@@ -167,12 +167,12 @@ namespace karabo {
             NDArray::setDimensionTypes(tmp);
         }
 
-        //        const ImageData& ImageData::write(const std::string& filename, const bool enableAppendMode) const {
-        //            karabo::util::Hash h("RawImageFile.filename", filename, "RawImageFile.enableAppendMode", enableAppendMode);
-        //            karabo::io::Output<ImageData >::Pointer out = karabo::io::Output<ImageData >::create(h);
-        //            out->write(*this);
-        //            return *this;
-        //        }
+        const ImageData& ImageData::write(const std::string& filename, const bool enableAppendMode) const {
+            karabo::util::Hash h("ImageDataFileWriter.filename", filename, "ImageDataFileWriter.enableAppendMode", enableAppendMode);
+            karabo::io::Output<ImageData >::Pointer out = karabo::io::Output<ImageData >::create(h);
+            out->write(*this);
+            return *this;
+        }
 
     }
 }
