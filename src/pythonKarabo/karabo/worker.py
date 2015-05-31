@@ -1,3 +1,4 @@
+import sys
 import threading
 from collections import deque
 
@@ -30,9 +31,11 @@ class Worker(threading.Thread):
         
     def setErrorHandler(self, handler):
         self.onError = handler
+        return self
         
     def setExitHandler(self, handler):
         self.onExit = handler
+        return self
 
     def is_running(self):
         return self.running
@@ -88,7 +91,7 @@ class Worker(threading.Thread):
                 if self.suspended:
                     continue
                 if t is not None:
-                    if stopCondition(t):
+                    if self.stopCondition(t):
                         if callable(self.onExit):
                             self.onExit()
                         break
@@ -145,3 +148,20 @@ class Worker(threading.Thread):
                 self.suspended = True
                 self.cv.notify()
             
+
+class QueueWorker(Worker):
+    
+    def __init__(self, callback):
+        super(QueueWorker, self).__init__(self.onWork)
+        self.handler = callback
+        self.msg = None
+        
+    def onWork(self):
+        self.handler(self.msg)
+        self.msg = None
+        
+    def stopCondition(self, msg):
+        if "stop" in msg:
+            return True
+        self.msg = msg
+        return False
