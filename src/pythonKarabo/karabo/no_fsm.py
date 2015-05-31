@@ -7,7 +7,7 @@ __date__ ="$Nov 26, 2014 3:18:24 PM$"
 
 
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-from worker import Worker
+from karabo.worker import Worker
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("NoFsm", "1.3")
