@@ -1,4 +1,5 @@
 import sys
+import traceback
 import threading
 from collections import deque
 
@@ -99,12 +100,11 @@ class Worker(threading.Thread):
                     self.counter -= 1
                 if self.running:
                     self.callback()
-        except RuntimeError as e:
+        except Exception:
             if callable(self.onError):
-                self.onError(e)
-        except:
-            if callable(self.onError):
-                self.onError(sys.exc_info()[0])
+                self.onError(traceback.format_exc())
+            else:
+                traceback.print_exc()
             
         if self.running:
             self.running = False
