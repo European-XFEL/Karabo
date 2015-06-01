@@ -264,6 +264,7 @@ tag=""          #for checkout
 revision="HEAD"     # for checkout
 svnTagName=""
 svnBranchName=""
+svnBranchFrom="trunk" # for branching
 allList=0
 verboseList=0
 
@@ -1818,7 +1819,9 @@ function createSvnTag() {
     echo
     echo "  Creating svn tag, please wait..."
     echo
-    # TODO Validate proper tag format: \d\.\d\.\d  (e.g. 0.1.7)
+    # TODO: Validate proper tag format \d\.\d\.d\-\d\.\d (e.g. 1.0.0-1.3) where
+    #       the digits before '-' are the package tag and the digits after it
+    #       are the karabo (branch) version.
     # in case of dependencies, change svnPath temporarily to old location of dependencies
     oldSvnPath=$svnPath; if [[ "$packageCategory" == "dependencies" ]]; then svnPath=$svnDepsPath; fi
     svn copy --parents $svnPath/$packageCategory/$packageName/$svnTagFrom $svnPath/$packageCategory/$packageName/tags/$svnTagName -m "Package $packageName got tagged from \"$svnTagFrom\" to \"tags/$svnTagName\" via karabo script"
@@ -1830,12 +1833,16 @@ function createSvnBranch() {
     local packageName=$1
     local packageCategory=$2
     local svnBranchName=$3
+    local svnBranchFrom=$4
     echo
     echo "  Creating svn branch, please wait..."
     echo
     # in case of dependencies, change svnPath temporarily to old location of dependencies
     oldSvnPath=$svnPath; if [[ "$packageCategory" == "dependencies" ]]; then svnPath=$svnDepsPath; fi
-    svn copy --parents $svnPath/$packageCategory/$packageName/trunk $svnPath/$packageCategory/$packageName/branches/$svnBranchName -m "Package $packageName got branched to \"branches/$svnBranchName\" via karabo script"
+    # TODO: Check that svnBranchName fits branch tag format \d\.\d-\d\.\d
+    #       (e.g. 1.0-1.3) where the digits before '-' are the package version
+    #       branch and the digits after it are the karabo (branch) version.
+    svn copy --parents $svnPath/$packageCategory/$packageName/$svnBranchFrom $svnPath/$packageCategory/$packageName/branches/$svnBranchName -m "Package $packageName got branched from \"$svnBranchFrom\" to \"branches/$svnBranchName\" via karabo script"
     # restoring previous svnPath
     svnPath=$oldSvnPath
 }
@@ -1900,7 +1907,7 @@ PACKAGE_NAME and PACKAGE_CATEGORY have to be valid, and existing. Dependent pack
 checked out.
 
 SVN_TAG is relative to the main package directory. For head revision specify "trunk".
-In case of branches (or tags) use "branches/vesion" (or tags/version) i.e.: "branches/0.1.0" ("tags/0.1.4")
+In case of branches (or tags) use "branches/version" (or tags/version) i.e.: "branches/0.1.0" ("tags/0.1.4")
 
 Valid options:
   -f               : forces checkout of package, i.e. will overwrite in case of (locally) pre-existing packages
@@ -2054,7 +2061,7 @@ End-of-help
 
     elif [[ "$1" == "tag" ]]; then
         cat <<End-of-help
-tag: Create a svn tag of a package
+tag: Create an svn tag of a package
 
 usage: tag PACKAGE_NAME PACKAGE_CATEGORY TAG_FROM TAG_NAME
 
@@ -2066,13 +2073,19 @@ End-of-help
 
     elif [[ "$1" == "branch" ]]; then
         cat <<End-of-help
-branch: Create a svn branch of a package
+branch: Create an svn branch of a package
 
-usage: branch PACKAGE_NAME PACKAGE_CATEGORY BRANCH_NAME
+usage: branch PACKAGE_NAME PACKAGE_CATEGORY BRANCH_NAME [FROM]
+
+If the optional FROM is not given, trunk is used.
 
 Examples:
 
-$0 branch conveyor testDevices 0.1
+(1) Branch from current trunk:
+  $0 branch conveyor testDevices 1.0-1.3
+
+(2) Branch from an existing tag:
+  $0 branch conveyor testDevices 1.0-1.3 tags/1.0.0-1.3
 
 End-of-help
 
@@ -2410,6 +2423,10 @@ until [ -z "$1" ]; do
             packageName=$2
             packageCategory=$3
             svnBranchName=$4
+            if [ $# -ge 5 ]; then
+		svnBranchFrom=$5
+		shift
+	    fi
             shift; shift; shift; shift
         fi
 
@@ -2473,7 +2490,7 @@ elif [[ "$createTag" == "1" ]]; then
     createSvnTag $packageName $packageCategory $svnTagFrom $svnTagName
 
 elif [[ "$createBranch" == "1" ]]; then
-    createSvnBranch $packageName $packageCategory $svnBranchName
+    createSvnBranch $packageName $packageCategory $svnBranchName $svnBranchFrom
 elif [[ "$setSvn" == "1" ]]; then
     setSvnPath
 elif [[ "$setRepo" == "1" ]]; then
