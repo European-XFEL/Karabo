@@ -62,7 +62,7 @@ do
     else 
         target=$exe
         title=$exe
-        options="-T $title -sb -rightbar -sl $scroll"
+        options="-T $title -sb -rightbar -sl $scroll -hold"
 	display=""
 	if [ -n "$XUSE" ] && [ "$xuse" = "yes" ]; then
 	    display="-display $XUSE"
@@ -72,8 +72,8 @@ do
 	    echo "INFO Starting: $target $params 2>&1 > /dev/null &"
 	    $target $params 2>&1 > /dev/null &
 	else
-            echo "INFO Starting: xterm $options $display -e $target $params $redirect &"
-	    xterm $options $display -e "$target $params $redirect" &
+            echo "INFO Starting: xterm $options $display -e bash -c \"$target $params $redirect\" &"
+	    xterm $options $display -e bash -c "$target $params $redirect" &
         fi
 	# store name and pid of started process
         bg=$!
