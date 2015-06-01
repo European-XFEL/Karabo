@@ -352,23 +352,23 @@ namespace karabo {
                 this->set(h, timestamp);
             }
 
-            template <class PixelType>
-            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
-                this->set<PixelType>(key, image, getActualTimestamp());
-            }
-
-            template <class PixelType>
-            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp) {
-                using namespace karabo::util;
-
-                Dims dims(image.dimX(), image.dimY(), image.dimZ());
-                karabo::xip::RawImageData raw(image.pixelPointer(), image.size(), true, dims);
-
-                Hash hash(key, raw.hash());
-                hash.setAttribute(key, "image", 1);
-                m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
-                emit("signalChanged", hash, getInstanceId());
-            }
+//            template <class PixelType>
+//            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
+//                this->set<PixelType>(key, image, getActualTimestamp());
+//            }
+//
+//            template <class PixelType>
+//            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp) {
+//                using namespace karabo::util;
+//
+//                Dims dims(image.dimX(), image.dimY(), image.dimZ());
+//                karabo::xip::RawImageData raw(image.pixelPointer(), image.size(), true, dims);
+//
+//                Hash hash(key, raw.hash());
+//                hash.setAttribute(key, "image", 1);
+//                m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
+//                emit("signalChanged", hash, getInstanceId());
+//            }
 
             /**
              * This function allows to write a CpuImage instead of an ImageElement to an output channel.
