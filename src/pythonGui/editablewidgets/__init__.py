@@ -7,7 +7,7 @@
 # define package editablewidgets
 
 __all__ = ["editablecheckbox", "editablechoiceelement", "editablecombobox",
-           "editabledirectory", "editabledoublespinbox", "editablefilein",
+           "editabledirectory", "numberlineedit", "editablefilein",
            "editablefileout", "editablelineedit", "editablelistelement",
            "editablelist", "editablespinbox",
            "hexoct", "singlebit", "qwtwidgets", "editabletableelement"]
