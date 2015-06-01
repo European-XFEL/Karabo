@@ -2,6 +2,7 @@
 # and open the template in the editor.
 
 import unittest
+from karabo.worker import Worker, QueueWorker
 from karabo.fsm import KARABO_FSM_NO_TRANSITION_ACTION, KARABO_FSM_EVENT2, KARABO_FSM_EVENT0, KARABO_FSM_INTERRUPT_STATE_EE
 from karabo.fsm import KARABO_FSM_STATE_EE, KARABO_FSM_ACTION0, KARABO_FSM_STATE_MACHINE, KARABO_FSM_CREATE_MACHINE
 from karabo.fsm import event_instance
