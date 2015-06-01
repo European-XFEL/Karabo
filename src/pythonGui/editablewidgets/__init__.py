@@ -9,5 +9,5 @@
 __all__ = ["editablecheckbox", "editablechoiceelement", "editablecombobox",
            "editabledirectory", "numberlineedit", "editablefilein",
            "editablefileout", "editablelineedit", "editablelistelement",
-           "editablelist", "editablespinbox",
+           "editablelist", "editablespinbox", "floatspinbox",
            "hexoct", "singlebit", "qwtwidgets", "editabletableelement"]
