@@ -68,6 +68,8 @@ namespace karabo {
 
             // Tracks channels that send EOS
             std::set<karabo::net::Channel::Pointer> m_eosChannels;
+            
+            int m_delayOnInput;
 
         public:
 
@@ -158,8 +160,12 @@ namespace karabo {
 
             void notifyOutputChannelsForPossibleRead();
 
+            void deferredNotificationsOfOutputChannelsForPossibleRead();
+            
             void notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel);
-
+            
+            void deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel);
+            
             bool respondsToEndOfStream();
 
             void parseOutputChannelConfiguration(const karabo::util::Hash& config);

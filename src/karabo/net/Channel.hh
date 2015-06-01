@@ -47,7 +47,7 @@ namespace karabo {
             typedef boost::function<void (karabo::util::Hash&, boost::shared_ptr<std::vector<char> >&) > ReadHashVectorPointerHandler;
 
             typedef boost::function<void () > WriteCompleteHandler;
-            typedef boost::function<void (const std::string&) > WaitHandler;
+            typedef boost::function<void () > WaitHandler;
 
             virtual ~Channel() {
             }
@@ -363,7 +363,7 @@ namespace karabo {
 
             virtual void setErrorHandler(const ErrorHandler& handler) = 0;
 
-            virtual void waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id) {
+            virtual void waitAsync(int milliseconds, const WaitHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
