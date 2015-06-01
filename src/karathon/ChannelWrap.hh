@@ -49,7 +49,7 @@ namespace karathon {
         static void writeAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& data, const bp::object& handler);
         static void writeAsyncHashStr(karabo::net::Channel::Pointer channel, const bp::object& hdr, const bp::object& data, const bp::object& handler);
         static void writeAsyncHashHash(karabo::net::Channel::Pointer channel, const bp::object& hdr, const bp::object& data, const bp::object& handler);
-        static void waitAsync(karabo::net::Channel::Pointer channel, const bp::object& milliseconds, const bp::object& handler, const std::string& id);
+        static void waitAsync(karabo::net::Channel::Pointer channel, const bp::object& milliseconds, const bp::object& handler);
         static void setErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
 
         static size_t id(karabo::net::Channel::Pointer channel) {
@@ -67,7 +67,7 @@ namespace karathon {
         static void proxyReadHashVectorHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash, const std::vector<char>& v);
         static void proxyReadHashHashHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b);
         static void proxyWriteCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel);
-        static void proxyWaitCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const std::string& id);
+        static void proxyWaitCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel);
         static void proxyErrorHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code);
         static bool hasattr(bp::object obj, const std::string& attrName) {
             return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));

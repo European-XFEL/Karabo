@@ -367,23 +367,23 @@ namespace karathon {
     }
 
 
-    void ChannelWrap::waitAsync(karabo::net::Channel::Pointer channel, const bp::object& milliobj, const bp::object& handler, const std::string& id) {
+    void ChannelWrap::waitAsync(karabo::net::Channel::Pointer channel, const bp::object& milliobj, const bp::object& handler) {
         if (!PyCallable_Check(handler.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         if (PyLong_Check(milliobj.ptr())) {
             int milliseconds = bp::extract<int>(milliobj);
             ScopedGILRelease nogil;
-            channel->waitAsync(milliseconds, boost::bind(proxyWaitCompleteHandler, handler, channel, _1), id);
+            channel->waitAsync(milliseconds, boost::bind(proxyWaitCompleteHandler, handler, channel));
             return;
         }
         PyErr_SetString(PyExc_TypeError, "Python type in parameters is not supported");
     }
 
 
-    void ChannelWrap::proxyWaitCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const std::string& id) {
+    void ChannelWrap::proxyWaitCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel) {
         ScopedGILAcquire gil;
         try {
-            handler(bp::object(channel), id);
+            handler(bp::object(channel));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) {
                 PyErr_Print();
