@@ -64,7 +64,7 @@ namespace karabo {
             BOOL_ELEMENT(expected).key("keepDataUntilNew")
                     .displayedName("Keep data until new")
                     .description("If true, keeps data until new data from an connected output is provided. "
-                    "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
+                                 "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
                     .assignmentOptional().defaultValue(false)
                     .init()
                     .commit();
@@ -73,6 +73,15 @@ namespace karabo {
                     .displayedName("Respond to end-of-stream")
                     .description("Determines whether this input should forward a end-of-stream event to its parent device.")
                     .assignmentOptional().defaultValue(true)
+                    .init()
+                    .commit();
+
+            INT32_ELEMENT(expected).key("delayOnInput")
+                    .displayedName("Delay on Input channel")
+                    .description("Some delay before informing output channel about readiness for next data.")
+                    .assignmentOptional().defaultValue(0)
+                    .unit(Unit::SECOND)
+                    .metricPrefix(MetricPrefix::MILLI)
                     .init()
                     .commit();
         }
@@ -85,6 +94,7 @@ namespace karabo {
             config.get("keepDataUntilNew", m_keepDataUntilNew);
             config.get("onSlowness", m_onSlowness);
             config.get("respondToEndOfStream", m_respondToEndOfStream);
+            config.get("delayOnInput", m_delayOnInput);
 
             m_channelId = MemoryType::registerChannel();
             m_inactiveChunk = MemoryType::registerChunk(m_channelId);
@@ -148,15 +158,18 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_swapBuffersMutex);
             MemoryType::read(data, idx, m_channelId, m_activeChunk);
         }
-        
+
+
         karabo::util::Hash::Pointer InputChannel::read(size_t idx) {
             boost::mutex::scoped_lock lock(m_swapBuffersMutex);
             return MemoryType::read(idx, m_channelId, m_activeChunk);
-        }              
-        
+        }
+
+
         size_t InputChannel::size() {
             return MemoryType::size(m_channelId, m_activeChunk);
         }
+
 
         unsigned int InputChannel::getMinimumNumberOfData() const {
             return m_minData;
@@ -215,35 +228,35 @@ namespace karabo {
         }
 
 
-//        void InputChannel::startConnection(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo) {
-//
-//            const std::string& memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
-//            const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
-//            const std::string& port = outputChannelInfo.getAs<std::string>("port");
-//
-//            karabo::net::Channel::Pointer channel;
-//            bool connected = false;
-//            int sleep = 1;
-//            while (!connected) {
-//                try {
-//                    channel = connection->start();
-//                } catch (karabo::util::NetworkException& e) {
-//                    KARABO_LOG_FRAMEWORK_INFO << "Could not connect to desired output channel, retrying in " << sleep << " s.";
-//                    boost::this_thread::sleep(boost::posix_time::seconds(sleep));
-//                    sleep += 2;
-//                    continue;
-//                }
-//                connected = true;
-//            }
-//            channel->setErrorHandler(boost::bind(&karabo::xms::InputChannel::onTcpChannelError, this, channel, _1));
-//            channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
-//            channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
-//
-//            m_tcpConnections.insert(connection); // TODO check whether really needed
-//            m_tcpChannels.insert(std::make_pair(hostname + port, channel));
-//        }
+        //        void InputChannel::startConnection(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo) {
+        //
+        //            const std::string& memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
+        //            const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
+        //            const std::string& port = outputChannelInfo.getAs<std::string>("port");
+        //
+        //            karabo::net::Channel::Pointer channel;
+        //            bool connected = false;
+        //            int sleep = 1;
+        //            while (!connected) {
+        //                try {
+        //                    channel = connection->start();
+        //                } catch (karabo::util::NetworkException& e) {
+        //                    KARABO_LOG_FRAMEWORK_INFO << "Could not connect to desired output channel, retrying in " << sleep << " s.";
+        //                    boost::this_thread::sleep(boost::posix_time::seconds(sleep));
+        //                    sleep += 2;
+        //                    continue;
+        //                }
+        //                connected = true;
+        //            }
+        //            channel->setErrorHandler(boost::bind(&karabo::xms::InputChannel::onTcpChannelError, this, channel, _1));
+        //            channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
+        //            channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
+        //
+        //            m_tcpConnections.insert(connection); // TODO check whether really needed
+        //            m_tcpChannels.insert(std::make_pair(hostname + port, channel));
+        //        }
 
-        
+
         void InputChannel::onConnect(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer channel) {
 
             const std::string& memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
@@ -258,10 +271,11 @@ namespace karabo {
             m_tcpChannels.insert(std::make_pair(hostname + port, channel));
         }
 
-        
+
         void InputChannel::startConnectionAsync(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo) {
             connection->startAsync(boost::bind(&InputChannel::onConnect, this, connection, outputChannelInfo, _1));
         }
+
 
         void InputChannel::onTcpConnectionError(karabo::net::Channel::Pointer, const karabo::net::ErrorCode& error) {
             KARABO_LOG_FRAMEWORK_ERROR << error.value() << ": " << error.message();
@@ -415,15 +429,34 @@ namespace karabo {
         }
 
 
-        void InputChannel::notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
+        void InputChannel::deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
             KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Notifying output channel that " << this->getInstanceId() << " is ready for next read.";
             channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
         }
 
 
-        void InputChannel::notifyOutputChannelsForPossibleRead() {
+        void InputChannel::notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
+            if (m_delayOnInput <= 0) // no delay
+                deferredNotificationOfOutputChannelForPossibleRead(channel);
+            else
+                channel->waitAsync(m_delayOnInput, boost::bind(&InputChannel::deferredNotificationOfOutputChannelForPossibleRead, this, channel));
+        }
+
+
+        void InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead() {
             for (TcpChannels::const_iterator it = m_tcpChannels.begin(); it != m_tcpChannels.end(); ++it) {
-                notifyOutputChannelForPossibleRead(it->second);
+                const karabo::net::Channel::Pointer& channel = it->second;
+                channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
+            }
+        }
+
+
+        void InputChannel::notifyOutputChannelsForPossibleRead() {
+            if (m_delayOnInput <= 0) // no delay
+                deferredNotificationsOfOutputChannelsForPossibleRead();
+            else { // wait "asynchronously" on the first channel
+                const karabo::net::Channel::Pointer& channel = m_tcpChannels.begin()->second;
+                channel->waitAsync(m_delayOnInput, boost::bind(&InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead, this));
             }
         }
 

@@ -59,6 +59,16 @@ namespace karabo {
             OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
                     .setNewDefaultValue(60)
                     .commit();
+            
+            INT32_ELEMENT(expected).key("delayOnInput")
+                    .displayedName("Delay on Input channel")
+                    .description("Some delay before informing output channel about readiness for next data.")
+                    .assignmentOptional().defaultValue(100)
+                    .unit(Unit::SECOND)
+                    .metricPrefix(MetricPrefix::MILLI)
+                    .init()
+                    .commit();
+                    
         }
 
 
@@ -532,7 +542,8 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "trying to unsubscribe from non-subscribed channel " << channelName;
                 }
 
-                Hash h("connectedOutputChannels", channelName, "dataDistribution", "copy", "onSlowness", "drop");
+                Hash h("connectedOutputChannels", channelName, "dataDistribution", "copy",
+                       "onSlowness", "drop", "delayOnInput", get<int>("delayOnInput"));
                 InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", h);
                 input->setInstanceId(m_instanceId);
                 input->registerIOEventHandler(boost::bind(&GuiServerDevice::onNetworkData, this, _1));
