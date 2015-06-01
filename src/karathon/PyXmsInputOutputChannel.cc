@@ -699,6 +699,11 @@ namespace karathon {
         static bp::object getChannelSpacePy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
             return bp::object(karabo::xms::ChannelSpaceType(self->getChannelSpace()));
         }
+
+        static void writePy(const boost::shared_ptr<karabo::xms::ImageData>& self, const std::string& filename, const bool enableAppendMode = false){
+	  self->write(filename, enableAppendMode);
+        }
+
     };
 
 
@@ -996,6 +1001,8 @@ void exportPyXmsInputOutputChannel() {
                 .def("getDimensionScales", &ImageData::getDimensionScales, bp::return_value_policy< bp::copy_const_reference >())
 
                 .def("setDimensionScales", &ImageData::setDimensionScales, (bp::arg("scales")))
+
+                .def("write", &karathon::ImageDataWrap::writePy, (bp::arg("filename"), bp::arg("enableAppendMode") = false))
 
                 //KARABO_PYTHON_FACTORY_CONFIGURATOR(ImageData)
                 ;
