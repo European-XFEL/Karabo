@@ -23,8 +23,6 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         self.widget = QLineEdit(parent)
         self.widget.setValidator(self.validator)
 
-        # for updates during input, otherwise cursor jumps to end of input
-        self.lastCursorPos = 0
         self.normalPalette = self.widget.palette()
         self.errorPalette = QPalette(self.normalPalette)
         self.errorPalette.setColor(QPalette.Text, Qt.red)
@@ -41,7 +39,6 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
                                if self.widget.hasAcceptableInput()
                                else self.errorPalette)
         if self.widget.hasAcceptableInput():
-            self.lastCursorPos = self.widget.cursorPosition()
             self.signalEditingFinished.emit(self.boxes[0], self.value)
 
 
@@ -55,11 +52,9 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         if value is None:
             value = 0
 
-        with SignalBlocker(self.widget):
-            self.widget.setText("{}".format(value))
-
-        self.widget.setCursorPosition(self.lastCursorPos)
-
+        if not self.widget.hasFocus():
+            with SignalBlocker(self.widget):
+                self.widget.setText("{}".format(value))
 
     def validate_value(self):
         """
