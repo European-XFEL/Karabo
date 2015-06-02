@@ -170,7 +170,8 @@ class Icons(DisplayWidget):
         box = self.boxes[0]
         dialog = self.Dialog(self.project, self.items, box.descriptor)
         self.items = dialog.exec()
-        self.valueChanged(box, box.value)
+        if box.hasValue():
+            self.valueChanged(box, box.value)
 
     def setPixmap(self, p):
         if p is None:
@@ -204,9 +205,9 @@ class TextIcons(Icons):
     Dialog = TextDialog
 
     def valueChanged(self, box, value, timestamp=None):
-        for item in self.items:
-            if item.value is None or item.re.match(value):
-                self.setPixmap(item.pixmap)
+        for it in self.items:
+            if it.value is None or value is not None and it.re.match(value):
+                self.setPixmap(it.pixmap)
                 return
 
     def save(self, e):
