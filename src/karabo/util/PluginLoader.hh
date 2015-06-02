@@ -59,6 +59,7 @@ namespace karabo {
             boost::filesystem::path m_pluginDirectory;
 
             static std::map<boost::filesystem::path, void*> m_loadedPlugins;
+            static std::vector<std::string> m_failedPlugins;
 
         };
     } // namespace util

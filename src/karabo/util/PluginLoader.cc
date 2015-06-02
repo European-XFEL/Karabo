@@ -28,6 +28,7 @@ namespace karabo {
 
         // Static initialization
         map<path, void*> PluginLoader::m_loadedPlugins = map<path, void*>();
+        vector<string> PluginLoader::m_failedPlugins = vector<string>();
 
 
         void PluginLoader::expectedParameters(Schema& expected) {
@@ -77,10 +78,22 @@ namespace karabo {
                             //cout << it->path().filename() << "\n";
 
                             string plugin = it->path().string();
+                            bool faultyPlugin = false;
+                            for (size_t i = 0; i < m_failedPlugins.size(); i++)
+                                if (m_failedPlugins[i] == plugin) {
+                                    faultyPlugin = true;
+                                    break;
+                                }
+                            if (faultyPlugin) continue;
                             if (m_loadedPlugins.find(plugin) == m_loadedPlugins.end()) {
                                 void* libHandle = dlopen(plugin.c_str(), RTLD_NOW);
                                 if (libHandle == 0) {
-                                    throw KARABO_INIT_EXCEPTION("Failed to load plugin " + string(it->path().filename().string()) + ": " + string(dlerror()));
+                                    cout << "\n******************************************************************************\n";
+                                    cout << "* ERROR while loading plugin \"" << string(it->path().filename().string())
+                                            << "\":\n*\t" << string(dlerror()) << "\n";
+                                    cout << "******************************************************************************\n" << endl;;
+                                    m_failedPlugins.push_back(plugin);
+                                    //throw KARABO_INIT_EXCEPTION("Failed to load plugin " + string(it->path().filename().string()) + ": " + string(dlerror()));
                                 } else {
                                     m_loadedPlugins[it->path()] = libHandle;
                                     cout << "Successfully loaded plugin: " << it->path().filename() << endl;
