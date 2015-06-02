@@ -10,7 +10,7 @@ from registry import Loadable
 from const import ns_svg, ns_karabo
 import sceneitems
 
-from PyQt4.QtCore import pyqtSlot, QRect, QSize
+from PyQt4.QtCore import pyqtSlot, QRect, QSize, Qt
 from PyQt4.QtGui import (QAction, QBoxLayout, QGridLayout, QLabel,
                          QLayout, QMenu, QStackedLayout, QWidget)
 
@@ -449,6 +449,7 @@ class ProxyWidget(QWidget):
         self.selected = False
         self.component = None
         self.marker = QLabel("", self)
+        self.marker.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.layout().addWidget(self.marker)
         self.widget = None
 
