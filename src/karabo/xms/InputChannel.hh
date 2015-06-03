@@ -53,6 +53,7 @@ namespace karabo {
 
             boost::mutex m_mutex;
             boost::mutex m_swapBuffersMutex;
+            boost::mutex m_shutdownPreventMutex;
 
             int m_activeChunk;
             int m_inactiveChunk;

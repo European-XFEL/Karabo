@@ -187,7 +187,9 @@ namespace karabo {
             if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
             m_inboundMessagePrefix.resize(sizeofLength);
             boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
-                    boost::bind(&karabo::net::TcpChannel::onSizeInBytesAvailable, this, handler, boost::asio::placeholders::bytes_transferred, boost::asio::placeholders::error));
+                                    boost::bind(&karabo::net::TcpChannel::onSizeInBytesAvailable,
+                                                shared_from_this(), handler, boost::asio::placeholders::bytes_transferred,
+                                                boost::asio::placeholders::error));
         }
 
 
@@ -211,7 +213,8 @@ namespace karabo {
 
         void TcpChannel::readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
             boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
-                    boost::bind(&karabo::net::TcpChannel::onBytesAvailable, this, handler, boost::asio::placeholders::error));
+                                    boost::bind(&karabo::net::TcpChannel::onBytesAvailable, shared_from_this(), handler,
+                                                boost::asio::placeholders::error));
         }
 
 
