@@ -376,6 +376,7 @@ class NetworkObject(Object, QObject):
         QObject.__init__(self)
         Object.__init__(self, box)
         box.visibilityChanged.connect(self.onVisibilityChanged)
+        self.onVisibilityChanged(box.visible > 0)
 
     @pyqtSlot(bool)
     def onVisibilityChanged(self, visible):

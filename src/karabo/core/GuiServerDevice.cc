@@ -540,6 +540,7 @@ namespace karabo {
 
                 if (!subscribe) {
                     KARABO_LOG_FRAMEWORK_WARN << "trying to unsubscribe from non-subscribed channel " << channelName;
+                    return;
                 }
 
                 Hash h("connectedOutputChannels", channelName, "dataDistribution", "copy",
