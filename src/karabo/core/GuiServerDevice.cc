@@ -63,7 +63,7 @@ namespace karabo {
             INT32_ELEMENT(expected).key("delayOnInput")
                     .displayedName("Delay on Input channel")
                     .description("Some delay before informing output channel about readiness for next data.")
-                    .assignmentOptional().defaultValue(100)
+                    .assignmentOptional().defaultValue(500)
                     .unit(Unit::SECOND)
                     .metricPrefix(MetricPrefix::MILLI)
                     .init()
@@ -515,7 +515,7 @@ namespace karabo {
 
         void GuiServerDevice::onSubscribeNetwork(Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork:\n" << info;
                 string channelName = info.get<string>("channelName");
                 bool subscribe = info.get<bool>("subscribe");
                 NetworkMap::iterator iter;
@@ -539,7 +539,7 @@ namespace karabo {
                 }
 
                 if (!subscribe) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "trying to unsubscribe from non-subscribed channel " << channelName;
+                    KARABO_LOG_FRAMEWORK_WARN << "trying to unsubscribe from non-subscribed channel " << channelName;
                 }
 
                 Hash h("connectedOutputChannels", channelName, "dataDistribution", "copy",
