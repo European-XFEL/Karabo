@@ -283,7 +283,7 @@ namespace karabo {
 
                 // Setup the validation classes
                 karabo::util::Validator::ValidationRules rules;
-                rules.allowAdditionalKeys = false;
+                rules.allowAdditionalKeys = true;
                 rules.allowMissingKeys = true;
                 rules.allowUnrootedConfiguration = true;
                 rules.injectDefaults = false;
