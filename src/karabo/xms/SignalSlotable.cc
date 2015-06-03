@@ -158,7 +158,7 @@ namespace karabo {
             m_defaultAccessLevel = KARABO_DEFAULT_ACCESS_LEVEL;
             m_connection = connection;
             m_instanceId = instanceId;
-            m_nThreads = 1;
+            m_nThreads = 2;
 
             // Currently only removes dots
             sanifyInstanceId(m_instanceId);
@@ -287,6 +287,7 @@ namespace karabo {
             }
 
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id: " << m_instanceId;
+            KARABO_LOG_FRAMEWORK_INFO << "Instance: " << m_instanceId << " uses " << m_nThreads << " threads";
             m_randPing = 0;
             call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
 
