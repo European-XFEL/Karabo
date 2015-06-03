@@ -107,14 +107,19 @@ namespace karabo {
 
 
         InputChannel::~InputChannel() {
-            // Close all connections
-            for (TcpConnections::iterator it = m_tcpConnections.begin(); it != m_tcpConnections.end(); ++it) {
-                (*it)->stop();
-            }
+            boost::mutex::scoped_lock lock(m_shutdownPreventMutex);
+
             if (m_tcpIoServiceThread.joinable()) {
                 m_tcpIoService->stop();
                 m_tcpIoServiceThread.join();
             }
+            
+            KARABO_LOG_FRAMEWORK_DEBUG << "***** InputChannel DTOR was called for channelId = " << m_channelId;
+            
+            // Close all TCP channels to devices output channels
+            m_tcpChannels.clear();
+            m_tcpConnections.clear();
+            
             MemoryType::unregisterChannel(m_channelId);
         }
 
@@ -288,11 +293,13 @@ namespace karabo {
 
 
         void InputChannel::onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
-
+            boost::mutex::scoped_lock lockShutdown(m_shutdownPreventMutex);
+            if (!channel || !channel->isOpen()) return;
+            
             try {
 
                 boost::mutex::scoped_lock lock(m_mutex);
-
+                
                 m_isEndOfStream = false;
 
                 if (header.has("endOfStream")) {
@@ -305,7 +312,9 @@ namespace karabo {
                     if (this->getMinimumNumberOfData() <= 0) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering another compute";
                         this->swapBuffers();
+                        m_mutex.unlock(); // TODO scoped in case of exception thrown is callback code
                         this->triggerIOEvent();
+                        m_mutex.lock();
                     }
 
                     if (m_eosChannels.size() == m_tcpChannels.size()) {
@@ -316,8 +325,9 @@ namespace karabo {
                         // Reset eos tracker
                         m_eosChannels.clear();
                     }
-
-                    channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
+                    
+                    if (channel->isOpen())
+                        channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
                     return;
                 }
 
@@ -354,7 +364,6 @@ namespace karabo {
                     m_mutex.unlock(); // TODO scoped in case of exception thrown is callback code
                     this->triggerIOEvent();
                     m_mutex.lock();
-
                 } else { // Data complete on both pots now
                     if (m_keepDataUntilNew) { // Is false per default
                         m_keepDataUntilNew = false;
@@ -365,8 +374,8 @@ namespace karabo {
                         m_keepDataUntilNew = true;
                     }
                 }
-
-                channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
+                if (channel->isOpen())
+                    channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
 
             } catch (const karabo::util::Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onTcpChannelRead " << e;

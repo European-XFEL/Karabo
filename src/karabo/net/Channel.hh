@@ -373,6 +373,7 @@ namespace karabo {
 
             virtual void close() = 0;
         
+            virtual bool isOpen() = 0;
         };
     }
 }
