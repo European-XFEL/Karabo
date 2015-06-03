@@ -9,7 +9,7 @@ The recommended python suites are `Python(x,y) <https://code.google.com/p/python
 However, as python(x,y) still lacks version with Python 3, currently the only possibility is to use WinPython. 
 The choice of python suite is dictated by availability of almost all packages required by karaboGUI (like PyQwt, guiqwt, guidata).
 
-Additionally, you need to install two modules Quamash and suds-jurko in Python(x,y) or WinPython using their package managers.
+Additionally, you need to install one module called suds-jurko in Python(x,y) or WinPython using their package managers.
 
 Below you will find detailed instruction how to install WinPython and karaboGUI.
 
@@ -56,7 +56,6 @@ Here is a list of all python packages included in karaboFramework, not all are r
 - pytz 2013.9
 - pyusb 1.0.0b1
 - pyzmq 14.0.1
-- quamash 0.3.0
 - scipy 0.13.2
 - setuptools 2.1
 - sip 4.16.7
@@ -79,17 +78,19 @@ Download the latest installation package `here <https://sourceforge.net/projects
 Get and install additional python packages
 ------------------------------------------
 
-Download additional packages from `PyPI <http://pypi.python.org/>`_:
+To download the additional package suds-jurko 0.6 follow these instructions:
 
-- `Quamash 0.4.1 <https://pypi.python.org/packages/source/Q/Quamash/Quamash-0.4.1.tar.gz>`_
-- `suds-jurko 0.6 <https://pypi.python.org/packages/source/s/suds-jurko/suds-jurko-0.6.zip>`_
+- from the WinPython installation directory, launch the WinPython Command Prompt.
+- then use pip at the prompt to install the package typing 'pip install suds-jurko'.
 
-and install them following `instructions <https://github.com/winpython/winpython/wiki/Installing-Additional-Packages>`_. 
+
 
 Get and install karaboGUI
 -------------------------
 
-Download karaboGUI Windows installation binary `here <ftp://karabo:framework@ftp.desy.de/karaboGui/>`_ and run it. You should get Start Menu entry as well as karaboGUI shortcut on Desktop.
+Download karaboGUI Windows installation binary `here <ftp://karabo:framework@ftp.desy.de/karaboGui/>`_ and run it. NOTE: if this link does not open automatically, type the following
+in the browser address bar: ftp://karabo:framework@ftp.desy.de/karaboGui/ .
+ You should get Start Menu entry as well as karaboGUI shortcut on Desktop.
 
 To uninstall karaboGui, open Control Panel -> Uninstall a program, find karaboGUI entry and uninstall it.
 
@@ -102,4 +103,4 @@ Due to `this issue <http://bugs.python.org/issue21354>`_ (resolved in Python 3.4
 
 right-click on karabo-gui.py and  select Send to Desktop. In this way, you have a shortcut on your Desktop and now you can easily start karaboGui with double click. To remove karaboGui, you need to use WinPython package manager: select karabo and karaboGui and press Uninstall packages.
 
- 
+
