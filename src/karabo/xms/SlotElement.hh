@@ -39,7 +39,7 @@ namespace karabo {
                 m_child.set("connectedSignals", 0);
                 m_child.setAttribute("connectedSignals", KARABO_SCHEMA_DISPLAYED_NAME, "Connected Signals");
                 m_child.setAttribute("connectedSignals", KARABO_SCHEMA_DESCRIPTION, "Signals already connected to this slot");
-                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, karabo::util::Schema::EXPERT);
+                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, karabo::util::Schema::ADMIN);
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_ASSIGNMENT, karabo::util::Schema::OPTIONAL_PARAM);
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::LEAF);
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::COMMAND);
