@@ -102,13 +102,28 @@ class PythonDevice(NoFsm):
                     .assignmentOptional().defaultValue("uninitialized").readOnly()
                     .commit(),
 
-            BOOL_ELEMENT(expected).key("trafficJam")
+            NODE_ELEMENT(expected).key("performanceStatistics")
+                    .displayedName("Performance Statistics")
+                    .description("Accumulates some statistics")
+                    .expertAccess()
+                    .commit(),
+
+            BOOL_ELEMENT(expected).key("performanceStatistics.enable")
+                    .displayedName("Enable Performance Indicators")
+                    .description("Enables some statistics to follow the performance of an individual device")
+                    .reconfigurable()
+                    .expertAccess()
+                    .assignmentOptional().defaultValue(False)
+                    .commit(),
+
+            BOOL_ELEMENT(expected).key("performanceStatistics.trafficJam")
                     .displayedName("Traffic jam for messages")
                     .description("Flag denoting traffic jam for messages traveling via broker")
+                    .expertAccess()
                     .readOnly().initialValue(False)
                     .commit(),
 
-            FLOAT_ELEMENT(expected).key("brokerLatency")
+            FLOAT_ELEMENT(expected).key("performanceStatistics.brokerLatency")
                     .displayedName("Broker latency (ms)")
                     .description("Time interval (in millis) between message sending to broker and receiving it on the device before queuing.")
                     .expertAccess()
@@ -116,29 +131,30 @@ class PythonDevice(NoFsm):
                     #.warnHigh(10000.0)
                     .commit(),
 
-            FLOAT_ELEMENT(expected).key("processingLatency")
+            FLOAT_ELEMENT(expected).key("performanceStatistics.processingLatency")
                     .displayedName("Processing latency (ms)")
                     .description("Time interval (in millis) between message sending to broker and reading it from the queue on the device.")
                     .expertAccess()
-                    .readOnly().initialValue(0.0)                        
+                    .readOnly().initialValue(0.0)
                     #.warnHigh(10000.0)
                     .commit(),
 
-            UINT32_ELEMENT(expected).key("messageQueueSize")
+            UINT32_ELEMENT(expected).key("performanceStatistics.messageQueueSize")
                     .displayedName("Local message queue size")
                     .description("Current size of the local message queue.")
+                    .expertAccess()
                     .readOnly().initialValue(0)
                     #.warnHigh(100)
                     .commit(),
 
-            INT64_ELEMENT(expected).key("latencyUpper")
+            INT64_ELEMENT(expected).key("performanceStatistics.latencyUpper")
                     .displayedName("Latency upper limit")
                     .description("Message latency above that the \"Traffic jam\" flag will be set.")
                     .assignmentOptional().defaultValue(10000)
                     .adminAccess()
                     .commit(),
 
-            INT64_ELEMENT(expected).key("latencyLower")
+            INT64_ELEMENT(expected).key("performanceStatistics.latencyLower")
                     .displayedName("Latency lower limit")
                     .description("Message latency below that the \"Traffic jam\" flag will be unset.")
                     .assignmentOptional().defaultValue(5000)
@@ -767,19 +783,23 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(slotFunc)
         
     def updateLatencies(self, brokerLatency, processingLatency, messageQueueSize):
-        jamFlag = self["trafficJam"]
-        latencyUpper = self["latencyUpper"]
-        latencyLower = self["latencyLower"]
-        
-        h = Hash("brokerLatency", brokerLatency, "processingLatency", processingLatency, "messageQueueSize", messageQueueSize)
-        
-        if jamFlag:
-            if processingLatency < latencyLower: self["trafficJam"] = False
-        else:
-            if processingLatency > latencyUpper:
-                self["trafficJam"] = True
-                self.log.WARN("Processing latency {} are higher than established limit : {}".format(processingLatency,latencyUpper))
-        self.set(h)
+        if self.get("performanceStatistics.trafficJam"):
+            # TODO: Remove jam flag, once notification system is in place
+            jamFlag = self.get("performanceStatistics.trafficJam")
+            latencyUpper = self.get("performanceStatistics.latencyUpper")
+            latencyLower = self.get("performanceStatistics.latencyLower")
+
+            h = Hash("performanceStatistics.brokerLatency", brokerLatency,
+                     "performanceStatistics.processingLatency", processingLatency,
+                     "performanceStatistics.messageQueueSize", messageQueueSize)
+
+            if jamFlag:
+                if processingLatency < latencyLower: self.set("performanceStatistics.trafficJam", False)
+            else:
+                if processingLatency > latencyUpper:
+                    self.set("performanceStatistics.trafficJam", True)
+                    self.log.WARN("Processing latency {} are higher than established limit : {}".format(processingLatency,latencyUpper))
+            self.set(h)
 
         
     '''
