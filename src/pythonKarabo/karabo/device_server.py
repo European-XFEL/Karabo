@@ -476,10 +476,10 @@ class DeviceServer(object):
             module = self.import_plugin(modname)
             UserDevice = getattr(module, classid)
             schema = UserDevice.getSchema(classid)
-            validator = Validator()
-            self.log.DEBUG("Trying to validate  the configuration on device server")
-            validated = validator.validate(schema, config)
-            self.log.DEBUG("Validated configuration is ...\n{}".format(validated))
+            #validator = Validator()
+            #self.log.DEBUG("Trying to validate  the configuration on device server")
+            #validated = validator.validate(schema, config)
+            #self.log.DEBUG("Validated configuration is ...\n{}".format(validated))
             
             if "_deviceId_" in config:
                 device = config["_deviceId_"]
@@ -497,7 +497,7 @@ class DeviceServer(object):
             launcher = Launcher(device, script, params)
             launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
-            del validated
+            #del validated
             self.ss.reply(True, deviceid)
         except Exception as e:
             self.log.WARN("Device '{}' could not be started because: {}".format(classid, e))
@@ -532,10 +532,10 @@ class DeviceServer(object):
             module = self.import_plugin(modname)
             userDevice = getattr(module, classid)
             schema = userDevice.getSchema(classid)
-            validator = Validator()
-            self.log.DEBUG("Trying to validate  the configuration on device server")
-            validated = validator.validate(schema, config)
-            self.log.DEBUG("Validated configuration is ...\n{}".format(validated))
+            #validator = Validator()
+            #self.log.DEBUG("Trying to validate  the configuration on device server")
+            #validated = validator.validate(schema, config)
+            #self.log.DEBUG("Validated configuration is ...\n{}".format(validated))
             
             if "_deviceId_" in config:
                 device = config["_deviceId_"]
@@ -553,7 +553,7 @@ class DeviceServer(object):
             launcher = Launcher(device, script, params)
             launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
-            del validated
+            #del validated
             self.ss.reply(True, deviceid)
         except Exception as e:
             self.log.WARN("Device '{}' could not be started because: {}".format(classid, e))

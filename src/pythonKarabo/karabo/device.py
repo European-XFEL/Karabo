@@ -211,7 +211,7 @@ class PythonDevice(NoFsm):
         self.validatorIntern   = Validator()
         self.validatorExtern   = Validator()
         rules = ValidatorValidationRules()
-        rules.allowAdditionalKeys = False
+        rules.allowAdditionalKeys = True
         rules.allowMissingKeys    = True
         rules.allowUnrootedConfiguration = True
         rules.injectDefaults = False
