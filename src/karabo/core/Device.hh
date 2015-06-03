@@ -33,12 +33,12 @@ namespace karabo {
     namespace core {
 
         // Convenient logging
-#define KARABO_LOG_DEBUG this->log() << krb_log4cpp::Priority::DEBUG 
-#define KARABO_LOG_INFO  this->log() << krb_log4cpp::Priority::INFO 
-#define KARABO_LOG_WARN  this->log() << krb_log4cpp::Priority::WARN 
-#define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR
+        #define KARABO_LOG_DEBUG this->log() << krb_log4cpp::Priority::DEBUG 
+        #define KARABO_LOG_INFO  this->log() << krb_log4cpp::Priority::INFO 
+        #define KARABO_LOG_WARN  this->log() << krb_log4cpp::Priority::WARN 
+        #define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR
 
-#define KARABO_NO_SERVER "__none__"
+        #define KARABO_NO_SERVER "__none__"
 
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
         public:
@@ -195,27 +195,34 @@ namespace karabo {
                         .adminAccess()
                         .commit();
 
-                INT32_ELEMENT(expected).key("nThreads")
-                        .displayedName("Number of threads")
-                        .description("Defines the number of threads that can be used to work on incoming events")
-                        .assignmentOptional().defaultValue(1)
-                        .minInc(1)
-                        .adminAccess()
-                        .commit();
-
                 STRING_ELEMENT(expected).key("state")
                         .displayedName("State")
                         .description("The current state the device is in")
                         .readOnly().initialValue("Ok")
                         .commit();
 
-                BOOL_ELEMENT(expected).key("trafficJam")
+                NODE_ELEMENT(expected).key("performanceStatistics")
+                        .displayedName("Performance Statistics")
+                        .description("Accumulates some statistics")
+                        .expertAccess()
+                        .commit();
+
+                BOOL_ELEMENT(expected).key("performanceStatistics.enable")
+                        .displayedName("Enable Performance Indicators")
+                        .description("Enables some statistics to follow the performance of an individual device")
+                        .reconfigurable()
+                        .expertAccess()
+                        .assignmentOptional().defaultValue(false)
+                        .commit();
+
+                BOOL_ELEMENT(expected).key("performanceStatistics.trafficJam")
                         .displayedName("Traffic jam for messages")
                         .description("Flag denoting traffic jam for messages traveling via broker")
+                        .expertAccess()
                         .readOnly().initialValue(false)
                         .commit();
 
-                FLOAT_ELEMENT(expected).key("brokerLatency")
+                FLOAT_ELEMENT(expected).key("performanceStatistics.brokerLatency")
                         .displayedName("Broker latency (ms)")
                         .description("Time interval (in millis) between message sending to broker and receiving it on the device before queuing.")
                         .expertAccess()
@@ -223,7 +230,7 @@ namespace karabo {
                         //.warnHigh(10000LL)
                         .commit();
 
-                FLOAT_ELEMENT(expected).key("processingLatency")
+                FLOAT_ELEMENT(expected).key("performanceStatistics.processingLatency")
                         .displayedName("Processing latency (ms)")
                         .description("Time interval (in millis) between message sending to broker and reading it from the queue on the device.")
                         .expertAccess()
@@ -231,21 +238,22 @@ namespace karabo {
                         //.warnHigh(10000LL)
                         .commit();
 
-                UINT32_ELEMENT(expected).key("messageQueueSize")
+                UINT32_ELEMENT(expected).key("performanceStatistics.messageQueueSize")
                         .displayedName("Local message queue size")
                         .description("Current size of the local message queue.")
+                        .expertAccess()
                         .readOnly().initialValue(0)
                         //.warnHigh(100)
                         .commit();
 
-                INT64_ELEMENT(expected).key("latencyUpper")
+                INT64_ELEMENT(expected).key("performanceStatistics.latencyUpper")
                         .displayedName("Latency upper limit")
                         .description("Message latency above that the \"Traffic jam\" flag will be set.")
                         .assignmentOptional().defaultValue(10000LL)
                         .adminAccess()
                         .commit();
 
-                INT64_ELEMENT(expected).key("latencyLower")
+                INT64_ELEMENT(expected).key("performanceStatistics.latencyLower")
                         .displayedName("Latency lower limit")
                         .description("Message latency below that the \"Traffic jam\" flag will be unset.")
                         .assignmentOptional().defaultValue(5000LL)
@@ -352,23 +360,23 @@ namespace karabo {
                 this->set(h, timestamp);
             }
 
-//            template <class PixelType>
-//            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
-//                this->set<PixelType>(key, image, getActualTimestamp());
-//            }
-//
-//            template <class PixelType>
-//            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp) {
-//                using namespace karabo::util;
-//
-//                Dims dims(image.dimX(), image.dimY(), image.dimZ());
-//                karabo::xip::RawImageData raw(image.pixelPointer(), image.size(), true, dims);
-//
-//                Hash hash(key, raw.hash());
-//                hash.setAttribute(key, "image", 1);
-//                m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
-//                emit("signalChanged", hash, getInstanceId());
-//            }
+            //            template <class PixelType>
+            //            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
+            //                this->set<PixelType>(key, image, getActualTimestamp());
+            //            }
+            //
+            //            template <class PixelType>
+            //            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp) {
+            //                using namespace karabo::util;
+            //
+            //                Dims dims(image.dimX(), image.dimY(), image.dimZ());
+            //                karabo::xip::RawImageData raw(image.pixelPointer(), image.size(), true, dims);
+            //
+            //                Hash hash(key, raw.hash());
+            //                hash.setAttribute(key, "image", 1);
+            //                m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
+            //                emit("signalChanged", hash, getInstanceId());
+            //            }
 
             /**
              * This function allows to write a CpuImage instead of an ImageElement to an output channel.
@@ -492,6 +500,7 @@ namespace karabo {
                     karabo::util::Hash tmp(hash);
                     std::vector<std::string> paths;
                     tmp.getPaths(paths);
+
                     BOOST_FOREACH(std::string path, paths) {
                         timestamp.toHashAttributes(tmp.getAttributes(path));
                     }
@@ -1062,23 +1071,27 @@ namespace karabo {
 
             void updateLatencies(float brokerLatency, float processingLatency, unsigned int messageQueueSize) {
 
-                // TODO Remove jam flag, once notification system is in place
-                bool jamFlag = this->get<bool>("trafficJam");
-                long long latencyUpper = this->get<long long>("latencyUpper");
-                long long latencyLower = this->get<long long>("latencyLower");
+                // updateLatencies
+                if (this->get<bool>("performanceStatistics.enable")) {
 
-                karabo::util::Hash h("brokerLatency", brokerLatency, "processingLatency", processingLatency, "messageQueueSize", messageQueueSize);
+                    // TODO Remove jam flag, once notification system is in place
+                    bool jamFlag = this->get<bool>("performanceStatistics.trafficJam");
+                    long long latencyUpper = this->get<long long>("performanceStatistics.latencyUpper");
+                    long long latencyLower = this->get<long long>("performanceStatistics.latencyLower");
 
-                if (jamFlag) {
-                    if (processingLatency < latencyLower)
-                        h.set("trafficJam", false);
-                } else {
-                    if (processingLatency > latencyUpper) {
-                        h.set("trafficJam", true);
-                        KARABO_LOG_WARN << "Processing latency " << processingLatency << " are higher than established limit : " << latencyUpper;
+                    karabo::util::Hash h("performanceStatistics.brokerLatency", brokerLatency, "performanceStatistics.processingLatency", processingLatency, "performanceStatistics.messageQueueSize", messageQueueSize);
+
+                    if (jamFlag) {
+                        if (processingLatency < latencyLower)
+                            h.set("performanceStatistics.trafficJam", false);
+                    } else {
+                        if (processingLatency > latencyUpper) {
+                            h.set("performanceStatistics.trafficJam", true);
+                            KARABO_LOG_WARN << "Processing latency " << processingLatency << " are higher than established limit : " << latencyUpper;
+                        }
                     }
+                    this->set(h);
                 }
-                this->set(h);
             }
 
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
