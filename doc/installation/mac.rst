@@ -18,7 +18,7 @@ Get and install python and required packages
 4. Download and install XQuartz (.dmg) from this location: http://xquartz.macosforge.org/landing/
 5. Customize xterm so that it respects .profile::
 
-   Open X11 and select Customize... from the Applications menu, double-click the menu item Terminal and change: “xterm” to “xterm -ls” (this means login shell)
+    Open X11 and select Customize... from the Applications menu, double-click the menu item Terminal and change: “xterm” to “xterm -ls” (this means login shell)
 
 6. Install MacPorts (install .dmg from www.macports.org)
 7. Install relevant packages using MacPorts. Go to a terminal and type::
