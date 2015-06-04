@@ -516,7 +516,7 @@ class _Manager(QObject):
         
         conf = self.deviceData[deviceId]
         # Schema already existent -> schema injected
-        if conf.status == "alive":
+        if conf.status in ("alive", "monitoring"):
             Network().onGetDeviceConfiguration(self.deviceData[deviceId])
         
         # Add configuration with schema to device data
@@ -540,6 +540,8 @@ class _Manager(QObject):
             device.status = "alive"
             # Trigger update scenes - to draw possible Workflow Connections
             self.signalUpdateScenes.emit()
+        if device.status == "alive" and device.visible > 0:
+            device.status = "monitoring"
 
 
     def handle_propertyHistory(self, deviceId, property, data):
