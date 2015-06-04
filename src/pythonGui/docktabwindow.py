@@ -127,10 +127,10 @@ class DockTabWindow(QTabWidget):
         if cw is self.lastWidget:
             return
 
-        if self.lastWidget is not None:
-            self.lastWidget.dockableWidget.notifyTabVisible(False)
         if cw is not None:
             cw.dockableWidget.notifyTabVisible(True)
+        if self.lastWidget is not None:
+            self.lastWidget.dockableWidget.notifyTabVisible(False)
         self.lastWidget = cw
 
 
