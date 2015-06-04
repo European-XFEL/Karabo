@@ -2067,7 +2067,14 @@ usage: tag PACKAGE_NAME PACKAGE_CATEGORY TAG_FROM TAG_NAME
 
 Examples:
 
-$0 tag beckhoffCom controlDevices branches/0.1 0.1.0
+(1) Tag new development from trunk
+  $0 tag beckhoffCom controlDevices trunk 0.1.0-1.2
+
+(2) Tag from an existing tag indicating validity for a new Karabo version
+  $0 tag beckhoffCom controlDevices tags/0.1.0-1.2 0.1.0-1.3
+
+(3) Tag from a branch for bug fixes or backports
+  $0 tag beckhoffCom controlDevices branches/0.1-1.2 0.1.1-1.2
 
 End-of-help
 
