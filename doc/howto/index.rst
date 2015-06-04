@@ -10,6 +10,7 @@ Contents:
    macro
    cppDevice
    pythonDevice
+   tagAndBranchDevices
    run
    widget
    
