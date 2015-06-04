@@ -486,7 +486,7 @@ class ProxyWidget(QWidget):
 
     @pyqtSlot(object, str, bool)
     def showStatus(self, configuration, status, error):
-        if status == "alive" and not error:
+        if status == "monitoring" and not error:
             self.marker.hide()
         else:
             if status != "offline" and error:
@@ -498,7 +498,8 @@ class ProxyWidget(QWidget):
                             noserver=icons.deviceOfflineNoServer,
                             noplugin=icons.deviceOfflineNoPlugin,
                             incompatible=icons.deviceIncompatible,
-                            offline=icons.deviceOffline).get(status)
+                            offline=icons.deviceOffline,
+                            alive=icons.deviceAlive).get(status)
             if icon is not None:
                 self.marker.setPixmap(icon.pixmap(16))
                 self.marker.setText("")
