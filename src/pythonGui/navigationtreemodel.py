@@ -132,6 +132,7 @@ class NavigationTreeModel(QAbstractItemModel):
             deviceNode.status = status
             deviceNode.visibility = visibility
             deviceNode.attributes = attrs
+            deviceNode.monitoring = False
 
 
     def updateData(self, config):
@@ -438,6 +439,8 @@ class NavigationTreeModel(QAbstractItemModel):
                 node = index.internalPointer()
                 if node.status == "error":
                     return icons.deviceInstanceError
+                if node.monitoring:
+                    return icons.deviceMonitored
                 else:
                     return icons.deviceInstance
 
