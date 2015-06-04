@@ -87,6 +87,7 @@ class Configuration(Box):
         "requested": a schema is requested, but didnt arrive yet
         "schema": the device has a schema, but no value yet
         "alive": everything is up-and-running
+        "monitoring": we are registered to monitor this device
 
         "noserver", "noplugin", and "incompatible" only make sense
         if we actually know the (future) server, so only for a device
@@ -97,7 +98,8 @@ class Configuration(Box):
     @status.setter
     def status(self, value):
         assert value in ('offline', 'noserver', 'noplugin', 'online',
-                         'incompatible', 'requested', 'schema', 'alive')
+                         'incompatible', 'requested', 'schema', 'alive',
+                         'monitoring')
         if value != self._status:
             self._status = value
         self.signalStatusChanged.emit(self, value, self.error)
@@ -139,7 +141,7 @@ class Configuration(Box):
         if self.status == "offline" and self.visible > 0:
             Network().onGetDeviceSchema(self.id)
             self.status = "requested"
-        elif self.status not in ("requested", "schema", "alive"):
+        elif self.status not in ("requested", "schema", "alive", "monitoring"):
             self.status = "online"
         else:
             self.signalStatusChanged.emit(self, self.status, self.error)
@@ -195,6 +197,8 @@ class Configuration(Box):
         self.visible -= 1
         if self.visible == 0 and self.status not in ("offline", "requested"):
             Network().onStopMonitoringDevice(self.id)
+            if self.status == "monitoring":
+                self.status = "alive"
 
 
     def __exit__(self, a, b, c):
