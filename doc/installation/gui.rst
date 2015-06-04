@@ -9,7 +9,7 @@ The recommended python suites are `Python(x,y) <https://code.google.com/p/python
 However, as python(x,y) still lacks version with Python 3, currently the only possibility is to use WinPython. 
 The choice of python suite is dictated by availability of almost all packages required by karaboGUI (like PyQwt, guiqwt, guidata).
 
-Additionally, you need to install one module called suds-jurko in Python(x,y) or WinPython using their package managers.
+Additionally, you need to install one module called suds-jurko in Python(x,y) or WinPython using their package managers (for instance WinPython Control Panel).
 
 Below you will find detailed instruction how to install WinPython and karaboGUI.
 
@@ -73,17 +73,20 @@ Installation instructions
 Get and install WinPython
 -------------------------
 
-Download the latest installation package `here <https://sourceforge.net/projects/winpython/files/WinPython_3.4/3.4.3.3/>`_ (currently 3.4.3.3 using Python 3.4.3) and install it following `instructions <https://github.com/winpython/winpython/wiki/Installation>`_. After installation register your WinPython distribution to Windows.
+Download the latest installation package `here <https://sourceforge.net/projects/winpython/files/WinPython_3.4/3.4.3.3/>`_ (currently 3.4.3.3 using Python 3.4.3) and install it following `instructions <https://github.com/winpython/winpython/wiki/Installation>`_. After installation register your WinPython distribution to Windows. From now on, you have Start Menu entry for WinPython.
 
 Get and install additional python packages
 ------------------------------------------
 
-To download the additional package suds-jurko 0.6 follow these instructions:
+To install the additional package suds-jurko 0.6 follow these instructions:
 
 - from the WinPython installation directory, launch the WinPython Command Prompt.
 - then use pip at the prompt to install the package typing 'pip install suds-jurko'.
 
+or use WinPython Control Panel:
 
+- download suds-jurko from `here <http://pypi.python.org/packages/source/s/suds-jurko/suds-jurko-0.6.zip>`_
+- open WinPython Control Panel, drag&drop downloaded file and install it (WinPython instructions `here <https://github.com/winpython/winpython/wiki/Installing-Additional-Packages>`_). 
 
 Get and install karaboGUI
 -------------------------
