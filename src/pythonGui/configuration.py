@@ -72,6 +72,11 @@ class Configuration(Box):
         if self.status == "requested":
             if self.visible > 0:
                 Network().onStartMonitoringDevice(self.id)
+                index = manager.Manager().systemTopology.findIndex(self.id)
+                if index.isValid():
+                    index.internalPointer().monitoring = True
+                    manager.Manager().systemTopology.dataChanged.emit(
+                        index, index)
             self.status = "schema"
 
 
@@ -189,6 +194,10 @@ class Configuration(Box):
                 Network().onGetDeviceSchema(self.id)
                 self.status = "requested"
             Network().onStartMonitoringDevice(self.id)
+            index = manager.Manager().systemTopology.findIndex(self.id)
+            if index.isValid():
+                index.internalPointer().monitoring = True
+                manager.Manager().systemTopology.dataChanged.emit(index, index)
 
 
     __enter__ = addVisible
@@ -197,6 +206,10 @@ class Configuration(Box):
         self.visible -= 1
         if self.visible == 0 and self.status not in ("offline", "requested"):
             Network().onStopMonitoringDevice(self.id)
+            index = manager.Manager().systemTopology.findIndex(self.id)
+            if index.isValid():
+                index.internalPointer().monitoring = False
+                manager.Manager().systemTopology.dataChanged.emit(index, index)
             if self.status == "monitoring":
                 self.status = "alive"
 
