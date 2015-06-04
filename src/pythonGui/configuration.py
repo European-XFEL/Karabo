@@ -193,7 +193,7 @@ class Configuration(Box):
 
     def removeVisible(self):
         self.visible -= 1
-        if self.visible == 0 and self.status != "offline":
+        if self.visible == 0 and self.status not in ("offline", "requested"):
             Network().onStopMonitoringDevice(self.id)
 
 
