@@ -39,13 +39,7 @@ Get and install python and required packages
     sudo port select --set nosetests nosetests34
     sudo port install py34-suds-jurko
 
-8. Install quamash, guidata and guiqwt::
-
-    cd ~/Downloads
-    wget https://pypi.python.org/packages/source/Q/Quamash/Quamash-0.4.1.tar.gz
-    tar xvzf Quamash-0.4.1.tar.gz
-    cd Quamash-0.4.1
-    python setup.py install --user
+8. Install guidata and guiqwt::
 
     cd ~/Downloads
     wget http://guidata.googlecode.com/files/guidata-1.6.1.zip
