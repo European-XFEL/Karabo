@@ -74,6 +74,7 @@ class Configuration(Box):
                 Network().onStartMonitoringDevice(self.id)
                 index = manager.Manager().systemTopology.findIndex(self.id)
                 if index.isValid():
+                    assert not index.internalPointer().monitoring
                     index.internalPointer().monitoring = True
                     manager.Manager().systemTopology.dataChanged.emit(
                         index, index)
@@ -196,6 +197,7 @@ class Configuration(Box):
             Network().onStartMonitoringDevice(self.id)
             index = manager.Manager().systemTopology.findIndex(self.id)
             if index.isValid():
+                assert not index.internalPointer().monitoring
                 index.internalPointer().monitoring = True
                 manager.Manager().systemTopology.dataChanged.emit(index, index)
 
@@ -208,6 +210,7 @@ class Configuration(Box):
             Network().onStopMonitoringDevice(self.id)
             index = manager.Manager().systemTopology.findIndex(self.id)
             if index.isValid():
+                assert index.internalPointer().monitoring
                 index.internalPointer().monitoring = False
                 manager.Manager().systemTopology.dataChanged.emit(index, index)
             if self.status == "monitoring":
