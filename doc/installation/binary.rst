@@ -18,7 +18,7 @@ If one of the option is for you simply follow the few steps below:
 Get and install Karabo Framework
 ===================================
 
-A self extracting shell script is available `here <ftp://karabo:framework@ftp.desy.de/karaboFramework/tags/1.3.0/>`_.
+A self extracting shell script is available `here <ftp://karabo:framework@ftp.desy.de/karaboFramework/tags>`_.
 
 Select the correct installer for your operating system and download it to some local folder.
 
