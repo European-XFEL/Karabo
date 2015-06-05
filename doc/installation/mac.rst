@@ -53,14 +53,10 @@ Get and install python and required packages
     cd guiqwt-2.3.1
     python setup.py install --user
 
-9. Install PyQwt
-
-Download PyQwt `here <http://prdownloads.sourceforge.net/pyqwt/PyQwt-5.2.0.tar.gz?download>`_, download patchPyQwt `here <ftp://karabo:framework@ftp.desy.de/karaboGui/>`_
-Untar PyQwt and patch it::
+9. Download PyQwt `here <http://prdownloads.sourceforge.net/pyqwt/PyQwt-5.2.0.tar.gz?download>`_, download patchPyQwt `here <ftp://karabo:framework@ftp.desy.de/karaboGui/>`_. Untar PyQwt, patch it and install::
 
     patch -p0 < patchPyQwt
 
-Then::
 
     cd PyQwt-5.2.0/configure
     python -c "from lib2to3.main import main;main('lib2to3.fixes')" -w configure.py
