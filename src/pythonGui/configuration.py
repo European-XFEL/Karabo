@@ -194,12 +194,13 @@ class Configuration(Box):
             if self.status == "online":
                 Network().onGetDeviceSchema(self.id)
                 self.status = "requested"
-            Network().onStartMonitoringDevice(self.id)
-            index = manager.Manager().systemTopology.findIndex(self.id)
-            if index.isValid():
-                assert not index.internalPointer().monitoring
-                index.internalPointer().monitoring = True
-                manager.Manager().systemTopology.dataChanged.emit(index, index)
+            else:
+                Network().onStartMonitoringDevice(self.id)
+                idx = manager.Manager().systemTopology.findIndex(self.id)
+                if idx.isValid():
+                    assert not idx.internalPointer().monitoring
+                    idx.internalPointer().monitoring = True
+                    manager.Manager().systemTopology.dataChanged.emit(idx, idx)
 
 
     __enter__ = addVisible
