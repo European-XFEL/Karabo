@@ -48,7 +48,7 @@ branches
 
 Tagging and Branching Strategy
 ==============================
-Since usually only one or very few developers write device code, 
+Since usually only one or very few developers write on the same device code, 
 a rather linear development is expected. Therefore, branches are not
 necessarily needed and a simple tagging and branching model is suggested:
 
