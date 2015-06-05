@@ -46,6 +46,7 @@ namespace karabo {
             }
 
             void stop() {
+                m_work.reset();
                 if (!m_ioservice)
                     throw KARABO_PARAMETER_EXCEPTION("AsioIOService is not configured");
                 m_ioservice->stop();
