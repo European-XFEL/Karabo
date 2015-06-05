@@ -46,7 +46,7 @@ sudo port select --set python python34
 sudo port install py34-pyqt4
 sudo port install py34-numpy py34-scipy
 sudo port install py34-matplotlib +qt4
-sudo port install py34-pyqwt
+sudo port install py34-pyqwt   ( not existing yet, see manual installation below)
 sudo port install py34-cython
 sudo port select --set cython cython34
 sudo port install py34-ipython -scientific +notebook +pyqt4
@@ -69,6 +69,20 @@ wget http://guiqwt.googlecode.com/files/guiqwt-2.3.1.zip
 unzip guiqwt-2.3.1.zip 
 cd guiqwt-2.3.1
 python setup.py install --user
+
+9. Install pyqwt
+
+Download qwt5 from http://prdownloads.sourceforge.net/pyqwt/PyQwt-5.2.0.tar.gz?download, download patch file from here.
+Untar PyQwt and patch it:
+
+patch -p0 < patchPyQwt
+
+Then:
+cd PyQwt-5.2.0/configure
+python -c "from lib2to3.main import main;main('lib2to3.fixes')" -w configure.py
+python configure.py -Q ../qwt-5.2
+make 
+make install
 
 
 
