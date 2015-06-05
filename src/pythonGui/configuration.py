@@ -73,7 +73,7 @@ class Configuration(Box):
             if self.visible > 0:
                 Network().onStartMonitoringDevice(self.id)
                 index = manager.Manager().systemTopology.findIndex(self.id)
-                if index.isValid():
+                if index is not None and index.isValid():
                     assert not index.internalPointer().monitoring
                     index.internalPointer().monitoring = True
                     manager.Manager().systemTopology.dataChanged.emit(
@@ -131,15 +131,14 @@ class Configuration(Box):
                 attrs = manager.Manager().systemHash[k][self.id, ...]
             except KeyError:
                 continue
+            if len(attrs) < 1:
+                continue
             break
         else:
             self.error = False
             self.status = "offline"
             return
-        
-        if len(attrs) < 1:
-            return
-        
+
         self.classId = attrs.get("classId")
         self.serverId = attrs.get("serverId")
         error = attrs.get("status") == "error"
@@ -197,7 +196,7 @@ class Configuration(Box):
             else:
                 Network().onStartMonitoringDevice(self.id)
                 idx = manager.Manager().systemTopology.findIndex(self.id)
-                if idx.isValid():
+                if idx is not None and idx.isValid():
                     assert not idx.internalPointer().monitoring
                     idx.internalPointer().monitoring = True
                     manager.Manager().systemTopology.dataChanged.emit(idx, idx)
@@ -210,7 +209,7 @@ class Configuration(Box):
         if self.visible == 0 and self.status not in ("offline", "requested"):
             Network().onStopMonitoringDevice(self.id)
             index = manager.Manager().systemTopology.findIndex(self.id)
-            if index.isValid():
+            if index is not None and index.isValid():
                 assert index.internalPointer().monitoring
                 index.internalPointer().monitoring = False
                 manager.Manager().systemTopology.dataChanged.emit(index, index)
