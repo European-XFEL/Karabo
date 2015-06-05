@@ -419,6 +419,8 @@ class ProjectModel(QStandardItemModel):
 
 
     def updateMacros(self):
+        """ put the running macros from the systemHash into the project model
+        """
         macros = {}
         hash = manager.Manager().systemHash.get("macro", Hash())
         for k, v, a in hash.iterall():
