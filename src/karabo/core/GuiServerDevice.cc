@@ -371,6 +371,7 @@ namespace karabo {
 
         void GuiServerDevice::onStartMonitoringDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
+                bool registerFlag = false;
                 string deviceId = info.get<string > ("deviceId");
 
                 {
@@ -385,13 +386,14 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
                     // Increase count of device in visible devices map
                     m_monitoredDevices[deviceId]++;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice " << deviceId << " " << m_monitoredDevices[deviceId];
+                    if (m_monitoredDevices[deviceId] == 1) registerFlag = true;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice " << deviceId << " (" << m_monitoredDevices[deviceId] << ")";
                 }
 
-                if (m_monitoredDevices[deviceId] == 1) { // Fresh device on the shelf
+                if (registerFlag) { // Fresh device on the shelf
                     remote().registerDeviceMonitor(deviceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
                 }
-
+                
                 // Send back fresh information about device
                 // TODO This could check a dirty-flag whether the device changed since last time seen
                 onGetDeviceConfiguration(channel, info);
@@ -402,10 +404,12 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onStopMonitoringDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onStopMonitoringDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {                        
+            
             try {
+                bool unregisterFlag = false;
                 string deviceId = info.get<string > ("deviceId");
-
+                
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
@@ -415,14 +419,14 @@ namespace karabo {
                 {
                     boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
                     m_monitoredDevices[deviceId]--;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice " << deviceId << " " << m_monitoredDevices[deviceId];
+                    if (m_monitoredDevices[deviceId] == 0) unregisterFlag = true;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice " << deviceId << " (" << m_monitoredDevices[deviceId] << ")";
                 }
 
-                if (m_monitoredDevices[deviceId] == 0) {
+                if (unregisterFlag) {
                     // Disconnect signal/slot from broker
                     remote().unregisterDeviceMonitor(deviceId);
                 }
-
 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onStopMonitoringDevice(): " << e.userFriendlyMsg();
@@ -838,8 +842,10 @@ namespace karabo {
 
         void GuiServerDevice::deviceChangedHandler(const std::string& deviceId, const karabo::util::Hash& what) {
             try {
-                Hash h("type", "deviceConfiguration", "deviceId", deviceId, "configuration", what);
-
+                
+                KARABO_LOG_FRAMEWORK_DEBUG << "deviceChangedHandler" << ": deviceId = \"" << deviceId << "\"";
+                
+                Hash h("type", "deviceConfiguration", "deviceId", deviceId, "configuration", what);                
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
                 for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {

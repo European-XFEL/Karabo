@@ -188,7 +188,7 @@ namespace karabo {
             m_inboundMessagePrefix.resize(sizeofLength);
             boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
                                     boost::bind(&karabo::net::TcpChannel::onSizeInBytesAvailable,
-                                                shared_from_this(), handler, boost::asio::placeholders::bytes_transferred,
+                                                this, handler, boost::asio::placeholders::bytes_transferred,
                                                 boost::asio::placeholders::error));
         }
 
@@ -213,7 +213,7 @@ namespace karabo {
 
         void TcpChannel::readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
             boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
-                                    boost::bind(&karabo::net::TcpChannel::onBytesAvailable, shared_from_this(), handler,
+                                    boost::bind(&karabo::net::TcpChannel::onBytesAvailable, this, handler,
                                                 boost::asio::placeholders::error));
         }
 

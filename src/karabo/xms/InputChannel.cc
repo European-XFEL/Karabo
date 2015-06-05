@@ -26,6 +26,8 @@ namespace karabo {
         //        KARABO_REGISTER_FOR_CONFIGURATION(AbstractInput, Input<std::vector<char> >, InputChannel<std::vector<char> >)
         //        KARABO_REGISTER_FOR_CONFIGURATION(Input<std::vector<char> >, InputChannel<std::vector<char> >)
 
+        
+        static boost::mutex s_shutdownPreventMutex;
 
         void InputChannel::expectedParameters(karabo::util::Schema& expected) {
             using namespace karabo::util;
@@ -107,20 +109,23 @@ namespace karabo {
 
 
         InputChannel::~InputChannel() {
+            // Acquire 2 mutexes
+            s_shutdownPreventMutex.lock();
             boost::mutex::scoped_lock lock(m_shutdownPreventMutex);
-
+            
             if (m_tcpIoServiceThread.joinable()) {
                 m_tcpIoService->stop();
                 m_tcpIoServiceThread.join();
             }
-            
-            KARABO_LOG_FRAMEWORK_DEBUG << "***** InputChannel DTOR was called for channelId = " << m_channelId;
-            
             // Close all TCP channels to devices output channels
             m_tcpChannels.clear();
             m_tcpConnections.clear();
+            s_shutdownPreventMutex.unlock();
+            // At this point in time all channels are closed and "onTcpChannelRead" will know that
             
             MemoryType::unregisterChannel(m_channelId);
+            KARABO_LOG_FRAMEWORK_DEBUG << "***** InputChannel DTOR was called for channelId = " << m_channelId;
+            
         }
 
 
@@ -293,8 +298,21 @@ namespace karabo {
 
 
         void InputChannel::onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
+
+            // acquire "static" (class level) mutex
+            s_shutdownPreventMutex.lock();   
+            
+            // Check if the channel is dead
+            if (!channel || !channel->isOpen()) {
+                s_shutdownPreventMutex.unlock();
+                // channel is dead so don't touch "member" mutex: it is invalid!
+                return;
+            }
+            
+            // acquire "member variable" mutex to postpone "InputChannel" DTOR
             boost::mutex::scoped_lock lockShutdown(m_shutdownPreventMutex);
-            if (!channel || !channel->isOpen()) return;
+            // unlock "static" mutex to allow other "InputChannel"'s to work
+            s_shutdownPreventMutex.unlock();
             
             try {
 
@@ -312,9 +330,9 @@ namespace karabo {
                     if (this->getMinimumNumberOfData() <= 0) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering another compute";
                         this->swapBuffers();
-                        m_mutex.unlock(); // TODO scoped in case of exception thrown is callback code
+                        //m_mutex.unlock(); // TODO scoped in case of exception thrown is callback code
                         this->triggerIOEvent();
-                        m_mutex.lock();
+                        //m_mutex.lock();
                     }
 
                     if (m_eosChannels.size() == m_tcpChannels.size()) {
