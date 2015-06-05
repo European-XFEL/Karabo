@@ -30,7 +30,7 @@ Get and install python and required packages
     sudo port install py34-pyqt4
     sudo port install py34-numpy py34-scipy
     sudo port install py34-matplotlib +qt4
-    sudo port install py34-pyqwt
+    sudo port install py34-pyqwt  (not existing yet, see manual installation below)
     sudo port install py34-cython
     sudo port select --set cython cython34
     sudo port install py34-ipython -scientific +notebook +pyqt4
@@ -52,6 +52,25 @@ Get and install python and required packages
     unzip guiqwt-2.3.1.zip
     cd guiqwt-2.3.1
     python setup.py install --user
+
+9. Install PyQwt
+
+Download PyQwt `here <http://prdownloads.sourceforge.net/pyqwt/PyQwt-5.2.0.tar.gz?download>`_, download patchPyQwt `here <ftp://karabo:framework@ftp.desy.de/karaboGui/>`_
+Untar PyQwt and patch it::
+
+    patch -p0 < patchPyQwt
+
+Then::
+
+    cd PyQwt-5.2.0/configure
+    python -c "from lib2to3.main import main;main('lib2to3.fixes')" -w configure.py
+    python configure.py -Q ../qwt-5.2
+    make
+    make install
+
+
+
+
 
 Get and install karaboGui source distribution
 =============================================
