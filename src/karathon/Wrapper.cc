@@ -13,6 +13,7 @@
 #include <karabo/util/Schema.hh>
 #include <karabo/xip/CpuImage.hh>
 #include "RawImageDataWrap.hh"
+#include "PyXmsInputOutputChannel.hh"
 
 using namespace std;
 //using namespace karabo::util;
@@ -217,6 +218,12 @@ namespace karathon {
             } else if (operand.type() == typeid (karabo::xip::RawImageData)) {
                 karabo::xip::RawImageData raw = boost::any_cast<karabo::xip::RawImageData>(operand);
                 return bp::object(boost::shared_ptr<karabo::xip::RawImageData>(new karabo::xip::RawImageData(raw)));
+            } else if (operand.type() == typeid (karabo::xms::ImageData)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData>(operand));
+            } else if (operand.type() == typeid (karabo::xms::NDArray)) {
+                return bp::object(boost::any_cast<karabo::xms::NDArray>(operand));
+            } else if (operand.type() == typeid (karabo::xms::Data)) {
+                return bp::object(boost::any_cast<karabo::xms::Data>(operand));
             } else if (operand.type() == typeid (karabo::util::Hash)) {
                 return bp::object(boost::any_cast<karabo::util::Hash>(operand));
             } else if (operand.type() == typeid (karabo::util::Hash::Pointer)) {
