@@ -11,6 +11,7 @@
 
 #include <karabo/util/Configurator.hh>
 #include <karabo/xms/SlotElement.hh>
+#include <karabo/core/BaseFsm.hh>
 #include <karabo/util/karaboDll.hh>
 
 #include "BaseFsm.hh"

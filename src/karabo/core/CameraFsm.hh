@@ -12,6 +12,7 @@
 #ifndef KARABO_CORE_CAMERAFSM_HH
 #define	KARABO_CORE_CAMERAFSM_HH
 
+#include <karabo/core/BaseFsm.hh>
 #include "Device.hh"
 
 namespace karabo {
