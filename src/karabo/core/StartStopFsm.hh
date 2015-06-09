@@ -13,6 +13,7 @@
 #define	KARABO_CORE_START_STOP_FSM_HH
 
 #include <karabo/xms/SlotElement.hh>
+#include <karabo/core/BaseFsm.hh>
 #include "Device.hh"
 
 namespace karabo {
