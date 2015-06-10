@@ -5,7 +5,8 @@ from asyncio import (async, coroutine, start_server, get_event_loop,
 from functools import wraps
 
 from karabo.device_client import DeviceClientBase
-from karabo import Int, Assignment, openmq
+from karabo.api import Int, Assignment
+from karabo import openmq
 from karabo.hash import Hash
 from karabo.p2p import Channel
 from karabo.signalslot import slot
@@ -213,7 +214,7 @@ if __name__ == "__main__":
     set_event_loop(loop)
 
     d = GuiServer({"_deviceId_": "GuiServer"})
-    async(d.run_async())
+    d.startInstance()
     try:
         loop.run_forever()
     finally:
