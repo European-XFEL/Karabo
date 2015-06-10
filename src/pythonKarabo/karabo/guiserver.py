@@ -1,12 +1,15 @@
 import karabo
 
-from asyncio import (async, coroutine, start_server, get_event_loop,
-                     IncompleteReadError)
+from asyncio import (async, coroutine, Future, start_server, get_event_loop,
+                     IncompleteReadError, open_connection, sleep)
 from functools import wraps
+import os
+from weakref import WeakValueDictionary
 
 from karabo.device_client import DeviceClientBase
 from karabo.api import Int, Assignment
 from karabo import openmq
+from karabo.enums import Unit, MetricPrefix
 from karabo.hash import Hash
 from karabo.p2p import Channel
 from karabo.signalslot import slot
@@ -14,10 +17,61 @@ from karabo.signalslot import slot
 
 def parallel(f):
     f = coroutine(f)
+
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         return async(f(self, *args, **kwargs))
     return wrapper
+
+
+class Subscription:
+    def __init__(self, channelName, parent):
+        self.instance, self.name = channelName.split(":")
+        self.parent = parent
+        self.triggered = {}
+
+    @coroutine
+    def start(self):
+        ok, info = yield from self.parent.call(
+            self.instance, "slotGetOutputChannelInformation", self.name,
+            os.getpid())
+        if not ok:
+            return
+        self.channel = Channel(
+            *(yield from open_connection(info["hostname"], int(info["port"]))))
+
+    @coroutine
+    def trigger(self):
+        h = Hash("reason", "hello", "instanceId", self.parent.deviceId,
+                 "memoryLocation", "remote",
+                 "dataDistribution", "copy",
+                 "onSlowness", "drop")
+        self.channel.writeHash(h, "XML")
+        r = yield from self.channel.readHash("XML")
+        if "endOfStream" in r:
+            for f in self.triggered.values():
+                f.set_result(None)
+        bt = yield from self.channel.readBytes()
+        yield from sleep(self.parent.delayOnInput / 1000)
+        l = r["byteSizes"][0]
+        data = Hash.decode(bt[:l], "Bin")
+        for f in self.triggered.values():
+            f.set_result(data)
+        self.triggered = {}
+        return True
+
+    def unsubscribe(self, channel):
+        f = self.triggered.pop(channel, None)
+        if f is not None:
+            f.set_result(None)
+
+    @coroutine
+    def update(self, channel):
+        trigger = not self.triggered
+        future = self.triggered[channel] = Future()
+        if trigger:
+            yield from self.trigger()
+        return (yield from future)
 
 
 class GuiServer(DeviceClientBase):
@@ -25,12 +79,20 @@ class GuiServer(DeviceClientBase):
                description="Local port for this server",
                assignment=Assignment.OPTIONAL, defaultValue=44444)
 
+    delayOnInput = Int(
+        displayedName="Delay on Input channel",
+        description="Some delay before informing output channel about "
+                    "readiness for next data.",
+        assignment=Assignment.OPTIONAL, defaultValue=500,
+        unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MILLI)
+
     def __init__(self, configuration):
         super().__init__(configuration)
 
         self.channels = set()
         self.deviceChannels = {}  # which channels is this device visbile in
         self.histories = {}
+        self.subscriptions = WeakValueDictionary()
 
     def run(self):
         async(self.log_handler())
@@ -63,6 +125,8 @@ class GuiServer(DeviceClientBase):
             for k in list(self.deviceChannels):
                 self.handle_stopMonitoringDevice(channel, k)
             self.channels.remove(channel)
+            for v in self.subscriptions.values():
+                v.unsubscribe(channel)
 
     def handle_error(self, channel, **kwargs):
         print("ERROR", kwargs)
@@ -108,6 +172,25 @@ class GuiServer(DeviceClientBase):
             self._ss.disconnect(deviceId, "signalChanged", self.slotChanged)
             self._ss.disconnect(deviceId, "signalSchemaUpdated",
                                 self.slotSchemaUpdated)
+
+    @parallel
+    def handle_subscribeNetwork(self, channel, channelName, subscribe):
+        subs = self.subscriptions.get(channelName)
+        if not subscribe:
+            if subs is not None:
+                subs.unsubscribe(channel)
+            return
+
+        if subs is None:
+            subs = self.subscriptions["channelName"] = \
+                Subscription(channelName, self)
+            yield from subs.start()
+        while True:
+            data = yield from subs.update(channel)
+            if data is None:
+                return
+            self.respond(channel, "networkData", name=channelName, data=data)
+            yield from channel.writer.drain()
 
     @parallel
     def handle_getClassSchema(self, channel, serverId, classId):
