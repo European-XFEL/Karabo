@@ -169,6 +169,7 @@ namespace karabo {
 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onConnect(): " << e.userFriendlyMsg();
+                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));                
             }
         }
 
@@ -228,7 +229,8 @@ namespace karabo {
                 }
                 channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1));
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in onRead(): " << e.userFriendlyMsg();
+                KARABO_LOG_ERROR << "Problem in onRead(): " << e.userFriendlyMsg();                
+                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1));
             }
         }
 
