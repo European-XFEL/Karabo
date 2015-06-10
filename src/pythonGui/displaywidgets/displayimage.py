@@ -96,8 +96,11 @@ class DisplayImage(DisplayWidget):
             raise RuntimeError('Image has less than two dimensions')
 
         if self.image is None:
-            self.image = make.image(npy)
+            # Some dtypes (eg uint32) are not displayed -> astype('float')
+            self.image = make.image(npy.astype('float'))
             self.plot.add_item(self.image)
         else:
-            self.image.set_data(npy)
+            self.image.set_data(npy.astype('float'))
             self.plot.replot()
+            # Also update colormap axis for Image
+            self.plot.update_colormap_axis(self.plot.items[1])
