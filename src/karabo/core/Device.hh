@@ -926,8 +926,7 @@ namespace karabo {
                 connect("", "signalNotification", "*", "slotNotification", NO_TRACK);
 
                 SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
-                connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", NO_TRACK);
-
+                
                 KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
                 KARABO_SLOT(slotGetConfiguration)
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
