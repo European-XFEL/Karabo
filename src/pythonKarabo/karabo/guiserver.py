@@ -182,7 +182,7 @@ class GuiServer(DeviceClientBase):
             return
 
         if subs is None:
-            subs = self.subscriptions["channelName"] = \
+            subs = self.subscriptions[channelName] = \
                 Subscription(channelName, self)
             yield from subs.start()
         while True:
