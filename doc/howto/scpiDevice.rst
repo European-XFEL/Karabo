@@ -13,15 +13,21 @@ From `wikipedia <http://en.wikipedia.org/wiki/Standard_Commands_for_Programmable
 How to Create a SCPI Karabo Device
 ==================================
 
-Create a python Karabo Device, called for example myScpiDevice::
+Create a python Karabo Device, called for example myScpiDevice:
+
+.. code-block:: bash
 
     ./karabo new myScpiDevice controlDevices pythonDevice reuseFsm MyScpiDevice
 
-Go into the base directory of the project::
+Go into the base directory of the project:
+
+.. code-block:: bash
 
     cd packages/controlDevices/myScpiDevice
 
-Add there a DEPENDS file like this::
+Add there a DEPENDS file like this:
+
+.. code-block:: bash
 
     # type        category        package    tag
     dependency    dependencies    scpi       branches/1.0-1.3
@@ -44,9 +50,11 @@ ScpiStartStopFsm has three top states: Disconnected, Ok and Error, and the Ok st
 Writing an Ok/Error Device
 ==========================
 
-The state machine to be used is ScpiOkErrorFsm. The device is very simple and should look like::
+The state machine to be used is ScpiOkErrorFsm. The device is very simple and should look like:
 
-    !/usr/bin/env python
+.. code-block:: python
+
+    #!/usr/bin/env python
     
     __author__="john.smith@xfel.eu"
     __date__ ="June  8, 2015, 01:53 PM"
@@ -79,9 +87,11 @@ The SCPI parameters can be accessed using Karabo expected parameters (more detai
 Writing an On/Off Device
 ========================
 
-The state machine to be used is ScpiOnOffFsm. The device should look pretty much like the Ok/Error one, except for the state machine to be used. There is also a hook, followHardwareState, which can be used to force the Karabo device to follow the hardware state. ::
+The state machine to be used is ScpiOnOffFsm. The device should look pretty much like the Ok/Error one, except for the state machine to be used. There is also a hook, followHardwareState, which can be used to force the Karabo device to follow the hardware state.
 
-    !/usr/bin/env python
+.. code-block:: python
+
+    #!/usr/bin/env python
     
     __author__="john.smith@xfel.eu"
     __date__ ="June  8, 2015, 01:53 PM"
@@ -119,9 +129,11 @@ In the followHardwareState() method you can use self.followOn() and self.followO
 Writing a Start/Stop Device
 ===========================
 
-The state machine to be used is ScpiStartStopFsm. There are three additional hooks: preAcquisition() will be executed when entering the startedState, postAcquisition() will be executed when leaving the startedState, processAsyncData(data) will be executed in startedState, each time data are received asynchronously. The device should look like::
+The state machine to be used is ScpiStartStopFsm. There are three additional hooks: preAcquisition() will be executed when entering the startedState, postAcquisition() will be executed when leaving the startedState, processAsyncData(data) will be executed in startedState, each time data are received asynchronously. The device should look like
 
-    !/usr/bin/env python
+.. code-block:: python
+
+    #!/usr/bin/env python
     
     __author__="john.smith@xfel.eu"
     __date__ ="June  9, 2015, 01:55 PM"
@@ -183,7 +195,9 @@ Parameters to be read/written to the SCPI instrument must have the 'scpi' tag. I
 The "sendOnConnect" Parameter
 -----------------------------
 
-Commands to be sent to the instrument when the Karabo device connects to it (for example some initial configuration), can be listed in the __init__ function; for example::
+Commands to be sent to the instrument when the Karabo device connects to it (for example some initial configuration), can be listed in the __init__ function; for example
+
+.. code-block:: python
 
     self.sendOnConnect = ['TRIG:LEV 10', 'TRIG:SOURCE EXT', 'SYST:COMM:SER:BAUD 19200']
 
@@ -193,7 +207,9 @@ These commands will be sent before the expected parameters with "writeOnConnect"
 Aliases
 -------
 
-The SCPI commands and queries corresponding to writing and reading any parameter must be written in the parameter alias. Different fields in the alias have to be separated by semicolons (;) or a different separator (as explained in :ref:`alias-separator-section` Section). For example::
+The SCPI commands and queries corresponding to writing and reading any parameter must be written in the parameter alias. Different fields in the alias have to be separated by semicolons (;) or a different separator (as explained in :ref:`alias-separator-section` Section). For example
+
+.. code-block:: python
 
     INT32_ELEMENT(expected).key("resolutionMode")
             .tags("scpi poll")
@@ -216,9 +232,11 @@ The third field contains the query command (ie >S1H?) and its parameters (none).
 The "aliasSeparator" Parameter
 ------------------------------
 
-The separator for the fields in the alias is by default the semicolon (;), but can be changed to a different one in the __init__ function; for example::
+The separator for the fields in the alias is by default the semicolon (;), but can be changed to a different one in the __init__ function; for example:
 
-        self.aliasSeparator = "|"
+.. code-block:: python
+
+    self.aliasSeparator = "|"
 
 will change it to the pipe character (|).
 
@@ -226,11 +244,15 @@ will change it to the pipe character (|).
 The "terminator" Parameter
 --------------------------
 
-The command terminator -  to be used in the communications between the Karabo device and the SCPI instrument - can be set in two different ways. For a given device, the command terminator is usually known and fixed, therefore should be hard-coded in the Karabo device. This can be done by adding a line like this to the __init__ function::
+The command terminator -  to be used in the communications between the Karabo device and the SCPI instrument - can be set in two different ways. For a given device, the command terminator is usually known and fixed, therefore should be hard-coded in the Karabo device. This can be done by adding a line like this to the __init__ function:
+
+.. code-block:: python
 
     self.commandTerminator = "\r\n" # The command terminator
 
-The second way to set the command terminator is by adding the "terminator" expected parameter. This should be done for "generic" devices, for which different terminators should be available at instantiation time. For example:: 
+The second way to set the command terminator is by adding the "terminator" expected parameter. This should be done for "generic" devices, for which different terminators should be available at instantiation time. For example:
+
+.. code-block:: python
 
     # Re-define default value and options
     STRING_ELEMENT(expected).key("terminator")
@@ -247,11 +269,15 @@ If the terminator is not set in the Karabo device, the default one will be used 
 The "socketTimeout" Parameter
 -----------------------------
 
-The socket read/write timeout (in seconds) can be redifined in __init__ with something like::
+The socket read/write timeout (in seconds) can be redifined in __init__ with something like:
+
+.. code-block:: python
 
     self.socketTimeout = 5.0
  
-A second way to set it is by adding the "socketTimeout" expected parameter. In this way the timeout can be changed during the lifetime of the Karabo device. For example::
+A second way to set it is by adding the "socketTimeout" expected parameter. In this way the timeout can be changed during the lifetime of the Karabo device. For example:
+
+.. code-block:: python
 
     FLOAT_ELEMENT(expected).key("socketTimeout")
             .displayedName("Socket Timeout")
@@ -269,7 +295,9 @@ This value is normally ok, but some instruments (eg agilentMultimeterPy) need lo
 On/Off (and Start/Stop) Slots
 -----------------------------
 
-For On/Off (Start/Stop) devices, the on/off (start/stop) slots are already defined in the state machines. What you have to do, is to set the SCPI command in the slots's alias. For example, for the start/stop::
+For On/Off (Start/Stop) devices, the on/off (start/stop) slots are already defined in the state machines. What you have to do, is to set the SCPI command in the slots's alias. For example, for the start/stop:
+
+.. code-block:: python
 
     # Define alias for the "start" slot
     OVERWRITE_ELEMENT(expected).key("start")
@@ -285,7 +313,9 @@ For On/Off (Start/Stop) devices, the on/off (start/stop) slots are already defin
 Additional Slots (Command-like Parameters)
 ------------------------------------------
 
-A SLOT_ELEMENT should be used for a SCPI command which is not triggering a state change in the Karabo Device. This requires not only to to add the expected parameter in the list::
+A SLOT_ELEMENT should be used for a SCPI command which is not triggering a state change in the Karabo Device. This requires not only to to add the expected parameter in the list:
+
+.. code-block:: python
 
     @staticmethod
     def expectedParameters(expected):
@@ -303,13 +333,17 @@ A SLOT_ELEMENT should be used for a SCPI command which is not triggering a state
         # ...
         )
 
-but also to register the slot, ::
+but also to register the slot,
+
+.. code-block:: python
 
     def registerAdditionalSlots(self, sigslot):
         '''Register additional slots'''
         sigslot.registerSlot(self.statStart)
 
-and to implement the corresponding function, ::
+and to implement the corresponding function,
+
+.. code-block:: python
 
     def statStart(self):
         '''Will start statistical batch'''
@@ -324,7 +358,9 @@ and to implement the corresponding function, ::
 A Complete Example 
 ------------------
 
-Here is a complte example of expected parameters for a Start/Stop device::
+Here is a complte example of expected parameters for a Start/Stop device:
+
+.. code-block:: python
 
       # Define alias for the "start" slot
       OVERWRITE_ELEMENT(expected).key("start")
