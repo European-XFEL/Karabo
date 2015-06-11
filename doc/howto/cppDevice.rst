@@ -110,7 +110,7 @@ It is good practice to place your class into the karabo namespace
     
         class HelloWorld : public karabo::core::Device<karabo::core::OkErrorFsm> {
 
-Any Device must in the end derive from the templated class Device<>, the template indicating which state machine to use. If you think you need no state-machine at all you should, like in this example, use the OkErrorFsm. It consists of only two states (Ok and Error) and provides a reset event to recover from error. If you leave the template empty, a custom state-machine must be defined within the device itself. We will look at such an example later.
+Any Device must in the end derive from the templated class Device<>, the template indicating which :ref:`state machine <stateMachines>` to use. If you think you need no state-machine at all you should, like in this example, use the OkErrorFsm. It consists of only two states (Ok and Error) and provides a reset event to recover from error. If you leave the template empty, a custom state-machine must be defined within the device itself. We will look at such an example later.
 
 The KARABO_CLASSINFO macro
 
@@ -264,7 +264,7 @@ The macro
 
 registers the device to BaseDevice configurator factory. The expected parameters of all classes mentioned in this macro will be evaluated an concatenated from left to right. In this way our HelloWord device inherits all expected parameters from BaseDevice (which has none), and from Device<OkErrorFsm> (which has a few).
 
-In the expectedParameter() function the parameters for this device are defined. See here **TODO link to schema documentation** for more details of how doing so.
+	In the expectedParameter() function the parameters for this device are defined. See :ref:`here <cppSchema>` for more details of how doing so.
 
 The constructor
 
@@ -274,7 +274,7 @@ The constructor
 
 has no code, despite calling the parent class' constructor (as is proper C++). This is completely fine for two reasons:
 1. The provided configuration got validated BEFORE the constructor was even called.
-2. The Device<> base class keeps the configuration (actually in form of a Hash **TODO link to Hash documentation** object) and gives access to it with getters and setters.
+2. The Device<> base class keeps the configuration (actually in form of a :ref:`Hash <cppHash>`) and gives access to it with getters and setters.
 
 Of course you can create a member variable and assign it by using the value in the provided configuration, like:
 
