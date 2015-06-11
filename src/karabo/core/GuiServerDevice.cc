@@ -364,6 +364,18 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onKillDevice";
                 string deviceId = info.get<string > ("deviceId");
+                NetworkMap::iterator iter;
+                {
+                    boost::mutex::scoped_lock lock(m_networkMutex);
+                    for (iter = m_networkConnections.begin(); iter != m_networkConnections.end(); ++iter) {
+                        vector<string> tokens;
+                        boost::split(tokens, iter->second.name, boost::is_any_of(":"));
+                        if (deviceId == tokens[0]) {
+                            iter->first->stop();
+                            m_networkConnections.erase(iter);
+                        }
+                    }
+                }
                 call(deviceId, "slotKillDevice");
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onKillDevice(): " << e.userFriendlyMsg();
