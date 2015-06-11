@@ -190,7 +190,7 @@ class GuiServer(DeviceClientBase):
             if data is None:
                 return
             self.respond(channel, "networkData", name=channelName, data=data)
-            yield from channel.writer.drain()
+            yield from channel.drain()
 
     @parallel
     def handle_getClassSchema(self, channel, serverId, classId):
