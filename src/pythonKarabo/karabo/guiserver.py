@@ -29,6 +29,7 @@ class Subscription:
         self.instance, self.name = channelName.split(":")
         self.parent = parent
         self.triggered = {}
+        self.subscriptions = set()
 
     @coroutine
     def start(self):
@@ -60,13 +61,19 @@ class Subscription:
         self.triggered = {}
         return True
 
+    def subscribe(self, channel):
+        self.subscriptions.add(channel)
+
     def unsubscribe(self, channel):
+        self.subscriptions.discard(channel)
         f = self.triggered.pop(channel, None)
         if f is not None:
             f.set_result(None)
 
     @coroutine
     def update(self, channel):
+        if channel not in self.subscriptions:
+            return None
         trigger = not self.triggered
         future = self.triggered[channel] = Future()
         if trigger:
@@ -185,6 +192,7 @@ class GuiServer(DeviceClientBase):
             subs = self.subscriptions[channelName] = \
                 Subscription(channelName, self)
             yield from subs.start()
+        subs.subscribe(channel)
         while True:
             data = yield from subs.update(channel)
             if data is None:
