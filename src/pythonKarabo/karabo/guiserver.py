@@ -47,12 +47,11 @@ class Subscription:
                  "memoryLocation", "remote",
                  "dataDistribution", "copy",
                  "onSlowness", "drop")
-        self.channel.writeHash(h, "XML")
-        r = yield from self.channel.readHash("XML")
-        if "endOfStream" in r:
-            for f in self.triggered.values():
-                f.set_result(None)
-        bt = yield from self.channel.readBytes()
+        r = ["endOfStream"]
+        while "endOfStream" in r:
+            self.channel.writeHash(h, "XML")
+            r = yield from self.channel.readHash("XML")
+            bt = yield from self.channel.readBytes()
         yield from sleep(self.parent.delayOnInput / 1000)
         l = r["byteSizes"][0]
         data = Hash.decode(bt[:l], "Bin")
