@@ -19,6 +19,7 @@ class Channel:
     def __init__(self, reader, writer):
         self.reader = reader
         self.writer = writer
+        self.drain_waiter = None
 
     @coroutine
     def readBytes(self):
@@ -38,6 +39,15 @@ class Channel:
 
     def writeSize(self, size):
         self.writer.write(pack(self.sizeCode, size))
+
+    def drain(self):
+        if self.drain_waiter is None:
+            self.drain_waiter = Future()
+            yield from self.writer.drain()
+            self.drain_waiter.set_result(None)
+            self.drain_waiter = None
+        else:
+            yield from self.drain_waiter
 
 
 class NetworkOutput(Configurable):
