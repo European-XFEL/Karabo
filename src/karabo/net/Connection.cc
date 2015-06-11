@@ -50,6 +50,6 @@ namespace karabo {
             m_service->setService(serviceType);
         }
 
-            }
-        }
+    }
+}
 

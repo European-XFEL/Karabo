@@ -168,6 +168,10 @@ namespace karabo {
             bool canCompute() const;
 
             void update();
+            
+            void stop() { 
+                if (m_tcpIoService) m_tcpIoService->stop();
+            }
 
             void notifyOutputChannelsForPossibleRead();
 
