@@ -317,7 +317,7 @@ namespace karabo {
 
         void GuiServerDevice::safeClientWrite(const karabo::net::Channel::Pointer channel, const karabo::util::Hash& message) {
             boost::mutex::scoped_lock lock(m_channelMutex);
-            channel->write(message);
+            if (channel->isOpen()) channel->write(message);
         }
 
 
@@ -325,7 +325,7 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
             for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(message);
+                if (it->first->isOpen()) it->first->write(message);
             }
         }
 
@@ -537,6 +537,11 @@ namespace karabo {
                             return;
                         } else {
                             if (iter->second.channel == channel) {
+                                // Cannot erase directly, but just ask to close TCP channels and wait until all done
+                                iter->first->disconnectFlag();    // set "disconnect" flag
+                                m_networkMutex.unlock(); // Have to unlock: InputChannel callbacks use this mutex, otherwise deadlock!
+                                iter->first->waitUntilAllTcpChannelsClosed();
+                                m_networkMutex.lock();
                                 m_networkConnections.erase(iter);
                                 return;
                             }

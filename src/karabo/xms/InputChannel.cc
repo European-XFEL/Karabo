@@ -26,8 +26,6 @@ namespace karabo {
         //        KARABO_REGISTER_FOR_CONFIGURATION(AbstractInput, Input<std::vector<char> >, InputChannel<std::vector<char> >)
         //        KARABO_REGISTER_FOR_CONFIGURATION(Input<std::vector<char> >, InputChannel<std::vector<char> >)
 
-        
-        static boost::mutex s_shutdownPreventMutex;
 
         void InputChannel::expectedParameters(karabo::util::Schema& expected) {
             using namespace karabo::util;
@@ -66,7 +64,7 @@ namespace karabo {
             BOOL_ELEMENT(expected).key("keepDataUntilNew")
                     .displayedName("Keep data until new")
                     .description("If true, keeps data until new data from an connected output is provided. "
-                    "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
+                                 "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
                     .assignmentOptional().defaultValue(false)
                     .init()
                     .commit();
@@ -109,23 +107,14 @@ namespace karabo {
 
 
         InputChannel::~InputChannel() {
-            // Acquire 2 mutexes
-            s_shutdownPreventMutex.lock();
-            boost::mutex::scoped_lock lock(m_shutdownPreventMutex);
-            
-            if (m_tcpIoServiceThread.joinable()) {
-                m_tcpIoService->stop();
-                m_tcpIoServiceThread.join();
-            }
-            // Close all TCP channels to devices output channels
+            // Wait for all callbacks being processed, then io_service.run() returns and thread returns.
+            m_tcpIoServiceThread.join();
             m_tcpChannels.clear();
-            m_tcpConnections.clear();
-            s_shutdownPreventMutex.unlock();
-            // At this point in time all channels are closed and "onTcpChannelRead" will know that
-            
-            MemoryType::unregisterChannel(m_channelId);
-            KARABO_LOG_FRAMEWORK_DEBUG << "***** InputChannel DTOR was called for channelId = " << m_channelId;
-            
+            {
+                boost::mutex::scoped_lock lock(m_mutex);    // TODO this mutex not needed InputChannel is one-threaded!
+                MemoryType::unregisterChannel(m_channelId);
+            }
+            KARABO_LOG_FRAMEWORK_DEBUG << "***** InputChannel DTOR for channelId = " << m_channelId;
         }
 
 
@@ -223,12 +212,45 @@ namespace karabo {
             TcpChannels::iterator it = m_tcpChannels.find(hostname + port);
             if (it != m_tcpChannels.end()) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Disconnecting...";
-                it->second->close(); // Closes channel
-
-                // TODO think about erasing it here
+                it->second.first->close(); // Closes channel
+                //m_tcpChannels.erase(it);   // TODO think about erasing it here
             }
         }
 
+
+        void InputChannel::tryToDisconnect(const karabo::net::Channel::Pointer& channel) {
+            for (TcpChannels::iterator it = m_tcpChannels.begin(); it != m_tcpChannels.end(); ++it) {
+                if (it->second.first == channel && it->second.second) {
+                    it->second.first->close();
+                    //m_tcpChannels.erase(it);
+                    KARABO_LOG_FRAMEWORK_DEBUG << "*************** INPUT Disconnected : 0x" << hex << (long) channel.get();
+                    boost::mutex::scoped_lock lock(m_mutexAllClosed);
+                    m_conditionAllClosed.notify_all();
+                    break;
+                }
+            }
+        }
+
+
+        void InputChannel::disconnectFlag() {
+            // Mark all TCP channels to be closed
+            for (TcpChannels::iterator it = m_tcpChannels.begin(); it != m_tcpChannels.end(); ++it) {
+                it->second.second = true;
+            }
+        }
+
+        bool InputChannel::allClosed() const {
+            for (TcpChannels::const_iterator it = m_tcpChannels.begin(); it != m_tcpChannels.end(); ++it) {
+                if (it->second.first->isOpen()) return false;
+            }
+            return true;
+        }
+        
+        void InputChannel::waitUntilAllTcpChannelsClosed() {
+            boost::mutex::scoped_lock lock(m_mutexAllClosed);
+            while(!this->allClosed())
+                m_conditionAllClosed.wait(lock);
+        }
 
         karabo::util::Hash InputChannel::prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const {
             const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
@@ -278,7 +300,7 @@ namespace karabo {
             channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
 
             m_tcpConnections.insert(connection); // TODO check whether really needed
-            m_tcpChannels.insert(std::make_pair(hostname + port, channel));
+            m_tcpChannels.insert(std::make_pair(hostname + port, std::make_pair(channel, false)));
         }
 
 
@@ -298,26 +320,10 @@ namespace karabo {
 
 
         void InputChannel::onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
-
-            // acquire "static" (class level) mutex
-            s_shutdownPreventMutex.lock();   
-            
-            // Check if the channel is dead
-            if (!channel || !channel->isOpen()) {
-                s_shutdownPreventMutex.unlock();
-                // channel is dead so don't touch "member" mutex: it is invalid!
-                return;
-            }
-            
-            // acquire "member variable" mutex to postpone "InputChannel" DTOR
-            boost::mutex::scoped_lock lockShutdown(m_shutdownPreventMutex);
-            // unlock "static" mutex to allow other "InputChannel"'s to work
-            s_shutdownPreventMutex.unlock();
-            
+            KARABO_LOG_FRAMEWORK_DEBUG << "INPUT ENTRY onTcpChannelRead";
             try {
+                boost::mutex::scoped_lock lock(m_mutex);   // TODO This mutex is not needed: InputChannel is one-threaded
 
-                boost::mutex::scoped_lock lock(m_mutex);
-                
                 m_isEndOfStream = false;
 
                 if (header.has("endOfStream")) {
@@ -330,11 +336,10 @@ namespace karabo {
                     if (this->getMinimumNumberOfData() <= 0) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering another compute";
                         this->swapBuffers();
-                        //m_mutex.unlock(); // TODO scoped in case of exception thrown is callback code
+                        m_mutex.unlock(); // TODO scoped in case of exception thrown is callback code
                         this->triggerIOEvent();
-                        //m_mutex.lock();
+                        m_mutex.lock();
                     }
-
                     if (m_eosChannels.size() == m_tcpChannels.size()) {
                         if (m_respondToEndOfStream) {
                             KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering EOS function after reception of " << m_eosChannels.size() << " EOS tokens";
@@ -343,7 +348,7 @@ namespace karabo {
                         // Reset eos tracker
                         m_eosChannels.clear();
                     }
-                    
+                    tryToDisconnect(channel); // check "disconnect" flag
                     if (channel->isOpen())
                         channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
                     return;
@@ -386,12 +391,11 @@ namespace karabo {
                     if (m_keepDataUntilNew) { // Is false per default
                         m_keepDataUntilNew = false;
                         KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Updating";
-                        m_mutex.unlock();
-                        update();
-                        m_mutex.lock();
+                        updateInternal();
                         m_keepDataUntilNew = true;
                     }
                 }
+                tryToDisconnect(channel); // check "disconnect" flag
                 if (channel->isOpen())
                     channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
 
@@ -405,8 +409,12 @@ namespace karabo {
 
 
         void InputChannel::triggerIOEvent() {
-            if (m_dataAvailableHandler) {
-                m_dataAvailableHandler(shared_from_this());
+            try {
+                if (m_dataAvailableHandler) {
+                    m_dataAvailableHandler(shared_from_this());
+                }
+            } catch(const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "std::exception in triggerIOEvent : " << e.what();
             }
         }
 
@@ -419,7 +427,7 @@ namespace karabo {
 
 
         void InputChannel::swapBuffers() {
-            //boost::mutex::scoped_lock lock(m_swapBuffersMutex);
+            boost::mutex::scoped_lock lock(m_swapBuffersMutex);
             std::swap(m_activeChunk, m_inactiveChunk);
         }
 
@@ -444,8 +452,12 @@ namespace karabo {
 
 
         void InputChannel::update() {
-
             boost::mutex::scoped_lock lock(m_mutex);
+            updateInternal();
+        }
+
+
+        void InputChannel::updateInternal() {
 
             if (m_keepDataUntilNew) return;
 
@@ -466,23 +478,28 @@ namespace karabo {
 
 
         void InputChannel::deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Notifying output channel that " << this->getInstanceId() << " is ready for next read.";
-            channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
+            if (channel->isOpen()) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Notifying output channel that " << this->getInstanceId() << " is ready for next read.";
+                channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
+            }
         }
 
 
         void InputChannel::notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
-            if (m_delayOnInput <= 0) // no delay
-                deferredNotificationOfOutputChannelForPossibleRead(channel);
-            else
-                channel->waitAsync(m_delayOnInput, boost::bind(&InputChannel::deferredNotificationOfOutputChannelForPossibleRead, this, channel));
+            if (channel->isOpen()) {
+                if (m_delayOnInput <= 0) // no delay
+                    deferredNotificationOfOutputChannelForPossibleRead(channel);
+                else
+                    channel->waitAsync(m_delayOnInput, boost::bind(&InputChannel::deferredNotificationOfOutputChannelForPossibleRead, this, channel));
+            }
         }
 
 
         void InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead() {
             for (TcpChannels::const_iterator it = m_tcpChannels.begin(); it != m_tcpChannels.end(); ++it) {
-                const karabo::net::Channel::Pointer& channel = it->second;
-                channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
+                const karabo::net::Channel::Pointer& channel = it->second.first;
+                if (channel->isOpen())
+                    channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
             }
         }
 
@@ -491,8 +508,9 @@ namespace karabo {
             if (m_delayOnInput <= 0) // no delay
                 deferredNotificationsOfOutputChannelsForPossibleRead();
             else { // wait "asynchronously" on the first channel
-                const karabo::net::Channel::Pointer& channel = m_tcpChannels.begin()->second;
-                channel->waitAsync(m_delayOnInput, boost::bind(&InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead, this));
+                const karabo::net::Channel::Pointer& channel = m_tcpChannels.begin()->second.first;
+                if (channel->isOpen())
+                    channel->waitAsync(m_delayOnInput, boost::bind(&InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead, this));
             }
         }
 

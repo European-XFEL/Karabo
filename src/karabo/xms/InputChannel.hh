@@ -32,7 +32,7 @@ namespace karabo {
          */
         class InputChannel : public boost::enable_shared_from_this<InputChannel> {
             typedef std::set<karabo::net::Connection::Pointer> TcpConnections;
-            typedef std::map<std::string /*host + port*/, karabo::net::Channel::Pointer> TcpChannels;
+            typedef std::map<std::string /*host + port*/, std::pair<karabo::net::Channel::Pointer, bool> > TcpChannels;
             typedef Memory<karabo::util::Hash> MemoryType;
 
             // Callback on available data
@@ -53,7 +53,6 @@ namespace karabo {
 
             boost::mutex m_mutex;
             boost::mutex m_swapBuffersMutex;
-            boost::mutex m_shutdownPreventMutex;
 
             int m_activeChunk;
             int m_inactiveChunk;
@@ -71,6 +70,9 @@ namespace karabo {
             std::set<karabo::net::Channel::Pointer> m_eosChannels;
             
             int m_delayOnInput;
+            
+            boost::mutex m_mutexAllClosed;
+            boost::condition_variable m_conditionAllClosed;
 
         public:
 
@@ -137,7 +139,15 @@ namespace karabo {
             void connect(const karabo::util::Hash& outputChannelInfo);
 
             void disconnect(const karabo::util::Hash& outputChannelInfo);
+            
+            void tryToDisconnect(const karabo::net::Channel::Pointer& channel);
 
+            void disconnectFlag();
+            
+            bool allClosed() const;
+            
+            void waitUntilAllTcpChannelsClosed();
+            
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
             //void startConnection(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo);
@@ -172,6 +182,8 @@ namespace karabo {
             void parseOutputChannelConfiguration(const karabo::util::Hash& config);
 
         private: // functions
+            
+            void updateInternal();
 
             bool needsDeviceConnection() const;
         };
