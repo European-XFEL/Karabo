@@ -97,7 +97,6 @@ class GuiServer(DeviceClientBase):
 
         self.channels = set()
         self.deviceChannels = {}  # which channels is this device visbile in
-        self.histories = {}
         self.subscriptions = WeakValueDictionary()
 
     def run(self):
@@ -211,13 +210,22 @@ class GuiServer(DeviceClientBase):
         schema, id = yield from self.call(deviceId, "slotGetSchema", False)
         self.respond(channel, "deviceSchema", deviceId=id, schema=schema)
 
+    @parallel
     def handle_getPropertyHistory(self, channel, deviceId, property, t0, t1,
                                   maxNumData=0):
-        self._ss.emit("call", {"Karabo_DataLoggerManager_0":
-                               "slotGetPropertyHistory"},
-                      deviceId, property, Hash(
-                          "from", t0, "to", t1, "maxNumData", maxNumData))
-        self.histories[deviceId, property] = channel
+        id = "DataLogger-{}".format(deviceId)
+        if id not in self.loggerMap:
+            self.loggerMap = yield from self.call(
+                "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
+            if id not in self.loggerMap:
+                raise KaraboError('no logger for device "{}"'.
+                                  format(deviceId))
+        reader = "DataLogReader-{}".format(self.loggerMap[id])
+        deviceId, property, data = yield from self.call(
+            reader, "slotGetPropertyHistory", deviceId, property,
+            Hash("from", t0, "to", t1, "maxNumData", maxNumData))
+        self.respond(channel, "propertyHistory", deviceId=deviceId,
+                     property=property, data=data)
 
     @parallel
     def handle_getAvailableProjects(self, channel):
@@ -252,14 +260,6 @@ class GuiServer(DeviceClientBase):
             "Karabo_ProjectManager", "slotCloseProject", user, name)
         self.respond(channel, "projectLoaded", name=name, success=success,
                      data=data)
-
-    @slot
-    def slotPropertyHistory(self, deviceId, property, data):
-        channel = self.histories.pop((deviceId, property), None)
-        if channel is None:
-            return
-        self.respond(channel, "propertyHistory", deviceId=deviceId,
-                     property=property, data=data)
 
     @slot
     def slotSchemaUpdated(self, schema, deviceId):
