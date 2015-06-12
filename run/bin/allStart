@@ -80,14 +80,17 @@ do
 	# Give the xterm processes time to start and set up their pids
 	sleep 0.5 
         echo "key: $exe $!" >> .allInfo 
-	echo "$bg" >> .allStart.pid
+	# put pid and its child pids in one line of file
+	echo -n "$bg " >> .allStart.pid
 	cpid=`pgrep -P $bg`
 	while [ -n "$cpid" ]; do
-	    echo "$cpid" >> .allStart.pid
+	    echo -n "$cpid " >> .allStart.pid
 	    cpid=`pgrep -P $cpid`
 	done
-	# Sleep as defined in allInfo
-	sleep $wait
+        # now add newline
+        echo >> .allStart.pid
+        # Sleep as defined in allInfo
+        sleep $wait
     fi    
 done
 

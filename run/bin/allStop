@@ -1,5 +1,32 @@
 #! /bin/bash
 
+# print help message if first argument asks for help
+if [ ${#@} -gt 0 ]; then
+    if [ $1 == "-h" ] || [ $1 == "-help" ] || [ $1 == "--help" ]; then
+	echo 
+	echo "allStop - stop processes started with allStart:"
+	echo 
+	echo "  allStop [-h|-help|--help] [arguments]"
+	echo 
+	echo "If any of the help options is given, print this help."
+	echo 
+	echo "Without any argument, kill all applications started by allStart."
+	echo 
+	echo "With arguments, kill those ALLINFO applications whose names"
+	echo "contain one of the arguments. Run ./allCheck to see the names."
+	echo 
+	echo "EXAMPLES:"
+        echo "(1) Kill everything:"
+	echo "allStop"
+        echo
+        echo "(2) Kill cpp and Python device servers:"
+	echo "allStop cppDeviceServ pythonDeviceServ"
+	echo 
+	exit 0
+    fi
+fi
+
+
 # Make sure the script runs in this directory
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 cd ${scriptDir}
@@ -12,13 +39,101 @@ if [ ! -e "allInfo" ]; then
     cp allInfo.orig allInfo
 fi
 
+info="./.allInfo"
+if [ ! -e $info ]; then
+    echo "ERROR no previous allStart"
+    exit 1
+fi
+allPids="./.allStart.pid"
+
 source ./allInfo
 
-while read line; do
+if [ ${#@} -eq 0 ]; then
+    # no arguments, kill all
+    # loop on all pids, irrespective of in one line or not
+    # i.e. kill also all childs explicitely
+    for pid in `cat $allPids`; do
+	# also contains child pids, so no need to inform user if kill fails
+	kill -${KARABO_KILL_SIGNAL} $pid 1>/dev/null 2>/dev/null
+    done
+    # now clean up
+    mv $allPids ${allPids}.last
+    mv $info ${info}.last
+else
+    # kill those ALLINFO applications whose name contains one of
+    # the arguments which have been passed to the script
 
-    #echo "kill -${KARABO_KILL_SIGNAL} $line 1>/dev/null 2>/dev/null"
-    kill -${KARABO_KILL_SIGNAL} $line 1>/dev/null 2>/dev/null
+    killedAny="no"
+    # create new $info file - temporary for now
+    newInfo=$(mktemp --tmpdir ${info}_XXXXXXXX)
 
-done < .allStart.pid
+    # read $info line by line
+    while read line; do
+        killed=0
+        # split line at ' ' and create array 'lineParts' to contain substrings
+        IFS=' ' read -ra lineParts <<< "$line"
+        # there must be at least two parts
+        nParts=${#lineParts[@]}
+        if [ $nParts -le 1 ]; then
+    	    continue
+        fi
+        name=${lineParts[$nParts - 2]} # last but one (!) part of 'lineParts'
+        # now loop on arguments
+        for arg in $@; do
+            if [ $killed -ne 0 ]; then
+                # killed already everything for this line: break loop on args
+                break
+            elif [[ $name =~ $arg ]]; then
+                # check whether name contains argument
+		# get pid
+                mainPid=${lineParts[$nParts - 1]}
+                if kill -${KARABO_KILL_SIGNAL} $mainPid 1>/dev/null 2>&1; then
+                    killed=1
+    		    echo "INFO Killed $name containing $arg (pid $mainPid)."
+                else
+                    echo "WARNING Could not kill $name with pid $mainPid."
+                    echo "        Probably it is already dead, i.e. one can "
+                    echo "        remove that line from $info." 
+                fi
+                # now get child pids from file to kill also orphans
+                # ($pids also contains $mainPid...)
+                pids=$(grep $mainPid $allPids)  # should be one line only...
+                for iPid in $pids; do
+                    if kill -${KARABO_KILL_SIGNAL} $iPid 1>/dev/null 2>&1; then
+                        # Mother is already killed, i.e. should be dead already,
+                        # nevertheless, processes may take a bit to clean up...
+                        #if [ $killed -eq 1 ]; then
+                        #    echo "Killed (daughter) pid $iPid although should already be dead!"
+                        #fi
+                        killed=1
+                    fi
+                done
+                if [ $killed -eq 1 ]; then
+                    # if main or child processes are killed, remove also from 
+                    # $allPids file (where master and childs are in same line).
+		    sed -i "/$mainPid/d" $allPids
+                fi
+    	    fi  # end of $arg is in $name
+        done  # end loop on arguments
+        if [ $killed -eq 0 ]; then
+    	    # nothing was succesfully killed for this entry in $info, so keep it
+    	    echo $line >> $newInfo
+        else
+    	    killedAny="yes"
+        fi
+    done < $info  # finished to process $info file!
+    
+    # some clean-up remains
+    if [ $killedAny = "no" ]; then
+        echo "WARNING Nothing killed, i.e. nothing matches '$@'."
+	# clean up temporary file
+        rm $newInfo
+    else
+	# overwrite old file with new one
+	cp $info ${info}.last
+        mv $newInfo $info
+    fi
+       
+fi  # end of if for case of killing according to arguments
 
 exit 0
