@@ -100,16 +100,15 @@ namespace karabo {
             m_inactiveChunk = MemoryType::registerChunk(m_channelId);
             m_activeChunk = MemoryType::registerChunk(m_channelId);
 
-
             KARABO_LOG_FRAMEWORK_DEBUG << "Inputting on channel " << m_channelId << " (active) chunkId " << m_activeChunk << " and (inactive) chunkId " << m_inactiveChunk;
-
         }
 
 
         InputChannel::~InputChannel() {
             // Wait for all callbacks being processed, then io_service.run() returns and thread returns.
-            m_tcpIoServiceThread.join();
             m_tcpChannels.clear();
+            if (m_tcpIoService) m_tcpIoService->stop();     // need this in "stopped" state if no activity in callbacks
+            m_tcpIoServiceThread.join();
             {
                 boost::mutex::scoped_lock lock(m_mutex);    // TODO this mutex not needed InputChannel is one-threaded!
                 MemoryType::unregisterChannel(m_channelId);
