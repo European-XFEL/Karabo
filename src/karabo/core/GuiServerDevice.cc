@@ -364,6 +364,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onKillDevice";
                 string deviceId = info.get<string > ("deviceId");
+                // Clean all connections related to "deviceId"
                 NetworkMap::iterator iter;
                 {
                     boost::mutex::scoped_lock lock(m_networkMutex);
@@ -371,7 +372,6 @@ namespace karabo {
                         vector<string> tokens;
                         boost::split(tokens, iter->second.name, boost::is_any_of(":"));
                         if (deviceId == tokens[0]) {
-                            iter->first->stop();
                             m_networkConnections.erase(iter);
                         }
                     }
@@ -538,7 +538,7 @@ namespace karabo {
                 bool subscribe = info.get<bool>("subscribe");
                 NetworkMap::iterator iter;
                 boost::mutex::scoped_lock lock(m_networkMutex);
-
+         
                 for (iter = m_networkConnections.begin(); iter != m_networkConnections.end(); ++iter) {
                     if (channelName == iter->second.name) {
                         if (subscribe) {

@@ -144,14 +144,10 @@ namespace karabo {
 
             void disconnectFlag();
             
-            bool allClosed() const;
-            
             void waitUntilAllTcpChannelsClosed();
             
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
-            //void startConnection(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo);
-            
             void onConnect(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer channel);
 
             // TODO Keep m_connectedOutputChannels in sync and adapt eos tokens on sudden death
@@ -169,10 +165,6 @@ namespace karabo {
 
             void update();
             
-            void stop() { 
-                if (m_tcpIoService) m_tcpIoService->stop();
-            }
-
             void notifyOutputChannelsForPossibleRead();
 
             void deferredNotificationsOfOutputChannelsForPossibleRead();
@@ -186,6 +178,8 @@ namespace karabo {
             void parseOutputChannelConfiguration(const karabo::util::Hash& config);
 
         private: // functions
+            
+            bool allClosed() const;
             
             void updateInternal();
 
