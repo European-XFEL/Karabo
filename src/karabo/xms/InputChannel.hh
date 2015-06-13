@@ -32,7 +32,7 @@ namespace karabo {
          */
         class InputChannel : public boost::enable_shared_from_this<InputChannel> {
             typedef std::set<karabo::net::Connection::Pointer> TcpConnections;
-            typedef std::map<std::string /*host + port*/, std::pair<karabo::net::Channel::Pointer, bool> > TcpChannels;
+            typedef std::map<std::string /*host + port*/, karabo::net::Channel::Pointer> TcpChannels;
             typedef Memory<karabo::util::Hash> MemoryType;
 
             // Callback on available data
@@ -71,9 +71,6 @@ namespace karabo {
             
             int m_delayOnInput;
             
-            boost::mutex m_mutexAllClosed;
-            boost::condition_variable m_conditionAllClosed;
-
         public:
 
             KARABO_CLASSINFO(InputChannel, "InputChannel", "1.0")
@@ -140,12 +137,6 @@ namespace karabo {
 
             void disconnect(const karabo::util::Hash& outputChannelInfo);
             
-            void tryToDisconnect(const karabo::net::Channel::Pointer& channel);
-
-            void disconnectFlag();
-            
-            void waitUntilAllTcpChannelsClosed();
-            
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
             void onConnect(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer channel);
@@ -167,11 +158,7 @@ namespace karabo {
             
             void notifyOutputChannelsForPossibleRead();
 
-            void deferredNotificationsOfOutputChannelsForPossibleRead();
-            
             void notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel);
-            
-            void deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel);
             
             bool respondsToEndOfStream();
 
@@ -179,10 +166,10 @@ namespace karabo {
 
         private: // functions
             
-            bool allClosed() const;
+            void deferredNotificationsOfOutputChannelsForPossibleRead();
             
-            void updateInternal();
-
+            void deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel);
+            
             bool needsDeviceConnection() const;
         };
 
