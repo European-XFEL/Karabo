@@ -364,18 +364,6 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onKillDevice";
                 string deviceId = info.get<string > ("deviceId");
-                // Clean all connections related to "deviceId"
-                NetworkMap::iterator iter;
-                {
-                    boost::mutex::scoped_lock lock(m_networkMutex);
-                    for (iter = m_networkConnections.begin(); iter != m_networkConnections.end(); ++iter) {
-                        vector<string> tokens;
-                        boost::split(tokens, iter->second.name, boost::is_any_of(":"));
-                        if (deviceId == tokens[0]) {
-                            m_networkConnections.erase(iter);
-                        }
-                    }
-                }
                 call(deviceId, "slotKillDevice");
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onKillDevice(): " << e.userFriendlyMsg();
@@ -549,11 +537,6 @@ namespace karabo {
                             return;
                         } else {
                             if (iter->second.channel == channel) {
-                                // Cannot erase directly, but just ask to close TCP channels and wait until all done
-                                iter->first->disconnectFlag();    // set "disconnect" flag
-                                m_networkMutex.unlock(); // Have to unlock: InputChannel callbacks use this mutex, otherwise deadlock!
-                                iter->first->waitUntilAllTcpChannelsClosed();
-                                m_networkMutex.lock();
                                 m_networkConnections.erase(iter);
                                 return;
                             }
