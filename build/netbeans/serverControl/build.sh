@@ -28,7 +28,7 @@ fi
 
 python3 \$PYKARABO/karabo/karaboServerControl.py "\$@"
 End-of-file
-chmod u+x karabo-server-control
+chmod a+x karabo-server-control
 cd ../lib
 cp -rf ../../../../../../src/serverControl .
 rm -f `find . -type f -name *.pyc`
