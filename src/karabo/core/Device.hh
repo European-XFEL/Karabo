@@ -319,7 +319,13 @@ namespace karabo {
 
             virtual ~Device() {
                 KARABO_LOG_FRAMEWORK_TRACE << "Device::~Device() dtor : m_deviceClient.use_count()="
-                        << m_deviceClient.use_count() << "\n" << karabo::util::StackTrace();
+                        << m_deviceClient.use_count() << "\n"
+#ifdef __linux__
+                        << karabo::util::StackTrace();
+#else
+                        << "Stack trace not implemented";
+#endif
+
                 m_deviceClient.reset();
             };
 
@@ -926,7 +932,7 @@ namespace karabo {
                 connect("", "signalNotification", "*", "slotNotification", NO_TRACK);
 
                 SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
-                
+
                 KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
                 KARABO_SLOT(slotGetConfiguration)
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
