@@ -1,11 +1,15 @@
 import karabo
 
-from asyncio import (async, coroutine, start_server, get_event_loop,
-                     IncompleteReadError)
+from asyncio import (async, coroutine, Future, start_server, get_event_loop,
+                     IncompleteReadError, open_connection, sleep)
 from functools import wraps
+import os
+from weakref import WeakValueDictionary
 
 from karabo.device_client import DeviceClientBase
-from karabo import Int, Assignment, openmq
+from karabo.api import Int, Assignment
+from karabo import openmq
+from karabo.enums import Unit, MetricPrefix
 from karabo.hash import Hash
 from karabo.p2p import Channel
 from karabo.signalslot import slot
@@ -13,10 +17,67 @@ from karabo.signalslot import slot
 
 def parallel(f):
     f = coroutine(f)
+
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         return async(f(self, *args, **kwargs))
     return wrapper
+
+
+class Subscription:
+    def __init__(self, channelName, parent):
+        self.instance, self.name = channelName.split(":")
+        self.parent = parent
+        self.triggered = {}
+        self.subscriptions = set()
+
+    @coroutine
+    def start(self):
+        ok, info = yield from self.parent.call(
+            self.instance, "slotGetOutputChannelInformation", self.name,
+            os.getpid())
+        if not ok:
+            return
+        self.channel = Channel(
+            *(yield from open_connection(info["hostname"], int(info["port"]))))
+
+    @coroutine
+    def trigger(self):
+        h = Hash("reason", "hello", "instanceId", self.parent.deviceId,
+                 "memoryLocation", "remote",
+                 "dataDistribution", "copy",
+                 "onSlowness", "drop")
+        r = ["endOfStream"]
+        while "endOfStream" in r:
+            self.channel.writeHash(h, "XML")
+            r = yield from self.channel.readHash("XML")
+            bt = yield from self.channel.readBytes()
+        yield from sleep(self.parent.delayOnInput / 1000)
+        l = r["byteSizes"][0]
+        data = Hash.decode(bt[:l], "Bin")
+        for f in self.triggered.values():
+            f.set_result(data)
+        self.triggered = {}
+        return True
+
+    def subscribe(self, channel):
+        self.subscriptions.add(channel)
+
+    def unsubscribe(self, channel):
+        self.subscriptions.discard(channel)
+        f = self.triggered.pop(channel, None)
+        if f is not None:
+            f.set_result(None)
+
+    @coroutine
+    def update(self, channel):
+        if channel not in self.subscriptions:
+            return None
+        trigger = not self.triggered
+        future = self.triggered[channel] = Future()
+        if trigger:
+            yield from self.trigger()
+        return (yield from future)
 
 
 class GuiServer(DeviceClientBase):
@@ -24,12 +85,19 @@ class GuiServer(DeviceClientBase):
                description="Local port for this server",
                assignment=Assignment.OPTIONAL, defaultValue=44444)
 
+    delayOnInput = Int(
+        displayedName="Delay on Input channel",
+        description="Some delay before informing output channel about "
+                    "readiness for next data.",
+        assignment=Assignment.OPTIONAL, defaultValue=500,
+        unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MILLI)
+
     def __init__(self, configuration):
         super().__init__(configuration)
 
         self.channels = set()
         self.deviceChannels = {}  # which channels is this device visbile in
-        self.histories = {}
+        self.subscriptions = WeakValueDictionary()
 
     def run(self):
         async(self.log_handler())
@@ -62,6 +130,8 @@ class GuiServer(DeviceClientBase):
             for k in list(self.deviceChannels):
                 self.handle_stopMonitoringDevice(channel, k)
             self.channels.remove(channel)
+            for v in self.subscriptions.values():
+                v.unsubscribe(channel)
 
     def handle_error(self, channel, **kwargs):
         print("ERROR", kwargs)
@@ -109,6 +179,26 @@ class GuiServer(DeviceClientBase):
                                 self.slotSchemaUpdated)
 
     @parallel
+    def handle_subscribeNetwork(self, channel, channelName, subscribe):
+        subs = self.subscriptions.get(channelName)
+        if not subscribe:
+            if subs is not None:
+                subs.unsubscribe(channel)
+            return
+
+        if subs is None:
+            subs = self.subscriptions[channelName] = \
+                Subscription(channelName, self)
+            yield from subs.start()
+        subs.subscribe(channel)
+        while True:
+            data = yield from subs.update(channel)
+            if data is None:
+                return
+            self.respond(channel, "networkData", name=channelName, data=data)
+            yield from channel.drain()
+
+    @parallel
     def handle_getClassSchema(self, channel, serverId, classId):
         schema, _, _ = yield from self.call(serverId, "slotGetClassSchema",
                                             classId)
@@ -120,21 +210,56 @@ class GuiServer(DeviceClientBase):
         schema, id = yield from self.call(deviceId, "slotGetSchema", False)
         self.respond(channel, "deviceSchema", deviceId=id, schema=schema)
 
+    @parallel
     def handle_getPropertyHistory(self, channel, deviceId, property, t0, t1,
                                   maxNumData=0):
-        self._ss.emit("call", {"Karabo_DataLoggerManager_0":
-                               "slotGetPropertyHistory"},
-                      deviceId, property, Hash(
-                          "from", t0, "to", t1, "maxNumData", maxNumData))
-        self.histories[deviceId, property] = channel
-
-    @slot
-    def slotPropertyHistory(self, deviceId, property, data):
-        channel = self.histories.pop((deviceId, property), None)
-        if channel is None:
-            return
+        id = "DataLogger-{}".format(deviceId)
+        if id not in self.loggerMap:
+            self.loggerMap = yield from self.call(
+                "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
+            if id not in self.loggerMap:
+                raise KaraboError('no logger for device "{}"'.
+                                  format(deviceId))
+        reader = "DataLogReader-{}".format(self.loggerMap[id])
+        deviceId, property, data = yield from self.call(
+            reader, "slotGetPropertyHistory", deviceId, property,
+            Hash("from", t0, "to", t1, "maxNumData", maxNumData))
         self.respond(channel, "propertyHistory", deviceId=deviceId,
                      property=property, data=data)
+
+    @parallel
+    def handle_getAvailableProjects(self, channel):
+        projects = yield from self.call("Karabo_ProjectManager",
+                                        "slotGetAvailableProjects")
+        self.respond(channel, "availableProjects", availableProjects=projects)
+
+    @parallel
+    def handle_newProject(self, channel, author, name, data):
+        name, success, data = yield from self.call(
+            "Karabo_ProjectManager", "slotNewProject", author, name, data)
+        self.respond(channel, "projectNew", name=name, success=success,
+                     data=data)
+
+    @parallel
+    def handle_loadProject(self, channel, user, name):
+        name, metaData, data = yield from self.call(
+            "Karabo_ProjectManager", "slotLoadProject", user, name)
+        self.respond(channel, "projectLoaded", name=name, metaData=metaData,
+                     buffer=data)
+
+    @parallel
+    def handle_saveProject(self, channel, user, name, data):
+        name, success, data = yield from self.call(
+            "Karabo_ProjectManager", "slotSaveProject", user, name)
+        self.respond(channel, "projectSaved", name=name, success=success,
+                     data=data)
+
+    @parallel
+    def handle_closeProject(self, channel, user, name):
+        name, success, data = yield from self.call(
+            "Karabo_ProjectManager", "slotCloseProject", user, name)
+        self.respond(channel, "projectLoaded", name=name, success=success,
+                     data=data)
 
     @slot
     def slotSchemaUpdated(self, schema, deviceId):
@@ -213,7 +338,7 @@ if __name__ == "__main__":
     set_event_loop(loop)
 
     d = GuiServer({"_deviceId_": "GuiServer"})
-    async(d.run_async())
+    d.startInstance()
     try:
         loop.run_forever()
     finally:
