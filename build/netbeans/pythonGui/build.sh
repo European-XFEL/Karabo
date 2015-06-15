@@ -26,7 +26,7 @@ cd \$KARABO/lib/pythonGui
 python3 karabo-gui.py "\$@"
 cd -
 End-of-file
-chmod u+x karabo-gui
+chmod a+x karabo-gui
 cd ../lib
 cp -rf ../../../../../../src/pythonGui .
 rm -f `find . -type f -name *.pyc`
