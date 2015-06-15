@@ -1373,10 +1373,14 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body, int timeout);
 
             long long getEpochMillis() {
-                timespec ts;
-                clock_gettime(CLOCK_REALTIME, &ts);
-                long long milliseconds = ts.tv_sec * 1000 + ts.tv_nsec / 1000000L;
-                return milliseconds;
+                using namespace boost::gregorian;
+                using namespace boost::local_time;
+                using namespace boost::posix_time;
+                
+                ptime epochTime(date(1970,1,1));
+                ptime nowTime = microsec_clock::local_time();
+                time_duration difference = nowTime - epochTime;
+                return difference.total_milliseconds();
             }
         };
     }
