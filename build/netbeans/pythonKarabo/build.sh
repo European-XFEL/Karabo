@@ -28,7 +28,7 @@ fi
 
 python3 \$PYKARABO/karabo/device_server.py "\$@"
 End-of-file
-chmod u+x karabo-pythondeviceserver
+chmod a+x karabo-pythondeviceserver
 cd ../lib
 cp -rf ../../../../../../src/pythonKarabo .
 rm -f `find . -type f -name *.pyc`
