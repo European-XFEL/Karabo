@@ -92,35 +92,38 @@ int main(int argc, char** argv) {
         deviceServer = Runner<DeviceServer>::instantiate(argc, argv);
         if (deviceServer) {
             
-            // Register signal handlers
-            static SignalHandler<SegmentationViolation> __SegmentationFaultHandler;
-            static SignalHandler<GenericException> __GenericExceptionHandler;
-            static SignalHandler<FloatingPointException> __FloatingPointExceptionHandler;
-            static SignalHandler<QuitSignal> __QuitSignalHandler;
-            static SignalHandler<TerminateSignal> __TerminateSignalHandler;
-            static SignalHandler<HangupSignal> __HangupSignalHandler;
+            #ifdef __linux__
+                // Register signal handlers
+                static SignalHandler<SegmentationViolation> __SegmentationFaultHandler;
+                static SignalHandler<GenericException> __GenericExceptionHandler;
+                static SignalHandler<FloatingPointException> __FloatingPointExceptionHandler;
+                static SignalHandler<QuitSignal> __QuitSignalHandler;
+                static SignalHandler<TerminateSignal> __TerminateSignalHandler;
+                static SignalHandler<HangupSignal> __HangupSignalHandler;
 
-            // Global instance of ExceptionHandler
-            static GlobalExceptionHandler __GlobalExceptionHandler;
+                // Global instance of ExceptionHandler
+                static GlobalExceptionHandler __GlobalExceptionHandler;
 
-            //std::cout << "Main thread: " << pthread_self() << endl;
-            // Mask all signals except SIGSEGV, SIGFPE, SIGBUS
-            // Every thread will be responsible for his own error of this types.
-            // Other async. signals will be blocked for all worker threads, and caught/handled by one SignalThread
-            sigset_t signal_mask;
-            sigfillset(&signal_mask);
-            sigdelset(&signal_mask, SIGSEGV);
-            sigdelset(&signal_mask, SIGFPE);
-            sigdelset(&signal_mask, SIGBUS);
+                //std::cout << "Main thread: " << pthread_self() << endl;
+                // Mask all signals except SIGSEGV, SIGFPE, SIGBUS
+                // Every thread will be responsible for his own error of this types.
+                // Other async. signals will be blocked for all worker threads, and caught/handled by one SignalThread
+                sigset_t signal_mask;
+                sigfillset(&signal_mask);
+                sigdelset(&signal_mask, SIGSEGV);
+                sigdelset(&signal_mask, SIGFPE);
+                sigdelset(&signal_mask, SIGBUS);
+
+                // In debug mode, SIGINT is also not blocked so that breakpoints can be set by debugger
+                if (deviceServer->isDebugMode()) {
+                    sigdelset(&signal_mask, SIGINT);
+                } else {
+                    static SignalHandler<InterruptSignal> __InterruptSignalHandler;
+                }
+
+                int ret = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
             
-            // In debug mode, SIGINT is also not blocked so that breakpoints can be set by debugger
-            if (deviceServer->isDebugMode()) {
-                sigdelset(&signal_mask, SIGINT);
-            } else {
-                static SignalHandler<InterruptSignal> __InterruptSignalHandler;
-            }
-
-            int ret = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
+            #endif
 
             deviceServer->run();
             deviceServer.reset();
