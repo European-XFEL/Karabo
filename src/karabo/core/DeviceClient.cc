@@ -148,6 +148,17 @@ namespace karabo {
         }
 
 
+        std::string DeviceClient::findInstance(const std::string &instanceId) const {
+            for (Hash::const_iterator it = m_runtimeSystemDescription.begin(); it != m_runtimeSystemDescription.end(); ++it) {
+                Hash& tmp = it->getValue<Hash>();
+                boost::optional<Hash::Node&> node = tmp.find(instanceId);
+                if (node) {
+                    return it->getKey() + "." + instanceId;
+                }
+            }
+        }
+
+
         void DeviceClient::mergeIntoRuntimeSystemDescription(const karabo::util::Hash& entry) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             m_runtimeSystemDescription.merge(entry);
@@ -470,8 +481,12 @@ namespace karabo {
 
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            std::string path("device." + instanceId + ".fullSchema");
-            boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+            std::string path(findInstance(instanceId));
+            boost::optional<Hash::Node&> node;
+            if (!path.empty()) {
+                path += ".fullSchema";
+                node = m_runtimeSystemDescription.find(path);
+            }
             if (!node) { // Not found, request and cache it
                 // Request schema
                 Schema schema;
@@ -491,8 +506,12 @@ namespace karabo {
         karabo::util::Schema DeviceClient::getDeviceSchemaNoWait(const std::string& instanceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Schema());
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            std::string path("device." + instanceId + ".fullSchema");
-            const boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+            std::string path(findInstance(instanceId));
+            boost::optional<Hash::Node&> node;
+            if (!path.empty()) {
+                path += ".fullSchema";
+                node = m_runtimeSystemDescription.find(path);
+            }
             if (!node || node->getValue<Schema>().empty()) { // Not found, request it
                 m_signalSlotable.lock()->requestNoWait(instanceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
                 return Schema();
@@ -505,10 +524,14 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 KARABO_LOG_FRAMEWORK_DEBUG << "_slotSchemaUpdated";
-                string path("device." + deviceId + ".fullSchema");
-                m_runtimeSystemDescription.set(path, schema);
+                string path(findInstance(deviceId));
+                if (path.empty()) {
+                    KARABO_LOG_FRAMEWORK_WARN << "got schema for unknown instance '" << deviceId << "'.";
+                    return;
+                }
+                m_runtimeSystemDescription.set(path + ".fullSchema", schema);
 
-                path = "device." + deviceId + ".activeSchema";
+                path += ".activeSchema";
                 if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
             }
             if (m_schemaUpdatedHandler) m_schemaUpdatedHandler(deviceId, schema);
@@ -523,10 +546,14 @@ namespace karabo {
         karabo::util::Schema DeviceClient::cacheAndGetActiveSchema(const std::string& instanceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Schema());
             std::string state = this->get<std::string > (instanceId, "state");
-            std::string path("device." + instanceId + ".activeSchema." + state);
+            boost::optional<Hash::Node&> node;
             {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+                std::string path(findInstance(instanceId));
+                if (!path.empty()) {
+                    path += ".activeSchema." + state;
+                    node = m_runtimeSystemDescription.find(path);
+                }
                 if (!node) { // Not found, request and cache it
                     // Request schema
                     Schema schema;

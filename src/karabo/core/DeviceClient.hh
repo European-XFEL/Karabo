@@ -637,6 +637,8 @@ namespace karabo {
 
             void eraseFromRuntimeSystemDescription(const std::string& path);
 
+        private:
+            std::string findInstance(const std::string &instanceId) const;
         };
     }
 }
