@@ -1,4 +1,4 @@
-from asyncio import (async, coroutine, Future, Queue, start_server,
+from asyncio import (async, coroutine, Future, Lock, Queue, start_server,
                      open_connection)
 import os
 import socket
@@ -19,7 +19,7 @@ class Channel:
     def __init__(self, reader, writer):
         self.reader = reader
         self.writer = writer
-        self.drain_waiter = None
+        self.drain_lock = Lock()
 
     @coroutine
     def readBytes(self):
@@ -41,13 +41,8 @@ class Channel:
         self.writer.write(pack(self.sizeCode, size))
 
     def drain(self):
-        if self.drain_waiter is None:
-            self.drain_waiter = Future()
+        with (yield from self.drain_lock):
             yield from self.writer.drain()
-            self.drain_waiter.set_result(None)
-            self.drain_waiter = None
-        else:
-            yield from self.drain_waiter
 
 
 class NetworkOutput(Configurable):
