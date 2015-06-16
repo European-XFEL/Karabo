@@ -117,6 +117,7 @@ if [ "$OS" = "Darwin" ]; then
     ln -sf karathon.dylib karathon_bin.so
     #install_name_tool -add_rpath "$PACKAGEDIR/lib" karathon.so
     #install_name_tool -add_rpath "$PACKAGEDIR/extern/lib" karathon.so
+    cp karathon* $PYKARABO/
     cd -
 
 else
@@ -127,6 +128,8 @@ else
     [ -e $PYKARABO ] && [ ! -d $PYKARABO ] && echo "Cannot create $PYKARABO directory"
     [ -d $PYKARABO ] && rm -rf $PYKARABO/* # <-- clean 
     [ ! -d $PYKARABO ] && mkdir $PYKARABO  # <-- create PYKARABO if needed
+
+    cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $PYKARABO/karathon_bin.so # <-- karathon.so 
 
     # Copying 'extern' has resulted in changing python interpreter path for scripts in 'bin' directory
     # <-- replace 1st line by proper interp path
@@ -187,7 +190,6 @@ else
     [ -d $PACKAGEDIR/extern/include/python3.4m ]  && (cd $PACKAGEDIR/extern/include; rm -f python3.4; ln -s python3.4m python3.4)
 fi
 
-cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $PYKARABO/karathon_bin.so # <-- karathon.so 
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 
 # Check if symbolic link "libkarathon.so" exists. If not, create it! 
@@ -241,16 +243,11 @@ cp -rf $DISTDIR/$OS/lib/serverControl/. $PYKARABO/
 #cp -rf $DISTDIR/$OS/lib/pythonTools/. $PYKARABO/
 
 # run (Karabo's run/package development environment)
-#tmpPwd=$(pwd)
-#cp -rf ../../../run $PACKAGEDIR/karaboRun
-tar --exclude=.svn -cf - ../../../run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
-#cd $PACKAGEDIR
-#tar -czf KaraboRun-$VERSION.tar.gz KaraboRun-$VERSION
+cd ../../../
+tar --exclude=.svn -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
 # Version information
 echo $VERSION > $PACKAGEDIR/karaboRun/VERSION
-#rm -rf KaraboRun-$VERSION
-#cd $tmpPwd
-
+cd -
 
 # bundle scripts for plugin packages
 cd ../karabo
