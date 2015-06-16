@@ -8,9 +8,12 @@
     <Test id="2">
       <Name>JmsBroker_Test::testBinaryTransport</Name>
     </Test>
+    <Test id="3">
+      <Name>TcpNetworking_Test::testClientServer</Name>
+    </Test>
   </SuccessfulTests>
   <Statistics>
-    <Tests>2</Tests>
+    <Tests>3</Tests>
     <FailuresTotal>0</FailuresTotal>
     <Errors>0</Errors>
     <Failures>0</Failures>

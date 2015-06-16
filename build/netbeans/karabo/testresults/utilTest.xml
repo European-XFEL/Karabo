@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
 <TestRun>
-  <FailedTests></FailedTests>
+  <FailedTests>
+    <FailedTest id="15">
+      <Name>Epochstamp_Test::testToFormattedString</Name>
+      <FailureType>Error</FailureType>
+      <Message>uncaught exception of type St13runtime_error
+- locale::facet::_S_create_c_locale name not valid
+</Message>
+    </FailedTest>
+  </FailedTests>
   <SuccessfulTests>
     <Test id="1">
       <Name>Base64_Test::testEncode</Name>
@@ -43,9 +51,6 @@
     </Test>
     <Test id="14">
       <Name>Epochstamp_Test::testToIso8601String</Name>
-    </Test>
-    <Test id="15">
-      <Name>Epochstamp_Test::testToFormattedString</Name>
     </Test>
     <Test id="16">
       <Name>Factory_Test::testObjectCreation</Name>
@@ -233,8 +238,8 @@
   </SuccessfulTests>
   <Statistics>
     <Tests>76</Tests>
-    <FailuresTotal>0</FailuresTotal>
-    <Errors>0</Errors>
+    <FailuresTotal>1</FailuresTotal>
+    <Errors>1</Errors>
     <Failures>0</Failures>
   </Statistics>
 </TestRun>
