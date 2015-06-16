@@ -279,6 +279,8 @@
         <itemPath>../../../src/karabo/util/Units.hh</itemPath>
         <itemPath>../../../src/karabo/util/Version.cc</itemPath>
         <itemPath>../../../src/karabo/util/Version.hh</itemPath>
+        <itemPath>../../../src/karabo/util/fmemopen.c</itemPath>
+        <itemPath>../../../src/karabo/util/fmemopen.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Type System" projectFiles="true">
         <itemPath>../../../src/karabo/util/FromInt.cc</itemPath>
@@ -1919,6 +1921,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Version.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/fmemopen.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/fmemopen.h"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3785,6 +3797,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Version.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/fmemopen.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/fmemopen.h"
             ex="false"
             tool="3"
             flavor2="0">

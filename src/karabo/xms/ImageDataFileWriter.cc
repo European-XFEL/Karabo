@@ -6,6 +6,9 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#ifdef __MACH__
+#include "../util/fmemopen.h"
+#endif
 
 #include "ImageDataFileWriter.hh"
 
