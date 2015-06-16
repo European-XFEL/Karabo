@@ -9,7 +9,6 @@
 #include <mach/clock.h>
 #include <mach/mach.h>
 #include <mach/mach_time.h>
-#include <CoreServices/CoreServices.h>
 typedef int clockid_t;
 #define CLOCK_REALTIME 0
 #endif
