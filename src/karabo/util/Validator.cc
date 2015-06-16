@@ -449,14 +449,14 @@ namespace karabo {
                 // TODO Check whether we are really going to validate inner elements of a vector for max/min..., maybe not.
 
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_SIZE)) {
-                    int minSize = masterNode.getAttribute<int>(KARABO_SCHEMA_MIN_SIZE);
+                    int minSize = masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MIN_SIZE);
                     if (currentSize < minSize) {
                         report << "Number of elements (" << currentSize << " for (vector-)parameter \"" << scope << "\" is smaller than lower bound (" << minSize << ")" << endl;
                     }
                 }
 
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MAX_SIZE)) {
-                    int maxSize = masterNode.getAttribute<int>(KARABO_SCHEMA_MAX_SIZE);
+                    int maxSize = masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MAX_SIZE);
                     if (currentSize > maxSize) {
                         report << "Number of elements (" << currentSize << " for (vector-)parameter \"" << scope << "\" is greater than upper bound (" << maxSize << ")" << endl;
                     }
