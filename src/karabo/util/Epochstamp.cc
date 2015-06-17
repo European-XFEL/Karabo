@@ -162,14 +162,21 @@ namespace karabo {
                 const boost::posix_time::time_facet* facet,
                 const std::string& localeName) {
             std::ostringstream datetime_ss;
+            std::string pt_str;
 
-            // special_locale takes ownership of the p_time_output facet
-            std::locale special_locale(std::locale(localeName.c_str()), facet);
-            datetime_ss.imbue(special_locale);
-            datetime_ss << pt;
-
+            #ifdef __MACH__
+                pt_str = to_simple_string(pt);
+            #else
+                // special_locale takes ownership of the p_time_output facet
+                std::locale special_locale(std::locale(localeName.c_str()), facet);
+                datetime_ss.imbue(special_locale);
+                datetime_ss << pt;
+                
+                pt_str = datetime_ss.str();
+            #endif
+            
             // return timestamp as string
-            return datetime_ss.str();
+            return pt_str;
         }
 
         std::string Epochstamp::toFormattedString(const std::string& format, const std::string& localTimeZone) const {
