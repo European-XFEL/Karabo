@@ -13,6 +13,13 @@
 #include "Hash.hh"
 #include "TimeDuration.hh"
 
+// This test can only be run in LINUX since C++ locale support seems completely broken on MAC OSX
+// The solution to make locale works in OSX passes for CLANG use
+#ifdef __MACH__
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
+#endif
+
 namespace karabo {
     namespace util {
 
