@@ -29,9 +29,29 @@ from karabo.timestamp import Timestamp
 
 
 class Curve(QObject):
-    ini = 1000 # Maximum size of data container
+    """This holds the data for one curve
+
+    The data is contained in one member variable, data, which is
+    an n-by-2 array, so that we have pairs of value and timestamp.
+
+    The array is split in two: the first part, up to self.past, is the
+    data that we got by inquiring from the past. The range that we acutally
+    did inquire is self.startpast to self.endpast.
+
+    Starting at self.past, we have current data. self.startcurrent is the time
+    starting at which we have current data.
+    The current data reaches up to self.fill. If less than
+    self.spare slots are left over, we discard older current data,
+    moving the current start time forward.
+
+    When getting values from the past, we always ask for self.maxHistory
+    values, and start trying to get more data if the user zooms in if
+    less than self.minHistory points are visible. self.sparse is True
+    if there simply are no more data to zoom in."""
+    ini = 1000  # Initial size of data container
     spare = 200 # Buffer until historic data is requested
-    maxHistory = 400 # Limits amount of data from past
+    maxHistory = 800 # Limits amount of data from past
+    minHistory = 100  # minimum number of points shown (if possible)
 
     def __init__(self, box, curve, parent):
         QObject.__init__(self, parent)
@@ -40,6 +60,9 @@ class Curve(QObject):
         self.data = numpy.empty((self.ini, 2), dtype=float) # Data container 
         self.fill = 0 # Actual fill size (historic + current)
         self.past = 0 # How much belongs to past
+        self.startcurrent = time.time()
+        self.sparse = False
+        self.startpast = self.endpast = 0
         box.signalHistoricData.connect(self.onHistoricData)
 
 
@@ -48,17 +71,22 @@ class Curve(QObject):
             # Emergency case, should only happen if historic data is slow
             self.data[self.past:-self.spare, :] = (
                 self.data[self.past + self.spare:, :])
+            self.breaktime = self.data[self.past, 1]
             self.fill -= self.spare
         # Spare is touched, ask for historic data
         elif self.fill == self.data.shape[0] - self.spare:
             self.getPropertyHistory(self.data[0, 1],
                 self.data[(self.past + self.data.shape[0]) // 2, 1])
         self.data[self.fill, :] = value, timestamp
+        if self.fill == self.past:
+            self.breaktime = timestamp
         self.fill += 1
         self.update()
 
 
     def getPropertyHistory(self, t0, t1):
+        self.startpast = t0
+        self.endpast = t1
         t0 = str(datetime.datetime.utcfromtimestamp(t0).isoformat())
         t1 = str(datetime.datetime.utcfromtimestamp(t1).isoformat())
         self.box.getPropertyHistory(t0, t1, self.maxHistory)
@@ -66,8 +94,14 @@ class Curve(QObject):
 
     def changeInterval(self, t0, t1):
         # t0 represent the oldest value displayed in the widget 
-        if t0 < self.data[0, 1] or t1 < self.data[self.past, 1]:
-            self.getPropertyHistory(t0, min(t1, self.data[self.past, 1]))
+        if t0 < self.startpast or (self.endpast < self.startcurrent and
+                t1 > self.endpast and t0 < self.startcurrent):
+            self.getPropertyHistory(t0, min(t1, self.startcurrent))
+        if t1 < self.startcurrent and not self.sparse:
+            p0 = self.data[:self.fill, 1].searchsorted(t0)
+            p1 = self.data[:self.fill, 1].searchsorted(t1)
+            if p1 - p0 < self.minHistory:
+                self.getPropertyHistory(t0, t1)
 
 
     def update(self):
@@ -80,14 +114,18 @@ class Curve(QObject):
             return
         l = [(e['v'], Timestamp.fromHashAttributes(e.getAttributes('v')).
              toTimestamp()) for e in data]
-        pos = self.data[:self.fill, 1].searchsorted(l[-1][1])
-        newsize = max(self.ini, self.fill - pos + self.spare)
+        self.sparse = len(l) < self.maxHistory / 2
+        pos = self.data[self.past:self.fill, 1].searchsorted(l[-1][1])
+        newsize = max(self.ini, self.fill - pos - self.past + self.spare)
         data = numpy.empty((len(l) + newsize, 2), dtype=float)
         data[:len(l), :] = l
-        data[len(l):len(l) + self.fill - pos, :] = self.data[pos:self.fill, :]
-        self.fill = len(l) + self.fill - pos
+        newfill = len(l) + self.fill - pos - self.past
+        data[len(l):newfill, :] = self.data[pos + self.past:self.fill, :]
+        self.fill = newfill
         self.data = data
         self.past = len(l)
+        if pos > 0:
+            self.startcurrent = self.endpast
         self.update()
 
 
@@ -179,6 +217,7 @@ class DisplayTrendline(DisplayWidget):
         self.plot.setAxisScaleDraw(QwtPlot.xBottom, drawer)
         self.plot.setAxisAutoScale(QwtPlot.yLeft)
         self.lasttime = time.time()
+        self.wasVisible = False
         self.plot.setAxisScale(QwtPlot.xBottom,
                                round(time.time() - 1), round(time.time() + 10))
         self.plot.setAxisLabelAlignment(QwtPlot.xBottom,
@@ -231,8 +270,8 @@ class DisplayTrendline(DisplayWidget):
                     t + 10)
 
         self.lasttime = timestamp.toTimestamp()
+        self.wasVisible = True
         self.plot.replot()
-
 
     def scaleChanged(self):
         asd = self.plot.axisScaleDiv(QwtPlot.xBottom)
