@@ -63,8 +63,9 @@ class Curve(QObject):
         self.startcurrent = time.time()
         self.sparse = False
         self.startpast = self.endpast = 0
+        self.t0 = self.t1 = 0
         box.signalHistoricData.connect(self.onHistoricData)
-
+        box.visibilityChanged.connect(self.onVisibilityChanged)
 
     def addPoint(self, value, timestamp):
         if self.fill >= self.data.shape[0]: # Have to get rid of data
@@ -102,11 +103,17 @@ class Curve(QObject):
             p1 = self.data[:self.fill, 1].searchsorted(t1)
             if p1 - p0 < self.minHistory:
                 self.getPropertyHistory(t0, t1)
+        self.t0 = t0
+        self.t1 = t1
 
 
     def update(self):
         self.curve.set_data(self.data[:self.fill, 1], self.data[:self.fill, 0])
 
+    @pyqtSlot(bool)
+    def onVisibilityChanged(self, visible):
+        if visible and self.t1 >= self.startcurrent:
+            self.getPropertyHistory(self.t0, self.t1)
 
     @pyqtSlot(object, object)
     def onHistoricData(self, box, data):
