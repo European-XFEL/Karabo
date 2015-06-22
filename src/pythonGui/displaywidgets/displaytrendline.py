@@ -10,6 +10,7 @@ from xml.etree.ElementTree import Element
 
 from const import ns_karabo
 from manager import Manager, getDevice
+from util import SignalBlocker
 from widget import DisplayWidget
 
 from PyQt4.QtCore import Qt, QObject, QTimer, pyqtSlot
@@ -223,12 +224,11 @@ class DisplayTrendline(DisplayWidget):
         t1 = self.plot.axisScaleDiv(QwtPlot.xBottom).upperBound()
         if self.lasttime < t1 < t:
             aw = self.plot.axisWidget(QwtPlot.xBottom)
-            blocked = aw.blockSignals(True)
-            self.plot.setAxisScale(
-                QwtPlot.xBottom,
-                self.plot.axisScaleDiv(QwtPlot.xBottom).lowerBound(),
-                t + 10)
-            aw.blockSignals(blocked)
+            with SignalBlocker(aw):
+                self.plot.setAxisScale(
+                    QwtPlot.xBottom,
+                    self.plot.axisScaleDiv(QwtPlot.xBottom).lowerBound(),
+                    t + 10)
 
         self.lasttime = timestamp.toTimestamp()
         self.plot.replot()
