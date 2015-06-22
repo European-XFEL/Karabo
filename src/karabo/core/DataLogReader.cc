@@ -127,6 +127,8 @@ namespace karabo {
                         unsigned long long seconds = fromString<unsigned long long>(tokens[2]);
                         unsigned long long fraction = fromString<unsigned long long>(tokens[3]);
                         epochstamp = Epochstamp(seconds, fraction);
+                        if (epochstamp < from)
+                            continue;
                         if (epochstamp > to)
                             break;
 
