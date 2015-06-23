@@ -6,7 +6,7 @@ from karabo.hashtypes import (Descriptor, Schema_ as Schema,  # this is not nice
                               Attribute)
 from karabo.registry import Registry
 
-from asyncio import coroutine
+from asyncio import coroutine, gather
 from enum import Enum
 from functools import partial
 from collections import OrderedDict
@@ -160,6 +160,14 @@ class Node(Descriptor):
 
     def __set__(self, instance, value):
         instance.setValue(self, self.cls(value, instance, self.key))
+
+    @coroutine
+    def setter_async(self, instance, hash):
+        props = ((getattr(self.cls, k), v)
+                 for k, v in hash.items())
+        parent = getattr(instance, self.key)
+        setters = [t.checkedSet(parent, v) for t, v in props]
+        yield from gather(*setters)
 
     def asHash(self, instance):
         r = karabo.hash.Hash()
