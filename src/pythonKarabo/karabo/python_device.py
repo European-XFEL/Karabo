@@ -143,8 +143,7 @@ class Device(SignalSlotable):
         props = ((getattr(self.__class__, k), v)
                  for k, v in reconfiguration.items())
         try:
-            setters = [t.checkedSet(self, v) for t, v in props
-                       if isinstance(t, Type)]
+            setters = [t.checkedSet(self, v) for t, v in props]
             yield from gather(*setters)
         except KaraboError as e:
             self.logger.exception("Failed to set property")
