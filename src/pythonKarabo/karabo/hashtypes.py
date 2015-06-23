@@ -190,7 +190,7 @@ class Descriptor(object):
 
     @coroutine
     def setter_async(self, instance, value):
-        self.setter(instance, value)
+        self.setter(instance, self.cast(value))
 
     def checkedSet(self, instance, value):
         if self.accessMode is not AccessMode.RECONFIGURABLE:
@@ -202,7 +202,7 @@ class Descriptor(object):
                 'setting "{}" is not allowed in state "{}"'.
                 format(self.key, instance.state))
         else:
-            return self.setter_async(instance, self.cast(value))
+            return self.setter_async(instance, value)
 
 
 class Slot(Descriptor):
