@@ -17,7 +17,7 @@ from weakref import WeakSet
 
 from karabo import KaraboError
 from karabo.hash import Hash
-from karabo.hashtypes import Slot, Type
+from karabo.hashtypes import Slot, Type, Descriptor
 from karabo.signalslot import slot
 from karabo.python_device import Device
 
@@ -72,7 +72,7 @@ class ProxySlot(Slot):
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        key = self.key
+        key = self.longkey
 
         @synchronize
         def method(self):
@@ -120,9 +120,12 @@ class Proxy(object):
         for k, v, a in hash.iterall():
             d = getattr(type(self), k, None)
             if d is not None:
-                self.__dict__[d.key] = v
-                for q in self._queues[k]:
-                    q.put_nowait(v)
+                if isinstance(d, ProxyNode):
+                    d.setValue(getattr(self, d.key), v, self)
+                else:
+                    self.__dict__[d.key] = v
+                    for q in self._queues[k]:
+                        q.put_nowait(v)
         for q in self._queues[None]:
             q.put_nowait(hash)
 
@@ -130,12 +133,13 @@ class Proxy(object):
         loop = get_event_loop()
         if loop.sync_set:
             ok, msg = loop.sync(self._device.call(
-                self.deviceId, "slotReconfigure", Hash(attr.key, value)), -1)
+                self.deviceId, "slotReconfigure", Hash(attr.longkey, value)),
+                -1)
             if not ok:
                 raise KaraboError(msg)
         else:
             update = not self._sethash
-            self._sethash[attr.key] = value
+            self._sethash[attr.longkey] = value
             if update:
                 self._device._ss.loop.call_soon_threadsafe(self._update)
 
@@ -172,6 +176,42 @@ class Proxy(object):
                                                "slotGetConfiguration")
         self._onChanged(conf)
         return self
+
+
+class ProxyNode(Descriptor):
+    def __init__(self, cls):
+        self.cls = cls
+
+    def setValue(self, instance, hash, parent):
+        for k, v, a in hash.iterall():
+            d = getattr(self.cls, k, None)
+            if d is not None:
+                if isinstance(d, ProxyNode):
+                    d.setValue(getattr(self, d.key), v)
+                else:
+                    instance.__dict__[d.key] = v
+                    for q in parent._queues[self.longkey]:
+                        q.put_nowait(v)
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        ret = instance.__dict__.get(self.key, None)
+        if ret is not None:
+            return ret
+        sub = self.cls()
+        if isinstance(instance, SubProxy):
+            sub._parent = instance._parent
+        else:
+            sub._parent = instance
+        instance.__dict__[self.key] = sub
+        return sub
+
+
+class SubProxy(object):
+    def setValue(self, desc, value):
+        self.__dict__[desc.key] = value
+        self._parent.setValue(desc, value)
 
 
 class OneShotQueue(asyncio.Future):
@@ -293,6 +333,28 @@ def waitUntil(condition):
         yield from loop.changedFuture
 
 
+def _createProxyDict(hash, prefix):
+    dict = {}
+    for k, v, a in hash.iterall():
+        if a["nodeType"] == 0:
+            d = Type.fromname[a["valueType"]]()
+            d.key = k
+            d.longkey = prefix + k
+            dict[k] = d
+        elif a["nodeType"] == 1:
+            if a.get("displayType") == "Slot":
+                del a["nodeType"]
+                dict[k] = ProxySlot()
+            else:
+                sub = _createProxyDict(v, prefix + k + ".")
+                Cls = type(k, (SubProxy,), sub)
+                dict[k] = ProxyNode(Cls)
+            dict[k].key = k
+            dict[k].longkey = prefix + k
+            dict[k].description = a.get("description")
+    return dict
+
+
 @synchronize
 def _getDevice(deviceId, sync, timeout=None):
     instance = get_instance()
@@ -303,17 +365,7 @@ def _getDevice(deviceId, sync, timeout=None):
 
     schema, _ = yield from instance.call(deviceId, "slotGetSchema", False)
 
-    dict = {}
-    for k, v, a in schema.hash.iterall():
-        if a["nodeType"] == 0:
-            d = Type.fromname[a["valueType"]]()
-            d.key = k
-            dict[k] = d
-        elif a["nodeType"] == 1 and a.get("displayType") == "Slot":
-            del a["nodeType"]
-            dict[k] = ProxySlot()
-            dict[k].key = k
-            dict[k].description = a.get("description")
+    dict = _createProxyDict(schema.hash, "")
     Cls = type(schema.name, (Proxy,), dict)
 
     ret = Cls(instance, deviceId, sync)
