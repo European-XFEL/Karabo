@@ -8,6 +8,7 @@ from karabo.api import Slot, Int
 from karabo.python_device import Device
 from karabo.device_client import (waitUntilNew, getDevice, waitUntil, setWait,
                                   setNoWait, Queue)
+from karabo.schema import Configurable, Node
 
 from .eventloop import startDevices, stopDevices, async_tst
 
@@ -23,9 +24,15 @@ class SuperInteger(Int):
         device.value = 2 * value
 
 
+class Nested(Configurable):
+    val = Int()
+
+
 class Remote(Device):
     value = Int(defaultValue=7)
     counter = Int(defaultValue=-1)
+
+    nested = Node(Nested)
 
     @Int()
     def other(self, value):
@@ -241,6 +248,12 @@ class Local(Device):
             finally:
                 yield from task
 
+    @coroutine
+    def nested(self):
+        with (yield from getDevice("remote")) as d:
+            self.value = d.nested.val
+            d.nested.val = 4
+
 
 class Tests(TestCase):
     @async_tst
@@ -351,6 +364,13 @@ class Tests(TestCase):
         yield from local.queue()
         self.assertEqual(local.good, 29)
 
+    @async_tst
+    def test_nested(self):
+        remote.nested.val = 3
+        yield from local.nested()
+        yield from sleep(1)
+        self.assertEqual(local.value, 3)
+        self.assertEqual(remote.nested.val, 4)
 
 
 def setUpModule():
