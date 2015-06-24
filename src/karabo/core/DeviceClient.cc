@@ -156,6 +156,7 @@ namespace karabo {
                     return it->getKey() + "." + instanceId;
                 }
             }
+            return "";
         }
 
 
