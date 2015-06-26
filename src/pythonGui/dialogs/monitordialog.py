@@ -144,7 +144,7 @@ class DevicePropertyDialog(QDialog):
         self.twDeviceProperties.headerItem().setHidden(True)
         descr = device.descriptor
         if descr is not None:
-            self._fillWidget(descr, device.boxvalue, self.twDeviceProperties.invisibleRootItem())
+            self._fillWidget(descr, device.boxvalue, self.twDeviceProperties.invisibleRootItem(), ())
         self.twDeviceProperties.itemClicked.connect(self.onDevicePropertySelected)
         self.twDeviceProperties.itemDoubleClicked.connect(self.accept)
         
@@ -164,7 +164,7 @@ class DevicePropertyDialog(QDialog):
         return self.twDeviceProperties.currentItem().data(0, Qt.UserRole)
 
 
-    def _fillWidget(self, descriptor, box, item):
+    def _fillWidget(self, descriptor, box, item, keyTuple):
         """
         Fill tree widget recursively with all device properties.
         """
@@ -179,7 +179,8 @@ class DevicePropertyDialog(QDialog):
             
             if childBox.isAccessible():
                 childItem = QTreeWidgetItem()
-                childItem.setData(0, Qt.UserRole, k)
+                newKeyTuple = keyTuple + (k,)
+                childItem.setData(0, Qt.UserRole, '.'.join(newKeyTuple))
                 displayText = childBox.descriptor.displayedName
                 childItem.setText(0, displayText)
                 if hasattr(v, "icon"):
@@ -187,7 +188,7 @@ class DevicePropertyDialog(QDialog):
                 item.addChild(childItem)
 
                 if isinstance(v, Schema):
-                    self._fillWidget(v, childBox.boxvalue, childItem)
+                    self._fillWidget(v, childBox.boxvalue, childItem, newKeyTuple)
 
 
     def onDevicePropertySelected(self, item, column):
