@@ -153,10 +153,10 @@ namespace karabo {
                 Hash& tmp = it->getValue<Hash>();
                 boost::optional<Hash::Node&> node = tmp.find(instanceId);
                 if (node) {
-                    return it->getKey() + "." + instanceId;
+                    return string(it->getKey() + "." + instanceId);
                 }
             }
-            return std::string();
+            return string();
         }
 
 
@@ -484,7 +484,9 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             std::string path(findInstance(instanceId));
             boost::optional<Hash::Node&> node;
-            if (!path.empty()) {
+            if (path.empty()) {
+                path = "device." + instanceId + ".fullSchema";
+            } else {
                 path += ".fullSchema";
                 node = m_runtimeSystemDescription.find(path);
             }
@@ -551,7 +553,9 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 std::string path(findInstance(instanceId));
-                if (!path.empty()) {
+                if (path.empty()) {
+                    path = "device." + instanceId + ".activeSchema." + state;
+                } else {
                     path += ".activeSchema." + state;
                     node = m_runtimeSystemDescription.find(path);
                 }
