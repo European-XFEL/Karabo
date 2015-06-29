@@ -234,7 +234,7 @@ class EventLoop(SelectorEventLoop):
             self.topic = getpass.getuser()
         self.connection = None
         self.changedFuture = Future(loop=self)  # call if some property changes
-        self.set_default_executor(ThreadPoolExecutor(10000))
+        self.set_default_executor(ThreadPoolExecutor(200))
 
     def getBroker(self, deviceId, classId):
         if self.connection is None:
