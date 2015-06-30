@@ -429,3 +429,27 @@ Here is a complte example of expected parameters for a Start/Stop device:
                 .description("The serial number.")
                 .readOnly()
                 .commit(),
+
+
+Polling Device Properties
+=========================
+
+All the expected parameters having the "poll" tag will be automatically polled
+(see :ref:`tags-section` Section). A user's hook is also provided by the base
+class, allowing the post-processing of the polled properties. For example:
+
+.. code-block:: python
+
+    def pollInstrumentSpecific(self):
+
+        # Get property1 and property2 from device
+        property1 = self.get('property1')
+        property2 = self.get('property2')
+
+        # Combine property1 and property2
+        property3 = property1 + property2
+
+        # Set property3 on device
+        self.set('property3', property3)
+
+
