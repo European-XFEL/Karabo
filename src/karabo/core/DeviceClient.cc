@@ -153,10 +153,10 @@ namespace karabo {
                 Hash& tmp = it->getValue<Hash>();
                 boost::optional<Hash::Node&> node = tmp.find(instanceId);
                 if (node) {
-                    return it->getKey() + "." + instanceId;
+                    return string(it->getKey() + "." + instanceId);
                 }
             }
-            return std::string();
+            return string();
         }
 
 
@@ -484,7 +484,9 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             std::string path(findInstance(instanceId));
             boost::optional<Hash::Node&> node;
-            if (!path.empty()) {
+            if (path.empty()) {
+                path = "device." + instanceId + ".fullSchema";
+            } else {
                 path += ".fullSchema";
                 node = m_runtimeSystemDescription.find(path);
             }
@@ -551,7 +553,9 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 std::string path(findInstance(instanceId));
-                if (!path.empty()) {
+                if (path.empty()) {
+                    path = "device." + instanceId + ".activeSchema." + state;
+                } else {
                     path += ".activeSchema." + state;
                     node = m_runtimeSystemDescription.find(path);
                 }
@@ -829,8 +833,14 @@ namespace karabo {
         karabo::util::Hash DeviceClient::cacheAndGetConfiguration(const std::string& deviceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            std::string path("device." + deviceId + ".configuration");
-            boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+            std::string path(findInstance(deviceId));
+            boost::optional<Hash::Node&> node;
+            if (path.empty()) {
+                path = "device." + deviceId + ".configuration";
+            } else {
+                path += ".configuration";
+                node = m_runtimeSystemDescription.find(path);
+            }
             if (!node) { // Not found, request and cache
                 // Request configuration
                 Hash hash;
@@ -857,8 +867,12 @@ namespace karabo {
         karabo::util::Hash DeviceClient::getConfigurationNoWait(const std::string& deviceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            std::string path("device." + deviceId + ".configuration");
-            boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+            std::string path(findInstance(deviceId));
+            boost::optional<Hash::Node&> node;
+            if (!path.empty()) {
+                path += ".configuration";
+                node = m_runtimeSystemDescription.find(path);
+            }
             stayConnected(deviceId);
             if (!node || node->getValue<Hash>().empty()) { // Not found, request
                 m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
@@ -1023,8 +1037,14 @@ namespace karabo {
 
             m_runtimeSystemDescriptionMutex.lock();
             // TODO Optimize speed
-            if (m_runtimeSystemDescription.has("device." + instanceId + ".configuration")) {
-                Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + ".configuration");
+            string path(findInstance(instanceId));
+            if (path.empty()) {
+                path = "device." + instanceId + ".configuration";
+            } else {
+                path += ".configuration";
+            }
+            if (m_runtimeSystemDescription.has(path)) {
+                Hash& tmp = m_runtimeSystemDescription.get<Hash>(path);
                 tmp.merge(hash);
                 m_runtimeSystemDescriptionMutex.unlock();
                 // NOTE: This will block us here, i.e. we are deaf for other changes...
@@ -1032,7 +1052,7 @@ namespace karabo {
                 notifyDeviceChangedMonitors(hash, instanceId);
                 notifyPropertyChangedMonitors(hash, instanceId);
             } else {
-                m_runtimeSystemDescription.set("device." + instanceId + ".configuration", hash);
+                m_runtimeSystemDescription.set(path, hash);
                 m_runtimeSystemDescriptionMutex.unlock();
                 notifyDeviceChangedMonitors(hash, instanceId);
                 notifyPropertyChangedMonitors(hash, instanceId);
