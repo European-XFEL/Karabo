@@ -8,32 +8,33 @@ None of the known python scientific distribution (anaconda, canopy express, etc)
 Get and install python and required packages
 ============================================
 
-1. Install Xcode
-2. Install the Command Line Tools of Xcode. For that open Xcode, and navigate to Xcode->Preferences->Downloads->Components and click "Install".
-3. Put in .profile proper locale (otherwise you will get error from guidata, or karabo gui)::
+1. Install Xcode, then install the Command Line Tools of Xcode. For that open Xcode, and navigate to Xcode->Preferences->Downloads->Components and click "Install".
+   You can also install only Command Line Tools without installing full Xcode, just type in terminal 'gcc', then in pop-up window click 'Install' button.
+2. Put in .profile proper locale (otherwise you will get error from guidata, or karabo gui)::
 
     export LC_ALL=en_US.UTF-8
     export LANG=en_US.UTF-8
 
-4. Download and install XQuartz (.dmg) from this location: http://xquartz.macosforge.org/landing/
-5. Customize xterm so that it respects .profile::
+3. Download and install XQuartz (.dmg) from this location: http://xquartz.macosforge.org/landing/
+4. Customize xterm so that it respects .profile::
 
     Open X11 and select Customize... from the Applications menu, double-click the menu item Terminal and change: “xterm” to “xterm -ls” (this means login shell)
 
-6. Install MacPorts (install .dmg from www.macports.org)
-7. Install relevant packages using MacPorts. Go to a terminal and type::
+5. Install MacPorts (install .pkg from www.macports.org)
+6. Install relevant packages using MacPorts. Go to a terminal and type::
 
     sudo port install gcc48
     sudo port select --set gcc mp-gcc48
     sudo port install sqlite3 qt4-mac-sqlite3-plugin python34
     sudo port select --set python python34
     sudo port install py34-pyqt4
+    sudo port install py34-Pillow
     sudo port install py34-numpy py34-scipy
     sudo port install py34-matplotlib +qt4
     sudo port install py34-pyqwt  (not existing yet, see manual installation below)
     sudo port install py34-cython
     sudo port select --set cython cython34
-    sudo port install py34-ipython -scientific +notebook +pyqt4
+    sudo port install py34-ipython +notebook +pyqt4
     sudo port select --set sphinx py34-sphinx
     sudo port select --set ipython ipython34
     sudo port select --set nosetests nosetests34
@@ -62,7 +63,7 @@ Get and install python and required packages
     python -c "from lib2to3.main import main;main('lib2to3.fixes')" -w configure.py
     python configure.py -Q ../qwt-5.2
     make
-    make install
+    sudo make install
 
 
 

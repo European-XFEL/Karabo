@@ -11,6 +11,7 @@ Contents:
    cppDevice
    pythonDevice
    stateMachines
+   properties
    scpiDevice
    tagAndBranchDevices
    run
