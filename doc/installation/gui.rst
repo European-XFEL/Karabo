@@ -92,8 +92,7 @@ Get and install karaboGUI
 -------------------------
 
 Download karaboGUI Windows installation binary `here <ftp://karabo:framework@ftp.desy.de/karaboGui/>`_ and run it. NOTE: if this link does not open automatically, type the following
-in the browser address bar: ftp://karabo:framework@ftp.desy.de/karaboGui/ .
- You should get Start Menu entry as well as karaboGUI shortcut on Desktop.
+in the browser address bar: ftp://karabo:framework@ftp.desy.de/karaboGui/ . You should get Start Menu entry as well as karaboGUI shortcut on Desktop.
 
 To uninstall karaboGui, open Control Panel -> Uninstall a program, find karaboGUI entry and uninstall it.
 
