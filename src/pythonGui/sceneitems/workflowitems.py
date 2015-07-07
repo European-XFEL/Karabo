@@ -11,7 +11,7 @@ from const import ns_karabo
 from layouts import ProxyWidget
 import manager
 from registry import Loadable
-from schema import Dummy
+from schema import Dummy, Schema
 import scene
 
 from PyQt4.QtCore import (pyqtSignal, QPoint, QPointF, QRect, QSize, Qt)
@@ -202,25 +202,11 @@ class Item(QWidget, Loadable):
                 o = self.output_channels.pop()
                 o.clear()
             self.connectionsChecked = False
-        
+
         if descr is not None and self.descriptor is None:
             self.descriptor = descr
-            
-            # Check for all in/output channels
-            for k in list(descr.dict.keys()):
-                box = getattr(device.boxvalue, k, None)
-                if box is None:
-                    continue
-                
-                displayType = box.descriptor.displayType
-                if displayType is None:
-                    continue
-                
-                if displayType == Item.INPUT:
-                    self.input_channels.append(WorkflowChannel(displayType, box, self))
-                elif displayType == Item.OUTPUT:
-                    self.output_channels.append(WorkflowChannel(displayType, box, self))
-            
+            self._addChannels(device)
+
             # Update geometry of proxy to new channels
             rect = self.boundingRect()
             pos = self.parent().geometry().topLeft()
@@ -228,7 +214,34 @@ class Item(QWidget, Loadable):
             
             # Set the proxyPos for later calculation (workflow connections)
             self.proxyPos = self.parent().pos()
-                
+
+
+    def _addChannels(self, box):
+        '''Recursively add all input/output channels from a box'''
+        for key, value in box.descriptor.dict.items():
+            # The child box belonging to key:
+            subBox = getattr(box.boxvalue, key, None)
+            if subBox is None:
+                continue
+            # Now we check whether it is a display type. If yes, check for
+            # input/output channel and append in case.
+            # If not, we might have a node (i.e. Schema).
+            displayType = subBox.descriptor.displayType
+            if displayType is None:
+                if type(value) is Schema:
+                    # A Schema is a node that we have to dive into:
+                    self._addChannels(subBox)
+                elif isinstance(value, Schema):
+                    # FIXME: Might have to handle ChoiceOfNodes, ListOfNodes,...
+                    #        How to properly inform that we do not?
+                    if key != '_connection_': # avoid spamming...
+                        msg = 'Looking for in-/output channels in'
+                        print(msg, type(value), ' (key: %s) not implemented.' % key)
+            elif displayType == Item.INPUT:
+                self.input_channels.append(WorkflowChannel(displayType, subBox, self))
+            elif displayType == Item.OUTPUT:
+                self.output_channels.append(WorkflowChannel(displayType, subBox, self))
+
 
     def checkConnections(self):
         raise NotImplementedError("Item.checkConnections")
