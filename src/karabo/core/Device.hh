@@ -940,12 +940,21 @@ namespace karabo {
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
 
             }
+            /**
+             *  Called in beginning of run() to setup p2p channels, will
+             *  recursively go through the schema of the device
+             *  * 
+             *  * @param topLevel: std::string: empty or existing path of full
+             *  *                  schema of the device
+             *  */
+            void initChannels(const std::string& topLevel = "") {
+                
+                // Keys under topLevel, without leading "topLevel.":
+                const std::vector<std::string>& subKeys = m_fullSchema.getKeys(topLevel);
 
-            void initChannels() {
-
-                const std::vector<std::string>& keys = m_fullSchema.getKeys();
-
-                BOOST_FOREACH(std::string key, keys) {
+                BOOST_FOREACH(const std::string &subKey, subKeys) {
+                    // Assemble full path out of topLevel and subKey
+                    const std::string key(topLevel.empty() ? subKey : (topLevel + '.') += subKey);
                     if (m_fullSchema.hasDisplayType(key)) {
                         const std::string& displayType = m_fullSchema.getDisplayType(key);
                         if (displayType == "OutputChannel") {
@@ -954,7 +963,16 @@ namespace karabo {
                         } else if (displayType == "InputChannel") {
                             KARABO_LOG_INFO << "Creating input channel \"" << key << "\"";
                             createInputChannel(key, m_parameters);
+                        } else {
+                            KARABO_LOG_DEBUG << "Not creating in-/output channel for \""
+                                    << key << "\" since it's a \"" << displayType <<"\"";
                         }
+                    } else if (m_fullSchema.isNode(key)) {
+                        // Recursive call going down the tree for channels within nodes
+                        KARABO_LOG_DEBUG << "Looking for input/output channels "
+                                << "under node \"" << key << "\"";
+                        
+                        this->initChannels(key);
                     }
                 }
             }
