@@ -434,16 +434,10 @@ def instantiate(serverId, classId, deviceId="", configuration=Hash(),
     """Instantiate and configure a device on a running server
 
     Arguments:
-    * *serverId*: The serverId of the server on which the device should be
-      started.
-
-    * *classId*: The classId of the device (corresponding plugin must already
-      be loaded on the server)
-
-    * *deviceId*: The future name of the device in the Karabo installation
-      (will fail if not unique)
-
-    * *configuration*: the configuration of the device (optional)
+      * *serverId*: The serverId of the server on which the device should be started.
+      * *classId*: The classId of the device (corresponding plugin must already be loaded on the server)
+      * *deviceId*: The future name of the device in the Karabo installation (will fail if not unique)
+      * *configuration*: the configuration of the device (optional)
 
     The keyword arguments are used to further configure the device. """
     configuration.update(kwargs)
