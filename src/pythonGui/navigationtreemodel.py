@@ -129,10 +129,10 @@ class NavigationTreeModel(QAbstractItemModel):
             if deviceNode is None:
                 deviceNode = TreeNode(deviceId, deviceId, classNode)
                 classNode.appendChildNode(deviceNode)
+                deviceNode.monitoring = False
             deviceNode.status = status
             deviceNode.visibility = visibility
             deviceNode.attributes = attrs
-            deviceNode.monitoring = False
 
 
     def updateData(self, config):
