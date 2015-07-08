@@ -39,7 +39,7 @@ class DockTabWindow(QTabWidget):
     def __init__(self, title, parent):
         super(DockTabWindow, self).__init__(parent)
         self.setWindowTitle(title)
-        self.divWidgetList = []
+        self.divWidgetList = set()
         self.lastWidget = None
         self.currentChanged.connect(self.onCurrentChanged)
 
@@ -59,13 +59,14 @@ class DockTabWindow(QTabWidget):
         divWidget.index = index
 
         # Store divWidget in list to keep it alive for un/dock event!!!
-        self.divWidgetList.append(divWidget)
+        self.divWidgetList.add(divWidget)
 
 
     def removeDockableTab(self, widget):
         divWidget = widget.parent()
         self.removeTab(self.indexOf(divWidget))
-        del divWidget
+        divWidget.setParent(None)
+        self.divWidgetList.remove(divWidget)
         self.updateTabsClosable()
 
 
@@ -94,6 +95,8 @@ class DockTabWindow(QTabWidget):
             return
         # Remove widget from tab
         self.removeTab(index)
+        widget.setParent(None)
+        self.divWidgetList.remove(widget)
         self.updateTabsClosable()
 
 
