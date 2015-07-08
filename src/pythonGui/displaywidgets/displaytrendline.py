@@ -229,6 +229,7 @@ class DisplayTrendline(DisplayWidget):
                                round(time.time() - 1), round(time.time() + 10))
         self.plot.setAxisLabelAlignment(QwtPlot.xBottom,
                                         Qt.AlignRight | Qt.AlignBottom)
+        self.destroyed.connect(self.destroy)
         self.addBox(box)
 
 
@@ -239,9 +240,14 @@ class DisplayTrendline(DisplayWidget):
     def addBox(self, box):
         curve = make.curve([], [], box.key(), "r")
         self.curves[box] = Curve(box, curve, self.dialog)
+        box.addVisible()
         self.plot.add_item(curve)
         return True
 
+    @pyqtSlot(object)
+    def destroy(self):
+        for box in self.curves:
+            box.removeVisible()
 
     @property
     def widget(self):
@@ -254,6 +260,7 @@ class DisplayTrendline(DisplayWidget):
     def removeKey(self, key):
         self.plot.remove_item(self.curves[key])
         del self.curves[key]
+        key.removeVisible()
 
 
     @property
