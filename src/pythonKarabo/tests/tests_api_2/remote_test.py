@@ -24,8 +24,13 @@ class SuperInteger(Int):
         device.value = 2 * value
 
 
+class NestNest(Configurable):
+    value = Int()
+
+
 class Nested(Configurable):
     val = Int()
+    nestnest = Node(NestNest)
 
 
 class Remote(Device):
@@ -251,8 +256,10 @@ class Local(Device):
     @coroutine
     def nested(self):
         with (yield from getDevice("remote")) as d:
-            self.value = d.nested.val
+            self.f1 = d.nested.val
+            self.f2 = d.nested.nestnest.value
             d.nested.val = 4
+            d.nested.nestnest.value = 5
 
 
 class Tests(TestCase):
@@ -367,10 +374,13 @@ class Tests(TestCase):
     @async_tst
     def test_nested(self):
         remote.nested.val = 3
+        remote.nested.nestnest.value = 7
         yield from local.nested()
         yield from sleep(1)
-        self.assertEqual(local.value, 3)
+        self.assertEqual(local.f1, 3)
+        self.assertEqual(local.f2, 7)
         self.assertEqual(remote.nested.val, 4)
+        self.assertEqual(remote.nested.nestnest.value, 5)
 
 
 def setUpModule():
