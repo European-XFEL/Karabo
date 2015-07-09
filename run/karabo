@@ -1806,6 +1806,26 @@ function listTemplates() {
     cd ../../
 }
 
+
+function listSvnSubdir() {
+    local subdir=$1
+    local packageName=$2
+    local packageCategory=$3
+
+    echo
+    echo "  Listing svn $subdir of $packageName in $packageCategory:"
+    echo
+
+    # In case of dependencies, change svnPath temporarily to old location of dependencies
+    oldSvnPath=$svnPath; if [[ "$packageCategory" == "dependencies" ]]; then svnPath=$svnDepsPath; fi
+    # list the directory on the server
+    svn ls $svnPath/$packageCategory/$packageName/$subdir
+    echo
+
+    # restoring previous svnPath
+    svnPath=$oldSvnPath
+}
+
 function removeContinueBuildInfo() {    
    \rm $etcDir/continueBuild.info
 }
@@ -1819,12 +1839,21 @@ function createSvnTag() {
     echo
     echo "  Creating svn tag, please wait..."
     echo
-    # TODO: Validate proper tag format \d\.\d\.d\-\d\.\d (e.g. 1.0.0-1.3) where
-    #       the digits before '-' are the package tag and the digits after it
-    #       are the karabo (branch) version.
     # in case of dependencies, change svnPath temporarily to old location of dependencies
     oldSvnPath=$svnPath; if [[ "$packageCategory" == "dependencies" ]]; then svnPath=$svnDepsPath; fi
-    svn copy --parents $svnPath/$packageCategory/$packageName/$svnTagFrom $svnPath/$packageCategory/$packageName/tags/$svnTagName -m "Package $packageName got tagged from \"$svnTagFrom\" to \"tags/$svnTagName\" via karabo script"
+    target=$svnPath/$packageCategory/$packageName/tags/$svnTagName
+    # Check non-existence of tag - otherwise source directory gets copied into it...
+    svn ls $target > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "ERROR: Target tag \"$target\" already exists."
+        echo "       Check tags via \"./karabo list tags $1 $2\"."
+        echo
+    else
+        # TODO: Validate proper tag format \d\.\d\.d\-\d\.\d (e.g. 1.0.0-1.3) where
+        #       the digits before '-' are the package tag and the digits after it
+        #       are the karabo (branch) version.
+        svn copy --parents $svnPath/$packageCategory/$packageName/$svnTagFrom $target -m "Package $packageName got tagged from \"$svnTagFrom\" to \"tags/$svnTagName\" via karabo script"
+    fi
     # restoring previous svnPath
     svnPath=$oldSvnPath
 }
@@ -1839,10 +1868,19 @@ function createSvnBranch() {
     echo
     # in case of dependencies, change svnPath temporarily to old location of dependencies
     oldSvnPath=$svnPath; if [[ "$packageCategory" == "dependencies" ]]; then svnPath=$svnDepsPath; fi
-    # TODO: Check that svnBranchName fits branch tag format \d\.\d-\d\.\d
-    #       (e.g. 1.0-1.3) where the digits before '-' are the package version
-    #       branch and the digits after it are the karabo (branch) version.
-    svn copy --parents $svnPath/$packageCategory/$packageName/$svnBranchFrom $svnPath/$packageCategory/$packageName/branches/$svnBranchName -m "Package $packageName got branched from \"$svnBranchFrom\" to \"branches/$svnBranchName\" via karabo script"
+    local target="$svnPath/$packageCategory/$packageName/branches/$svnBranchName"
+    # Check non-existence of branch - otherwise source directory gets copied into it...
+    svn ls $target > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "ERROR: Target branch \"$target\" already exists."
+        echo "       Check branches via \"./karabo list branches $1 $2\"."
+        echo
+    else
+        # TODO: Check that svnBranchName fits branch tag format \d\.\d-\d\.\d
+        #       (e.g. 1.0-1.3) where the digits before '-' are the package version
+        #       branch and the digits after it are the karabo (branch) version.
+        svn copy --parents $svnPath/$packageCategory/$packageName/$svnBranchFrom $target -m "Package $packageName got branched from \"$svnBranchFrom\" to \"branches/$svnBranchName\" via karabo script"
+    fi
     # restoring previous svnPath
     svnPath=$oldSvnPath
 }
@@ -2042,6 +2080,8 @@ usage: list DETAIL  [options]
   configurations - Lists all configurations (logical package subsets)
   templates      - Lists all available templates
   refresh        - Refreshes list from svn
+  tags           - Lists existing tags of given package
+  branches       - Lists existing branches of given package
 
 Examples:
 
@@ -2054,8 +2094,14 @@ Examples:
 (3) List all available packages of device type (plugins)
   $0 list packages
 
-(4)  List all available packages regardless of their type
+(4) List all available packages regardless of their type
   $0 list packages -a
+
+(5) List existing tags of a package
+  $0 list tags PACKAGE_NAME PACKAGE_CATEGORY
+
+(6) List existing branches of a package
+  $0 list branches PACKAGE_NAME PACKAGE_CATEGORY
 
 End-of-help
 
@@ -2395,6 +2441,16 @@ until [ -z "$1" ]; do
             detailedHelp $1
         fi
         listWhat=$2
+        # listing tags and branches needs further arguments:
+        if [ $listWhat == "tags" ] || [ $listWhat == "branches" ]; then
+           if [ $# -lt 4 ]; then
+             detailedHelp $1
+           else
+             packageName=$3
+             packageCategory=$4
+             shift; shift
+           fi
+        fi
         shift; shift
         until [ -z "$1" ]; do
             if [[ "$1" == "-a" ]]; then
@@ -2478,6 +2534,10 @@ elif [[ "$list" == "1" ]]; then
         listTemplates
     elif [[ "$listWhat" == "refresh" ]]; then
         refreshAllPackagesFromSvn now
+    elif [[ "$listWhat" == "tags" ]]; then
+        listSvnSubdir tags $packageName $packageCategory
+    elif [[ "$listWhat" == "branches" ]]; then
+        listSvnSubdir branches $packageName $packageCategory
     fi
 
 elif [[ "$new" == "1" ]]; then
