@@ -187,7 +187,7 @@ class ProxyNode(Descriptor):
             d = getattr(self.cls, k, None)
             if d is not None:
                 if isinstance(d, ProxyNode):
-                    d.setValue(getattr(self, d.key), v)
+                    d.setValue(getattr(instance, d.key), v, parent)
                 else:
                     instance.__dict__[d.key] = v
                     for q in parent._queues[self.longkey]:
