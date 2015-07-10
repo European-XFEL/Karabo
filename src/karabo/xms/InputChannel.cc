@@ -135,7 +135,21 @@ namespace karabo {
 
 
         void InputChannel::registerIOEventHandler(const boost::function<void (const Self::Pointer&)>& ioEventHandler) {
+            if (m_dataAvailableHandlerNew) {
+                KARABO_LOG_FRAMEWORK_WARN << "Clear data handler per Data since setting one per InputChannel";
+                m_dataAvailableHandlerNew.clear();
+            }
             m_dataAvailableHandler = ioEventHandler;
+        }
+
+
+        void InputChannel::registerNewIOEventHandler(const boost::function<void (const Data&)>& ioEventHandlerNew) {
+            if (m_dataAvailableHandler) {
+                KARABO_LOG_FRAMEWORK_WARN << "Clear data handler per InputChannel since setting one per Data";
+                m_dataAvailableHandler.clear();
+            }
+
+            m_dataAvailableHandlerNew = ioEventHandlerNew;
         }
 
 
@@ -375,8 +389,16 @@ namespace karabo {
 
 
         void InputChannel::triggerIOEvent() {
+            // There is either m_dataAvailableHandler or m_dataAvailableHandlerNew
+            // (or neither).
             if (m_dataAvailableHandler) {
                 m_dataAvailableHandler(shared_from_this());
+            }
+            if (m_dataAvailableHandlerNew) {
+                for (size_t i = 0; i < this->size(); ++i) {
+                    m_dataAvailableHandlerNew(this->read(i));
+                }
+                this->update();
             }
         }
 
