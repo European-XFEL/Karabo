@@ -82,7 +82,7 @@ namespace karabo {
                 return m_hash->get<T>(key);
             }
 
-            bool has(const std::string& key) {
+            bool has(const std::string& key) const {
                 return m_hash->has(key);
             }
             
