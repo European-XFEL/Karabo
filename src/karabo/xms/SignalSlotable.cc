@@ -1805,7 +1805,14 @@ namespace karabo {
             getInputChannel(channelName)->registerIOEventHandler(handler);
         }
 
+        
+        void SignalSlotable::registerNewDataHandler(const std::string& channelName,
+                const boost::function<void (const karabo::xms::Data&) >& handler) {
+            getInputChannel(channelName)->registerNewIOEventHandler(handler);
+        }
+            
 
+        
         void SignalSlotable::registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler) {
             getInputChannel(channelName)->registerEndOfStreamEventHandler(handler);
         }
