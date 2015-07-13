@@ -173,7 +173,7 @@ namespace karabo {
              */
             void setDimensions(const karabo::util::Dims& dims);
 
-            const std::vector<int> getDimensionTypes();
+            const std::vector<int> getDimensionTypes() const;
 
             void setDimensionTypes(const std::vector<int>& dimTypes);
 
