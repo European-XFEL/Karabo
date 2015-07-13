@@ -155,7 +155,7 @@ namespace karabo {
             NDArray::setDimensions(tmp);                    
         }
 
-        const std::vector<int> ImageData::getDimensionTypes() {
+        const std::vector<int> ImageData::getDimensionTypes() const {
             std::vector<int> dimTypes(NDArray::getDimensionTypes());
             std::reverse(dimTypes.begin(), dimTypes.end());
             return dimTypes;

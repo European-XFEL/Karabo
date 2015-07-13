@@ -97,7 +97,7 @@ namespace karabo {
 
             virtual void setDimensions(const karabo::util::Dims& dims);
 
-            virtual const std::vector<int> getDimensionTypes();
+            virtual const std::vector<int> getDimensionTypes() const;
 
             virtual void setDimensionTypes(const std::vector<int>& dimTypes);
 
