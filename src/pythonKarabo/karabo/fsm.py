@@ -30,17 +30,45 @@ _machines_ = {'none':None}
 _state_periodic_actions_ = {'none':(-1, -1, NOOP)}
 
 # events
-def KARABO_FSM_EVENT(self, event_name, method_name):
-    def inner(self, *args):
+def KARABO_FSM_EVENT0(self, event_name, method_name):
+    def inner(self):
         """Drive state machine by processing an event"""
-        self.processEvent(event_instance(event_name, args))
+        self.processEvent(event_instance(event_name, tuple()))
     inner.__name__ = str(method_name)
     setattr(self.__class__, inner.__name__, inner)
     _events_.append(event_name)
 
-KARABO_FSM_EVENT0 = KARABO_FSM_EVENT1 = KARABO_FSM_EVENT2 = \
-    KARABO_FSM_EVENT3 = KARABO_FSM_EVENT4 = KARABO_FSM_EVENT
+def KARABO_FSM_EVENT1(self, event_name, method_name):
+    def inner(self, a1):
+        """Drive state machine by processing an event"""
+        self.processEvent(event_instance(event_name, (a1,)))
+    inner.__name__ = str(method_name)
+    setattr(self.__class__, inner.__name__, inner)
+    _events_.append(event_name)
 
+def KARABO_FSM_EVENT2(self, event_name, method_name):
+    def inner(self, a1, a2):
+        """Drive state machine by processing an event"""
+        self.processEvent(event_instance(event_name, (a1, a2,)))
+    inner.__name__ = str(method_name)
+    setattr(self.__class__, inner.__name__, inner)
+    _events_.append(event_name)
+
+def KARABO_FSM_EVENT3(self, event_name, method_name):
+    def inner(self, a1, a2, a3):
+        """Drive state machine by processing an event"""
+        self.processEvent(event_instance(event_name, (a1, a2, a3,)))
+    inner.__name__ = str(method_name)
+    setattr(self.__class__, inner.__name__, inner)
+    _events_.append(event_name)
+
+def KARABO_FSM_EVENT4(self, event_name, method_name):
+    def inner(self, a1, a2, a3, a4):
+        """Drive state machine by processing an event"""
+        self.processEvent(event_instance(event_name, (a1, a2, a3, a4)))
+    inner.__name__ = str(method_name)
+    setattr(self.__class__, inner.__name__, inner)
+    _events_.append(event_name)
 
 # states
 def KARABO_FSM_STATE(name, target_action='', on_entry=NOOP, on_exit=NOOP):
