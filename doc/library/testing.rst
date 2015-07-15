@@ -49,12 +49,22 @@ Creating a new test class
      Folder:      tests/<subfolder>
      Extension:   cc and hh
 
+4. In case the new test class 
+
+ * does not appear in Netbeans' project view
+ * and/or the tests are not executed using the recepees does not run (see :ref:`running-tests-label`)
+ * and/or compiling the file using F9 fails
+
+ it may help to close the Karabo project, re-open it, right click on the test subfolder and add header and source files using *Add existing Item...*.
+
 
 Creating a new test function
 ----------------------------
 
 Simply add a new function into an existing test class and register it in the header using the *CPPUNIT_TEST* macro. (Look at other functions as example!)
 
+
+.. _running-tests-label:
 
 Running tests
 -------------
