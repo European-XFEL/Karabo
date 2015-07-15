@@ -8,10 +8,27 @@
 #define	KARABO_XIP_DATA_HH
 
 #include <karabo/util.hpp>
+// redundant: #include"karabo/util/Exception.hh
 
 namespace karabo {
     namespace xms {
-
+        /**
+         * Class Data is used to send hierarchical data structures point-to-point.
+         * 
+         * Data is similar to karabo::util::Hash in the sense that simple data
+         * structures like scalars and vectors are added via Data::set(key, value)
+         * and received via Data::get<StructureType>(key).
+         * But do not use values of type Hash or Hash::Pointer to create nodes
+         * in a hierarchical data structure. Instead, use Data::setNode(key, data)
+         * with data being a Data object (or something inheriting from Data without
+         * adding new data members and providing a constructor from a Hash::Pointer,
+         * e.g. NDArray or ImageData).
+         * Internally, all nodes are stored as Hash::Pointer or are converted
+         * from Hash to Hash::Pointer when one tries to get them out of a Data
+         * object.
+         * To get back the nodes, use e.g. Data d(data.getNode<Data>(key));
+         * or the equivalent for NDArray or ImageData replacing Data.
+         */
         class Data {
             
         protected:
@@ -52,12 +69,19 @@ namespace karabo {
             
             void setNode(const std::string& key, const Data& data);
             
+            /**
+             * Get a node and create a T object from it,
+             * e.g. Data, NDArray, ImageData.
+             */
             template <class T>
-            T getNode(const std::string& key) {
+            T getNode(const std::string& key) const {
                 if (m_hash->is<karabo::util::Hash>(key)) {
-                    karabo::util::Hash::Pointer tmp(new karabo::util::Hash(m_hash->get<karabo::util::Hash>(key)));
-                    m_hash->set(key, tmp);
-                    return tmp;
+                    // Replace Hash by Hash::Pointer
+                    karabo::util::Hash::Pointer ptr(new karabo::util::Hash(m_hash->get<karabo::util::Hash>(key)));
+                    // const_cast to achieve class promise:
+                    // There are only Hash::Pointer inside.
+                    const_cast<karabo::util::Hash&>(*m_hash).set(key, ptr);
+                    return ptr;
                 } else {
                     return m_hash->get<karabo::util::Hash::Pointer>(key);
                 }
@@ -65,20 +89,20 @@ namespace karabo {
 
             template <class T>
             void set(const std::string& key, const T& value) {
-                // user setp ??
                 // Protect using nested calls by changing the separator
                 m_hash->set(key, value, '*');
             }
-
+            
             template <class T>
-            T& get(const std::string& key) {
-                // use getp ??
+            // inline needed to make the specialization (see below) work
+            inline T& get(const std::string& key) {
                 // Protect using nested calls by changing the separator
                 return m_hash->get<T>(key, '*');
             }
 
             template <class T>
-            const T& get(const std::string& key) const {
+            // inline needed to make the specialization (see below) work
+            inline const T& get(const std::string& key) const {
                 return m_hash->get<T>(key);
             }
 
@@ -97,6 +121,42 @@ namespace karabo {
             friend std::ostream& operator<<(std::ostream& os, const Data& data);
 
         };
+
+        template <>
+        inline karabo::util::Hash& Data::get<karabo::util::Hash>(const std::string& key)
+        {
+            throw KARABO_NOT_SUPPORTED_EXCEPTION("Cannot get Hash out of Data, only Hash::Pointer");
+        }
+        
+        template <>
+        inline const karabo::util::Hash& Data::get<karabo::util::Hash>(const std::string& key) const
+        {
+            throw KARABO_NOT_SUPPORTED_EXCEPTION("Cannot get Hash out of Data, only Hash::Pointer");
+        }
+
+        template <>
+        inline karabo::util::Hash::Pointer& Data::get<karabo::util::Hash::Pointer>(const std::string& key)
+        {
+            if (m_hash->is<karabo::util::Hash>(key)) {
+                // Replace Hash by Hash::Pointer
+                karabo::util::Hash::Pointer ptr(new karabo::util::Hash(m_hash->get<karabo::util::Hash>(key)));
+                m_hash->set(key, ptr);
+            }
+            return m_hash->get<karabo::util::Hash::Pointer>(key);
+        }
+        
+        template <>
+        inline const karabo::util::Hash::Pointer& Data::get<karabo::util::Hash::Pointer>(const std::string& key) const
+        {
+            if (m_hash->is<karabo::util::Hash>(key)) {
+                // Replace Hash by Hash::Pointer - const_cast is fair to achieve
+                // class promise: There are only Hash::Pointer inside.
+                karabo::util::Hash::Pointer ptr(new karabo::util::Hash(m_hash->get<karabo::util::Hash>(key)));
+                const_cast<karabo::util::Hash&>(*m_hash).set(key, ptr);
+            }
+            return m_hash->get<karabo::util::Hash::Pointer>(key);
+        }
+
 
         template <class Derived, class Described>
         class DataElement {
