@@ -65,12 +65,12 @@ namespace karabo {
         Data::~Data() {
         }
         
-        
+
         void Data::setNode(const std::string& key, const Data& data) {
             m_hash->set(key, data.hash());
         }
 
-
+        
         const karabo::util::Hash::Pointer& Data::hash() const {
             return m_hash;
         }

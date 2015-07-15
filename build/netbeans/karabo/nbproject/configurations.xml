@@ -458,6 +458,8 @@
         <itemPath>../../../src/karabo/tests/xip/xipTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f5" displayName="xms_test" projectFiles="true" kind="TEST">
+        <itemPath>../../../src/karabo/tests/xms/Data_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/xms/Data_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xms/ImageData_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/xms/ImageData_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xms/NDArray_Test.cc</itemPath>
@@ -1581,6 +1583,16 @@
       <item path="../../../src/karabo/tests/xip/xipTestRunner.cc"
             ex="false"
             tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/Data_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/Data_Test.hh"
+            ex="false"
+            tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/xms/ImageData_Test.cc"
@@ -3457,6 +3469,16 @@
       <item path="../../../src/karabo/tests/xip/xipTestRunner.cc"
             ex="false"
             tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/Data_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/Data_Test.hh"
+            ex="false"
+            tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/xms/ImageData_Test.cc"
