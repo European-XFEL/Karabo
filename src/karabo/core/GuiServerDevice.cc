@@ -572,8 +572,6 @@ namespace karabo {
                 for (size_t i = 0; i < input->size(); ++i) {
                     Hash::Pointer data = input->read(i);
 
-                    //cout << *data << endl;
-
                     boost::mutex::scoped_lock lock(m_networkMutex);
                     pair<NetworkMap::iterator, NetworkMap::iterator> range = m_networkConnections.equal_range(input);
                     for (; range.first != range.second; range.first++) {
@@ -581,8 +579,8 @@ namespace karabo {
                         //cout << h << endl;
                         safeClientWrite(range.first->second.channel, h);
                     }
-                    input->update();
                 }
+                input->update();
             } catch (const Exception &e) {
                 KARABO_LOG_ERROR << "Problem in onNetworkData: " << e.userFriendlyMsg();
             }
