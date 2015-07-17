@@ -302,7 +302,9 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (bp::arg("channelName"), bp::arg("configuration"), bp::arg("handler") = bp::object()))
 
             .def("createInputChannel", &SignalSlotableWrap::createInputChannelPy
-                 , (bp::arg("channelName"), bp::arg("configuration"), bp::arg("onData") = bp::object(), bp::arg("onEndOfStream") = bp::object()))
+                 , (bp::arg("channelName"), bp::arg("configuration")
+                    , bp::arg("onData") = bp::object(), bp::arg("onInput") = bp::object()
+                    , bp::arg("onEndOfStream") = bp::object()))
 
             .def("connectInputChannels", &SignalSlotable::connectInputChannels)
 
@@ -311,7 +313,10 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("getInputChannel", &SignalSlotableWrap::getInputChannelPy, (bp::arg("channelName")))
 
             .def("registerDataHandler", &SignalSlotableWrap::registerDataHandlerPy
-                 , (bp::arg("channelName"), bp::arg("handler") = bp::object()))
+                 , (bp::arg("channelName"), bp::arg("handlerPerData") = bp::object()))
+
+            .def("registerInputHandler", &SignalSlotableWrap::registerInputHandlerPy
+                 , (bp::arg("channelName"), bp::arg("handlerPerInput") = bp::object()))
 
             .def("registerEndOfStreamHandler", &SignalSlotableWrap::registerEndOfStreamHandlerPy
                  , (bp::arg("channelName"), bp::arg("handler") = bp::object()))
