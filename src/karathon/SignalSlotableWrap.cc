@@ -578,6 +578,20 @@ namespace karathon {
     }
 
 
+    void SignalSlotableWrap::proxyOnDataAvailableHandler(const bp::object& handler,
+                                                         const karabo::xms::Data& data) {
+        ScopedGILAcquire gil;
+        try {
+            if (handler) handler(bp::object(data));
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) PyErr_Print();
+            throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+
     void SignalSlotableWrap::proxyOnEndOfStreamEventHandler(const bp::object& handler,
                                                             const karabo::xms::InputChannel::Pointer& channel) {
         ScopedGILAcquire gil;
