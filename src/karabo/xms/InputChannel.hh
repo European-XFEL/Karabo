@@ -35,11 +35,11 @@ namespace karabo {
             typedef std::map<std::string /*host + port*/, karabo::net::Channel::Pointer> TcpChannels;
             typedef Memory<karabo::util::Hash> MemoryType;
 
-            /// Callback on available data (per channel)
-            boost::function<void (const boost::shared_ptr<InputChannel>&) > m_dataAvailableHandler;
+            /// Callback on available data (per InputChannel)
+            boost::function<void (const boost::shared_ptr<InputChannel>&) > m_inputHandler;
 
-            /// Callback on available data (per data item currently in channel)
-            boost::function<void (const Data&) > m_dataAvailableHandlerNew;
+            /// Callback on available data (per Data item in InputChannel)
+            boost::function<void (const Data&) > m_dataHandler;
 
             // Callback on end-of-stream
             boost::function<void (const boost::shared_ptr<InputChannel>&) > m_endOfStreamHandler;
@@ -103,9 +103,9 @@ namespace karabo {
 
             const std::string& getInstanceId() const;
 
-            void registerIOEventHandler(const boost::function<void (const Self::Pointer&)>& ioEventHandler);
+            void registerInputHandler(const boost::function<void (const Self::Pointer&)>& ioInputHandler);
 
-            void registerNewIOEventHandler(const boost::function<void (const Data&)>& ioEventHandler);
+            void registerDataHandler(const boost::function<void (const Data&)>& ioDataHandler);
 
             void registerEndOfStreamEventHandler(const boost::function<void (const Self::Pointer&)>& endOfStreamEventHandler);
 

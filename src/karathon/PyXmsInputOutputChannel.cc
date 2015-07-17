@@ -720,8 +720,13 @@ namespace karathon {
     }
 
 
-    void InputChannelWrap::registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
-        self->registerIOEventHandler(handler);
+    void InputChannelWrap::registerInputHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
+        self->registerInputHandler(handler);
+    }
+
+
+    void InputChannelWrap::registerDataHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
+        self->registerDataHandler(handler);
     }
 
 
@@ -1052,7 +1057,9 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("getInstanceId", &InputChannel::getInstanceId, bp::return_value_policy<bp::copy_const_reference > ())
 
-                .def("registerIOEventHandler", &karathon::InputChannelWrap().registerIOEventHandlerPy)
+                .def("registerDataHandler", &karathon::InputChannelWrap().registerDataHandlerPy)
+
+                .def("registerInputHandler", &karathon::InputChannelWrap().registerInputHandlerPy)
 
                 .def("registerEndOfStreamEventHandler", &karathon::InputChannelWrap().registerEndOfStreamEventHandlerPy)
 
