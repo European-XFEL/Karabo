@@ -1748,16 +1748,10 @@ namespace karabo {
             channel->setInstanceId(m_instanceId);
             // in fact, only one of the following two can be set...
             if (onDataAvailableHandler) {
-                // KARABO_LOG_FRAMEWORK_ERROR << "createInputChannel: Do not register handler for Data";
                 channel->registerDataHandler(onDataAvailableHandler);
-            } else {
-                KARABO_LOG_FRAMEWORK_ERROR << "createInputChannel: no handler for Data";
             }
             if (onInputAvailableHandler) {
-                // KARABO_LOG_FRAMEWORK_ERROR << "Do not register IO handler for Channel";
                  channel->registerInputHandler(onInputAvailableHandler);
-            } else {
-                KARABO_LOG_FRAMEWORK_ERROR << "createInputChannel: no handler for Channel";
             }
             if (onEndOfStreamEventHandler) {
                 channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);

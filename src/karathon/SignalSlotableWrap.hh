@@ -481,43 +481,7 @@ namespace karathon {
                              const karabo::util::Hash& config,
                              const bp::object& onDataHandler = bp::object(),
                              const bp::object& onInputHandler = bp::object(),
-                             const bp::object& onEndOfStreamHandler = bp::object())
-        {
-            // Following does not work, at runtime it gives:
-            // Exception caught: No to_python (by-value) converter found for C++ type: boost::function<void (boost::shared_ptr<karabo::xms::InputChannel> const&)>
-
-//            // Basically just call createInputChannel from C++, but take care
-//            // that 'empty' callbacks are really empty.
-//            typedef boost::function<void (const karabo::xms::Data&)>     OnDataFunction;
-//            typedef boost::function<void (const karabo::xms::InputChannel::Pointer&)> OnInputFunction;
-//            OnDataFunction dataHandler = OnDataFunction();
-//            OnInputFunction inputHandler = OnInputFunction();
-//            OnInputFunction endOfStreamHandler = OnInputFunction();
-//            const bp::object& empty = bp::object();
-//            if (onDataHandler != empty) {
-//                dataHandler = boost::bind(&SignalSlotableWrap::proxyOnDataAvailableHandler,
-//                        this, onDataHandler, _1);
-//            }
-//            if (onInputHandler != empty) {
-//                inputHandler = boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler,
-//                        this, onInputHandler, _1);
-//            }
-//            if (endOfStreamHandler != empty) {
-//                endOfStreamHandler = boost::bind(&SignalSlotableWrap::proxyOnEndOfStreamEventHandler,
-//                        this, onEndOfStreamHandler, _1);
-//            }
-//
-//            return this->createInputChannel(channelName, config,
-//                    dataHandler, inputHandler, endOfStreamHandler);
-            return createInputChannel(channelName,
-                                      config,
-                                      boost::bind(&SignalSlotableWrap::proxyOnDataAvailableHandler,
-                                                  this, onDataHandler, _1),
-                                      boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler,
-                                                  this, onInputHandler, _1),
-                                      boost::bind(&SignalSlotableWrap::proxyOnEndOfStreamEventHandler,
-                                                  this, onEndOfStreamHandler, _1));
-        }
+                             const bp::object& onEndOfStreamHandler = bp::object());
 
         bp::object getOutputChannelPy(const std::string& name) {
             return bp::object(getOutputChannel(name));
