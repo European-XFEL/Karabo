@@ -127,6 +127,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Trainstamp.o \
 	${OBJECTDIR}/_ext/163016059/Validator.o \
 	${OBJECTDIR}/_ext/163016059/Version.o \
+	${OBJECTDIR}/_ext/163016059/fmemopen.o \
 	${OBJECTDIR}/_ext/1760428615/Authenticator.o \
 	${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o \
 	${OBJECTDIR}/_ext/1760428615/soapC.o \
@@ -649,6 +650,11 @@ ${OBJECTDIR}/_ext/163016059/Version.o: ../../../src/karabo/util/Version.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Version.o ../../../src/karabo/util/Version.cc
+
+${OBJECTDIR}/_ext/163016059/fmemopen.o: ../../../src/karabo/util/fmemopen.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/fmemopen.o ../../../src/karabo/util/fmemopen.c
 
 ${OBJECTDIR}/_ext/1760428615/Authenticator.o: ../../../src/karabo/webAuth/Authenticator.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
@@ -2225,6 +2231,19 @@ ${OBJECTDIR}/_ext/163016059/Version_nomain.o: ${OBJECTDIR}/_ext/163016059/Versio
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Version_nomain.o ../../../src/karabo/util/Version.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Version.o ${OBJECTDIR}/_ext/163016059/Version_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/fmemopen_nomain.o: ${OBJECTDIR}/_ext/163016059/fmemopen.o ../../../src/karabo/util/fmemopen.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/fmemopen.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -O2 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/fmemopen_nomain.o ../../../src/karabo/util/fmemopen.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/fmemopen.o ${OBJECTDIR}/_ext/163016059/fmemopen_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1760428615/Authenticator_nomain.o: ${OBJECTDIR}/_ext/1760428615/Authenticator.o ../../../src/karabo/webAuth/Authenticator.cc 

@@ -11,6 +11,7 @@
 #include <boost/filesystem.hpp>
 #include "Device.hh"
 #include "OkErrorFsm.hh"
+#include "DataLoggerStructs.hh"
 
 
 /**
@@ -66,6 +67,10 @@ namespace karabo {
 
             int getFileIndex(const std::string& deviceId);
 
+            MetaSearchResult navigateMetaRange(const std::string& deviceId, int startnum, const std::string& path,
+                                               const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to);
+
+            size_t findPositionOfEpochstamp(std::ifstream& f, double t, size_t& left, size_t& right);
         };
     }
 }

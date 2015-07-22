@@ -16,6 +16,7 @@
 #include "Device.hh"
 #include "OkErrorFsm.hh"
 #include "Worker.hh"
+#include "DataLoggerStructs.hh"
 
 /**
  * The main karabo namespace
@@ -32,6 +33,7 @@ namespace karabo {
 
             karabo::util::Schema m_currentSchema;
 
+            boost::mutex m_configMutex;
             std::fstream m_configStream;
 
             unsigned int m_lastIndex;
@@ -41,6 +43,8 @@ namespace karabo {
 
             long m_startPosition;
             boost::thread m_flushThread;
+            
+            std::map<std::string, karabo::core::MetaData::Pointer> m_idxMap; 
 
         public:
 
