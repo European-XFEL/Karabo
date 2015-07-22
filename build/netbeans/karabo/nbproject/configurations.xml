@@ -9,6 +9,7 @@
         <itemPath>../../../src/karabo/core/DataLogger.hh</itemPath>
         <itemPath>../../../src/karabo/core/DataLoggerManager.cc</itemPath>
         <itemPath>../../../src/karabo/core/DataLoggerManager.hh</itemPath>
+        <itemPath>../../../src/karabo/core/DataLoggerStructs.hh</itemPath>
         <itemPath>../../../src/karabo/core/Device.hh</itemPath>
         <itemPath>../../../src/karabo/core/GuiServerDevice.cc</itemPath>
         <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
@@ -571,6 +572,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DataLoggerManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerStructs.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2448,6 +2454,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DataLoggerManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerStructs.hh"
             ex="false"
             tool="3"
             flavor2="0">
