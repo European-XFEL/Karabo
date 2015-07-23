@@ -198,8 +198,8 @@ If this attribute is defined to something different than 0, the motor
 will always stop the motion coming from the same mechanical
 direction. This means that it could be possible to ask the motor to go
 a little bit after the desired position and then to return to the
-desired position. The attribute value is the number of steps the motor
-will pass the desired position if it arrives from the “wrong”
+desired position. The attribute value is the distance (in physical units)
+the motor will pass the desired position if it arrives from the “wrong”
 direction. This is a signed value. If the sign is positive, this means
 that the authorized direction to stop the motion is the increasing
 motor position direction. If the sign is negative, this means that the
@@ -208,6 +208,7 @@ position direction.
 
 * Type: float
 * Access Mode: reconfigurable (expert)
+* Allowed States: Off, Stopped
 
 **resetCurrentPosition**
 
@@ -224,6 +225,14 @@ Boolean flag indicating, whether the motor was homed before. The flag gets posit
 
 * Type: bool
 * Access: read-only
+
+**onTarget**
+
+Boolean flag indicating, whether the motor has reached the target position.
+
+* Type: bool
+* Access: read-only
+
 
 Beckhoff Specific Properties
 ----------------------------
@@ -269,6 +278,7 @@ This property describes the factor by which each encoder step should be scaled t
 
 * Type: float
 * Access: reconfigurable (expert) 
+* Allowed States: Off, Stopped
 
 **epsilon**
 
@@ -283,21 +293,24 @@ NOTE: In the current implementation, care must be taken with very small values o
 
 Maximum velocitiy. In position mode, the motor will drive with this velocity. 
 
+* Type: integer
+* Access Mode: reconfigurable (expert)
+* Allowed States: Off, Stopped
+
 **aMax**
 
 Maximum acceleration.
+
+* Type: integer
+* Access Mode: reconfigurable (expert)
+* Allowed States: Off, Stopped
 
 **iMax**
 
 Maximum current.
 
-
-
-
-
-
-
-
- 
+* Type: integer
+* Access Mode: reconfigurable (expert)
+* Allowed States: Off, Stopped
 
 
