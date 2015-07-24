@@ -102,19 +102,19 @@ Such indexing applies only to "read-only" parameters and to those that were chan
 
 The record format of binary index file contains 5 fields:
 
-+-------------------------------------+----------+
-|   Field                             |  Length  |
-+=====================================+==========+
-| "Double" timestamp                  |  8 bytes |
-+-------------------------------------+----------+
-| TrainId                             |  8 bytes |
-+-------------------------------------+----------+
-| File position in configuration file |  8 bytes |
-+-------------------------------------+----------+
-| Extent1                             |  4 bytes |
-+-------------------------------------+----------+
-| Extent2                             |  4 bytes |
-+-------------------------------------+----------+
+     +-------------------------------------+----------+
+     |   Field                             |  Length  |
+     +=====================================+==========+
+     | Timestamp as *Double*               |  8 bytes |
+     +-------------------------------------+----------+
+     | TrainId                             |  8 bytes |
+     +-------------------------------------+----------+
+     | File position in configuration file |  8 bytes |
+     +-------------------------------------+----------+
+     | Extent1                             |  4 bytes |
+     +-------------------------------------+----------+
+     | Extent2                             |  4 bytes |
+     +-------------------------------------+----------+
 
 Fixed record size (32 bytes) allows easy calculation at positioning in the index file and
 applying selection of data points without touching the "raw" configuration files. See DataLogReader below.
@@ -126,10 +126,10 @@ DataLogReader device implements "slotGetPropertyHistory" slot function that is c
 on behalf of Gui client, for example, due to trendline widget requests. The request comes with information
 about deviceId of user device, requested property and time range (from/to).   The DataLogReader does the following
 
-* define file number for the "from" time request using content file
-* find positions in property index file of "from" and "to" timestamps and get the structure containing index file position and file number corresponding "from" timestamp, position and number corresponding "to" timestamp and vector of number of entries in files that belongs to requested time range.
-* calculate total number of entries containing in this vector
-* calculate "reduction factor"
+* define file numbers for the "from" and "to" time request using content file
+* find positions in property index file of "from" and "to" timestamps and get the structure containing index file record number and file number corresponding "from" timestamp, record number and file number corresponding the "to" timestamp and vector of number of entries in files that belongs to requested time range.
+* calculate total number of entries containing in this vector (equal to sum of all vector element values)
+* calculate "reduction factor" using requested number of data points.
 * read "configuration files" via reduced binary index ( ~ 800 data points )
 
 DataLogReader device is used by GuiServer device for executing requests about property
