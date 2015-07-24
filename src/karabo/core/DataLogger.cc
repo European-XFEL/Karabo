@@ -89,11 +89,12 @@ namespace karabo {
             connect(m_deviceToBeLogged, "signalChanged", "", "slotChanged", NO_TRACK);
             connect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated", NO_TRACK);
 
-            if (!boost::filesystem::exists(get<string>("directory"))) {
+            if (!boost::filesystem::exists(get<string>("directory")))
                 boost::filesystem::create_directory(get<string>("directory"));
+            if (!boost::filesystem::exists(get<string>("directory") + "/raw"))
                 boost::filesystem::create_directory(get<string>("directory") + "/raw");
+            if (!boost::filesystem::exists(get<string>("directory") + "/idx"))
                 boost::filesystem::create_directory(get<string>("directory") + "/idx");
-            }
 
             m_lastIndex = determineLastIndex(m_deviceToBeLogged);
 
