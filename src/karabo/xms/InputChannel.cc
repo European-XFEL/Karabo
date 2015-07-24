@@ -134,8 +134,24 @@ namespace karabo {
         }
 
 
-        void InputChannel::registerIOEventHandler(const boost::function<void (const Self::Pointer&)>& ioEventHandler) {
-            m_dataAvailableHandler = ioEventHandler;
+        void InputChannel::registerInputHandler(const boost::function<void (const Self::Pointer&)>& ioInputHandler) {
+            if (m_dataHandler) {
+                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
+                        << "data handler per Data since setting one per InputChannel";
+                m_dataHandler.clear();
+            }
+            m_inputHandler = ioInputHandler;
+        }
+
+
+        void InputChannel::registerDataHandler(const boost::function<void (const Data&)>& ioDataHandler) {
+            if (m_inputHandler) {
+                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
+                        << "data handler per InputChannel since setting one per Data";
+                m_inputHandler.clear();
+            }
+
+            m_dataHandler = ioDataHandler;
         }
 
 
@@ -375,8 +391,27 @@ namespace karabo {
 
 
         void InputChannel::triggerIOEvent() {
-            if (m_dataAvailableHandler) {
-                m_dataAvailableHandler(shared_from_this());
+            // There is either m_inputHandler or m_dataHandler
+            // (or neither), see registerInputHandler and registerDataHandler.
+            if (m_inputHandler && m_dataHandler) {
+                // Just in case that the above promise is not the case...
+                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
+                        << "input handler since we have a data handler.";
+                // Clear inputHandler since dataHandler is the recommended
+                // interface (though inputHandler is more general...).
+                m_inputHandler.clear();
+            }
+
+            if (m_dataHandler) {
+                for (size_t i = 0; i < this->size(); ++i) {
+                    m_dataHandler(this->read(i));
+                }
+                this->update();
+            }
+            if (m_inputHandler) {
+                m_inputHandler(shared_from_this());
+                // FIXME: Move call to this->update() from
+                //        m_dataHandlerPerChannel to here!
             }
         }
 

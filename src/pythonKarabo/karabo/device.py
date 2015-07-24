@@ -635,6 +635,7 @@ class PythonDevice(NoFsm):
 
     def initChannels(self):
         keys = self.fullSchema.getKeys()
+        # GF: FIXME - go recursively down the node!
         for key in keys:
             if self.fullSchema.hasDisplayType(key):
                 displayType = self.fullSchema.getDisplayType(key)
@@ -645,9 +646,12 @@ class PythonDevice(NoFsm):
                     self.log.INFO("Creating input channel \"{}\"".format(key))
                     self._ss.createInputChannel(key, self.parameters)
     
-    def KARABO_ON_DATA(self, channelName, handler):
-        self._ss.registerDataHandler(channelName, handler)
-        
+    def KARABO_ON_DATA(self, channelName, handlerPerData):
+        self._ss.registerDataHandler(channelName, handlerPerData)
+
+    def KARABO_ON_INPUT(self, channelName, handlerPerInput):
+        self._ss.registerInputHandler(channelName, handlerPerInput)
+
     def KARABO_ON_EOS(self, channelName, handler):
         self._ss.registerEndOfStreamHandler(channelName, handler)
     
