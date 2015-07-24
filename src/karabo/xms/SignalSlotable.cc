@@ -1738,15 +1738,20 @@ namespace karabo {
 
 
         InputChannel::Pointer SignalSlotable::createInputChannel(const std::string& channelName, const karabo::util::Hash& config,
-                const boost::function<void(const InputChannel::Pointer&)>& onInputAvailableHandler,
+                const boost::function<void (const Data&) >& onDataAvailableHandler,
+                const boost::function<void (const InputChannel::Pointer&) >& onInputAvailableHandler,
                 const boost::function<void(const InputChannel::Pointer&)>& onEndOfStreamEventHandler) {
             if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
             Hash channelConfig = config.get<Hash>(channelName);
             if (channelConfig.has("schema")) channelConfig.erase("schema");
             InputChannel::Pointer channel = Configurator<InputChannel>::create("InputChannel", channelConfig);
             channel->setInstanceId(m_instanceId);
+            // in fact, only one of the following two can be set...
+            if (onDataAvailableHandler) {
+                channel->registerDataHandler(onDataAvailableHandler);
+            }
             if (onInputAvailableHandler) {
-                channel->registerIOEventHandler(onInputAvailableHandler);
+                 channel->registerInputHandler(onInputAvailableHandler);
             }
             if (onEndOfStreamEventHandler) {
                 channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
@@ -1801,9 +1806,16 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::registerDataHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler) {
-            getInputChannel(channelName)->registerIOEventHandler(handler);
+        void SignalSlotable::registerInputHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler) {
+            getInputChannel(channelName)->registerInputHandler(handler);
         }
+
+
+        void SignalSlotable::registerDataHandler(const std::string& channelName,
+                const boost::function<void (const karabo::xms::Data&) >& handler) {
+            getInputChannel(channelName)->registerDataHandler(handler);
+        }
+
 
 
         void SignalSlotable::registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler) {

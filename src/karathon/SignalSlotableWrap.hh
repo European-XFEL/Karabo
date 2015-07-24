@@ -469,6 +469,7 @@ namespace karathon {
         createOutputChannelPy(const std::string& channelName,
                               const karabo::util::Hash& config,
                               const bp::object& onOutputPossibleHandler = bp::object()) {
+            // Should we do same trick concerning bp::object as in createInputChannelPy?
             return createOutputChannel(channelName,
                                        config,
                                        boost::bind(&SignalSlotableWrap::proxyOnOutputPossibleHandler,
@@ -478,15 +479,9 @@ namespace karathon {
         karabo::xms::InputChannel::Pointer
         createInputChannelPy(const std::string& channelName,
                              const karabo::util::Hash& config,
-                             const bp::object& onInputAvailableHandler = bp::object(),
-                             const bp::object& onEndOfStreamEventHandler = bp::object()) {
-            return createInputChannel(channelName,
-                                      config,
-                                      boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler,
-                                                  this, onInputAvailableHandler, _1),
-                                      boost::bind(&SignalSlotableWrap::proxyOnEndOfStreamEventHandler,
-                                                  this, onEndOfStreamEventHandler, _1));
-        }
+                             const bp::object& onDataHandler = bp::object(),
+                             const bp::object& onInputHandler = bp::object(),
+                             const bp::object& onEndOfStreamHandler = bp::object());
 
         bp::object getOutputChannelPy(const std::string& name) {
             return bp::object(getOutputChannel(name));
@@ -497,7 +492,11 @@ namespace karathon {
         }
 
         void registerDataHandlerPy(const std::string& channelName, const bp::object& handler) {
-            registerDataHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler, this, handler, _1));
+            registerDataHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnDataAvailableHandler, this, handler, _1));
+        }
+
+        void registerInputHandlerPy(const std::string& channelName, const bp::object& handler) {
+            registerInputHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler, this, handler, _1));
         }
             
         void registerEndOfStreamHandlerPy(const std::string& channelName, const bp::object& handler) {
@@ -522,6 +521,8 @@ namespace karathon {
         void proxyOnOutputPossibleHandler(const bp::object& handler, const karabo::xms::OutputChannel::Pointer& channel);
 
         void proxyOnInputAvailableHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
+
+        void proxyOnDataAvailableHandler(const bp::object& handler, const karabo::xms::Data& data);
 
         void proxyOnEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
 
