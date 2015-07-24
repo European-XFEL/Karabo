@@ -9,4 +9,5 @@ Contents:
    mac
    binary
    sources
+   netbeans
    distributed
