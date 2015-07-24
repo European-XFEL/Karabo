@@ -15,6 +15,7 @@
 
 #include "PathElement.hh"
 #include "PluginLoader.hh"
+#include "karabo/log/Logger.hh"
 
 
 namespace karabo {
@@ -88,19 +89,19 @@ namespace karabo {
                             if (m_loadedPlugins.find(plugin) == m_loadedPlugins.end()) {
                                 void* libHandle = dlopen(plugin.c_str(), RTLD_NOW);
                                 if (libHandle == 0) {
-                                    cout << "\n******************************************************************************\n";
-                                    cout << "* ERROR while loading plugin \"" << string(it->path().filename().string())
-                                            << "\":\n*\t" << string(dlerror()) << "\n";
-                                    cout << "******************************************************************************\n" << endl;;
+                                    KARABO_LOG_FRAMEWORK_ERROR << "Trouble loading plugin "
+                                            << it->path().filename()
+                                            << ":\n\t" << string(dlerror());
                                     m_failedPlugins.push_back(plugin);
                                     //throw KARABO_INIT_EXCEPTION("Failed to load plugin " + string(it->path().filename().string()) + ": " + string(dlerror()));
                                 } else {
                                     m_loadedPlugins[it->path()] = libHandle;
-                                    cout << "Successfully loaded plugin: " << it->path().filename() << endl;
+                                    KARABO_LOG_FRAMEWORK_INFO << "Successfully loaded plugin: "
+                                            << it->path().filename();
                                     hasNewPlugins = true;
                                 }
                             } else {
-                                //cout << "has already been loaded, skipping" << endl;
+                                //cout << "has already been loaded, skipping" << endl;><>
                             }
                         } else {
                             ++otherCount;
