@@ -633,10 +633,12 @@ class PythonDevice(NoFsm):
         # timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
 
-    def initChannels(self):
-        keys = self.fullSchema.getKeys()
-        # GF: FIXME - go recursively down the node!
-        for key in keys:
+    def initChannels(self, topLevel=""):
+        # Keys under topLevel, without leading "topLevel.":
+        subKeys = self.fullSchema.getKeys(topLevel)
+        # Now go recursively down the node:
+        for subKey in subKeys:
+            key = topLevel + '.' + subKey if topLevel else subKey
             if self.fullSchema.hasDisplayType(key):
                 displayType = self.fullSchema.getDisplayType(key)
                 if displayType == "OutputChannel":
@@ -645,7 +647,16 @@ class PythonDevice(NoFsm):
                 elif displayType == "InputChannel":
                     self.log.INFO("Creating input channel \"{}\"".format(key))
                     self._ss.createInputChannel(key, self.parameters)
-    
+                else:
+                    self.log.DEBUG("Not creating in-/output channel for '" +
+                                   key + "' since it's a '" + displayType +"'")
+            elif self.fullSchema.isNode(key):
+                # Recursive call going down the tree for channels within nodes
+                self.log.DEBUG("Looking for input/output channels " +
+                               "under node '" + key + "'")
+                self.initChannels(key)
+
+
     def KARABO_ON_DATA(self, channelName, handlerPerData):
         self._ss.registerDataHandler(channelName, handlerPerData)
 
