@@ -367,7 +367,17 @@ namespace karathon {
             PyArray_Descr* dtype = PyArray_DESCR(arr);
             ChannelSpaceType _channelSpace = Types::convert<FromNumpy, karabo::xms::ToChannelSpace>(dtype->type_num);
 
-            self->setData(data, size, copy);
+            // check if we have to release carr
+            if (PyArray_DATA(carr) == PyArray_DATA(arr)) {   // The input np array was contiguous
+                // No real copy done 
+                self->setData(data, size, copy);
+            } else {
+                // copy done
+                self->setData(data, size, true);
+            }
+            
+            // check if we have to 
+            
             // We need to fix the type here
             self->set("dataType", Types::convert<FromNumpy, ToLiteral>(dtype->type_num));
 
@@ -386,6 +396,10 @@ namespace karathon {
                 self->setChannelSpace(channelSpace);
 
             self->setIsBigEndian(false);
+            
+            // Kill created earlier 'carr' object
+            Py_DECREF(carr);
+            
         } else {
             throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray or Hash");
         }
