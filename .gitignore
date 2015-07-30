@@ -12,7 +12,14 @@ GNU-Linux-x86
 *~
 *.orig
 package/
-run/
+run/packages/
+run/servers/*/serverId.xml
+run/servers/*/device-server.log
+run/servers/*/lastConfiguration.xml
+run/servers/*/plugins
+run/servers/dataLoggerServer/karaboHistory
+run/servers/dataLoggerServer/loggermap.xml
+run/servers/projectServer/projects/
 src/karabo/tests/io/resources/*
 build/netbeans/*/*.log
 !.gitignore
