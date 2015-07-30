@@ -84,11 +84,29 @@ int main(int argc, char** argv) {
             rawtxt.push_back(it->path());
         }
 
-        bf::path idxPath(history.string() + "/idx/");
-        if (!bf::exists(idxPath)) {
-            bf::create_directory(idxPath);
+        // Create empty 'idx' directory saving the old one if it does exist
+        bf::path idxPath(history.string() + "/idx");
+        if (bf::exists(idxPath)) {
+            bf::path pdir;
+            for (size_t ii = 1;; ii++) {
+                pdir = bf::path(history.string() + "/idx" + toString(ii));
+                if (!bf::exists(pdir)) break;
+            }
+            bf::rename(idxPath, pdir);
         }
-
+        bf::create_directory(idxPath);
+        
+        // rename "content" file
+        bf::path cfile(history.string() + "/raw/" + deviceId + "_index.txt");
+        if (bf::exists(cfile)) {
+            bf::path pfile;
+            for (size_t iii = 1;; iii++) {
+                pfile = bf::path(cfile.string() + toString(iii));
+                if (!bf::exists(pfile)) break;
+            }
+            bf::rename(cfile, pfile);
+        }
+        
         if (!bf::exists(schemaPath))
             throw KARABO_PARAMETER_EXCEPTION("Schema file: " + schemaPath.string() + " not found. Cannot continue...");
     }
@@ -146,13 +164,13 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
     unsigned int runNum = 0x0F0B1B2B;
 
     size_t recnum = 0;
-    
+
     while (irs.good()) {
         string line;
         size_t position = irs.tellg();
         if (getline(irs, line)) {
             if (line.empty()) continue;
-            
+
             vector<string> tokens;
             boost::split(tokens, line, boost::is_any_of("|"));
             if (tokens.size() != 10) {
@@ -160,7 +178,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                 continue; // This record is corrupted -- skip it
             }
             recnum++;
-            
+
             // tokens[0] => epochISO8601
             // tokens[1] => epochDouble
             // tokens[2] => epochSeconds
@@ -177,7 +195,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
 
             //cout << "*** " << recnum << " *** "
             //        "\t" << "position in input : " << position << ", epoch: " << seconds << "." << fraction << endl;
-            
+
             while (seconds > schemaRange.toSeconds || (seconds == schemaRange.toSeconds && fraction > schemaRange.toFraction)) {
                 if (sfs.fail()) break;
                 schemaRange.fromSeconds = schemaRange.toSeconds;
@@ -208,19 +226,19 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                         << " " << position << " " << tokens[8] << " " << number << "\n";
 
                 ocs.close();
-                
+
                 //cout << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] << " " << tokens[4]
                 //        << " " << position << " " << tokens[8] << " " << number << endl;
-                
+
                 if (tokens[9] == "LOGOUT") {
                     map<string, MetaData::Pointer>::iterator ii = idxMap.begin();
                     while (ii != idxMap.end()) {
                         MetaData::Pointer mdp = ii->second;
                         if (mdp && mdp->idxStream.is_open()) {
-                            mdp->marker = true;  // mark the record by "LOGOUT" event
+                            mdp->marker = true; // mark the record by "LOGOUT" event
                             ++ii;
                         } else {
-                            idxMap.erase(ii++);  // forget about "not opened" entries to mimic DataLogger behavior
+                            idxMap.erase(ii++); // forget about "not opened" entries to mimic DataLogger behavior
                         }
                     }
                 } else {
@@ -231,9 +249,9 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                     }
                 }
             }
-            
+
             if (tokens[5] == ".") continue;
-            
+
             // Check if we need to build index for this property by inspecting schema
             if (schema->has(tokens[5]) && schema->isAccessReadOnly(tokens[5])) {
                 map<string, MetaData::Pointer>::iterator it = idxMap.find(tokens[5]);
