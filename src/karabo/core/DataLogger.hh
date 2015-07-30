@@ -40,6 +40,7 @@ namespace karabo {
             std::string m_user;
             karabo::util::Timestamp m_lastDataTimestamp;
             bool m_pendingLogin;
+            bool m_newFile;
 
             long m_startPosition;
             boost::thread m_flushThread;
@@ -54,11 +55,7 @@ namespace karabo {
 
             DataLogger(const karabo::util::Hash& input);
 
-            virtual ~DataLogger() {
-                slotTagDeviceToBeDiscontinued(true, 'L');
-                KARABO_LOG_INFO << "dead.";
-            }
-
+            virtual ~DataLogger();
 
         private: // Functions
 
