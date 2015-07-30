@@ -30,6 +30,9 @@ namespace karabo {
             std::string idxFile;
             std::ofstream idxStream;
             Record record;
+            bool marker;     // flag that tells should be current record to be marked
+            
+            MetaData() : idxFile(), idxStream(), record(), marker(true) {}
         };
         
         struct MetaSearchResult {

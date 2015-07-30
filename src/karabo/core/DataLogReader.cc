@@ -146,6 +146,7 @@ namespace karabo {
                         df.seekg(record.positionInRaw, ios::beg);
                         string line;
                         if (getline(df, line)) {
+                            if (line.empty()) continue;
                             vector<string> tokens;
                             boost::split(tokens, line, boost::is_any_of("|"));
                             if (tokens.size() != 10) {
@@ -404,9 +405,10 @@ namespace karabo {
                                                           const karabo::util::Epochstamp& efrom, const karabo::util::Epochstamp& eto) {
             MetaData::Record record;
             MetaSearchResult result;
-            result.fromFileNumber = -1;
-            result.toFileNumber = -1;
             size_t endnum = getFileIndex(deviceId);
+
+            result.fromFileNumber = startnum;
+            result.toFileNumber = tonum;
 
             double from = efrom.toTimestamp();
             double to = eto.toTimestamp();
@@ -437,15 +439,14 @@ namespace karabo {
                 if (f.is_open()) f.close();
         
                 fname = get<string>("directory") + "/idx/" + deviceId + "_configuration_" + toString(fnum) + "-" + path + "-index.bin";
-                filesize = bf::file_size(fname, ec);
-                if (ec) throw KARABO_PARAMETER_EXCEPTION("Failed to get filesize of \"" + fname + "\" -- " + ec.message());
-                nrecs = filesize / sizeof (MetaData::Record);
-                assert(filesize % sizeof (MetaData::Record) == 0);  // must be multiple to size of record
-
-                f.open(fname.c_str(), ios::in | ios::binary);
+                f.open(fname.c_str(), ios::in | ios::binary | ios::ate);
                 if (!f.is_open()) throw KARABO_IO_EXCEPTION("Failed to open file \"" + fname + "\".");
-
+                filesize = f.tellg();
+                nrecs = filesize / sizeof (MetaData::Record);
+                assert(filesize % sizeof (MetaData::Record) == 0);
+                
                 // read first record
+                f.seekg(0, ios::beg);
                 f.read((char*) &record, sizeof (MetaData::Record));
                 epochLeft = firstEpochInFile = record.epochstamp;
                 recLeft = 0;

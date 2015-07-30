@@ -72,22 +72,29 @@ namespace karabo {
 
 
         DataLogger::DataLogger(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
+            m_newFile = false;
+            m_pendingLogin = true;
+
             input.get("deviceToBeLogged", m_deviceToBeLogged);
+            // start "flush" thread ...
+            m_flushThread = boost::thread(boost::bind(&DataLogger::flushThread, this));
+        }
+
+
+        DataLogger::~DataLogger() {
+            // stop and join "flush" thread if it is running...
+            if (m_flushThread.joinable()) {
+                m_flushThread.interrupt();
+                m_flushThread.join();
+            }
+            slotTagDeviceToBeDiscontinued(true, 'L');
+            KARABO_LOG_INFO << "dead.";
         }
 
 
         void DataLogger::okStateOnEntry() {
 
             m_user = "."; //TODO:  Define proper user running a device. The dot is unknown user?
-            m_pendingLogin = false;
-
-            // Register slots
-            SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
-            SLOT2(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
-            SLOT2(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
-
-            connect(m_deviceToBeLogged, "signalChanged", "", "slotChanged", NO_TRACK);
-            connect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated", NO_TRACK);
 
             if (!boost::filesystem::exists(get<string>("directory")))
                 boost::filesystem::create_directory(get<string>("directory"));
@@ -98,7 +105,14 @@ namespace karabo {
 
             m_lastIndex = determineLastIndex(m_deviceToBeLogged);
 
-            slotTagDeviceToBeDiscontinued(false, 'L'); // 2nd arg means: device was not valid up to now, 3rd means logger
+            // Register slots
+            SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
+            SLOT2(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
+            SLOT2(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
+
+            connect(m_deviceToBeLogged, "signalChanged", "", "slotChanged", NO_TRACK);
+            connect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated", NO_TRACK);
+
             refreshDeviceInformation();
 
         }
@@ -118,68 +132,28 @@ namespace karabo {
         void DataLogger::slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason) {
             KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued " << wasValidUpToNow << " '" << reason << "'";
             try {
-                string filename = get<string>("directory") + "/raw/" + m_deviceToBeLogged + "_configuration_" + toString(m_lastIndex) + ".txt";
-                string contentPath = get<string>("directory") + "/raw/" + m_deviceToBeLogged + "_index.txt";
-                if (wasValidUpToNow) {
-                    // stop and join "flush" thread if it is running...
-                    if (m_flushThread.joinable()) {
-                        m_flushThread.interrupt();
-                        m_flushThread.join();
-                    }
+                boost::mutex::scoped_lock lock(m_configMutex);
+                if (m_configStream.is_open()) {
+                    m_configStream << m_lastDataTimestamp.toIso8601Ext() << "|" << fixed << m_lastDataTimestamp.toTimestamp()
+                            << "|" << m_lastDataTimestamp.getSeconds() << "|" << m_lastDataTimestamp.getFractionalSeconds()
+                            << "|" << m_lastDataTimestamp.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
+                    long position = m_configStream.tellp();
+                    m_configStream.close();
+                    string contentPath = get<string>("directory") + "/raw/" + m_deviceToBeLogged + "_index.txt";
+                    ofstream contentStream(contentPath.c_str(), ios::app);
+                    contentStream << "-LOG " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp()
+                            << " " << m_lastDataTimestamp.getSeconds() << " " << m_lastDataTimestamp.getFractionalSeconds()
+                            << " " << m_lastDataTimestamp.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
+                    contentStream.close();
+                    //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued index stream closed";
 
-                    long position = 0;
-                    {
-                        boost::mutex::scoped_lock lock(m_configMutex);
-                        if (m_configStream.is_open()) {
-                            m_configStream << m_lastDataTimestamp.toIso8601Ext() << "|" << fixed << m_lastDataTimestamp.toTimestamp()
-                                    << "|" << m_lastDataTimestamp.getSeconds() << "|" << m_lastDataTimestamp.getFractionalSeconds()
-                                    << "|" << m_lastDataTimestamp.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
-                            position = m_configStream.tellp();
-                            m_configStream.close();
-                        }
+                    for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
+                        MetaData::Pointer mdp = it->second;
+                        if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
                     }
-                    if (position > 0) {
-                        ofstream contentStream(contentPath.c_str(), ios::app);
-                        contentStream.seekp(0, ios_base::end);
-                        contentStream << "-LOG " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp()
-                                << " " << m_lastDataTimestamp.getSeconds() << " " << m_lastDataTimestamp.getFractionalSeconds()
-                                << " " << m_lastDataTimestamp.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
-                        contentStream.close();
-                        //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued index stream closed";
-
-                        for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
-                            MetaData::Pointer mdp = it->second;
-                            if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
-                            m_idxMap.erase(it);
-                        }
-                        //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued idxMap is cleaned";
-                    }
-                    return;
+                    m_idxMap.clear();
+                    //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued idxMap is cleaned";
                 }
-
-                if (!m_configStream.is_open()) {
-                    m_configStream.open(filename.c_str(), ios::in | ios::out | ios::app);
-                    if (!m_configStream.is_open()) {
-                        throw KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
-                    }
-                    // Make sure that the file contains '\n' (newline) at the end
-                    m_configStream.seekg(0, ios::end);
-                    long pos = m_configStream.tellg();
-                    if (pos > 0) { // ... file is not empty!
-                        string nl;
-                        m_configStream.seekg(pos - 1, ios::beg);
-                        m_configStream >> nl; // if newline exists the status will "fail" or "eof" because "nl" string is empty
-                        if (m_configStream.fail()) m_configStream.clear(); // clear the status otherwise stream will not work
-                        m_configStream.seekg(0); // without this statement the writing doesn't work
-                        if (!nl.empty()) {
-                            m_configStream << "\n";
-                            m_configStream.flush();
-                        }
-                    }
-                }
-                m_pendingLogin = true;
-                // start "flush" thread ...
-                m_flushThread = boost::thread(boost::bind(&DataLogger::flushThread, this));
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Problems tagging " + m_deviceToBeLogged + " to be discontinued"));
             }
@@ -188,23 +162,9 @@ namespace karabo {
 
         void DataLogger::slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId) {
 
-            if (m_currentSchema.empty()) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Schema for " << deviceId << " still empty";
-                return;
-            }
-            
-            {
-                boost::mutex::scoped_lock lock(m_configMutex);
-                if (!m_configStream.is_open()) {
-                    return;
-                }
-                if (m_pendingLogin) {
-                    m_configStream.flush();
-                    if (m_configStream.fail()) m_configStream.clear();
-                    m_configStream.seekp(0, ios::end); // position to EOF
-                }
-            }
-            
+            // To write log I need schema ...
+            if (m_currentSchema.empty()) return;
+
             // TODO: Define these variables: each of them uses 24 bits
             int expNum = 0x0F0A1A2A;
             int runNum = 0x0F0B1B2B;
@@ -214,6 +174,8 @@ namespace karabo {
 
             vector<string> paths;
             configuration.getPaths(paths);
+
+            boost::mutex::scoped_lock lock(m_configMutex);
 
             for (size_t i = 0; i < paths.size(); ++i) {
                 const string& path = paths[i];
@@ -226,30 +188,43 @@ namespace karabo {
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 m_lastDataTimestamp = t;
 
-                long position;
-
-                {
-                    boost::mutex::scoped_lock lock(m_configMutex);
-                    position = m_configStream.tellp(); // get current file size
-                    if (position == -1) {
-                        string filename = get<string>("directory") + "/raw/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
-                        throw KARABO_IO_EXCEPTION("Failed to position in file \"" + filename + "\"");
+                if (!m_configStream.is_open()) {
+                    string configName = get<string>("directory") + "/raw/" + m_deviceToBeLogged + "_configuration_" + toString(m_lastIndex) + ".txt";
+                    m_configStream.open(configName.c_str(), ios::out | ios::app);
+                    if (!m_configStream.is_open()) {
+                        KARABO_LOG_ERROR << "Failed to open \"" << configName << "\". Check permissions.";
+                        return;
                     }
-
-                    m_configStream << t.toIso8601Ext() << "|" << fixed << t.toTimestamp() << "|" << t.getSeconds() << "|"
-                            << t.getFractionalSeconds() << "|" << t.getTrainId() << "|" << path << "|" << type << "|"
-                            << value << "|" << m_user;
-                    if (m_pendingLogin) m_configStream << "|LOGIN\n";
-                    else m_configStream << "|VALID\n";
+                    if (m_configStream.tellp() > 0) {
+                        // Make sure that the file contains '\n' (newline) at the end of previous round
+                        m_configStream << '\n';
+                    } else
+                        m_newFile = true;
                 }
 
-                if (m_pendingLogin) {
-                    m_pendingLogin = false;
+                size_t position = m_configStream.tellp(); // get current file size
+
+                m_configStream << t.toIso8601Ext() << "|" << fixed << t.toTimestamp() << "|" << t.getSeconds() << "|"
+                        << t.getFractionalSeconds() << "|" << t.getTrainId() << "|" << path << "|" << type << "|"
+                        << value << "|" << m_user;
+                if (m_pendingLogin) m_configStream << "|LOGIN\n";
+                else m_configStream << "|VALID\n";
+
+                if (m_pendingLogin || m_newFile) {
                     string contentPath = get<string>("directory") + "/raw/" + deviceId + "_index.txt";
                     ofstream contentStream(contentPath.c_str(), ios::app);
-                    contentStream << "+LOG " << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " "
+                    if (m_pendingLogin) {
+                        contentStream << "+LOG ";
+                    } else {
+                        contentStream << "=NEW ";
+                    }
+
+                    contentStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " "
                             << t.getFractionalSeconds() << " " << t.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
                     contentStream.close();
+
+                    m_pendingLogin = false;
+                    m_newFile = false;
                 }
 
 
@@ -265,7 +240,7 @@ namespace karabo {
                         mdp->record.trainId = t.getTrainId();
                         mdp->record.positionInRaw = position;
                         mdp->record.extent1 = (expNum & 0xFFFFFF);
-                        mdp->record.extent2 = (runNum && 0xFFFFFF) | (1 << 30);
+                        mdp->record.extent2 = (runNum & 0xFFFFFF) | (1 << 30);
                         m_idxMap[path] = mdp;
                         // defer writing: write only if more changes come
                     } else {
@@ -288,38 +263,15 @@ namespace karabo {
             long maxFilesize = get<int>("maximumFileSize") * 1000000; // times to 1000000 because maximumFilesSize in MBytes
             long position = m_configStream.tellp();
             if (maxFilesize <= position) {
-                {
-                    boost::mutex::scoped_lock lock(m_configMutex);
-                    m_configStream.close();
-                    // increment index number for configuration file
-                    m_lastIndex = incrementLastIndex(deviceId);
-                    string filename = get<string>("directory") + "/raw/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
-                    m_configStream.open(filename.c_str(), ios::in | ios::out | ios::app);
-                    if (!m_configStream.is_open()) {
-                        throw KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
-                    }
-                }
-                // record changing the file into index file
-                string contentPath = get<string>("directory") + "/raw/" + deviceId + "_index.txt";
-                ofstream contentStream(contentPath.c_str(), ios::app);
-                contentStream << "=NEW " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp() << " " << m_lastDataTimestamp.getSeconds() << " "
-                        << m_lastDataTimestamp.getFractionalSeconds() << " " << m_lastDataTimestamp.getTrainId() << " 0 " << m_user << " " << m_lastIndex << "\n";
-                contentStream.close();
+                // increment index number for configuration file
+                m_lastIndex = incrementLastIndex(deviceId);
+                m_configStream.close();
 
                 for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
                     MetaData::Pointer mdp = it->second;
-                    if (mdp && !mdp->idxStream.is_open()) continue;
-                    // close and re-open only files for properties that were opened earlier
-                    mdp->idxStream.close();
-                    // Extract property name from the former file name
-                    vector<string> tokens;
-                    boost::split(tokens, mdp->idxFile, boost::is_any_of("-"));
-                    string& path = tokens[1];
-                    // build new file name
-                    mdp->idxFile = get<string>("directory") + "/idx/" + deviceId + "_configuration_" + toString(m_lastIndex)
-                            + "-" + path + "-index.bin";
-                    mdp->idxStream.open(mdp->idxFile.c_str(), ios::out | ios::app | ios::binary);
+                    if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
                 }
+                m_idxMap.clear();
             }
         }
 

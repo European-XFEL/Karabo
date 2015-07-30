@@ -208,6 +208,16 @@ cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 cd ../brokerMessageLogger
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
+# idxview
+cd ../tools/dataLoggerIndex/idxview
+cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
+cd ../..
+
+#idxbuild
+cd ../tools/dataLoggerIndex/idxbuild
+cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
+cd ../..
+
 # pythonKarabo
 cd ../pythonKarabo
 safeRunCommand "./build.sh"
