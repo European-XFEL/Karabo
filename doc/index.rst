@@ -8,6 +8,7 @@ Contents:
    installation/index
    howto/index
    library/index
+   tools/index
    documentation   
    :maxdepth: 2
 

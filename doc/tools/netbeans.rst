@@ -1,4 +1,4 @@
-.. _gettingStartedNetbeans:
+.. _toolsNetbeans:
 
 **************************
 Getting Started - NetBeans
