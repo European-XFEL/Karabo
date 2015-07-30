@@ -128,6 +128,8 @@ bundle: build
 	cd ../karathon; $(MAKE) CONF=$(CONF)
 	cd ../deviceServer; $(MAKE) CONF=$(CONF)
 	cd ../brokerMessageLogger; $(MAKE) CONF=$(CONF)
+	cd ../tools/dataLoggerIndex/idxview; $(MAKE) CONF=$(CONF)
+	cd ../tools/dataLoggerIndex/idxbuild; $(MAKE) CONF=$(CONF)
 
 # DEPRECATE!
 package: bundle-package
@@ -147,6 +149,8 @@ bundle-clean: clean
 	cd ../karathon; $(MAKE) clean CONF=$(CONF)
 	cd ../deviceServer; $(MAKE) clean CONF=$(CONF)
 	cd ../brokerMessageLogger; $(MAKE) clean CONF=$(CONF)
+	cd ../tools/dataLoggerIndex/idxview; $(MAKE) clean CONF=$(CONF)
+	cd ../tools/dataLoggerIndex/idxbuild; $(MAKE) clean CONF=$(CONF)
 
 # clean
 clean: .clean-post
