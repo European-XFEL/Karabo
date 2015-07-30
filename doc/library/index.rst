@@ -13,4 +13,5 @@ bindings, the native Python package and the pyQt-based GUI.
    testing
    reference
    dataLogger
+   guiServer
    
