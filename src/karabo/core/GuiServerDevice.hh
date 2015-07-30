@@ -25,7 +25,7 @@ namespace karabo {
 
     namespace core {
 
-        class GuiServerDevice : public karabo::core::Device<OkErrorFsm> {
+        class GuiServerDevice : public karabo::core::Device<> {
 
             struct NetworkConnection {
                 std::string name;
@@ -67,7 +67,7 @@ namespace karabo {
 
             virtual ~GuiServerDevice();
             
-            void okStateOnEntry();
+            void initialize();
 
 
         private: // Functions
