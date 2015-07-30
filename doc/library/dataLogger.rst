@@ -1,6 +1,6 @@
-***********
-Data Logging
-***********
+*************
+ Data Logging
+*************
 
 Data Logging is a service consisting of several components (devices):  DataLoggerManager, DataLogger devices and
 DataLogReader.  They may run on the same device server or may be spread across separate device servers that
