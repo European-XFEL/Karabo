@@ -16,9 +16,9 @@ CND_PACKAGE_NAME_Debug=idxbuild.tar
 CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/idxbuild.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux-x86
-CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86
+CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86/bin
 CND_ARTIFACT_NAME_Release=idxbuild
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/idxbuild
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/bin/idxbuild
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=idxbuild.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/idxbuild.tar
