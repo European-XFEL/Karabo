@@ -189,7 +189,8 @@ namespace karabo {
             }
             string foreignHost("unknown");
             if (instanceInfo.has("host")) instanceInfo.get("host", foreignHost);
-            string msg("Another instance with the same ID is already online (on host: " + foreignHost + ")");
+            const string msg("Another instance with ID '" + instanceId
+                             + "' is already online (on host: " + foreignHost + ")");
             return std::make_pair(false, msg);
         }
 
