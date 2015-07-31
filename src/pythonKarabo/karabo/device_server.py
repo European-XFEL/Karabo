@@ -595,8 +595,12 @@ class DeviceServer(object):
             self.log.INFO("Device \"{}\" removed from server.".format(id))
 
     def slotGetClassSchema(self, classid):
-        schema = Configurator(PythonDevice).getSchema(classid)
-        self.ss.reply(schema, classid, self.serverid)
+        try:
+            schema = Configurator(PythonDevice).getSchema(classid)
+            self.ss.reply(schema, classid, self.serverid)
+        except AttributeError as e:
+            self.log.WARN("Replied empty schema due to : {}".format(str(e)))
+            self.ss.reply(Schema(), classid, self.serverid)
         
     def processEvent(self, event):
         with self.processEventLock:
