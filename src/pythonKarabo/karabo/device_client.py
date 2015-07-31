@@ -414,8 +414,8 @@ def getDevices(serverId=None):
     if serverId is None:
         return list(instance.systemTopology["device"])
     else:
-        return [k for k, v in instance.systemTopology["device"]
-                if v["serverId"] == serverId]
+        return [k for k, v, a in instance.systemTopology["device"].iterall()
+                if a["serverId"] == serverId]
 
 def getServers():
     """Return a list of currently running servers"""
