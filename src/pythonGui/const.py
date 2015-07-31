@@ -17,6 +17,7 @@ ns_svg = "{http://www.w3.org/2000/svg}"
 ns_karabo = "{http://karabo.eu/scene}"
 ElementTree.register_namespace("svg", ns_svg[1:-1])
 ElementTree.register_namespace("krb", ns_karabo[1:-1])
+ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 
 
 # Parameter item properties
