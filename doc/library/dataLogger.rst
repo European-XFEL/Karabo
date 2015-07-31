@@ -123,11 +123,11 @@ applying selection of data points without touching the "raw" configuration files
 Index tools
 -----------
 Some useful tools are located in $KARABO/bin directory
-The binary index files can be inspected if needed by *idxview*:
+The binary index files can be inspected if needed by **idxview**:
 
     idxview <binary-index-file>
 
-The index files may be rebuild or re-created offline using *idxbuild* command:
+The index files may be rebuild or re-created offline using **idxbuild** command:
     
     idxbuild <deviceId> <top-karabo-history-directory>
 
@@ -136,6 +136,11 @@ Example:
     cd .../karaboRun/servers/dataLoggerServers
 
     idxbuild gen karaboHistory
+
+Rebuilding reguires **raw** directory with "raw" configuration files ( <deviceId>_configuration_<number>.txt ),
+schema file ( <deviceId>_schema.txt ).  The "content" file ( <deviceId>_index.txt ) will be rebuild, the old one
+will be renamed.  The old **idx** direcotry will be renamed and the fresh directory **idx** will be created with
+generated binary index files.
 
  
 DataLogReader
