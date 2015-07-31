@@ -121,11 +121,14 @@ class Tests(TestCase):
     @coroutine
     def init_topo(self, dc):
         yield from dc.startInstance()
-        other = Other(dict(_deviceId_="other"))
+        other = Other(dict(_deviceId_="other", _serverId_="tserver"))
         self.assertNotIn("other", getDevices())
+        self.assertNotIn("other", getDevices("tserver"))
         yield from other.startInstance()
         yield from sleep(1)
         self.assertIn("other", getDevices())
+        self.assertIn("other", getDevices("tserver"))
+        self.assertNotIn("other", getDevices("bserver"))
 
     def test_topology(self):
         loop = setEventLoop()
