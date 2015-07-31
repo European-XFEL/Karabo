@@ -259,7 +259,7 @@ class GuiServer(DeviceClientBase):
     def handle_closeProject(self, channel, user, name):
         name, success, data = yield from self.call(
             "Karabo_ProjectManager", "slotCloseProject", user, name)
-        self.respond(channel, "projectLoaded", name=name, success=success,
+        self.respond(channel, "projectClosed", name=name, success=success,
                      data=data)
 
     @slot
