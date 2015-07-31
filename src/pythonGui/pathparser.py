@@ -15,7 +15,7 @@ class Parser(object):
             raise StopIteration
         ret = float(self.number) if self.number is not None else self.token
         try:
-            self.token, self.number, _, _, _ = self.iter.next().groups()
+            self.token, self.number, _, _, _ = next(self.iter).groups()
         except StopIteration:
             self.iter = None
         return ret
@@ -53,7 +53,7 @@ class Parser(object):
 
 
     def m(self, relative):
-        p = self.points(relative).next()
+        p = next(self.points(relative))
         self.path.moveTo(p)
         self.l(relative)
 
