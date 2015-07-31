@@ -82,7 +82,8 @@ This file (<deviceId>.last) stores the last file number used.
 Schema.
 -------
 
-This file (<deviceId>_schema.txt) contains user device schema as XML file.
+This file (<deviceId>_schema.txt) contains records of timestamps (seconds, fraction), trainId and user device schema
+ as XML string.
 
 Binary index streams
 --------------------
@@ -119,6 +120,24 @@ The record format of binary index file contains 5 fields:
 Fixed record size (32 bytes) allows easy calculation at positioning in the index file and
 applying selection of data points without touching the "raw" configuration files. See DataLogReader below.
 
+Index tools
+-----------
+Some useful tools are located in $KARABO/bin directory
+The binary index files can be inspected if needed by *idxview*:
+
+    idxview <binary-index-file>
+
+The index files may be rebuild or re-created offline using *idxbuild* command:
+    
+    idxbuild <deviceId> <top-karabo-history-directory>
+
+Example:
+
+    cd .../karaboRun/servers/dataLoggerServers
+
+    idxbuild gen karaboHistory
+
+ 
 DataLogReader
 =============
 
