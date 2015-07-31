@@ -7,7 +7,11 @@
 Introduction
 ============
 
-From `wikipedia <http://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments>`_: 'The Standard Commands for Programmable Instruments (SCPI) (often pronounced "skippy") defines a standard for syntax and commands to use in controlling programmable test and measurement devices.'
+From `wikipedia
+<http://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments>`_:
+'The Standard Commands for Programmable Instruments (SCPI) (often
+pronounced "skippy") defines a standard for syntax and commands to use
+in controlling programmable test and measurement devices.'
 
 
 How to Create a SCPI Karabo Device
@@ -17,7 +21,7 @@ Create a python Karabo Device, called for example myScpiDevice:
 
 .. code-block:: bash
 
-    ./karabo new myScpiDevice controlDevices pythonDevice reuseFsm MyScpiDevice
+    ./karabo new myScpiDevice controlDevices pythonDevice minimal MyScpiDevice
 
 Go into the base directory of the project:
 
@@ -30,27 +34,40 @@ Add there a DEPENDS file like this:
 .. code-block:: bash
 
     # type        category        package    tag
-    dependency    dependencies    scpi       branches/1.0-1.3
+    dependency    dependencies    scpi       branches/1.1-1.3
 
-Open the source file in Netbeans for editing.
+Do not forget to add the DEPENDS file to the repository:
+
+.. code-block:: bash
+
+    svn add DEPENDS
+
+Now you can open the source file, MyScpiDevice.py, for editing.
 
 
 State Machines
 ==============
 
-There are currently three state machines available for SCPI devices: ScpiOkErrorFsm, ScpiOnOffFsm, ScpiStartStopFsm.
+There are currently three state machines available for SCPI devices:
+ScpiOkErrorFsm, ScpiOnOffFsm, ScpiStartStopFsm.
 
-ScpiOkErrorFsm is the simplest one. It has only three states: Disconnected, Ok and Error.
+ScpiOkErrorFsm is the simplest one. It has only three states:
+Disconnected, Ok and Error.
 
-ScpiOnOffFsm has three top states: Disconnected, Ok and Error, and the Ok state contains two sub-states, Ok.On and Ok.Off. This state machine is suitable for example for power supplies.
+ScpiOnOffFsm has three top states: Disconnected, Ok and Error, and the
+Ok state contains two sub-states, Ok.On and Ok.Off. This state machine
+is suitable for example for power supplies.
 
-ScpiStartStopFsm has three top states: Disconnected, Ok and Error, and the Ok state contains two sub-states, Ok.Started and Ok.Stopped. This state machine is suitable for example for measurement devices.
+ScpiStartStopFsm has three top states: Disconnected, Ok and Error, and
+the Ok state contains two sub-states, Ok.Started and Ok.Stopped. This
+state machine is suitable for example for measurement devices.
 
 
 Writing an Ok/Error Device
 ==========================
 
-The state machine to be used is ScpiOkErrorFsm. The device is very simple and should look like:
+The state machine to be used is ScpiOkErrorFsm. The device is very
+simple and should look like:
 
 .. code-block:: python
 
@@ -81,13 +98,17 @@ The state machine to be used is ScpiOkErrorFsm. The device is very simple and sh
     if __name__ == "__main__":
         launchPythonDevice()
 
-The SCPI parameters can be accessed using Karabo expected parameters (more details in the following).
+The SCPI parameters can be accessed using Karabo expected parameters
+(see the :ref:`scpi-expected-parameters` Section for details).
 
 
 Writing an On/Off Device
 ========================
 
-The state machine to be used is ScpiOnOffFsm. The device should look pretty much like the Ok/Error one, except for the state machine to be used. There is also a hook, followHardwareState, which can be used to force the Karabo device to follow the hardware state.
+The state machine to be used is ScpiOnOffFsm. The device should look
+pretty much like the Ok/Error one, except for the state machine to be
+used. There is also a hook, followHardwareState, which can be used to
+force the Karabo device to follow the hardware state.
 
 .. code-block:: python
 
@@ -123,13 +144,20 @@ The state machine to be used is ScpiOnOffFsm. The device should look pretty much
     if __name__ == "__main__":
         launchPythonDevice()
 
-In the followHardwareState() method you can use self.followOn() and self.followOff() to force the device to follow the hardware state, without executing any action.
+In the followHardwareState() method you can use self.followOn() and
+self.followOff() to force the device to follow the hardware state,
+without executing any action.
 
 
 Writing a Start/Stop Device
 ===========================
 
-The state machine to be used is ScpiStartStopFsm. There are three additional hooks: preAcquisition() will be executed when entering the startedState, postAcquisition() will be executed when leaving the startedState, processAsyncData(data) will be executed in startedState, each time data are received asynchronously. The device should look like
+The state machine to be used is ScpiStartStopFsm. There are three
+additional hooks: preAcquisition() will be executed when entering the
+startedState, postAcquisition() will be executed when leaving the
+startedState, processAsyncData(data) will be executed in startedState,
+each time data are received asynchronously. The device should look
+like
 
 .. code-block:: python
 
@@ -177,37 +205,53 @@ The state machine to be used is ScpiStartStopFsm. There are three additional hoo
     if __name__ == "__main__":
         launchPythonDevice()
 
-In the followHardwareState() method you can use self.followStarted() and self.followStopped() to force the device to follow the hardware state, without executing any action.
+In the followHardwareState() method you can use self.followStarted()
+and self.followStopped() to force the device to follow the hardware
+state, without executing any action.
 
+
+.. _scpi-expected-parameters:
 
 Expected Parameters
 ===================
 
 
-.. _tags-section:
+.. _scpi-tags:
 
 Tags
 ----
 
-Parameters to be read/written to the SCPI instrument must have the 'scpi' tag. If they have the 'readOnConnect' (respectively 'writeOnConnect') will be read from (written to) the instrument when the Karabo device connects to it. If they have the 'poll' tag, they will be polled regularly. The parameter tagged with the 'handshake' flag, if there, will be used to determine whether the handshaking message is turned on or off ("ON", "1", 1, True will be interpreted as handshaking is on; any other value as off).
+* **'scpi'** tag: Parameters to be read from (written to) the SCPI
+  instrument must have the 'scpi' tag.
+
+* **'readOnConnect'** and **'writeOnConnect'** tags: Parameters having
+  the 'readOnConnect' (respectively 'writeOnConnect') flag will be
+  read from (written to) the instrument when the Karabo device
+  connects to it.
+
+* **'poll'** tag: Parameters having the 'poll' tag will be polled
+  periodically. The poll interval is a parameter of the base class.
 
 
 The "sendOnConnect" Parameter
 -----------------------------
 
-Commands to be sent to the instrument when the Karabo device connects to it (for example some initial configuration), can be listed in the __init__ function; for example
+Commands to be sent to the instrument when the Karabo device connects
+to it (for example some initial configuration), can be listed in the
+__init__ function; for example
 
 .. code-block:: python
 
     self.sendOnConnect = ['TRIG:LEV 10', 'TRIG:SOURCE EXT', 'SYST:COMM:SER:BAUD 19200']
 
-These commands will be sent before the expected parameters with "writeOnConnect" tag (see :ref:`tags-section` Section).
+These commands will be sent before the expected parameters with
+"writeOnConnect" tag (see :ref:`scpi-tags` Section).
  
 
 Aliases
 -------
 
-The SCPI commands and queries corresponding to writing and reading any parameter must be written in the parameter alias. Different fields in the alias have to be separated by semicolons (;) or a different separator (as explained in :ref:`alias-separator-section` Section). For example
+The SCPI commands and queries corresponding to writing and reading any parameter must be written in the parameter alias. Different fields in the alias have to be separated by semicolons (;) or a different separator (as explained in :ref:`scpi-alias-separator` Section). For example
 
 .. code-block:: python
 
@@ -227,7 +271,7 @@ The first field in the alias contains the set command (ie >S1H) and its paramete
 The third field contains the query command (ie >S1H?) and its parameters (none). The fourth field (ie {resolutionMode:d}) is the expected reply to the query; it is parsed and resolutionMode is extracted as integer (d). Other allowed types are "w" (letters and underscores), "g" (integer, fixed point or floating point numbers). The python parse package is used for parsing: the complete list of types can be found in the `documentation <https://pypi.python.org/pypi/parse>`_.
 
 
-.. _alias-separator-section:
+.. _scpi-alias-separator:
 
 The "aliasSeparator" Parameter
 ------------------------------
@@ -238,7 +282,7 @@ The separator for the fields in the alias is by default the semicolon (;), but c
 
     self.aliasSeparator = "|"
 
-will change it to the pipe character (|).
+will change it to the pipe character (\|).
 
 
 The "terminator" Parameter
@@ -266,36 +310,61 @@ The second way to set the command terminator is by adding the "terminator" expec
 If the terminator is not set in the Karabo device, the default one will be used for communications with the SCPI instrument: "\\n".
 
 
-The "socketTimeout" Parameter
+.. _scpi-timeout-parameter:
+
+The "scpiTimeout" Parameter
 -----------------------------
 
-The socket read/write timeout (in seconds) can be redifined in __init__ with something like:
+The default scpi communication timeout used in the base class is 1
+second. This value is normally ok, but some instruments (eg the
+agilentMultimeterPy) may need a longer time to give back a
+measurement.
+
+The scpi timeout (in seconds) can be redifined in __init__ with
+something like:
 
 .. code-block:: python
 
-    self.socketTimeout = 5.0
+    self.scpiTimeout = 5.0 # New timeout value in seconds
  
-A second way to set it is by adding the "socketTimeout" expected parameter. In this way the timeout can be changed during the lifetime of the Karabo device. For example:
+A second way to set it is by adding the "scpiTimeout" expected
+parameter. In this way the timeout can be changed during the lifetime
+of the Karabo device. For example:
 
 .. code-block:: python
 
-    FLOAT_ELEMENT(expected).key("socketTimeout")
-            .displayedName("Socket Timeout")
-            .description("The socket timeout.")
+    FLOAT_ELEMENT(expected).key("scpiTimeout")
+            .displayedName("SCPI Timeout")
+            .description("The scpi communication timeout.")
             .unit(Unit.SECOND)
             .assignmentOptional().defaultValue(1.0)
             .reconfigurable()
             .commit(),
  
-If the socket timeout is not set in the Karabo device, the default value of 1 s will be used.
+If the scpi timeout is not set in the Karabo device, the default value of 1 s will be used.
 
-This value is normally ok, but some instruments (eg agilentMultimeterPy) need longer time to give back data.
+
+The "socketTimeout" Parameter
+-----------------------------
+
+The default TCP socket timeout used in the base class is 1 second.
+Similarly to the scpi communication timeout, also the TCP socket
+timeout can be redefined, either in the __init__ by doing
+
+.. code-block:: python
+
+    self.socketTimeout = 2.0 # New timeout value in seconds
+
+or by defining a "socketTimeout" element in the expected parameters.
 
 
 On/Off (and Start/Stop) Slots
 -----------------------------
 
-For On/Off (Start/Stop) devices, the on/off (start/stop) slots are already defined in the state machines. What you have to do, is to set the SCPI command in the slots's alias. For example, for the start/stop:
+For On/Off (Start/Stop) devices, the on/off (start/stop) slots are
+already defined in the state machines. What you have to do, is to set
+the SCPI command in the slots's alias. For example, for the
+start/stop:
 
 .. code-block:: python
 
@@ -313,7 +382,9 @@ For On/Off (Start/Stop) devices, the on/off (start/stop) slots are already defin
 Additional Slots (Command-like Parameters)
 ------------------------------------------
 
-A SLOT_ELEMENT should be used for a SCPI command which is not triggering a state change in the Karabo Device. This requires not only to to add the expected parameter in the list:
+A SLOT_ELEMENT should be used for a SCPI command which is not
+triggering a state change in the Karabo Device. This requires not only
+to to add the expected parameter in the list:
 
 .. code-block:: python
 
@@ -324,7 +395,7 @@ A SLOT_ELEMENT should be used for a SCPI command which is not triggering a state
         
         SLOT_ELEMENT(expected).key("statStart")
                 .tags("scpi")
-                .alias("CONF:STAT:START;;;;OK") # No query available
+                .alias("CONF:STAT:START;;;;") # No query available
                 .displayedName("Start Statistical Batch")
                 .description("Terminates the current statistical batch and start a new one.")
                 .allowedStates("Ok.Stopped")
@@ -358,7 +429,7 @@ and to implement the corresponding function,
 A Complete Example 
 ------------------
 
-Here is a complte example of expected parameters for a Start/Stop device:
+Here is a complete example of expected parameters for a Start/Stop device:
 
 .. code-block:: python
 
@@ -382,8 +453,8 @@ Here is a complte example of expected parameters for a Start/Stop device:
                 .commit(),
 
       STRING_ELEMENT(expected).key("handshake")
-                .tags("scpi handshake") # This parameter tells whether handshaking is ON or OFF
-                .alias("SYST:COMM:HAND {handshake};;SYST:COMM:HAND?;{handshake:w};OK")
+                .tags("scpi")
+                .alias("SYST:COMM:HAND {handshake};;SYST:COMM:HAND?;{handshake:w};")
                 .displayedName("Handshake")
                 .description("Set the state of the message roundtrip handshaking.")
                 .assignmentOptional().defaultValue("OFF")
@@ -394,7 +465,7 @@ Here is a complte example of expected parameters for a Start/Stop device:
 
       STRING_ELEMENT(expected).key("baudRate")
                 .tags("scpi")
-                .alias("SYST:COMM:SER:BAUD {baudRate};;SYST:COMM:SER:BAUD?;{baudRate:w};OK")
+                .alias("SYST:COMM:SER:BAUD {baudRate};;SYST:COMM:SER:BAUD?;{baudRate:w};")
                 .displayedName("Serial Baud Rate")
                 .description("Set the transmit and receive baud rates on the RS-232 port.")
                 .assignmentOptional().defaultValue("9600")
@@ -405,7 +476,7 @@ Here is a complte example of expected parameters for a Start/Stop device:
 
       INT32_ELEMENT(expected).key("errorCount")
                 .tags("scpi poll")
-                .alias(";;SYST:ERR:COUNT?;{errorCount:d};OK") # Only query available
+                .alias(";;SYST:ERR:COUNT?;{errorCount:d};") # Only query available
                 .displayedName("Error Count")
                 .description("The number of error records in the queue.")
                 .readOnly()
@@ -413,7 +484,7 @@ Here is a complte example of expected parameters for a Start/Stop device:
 
       STRING_ELEMENT(expected).key("measureType")
                 .tags("scpi writeOnConnect") # Write to h/w at initialization
-                .alias("CONF:MEAS:TYPE {measureType};;CONF:MEAS:TYPE?;{measureType:w};OK")
+                .alias("CONF:MEAS:TYPE {measureType};;CONF:MEAS:TYPE?;{measureType:w};")
                 .displayedName("Measure Type")
                 .description("Set the meter measurement mode (energy or power).")
                 .assignmentOptional().defaultValue("J")
@@ -424,7 +495,7 @@ Here is a complte example of expected parameters for a Start/Stop device:
 
       STRING_ELEMENT(expected).key("serialNumber")
                 .tags("scpi readOnConnect") # Read from h/w at initialization
-                .alias(";;SYST:INF:SNUM?;\"{serialNumber}\";OK") # Only query available
+                .alias(";;SYST:INF:SNUM?;\"{serialNumber}\";") # Only query available
                 .displayedName("Serial Number")
                 .description("The serial number.")
                 .readOnly()
@@ -434,9 +505,19 @@ Here is a complte example of expected parameters for a Start/Stop device:
 Polling Device Properties
 =========================
 
-All the expected parameters having the "poll" tag will be automatically polled
-(see :ref:`tags-section` Section). A user's hook is also provided by the base
-class, allowing the post-processing of the polled properties. For example:
+All the expected parameters having the "poll" tag will be
+automatically polled (see :ref:`scpi-tags` Section). The refresh
+interval is given by the 'pollInterval' device parameter.
+
+An immediate refresh can be triggered by the 'pollNow' command.
+
+The list of parameters to be polled can be reconfigured be means of
+the 'propertiesToPoll' property. For example, if you set it to
+'handshake,baudRate' these two properties will be polled. The access
+level for 'propertiesToPoll' property is expert.
+
+A user's hook is also provided by the base class, allowing the
+post-processing of the polled properties. For example:
 
 .. code-block:: python
 
@@ -453,3 +534,29 @@ class, allowing the post-processing of the polled properties. For example:
         self.set('property3', property3)
 
 
+Enabling the Heartbeat
+======================
+
+The scpi Karabo device can periodically send a heartbeat query to the
+instrument. The default query is "*IDN?", which should be available
+for all SCPI-compliant instruments. The sending of the heartbeat query
+is by default disabled, but it can be enabled by setting the
+'enableHeartbeat' property to True.
+
+Once a reply to the query is received, it is published in the 'heartbeatReply'
+property, and the 'heartbeatTime' is updated as well, with the current time.
+
+The query can be changed in the 'heartbeatCommand' property, and also the time interval can
+be changed in the 'heartbeatPeriod' property (default value is 5 s).
+
+
+Sending an Arbitrary Command to the Instrument
+==============================================
+
+An arbitrary command (or query) can be sent to the instrument. To do
+so, it is enough to write the command (or query) in the 'sendCommand'
+device property. This property is expert access level.
+
+Once a reply is received, it is published in the 'replyToCommand' property. If no
+reply is received after the scpi timeout (see :ref:`scpi-timeout-parameter`),
+'replyToCommand' is left empty.
