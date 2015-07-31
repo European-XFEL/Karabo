@@ -157,10 +157,7 @@ class ProjectTreeView(QTreeView):
         \return True, if project saved successfully, else False
         """
         project = self.model().currentProject()
-        # Only save, if modifications where made
-        if not project.isModified:
-            return
-        
+
         if project.access == ProjectAccess.CLOUD:
             msgBox = QMessageBox(QMessageBox.Question, "Check in project", 
                        "The project \"<b>{}</b>\" has been checked out.<br><br>"
