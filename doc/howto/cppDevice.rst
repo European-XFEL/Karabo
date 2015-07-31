@@ -111,7 +111,7 @@ provides you the full Karabo framework. Both, include pathes and namespaces foll
 * xip: Image classes, processing, GPU code
 * core: Device, DeviceServer, DeviceClient base classes
 
-Consequently, if you want to include less, you can refer to a header of a specific functionality (like in boost, e.g. <karabo/util/util.hpp>, or <karabo/io/io.hpp>).
+Consequently, if you want to include less, you can refer to a header of a specific functionality (like in boost, e.g. <karabo/util.hpp>, or <karabo/io.hpp>) or of a single class (e.g. <karabo/webAuth/Authenticator.hh>).
 
 It is good practice to place your class into the karabo namespace
 
@@ -540,7 +540,8 @@ happening. Once connected we internally call the stop command (in
 reality on should ask the h/w what state it is in an adapt
 accordingly).
 
-We are almost done, start and stop are very similar so lets only look
+We are almost done, start and stop are very similar and reset is
+almost trivial, so lets only look
 at the start function:
 
 .. code-block:: c++
@@ -597,8 +598,142 @@ configured.
 
 The next part shows one example to potentially drive your device into an Error state. Here we check, whether the conveyer stands still before starting it. Note the return statement to finish the execution of the function.
 
-The last part of the start function simulates the ramping up by giving several updates on the "currentSpeed" property with some fixed delay. Setting a property value like here for "currentSpeed" does to things, it updates the own device
+The last part of the start function simulates the ramping up by giving several updates on the "currentSpeed" property with some fixed delay. Setting a property value like here for "currentSpeed" does two things, it updates the own device
 state and publishes this value to the broker, such that interested
 clients will get an event.
 
- 
+
+Point-to-Point Communication
+============================
+The conveyor belt example is typical for a device that represents some hardware
+that is just controlled and monitored. No data is *produced* by these devices,
+but just property changes are communicated. This is done via the central
+message broker.
+
+Other devices like cameras produce large amounts of data that cannot be
+distributed this way. Instead, the data should be sent directly from one device
+producing it to one or more other devices that have registered themselves
+at the producer for that purpose. In the Karabo framework this can be done
+using a point-to-point protocoll between so called output and input channels.
+
+Output Channel
+--------------
+First, we have to tell the framework what data is to be sent via the output
+channel, i.e. to declare its scheme.
+This is done inside the ``expectedParameters`` method.
+Here is an example of a device sending a 32-bit integer, a string and
+a vector of 64-bit integers:
+
+.. code-block:: c++
+
+        Schema data;
+        INT32_ELEMENT(data).key("dataId")
+                .readOnly()
+                .commit();
+
+        STRING_ELEMENT(data).key("string")
+                .readOnly()
+                .commit();
+
+        VECTOR_INT64_ELEMENT(data).key("vector_int64")
+                .readOnly()
+                .commit();
+
+Next (but still within ``expectedParameters``), the output channel has to be
+declared. Here we create one with the key *output*:
+
+.. code-block:: c++
+
+        OUTPUT_CHANNEL(expected).key("output")
+                .displayedName("Output")
+                .dataSchema(data)
+                .commit();
+
+Whenever the device should write data to this output channel, 
+a ``Data`` object from <karabo/xms/Data.hh> has to be created and filled
+according to the schema defined above, e.g.:
+
+.. code-block:: c++
+
+        Data data;
+        data.set("dataId", 5);
+        data.set("string", std::string("This is a string to be sent."));
+        std::vector<long long> vec = ...; // create and fill the array here
+        data.set("vector_int64", vec);
+
+Note that Karabo does not yet check that the data sent matches the
+declared schema.
+
+Finally, the data is sent by calling the device method
+
+.. code-block:: c++
+
+        this->writeChannel("output", data);
+
+with the key of the channel as the first and the ``Data`` object as the second.
+
+Once the data stream is finished, i.e. no further data is to be sent, the
+end of stream method has to be called with the output channel key as argument
+to inform all input channels that receive the data:
+
+.. code-block:: c++
+
+        signalEndOfStream("output");
+
+
+Input Channel
+--------------
+Also input channels first have to declare what data they expect to receive.
+This is done in exactly the same way as for output channels inside the
+``expectedParameters`` method.
+Declaring the input channel is also analogue to the way an output channels is
+declared:
+
+.. code-block:: c++
+
+        INPUT_CHANNEL(expected).key("input")
+                .displayedName("Input")
+                .description("Input channel: client") // optional, for GUI
+                .dataSchema(data)
+                .commit();
+
+The next step is to prepare a member function of the device that should be
+called whenever new data arrives. The signature of that function has to be
+
+.. code-block:: c++
+
+   void onData(const karabo::xms::Data& data);
+
+
+Inside the function the data sent can be unpacked in the following way:
+
+.. code-block:: c++
+
+   const vector<long long>& vec = data.get<std::vector<long long> >("vector_int64");
+   int id = data.get<int>("dataId");
+   const std::string& str = data.get<std::string>("string");
+
+
+Finally, the framework has to be informed that this method should be called
+whenever data arrives. This has to be done in the ``initialize()`` member
+function (or, more precisely, in the function registered in the constructor
+using the ``KARABO_INITIAL_FUNCTION`` macro) in the following way:
+
+.. code-block:: c++
+
+   KARABO_ON_DATA("input", onData);
+
+with the key of the input channel as first and the function name as the second
+argument.
+
+TODO:
+Tell about KARABO_ON_EOS.
+
+More Details
+--------------
+TODO:
+
+* data.has<..>(..),. getNode,etc.
+* Need to care about exceptions?
+* The alternative to  KARABO_ON_DATA, i.e. KARABO_ON_INPUT.
+* Explain treatment of images using ``IMAGEDATA`` in ``expectedParameters`` and the special ``writeChannel("output", "image", img);`` method.
