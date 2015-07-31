@@ -1,14 +1,14 @@
 import karabo
 
 from asyncio import (async, coroutine, Future, start_server, get_event_loop,
-                     IncompleteReadError, open_connection, sleep)
+                     IncompleteReadError, open_connection, sleep, wait_for)
 from functools import wraps
 import os
 from weakref import WeakValueDictionary
 
 from karabo.device_client import DeviceClientBase
 from karabo.api import Int, Assignment
-from karabo import openmq
+from karabo import openmq, KaraboError
 from karabo.enums import Unit, MetricPrefix
 from karabo.hash import Hash
 from karabo.p2p import Channel
@@ -33,11 +33,12 @@ class Subscription:
 
     @coroutine
     def start(self):
-        ok, info = yield from self.parent.call(
+        ok, info = yield from wait_for(self.parent.call(
             self.instance, "slotGetOutputChannelInformation", self.name,
-            os.getpid())
+            os.getpid()), 1)
         if not ok:
-            return
+            raise KaraboError('no information for channel "{}"'.
+                              format(self.name))
         self.channel = Channel(
             *(yield from open_connection(info["hostname"], int(info["port"]))))
 
