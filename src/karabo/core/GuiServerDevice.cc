@@ -938,10 +938,10 @@ namespace karabo {
 
         void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
             try {               
-                if (errorCode.value() == 2) { // End of file
+                if (errorCode.value() == 2 || errorCode.value() == 32) { // End of file or Broken pipe
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     
-                    KARABO_LOG_INFO << "TCP socket got EOF, client dropped the connection";
+                    KARABO_LOG_INFO << "TCP socket got \"" << errorCode.message() << "\", client dropped the connection";
                     // TODO Fork on error message
                     std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
                     if (it != m_channels.end()) {
