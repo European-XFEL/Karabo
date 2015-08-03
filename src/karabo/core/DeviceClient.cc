@@ -869,14 +869,12 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             stayConnected(deviceId);
             std::string path(findInstance(deviceId));
-            if (path.empty()) {
-                m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
-                return Hash();
+            if (!path.empty()) {
+                path += ".configuration";
+                boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+                if (node && !node->getValue<Hash>().empty())
+                    return node->getValue<Hash>();
             }
-            path += ".configuration";
-            boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
-            if (node && !node->getValue<Hash>().empty())
-                return node->getValue<Hash>();
             m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
             return Hash();
         }
