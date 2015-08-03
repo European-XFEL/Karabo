@@ -86,15 +86,15 @@ int main(int argc, char** argv) {
 
         // Create empty 'idx' directory saving the old one if it does exist
         bf::path idxPath(history.string() + "/idx");
-        if (bf::exists(idxPath)) {
-            bf::path pdir;
-            for (size_t ii = 1;; ii++) {
-                pdir = bf::path(history.string() + "/idx" + toString(ii));
-                if (!bf::exists(pdir)) break;
-            }
-            bf::rename(idxPath, pdir);
-        }
-        bf::create_directory(idxPath);
+        //if (bf::exists(idxPath)) {
+        //    bf::path pdir;
+        //    for (size_t ii = 1;; ii++) {
+        //        pdir = bf::path(history.string() + "/idx" + toString(ii));
+        //        if (!bf::exists(pdir)) break;
+        //    }
+        //    bf::rename(idxPath, pdir);
+        //}
+        if (!bf::exists(idxPath)) bf::create_directory(idxPath);
         
         // rename "content" file
         bf::path cfile(history.string() + "/raw/" + deviceId + "_index.txt");
@@ -269,7 +269,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                 } else {
                     mdp = it->second;
                     if (!mdp->idxStream.is_open()) {
-                        mdp->idxStream.open(mdp->idxFile.c_str(), ios::out | ios::app | ios::binary);
+                        mdp->idxStream.open(mdp->idxFile.c_str(), ios::out | ios::trunc | ios::binary);
                         if (mdp->marker) {
                             mdp->marker = false;
                             mdp->record.extent2 |= (1 << 30);
