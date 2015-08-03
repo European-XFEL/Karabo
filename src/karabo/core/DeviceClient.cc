@@ -178,7 +178,7 @@ namespace karabo {
             string path(prepareTopologyPath(instanceId, instanceInfo));
 
             // If this is true, the instance silently died and was restarted so quickly we couldn't recognize
-            if (existsInRuntimeSystemDescription(path)) {              
+            if (existsInRuntimeSystemDescription(path)) {
 
                 eraseFromRuntimeSystemDescription(path);
                 eraseFromInstanceUsage(instanceId);
@@ -867,19 +867,18 @@ namespace karabo {
         karabo::util::Hash DeviceClient::getConfigurationNoWait(const std::string& deviceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            std::string path(findInstance(deviceId));
-            boost::optional<Hash::Node&> node;
-            if (!path.empty()) {
-                path += ".configuration";
-                node = m_runtimeSystemDescription.find(path);
-            }
             stayConnected(deviceId);
-            if (!node || node->getValue<Hash>().empty()) { // Not found, request
+            std::string path(findInstance(deviceId));
+            if (path.empty()) {
                 m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
                 return Hash();
             }
-            stayConnected(deviceId);
-            return node->getValue<Hash>();
+            path += ".configuration";
+            boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+            if (node && !node->getValue<Hash>().empty())
+                return node->getValue<Hash>();
+            m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
+            return Hash();
         }
 
 
