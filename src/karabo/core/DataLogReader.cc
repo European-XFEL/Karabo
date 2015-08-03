@@ -115,79 +115,82 @@ namespace karabo {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: reductionFactor : " << reductionFactor;
 
-                p.startPeriod("collection");
+                if (ndata) {
 
-                ifstream df;
-                ifstream mf;
-                size_t indx = 0;
-                size_t idxpos = msr.fromRecord;
-                for (size_t fnum = msr.fromFileNumber, ii = 0; fnum <= msr.toFileNumber && ii < msr.nrecList.size(); fnum++, ii++) {
+                    p.startPeriod("collection");
+
+                    ifstream df;
+                    ifstream mf;
+                    size_t indx = 0;
+                    size_t idxpos = msr.fromRecord;
+                    for (size_t fnum = msr.fromFileNumber, ii = 0; fnum <= msr.toFileNumber && ii < msr.nrecList.size(); fnum++, ii++) {
+                        if (mf.is_open()) mf.close();
+                        if (df.is_open()) df.close();
+                        string idxname = get<string>("directory") + "/idx/" + deviceId + "_configuration_" + toString(fnum) + "-" + property + "-index.bin";
+                        string dataname = get<string>("directory") + "/raw/" + deviceId + "_configuration_" + toString(fnum) + ".txt";
+                        if (!bf::exists(bf::path(idxname))) continue;
+                        if (!bf::exists(bf::path(dataname))) continue;
+                        mf.open(idxname.c_str(), ios::in | ios::binary);
+                        df.open(dataname.c_str());
+                        if (!mf.is_open() || !df.is_open()) continue;
+                        if (ii != 0) idxpos = 0;
+
+                        //                    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: property : \"" << property << "\", fileNumber : " << fnum
+                        //                                               << ", ii=" << ii << ", idx start position=" << idxpos;
+
+                        mf.seekg(idxpos * sizeof (MetaData::Record), ios::beg);
+                        for (size_t i = 0; i < msr.nrecList[ii]; i++) {
+                            MetaData::Record record;
+                            mf.read((char*) &record, sizeof (MetaData::Record));
+                            if ((indx++ % reductionFactor) != 0 && (record.extent2 & (1 << 30)) == 0)
+                                continue; // skip data point
+
+                            df.seekg(record.positionInRaw, ios::beg);
+                            string line;
+                            if (getline(df, line)) {
+                                if (line.empty()) continue;
+                                vector<string> tokens;
+                                boost::split(tokens, line, boost::is_any_of("|"));
+                                if (tokens.size() != 10) {
+                                    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record: token.size() = " << tokens.size();
+                                    continue; // This record is corrupted -- skip it
+                                }
+
+                                //df >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> trainId >> path >> type >> value >> user >> flag;
+
+                                const string& flag = tokens[9];
+                                if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
+                                    result[result.size() - 1].setAttribute("v", "isLast", 'L');
+                                }
+
+                                const string& path = tokens[5];
+                                if (path != property)
+                                    throw KARABO_PARAMETER_EXCEPTION("Wrong property read in raw file");
+
+                                Hash hash;
+                                const string& type = tokens[6];
+                                const string& value = tokens[7];
+                                Hash::Node& node = hash.set<string>("v", value);
+                                node.setType(Types::from<FromLiteral>(type));
+
+                                unsigned long long trainId = fromString<unsigned long long>(tokens[4]);
+                                unsigned long long seconds = fromString<unsigned long long>(tokens[2]);
+                                unsigned long long fraction = fromString<unsigned long long>(tokens[3]);
+                                Timestamp tst(Epochstamp(seconds, fraction), Trainstamp(trainId));
+                                Hash::Attributes& attrs = hash.getAttributes("v");
+                                tst.toHashAttributes(attrs);
+                                result.push_back(hash);
+                            }
+                            //else {
+                            //    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: getline returns FALSE";
+                            //}
+                        }
+                    }
                     if (mf.is_open()) mf.close();
                     if (df.is_open()) df.close();
-                    string idxname = get<string>("directory") + "/idx/" + deviceId + "_configuration_" + toString(fnum) + "-" + property + "-index.bin";
-                    string dataname = get<string>("directory") + "/raw/" + deviceId + "_configuration_" + toString(fnum) + ".txt";
-                    if (!bf::exists(bf::path(idxname))) continue;
-                    if (!bf::exists(bf::path(dataname))) continue;
-                    mf.open(idxname.c_str(), ios::in | ios::binary);
-                    df.open(dataname.c_str());
-                    if (!mf.is_open() || !df.is_open()) continue;
-                    if (ii != 0) idxpos = 0;
 
-                    //                    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: property : \"" << property << "\", fileNumber : " << fnum
-                    //                                               << ", ii=" << ii << ", idx start position=" << idxpos;
-
-                    mf.seekg(idxpos * sizeof (MetaData::Record), ios::beg);
-                    for (size_t i = 0; i < msr.nrecList[ii]; i++) {
-                        MetaData::Record record;
-                        mf.read((char*) &record, sizeof (MetaData::Record));
-                        if ((indx++ % reductionFactor) != 0 && (record.extent2 & (1 << 30)) == 0)
-                            continue; // skip data point
-
-                        df.seekg(record.positionInRaw, ios::beg);
-                        string line;
-                        if (getline(df, line)) {
-                            if (line.empty()) continue;
-                            vector<string> tokens;
-                            boost::split(tokens, line, boost::is_any_of("|"));
-                            if (tokens.size() != 10) {
-                                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record: token.size() = " << tokens.size();
-                                continue; // This record is corrupted -- skip it
-                            }
-
-                            //df >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> trainId >> path >> type >> value >> user >> flag;
-
-                            const string& flag = tokens[9];
-                            if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
-                                result[result.size() - 1].setAttribute("v", "isLast", 'L');
-                            }
-
-                            const string& path = tokens[5];
-                            if (path != property)
-                                throw KARABO_PARAMETER_EXCEPTION("Wrong property read in raw file");
-
-                            Hash hash;
-                            const string& type = tokens[6];
-                            const string& value = tokens[7];
-                            Hash::Node& node = hash.set<string>("v", value);
-                            node.setType(Types::from<FromLiteral>(type));
-
-                            unsigned long long trainId = fromString<unsigned long long>(tokens[4]);
-                            unsigned long long seconds = fromString<unsigned long long>(tokens[2]);
-                            unsigned long long fraction = fromString<unsigned long long>(tokens[3]);
-                            Timestamp tst(Epochstamp(seconds, fraction), Trainstamp(trainId));
-                            Hash::Attributes& attrs = hash.getAttributes("v");
-                            tst.toHashAttributes(attrs);
-                            result.push_back(hash);
-                        }
-                        //else {
-                        //    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: getline returns FALSE";
-                        //}
-                    }
+                    p.stopPeriod("collection");
                 }
-                if (mf.is_open()) mf.close();
-                if (df.is_open()) df.close();
-
-                p.stopPeriod("collection");
 
                 reply(deviceId, property, result);
 
@@ -409,6 +412,7 @@ namespace karabo {
 
             result.fromFileNumber = startnum;
             result.toFileNumber = tonum;
+            result.nrecList.clear();
 
             double from = efrom.toTimestamp();
             double to = eto.toTimestamp();
@@ -435,16 +439,16 @@ namespace karabo {
             bs::error_code ec;
 
             // Find record number of "from" in index file ..
-            for (; fnum <= endnum; fnum++) {
+            for (; fnum <= tonum; fnum++) {
                 if (f.is_open()) f.close();
-        
+
                 fname = get<string>("directory") + "/idx/" + deviceId + "_configuration_" + toString(fnum) + "-" + path + "-index.bin";
                 f.open(fname.c_str(), ios::in | ios::binary | ios::ate);
-                if (!f.is_open()) throw KARABO_IO_EXCEPTION("Failed to open file \"" + fname + "\".");
+                if (!f.is_open()) continue;
                 filesize = f.tellg();
                 nrecs = filesize / sizeof (MetaData::Record);
                 assert(filesize % sizeof (MetaData::Record) == 0);
-                
+
                 // read first record
                 f.seekg(0, ios::beg);
                 f.read((char*) &record, sizeof (MetaData::Record));
@@ -456,7 +460,7 @@ namespace karabo {
                     result.fromRecord = recLeft;
                     break;
                 }
-                
+
                 // read last record
                 f.seekg(filesize - sizeof (MetaData::Record), ios::beg);
                 f.read((char*) &record, sizeof (MetaData::Record));
@@ -467,15 +471,15 @@ namespace karabo {
                     result.fromRecord = recRight;
                     break;
                 }
-                
+
                 if (from > epochRight) continue;
-                
+
                 // epochLeft < from < epochRight
                 result.fromFileNumber = fnum;
                 result.fromRecord = findPositionOfEpochstamp(f, from, recLeft, recRight);
                 break;
             }
-            
+
             // Try to find position in the index file of "to" timestamp
             if (fnum == tonum) {
                 recLeft = result.fromRecord;
@@ -493,25 +497,25 @@ namespace karabo {
             }
 
             fnum++;
-            result.nrecList.push_back(nrecs - result.fromRecord);
+            if ((nrecs - result.fromRecord) > 0)
+                result.nrecList.push_back(nrecs - result.fromRecord);
 
             // ... check next files
             for (; fnum <= endnum; fnum++) {
                 if (f.is_open()) f.close();
-                
+
                 fname = get<string>("directory") + "/idx/" + deviceId + "_configuration_" + toString(fnum) + "-" + path + "-index.bin";
                 filesize = bf::file_size(fname, ec);
-                if (ec)
-                    throw KARABO_PARAMETER_EXCEPTION("Failed to get filesize of \"" + fname + "\"  -- " + ec.message());
+                if (ec) continue;
                 nrecs = filesize / sizeof (MetaData::Record);
                 assert(filesize % sizeof (MetaData::Record) == 0);
                 if (fnum < tonum) {
                     result.nrecList.push_back(nrecs);
                     continue;
                 }
-                
+
                 f.open(fname.c_str(), ios::in | ios::binary);
-                if (!f.is_open()) throw KARABO_IO_EXCEPTION("Failed to open file \"" + fname + "\".");
+                if (!f.is_open()) continue;
 
                 // read first record
                 f.read((char*) &record, sizeof (MetaData::Record));
@@ -523,7 +527,7 @@ namespace karabo {
                     result.nrecList.push_back(result.toRecord + 1);
                     break;
                 }
-                
+
                 // read last record
                 f.seekg(filesize - sizeof (MetaData::Record), ios::beg);
                 f.read((char*) &record, sizeof (MetaData::Record));
@@ -540,7 +544,7 @@ namespace karabo {
                     result.nrecList.push_back(nrecs);
                     continue;
                 }
-                
+
                 // epochLeft < to < epochRight
                 result.toFileNumber = fnum;
                 result.toRecord = findPositionOfEpochstamp(f, to, recLeft, recRight);
