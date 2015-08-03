@@ -12,7 +12,8 @@
 #include "karabo/io/FileTools.hh"
 
 #define DATALOGGER_PREFIX "DataLogger-"
-#define DATALOGREADER_PREFIX "DataLogReader-"
+#define DATALOGREADER_PREFIX "DataLogReader"
+#define DATALOGREADERS_PER_SERVER 1
 
 namespace karabo {
     namespace core {
@@ -52,9 +53,13 @@ namespace karabo {
                     .init()
                     .assignmentOptional().defaultValue(emptyVec)
                     .commit();
-
+            
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue(5)
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("archive")
+                    .setNewDefaultValue(false)
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("deviceId")
@@ -106,10 +111,12 @@ namespace karabo {
             // Start DataLogReaders on all DataLogger device servers
             for (vector<string>::iterator ii = m_serverList.begin(); ii != m_serverList.end(); ii++) {
                 string serverId = *ii;
-                Hash config;
-                config.set("DataLogReader.deviceId", DATALOGREADER_PREFIX + serverId);
-                config.set("DataLogReader.directory", "karaboHistory");
-                remote().instantiateNoWait(serverId, config);
+                for (int i = 0; i < DATALOGREADERS_PER_SERVER; i++) {
+                    Hash config;
+                    config.set("DataLogReader.deviceId", DATALOGREADER_PREFIX + toString(i) + "-" + serverId);
+                    config.set("DataLogReader.directory", "karaboHistory");
+                    remote().instantiateNoWait(serverId, config);
+                }
             }
             
             

@@ -17,7 +17,8 @@ using namespace karabo::xip;
 using namespace karabo::xms;
 
 #define DATALOGGER_PREFIX "DataLogger-"
-#define DATALOGREADER_PREFIX "DataLogReader-"
+#define DATALOGREADER_PREFIX "DataLogReader"
+#define DATALOGREADERS_PER_SERVER 1
 
 namespace karabo {
     namespace core {
@@ -500,8 +501,8 @@ namespace karabo {
 
                 string loggerId = DATALOGGER_PREFIX + deviceId;
                 if (m_loggerMap.has(loggerId)) {
-                    string readerId = DATALOGREADER_PREFIX + m_loggerMap.get<string>(loggerId);
-                    //call(readerId, "slotGetPropertyHistory", deviceId, property, args);
+                    static int i = 0;
+                    string readerId = DATALOGREADER_PREFIX + toString(i++ % DATALOGREADERS_PER_SERVER) + "-" + m_loggerMap.get<string>(loggerId);
                     request(readerId, "slotGetPropertyHistory", deviceId, property, args)
                             .receiveAsync<string, string, vector<Hash> >(boost::bind(&karabo::core::GuiServerDevice::propertyHistory, this, channel, _1, _2, _3));
                 }
