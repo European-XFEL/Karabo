@@ -12,9 +12,11 @@ GNU-Linux-x86
 *~
 *.orig
 package/
+run/bin/allInfo
+run/etc/*.log
 run/packages/
 run/servers/*/serverId.xml
-run/servers/*/device-server.log
+run/servers/*/device-server.log*
 run/servers/*/lastConfiguration.xml
 run/servers/*/plugins
 run/servers/dataLoggerServer/karaboHistory
