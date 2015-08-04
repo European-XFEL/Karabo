@@ -4,6 +4,7 @@
 ******************************
  How to write a device in C++
 ******************************
+.. sectionauthor:: Burkhard Heisen <burkhard.heisen@xfel.eu>
 
 The "Conveyor" device
 =====================
@@ -99,7 +100,7 @@ The include statement
 
    #include <karabo/karabo.hpp>
     
-provides you the full Karabo framework. Both, include pathes and namespaces follow the physical directory layout of the Karabo framework sources. Karabo comprises the following main functionalities (reflected as source directories):
+provides you the full Karabo framework. Both, include paths and namespaces follow the physical directory layout of the Karabo framework sources. Karabo comprises the following main functionalities (reflected as source directories):
 
 * util: Factories, Configurator, Hash, Schema, String and Time tools, etc.
 * io: Serializer, Input, Output, FileIO tools
@@ -154,7 +155,7 @@ The constructor
 
 will be called-back by the configurator mechanism. It else is a regular constructor.
 
-**NOTE**: Currently, device construction happends in the main thread of the device-server. So make sure you do not have slow or even blocking code in your constructor as it will block the whole server.
+**NOTE**: Currently, device construction happens in the main thread of the device-server. So make sure you do not have slow or even blocking code in your constructor as it will block the whole server.
 
 If you opened any threads yourself in the device or allocated heaped memory that you have to free, the destructor is the place for doing so. It is guaranteed to be called, whenever a device instance gets killed.
 
@@ -404,7 +405,7 @@ and concatenated from left to right. In this way our Conveyor device
 inherits all expected parameters from BaseDevice (which has none), and
 from Device<> (which has a few).
 
-In the expectedParameter() function the parameters for this device are
+In the expectedParameters() function the parameters for this device are
 defined. See :ref:`here <cppSchema>` for more details of how doing so.
 
 The constructor
@@ -514,7 +515,7 @@ practices for all call-back functions (mostly slots) of Karabo:
 
 (3) Only use try/catch blocks if you want to react on an exception (by driving the device into "Error" state for example), else trust in Karabo handling them
 
-Now in the intialize function (which is automatically called once the constructor finished)
+Now in the initialize function (which is automatically called once the constructor finished)
 
 .. code-block:: c++
 
@@ -576,7 +577,7 @@ at the start function:
 
     }     
 
-We simulate a slow ramping up of the speed and explicitely inform
+We simulate a slow ramping up of the speed and explicitly inform
 about that using the intermediate state "Starting". 
 
 .. code-block:: c++
@@ -605,8 +606,10 @@ clients will get an event.
 
 Point-to-Point Communication
 ============================
+.. sectionauthor:: Gero Flucke <gero.flucke@xfel.eu>
+
 The conveyor belt example is typical for a device that represents some hardware
-that is just controlled and monitored. No data is *produced* by these devices,
+that is controlled and monitored. No data is *produced* by these devices,
 but just property changes are communicated. This is done via the central
 message broker.
 
@@ -614,12 +617,13 @@ Other devices like cameras produce large amounts of data that cannot be
 distributed this way. Instead, the data should be sent directly from one device
 producing it to one or more other devices that have registered themselves
 at the producer for that purpose. In the Karabo framework this can be done
-using a point-to-point protocoll between so called output and input channels.
+using a point-to-point protocol between so called output and input channels
+of devices.
 
-Output Channel
---------------
+Sending Data: Output Channel
+----------------------------
 First, we have to tell the framework what data is to be sent via the output
-channel, i.e. to declare its scheme.
+channel, i.e. to declare its schema.
 This is done inside the ``expectedParameters`` method.
 Here is an example of a device sending a 32-bit integer, a string and
 a vector of 64-bit integers:
@@ -661,7 +665,7 @@ according to the schema defined above, e.g.:
         std::vector<long long> vec = ...; // create and fill the array here
         data.set("vector_int64", vec);
 
-Note that Karabo does not yet check that the data sent matches the
+Note that Karabo does not (yet) check that the data sent matches the
 declared schema.
 
 Finally, the data is sent by calling the device method
@@ -670,7 +674,8 @@ Finally, the data is sent by calling the device method
 
         this->writeChannel("output", data);
 
-with the key of the channel as the first and the ``Data`` object as the second.
+with the key of the channel as the first and the ``Data`` object as the second
+argument.
 
 Once the data stream is finished, i.e. no further data is to be sent, the
 end of stream method has to be called with the output channel key as argument
@@ -678,12 +683,12 @@ to inform all input channels that receive the data:
 
 .. code-block:: c++
 
-        signalEndOfStream("output");
+        this->signalEndOfStream("output");
 
 
-Input Channel
---------------
-Also input channels first have to declare what data they expect to receive.
+Receiving Data: Input Channel
+-----------------------------
+Also for input channels oen has to declare what data they expect to receive.
 This is done in exactly the same way as for output channels inside the
 ``expectedParameters`` method.
 Declaring the input channel is also analogue to the way an output channels is
@@ -709,9 +714,9 @@ Inside the function the data sent can be unpacked in the following way:
 
 .. code-block:: c++
 
-   const vector<long long>& vec = data.get<std::vector<long long> >("vector_int64");
    int id = data.get<int>("dataId");
    const std::string& str = data.get<std::string>("string");
+   const vector<long long>& vec = data.get<std::vector<long long> >("vector_int64");
 
 
 Finally, the framework has to be informed that this method should be called
@@ -726,14 +731,183 @@ using the ``KARABO_INITIAL_FUNCTION`` macro) in the following way:
 with the key of the input channel as first and the function name as the second
 argument.
 
-TODO:
-Tell about KARABO_ON_EOS.
+A similar macro can be used to register a member function that should be called
+when the data stream terminates, i.e. when the sending device calls 
+``this->signalEndOfStream("<output channel name>");``:
 
-More Details
---------------
-TODO:
+.. code-block:: c++
 
-* data.has<..>(..),. getNode,etc.
-* Need to care about exceptions?
-* The alternative to  KARABO_ON_DATA, i.e. KARABO_ON_INPUT.
-* Explain treatment of images using ``IMAGEDATA`` in ``expectedParameters`` and the special ``writeChannel("output", "image", img);`` method.
+  KARABO_ON_EOS("input", onEndOfStream);
+
+The signature of this member function has to be
+
+.. code-block:: c++
+
+   void onEndOfStream(const karabo::xms::InputChannel::Pointer& input);
+
+
+
+Hierarchies in the Schema
+-------------------------
+
+The data that is sent from an output to an input channel can have a hierarchical
+structure. This structure is declared in the usual way in
+``expectedParameters``, for both input and output channels:
+
+.. code-block:: c++
+
+        Schema data;
+        // Add whatever data on first hierarchy level:
+        // ...
+        // First level done - now add second level:
+        NODE_ELEMENT(data).key("node")
+                .commit();
+        
+        FLOAT_ELEMENT(data).key("node.afloat")
+                .readOnly()
+                .commit();
+
+When writing to an output channel, one first has to create and fill the node.
+Then the node can be added and the data can be sent:
+
+.. code-block:: c++
+
+        Data data; // top level data structure
+        // Here e.g. fill top level content:
+        // ...
+        Data node;
+        float floatValue = 1.3f;  // or whatever...
+        node.set("afloat", floatValue);
+        data.setNode("node", node);
+        this->writeChannel("output", data);
+
+In the ``onData`` member function of a device receiving the data in an input
+channel, the node can be unpacked in the following way:
+
+.. code-block:: c++
+
+    void onData(const karabo::xms::Data& data)
+    {
+      // ...    
+      Data node(data.getNode<Data>("node"));
+      const float afloat = node.get<float>("afloat");
+      // ...    
+    }
+
+
+Treatment of Image Data
+-----------------------
+Image data can be sent using the class ``ImageData`` which extends the
+``Data`` class by some predefined properties, i.e. it serves as a special node
+with convenience methods for conversions to and from more useful image data
+formats.
+The schema of an output channel for image data is defined in
+``expectedParameters`` as follows:
+
+.. code-block:: c++
+
+        Schema data;
+        IMAGEDATA(data).key("image")
+                .commit();
+
+        OUTPUT_CHANNEL(expected).key("output") // or any other key
+                .displayedName("Output")       // or whatever name you choose
+                .dataSchema(data)
+                .commit();
+
+For input channels simply replace ``OUTPUT_CHANNEL`` by ``INPUT_CHANNEL``.
+
+If only the image is sent and if it is available as an instance of 
+``karabo::xip::CpuImage<T>``, there is a convenience method for writing
+to the output channel:
+
+.. code-block:: c++
+
+   const karabo::xip::CpuImage<float> image = ...;  
+   // Write image with key "image" to channel "output":
+   this->writeChannel("output", "image", image);
+
+Otherwise, ``ImageData`` has to be constructed properly, e.g. from
+an instance of ``karabo::xip::CpuImage<T>``, and can then be treated like a
+node:
+
+.. code-block:: c++
+
+   Data data;
+   const karabo::xip::CpuImage<float> image = ...;  
+   ImageData imageData(image);
+   data.setNode("image", imageData);
+   // Add other data if promised in the schema definition, e.g. a float:
+   // data.set("afloat", 2.1f);
+   this->writeChannel("output", data);
+
+If the data is received from an input channel, the ``ImageData`` object can be
+accessed similarly to a simple ``Data`` object representing a node:
+
+.. code-block:: c++
+
+    void onData(const karabo::xms::Data& data)
+    {
+      // ...    
+      ImageData imageData(data.getNode<ImageData>("image"));
+      // ...    
+    }
+
+Conversion methods from ``ImageData`` to an image data class like  
+``karabo::xip::CpuImage<T>`` are still to be provided.
+
+
+Interface *per TCP Message*
+---------------------------
+
+Point-to-point communication in the Karabo framework generally uses TCP for
+data transfer between devices.
+Whenever ``writeChannel`` is called for an output channel, the data is sent as
+a separate message to all connected input channels.
+There might be circumstances where it is advantageous to pack more than one
+data item into a TCP message. For this a lower level API is provided as
+described in the following.
+
+To sent several data items in a single TCP message, the following few lines
+of code should be used instead of ``this->writeChannel(channelName, data)``:
+
+.. code-block:: c++
+
+    data.attachTimestamp(this->getActualTimestamp());
+    karabo::xms::OutputChannel::Pointer channel = this->getOutputChannel(channelName);
+    channel->write(data);
+
+Once there is enough data accumulated to be actually sent, 
+
+.. code-block:: c++
+
+    channel->update();
+
+has to be called.
+
+For a device with an input channel it does not matter much whether several
+data items that it receives have been sent in a single TCP message or not.
+A member function registered with ``KARABO_ON_DATA`` will be called
+for each item. Nevertheless, in case it matters which data items are sent
+together (which should not be the case), the device can register a method
+that receives all data items in one go.
+Instead of using ``KARABO_ON_DATA``, such a method has to be registered
+using ``KARABO_ON_INPUT``. The signature of this method has to be 
+
+.. code-block:: c++
+
+   void onInput(const karabo::xms::InputChannel::Pointer& input);
+
+
+Inside the method one has to loop over the data items. Finally one has to 
+tell the ``InputChannel`` that reading the data is done by calling
+``update()`` at the very end of the method:
+
+.. code-block:: c++
+
+       for (size_t i = 0; i < input->size(); ++i) {
+            Data data(input->read(i));
+            ... // whatever you want to do with the data
+        }
+        // Tell the input channel that you are done with all data
+        input->update();
