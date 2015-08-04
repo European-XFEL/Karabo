@@ -49,53 +49,66 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
  */
 int main(int argc, char** argv) {
 
-    if (argc < 3) {
-        cout << "Usage: " << argv[0] << " <deviceId> <karabo_history_dir>" << endl;
+    if (argc < 2) {
+        cout << "\nUsage: " << argv[0] << " <karabo_history_dir>\n" << endl;
         return 1;
     }
 
-    string deviceId(argv[1]);
-    string karaboHistory(argv[2]);
+    string karaboHistory(argv[1]);
 
-    cout << "Input parameters: deviceId=\"" << deviceId << "\", karaboHistory=\"" << karaboHistory << "\"\n" << endl;
+    cout << "\nInput parameters: karaboHistory=\"" << karaboHistory << "\"\n" << endl;
 
-    vector<bf::path> rawtxt;
-    bf::path schemaPath(karaboHistory + "/raw/" + deviceId + "_schema.txt");
+    bf::path history(karaboHistory);
+    if (!bf::exists(history))
+        throw KARABO_PARAMETER_EXCEPTION("Directory \"" + history.string() + "\" does not exist!");
+    if (!bf::is_directory(history))
+        throw KARABO_PARAMETER_EXCEPTION("File \"" + history.string() + "\" is not a directory!");
 
-    {
-        bf::path history(karaboHistory);
-        if (!bf::exists(history))
-            throw KARABO_PARAMETER_EXCEPTION("Directory \"" + history.string() + "\" does not exist!");
-        if (!bf::is_directory(history))
-            throw KARABO_PARAMETER_EXCEPTION("File \"" + history.string() + "\" is not a directory!");
+    bf::path rawdir(karaboHistory + "/raw/");
+    if (!bf::exists(rawdir))
+        throw KARABO_PARAMETER_EXCEPTION("Directory \"" + rawdir.string() + "\" does not exist!");
+    if (!bf::is_directory(rawdir))
+        throw KARABO_PARAMETER_EXCEPTION("File \"" + rawdir.string() + "\" is not a directory!");
 
-        bf::path rawpath(karaboHistory + "/raw/");
-        if (!bf::exists(rawpath))
-            throw KARABO_PARAMETER_EXCEPTION("Directory \"" + rawpath.string() + "\" does not exist!");
-        if (!bf::is_directory(rawpath))
-            throw KARABO_PARAMETER_EXCEPTION("File \"" + rawpath.string() + "\" is not a directory!");
+    bf::path idxdir(karaboHistory + "/idx");
+    if (!bf::exists(idxdir)) {
+        cout << "Create directory " << idxdir << endl;
+        bf::create_directory(idxdir);
+    }
+    
+    vector<string> devices;
+    for (bf::directory_iterator it(rawdir); it != bf::directory_iterator(); ++it) {
+        if (it->path().extension() != ".last") continue;
+        string deviceId = it->path().stem().string();
+        devices.push_back(deviceId);
+    }
+    
+    cout << devices.size() << " devices have to be processed..." << endl;
 
-        for (bf::directory_iterator it(rawpath); it != bf::directory_iterator(); ++it) {
-            if (it->path().extension() != ".txt") continue;
-            string filename = it->path().filename().string();
-            string pattern = deviceId + "_configuration_";
-            if (filename.substr(0, pattern.length()) != pattern) continue;
-            //cout << "Filename : " << it->path().filename() << endl;
-            rawtxt.push_back(it->path());
+    for (vector<string>::const_iterator it = devices.begin(); it != devices.end(); ++it) {
+        string deviceId = *it;
+
+        cout << "Process the device : \"" << deviceId << "\"" << endl;
+        
+        bf::path schemaPath(karaboHistory + "/raw/" + deviceId + "_schema.txt");
+        if (!bf::exists(schemaPath)) {
+            cout << "WARNING: No schema file found for the device: \"" << deviceId << "\". Skip this device..." << endl;
+            continue;
         }
 
-        // Create empty 'idx' directory saving the old one if it does exist
-        bf::path idxPath(history.string() + "/idx");
-        //if (bf::exists(idxPath)) {
-        //    bf::path pdir;
-        //    for (size_t ii = 1;; ii++) {
-        //        pdir = bf::path(history.string() + "/idx" + toString(ii));
-        //        if (!bf::exists(pdir)) break;
-        //    }
-        //    bf::rename(idxPath, pdir);
-        //}
-        if (!bf::exists(idxPath)) bf::create_directory(idxPath);
-        
+        vector<bf::path> rawtxt;
+        for (bf::directory_iterator dit(rawdir); dit != bf::directory_iterator(); ++dit) {
+            if (dit->path().extension() != ".txt") continue;
+            string filename = dit->path().filename().string();
+            string pattern = deviceId + "_configuration_";
+            if (filename.substr(0, pattern.length()) != pattern) continue;
+            //cout << "Filename : " << dit->path().filename() << endl;
+            rawtxt.push_back(dit->path());
+        }
+
+        // Sort this list by time of last file modification
+        sort(rawtxt.begin(), rawtxt.end(), byLastFileModificationTime);
+
         // rename "content" file
         bf::path cfile(history.string() + "/raw/" + deviceId + "_index.txt");
         if (bf::exists(cfile)) {
@@ -106,41 +119,35 @@ int main(int argc, char** argv) {
             }
             bf::rename(cfile, pfile);
         }
-        
-        if (!bf::exists(schemaPath))
-            throw KARABO_PARAMETER_EXCEPTION("Schema file: " + schemaPath.string() + " not found. Cannot continue...");
-    }
 
-    // Sort this list by time of last file modification
-    sort(rawtxt.begin(), rawtxt.end(), byLastFileModificationTime);
-
-    // Check completeness of the data set
-    for (size_t i = 0; i < rawtxt.size(); ++i) {
-        string fn = deviceId + "_configuration_" + toString(i) + ".txt";
-        if (rawtxt[i].filename().string() != fn) {
-            throw KARABO_PARAMETER_EXCEPTION("Data set is not complete: found file: \"" + rawtxt[i].filename().string()
-                                             + "\", expected: \"" + fn + "\"");
+        // Check completeness of the data set
+        for (size_t i = 0; i < rawtxt.size(); ++i) {
+            string fn = deviceId + "_configuration_" + toString(i) + ".txt";
+            if (rawtxt[i].filename().string() != fn) {
+                throw KARABO_PARAMETER_EXCEPTION("Data set is not complete: found file: \"" + rawtxt[i].filename().string()
+                                                 + "\", expected: \"" + fn + "\"");
+            }
         }
-    }
 
-    ifstream sfs(schemaPath.c_str());
-    {
-        sfs >> schemaRange.fromSeconds >> schemaRange.fromFraction >> schemaRange.fromTrainId;
-        sfs.seekg(1, ios::cur); // skip 'space' character
-        getline(sfs, schemaRange.fromSchemaArchive, '\n');
-    }
-    {
-        sfs >> schemaRange.toSeconds >> schemaRange.toFraction >> schemaRange.toTrainId;
-        sfs.seekg(1, ios::cur);
-        getline(sfs, schemaRange.toSchemaArchive, '\n');
-    }
+        ifstream sfs(schemaPath.c_str());
+        {
+            sfs >> schemaRange.fromSeconds >> schemaRange.fromFraction >> schemaRange.fromTrainId;
+            sfs.seekg(1, ios::cur); // skip 'space' character
+            getline(sfs, schemaRange.fromSchemaArchive, '\n');
+        }
+        {
+            sfs >> schemaRange.toSeconds >> schemaRange.toFraction >> schemaRange.toTrainId;
+            sfs.seekg(1, ios::cur);
+            getline(sfs, schemaRange.toSchemaArchive, '\n');
+        }
 
-    for (size_t i = 0; i < rawtxt.size(); ++i) {
-        cout << "Filename : " << rawtxt[i].filename() << endl;
-        processNextFile(deviceId, i, karaboHistory, sfs);
-    }
+        for (size_t i = 0; i < rawtxt.size(); ++i) {
+            cout << "\tFile : " << rawtxt[i].filename() << endl;
+            processNextFile(deviceId, i, karaboHistory, sfs);
+        }
 
-    sfs.close();
+        sfs.close();
+    }
 
     return 0;
 }
