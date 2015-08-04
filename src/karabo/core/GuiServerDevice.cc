@@ -148,7 +148,7 @@ namespace karabo {
                 m_guiDebugChannel = m_guiDebugConnection->createChannel();
 
                 // Produce some information
-                KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<string>("port");
+                KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port");
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in initialize(): " << e.userFriendlyMsg();
