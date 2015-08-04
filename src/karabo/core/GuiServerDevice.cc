@@ -18,7 +18,7 @@ using namespace karabo::xms;
 
 #define DATALOGGER_PREFIX "DataLogger-"
 #define DATALOGREADER_PREFIX "DataLogReader"
-#define DATALOGREADERS_PER_SERVER 1
+#define DATALOGREADERS_PER_SERVER 2
 
 namespace karabo {
     namespace core {
