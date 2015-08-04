@@ -1,9 +1,3 @@
-
-import sip
-sip.setapi("QString", 2)
-sip.setapi("QVariant", 2)
-sip.setapi("QUrl", 2)
-
 from PyQt4.QtGui import QDialog, QFileDialog
 
 import weakref
