@@ -3,6 +3,8 @@
 build/netbeans/pythonGui/nbproject/*
 build/netbeans/*/nbproject/Makefile-*.mk
 build/netbeans/*/nbproject/private
+build/netbeans/*/*/*/nbproject/Makefile-*.mk
+build/netbeans/*/*/*/nbproject/private
 build/python/build/
 dist/
 /private/*
