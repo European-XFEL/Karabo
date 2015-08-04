@@ -35,7 +35,6 @@ void Data_Test::tearDown()
 
 void Data_Test::testSetHash()
 {
-    std::cout << "testSetHashPtr" << std::endl; 
     // put vector into a Hash (i.e. not a Hash::Pointer)
     util::Hash hash("array", m_vec);
     // add hash via set to a Data object
@@ -47,11 +46,9 @@ void Data_Test::testSetHash()
 // FIXME: put back
     bool exceptionIfByRef = false;
     try {
-//        (&data).get<util::Hash>("node");
-        const_cast<const xms::Data*>(&data)->get<util::Hash>("node");
-    } catch (int &e) {
-        std::cout << "in catch: " << e << std::endl; 
-        exceptionIfByRef = true;
+        // Here and everywhere one should test also the const methods...:
+        // const_cast<const xms::Data*>(&data)->get<util::Hash>("node");
+        data.get<util::Hash>("node");
     } catch (...) {
         exceptionIfByRef = true;
     }
