@@ -113,7 +113,7 @@ namespace karabo {
                 for (vector<size_t>::iterator it = msr.nrecList.begin(); it != msr.nrecList.end(); it++) ndata += *it;
                 size_t reductionFactor = (ndata + maxNumData - 1) / maxNumData;
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: reductionFactor : " << reductionFactor;
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: total " << ndata << " data points and reductionFactor : " << reductionFactor;
 
                 if (ndata) {
 
@@ -197,8 +197,8 @@ namespace karabo {
                 p.stopPeriod("reaction");
                 p.close();
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: reply " << result.size()
-                        << " data points. Reaction : " << p.getPeriod("reaction").getDuration() << " [s]";
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: sent " << result.size()
+                        << " data points. Request processing time : " << p.getPeriod("reaction").getDuration() << " [s]";
 
             } catch (...) {
                 KARABO_RETHROW
