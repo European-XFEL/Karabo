@@ -67,7 +67,8 @@ namespace karabo {
         
 
         void Data::setNode(const std::string& key, const Data& data) {
-            m_hash->set(key, data.hash());
+            // Protect using nested calls by changing the separator to '*'
+            m_hash->set(key, data.hash(), '*');
         }
 
         
