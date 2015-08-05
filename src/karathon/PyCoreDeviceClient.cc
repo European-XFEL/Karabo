@@ -70,15 +70,15 @@ void exportPyCoreDeviceClient() {
             .def("set", (bp::tuple(DeviceClientWrap::*)(const string&, const karabo::util::Hash&, int))(&DeviceClientWrap::setPy), (bp::arg("deviceId"), bp::arg("hash"), bp::arg("timeoutInSeconds") = -1))
             .def("setNoWait", &DeviceClientWrap::setNoWaitPy, (bp::arg("instanceId"), bp::arg("key"), bp::arg("value"), bp::arg("keySep") = "."))
             .def("execute", &DeviceClientWrap::executePy0, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("timeoutInSeconds") = -1))
-            .def("execute", &DeviceClientWrap::executePy1, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("timeoutInSeconds") = -1))
-            .def("execute", &DeviceClientWrap::executePy2, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("timeoutInSeconds") = -1))
-            .def("execute", &DeviceClientWrap::executePy3, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("timeoutInSeconds") = -1))
-            .def("execute", &DeviceClientWrap::executePy4, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4"), bp::arg("timeoutInSeconds") = -1))
+            .def("execute1", &DeviceClientWrap::executePy1, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("timeoutInSeconds") = -1))
+            .def("execute2", &DeviceClientWrap::executePy2, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("timeoutInSeconds") = -1))
+            .def("execute3", &DeviceClientWrap::executePy3, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("timeoutInSeconds") = -1))
+            .def("execute4", &DeviceClientWrap::executePy4, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4"), bp::arg("timeoutInSeconds") = -1))
             .def("executeNoWait", &DeviceClientWrap::executeNoWaitPy0, (bp::arg("instanceId"), bp::arg("functionName")))
-            .def("executeNoWait", &DeviceClientWrap::executeNoWaitPy1, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1")))
-            .def("executeNoWait", &DeviceClientWrap::executeNoWaitPy2, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2")))
-            .def("executeNoWait", &DeviceClientWrap::executeNoWaitPy3, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
-            .def("executeNoWait", &DeviceClientWrap::executeNoWaitPy4, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
+            .def("executeNoWait1", &DeviceClientWrap::executeNoWaitPy1, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1")))
+            .def("executeNoWait2", &DeviceClientWrap::executeNoWaitPy2, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2")))
+            .def("executeNoWait3", &DeviceClientWrap::executeNoWaitPy3, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+            .def("executeNoWait4", &DeviceClientWrap::executeNoWaitPy4, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
             ;
 }
 
