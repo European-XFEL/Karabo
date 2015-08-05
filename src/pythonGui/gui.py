@@ -4,32 +4,28 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
 __author__="kerstin weger"
 # export PYTHONPATH= <pathToExfelSuite>/lib/debug
 
-import util # assure sip api is set first
 from traceback import print_exception, format_exception
 
-from mainwindow import MainWindow
-from network import Network
-from manager import Manager
 
-import karabo
+def init(app):
+    """ Initialize the GUI.
 
-from PyQt4.QtGui import QApplication, QMessageBox
+    Imports are being done inside this function to avoid delaying the display
+    of the splash screen. We want the user to know that something is happening
+    soon after they launch the GUI.
+    """
+    from mainwindow import MainWindow
+    from network import Network
+    from manager import Manager
+    import karabo # XXX: I think this could be for side effects?
+    import gui_registry_loader # XXX: Only imported for side-effects
+    import icons
+    import numpy
 
-import numpy
-
-from displaywidgets import *
-from editablewidgets import *
-from vacuumwidgets import *
-
-import icons
-
-def init(argv):
     numpy.set_printoptions(suppress=True, threshold=10)
-    app = QApplication(argv)
     icons.init()
 
     app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
@@ -54,10 +50,11 @@ def init(argv):
         window.onServerConnectionChanged)
     Network().signalUserChanged.connect(window.onUpdateAccessLevel)
     window.show()
-    return app
 
 
 def excepthook(type, value, traceback):
+    from PyQt4.QtGui import QMessageBox
+
     print_exception(type, value, traceback)
     mb = QMessageBox(getattr(value, "icon", QMessageBox.Critical),
                      getattr(value, "title", type.__name__),

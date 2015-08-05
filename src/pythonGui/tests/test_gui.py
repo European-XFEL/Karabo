@@ -1,9 +1,15 @@
 from unittest import TestCase, main
 
+# assure sip api is set first
+import sip
+sip.setapi("QString", 2)
+sip.setapi("QVariant", 2)
+sip.setapi("QUrl", 2)
+
 from docktabwindow import Dockable
 import gui
 from PyQt4.QtCore import QObject, QMimeData, QPoint, Qt, pyqtSignal
-from PyQt4.QtGui import QDropEvent, QWidget
+from PyQt4.QtGui import QApplication, QDropEvent, QWidget
 import icons
 from manager import Manager
 import manager
@@ -72,7 +78,8 @@ class Tests(TestCase):
     directory = path.dirname(__file__)
     def setUp(self):
         sys.excepthook = self.excepthook
-        self.app = gui.init([])
+        self.app = QApplication([])
+        gui.init(self.app)
         self.excepttype = None
 
         r = XMLParser()
