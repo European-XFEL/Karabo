@@ -273,7 +273,10 @@ namespace karabo {
                     ch->socket().async_connect(*it, boost::bind(&TcpConnection::connectHandler,
                             this, new_channel, handler, boost::asio::placeholders::error));
                 } else {
-                    throw KARABO_NETWORK_EXCEPTION(e.message());
+                    if (m_errorHandler)
+                        m_errorHandler(e);
+                    else
+                        throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
             } catch (...) {
                 KARABO_RETHROW

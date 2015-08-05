@@ -551,17 +551,36 @@ class DeviceClient(object):
          return self.__client.setNoWait(instanceId, propertyName, propertyValue)
     
         
-    def execute(self, instanceId, command, a1 = None):
+    def execute(self, instanceId, command, *args):
         """Executes a command"""
-        if a1 is None:
+        if len(args) == 0:
             return self.__client.execute(instanceId, command)
+        elif len(args) == 1:
+            return self.__client.execute1(instanceId, command, args[0])
+        elif len(args) == 2:
+            return self.__client.execute2(instanceId, command, args[0], args[1])
+        elif len(args) == 3:
+            return self.__client.execute3(instanceId, command, args[0], args[1], args[2])
+        elif len(args) == 4:
+            return self.__client.execute4(instanceId, command, args[0], args[1], args[2], args[3])
         else:
-            return self.__client.execute(instanceId, command, a1)
+            raise NotImplementedError("Too many arguments.")
         
         
-    def executeNoWait(self, deviceId, command):
+    def executeNoWait(self, deviceId, command, *args):
         """Executes a command"""
-        self.__client.executeNoWait(deviceId, command)
+        if len(args) == 0:
+            self.__client.executeNoWait(deviceId, command)
+        elif len(args) == 1:
+            self.__client.executeNoWait1(deviceId, command, args[0])
+        elif len(args) == 2:
+            self.__client.executeNoWait2(deviceId, command, args[0], args[1])
+        elif len(args) == 3:
+            self.__client.executeNoWait3(deviceId, command, args[0], args[1], args[2])
+        elif len(args) == 4:
+            self.__client.executeNoWait4(deviceId, command, args[0], args[1], args[2], args[3])
+        else:
+            raise NotImplementedError("Too many arguments.")
    
     
     def sleep(self, secs):

@@ -632,6 +632,7 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotKillDevice)        
         # timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
+        self._ss.registerSlot(self.slotLoggerPriority)
 
     def initChannels(self, topLevel=""):
         # Keys under topLevel, without leading "topLevel.":
@@ -768,6 +769,11 @@ class PythonDevice(NoFsm):
             self._timeFrac = frac
             self._timePeriod = period
         self.onTimeUpdate(id, sec, frac, period)
+        
+    def slotLoggerPriority(self, newprio):
+        oldprio = Priority.getPriorityName(self.logger.getLogger("some_deviceId").getRootPriority())
+        self.logger.getLogger("some_deviceId").setRootPriority(Priority.getPriorityValue(newprio))
+        print("*** Logger Priority changed : {} ==> {} ***".format(oldprio, newprio))
         
     def _getActualTimestamp(self):
         epochNow = Epochstamp()

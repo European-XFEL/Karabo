@@ -18,34 +18,68 @@ using namespace std;
 
 
 namespace karathon {
-    
+
     // make 'create' to be public
+
+
     struct AppenderConfiguratorWrap1 : AppenderConfigurator {
         krb_log4cpp::Appender* create() = 0;
     };
-    
+
+
     struct AppenderConfiguratorWrap : AppenderConfiguratorWrap1, bp::wrapper<AppenderConfiguratorWrap1> {
+
+
         krb_log4cpp::Appender* create() {
             return this->get_override("create")();
         }
     };
+    
+    struct PriorityWrap {
+        static bp::object getPriorityNamePy(int priority) {
+            return bp::object(krb_log4cpp::Priority::getPriorityName(priority));
+        }
+    };
 }
+
 
 void exportPyLogLogger() {
     { // AppenderConfigurator
         bp::class_<karathon::AppenderConfiguratorWrap, boost::noncopyable>("AppenderConfigurator", bp::no_init)
-                .def("create", bp::pure_virtual((krb_log4cpp::Appender* (karathon::AppenderConfiguratorWrap1::*)())&karathon::AppenderConfiguratorWrap1::create), bp::return_internal_reference<>())
+                .def("create", bp::pure_virtual((krb_log4cpp::Appender * (karathon::AppenderConfiguratorWrap1::*)()) & karathon::AppenderConfiguratorWrap1::create), bp::return_internal_reference<>())
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(AppenderConfigurator)
                 ;
     }
-    
+
     { // CategoryConfigurator
         bp::class_<CategoryConfigurator>("CategoryConfigurator", bp::init<const Hash&>())
                 .def("setup", &CategoryConfigurator::setup)
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(CategoryConfigurator)
                 ;
     }
-    
+
+    {
+        bp::enum_<krb_log4cpp::Priority::PriorityLevel>("PriorityLevel", "This enumeration describes priority levels")
+                .value("EMERG", krb_log4cpp::Priority::EMERG)
+                .value("FATAL", krb_log4cpp::Priority::FATAL)
+                .value("ALERT", krb_log4cpp::Priority::ALERT)
+                .value("CRIT", krb_log4cpp::Priority::CRIT)
+                .value("ERROR", krb_log4cpp::Priority::ERROR)
+                .value("WARN", krb_log4cpp::Priority::WARN)
+                .value("NOTICE", krb_log4cpp::Priority::NOTICE)
+                .value("INFO", krb_log4cpp::Priority::INFO)
+                .value("DEBUG", krb_log4cpp::Priority::DEBUG)
+                .value("NOTSET", krb_log4cpp::Priority::NOTSET)
+                ;
+
+        bp::class_<krb_log4cpp::Priority> p("Priority", bp::init<>());
+
+        p.def("getPriorityName", &karathon::PriorityWrap::getPriorityNamePy, (bp::arg("priority"))).staticmethod("getPriorityName");
+
+        p.def("getPriorityValue"
+              , (int (*)(string const&)) (&krb_log4cpp::Priority::getPriorityValue)
+              , (bp::arg("priorityName"))).staticmethod("getPriorityValue");
+    }
 
     {//krb_log4cpp::Category
         bp::class_< krb_log4cpp::Category, boost::noncopyable > ct("Category", bp::no_init)
@@ -63,8 +97,22 @@ void exportPyLogLogger() {
         ct.def("getAdditivity"
                , (bool (krb_log4cpp::Category::*)()const) (&krb_log4cpp::Category::getAdditivity));
 
+        ct.def("getPriority"
+               , (int (krb_log4cpp::Category::*)()const) (&krb_log4cpp::Category::getPriority));
+
+        ct.def("getRootPriority"
+               , (int (*)()) (&krb_log4cpp::Category::getRootPriority)).staticmethod("getRootPriority");
+
         ct.def("getChainedPriority"
                , (int (krb_log4cpp::Category::*)()const) (&krb_log4cpp::Category::getChainedPriority));
+
+        ct.def("setPriority"
+               , (void (krb_log4cpp::Category::*)(int)) (&krb_log4cpp::Category::setPriority)
+               , bp::arg("newprio"));
+
+        ct.def("setRootPriority"
+               , (void (*)(int)) (&krb_log4cpp::Category::setRootPriority)
+               , bp::arg("newprio")).staticmethod("setRootPriority");
 
         ct.def("WARN"
                , (void (krb_log4cpp::Category::*)(string const &))(&krb_log4cpp::Category::warn)
