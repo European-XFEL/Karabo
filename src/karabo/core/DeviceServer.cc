@@ -289,23 +289,24 @@ namespace karabo {
 
 
         void DeviceServer::loadLogger(const Hash& input) {
-            Hash config = input.get<Hash>("Logger");
+            
+            m_loggerConfiguration = input.get<Hash>("Logger");
 
             
             // make a copy of additional appenders defined by user
-            vector<Hash> appenders = config.get < vector<Hash> >("appenders");
+            vector<Hash> appenders = m_loggerConfiguration.get < vector<Hash> >("appenders");
 
             // handle predefined DeviceServer appenders
             vector<Hash> newAppenders(3, Hash());
-            newAppenders[0].set("Ostream", config.get<Hash>("ostream"));
-            newAppenders[1].set("RollingFile", config.get<Hash>("rollingFile"));
-            newAppenders[2].set("Network", config.get<Hash>("network"));
+            newAppenders[0].set("Ostream", m_loggerConfiguration.get<Hash>("ostream"));
+            newAppenders[1].set("RollingFile", m_loggerConfiguration.get<Hash>("rollingFile"));
+            newAppenders[2].set("Network", m_loggerConfiguration.get<Hash>("network"));
 
 
 
-            config.erase("ostream");
-            config.erase("rollingFile");
-            config.erase("network");
+            m_loggerConfiguration.erase("ostream");
+            m_loggerConfiguration.erase("rollingFile");
+            m_loggerConfiguration.erase("network");
 
             for (size_t i = 0; i < appenders.size(); ++i) {
                 if (appenders[i].has("Ostream")) {
@@ -316,19 +317,19 @@ namespace karabo {
             }
 
 
-            config.set("appenders", newAppenders);
+            m_loggerConfiguration.set("appenders", newAppenders);
 
-            config.set("appenders[2].Network.layout", Hash());
-            config.set("appenders[2].Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
-            config.set("appenders[2].Network.connection", m_connectionConfiguration);
+            m_loggerConfiguration.set("appenders[2].Network.layout", Hash());
+            m_loggerConfiguration.set("appenders[2].Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
+            m_loggerConfiguration.set("appenders[2].Network.connection", m_connectionConfiguration);
 
-            Hash category = config.get<Hash>("karabo");
+            Hash category = m_loggerConfiguration.get<Hash>("karabo");
             category.set("name", "karabo");
-            config.set("categories[0].Category", category);
-            config.set("categories[0].Category.appenders[1].Ostream.layout.Pattern.format", "%p  %c  : %m%n");
-            config.erase("karabo");
-            // cerr << "loadLogger final:" << endl << config << endl;
-            m_logger = Logger::configure(config);
+            m_loggerConfiguration.set("categories[0].Category", category);
+            m_loggerConfiguration.set("categories[0].Category.appenders[1].Ostream.layout.Pattern.format", "%p  %c  : %m%n");
+            m_loggerConfiguration.erase("karabo");
+            //cerr << "loadLogger final:" << endl << m_loggerConfiguration << endl;
+            m_logger = Logger::configure(m_loggerConfiguration);
         }
 
 
@@ -383,6 +384,7 @@ namespace karabo {
             SLOT0(slotKillServer)
             SLOT1(slotDeviceGone, string /*deviceId*/)
             SLOT1(slotGetClassSchema, string /*classId*/)
+            SLOT1(slotLoggerPriority, string /*priority*/)
 
             // Connect to global slot(s))
             connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", NO_TRACK);
@@ -683,6 +685,14 @@ namespace karabo {
                 domain = tokens.front() + "-" + tokens.back();
             }
             return domain + "_" + classId + "_" + index;
+        }
+
+
+        void DeviceServer::slotLoggerPriority(const std::string& newprio) {
+            using namespace krb_log4cpp;
+            string oldprio = Priority::getPriorityName(m_logger->getLogger<Self>().getRootPriority());
+            m_logger->getLogger<Self>().setRootPriority(Priority::getPriorityValue(newprio));
+            cout << "*** Logger Priority changed : " << oldprio << " ==> " << newprio << " ***" << endl;
         }
     }
 }

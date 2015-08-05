@@ -63,6 +63,8 @@ namespace karabo {
 
             int m_heartbeatIntervall;
             
+            karabo::util::Hash m_loggerConfiguration;
+            
         public:
 
             KARABO_CLASSINFO(DeviceServer, "DeviceServer", karabo::util::Version::getVersion())
@@ -177,7 +179,7 @@ namespace karabo {
 
             void instantiateNew(const karabo::util::Hash& hash);
 
-
+            void slotLoggerPriority(const std::string& prio);
 
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
 
