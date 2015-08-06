@@ -483,6 +483,11 @@ namespace karathon {
                              const bp::object& onInputHandler = bp::object(),
                              const bp::object& onEndOfStreamHandler = bp::object());
 
+        void connectInputChannelsPy() {
+            ScopedGILRelease nogil;
+            this->connectInputChannels();
+        }
+        
         bp::object getOutputChannelPy(const std::string& name) {
             return bp::object(getOutputChannel(name));
         }
