@@ -881,3 +881,14 @@ class DeviceClient(object):
 
         return project
 
+    def setPrio(self, deviceId, priority):
+        """
+        This function changes the Logger priority of the deviceId
+        
+        Example:
+        
+            setPrio('Karabo_DataLoggerServer', 'DEBUG')
+            setPrio('Karabo_DataLoggerServer", 'INFO')
+            
+        """
+        self.executeNoWait(deviceId, "slotLoggerPriority", priority)
