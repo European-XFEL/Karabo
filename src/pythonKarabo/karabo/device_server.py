@@ -350,6 +350,7 @@ class DeviceServer(object):
         self.ss.registerSlot(self.slotDeviceGone)
         self.ss.registerSlot(self.slotGetClassSchema)
         self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK, False)
+        self.ss.registerSlot(self.slotLoggerPriority)
 
     def onStateUpdate(self, currentState):
         #self.ss.reply(currentState)
@@ -601,6 +602,11 @@ class DeviceServer(object):
         except AttributeError as e:
             self.log.WARN("Replied empty schema due to : {}".format(str(e)))
             self.ss.reply(Schema(), classid, self.serverid)
+        
+    def slotLoggerPriority(self, newprio):
+        oldprio = Priority.getPriorityName(self.logger.getLogger("some_deviceId").getRootPriority())
+        self.logger.getLogger("some_deviceId").setRootPriority(Priority.getPriorityValue(newprio))
+        self.log.INFO("Logger Priority changed : {} ==> {}".format(oldprio, newprio))
         
     def processEvent(self, event):
         with self.processEventLock:
