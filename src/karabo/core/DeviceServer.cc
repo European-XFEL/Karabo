@@ -692,7 +692,7 @@ namespace karabo {
             using namespace krb_log4cpp;
             string oldprio = Priority::getPriorityName(m_logger->getLogger<Self>().getRootPriority());
             m_logger->getLogger<Self>().setRootPriority(Priority::getPriorityValue(newprio));
-            cout << "*** Logger Priority changed : " << oldprio << " ==> " << newprio << " ***" << endl;
+            KARABO_LOG_INFO << "Logger Priority changed : " << oldprio << " ==> " << newprio;
         }
     }
 }
