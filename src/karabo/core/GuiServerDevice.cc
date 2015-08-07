@@ -563,7 +563,7 @@ namespace karabo {
                 InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", h);
                 input->setInstanceId(m_instanceId);
                 input->registerInputHandler(boost::bind(&GuiServerDevice::onNetworkData, this, _1));
-                connectInputChannel(input, 1); // 1 attempt and 1 sec sleep if exception
+                connectInputChannel(input, true); // 1 attempt
                 NetworkConnection nc;
                 nc.name = channelName;
                 nc.channel = channel;
