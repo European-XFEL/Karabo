@@ -1,7 +1,8 @@
 import karabo
 
-from asyncio import (async, coroutine, Future, start_server, get_event_loop,
-                     IncompleteReadError, open_connection, sleep, wait_for)
+from asyncio import (
+    async, CancelledError, coroutine, Future, start_server, get_event_loop,
+    IncompleteReadError, open_connection, shield, sleep, wait_for)
 from functools import wraps
 import os
 from weakref import WeakValueDictionary
@@ -28,7 +29,8 @@ class Subscription:
     def __init__(self, channelName, parent):
         self.instance, self.name = channelName.split(":")
         self.parent = parent
-        self.triggered = {}
+        self.shields = {}
+        self.future = None
         self.subscriptions = set()
 
     @coroutine
@@ -56,29 +58,27 @@ class Subscription:
         yield from sleep(self.parent.delayOnInput / 1000)
         l = r["byteSizes"][0]
         data = Hash.decode(bt[:l], "Bin")
-        for f in self.triggered.values():
-            f.set_result(data)
-        self.triggered = {}
-        return True
+        self.future = None
+        return data
 
     def subscribe(self, channel):
         self.subscriptions.add(channel)
 
     def unsubscribe(self, channel):
         self.subscriptions.discard(channel)
-        f = self.triggered.pop(channel, None)
+        f = self.shields.pop(channel, None)
         if f is not None:
-            f.set_result(None)
+            f.cancel()
 
     @coroutine
     def update(self, channel):
         if channel not in self.subscriptions:
             return None
-        trigger = not self.triggered
-        future = self.triggered[channel] = Future()
-        if trigger:
-            yield from self.trigger()
-        return (yield from future)
+        if self.future is None:
+            self.future = async(self.trigger())
+        future = self.shields[channel] = shield(self.future)
+        ret = yield from future
+        return ret
 
 
 class GuiServer(DeviceClientBase):
@@ -125,7 +125,7 @@ class GuiServer(DeviceClientBase):
                 info = yield from channel.readHash("Bin")
                 getattr(self, "handle_" + info["type"])(
                     channel, **{k: v for k, v in info.items() if k != "type"})
-        except IncompleteReadError:
+        except (IncompleteReadError, ConnectionResetError):
             pass
         finally:
             for k in list(self.deviceChannels):
@@ -193,8 +193,9 @@ class GuiServer(DeviceClientBase):
             yield from subs.start()
         subs.subscribe(channel)
         while True:
-            data = yield from subs.update(channel)
-            if data is None:
+            try:
+                data = yield from subs.update(channel)
+            except CancelledError:
                 return
             self.respond(channel, "networkData", name=channelName, data=data)
             yield from channel.drain()
