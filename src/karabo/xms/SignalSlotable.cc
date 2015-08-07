@@ -1847,7 +1847,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, int trials, int sleep) {
+        void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, bool once, int sleep) {
             // Loop connected outputs
             std::vector<karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
             for (size_t j = 0; j < outputChannels.size(); ++j) {
@@ -1855,19 +1855,21 @@ namespace karabo {
                 const std::string& channelId = outputChannels[j].get<string > ("channelId");
                 bool channelExists = false;
                 karabo::util::Hash reply;
-                while ((trials--) > 0) {
+                while (m_runEventLoop) {  // m_runEventLoop
                     try {
                         this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
                     } catch (karabo::util::TimeoutException&) {
                         karabo::util::Exception::clearTrace();
-                        std::cout << "Could not find instanceId \"" + instanceId + "\" for IO connection" << std::endl;
+                        std::cout << "Could not find instanceId \"" + instanceId + "\" for IO connection to \"" << channelId << "\" channel" << std::endl;
+                        if (once) break;
                         std::cout << "Trying again in " << sleep << " seconds." << std::endl;
                         boost::this_thread::sleep(boost::posix_time::seconds(sleep));
-                        sleep += 2;
+                        sleep = 5;
                         continue;
                     }
                     break;
                 }
+                if (!m_runEventLoop) return;
                 if (channelExists) {
                     channel->connect(reply); // Synchronous
                 } else {
