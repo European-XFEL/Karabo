@@ -79,7 +79,7 @@ logLevel=INFO
 ALLINFO[0]="$KARABO_SERVERS/guiServer/startCppServer:DeviceServer.Logger.priority=$logLevel:0:1000:yes"
 ALLINFO[1]="$KARABO_SERVERS/dataLoggerServer/startCppServer:DeviceServer.Logger.priority=$logLevel:0:1000:yes"
 ALLINFO[2]="$KARABO_SERVERS/projectServer/startCppServer:DeviceServer.Logger.priority=$logLevel:0:1000:yes"
-ALLINFO[3]="$KARABO_SERVERS/macroServer/startPythonServerApi2:DeviceServer.serverId=Karabo_MacroServer:0:1000:yes"
+ALLINFO[3]="$KARABO_SERVERS/macroServer/startPythonServerApi2:DeviceServer.serverId=macroServer:0:1000:yes"
 
 
 #####################
