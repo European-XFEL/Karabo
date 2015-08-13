@@ -41,6 +41,17 @@ namespace karabo {
             , m_fileindex(-1) {
             }
         };
+        
+        
+        struct PropFileInfo {
+            typedef boost::shared_ptr<PropFileInfo> Pointer;
+            boost::mutex filelock;
+            size_t filesize;
+            time_t lastwrite;
+            std::vector<std::string> properties;
+            PropFileInfo() : filelock(), filesize(0), lastwrite(0), properties() {}
+        };
+        
 
         class DataLogReader : public karabo::core::Device<karabo::core::OkErrorFsm> {
         public:
@@ -71,6 +82,11 @@ namespace karabo {
                                                const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to);
 
             size_t findPositionOfEpochstamp(std::ifstream& f, double t, size_t& left, size_t& right);
+            
+        private:
+            
+            static std::map<std::string, PropFileInfo::Pointer > m_mapPropFileInfo;
+
         };
     }
 }
