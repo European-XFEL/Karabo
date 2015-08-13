@@ -45,7 +45,10 @@ namespace karabo {
             long m_startPosition;
             boost::thread m_flushThread;
             
-            std::map<std::string, karabo::core::MetaData::Pointer> m_idxMap; 
+            std::map<std::string, karabo::core::MetaData::Pointer> m_idxMap;
+            std::vector<std::string> m_idxprops;
+            size_t m_propsize;
+            time_t m_lasttime;
 
         public:
 
