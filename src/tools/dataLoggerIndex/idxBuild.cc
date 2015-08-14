@@ -170,15 +170,6 @@ int main(int argc, char** argv) {
             }
         }
         
-        // Check completeness of the data set
-        for (size_t i = 0; i < rawtxt.size(); ++i) {
-            string fn = deviceId + "_configuration_" + toString(i) + ".txt";
-            if (rawtxt[i].filename().string() != fn) {
-                throw KARABO_PARAMETER_EXCEPTION("Data set is not complete: found file: \"" + rawtxt[i].filename().string()
-                                                 + "\", expected: \"" + fn + "\"");
-            }
-        }
-
         ifstream sfs(schemaPath.c_str());
         {
             sfs >> schemaRange.fromSeconds >> schemaRange.fromFraction >> schemaRange.fromTrainId;
@@ -191,9 +182,12 @@ int main(int argc, char** argv) {
             getline(sfs, schemaRange.toSchemaArchive, '\n');
         }
 
-        for (size_t i = 0; i < rawtxt.size(); ++i) {
-            cout << "\tFile : " << rawtxt[i].filename() << endl;
-            processNextFile(deviceId, i, karaboHistory, sfs, buildContentFile, idxprops);
+        string pattern = deviceId + "_configuration_";
+        for (vector<bf::path>::iterator i = rawtxt.begin(); i != rawtxt.end(); ++i) {
+            cout << "\tFile : " << i->filename() << endl;
+            // extract filenum from file name
+            size_t filenum = fromString<size_t>(i->filename().stem().string().substr(pattern.size()));
+            processNextFile(deviceId, filenum, karaboHistory, sfs, buildContentFile, idxprops);
         }
 
         sfs.close();
