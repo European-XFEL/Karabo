@@ -1,8 +1,40 @@
 #! /bin/bash
 ####################################################################################
-# allStart starts the applications defined in ALLINFO in separate xterms
-# additional information (including arguements) are described in ./allInfo
 # author: CY 18.12.2012
+
+# print help message if first argument asks for help
+nox="false"  #  i.e. _do_ use separate xterms
+if [ ${#@} -gt 0 ]; then
+    if [ $1 == "-h" ] || [ $1 == "-help" ] || [ $1 == "--help" ]; then
+        echo
+        echo "allStart - start applications as defined in allInfo file"
+        echo
+        echo "  allStart [-h|-help|--help|-nox|--nox]"
+        echo
+        echo "If any of the help options is given, print this help."
+        echo
+        echo "The applications to be started are defined in the file 'allInfo'"
+        echo "that lies in the same directory as the allStart script."
+        echo "If no allInfo file is there, one is created as a copy of"
+        echo "allInfo.org. See the comments in there for more details."
+        echo
+        echo "By default, all applications are started in their own xterm"
+        echo "windows that display their outputs."
+        echo "If any of the 'no X' options (-nox|--nox) is given, all"
+        echo "applications are started within the calling shell and their"
+        echo "output is swallowed."
+        echo "Using the 'showLogs' script, server log files can nevertheless"
+        echo "be investigated."
+        echo
+        exit 0
+    elif [ $1 == "-nox" ] || [ $1 == "--nox" ]; then
+        nox="true"
+        # shift  # must not remove from argument list to keep it in .allInfo
+    else
+        echo "Unknown option '$1', please consult help: $0 --help"
+        exit 1
+    fi
+fi
 
 # Make sure the script runs in this directory
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
@@ -32,7 +64,7 @@ elif  [ -n "$RESTART" ] && [ "$check" = "0" ]; then
     mv .allStart.pid .allStart.pid.last 2> /dev/null
 elif [ "$check" != "0" ]; then 
     echo
-    echo "ERROR xterms running cannot allStart"
+    echo "ERROR processes are running, cannot allStart"
     echo
     exit 1;
 else
@@ -67,13 +99,13 @@ do
 	if [ -n "$XUSE" ] && [ "$xuse" = "yes" ]; then
 	    display="-display $XUSE"
 	fi
-        if [ "$1" = "-nox" ]; then
-            # No xterms should be used
-	    echo "INFO Starting: $target $params 2>&1 > /dev/null &"
-	    $target $params 2>&1 > /dev/null &
-	else
-            echo "INFO Starting: xterm $options $display -e bash -c \"$target $params $redirect\" &"
-	    xterm $options $display -e bash -c "$target $params $redirect" &
+        if [ "$nox" == "true" ]; then
+            # No xterms should be used, disregard stdout and stderr
+            echo "INFO Starting: $target $params > /dev/null 2>&1 &"
+            $target $params > /dev/null 2>&1 &
+        else
+            echo "INFO Starting: xterm $options $display -e bash -c \"$target $params\" &"
+            xterm $options $display -e bash -c "$target $params" &
         fi
 	# store name and pid of started process
         bg=$!
