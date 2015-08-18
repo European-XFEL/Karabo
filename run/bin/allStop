@@ -1,28 +1,38 @@
 #! /bin/bash
+# author: ?
+# largely modified by GF, July/August 2015
 
-# print help message if first argument asks for help
+# Look for options:
+verbose=""
 if [ ${#@} -gt 0 ]; then
+    # print help message if first argument asks for help
     if [ $1 == "-h" ] || [ $1 == "-help" ] || [ $1 == "--help" ]; then
 	echo 
-	echo "allStop - stop processes started with allStart:"
+	echo "$0 - stop processes started with allStart:"
 	echo 
-	echo "  allStop [-h|-help|--help] [arguments]"
+	echo "  $0 [-h|-help|--help|-v|-verbose|--verbose] [arguments]"
 	echo 
 	echo "If any of the help options is given, print this help."
+        echo "Using otherwise any of -v|-verbose|--verbose will print some"
+        echo "details about the process ids that are stopped."
 	echo 
-	echo "Without any argument, kill all applications started by allStart."
+	echo "Without any argument, stop all applications started by allStart."
 	echo 
-	echo "With arguments, kill those ALLINFO applications whose names"
-	echo "contain one of the arguments. Run ./allCheck to see the names."
+	echo "With arguments, stop those allInfo applications whose names"
+	echo "contain one of the arguments."
+        echo "Run ./allCheck to see the names."
 	echo 
 	echo "EXAMPLES:"
-        echo "(1) Kill everything:"
-	echo "allStop"
+        echo "(1) Stop everything:"
+	echo "$0"
         echo
-        echo "(2) Kill cpp and Python device servers:"
-	echo "allStop cppDeviceServ pythonDeviceServ"
+        echo "(2) Verbosely stop cpp and Python device servers:"
+	echo "$0 -v cppDeviceServ pythonDeviceSer"
 	echo 
 	exit 0
+    elif [ $1 == "-v" ] || [ $1 == "-verbose" ] || [ $1 == "--verbose" ]; then
+        verbose="true"
+        shift  # remove from  argument list
     fi
 fi
 
@@ -44,96 +54,132 @@ if [ ! -e $info ]; then
     echo "ERROR no previous allStart"
     exit 1
 fi
-allPids="./.allStart.pid"
 
 source ./allInfo
 
-if [ ${#@} -eq 0 ]; then
-    # no arguments, kill all
-    # loop on all pids, irrespective of in one line or not
-    # i.e. kill also all childs explicitely
-    for pid in `cat $allPids`; do
-	# also contains child pids, so no need to inform user if kill fails
-	kill -${KARABO_KILL_SIGNAL} $pid 1>/dev/null 2>/dev/null
-    done
-    # now clean up
-    mv $allPids ${allPids}.last
-    mv $info ${info}.last
-else
-    # kill those ALLINFO applications whose name contains one of
-    # the arguments which have been passed to the script
+killedAny="no"
 
-    killedAny="no"
-    # create new $info file - temporary for now
-    newInfo=$(mktemp --tmpdir ${info}_XXXXXXXX)
+# create new $info file - temporary for now
+newInfo=$(mktemp --tmpdir ${info}_XXXXXXXX)
+# also new pids file
+allPidsFile="./.allStart.pid"
+newAllPidsFile=$(mktemp --tmpdir ${allPidsFile}_XXXXXXXX)
+cp $allPidsFile $newAllPidsFile
 
-    # read $info line by line
-    while read line; do
-        killed=0
-        # split line at ' ' and create array 'lineParts' to contain substrings
-        IFS=' ' read -ra lineParts <<< "$line"
-        # there must be at least two parts
-        nParts=${#lineParts[@]}
-        if [ $nParts -le 1 ]; then
-    	    continue
-        fi
+# Count whether $newInfo still contains info about servers etc.:
+declare -i somethingLeft=0
+# read $info line by line
+while read line; do
+    killed=0
+    # split line at ' ' and create array 'lineParts' to contain substrings
+    IFS=' ' read -ra lineParts <<< "$line"
+    # There must be at least two parts and we skip the 'argument' line
+    nParts=${#lineParts[@]}
+    if [ $nParts -gt 1 ] && [ ${lineParts[0]} != "args:" ]; then
         name=${lineParts[$nParts - 2]} # last but one (!) part of 'lineParts'
-        # now loop on arguments
-        for arg in $@; do
-            if [ $killed -ne 0 ]; then
-                # killed already everything for this line: break loop on args
-                break
-            elif [[ $name =~ $arg ]]; then
-                # check whether name contains argument
-		# get pid
-                mainPid=${lineParts[$nParts - 1]}
-                if kill -${KARABO_KILL_SIGNAL} $mainPid 1>/dev/null 2>&1; then
-                    killed=1
-    		    echo "INFO Killed $name containing $arg (pid $mainPid)."
-                else
-                    echo "WARNING Could not kill $name with pid $mainPid."
-                    echo "        Probably it is already dead, i.e. one can "
-                    echo "        remove that line from $info." 
-                fi
-                # now get child pids from file to kill also orphans
-                # ($pids also contains $mainPid...)
-                pids=$(grep $mainPid $allPids)  # should be one line only...
-                for iPid in $pids; do
-                    if kill -${KARABO_KILL_SIGNAL} $iPid 1>/dev/null 2>&1; then
-                        # Mother is already killed, i.e. should be dead already,
-                        # nevertheless, processes may take a bit to clean up...
-                        #if [ $killed -eq 1 ]; then
-                        #    echo "Killed (daughter) pid $iPid although should already be dead!"
-                        #fi
-                        killed=1
-                    fi
-                done
-                if [ $killed -eq 1 ]; then
-                    # if main or child processes are killed, remove also from 
-                    # $allPids file (where master and childs are in same line).
-		    sed -i "/$mainPid/d" $allPids
-                fi
-    	    fi  # end of $arg is in $name
-        done  # end loop on arguments
-        if [ $killed -eq 0 ]; then
-    	    # nothing was succesfully killed for this entry in $info, so keep it
-    	    echo $line >> $newInfo
+        killThis=0
+        if [ "$#" -eq 0 ]; then
+            # no arguments: kill all
+            killThis=1
         else
-    	    killedAny="yes"
+            # check whether name contains any of the arguments
+            for arg in $@; do
+                if [[ $name =~ $arg ]]; then
+                    killThis=1
+                    break
+                fi
+            done
         fi
-    done < $info  # finished to process $info file!
-    
-    # some clean-up remains
-    if [ $killedAny = "no" ]; then
-        echo "WARNING Nothing killed, i.e. nothing matches '$@'."
-	# clean up temporary file
-        rm $newInfo
+        if [ $killThis -eq 1 ]; then
+	    # get pid
+            mainPid=${lineParts[$nParts - 1]}
+            # Recursively get pids of all descendant processes:
+            # (Note: Array copying here does not care about sparse arrays or
+            #        spaces in array elements.)
+            allPids=()
+            currChildPids=( $mainPid )
+            test $verbose && echo "Get all descendant pids of $mainPid ($name):"
+            declare -i depth=0
+            while [ ${#currChildPids[@]} -gt 0 ]; do
+                depth+=1
+                newChildPids=()
+                for childPid in ${currChildPids[@]}; do
+                    #test $verbose && echo "Add children of $childPid."
+                    newChildPids=( ${newChildPids[@]} `pgrep -P $childPid` )
+                    #test $verbose && echo "newChildPids: ${newChildPids[@]}"
+                done
+                allPids=( ${allPids[@]} ${newChildPids[@]} )
+                if [ $verbose ] && [ ${#newChildPids[@]} -gt 0 ]; then
+                    echo "All descendant pids (depth $depth): ${allPids[@]}"
+                fi
+                currChildPids=( ${newChildPids[@]} )
+            done
+
+            test $verbose && echo "Kill mainpid $mainPid."
+            if kill -${KARABO_KILL_SIGNAL} $mainPid 1>/dev/null 2>&1; then
+                killed=1
+                echo "INFO Killed $name (pid $mainPid)."
+            else
+                echo "WARNING Could not kill $name with pid $mainPid."
+                echo "        Probably it is already dead, i.e. one can "
+                echo "        remove that line from $info."
+                echo "        Descendants pids are \"${allPids[@]}\"."
+            fi
+            # Kill all descendants from list created above.
+            # Note: If new child processes are created after the list is built
+            #       above, we do not explicitly kill them here.
+            #       Could be a problem with 'allStart -nox' - but is unlikely.
+            for iPid in ${allPids[@]}; do
+                if kill -${KARABO_KILL_SIGNAL} $iPid 1>/dev/null 2>&1; then
+                    # Mother is already killed, i.e. should be dead already,
+                    # nevertheless, processes may take a bit to clean up...
+                    #if [ $killed -eq 1 ]; then
+                    #    echo "Killed (daughter) pid $iPid although should already be dead!"
+                    #fi
+                    killed=1
+                    test $verbose && echo "Killed descendant pid $iPid."
+                else
+                    test $verbose && echo "NOT killed descendant pid $iPid."
+                fi
+            done
+            test $verbose && echo
+            if [ $killed -eq 1 ]; then
+                # if main or child processes are killed, remove also from
+                # $newAllPidsFile (where master and children are in same line).
+	        sed -i "/$mainPid/d" $newAllPidsFile
+            fi
+        fi  # End of "We should kill something for this line ($killThis -eq 1)."
+    fi  # End of "Line could be properly interpreted ."
+
+    if [ $killed -eq 0 ]; then
+        # nothing was succesfully killed for this entry in $info, so keep it
+        if [ ${lineParts[0]} != "args:" ]; then
+            somethingLeft+=1
+        fi
+        echo $line >> $newInfo
     else
-	# overwrite old file with new one
-	cp $info ${info}.last
-        mv $newInfo $info
+        killedAny="yes"
     fi
-       
-fi  # end of if for case of killing according to arguments
+done < $info  # finished to process $info file!
+    
+# some clean-up remains
+if [ $killedAny = "no" ]; then
+    echo "WARNING Nothing killed, i.e. nothing matches '$@'."
+    # clean up temporary files
+    rm $newInfo
+    rm $newAllPidsFile
+else
+    cp $info ${info}.last
+    cp $allPidsFile ${allPidsFile}.last
+    if [ $somethingLeft -gt 0 ]; then
+        # overwrite old files with new ones
+        command=mv
+    else
+        # nothing left, remove old and new files
+        command=rm
+    fi
+    $command $newInfo $info
+    $command $newAllPidsFile $allPidsFile
+fi
 
 exit 0
