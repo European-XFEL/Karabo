@@ -197,21 +197,33 @@ class NoEventLoop(AbstractEventLoop):
     def cancel(self):
         self._cancelled = True
         if self.task is not None:
-            self.task.cancel()
+            self._instance._ss.loop.call_soon_threadsafe(self.task.cancel)
+
+    def _sync(self, coro, l1, l2):
+        if isinstance(coro, Future):
+            self.task = coro
+        else:
+            self.task = self._instance._ss.loop.create_task(
+                coro, instance=self._instance)
+        self.task.add_done_callback(lambda _: l2.release())
+        l1.release()
 
     def sync(self, coro, timeout=-1):
         if self._cancelled:
             raise CancelledError
-        lock = threading.Lock()
-        lock.acquire()
-        self.task = async(coro, loop=self._instance._ss.loop)
-        self.task.add_done_callback(lambda _: lock.release())
-        lock.acquire(timeout=timeout)
+        l1 = threading.Lock()
+        l1.acquire()
+        l2 = threading.Lock()
+        l2.acquire()
+        loop = self._instance._ss.loop
+        loop.call_soon_threadsafe(self._sync, coro, l1, l2)
+        l2.acquire(timeout=timeout)
+        l1.acquire()
         try:
             if self.task.done():
                 return self.task.result()
             else:
-                self.task.cancel()
+                loop.call_soon_threadsafe(self.task.cancel)
                 raise TimeoutError
         finally:
             self.task = None
