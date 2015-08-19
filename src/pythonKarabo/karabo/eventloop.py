@@ -37,7 +37,7 @@ class Broker:
         p['signalInstanceId'] = self.deviceId
         p['__format'] = 'Bin'
         m.properties = p
-        self.producer.send(m, 1, 4, 1000)
+        self.producer.send(m, 1, 4, 100000)
 
     def call(self, signal, targets, reply, args):
         p = openmq.Properties()
@@ -63,7 +63,7 @@ class Broker:
         m = openmq.TextMessage()
         m.data = message
         m.properties = p
-        self.producer.send(m, 1, 4, 1000)
+        self.producer.send(m, 1, 4, 100000)
 
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
