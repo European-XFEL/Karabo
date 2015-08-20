@@ -7,27 +7,27 @@ logfile=device-server.log
 if [ ${#@} -gt 0 ]; then
     # print help message if first argument asks for help
     if [ $1 == "-h" ] || [ $1 == "-help" ] || [ $1 == "--help" ]; then
-	echo 
+	echo
 	echo "$0 - show logs of servers"
-	echo 
+	echo
 	echo "  $0 [-h|-help|--help] [arguments]"
-	echo 
+	echo
 	echo "If any of the help options is given, print this help."
-	echo 
+	echo
 	echo "Otherwise open xterms to show the files '${logfile}' in the"
-	echo "directories '\$KARABO_SERVERS/*' where \$KARABO_SERVERS has to" 
-	echo "be defined in the allInfo file."
+	echo "directories '\$KARABO_SERVERS/*', scrolled to their ends."
+        echo "\$KARABO_SERVERS has to be defined in the allInfo file."
 	echo
 	echo "Without arguments, show all these files. With arguments, show"
 	echo "only those files whose names contain one of the arguments."
-	echo 
+	echo
 	echo "EXAMPLES:"
         echo "(1) Show all logs:"
 	echo "$0"
         echo
         echo "(2) Show only GUI and project server logs:"
 	echo "$0 guiServ projectSer"
-	echo 
+	echo
 	exit 0
     fi
 fi
@@ -51,7 +51,7 @@ test -r $foo || { echo "ERROR cannot read definitions file $foo";  exit 1;}
 
 # required environmental
 source allInfo
-test -n "$KARABO_SERVERS" || { echo "ERROR KARABO_SERVERS variable does not exist"; exit 3;} 
+test -n "$KARABO_SERVERS" || { echo "ERROR KARABO_SERVERS variable does not exist"; exit 3;}
 
 declare -i count=0
 for log in $KARABO_SERVERS/*/$logfile
@@ -71,7 +71,8 @@ do
 	done
     fi
     if [ $showThis -eq 1 ]; then
-	xterm -T "${HOSTNAME}: ${log}" -e bash -c "less $log" &
+	# less +G  => directly scroll to the end
+	xterm -T "${HOSTNAME}: less ${log}" -e bash -c "less +G $log" &
 	count+=1
     fi
 done
@@ -79,5 +80,5 @@ done
 if [ $count -eq 0 ]; then
     echo "No logs matching any of the patterns '$@'."
 fi
- 
+
 exit 0
