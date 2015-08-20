@@ -839,8 +839,11 @@ namespace karabo {
 
 
         void SignalSlotable::slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            if (!hasTrackedInstance(instanceId)) {
+                emit("signalInstanceNew", instanceId, instanceInfo);
+            }
             addTrackedInstance(instanceId, instanceInfo);
-            emit("signalInstanceNew", instanceId, instanceInfo);
+            
         }
 
 
