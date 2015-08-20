@@ -177,6 +177,12 @@ namespace karabo {
             boost::filesystem::path directory(get<string> ("directory"));
             boost::filesystem::directory_iterator end_iter;
             for (boost::filesystem::directory_iterator iter(directory); iter != end_iter; ++iter) {
+                if (!boost::filesystem::is_regular_file(iter->path())) {
+                    // e.g. a directory
+                    KARABO_LOG_DEBUG << "Skip " << iter->path() << " since not a regular file.";
+                    continue;
+                }
+
                 std::string relativePath = iter->path().relative_path().string();
                 // Get meta-data from project file
                 ifstream projectFile(relativePath.c_str(), ios::in | ios::binary);
@@ -206,6 +212,7 @@ namespace karabo {
                     
                     projectFile.close();
                 } else {
+                    // e.g. a file where we do not have read permissions
                     KARABO_LOG_DEBUG << "Not able to open project file " << relativePath;
                 }
             }
