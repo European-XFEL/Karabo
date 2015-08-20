@@ -60,7 +60,7 @@ namespace karabo {
         void Signal::send(const karabo::util::Hash& message) {
             try {
                 // TODO Do not send if no slots are connected
-                if (m_registeredSlotInstanceIdsString == "__none__") return;
+                //if (m_registeredSlotInstanceIdsString == "__none__") return;
                 karabo::util::Hash header = prepareHeader();
                 // In case we are connected to a single local instance we shortcut the broker
                 if ((m_registeredSlots.size() == 1) && 
