@@ -60,6 +60,7 @@ namespace karabo {
             std::pair<int, int> m_brokerLatency;
             std::pair<int, int> m_processingLatency;
 
+            friend class Signal;
 
         protected:
 
@@ -422,12 +423,13 @@ namespace karabo {
 
             SlotChannels m_slotChannels;
 
-            karabo::util::Hash m_trackedComponents;
+            karabo::util::Hash m_trackedInstances;
+            bool m_trackAllInstances;
             int m_heartbeatInterval;
             static std::set<int> m_reconnectIntervals;
 
 
-            mutable boost::mutex m_heartbeatMutex;
+            mutable boost::mutex m_trackedInstancesMutex;
 
             boost::thread m_trackingThread;
             bool m_doTracking;
@@ -600,6 +602,15 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
              * @return bool indicating success or failure
              */
             bool logout();
+            
+            
+            /**
+             * Single call that leads to a tracking of all instances if called before the event loop is started
+             */
+            void trackAllInstances() {
+                m_trackAllInstances = true;
+            }
+            
 
             /**
              * Retrieves currently logged in username (empty if not logged in)
@@ -660,7 +671,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
             karabo::net::BrokerConnection::Pointer getConnection() const;
 
-            const std::vector<std::pair<std::string, karabo::util::Hash> >& getAvailableInstances(const bool activateTracking = false);
+            karabo::util::Hash getAvailableInstances(const bool activateTracking = false);
 
             std::vector<std::string> getAvailableSignals(const std::string& instanceId);
 
@@ -1193,7 +1204,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             
             void registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&) >& handler);
             
-            void connectInputChannel(const InputChannel::Pointer& channel, bool once = false, int sleep = 1);
+            void connectInputChannel(const InputChannel::Pointer& channel, int trails = 8, int sleep = 1);
 
             void connectInputChannels();
 
@@ -1325,27 +1336,39 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
             void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval, const karabo::util::Hash& instanceInfo);
 
-            void refreshTimeToLiveForConnectedSlot(const std::string& networkId, int heartbeatInterval, const karabo::util::Hash& instanceInfo);
+            //void refreshTimeToLiveForConnectedSlot(const std::string& networkId, int heartbeatInterval, const karabo::util::Hash& instanceInfo);
 
-            void letConnectionSlowlyDieWithoutHeartbeat();
+            void letInstanceSlowlyDieWithoutHeartbeat();
 
-            void registerConnectionForTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
+            //void registerConnectionForTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
 
-            void unregisterConnectionFromTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
+            //void unregisterConnectionFromTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
             bool isConnectionTracked(const std::string& connectionId);
+            
+            void decreaseCountdown(std::vector<std::pair<std::string, karabo::util::Hash> >& deadOnes);
 
-            void addTrackedComponent(const std::string& instanceId, const bool isExplicitlyTracked = false);
+            
+            // Thread safe
+            void addTrackedInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            
+            // Thread safe
+            bool hasTrackedInstance(const std::string& instanceId);
+            
+            // Thread safe
+            void eraseTrackedInstance(const std::string& instanceId);
 
-            void updateTrackedComponentInstanceInfo(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void updateTrackedInstanceInfo(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            void addTrackedComponentConnection(const std::string& instanceId, const karabo::util::Hash& connection);
+            void addTrackedInstanceConnection(const std::string& instanceId, const karabo::util::Hash& connection);
 
             karabo::util::Hash prepareConnectionNotAvailableInformation(const karabo::util::Hash& signals) const;
 
             void slotGetAvailableFunctions(const std::string& type);
 
-            void cleanSignalsAndStopTracking(const std::string& instanceId);
+            void cleanSignals(const std::string& instanceId);
+            
+            void stopTracking(const std::string& instanceId);
 
             // IO channel related
             karabo::util::Hash slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
@@ -1376,16 +1399,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
             bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body, int timeout);
 
-            long long getEpochMillis() {
-                using namespace boost::gregorian;
-                using namespace boost::local_time;
-                using namespace boost::posix_time;
-                
-                ptime epochTime(date(1970,1,1));
-                ptime nowTime = microsec_clock::local_time();
-                time_duration difference = nowTime - epochTime;
-                return difference.total_milliseconds();
-            }
+            long long getEpochMillis();
         };
     }
 }
