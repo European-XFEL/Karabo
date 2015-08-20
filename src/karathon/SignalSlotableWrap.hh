@@ -177,8 +177,8 @@ namespace karathon {
             return bp::make_tuple(result.first, bp::object(result.second));
         }
 
-        bp::object getAvailableInstancesPy(bool activateTracking) {
-            return Wrapper::fromStdVectorToPyList(this->getAvailableInstances(activateTracking));
+        karabo::util::Hash getAvailableInstancesPy(bool activateTracking) {
+            return this->getAvailableInstances(activateTracking);
         }
 
         bp::object getAvailableSignalsPy(const std::string& instanceId) {
