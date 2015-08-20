@@ -177,9 +177,8 @@ namespace karabo {
             boost::filesystem::path directory(get<string> ("directory"));
             boost::filesystem::directory_iterator end_iter;
             for (boost::filesystem::directory_iterator iter(directory); iter != end_iter; ++iter) {
-                if (!boost::filesystem::is_regular_file(iter->path())) {
-                    // e.g. a directory
-                    KARABO_LOG_DEBUG << "Skip " << iter->path() << " since not a regular file.";
+                if (boost::filesystem::is_directory(iter->path())) {
+                    KARABO_LOG_DEBUG << "Skip " << iter->path() << " as it is a directory.";          
                     continue;
                 }
 
