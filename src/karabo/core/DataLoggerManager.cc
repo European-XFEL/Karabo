@@ -73,6 +73,9 @@ namespace karabo {
         }
 
         DataLoggerManager::DataLoggerManager(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
+            
+            trackAllInstances();
+            
             string filename = "loggermap.xml";
             //set<int>("nThreads", 10);
             m_serverList = input.get<vector<string> >("serverList");

@@ -79,6 +79,8 @@ namespace karabo {
 
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
+                    
+            trackAllInstances();
 
             Hash h;
             h.set("port", config.get<unsigned int>("port"));
@@ -852,7 +854,7 @@ namespace karabo {
         void GuiServerDevice::deviceChangedHandler(const std::string& deviceId, const karabo::util::Hash& what) {
             try {
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "deviceChangedHandler" << ": deviceId = \"" << deviceId << "\"";
+                //KARABO_LOG_FRAMEWORK_DEBUG << "deviceChangedHandler" << ": deviceId = \"" << deviceId << "\"";
 
                 Hash h("type", "deviceConfiguration", "deviceId", deviceId, "configuration", what);
                 boost::mutex::scoped_lock lock(m_channelMutex);
