@@ -36,7 +36,15 @@ namespace karabo {
             m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
             m_internalSignalSlotable->setNumberOfThreads(2);
             m_signalSlotable = m_internalSignalSlotable;
-            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_internalSignalSlotable, 60, Hash()));
+            Hash instanceInfo;
+            instanceInfo.set("type", "client");
+            instanceInfo.set("lang", "c++");
+            instanceInfo.set("visibility", 4);
+            instanceInfo.set("compatibility", DeviceClient::classInfo().getVersion());
+            instanceInfo.set("host", boost::asio::ip::host_name());
+            instanceInfo.set("status", "ok");
+            
+            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_internalSignalSlotable, 60, instanceInfo));
 
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
@@ -55,7 +63,7 @@ namespace karabo {
         , m_topologyInitialized(false)
         , m_masterMode(NO_MASTER)
         , m_getOlder(true) {
-
+            
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
             //m_ageingThread.detach();
@@ -880,7 +888,7 @@ namespace karabo {
         void DeviceClient::registerDeviceMonitor(const std::string& deviceId, const boost::function<void (const std::string& /*deviceId*/, const karabo::util::Hash& /*config*/)> & callbackFunction) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-            m_signalSlotable.lock()->call(deviceId, "slotGetConfiguration");
+            m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
             stayConnected(deviceId);
             m_deviceChangedHandlers.set(deviceId + "._function", callbackFunction);
             immortalize(deviceId);
