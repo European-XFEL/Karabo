@@ -36,7 +36,7 @@ namespace karabo {
         , m_filterCondition("")
         , m_isStopped(false)
         , m_hasAsyncHandler(false)
-        , m_syncReadTimeout(100000)
+        , m_syncReadTimeout(30000)
         , m_hasConsumer(false)
         , m_hasProducer(false)
         , m_subDestination(subDestination)

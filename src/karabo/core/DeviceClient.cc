@@ -314,13 +314,13 @@ namespace karabo {
             initTopology();
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             Hash topology;
-            for (Hash::const_iterator it = m_runtimeSystemDescription.begin(); it != m_runtimeSystemDescription.end(); ++it) {
-                const std::string& categoryName = it->getKey();
-                const Hash& category = it->getValue<Hash>();
+            for (Hash::const_map_iterator it = m_runtimeSystemDescription.mbegin(); it != m_runtimeSystemDescription.mend(); ++it) {
+                const std::string& categoryName = it->first;
+                const Hash& category = it->second.getValue<Hash>();
                 Hash& entry = topology.bindReference<Hash>(categoryName);
-                for (Hash::const_iterator jt = category.begin(); jt != category.end(); ++jt) {
-                    Hash::Node& node = entry.set(jt->getKey(), Hash());
-                    node.setAttributes(jt->getAttributes());
+                for (Hash::const_map_iterator jt = category.mbegin(); jt != category.mend(); ++jt) {
+                    Hash::Node& node = entry.set(jt->first, Hash());
+                    node.setAttributes(jt->second.getAttributes());
                 }
             }
             return topology;
@@ -336,11 +336,11 @@ namespace karabo {
                 vector<string> deviceServers;
                 deviceServers.reserve(tmp.size());
                 karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-                for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
-                    if (it->hasAttribute("visibility")) {
-                        if (p->getAccessLevel(it->getKey()) < it->getAttribute<int>("visibility")) continue;
+                for (Hash::const_map_iterator it = tmp.mbegin(); it != tmp.mend(); ++it) {
+                    if (it->second.hasAttribute("visibility")) {
+                        if (p->getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility")) continue;
                     }
-                    deviceServers.push_back(it->getKey());
+                    deviceServers.push_back(it->second.getKey());
                 }
                 return deviceServers;
             } else {
@@ -379,11 +379,11 @@ namespace karabo {
                 const Hash& tmp = m_runtimeSystemDescription.get<Hash>("device");
                 vector<string> devices;
                 devices.reserve(tmp.size());
-                for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
-                    if (it->hasAttribute("visibility")) {
-                        if (p->getAccessLevel(it->getKey()) < it->getAttribute<int>("visibility")) continue;
+                for (Hash::const_map_iterator it = tmp.mbegin(); it != tmp.mend(); ++it) {
+                    if (it->second.hasAttribute("visibility")) {
+                        if (p->getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility")) continue;
                     }
-                    devices.push_back(it->getKey());
+                    devices.push_back(it->second.getKey());
                 }
                 return devices;
             }
@@ -402,12 +402,12 @@ namespace karabo {
                 const Hash& tmp = m_runtimeSystemDescription.get<Hash>("device");
                 vector<string> devices;
                 devices.reserve(tmp.size());
-                for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
-                    if (it->getAttribute<string>("serverId") == deviceServer) {
-                        if (it->hasAttribute("visibility")) {
-                            if (p->getAccessLevel(it->getKey()) < it->getAttribute<int>("visibility")) continue;
+                for (Hash::const_map_iterator it = tmp.mbegin(); it != tmp.mend(); ++it) {
+                    if (it->second.getAttribute<string>("serverId") == deviceServer) {
+                        if (it->second.hasAttribute("visibility")) {
+                            if (p->getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility")) continue;
                         }
-                        devices.push_back(it->getKey());
+                        devices.push_back(it->second.getKey());
                     }
                 }
                 return devices;
