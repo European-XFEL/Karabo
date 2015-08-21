@@ -73,9 +73,6 @@ namespace karabo {
         }
 
         DataLoggerManager::DataLoggerManager(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
-            
-            trackAllInstances();
-            
             string filename = "loggermap.xml";
             //set<int>("nThreads", 10);
             m_serverList = input.get<vector<string> >("serverList");
@@ -92,7 +89,11 @@ namespace karabo {
         }
 
         void DataLoggerManager::okStateOnEntry() {
+            m_maintainedDevices.clear();
             // Register handlers
+            
+            trackAllInstances();
+            
             remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
 
@@ -124,43 +125,50 @@ namespace karabo {
             
             
             // Get all current instances in the system
-            const Hash& systemTopology = remote().getSystemTopology();
-            {
-                boost::optional<const Hash::Node&> node = systemTopology.find("device");
-                if (node) {
-                    const Hash& devices = node->getValue<Hash>();
-                    for (Hash::const_iterator it = devices.begin(); it != devices.end(); ++it) { // Loop all devices ...
-                        // ... but consider only those to be archived
-                        if (it->hasAttribute("archive") && (it->getAttribute<bool>("archive") == true)) {
-                            const std::string& deviceId = it->getKey();
-                            if (deviceId == m_instanceId) continue; // Skip myself
-
-                            // Check if deviceId is known in the world
-                            string loggerId = DATALOGGER_PREFIX + deviceId;
-                            {
-                                string serverId;
-                                if (m_loggerMap.has(loggerId)) {
-                                    serverId = m_loggerMap.get<string>(loggerId);
-                                } else {
-                                    m_serverIndex %= m_serverList.size();
-                                    serverId = m_serverList[m_serverIndex++];
-                                    m_loggerMap.set(loggerId, serverId);
-                                    m_saved = false;
-                                }
-                                Hash config;
-                                config.set("DataLogger.deviceId", loggerId);
-                                config.set("DataLogger.deviceToBeLogged", deviceId);
-                                config.set("DataLogger.directory", "karaboHistory");
-                                config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
-                                config.set("DataLogger.flushInterval", get<int>("flushInterval"));
-                                remote().instantiateNoWait(serverId, config);
-                            }
-                        }
-                    }
-                }
-            }
+            remote().getSystemTopology();
+//            {
+//                boost::optional<const Hash::Node&> node = systemTopology.find("device");
+//                if (node) {
+//                    const Hash& devices = node->getValue<Hash>();
+//                    for (Hash::const_iterator it = devices.begin(); it != devices.end(); ++it) { // Loop all devices ...
+//                        // ... but consider only those to be archived
+//                        if (it->hasAttribute("archive") && (it->getAttribute<bool>("archive") == true)) {
+//                            const std::string& deviceId = it->getKey();
+//                            if (deviceId == m_instanceId) continue; // Skip myself
+//
+//                            // safety check
+//                            if (find(m_maintainedDevices.begin(), m_maintainedDevices.end(), deviceId) != m_maintainedDevices.end()) {
+//                                KARABO_LOG_WARN << "Duplicate \"signalInstanceNew\" for device \"" << deviceId << "\"";
+//                                return;
+//                            } else
+//                                m_maintainedDevices.push_back(deviceId);
+//                            
+//                            // Check if deviceId is known in the world
+//                            string loggerId = DATALOGGER_PREFIX + deviceId;
+//                            {
+//                                string serverId;
+//                                if (m_loggerMap.has(loggerId)) {
+//                                    serverId = m_loggerMap.get<string>(loggerId);
+//                                } else {
+//                                    m_serverIndex %= m_serverList.size();
+//                                    serverId = m_serverList[m_serverIndex++];
+//                                    m_loggerMap.set(loggerId, serverId);
+//                                    m_saved = false;
+//                                }
+//                                Hash config;
+//                                config.set("DataLogger.deviceId", loggerId);
+//                                config.set("DataLogger.deviceToBeLogged", deviceId);
+//                                config.set("DataLogger.directory", "karaboHistory");
+//                                config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
+//                                config.set("DataLogger.flushInterval", get<int>("flushInterval"));
+//                                remote().instantiateNoWait(serverId, config);
+//                            }
+//                        }
+//                    }
+//                }
+//            }
             
-            emit("signalLoggerMap", m_loggerMap);
+//            emit("signalLoggerMap", m_loggerMap);
         }
 
         void DataLoggerManager::slotGetLoggerMap() {
@@ -179,6 +187,13 @@ namespace karabo {
 
                     // Consider the devices that should be archived 
                     if (entry.hasAttribute(deviceId, "archive") && (entry.getAttribute<bool>(deviceId, "archive") == true)) {
+                        // safety check
+                        if (find(m_maintainedDevices.begin(), m_maintainedDevices.end(), deviceId) != m_maintainedDevices.end()) {
+                            KARABO_LOG_WARN << "Duplicate \"signalInstanceNew\" for device \"" << deviceId << "\"";
+                            return;
+                        } else
+                            m_maintainedDevices.push_back(deviceId);
+                        
                         // Check whether according logger device exists (it should not) and instantiate
                         string loggerId = DATALOGGER_PREFIX + deviceId;
                         {
@@ -210,6 +225,14 @@ namespace karabo {
         }
 
         void DataLoggerManager::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            // Safety check
+            vector<string>::iterator it = find(m_maintainedDevices.begin(), m_maintainedDevices.end(), instanceId);
+            if (it == m_maintainedDevices.end()) {
+                KARABO_LOG_WARN << "Signal \"signalInstanceGone\" comes again for device \"" << instanceId << "\"";
+                return;
+            }
+            m_maintainedDevices.erase(it);
+            
             try {
                 string loggerId = DATALOGGER_PREFIX + instanceId;
                 this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
