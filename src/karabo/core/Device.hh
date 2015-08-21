@@ -997,23 +997,16 @@ namespace karabo {
                 return true;
             }
 
-            void slotGetConfiguration() {
-                //std::string senderId = this->getSenderInfo("slotGetConfiguration")->getInstanceIdOfSender();
-                //call(senderId, "slotChanged", m_parameters, m_deviceId);
+            void slotGetConfiguration() {                
                 reply(m_parameters, m_deviceId);
             }
 
-            void slotGetSchema(bool onlyCurrentState) {
-
-                //std::string senderId = this->getSenderInfo("slotGetSchema")->getInstanceIdOfSender();
-
+            void slotGetSchema(bool onlyCurrentState) {           
                 if (onlyCurrentState) {
                     const std::string& currentState = get<std::string > ("state");
-                    const karabo::util::Schema& schema = getStateDependentSchema(currentState);
-                    //call(senderId, "slotSchemaUpdated", schema, m_deviceId);
+                    const karabo::util::Schema& schema = getStateDependentSchema(currentState);                   
                     reply(schema, m_deviceId);
-                } else {
-                    //call(senderId, "slotSchemaUpdated", m_fullSchema, m_deviceId);
+                } else {                  
                     reply(m_fullSchema, m_deviceId);
                 }
             }
