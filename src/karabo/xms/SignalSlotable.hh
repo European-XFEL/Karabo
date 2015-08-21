@@ -607,9 +607,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             /**
              * Single call that leads to a tracking of all instances if called before the event loop is started
              */
-            void trackAllInstances() {
-                m_trackAllInstances = true;
-            }
+            void trackAllInstances();
             
 
             /**

@@ -6,10 +6,6 @@
 #include "DataLogReader.hh"
 #include "karabo/io/FileTools.hh"
 
-#define DATALOGGER_PREFIX "DataLogger-"
-#define DATALOGREADER_PREFIX "DataLogReader"
-#define DATALOGREADERS_PER_SERVER 2
-
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
 

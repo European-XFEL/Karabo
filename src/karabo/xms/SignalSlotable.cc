@@ -79,9 +79,9 @@ namespace karabo {
 
 
         karabo::util::Hash SignalSlotable::Requestor::prepareHeaderNoWait(const std::string& requestSlotInstanceId,
-                const std::string& requestSlotFunction,
-                const std::string& replySlotInstanceId,
-                const std::string& replySlotFunction) {
+                                                                          const std::string& requestSlotFunction,
+                                                                          const std::string& replySlotInstanceId,
+                                                                          const std::string& replySlotFunction) {
 
             karabo::util::Hash header;
             header.set("replyInstanceIds", "|" + replySlotInstanceId + "|");
@@ -135,14 +135,14 @@ namespace karabo {
 
 
         SignalSlotable::SignalSlotable(const string& instanceId,
-                const BrokerConnection::Pointer& connection) : m_randPing(rand() + 2) {
+                                       const BrokerConnection::Pointer& connection) : m_randPing(rand() + 2) {
             init(instanceId, connection);
         }
 
 
         SignalSlotable::SignalSlotable(const std::string& instanceId,
-                const std::string& brokerType,
-                const karabo::util::Hash& brokerConfiguration) : m_randPing(rand() + 2) {
+                                       const std::string& brokerType,
+                                       const karabo::util::Hash& brokerConfiguration) : m_randPing(rand() + 2) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
@@ -153,7 +153,7 @@ namespace karabo {
 
 
         void SignalSlotable::init(const std::string& instanceId,
-                const karabo::net::BrokerConnection::Pointer& connection) {
+                                  const karabo::net::BrokerConnection::Pointer& connection) {
 
             m_trackAllInstances = false;
             m_defaultAccessLevel = KARABO_DEFAULT_ACCESS_LEVEL;
@@ -191,7 +191,7 @@ namespace karabo {
             string foreignHost("unknown");
             if (instanceInfo.has("host")) instanceInfo.get("host", foreignHost);
             const string msg("Another instance with ID '" + instanceId
-                    + "' is already online (on host: " + foreignHost + ")");
+                             + "' is already online (on host: " + foreignHost + ")");
             return std::make_pair(false, msg);
         }
 
@@ -394,17 +394,6 @@ namespace karabo {
             string selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'";
             m_consumerChannel->setFilter(selector);
             m_consumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2, _3));
-
-            if (m_trackAllInstances) {
-                selector = "signalFunction = 'signalHeartbeat'";
-                m_heartbeatConsumerChannel->setFilter(selector);
-                m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2, _3));
-            }
-            //            } else {
-            //                selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%'";
-            //            }
-            //            m_heartbeatConsumerChannel->setFilter(selector);
-            //            m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2, _3));
         }
 
 
@@ -678,6 +667,13 @@ namespace karabo {
         }
 
 
+        void SignalSlotable::trackAllInstances() {
+            m_trackAllInstances = true;            
+            m_heartbeatConsumerChannel->setFilter("signalFunction = 'signalHeartbeat'");
+            m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2, _3));
+        }
+
+
         void SignalSlotable::slotInstanceNew(const std::string& instanceId, const karabo::util::Hash & instanceInfo) {
 
             if (instanceId == m_instanceId) return;
@@ -725,6 +721,7 @@ namespace karabo {
 
 
         void SignalSlotable::emitHeartbeat() {
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
             //----------------- make this thread sensible to external interrupts
             boost::this_thread::interruption_enabled(); // enable interruption +
             boost::this_thread::interruption_requested(); // request interruption = we need both!
@@ -843,7 +840,7 @@ namespace karabo {
                 emit("signalInstanceNew", instanceId, instanceInfo);
             }
             addTrackedInstance(instanceId, instanceInfo);
-            
+
         }
 
 
@@ -1599,8 +1596,8 @@ namespace karabo {
 
                     if (m_trackAllInstances) {
 
-                        cout << "COUNTDOWN" << endl;
-                        cout << m_trackedInstances << endl;
+                        //cout << "COUNTDOWN" << endl;
+                        //cout << m_trackedInstances << endl;
 
                         vector<pair<string, Hash> > deadOnes;
 
@@ -1664,7 +1661,7 @@ namespace karabo {
         void SignalSlotable::cleanSignals(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "Cleaning all signals for instance \"" << instanceId << "\"";
+            KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << " says : Cleaning all signals for instance \"" << instanceId << "\"";
 
             for (SignalInstances::iterator it = m_signalInstances.begin(); it != m_signalInstances.end(); ++it) {
                 it->second->unregisterSlot(instanceId);
@@ -1680,9 +1677,9 @@ namespace karabo {
 
 
         InputChannel::Pointer SignalSlotable::createInputChannel(const std::string& channelName, const karabo::util::Hash& config,
-                const boost::function<void (const Data&) >& onDataAvailableHandler,
-                const boost::function<void (const InputChannel::Pointer&) >& onInputAvailableHandler,
-                const boost::function<void(const InputChannel::Pointer&)>& onEndOfStreamEventHandler) {
+                                                                 const boost::function<void (const Data&) >& onDataAvailableHandler,
+                                                                 const boost::function<void (const InputChannel::Pointer&) >& onInputAvailableHandler,
+                                                                 const boost::function<void(const InputChannel::Pointer&)>& onEndOfStreamEventHandler) {
             if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
             Hash channelConfig = config.get<Hash>(channelName);
             if (channelConfig.has("schema")) channelConfig.erase("schema");
@@ -1704,7 +1701,7 @@ namespace karabo {
 
 
         OutputChannel::Pointer SignalSlotable::createOutputChannel(const std::string& channelName, const karabo::util::Hash& config,
-                const boost::function<void (const OutputChannel::Pointer&)>& onOutputPossibleHandler) {
+                                                                   const boost::function<void (const OutputChannel::Pointer&)>& onOutputPossibleHandler) {
             if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
             Hash channelConfig = config.get<Hash>(channelName);
             if (channelConfig.has("schema")) channelConfig.erase("schema");
@@ -1754,7 +1751,7 @@ namespace karabo {
 
 
         void SignalSlotable::registerDataHandler(const std::string& channelName,
-                const boost::function<void (const karabo::xms::Data&) >& handler) {
+                                                 const boost::function<void (const karabo::xms::Data&) >& handler) {
             getInputChannel(channelName)->registerDataHandler(handler);
         }
 
