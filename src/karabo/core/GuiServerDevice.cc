@@ -941,7 +941,7 @@ namespace karabo {
 
         void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
             try {               
-                if (errorCode.value() == 2 || errorCode.value() == 32) { // End of file or Broken pipe
+                if (errorCode.value() == 2 || errorCode.value() == 32 || errorCode.value() == 104) { // End of file or Broken pipe
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     
                     KARABO_LOG_INFO << "TCP socket got \"" << errorCode.message() << "\", client dropped the connection";
