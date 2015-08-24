@@ -837,8 +837,10 @@ namespace karabo {
 
         void SignalSlotable::slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             if (!hasTrackedInstance(instanceId)) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId " << instanceId;
                 emit("signalInstanceNew", instanceId, instanceInfo);
             }
+            KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId (but already tracked) " << instanceId;
             addTrackedInstance(instanceId, instanceInfo);
 
         }
@@ -1277,7 +1279,7 @@ namespace karabo {
 
         bool SignalSlotable::hasTrackedInstance(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
-            return m_trackedInstances.has(m_instanceId);
+            return m_trackedInstances.has(instanceId);
         }
 
 
