@@ -55,7 +55,7 @@ namespace karabo {
                     .commit();
             
             OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue(5)
+                    .setNewDefaultValue(4)
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("archive")
