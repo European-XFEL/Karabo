@@ -78,9 +78,7 @@ namespace karabo {
             KARABO_INITIAL_FUNCTION(initialize)
 
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
-            KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
-                    
-            trackAllInstances();
+            KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)                            
 
             Hash h;
             h.set("port", config.get<unsigned int>("port"));
@@ -122,6 +120,9 @@ namespace karabo {
 
         void GuiServerDevice::initialize() {
             try {
+                
+                trackAllInstances();
+                
                 remote().getSystemInformation();
 
                 // Register handlers

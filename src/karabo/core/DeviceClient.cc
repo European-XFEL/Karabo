@@ -45,7 +45,13 @@ namespace karabo {
             instanceInfo.set("status", "ok");
             
             m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_internalSignalSlotable, 60, instanceInfo));
-
+            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+            bool ok = m_internalSignalSlotable->ensureOwnInstanceIdUnique();
+            if (!ok) {
+                m_eventThread.join(); // Blocks
+                return;
+            }
+                
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
             //m_ageingThread.detach();

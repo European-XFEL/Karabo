@@ -872,7 +872,15 @@ namespace karabo {
                 instanceInfo.set("archive", this->get<bool>("archive"));
 
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo));
-
+                
+                boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+                
+                bool ok = ensureOwnInstanceIdUnique();
+                if (!ok) {
+                    t.join(); // Blocks
+                    return;
+                }
+                
                 KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
 
                 // ClassId

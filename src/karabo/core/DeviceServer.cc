@@ -362,6 +362,15 @@ namespace karabo {
             instanceInfo.set("host", boost::asio::ip::host_name());
             instanceInfo.set("visibility", m_visibility);
             boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, m_heartbeatIntervall, instanceInfo));
+
+            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+
+            bool ok = ensureOwnInstanceIdUnique();
+            if (!ok) {
+                t.join(); // Blocks
+                return;
+            }
+            
             this->startFsm();
             t.join();
 
