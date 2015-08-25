@@ -6,9 +6,6 @@
 #include "DataLogReader.hh"
 #include "karabo/io/FileTools.hh"
 
-#define DATALOGGER_PREFIX "DataLogger-"
-#define DATALOGREADER_PREFIX "DataLogReader-"
-
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
 
@@ -27,7 +24,7 @@ namespace karabo {
         void DataLogReader::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue(5)
+                    .setNewDefaultValue(4)
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("archive")
@@ -266,7 +263,7 @@ namespace karabo {
                 Epochstamp target(timepoint);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Requested time point: " << target.getSeconds();
-                
+
                 // Retrieve proper Schema
                 bf::path schemaPath(get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_schema.txt");
                 if (bf::exists(schemaPath)) {

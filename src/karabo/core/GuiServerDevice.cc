@@ -53,7 +53,7 @@ namespace karabo {
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue(5)
+                    .setNewDefaultValue(4)
                     .commit();
 
             // Slow beats on GuiServer
@@ -78,7 +78,7 @@ namespace karabo {
             KARABO_INITIAL_FUNCTION(initialize)
 
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
-            KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
+            KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)                            
 
             Hash h;
             h.set("port", config.get<unsigned int>("port"));
@@ -120,6 +120,9 @@ namespace karabo {
 
         void GuiServerDevice::initialize() {
             try {
+                
+                trackAllInstances();
+                
                 remote().getSystemInformation();
 
                 // Register handlers
@@ -852,7 +855,7 @@ namespace karabo {
         void GuiServerDevice::deviceChangedHandler(const std::string& deviceId, const karabo::util::Hash& what) {
             try {
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "deviceChangedHandler" << ": deviceId = \"" << deviceId << "\"";
+                //KARABO_LOG_FRAMEWORK_DEBUG << "deviceChangedHandler" << ": deviceId = \"" << deviceId << "\"";
 
                 Hash h("type", "deviceConfiguration", "deviceId", deviceId, "configuration", what);
                 boost::mutex::scoped_lock lock(m_channelMutex);
@@ -939,7 +942,7 @@ namespace karabo {
 
         void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
             try {               
-                if (errorCode.value() == 2 || errorCode.value() == 32) { // End of file or Broken pipe
+                if (errorCode.value() == 2 || errorCode.value() == 32 || errorCode.value() == 104) { // End of file or Broken pipe
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     
                     KARABO_LOG_INFO << "TCP socket got \"" << errorCode.message() << "\", client dropped the connection";

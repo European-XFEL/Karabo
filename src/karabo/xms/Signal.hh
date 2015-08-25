@@ -43,7 +43,7 @@ namespace karabo {
 
             void registerSlot(const std::string& slotInstanceId, const std::string& slotFunction);
 
-            void unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction);
+            void unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction = "");
 
             void emit0() {
                 send(karabo::util::Hash());
@@ -72,7 +72,7 @@ namespace karabo {
                 karabo::util::Hash message("a1", a1, "a2", a2, "a3", a3, "a4", a4);
                 send(message);
             }
-
+            
             //private:
         protected:
 
@@ -84,7 +84,7 @@ namespace karabo {
 
         protected:
 
-            const SignalSlotable* m_signalSlotable;
+            SignalSlotable* m_signalSlotable;
             karabo::net::BrokerChannel::Pointer m_channel;
             std::string m_signalInstanceId;
             std::string m_signalFunction;

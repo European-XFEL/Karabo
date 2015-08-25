@@ -52,6 +52,7 @@ namespace karabo {
             size_t m_serverIndex;
             karabo::util::Hash m_loggerMap;
             bool m_saved;
+            std::vector<std::string> m_maintainedDevices;
         };
     }
 }

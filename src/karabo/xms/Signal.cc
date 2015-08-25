@@ -13,9 +13,11 @@
 
 namespace karabo {
     namespace xms {
+        
+        using namespace karabo::util;
 
         Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& signalInstanceId, const std::string& signalFunction, const int priority) :
-        m_signalSlotable(signalSlotable), m_channel(channel), m_signalInstanceId(signalInstanceId), m_signalFunction(signalFunction), m_priority(priority) {
+        m_signalSlotable(const_cast<SignalSlotable*>(signalSlotable)), m_channel(channel), m_signalInstanceId(signalInstanceId), m_signalFunction(signalFunction), m_priority(priority) {
             updateConnectedSlotsString();
         }
 
@@ -43,10 +45,14 @@ namespace karabo {
         }
 
         void Signal::unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
-            std::map<std::string, std::set<std::string> >::iterator it = m_registeredSlots.find(slotInstanceId);
+            std::map<std::string, std::set<std::string> >::iterator it = m_registeredSlots.find(slotInstanceId);           
             if (it != m_registeredSlots.end()) {
-                it->second.erase(slotFunction);
-                if (it->second.empty()) m_registeredSlots.erase(slotInstanceId);
+                if (slotFunction.empty()) {
+                    m_registeredSlots.erase(slotInstanceId);
+                } else {
+                    it->second.erase(slotFunction);
+                    if (it->second.empty()) m_registeredSlots.erase(slotInstanceId);
+                }
                 updateConnectedSlotsString();
             }
         }
@@ -54,9 +60,15 @@ namespace karabo {
         void Signal::send(const karabo::util::Hash& message) {
             try {
                 // TODO Do not send if no slots are connected
-                //if (m_connectedSlotsString == "__none__") return;
+                //if (m_registeredSlotInstanceIdsString == "__none__") return;
                 karabo::util::Hash header = prepareHeader();
-                m_channel->write(header, message, m_priority);
+                // In case we are connected to a single local instance we shortcut the broker
+                if ((m_registeredSlots.size() == 1) && 
+                        (m_registeredSlots.find(m_signalSlotable->m_instanceId) != m_registeredSlots.end())) {
+                    m_signalSlotable->injectEvent(m_channel, Hash::Pointer(new Hash(header)), Hash::Pointer(new Hash(message)));
+                } else {
+                    m_channel->write(header, message, m_priority);
+                }
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))
             }
