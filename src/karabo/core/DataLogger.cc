@@ -96,7 +96,7 @@ namespace karabo {
 
 
         void DataLogger::okStateOnEntry() {
-
+            boost::this_thread::sleep(boost::posix_time::seconds(2));
             m_user = "."; //TODO:  Define proper user running a device. The dot is unknown user?
 
             if (!boost::filesystem::exists(get<string>("directory")))
