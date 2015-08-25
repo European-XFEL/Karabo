@@ -429,7 +429,12 @@ namespace karathon {
         if (autostartEventLoop) {
             ScopedGILRelease nogil;
             m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeatInterval, karabo::util::Hash()));
-            boost::this_thread::sleep(boost::posix_time::milliseconds(10)); // give a chance above thread to start up before leaving this constructor
+            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+            bool ok = ensureOwnInstanceIdUnique();
+            if (!ok) {
+                m_eventLoop.join(); // Blocks
+                return;
+            }
         }
     }
 

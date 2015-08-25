@@ -575,21 +575,15 @@ namespace karabo {
 
             virtual void _slotChanged(const karabo::util::Hash& hash, const std::string& instanceId);
 
-            virtual void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            virtual void _slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             virtual void slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            virtual void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            virtual void _slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             virtual void _slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
             virtual void _slotClassSchema(const karabo::util::Schema& schema, const std::string& classId, const std::string& serverId);
-
-
-
-            void onInstanceNotAvailable(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
-
-            void onInstanceAvailableAgain(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             static std::string generateOwnInstanceId();
 
@@ -615,7 +609,7 @@ namespace karabo {
 
             std::vector<std::string> filterProperties(const karabo::util::Schema& schema, const int accessLevel);
 
-            void checkMaster();
+            //void checkMaster();
 
             std::string getInstanceType(const karabo::util::Hash& instanceInfo) const;
 
