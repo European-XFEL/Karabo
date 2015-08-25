@@ -61,7 +61,7 @@ namespace karabo {
 
             // Hide the loggers from the standard view in clients
             OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue(5)
+                    .setNewDefaultValue(4)
                     .commit();
 
             // Slow beats
@@ -201,7 +201,7 @@ namespace karabo {
             configuration.getPaths(paths);
 
             boost::mutex::scoped_lock lock(m_configMutex);
-
+            
             for (size_t i = 0; i < paths.size(); ++i) {
                 const string& path = paths[i];
                 const Hash::Node& leafNode = configuration.getNode(path);
@@ -255,7 +255,7 @@ namespace karabo {
                 // check if we have property registered
                 if (!propPathExists) continue;
                 if (find(m_idxprops.begin(), m_idxprops.end(), path) == m_idxprops.end()) continue;
-                
+
                 // Check if we need to build index for this property by inspecting schema
                 if (m_currentSchema.has(path) && m_currentSchema.isAccessReadOnly(path)) {
                     map<string, MetaData::Pointer>::iterator it = m_idxMap.find(path);
@@ -327,7 +327,7 @@ namespace karabo {
         }
 
 
-        void DataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
+        void DataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {            
             KARABO_LOG_FRAMEWORK_DEBUG << "slotSchemaUpdated: Schema for " << deviceId << " arrived...";
             m_currentSchema = schema;
             string filename = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_schema.txt";

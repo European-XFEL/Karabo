@@ -872,7 +872,15 @@ namespace karabo {
                 instanceInfo.set("archive", this->get<bool>("archive"));
 
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo));
-
+                
+                boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+                
+                bool ok = ensureOwnInstanceIdUnique();
+                if (!ok) {
+                    t.join(); // Blocks
+                    return;
+                }
+                
                 KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
 
                 // ClassId
@@ -997,23 +1005,16 @@ namespace karabo {
                 return true;
             }
 
-            void slotGetConfiguration() {
-                //std::string senderId = this->getSenderInfo("slotGetConfiguration")->getInstanceIdOfSender();
-                //call(senderId, "slotChanged", m_parameters, m_deviceId);
+            void slotGetConfiguration() {                
                 reply(m_parameters, m_deviceId);
             }
 
-            void slotGetSchema(bool onlyCurrentState) {
-
-                //std::string senderId = this->getSenderInfo("slotGetSchema")->getInstanceIdOfSender();
-
+            void slotGetSchema(bool onlyCurrentState) {           
                 if (onlyCurrentState) {
                     const std::string& currentState = get<std::string > ("state");
-                    const karabo::util::Schema& schema = getStateDependentSchema(currentState);
-                    //call(senderId, "slotSchemaUpdated", schema, m_deviceId);
+                    const karabo::util::Schema& schema = getStateDependentSchema(currentState);                   
                     reply(schema, m_deviceId);
-                } else {
-                    //call(senderId, "slotSchemaUpdated", m_fullSchema, m_deviceId);
+                } else {                  
                     reply(m_fullSchema, m_deviceId);
                 }
             }

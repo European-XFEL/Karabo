@@ -8,6 +8,7 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include <exception>
 #include "OutputChannel.hh"
 #include "Data.hh"
 
@@ -69,9 +70,13 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "NoInputShared: " << m_onNoSharedInputChannelAvailable;
 
             // Memory related
-            m_channelId = MemoryType::registerChannel();
-            m_chunkId = MemoryType::registerChunk(m_channelId);
-
+            try {
+                m_channelId = MemoryType::registerChannel();
+                m_chunkId = MemoryType::registerChunk(m_channelId);
+            } catch(...) {
+                KARABO_RETHROW
+            }
+            
             KARABO_LOG_FRAMEWORK_DEBUG << "Outputting data on channel " << m_channelId << " and chunk " << m_chunkId;
 
             // Data networking
