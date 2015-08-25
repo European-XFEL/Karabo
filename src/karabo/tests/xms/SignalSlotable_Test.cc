@@ -54,10 +54,16 @@ void SignalSlotable_Test::testMethod() {
 
         SignalSlotDemo ssDemo("SignalSlotDemo", connection);
         ssDemo.setNumberOfThreads(2);
-        boost::thread t(boost::bind(&SignalSlotable::runEventLoop, &ssDemo, 10, Hash()));
+        boost::thread t(boost::bind(&SignalSlotable::runEventLoop, &ssDemo, 10, Hash()));                
         
         // Give thread some time to come up
         boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+
+        bool ok = ssDemo.ensureOwnInstanceIdUnique();
+        if (!ok) {
+            t.join(); // Blocks
+            return;
+        }
         
         ssDemo.connectN("signalA", "slotA");
 
