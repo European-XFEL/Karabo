@@ -1217,6 +1217,8 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
                 boost::split(tokens, hostname, boost::is_any_of("."));
                 return std::string(tokens[0] + "_" + T::classInfo().getClassId() + "_" + karabo::util::toString(getpid()));
             }
+            
+            bool ensureOwnInstanceIdUnique();
 
         protected: // Functions
 

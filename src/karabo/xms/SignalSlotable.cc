@@ -279,13 +279,10 @@ namespace karabo {
         void SignalSlotable::runEventLoop(int heartbeatInterval, const karabo::util::Hash& instanceInfo) {
 
             try {
-                m_instanceInfo = instanceInfo;
+                               
                 m_heartbeatInterval = heartbeatInterval;
-                // Inject the heartbeat interval to instanceInfo
-                m_instanceInfo.set("heartbeatInterval", heartbeatInterval);
-                // Inject karaboVersion
-                m_instanceInfo.set("karaboVersion", karabo::util::Version::getVersion());
-
+                m_instanceInfo = instanceInfo; 
+                 
                 m_runEventLoop = true;
 
                 startBrokerMessageConsumption();
@@ -295,32 +292,17 @@ namespace karabo {
                     m_eventLoopThreads.create_thread(boost::bind(&karabo::xms::SignalSlotable::_runEventLoop, this));
                 }
 
-                // Make sure the instanceId is valid and unique
-                std::pair<bool, std::string> result = isValidInstanceId(m_instanceId);
-                if (!result.first) {
-                    KARABO_LOG_FRAMEWORK_ERROR << result.second;
-                    stopBrokerMessageConsumption();
-                    throw KARABO_LOGIC_EXCEPTION(result.second);
-                }
-
-                KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id: " << m_instanceId;
-                KARABO_LOG_FRAMEWORK_INFO << "Instance: " << m_instanceId << " uses " << m_nThreads << " threads";
-
-                call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
-
-                startEmittingHeartbeats(heartbeatInterval);
-                startTrackingSystem();
-
-                m_randPing = 0;
                 m_eventLoopThreads.join_all(); // Join all event dispatching threads
 
                 stopBrokerMessageConsumption();
-                stopTrackingSystem();
-                stopEmittingHearbeats();
+                
+                if (!m_randPing) {
+                    stopTrackingSystem();
+                    stopEmittingHearbeats();
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << m_instanceId << "\" shuts cleanly down";
-                call("*", "slotInstanceGone", m_instanceId, m_instanceInfo);
-
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << m_instanceId << "\" shuts cleanly down";
+                    call("*", "slotInstanceGone", m_instanceId, m_instanceInfo);
+                }
 
 
             } catch (const karabo::util::Exception& e) {
@@ -330,6 +312,36 @@ namespace karabo {
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Unknown error in runEventLoop happened";
             }
+        }
+
+        
+        bool SignalSlotable::ensureOwnInstanceIdUnique() {
+               
+                // Inject the heartbeat interval to instanceInfo
+                m_instanceInfo.set("heartbeatInterval", m_heartbeatInterval);
+                
+                // Inject karaboVersion
+                m_instanceInfo.set("karaboVersion", karabo::util::Version::getVersion());
+
+            
+                // Make sure the instanceId is valid and unique
+                std::pair<bool, std::string> result = isValidInstanceId(m_instanceId);
+                if (!result.first) {
+                    KARABO_LOG_FRAMEWORK_ERROR << result.second;
+                    stopEventLoop();
+                    return result.first;
+                }
+                KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id: " << m_instanceId;
+                KARABO_LOG_FRAMEWORK_INFO << "Instance: " << m_instanceId << " uses " << m_nThreads << " threads";
+
+                call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
+
+                startEmittingHeartbeats(m_heartbeatInterval);
+                startTrackingSystem();
+
+                m_randPing = 0; // Allows to answer on slotPing
+                
+                return result.first;
         }
 
 
@@ -668,7 +680,7 @@ namespace karabo {
 
 
         void SignalSlotable::trackAllInstances() {
-            m_trackAllInstances = true;            
+            m_trackAllInstances = true;           
             m_heartbeatConsumerChannel->setFilter("signalFunction = 'signalHeartbeat'");
             m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2, _3));
         }
@@ -773,7 +785,7 @@ namespace karabo {
                     //cout << "Bad id, replying" << endl;
                     reply(m_instanceInfo);
                 }
-            } else if (!m_randPing) {
+            } else if (!m_randPing) { // I should only answer, if my name got accepted which is indicated by a value of m_randPing==0
                 call(instanceId, "slotPingAnswer", m_instanceId, m_instanceInfo);
                 //emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, m_instanceInfo);
             }
@@ -839,8 +851,9 @@ namespace karabo {
             if (!hasTrackedInstance(instanceId)) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId " << instanceId;
                 emit("signalInstanceNew", instanceId, instanceInfo);
+            } else {                            
+                KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId (but already tracked) " << instanceId;
             }
-            KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId (but already tracked) " << instanceId;
             addTrackedInstance(instanceId, instanceInfo);
 
         }
