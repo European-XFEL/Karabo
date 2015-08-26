@@ -115,6 +115,9 @@ namespace karabo {
 
             // Flag: initialization required
             bool m_hasSession;
+            
+            // MQ Acknowledge Mode for session
+            MQAckMode m_ackMode;
 
         public:
 
