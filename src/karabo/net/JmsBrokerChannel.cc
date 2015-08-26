@@ -120,6 +120,8 @@ namespace karabo {
                                              MQ_SESSION_SYNC_RECEIVE,
                                              &m_sessionHandle));
 
+                MQ_SAFE_CALL(MQGetAcknowledgeMode(m_sessionHandle, &m_ackMode));
+                
                 string destination = jbc->m_destinationName;
                 if (!m_subDestination.empty()) destination += "_" + m_subDestination;
                 MQ_SAFE_CALL(MQCreateDestination(m_sessionHandle, destination.c_str(),
@@ -198,7 +200,9 @@ namespace karabo {
                 } else {
                     throw KARABO_MESSAGE_EXCEPTION("Received message in wrong format (expecting binary)");
                 }
-                MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
+                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                }
                 MQ_SAFE_CALL(MQFreeMessage(messageHandle));
             } catch (...) {
                 KARABO_RETHROW
@@ -305,7 +309,9 @@ namespace karabo {
                 } else {
                     throw KARABO_MESSAGE_EXCEPTION("Received message in wrong format (expecting text)");
                 }
-                MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
+                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                }
                 // Clean up
                 MQ_SAFE_CALL(MQFreeMessage(messageHandle));
 
@@ -360,7 +366,9 @@ namespace karabo {
                 } else {
                     throw KARABO_MESSAGE_EXCEPTION("Received invalid message type (neither text nor binary)");
                 }
-                MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle))
+                if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
+                     MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                }
                 // Clean up
                 MQ_SAFE_CALL(MQFreeMessage(messageHandle));
             } catch (...) {
@@ -529,7 +537,9 @@ namespace karabo {
 
                 if (!MQStatusIsError(status) && !m_isStopped) {
 
-                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                    if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
+                        MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                    }
 
                     // Allow registration of another handler
                     if (!m_ioService->isWorking()) m_hasAsyncHandler = false;
@@ -614,7 +624,9 @@ namespace karabo {
                 MQStatus status = consumeMessage(messageHandle, 2000);
 
                 if (!MQStatusIsError(status) && !m_isStopped) {
-                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                    if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
+                        MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                    }
 
                     // Allow registration of another handler
                     if (!m_ioService->isWorking()) m_hasAsyncHandler = false;
@@ -694,7 +706,9 @@ namespace karabo {
 
                 if (!MQStatusIsError(status) && !m_isStopped) {
 
-                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                    if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
+                        MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                    }
 
                     // Allow registration of another handler
                     if (!m_ioService->isWorking()) m_hasAsyncHandler = false;

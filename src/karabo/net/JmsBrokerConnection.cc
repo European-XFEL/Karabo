@@ -178,7 +178,7 @@ namespace karabo {
                     .key("acknowledgeMode")
                     .displayedName("Acknowledge Mode")
                     .description("General Acknowledge Mode")
-                    .assignmentOptional().defaultValue("explicit")
+                    .assignmentOptional().defaultValue("auto")
                     .options("dupsOk,auto,explicit,transacted")
                     .expertAccess()
                     .commit();
