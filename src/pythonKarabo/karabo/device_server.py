@@ -339,6 +339,13 @@ class DeviceServer(object):
         self.signalSlotableThread = threading.Thread(target=self.ss.runEventLoop, args = (10, info))
         self.signalSlotableThread.start()
         time.sleep(0.01)  # for rescheduling, some garantie that runEventLoop will start before FSM
+        
+        # if our own instanceId is used on topic -- exit
+        ok = self.ss.ensureOwnInstanceIdUnique()
+        if not ok:
+            self.signalSlotableThread.join()
+            return
+                
         self.fsm.start()
         signal.pause()
     
