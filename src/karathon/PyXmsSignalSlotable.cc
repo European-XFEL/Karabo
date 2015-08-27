@@ -113,6 +113,9 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  "Example:\n\tss = SignalSlotable.create('a')\n\tinfo = Hash('type','device')\n\tinfo['classId'] = myclassId\n\tinfo['serverId'] = myserverId\n\t"
                  "info['visibility'] = ['']\n\tinfo['version'] = my_version\n\tinfo['host'] = host_name\n\tss.runEventLoop(10, info)\n"
                  )
+            
+            .def("ensureOwnInstanceIdUnique", &SignalSlotableWrap::ensureOwnInstanceIdUnique,
+                 "\nIt should be called to guarantee the uniqueness on the topic\n")
 
             .def("stopEventLoop", &SignalSlotableWrap::stopEventLoop)
 

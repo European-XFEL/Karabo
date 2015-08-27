@@ -158,6 +158,15 @@ namespace karathon {
             ScopedGILRelease nogil;
             karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info);
         }
+        
+        bp::object ensureOwnInstanceIdUnique() {
+            bool result = false;
+            {
+                ScopedGILRelease nogil;
+                result = karabo::xms::SignalSlotable::ensureOwnInstanceIdUnique();
+            }
+            return bp::object(result);
+        }
 
         void stopEventLoop() {
             ScopedGILRelease nogil;
