@@ -291,7 +291,14 @@ class PythonDevice(NoFsm):
         # TODO Make configurable
         t = threading.Thread(target = self._ss.runEventLoop, args = (20, info))
         t.start()
-        time.sleep(0.01) # for rescheduling, some garantie that runEventLoop will start before FSM        
+        time.sleep(0.01) # for rescheduling, some garantie that runEventLoop will start before FSM
+        
+        # if our own instanceId is used on topic -- exit
+        ok = self._ss.ensureOwnInstanceIdUnique()
+        if not ok:
+            t.join()
+            return
+        
         with self._stateChangeLock:
             validated = self.validatorIntern.validate(self.fullSchema, self.parameters, self._getActualTimestamp())
             self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
