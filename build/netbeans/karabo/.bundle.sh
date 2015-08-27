@@ -252,6 +252,14 @@ cp -rf $DISTDIR/$OS/lib/serverControl/. $PYKARABO/
 #cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 #cp -rf $DISTDIR/$OS/lib/pythonTools/. $PYKARABO/
 
+if [ "$BUNDLE_ACTION" = "package" ]; then
+    # Build the docs
+    pushd ../../../doc
+    safeRunCommand "./build.sh" $PACKAGEDIR $VERSION
+    cp -rf .build/html $PACKAGEDIR/docs
+    popd
+fi
+
 # run (Karabo's run/package development environment)
 cd ../../../
 tar --exclude=.svn -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
