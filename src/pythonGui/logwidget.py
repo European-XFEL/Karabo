@@ -279,9 +279,12 @@ class LogWidget(QWidget):
 
 
     def onLogDataAvailable(self, logData):
-        for l in logData.split('#')[:-1]:
-            self.logs.append(Log(len(self.logs) + 1,
-                                 *(tuple(l.split(" | ")) + ("",))))
+        for l in logData:
+            #Log = namedtuple('Log', ["id", "dateTime", "messageType", "instanceId",
+            #             "description", "additionalDescription"])
+            self.logs.append(Log(len(self.logs) + 1, dateTime=l["timestamp"], messageType=l["type"],
+                                 instanceId=l["category"], description=l["message"],
+                                 additionalDescription=""))
         self.onViewNeedsUpdate()
 
 
@@ -340,6 +343,8 @@ class LogWidget(QWidget):
                 self.dtStartDate.setDateTime(endDateTime)
                 self.dtEndDate.setDateTime(startDateTime)
 
+            # l.dateTime comes in format as defined in NetworkAppender:
+            # (FIXME: replace format here by dateTimeFormat defined above?)
             g = (l for l in g if startDateTime <
                  QDateTime.fromString(l.dateTime, "yyyy-MM-dd hh:mm:ss") <
                  endDateTime)
