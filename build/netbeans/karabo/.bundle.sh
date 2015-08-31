@@ -262,7 +262,7 @@ fi
 
 # run (Karabo's run/package development environment)
 cd ../../../
-tar --exclude=.svn -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
+tar --exclude=.svn --exclude=run/servers/dataLoggerServer/karaboHistory -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
 # Version information
 echo $VERSION > $PACKAGEDIR/karaboRun/VERSION
 cd -
