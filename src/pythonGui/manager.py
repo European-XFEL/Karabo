@@ -49,7 +49,7 @@ class _Manager(QObject):
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
-    signalLogDataAvailable = pyqtSignal(str) # logData
+    signalLogDataAvailable = pyqtSignal(object) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
     
     signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
@@ -371,8 +371,8 @@ class _Manager(QObject):
                                                   Hash(classId, conf.toHash())))
 
 
-    def handle_log(self, message):
-        self.signalLogDataAvailable.emit(message)
+    def handle_log(self, messages):
+        self.signalLogDataAvailable.emit(messages)
 
 
     def handle_brokerInformation(self, **kwargs):
@@ -406,11 +406,12 @@ class _Manager(QObject):
             timestamp = datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
             timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-            logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
-                         "Detected dirty shutdown for instance \"" + id + "\", which " \
-                         "is coming up now.#"
             # A log message is triggered
-            self.handle_log(logMessage)
+            logMessage = dict(timestamp=timestamp, type="INFO", category=id,
+                              message='Detected dirty shutdown for instance '
+                              '"{}", which is coming up now.'.format(id))
+
+            self.handle_log([logMessage])
             
             # Clear deviceId parameter page, if existent
             self._clearDeviceParameterPage(id)
