@@ -306,8 +306,7 @@ class DeviceServer(object):
                 
         config.set("appenders", newAppenders)
             
-        config["appenders[2].Network.layout"] = Hash()
-        config["appenders[2].Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
+        # network appender has fixed format (the one expected by the GUI)
         if "connection" in input:
             config["appenders[2].Network.connection"] = input["connection"]
             
