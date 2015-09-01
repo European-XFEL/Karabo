@@ -25,9 +25,9 @@ namespace karabo {
             // Time format should match "yyyy-MM-dd hh:mm:ss" as GUI expects in
             // logwidget.py:
             m_timeLayout.setConversionPattern("%d{%F %H:%M:%S}");
-            m_priorityLayout.setConversionPattern("%p");
-            m_categoryLayout.setConversionPattern("%c");
-            m_messageLayout.setConversionPattern("%m");
+            m_priorityLayout.setConversionPattern("%p"); // DEBUG, INFO, WARN or ERROR
+            m_categoryLayout.setConversionPattern("%c"); // deviceId
+            m_messageLayout.setConversionPattern("%m");  // message text
 
             // Start thread
             m_thread = boost::thread(boost::bind(&karabo::net::NetworkAppender::checkLogCache, this));
