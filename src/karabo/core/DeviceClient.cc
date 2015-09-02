@@ -973,9 +973,11 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
             if (m_instanceUsage.find(instanceId) == m_instanceUsage.end()) { // Not there yet
                 p->connect(instanceId, "signalChanged", "", "_slotChanged");
+                p->connect(instanceId, "signalStateChanged", "", "_slotChanged");
                 p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
             } else if (m_instanceUsage[instanceId] >= CONNECTION_KEEP_ALIVE) { // Died before
                 p->connect(instanceId, "signalChanged", "", "_slotChanged");
+                p->connect(instanceId, "signalStateChanged", "", "_slotChanged");
                 p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
             }
             m_instanceUsage[instanceId] = 0;

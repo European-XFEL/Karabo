@@ -213,7 +213,7 @@ namespace karabo {
              * @param data The textual data (body) of the message
              * @param header The list of properties to be send as JMS properties
              */
-            void write(const karabo::util::Hash& header, const std::string& data, const int priority = 4);
+            void write(const karabo::util::Hash& header, const std::string& data, const int priority = 4, const int messageTimeToLive = 600000);
 
             /**
              * Low level writing within the JMS framework
@@ -221,9 +221,9 @@ namespace karabo {
              * @param data The binary data (body) of the message
              * @param header The list of properties to be send as JMS properties
              */
-            void write(const karabo::util::Hash& header, const char* data, const size_t& size, const int priority = 4);
+            void write(const karabo::util::Hash& header, const char* data, const size_t& size, const int priority = 4, const int messageTimeToLive = 600000);
 
-            void write(const karabo::util::Hash& header, const karabo::util::Hash& data, const int priority = 4);
+            void write(const karabo::util::Hash& header, const karabo::util::Hash& data, const int priority = 4, const int messageTimeToLive = 600000);
 
             //**************************************************************/
             //*                Errors, Timing, Selections                  */
@@ -318,11 +318,11 @@ namespace karabo {
 
             void rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header);
 
-            void sendTextMessage(const karabo::util::Hash& header, const std::string& messageBody, const int priority);
+            void sendTextMessage(const karabo::util::Hash& header, const std::string& messageBody, const int priority, const int messageTimeToLive);
 
-            void sendBinaryMessage(const karabo::util::Hash& header, const char* messageBody, const size_t& size, const int priority);
+            void sendBinaryMessage(const karabo::util::Hash& header, const char* messageBody, const size_t& size, const int priority, const int messageTimeToLive);
 
-            void sendBinaryMessageCompressed(const karabo::util::Hash& header, const char* messageBody, const size_t& size, const int priority);
+            void sendBinaryMessageCompressed(const karabo::util::Hash& header, const char* messageBody, const size_t& size, const int priority, const int messageTimeToLive);
 
             void compressSnappy(const char* source, const size_t& source_length, std::vector<char>& target);
 

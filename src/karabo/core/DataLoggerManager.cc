@@ -97,20 +97,20 @@ namespace karabo {
             remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
 
-            KARABO_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
+            KARABO_SYSTEM_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
             KARABO_SLOT(slotGetLoggerMap);
 
             // Check if the local server where DataLoggerManager is running is in the server list
-            {
-                bool takenIntoAccount = false;
-                for (vector<string>::iterator ii = m_serverList.begin(); ii != m_serverList.end(); ii++) {
-                    if (*ii == getServerId()) {
-                        takenIntoAccount = true;
-                        break;
-                    }
-                }
-                if (!takenIntoAccount) m_serverList.push_back(getServerId());
-            }
+            //{
+            //    bool takenIntoAccount = false;
+            //    for (vector<string>::iterator ii = m_serverList.begin(); ii != m_serverList.end(); ii++) {
+            //        if (*ii == getServerId()) {
+            //            takenIntoAccount = true;
+            //            break;
+            //        }
+            //    }
+            //    if (!takenIntoAccount) m_serverList.push_back(getServerId());
+            //}
 
             // Start DataLogReaders on all DataLogger device servers
             for (vector<string>::iterator ii = m_serverList.begin(); ii != m_serverList.end(); ii++) {

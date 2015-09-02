@@ -481,7 +481,10 @@ namespace karabo {
 
                 if (!validated.empty()) {
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
-                    emit("signalChanged", validated, getInstanceId());
+                    if (validated.has("state"))
+                        emit("signalStateChanged", validated, getInstanceId());   // more reliable delivery: timeToLive == 600000 (10min)
+                    else
+                        emit("signalChanged", validated, getInstanceId());        // less reliable delivery: timeToLive == 4000 (4 secs)
                 }
             }
 
@@ -812,6 +815,8 @@ namespace karabo {
             virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
 
+            // TODO:  Implement local call: just post command on local queue
+            
             void execute(const std::string& command) const {
                 call("", command);
             }
@@ -931,15 +936,17 @@ namespace karabo {
             void initDeviceSlots() {
                 using namespace std;
 
-                SIGNAL2("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
+                KARABO_SIGNAL2("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
+                
+                KARABO_SYSTEM_SIGNAL2("signalStateChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
 
-                SIGNAL2("signalNoTransition", string, string);
+                KARABO_SYSTEM_SIGNAL2("signalNoTransition", string, string);
                 connect("", "signalNoTransition", "*", "slotNoTransition", NO_TRACK);
 
-                SIGNAL4("signalNotification", string /*type*/, string /*messageShort*/, string /*messageDetail*/, string /*deviceId*/);
+                KARABO_SYSTEM_SIGNAL4("signalNotification", string /*type*/, string /*messageShort*/, string /*messageDetail*/, string /*deviceId*/);
                 connect("", "signalNotification", "*", "slotNotification", NO_TRACK);
 
-                SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
+                KARABO_SYSTEM_SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
 
                 KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
                 KARABO_SLOT(slotGetConfiguration)
