@@ -986,7 +986,7 @@ def install_all():
         # get version of OS (e.g. 14.04)
         os_version = exec_command_oneliner(client, "lsb_release -rs")
         # for Scientific Linux, get only major release
-        if os_name == "Scientific":
+        if os_name == "Scientific" or os_name == "CentOS":
             os_version = str(os_version)
             os_version = os_version.split('.')[0]
             os_version = int(os_version)
