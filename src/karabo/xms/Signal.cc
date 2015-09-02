@@ -67,6 +67,7 @@ namespace karabo {
                         (m_registeredSlots.find(m_signalSlotable->m_instanceId) != m_registeredSlots.end())) {
                     m_signalSlotable->injectEvent(m_channel, Hash::Pointer(new Hash(header)), Hash::Pointer(new Hash(message)));
                 } else {
+                    if (m_signalFunction != "signalHeartbeat" && m_registeredSlotInstanceIdsString == "__none__") return;
                     m_channel->write(header, message, m_priority);
                 }
             } catch (const karabo::util::Exception& e) {
