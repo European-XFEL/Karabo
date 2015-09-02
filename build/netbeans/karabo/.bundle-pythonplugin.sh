@@ -56,7 +56,7 @@ NUM_CORES=2  # default
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
     DISTRO_RELEASE=$(lsb_release -rs)
-    if [ "$DISTRO_ID" = "Scientific" ]; then
+    if [ "$DISTRO_ID" = "Scientific" -o "$DISTRO_ID" = "CentOS" ]; then
        DISTRO_RELEASE=${DISTRO_RELEASE%%\.*}
     fi
     NUM_CORES=`grep "processor" /proc/cpuinfo | wc -l`

@@ -69,7 +69,7 @@ OS=$(uname -s)
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
     DISTRO_RELEASE=$(lsb_release -rs)
-    if [ "$DISTRO_ID" = "Scientific" ]; then
+    if [ "$DISTRO_ID" = "Scientific" -o  "$DISTRO_ID" = "CentOS" ]; then
        DISTRO_RELEASE=${DISTRO_RELEASE%%\.*}
     fi
 fi

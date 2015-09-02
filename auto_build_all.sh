@@ -130,7 +130,7 @@ if [ "$SKIP" = "n" ]; then
         #    Scientific Linux or CentOS      #
         ######################################
 
-    elif [ "$DISTRO_ID" == "Scientific" ]; then
+    elif [ "$DISTRO_ID" == "Scientific" -o "$DISTRO_ID" == "CentOS" ]; then
         safeRunCommand "yum install redhat-lsb"
         safeRunCommand "yum install make gcc gcc-c++ gcc-gfortran subversion doxygen nspr-devel nss-devel zlib-devel libX11-devel readline-devel qt-devel lapack-devel sqlite-devel openssl-devel"
         safeRunCommand "yum install epel-release
