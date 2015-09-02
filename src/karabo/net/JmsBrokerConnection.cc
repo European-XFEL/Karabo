@@ -178,19 +178,19 @@ namespace karabo {
                     .key("acknowledgeMode")
                     .displayedName("Acknowledge Mode")
                     .description("General Acknowledge Mode")
-                    .assignmentOptional().defaultValue("auto")
+                    .assignmentOptional().defaultValue("explicit")
                     .options("dupsOk,auto,explicit,transacted")
                     .expertAccess()
                     .commit();
 
-            INT32_ELEMENT(expected)
-                    .key("messageTimeToLive")
-                    .displayedName("Message Time to Live")
-                    .description("Time to live for an individual message send by a producer (0 = unlimited) [ms]")
-                    .assignmentOptional().defaultValue(120000)
-                    .minInc(0)
-                    .expertAccess()
-                    .commit();
+//            INT32_ELEMENT(expected)
+//                    .key("messageTimeToLive")
+//                    .displayedName("Message Time to Live")
+//                    .description("Time to live for an individual message send by a producer (0 = unlimited) [ms]")
+//                    .assignmentOptional().defaultValue(600000)
+//                    .minInc(0)
+//                    .expertAccess()
+//                    .commit();
 
             INT32_ELEMENT(expected)
                     .key("compressionUsageThreshold")
@@ -250,7 +250,7 @@ namespace karabo {
             input.get("acknowledgeSent", m_acknowledgeSent);
             input.get("deliveryInhibition", m_deliveryInhibition);
             input.get("acknowledgeTimeout", m_acknowledgeTimeout);
-            input.get("messageTimeToLive", m_messageTimeToLive);
+            //input.get("messageTimeToLive", m_messageTimeToLive);
             input.get("compressionUsageThreshold", m_compressionUsageThreshold);
             input.get("compression", m_compression);
 

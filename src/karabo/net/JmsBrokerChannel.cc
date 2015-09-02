@@ -36,7 +36,7 @@ namespace karabo {
         , m_filterCondition("")
         , m_isStopped(false)
         , m_hasAsyncHandler(false)
-        , m_syncReadTimeout(120000)
+        , m_syncReadTimeout(600000)
         , m_hasConsumer(false)
         , m_hasProducer(false)
         , m_subDestination(subDestination)
@@ -869,16 +869,7 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::sendTextMessage(const karabo::util::Hash& header, const std::string& messageBody, const int priority) {
-            int messageTimeToLive;
-            {
-                boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
-                if (!jbc)
-                    throw KARABO_IO_EXCEPTION("BrokerChannel found parent connection destroyed");
-                else
-                    messageTimeToLive = jbc->m_messageTimeToLive;
-            }
-
+        void JmsBrokerChannel::sendTextMessage(const karabo::util::Hash& header, const std::string& messageBody, const int priority, const int messageTimeToLive) {
             try {
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
@@ -936,16 +927,7 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::sendBinaryMessage(const Hash& header, const char* messageBody, const size_t& size, const int priority) {
-            int messageTimeToLive;
-            {
-                boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
-                if (!jbc)
-                    throw KARABO_IO_EXCEPTION("BrokerChannel found parent connection destroyed");
-                else
-                    messageTimeToLive = jbc->m_messageTimeToLive;
-            }
-
+        void JmsBrokerChannel::sendBinaryMessage(const Hash& header, const char* messageBody, const size_t& size, const int priority, const int messageTimeToLive) {
             try {
                 //MQProducerHandle producerHandle = MQ_INVALID_HANDLE;
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
@@ -1005,8 +987,7 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::sendBinaryMessageCompressed(const Hash& header, const char* messageBody, const size_t& size, const int priority) {
-            int messageTimeToLive;
+        void JmsBrokerChannel::sendBinaryMessageCompressed(const Hash& header, const char* messageBody, const size_t& size, const int priority, const int messageTimeToLive) {
             string compression;
 
             {
@@ -1015,7 +996,6 @@ namespace karabo {
                     throw KARABO_IO_EXCEPTION("BrokerChannel found parent connection destroyed");
                 else {
                     compression = jbc->m_compression;
-                    messageTimeToLive = jbc->m_messageTimeToLive;
                 }
             }
 
@@ -1105,13 +1085,13 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::write(const karabo::util::Hash& header, const std::string& messageBody, const int priority) {
+        void JmsBrokerChannel::write(const karabo::util::Hash& header, const std::string& messageBody, const int priority, const int messageTimeToLive) {
 
             try {
 
                 //ensureProducerAvailable();
 
-                sendTextMessage(header, messageBody, priority);
+                sendTextMessage(header, messageBody, priority, messageTimeToLive);
 
             } catch (...) {
                 KARABO_RETHROW
@@ -1131,7 +1111,7 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::write(const Hash& header, const char* messageBody, const size_t& size, const int priority) {
+        void JmsBrokerChannel::write(const Hash& header, const char* messageBody, const size_t& size, const int priority, const int messageTimeToLive) {
             int compressionUsageThreshold;
             //string compression;
 
@@ -1150,9 +1130,9 @@ namespace karabo {
                 //                std::cout << "JmsBrokerChannel::write: threshold=" << compressionUsageThreshold
                 //                        << ", compression = \"" <<  jbc->m_compression << "\"." << std::endl;
                 if (compressionUsageThreshold >= 0 && compressionUsageThreshold < int(size)) {
-                    sendBinaryMessageCompressed(header, messageBody, size, priority);
+                    sendBinaryMessageCompressed(header, messageBody, size, priority, messageTimeToLive);
                 } else {
-                    sendBinaryMessage(header, messageBody, size, priority);
+                    sendBinaryMessage(header, messageBody, size, priority, messageTimeToLive);
                 }
             } catch (...) {
                 KARABO_RETHROW
@@ -1160,19 +1140,19 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::write(const karabo::util::Hash& header, const karabo::util::Hash& data, const int priority) {
+        void JmsBrokerChannel::write(const karabo::util::Hash& header, const karabo::util::Hash& data, const int priority, const int messageTimeToLive) {
             //cout << "JmsBrokerChannel::write ....\n\theader\n" << header << "\n\tdata\n" << data << "------------------\n" << endl;
             Hash modifiedHeader(header);
             if (m_serializationType == "text") {
                 modifiedHeader.set("__format", "Xml");
                 string buffer;
                 m_textSerializer->save(data, buffer);
-                this->write(modifiedHeader, buffer, priority);
+                this->write(modifiedHeader, buffer, priority, messageTimeToLive);
             } else if (m_serializationType == "binary") {
                 modifiedHeader.set("__format", "Bin");
                 std::vector<char> buffer;
                 m_binarySerializer->save(data, buffer);
-                this->write(modifiedHeader, &buffer[0], buffer.size(), priority);
+                this->write(modifiedHeader, &buffer[0], buffer.size(), priority, messageTimeToLive);
             }
         }
 

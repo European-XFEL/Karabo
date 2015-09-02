@@ -111,7 +111,7 @@ namespace karabo {
 
         void SignalSlotable::Requestor::sendRequest(const karabo::util::Hash& header, const karabo::util::Hash& body) const {
             try {
-                m_signalSlotable->m_producerChannel->write(header, body);
+                m_signalSlotable->m_producerChannel->write(header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Problems sending request"));
             }
@@ -574,10 +574,10 @@ namespace karabo {
                 replyHeader.set("signalFunction", "__reply__");
                 replyHeader.set("slotInstanceIds", "|" + header.get<string>("signalInstanceId") + "|");
                 if (it != m_replies.end()) {
-                    m_producerChannel->write(replyHeader, it->second);
+                    m_producerChannel->write(replyHeader, it->second, KARABO_SYS_PRIO, KARABO_SYS_TTL);
                 } else if (!global) {
                     // Inject an empty reply, in case the no one was provided in the slot body                    
-                    m_producerChannel->write(replyHeader, karabo::util::Hash());
+                    m_producerChannel->write(replyHeader, karabo::util::Hash(), KARABO_SYS_PRIO, KARABO_SYS_TTL);
                 }
             }
             if (it != m_replies.end()) {
@@ -587,7 +587,7 @@ namespace karabo {
                     replyHeader.set("signalFunction", "__replyNoWait__");
                     replyHeader.set("slotInstanceIds", header.get<string>("replyInstanceIds"));
                     replyHeader.set("slotFunctions", header.get<string>("replyFunctions"));
-                    m_producerChannel->write(replyHeader, it->second, 9);
+                    m_producerChannel->write(replyHeader, it->second, KARABO_SYS_PRIO, KARABO_SYS_TTL);
                 }
                 m_replies.erase(it);
             }
@@ -600,45 +600,45 @@ namespace karabo {
             registerHeartbeatSignal<string, int, Hash>("signalHeartbeat");
 
             // Listener for heartbeats
-            SLOT3(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
+            KARABO_SLOT3(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
 
-            KARABO_SIGNAL("signalInstanceNew", string, Hash);
+            KARABO_SYSTEM_SIGNAL("signalInstanceNew", string, Hash);
 
-            KARABO_SIGNAL("signalInstanceGone", string, Hash);
+            KARABO_SYSTEM_SIGNAL("signalInstanceGone", string, Hash);
 
-            //SIGNAL3("signalHeartbeat", string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
+            //KARABO_SYSTEM_SIGNAL3("signalHeartbeat", string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
 
             // Global ping listener
-            GLOBAL_SLOT3(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/, bool /*trackPingedInstance*/)
+            KARABO_GLOBAL_SLOT3(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/, bool /*trackPingedInstance*/)
 
             // Global instance new notification
-            GLOBAL_SLOT2(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/)
+            KARABO_GLOBAL_SLOT2(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/)
 
             // Global slot instance gone
-            GLOBAL_SLOT2(slotInstanceGone, string /*instanceId*/, Hash /*instanceInfo*/)
+            KARABO_GLOBAL_SLOT2(slotInstanceGone, string /*instanceId*/, Hash /*instanceInfo*/)
 
             // Listener for ping answers
-            SLOT2(slotPingAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
+            KARABO_SLOT2(slotPingAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
 
             // Connects signal to slot
-            SLOT4(slotConnectToSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/, int /*connectionType*/)
+            KARABO_SLOT4(slotConnectToSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/, int /*connectionType*/)
 
             // Replies whether slot exists on this instance
-            SLOT4(slotConnectToSlot, string /*signalInstanceId*/, string /*signalFunction*/, string /*slotFunction*/, int /*connectionType*/)
+            KARABO_SLOT4(slotConnectToSlot, string /*signalInstanceId*/, string /*signalFunction*/, string /*slotFunction*/, int /*connectionType*/)
 
             // Disconnects signal from slot
-            SLOT3(slotDisconnectFromSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
+            KARABO_SLOT3(slotDisconnectFromSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
 
-            SLOT3(slotDisconnectFromSlot, string /*signalInstance*/, string /*signalFunction*/, string /*slotFunction*/)
+            KARABO_SLOT3(slotDisconnectFromSlot, string /*signalInstance*/, string /*signalFunction*/, string /*slotFunction*/)
 
             // Function request
-            SLOT1(slotGetAvailableFunctions, string /*functionType*/)
+            KARABO_SLOT1(slotGetAvailableFunctions, string /*functionType*/)
 
             // Provides information about p2p connectivity
-            SLOT2(slotGetOutputChannelInformation, string /*ioChannelId*/, int /*pid*/)
+            KARABO_SLOT2(slotGetOutputChannelInformation, string /*ioChannelId*/, int /*pid*/)
 
             // Establishes/Releases P2P connections
-            SLOT3(slotConnectToOutputChannel, string /*inputChannelName*/, karabo::util::Hash /*outputChannelInfo */, bool /*connect/disconnect*/)
+            KARABO_SLOT3(slotConnectToOutputChannel, string /*inputChannelName*/, karabo::util::Hash /*outputChannelInfo */, bool /*connect/disconnect*/)
         }
 
 

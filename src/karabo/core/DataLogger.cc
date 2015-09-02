@@ -116,6 +116,7 @@ namespace karabo {
             SLOT2(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
 
             connect(m_deviceToBeLogged, "signalChanged", "", "slotChanged", NO_TRACK);
+            connect(m_deviceToBeLogged, "signalStateChanged", "", "slotChanged", NO_TRACK);
             connect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated", NO_TRACK);
 
             refreshDeviceInformation();

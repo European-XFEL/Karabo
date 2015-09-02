@@ -160,19 +160,19 @@ namespace karabo {
             //*              Synchronous Write - No Header                 */
             //**************************************************************/
 
-            virtual void write(const char* data, const size_t& size, const int priority = 4) {
+            virtual void write(const char* data, const size_t& size, const int priority = 4, const int messageTimeToLive = 600000) {
                 throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
             }
 
-            virtual void write(const std::vector<char>& data, const int priority = 4) {
-                write(&data[0], data.size());
+            virtual void write(const std::vector<char>& data, const int priority = 4, const int messageTimeToLive = 600000) {
+                write(&data[0], data.size(), messageTimeToLive);
             }
 
-            virtual void write(const std::string& data, const int priority = 4) {
+            virtual void write(const std::string& data, const int priority = 4, const int messageTimeToLive = 600000) {
                 throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
             }
 
-            virtual void write(const karabo::util::Hash& data, const int priority = 4) {
+            virtual void write(const karabo::util::Hash& data, const int priority = 4, const int messageTimeToLive = 600000) {
                 throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
             }
 
@@ -180,17 +180,17 @@ namespace karabo {
             //*              Synchronous Write - With Header               */
             //**************************************************************/
 
-            virtual void write(const karabo::util::Hash& header, const char* data, const size_t& size, const int priority = 4) {
+            virtual void write(const karabo::util::Hash& header, const char* data, const size_t& size, const int priority = 4, const int messageTimeToLive = 600000) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
-            virtual void write(const karabo::util::Hash& header, const std::vector<char>& data, const int priority = 4) {
-                write(header, static_cast<const char*> (&data[0]), data.size());
+            virtual void write(const karabo::util::Hash& header, const std::vector<char>& data, const int priority = 4, const int messageTimeToLive = 600000) {
+                write(header, static_cast<const char*> (&data[0]), data.size(), messageTimeToLive);
             }
 
-            virtual void write(const karabo::util::Hash& header, const std::string& data, const int priority = 4) = 0;
+            virtual void write(const karabo::util::Hash& header, const std::string& data, const int priority = 4, const int messageTimeToLive = 600000) = 0;
 
-            virtual void write(const karabo::util::Hash& header, const karabo::util::Hash& data, const int priority = 4) = 0;
+            virtual void write(const karabo::util::Hash& header, const karabo::util::Hash& data, const int priority = 4, const int messageTimeToLive = 600000) = 0;
 
             //**************************************************************/
             //*                Errors, Timing, Selections                  */
