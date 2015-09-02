@@ -9,6 +9,7 @@
 
 #include <krb_log4cpp/LoggingEvent.hh>
 #include <karabo/util/Hash.hh>
+#include <karabo/log/Logger.hh>
 
 #include "NetworkAppender.hh"
 
@@ -63,18 +64,18 @@ namespace karabo {
 
 
         void NetworkAppender::checkLogCache() {
-            try {
-                while (m_ok) {
+            while (m_ok) {
+                try {
                     writeNow();
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+                } catch (const karabo::util::Exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Writing failed for "
+                            << m_logCache.size() << " message(s): " << e;
+                    // Clean up, i.e. do not try to send again since messages
+                    // should anyway be in server log:
+                    boost::mutex::scoped_lock lock(m_mutex);
+                    m_logCache.clear();
                 }
-
-            } catch (const karabo::util::Exception& e) {
-                // Would be better to use the macro to the message into the
-                // log file - would need KARABO_CLASSINFO in .hh ?
-                // GF FIXME
-                // KARABO_LOG_FRAMEWORK_ERROR << "Writing failed: " << e;
-                std::cerr << "NetworkAppender: Writing failed: " << e << std::endl;
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
             }
         }
 

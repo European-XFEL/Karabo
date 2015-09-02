@@ -29,6 +29,7 @@ namespace karabo {
         class NetworkAppender : public krb_log4cpp::LayoutAppender {
 
         public:
+            KARABO_CLASSINFO(NetworkAppender, "NetworkAppender", "1.1")
 
             NetworkAppender(const std::string& name, const BrokerChannel::Pointer& channel);
             virtual ~NetworkAppender();
