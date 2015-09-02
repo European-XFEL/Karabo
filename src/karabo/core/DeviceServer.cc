@@ -387,13 +387,13 @@ namespace karabo {
 
 
         void DeviceServer::registerAndConnectSignalsAndSlots() {
-            SIGNAL3("signalNewDeviceClassAvailable", string /*serverId*/, string /*classId*/, Schema /*classSchema*/)
-            SIGNAL3("signalClassSchema", karabo::util::Schema /*classSchema*/, string /*classId*/, string /*deviceId*/);
-            SLOT1(slotStartDevice, Hash /*configuration*/)
-            SLOT0(slotKillServer)
-            SLOT1(slotDeviceGone, string /*deviceId*/)
-            SLOT1(slotGetClassSchema, string /*classId*/)
-            SLOT1(slotLoggerPriority, string /*priority*/)
+            KARABO_SYSTEM_SIGNAL3("signalNewDeviceClassAvailable", string /*serverId*/, string /*classId*/, Schema /*classSchema*/)
+            KARABO_SYSTEM_SIGNAL3("signalClassSchema", karabo::util::Schema /*classSchema*/, string /*classId*/, string /*deviceId*/);
+            KARABO_SLOT1(slotStartDevice, Hash /*configuration*/)
+            KARABO_SLOT0(slotKillServer)
+            KARABO_SLOT1(slotDeviceGone, string /*deviceId*/)
+            KARABO_SLOT1(slotGetClassSchema, string /*classId*/)
+            KARABO_SLOT1(slotLoggerPriority, string /*priority*/)
 
             // Connect to global slot(s))
             connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", NO_TRACK);

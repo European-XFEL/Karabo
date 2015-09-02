@@ -25,6 +25,12 @@ namespace karabo {
      */
     namespace xms {
 
+        #define KARABO_SYS_PRIO 4
+        #define KARABO_SYS_TTL 600000
+ 
+        #define KARABO_PUB_PRIO 3
+        #define KARABO_PUB_TTL 4000
+ 
         // Forward SignalSlotable
         class SignalSlotable;
 
@@ -34,7 +40,9 @@ namespace karabo {
 
             KARABO_CLASSINFO(Signal, "Signal", "1.0")
 
-            Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& signalInstanceId, const std::string& signalFunction, const int priority = 4);
+            Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel,
+                   const std::string& signalInstanceId, const std::string& signalFunction,
+                   const int priority = KARABO_SYS_PRIO, const int messageTimeToLive = KARABO_SYS_TTL);
 
             virtual ~Signal() {
             }
@@ -93,6 +101,7 @@ namespace karabo {
             size_t m_nRegisteredSlots;
             std::map<std::string, std::set<std::string> > m_registeredSlots;
             int m_priority;
+            int m_messageTimeToLive;
         };
 
     } // namespace xms

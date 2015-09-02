@@ -14,13 +14,19 @@
 namespace karabo {
     namespace xms {
         
-        using namespace karabo::util;
 
-        Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& signalInstanceId, const std::string& signalFunction, const int priority) :
-        m_signalSlotable(const_cast<SignalSlotable*>(signalSlotable)), m_channel(channel), m_signalInstanceId(signalInstanceId), m_signalFunction(signalFunction), m_priority(priority) {
+        Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel,
+                       const std::string& signalInstanceId, const std::string& signalFunction,
+                       const int priority, const int messageTimeToLive)
+        : m_signalSlotable(const_cast<SignalSlotable*>(signalSlotable))
+        , m_channel(channel)
+        , m_signalInstanceId(signalInstanceId)
+        , m_signalFunction(signalFunction)
+        , m_priority(priority)
+        , m_messageTimeToLive(messageTimeToLive) {
             updateConnectedSlotsString();
         }
-
+        
         void Signal::updateConnectedSlotsString() {
             m_registeredSlotsString.clear();
             m_registeredSlotInstanceIdsString.clear();
@@ -58,17 +64,18 @@ namespace karabo {
         }
 
         void Signal::send(const karabo::util::Hash& message) {
+            using namespace karabo::util;
             try {
-                // TODO Do not send if no slots are connected
-                //if (m_registeredSlotInstanceIdsString == "__none__") return;
                 karabo::util::Hash header = prepareHeader();
                 // In case we are connected to a single local instance we shortcut the broker
                 if ((m_registeredSlots.size() == 1) && 
                         (m_registeredSlots.find(m_signalSlotable->m_instanceId) != m_registeredSlots.end())) {
                     m_signalSlotable->injectEvent(m_channel, Hash::Pointer(new Hash(header)), Hash::Pointer(new Hash(message)));
                 } else {
+                    // Do not send if no slots are connected except heartbeats.
+                    // Heartbeats always have slotInstanceId == __none__ 
                     if (m_signalFunction != "signalHeartbeat" && m_registeredSlotInstanceIdsString == "__none__") return;
-                    m_channel->write(header, message, m_priority);
+                    m_channel->write(header, message, m_priority, m_messageTimeToLive);
                 }
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))

@@ -42,7 +42,7 @@ namespace karabo {
             void okStateOnEntry();
 
             void instanceNewHandler(const karabo::util::Hash& topologyEntry);
-
+            
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             void slotGetLoggerMap();
