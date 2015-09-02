@@ -9,7 +9,7 @@ echo "connection opened: (stop all device servers script)"
 
 os_name=$(lsb_release -is)
 os_version=$(lsb_release -rs)
-if [ "${os_name}" = "Scientific" ]; then os_version=${os_version%%\.*}; fi
+if [ "${os_name}" = "Scientific" -o "${os_name}" = "CentOS" ]; then os_version=${os_version%%\.*}; fi
 os_arch=$(uname -m)
 
 CONFIG_FILE=config.iniSIMPLIFIED_DATA_FILE=$( grep simplified_data_file ${CONFIG_FILE} | cut -d '=' -f2 | tr -d ' ')
