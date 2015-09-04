@@ -93,7 +93,9 @@ do
         echo "INFO $exe running, not restarting"
     else 
         target=$exe
-        title=$exe
+        # on CentOS, HOSTNAME contains domain => strip off from 1st dot
+        #title="\"${HOSTNAME%%.*}: $exe\""
+        title="${HOSTNAME%%.*}:$exe"
         options="-T $title -sb -rightbar -sl $scroll -hold"
 	display=""
 	if [ -n "$XUSE" ] && [ "$xuse" = "yes" ]; then
