@@ -58,22 +58,23 @@ for log in $KARABO_SERVERS/*/$logfile
 do
     showThis=0
     if [ ${#@} -eq 0 ]; then
-	# no argument: show all logs
-	showThis=1
+        # no argument: show all logs
+        showThis=1
     else
         # there are arguments: loop and show if at least one is matching
         for arg in $@; do
-	    if [[ $log =~ $arg ]]; then
+            if [[ $log =~ $arg ]]; then
                 # i.e. log contains argument
-		showThis=1
-		break
-	    fi
-	done
+                showThis=1
+                break
+            fi
+        done
     fi
     if [ $showThis -eq 1 ]; then
-	# less +G  => directly scroll to the end
-	xterm -T "${HOSTNAME}: less ${log}" -e bash -c "less +G $log" &
-	count+=1
+        # less +G  => directly scroll to the end,
+        # e.g. on CentOS7, HOSTNAME contains domain => strip off from 1st dot
+        xterm -T "${HOSTNAME%%.*}: less ${log}" -e bash -c "less +G $log" &
+        count+=1
     fi
 done
 
