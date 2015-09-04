@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<DeviceServer>
+  <autoStart>
+    <KRB_Item>
+      <DataLoggerManager>
+      <serverList KRB_Type="VECTOR_STRING">Karabo_DataLoggerServer</serverList>
+      </DataLoggerManager>
+    </KRB_Item>
+  </autoStart>
+  <scanPlugins KRB_Type="STRING">false</scanPlugins>
+  <serverId KRB_Type="STRING">Karabo_DLManagerServer</serverId>
+  <visibility>4</visibility>
+  <Logger><priority>INFO</priority></Logger>
+</DeviceServer>
