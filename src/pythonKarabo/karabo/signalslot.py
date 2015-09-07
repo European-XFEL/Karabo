@@ -122,8 +122,6 @@ class SignalSlotable(Configurable):
 
         class Spam(SignalSlotable):
             signalHam = Signal(String(), Int())"""
-    signalHeartbeat = Signal(hashtypes.String(), hashtypes.Int32(),
-                             hashtypes.Hash())
     signalChanged = Signal(hashtypes.Hash(), hashtypes.String())
 
     _deviceId_ = String(
@@ -181,8 +179,6 @@ class SignalSlotable(Configurable):
         elif self.__randPing == 0:
             self._ss.emit("call", {instanceId: ["slotPingAnswer"]},
                           self.deviceId, self.info)
-        if track and instanceId != self.deviceId:
-            self.signalHeartbeat.connect(instanceId, "slotHeartbeat", None)
 
     def inner(self, message, args):
         ret = self.slotPing(*args)
@@ -216,9 +212,8 @@ class SignalSlotable(Configurable):
     @coroutine
     def heartbeats(self):
         while self is not None:
-            self.signalHeartbeat(self.deviceId, self.heartbeatInterval,
-                                 self.info)
             interval = self.heartbeatInterval
+            self._ss.heartbeat(interval, self.info)
             self = weakref.ref(self)
             yield from sleep(interval)
             self = self()
