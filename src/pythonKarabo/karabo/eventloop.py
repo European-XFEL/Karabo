@@ -25,6 +25,9 @@ class Broker:
         self.session = openmq.Session(self.connection, False, 1, 0)
         self.destination = openmq.Destination(self.session, loop.topic, 1)
         self.producer = openmq.Producer(self.session, self.destination)
+        self.hbdestination = openmq.Destination(self.session,
+                                                loop.topic + "_beats", 1)
+        self.hbproducer = openmq.Producer(self.session, self.hbdestination)
         self.deviceId = deviceId
         self.classId = classId
         self.repliers = {}
@@ -39,6 +42,19 @@ class Broker:
         p['__format'] = 'Bin'
         m.properties = p
         self.producer.send(m, 1, 4, 100000)
+
+    def heartbeat(self, interval, info):
+        h = Hash()
+        h["a1"] = self.deviceId
+        h["a2"] = interval
+        h["a3"] = info
+        m = openmq.BytesMessage()
+        m.data = h.encode("Bin")
+        p = openmq.Properties()
+        p["signalFunction"] = "signalHeartbeat"
+        p["__format"] = "Bin"
+        m.properties = p
+        self.hbproducer.send(m, 1, 4, 100000)
 
     def call(self, signal, targets, reply, args):
         p = openmq.Properties()
