@@ -26,10 +26,10 @@ namespace karabo {
     namespace xms {
 
         #define KARABO_SYS_PRIO 4
-        #define KARABO_SYS_TTL 600000
+        #define KARABO_SYS_TTL 0
  
         #define KARABO_PUB_PRIO 3
-        #define KARABO_PUB_TTL 4000
+        #define KARABO_PUB_TTL 30000
  
         // Forward SignalSlotable
         class SignalSlotable;
