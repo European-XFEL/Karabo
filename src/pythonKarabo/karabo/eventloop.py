@@ -12,6 +12,7 @@ import getpass
 from itertools import count
 import os
 import queue
+import socket
 import sys
 import threading
 import weakref
@@ -53,7 +54,7 @@ class Broker:
             p['slotFunctions'] = b'__none__'
         if reply is not None:
             p['replyTo'] = reply
-        p['hostname'] = "exflpcx18981"
+        p['hostname'] = socket.gethostname()
         p['classId'] = self.classId
         self.send(p, args)
 
