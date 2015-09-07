@@ -403,14 +403,10 @@ class _Manager(QObject):
         # Check for existing stuff and remove
         instanceIds, serverClassIds = self.systemTopology.detectExistingInstances(topologyEntry)
         for id in instanceIds:
-            timestamp = datetime.now()
-            # TODO: better format for timestamp and timestamp generation in karabo
-            timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-            # A log message is triggered
-            logMessage = dict(timestamp=timestamp, type="INFO", category=id,
-                              message='Detected dirty shutdown for instance '
-                              '"{}", which is coming up now.'.format(id))
-
+            logMessage = dict(
+                timestamp=datetime.now().isoformat(), type="INFO", category=id,
+                message='Detected dirty shutdown for instance "{}", '
+                        'which is coming up now.'.format(id))
             self.handle_log([logMessage])
             
             # Clear deviceId parameter page, if existent

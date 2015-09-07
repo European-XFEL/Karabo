@@ -23,9 +23,9 @@ namespace karabo {
         NetworkAppender::NetworkAppender(const std::string& name, const karabo::net::BrokerChannel::Pointer& channel) :
         LayoutAppender(name), m_channel(channel), m_ok(true)
         {
-            // Time format should match "yyyy-MM-dd hh:mm:ss" as GUI expects in
-            // logwidget.py:
-            m_timeLayout.setConversionPattern("%d{%F %H:%M:%S}");
+            // Time format should be ISO8601, for real, not the
+            // log4cpp crippled version (missing T)
+            m_timeLayout.setConversionPattern("%d{%Y-%m-%dT%H:%M:%S.%l}");
             m_priorityLayout.setConversionPattern("%p"); // DEBUG, INFO, WARN or ERROR
             m_categoryLayout.setConversionPattern("%c"); // deviceId
             m_messageLayout.setConversionPattern("%m");  // message text
