@@ -9,7 +9,7 @@
    like Debug, Info, Errors, Warns, Alarms, Warnings in a generic kind of way.
 """
 
-__all__ = ["LogWidget", "LogTableView", "LogQueryModel"]
+__all__ = ["LogWidget", "LogQueryModel"]
 
 
 import globals
@@ -61,10 +61,22 @@ class LogWidget(QWidget):
 
         self.logs = [ ]
         self.queryModel = LogQueryModel()
-        # Create thread for log data processing
-        self.twLogTable = LogTableView(self.queryModel, self)
-        vLayout.addWidget(self.twLogTable)
+        twLogTable = QTableView(self)
+        vLayout.addWidget(twLogTable)
 
+        twLogTable.setModel(self.queryModel)
+        twLogTable.setWordWrap(True)
+        twLogTable.setAlternatingRowColors(True)
+        twLogTable.horizontalHeader().setStretchLastSection(True)
+        twLogTable.verticalHeader().setVisible(False)
+
+        twLogTable.setSelectionBehavior(QAbstractItemView.SelectRows)
+        twLogTable.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        twLogTable.setSortingEnabled(True)
+        twLogTable.sortByColumn(0, Qt.AscendingOrder)
+
+        twLogTable.doubleClicked.connect(self.onItemDoubleClicked)
 
     def _setupFilterWidget(self):
         """
@@ -347,6 +359,12 @@ class LogWidget(QWidget):
                                  (add and text in l.additionalDescription))
         return list(g)
 
+    def onItemDoubleClicked(self, index):
+        value = index.data()
+        if value is None:
+            return
+
+        Manager().signalSelectNewNavigationItem.emit(value)
 
     def onSaveToFile(self):
         """ Write current database content to a file """
@@ -364,37 +382,6 @@ class LogWidget(QWidget):
     def onClearLog(self):
         self.logs = [ ]
         self.onFilterChanged()
-
-
-class LogTableView(QTableView):
-    def __init__(self, model, parent=None):
-        super(LogTableView, self).__init__(parent)
-
-        # Model
-        self.setModel(model)
-
-        self.setWordWrap(True)
-        self.setAlternatingRowColors(True)
-        self.horizontalHeader().setStretchLastSection(True)
-        self.verticalHeader().setVisible(False)
-
-        # Selection
-        self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.SingleSelection)
-
-        # Sorting
-        self.setSortingEnabled(True)
-        self.sortByColumn(0, Qt.AscendingOrder)
-
-
-    def mouseDoubleClickEvent(self, event):
-        index = self.model().index(self.currentIndex().row(), 3)
-        value = index.data()
-        if value is None:
-            return
-        # Emit signal with deviceId to select device instance
-        Manager().signalSelectNewNavigationItem.emit(value)
-        QTableView.mouseDoubleClickEvent(self, event)
 
 
 Log = namedtuple('Log', ["id", "dateTime", "messageType", "instanceId",
