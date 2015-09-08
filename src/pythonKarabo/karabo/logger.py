@@ -1,10 +1,10 @@
 from bisect import bisect
+from datetime import datetime
 import logging
-import time
+import traceback
 import weakref
 
-from karabo.enums import Assignment
-from karabo.hash import Hash, String, StringList
+from karabo.hash import Hash, StringList
 from karabo.schema import Configurable, ListOfNodes
 
 
@@ -18,7 +18,7 @@ class _Filter(logging.Filter):
         return self.parent().filter(*args, **kwargs)
 
     def remove(self, parent):
-        for a in added:
+        for a in self.added:
             a.removeFilter(self)
 
     def addTo(self, what):
@@ -67,12 +67,18 @@ class _Handler(logging.Handler):
 
 class NetworkHandler(Handler):
     def emit(self, record):
-        self.parent.broker.log("{} | {} | {} | {}#".format(
-            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(record.created)),
-            ["DEBUG", "INFO", "WARN", "ERROR"][
-                bisect([20, 30, 40], record.levelno)],
-            self.parent.broker.deviceId,
-            record.getMessage()))
+        hash = Hash(
+            "timestamp", datetime.fromtimestamp(record.created).isoformat(),
+            "type", ("DEBUG", "INFO", "WARN", "ERROR"
+                     )[bisect([20, 30, 40], record.levelno)],
+            "category", self.parent.broker.deviceId,
+            "message", record.getMessage(),
+            "lineno", record.lineno,
+            "module", record.module,
+            "funcname", record.funcName)
+        if record.exc_info is not None:
+            hash["traceback"] = traceback.format_exception(*record.exc_info)
+        self.parent.broker.log(hash)
 
 
 class PrintHandler(Handler):

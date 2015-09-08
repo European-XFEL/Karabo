@@ -1,11 +1,12 @@
-import karabo
-
-from asyncio import (async, coroutine, gather, set_event_loop, sleep, wait_for,
-                     TimeoutError)
+from asyncio import (async, coroutine, gather, get_event_loop, set_event_loop,
+                     sleep, wait_for, TimeoutError)
+from datetime import datetime
 import gc
 from unittest import TestCase, main
 
+from karabo import openmq
 from karabo.api import Slot, Int
+from karabo.hash import Hash, VectorChar
 from karabo.python_device import Device
 from karabo.device_client import (waitUntilNew, getDevice, waitUntil, setWait,
                                   setNoWait, Queue)
@@ -88,6 +89,16 @@ class Remote(Device):
 
     generic = Superslot()
     generic_int = SuperInteger()
+    logmessage = VectorChar()
+
+    @Slot()
+    @coroutine
+    def read_log(self):
+        consumer = openmq.Consumer(self._ss.session, self._ss.destination,
+                                   "target = 'log'", False)
+        message = yield from get_event_loop().run_in_executor(
+            None, consumer.receiveMessage, 1000)
+        self.logmessage = message.data
 
 
 class Local(Device):
@@ -286,6 +297,26 @@ class Local(Device):
         with (yield from getDevice("remote")) as d:
             yield from d.doit()
 
+    @coroutine
+    def loginfo(self):
+        with (yield from getDevice("remote")) as d:
+            t = async(d.read_log())
+            yield from sleep(0.1)
+            self.logger.warning("this is an info")
+            yield from t
+
+
+    @coroutine
+    def logexception(self):
+        with (yield from getDevice("remote")) as d:
+            t = async(d.read_log())
+            yield from sleep(0.1)
+            try:
+                raise RuntimeError
+            except Exception:
+                self.logger.exception("expected exception")
+            yield from t
+
 
 class Tests(TestCase):
     @async_tst
@@ -390,6 +421,28 @@ class Tests(TestCase):
         self.assertEqual(local.f2, 777)
         self.assertEqual(local.f3, 777)
         self.assertEqual(local.f4, 777)
+
+    @async_tst
+    def test_log(self):
+        yield from local.loginfo()
+        hash = Hash.decode(remote.logmessage, "Bin")
+        hash = hash["messages"][0]
+        self.assertEqual(hash["message"], "this is an info")
+        self.assertEqual(hash["type"], "WARN")
+        self.assertEqual(hash["category"], "local")
+        self.assertEqual(hash["timestamp"][:18],
+                         datetime.now().isoformat()[:18])
+        yield from local.logexception()
+        hash = Hash.decode(remote.logmessage, "Bin")
+        hash = hash["messages"][0]
+        self.assertEqual(hash["message"], "expected exception")
+        self.assertEqual(hash["type"], "ERROR")
+        self.assertEqual(hash["category"], "local")
+        self.assertEqual(hash["timestamp"][:18],
+                         datetime.now().isoformat()[:18])
+        self.assertEqual(hash["funcname"], "logexception")
+        self.assertEqual(hash["module"], "remote_test")
+        self.assertEqual(len(hash["traceback"]), 3)
 
     @async_tst
     def test_queue(self):
