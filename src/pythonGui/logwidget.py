@@ -149,7 +149,7 @@ class LogWidget(QWidget):
         self.dtStartDate = QDateTimeEdit()
         self.dtStartDate.setDisplayFormat("yyyy-MM-dd hh:mm")
         self.dtStartDate.setCalendarPopup(True)
-        self.dtStartDate.setDate(QDate(2015, 8, 1))
+        self.dtStartDate.setDate(QDate.currentDate().addMonths(-1))
         self.dtStartDate.dateTimeChanged.connect(self.onFilterChanged)
         dateLayout.addRow("Start date: ", self.dtStartDate)
 
