@@ -77,6 +77,7 @@ class Device(SignalSlotable):
                requiredAccessLevel=AccessLevel.EXPERT)
 
     signalChanged = Signal(hashtypes.Hash(), hashtypes.String())
+    signalStateChanged = Signal(hashtypes.Hash(), hashtypes.String())
     signalSchemaUpdated = Signal(hashtypes.Schema(), hashtypes.String())
 
     subclasses = {}
