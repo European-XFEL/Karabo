@@ -77,8 +77,8 @@ class Broker:
     def log(self, message):
         p = openmq.Properties()
         p["target"] = "log"
-        m = openmq.TextMessage()
-        m.data = message
+        m = openmq.BytesMessage()
+        m.data = Hash("messages", [message]).encode("Bin")
         m.properties = p
         self.producer.send(m, 1, 4, 100000)
 
