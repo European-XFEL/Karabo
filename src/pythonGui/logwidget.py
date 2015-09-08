@@ -9,7 +9,7 @@
    like Debug, Info, Errors, Warns, Alarms, Warnings in a generic kind of way.
 """
 
-__all__ = ["LogWidget", "LogTableView", "LogQueryModel", "LogThread"]
+__all__ = ["LogWidget", "LogTableView", "LogQueryModel"]
 
 
 import globals
@@ -17,12 +17,12 @@ import icons
 from manager import Manager
 from util import getSaveFileName
 
-from PyQt4.QtCore import (pyqtSignal, QAbstractTableModel, QDate, QDateTime, Qt)
+from PyQt4.QtCore import (QAbstractTableModel, QDate, QDateTime,
+                          QModelIndex, Qt)
 from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QFormLayout, QFrame, QGroupBox, QHBoxLayout,
-                         QItemSelectionModel, QLabel,
-                         QLineEdit, QPushButton, QTableView, QToolButton,
-                         QVBoxLayout, QWidget)
+                         QLabel, QLineEdit, QPushButton, QTableView,
+                         QToolButton, QVBoxLayout, QWidget)
 
 from collections import namedtuple
 
@@ -137,7 +137,7 @@ class LogWidget(QWidget):
         self.dtStartDate = QDateTimeEdit()
         self.dtStartDate.setDisplayFormat("yyyy-MM-dd hh:mm")
         self.dtStartDate.setCalendarPopup(True)
-        self.dtStartDate.setDate(QDate(2014, 1, 1))
+        self.dtStartDate.setDate(QDate(2015, 8, 1))
         self.dtStartDate.dateTimeChanged.connect(self.onFilterChanged)
         dateLayout.addRow("Start date: ", self.dtStartDate)
 
@@ -276,18 +276,15 @@ class LogWidget(QWidget):
 
 
     def onLogDataAvailable(self, logData):
-        for l in logData:
-            self.logs.append(Log(
-                len(self.logs) + 1, dateTime=l["timestamp"],
+        new = [Log(
+                len(self.logs) + i + 1,
+                dateTime=QDateTime.fromString(l["timestamp"], Qt.ISODate),
                 messageType=l["type"], instanceId=l["category"],
-                description=l["message"], additionalDescription=""))
-        self.onViewNeedsUpdate()
-
-
-    def onViewNeedsUpdate(self):
-        # Update view considering filter options
-        self.onFilterChanged()
-
+                description=l["message"], additionalDescription="")
+               for i, l in enumerate(logData)]
+        self.logs.extend(new)
+        for l in self.filter(new):
+            self.queryModel.add(l)
 
     def onFilterOptionVisible(self, checked):
         """
@@ -307,11 +304,10 @@ class LogWidget(QWidget):
 
 
     def onFilterChanged(self):
-        """
-        This slot is called from here when the filter options might have changed
-        and the view needs to be updated by a new query to the database.
-        """
-        g = self.logs
+        self.queryModel.setList(self.filter(self.logs))
+
+    def filter(self, g):
+        """ filter relevant items from generator g"""
         if self.isLogData:
             s = dict(DEBUG=self.pbFilterDebug, INFO=self.pbFilterInfo,
                      WARN=self.pbFilterWarn, ERROR=self.pbFilterError)
@@ -339,9 +335,7 @@ class LogWidget(QWidget):
                 self.dtStartDate.setDateTime(endDateTime)
                 self.dtEndDate.setDateTime(startDateTime)
 
-            g = (l for l in g if startDateTime <
-                 QDateTime.fromString(l.dateTime, Qt.ISODate) <
-                 endDateTime)
+            g = (l for l in g if startDateTime < l.dateTime < endDateTime)
 
         text = self.leSearch.text()
         if text:
@@ -351,7 +345,7 @@ class LogWidget(QWidget):
             g = (l for l in g if (ins and text in l.instanceId) or
                                  (des and text in l.description) or
                                  (add and text in l.additionalDescription))
-        self.queryModel.setList(list(g))
+        return list(g)
 
 
     def onSaveToFile(self):
@@ -408,15 +402,11 @@ Log = namedtuple('Log', ["id", "dateTime", "messageType", "instanceId",
 
 
 class LogQueryModel(QAbstractTableModel):
-    # Define signals
-    signalViewNeedsSortUpdate = pyqtSignal(str) # queryText
-    signalRestoreLastSelection = pyqtSignal(object) # modelIndex
-
     def __init__(self, parent=None):
         super(LogQueryModel, self).__init__(parent)
-
-        self.filtered = [ ]
-
+        self.filtered = []
+        self.key = lambda l: l[0]
+        self.reverse = False
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
@@ -426,6 +416,7 @@ class LogQueryModel(QAbstractTableModel):
     def setList(self, l):
         self.beginResetModel()
         self.filtered = l
+        self.filtered.sort(key=self.key, reverse=self.reverse)
         self.endResetModel()
 
     def rowCount(self, _):
@@ -458,8 +449,23 @@ class LogQueryModel(QAbstractTableModel):
             return l[index.column()]
         return None
 
+    def add(self, data):
+        hi = len(self.filtered)
+        lo = 0
+        key = self.key(data)
+        while hi > lo:
+            mid = (hi + lo) // 2
+            if self.reverse == (self.key(self.filtered[mid]) < key):
+                hi = mid
+            else:
+                lo = mid + 1
+        self.beginInsertRows(QModelIndex(), lo, lo + 1)
+        self.filtered.insert(lo, data)
+        self.endInsertRows()
+
     def sort(self, column, order):
+        self.key = lambda l: l[column]
+        self.reverse = order != Qt.AscendingOrder
         self.beginResetModel()
-        self.filtered.sort(key=lambda l: l[column],
-                           reverse=order != Qt.AscendingOrder)
+        self.filtered.sort(key=self.key, reverse=self.reverse)
         self.endResetModel()
