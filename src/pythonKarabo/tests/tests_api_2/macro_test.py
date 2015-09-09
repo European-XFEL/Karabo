@@ -322,7 +322,9 @@ def setUpModule():
 
 
 def tearDownModule():
+    global remote, local
     stopDevices(remote, local)
+    Tests.instance = remote = local = None
 
 
 if __name__ == "__main__":
