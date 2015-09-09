@@ -77,7 +77,9 @@ def setUpModule():
 
 
 def tearDownModule():
+    global remA, remB, local
     stopDevices(local, remA, remB)
+    Tests.instance = local = remA = remB = None
 
 
 if __name__ == "__main__":
