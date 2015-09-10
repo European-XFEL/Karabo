@@ -29,7 +29,7 @@ namespace karabo {
         #define KARABO_SYS_TTL 0
  
         #define KARABO_PUB_PRIO 3
-        #define KARABO_PUB_TTL 30000
+        #define KARABO_PUB_TTL 5000
  
         // Forward SignalSlotable
         class SignalSlotable;
