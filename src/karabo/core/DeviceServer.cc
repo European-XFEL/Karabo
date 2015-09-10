@@ -472,6 +472,8 @@ namespace karabo {
 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Exception raised in scanPlugins: " << e;
+            } catch (const std::exception& se) {
+                KARABO_LOG_ERROR << "Standard exception raised in scanPlugins: " << se.what();
             } catch (...) {
                 KARABO_LOG_ERROR << "Unknown exception raised in scanPlugins: ";
             }
