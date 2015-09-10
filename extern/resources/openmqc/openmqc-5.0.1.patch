@@ -1,0 +1,14 @@
+diff -rupN openmqc-5.0.1/src/client/MessageConsumer.cpp openmqc-5.0.2/src/client/MessageConsumer.cpp
+--- openmqc-5.0.1/src/client/MessageConsumer.cpp	2013-09-20 15:51:21.000000000 +0200
++++ openmqc-5.0.2/src/client/MessageConsumer.cpp	2015-09-10 17:40:40.707905588 +0200
+@@ -586,6 +586,10 @@ MessageConsumer::receive(Message ** cons
+   if (this->isDMQConsumer == PR_FALSE && ((*message)->isExpired()) == PR_TRUE) {
+     ERRCHK( session->acknowledgeExpiredMessage(*message) );
+     this->session->messageDelivered();
++
++    DELETE( packet );
++    HANDLED_DELETE( *message );
++
+     receiveQueue->receiveDone();
+     continue;
+   } 
