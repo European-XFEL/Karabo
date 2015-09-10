@@ -130,7 +130,7 @@ class Tests(TestCase):
         task = loop.create_task(self.init_macroserver(server), server)
         proxy = loop.run_until_complete(task)
         self.assertEqual(proxy.s, "done")
-        async(server.slotKillServer())
+        loop.create_task(server.slotKillServer(), server)
         loop.run_forever()
         loop.close()
 

@@ -264,7 +264,7 @@ class DeviceServer(SignalSlotable):
                 timeout=10)
 
             if pending:
-                print("some devices could not be killed")
+                self.logger.warning("some devices could not be killed")
         self.stopEventLoop()
         self._ss.emit("call", {"*": ["slotDeviceServerInstanceGone"]},
                       self.serverId)
