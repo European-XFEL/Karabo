@@ -10,7 +10,7 @@ import weakref
 from karabo.api import Int, Slot
 from karabo.cli import connectDevice, DeviceClient
 from karabo.device_client import (
-    getDevice, instantiate, DeviceClientBase, getDevices)
+    getDevice, instantiate, shutdown, DeviceClientBase, getDevices)
 from karabo.eventloop import NoEventLoop
 from karabo.hash import Hash
 from karabo.macro import Macro, EventThread, RemoteDevice
@@ -32,6 +32,10 @@ class Remote(Macro):
     @Slot()
     def instantiate(self):
         instantiate("testServer", "Other", "other")
+
+    @Slot()
+    def shutdown(self):
+        shutdown("other")
 
 
 class NoRemote(Macro):
@@ -140,12 +144,25 @@ class Tests(TestCase):
         yield from sleep(4)
         return (yield from getDevice("other"))
 
+    @coroutine
+    def shutdown_server(self):
+        proxy = yield from getDevice("remote")
+        yield from proxy.shutdown()
+        yield from sleep(0.1)
+
     def test_server(self):
         loop = setEventLoop()
         server = DeviceServer(dict(serverId="testServer"))
         task = loop.create_task(self.init_server(server), server)
         proxy = loop.run_until_complete(task)
         self.assertEqual(proxy.something, 333)
+        self.assertIn("other", server.deviceInstanceMap)
+        r = weakref.ref(server.deviceInstanceMap["other"])
+        loop.run_until_complete(
+            loop.create_task(self.shutdown_server(), server))
+        self.assertNotIn("other", server.deviceInstanceMap)
+        gc.collect()
+        self.assertIsNone(r())
         async(server.slotKillServer())
         loop.run_forever()
         loop.close()
