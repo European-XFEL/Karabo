@@ -20,7 +20,8 @@ import karabo
 from karabo.device_client import (
     getDevice, waitUntil, waitUntilNew, setWait, setNoWait, execute,
     executeNoWait, DeviceClientBase, getDevices, getClasses, getServers,
-    instantiate, connectDevice, shutdown, shutdownNoWait, instantiateNoWait)
+    instantiate, connectDevice, shutdown, shutdownNoWait, instantiateNoWait,
+    disconnectDevice)
 from karabo.eventloop import NoEventLoop
 from karabo.macro import Macro
 
