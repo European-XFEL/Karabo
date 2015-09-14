@@ -1,5 +1,8 @@
 __all__ = ["Evaluator"]
 
+import traceback
+
+from PyQt4.QtGui import QAction, QInputDialog, QLineEdit, QMessageBox
 
 from util import SignalBlocker
 from widget import DisplayWidget
@@ -42,7 +45,13 @@ class Evaluator(DisplayWidget):
 
 
     def setText(self, text):
-        self.function = eval("lambda x:" + text, self.globals)
+        try:
+            self.function = eval("lambda x:" + text, self.globals)
+        except SyntaxError as e:
+            err = traceback.format_exception_only(type(e), e)
+            QMessageBox.warning(None, "Error in expression",
+                                "<pre>{1}{2}</pre>{3}".format(*err))
+            return
         self.text = text
         self.valueChanged(None, self.value)
 
@@ -53,7 +62,11 @@ class Evaluator(DisplayWidget):
 
         self.value = value
         with SignalBlocker(self.widget):
-            self.widget.setText("{}".format(self.function(value)))
+            try:
+                text = "{}".format(self.function(value))
+            except Exception as e:
+                text = traceback.format_exception_only(type(e), e)[0]
+            self.widget.setText(text)
 
 
     def save(self, e):
