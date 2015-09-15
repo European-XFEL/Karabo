@@ -13,6 +13,7 @@ from asyncio import get_event_loop
 from collections import defaultdict
 from decimal import Decimal
 from functools import wraps
+import time
 from weakref import WeakSet
 
 from karabo import KaraboError
@@ -77,6 +78,7 @@ class ProxySlot(Slot):
         @synchronize
         def method(self):
             self._update()
+            self._device._use()
             return (yield from self._device.call(self._deviceId, key))
         method.__doc__ = self.description
         return method.__get__(instance, owner)
@@ -116,6 +118,9 @@ class Proxy(object):
     def __dir__(cls):
         return dir(cls)
 
+    def _use(self):
+        pass
+
     def _onChanged(self, hash):
         for k, v, a in hash.iterall():
             d = getattr(type(self), k, None)
@@ -130,6 +135,7 @@ class Proxy(object):
             q.put_nowait(hash)
 
     def setValue(self, attr, value):
+        self._use()
         loop = get_event_loop()
         if loop.sync_set:
             ok, msg = loop.sync(self._device.call(
@@ -178,6 +184,34 @@ class Proxy(object):
         return self
 
 
+class AutoDisconnectProxy(Proxy):
+    def __init__(self, device, deviceId, sync):
+        super().__init__(device, deviceId, sync)
+        self._interval = 1
+        self._lastused = time.time()
+        self._task = asyncio.async(self._connector())
+
+    def _use(self):
+        self._lastused = time.time()
+        if self._task.done():
+            self._connect()
+
+    @synchronize
+    def _connect(self):
+        if self._task.done():
+            yield from self
+            self._task = asyncio.async(self._connector())
+
+    @asyncio.coroutine
+    def _connector(self):
+        with self:
+            while True:
+                delta = self._interval - time.time() + self._lastused
+                if delta < 0:
+                    return
+                yield from asyncio.sleep(delta)
+
+
 class ProxyNode(Descriptor):
     def __init__(self, cls):
         self.cls = cls
@@ -212,6 +246,9 @@ class SubProxy(object):
     def setValue(self, desc, value):
         self.__dict__[desc.key] = value
         self._parent.setValue(desc, value)
+
+    def _use(self):
+        self._parent._use()
 
 
 class OneShotQueue(asyncio.Future):
@@ -356,7 +393,7 @@ def _createProxyDict(hash, prefix):
 
 
 @synchronize
-def _getDevice(deviceId, sync, timeout=None):
+def _getDevice(deviceId, sync, Proxy=Proxy):
     instance = get_instance()
     ret = instance._devices.get(deviceId)
     if ret is not None:
@@ -394,7 +431,7 @@ def getDevice(deviceId, *, sync=None, timeout=-1):
     return _getDevice(deviceId, sync=sync, timeout=timeout)
 
 
-def connectDevice(device):
+def connectDevice(device, autodisconnect=None):
     """get and connect a device proxy for the device *deviceId*
 
     This connects a given device proxy to the real device such that the
@@ -403,10 +440,22 @@ def connectDevice(device):
     especially on the command line.
 
     If the device is needed only within a specific block, it is nicer
-    instead use a with statement as described in :func:`getDevice`."""
-    if not isinstance(device, Device):
-        device = getDevice(device)
-    return device.__enter__()
+    tu use instead a with statement as described in :func:`getDevice`."""
+    if isinstance(device, Proxy):
+        if autodisconnect is not None:
+            raise RuntimeError(
+                "autodisconnect can only be set at proxy creation time")
+    else:
+        if autodisconnect is None:
+            P = Proxy
+        else:
+            P = AutoDisconnectProxy
+        device = _getDevice(device, sync=get_event_loop().sync_set, Proxy=P)
+    if autodisconnect is None:
+        return device.__enter__()
+    else:
+        device._interval = autodisconnect
+        return device
 
 
 @synchronize
