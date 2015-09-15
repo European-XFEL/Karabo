@@ -43,8 +43,9 @@ class DeviceClient(Macro, DeviceClientBase):
 
 
 @functools.wraps(device_client.connectDevice)
-def connectDevice(device, autodisconnect=15):
-    return device_client.connectDevice(device, autodisconnect)
+def connectDevice(device, *, autodisconnect=15, timeout=5):
+    return device_client.connectDevice(device, autodisconnect=autodisconnect,
+                                       timeout=timeout)
 
 
 def device_completer(self, line):
