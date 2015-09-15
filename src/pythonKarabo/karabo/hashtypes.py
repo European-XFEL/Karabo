@@ -174,6 +174,7 @@ class Descriptor(object):
         if instance is None:
             return self
         else:
+            instance._use()
             if self.key not in instance.__dict__:
                 raise AttributeError(
                     "attribute '{}' has not been set".format(self.key))
