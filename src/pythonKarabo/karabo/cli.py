@@ -8,6 +8,7 @@
 # all side effects should be added to the if statement below.
 
 from asyncio import set_event_loop
+import functools
 import os
 import os.path as osp
 import re
@@ -17,11 +18,11 @@ import sys
 import IPython
 
 import karabo
+from karabo import device_client
 from karabo.device_client import (
     getDevice, waitUntil, waitUntilNew, setWait, setNoWait, execute,
     executeNoWait, DeviceClientBase, getDevices, getClasses, getServers,
-    instantiate, connectDevice, shutdown, shutdownNoWait, instantiateNoWait,
-    disconnectDevice)
+    instantiate, shutdown, shutdownNoWait, instantiateNoWait, disconnectDevice)
 from karabo.eventloop import NoEventLoop
 from karabo.macro import Macro
 
@@ -39,6 +40,11 @@ class DeviceClient(Macro, DeviceClientBase):
                 return getDevice(name)
             else:
                 raise AttributeError('Unknown device "{}"'.format(name))
+
+
+@functools.wraps(device_client.connectDevice)
+def connectDevice(device, autodisconnect=15):
+    return device_client.connectDevice(device, autodisconnect)
 
 
 def device_completer(self, line):
