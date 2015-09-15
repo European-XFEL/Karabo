@@ -64,7 +64,7 @@ class DeviceClientBase(Device):
 def synchronize(func):
     coro = asyncio.coroutine(func)
     @wraps(coro)
-    def wrapper(*args, timeout=-1, **kwargs):
+    def wrapper(*args, timeout=5, **kwargs):
         return get_event_loop().sync(coro(*args, **kwargs), timeout)
     return wrapper
 
@@ -411,7 +411,7 @@ def _getDevice(deviceId, sync, Proxy=Proxy):
     return ret
 
 
-def getDevice(deviceId, *, sync=None, timeout=-1):
+def getDevice(deviceId, *, sync=None, timeout=5):
     """get a device proxy for the device deviceId
 
     Request a schema of a remote device and create a proxy object which
@@ -431,7 +431,7 @@ def getDevice(deviceId, *, sync=None, timeout=-1):
     return _getDevice(deviceId, sync=sync, timeout=timeout)
 
 
-def connectDevice(device, autodisconnect=None):
+def connectDevice(device, *, autodisconnect=None, timeout=5):
     """get and connect a device proxy for the device *deviceId*
 
     This connects a given device proxy to the real device such that the
@@ -450,7 +450,8 @@ def connectDevice(device, autodisconnect=None):
             P = Proxy
         else:
             P = AutoDisconnectProxy
-        device = _getDevice(device, sync=get_event_loop().sync_set, Proxy=P)
+        device = _getDevice(device, sync=get_event_loop().sync_set,
+                            timeout=timeout, Proxy=P)
     if autodisconnect is None:
         return device.__enter__()
     else:
