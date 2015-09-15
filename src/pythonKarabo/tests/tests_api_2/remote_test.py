@@ -2,6 +2,7 @@ import karabo
 
 from asyncio import (async, coroutine, gather, set_event_loop, sleep, wait_for,
                      TimeoutError)
+import gc
 from unittest import TestCase, main
 
 from karabo.api import Slot, Int
@@ -78,6 +79,12 @@ class Remote(Device):
         for i in range(30):
             self.counter = i
             yield from sleep(0.1)
+
+    @Slot()
+    @coroutine
+    def error(self):
+        with (yield from getDevice("local")) as d:
+            yield from d.error()
 
     generic = Superslot()
     generic_int = SuperInteger()
@@ -261,6 +268,24 @@ class Local(Device):
             d.nested.val = 4
             d.nested.nestnest.value = 5
 
+    @Slot()
+    @coroutine
+    def error(self):
+        raise RuntimeError
+
+    @Slot()
+    @coroutine
+    def task_error(self):
+        async(self.error())
+
+    @coroutine
+    def onException(self, slot, exc, tb):
+        self.exc_slot = slot
+        self.exception = exc
+        self.traceback = tb
+        with (yield from getDevice("remote")) as d:
+            yield from d.doit()
+
 
 class Tests(TestCase):
     @async_tst
@@ -381,6 +406,37 @@ class Tests(TestCase):
         self.assertEqual(local.f2, 7)
         self.assertEqual(remote.nested.val, 4)
         self.assertEqual(remote.nested.nestnest.value, 5)
+
+    @async_tst
+    def test_error(self):
+        remote.done = False
+        with self.assertLogs(logger="local", level="ERROR"):
+            yield from remote.error()
+            yield from sleep(0.1)
+        self.assertTrue(remote.done)
+        remote.done = False
+        self.assertIs(local.exc_slot, Local.error)
+        self.assertIsInstance(local.exception, RuntimeError)
+        local.traceback.tb_lasti  # stupid check whether that is a traceback
+        del local.exc_slot
+        del local.exception
+        del local.traceback
+
+    @async_tst
+    def test_task_error(self):
+        remote.done = False
+        with self.assertLogs(logger="local", level="ERROR"):
+            with (yield from getDevice("local")) as d:
+                yield from d.task_error()
+                gc.collect()
+                yield from sleep(0.1)
+        self.assertTrue(remote.done)
+        remote.done = False
+        self.assertIsNone(local.exc_slot)
+        self.assertIsInstance(local.exception, RuntimeError)
+        del local.exc_slot
+        del local.exception
+        del local.traceback
 
 
 def setUpModule():

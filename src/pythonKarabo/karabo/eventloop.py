@@ -159,7 +159,8 @@ class Broker:
                     for slot in slots:
                         slot.slot(device, message, params)
                 except:
-                    device.logger.exception('error in slot "%s"', slot)
+                    device.logger.exception(
+                        "internal error while executing slot")
                 slot = slots = None
         finally:
             self.emit('call', {'*': ['slotInstanceGone']}, self.deviceId, info)
@@ -264,6 +265,15 @@ class EventLoop(SelectorEventLoop):
         self.connection = None
         self.changedFuture = Future(loop=self)  # call if some property changes
         self.set_default_executor(ThreadPoolExecutor(200))
+        self.set_exception_handler(EventLoop.exceptionHandler)
+
+    def exceptionHandler(self, context):
+        try:
+            instance = context["future"].instance()
+            instance._onException(None, context["exception"],
+                                  context.get("source_traceback"))
+        except:
+            self.default_exception_handler(context)
 
     def getBroker(self, deviceId, classId):
         if self.connection is None:
