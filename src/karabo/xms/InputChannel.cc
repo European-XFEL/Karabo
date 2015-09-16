@@ -318,14 +318,12 @@ namespace karabo {
                         if (this->getMinimumNumberOfData() <= 0) {
                             KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering another compute";
                             this->swapBuffers();
-                            m_mutex.unlock();
-                            this->triggerIOEvent();
-                            m_mutex.lock();
+                            m_tcpIoService->post(boost::bind(&InputChannel::triggerIOEvent, this));
                         }
                         if (m_eosChannels.size() == m_tcpChannels.size()) {
                             if (m_respondToEndOfStream) {
                                 KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering EOS function after reception of " << m_eosChannels.size() << " EOS tokens";
-                                this->triggerEndOfStreamEvent();
+                                m_tcpIoService->post(boost::bind(&InputChannel::triggerEndOfStreamEvent, this));
                             }
                             // Reset eos tracker
                             m_eosChannels.clear();
@@ -364,16 +362,12 @@ namespace karabo {
 
                         // No mutex under callback
                         KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering IOEvent";
-                        m_mutex.unlock(); // TODO scoped in case of exception thrown is callback code
-                        this->triggerIOEvent();
-                        m_mutex.lock();
+                        m_tcpIoService->post(boost::bind(&InputChannel::triggerIOEvent, this));
                     } else { // Data complete on both pots now
                         if (m_keepDataUntilNew) { // Is false per default
                             m_keepDataUntilNew = false;
                             KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Updating";
-                            m_mutex.unlock();
-                            update();
-                            m_mutex.lock();
+                            m_tcpIoService->post(boost::bind(&InputChannel::update, this));
                             m_keepDataUntilNew = true;
                         }
                     }
@@ -406,7 +400,7 @@ namespace karabo {
                 for (size_t i = 0; i < this->size(); ++i) {
                     m_dataHandler(this->read(i));
                 }
-                this->update();
+                m_tcpIoService->post(boost::bind(&InputChannel::update, this));
             }
             if (m_inputHandler) {
                 m_inputHandler(shared_from_this());

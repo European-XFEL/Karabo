@@ -27,11 +27,12 @@ namespace karabo {
 namespace karathon {
 
     class SignalWrap : public karabo::xms::Signal {
-
     public:
 
-        SignalWrap(const karabo::xms::SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& instanceId, const std::string& signalId) :
-        karabo::xms::Signal(signalSlotable, channel, instanceId, signalId) {
+        SignalWrap(const karabo::xms::SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel,
+                   const std::string& instanceId, const std::string& signalId,
+                   const int priority = KARABO_SYS_PRIO, const int messageTimeToLive = KARABO_SYS_TTL)
+        : karabo::xms::Signal(signalSlotable, channel, instanceId, signalId, priority, messageTimeToLive) {
         }
 
         void emitPy1(const bp::object& a1) {

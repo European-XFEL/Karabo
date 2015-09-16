@@ -26,6 +26,8 @@ namespace karabo {
             
             virtual void stop() = 0;
             
+            virtual void post(const boost::function<void()>& handler) = 0;
+            
         protected:
             virtual ~AbstractIOService() {
             }

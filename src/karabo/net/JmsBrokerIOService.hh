@@ -43,6 +43,8 @@ namespace karabo {
             void work();
 
             void stop();
+            
+            void post(const boost::function<void()>& handler);
 
             bool isStopped();
 

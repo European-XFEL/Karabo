@@ -39,6 +39,9 @@ namespace karabo {
             m_status = IDLE;
         }
 
+        void JmsBrokerIOService::post(const boost::function<void()>& handler) {
+            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("'post' function call");
+        }
 
         bool JmsBrokerIOService::activateRegisteredMessageReceivers() {
             boost::mutex::scoped_lock lock(m_mutex);
