@@ -27,6 +27,12 @@ from karabo.eventloop import NoEventLoop
 from karabo.macro import Macro
 
 
+__all__ = ["getDevice", "waitUntil", "waitUntilNew", "setWait", "setNoWait",
+           "execute", "executeNoWait", "getDevices", "getClasses",
+           "getServers", "instantiate", "connectDevice", "shutdown",
+           "shutdownNoWait", "instantiateNoWait", "karabo", "disconnectDevice"]
+
+
 class DeviceClient(Macro, DeviceClientBase):
     @property
     def __all__(self):
@@ -43,9 +49,9 @@ class DeviceClient(Macro, DeviceClientBase):
 
 
 @functools.wraps(device_client.connectDevice)
-def connectDevice(device, *, autodisconnect=15, timeout=5):
+def connectDevice(device, *, autodisconnect=15, **kwargs):
     return device_client.connectDevice(device, autodisconnect=autodisconnect,
-                                       timeout=timeout)
+                                       **kwargs)
 
 
 def device_completer(self, line):
@@ -87,9 +93,3 @@ if ip is not None:
                        "set(No)?Wait|shutdown(NoWait)?)\(")
     ip.set_hook("complete_command", class_completer,
                 re_key=".*instantiate(NoWait)?\(")
-
-
-    __all__ = ["getDevice", "waitUntil", "waitUntilNew", "setWait", "setNoWait",
-               "execute", "executeNoWait", "getDevices", "getClasses",
-               "getServers", "instantiate", "connectDevice", "shutdown",
-               "shutdownNoWait", "instantiateNoWait", "karabo"]
