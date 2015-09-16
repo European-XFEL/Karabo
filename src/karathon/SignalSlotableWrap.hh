@@ -205,24 +205,52 @@ namespace karathon {
         }
 
         void registerSignalPy1(const std::string& funcName, const bp::object&) {
-            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName));
+            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL));
             boost::function<void (const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy1, s, _1));
             storeSignal(funcName, s, f);
         }
 
         void registerSignalPy2(const std::string& funcName, const bp::object&, const bp::object&) {
-            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName));
+            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL));
             boost::function<void (const bp::object&, const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy2, s, _1, _2));
             storeSignal(funcName, s, f);
         }
 
         void registerSignalPy3(const std::string& funcName, const bp::object&, const bp::object&, const bp::object&) {
-            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName));
+            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL));
             boost::function<void (const bp::object&, const bp::object&, const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy3, s, _1, _2, _3));
             storeSignal(funcName, s, f);
         }
 
         void registerSignalPy4(const std::string& funcName, const bp::object&, const bp::object&, const bp::object&, const bp::object&) {
+            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL));
+            boost::function<void (const bp::object&, const bp::object&, const bp::object&, const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy4, s, _1, _2, _3, _4));
+            storeSignal(funcName, s, f);
+        }
+
+        void registerSystemSignalPy0(const std::string& funcName) {
+            this->registerSystemSignal(funcName);
+        }
+
+        void registerSystemSignalPy1(const std::string& funcName, const bp::object&) {
+            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName));
+            boost::function<void (const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy1, s, _1));
+            storeSignal(funcName, s, f);
+        }
+
+        void registerSystemSignalPy2(const std::string& funcName, const bp::object&, const bp::object&) {
+            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName));
+            boost::function<void (const bp::object&, const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy2, s, _1, _2));
+            storeSignal(funcName, s, f);
+        }
+
+        void registerSystemSignalPy3(const std::string& funcName, const bp::object&, const bp::object&, const bp::object&) {
+            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName));
+            boost::function<void (const bp::object&, const bp::object&, const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy3, s, _1, _2, _3));
+            storeSignal(funcName, s, f);
+        }
+
+        void registerSystemSignalPy4(const std::string& funcName, const bp::object&, const bp::object&, const bp::object&, const bp::object&) {
             boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName));
             boost::function<void (const bp::object&, const bp::object&, const bp::object&, const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy4, s, _1, _2, _3, _4));
             storeSignal(funcName, s, f);

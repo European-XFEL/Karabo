@@ -205,6 +205,12 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("registerSignal", &SignalSlotableWrap::registerSignalPy3, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
             .def("registerSignal", &SignalSlotableWrap::registerSignalPy4, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
+            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy0, (bp::arg("signalFunction")))
+            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy1, (bp::arg("signalFunction"), bp::arg("a1")))
+            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy2, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
+            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy3, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy4, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
+
             .def("emit", (void (SignalSlotable::*)(string const &) const) (&SignalSlotable::emit)
                  , (bp::arg("signalFunction")))
             .def("emit", &SignalSlotableWrap::emitPy1

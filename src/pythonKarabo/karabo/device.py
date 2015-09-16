@@ -623,14 +623,15 @@ class PythonDevice(NoFsm):
     def _initDeviceSlots(self):
         #-------------------------------------------- register intrinsic signals
         self._ss.registerSignal("signalChanged", Hash, str)                # changeHash, instanceId        
+        self._ss.registerSystemSignal("signalStateChanged", Hash, str)                # changeHash, instanceId        
         
-        self._ss.registerSignal("signalNoTransition", str, str)                 # 
+        self._ss.registerSystemSignal("signalNoTransition", str, str)                 # 
         self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", ConnectionType.NO_TRACK, False)        
         
-        self._ss.registerSignal("signalNotification", str, str, str, str)     # type, shortMessage, detailedMessage, deviceId
+        self._ss.registerSystemSignal("signalNotification", str, str, str, str)     # type, shortMessage, detailedMessage, deviceId
         self._ss.connect("", "signalNotification", "*", "slotNotification", ConnectionType.NO_TRACK, False)
         
-        self._ss.registerSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
+        self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
                 
         #---------------------------------------------- register intrinsic slots
         self._ss.registerSlot(self.slotReconfigure)        

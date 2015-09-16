@@ -47,6 +47,12 @@ namespace karabo {
                 }
             }
 
+            void post(const boost::function<void()>& handler) {
+                if (m_service) {
+                    m_service->post(handler);
+                }
+            }
+            
             template <class T>
             boost::shared_ptr<T> castTo() {
                 return boost::static_pointer_cast<T>(m_service);
