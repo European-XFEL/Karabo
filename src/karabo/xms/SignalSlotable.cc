@@ -1620,8 +1620,8 @@ namespace karabo {
 
                         for (size_t i = 0; i < deadOnes.size(); ++i) {
                             KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Instance \"" << deadOnes[i].first << "\" silently disappeared (no heartbeats received anymore)";
-                            emit("signalInstanceGone", deadOnes[i].first, deadOnes[i].second);
-                            eraseTrackedInstance(deadOnes[i].first);
+//                            emit("signalInstanceGone", deadOnes[i].first, deadOnes[i].second);
+//                            eraseTrackedInstance(deadOnes[i].first);
                         }
                     }
 

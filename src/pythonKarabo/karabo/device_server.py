@@ -350,8 +350,8 @@ class DeviceServer(object):
         signal.pause()
     
     def _registerAndConnectSignalsAndSlots(self):
-        self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, Schema) # serverid, classid, Schema
-        self.ss.registerSignal("signalClassSchema", Schema, str, str) # classSchema, classid, deviceid
+        self.ss.registerSystemSignal("signalNewDeviceClassAvailable", str, str, Schema) # serverid, classid, Schema
+        self.ss.registerSystemSignal("signalClassSchema", Schema, str, str) # classSchema, classid, deviceid
         self.ss.registerSlot(self.slotStartDevice)
         self.ss.registerSlot(self.slotKillServer)
         self.ss.registerSlot(self.slotDeviceGone)

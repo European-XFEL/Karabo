@@ -52,6 +52,11 @@ namespace karabo {
                 m_ioservice->stop();
             }
 
+            void post(const boost::function<void()>& handler) {
+                if (m_ioservice)
+                    m_ioservice->post(handler);
+            }
+            
             BoostIOServicePointer getBoostIOService() {
                 return m_ioservice;
             }
