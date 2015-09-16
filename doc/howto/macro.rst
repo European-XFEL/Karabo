@@ -251,8 +251,8 @@ wait forever. This is done as follows::
 Error Handling
 ==============
 
-Errors do happen. When they happen, in python typically an exception is
-raised. The best way to do error handling is to use the normal python
+Errors do happen. When they happen, in Python typically an exception is
+raised. The best way to do error handling is to use the usual Python
 try-except-statements.
 
 A good example is a user that cancels the operation of a macro. In
