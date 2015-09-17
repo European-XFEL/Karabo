@@ -93,6 +93,11 @@ public:
     static bp::object getParametersInWarnOrAlarm(Validator& self) {
         return bp::object(self.getParametersInWarnOrAlarm());
     }
+
+
+    static bp::object hasReconfigurableParameter(Validator& self) {
+        return bp::object(self.hasReconfigurableParameter());
+    }
 };
 
 
@@ -1980,6 +1985,7 @@ void exportPyUtilSchema() {
                 .def("getValidationRules", &ValidatorWrap::getValidationRules)
                 .def("hasParametersInWarnOrAlarm", &ValidatorWrap::hasParametersInWarnOrAlarm)
                 .def("getParametersInWarnOrAlarm", &ValidatorWrap::getParametersInWarnOrAlarm)
+                .def("hasReconfigurableParameter", &ValidatorWrap::hasReconfigurableParameter)
                 ;
     }
 

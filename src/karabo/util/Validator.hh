@@ -34,6 +34,7 @@ namespace karabo {
             
             karabo::util::Hash m_parametersInWarnOrAlarm;
             karabo::util::Timestamp m_timestamp;
+            bool m_hasReconfigurableParameter;
             
         public:
             
@@ -66,6 +67,8 @@ namespace karabo {
             bool hasParametersInWarnOrAlarm() const;
             
             const karabo::util::Hash& getParametersInWarnOrAlarm() const;
+            
+            bool hasReconfigurableParameter() const;
 
         private:
 
