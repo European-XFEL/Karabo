@@ -412,6 +412,17 @@ class PythonDevice(NoFsm):
 
                 if not validated.empty():
                     self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+                    
+                    # Hash containing 'state' should be signalled by 'signalStateChanged'
+                    if 'state' in validated:
+                        self._ss.emit("signalStateChanged", validated, self.deviceid)
+                        return;
+                    
+                    # if at least one key is reconfigurable -> signalStateChanged
+                    if self.validatorIntern.hasReconfigurableParameter():
+                        self._ss.emit("signalStateChanged", validated, self.deviceid)
+                        return
+                        
                     self._ss.emit("signalChanged", validated, self.deviceid)
        
     def __setitem__(self, key, value):
