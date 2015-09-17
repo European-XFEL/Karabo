@@ -1620,8 +1620,8 @@ namespace karabo {
 
                         for (size_t i = 0; i < deadOnes.size(); ++i) {
                             KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Instance \"" << deadOnes[i].first << "\" silently disappeared (no heartbeats received anymore)";
-//                            emit("signalInstanceGone", deadOnes[i].first, deadOnes[i].second);
-//                            eraseTrackedInstance(deadOnes[i].first);
+                            emit("signalInstanceGone", deadOnes[i].first, deadOnes[i].second);
+                            eraseTrackedInstance(deadOnes[i].first);
                         }
                     }
 
@@ -1647,7 +1647,7 @@ namespace karabo {
                     }
 
                     // We are sleeping thrice as long as the count-down ticks (which ticks in seconds)
-                    boost::this_thread::sleep(boost::posix_time::seconds(3));
+                    boost::this_thread::sleep(boost::posix_time::seconds(5));
                 }
 
             } catch (const Exception& e) {

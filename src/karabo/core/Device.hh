@@ -481,10 +481,21 @@ namespace karabo {
 
                 if (!validated.empty()) {
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
-                    if (validated.has("state"))
-                        emit("signalStateChanged", validated, getInstanceId());   // more reliable delivery: timeToLive == 600000 (10min)
-                    else
-                        emit("signalChanged", validated, getInstanceId());        // less reliable delivery: timeToLive == 4000 (4 secs)
+                    
+                    // if Hash contains at least one reconfigurable parameter -> signalStateChanged
+                    if (validated.has("state")) {
+                        emit("signalStateChanged", validated, getInstanceId());     // more reliable delivery: timeToLive == 600000 (10min)
+                        return;
+                    }
+                    
+                    // if Hash contains at least one reconfigurable parameter -> signalStateChanged
+                    if (m_validatorIntern.hasReconfigurableParameter()) {
+                        emit("signalStateChanged", validated, getInstanceId()); // more reliable delivery: timeToLive == 600000 (10min)
+                        return;
+                    }
+                    
+                    // ... otherwise -> signalChanged
+                    emit("signalChanged", validated, getInstanceId());              // less reliable delivery: timeToLive == 3000 (3 secs)
                 }
             }
 
@@ -514,6 +525,22 @@ namespace karabo {
                         timestamp.toHashAttributes(tmp.getAttributes(path));
                     }
                     m_parameters.merge(tmp, karabo::util::Hash::REPLACE_ATTRIBUTES);
+                    
+                    // if Hash contains 'state' key -> signalStateChanged
+                    if (tmp.has("state")) {
+                        emit("signalStateChanged", tmp, getInstanceId());     // more reliable delivery: timeToLive == 600000 (10min)
+                        return;
+                    }
+                    
+                    // if Hash contains at least one reconfigurable parameter -> signalStateChanged
+                    BOOST_FOREACH(std::string path, paths) {
+                        if (m_fullSchema.has(path) && m_fullSchema.isAccessReconfigurable(path)) {
+                            emit("signalStateChanged", tmp, getInstanceId()); // more reliable delivery: timeToLive == 600000 (10min)
+                            return;
+                        }
+                    }
+
+                    // ... otherwise -> signalChanged
                     emit("signalChanged", tmp, getInstanceId());
                 }
             }

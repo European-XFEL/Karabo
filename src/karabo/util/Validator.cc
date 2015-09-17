@@ -48,6 +48,9 @@ namespace karabo {
 
             // Clear all previous warnings and alarms
             m_parametersInWarnOrAlarm.clear();
+            
+            // Clear previous "reconfigurable" flag
+            m_hasReconfigurableParameter = false;
 
             // Prepare timestamp if needed
             if (m_injectTimestamps) {
@@ -360,6 +363,9 @@ namespace karabo {
                 }
             }
 
+            if (masterNode.hasAttribute(KARABO_SCHEMA_ACCESS_MODE) && masterNode.getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE)
+                m_hasReconfigurableParameter = true;
+            
             // Check ranges
             if (referenceCategory == Types::SIMPLE) {
                 if (masterNode.hasAttribute(KARABO_SCHEMA_OPTIONS)) {
@@ -482,6 +488,10 @@ namespace karabo {
 
         const Hash& Validator::getParametersInWarnOrAlarm() const {
             return m_parametersInWarnOrAlarm;
+        }
+        
+        bool Validator::hasReconfigurableParameter() const {
+            return m_hasReconfigurableParameter;
         }
     }
 }
