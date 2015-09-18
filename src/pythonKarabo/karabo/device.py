@@ -403,12 +403,12 @@ class PythonDevice(NoFsm):
                     print("Validation Exception (Intern): " + str(e))
                     raise RuntimeError("Validation Exception: " + str(e))
 
-                #if self.validatorIntern.hasParametersInWarnOrAlarm():
-                #    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
-                #    for key in warnings:
-                #        desc = warnings[key]
-                #        self.log.WARN(desc["message"])
-                #        self._ss.emit("signalNotification", desc["type"], desc["message"], "", self.deviceid)
+                if self.validatorIntern.hasParametersInWarnOrAlarm():
+                    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
+                    for key in warnings:
+                        desc = warnings[key]
+                        self.log.WARN(desc["message"])
+                        self._ss.emit("signalNotification", desc["type"], desc["message"], "", self.deviceid)
 
                 if not validated.empty():
                     self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
@@ -753,7 +753,10 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             self.parameters += reconfiguration
         self.log.DEBUG("After user interaction:\n{}".format(reconfiguration))
-        self._ss.emit("signalChanged", reconfiguration, self.deviceid)
+        if self.validatorExtern.hasReconfigurableParameter():
+            self._ss.emit("signalStateChanged", reconfiguration, self.deviceid)
+        else:
+            self._ss.emit("signalChanged", reconfiguration, self.deviceid)
         self.postReconfigure()
     
     def slotGetSchema(self, onlyCurrentState):
