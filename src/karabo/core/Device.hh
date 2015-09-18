@@ -1094,7 +1094,10 @@ namespace karabo {
                 m_objectStateChangeMutex.unlock();
 
                 KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
-                emit("signalChanged", reconfiguration, getInstanceId());
+                if (m_validatorExtern.hasReconfigurableParameter())
+                    emit("signalStateChanged", reconfiguration, getInstanceId());
+                else
+                    emit("signalChanged", reconfiguration, getInstanceId());
                 this->postReconfigure();
             }
 
