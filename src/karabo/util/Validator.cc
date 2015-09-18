@@ -14,12 +14,18 @@ namespace karabo {
     namespace util {
 
 
-        Validator::Validator() : m_injectDefaults(true), m_allowUnrootedConfiguration(true),
-        m_allowAdditionalKeys(false), m_allowMissingKeys(false), m_injectTimestamps(false) {
+        Validator::Validator()
+        : m_injectDefaults(true)
+        , m_allowUnrootedConfiguration(true)
+        , m_allowAdditionalKeys(false)
+        , m_allowMissingKeys(false)
+        , m_injectTimestamps(false)
+        , m_hasReconfigurableParameter(false) {
         }
 
 
-        Validator::Validator(const ValidationRules rules) {
+        Validator::Validator(const ValidationRules rules)
+        : m_hasReconfigurableParameter(false) {
             this->setValidationRules(rules);
         }
 
@@ -341,7 +347,7 @@ namespace karabo {
 
         void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) {
 
-
+            
             if (m_injectTimestamps) attachTimestampIfNotAlreadyThere(workNode);
 
             Types::ReferenceType referenceType = Types::from<FromLiteral>(masterNode.getAttribute<string>(KARABO_SCHEMA_VALUE_TYPE));
