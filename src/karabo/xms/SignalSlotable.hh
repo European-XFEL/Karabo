@@ -1259,6 +1259,8 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             
             void connectInputChannel(const InputChannel::Pointer& channel, int trails = 8, int sleep = 1);
 
+            void connectInputChannelAsync(const InputChannel::Pointer& channel, const boost::function<void()>& handler);
+            
             void connectInputChannels();
 
             std::pair<bool, std::string> exists(const std::string& instanceId);
@@ -1455,6 +1457,11 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body, int timeout);
 
             long long getEpochMillis();
+            
+            void onInputChannelConnectInfo(const InputChannel::Pointer& channel,
+                                           const boost::function<void()>& handler,
+                                           const std::string& instanceId, const std::string& channelId,
+                                           bool channelExists, const karabo::util::Hash& info);
         };
     }
 }
