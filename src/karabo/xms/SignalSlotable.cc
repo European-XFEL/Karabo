@@ -1829,6 +1829,34 @@ namespace karabo {
         }
 
 
+        void SignalSlotable::connectInputChannelAsync(const InputChannel::Pointer& channel, const boost::function<void() >& handler) {
+            // Loop connected outputs
+            std::vector<karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
+            for (size_t j = 0; j < outputChannels.size(); ++j) {
+                const std::string& instanceId = outputChannels[j].get<string > ("instanceId");
+                const std::string& channelId = outputChannels[j].get<string > ("channelId");
+                this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
+                        .receiveAsync<bool, karabo::util::Hash>(boost::bind(&SignalSlotable::onInputChannelConnectInfo,
+                                                                            this, channel, handler,
+                                                                            instanceId, channelId, _1, _2));
+            }
+            
+        }
+        
+        
+        void SignalSlotable::onInputChannelConnectInfo(const InputChannel::Pointer& channel,
+                                                       const boost::function<void() >& handler,
+                                                       const std::string& instanceId, const std::string& channelId,
+                                                       bool channelExists, const karabo::util::Hash& info) {
+            if (channelExists) {
+                channel->connect(info); // Synchronous
+                handler();
+            }  else {
+                KARABO_LOG_FRAMEWORK_ERROR << "Could not find outputChannel \"" << channelId << "\" on instanceId \"" << instanceId << "\"";
+            }
+        }
+        
+        
         karabo::util::Hash SignalSlotable::slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId) {
             OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);
             if (it != m_outputChannels.end()) {

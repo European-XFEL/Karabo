@@ -172,7 +172,9 @@ namespace karabo {
             void slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string& deviceId);
             
             void slotLoggerMap(const karabo::util::Hash& loggerMap);
-            
+          
+            void onInputChannelConnected(const karabo::xms::InputChannel::Pointer& input, const karabo::net::Channel::Pointer& channel, const std::string& channelName);
+           
         };
     }
 }
