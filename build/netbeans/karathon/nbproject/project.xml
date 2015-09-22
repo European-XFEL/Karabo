@@ -13,6 +13,7 @@
             </make-dep-projects>
             <sourceRootList>
                 <sourceRootElem>../../../src/karathon</sourceRootElem>
+                <sourceRootElem>../../../src/karathon</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>
