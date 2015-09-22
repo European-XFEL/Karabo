@@ -144,12 +144,15 @@ if [ "$SKIP" = "n" ]; then
 
     elif [ "$DISTRO_ID" == "MacOSX" ]; then	
 	echo "### This can take a while. Better prepare yourself a coffee..."
-	safeRunCommand "sudo port install nspr nss pkgconfig sqlite3 python27 py27-numpy py27-scipy py27-matplotlib py27-pyqt4 py27-pyqwt py27-zmq py27-tornado  py27-pygments py27-nose py27-ipython"
-	safeRunCommand "sudo port select --set python python27"
-	safeRunCommand "sudo port select --set ipython ipython27" 
+	safeRunCommand "sudo port -v selfupdate || true"
+        safeRunCommand "sudo port selfupdate || true"
+        safeRunCommand "sudo port upgrade outdated || true"
+        safeRunCommand "sudo port install nspr nss pkgconfig sqlite3 python34 py34-numpy py34-scipy py34-matplotlib py34-pyqt4 py34-zmq py34-tornado  py34-pygments py34-nose py34-ipython"
+	safeRunCommand "sudo port select --set python python34"
+	safeRunCommand "sudo port select --set ipython py34-ipython" 
 	safeRunCommand "sudo easy_install readline"
         # Patch reported macports bug (#37201)
-	safeRunCommand "sudo cp -rf extern/resources/bundleMacOSX/sqldrivers /opt/local/share/qt4/plugins"
+	#safeRunCommand "sudo cp -rf extern/resources/bundleMacOSX/sqldrivers /opt/local/share/qt4/plugins"
         # Patch NetBeans bug regarding Makefile pathes
 	safeRunCommand "cd /usr/bin"
 	safeRunCommand "sudo ln -sf /opt/local/bin/pkg-config pkg-config"
