@@ -310,3 +310,39 @@ class SignalSlotable(Configurable):
         if not loop.changedFuture.done():
             loop.changedFuture.set_result(None)
         loop.changedFuture = Future(loop=loop)
+
+    @coroutine
+    def onCancelled(self, slot):
+        pass
+
+    @coroutine
+    def onException(self, slot, exception, traceback):
+        pass
+
+    @coroutine
+    def _logException(self, coro):
+        try:
+            yield from coro
+        except:
+            self.logger.exception("error in error handler")
+
+    def _onException(self, slot, exc, tb):
+        if isinstance(exc, CancelledError):
+            m = self.onCancelled
+            args = slot,
+        else:
+            m = self.onException
+            args = slot, exc, tb
+            if slot is None:
+                self.logger.error('error in device "%s"', self.deviceId,
+                                  exc_info=(type(exc), exc, tb))
+            else:
+                self.logger.error('error in slot "%s" of device "%s"',
+                                  slot.key, self.deviceId,
+                                  exc_info=(type(exc), exc, tb))
+
+        if iscoroutinefunction(m):
+            async(self._logException(m(*args)))
+        else:
+            async(self._logException(
+                get_event_loop().start_thread(m, *args)))

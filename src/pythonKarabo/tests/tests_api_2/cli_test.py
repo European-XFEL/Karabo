@@ -1,6 +1,7 @@
 import karabo
 
-from asyncio import async, coroutine, sleep
+from asyncio import async, coroutine, get_event_loop, set_event_loop, sleep
+from itertools import count
 import gc
 from unittest import TestCase, main
 import sys
@@ -8,6 +9,8 @@ import time
 import weakref
 
 from karabo.api import Int, Slot
+from karabo.cli import connectDevice, DeviceClient
+from karabo.eventloop import NoEventLoop
 from karabo.macro import Macro, EventThread
 from karabo.hash import Hash
 from karabo.python_server import DeviceServer
@@ -34,10 +37,18 @@ class Remote(Macro):
 
 class Other(Device):
     something = Int(defaultValue=333)
+    counter = Int(defaultValue=-1)
 
+    @coroutine
+    def do_count(self):
+        for i in count():
+            self.counter = i
+            yield from sleep(0.1)
 
-class DeviceClient(Macro, DeviceClientBase):
-    pass
+    @Slot()
+    @coroutine
+    def count(self):
+        async(self.do_count())
 
 
 class Tests(TestCase):
@@ -117,6 +128,41 @@ class Tests(TestCase):
         async(server.slotKillServer())
         loop.run_forever()
         loop.close()
+
+    @coroutine
+    def init_other(self):
+        self.other = Other(dict(_deviceId_="other", _serverId_="tserver"))
+        yield from self.other.startInstance()
+
+    def test_autodisconnect(self):
+        devices = DeviceClient(_deviceId_="ikarabo-test")
+        oel = get_event_loop()
+        set_event_loop(NoEventLoop(devices))
+        time.sleep(0.1)
+        thread = EventThread.instance().thread
+        thread.loop.call_soon_threadsafe(async, self.init_other())
+        time.sleep(4)
+
+        # test whether proxy stays alive while used
+        other = connectDevice("other")
+        other.count()
+        lastcount = -2
+        for i in range(20):
+            self.assertLess(lastcount, other.counter)
+            lastcount = other.counter
+            time.sleep(1)
+
+        # test proxy disconnects when not used
+        time.sleep(16)
+        lastcount = other.__dict__["counter"]
+        time.sleep(3)
+        self.assertEqual(other.__dict__["counter"], lastcount)
+        self.assertNotEqual(other.counter, lastcount)
+
+        set_event_loop(oel)
+        del self.other
+        thread.stop()
+        EventThread.instance = None
 
     @coroutine
     def init_topo(self, dc):
