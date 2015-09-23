@@ -387,25 +387,44 @@ namespace karabo {
         void InputChannel::triggerIOEvent() {
             // There is either m_inputHandler or m_dataHandler
             // (or neither), see registerInputHandler and registerDataHandler.
-            if (m_inputHandler && m_dataHandler) {
-                // Just in case that the above promise is not the case...
-                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
-                        << "input handler since we have a data handler.";
-                // Clear inputHandler since dataHandler is the recommended
-                // interface (though inputHandler is more general...).
-                m_inputHandler.clear();
+            try {
+                if (m_inputHandler && m_dataHandler) {
+                    // Just in case that the above promise is not the case...
+                    KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
+                            << "input handler since we have a data handler.";
+                    // Clear inputHandler since dataHandler is the recommended
+                    // interface (though inputHandler is more general...).
+                    m_inputHandler.clear();
+                }
+            } catch(const std::exception& ex1) {
+                KARABO_LOG_FRAMEWORK_ERROR << ex1.what();
+                throw KARABO_SYSTEM_EXCEPTION(ex1.what());
             }
 
-            if (m_dataHandler) {
-                for (size_t i = 0; i < this->size(); ++i) {
-                    m_dataHandler(this->read(i));
+            try {
+                if (m_dataHandler) {
+                    for (size_t i = 0; i < this->size(); ++i) {
+                        m_dataHandler(this->read(i));
+                    }
+                    if (m_tcpIoService)
+                        m_tcpIoService->post(boost::bind(&InputChannel::update, this));
+                    else
+                        update();
                 }
-                m_tcpIoService->post(boost::bind(&InputChannel::update, this));
+            } catch(const std::exception& ex2) {
+                KARABO_LOG_FRAMEWORK_ERROR << ex2.what();
+                throw KARABO_SYSTEM_EXCEPTION(ex2.what());
             }
-            if (m_inputHandler) {
-                m_inputHandler(shared_from_this());
-                // FIXME: Move call to this->update() from
-                //        m_dataHandlerPerChannel to here!
+            
+            try {
+                if (m_inputHandler) {
+                    m_inputHandler(shared_from_this());
+                    // FIXME: Move call to this->update() from
+                    //        m_dataHandlerPerChannel to here!
+                }
+            } catch(const std::exception& ex3) {
+                KARABO_LOG_FRAMEWORK_ERROR << ex3.what();
+                throw KARABO_SYSTEM_EXCEPTION(ex3.what());
             }
         }
 
@@ -443,23 +462,27 @@ namespace karabo {
 
 
         void InputChannel::update() {
+            try {
+                boost::mutex::scoped_lock lock(m_mutex);
 
-            boost::mutex::scoped_lock lock(m_mutex);
+                if (m_keepDataUntilNew) return;
 
-            if (m_keepDataUntilNew) return;
+                // Clear active chunk
+                MemoryType::clearChunkData(m_channelId, m_activeChunk);
 
-            // Clear active chunk
-            MemoryType::clearChunkData(m_channelId, m_activeChunk);
+                // Swap buffers               
+                swapBuffers();
 
-            // Swap buffers               
-            swapBuffers();
+                // Fetch number of data pieces
+                size_t nActiveData = MemoryType::size(m_channelId, m_activeChunk);
 
-            // Fetch number of data pieces
-            size_t nActiveData = MemoryType::size(m_channelId, m_activeChunk);
-
-            // Notify all connected output channels for another read
-            if (nActiveData >= this->getMinimumNumberOfData()) {
-                notifyOutputChannelsForPossibleRead();
+                // Notify all connected output channels for another read
+                if (nActiveData >= this->getMinimumNumberOfData()) {
+                    notifyOutputChannelsForPossibleRead();
+                }
+            } catch(const std::exception& ex) {
+                KARABO_LOG_FRAMEWORK_ERROR << ex.what();
+                throw KARABO_SYSTEM_EXCEPTION(ex.what());
             }
         }
 
