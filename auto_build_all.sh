@@ -150,7 +150,7 @@ if [ "$SKIP" = "n" ]; then
         safeRunCommand "sudo port install nspr nss pkgconfig sqlite3 python34 py34-numpy py34-scipy py34-matplotlib py34-pyqt4 py34-zmq py34-tornado  py34-pygments py34-nose py34-ipython"
 	safeRunCommand "sudo port select --set python python34"
 	safeRunCommand "sudo port select --set ipython py34-ipython" 
-	safeRunCommand "sudo easy_install readline"
+	safeRunCommand "sudo port install py34-readline"
         # Patch reported macports bug (#37201)
 	#safeRunCommand "sudo cp -rf extern/resources/bundleMacOSX/sqldrivers /opt/local/share/qt4/plugins"
         # Patch NetBeans bug regarding Makefile pathes
