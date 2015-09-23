@@ -163,12 +163,16 @@ class Proxy(object):
         if self._used == 1:
             self._device._ss.connect(self._deviceId, "signalChanged",
                                      self._device.slotChanged)
+            self._device._ss.connect(self._deviceId, "signalStateChanged",
+                                     self._device.slotChanged)
         return self
 
     def __exit__(self, a, b, c):
         self._used -= 1
         if self._used == 0:
             self._device._ss.disconnect(self._deviceId, "signalChanged",
+                                        self._device.slotChanged)
+            self._device._ss.disconnect(self._deviceId, "signalStateChanged",
                                         self._device.slotChanged)
 
     def __del__(self):
