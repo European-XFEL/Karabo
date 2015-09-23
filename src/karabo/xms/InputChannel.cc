@@ -107,8 +107,10 @@ namespace karabo {
         InputChannel::~InputChannel() {
             m_tcpChannels.clear();
             m_tcpConnections.clear();
-            if (m_tcpIoService) m_tcpIoService->stop();
-            m_tcpIoServiceThread.join();
+            if (m_tcpIoService) {
+                m_tcpIoService->stop();
+                m_tcpIoServiceThread.join();
+            }
             MemoryType::unregisterChannel(m_channelId);
             KARABO_LOG_FRAMEWORK_DEBUG << "*** ~InputChannel DTOR for channelId = " << m_channelId;
         }
@@ -418,13 +420,21 @@ namespace karabo {
             
             try {
                 if (m_inputHandler) {
-                    m_inputHandler(shared_from_this());
+                    InputChannel::Pointer that;
+                    try {
+                        that = shared_from_this();
+                    } catch (const std::exception& ex3) {
+                        KARABO_LOG_FRAMEWORK_WARN << "InputChannel::triggerIOEvent : Cannot trigger IO event for this "
+                                "InputChannel because failed to get shared_from_this() -- " << ex3.what();
+                    }
+                    if (that)
+                        m_inputHandler(that);
                     // FIXME: Move call to this->update() from
                     //        m_dataHandlerPerChannel to here!
                 }
-            } catch(const std::exception& ex3) {
-                KARABO_LOG_FRAMEWORK_ERROR << ex3.what();
-                throw KARABO_SYSTEM_EXCEPTION(ex3.what());
+            } catch(const std::exception& ex4) {
+                KARABO_LOG_FRAMEWORK_ERROR << ex4.what();
+                throw KARABO_SYSTEM_EXCEPTION(ex4.what());
             }
         }
 
