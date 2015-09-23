@@ -247,3 +247,37 @@ the example above it is 10 seconds. If you do not provide a timeout you may
 wait forever. This is done as follows::
 
     waitUntilNew(motor, timeout=10).state
+
+Error Handling
+==============
+
+Errors do happen. When they happen, in Python typically an exception is
+raised. The best way to do error handling is to use the usual Python
+try-except-statements.
+
+A good example is a user that cancels the operation of a macro. In
+this case one should write::
+
+    @Slot
+    def do_something(self):
+        try:
+            # start something here, e.g. move some motor
+        except CancelledError:
+            # clean up stuff
+        finally:
+            # something which should always be done, e.g. move the motor
+            # back to its original position
+
+Sometimes, however, an exception happens unexpectedly. For some macros,
+it might then be advisable to bring the system back into a safe state.
+For this case, two methods may be defined which are called in this case::
+
+    def onCancelled(self, slot):
+        """to be called if a user cancelled the operation"""
+
+    def onException(self, slot, exception, traceback):
+        """to be called if an exception happend in the code"""
+
+The *slot* is the slot that had been executed, the *exception* and *traceback*
+are also supplied. *slot* and *traceback* may be None if they cannot be
+determined.

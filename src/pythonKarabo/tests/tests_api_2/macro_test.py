@@ -1,12 +1,12 @@
 import karabo
 
-from asyncio import (async, coroutine, gather, set_event_loop, sleep,
+from asyncio import (async, coroutine, gather, set_event_loop,
                      TimeoutError)
 from unittest import TestCase, main
 import sys
 import time
 
-from karabo.api import Slot, Int
+from karabo.api import Slot, Int, sleep
 from karabo.macro import Macro
 from karabo.python_device import Device
 from karabo.python_server import KaraboStream
@@ -53,6 +53,12 @@ class Remote(Device):
     def call_local(self):
         with (yield from getDevice("local")) as l:
             yield from l.remotecalls()
+
+    @Slot()
+    @coroutine
+    def error(self):
+        with (yield from getDevice("local")) as d:
+            yield from d.error()
 
     generic = Superslot()
 
@@ -165,6 +171,24 @@ class Local(Macro):
                     self.good += 1
                 time.sleep(i * 0.01)
 
+    @Slot()
+    def error(self):
+        raise RuntimeError
+
+    def onException(self, slot, exc, tb):
+        self.exc_slot = slot
+        self.exception = exc
+        self.traceback = tb
+        with getDevice("remote") as d:
+            d.doit()
+
+    def onCancelled(self, slot):
+        self.cancel_slot = slot
+
+    @Slot()
+    def cancelled(self):
+        sleep(10)
+
 
 class Tests(TestCase):
     @sync_tst
@@ -266,6 +290,28 @@ class Tests(TestCase):
     def test_queue(self):
         local.queue()
         self.assertEqual(local.good, 29)
+
+    @async_tst
+    def test_error(self):
+        remote.done = False
+        with self.assertLogs(logger="local", level="ERROR"):
+            yield from remote.error()
+            yield from sleep(0.1)
+        self.assertTrue(remote.done)
+        self.assertIs(local.exc_slot, Local.error)
+        self.assertIsInstance(local.exception, RuntimeError)
+        local.traceback.tb_lasti  # stupid check whether that is a traceback
+        del local.exc_slot
+        del local.exception
+        del local.traceback
+
+    @async_tst
+    def test_cancel(self):
+        with (yield from getDevice("local")) as d:
+            async(d.cancelled())
+            yield from sleep(0.1)
+            yield from d.cancel()
+        self.assertEqual(local.cancel_slot, Local.cancelled)
 
 
 def setUpModule():

@@ -130,6 +130,10 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     def run(self):  # endpoint for multiple inheritance
         self.running = True
 
+    def _use(self):
+        """this method is called each time an attribute of this configurable
+        is read"""
+
 
 class Node(Descriptor):
     """Compose configurable classes into each other

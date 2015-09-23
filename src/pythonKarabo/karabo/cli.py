@@ -2,9 +2,13 @@
 # it has side-effects while importing (like showing a banner)
 # so don't use it for anything else
 
-import karabo
+# when expanding this script, assure that afterwards it is still
+# easily importable, which is important for the tests. No side effects
+# should happend if this script is just imported as a module, so
+# all side effects should be added to the if statement below.
 
 from asyncio import set_event_loop
+import functools
 import os
 import os.path as osp
 import re
@@ -13,20 +17,20 @@ import sys
 
 import IPython
 
+import karabo
+from karabo import device_client
 from karabo.device_client import (
     getDevice, waitUntil, waitUntilNew, setWait, setNoWait, execute,
     executeNoWait, DeviceClientBase, getDevices, getClasses, getServers,
-    instantiate, connectDevice, shutdown, shutdownNoWait, instantiateNoWait)
+    instantiate, shutdown, shutdownNoWait, instantiateNoWait, disconnectDevice)
 from karabo.eventloop import NoEventLoop
 from karabo.macro import Macro
 
 
-with open(osp.join(osp.dirname(sys.base_prefix), "VERSION"), "r") as fin:
-    version = fin.read()
-
-print("""IKarabo Version {}
-Type karabo? for help
-""".format(version))
+__all__ = ["getDevice", "waitUntil", "waitUntilNew", "setWait", "setNoWait",
+           "execute", "executeNoWait", "getDevices", "getClasses",
+           "getServers", "instantiate", "connectDevice", "shutdown",
+           "shutdownNoWait", "instantiateNoWait", "karabo", "disconnectDevice"]
 
 
 class DeviceClient(Macro, DeviceClientBase):
@@ -44,15 +48,13 @@ class DeviceClient(Macro, DeviceClientBase):
                 raise AttributeError('Unknown device "{}"'.format(name))
 
 
-devices = DeviceClient(_deviceId_="ikarabo-{}-{}".format(socket.gethostname(),
-                                                         os.getpid()))
-set_event_loop(NoEventLoop(devices))
-
-ip = IPython.get_ipython()
+@functools.wraps(device_client.connectDevice)
+def connectDevice(device, *, autodisconnect=15, **kwargs):
+    return device_client.connectDevice(device, autodisconnect=autodisconnect,
+                                       **kwargs)
 
 
 def device_completer(self, line):
-    #print("device")
     return list(devices.systemTopology["device"])
 
 
@@ -62,17 +64,32 @@ def class_completer(self, line):
         return devices.systemTopology["server"][param.group(0)[1:-1],
                                                 "deviceClasses"]
     return list(devices.systemTopology["server"])
+
+
 first_param = re.compile("\"[^\"]*\"|'[^']*'")
 
 
-ip.set_hook("complete_command", device_completer,
-            re_key=".*((get|connect)Device|execute(NoWait)?|"
-                   "set(No)?Wait|shutdown(NoWait)?)\(")
-ip.set_hook("complete_command", class_completer,
-            re_key=".*instantiate(NoWait)?\(")
+# here starts the main part of this script. It does not use the
+# standard if __name__ == "__main__" idiom, instead it checks whether
+# this script is started from within ipython, in which case it installs
+# everything needed into the ipython kernel.
 
 
-__all__ = ["getDevice", "waitUntil", "waitUntilNew", "setWait", "setNoWait",
-           "execute", "executeNoWait", "getDevices", "getClasses",
-           "getServers", "instantiate", "connectDevice", "shutdown",
-           "shutdownNoWait", "instantiateNoWait", "karabo"]
+ip = IPython.get_ipython()
+if ip is not None:
+    with open(osp.join(osp.dirname(sys.base_prefix), "VERSION"), "r") as fin:
+        version = fin.read()
+
+    print("""IKarabo Version {}
+    Type karabo? for help
+    """.format(version))
+
+    devices = DeviceClient(_deviceId_="ikarabo-{}-{}".format(
+        socket.gethostname(), os.getpid()))
+    set_event_loop(NoEventLoop(devices))
+
+    ip.set_hook("complete_command", device_completer,
+                re_key=".*((get|connect)Device|execute(NoWait)?|"
+                       "set(No)?Wait|shutdown(NoWait)?)\(")
+    ip.set_hook("complete_command", class_completer,
+                re_key=".*instantiate(NoWait)?\(")
