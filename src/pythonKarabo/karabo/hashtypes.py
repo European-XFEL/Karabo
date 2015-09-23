@@ -8,6 +8,7 @@ from asyncio import async, iscoroutinefunction, coroutine, get_event_loop
 import base64
 from enum import Enum
 import numpy
+import sys
 
 
 """ This module contains the type hierarchy implied by the Karabo hash.
@@ -174,6 +175,7 @@ class Descriptor(object):
         if instance is None:
             return self
         else:
+            instance._use()
             if self.key not in instance.__dict__:
                 raise AttributeError(
                     "attribute '{}' has not been set".format(self.key))
@@ -247,8 +249,8 @@ class Slot(Descriptor):
             try:
                 device._ss.reply(message, (yield from coro))
             except Exception as e:
-                device.logger.exception('slot "{}" raised exception'.
-                                        format(self.key))
+                _, exc, tb = sys.exc_info()
+                device._onException(self, exc, tb)
                 device._ss.reply(message, str(e))
         return async(inner())
 
