@@ -1289,6 +1289,12 @@ struct HashFilterWrap {
         HashFilter::byTag(schema, config, *result, tags, sep);
         return result;
     }
+    
+    static boost::shared_ptr<Hash> byAccessMode(const Schema& schema, const Hash& config, const AccessType& value) {
+        boost::shared_ptr<Hash> result(new Hash);
+        HashFilter::byAccessMode(schema, config, *result, value);
+        return result;
+    }
 };
 
 
@@ -2090,6 +2096,8 @@ void exportPyUtilSchema() {
         bp::class_<HashFilterWrap, boost::noncopyable>("HashFilter", bp::no_init)
                 .def("byTag", HashFilterWrap::byTag, (bp::arg("schema"), bp::arg("config"), bp::arg("tags"), bp::arg("sep") = ","))
                 .staticmethod("byTag")
+                .def("byAccessMode", HashFilterWrap::byAccessMode, (bp::arg("schema"), bp::arg("config"), bp::arg("accessMode")))
+                .staticmethod("byAccessMode")
                 ;
     }
 } //end  exportPyUtilSchema
