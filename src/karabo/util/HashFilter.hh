@@ -31,12 +31,16 @@ namespace karabo {
 
             static void byTag(const Schema& schema, const Hash& config, Hash& result, const std::string& tags, const std::string& sep = ",");
 
+            static void byAccessMode(const Schema& schema, const Hash& config, Hash& result, const AccessType& value);
+
 
         private:
 
             static void r_byTag(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const std::set<std::string>& tags);
             static bool processNode(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const std::set<std::string>& tags);
             
+            static void r_byAccessMode(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const AccessType& value);
+            static bool processNodeForAccessMode(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const AccessType& value);
                         
         };
     }
