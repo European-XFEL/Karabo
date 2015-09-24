@@ -176,6 +176,8 @@ class GuiServer(DeviceClientBase):
         if not channels:
             del self.deviceChannels[deviceId]
             self._ss.disconnect(deviceId, "signalChanged", self.slotChanged)
+            self._ss.disconnect(deviceId, "signalStateChanged",
+                                self.slotChanged)
             self._ss.disconnect(deviceId, "signalSchemaUpdated",
                                 self.slotSchemaUpdated)
 
@@ -323,6 +325,7 @@ class GuiServer(DeviceClientBase):
 
     def registerDevice(self, deviceId):
         self._ss.connect(deviceId, "signalChanged", self.slotChanged)
+        self._ss.connect(deviceId, "signalStateChanged", self.slotChanged)
         self._ss.connect(deviceId, "signalSchemaUpdated",
                          self.slotSchemaUpdated)
 
