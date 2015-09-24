@@ -29,7 +29,7 @@ class Local(Macro):
 
     @Monitor()
     @Int()
-    def sum(self):
+    def division(self):
         if self.remoteB.counter == 0:
             raise RuntimeError
         return self.remoteA.counter / self.remoteB.counter
@@ -55,7 +55,7 @@ class Tests(TestCase):
         local.startB()
         time.sleep(0.2)
         for i in range(30):
-            self.assertEqual(local.sum, remA.counter / remB.counter)
+            self.assertEqual(local.division, remA.counter / remB.counter)
             time.sleep(0.1)
 
     @sync_tst
