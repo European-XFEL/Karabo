@@ -63,8 +63,14 @@ the Ok state contains two sub-states, Ok.Started and Ok.Stopped. This
 state machine is suitable for example for measurement devices.
 
 
+.. _scpi-writing-a-device:
+
+Writing a Device
+================
+
+
 Writing an Ok/Error Device
-==========================
+--------------------------
 
 The state machine to be used is ScpiOkErrorFsm. The device is very
 simple and should look like:
@@ -103,7 +109,7 @@ The SCPI parameters can be accessed using Karabo expected parameters
 
 
 Writing an On/Off Device
-========================
+------------------------
 
 The state machine to be used is ScpiOnOffFsm. The device should look
 pretty much like the Ok/Error one, except for the state machine to be
@@ -150,7 +156,7 @@ without executing any action.
 
 
 Writing a Start/Stop Device
-===========================
+---------------------------
 
 The state machine to be used is ScpiStartStopFsm. There are three
 additional hooks: preAcquisition() will be executed when entering the
@@ -208,6 +214,16 @@ like
 In the followHardwareState() method you can use self.followStarted()
 and self.followStopped() to force the device to follow the hardware
 state, without executing any action.
+
+
+How to read/write parameters from/to the instrument
+---------------------------------------------------
+
+Each parameter on the instrument you want to have available in the
+Karabo device, must have a corresponding expected parameter in the
+Karabo device. The expected parameter must be tagged as 'scpi'. Please
+have a look at the :ref:`scpi-expected-parameters` Section for the
+details.
 
 
 .. _scpi-expected-parameters:
@@ -517,21 +533,98 @@ the 'propertiesToPoll' property. For example, if you set it to
 level for 'propertiesToPoll' property is expert.
 
 A user's hook is also provided by the base class, allowing the
-post-processing of the polled properties. For example:
+post-processing of the polled properties. For example, if you read
+some temperature in Fahrenheit degrees and you want to display it in
+Celsius, you can define two expected parameters, like in the
+following:
+
+.. code-block:: python
+
+    FLOAT_ELEMENT(expected).key("temperature")
+              .displayedName("Temperature")
+              .description("Blah blah.")
+              .unit(Unit.DEGREE_CELSIUS)
+              .readOnly()
+              .commit(),
+
+    FLOAT_ELEMENT(expected).key("temperatureFahrenheit")
+              .tags("scpi poll")
+              .alias(";;GETTEMP;{temperatureHex:g};")
+              .displayedName("Temperature Fahrenheit")
+              .description("Blah blah.")
+              .expertAccess() # Only visible to expert
+              .readOnly()
+              .commit(),
+
+
+Then, you can postprocess the polled data this way:
 
 .. code-block:: python
 
     def pollInstrumentSpecific(self):
 
-        # Get property1 and property2 from device
-        property1 = self.get('property1')
-        property2 = self.get('property2')
+        # 'temperatureFahrenheit' is a polled property
+        tF = self.get('temperatureFahrenheit')
 
-        # Combine property1 and property2
-        property3 = property1 + property2
+        # Convert temperatureFahrenheit into Celsius degrees
+        tC = (tF - 32.) / 1.8
 
-        # Set property3 on device
-        self.set('property3', property3)
+        # Set 'temperature' on the Karabo device, which is a derived property
+        self.set('temperature', tC)
+
+
+Preprocessing the incoming reconfiguration
+==========================================
+
+The base class provides a user's hook to preprocess the incoming
+reconfiguration, before any command is sent to the instrument.  It can
+be used for example when the instrument expects a parameter in some
+unusual units, and you would like to allow the user to input the
+parameter with a more standard unit.
+
+This can be done by using two expected parameters, like in the following:
+
+.. code-block:: python
+
+    FLOAT_ELEMENT(expected).key("temperature")
+              .tags("scpi")
+              .alias("SETTEMP {temperatureHex};;;;")
+              .displayedName("Temperature")
+              .description("Blah blah.")
+              .unit(Unit.DEGREE_CELSIUS)
+              .reconfigurable()
+              .commit(),
+
+    STRING_ELEMENT(expected).key("temperatureHex")
+              .displayedName("TemperatureHex")
+              .description("Blah blah.")
+              .expertAccess() # Only visible to expert
+              .readOnly()
+              .commit(),
+
+
+and then by coding the relation between temperature and temperatureHex
+in the preprocessConfiguration function,
+
+.. code-block:: python
+
+    def preprocessConfiguration(self, inputConfig):
+        
+        if inputConfig.has('temperature'):
+            # Get temperature from inputConfig, change unit,
+            # represent it as bytes
+            temp = inputConfig.get('temperature') # eg -23.15
+            temp100 = np.int16(100*temp) # -2315
+            tempBytes = temp100.tostring() # b'\xf5\xf6'
+	    tempHex = '%02X%02X'%(tempBytes[0], tempBytes[1]) # 'F5F6'
+
+            self.set('temperatureHex', tempHex)
+
+
+Setting a new value for 'temperature' will make preprocessConfiguration called.
+A new value for 'temperatureHex' will be set in the device, and only then
+the command 'SETTEMP' will be sent to the instrument, with 'temperatureHex'
+as an additional parameter.
 
 
 Enabling the Heartbeat
