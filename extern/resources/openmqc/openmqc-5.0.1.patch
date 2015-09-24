@@ -1,8 +1,32 @@
 diff -rupN openmqc-5.0.1/src/client/MessageConsumer.cpp openmqc-5.0.2/src/client/MessageConsumer.cpp
 --- openmqc-5.0.1/src/client/MessageConsumer.cpp	2013-09-20 15:51:21.000000000 +0200
-+++ openmqc-5.0.2/src/client/MessageConsumer.cpp	2015-09-10 17:40:40.707905588 +0200
-@@ -586,6 +586,10 @@ MessageConsumer::receive(Message ** cons
-   if (this->isDMQConsumer == PR_FALSE && ((*message)->isExpired()) == PR_TRUE) {
++++ openmqc-5.0.2/src/client/MessageConsumer.cpp	2015-09-24 12:10:01.370313154 +0200
+@@ -583,9 +583,33 @@ MessageConsumer::receive(Message ** cons
+   LOG_FINEST(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS,
+                "MessageConsumer::receive allocated new message 0x%p",
+                *message ));
+-  if (this->isDMQConsumer == PR_FALSE && ((*message)->isExpired()) == PR_TRUE) {
++
++  PRUint8 prio;
++  ERRCHK( (*message)->getJMSPriority(&prio) );
++
++  bool expired = ((*message)->isExpired()) == PR_TRUE;
++  bool overflowed = receiveQueue?  receiveQueue->size() > 100 && prio < 4 : false; 
++
++  if (this->isDMQConsumer == PR_FALSE && (expired || overflowed)) {
++    static int expcnt = 0;
++    static int ovrcnt = 0;
++    static int prtcnt = 0;
++
++    if (expired) expcnt++;
++    if (overflowed) ovrcnt++;
++
++    if ( ++prtcnt % 100 == 0 ) {
++       //LOG_INFO(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS, "MessageConsumer::receive : killed %3d%% PRIORITY and %3d%% EXPIRATION", ovrcnt, expcnt ));
++       expcnt = 0;
++       ovrcnt = 0;
++    }
++         
      ERRCHK( session->acknowledgeExpiredMessage(*message) );
      this->session->messageDelivered();
 +
