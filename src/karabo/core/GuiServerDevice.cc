@@ -542,6 +542,10 @@ namespace karabo {
                 for (iter = m_networkConnections.begin(); iter != m_networkConnections.end(); ++iter) {
                     if (channelName == iter->second.name) {
                         if (subscribe) {
+                            if (channel == iter->second.channel) {
+                                // request to subscribe the second time the same!
+                                return; 
+                            }
                             NetworkConnection nc;
                             nc.name = channelName;
                             nc.channel = channel;
@@ -571,13 +575,13 @@ namespace karabo {
                 // attempting to connect to non-existing device ... 
                 // But it may fail if network or broker is so busy that cannot reply in time ...
                 // ... maybe we need asynchronous connect here
-                //connectInputChannel(input, 1); // 1 attempt
-                //NetworkConnection nc;
-                //nc.name = channelName;
-                //nc.channel = channel;
-                //m_networkConnections.insert(NetworkMap::value_type(input, nc));
+                connectInputChannel(input, 1); // 1 attempt
+                NetworkConnection nc;
+                nc.name = channelName;
+                nc.channel = channel;
+                m_networkConnections.insert(NetworkMap::value_type(input, nc));
                 
-                connectInputChannelAsync(input, boost::bind(&GuiServerDevice::onInputChannelConnected, this, input, channel, channelName));
+                //connectInputChannelAsync(input, boost::bind(&GuiServerDevice::onInputChannelConnected, this, input, channel, channelName));
             } catch (const Exception &e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSubscribeNetwork(): " << e.userFriendlyMsg();
             }
@@ -586,7 +590,7 @@ namespace karabo {
 
         void GuiServerDevice::onInputChannelConnected(const InputChannel::Pointer& input, const Channel::Pointer& channel, const std::string& channelName) {
             boost::mutex::scoped_lock lock(m_networkMutex);
-            
+            // TODO: Revise the code below ... avoid double insertion because of asynchrony.
             NetworkConnection nc;
             nc.name = channelName;
             nc.channel = channel;
@@ -598,7 +602,7 @@ namespace karabo {
         void GuiServerDevice::onNetworkData(const InputChannel::Pointer& input) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onNetworkData";
-
+                
                 for (size_t i = 0; i < input->size(); ++i) {
                     Hash::Pointer data = input->read(i);
 
