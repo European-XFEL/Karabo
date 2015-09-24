@@ -135,7 +135,7 @@ namespace karabo {
 
                 // if the tag was found in the HASH copy complete Hash and return
                 // otherwise process the Hash further
-                if (processNodeForAccessMode(master, inputNode, result, path, value) == true) return;
+                //if (processNodeForAccessMode(master, inputNode, result, path, value) == true) return;
 
                 const Hash& input = inputNode.getValue<Hash>();
                 for (Hash::const_iterator it = input.begin(); it != input.end(); ++it) {
@@ -146,10 +146,10 @@ namespace karabo {
 
                 // if the tag was found in the vector<HASH> (defined for LIST_ELEMENT) copy complete vector<Hash> and return
                 // otherwise process the Hash further
-                if (processNodeForAccessMode(master, inputNode, result, path, value) == true) {
+                //if (processNodeForAccessMode(master, inputNode, result, path, value) == true) {
                     //clog << "Copy entire vector<Hash> " << path << endl;
-                    return;
-                }
+                //    return;
+                //}
                 //clog << "Further processing vector<Hash>  " << path << endl;
 
                 // For vector<Hash> the following policy is implemented
@@ -192,9 +192,16 @@ namespace karabo {
         bool HashFilter::processNodeForAccessMode(const Hash& master, const Hash::Node& inputNode, Hash& result,
                                                   const std::string& path, const AccessType& value) {
 
+            //clog << "processNodeForAccessMode  " << path << endl;
             if (master.hasAttribute(path, KARABO_SCHEMA_ACCESS_MODE)) {
                 int t = master.getAttribute<int>(path, KARABO_SCHEMA_ACCESS_MODE);
-                return (t & int(value)) == int(value);
+                bool rc = (t & int(value)) == int(value);
+                //clog << "\t" << path << "   attribute value = 0x" << hex << t << ", input value = 0x" << value << " ==> result = " << boolalpha << rc << endl;
+                if (rc) {
+                    result.set(path, inputNode);
+                    result.setAttributes(path, inputNode.getAttributes());
+                    return true;
+                }
             }
             return false;
 
