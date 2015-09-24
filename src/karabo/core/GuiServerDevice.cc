@@ -543,7 +543,9 @@ namespace karabo {
                     if (channelName == iter->second.name) {
                         if (subscribe) {
                             if (channel == iter->second.channel) {
-                                // request to subscribe the second time the same!
+                                KARABO_LOG_FRAMEWORK_WARN << "Skip subscription to output channel '" << channelName
+                                        << "' for GUI on channel " " : It is already subscribed for GUI on channel "
+                                        << channel.get();
                                 return; 
                             }
                             NetworkConnection nc;
