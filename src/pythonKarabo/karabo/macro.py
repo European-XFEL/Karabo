@@ -1,5 +1,4 @@
-from asyncio import (async, CancelledError, coroutine, get_event_loop,
-                     set_event_loop)
+from asyncio import async, coroutine, get_event_loop, set_event_loop
 import atexit
 from functools import wraps
 import sys
@@ -174,9 +173,7 @@ class Macro(Device):
                 for m in self._monitors:
                     try:
                         setattr(self, m.key, m.monitor(self))
-                    except CancelledError:
-                        raise
-                    except:
+                    except Exception:
                         self.logger.exception(
                             'exception in monitor "{}" of device "{}"'.
                             format(m.key, self.deviceId))
