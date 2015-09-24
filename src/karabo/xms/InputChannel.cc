@@ -387,9 +387,13 @@ namespace karabo {
 
 
         void InputChannel::triggerIOEvent() {
-            // There is either m_inputHandler or m_dataHandler
-            // (or neither), see registerInputHandler and registerDataHandler.
             try {
+                // set the guard: it is guaranteed that InputChannel object is alive
+                // ... or exception brings us out here
+                InputChannel::Pointer self = shared_from_this();
+                
+                // There is either m_inputHandler or m_dataHandler
+                // (or neither), see registerInputHandler and registerDataHandler.
                 if (m_inputHandler && m_dataHandler) {
                     // Just in case that the above promise is not the case...
                     KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
@@ -397,13 +401,8 @@ namespace karabo {
                     // Clear inputHandler since dataHandler is the recommended
                     // interface (though inputHandler is more general...).
                     m_inputHandler.clear();
-                }
-            } catch(const std::exception& ex1) {
-                KARABO_LOG_FRAMEWORK_ERROR << ex1.what();
-                throw KARABO_SYSTEM_EXCEPTION(ex1.what());
-            }
+                }    
 
-            try {
                 if (m_dataHandler) {
                     for (size_t i = 0; i < this->size(); ++i) {
                         m_dataHandler(this->read(i));
@@ -413,35 +412,34 @@ namespace karabo {
                     else
                         update();
                 }
-            } catch(const std::exception& ex2) {
-                KARABO_LOG_FRAMEWORK_ERROR << ex2.what();
-                throw KARABO_SYSTEM_EXCEPTION(ex2.what());
-            }
             
-            try {
                 if (m_inputHandler) {
-                    InputChannel::Pointer that;
-                    try {
-                        that = shared_from_this();
-                    } catch (const std::exception& ex3) {
-                        KARABO_LOG_FRAMEWORK_WARN << "InputChannel::triggerIOEvent : Cannot trigger IO event for this "
-                                "InputChannel because failed to get shared_from_this() -- " << ex3.what();
-                    }
-                    if (that)
-                        m_inputHandler(that);
+                    m_inputHandler(self);
                     // FIXME: Move call to this->update() from
                     //        m_dataHandlerPerChannel to here!
                 }
-            } catch(const std::exception& ex4) {
-                KARABO_LOG_FRAMEWORK_ERROR << ex4.what();
-                throw KARABO_SYSTEM_EXCEPTION(ex4.what());
+            } catch(const boost::bad_weak_ptr& e) {
+                KARABO_LOG_FRAMEWORK_INFO << "\"triggerIOEvent\" call is too late: InputChannel destroyed already -- " << e.what();
+            } catch(const std::exception& ex) {
+                KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" exception -- " << ex.what();
+                //throw KARABO_SYSTEM_EXCEPTION(string("\"triggerIOEvent\" exception -- ") + ex.what());
             }
         }
 
 
         void InputChannel::triggerEndOfStreamEvent() {
-            if (m_endOfStreamHandler) {
-                m_endOfStreamHandler(shared_from_this());
+            try {
+                // set the guard: it is guaranteed that InputChannel object is alive
+                // ... or exception brings us out here
+                InputChannel::Pointer self = shared_from_this();
+        
+                if (m_endOfStreamHandler) {
+                    m_endOfStreamHandler(shared_from_this());
+                }
+            } catch(const boost::bad_weak_ptr& e) {
+            } catch(const std::exception& ex) {
+                KARABO_LOG_FRAMEWORK_ERROR << "\"triggerEndOfStreamEvent\" call is problematic -- " << ex.what();
+                //throw KARABO_SYSTEM_EXCEPTION(string("\"triggerEndOfStreamEvent\" call is problematic -- ") + ex.what());
             }
         }
 
@@ -473,6 +471,10 @@ namespace karabo {
 
         void InputChannel::update() {
             try {
+                // set the guard: it is guaranteed that InputChannel object is alive
+                // ... or exception brings us out here
+                InputChannel::Pointer self = shared_from_this();
+                
                 boost::mutex::scoped_lock lock(m_mutex);
 
                 if (m_keepDataUntilNew) return;
@@ -490,9 +492,10 @@ namespace karabo {
                 if (nActiveData >= this->getMinimumNumberOfData()) {
                     notifyOutputChannelsForPossibleRead();
                 }
+            } catch(const boost::bad_weak_ptr& e) {
             } catch(const std::exception& ex) {
-                KARABO_LOG_FRAMEWORK_ERROR << ex.what();
-                throw KARABO_SYSTEM_EXCEPTION(ex.what());
+                KARABO_LOG_FRAMEWORK_ERROR << "InputChannel::update exception -- " << ex.what();
+                //throw KARABO_SYSTEM_EXCEPTION(ex.what());
             }
         }
 
