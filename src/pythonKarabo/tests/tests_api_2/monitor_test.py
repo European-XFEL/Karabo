@@ -18,7 +18,7 @@ class Remote(Device):
     @Slot()
     @coroutine
     def count(self):
-        for i in range(30):
+        for i in range(1, 30):
             self.counter = i
             yield from sleep(0.1)
 
@@ -29,8 +29,10 @@ class Local(Macro):
 
     @Monitor()
     @Int()
-    def sum(self):
-        return self.remoteA.counter + self.remoteB.counter
+    def division(self):
+        if self.remoteB.counter == 0:
+            raise RuntimeError
+        return self.remoteA.counter / self.remoteB.counter
 
     @Slot()
     def startA(self):
@@ -40,6 +42,11 @@ class Local(Macro):
     def startB(self):
         self.remoteB.count()
 
+    @Slot()
+    def error(self):
+        self.remoteA.counter = 1
+        self.remoteB.counter = 0
+
 
 class Tests(TestCase):
     @sync_tst
@@ -48,8 +55,13 @@ class Tests(TestCase):
         local.startB()
         time.sleep(0.2)
         for i in range(30):
-            self.assertEqual(local.sum, remA.counter + remB.counter)
+            self.assertEqual(local.division, remA.counter / remB.counter)
             time.sleep(0.1)
+
+    @sync_tst
+    def test_error(self):
+        with self.assertLogs("local", "ERROR"):
+            local.error()
 
 
 def setUpModule():
