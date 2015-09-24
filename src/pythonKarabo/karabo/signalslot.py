@@ -54,7 +54,9 @@ def coslot(f):
     def inner(device, message, args):
         try:
             device._ss.reply(message, (yield from f(device, *args)))
-        except:
+        except CancelledError:
+            raise
+        except Exception:
             device.logger.exception('exception in slot "{}" of device "{}"'.
                                     format(f.__qualname__, device.deviceId))
 
