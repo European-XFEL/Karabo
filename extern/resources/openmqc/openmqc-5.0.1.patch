@@ -1,6 +1,15 @@
 diff -rupN openmqc-5.0.1/src/client/MessageConsumer.cpp openmqc-5.0.2/src/client/MessageConsumer.cpp
 --- openmqc-5.0.1/src/client/MessageConsumer.cpp	2013-09-20 15:51:21.000000000 +0200
-+++ openmqc-5.0.2/src/client/MessageConsumer.cpp	2015-09-24 12:10:01.370313154 +0200
++++ openmqc-5.0.2/src/client/MessageConsumer.cpp	2015-09-25 15:10:38.757063598 +0200
+@@ -68,7 +68,7 @@ MessageConsumer::MessageConsumer(Session
+                                  const UTF8String * const messageSelectorArg,
+                                  const PRBool noLocalArg,
+                                  MQMessageListenerFunc messageListenerArg,
+-                                 void * messageListenerCallbackDataArg)
++                                 void * messageListenerCallbackDataArg) : prtcnt(0), ovrcnt(0), expcnt(0)
+ {
+   CHECK_OBJECT_VALIDITY();
+ 
 @@ -583,9 +583,33 @@ MessageConsumer::receive(Message ** cons
    LOG_FINEST(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS,
                 "MessageConsumer::receive allocated new message 0x%p",
@@ -10,19 +19,19 @@ diff -rupN openmqc-5.0.1/src/client/MessageConsumer.cpp openmqc-5.0.2/src/client
 +  PRUint8 prio;
 +  ERRCHK( (*message)->getJMSPriority(&prio) );
 +
++  if (receiveQueue->size() > 200) threshold = 100;
++  if (receiveQueue->size() < 100) threshold = 200;
++
 +  bool expired = ((*message)->isExpired()) == PR_TRUE;
-+  bool overflowed = receiveQueue?  receiveQueue->size() > 100 && prio < 4 : false; 
++  bool overflowed = receiveQueue?  receiveQueue->size() > threshold && prio < 4 : false; 
 +
 +  if (this->isDMQConsumer == PR_FALSE && (expired || overflowed)) {
-+    static int expcnt = 0;
-+    static int ovrcnt = 0;
-+    static int prtcnt = 0;
 +
 +    if (expired) expcnt++;
 +    if (overflowed) ovrcnt++;
 +
-+    if ( ++prtcnt % 100 == 0 ) {
-+       //LOG_INFO(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS, "MessageConsumer::receive : killed %3d%% PRIORITY and %3d%% EXPIRATION", ovrcnt, expcnt ));
++    if ( ++prtcnt % 1000 == 0 ) {
++       //LOG_INFO(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS, "MessageConsumer::receive : killed %3d%% PRIO and %3d%% EXP, WM %d", ovrcnt/10, expcnt/10, threshold ));
 +       expcnt = 0;
 +       ovrcnt = 0;
 +    }
@@ -36,3 +45,18 @@ diff -rupN openmqc-5.0.1/src/client/MessageConsumer.cpp openmqc-5.0.2/src/client
      receiveQueue->receiveDone();
      continue;
    } 
+diff -rupN openmqc-5.0.1/src/client/MessageConsumer.hpp openmqc-5.0.2/src/client/MessageConsumer.hpp
+--- openmqc-5.0.1/src/client/MessageConsumer.hpp	2013-09-20 15:51:21.000000000 +0200
++++ openmqc-5.0.2/src/client/MessageConsumer.hpp	2015-09-25 14:47:34.784574260 +0200
+@@ -133,6 +133,11 @@ private:
+   MQError beforeMessageListener(const Message * message, MQError mqerror);
+   void afterMessageListener(const Message * message, MQError mqerror);
+ 
++  PRInt32 prtcnt;
++  PRInt32 ovrcnt;
++  PRInt32 expcnt;
++  PRInt32 threshold;
++
+ public:
+   /**
+    * Constructor.
