@@ -78,7 +78,7 @@ namespace karabo {
             KARABO_INITIAL_FUNCTION(initialize)
 
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
-            KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)                            
+            KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
 
             Hash h;
             h.set("port", config.get<unsigned int>("port"));
@@ -105,9 +105,9 @@ namespace karabo {
 
             // This creates a connection in order to forward exceptions happened in the GUI
             m_guiDebugConnection = BrokerConnection::create("Jms", Hash("destinationName", "karaboGuiDebug",
-                    "hostname", host,
-                    "port", port,
-                    "brokerHosts", brokers));
+                                                                        "hostname", host,
+                                                                        "port", port,
+                                                                        "brokerHosts", brokers));
         }
 
 
@@ -120,9 +120,9 @@ namespace karabo {
 
         void GuiServerDevice::initialize() {
             try {
-                
+
                 trackAllInstances();
-                
+
                 remote().getSystemInformation();
 
                 // Register handlers
@@ -457,7 +457,7 @@ namespace karabo {
                 if (!schema.empty()) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";
                     Hash h("type", "classSchema", "serverId", serverId,
-                            "classId", classId, "schema", schema);
+                           "classId", classId, "schema", schema);
                     safeClientWrite(channel, h);
                 }
             } catch (const Exception& e) {
@@ -477,7 +477,7 @@ namespace karabo {
                 if (!schema.empty()) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";
                     Hash h("type", "deviceSchema", "deviceId", deviceId,
-                            "schema", schema);
+                           "schema", schema);
                     if (!config.empty()) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Adding configuration, too";
                         h.set("configuration", config);
@@ -521,7 +521,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history";
 
                 Hash h("type", "propertyHistory", "deviceId", deviceId,
-                        "property", property, "data", data);
+                       "property", property, "data", data);
 
                 safeClientWrite(channel, h);
 
@@ -546,7 +546,7 @@ namespace karabo {
                                 KARABO_LOG_FRAMEWORK_WARN << "Skip subscription to output channel '" << channelName
                                         << "' for GUI on channel " " : It is already subscribed for GUI on channel "
                                         << channel.get();
-                                return; 
+                                return;
                             }
                             NetworkConnection nc;
                             nc.name = channelName;
@@ -568,11 +568,11 @@ namespace karabo {
                 }
 
                 Hash h("connectedOutputChannels", channelName, "dataDistribution", "copy",
-                        "onSlowness", "drop", "delayOnInput", get<int>("delayOnInput"));
+                       "onSlowness", "drop", "delayOnInput", get<int>("delayOnInput"));
                 InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", h);
                 input->setInstanceId(m_instanceId);
                 input->registerInputHandler(boost::bind(&GuiServerDevice::onNetworkData, this, _1));
-                
+
                 // TODO: This is a synchronous connect (using request-receive-with-timeout) and it may take ages
                 // attempting to connect to non-existing device ... 
                 // But it may fail if network or broker is so busy that cannot reply in time ...
@@ -582,7 +582,7 @@ namespace karabo {
                 nc.name = channelName;
                 nc.channel = channel;
                 m_networkConnections.insert(NetworkMap::value_type(input, nc));
-                
+
                 //connectInputChannelAsync(input, boost::bind(&GuiServerDevice::onInputChannelConnected, this, input, channel, channelName));
             } catch (const Exception &e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSubscribeNetwork(): " << e.userFriendlyMsg();
@@ -596,7 +596,7 @@ namespace karabo {
             NetworkConnection nc;
             nc.name = channelName;
             nc.channel = channel;
-            
+
             m_networkConnections.insert(NetworkMap::value_type(input, nc));
         }
 
@@ -604,7 +604,7 @@ namespace karabo {
         void GuiServerDevice::onNetworkData(const InputChannel::Pointer& input) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onNetworkData";
-                
+
                 for (size_t i = 0; i < input->size(); ++i) {
                     Hash::Pointer data = input->read(i);
 
@@ -843,19 +843,20 @@ namespace karabo {
                     // Broadcast to all GUIs
                     for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                         it->first->write(h);
-
-                        {
-                            // Erase instance from the monitored list
-                            boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                            std::map<std::string, int>::iterator jt = m_monitoredDevices.find(instanceId);
-                            if (jt != m_monitoredDevices.end()) {
-                                m_monitoredDevices.erase(jt);
-                            }
-                        }
                         // and remove the instance from channel
                         it->second.erase(instanceId);
                     }
                 }
+
+                {
+                    // Erase instance from the monitored list
+                    boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
+                    std::map<std::string, int>::iterator jt = m_monitoredDevices.find(instanceId);
+                    if (jt != m_monitoredDevices.end()) {
+                        m_monitoredDevices.erase(jt);
+                    }
+                }
+
                 {
                     // Erase all bookmarks (InputChannel pointers) associated with instance that gone 
                     NetworkMap::iterator iter;
@@ -905,7 +906,7 @@ namespace karabo {
                 if (classSchema.empty()) return;
 
                 Hash h("type", "classSchema", "serverId", serverId,
-                        "classId", classId, "schema", classSchema);
+                       "classId", classId, "schema", classSchema);
 
                 // Broadcast to all GUIs
                 safeAllClientsWrite(h);
@@ -925,7 +926,7 @@ namespace karabo {
                 }
 
                 Hash h("type", "deviceSchema", "deviceId", deviceId,
-                        "schema", schema);
+                       "schema", schema);
 
                 // Broadcast to all GUIs
                 safeAllClientsWrite(h);
@@ -940,8 +941,8 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting notification";
                 Hash h("type", "notification", "deviceId", deviceId,
-                        "messageType", type, "shortMsg", shortMessage,
-                        "detailedMsg", detailedMessage);
+                       "messageType", type, "shortMsg", shortMessage,
+                       "detailedMsg", detailedMessage);
 
                 // Broadcast to all GUIs
                 safeAllClientsWrite(h);
@@ -965,49 +966,62 @@ namespace karabo {
 
 
         void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
-            try {               
-                if (errorCode.value() == 2 || errorCode.value() == 32 || errorCode.value() == 104) { // End of file or Broken pipe
+            channel->getConnection()->getIOService()->post(boost::bind(&GuiServerDevice::onPostError, this, channel, errorCode));
+        }
+        
+        
+        void GuiServerDevice::onPostError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
+            try {
+                if (errorCode.value() != 2 && errorCode.value() != 32 && errorCode.value() != 104) { // NOT End of file or Broken pipe
+                    KARABO_LOG_ERROR << "Tcp channel error, code: " << errorCode.value() << ", message: " << errorCode.message();
+                    return;
+                }
+
+                KARABO_LOG_INFO << "TCP socket got \"" << errorCode.message() << "\", client dropped the connection";
+
+                // TODO Fork on error message
+                std::set<std::string> deviceIds; // empty set
+                {
                     boost::mutex::scoped_lock lock(m_channelMutex);
-                    
-                    KARABO_LOG_INFO << "TCP socket got \"" << errorCode.message() << "\", client dropped the connection";
-                    // TODO Fork on error message
                     std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
                     if (it != m_channels.end()) {
                         it->first->close(); // This closes socket and unregisters channel from connection
-                        // Remove all previously visible devices
-                        const std::set<std::string>& deviceIds = it->second;
-                        for (std::set<std::string>::const_iterator jt = deviceIds.begin(); jt != deviceIds.end(); jt++) {
-                            const std::string& deviceId = *jt;
-                            {
-                                boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                                m_monitoredDevices[deviceId]--;
-                            }
-                            KARABO_LOG_FRAMEWORK_DEBUG << "stopMonitoringDevice (GUI gone) " << deviceId << " " << m_monitoredDevices[deviceId];
-                            if (m_monitoredDevices[deviceId] == 0) {
-                                // Disconnect signal/slot from broker
-                                remote().unregisterDeviceMonitor(deviceId);
-                            }
-                        }
+                        deviceIds = it->second; // copy to the empty set
                         // Remove channel as such
                         m_channels.erase(it);
                     }
 
-                    {
-                        boost::mutex::scoped_lock lock(m_networkMutex);
+                }
 
-                        NetworkMap::iterator iter = m_networkConnections.begin();
-                        while (iter != m_networkConnections.end()) {
-                            if (iter->second.channel == channel) {
-                                m_networkConnections.erase(iter++);
-                            } else ++iter;
+                {
+                    boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
+                    // Remove all previously visible devices
+                    for (std::set<std::string>::const_iterator jt = deviceIds.begin(); jt != deviceIds.end(); jt++) {
+                        const std::string& deviceId = *jt;
+                        m_monitoredDevices[deviceId]--;
+                        KARABO_LOG_FRAMEWORK_DEBUG << "stopMonitoringDevice (GUI gone) " << deviceId << " " << m_monitoredDevices[deviceId];
+                        if (m_monitoredDevices[deviceId] == 0) {
+                            // Disconnect signal/slot from broker
+                            remote().unregisterDeviceMonitor(deviceId);
                         }
                     }
-                } else {
-                    KARABO_LOG_ERROR << "Tcp channel error, code: " << errorCode.value() << ", message: " << errorCode.message();
                 }
-                
+
+                {
+                    boost::mutex::scoped_lock lock(m_networkMutex);
+
+                    NetworkMap::iterator iter = m_networkConnections.begin();
+                    while (iter != m_networkConnections.end()) {
+                        if (iter->second.channel == channel) {
+                            m_networkConnections.erase(iter++);
+                        } else ++iter;
+                    }
+                }
+
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onError(): " << e.userFriendlyMsg();
+            } catch (const std::exception& se) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in onError(): " << se.what();
             }
         }
 
