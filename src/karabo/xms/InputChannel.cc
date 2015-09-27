@@ -109,7 +109,10 @@ namespace karabo {
             m_tcpConnections.clear();
             if (m_tcpIoService) {
                 m_tcpIoService->stop();
-                m_tcpIoServiceThread.join();
+                if (m_tcpIoServiceThread.get_id() == boost::this_thread::get_id()) {
+                    KARABO_LOG_FRAMEWORK_WARN << BOOST_CURRENT_FUNCTION << ":" << __LINE__ << " : attempt to join itself";
+                } else
+                    m_tcpIoServiceThread.join();
             }
             MemoryType::unregisterChannel(m_channelId);
             KARABO_LOG_FRAMEWORK_DEBUG << "*** ~InputChannel DTOR for channelId = " << m_channelId;
@@ -391,7 +394,7 @@ namespace karabo {
                 // set the guard: it is guaranteed that InputChannel object is alive
                 // ... or exception brings us out here
                 InputChannel::Pointer self = shared_from_this();
-                
+
                 // There is either m_inputHandler or m_dataHandler
                 // (or neither), see registerInputHandler and registerDataHandler.
                 if (m_inputHandler && m_dataHandler) {
@@ -401,7 +404,7 @@ namespace karabo {
                     // Clear inputHandler since dataHandler is the recommended
                     // interface (though inputHandler is more general...).
                     m_inputHandler.clear();
-                }    
+                }
 
                 if (m_dataHandler) {
                     for (size_t i = 0; i < this->size(); ++i) {
@@ -412,7 +415,7 @@ namespace karabo {
                     else
                         update();
                 }
-            
+
                 if (m_inputHandler) {
                     m_inputHandler(self);
                     // FIXME: Move call to this->update() from
@@ -432,7 +435,7 @@ namespace karabo {
                 // set the guard: it is guaranteed that InputChannel object is alive
                 // ... or exception brings us out here
                 InputChannel::Pointer self = shared_from_this();
-        
+
                 if (m_endOfStreamHandler) {
                     m_endOfStreamHandler(shared_from_this());
                 }
@@ -474,7 +477,7 @@ namespace karabo {
                 // set the guard: it is guaranteed that InputChannel object is alive
                 // ... or exception brings us out here
                 InputChannel::Pointer self = shared_from_this();
-                
+
                 boost::mutex::scoped_lock lock(m_mutex);
 
                 if (m_keepDataUntilNew) return;
