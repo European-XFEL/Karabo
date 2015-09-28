@@ -11,6 +11,8 @@
 #ifndef KARABO_XIP_STATISTICS_HH
 #define	KARABO_XIP_STATISTICS_HH
 
+#include <iostream>
+
 namespace karabo {
     namespace xip {
 
