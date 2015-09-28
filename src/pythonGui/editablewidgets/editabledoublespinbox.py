@@ -11,7 +11,7 @@ __all__ = ["IntLineEdit", "DoubleLineEdit"]
 from util import SignalBlocker
 from widget import DisplayWidget, EditableWidget
 
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import QLineEdit, QDoubleValidator, QPalette, QValidator
 
 from karabo.hashtypes import Integer, Number
@@ -33,7 +33,7 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         if not ro:
             self.widget.textChanged.connect(self.onTextChanged)
 
-
+    @pyqtSlot(str)
     def onTextChanged(self, text):
         self.widget.setPalette(self.normalPalette
                                if self.widget.hasAcceptableInput()
