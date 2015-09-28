@@ -23,6 +23,8 @@ from karabo.signalslot import slot
 from karabo.python_device import Device
 
 class DeviceClientBase(Device):
+    abstract = True
+
     def __init__(self, configuration):
         self.systemTopology = Hash("device", Hash(), "server", Hash(),
                                    "macro", Hash())
