@@ -3,7 +3,7 @@ import karabo
 from asyncio import async, coroutine, get_event_loop, set_event_loop, sleep
 from itertools import count
 import gc
-from unittest import TestCase, main
+from unittest import TestCase, main, skip
 import sys
 import time
 import weakref
@@ -11,7 +11,7 @@ import weakref
 from karabo.api import Int, Slot
 from karabo.cli import connectDevice, DeviceClient
 from karabo.eventloop import NoEventLoop
-from karabo.macro import Macro, EventThread
+from karabo.macro import Macro, EventThread, RemoteDevice
 from karabo.hash import Hash
 from karabo.python_server import DeviceServer
 from karabo.device_client import (
@@ -33,6 +33,10 @@ class Remote(Macro):
     @Slot()
     def instantiate(self):
         instantiate("testServer", "Other", "other")
+
+
+class NoRemote(Macro):
+    rd = RemoteDevice("DoesNotExist")
 
 
 class Other(Device):
@@ -65,6 +69,11 @@ class Tests(TestCase):
         self.assertIsNone(EventThread.instance())
         time.sleep(0.1)
         self.assertFalse(thread.is_alive())
+
+    @skip
+    def test_remote_timeout(self):
+        with self.assertLogs("NoRemote"):
+            remote = NoRemote(_deviceId_="NoRemote")
 
     def test_main(self):
         save = sys.argv
