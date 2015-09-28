@@ -76,8 +76,6 @@ namespace karabo {
             
             void safeAllClientsWrite(const karabo::util::Hash& message);
 
-            void onPostError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& err);
-            
             void onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorMessage);
 
             void onGuiError(const karabo::util::Hash& hash);

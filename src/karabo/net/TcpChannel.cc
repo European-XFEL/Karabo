@@ -501,7 +501,7 @@ namespace karabo {
                 boost::asio::write(m_socket, buf, transfer_all(), error);
 
                 if (!error) return;
-                else if (m_errorHandler) m_errorHandler(error);
+                else if (m_errorHandler) m_connectionPointer->m_boostIoServicePointer->post(boost::bind(m_errorHandler, error));
                 else throw KARABO_NETWORK_EXCEPTION(error.message());
 
             } catch (...) {
@@ -618,7 +618,7 @@ namespace karabo {
                 buf.push_back(buffer(body, bodySize));
                 boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
-                    if (m_errorHandler) m_errorHandler(error);
+                    if (m_errorHandler) m_connectionPointer->m_boostIoServicePointer->post(boost::bind(m_errorHandler, error));
                     else throw KARABO_NETWORK_EXCEPTION(error.message());
                 }
             } catch (...) {

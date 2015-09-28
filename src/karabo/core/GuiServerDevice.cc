@@ -563,7 +563,7 @@ namespace karabo {
                 }
 
                 if (!subscribe) {
-                    KARABO_LOG_FRAMEWORK_WARN << "trying to unsubscribe from non-subscribed channel " << channelName;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "trying to unsubscribe from non-subscribed channel " << channelName;
                     return;
                 }
 
@@ -966,11 +966,6 @@ namespace karabo {
 
 
         void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
-            channel->getConnection()->getIOService()->post(boost::bind(&GuiServerDevice::onPostError, this, channel, errorCode));
-        }
-        
-        
-        void GuiServerDevice::onPostError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
             try {
                 if (errorCode.value() != 2 && errorCode.value() != 32 && errorCode.value() != 104) { // NOT End of file or Broken pipe
                     KARABO_LOG_ERROR << "Tcp channel error, code: " << errorCode.value() << ", message: " << errorCode.message();
