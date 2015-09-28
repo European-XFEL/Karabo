@@ -162,6 +162,7 @@ class Macro(Device):
         assigned to the object's properties """
         yield from super().run_async()
         self.state = "SearchRemotes..."
+        holders = []
 
         @coroutine
         def connect(key, remote):
@@ -175,12 +176,14 @@ class Macro(Device):
                                   format(remote.id, self.deviceId))
             else:
                 setattr(self, key, d)
-                async(self._holdDevice(d))
+                holders.append(self._holdDevice(d))
 
         ts = type(self)
         attributes = ((k, getattr(ts, k)) for k in dir(ts))
         yield from gather(*(connect(k, v) for k, v in attributes
                           if isinstance(v, RemoteDevice)))
+        for h in holders:
+            async(h)
         self.state = "Idle..."
 
     def _holdDevice(self, d):
