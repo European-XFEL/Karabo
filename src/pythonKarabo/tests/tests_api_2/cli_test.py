@@ -3,7 +3,7 @@ import karabo
 from asyncio import async, coroutine, get_event_loop, set_event_loop, sleep
 from itertools import count
 import gc
-from unittest import TestCase, main
+from unittest import TestCase, main, skip
 import sys
 import time
 import weakref
@@ -70,6 +70,7 @@ class Tests(TestCase):
         time.sleep(0.1)
         self.assertFalse(thread.is_alive())
 
+    @skip
     def test_remote_timeout(self):
         with self.assertLogs("NoRemote"):
             remote = NoRemote(_deviceId_="NoRemote")
