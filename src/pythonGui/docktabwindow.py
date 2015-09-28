@@ -229,8 +229,8 @@ class DivWidget(QFrame):
     def onDock(self):
         self.acDock.setVisible(False)
         self.acUndock.setVisible(True)
-        self.dockWindow.onDock(self)
         self.dockableWidget.onDock()
+        self.dockWindow.onDock(self)
 
     def hasIcon(self):
         return self.icon is not None
