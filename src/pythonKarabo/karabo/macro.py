@@ -156,8 +156,10 @@ class Macro(Device):
 
     @coroutine
     def run_async(self):
+        """ implement the RemoteDevice functionality, upon
+        starting the device the devices are searched and then
+        assigned to the object's properties """
         yield from super().run_async()
-        devices = []
         self.state = "SearchRemotes..."
 
         @coroutine
@@ -174,9 +176,10 @@ class Macro(Device):
                 setattr(self, key, d)
                 async(self._holdDevice(d))
 
-        yield from gather(*(connect(k, v) for k, v in (
-            (k, getattr(type(self), k)) for k in dir(type(self))
-            ) if isinstance(v, RemoteDevice)))
+        ts = type(self)
+        attributes = ((k, getattr(ts, k)) for k in dir(ts))
+        yield from gather(*(connect(k, v) for k, v in attributes
+                          if isinstance(v, RemoteDevice)))
         self.state = "Idle..."
 
     def _holdDevice(self, d):
