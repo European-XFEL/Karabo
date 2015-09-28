@@ -1,4 +1,5 @@
-from asyncio import async, coroutine, get_event_loop, set_event_loop
+from asyncio import (async, coroutine, gather, get_event_loop, set_event_loop,
+                     TimeoutError, wait_for)
 import atexit
 from functools import wraps
 import sys
@@ -22,8 +23,9 @@ def Monitor():
 
 
 class RemoteDevice:
-    def __init__(self, id):
+    def __init__(self, id, timeout=5):
         self.id = id
+        self.timeout = timeout
 
 
 class Sentinel:
@@ -154,16 +156,30 @@ class Macro(Device):
 
     @coroutine
     def run_async(self):
+        """ implement the RemoteDevice functionality, upon
+        starting the device the devices are searched and then
+        assigned to the object's properties """
         yield from super().run_async()
-        devices = []
-        for k in dir(type(self)):
-            v = getattr(type(self), k)
-            if isinstance(v, RemoteDevice):
-                d = yield from getDevice(v.id)
-                setattr(self, k, d)
-                devices.append(d)
-        for d in devices:
-            async(self._holdDevice(d))
+        self.state = "SearchRemotes..."
+
+        @coroutine
+        def connect(key, remote):
+            coro = getDevice(remote.id)
+            if remote.timeout > 0:
+                coro = wait_for(coro, remote.timeout)
+            try:
+                d = yield from coro
+            except TimeoutError:
+                self.logger.error('no remote device "{}" for macro "{}"'.
+                                  format(remote.id, self.deviceId))
+            else:
+                setattr(self, key, d)
+                async(self._holdDevice(d))
+
+        ts = type(self)
+        attributes = ((k, getattr(ts, k)) for k in dir(ts))
+        yield from gather(*(connect(k, v) for k, v in attributes
+                          if isinstance(v, RemoteDevice)))
         self.state = "Idle..."
 
     def _holdDevice(self, d):
