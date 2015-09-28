@@ -92,6 +92,7 @@ def _wrapslot(slot, name):
 
 
 class Macro(Device):
+    abstract = True
     subclasses = []
 
     project = String(

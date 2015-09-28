@@ -1,8 +1,8 @@
 from asyncio import coroutine, gather
 
-from karabo.enums import AccessMode
+from karabo.enums import AccessLevel, AccessMode
 from karabo.python_device import Device
-from karabo.hashtypes import String
+from karabo.hashtypes import String, Int32
 from karabo.macro import Macro
 
 
@@ -23,6 +23,7 @@ class MetaMacro(Device):
         displayedName="Name of Module",
         description="The name of the module within the project",
         accessMode=AccessMode.INITONLY)
+    visibility = Int32(enum=AccessLevel, defaultValue=AccessLevel.ADMIN)
 
     def __init__(self, config):
         super().__init__(config)
