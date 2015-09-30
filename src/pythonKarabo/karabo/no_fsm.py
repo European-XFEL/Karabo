@@ -19,17 +19,18 @@ class NoFsm(object):
 
     def __init__(self, configuration):
         super(NoFsm, self).__init__()
-        self.func = None
+        self.func = []
     
     def startFsm(self):
         """Start state machine"""
         #self.updateState("Changing...")
-        if self.func is None:
-            raise RuntimeError("No initial function defined. Please call 'initialFunc' method in the device constructor")
-        self.func()    # call initial function registered in the device constructor
+        if len(self.func) == 0:
+            raise RuntimeError("No initial function defined. Please call 'registerInitialFunction' method in the device constructor")
+        # call initial function registered in the device constructor on registration order
+        for f in self.func: f()
         
     def registerInitialFunction(self, func):
-        self.func = func
+        self.func.append(func)
         
     def stopFsm(self): pass
     
