@@ -437,7 +437,7 @@ namespace karabo {
                 InputChannel::Pointer self = shared_from_this();
 
                 if (m_endOfStreamHandler) {
-                    m_endOfStreamHandler(shared_from_this());
+                    m_endOfStreamHandler(self);
                 }
             } catch(const boost::bad_weak_ptr& e) {
             } catch(const std::exception& ex) {
