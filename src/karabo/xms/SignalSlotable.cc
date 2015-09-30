@@ -279,10 +279,10 @@ namespace karabo {
         void SignalSlotable::runEventLoop(int heartbeatInterval, const karabo::util::Hash& instanceInfo) {
 
             try {
-                               
+
                 m_heartbeatInterval = heartbeatInterval;
-                m_instanceInfo = instanceInfo; 
-                 
+                m_instanceInfo = instanceInfo;
+
                 m_runEventLoop = true;
 
                 startBrokerMessageConsumption();
@@ -295,7 +295,7 @@ namespace karabo {
                 m_eventLoopThreads.join_all(); // Join all event dispatching threads
 
                 stopBrokerMessageConsumption();
-                
+
                 if (!m_randPing) {
                     stopTrackingSystem();
                     stopEmittingHearbeats();
@@ -314,34 +314,34 @@ namespace karabo {
             }
         }
 
-        
+
         bool SignalSlotable::ensureOwnInstanceIdUnique() {
-               
-                // Inject the heartbeat interval to instanceInfo
-                m_instanceInfo.set("heartbeatInterval", m_heartbeatInterval);
-                
-                // Inject karaboVersion
-                m_instanceInfo.set("karaboVersion", karabo::util::Version::getVersion());
 
-            
-                // Make sure the instanceId is valid and unique
-                std::pair<bool, std::string> result = isValidInstanceId(m_instanceId);
-                if (!result.first) {
-                    KARABO_LOG_FRAMEWORK_ERROR << result.second;
-                    stopEventLoop();
-                    return result.first;
-                }
-                KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id: " << m_instanceId;
-                KARABO_LOG_FRAMEWORK_INFO << "Instance: " << m_instanceId << " uses " << m_nThreads << " threads";
+            // Inject the heartbeat interval to instanceInfo
+            m_instanceInfo.set("heartbeatInterval", m_heartbeatInterval);
 
-                call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
+            // Inject karaboVersion
+            m_instanceInfo.set("karaboVersion", karabo::util::Version::getVersion());
 
-                startEmittingHeartbeats(m_heartbeatInterval);
-                startTrackingSystem();
 
-                m_randPing = 0; // Allows to answer on slotPing
-                
+            // Make sure the instanceId is valid and unique
+            std::pair<bool, std::string> result = isValidInstanceId(m_instanceId);
+            if (!result.first) {
+                KARABO_LOG_FRAMEWORK_ERROR << result.second;
+                stopEventLoop();
                 return result.first;
+            }
+            KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id: " << m_instanceId;
+            KARABO_LOG_FRAMEWORK_INFO << "Instance: " << m_instanceId << " uses " << m_nThreads << " threads";
+
+            call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
+
+            startEmittingHeartbeats(m_heartbeatInterval);
+            startTrackingSystem();
+
+            m_randPing = 0; // Allows to answer on slotPing
+
+            return result.first;
         }
 
 
@@ -680,7 +680,7 @@ namespace karabo {
 
 
         void SignalSlotable::trackAllInstances() {
-            m_trackAllInstances = true;           
+            m_trackAllInstances = true;
             m_heartbeatConsumerChannel->setFilter("signalFunction = 'signalHeartbeat'");
             m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2, _3));
         }
@@ -851,7 +851,7 @@ namespace karabo {
             if (!hasTrackedInstance(instanceId)) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId " << instanceId;
                 emit("signalInstanceNew", instanceId, instanceInfo);
-            } else {                            
+            } else {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId (but already tracked) " << instanceId;
             }
             addTrackedInstance(instanceId, instanceInfo);
@@ -1809,11 +1809,18 @@ namespace karabo {
                 karabo::util::Hash reply;
                 while ((trials--) > 0) {
                     try {
-                        this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
+                        this->request(instanceId, "slotGetOutputChannelInformation", channelId,
+                                      static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
                     } catch (karabo::util::TimeoutException&) {
                         karabo::util::Exception::clearTrace();
-                        std::cout << "Could not find instanceId \"" + instanceId + "\" for IO connection" << std::endl;
-                        std::cout << "Trying again in " << sleep << " seconds." << std::endl;
+                        KARABO_LOG_FRAMEWORK_INFO << "Could not find instanceId \"" + instanceId + "\" for IO connection";
+                        KARABO_LOG_FRAMEWORK_INFO << "Trying again in " << sleep << " seconds.";
+                        boost::this_thread::sleep(boost::posix_time::seconds(sleep));
+                        sleep += 2;
+                        continue;
+                    }
+                    // Use all attempts if failed to get channel existing...
+                    if (!channelExists) {
                         boost::this_thread::sleep(boost::posix_time::seconds(sleep));
                         sleep += 2;
                         continue;
@@ -1823,7 +1830,9 @@ namespace karabo {
                 if (channelExists) {
                     channel->connect(reply); // Synchronous
                 } else {
-                    throw KARABO_IO_EXCEPTION("Could not find outputChannel \"" + channelId + "\" on instanceId \"" + instanceId + "\"");
+                    KARABO_LOG_FRAMEWORK_WARN << "Could not find outputChannel \""
+                            << channelId << "\" on instanceId \"" << instanceId
+                            << "\". Perhaps device with output channel is not online yet.";
                 }
             }
         }
@@ -1840,10 +1849,10 @@ namespace karabo {
                                                                             this, channel, handler,
                                                                             instanceId, channelId, _1, _2));
             }
-            
+
         }
-        
-        
+
+
         void SignalSlotable::onInputChannelConnectInfo(const InputChannel::Pointer& channel,
                                                        const boost::function<void() >& handler,
                                                        const std::string& instanceId, const std::string& channelId,
@@ -1855,8 +1864,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Could not find outputChannel \"" << channelId << "\" on instanceId \"" << instanceId << "\"";
             }
         }
-        
-        
+
+
         karabo::util::Hash SignalSlotable::slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId) {
             OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);
             if (it != m_outputChannels.end()) {
