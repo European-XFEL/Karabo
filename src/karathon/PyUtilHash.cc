@@ -428,5 +428,8 @@ void exportPyUtilHash() {
 
     bp::class_<std::vector<Hash>, boost::shared_ptr<std::vector<Hash> > >("VectorHash")
         .def(bp::vector_indexing_suite<std::vector<Hash> >());
+    
+    bp::class_<std::vector<boost::shared_ptr<Hash> >, boost::shared_ptr<std::vector<boost::shared_ptr<Hash> > > >("VectorHashPointer")
+        .def(bp::vector_indexing_suite<std::vector<boost::shared_ptr<Hash> >, true >());
 }
 
