@@ -62,12 +62,22 @@ namespace karabo {
 
         void DataLogReader::slotGetPropertyHistory(const std::string& deviceId, const std::string& property, const Hash& params) {
             try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory(" << deviceId << ", " << property << ", from/to parameters)";
+                
+                // Safety check that the directory contains something about 'deviceId'
+                {
+                    bf::path dirPath(get<string>("directory") + "/" + deviceId + "/raw/");
+                    if (!bf::exists(dirPath) || !bf::is_directory(dirPath)) {
+                        // We know nothing about requested 'deviceId', just return empty reply
+                        reply(deviceId, property, vector<Hash>());
+                        return;
+                    }
+                }
+
                 TimeProfiler p("processingForTrendline");
                 p.open();
 
                 p.startPeriod("reaction");
-
-                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory(" << deviceId << ", " << property << ", from/to parameters)";
 
                 // Register a property in prop file for indexing if it is not there
                 {
