@@ -49,6 +49,8 @@ namespace karabo {
             
             void instantiateReaders(const std::string& serverId);
             
+            void restartReadersAndLoggers();
+            
         private: // Data
             std::vector<std::string> m_serverList;
             size_t m_serverIndex;
