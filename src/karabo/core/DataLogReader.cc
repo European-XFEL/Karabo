@@ -1,5 +1,7 @@
 #include <map>
 #include <vector>
+#include <cstdlib>
+#include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <streambuf>
 #include <karabo/io/Input.hh>
@@ -212,7 +214,7 @@ namespace karabo {
                                 vector<string> tokens;
                                 boost::split(tokens, line, boost::is_any_of("|"));
                                 if (tokens.size() != 10) {
-                                    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record: token.size() = " << tokens.size();
+                                    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record: tokens.size() = " << tokens.size();
                                     continue; // This record is corrupted -- skip it
                                 }
 
@@ -224,9 +226,14 @@ namespace karabo {
                                 }
 
                                 const string& path = tokens[5];
-                                if (path != property)
-                                    throw KARABO_PARAMETER_EXCEPTION("Wrong property read in raw file");
-
+                                if (path != property) {
+                                    // if you don't like the index record (for example, it pointed to the wrong property) just skip it
+                                    KARABO_LOG_FRAMEWORK_WARN << "The index for \"" << deviceId << "\", property : \"" << property
+                                            << "\" and file number : " << fnum << " points out to the wrong property in the raw file. Skip it ...";
+                                    // TODO: Here we can start index rebuilding for fnum != lastFileIndex
+                                    continue;
+                                }
+                                
                                 Hash hash;
                                 const string& type = tokens[6];
                                 const string& value = tokens[7];
@@ -640,6 +647,14 @@ namespace karabo {
                 if (ROUND1MS(t) >= ROUND1MS(epoch)) return (left + i);
             }
             throw KARABO_PARAMETER_EXCEPTION("Epochstamp was not found! Timestamp " + toString(t) + " is wrong!");
+        }
+        
+        
+        void DataLogReader::runIndexBuilder(const std::string& deviceId, int fnum) {
+            ostringstream oss;
+            oss << "idxbuild" << " " << get<string>("directory") << " " << deviceId << " " << fnum;
+            int ret = system(oss.str().c_str());            
+            KARABO_LOG_FRAMEWORK_DEBUG << "system(\"" << oss.str() << "\") returns " << ret; 
         }
     }
 

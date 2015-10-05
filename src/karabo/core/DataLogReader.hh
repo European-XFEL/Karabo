@@ -83,6 +83,8 @@ namespace karabo {
 
             size_t findPositionOfEpochstamp(std::ifstream& f, double t, size_t& left, size_t& right);
             
+            void runIndexBuilder(const std::string& deviceId, int fnum);
+            
         private:
             
             static std::map<std::string, PropFileInfo::Pointer > m_mapPropFileInfo;
