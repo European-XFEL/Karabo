@@ -52,11 +52,20 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
 int main(int argc, char** argv) {
 
     if (argc < 2) {
-        cout << "\nUsage: " << argv[0] << " <karabo_history_dir>\n" << endl;
+        cout << "\nUsage: " << argv[0] << " <karabo_history_dir> [deviceId [filenum]] \n" << endl;
         return 1;
     }
 
     string karaboHistory(argv[1]);
+    string requestedDeviceId = "";    // means "all devices"
+    int requestedFilenum = -1;        // means "all file numbers"
+    
+    if (argc > 2) {
+        requestedDeviceId.assign(argv[2]);
+        if (argc > 3)
+            requestedFilenum = fromString<int>(string(argv[3]));
+    }   
+        
 
     cout << "\nInput parameters: karaboHistory=\"" << karaboHistory << "\"\n" << endl;
 
@@ -108,6 +117,7 @@ int main(int argc, char** argv) {
         if (!bf::is_directory(it->path())) continue;
         string deviceId = it->path().filename().string();
         if (deviceId == "raw" || deviceId == "idx") continue;
+        if (!requestedDeviceId.empty() && requestedDeviceId != deviceId) continue;
         devices.push_back(deviceId);
         
         bf::path rawdir(karaboHistory + "/" + deviceId + "/raw");
@@ -117,9 +127,12 @@ int main(int argc, char** argv) {
             throw KARABO_PARAMETER_EXCEPTION("File \"" + rawdir.string() + "\" is not a directory!");
         
         bf::path idxdir(karaboHistory + "/" + deviceId + "/idx");
-        bf::remove_all(idxdir);
-        bf::create_directory(idxdir);
-    
+        // check if we need to re-build all index files
+        if (requestedFilenum == -1) {
+            // simply delete the whole directory with the old content and create the new one
+            bf::remove_all(idxdir);
+            bf::create_directory(idxdir);
+        }
     }
     
     cout << devices.size() << " devices have to be processed..." << endl;
@@ -184,10 +197,12 @@ int main(int argc, char** argv) {
 
         string pattern = deviceId + "_configuration_";
         for (vector<bf::path>::iterator i = rawtxt.begin(); i != rawtxt.end(); ++i) {
-            cout << "\tFile : " << i->filename() << endl;
             // extract filenum from file name
-            size_t filenum = fromString<size_t>(i->filename().stem().string().substr(pattern.size()));
-            processNextFile(deviceId, filenum, karaboHistory, sfs, buildContentFile, idxprops);
+            int filenum = fromString<size_t>(i->filename().stem().string().substr(pattern.size()));
+            if (requestedFilenum < 0 || requestedFilenum == filenum) {
+                cout << "\tFile : " << i->filename() << endl;
+                processNextFile(deviceId, filenum, karaboHistory, sfs, buildContentFile, idxprops);
+            }
         }
 
         sfs.close();
