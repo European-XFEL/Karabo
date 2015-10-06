@@ -52,22 +52,30 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
 int main(int argc, char** argv) {
 
     if (argc < 2) {
-        cout << "\nUsage: " << argv[0] << " <karabo_history_dir> [deviceId [filenum]] \n" << endl;
+        cout << "\nUsage: " << argv[0] << " <karabo_history_dir> [deviceId [property [filenum]]]\n" << endl;
         return 1;
     }
 
     string karaboHistory(argv[1]);
-    string requestedDeviceId = "";    // means "all devices"
-    int requestedFilenum = -1;        // means "all file numbers"
+    string requestedDeviceId = "";    // means "all devices found in karaboHistory"
+    string requestedProperty = "";    // means "all registered properties"
+    int requestedFilenum = -1;        // means "all file numbers found in raw subdirectory"
     
     if (argc > 2) {
         requestedDeviceId.assign(argv[2]);
-        if (argc > 3)
-            requestedFilenum = fromString<int>(string(argv[3]));
+        if (argc > 3) {
+            requestedProperty.assign(argv[3]);
+            if (argc > 4)
+                requestedFilenum = fromString<int>(string(argv[4]));
+        }
     }   
         
 
-    cout << "\nInput parameters: karaboHistory=\"" << karaboHistory << "\"\n" << endl;
+    cout << "\nInput parameters are ...\n\tkaraboHistory =\t\"" << karaboHistory << "\"\n"
+            << "\tdeviceId =\t\"" << requestedDeviceId << "\"\n"
+            << "\tproperty =\t\"" << requestedProperty << "\"\n"
+            << "\tfile_num =\t\"" << requestedFilenum << "\"\n"
+            << endl;
 
     bf::path history(karaboHistory);
     if (!bf::exists(history))
@@ -173,16 +181,21 @@ int main(int argc, char** argv) {
         {
             bf::path propPath(history.string() + "/" + deviceId + "/raw/" + deviceId + "_properties_with_index.txt");
             if (bf::exists(propPath)) {
-                ifstream in(propPath.c_str());
-                in.seekg(0, ios::end);
-                string content(in.tellg(), ' ');
-                in.seekg(0, ios::beg);
-                content.assign((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
-                in.close();
-                boost::split(idxprops, content, boost::is_any_of("\n"));
+                if (requestedProperty.empty()) {
+                    ifstream in(propPath.c_str());
+                    in.seekg(0, ios::end);
+                    string content(in.tellg(), ' ');
+                    in.seekg(0, ios::beg);
+                    content.assign((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
+                    in.close();
+                    boost::split(idxprops, content, boost::is_any_of("\n"));
+                } else
+                    idxprops.push_back(requestedProperty);
             }
         }
         
+        if (!buildContentFile && idxprops.empty()) continue;  // nothing to rebuild
+
         ifstream sfs(schemaPath.c_str());
         {
             sfs >> schemaRange.fromSeconds >> schemaRange.fromFraction >> schemaRange.fromTrainId;
