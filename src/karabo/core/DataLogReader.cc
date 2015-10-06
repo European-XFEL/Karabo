@@ -22,7 +22,47 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>, DataLogReader)
 
-
+        
+        IndexBuilderService* IndexBuilderService::m_instance = NULL;
+        
+        
+        IndexBuilderService* IndexBuilderService::getInstance() {
+            if (!m_instance) m_instance = new IndexBuilderService();
+            return m_instance;
+        }
+        
+        
+        void IndexBuilderService::stop() {
+            m_svc.stop();
+            m_thread.join();
+        }
+        
+        
+        void IndexBuilderService::build(const std::string& commandLineArguments) {
+            int size = m_cache.size();
+            m_cache.insert(commandLineArguments);
+            if (size == m_cache.size()) return;   // such a request was before
+            m_svc.post(boost::bind(&IndexBuilderService::rebuild, this, commandLineArguments));
+        }
+        
+        
+        void IndexBuilderService::rebuild(const std::string& commandLineArguments) {
+            try {
+                std::string home(getenv("HOME"));
+                std::string framework = home + "/.karabo/karaboFramework";
+                std::ifstream t(framework.c_str());
+                std::string karabo((istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+                boost::trim(karabo);
+                std::string command = karabo + "/bin/idxbuild " + commandLineArguments;
+                std::cout << "\n********* REBUILD INDEX FILE *********\n\tCOMMAND : \"" << command << "\" ...\n";
+                int ret = system(command.c_str());
+                std::cout << "\tCOMMAND : \"" << command << "\" returns code " << ret << "\n" << std::endl;
+            } catch (const std::exception& e) {
+                std::cout << "*** Standard Exception in rebuild : " << e.what() << std::endl;
+            }
+        }
+        
+        
         void DataLogReader::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("visibility")
@@ -47,11 +87,13 @@ namespace karabo {
 
 
         DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
+            m_ibs = IndexBuilderService::getInstance();
             //set<int>("nThreads", 1);
         }
 
 
         DataLogReader::~DataLogReader() {
+            m_ibs->stop();
             KARABO_LOG_INFO << "dead.";
         }
 
@@ -81,6 +123,9 @@ namespace karabo {
 
                 p.startPeriod("reaction");
 
+                
+                bool rebuildIndex = false;
+                
                 // Register a property in prop file for indexing if it is not there
                 {
                     // build the properties file path
@@ -95,6 +140,7 @@ namespace karabo {
                         m_mapPropFileInfo[deviceId]->properties.push_back(property);
                         m_mapPropFileInfo[deviceId]->filesize = bf::file_size(propPath);
                         m_mapPropFileInfo[deviceId]->lastwrite= bf::last_write_time(propPath);
+                        rebuildIndex = true;
                     } else {
                         // check if the prop file was changed
                         time_t lastTime = bf::last_write_time(propPath);
@@ -132,6 +178,7 @@ namespace karabo {
                             }
                             ptr->filesize = bf::file_size(propPath);
                             ptr->lastwrite= bf::last_write_time(propPath);
+                            rebuildIndex = true;
                         }
                     }
                 }
@@ -150,6 +197,16 @@ namespace karabo {
                     KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/" << deviceId << ".last\" not found. No data will be sent...";
                     reply(deviceId, property, result);
                     return;
+                }
+                
+                // start rebuilding index for deviceId, property and all files
+                if (rebuildIndex) {
+                    rebuildIndex = false;
+                    int idx = lastFileIndex;
+                    while (idx >= 0) {
+                        m_ibs->build(get<string>("directory") + " " + deviceId + " " + property + " " + toString(idx));
+                        idx--;
+                    }
                 }
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "From (UTC): " << from.toIso8601Ext();
@@ -648,14 +705,6 @@ namespace karabo {
             }
             throw KARABO_PARAMETER_EXCEPTION("Epochstamp was not found! Timestamp " + toString(t) + " is wrong!");
         }
-        
-        
-        void DataLogReader::runIndexBuilder(const std::string& deviceId, int fnum) {
-            ostringstream oss;
-            oss << "idxbuild" << " " << get<string>("directory") << " " << deviceId << " " << fnum;
-            int ret = system(oss.str().c_str());            
-            KARABO_LOG_FRAMEWORK_DEBUG << "system(\"" << oss.str() << "\") returns " << ret; 
-        }
     }
 
 #undef ROUND10MS
@@ -663,4 +712,3 @@ namespace karabo {
 }
 
 std::map<std::string, karabo::core::PropFileInfo::Pointer > karabo::core::DataLogReader::m_mapPropFileInfo;
-

@@ -52,7 +52,41 @@ namespace karabo {
             PropFileInfo() : filelock(), filesize(0), lastwrite(0), properties() {}
         };
         
+        
+        class IndexBuilderService {
+        private:
+            static IndexBuilderService* m_instance;
+            
+            boost::asio::io_service m_svc;
+            
+            boost::asio::io_service::work m_work;
+            
+            std::set<std::string> m_cache;
+            
+            boost::thread m_thread;
+        
+            IndexBuilderService() : m_work(m_svc), m_cache(), m_thread(boost::bind(&boost::asio::io_service::run, &m_svc))
+            {
+            }
+            
+        public:
+            
+            static IndexBuilderService* getInstance();
+           
+            ~IndexBuilderService();
 
+            void stop();
+            
+            void build(const std::string& commandLineArguments);
+            
+        private:
+            
+            void rebuild(const std::string& args);
+            
+        };
+        
+
+        
         class DataLogReader : public karabo::core::Device<karabo::core::OkErrorFsm> {
         public:
 
@@ -83,13 +117,11 @@ namespace karabo {
 
             size_t findPositionOfEpochstamp(std::ifstream& f, double t, size_t& left, size_t& right);
             
-            void runIndexBuilder(const std::string& deviceId, int fnum);
-            
         private:
             
             static std::map<std::string, PropFileInfo::Pointer > m_mapPropFileInfo;
-
-        };
+            IndexBuilderService* m_ibs;
+        };  
     }
 }
 
