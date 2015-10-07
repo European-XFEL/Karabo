@@ -26,7 +26,9 @@ namespace karabo {
             
             virtual void stop() = 0;
             
-            virtual void post(const boost::function<void()>& handler) = 0;
+            virtual void post(const boost::function<void()>& handler) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
             
         protected:
             virtual ~AbstractIOService() {
