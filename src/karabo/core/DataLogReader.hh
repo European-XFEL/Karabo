@@ -64,6 +64,8 @@ namespace karabo {
             std::set<std::string> m_cache;
             
             boost::thread m_thread;
+            
+            boost::mutex m_mutex;
         
             IndexBuilderService() : m_work(m_svc), m_cache(), m_thread(boost::bind(&boost::asio::io_service::run, &m_svc))
             {
@@ -77,11 +79,11 @@ namespace karabo {
 
             void stop();
             
-            void build(const std::string& commandLineArguments);
+            void buildIndexFor(const std::string& commandLineArguments);
             
         private:
             
-            void rebuild(const std::string& args);
+            void build(const std::string& args);
             
         };
         

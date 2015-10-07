@@ -38,27 +38,37 @@ namespace karabo {
         }
         
         
-        void IndexBuilderService::build(const std::string& commandLineArguments) {
+        void IndexBuilderService::buildIndexFor(const std::string& commandLineArguments) {
+            boost::mutex::scoped_lock lock(m_mutex);
             int size = m_cache.size();
             m_cache.insert(commandLineArguments);
             if (size == m_cache.size()) return;   // such a request was before
-            m_svc.post(boost::bind(&IndexBuilderService::rebuild, this, commandLineArguments));
+            m_svc.post(boost::bind(&IndexBuilderService::build, this, commandLineArguments));
         }
         
         
-        void IndexBuilderService::rebuild(const std::string& commandLineArguments) {
+        void IndexBuilderService::build(const std::string& commandLineArguments) {
             try {
-                std::string home(getenv("HOME"));
-                std::string framework = home + "/.karabo/karaboFramework";
-                std::ifstream t(framework.c_str());
-                std::string karabo((istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-                boost::trim(karabo);
+                std::cout << "\n********* Index File Building *********\n";
+                if (getenv("KARABO") == NULL) {
+                    std::string home(getenv("HOME"));
+                    std::string framework = home + "/.karabo/karaboFramework";
+                
+                    std::ifstream in(framework.c_str());
+                    std::string karabo((istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+                    boost::trim(karabo);   // get rid of newline character at the end
+                    in.close();
+                    setenv("KARABO", karabo.c_str(), 1);
+                }
+                
+                std::string karabo(getenv("KARABO"));
+                
                 std::string command = karabo + "/bin/idxbuild " + commandLineArguments;
-                std::cout << "\n********* REBUILD INDEX FILE *********\n\tCOMMAND : \"" << command << "\" ...\n";
+                std::cout << "*** Execute : \"" << command << "\" ...\n";
                 int ret = system(command.c_str());
-                std::cout << "\tCOMMAND : \"" << command << "\" returns code " << ret << "\n" << std::endl;
+                std::cout << "\n*** Command finished with return code " << ret << "\n" << std::endl;
             } catch (const std::exception& e) {
-                std::cout << "*** Standard Exception in rebuild : " << e.what() << std::endl;
+                std::cout << "*** Standard Exception in 'build' method : " << e.what() << std::endl;
             }
         }
         
@@ -109,13 +119,17 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory(" << deviceId << ", " << property << ", from/to parameters)";
                 
                 // Safety check that the directory contains something about 'deviceId'
-                {
+                try {
                     bf::path dirPath(get<string>("directory") + "/" + deviceId + "/raw/");
                     if (!bf::exists(dirPath) || !bf::is_directory(dirPath)) {
                         // We know nothing about requested 'deviceId', just return empty reply
                         reply(deviceId, property, vector<Hash>());
                         return;
                     }
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "slotGetPropertyHistory Standard Exception while checking deviceId path : " << e.what();
+                    reply(deviceId, property, vector<Hash>());
+                    return;
                 }
 
                 TimeProfiler p("processingForTrendline");
@@ -127,11 +141,10 @@ namespace karabo {
                 bool rebuildIndex = false;
                 
                 // Register a property in prop file for indexing if it is not there
-                {
-                    // build the properties file path
+                try {
                     bf::path propPath(get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_properties_with_index.txt");
-                    // check if file exists
                     if (!bf::exists(propPath)) {
+                        // create prop file 
                         m_mapPropFileInfo[deviceId] = PropFileInfo::Pointer(new PropFileInfo());
                         boost::mutex::scoped_lock lock(m_mapPropFileInfo[deviceId]->filelock);
                         ofstream out(propPath.c_str(), ios::out|ios::app);
@@ -156,7 +169,7 @@ namespace karabo {
                         PropFileInfo::Pointer ptr = mapit->second;
                         
                         if (ptr->filesize != propsize || ptr->lastwrite != lastTime) {
-                            // prop file was changed by another thread
+                            // prop file was changed by another thread, so re-read properties ...
                             ptr->properties.clear();
                             string content(propsize, ' ');
                             ifstream in(propPath.c_str());
@@ -181,6 +194,10 @@ namespace karabo {
                             rebuildIndex = true;
                         }
                     }
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "slotGetPropertyHistory Standard Exception while registering property file : " << e.what();
+                    reply(deviceId, property, vector<Hash>());
+                    return;
                 }
 
                 vector<Hash> result;
@@ -204,7 +221,7 @@ namespace karabo {
                     rebuildIndex = false;
                     int idx = lastFileIndex;
                     while (idx >= 0) {
-                        m_ibs->build(get<string>("directory") + " " + deviceId + " " + property + " " + toString(idx));
+                        m_ibs->buildIndexFor(get<string>("directory") + " " + deviceId + " " + property + " " + toString(idx));
                         idx--;
                     }
                 }
