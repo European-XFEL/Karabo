@@ -64,7 +64,7 @@ source $originalPwd/build.config
 
 # Use pip to install dependency in Karabo
 echo -e "\n### Installing $DEPNAME"
-pip install $WHEEL_INSTALL_FLAGS $DISTDIR/*.whl
+$PIP install $WHEEL_INSTALL_FLAGS $DISTDIR/*.whl
 echo -e "\n\n**** Installed $DEPNAME"
 
 cd $originalPwd
