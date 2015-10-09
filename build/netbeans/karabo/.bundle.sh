@@ -269,8 +269,11 @@ cd -
 
 # bundle scripts for plugin packages
 cd ../karabo
-cp .bundle-cppplugin.sh .bundle-pythonplugin.sh .extract-cppplugin.sh .extract-pythonplugin.sh $PACKAGEDIR/bin
-cp .extract-dependency.sh .set_relative_rpath.py .bundle-dependency.sh $PACKAGEDIR/bin
+cp .bundle-cppplugin.sh .bundle-pythonplugin.sh $PACKAGEDIR/bin
+cp .bundle-dependency.sh .bundle-pythondependency.sh $PACKAGEDIR/bin
+cp .extract-cppplugin.sh .extract-pythonplugin.sh $PACKAGEDIR/bin
+cp .extract-dependency.sh $PACKAGEDIR/bin
+cp .set_relative_rpath.py $PACKAGEDIR/bin
 
 if [ "$OS" = "Linux" ]; then
 	PACKAGEDIR=$(readlink -f $PACKAGEDIR)
