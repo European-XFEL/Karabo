@@ -9,4 +9,4 @@ if [ -z $KARABO ]; then
     fi
 fi
 
-$KARABO/bin/.bundle-pythondependency.sh $1 $2 $3
+$KARABO/bin/.bundle-pythondependency.sh
