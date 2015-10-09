@@ -159,6 +159,9 @@ else
     [ -f $PACKAGEDIR/extern/bin/irunner ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/irunner
     [ -f $PACKAGEDIR/extern/bin/nosetests ]         && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/nosetests
     [ -f $PACKAGEDIR/extern/bin/nosetests-3.4 ]     && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/nosetests-3.4
+    [ -f $PACKAGEDIR/extern/bin/pip ]               && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pip
+    [ -f $PACKAGEDIR/extern/bin/pip3 ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pip3
+    [ -f $PACKAGEDIR/extern/bin/pip3.4 ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pip3.4
     [ -f $PACKAGEDIR/extern/bin/pnuke ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pnuke
     [ -f $PACKAGEDIR/extern/bin/prsync ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/prsync
     [ -f $PACKAGEDIR/extern/bin/pscp ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pscp
@@ -186,6 +189,7 @@ else
     [ -f $PACKAGEDIR/extern/bin/sphinx-quickstart ] && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-quickstart
     [ -f $PACKAGEDIR/extern/bin/sift ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sift
     [ -f $PACKAGEDIR/extern/bin/smtpd.py ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/smtpd.py
+    [ -f $PACKAGEDIR/extern/bin/wheel ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/wheel
     # TODO: Some files from 'bin' are still not converted: pyuic4
     [ -d $PACKAGEDIR/extern/include/python3.4m ]  && (cd $PACKAGEDIR/extern/include; rm -f python3.4; ln -s python3.4m python3.4)
 fi
