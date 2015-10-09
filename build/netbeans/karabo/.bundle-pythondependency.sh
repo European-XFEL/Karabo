@@ -17,16 +17,6 @@ safeRunCommand() {
 originalPwd=$(pwd)
 OS=$(uname -s)
 
-# check if arguments are passed or not
-if [ $# -eq 0 ]; then
-    echo "No arguments passed from .install.sh, building will proceed as usual.."
-else
-    echo "Arguments found; assigning arguments to variables and proceeding with build.."
-    CND_DIST=$1
-    CONF=$2
-    PLATFORM=$3
-fi
-
 if [ -z $KARABO ]; then
     if [ -e $HOME/.karabo/karaboFramework ]; then
         KARABO=$(cat $HOME/.karabo/karaboFramework)
@@ -50,7 +40,7 @@ else
 fi
 
 DEPNAME=`basename $originalPwd`
-DISTDIR=$originalPwd/src/dist
+DISTDIR=$originalPwd/package
 
 # Always clean the bundle
 rm -rf $DISTDIR
@@ -64,7 +54,7 @@ source $originalPwd/build.config
 
 # Use pip to install dependency in Karabo
 echo -e "\n### Installing $DEPNAME"
-$PIP install $WHEEL_INSTALL_FLAGS $DISTDIR/*.whl
+$PIP install $WHEEL_INSTALL_FLAGS $DISTDIR/*.whl --upgrade
 echo -e "\n\n**** Installed $DEPNAME"
 
 cd $originalPwd
