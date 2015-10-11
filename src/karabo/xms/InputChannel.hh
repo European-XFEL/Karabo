@@ -176,6 +176,10 @@ namespace karabo {
             void deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel);
             
             bool needsDeviceConnection() const;
+            
+            void closeChannels();
+            
+            void stopConnections();
         };
 
         class InputChannelElement {

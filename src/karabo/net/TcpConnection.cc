@@ -117,7 +117,15 @@ namespace karabo {
             input.get("compression", m_compression);
         }
 
-
+        
+        TcpConnection::~TcpConnection() {
+            m_acceptor.reset();
+            m_resolver.reset();
+            m_boostIoServicePointer.reset();
+            KARABO_LOG_FRAMEWORK_DEBUG << "TcpConnection::~TcpConnection() DTOR";
+        }
+        
+        
         Channel::Pointer TcpConnection::start() {
 
             this->setIOServiceType("Asio");
@@ -305,8 +313,26 @@ namespace karabo {
 
 
         void TcpConnection::stop() {
-            if (m_connectionType == "server")
-                m_acceptor->close();
+            boost::system::error_code ec;
+            if (m_connectionType == "server" && m_acceptor) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "TcpConnection::stop() - server.";
+                m_acceptor->cancel(ec);
+                if (ec)
+                    KARABO_LOG_FRAMEWORK_ERROR << "TcpConnection::stop() - server acceptor cancel : "
+                            << ec.value() << " -- " << ec.message();
+                m_acceptor->close(ec);
+                if (ec)
+                    KARABO_LOG_FRAMEWORK_ERROR << "TcpConnection::stop() - server acceptor close : "
+                            << ec.value() << " -- " << ec.message();
+                m_acceptor.reset();
+            } else if (m_resolver) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "TcpConnection::stop() - client.";
+                m_resolver->cancel();
+                m_resolver.reset();
+            }
+            //m_service->stop();
+            m_boostIoServicePointer.reset();
+            m_service.reset();
         }
 
 
