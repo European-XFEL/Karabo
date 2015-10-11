@@ -1676,7 +1676,7 @@ namespace karabo {
         void SignalSlotable::cleanSignals(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
 
-            KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << " says : Cleaning all signals for instance \"" << instanceId << "\"";
+            KARABO_LOG_FRAMEWORK_TRACE << m_instanceId << " says : Cleaning all signals for instance \"" << instanceId << "\"";
 
             for (SignalInstances::iterator it = m_signalInstances.begin(); it != m_signalInstances.end(); ++it) {
                 it->second->unregisterSlot(instanceId);
