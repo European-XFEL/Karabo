@@ -54,8 +54,7 @@ namespace karabo {
 
             typedef boost::function<void (const ChannelPointer&) > ConnectionHandler;
 
-            virtual ~Connection() {
-            }
+            virtual ~Connection();
 
             static void expectedParameters(karabo::util::Schema& expected);
 

@@ -9,8 +9,10 @@
  */
 
 #include <exception>
+#include <boost/pointer_cast.hpp>
 #include "OutputChannel.hh"
 #include "Data.hh"
+#include "karabo/net/TcpChannel.hh"
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -60,7 +62,7 @@ namespace karabo {
 
 
         OutputChannel::OutputChannel(const karabo::util::Hash& config) : m_sharedInputIndex(0) {
-
+            KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::OutputChannel CTOR ***";
             config.get("distributionMode", m_distributionMode);
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
             config.get("hostname", m_hostname);
@@ -113,11 +115,14 @@ namespace karabo {
 
 
         OutputChannel::~OutputChannel() {
-            if (m_dataThread.joinable()) {
-                m_dataConnection->stop();
-                m_dataIOService->stop();
-                m_dataThread.join();
+            KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::~OutputChannel() DTOR ***";
+            for (std::set<TcpChannelPointer>::iterator it =m_dataChannels.begin(); it!=m_dataChannels.end(); ++it) {
+                (*it)->close();
             }
+            m_dataChannels.clear();
+            m_dataConnection->stop();
+            m_dataIOService->stop();
+            m_dataThread.join();
             MemoryType::unregisterChannel(m_channelId);
         }
 
@@ -142,29 +147,37 @@ namespace karabo {
         }
 
 
-        void OutputChannel::onTcpConnect(TcpChannelPointer channel) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "Connection established";
+        void OutputChannel::onTcpConnect(const TcpChannelPointer& channel) {
+            using namespace karabo::net;
+            m_dataChannels.insert(channel);
+            TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
+            KARABO_LOG_FRAMEWORK_DEBUG << "***** Connection established to socket " << tch->socket().native() << " *****";
             channel->setErrorHandler(boost::bind(&karabo::xms::OutputChannel::onTcpChannelError, this, channel, _1));
             channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, channel, _1));
             m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1));
         }
 
 
-        void OutputChannel::onTcpConnectionError(karabo::net::Connection::Pointer conn, const karabo::net::ErrorCode& error) {
+        void OutputChannel::onTcpConnectionError(const karabo::net::Connection::Pointer& conn, const karabo::net::ErrorCode& error) {
             KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
         }
 
 
         void OutputChannel::onTcpChannelError(const TcpChannelPointer& channel, const karabo::net::ErrorCode& error) {
-            KARABO_LOG_FRAMEWORK_ERROR << "Tcp channel error, code: " << error.value() << ", message: " << error.message();
+            using namespace karabo::net;
+            TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
+            KARABO_LOG_FRAMEWORK_ERROR << "Tcp channel (socket " << tch->socket().native()
+                    << ") error, code: " << error.value() << ", message: " << error.message();
             if (error.value() == 2) { // End of file
                 // Unregister channel
                 onInputGone(channel);
+                m_dataChannels.erase(channel);
+                channel->close();
             }
         }
 
 
-        void OutputChannel::onTcpChannelRead(TcpChannelPointer channel, const karabo::util::Hash& message) {
+        void OutputChannel::onTcpChannelRead(const TcpChannelPointer& channel, const karabo::util::Hash& message) {
 
             std::string reason;
             if (message.has("reason")) message.get<std::string > ("reason", reason);
@@ -261,7 +274,7 @@ namespace karabo {
 
 
         void OutputChannel::onInputGone(const TcpChannelPointer& channel) {
-
+            KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::onInputGone ***";
             // SHARED Inputs
             for (InputChannels::iterator it = m_registeredSharedInputs.begin(); it != m_registeredSharedInputs.end(); ++it) {
                 if (it->get<TcpChannelPointer>("tcpChannel") == channel) {

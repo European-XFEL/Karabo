@@ -374,6 +374,29 @@ namespace karabo {
             virtual void close() = 0;
         
             virtual bool isOpen() = 0;
+            
+            virtual void writeAsync(const karabo::util::Hash& header, const char* data, const size_t& size, int prio = 4) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+
+            virtual void writeAsync(const karabo::util::Hash& header, const std::vector<char>& data, int prio = 4) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+
+            virtual void writeAsync(const karabo::util::Hash& header,
+                                    const boost::shared_ptr<std::vector<char> >& data, int prio = 4) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+
+            virtual void writeAsync(const karabo::util::Hash& header, const std::string& data, int prio = 4) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+
+            virtual void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio = 4) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+
+            virtual void setAsyncChannelPolicy(int priority, const std::string& policy) {}
         };
     }
 }

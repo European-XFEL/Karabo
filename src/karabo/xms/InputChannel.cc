@@ -105,8 +105,8 @@ namespace karabo {
 
 
         InputChannel::~InputChannel() {
-            m_tcpChannels.clear();
-            m_tcpConnections.clear();
+            closeChannels();
+            stopConnections();
             if (m_tcpIoService) {
                 m_tcpIoService->stop();
                 if (m_tcpIoServiceThread.get_id() == boost::this_thread::get_id()) {
@@ -115,7 +115,7 @@ namespace karabo {
                     m_tcpIoServiceThread.join();
             }
             MemoryType::unregisterChannel(m_channelId);
-            KARABO_LOG_FRAMEWORK_DEBUG << "*** ~InputChannel DTOR for channelId = " << m_channelId;
+            KARABO_LOG_FRAMEWORK_WARN << "*** InputChannel::~InputChannel DTOR for channelId = " << m_channelId;
         }
 
 
@@ -235,6 +235,22 @@ namespace karabo {
         }
 
 
+        void InputChannel::closeChannels() {
+            for (TcpChannels::iterator it = m_tcpChannels.begin(); it != m_tcpChannels.end(); ++it) {
+                it->second->close();
+            }
+            m_tcpChannels.clear();
+        }
+        
+        
+        void InputChannel::stopConnections() {
+            for (set<karabo::net::Connection::Pointer>::iterator it = m_tcpConnections.begin(); it != m_tcpConnections.end(); ++it) {
+                (*it)->stop();
+            }
+            m_tcpConnections.clear();
+        }
+        
+        
         karabo::util::Hash InputChannel::prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const {
             const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
             const unsigned int& port = outputChannelInfo.get<unsigned int>("port");
