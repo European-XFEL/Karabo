@@ -69,6 +69,7 @@ namespace karabo {
             int m_compression;
 
             karabo::net::Connection::Pointer m_dataConnection;
+            std::set<TcpChannelPointer> m_dataChannels;
             //TcpChannelPointer m_dataChannel;
             karabo::net::IOService::Pointer m_dataIOService;
             boost::thread m_dataThread;
@@ -154,16 +155,16 @@ namespace karabo {
 
         private:
 
-            void onTcpConnect(TcpChannelPointer channel);
+            void onTcpConnect(const TcpChannelPointer& channel);
 
 
             // TODO Implement this !!!!
 
-            void onTcpConnectionError(karabo::net::Connection::Pointer conn, const karabo::net::ErrorCode& error);
+            void onTcpConnectionError(const karabo::net::Connection::Pointer& conn, const karabo::net::ErrorCode& error);
 
             void onTcpChannelError(const TcpChannelPointer& channel, const karabo::net::ErrorCode& error);
 
-            void onTcpChannelRead(TcpChannelPointer channel, const karabo::util::Hash& message);
+            void onTcpChannelRead(const TcpChannelPointer& channel, const karabo::util::Hash& message);
 
             void onInputAvailable(const std::string& instanceId);
 

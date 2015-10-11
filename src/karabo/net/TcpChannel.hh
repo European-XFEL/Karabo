@@ -8,18 +8,19 @@
 #ifndef KARABO_NET_TCPCHANNEL_HH
 #define	KARABO_NET_TCPCHANNEL_HH
 
-#include <boost/enable_shared_from_this.hpp>
+//#include <boost/enable_shared_from_this.hpp>
 
 #include <karabo/io/TextSerializer.hh>
 #include <karabo/io/BinarySerializer.hh>
 
 #include "Channel.hh"
 #include "TcpConnection.hh"
+#include "Queues.hh"
 
 namespace karabo {
     namespace net {
 
-        class TcpChannel : public Channel, public boost::enable_shared_from_this<TcpChannel> {
+        class TcpChannel : public Channel {
 
             enum HandlerType {
                 NONE,
@@ -52,6 +53,15 @@ namespace karabo {
             boost::shared_ptr<std::vector<char> > m_outboundData;
             boost::shared_ptr<std::vector<char> > m_outboundHeader;
             
+            // MQ channel supported parameters
+            unsigned int m_bodySize;
+            unsigned int m_headerSize;
+            Message::Pointer m_message;
+            std::vector<karabo::net::Queue::Pointer> m_queue;
+            std::string m_policy;
+            bool m_writeInProgress;
+            bool m_quit;
+
         public:
 
             KARABO_CLASSINFO(TcpChannel, "TcpChannel", "1.0")
@@ -196,7 +206,7 @@ namespace karabo {
              * @param channel
              * @param byteSize
              */
-            void byteSizeAvailableHandler(const Channel::Pointer& channel, const size_t byteSize);
+            void byteSizeAvailableHandler(const size_t byteSize);
 
 
 
@@ -207,7 +217,7 @@ namespace karabo {
              * Internal default handler
              * @param channel
              */
-            void bytesAvailableHandler(const Channel::Pointer& channel);
+            void bytesAvailableHandler();
 
             void readAsyncRaw(char* data, size_t& size, const ReadRawHandler& handler);
 
@@ -253,6 +263,18 @@ namespace karabo {
                 return m_socket;
             }
 
+            void writeAsync(const karabo::util::Hash& header, const char* data, const size_t& size, int prio);
+
+            void writeAsync(const karabo::util::Hash& header, const std::vector<char>& data, int prio);
+
+            void writeAsync(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& data, int prio);
+
+            void writeAsync(const karabo::util::Hash& header, const std::string& data, int prio);
+
+            void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio);
+
+            virtual void setAsyncChannelPolicy(int priority, const std::string& policy);
+
         private:
 
             void managedWriteAsync(const WriteCompleteHandler& handler);
@@ -268,9 +290,9 @@ namespace karabo {
             void prepareHeaderFromHash(const karabo::util::Hash& hash);
             
             void prepareHashFromHeader(karabo::util::Hash& hash) const;
-
-            void prepareDataFromHash(const karabo::util::Hash& hash);
             
+            void prepareDataFromHash(const karabo::util::Hash& hash);
+
             void prepareDataFromHash(const karabo::util::Hash& hash, boost::shared_ptr<std::vector<char> >& dataPtr);
             
             void prepareHashFromData(karabo::util::Hash& hash) const;
@@ -297,10 +319,24 @@ namespace karabo {
 
             void asyncWaitHandler(const Channel::WaitHandler& handler, const ErrorCode& e);
 
+            
+            // MQ support methods
         private:
 
+            void prepareVectorFromHash(const karabo::util::Hash& hash, std::vector<char>& vec);
 
-           
+            void prepareHashFromVector(const std::vector<char>& vec, karabo::util::Hash& hash) const;
+            
+            void writeAsync(const Message::Pointer& mp, int prio);
+            
+            void writeAsync(const char* header, const size_t& hsize, const char* data, const size_t& dsize, int prio);
+            
+            void doWrite();
+            
+            bool isEmpty();
+            
+            void doWriteHandler(boost::system::error_code, std::size_t length);
+            
         };
     }
 }

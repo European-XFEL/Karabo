@@ -54,8 +54,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(TcpConnection, "Tcp", "1.0")
 
-            virtual ~TcpConnection() {
-            }
+            virtual ~TcpConnection();
 
             static void expectedParameters(karabo::util::Schema& expected);
 
