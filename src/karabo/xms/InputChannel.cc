@@ -115,7 +115,7 @@ namespace karabo {
                     m_tcpIoServiceThread.join();
             }
             MemoryType::unregisterChannel(m_channelId);
-            KARABO_LOG_FRAMEWORK_WARN << "*** InputChannel::~InputChannel DTOR for channelId = " << m_channelId;
+            KARABO_LOG_FRAMEWORK_DEBUG << "*** InputChannel::~InputChannel DTOR for channelId = " << m_channelId;
         }
 
 

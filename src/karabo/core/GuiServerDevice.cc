@@ -302,7 +302,7 @@ namespace karabo {
             try {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice";
-                cout << hash << endl;
+                //cout << hash << endl;
                 string serverId = hash.get<string > ("serverId");
                 KARABO_LOG_INFO << "Incoming request to start device instance on server " << serverId;
                 request(serverId, "slotStartDevice", hash)
