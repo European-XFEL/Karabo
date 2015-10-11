@@ -62,7 +62,7 @@ namespace karabo {
 
 
         OutputChannel::OutputChannel(const karabo::util::Hash& config) : m_sharedInputIndex(0) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::OutputChannel CTOR ***";
+            //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::OutputChannel CTOR ***";
             config.get("distributionMode", m_distributionMode);
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
             config.get("hostname", m_hostname);
@@ -115,7 +115,7 @@ namespace karabo {
 
 
         OutputChannel::~OutputChannel() {
-            KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::~OutputChannel() DTOR ***";
+            //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::~OutputChannel() DTOR ***";
             for (std::set<TcpChannelPointer>::iterator it =m_dataChannels.begin(); it!=m_dataChannels.end(); ++it) {
                 (*it)->close();
             }
