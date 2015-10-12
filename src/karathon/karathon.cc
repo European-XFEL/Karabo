@@ -33,6 +33,7 @@ void exportPyUtilEpochstamp();
 void exportPyUtilTimestamp();
 void exportPyUtilTimeDuration();
 void exportPyUtilDims();
+void exportPyUtilDetectorGeometry();
 
 // io
 void exportPyIo();
@@ -116,6 +117,7 @@ BOOST_PYTHON_MODULE(karathon_bin) {
     exportPyUtilDims();
     exportPyUtilSchema();
     exportPyUtilDateTimeString();
+    exportPyUtilDetectorGeometry();
     
     // io
     exportPyIo();

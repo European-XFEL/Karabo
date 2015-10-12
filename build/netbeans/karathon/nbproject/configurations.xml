@@ -50,9 +50,9 @@
         <itemPath>../../../src/karathon/PythonMacros.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Tools" projectFiles="true">
-        <itemPath>../../../src/karathon/DetectorGeometryWrap.hh</itemPath>
         <itemPath>../../../src/karathon/DimsWrap.hh</itemPath>
         <itemPath>../../../src/karathon/PyUtilDateTimeString.cc</itemPath>
+        <itemPath>../../../src/karathon/PyUtilDetectorGeometry.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilDims.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilEpochstamp.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilTimeDuration.cc</itemPath>
@@ -184,11 +184,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karathon/DetectorGeometryWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karathon/DeviceClientWrap.hh"
             ex="false"
             tool="3"
@@ -254,6 +249,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilDateTimeString.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilDetectorGeometry.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -604,11 +604,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karathon/DetectorGeometryWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karathon/DeviceClientWrap.hh"
             ex="false"
             tool="3"
@@ -674,6 +669,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilDateTimeString.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilDetectorGeometry.cc"
             ex="false"
             tool="1"
             flavor2="0">

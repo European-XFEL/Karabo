@@ -689,6 +689,15 @@ namespace karathon {
       self->write(filename, enableAppendMode);
     }
 
+    void ImageDataWrap::setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& geometry){
+      karabo::util::DetectorGeometry geo = bp::extract<karabo::util::DetectorGeometry>(geometry);
+      self->setGeometry(geo);
+    }
+    
+    karabo::util::DetectorGeometry ImageDataWrap::getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self){
+        return self->getGeometry();
+    }
+    
 
     karabo::xms::ImageDataElement& ImageDataElementWrap::setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement>& self,
             const std::string& subKey,
@@ -979,6 +988,9 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("write", &karathon::ImageDataWrap::writePy, (bp::arg("filename"), bp::arg("enableAppendMode") = false))
 
+                .def("setGeometry", &karathon::ImageDataWrap::setGeometryPy, (bp::arg("geometry")))
+                
+                .def("getGeometry",  &karathon::ImageDataWrap::getGeometryPy)
                 //KARABO_PYTHON_FACTORY_CONFIGURATOR(ImageData)
                 ;
     }
@@ -1012,7 +1024,12 @@ void exportPyXmsInputOutputChannel() {
                 .def("setChannelSpace", &ImageDataElement::setChannelSpace
                      , (bp::arg("channelSpace"))
                      , bp::return_internal_reference<> ())
+                .def("setGeometry", &ImageDataElement::setGeometry
+                    , (bp::arg("geometry"))
+                    , bp::return_internal_reference<>())
                 ;
+                ;
+        
     }
 
     {

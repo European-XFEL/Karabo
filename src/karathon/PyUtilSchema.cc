@@ -19,6 +19,7 @@
 #include <karabo/io/OutputElement.hh>
 #include <karabo/util/Validator.hh>
 #include <karabo/util/HashFilter.hh>
+#include <karabo/util/TableElement.hh>
 
 #include "PythonMacros.hh"
 #include "Wrapper.hh"
@@ -1868,6 +1869,100 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("appendAsNode"
                      , &ListElementWrap::appendAsNode, (bp::arg("python_class"), bp::arg("nodeName") = "")
+                     , bp::return_internal_reference<> ())
+                ;
+    }
+    
+    //////////////////////////////////////////////////////////////////////
+    // Binding TableElement
+    // In Python : TABLE_ELEMENT
+    {
+        bp::implicitly_convertible< Schema &, TableElement >();
+        bp::class_<TableElement> ("TABLE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+                .def("advanced", &TableElement::advanced
+                    , bp::return_internal_reference<> () )
+                .def("observerAccess", &TableElement::observerAccess
+                    , bp::return_internal_reference<> () )
+                .def("userAccess", &TableElement::userAccess
+                    , bp::return_internal_reference<> () )
+                .def("operatorAccess", &TableElement::operatorAccess
+                    , bp::return_internal_reference<> () )
+                .def("expertAccess", &TableElement::expertAccess
+                    , bp::return_internal_reference<> () )
+                .def("adminAccess", &TableElement::adminAccess
+                    , bp::return_internal_reference<> () )
+                .def("allowedStates", &TableElement::allowedStates
+                    , ( bp::arg("states"), bp::arg("sep")=" ,;" )
+                    , bp::return_internal_reference<> ())
+                .def("assignmentInternal", &TableElement::assignmentInternal
+                    , bp::return_internal_reference<> () )
+                .def("assignmentMandatory", &TableElement::assignmentMandatory
+                    , bp::return_internal_reference<> () )
+                .def("assignmentOptional", &TableElement::assignmentOptional
+                    , bp::return_internal_reference<> () )
+                .def("alias"
+                    , &AliasAttributeWrap<TableElement>::aliasPy
+                    , bp::return_internal_reference<> ())
+                .def("commit", &TableElement::commit
+                    , bp::return_internal_reference<> () )
+                .def("commit"
+                    , (TableElement & (TableElement::*)(karabo::util::Schema &))(&TableElement::commit )
+                    , bp::arg("expected")
+                    , bp::return_internal_reference<> () )
+                .def("description", &TableElement::description
+                    , bp::return_internal_reference<> () )
+                .def("displayedName", &TableElement::displayedName
+                    , bp::return_internal_reference<> () )
+                .def("init", &TableElement::init
+                    , bp::return_internal_reference<> () )
+                .def("key", &TableElement::key
+                    , bp::return_internal_reference<> () )
+                .def("reconfigurable", &TableElement::reconfigurable
+                    , bp::return_internal_reference<> () )
+                .def("tags"
+                    , (TableElement & (TableElement::*)(std::string const &, std::string const &))(&TableElement::tags)
+                    , (bp::arg("tags"), bp::arg("sep")=" ,;")
+                    , bp::return_internal_reference<> ())
+                .def("tags"
+                    , (TableElement & (TableElement::*)(std::vector<std::string> const &))(&TableElement::tags)
+                    , (bp::arg("tags"))
+                    , bp::return_internal_reference<> ())
+                .def("defaultValue"
+                    , &DefaultValueTableWrap::defaultValue
+                    , (bp::arg("self"), bp::arg("pyList"))
+                    , bp::return_internal_reference<> ())
+                .def("noDefaultValue"
+                    , (TableElement & (karabo::util::TableDefaultValue<TableElement>::*)())(&karabo::util::TableDefaultValue<TableElement>::noDefaultValue)
+                    , bp::return_internal_reference<> ())
+                .def("maxSize"
+                    , (TableElement & ( TableElement::*)(int const & )) (&TableElement::maxSize)
+                    , bp::return_internal_reference<> () )
+                    .def("minSize"
+                    , (TableElement & ( TableElement::*)(int const & ))(&TableElement::minSize)
+                    , bp::return_internal_reference<> () )
+                .def("setNodeSchema"
+                     , &TableElement::setNodeSchema, (bp::arg("nodeSchema"))
+                     , bp::return_internal_reference<> ())
+                /*.def("addRow"
+                     , (TableElement & (TableElement::*)(const Hash&))&TableElement::addRow, (bp::arg("nodeHash") = Hash())
+                     , bp::return_internal_reference<> ())
+                .def("addRow"
+                     , (TableElement & (TableElement::*)(const Schema&, const Hash&))&TableElement::addRow, (bp::arg("nodeSchema"), bp::arg("nodeHash") = Hash())
+                     , bp::return_internal_reference<> ())*/
+                ;
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //  TableDefaultValue<TableElement> 
+    {
+        typedef TableDefaultValue<TableElement> DefTableElement;
+        bp::class_< DefTableElement, boost::noncopyable > ("DefaultValueTableElement", bp::no_init)
+                .def("defaultValue"
+                     , &DefaultValueTableWrap::defaultValue
+                     , (bp::arg("self"), bp::arg("pyList"))
+                     , bp::return_internal_reference<> ())
+                .def("noDefaultValue"
+                     , (TableElement & (DefTableElement::*)())(&DefTableElement::noDefaultValue)
                      , bp::return_internal_reference<> ())
                 ;
     }
