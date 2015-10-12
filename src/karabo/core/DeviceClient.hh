@@ -309,6 +309,9 @@ namespace karabo {
             void get(const std::string& instanceId, karabo::util::Hash& hash);
 
             karabo::util::Hash getConfigurationNoWait(const std::string& deviceId);
+            
+            bool hasAttribute(const std::string& instanceId, const std::string& key, const std::string& attribute, const char keySep = '.' );
+
 
             template<class T>
             T get(const std::string& instanceId, const std::string& key, const char keySep = '.') {
@@ -343,7 +346,33 @@ namespace karabo {
             
             boost::any getAsAny(const std::string& instanceId, const std::string& key, const char keySep = '.') {
                 try {
+                    /*if(cacheAndGetConfiguration(instanceId).getNode(key, keySep).getType() != karabo::util::Types::VECTOR_HASH ||
+                            !cacheAndGetConfiguration(instanceId).hasAttribute(key, KARABO_SCHEMA_ROW_SCHEMA, keySep)){*/
                     return cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValueAsAny();
+                   /*} else {
+                        std::vector<karabo::util::Hash> value = cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValue<std::vector<karabo::util::Hash> >();
+                        for(std::vector<karabo::util::Hash>::iterator it = value.begin(); it != value.end(); ++it){
+                            for(karabo::util::Hash::iterator h_it = it->begin(); h_it != it->end(); ++h_it){
+                                if(h_it->hasAttribute("isAliasing")){
+                                    std::string isAliasing = h_it->getAttribute<std::string>("isAliasing");
+                                    size_t sepPos = isAliasing.find(".");
+                                    std::string deviceId = isAliasing.substr(0, sepPos);
+                                    std::string keyPath = isAliasing.substr(sepPos+1);
+                                    try {
+                                        if(this->hasAttribute(deviceId, keyPath, "isAliasing")){
+                                            throw KARABO_PARAMETER_EXCEPTION("Refusing to get monitor value of "+keyPath+" as it is a monitor itself");
+                                        }
+                                        h_it->setValue(this->getAsAny(deviceId, keyPath));
+                                    } catch(const karabo::util::Exception& e){
+                                        KARABO_LOG_FRAMEWORK_WARN<<"Could not retrieve monitored parameter "<<h_it->getKey()<<" from device "<<deviceId;
+                                        KARABO_LOG_FRAMEWORK_WARN<<"Reason: "<<e.userFriendlyMsg();
+                                    }
+                                }
+                            }
+                        }
+                        return boost::any(value); //will only be reached if T is actually a vector<Hash>
+                        
+                    }*/
                 } catch (const karabo::util::Exception& e) {
 
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));

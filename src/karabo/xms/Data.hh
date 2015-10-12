@@ -173,9 +173,12 @@ namespace karabo {
 
         template <class Derived, class Described>
         class DataElement {
-            karabo::util::Schema& m_schema;
+           
             std::string m_key;
 
+         protected:
+            karabo::util::Schema& m_schema;
+            
         public:
 
             DataElement(karabo::util::Schema& s) : m_schema(s) {
