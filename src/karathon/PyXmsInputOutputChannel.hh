@@ -17,6 +17,7 @@
 #include "DimsWrap.hh"
 #include "FromNumpy.hh"
 #include "ToNumpy.hh"
+#include <karabo/util/DetectorGeometry.hh>
 
 #define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
 #define NO_IMPORT_ARRAY
@@ -76,6 +77,8 @@ namespace karathon {
         static bp::object getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
         static bp::object getChannelSpacePy(const boost::shared_ptr<karabo::xms::ImageData>& self);
         static void writePy(const boost::shared_ptr<karabo::xms::ImageData>& self, const std::string& filename, const bool enableAppendMode = false);
+        static void setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& geometry);
+        static karabo::util::DetectorGeometry getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
     };
 
 

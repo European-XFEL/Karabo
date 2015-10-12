@@ -12,6 +12,7 @@
 #include <boost/python.hpp>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/VectorElement.hh>
+#include <karabo/util/TableElement.hh>
 namespace bp = boost::python;
 
 
@@ -114,6 +115,28 @@ struct DefaultValueVectorWrap {
 
 };
 
+
+struct DefaultValueTableWrap {
+    typedef std::vector<karabo::util::Hash > VType;
+    typedef karabo::util::TableElement U;
+    typedef karabo::util::TableDefaultValue< U> DefValueVec;
+
+    static U & defaultValue(DefValueVec& self, const bp::object& obj) {
+        if (PyList_Check(obj.ptr())) {
+            const bp::list& l = bp::extract<bp::list > (obj);
+            bp::ssize_t size = bp::len(l);
+
+            std::vector<karabo::util::Hash> v(size);
+            for (bp::ssize_t i = 0; i < size; ++i) {
+                v[i] = bp::extract<karabo::util::Hash > (obj[i]);
+            }
+            return self.defaultValue(v);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
+        }
+    }
+
+};
 
 template <class T>
 struct ReadOnlySpecificVectorWrap {
