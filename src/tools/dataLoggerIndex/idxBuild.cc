@@ -254,7 +254,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             vector<string> tokens;
             boost::split(tokens, line, boost::is_any_of("|"));
             if (tokens.size() != 10) {
-                cout << "*** slotGetPropertyHistory: skip corrupted record: token.size() = " << tokens.size() << endl;
+                cout << "*** slotGetPropertyHistory: skip corrupted record : token.size() = " << tokens.size() << endl;
                 continue; // This record is corrupted -- skip it
             }
             recnum++;
@@ -339,8 +339,8 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             if (idxprops.empty()) continue;    // no interest for building binary index
             if (find(idxprops.begin(), idxprops.end(), tokens[5]) == idxprops.end()) continue;  // property is not in the prop file
             
-            // Check if we need to build index for this property by inspecting schema and filter it
-            if (schema->has(tokens[5]) && schema->isAccessReadOnly(tokens[5])) {
+            // Check if we need to build index for this property by inspecting schema ... checking only existence
+            if (schema->has(tokens[5])) {
                 map<string, MetaData::Pointer>::iterator it = idxMap.find(tokens[5]);
                 MetaData::Pointer mdp;
                 if (it == idxMap.end()) {

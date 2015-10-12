@@ -40,7 +40,7 @@ namespace karabo {
         
         void IndexBuilderService::buildIndexFor(const std::string& commandLineArguments) {
             //boost::mutex::scoped_lock lock(m_mutex);
-            int size = m_cache.size();
+            size_t size = m_cache.size();
             m_cache.insert(commandLineArguments);
             if (size == m_cache.size()) return;   // such a request was before
             m_svc.post(boost::bind(&IndexBuilderService::build, this, commandLineArguments));
