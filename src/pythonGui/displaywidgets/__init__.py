@@ -11,5 +11,5 @@ __all__ = ["displaybitfield",
     "displaycommand", "displaydirectory", "displayfilein", "displayfileout",
     "displayplot", "displayiconset", "displayimageelement", "displayimage",
     "displaylabel", # "displayimagestack",
-    "displaylineedit", "displaytrendline", # "displaypycode"
-    "icons", "eval", "xyplot", "monitor"]
+    "displaylineedit", "displaytrendline", "displaytableelement",# "displaypycode"
+    "icons", "eval", "xyplot", "monitor", "displayalignedimage", ]

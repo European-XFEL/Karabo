@@ -23,6 +23,7 @@ import globals
 from treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
 from treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
+from treewidgetitems.tabletreewidgetitem import TableTreeWidgetItem
 from widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
@@ -403,7 +404,7 @@ class Schema(hashtypes.Descriptor):
         nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
                  ListOfNodes.parse)
         #print(attrs.get('displayType'))
-        self = dict(NDArray=ImageNode, ImageData=ImageNode, Image=ImageNode, Slot=SlotNode, OutputChannel=OutputNode).get(
+        self = dict(NDArray=ImageNode, ImageData=ImageNode, Image=ImageNode, Slot=SlotNode, OutputChannel=OutputNode, Table=TableNode).get(
                 attrs.get('displayType', None), cls)(key)
         self.displayedName = key
         self.parseAttrs(self, attrs, parent)
@@ -428,6 +429,9 @@ class Schema(hashtypes.Descriptor):
                                                AccessMode.INITONLY))
         self.metricPrefixSymbol = attrs.get('metricPrefixSymbol', '')
         self.unitSymbol = attrs.get('unitSymbol', '')
+        if 'rowSchema' in attrs:
+            self.rowSchema = attrs.get('rowSchema')
+        
         if parent is None:
             ral = AccessLevel.OBSERVER
         else:
@@ -582,6 +586,11 @@ class ImageNode(Schema):
         item.enabled = not isClass
         self.completeItem(treeWidget, item, box, isClass)
 
+class TableNode(Schema):
+    def item(self, treeWidget, parent, box, isClass):
+        item = TableTreeWidgetItem(box, treeWidget, parent)
+        #item.enabled = not isClass
+        self.completeItem(treeWidget, item, box, isClass)
 
 class OutputNode(Schema):
     def getClass(self):
@@ -765,3 +774,31 @@ class ListOfNodes(hashtypes.Descriptor):
         box._value = Dummy()
         box.initialized = False
         box.descriptor = None
+
+
+class VectorHash(hashtypes.VectorHash, metaclass=Monkey):
+    # Means that parent class is overwritten/updated
+    #icon = icons.string
+ 
+    def item(self, treeWidget, parent, box, isClass):
+        item = TableTreeWidgetItem(box, treeWidget, parent)
+        item.setIcon(0, self.icon if self.options is None else icons.enum)
+        item.enumeration = self.options
+        component = None
+        item.editableComponent = None
+        if isClass:
+            if self.accessMode in (AccessMode.INITONLY,
+                                   AccessMode.RECONFIGURABLE):
+                component = EditableNoApplyComponent
+        else:
+            if self.accessMode is AccessMode.RECONFIGURABLE:
+                component = EditableApplyLaterComponent
+        
+        if component is not None:
+            factory = EditableWidget.getClass(box)(box, treeWidget)
+            item.editableComponent = component(factory, box, treeWidget)
+        if component is EditableApplyLaterComponent:
+            item.editableComponent.signalApplyChanged.connect(
+                treeWidget.onApplyChanged)
+        self.completeItem(treeWidget, item, box, isClass)
+        return item
