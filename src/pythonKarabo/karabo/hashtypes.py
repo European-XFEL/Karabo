@@ -758,7 +758,8 @@ class VectorHash(Vector):
 
 
     def cast(self, other):
-        return [Hash.cast(self, o) for o in other]
+        ht = Hash()
+        return [ht.cast(o) for o in other]
 
 
 class Schema(Hash):
