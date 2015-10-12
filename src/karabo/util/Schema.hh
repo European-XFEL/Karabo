@@ -86,6 +86,7 @@ namespace karabo {
             #define KARABO_SCHEMA_ALLOWED_STATES "allowedStates"
             #define KARABO_SCHEMA_ASSIGNMENT "assignment"
             #define KARABO_SCHEMA_TAGS "tags"
+            #define KARABO_SCHEMA_ROW_SCHEMA "rowSchema"
 
             #define KARABO_SCHEMA_OPTIONS "options"
             #define KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL "requiredAccessLevel"

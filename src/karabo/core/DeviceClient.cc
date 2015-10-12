@@ -1236,6 +1236,10 @@ if (nodeData) {\
             if (node) type = node->getValue<string>();
             return type;
         }
+        
+        bool DeviceClient::hasAttribute(const std::string& instanceId, const std::string& key, const std::string& attribute, const char keySep) {
+            return cacheAndGetConfiguration(instanceId).hasAttribute(key, attribute, keySep); 
+        }
 
 #undef KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN
 

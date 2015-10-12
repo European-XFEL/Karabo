@@ -554,6 +554,8 @@ namespace karabo {
             const T& get(const std::string& key, const T& var = T()) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
+                    //if (karabo::util::Types::from(var) == karabo::util::Types::VECTOR_HASH && m_parameters.hasAttribute(key, KARABO_SCHEMA_ROW_SCHEMA))
+                    //    return reinterpret_cast<const T&> (getVectorHashRow(key)); //will only be reached if T is actually a vector<Hash>
                     return m_parameters.get<T>(key);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
@@ -1179,6 +1181,30 @@ namespace karabo {
                 m_timeChangeMutex.unlock();
                 return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
             }
+            
+            /*const std::vector<karabo::util::Hash>& getVectorHashRow(const std::string& key) const {
+                const std::vector<karabo::util::Hash>& value = m_parameters.get<std::vector<karabo::util::Hash> >(key);
+                for (std::vector<karabo::util::Hash>::const_iterator it = value.begin(); it != value.end(); ++it) {
+                    for (karabo::util::Hash::const_iterator h_it = it->begin(); h_it != it->end(); ++h_it) {
+                        if (h_it->hasAttribute("isAliasing")) {
+                            std::string isAliasing = h_it->getAttribute<std::string>("isAliasing");
+                            size_t sepPos = isAliasing.find(".");
+                            std::string deviceId = isAliasing.substr(0, sepPos);
+                            std::string keyPath = isAliasing.substr(sepPos + 1);
+                            try {
+                                if (const_cast<Device<FSM>*> (this)->remote().hasAttribute(deviceId, keyPath, "isAliasing")) {
+                                    throw KARABO_PARAMETER_EXCEPTION("Refusing to get monitor value of " + keyPath + " as it is a monitor itself");
+                                }
+                                h_it->setValue(const_cast<Device<FSM>*> (this)->remote().getAsAny(deviceId, keyPath));
+                            } catch (const karabo::util::Exception& e) {
+                                KARABO_LOG_WARN << "Could not retrieve monitored parameter " << h_it->getKey() << " from device " << deviceId;
+                                KARABO_LOG_WARN << "Reason: " << e.userFriendlyMsg();
+                            }
+                        }
+                    }
+                }
+                return value;
+            }*/
 
         };
     }
