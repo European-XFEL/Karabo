@@ -36,6 +36,9 @@ namespace karabo {
                     .description("Describes the channel encoding, i.e. signed/unsigned/floating point, bits per channel and bytes per pixel")
                     .readOnly()
                     .commit();
+            NODE_ELEMENT(s).key("geometry")
+                    .displayedName("Geometry")
+                    .commit();
         }
 
 
@@ -172,6 +175,17 @@ namespace karabo {
             karabo::io::Output<ImageData >::Pointer out = karabo::io::Output<ImageData >::create(h);
             out->write(*this);
             return *this;
+        }
+        
+        void ImageData::setGeometry(const DetectorGeometry & geometry){
+            m_hash->set("detectorGeometry", geometry.toHash());
+            
+            //geometry.toSchema("", this->getSchema());
+            
+        }
+                
+        DetectorGeometry ImageData::getGeometry(){
+            return DetectorGeometry(m_hash->get<Hash>("detectorGeometry"));
         }
 
     }

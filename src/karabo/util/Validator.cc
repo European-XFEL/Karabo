@@ -110,7 +110,8 @@ namespace karabo {
                 int nodeType = it->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE);
                 bool userHasNode = user.has(key);
                 bool hasDefault = it->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE);
-
+                bool hasRowSchema = it->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA);
+                
                 // Remove current node from all provided
                 if (userHasNode) keys.erase(key);
 
@@ -126,10 +127,12 @@ namespace karabo {
                             }
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
                             Hash::Node& node = working.set(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE));
+                            if(hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
                             this->validateLeaf(*it, node, report, currentScope);
                         }
                     } else { // Node IS provided
                         Hash::Node& node = working.setNode(user.getNode(key));
+                        if(hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
                         this->validateLeaf(*it, node, report, currentScope);
                     }
                 } else if (nodeType == Schema::NODE) {

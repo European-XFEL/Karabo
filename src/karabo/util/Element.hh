@@ -21,11 +21,14 @@
 #include "Exception.hh"
 #include "FromTypeInfo.hh"
 
+
+
 namespace karabo {
     namespace util {
 
         // Class forward (needed to prevent assignment of Hash to Attribute)
         class Hash;
+        
         template <class T> class GenericElement;
 
         template<typename KeyType, typename AttributesType = bool>
@@ -96,9 +99,9 @@ namespace karabo {
 
             inline void setAttribute(const std::string& key, const boost::any& value);
 
-            inline void setAttribute(const std::string& key, const Hash& value);
+            /*inline void setAttribute(const std::string& key, const Hash& value);
 
-            inline void setAttribute(const std::string& key, const std::vector<Hash>& value);
+            inline void setAttribute(const std::string& key, const std::vector<Hash>& value);*/
 
             template<class T>
             inline T& getAttribute(const std::string& key);
@@ -340,7 +343,7 @@ namespace karabo {
             m_attributes.set(key, value);
         }
 
-        template<typename KeyType, typename AttributeType>
+        /*template<typename KeyType, typename AttributeType>
         inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, const Hash& value) {
             throw KARABO_NOT_SUPPORTED_EXCEPTION("Attribute can not be of type Hash");
         }
@@ -348,7 +351,7 @@ namespace karabo {
         template<typename KeyType, typename AttributeType>
         inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, const std::vector<Hash>& value) {
             throw KARABO_NOT_SUPPORTED_EXCEPTION("Attribute can not be of type Hash");
-        }
+        }*/
 
         template<typename KeyType, typename AttributeType>
         template<class T>
@@ -475,6 +478,7 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
                     _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
                     _KARABO_HELPER_MACRO(STRING, std::string)
+                    _KARABO_HELPER_MACRO(HASH, Hash)
                     _KARABO_HELPER_MACRO(NONE, CppNone)
                     _KARABO_HELPER_MACRO_1(BOOL, bool)
                     _KARABO_HELPER_MACRO_1(CHAR, char)
@@ -488,6 +492,7 @@ namespace karabo {
                     _KARABO_HELPER_MACRO_1(UINT64, unsigned long long)
                     _KARABO_HELPER_MACRO_1(FLOAT, float)
                     _KARABO_HELPER_MACRO_1(DOUBLE, double)
+                case Types::SCHEMA: return std::string("Schema Object");
 
                 default:
                     throw KARABO_CAST_EXCEPTION("Could not convert value of key \"" + m_key + "\" to string");

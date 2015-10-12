@@ -13,6 +13,7 @@
 #include <karabo/util/ToLiteral.hh>
 #include <karabo/xip/CpuImage.hh>
 #include "NDArray.hh"
+#include <karabo/util/DetectorGeometry.hh>
 
 namespace karabo {
     namespace xms {
@@ -183,6 +184,10 @@ namespace karabo {
                 os << *image.hash();
                 return os;
             }
+            
+            void setGeometry(const karabo::util::DetectorGeometry & geometry);
+            
+            karabo::util::DetectorGeometry getGeometry();
 
         private:
 
@@ -241,6 +246,13 @@ namespace karabo {
 
             ImageDataElement& setChannelSpace(const ChannelSpaceType& channelSpace) {
                 return setDefaultValue("channelSpace", (int)channelSpace);
+            }
+            
+            ImageDataElement& setGeometry(karabo::util::DetectorGeometry & geometry){
+                geometry.toSchema("data.geometry", m_schema);
+                return setDefaultValue("detectorGeometry", geometry.toHash());
+
+            
             }
         };
 

@@ -9,7 +9,7 @@
 #include "Hash.hh"
 #include "Schema.hh"
 #include "ToLiteral.hh"
-
+#include "Validator.hh"
 namespace karabo {
 
     namespace util {
@@ -367,7 +367,34 @@ namespace karabo {
                     if (thisNode->is<vector<Hash> > () && otherNode.is<vector<Hash> > ()) {
                         vector<Hash>& this_vec = thisNode->getValue<vector<Hash> > ();
                         const vector<Hash>& other_vec = otherNode.getValue<vector<Hash> > ();
+                        
+                        if(thisNode->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)){
+                           
+                            Schema nodeSchema = thisNode->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA);
+                            //nodeSchema.setParameterHash(this_vec[0]); //first element contains the schema
+                            
+                            vector<Hash> validatedOtherVec;
+                           
+                            
+                            Validator validator;
+                            Validator::ValidationRules rules;
+                            rules.allowAdditionalKeys = false;
+                            rules.allowMissingKeys = false;
+                            rules.allowUnrootedConfiguration = true;
+                            validator.setValidationRules(rules);
+                            for(vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it){
+                                Hash validatedHash;
+                                std::pair<bool, std::string> validationResult = validator.validate(nodeSchema, *it, validatedHash);
+                                if(!validationResult.first){
+                                    throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against preset node schema");
+                                }
+                                validatedOtherVec.push_back(validatedHash);
+                            }
+                            this_vec = validatedOtherVec; //.insert(this_vec.end(), validatedOtherVec.begin(), validatedOtherVec.end());
+                            
+                        } else {
                         this_vec.insert(this_vec.end(), other_vec.begin(), other_vec.end());
+                        }
                         continue;
                     }
                     thisNode->setValue(otherNode.getValueAsAny());
@@ -401,7 +428,37 @@ namespace karabo {
                     if (thisNode->is<vector<Hash> > () && otherNode.is<vector<Hash> > ()) {
                         vector<Hash>& this_vec = thisNode->getValue<vector<Hash> > ();
                         const vector<Hash>& other_vec = otherNode.getValue<vector<Hash> > ();
-                        this_vec.insert(this_vec.end(), other_vec.begin(), other_vec.end());
+                        
+                        if(thisNode->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)){
+                           
+                            //Schema nodeSchema;
+                            Schema nodeSchema = thisNode->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA);
+                            //nodeSchema.setParameterHash(this_vec[0]);
+                            
+                            vector<Hash> validatedOtherVec;
+                            
+                            
+                            Validator validator;
+                            Validator::ValidationRules rules;
+                            rules.allowAdditionalKeys = false;
+                            rules.allowMissingKeys = false;
+                            rules.allowUnrootedConfiguration = true;
+                            validator.setValidationRules(rules);
+                            for(vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it){
+                                Hash validatedHash;
+                                std::pair<bool, std::string> validationResult = validator.validate(nodeSchema, *it, validatedHash);
+                                if(!validationResult.first){
+                                    throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against preset node schema");
+                                }
+                                validatedOtherVec.push_back(validatedHash);
+                            }
+                            this_vec = validatedOtherVec; //.insert(this_vec.end(), validatedOtherVec.begin(), validatedOtherVec.end());
+                            
+                        } else {
+                        
+                            this_vec.insert(this_vec.end(), other_vec.begin(), other_vec.end());
+                            
+                        }
                         continue;
                     }
                     thisNode->setValue(otherNode.getValueAsAny());
