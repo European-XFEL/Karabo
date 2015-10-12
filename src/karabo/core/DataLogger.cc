@@ -257,8 +257,8 @@ namespace karabo {
                 if (!propPathExists) continue;
                 if (find(m_idxprops.begin(), m_idxprops.end(), path) == m_idxprops.end()) continue;
 
-                // Check if we need to build index for this property by inspecting schema
-                if (m_currentSchema.has(path) && m_currentSchema.isAccessReadOnly(path)) {
+                // Check if we need to build index for this property by inspecting schema ... checking only existence
+                if (m_currentSchema.has(path)) {
                     map<string, MetaData::Pointer>::iterator it = m_idxMap.find(path);
                     MetaData::Pointer mdp;
                     if (it == m_idxMap.end()) {
