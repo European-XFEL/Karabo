@@ -37,6 +37,7 @@ else
   PYTHON=$KARABO/extern/bin/python
   PIP=$KARABO/extern/bin/pip
   WHEEL_INSTALL_FLAGS=
+  export PATH=$KARABO/extern/bin/:$PATH
 fi
 
 DEPNAME=`basename $originalPwd`
@@ -54,7 +55,7 @@ source $originalPwd/build.config
 
 # Use pip to install dependency in Karabo
 echo -e "\n### Installing $DEPNAME"
-$PIP install $WHEEL_INSTALL_FLAGS $DISTDIR/*.whl --upgrade
+$PIP install --upgrade --no-deps --force-reinstall $WHEEL_INSTALL_FLAGS $DISTDIR/*.whl
 echo -e "\n\n**** Installed $DEPNAME"
 
 cd $originalPwd
