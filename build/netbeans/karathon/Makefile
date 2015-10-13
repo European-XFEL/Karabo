@@ -66,6 +66,9 @@ build: .build-post
 
 .build-pre: nbproject/Makefile-$(CONF).mk
 # Add your pre 'build' code here...
+# Take care that Karabo is built (not bundled - that would be circular):
+	@echo "### Take care that Karabo is built before Karathon. ###"
+	cd ../karabo; $(MAKE) CONF=$(CONF)
 	
 # Make sure the KARATHON folder always exists
 	@if test ! -d $(KARATHON)/include; then $(MKDIR) -p $(KARATHON)/include; fi
