@@ -48,7 +48,6 @@
 MKDIR=mkdir
 CP=cp
 CCADMIN=CCadmin
-#CURRENT_PLATFORM=`uname -s`
 CURRENT_PLATFORM=$(shell uname -s)
 CONF ?= Debug
 
