@@ -108,9 +108,10 @@ build: .build-post
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.h* $(KARABO)/include/karabo/core
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h* $(KARABO)/include/karabo/xip
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/*.hpp $(KARABO)/include/karabo
+	@echo "### Done building Karabo. ###"
 
 # Force extern re-build
-.PHONY: extern clean-extern bundle package instnall bundle-package bundle-install bundle-clean clean
+.PHONY: extern clean-extern bundle package install bundle-package bundle-install bundle-clean clean
 extern:
 	@mkdir -p $(KARABO)
 	@./.installExtern.sh $(EXTERN_DIR) $(EXTERN_DISTDIR) $(GUIOPT) $(WHAT)
