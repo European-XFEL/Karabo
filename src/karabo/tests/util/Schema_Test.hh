@@ -50,6 +50,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testArchivePolicy);
     CPPUNIT_TEST(testOverwriteElement);
     CPPUNIT_TEST(testMerge);
+    CPPUNIT_TEST(testTable);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -100,6 +101,7 @@ private: //functions
     void testArchivePolicy();
     void testOverwriteElement();
     void testMerge();
+    void testTable();
 
 };
 

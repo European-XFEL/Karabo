@@ -10,6 +10,9 @@
 #include <stack>
 #include "Hash_Test.hh"
 #include "karabo/util/ToLiteral.hh"
+#include "Factory_Test.hh"
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/util/Exception.hh>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Hash_Test);
 
@@ -1204,5 +1207,127 @@ void Hash_Test::testHelper() {
         //std::clog << "Count V : " << c2.getResult() << std::endl;
     }
 }
+
+void Hash_Test::testTableValidation(){
+    Hash phonyTable;
+    std::vector<Hash> rows;
+    phonyTable.set("tab", rows);
+    
+    Schema s;
+    INT32_ELEMENT(s).key("a")
+            .assignmentOptional().noDefaultValue()
+            .commit();
+    STRING_ELEMENT(s).key("b")
+            .assignmentOptional().defaultValue("bar")
+            .commit();
+    FLOAT_ELEMENT(s).key("c")
+            .assignmentMandatory()
+            .commit();
+    
+    phonyTable.setAttribute("tab", "rowSchema", s);
+    phonyTable.setAttribute<int>("tab", "nodeType", Schema::LEAF);
+    phonyTable.setAttribute<int>("tab", "leafType", Schema::PROPERTY);
+    
+   
+    
+    
+    Hash aRow;
+    aRow.set<int>("a", 1);
+    aRow.set<std::string>("b", "foo");
+    aRow.set<float>("c", 0.1);
+    rows.push_back(aRow);
+    
+    bool allOk = false;
+    try{
+        phonyTable.set("tab", rows);
+        allOk = true;
+    } catch (...){
+        allOk = false;
+    }
+    CPPUNIT_ASSERT(allOk);
+    
+    //provoke failure due to missing mandatory
+    Hash aRow2;
+    aRow2.set<int>("a", 1);
+    aRow2.set<std::string>("b", "foo");
+    //aRow2.set<float>("c", 0.1);
+
+    rows.push_back(aRow2);
+    Hash newPhoneyTable("tab",rows);
+    
+    allOk = true;
+    try{
+        phonyTable.merge(newPhoneyTable, Hash::MERGE_ATTRIBUTES);
+        allOk = true;
+    } catch (karabo::util::ParameterException const& e) {
+       
+        allOk = false;
+    }
+    CPPUNIT_ASSERT(allOk == false);
+    
+    //provoke failure due to wrong type on mandatory
+    Hash aRow3;
+    aRow3.set<int>("a", 1);
+    aRow3.set<std::string>("b", "foo");
+    aRow3.set<std::string>("c", "bar");
+
+    rows[1] = aRow3;
+    Hash newPhoneyTable2("tab",rows);
+    
+    allOk = true;
+    try{
+        phonyTable.merge(newPhoneyTable2, Hash::MERGE_ATTRIBUTES);
+       
+        allOk = true;
+    } catch (karabo::util::ParameterException const& e) {
+        allOk = false;
+    }
+    CPPUNIT_ASSERT(allOk == false);
+    
+    //provoke failure due to additional colum
+    Hash aRow4;
+    aRow4.set<int>("a", 1);
+    aRow4.set<std::string>("b", "foo");
+    aRow4.set<float>("c", 1.0);
+    aRow4.set<float>("d", 1.0);
+
+    rows[1] = aRow4;
+    Hash newPhoneyTable4("tab",rows);
+    
+    allOk = true;
+    try{
+        phonyTable.merge(newPhoneyTable4, Hash::MERGE_ATTRIBUTES);
+       
+        allOk = true;
+    } catch (karabo::util::ParameterException const& e) {
+        allOk = false;
+    }
+    CPPUNIT_ASSERT(allOk == false);
+    
+    
+    //check if defaults are set
+    Hash aRow5;
+    aRow5.set<float>("c", 1.0);
+    
+
+    rows[1] = aRow5;
+    Hash newPhoneyTable5("tab",rows);
+    
+    allOk = false;
+    try{
+        phonyTable.merge(newPhoneyTable5, Hash::MERGE_ATTRIBUTES);
+       
+        allOk = true;
+    } catch (karabo::util::ParameterException const& e) {
+        allOk = false;
+    }
+    CPPUNIT_ASSERT(allOk);
+    std::vector<Hash> ret = phonyTable.get<std::vector<Hash> >("tab");
+    Hash h1 = ret[1];
+    CPPUNIT_ASSERT(h1.get<std::string>("b") == "bar");
+    CPPUNIT_ASSERT(h1.has("a") == false);
+}
+
+
 
 
