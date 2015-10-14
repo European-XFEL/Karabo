@@ -213,7 +213,10 @@ class TableModel(QAbstractTableModel):
                 
                     
             #now display value
-            value = valueType.cast(value)
+            try:
+                value = valueType.cast(value)
+            except:
+                value = None
             self.data[row][cKey] = value
             
             self.dataChanged.emit(idx,idx)
