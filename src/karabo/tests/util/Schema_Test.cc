@@ -655,3 +655,10 @@ void Schema_Test::testMerge() {
     CPPUNIT_ASSERT(schema.getDefaultValue<unsigned int>("monitor.count") == 777);
     CPPUNIT_ASSERT(schema.getDefaultValue<float>("monitor.stats.d1") == 3.1415f);
 }
+
+void Schema_Test::testTable() {
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(sch);
+    CPPUNIT_ASSERT(sch.isLeaf("testTable") == true);
+    CPPUNIT_ASSERT(sch.getParameterHash().hasAttribute("testTable", "rowSchema") == true);
+}

@@ -9,6 +9,7 @@
 #define	HASH_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
+#include <karabo/util/SimpleElement.hh>
 
 class Hash_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Hash_Test);
@@ -23,7 +24,7 @@ class Hash_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testMerge);
     CPPUNIT_TEST(testSubtract);
     CPPUNIT_TEST(testHelper);
-    
+    CPPUNIT_TEST(testTableValidation);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -44,6 +45,7 @@ private:
     void testMerge();
     void testSubtract();
     void testHelper();
+    void testTableValidation();
 };
 
 #endif
