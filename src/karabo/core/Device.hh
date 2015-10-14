@@ -435,6 +435,7 @@ namespace karabo {
 
             KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::RawImageData& image, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
                 Hash hash(key, image.hash());
 
@@ -515,16 +516,19 @@ namespace karabo {
             }
 
             void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
+                using namespace karabo::util;
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                
                 // TODO Think about attaching timestamps only to top level nodes (must check all other depending code)
                 if (!hash.empty()) {
-                    karabo::util::Hash tmp(hash);
+                    Hash tmp(hash);
                     std::vector<std::string> paths;
                     tmp.getPaths(paths);
 
                     BOOST_FOREACH(std::string path, paths) {
                         timestamp.toHashAttributes(tmp.getAttributes(path));
                     }
-                    m_parameters.merge(tmp, karabo::util::Hash::REPLACE_ATTRIBUTES);
+                    m_parameters.merge(tmp, Hash::REPLACE_ATTRIBUTES);
                     
                     // if Hash contains 'state' key -> signalStateChanged
                     if (tmp.has("state")) {
