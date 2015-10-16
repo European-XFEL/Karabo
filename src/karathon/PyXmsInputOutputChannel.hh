@@ -13,6 +13,7 @@
 #include <karabo/xip.hpp>
 #include "PythonFactoryMacros.hh"
 #include "ScopedGILRelease.hh"
+#include "ScopedGILAcquire.hh"
 #include "Wrapper.hh"
 #include "DimsWrap.hh"
 #include "FromNumpy.hh"
@@ -93,6 +94,7 @@ namespace karathon {
     struct OutputChannelWrap {
 
         static void registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler);
+        static void proxyIOEventHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::OutputChannel>& self);
         static void writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data);
         static void updatePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self);
         static void signalEndOfStreamPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self);
@@ -102,8 +104,11 @@ namespace karathon {
     struct InputChannelWrap {
 
         static void registerDataHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
+        static void proxyDataHandler(const bp::object& handler, const karabo::xms::Data& data);
         static void registerInputHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
+        static void proxyInputHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::InputChannel>& self);
         static void registerEndOfStreamEventHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
+        static void proxyEndOfStreamEventHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::InputChannel>& self);
         static bp::object getConnectedOutputChannelsPy(const boost::shared_ptr<karabo::xms::InputChannel>& self);
         static bp::object readPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, size_t idx);
         static void connectPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const karabo::util::Hash& outputChannelInfo);
