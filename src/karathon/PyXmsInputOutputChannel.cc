@@ -709,9 +709,15 @@ namespace karathon {
 
 
     void OutputChannelWrap::registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
-        self->registerIOEventHandler(handler);
+        self->registerIOEventHandler(boost::bind(OutputChannelWrap::proxyIOEventHandler, handler, _1));
     }
 
+
+    void OutputChannelWrap::proxyIOEventHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::OutputChannel>& outputChannel) {
+        ScopedGILAcquire gil;
+        handler(bp::object(outputChannel));
+    }
+    
 
     void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data) {
         if (bp::extract<karabo::xms::ImageData>(data).check()) {
@@ -744,20 +750,38 @@ namespace karathon {
 
 
     void InputChannelWrap::registerInputHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
-        self->registerInputHandler(handler);
+        self->registerInputHandler(boost::bind(InputChannelWrap::proxyInputHandler, handler, _1));
     }
 
 
+    void InputChannelWrap::proxyInputHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::InputChannel>& input) {
+        ScopedGILAcquire gil;
+        handler(bp::object(input));
+    }
+
+    
     void InputChannelWrap::registerDataHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
-        self->registerDataHandler(handler);
+        self->registerDataHandler(boost::bind(InputChannelWrap::proxyDataHandler, handler, _1));
     }
 
 
+    void InputChannelWrap::proxyDataHandler(const bp::object& handler, const karabo::xms::Data& data) {
+        ScopedGILAcquire gil;
+        handler(bp::object(data));
+    }
+
+    
     void InputChannelWrap::registerEndOfStreamEventHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
-        self->registerEndOfStreamEventHandler(handler);
+        self->registerEndOfStreamEventHandler(boost::bind(InputChannelWrap::proxyEndOfStreamEventHandler, handler, _1));
     }
 
 
+    void InputChannelWrap::proxyEndOfStreamEventHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::InputChannel>& input) {
+        ScopedGILAcquire gil;
+        handler(bp::object(input));
+    }
+
+    
     bp::object InputChannelWrap::getConnectedOutputChannelsPy(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
         return Wrapper::toObject(self->getConnectedOutputChannels());
     }
