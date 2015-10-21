@@ -1045,7 +1045,8 @@ namespace karabo {
                 return true;
             }
 
-            void slotGetConfiguration() {                
+            void slotGetConfiguration() {
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 reply(m_parameters, m_deviceId);
             }
 
