@@ -3,7 +3,7 @@
  *
  * Created on February 10, 2014, 3:58 PM
  * 
- * Copyright (c) 2010-2013 European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #ifndef KARABO_UTIL_VERSION_HH
@@ -35,6 +35,8 @@ namespace karabo {
             static std::string getPathToVersionFile();
 
         public:
+
+            static std::string getPathToKaraboInstallation();
 
             static std::string getVersion();
 
