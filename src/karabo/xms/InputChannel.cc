@@ -309,12 +309,18 @@ namespace karabo {
 
 
         void InputChannel::onTcpConnectionError(karabo::net::Channel::Pointer, const karabo::net::ErrorCode& error) {
-            KARABO_LOG_FRAMEWORK_ERROR << error.value() << ": " << error.message();
+            if (error.value() != 125 && error.value() != 2)
+                KARABO_LOG_FRAMEWORK_ERROR << error.value() << ": " << error.message();
+            else
+                KARABO_LOG_FRAMEWORK_DEBUG << "onTcpConnectionError : " << error.value() << ": " << error.message();
         }
 
 
         void InputChannel::onTcpChannelError(karabo::net::Channel::Pointer, const karabo::net::ErrorCode& error) {
-            KARABO_LOG_FRAMEWORK_INFO << error.value() << ": " << error.message();
+            if (error.value() != 125 && error.value() != 2)
+                KARABO_LOG_FRAMEWORK_INFO << "onTcpChannelError : " << error.value() << ": " << error.message();
+            else
+                KARABO_LOG_FRAMEWORK_DEBUG << "onTcpChannelError : " << error.value() << ": " << error.message();            
         }
 
 

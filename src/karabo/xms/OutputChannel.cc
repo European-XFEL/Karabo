@@ -117,12 +117,15 @@ namespace karabo {
         OutputChannel::~OutputChannel() {
             //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::~OutputChannel() DTOR ***";
             for (std::set<TcpChannelPointer>::iterator it =m_dataChannels.begin(); it!=m_dataChannels.end(); ++it) {
-                (*it)->close();
+                if (*it) (*it)->close();
             }
             m_dataChannels.clear();
-            m_dataConnection->stop();
-            m_dataIOService->stop();
-            m_dataThread.join();
+            if (m_dataConnection) m_dataConnection->stop();
+            if (m_dataIOService) m_dataIOService->stop();
+            if (m_dataThread.get_id() == boost::this_thread::get_id())
+                KARABO_LOG_FRAMEWORK_WARN << BOOST_CURRENT_FUNCTION << ":" << __LINE__ << " : attempt to join itself";
+            else
+                m_dataThread.join();
             MemoryType::unregisterChannel(m_channelId);
         }
 
@@ -159,21 +162,27 @@ namespace karabo {
 
 
         void OutputChannel::onTcpConnectionError(const karabo::net::Connection::Pointer& conn, const karabo::net::ErrorCode& error) {
-            KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
+            if (error.value() != 125 && error.value() != 2) //Don't report about 2:"End-of-file" and 125:"Operation cancelled"
+                KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
+            else
+                KARABO_LOG_FRAMEWORK_DEBUG << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
         }
 
 
         void OutputChannel::onTcpChannelError(const TcpChannelPointer& channel, const karabo::net::ErrorCode& error) {
             using namespace karabo::net;
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
-            KARABO_LOG_FRAMEWORK_ERROR << "Tcp channel (socket " << tch->socket().native()
-                    << ") error, code: " << error.value() << ", message: " << error.message();
             if (error.value() == 2) { // End of file
+                KARABO_LOG_FRAMEWORK_DEBUG << "Tcp channel (socket " << tch->socket().native()
+                    << ") error, code: " << error.value() << ", message: " << error.message();
                 // Unregister channel
                 onInputGone(channel);
                 m_dataChannels.erase(channel);
                 channel->close();
+                return;
             }
+            KARABO_LOG_FRAMEWORK_ERROR << "Tcp channel (socket " << tch->socket().native()
+                    << ") error, code: " << error.value() << ", message: " << error.message();
         }
 
 
@@ -325,9 +334,16 @@ namespace karabo {
 
         void OutputChannel::triggerIOEvent() {
             try {
-                if (m_ioEventHandler) m_ioEventHandler(shared_from_this());
+                OutputChannel::Pointer self = shared_from_this();
+                if (m_ioEventHandler) m_ioEventHandler(self);
             } catch (karabo::util::Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" Exception code #" << e.userFriendlyMsg() << " -- " << e.detailedMsg();
                 KARABO_RETHROW;
+            } catch(const boost::bad_weak_ptr& e) {
+                KARABO_LOG_FRAMEWORK_INFO << "\"triggerIOEvent\" call is too late: OutputChannel destroyed already -- " << e.what();
+            } catch(const std::exception& ex) {
+                KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" exception -- " << ex.what();
+                //throw KARABO_SYSTEM_EXCEPTION(string("\"triggerIOEvent\" exception -- ") + ex.what());
             }
         }
 
