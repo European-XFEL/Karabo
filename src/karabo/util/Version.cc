@@ -3,7 +3,7 @@
  *
  * Created on February 10, 2014, 3:58 PM
  * 
- * Copyright (c) 2010-2013 European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #include <iosfwd>
@@ -47,25 +47,33 @@ namespace karabo {
         }
 
 
-        std::string Version::getPathToVersionFile() {
-            boost::filesystem::path karaboLocation(std::string(getenv("HOME")) + "/.karabo/karaboFramework");
-            if (boost::filesystem::exists(karaboLocation)) {
-                std::stringstream buffer;
-                std::ifstream file(karaboLocation.string().c_str());
-                if (file) {
-                    buffer << file.rdbuf();
-                    file.close();
-                } else {
-                    throw KARABO_IO_EXCEPTION("Cannot open file: " + karaboLocation.string());
-                }
-                // Get rid of the newline character
-                std::string path(buffer.str());
-                path = path.substr(0, path.size() - 1); // Cut away newline character
-                return path + "/VERSION";
-            }
-            throw KARABO_IO_EXCEPTION("No karabo framework installation found: $HOME/.karabo/karaboFramework");
+        std::string Version::getPathToVersionFile()
+        {
+            return getPathToKaraboInstallation() += "/VERSION";
         }
 
+        std::string Version::getPathToKaraboInstallation()
+        {
+            std::string karabo(getenv("KARABO"));
+            if (karabo.empty()) {
+                // get from content of $HOME/.karabo/karaboFramework
+                const std::string home(getenv("HOME"));
+                const boost::filesystem::path karaboLocationFile(home + "/.karabo/karaboFramework");
+                if (boost::filesystem::exists(karaboLocationFile)) {
+                    std::ifstream file(karaboLocationFile.string().c_str());
+                    if (!file) {
+                        throw KARABO_IO_EXCEPTION("Cannot open file: " + karaboLocationFile.string());
+                    }
+                    std::stringstream buffer;
+                    buffer << file.rdbuf(); // read complete file
+                    karabo = buffer.str();
+                    boost::trim(karabo); // get rid of newline character at the end
+                } else {
+                    throw KARABO_IO_EXCEPTION(karaboLocationFile.string() + " not found -- needed to get path to installation.");
+                }
+            }
+            return karabo;
+        }
 
         Version& Version::getInstance() {
             static Version v;
