@@ -298,7 +298,7 @@ Now let us have a look at the implementation, here is the complete file
 
 	       if (config.has("reverseDirection")) {
 		   // Simulate setting to h/w
-		   KARABO_LOG_INFO << "Setting to hardware: targetSpeed -> " << config.get<bool>("reverseDirection");
+		   KARABO_LOG_INFO << "Setting to hardware: reverseDirection -> " << config.get<bool>("reverseDirection");
 	       }
 
 	   } catch (...) {
@@ -387,6 +387,7 @@ Now let us have a look at the implementation, here is the complete file
 
        void Conveyor::reset() {
 	   set("injectError", false);
+	   set<float>("currentSpeed", 0.0);
 	   initialize();
        }
    }
