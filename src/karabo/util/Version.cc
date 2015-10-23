@@ -54,9 +54,14 @@ namespace karabo {
 
         std::string Version::getPathToKaraboInstallation()
         {
-            std::string karabo(getenv("KARABO"));
+            std::string karabo;
+            const char* tmp = getenv("KARABO");
+            if (tmp) karabo = tmp;
             if (karabo.empty()) {
                 // get from content of $HOME/.karabo/karaboFramework
+                if(!getenv("HOME")) {
+                    throw KARABO_IO_EXCEPTION("$HOME environment variable is defined but needed to get the path to the Karabo installation.");
+                }
                 const std::string home(getenv("HOME"));
                 const boost::filesystem::path karaboLocationFile(home + "/.karabo/karaboFramework");
                 if (boost::filesystem::exists(karaboLocationFile)) {
