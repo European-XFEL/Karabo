@@ -4,7 +4,7 @@
 *********************************
  How to write a device in Python
 *********************************
-
+.. sectionauthor:: Andrea Parenti <andrea.parenti@xfel.eu>
 
 C++ like API based on Python bindings
 =====================================
@@ -24,96 +24,134 @@ Consider the code of our device - ConveyorPy.py:
     __copyright__="Copyright (c) 2010-2014 European XFEL GmbH Hamburg. All rights reserved."
     
     import time
-    import sys
     from karabo.device import *
-    from karabo.no_fsm import (NoFsm, Worker)
-    
+
     @KARABO_CLASSINFO("ConveyorPy", "1.3")
     class ConveyorPy(PythonDevice):
-    
-            
+        
         @staticmethod
         def expectedParameters(expected):
             '''Description of device parameters statically known'''
             (
+            OVERWRITE_ELEMENT(expected).key("state")
+                    .setNewOptions("Initializing,Error,Started,Stopping,Stopped,Starting")
+                    .setNewDefaultValue("Initializing")
+                    .commit(),
+
             # Button definitions
             SLOT_ELEMENT(expected).key("start")
-             .displayedName("Start").description("Instructs device to go to started state")
-             .allowedStates("Stopped")
-             .commit()
-             ,
+                    .displayedName("Start")
+                    .description("Instructs device to go to started state")
+                    .allowedStates("Stopped")
+                    .commit(),
+
             SLOT_ELEMENT(expected).key("stop")
-             .displayedName("Stop").description("Instructs device to go to stopped state")
-             .allowedStates("Started")
-             .commit()
-             ,
+                    .displayedName("Stop")
+                    .description("Instructs device to go to stopped state")
+                    .allowedStates("Started")
+                    .commit(),
+
             SLOT_ELEMENT(expected).key("reset")
-             .displayedName("Reset").description("Resets the device in case of an error")
-             .allowedStates("Error")
-             .commit()
-             ,
+                    .displayedName("Reset")
+                    .description("Resets in case of an error")
+                    .allowedStates("Error")
+                    .commit(),
+
             # Other elements
             DOUBLE_ELEMENT(expected).key("targetSpeed")
-             .displayedName("Target Conveyor Speed")
-             .description("Configures the speed of the conveyor belt")
-             .unit(Unit.METER_PER_SECOND)
-             .assignmentOptional().defaultValue(0.8)
-             .reconfigurable()
-             .commit()
-             ,
+                    .displayedName("Target Conveyor Speed")
+                    .description("Configures the speed of the conveyor belt")
+                    .unit(Unit.METER_PER_SECOND)
+                    .assignmentOptional().defaultValue(0.8)
+                    .reconfigurable()
+                    .commit(),
+
             DOUBLE_ELEMENT(expected).key("currentSpeed")
-             .displayedName("Current Conveyor Speed")
-             .description("Shows the current speed of the conveyor")
-             .readOnly()
-             .commit()
-             ,
-            BOOL_ELEMENT(expected)
-             .key("reverseDirection").displayedName("Reverse Direction")
-             .description("Reverses the direction of the conveyor band")
-             .assignmentOptional().defaultValue(False).reconfigurable()
-             .allowedStates("Ok.Stopped")
-             .commit()
-            ,
-            )
-    
+                    .displayedName("Current Conveyor Speed")
+                    .description("Shows the current speed of the conveyor")
+                    .readOnly()
+                    .commit(),
+
+            BOOL_ELEMENT(expected).key("reverseDirection")
+                    .displayedName("Reverse Direction")
+                    .description("Reverses the direction of the conveyor band")
+                    .assignmentOptional().defaultValue(False)
+                    .allowedStates("Stopped")
+                    .reconfigurable()
+                    .commit(),
+
+            BOOL_ELEMENT(expected).key("injectError")
+                    .displayedName("Inject Error")
+                    .description("Does not correctly stop the conveyor, such that a Error is triggered during next start")
+                    .assignmentOptional().defaultValue(False)
+                    .reconfigurable()
+                    .expertAccess()
+                    .commit(),
+
+        )
+
         def __init__(self, configuration):
             # Always call PythonDevice constructor first!
             super(ConveyorPy, self).__init__(configuration)
+
             # Register function that will be called first
-            self.registerInitialFunction(self.initialState)
+            self.registerInitialFunction(self.initialize)
+
             # Register slots
             self.registerSlot(self.start)
             self.registerSlot(self.stop) 
             self.registerSlot(self.reset)
-            self.worker = None
-            self.timeout = 1000  # milliseconds
-            self.repetition = -1 # forever
-                   
-        def initialState(self):
+
+        def preReconfigure(self, config):
+            '''The preReconfigure hook allows to forward the configuration to some connected h/w'''
+
+            try:
+                if config.has("targetSpeed"):
+                    # Simulate setting to h/w
+                    self.log.INFO("Setting to hardware: targetSpeed -> " + str(config.get("targetSpeed")))
+
+                if config.has("reverseDirection"):
+                    # Simulate setting to h/w
+                    self.log.INFO("Setting to hardware: reverseDirection -> " + str(config.get("reverseDirection")))
+
+            except Exception as e:
+                # You may want to indicate that the h/w failed
+                self.log.ERROR("'preReconfigure' method failed : {}".format(e))
+                self.updateState("Error")
+
+        def initialize(self):
             '''Initial function called after constructor but with equipped SignalSlotable under runEventLoop'''
             try:
+                # As the Initializing state is not mentioned in the allowed states
+                # nothing else is possible during this state
                 self.updateState("Initializing")
-                self.log.INFO("Connecting to conveyer hardware, setting up motors...")
-                self.set("currentSpeed", 0.0)
+
+                self.log.INFO("Connecting to conveyer hardware...")
+
+                # Simulate some time it could need to connect and setup
+                time.sleep(2.)
+
+                # Automatically go to the Stopped state
                 self.stop()
             except Exception as e:
-                print("'initialState' method failed : {}".format(e))
-                self.exceptionFound("'initialState' method failed", str(e))
-    
+                self.log.ERROR("'initialState' method failed : {}".format(e))
+                self.updateState("Error")
+
         def start(self):
             try:
-                self.updateState("Starting...") # set this if long-lasting work follows
+                self.updateState("Starting") # set this if long-lasting work follows
                 
                 # Retrieve current values from our own device-state
-                tgtSpeed     = self.get("targetSpeed")
+                tgtSpeed = self.get("targetSpeed")
                 currentSpeed = self.get("currentSpeed")
-    
+
                 # If we do not stand still here that is an error
                 if currentSpeed > 0.0:
                     raise ValueError("Conveyer does not stand still at start-up")
-    
+
+                # Separate ramping into 50 steps
                 increase = tgtSpeed / 50.0
-    
+
                 # Simulate a slow ramping up of the conveyor
                 for i in range(50):
                     currentSpeed += increase
@@ -122,69 +160,50 @@ Consider the code of our device - ConveyorPy.py:
                 # Be sure to finally run with targetSpeed
                 self.set("currentSpeed", tgtSpeed)
                 
-                self.updateState("Started")      # reached the state "Ok.Started"
-                
-                # start worker that will call 'hook' method repeatedly
-                self.counter = 0
-                self.worker = Worker(self.hook, self.timeout, self.repetition).start()
+                self.updateState("Started") # reached the state "Started"
             
             except Exception as e:
-                print("'start' method failed : {}".format(e))
-                self.exceptionFound("'start' method failed", str(e))
-            
-        def hook(self):
-            self.counter += 1
-            self.log.INFO("*** periodicAction : counter = " + str(self.counter))
-                
-        def stopFsm(self):
-            ''' This class has no FSM, but this method allows us to shutdown all the
-                workers by hands.
-            '''
-            if self.worker is not None:
-                if self.worker.is_running():
-                    self.worker.stop()
-                self.worker.join()
-                self.worker = None
+                self.log.ERROR("'start' method failed : {}".format(e))
+                self.updateState("Error")
             
         def stop(self):
-            # First shut the worker down ...
-            if self.worker is not None:
-                if self.worker.is_running():
-                    self.worker.stop()
-                self.worker.join()
-                self.worker = None
-    
             try:
                 # Retrieve current value from our own device-state
                 currentSpeed = self.get("currentSpeed")
                 if currentSpeed != 0:
-                    self.updateState("Stopping...") # set this if long-lasting work follows
+                    self.updateState("Stopping") # set this if long-lasting work follows
                     # Separate ramping into 50 steps
                     decrease = currentSpeed / 50.0
+
                     # Simulate a slow ramping down of the conveyor
                     for i in range(50):
                         currentSpeed -= decrease
                         self.set("currentSpeed", currentSpeed)
                         time.sleep(0.05)
                     # Be sure to finally stand still
-                    self.set("currentSpeed", 0)
+                    if self.get("injectError"):
+                        self.set("currentSpeed", 0.1)
+                    else:
+                        self.set("currentSpeed", 0.0)
                     
-                self.updateState("Stopped")      # reached the state "Ok.Stopped"
+                self.updateState("Stopped") # reached the state "Stopped"
             except Exception as e:            
-                print("'stop' method failed : {}".format(e))
-                self.exceptionFound("'stop' method failed", str(e))
+                self.log.ERROR("'stop' method failed : {}".format(e))
+                self.updateState("Error")
             
         def reset(self):
             '''Put here business logic.'''
-            pass
-        
-        # Put here more state machibe actions if needed...
+            self.set("injectError", False)
+            self.set("currentSpeed", 0.0)
+            self.initialize()
        
     # This entry used by device server
     if __name__ == "__main__":
         launchPythonDevice()
 
-Consider the main steps of the code above, that are Important to mention while writing devices in Python:
+
+Consider the main steps of the code above, that are important to
+mention while writing devices in Python:
 
 1. Import all modules from karabo.device:
 
@@ -192,62 +211,101 @@ Consider the main steps of the code above, that are Important to mention while w
 
       from karabo.device import *
   
-2. Decide whether you want to use an FSM. In our example we don't use it,
-   therefore we have:
-
-   .. code-block:: python
-
-     from karabo.no_fsm import (NoFsm, Worker)    
-
-   Current raccomandation is to use NoFsm. If you need an FSM, read
-   :ref:`this <stateMachines>` section.
+2. Decide whether you want to use an FSM. In our example we don't use
+   it, which is the current raccomandation is to use NoFsm. If you
+   need an FSM, read :ref:`this <stateMachines>` section.
 
 3. Place decorator KARABO_CLASSINFO just before class definition. It has two 
    parameters: "classId" and "version" similar to corresponding C++ macro. 
    In class definition we specify that our class inherits from PythonDevice 
-   as well as from StartStopFsm (see step 2):
+   (see step 2):
 
    .. code-block:: python
 
      @KARABO_CLASSINFO("ConveyorPy", "1.3")
      class ConveyorPy(PythonDevice):
 
-4. Constructor:
+4. Define static method expectedParameters, where you should describe what
+   properties are available on this device.
+
+5. Constructor:
 
    .. code-block:: python
 
-     def __init__(self, configuration):
-         # always call superclass constructor first!
-         super(ConveyorPy,self).__init__(configuration)
-         # Register function that will be called first
-         self.registerInitialFunction(self.initialState)
-         # Register slots
-         self.registerSlot(self.start)
-         self.registerSlot(self.stop) 
-         self.registerSlot(self.reset)
-         self.worker = None
-         self.timeout = 1000  # milliseconds
-         self.repetition = -1 # forever
+        def __init__(self, configuration):
+            # Always call PythonDevice constructor first!
+            super(ConveyorPy, self).__init__(configuration)
+
+            # Register function that will be called first
+            self.registerInitialFunction(self.initialize)
+
+            # Register slots
+            self.registerSlot(self.start)
+            self.registerSlot(self.stop) 
+            self.registerSlot(self.reset)
 
    In the constructor you always have to call first the superclass constructor.
 
    Then you need to register the function that will be called when the device
    is instantiated.
 
-   Finally you have to register all the slots: in the example start, stop and
-   reset.
+   Finally you have to register all the slots: in the example 'start',
+   'stop' and 'reset'.
 
-5. Define static method expectedParameters, where you should describe what
-   properties are available on this device.
+6. Define implementation of the 'preReconfigure' and 'postReconfigure'
+   functions, which are called after a reconfiguration request was
+   received, respectively before and after it has been merged into the
+   device’s state.
 
-6. Define implementation of initial function (in the example initialState)
-   and of the slots. They will have to call self.updateState(newState) at the
-   very end, in order to update device's state.
+7. Define implementation of initial function (in the example
+   'initialize') and of the slots. They will have to call
+   self.updateState(newState) at the very end, in order to update
+   device's state.
 
-   These functions must be non-blocking: if they need to run some process which
-   takes long time, they should start it in a separate thread, or even better by
-   using the Worker class. See the complete example code for the Worker's 
-   usage.
+   These functions must be non-blocking: if they need to run some
+   process which takes long time, they should start it in a separate
+   thread, or even better by using the Worker class.
+
+
+The "Worker" class
+------------------
+
+The Woker class is suitable for executing periodic tasks. It is defined
+in the karabo.no_fsm module, from which it must be imported,
+
+.. code-block:: python
+
+    from karabo.no_fsm import Worker
+
+It can be instantiated and started like this:
+
+.. code-block:: python
+
+    self.counter = 0
+    self.timeout = 1000  # milliseconds
+    self.repetition = -1  # forever
+    self.worker = Worker(self.hook, self.timeout, self.repetition).start()
+
+The 'repetition' parameter will specify how many times the task has to
+be executed (-1 means 'forever'), the 'timeout' parameter will set the
+interval bewteen two calls, self.hook is the callback function defined
+by the user, for example:
+
+.. code-block:: python
+
+    def hook(self):
+        self.counter += 1
+        self.log.INFO("*** periodicAction : counter = " + str(self.counter))
+
+The worker can then be stopped like this
+
+.. code-block:: python
+
+    if self.worker is not None:
+        if self.worker.is_running():
+            self.worker.stop()
+        self.worker.join()
+        self.worker = None
 
 
 Pythonic API based on native Python
