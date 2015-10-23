@@ -242,7 +242,7 @@ class PythonDevice(NoFsm):
         self._ss.registerSlotCallGuardHandler(self.slotCallGuard)
         
         # Register exception handler
-        self._ss.registerExceptionHandler(self.errorFound)
+        self._ss.registerExceptionHandler(self.exceptionFound)
 
         # Register updateLatencies handler
         self._ss.registerPerformanceStatisticsHandler(self.updateLatencies)
@@ -732,7 +732,7 @@ class PythonDevice(NoFsm):
                 self._applyReconfiguration(validated)
             except Exception as e:
                 print("PythonDevice.slotReconfigure Exception:", str(e))
-                self.errorFound("Python Exception happened", str(e))
+                self.exceptionFound("Python Exception happened", str(e))
                 self._ss.reply(False, str(e))
                 return
         self._ss.reply(result, error)
