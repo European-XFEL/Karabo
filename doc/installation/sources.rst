@@ -229,16 +229,6 @@ MacOS X
     port list py34-ipython
 
 
-.. _netbeans:
-
-NetBeans
-========
-
-NetBeans is the recommended IDE for working on the Karabo
-framework. See :ref:`here <gettingStartedNetbeans>` how to install and
-set up correctly.
-
-
 Get and install the Karabo framework (quick - no details)
 =========================================================
 
