@@ -9,7 +9,8 @@ Contents:
    howto/index
    library/index
    tools/index
-   documentation   
+   documentation
+   whatsnew/1.3   
    :maxdepth: 2
 
 

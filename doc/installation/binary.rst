@@ -56,8 +56,8 @@ Using the CLI is described :ref:`here <howto-cli>`.
 If you log into the correct server you will be immediately able to view and control (given your access persmissions allow it) devices that are currently online.
 
 
-Starting Karabo all local
-=========================
+Starting a full Karabo system all local
+=======================================
 
 Here we describe how you can bring up a small local Karabo system on your computer. Make sure you have understood the :ref:`fundamental concepts <fundamentals>` before proceeding here.
 
@@ -79,7 +79,7 @@ To stop the broker simply type::
 Step 2: Installing Devices
 --------------------------
 
-After installation, Karabo is still "empty". You first have to install some devices to do anything useful. You can think about devices like the apps on your smartphone. We have a repository of devices that after downloading and installing will be available in Karabo.
+After installation, Karabo is still "empty". You first have to install some devices to do anything useful. We have a repository of devices that after downloading and installing will be available in Karabo.
 
 Like the KaraboFramework itself, devices can be installed as binary packages or from sources. The binary installation typically is quicker and easier and you should use it if you do not want to further develop or bug-fix the devices (as no source code is shipped).
 
@@ -111,6 +111,56 @@ Calling the script as above should produce an ouput like this::
     setsvn    - Sets karabo svn repository path
     import    - Imports local project into repository
     
+To get quickly going with Karabo try the demo configuration::
+
+  ./karabo install-s karabo-demo
+
+For that to work you must have read-access to our SVN repository, in case you don't write a mail to karabo@xfel.eu and ask for it.
+
+This command will check-out the devices (as defined in a file called 'karabo-demo' located in the *etc/* folder) to a folder called *package*/. 
+C++ code is automatically compiled into a shared library. Subsequently, a soft-link to this library is created in the *servers/cppDeviceServer/plugin* folder such that on start-up the server will know about this device class.
+If the device is coded in Python the same thing will happen with the difference that *servers/pythonDeviceServer/plugin* is used (for the source file, as no compilation is needed).
+
+The other subcommands are not documented here in detail, please use the script-internal help.
+
+Step 3: Starting up Karabo
+--------------------------
+
+Navigate to the *bin/* folder.
+
+Before starting you have to tell Karabo which broker to use. There are two possibilities:
+
+(a) By setting an environment variable::
+
+      export KARABO_BROKER_HOSTS=localhost:7777
+
+(b) By configuring it in the *allInfo* file. This file does not exist if you use Karabo the first time. In this case you
+    create a copy of the *allInfo.orig* file, name it *allInfo*.
+    With a text-editor open it and edit the KARABO_BROKER_HOSTS variable as under (a). By the way, in this file you can also configure, which device servers should be started.
+
+Start Karabo::
+
+  ./allStart
+
+Stop Karabo::
+
+  ./allStop
+
+Or, in case you want to stop an individual server (here the cppDeviceServer), type::
+
+  ./allStop cppDeviceServer
+
+Use::
+
+  ./allCheck
+
+to see what Karabo applications are currently running.
+
+
+
+
+
+
 
 
 
