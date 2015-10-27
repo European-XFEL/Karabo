@@ -16,6 +16,7 @@
 #include <karabo/util/PathElement.hh>
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/util/ImageElement.hh>
+#include <karabo/util/TableElement.hh>
 
 #include <karabo/util/Configurator.hh>
 
@@ -451,6 +452,9 @@ namespace configurationTest {
                     .warnHigh("c").warnLow("d")
                     .archivePolicy(Schema::EVERY_10MIN)
                     .commit();
+            
+           
+                    
 
             vector<int> vecInit;
             {
@@ -509,6 +513,27 @@ namespace configurationTest {
             
             IMAGE_ELEMENT(expected)
                     .key("image")
+                    .commit();
+            
+            Schema rowSchema;
+            
+            INT32_ELEMENT(rowSchema)
+                    .key("a")
+                    .minInc(2)
+                    .maxExc(10)
+                    .displayedName("A")
+                    .assignmentOptional().noDefaultValue()
+                    .commit();
+            
+            STRING_ELEMENT(rowSchema)
+                    .key("b")
+                    .assignmentOptional().noDefaultValue()
+                    .commit();
+            
+            TABLE_ELEMENT(expected)
+                    .key("testTable")
+                    .setNodeSchema(rowSchema)
+                    .assignmentOptional().defaultValue(std::vector<Hash>(2, Hash("a", 3, "b", "foo")))
                     .commit();
 
         }
