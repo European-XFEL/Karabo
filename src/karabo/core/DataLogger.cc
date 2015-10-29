@@ -13,7 +13,7 @@
 #include <karabo/io/TextSerializer.hh>
 #include <karabo/util/Schema.hh>
 
-namespace karabo {
+namespace karabo {  
     namespace core {
 
         using namespace krb_log4cpp;
@@ -97,12 +97,21 @@ namespace karabo {
 
         void DataLogger::okStateOnEntry() {
 
+            boost::system::error_code ec;
+            
             m_user = "."; //TODO:  Define proper user running a device. The dot is unknown user?
 
             if (!boost::filesystem::exists(get<string>("directory")))
                 boost::filesystem::create_directory(get<string>("directory"));
-            if (!boost::filesystem::exists(get<string>("directory") + "/" + m_deviceToBeLogged))
-                boost::filesystem::create_directory(get<string>("directory") + "/" + m_deviceToBeLogged);
+            if (!boost::filesystem::exists(get<string>("directory") + "/" + m_deviceToBeLogged)) {
+                boost::filesystem::create_directories(get<string>("directory") + "/" + m_deviceToBeLogged, ec);
+                if (ec) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Failed to create directories : " << m_deviceToBeLogged
+                            << ". code = " << ec.value() << " -- " << ec.message();
+                    throw KARABO_INIT_EXCEPTION("Failed to create directories  \"" + get<string>("directory")
+                            + "/" + m_deviceToBeLogged + "\" : " + ec.message());
+                }
+            }
             if (!boost::filesystem::exists(get<string>("directory") + "/" + m_deviceToBeLogged + "/raw"))
                 boost::filesystem::create_directory(get<string>("directory") + "/" + m_deviceToBeLogged + "/raw");
             if (!boost::filesystem::exists(get<string>("directory") + "/" + m_deviceToBeLogged + "/idx"))
@@ -145,7 +154,7 @@ namespace karabo {
                             << "|" << m_lastDataTimestamp.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
                     long position = m_configStream.tellp();
                     m_configStream.close();
-                    string contentPath = get<string>("directory") + "/" + m_deviceToBeLogged + "/raw/" + m_deviceToBeLogged + "_index.txt";
+                    string contentPath = get<string>("directory") + "/" + m_deviceToBeLogged + "/raw/archive_index.txt";
                     ofstream contentStream(contentPath.c_str(), ios::app);
                     contentStream << "-LOG " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp()
                             << " " << m_lastDataTimestamp.getSeconds() << " " << m_lastDataTimestamp.getFractionalSeconds()
@@ -172,7 +181,7 @@ namespace karabo {
             if (m_currentSchema.empty()) return;
 
             bool propPathExists = false;
-            boost::filesystem::path propPath(get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_properties_with_index.txt");
+            boost::filesystem::path propPath(get<string>("directory") + "/" + deviceId + "/raw/properties_with_index.txt");
             if (boost::filesystem::exists(propPath)) {
                 propPathExists = true;
                 size_t propsize = boost::filesystem::file_size(propPath);
@@ -215,7 +224,7 @@ namespace karabo {
                 m_lastDataTimestamp = t;
 
                 if (!m_configStream.is_open()) {
-                    string configName = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
+                    string configName = get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(m_lastIndex) + ".txt";
                     m_configStream.open(configName.c_str(), ios::out | ios::app);
                     if (!m_configStream.is_open()) {
                         KARABO_LOG_ERROR << "Failed to open \"" << configName << "\". Check permissions.";
@@ -237,7 +246,7 @@ namespace karabo {
                 else m_configStream << "|VALID\n";
 
                 if (m_pendingLogin || m_newFile) {
-                    string contentPath = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_index.txt";
+                    string contentPath = get<string>("directory") + "/" + deviceId + "/raw/archive_index.txt";
                     ofstream contentStream(contentPath.c_str(), ios::app);
                     if (m_pendingLogin) {
                         contentStream << "+LOG ";
@@ -263,7 +272,7 @@ namespace karabo {
                     MetaData::Pointer mdp;
                     if (it == m_idxMap.end()) {
                         mdp = MetaData::Pointer(new MetaData);
-                        mdp->idxFile = get<string>("directory") + "/" + deviceId + "/idx/" + deviceId + "_configuration_" + toString(m_lastIndex)
+                        mdp->idxFile = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(m_lastIndex)
                                 + "-" + path + "-index.bin";
                         mdp->record.epochstamp = t.toTimestamp();
                         mdp->record.trainId = t.getTrainId();
@@ -331,7 +340,7 @@ namespace karabo {
         void DataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {            
             KARABO_LOG_FRAMEWORK_DEBUG << "slotSchemaUpdated: Schema for " << deviceId << " arrived...";
             m_currentSchema = schema;
-            string filename = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_schema.txt";
+            string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_schema.txt";
             fstream fileout(filename.c_str(), ios::out | ios::app);
             if (fileout.is_open()) {
                 Timestamp t;
@@ -346,12 +355,12 @@ namespace karabo {
 
 
         int DataLogger::determineLastIndex(const std::string& deviceId) {
-            string lastIndexFilename = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + ".last";
+            string lastIndexFilename = get<string>("directory") + "/" + deviceId + "/raw/archive.last";
             int idx;
             fstream fs;
             if (!boost::filesystem::exists(lastIndexFilename)) {
                 for (size_t i = 0;; i++) {
-                    string filename = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_configuration_" + toString(i) + ".txt";
+                    string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(i) + ".txt";
                     if (!boost::filesystem::exists(filename)) {
                         idx = i;
                         break;
@@ -369,7 +378,7 @@ namespace karabo {
 
 
         int DataLogger::incrementLastIndex(const std::string& deviceId) {
-            string lastIndexFilename = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + ".last";
+            string lastIndexFilename = get<string>("directory") + "/" + deviceId + "/raw/archive.last";
             int idx;
             if (!boost::filesystem::exists(lastIndexFilename)) {
                 idx = determineLastIndex(deviceId);

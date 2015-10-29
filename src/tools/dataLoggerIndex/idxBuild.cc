@@ -150,7 +150,9 @@ int main(int argc, char** argv) {
 
         cout << "Process the device : \"" << deviceId << "\"" << endl;
         
-        bf::path schemaPath(karaboHistory + "/" + deviceId + "/raw/" + deviceId + "_schema.txt");
+        bf::path oldSchemaPath(karaboHistory + "/" + deviceId + "/raw/archive_schema.txt");
+        
+        bf::path schemaPath(karaboHistory + "/" + deviceId + "/raw/archive_schema.txt");
         if (!bf::exists(schemaPath)) {
             cout << "WARNING: No schema file found for the device: \"" << deviceId << "\". Skip this device..." << endl;
             continue;
@@ -162,7 +164,7 @@ int main(int argc, char** argv) {
         for (bf::directory_iterator dit(rawdir); dit != bf::directory_iterator(); ++dit) {
             if (dit->path().extension() != ".txt") continue;
             string filename = dit->path().filename().string();
-            string pattern = deviceId + "_configuration_";
+            string pattern = "archive_";
             if (filename.substr(0, pattern.length()) != pattern) continue;
             //cout << "Filename : " << dit->path().filename() << endl;
             rawtxt.push_back(dit->path());
@@ -172,14 +174,14 @@ int main(int argc, char** argv) {
         sort(rawtxt.begin(), rawtxt.end(), byLastFileModificationTime);
 
         // rename "content" file
-        bf::path cfile(history.string() + "/" + deviceId + "/raw/" + deviceId + "_index.txt");
+        bf::path cfile(history.string() + "/" + deviceId + "/raw/archive_index.txt");
         bool buildContentFile = false;
         if (!bf::exists(cfile)) buildContentFile = true;
 
         // Load properties file into vector
         vector<string> idxprops;
         {
-            bf::path propPath(history.string() + "/" + deviceId + "/raw/" + deviceId + "_properties_with_index.txt");
+            bf::path propPath(history.string() + "/" + deviceId + "/raw/properties_with_index.txt");
             if (bf::exists(propPath)) {
                 if (requestedProperty.empty()) {
                     ifstream in(propPath.c_str());
@@ -208,7 +210,7 @@ int main(int argc, char** argv) {
             getline(sfs, schemaRange.toSchemaArchive, '\n');
         }
 
-        string pattern = deviceId + "_configuration_";
+        string pattern = "archive_";
         for (vector<bf::path>::iterator i = rawtxt.begin(); i != rawtxt.end(); ++i) {
             // extract filenum from file name
             int filenum = fromString<size_t>(i->filename().stem().string().substr(pattern.size()));
@@ -237,7 +239,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
     Schema::Pointer schema(new Schema);
     serializer->load(*schema, schemaRange.fromSchemaArchive);
 
-    string infile = historyDir + "/" + deviceId + "/raw/" + deviceId + "_configuration_" + toString(number) + ".txt";
+    string infile = historyDir + "/" + deviceId + "/raw/archive_" + toString(number) + ".txt";
     ifstream irs(infile.c_str());
     bool newFileFlag = true;
     unsigned int expNum = 0x0F0A1A2A;
@@ -294,7 +296,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             if ((tokens[9] == "LOGIN" || tokens[9] == "LOGOUT" || newFileFlag)) {
                 newFileFlag = false;
                 if (buildContent) {
-                    string contentFile = historyDir + "/" + deviceId + "/raw/" + deviceId + "_index.txt";
+                    string contentFile = historyDir + "/" + deviceId + "/raw/archive_index.txt";
                     ofstream ocs(contentFile.c_str(), ios::out | ios::app);
                     if (tokens[9] == "LOGIN")
                         ocs << "+LOG ";
@@ -345,7 +347,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                 MetaData::Pointer mdp;
                 if (it == idxMap.end()) {
                     mdp = MetaData::Pointer(new MetaData);
-                    mdp->idxFile = historyDir + "/" + deviceId + "/idx/" + deviceId + "_configuration_" + toString(number) + "-" + tokens[5] + "-index.bin";
+                    mdp->idxFile = historyDir + "/" + deviceId + "/idx/archive_" + toString(number) + "-" + tokens[5] + "-index.bin";
                     mdp->record.epochstamp = fromString<double>(tokens[1]);
                     mdp->record.trainId = fromString<unsigned long long>(tokens[4]);
                     mdp->record.positionInRaw = position;
