@@ -14,6 +14,5 @@ Contents:
    properties
    scpiDevice
    tagAndBranchDevices
-   run
    widget
    
