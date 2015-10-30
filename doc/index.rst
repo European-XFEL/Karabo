@@ -6,6 +6,7 @@ Contents:
 .. toctree::
    fundamentals
    installation/index
+   run/index
    howto/index
    library/index
    tools/index
