@@ -45,6 +45,40 @@ bool byLastFileModificationTime(const bf::path& lhs, const bf::path& rhs);
 void processNextFile(const std::string& deviceId, size_t number, const std::string& historyDir, std::ifstream& schema,
                      bool contentFlag, const std::vector<std::string>& properties);
 
+void findDevices(const std::string& root, const std::string& prefix, std::vector<std::string>& devices) {
+    bf::path dirpath = root;
+    
+    if (!prefix.empty()) dirpath += "/" + prefix;
+
+    if (!bf::exists(dirpath)) return;
+    
+    for (bf::directory_iterator it(dirpath); it != bf::directory_iterator(); ++it) {
+        
+        // we expect that entry should be a directory
+        if (!bf::is_directory(it->path())) continue;
+        
+        // build candidate
+        string candidate;
+
+        if (prefix.empty())
+            candidate.assign(it->path().filename().string());
+        else
+            candidate.assign(prefix + "/" + it->path().filename().string());
+        
+        // check if it fits the requirement(s)
+        bf::path archiveLast(root + "/" + candidate + "/raw/archive.last");
+        
+        if (bf::exists(archiveLast)) {
+            // we found the deviceId!
+            devices.push_back(candidate);
+        } else {
+            // try to dig deeper ...
+            findDevices(root, candidate, devices);
+        }
+    }
+}
+
+
 
 /*
  * 
@@ -84,50 +118,48 @@ int main(int argc, char** argv) {
         throw KARABO_PARAMETER_EXCEPTION("File \"" + history.string() + "\" is not a directory!");
 
     // convert to the new directory structure if needed
-    {
-        // check if we have old raw directory
-        bf::path rawdir(karaboHistory + "/raw/");
-        if (bf::exists(rawdir) && bf::is_directory(rawdir)) {
-            // build the list of devices
-            vector<string> devices;
-            for (bf::directory_iterator it(rawdir); it != bf::directory_iterator(); ++it) {
-                if (it->path().extension() != ".last") continue;
-                string deviceId = it->path().stem().string();
-                devices.push_back(deviceId);
-            }
-            // create new dir structure and copy files ...
-            for (vector<string>::iterator it = devices.begin(); it != devices.end(); ++it) {
-                string deviceId = *it;
-                bf::path deviceDir(karaboHistory + "/" + deviceId);
-                bf::path deviceRawDir(karaboHistory + "/" + deviceId + "/raw/");
-                if (!bf::exists(deviceDir)) {
-                    bf::create_directory(deviceDir);
-                    bf::create_directory(deviceRawDir);
-                }
-                for (bf::directory_iterator ii(rawdir); ii != bf::directory_iterator(); ++ii) {
-                    if (boost::starts_with(ii->path().filename().string(), deviceId)) {
-                        bf::copy_file(ii->path(), bf::path(deviceRawDir.string() + ii->path().filename().string()));
-                    }
-                }
-            }
-            // remove old raw directory
-            bf::remove_all(rawdir);
-        }
-        // remove old idx directory
-        bf::path idxdir(karaboHistory + "/idx/");
-        if (bf::exists(idxdir))
-            bf::remove_all(idxdir);
-    }
+//    {
+//        // check if we have old raw directory
+//        bf::path rawdir(karaboHistory + "/raw/");
+//        if (bf::exists(rawdir) && bf::is_directory(rawdir)) {
+//            // build the list of devices
+//            vector<string> devices;
+//            for (bf::directory_iterator it(rawdir); it != bf::directory_iterator(); ++it) {
+//                if (it->path().extension() != ".last") continue;
+//                string deviceId = it->path().stem().string();
+//                devices.push_back(deviceId);
+//            }
+//            // create new dir structure and copy files ...
+//            for (vector<string>::iterator it = devices.begin(); it != devices.end(); ++it) {
+//                string deviceId = *it;
+//                bf::path deviceDir(karaboHistory + "/" + deviceId);
+//                bf::path deviceRawDir(karaboHistory + "/" + deviceId + "/raw/");
+//                if (!bf::exists(deviceDir)) {
+//                    bf::create_directory(deviceDir);
+//                    bf::create_directory(deviceRawDir);
+//                }
+//                for (bf::directory_iterator ii(rawdir); ii != bf::directory_iterator(); ++ii) {
+//                    if (boost::starts_with(ii->path().filename().string(), deviceId)) {
+//                        bf::copy_file(ii->path(), bf::path(deviceRawDir.string() + ii->path().filename().string()));
+//                    }
+//                }
+//            }
+//            // remove old raw directory
+//            bf::remove_all(rawdir);
+//        }
+//        // remove old idx directory
+//        bf::path idxdir(karaboHistory + "/idx/");
+//        if (bf::exists(idxdir))
+//            bf::remove_all(idxdir);
+//    }
     
     
     vector<string> devices;
-    for (bf::directory_iterator it(history); it != bf::directory_iterator(); ++it) {
-        if (!bf::is_directory(it->path())) continue;
-        string deviceId = it->path().filename().string();
-        if (deviceId == "raw" || deviceId == "idx") continue;
+    findDevices(karaboHistory, "", devices);
+    
+    for (vector<string>::const_iterator it = devices.begin(); it != devices.end(); ++it) {
+        const string& deviceId = *it;
         if (!requestedDeviceId.empty() && requestedDeviceId != deviceId) continue;
-        devices.push_back(deviceId);
-        
         bf::path rawdir(karaboHistory + "/" + deviceId + "/raw");
         if (!bf::exists(rawdir))
             throw KARABO_PARAMETER_EXCEPTION("Directory \"" + rawdir.string() + "\" does not exist!");
@@ -143,13 +175,13 @@ int main(int argc, char** argv) {
         }
     }
     
-    cout << devices.size() << " devices have to be processed..." << endl;
+    cout << devices.size() << " devices found ... process only those that require indexing ..." << endl;
 
     for (vector<string>::const_iterator it = devices.begin(); it != devices.end(); ++it) {
         string deviceId = *it;
 
-        cout << "Process the device : \"" << deviceId << "\"" << endl;
-        
+        //cout << "Process the device : \"" << deviceId << "\"" << endl;
+                
         bf::path oldSchemaPath(karaboHistory + "/" + deviceId + "/raw/archive_schema.txt");
         
         bf::path schemaPath(karaboHistory + "/" + deviceId + "/raw/archive_schema.txt");
@@ -164,20 +196,22 @@ int main(int argc, char** argv) {
         for (bf::directory_iterator dit(rawdir); dit != bf::directory_iterator(); ++dit) {
             if (dit->path().extension() != ".txt") continue;
             string filename = dit->path().filename().string();
+            // skip archive_index.txt & archive_schema.txt
+            if (filename == "archive_index.txt" || filename == "archive_schema.txt") continue;
             string pattern = "archive_";
             if (filename.substr(0, pattern.length()) != pattern) continue;
-            //cout << "Filename : " << dit->path().filename() << endl;
+            //cout << "Filename being processed : " << dit->path().filename() << endl;
             rawtxt.push_back(dit->path());
         }
 
         // Sort this list by time of last file modification
         sort(rawtxt.begin(), rawtxt.end(), byLastFileModificationTime);
-
+        
         // rename "content" file
         bf::path cfile(history.string() + "/" + deviceId + "/raw/archive_index.txt");
         bool buildContentFile = false;
         if (!bf::exists(cfile)) buildContentFile = true;
-
+        
         // Load properties file into vector
         vector<string> idxprops;
         {
@@ -190,14 +224,16 @@ int main(int argc, char** argv) {
                     in.seekg(0, ios::beg);
                     content.assign((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
                     in.close();
-                    boost::split(idxprops, content, boost::is_any_of("\n"));
+                    boost::split(idxprops, content, boost::is_any_of("\n\t\r "), boost::token_compress_on);
                 } else
                     idxprops.push_back(requestedProperty);
             }
         }
         
         if (!buildContentFile && idxprops.empty()) continue;  // nothing to rebuild
-
+        
+        cout << "Process the device : \"" << deviceId << "\"" << endl;
+        
         ifstream sfs(schemaPath.c_str());
         {
             sfs >> schemaRange.fromSeconds >> schemaRange.fromFraction >> schemaRange.fromTrainId;
