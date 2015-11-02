@@ -66,7 +66,7 @@ export PKG_CONFIG_PATH=.
 # build
 build: .build-post
 
-.build-pre: nbproject/Makefile-$(CONF).mk
+.build-pre:
 # Add your pre 'build' code here...
 
 # Make sure the KARABO folder always exists
@@ -151,7 +151,7 @@ bundle-clean: clean
 # clean
 clean: .clean-post
 
-.clean-pre: nbproject/Makefile-$(CONF).mk
+.clean-pre:
 # Add your pre 'clean' code here...
 
 .clean-post: .clean-impl
@@ -161,7 +161,7 @@ clean: .clean-post
 # clobber
 clobber: .clobber-post
 
-.clobber-pre: nbproject/Makefile-$(CONF).mk
+.clobber-pre:
 # Add your pre 'clobber' code here...
 
 .clobber-post: .clobber-impl
@@ -171,7 +171,7 @@ clobber: .clobber-post
 # all
 all: .all-post
 
-.all-pre: nbproject/Makefile-$(CONF).mk
+.all-pre:
 # Add your pre 'all' code here...
 
 .all-post: .all-impl
@@ -181,7 +181,7 @@ all: .all-post
 # build tests
 build-tests: .build-tests-post
 
-.build-tests-pre: nbproject/Makefile-$(CONF).mk
+.build-tests-pre:
 # Add your pre 'build-tests' code here...
 
 .build-tests-post: .build-tests-impl
@@ -191,7 +191,7 @@ build-tests: .build-tests-post
 # run tests
 test: .test-post
 
-.test-pre: nbproject/Makefile-$(CONF).mk
+.test-pre:
 # Add your pre 'test' code here...
 	@if test ! -d testresults;    then $(MKDIR) -p  testresults; fi
 
@@ -222,6 +222,12 @@ nbproject/Makefile-variables.mk: nbproject/Karabo-variables-$(CURRENT_PLATFORM).
 nbproject/Makefile-$(CONF).mk: nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk
 	$(CP) -fp nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk nbproject/Makefile-$(CONF).mk
 
+# The following two includes lead to warnings from make ("No such file or
+# directory") when compiling the first time after a fresh checkout
+# (see https://www.gnu.org/software/make/manual/html_node/Include.html).
+# But then it will create the files according to the above rules. In fact, even
+# if the files were not missing, they might need to be recreated before used!
+
 # include project implementation makefile
 include nbproject/Makefile-impl.mk
 
@@ -229,5 +235,14 @@ include nbproject/Makefile-impl.mk
 include nbproject/Makefile-variables.mk
 
 # nbproject/Makefile-$(CONF).mk is not included here, but is used in all
-# the .*-impl targets used above (and defined in Makefile-impl.mk). Therefore
-# it is added as a prerequisite to the .*-pre targets.
+# the .*-impl targets used above (and defined in Makefile-impl.mk).
+# To take care that it exists before the .validate-impl target in
+# Makefile-impl.mk checks that, we add it here as a prerequisite.
+# Since this target is really internal to the NetBeans generated
+# Makefile-impl.mk, this should be considered a HACK around the fact that there
+# the *-pre targets appear as prerequisites in parallel with .validate.impl,
+# i.e. we cannot simply make the .*-pre targets depend on Makefile-$(CONF).mk
+# here. That is because then the check might still be executed before the
+# .*-pre target lead to the creation of Makefile-$(CONF).mk.
+# Hope that people reading this could follow...
+.validate-impl: nbproject/Makefile-$(CONF).mk
