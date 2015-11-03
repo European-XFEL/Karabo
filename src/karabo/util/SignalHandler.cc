@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <karabo/log/Logger.hh>
 
 using namespace std;
 
@@ -108,6 +109,11 @@ namespace karabo {
             oss << endl << StackTrace() << endl;
 
             cerr << oss.str() << endl;
+            
+            KARABO_LOG_FRAMEWORK_ERROR_C("TerminateCallback")
+                    << "\n------------------- STACK TRACE ----------------------\n"
+                    << oss.str()
+                    << "\n-------------------- TRACE END -----------------------\n";
 
             // Jump to the a safe point in the stack where we can resume execution
             // This avoid infinite loop, and allow to perform any neede  cleaning during the last breathes 
