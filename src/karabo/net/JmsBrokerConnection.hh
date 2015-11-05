@@ -92,6 +92,8 @@ namespace karabo {
                 return m_deliveryInhibition;
             }
 
+            virtual bool isConnected() const;
+            
         private:
 
             void close();

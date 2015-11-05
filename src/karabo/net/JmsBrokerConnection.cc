@@ -270,6 +270,9 @@ namespace karabo {
             }
         }
 
+        bool JmsBrokerConnection::isConnected() const {
+            return m_hasConnection;
+        }
 
         void JmsBrokerConnection::connectToBrokers() {
             // The lock below is vital, because this code is executed on many threads

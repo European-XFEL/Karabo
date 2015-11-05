@@ -1608,7 +1608,12 @@ namespace karabo {
             try {
 
                 while (m_doTracking) {
-
+                    
+                    if (!m_connection->isConnected()) {
+                        boost::this_thread::sleep(boost::posix_time::seconds(5));
+                        continue;
+                    }
+                    
                     if (m_trackAllInstances) {
 
                         //cout << "COUNTDOWN" << endl;
