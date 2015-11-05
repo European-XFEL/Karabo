@@ -207,6 +207,7 @@ class MainWindow(QMainWindow):
 
 
     def _quit(self):
+        self.projectPanel.closeAllProjects()
         self.signalQuitApplication.emit()
 
 
