@@ -130,6 +130,8 @@ namespace karabo {
             void setErrorHandler(const BrokerErrorHandler& handler) {
                 m_errorHandler = handler;
             }
+            
+            virtual bool isConnected() const = 0;
 
         protected: // functions
 
