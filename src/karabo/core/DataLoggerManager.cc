@@ -48,12 +48,6 @@ namespace karabo {
                     .assignmentOptional().defaultValue(100)
                     .commit();
 
-            PATH_ELEMENT(expected).key("directory")
-                    .displayedName("Directory")
-                    .description("The directory where the log files should be placed")
-                    .assignmentOptional().defaultValue("karaboHistory")
-                    .commit();
-
             std::vector<std::string> emptyVec;
 
             VECTOR_STRING_ELEMENT(expected).key("serverList")
@@ -153,7 +147,7 @@ namespace karabo {
                             Hash config;
                             config.set("DataLogger.deviceId", loggerId);
                             config.set("DataLogger.deviceToBeLogged", deviceId);
-                            config.set("DataLogger.directory", get<string>("directory"));
+                            config.set("DataLogger.directory", "karaboHistory");
                             config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
                             config.set("DataLogger.flushInterval", get<int>("flushInterval"));
                             remote().instantiateNoWait(serverId, config);
@@ -171,7 +165,7 @@ namespace karabo {
                 if (!remote().exists(readerId).first) {
                     Hash config;
                     config.set("DataLogReader.deviceId", readerId);
-                    config.set("DataLogReader.directory", get<string>("directory"));
+                    config.set("DataLogReader.directory", "karaboHistory");
                     remote().instantiateNoWait(serverId, config);
                     KARABO_LOG_FRAMEWORK_INFO << "instantiateReaders: reader \"" << readerId << "\" started on server \"" << serverId << "\"";
                 }
@@ -220,7 +214,7 @@ namespace karabo {
                                 Hash config;
                                 config.set("DataLogger.deviceId", loggerId);
                                 config.set("DataLogger.deviceToBeLogged", deviceId);
-                                config.set("DataLogger.directory", get<string>("directory"));
+                                config.set("DataLogger.directory", "karaboHistory");
                                 config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
                                 config.set("DataLogger.flushInterval", get<int>("flushInterval"));
                                 remote().instantiateNoWait(serverId, config);
@@ -257,7 +251,7 @@ namespace karabo {
                                 Hash config;
                                 config.set("DataLogger.deviceId", loggerId);
                                 config.set("DataLogger.deviceToBeLogged", deviceId);
-                                config.set("DataLogger.directory", get<string>("directory"));
+                                config.set("DataLogger.directory", "karaboHistory");
                                 config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
                                 config.set("DataLogger.flushInterval", get<int>("flushInterval"));
                                 remote().instantiateNoWait(serverId, config);
