@@ -1,0 +1,43 @@
+#!/bin/bash
+cd $(dirname $0)
+if [ -z $KARABO ]; then
+    if [ -e $HOME/.karabo/karaboFramework ]; then
+        KARABO=$(cat $HOME/.karabo/karaboFramework)
+    else
+      echo "ERROR Could not find karaboFramework. Make sure you have installed the karaboFramework."
+      exit 1
+    fi
+fi
+
+#echo "Number of parameters are " $#
+
+MQ=$KARABO/extern/MessageQueue/mq
+CLASSPATH=$MQ/lib/imq.jar:$MQ/lib/jms.jar:$MQ/examples/applications/qbrowser
+export CLASSPATH
+
+if [ $# -eq 0 ]; then
+    java -DimqAddressList=mq://exfl-broker:7777/jms QBrowser
+
+elif [ $# -eq 1 ]; then
+    java -DimqAddressList=mq://$1/jms QBrowser
+
+elif [ $# -eq 2 ] && [ "$1" == "-b" ]; then
+    java -DimqAddressList=mq://$2/jms QBrowser
+
+else
+    echo ""
+    echo "Unexpected argument list: $@"
+    echo ""
+    echo "Usage:"
+    echo "        ./qbrowser [[-b] <host>:<port>]"
+    echo ""
+    echo "Examples:"
+    echo ""
+    echo "        ./qbrowser -b exflbkr01n0:7777"
+    echo "        ./qbrowser exflbkr01n0:7777"
+    echo "        ./qbrowser     \# default: exfl-broker:7777"
+    echo "" 
+fi
+
+exit 0
+
