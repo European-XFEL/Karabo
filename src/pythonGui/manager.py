@@ -55,7 +55,6 @@ class _Manager(QObject):
     signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
     signalProjectLoaded = pyqtSignal(str, object, object) # projectName, metaData, data
     signalProjectSaved = pyqtSignal(str, bool, object) # projectName, success, data
-    signalProjectClosed = pyqtSignal(str, bool, object) # projectName, success, data
 
 
     def __init__(self, *args, **kwargs):
@@ -554,7 +553,8 @@ class _Manager(QObject):
 
 
     def handle_projectClosed(self, name, success, data):
-        self.signalProjectClosed.emit(name, success, data)
+        """ exists for compatibility with old GuiServers only """
+        pass
 
 
     def handle_notification(self, deviceId, messageType, shortMsg, detailedMsg):

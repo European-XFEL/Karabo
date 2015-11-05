@@ -45,7 +45,6 @@ class ProjectPanel(Dockable, QWidget):
         manager.Manager().signalAvailableProjects.connect(self.twProject.onAvailableProjects)
         manager.Manager().signalProjectLoaded.connect(self.twProject.onProjectLoaded)
         manager.Manager().signalProjectSaved.connect(self.twProject.onProjectSaved)
-        manager.Manager().signalProjectClosed.connect(self.twProject.onProjectClosed)
         manager.Manager().signalReset.connect(self.onResetPanel)
 
         mainLayout = QVBoxLayout(self)

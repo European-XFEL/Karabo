@@ -36,6 +36,7 @@ from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QFileInfo, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
                          QItemSelectionModel, QMessageBox, QStandardItem,
                          QStandardItemModel)
+import os
 import os.path
 from zipfile import ZipFile
 
@@ -832,6 +833,10 @@ class ProjectModel(QStandardItemModel):
         
         if project.access == ProjectAccess.CLOUD:
             network.Network().onCloseProject(project.basename)
+            filename = os.path.join(globals.KARABO_PROJECT_FOLDER,
+                                    network.Network().username,
+                                    project.basename)
+            os.remove(filename)
 
 
     def appendProject(self, project):
