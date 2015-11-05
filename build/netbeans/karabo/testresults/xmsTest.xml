@@ -3,23 +3,32 @@
   <FailedTests></FailedTests>
   <SuccessfulTests>
     <Test id="1">
-      <Name>ImageData_Test::testConstructor</Name>
+      <Name>Data_Test::testSetHash</Name>
     </Test>
     <Test id="2">
-      <Name>ImageData_Test::testSetAndGetMethods</Name>
+      <Name>Data_Test::testSetHashPtr</Name>
     </Test>
     <Test id="3">
-      <Name>NDArray_Test::testConstructor</Name>
+      <Name>Data_Test::testHashCtr</Name>
     </Test>
     <Test id="4">
-      <Name>NDArray_Test::testSetAndGetMethods</Name>
+      <Name>ImageData_Test::testConstructor</Name>
     </Test>
     <Test id="5">
+      <Name>ImageData_Test::testSetAndGetMethods</Name>
+    </Test>
+    <Test id="6">
+      <Name>NDArray_Test::testConstructor</Name>
+    </Test>
+    <Test id="7">
+      <Name>NDArray_Test::testSetAndGetMethods</Name>
+    </Test>
+    <Test id="8">
       <Name>SignalSlotable_Test::testMethod</Name>
     </Test>
   </SuccessfulTests>
   <Statistics>
-    <Tests>5</Tests>
+    <Tests>8</Tests>
     <FailuresTotal>0</FailuresTotal>
     <Errors>0</Errors>
     <Failures>0</Failures>

@@ -142,7 +142,7 @@ namespace karabo {
                 
                 // Register a property in prop file for indexing if it is not there
                 try {
-                    bf::path propPath(get<string>("directory") + "/" + deviceId + "/raw/properties_with_index.txt");
+                    bf::path propPath(get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_properties_with_index.txt");
                     if (!bf::exists(propPath)) {
                         // create prop file 
                         m_mapPropFileInfo[deviceId] = PropFileInfo::Pointer(new PropFileInfo());
@@ -211,7 +211,7 @@ namespace karabo {
 
                 int lastFileIndex = getFileIndex(deviceId);
                 if (lastFileIndex < 0) {
-                    KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/archive.last\" not found. No data will be sent...";
+                    KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/" << deviceId << ".last\" not found. No data will be sent...";
                     reply(deviceId, property, result);
                     return;
                 }
@@ -262,8 +262,8 @@ namespace karabo {
                     for (size_t fnum = msr.fromFileNumber, ii = 0; fnum <= msr.toFileNumber && ii < msr.nrecList.size(); fnum++, ii++) {
                         if (mf.is_open()) mf.close();
                         if (df.is_open()) df.close();
-                        string idxname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + property + "-index.bin";
-                        string dataname = get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(fnum) + ".txt";
+                        string idxname = get<string>("directory") + "/" + deviceId + "/idx/" + deviceId + "_configuration_" + toString(fnum) + "-" + property + "-index.bin";
+                        string dataname = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_configuration_" + toString(fnum) + ".txt";
                         if (!bf::exists(bf::path(idxname))) continue;
                         if (!bf::exists(bf::path(dataname))) continue;
                         mf.open(idxname.c_str(), ios::in | ios::binary);
@@ -356,7 +356,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Requested time point: " << target.getSeconds();
 
                 // Retrieve proper Schema
-                bf::path schemaPath(get<string>("directory") + "/" + deviceId + "/raw/archive_schema.txt");
+                bf::path schemaPath(get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_schema.txt");
                 if (bf::exists(schemaPath)) {
                     std::ifstream schemastream(schemaPath.string().c_str());
                     unsigned long long seconds;
@@ -395,7 +395,7 @@ namespace karabo {
                 int lastFileIndex = getFileIndex(deviceId);
                 if (lastFileIndex < 0) {
                     reply(Hash(), Schema());
-                    KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/archive.last\" not found. No data will be sent...";
+                    KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/" << deviceId << ".last\" not found. No data will be sent...";
                     return;
                 }
 
@@ -403,7 +403,7 @@ namespace karabo {
                     Epochstamp current(0, 0);
                     long position = index.m_position;
                     for (int i = index.m_fileindex; i <= lastFileIndex && current <= target; i++, position = 0) {
-                        string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_" + karabo::util::toString(i) + ".txt";
+                        string filename = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_configuration_" + karabo::util::toString(i) + ".txt";
                         ifstream file(filename.c_str());
                         file.seekg(position);
 
@@ -459,7 +459,7 @@ namespace karabo {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint: Requested time point: " << timepoint;
 
-            string contentpath = get<string>("directory") + "/" + deviceId + "/raw/archive_index.txt";
+            string contentpath = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_index.txt";
             if (!bf::exists(bf::path(contentpath)))
                 return entry;
 
@@ -501,7 +501,7 @@ namespace karabo {
 
             DataLoggerIndex nearest;
 
-            string contentpath = get<string>("directory") + "/" + deviceId + "/raw/archive_index.txt";
+            string contentpath = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + "_index.txt";
             if (!bf::exists(bf::path(contentpath))) return nearest;
             ifstream contentstream(contentpath.c_str());
 
@@ -531,7 +531,7 @@ namespace karabo {
 
 
         int DataLogReader::getFileIndex(const std::string& deviceId) {
-            string filename = get<string>("directory") + "/" + deviceId + "/raw/archive.last";
+            string filename = get<string>("directory") + "/" + deviceId + "/raw/" + deviceId + ".last";
             if (!bf::exists(bf::path(filename))) return -1;
             ifstream ifs(filename.c_str());
             int idx;
@@ -582,7 +582,7 @@ namespace karabo {
             for (; fnum <= tonum; fnum++) {
                 if (f.is_open()) f.close();
 
-                fname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + path + "-index.bin";
+                fname = get<string>("directory") + "/" + deviceId + "/idx/" + deviceId + "_configuration_" + toString(fnum) + "-" + path + "-index.bin";
                 f.open(fname.c_str(), ios::in | ios::binary | ios::ate);
                 if (!f.is_open()) continue;
                 filesize = f.tellg();
@@ -644,7 +644,7 @@ namespace karabo {
             for (; fnum <= endnum; fnum++) {
                 if (f.is_open()) f.close();
 
-                fname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + path + "-index.bin";
+                fname = get<string>("directory") + "/" + deviceId + "/idx/" + deviceId + "_configuration_" + toString(fnum) + "-" + path + "-index.bin";
                 filesize = bf::file_size(fname, ec);
                 if (ec) continue;
                 nrecs = filesize / sizeof (MetaData::Record);
