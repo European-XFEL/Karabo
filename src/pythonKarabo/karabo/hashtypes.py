@@ -196,13 +196,13 @@ class Descriptor(object):
 
     def checkedSet(self, instance, value):
         if self.accessMode is not AccessMode.RECONFIGURABLE:
-            raise karabo.KaraboError('property "{}" is not reconfigurable'.
-                                     format(self.key))
+            msg = 'property "{}" is not reconfigurable'.format(self.key)
+            raise KaraboError(msg)
         elif (self.allowedStates is not None and
               instance.state in self.allowedStates):
-            raise karabo.KaraboError(
-                'setting "{}" is not allowed in state "{}"'.
-                format(self.key, instance.state))
+            msg = 'setting "{}" is not allowed in state "{}"'.format(
+                self.key, instance.state)
+            raise KaraboError(msg)
         else:
             return self.setter_async(instance, value)
 
@@ -240,7 +240,7 @@ class Slot(Descriptor):
             msg = 'calling slot "{}" not allowed in state "{}"'.format(
                 self.key, device.state)
             device._ss.reply(message, msg)
-            raise karabo.KaraboError(msg)
+            raise KaraboError(msg)
         if self.iscoroutine or iscoroutinefunction(self.method):
             coro = self.method(device)
         else:

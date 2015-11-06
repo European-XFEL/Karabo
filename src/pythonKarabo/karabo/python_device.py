@@ -14,8 +14,9 @@ from karabo.schema import Configurable, Schema, Validator, Node
 from karabo.signalslot import (SignalSlotable, Signal, ConnectionType, slot,
                                coslot, replySlot)
 from karabo.timestamp import Timestamp
-from karabo import hashtypes, KaraboError
+from karabo import hashtypes
 from karabo.enums import AccessLevel, AccessMode, Assignment
+from karabo.exceptions import KaraboError
 from karabo.registry import Registry
 from karabo.eventloop import EventLoop
 from karabo.launcher import getClassSchema_async, sameThread, legacy
