@@ -10,7 +10,7 @@ from IPython.kernel import KernelClient
 
 from karabo.enums import AccessLevel, AccessMode
 from karabo.python_device import Device
-from karabo.hashtypes import VectorChar, Slot, Int32
+from karabo.hash import VectorChar, Slot, Int32
 from karabo.signalslot import coslot
 
 

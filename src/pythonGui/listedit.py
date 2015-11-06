@@ -12,7 +12,7 @@
 __all__ = ["ListEdit"]
 
 
-from karabo import hashtypes
+from karabo.hash import Simple
 import numpy
 from PyQt4.QtCore import QCoreApplication
 from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
@@ -142,7 +142,7 @@ class ListEdit(QDialog):
 
 
         dialog = QInputDialog.getText
-        if isinstance(self.descriptor, hashtypes.Simple):
+        if isinstance(self.descriptor, Simple):
             if issubclass(self.descriptor.numpy, numpy.inexact):
                 dialog = QInputDialog.getDouble
             elif issubclass(self.descriptor.numpy, numpy.integer):

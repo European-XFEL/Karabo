@@ -2,7 +2,7 @@ from asyncio import coroutine, gather
 
 from karabo.enums import AccessLevel, AccessMode
 from karabo.python_device import Device
-from karabo.hashtypes import String, Int32
+from karabo.hash import String, Int32
 from karabo.macro import Macro
 
 

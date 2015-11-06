@@ -24,8 +24,7 @@ __all__ = ["EditableTableElement"]
 from util import SignalBlocker
 from widget import DisplayWidget, EditableWidget
 
-from karabo.hash import Hash
-from karabo.hashtypes import VectorHash
+from karabo.hash import Hash, Type, VectorHash
 
 from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog, QComboBox,
                         QVBoxLayout, QWidget, QDialogButtonBox, QCheckBox)
@@ -33,7 +32,6 @@ from PyQt4.QtCore import *
 
 import icons
 
-import karabo.hashtypes as hashtypes
 import manager
 
 class TableModel(QAbstractTableModel):
@@ -354,7 +352,7 @@ class FromPropertyPopUp(QDialog):
         if descriptor is not None:
             properties = []
             for i, v in descriptor.dict.items():
-                if isinstance(v, hashtypes.Type) and not isinstance(v, hashtypes.VectorHash): 
+                if isinstance(v, Type) and not isinstance(v, VectorHash):
                 #the latter won't work as it would result in a non-flat table
                     properties.append(i)
             

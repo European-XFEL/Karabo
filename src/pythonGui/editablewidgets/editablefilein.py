@@ -16,7 +16,7 @@ import icons
 from util import SignalBlocker
 from widget import EditableWidget
 
-from karabo.hashtypes import String
+from karabo.hash import String
 
 from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QLineEdit, QToolButton,
                          QWidget)

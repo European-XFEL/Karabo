@@ -25,9 +25,9 @@ import karabo
 
 from karabo.python_loader import PluginLoader
 from karabo.python_device import Device, SignalSlotable
-from karabo.hash import Hash, BinaryParser, BinaryWriter, XMLParser, saveToFile
-from karabo.hashtypes import Schema, String, Int32
-from karabo import hashtypes
+from karabo.hash import (BinaryParser, BinaryWriter, Hash, Int32,
+                         SchemaHashType, String, StringList, XMLParser,
+                         saveToFile)
 from karabo.schema import Validator, Node
 from karabo.logger import Logger
 from karabo.signalslot import (ConnectionType, Signal, slot, coslot)
@@ -97,7 +97,7 @@ class DeviceServer(SignalSlotable):
             else:
                 print("WARN : Found serverId.xml without serverId contained")
                 self.serverId = self._generateDefaultServerId() # If nothing configured -> generate
-                saveToFile(Hash("DeviceServer.serverId", m_serverId),
+                saveToFile(Hash("DeviceServer.serverId", self.serverId),
                            serverIdFileName)
         else: # No file
             if self.serverId == "__none__":
@@ -153,10 +153,8 @@ class DeviceServer(SignalSlotable):
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
 
-    signalNewDeviceClassAvailable = Signal(
-        hashtypes.String(), hashtypes.String(), hashtypes.Schema())
-    signalClassSchema = Signal(hashtypes.Schema(), hashtypes.String(),
-                               hashtypes.String())
+    signalNewDeviceClassAvailable = Signal(String(), String(), SchemaHashType())
+    signalClassSchema = Signal(SchemaHashType(), String(), String())
 
     def _registerAndConnectSignalsAndSlots(self):
         self.signalNewDeviceClassAvailable.connect(
@@ -257,8 +255,7 @@ class DeviceServer(SignalSlotable):
         
     def notifyNewDeviceAction(self):
         self.updateInstanceInfo(Hash(
-            "deviceClasses", hashtypes.StringList(
-                [k for k in Device.subclasses.keys()]),
+            "deviceClasses", StringList([k for k in Device.subclasses.keys()]),
             "visibilities", numpy.array([c.visibility.defaultValue.value
                              for c in Device.subclasses.values()])))
 

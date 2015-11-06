@@ -23,7 +23,7 @@ __all__ = ["DisplayImageElement"]
 from schema import ImageNode
 from widget import DisplayWidget
 
-from karabo import hashtypes
+from karabo.hash import Type
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
@@ -92,7 +92,7 @@ class DisplayImageElement(DisplayWidget):
         # Data type information
         type = value.dataType
         try:
-            type = hashtypes.Type.fromname[type].numpy
+            type = Type.fromname[type].numpy
         except KeyError as e:
             e.message = 'Image element has improper type "{}"'.format(type)
             raise
