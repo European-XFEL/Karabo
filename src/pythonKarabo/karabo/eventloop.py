@@ -1,7 +1,4 @@
 from __future__ import absolute_import, unicode_literals
-from karabo.hashtypes import Type, Slot
-from karabo.hash import Hash, BinaryWriter
-from karabo import openmq
 
 from asyncio import (AbstractEventLoop, async, coroutine, Future,
                      get_event_loop, Queue, set_event_loop, SelectorEventLoop,
@@ -16,6 +13,9 @@ import socket
 import sys
 import threading
 import weakref
+
+from karabo import openmq
+from karabo.hash import Hash, BinaryWriter, Type, Slot
 
 
 class Broker:

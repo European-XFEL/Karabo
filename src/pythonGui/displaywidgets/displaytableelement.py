@@ -23,8 +23,7 @@ __all__ = ["DisplayTableElement"]
 
 from editablewidgets.editabletableelement import *
 from PyQt4.QtCore import *
-from karabo.hash import Hash
-from karabo.hashtypes import VectorHash
+from karabo.hash import Hash, VectorHash
 
 
 class DisplayTableElement(EditableTableElement):

@@ -16,7 +16,7 @@ from util import getSaveFileName
 from util import SignalBlocker
 from widget import EditableWidget
 
-from karabo.hashtypes import String
+from karabo.hash import String
 
 from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 

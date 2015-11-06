@@ -2,8 +2,7 @@ from asyncio import async, coroutine, get_event_loop, TimeoutError
 import threading
 import weakref
 
-from karabo.hash import Hash
-from karabo.hashtypes import Slot, Type
+from karabo.hash import Hash, Slot, Type
 from karabo.signalslot import Proxy, waitUntilNew
 from karabo.python_device import Device
 

@@ -22,8 +22,8 @@ __all__ = ["DisplayLabel"]
 
 
 from widget import DisplayWidget
-from karabo.hash import Hash
-from karabo import hashtypes
+from karabo.hash import (Double, Float, Hash, String, Simple, Type, HashType,
+                         VectorDouble, VectorFloat, VectorHash)
 import decimal
 import re
 
@@ -34,14 +34,14 @@ from numpy import ndarray
 
 
 class DisplayLabel(DisplayWidget):
-    category = hashtypes.String, hashtypes.Simple
+    category = String, Simple
     alias = "Value Field"
   
     def __init__(self, box, parent):
         super(DisplayLabel, self).__init__(box)
-        
+
         self.value = None
-        
+
         self.widget = QLabel(parent)
         self.widget.setAutoFillBackground(True)
         self.widget.setAlignment(Qt.AlignCenter)
@@ -50,17 +50,14 @@ class DisplayLabel(DisplayWidget):
         self.widget.setWordWrap(True)
         self.setErrorState(False)
 
-
     def setErrorState(self, isError):
         self.widget.setStyleSheet("QLabel {{ background-color : rgba({}); }}".
                                   format('255,155,155,128' if isError
                                          else '225,242,225,128'))
 
-
     def valueChanged(self, box, value, timestamp=None):
-        if (not isinstance(box.descriptor, hashtypes.Type)
-            or isinstance(box.descriptor,
-                          (hashtypes.Hash, hashtypes.VectorHash))):
+        if (not isinstance(box.descriptor, Type)
+            or isinstance(box.descriptor, (HashType, VectorHash))):
             return # only simple types can be shown here
 
         if value is None:
@@ -78,15 +75,12 @@ class DisplayLabel(DisplayWidget):
             format = dict(bin='b{:b}', oct='o{:o}', hex='0x{:X}'
                           )[box.descriptor.displayType[:3]]
         except (TypeError, KeyError):
-            if isinstance(box.descriptor, (hashtypes.Float,
-                                           hashtypes.VectorFloat)):
+            if isinstance(box.descriptor, (Float, VectorFloat)):
                 format = "{:.6g}"
-            elif isinstance(box.descriptor, (hashtypes.Double,
-                                             hashtypes.VectorDouble)):
+            elif isinstance(box.descriptor, (Double, VectorDouble)):
                 format = "{:.10g}"
             else:
                 format = "{}"
-
 
         if isinstance(value, ndarray):
             ret = str(value)

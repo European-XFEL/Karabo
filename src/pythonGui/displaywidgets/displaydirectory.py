@@ -18,7 +18,7 @@ from util import SignalBlocker
 import icons
 from widget import DisplayWidget
 
-from karabo.hashtypes import String
+from karabo.hash import String
 
 from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
