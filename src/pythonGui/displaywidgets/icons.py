@@ -3,7 +3,7 @@ from const import ns_karabo
 import icons
 from widget import DisplayWidget
 
-from karabo import hashtypes
+from karabo.hash import Integer, Number, String
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer
@@ -201,7 +201,7 @@ class TextDialog(Dialog):
 
 class TextIcons(Icons):
     alias = "Icons"
-    category = hashtypes.String
+    category = String
     Dialog = TextDialog
 
     def valueChanged(self, box, value, timestamp=None):
@@ -232,7 +232,7 @@ class TextIcons(Icons):
 class DigitDialog(Dialog):
     def __init__(self, project, items, descriptor):
         super().__init__(project, items)
-        if isinstance(descriptor, hashtypes.Integer):
+        if isinstance(descriptor, Integer):
             self.value = self.intValue
             self.stack.setCurrentWidget(self.intPage)
         else:
@@ -265,7 +265,7 @@ class DigitDialog(Dialog):
 
 class DigitIcons(Icons):
     alias = "Icons"
-    category = hashtypes.Integer, hashtypes.Number
+    category = Integer, Number
     Dialog = DigitDialog
 
     def valueChanged(self, box, value, timestamp=None):
@@ -287,7 +287,7 @@ class DigitIcons(Icons):
             e.append(ee)
 
     def load(self, e):
-        if isinstance(self.boxes[0].descriptor, hashtypes.Integer):
+        if isinstance(self.boxes[0].descriptor, Integer):
             parse = int
         else:
             parse = float

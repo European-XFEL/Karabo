@@ -11,7 +11,7 @@ __all__ = ["Hexadecimal"]
 from util import SignalBlocker
 from widget import DisplayWidget, EditableWidget
 
-from karabo.hashtypes import Integer
+from karabo.hash import Integer
 
 from PyQt4.QtGui import QLineEdit
 from numpy import log2

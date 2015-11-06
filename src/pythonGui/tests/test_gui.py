@@ -17,8 +17,7 @@ import network
 import globals
 import widget
 
-from karabo.hash import Hash, XMLParser
-from karabo.hashtypes import Integer, Schema_
+from karabo.hash import Hash, Integer, Schema, XMLParser
 from karabo.enums import AccessLevel
 from karabo.project import ProjectAccess
 from itertools import count
@@ -84,7 +83,7 @@ class Tests(TestCase):
 
         r = XMLParser()
         with open(path.join(self.directory, "schema.xml"), "r") as fin:
-            self.testschema = Schema_("testschema", hash=r.read(fin.read()))
+            self.testschema = Schema("testschema", hash=r.read(fin.read()))
         with open(path.join(self.directory, "configuration.xml"), "r") as fin:
             self.testconfiguration = r.read(fin.read())["ParameterTest"]
         globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
