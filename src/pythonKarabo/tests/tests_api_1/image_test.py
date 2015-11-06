@@ -3,13 +3,14 @@ __date__ ="$Jul 2, 2013$"
 
 ''' @@@Test is commented for now as it is commented in karathon.cc
     @@@(corresponds to test in karabo: xip_test/Image_Test.cc )
+import os.path as op
 import unittest
 from karabo.karathon import *
 
 class  Image_TestCase(unittest.TestCase):
     def setUp(self):
-        self.resourcesdir = "../../../src/pythonKarabo/tests/resources/"
-    
+        self.resourcesdir = op.join(op.dirname(__file__), 'resources')
+
     def test_image_double(self):
         try:
             img = ImageDOUBLE(CPU)
@@ -19,7 +20,7 @@ class  Image_TestCase(unittest.TestCase):
             self.fail("test_image_double exception group 1: " + str(e))
         
         try:
-            img = ImageDOUBLE(CPU, self.resourcesdir+"in-3-3-3.asc")
+            img = ImageDOUBLE(CPU, op.join(self.resourcesdir, "in-3-3-3.asc"))
             self.assertEqual(img.dimensionality(), 3)
             self.assertEqual(img.dimX(), 3)
             self.assertEqual(img.dimY(), 3)
@@ -72,7 +73,7 @@ class  Image_TestCase(unittest.TestCase):
             self.fail("test_image_float exception group 1: " + str(e))
         
         try:
-            img = ImageFLOAT(CPU, self.resourcesdir+"in-3-3-3.asc")
+            img = ImageFLOAT(CPU, op.join(self.resourcesdir, "in-3-3-3.asc"))
             self.assertEqual(img.dimensionality(), 3)
             self.assertEqual(img.dimX(), 3)
             self.assertEqual(img.dimY(), 3)
