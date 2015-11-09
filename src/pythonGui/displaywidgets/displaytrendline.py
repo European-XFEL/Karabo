@@ -9,7 +9,8 @@ import base64
 from xml.etree.ElementTree import Element
 
 from const import ns_karabo
-from manager import Manager, getDevice
+from manager import getDevice
+from network import Network
 from util import SignalBlocker
 from widget import DisplayWidget
 
@@ -22,7 +23,6 @@ from PyQt4.Qwt5.Qwt import (QwtPlot, QwtScaleDraw, QwtText,
 from guiqwt.plot import CurveDialog, PlotManager
 from guiqwt.tools import SelectPointTool
 from guiqwt.builder import make
-from guiqwt import signals
 
 from karabo.hash import Simple
 from karabo.timestamp import Timestamp
@@ -31,108 +31,161 @@ from karabo.timestamp import Timestamp
 class Curve(QObject):
     """This holds the data for one curve
 
-    The data is contained in one member variable, data, which is
-    an n-by-2 array, so that we have pairs of value and timestamp.
+    the currently to be shown data is in self.x and self.y.
+    Up to self.histsize it is filled with historical data, up to self.fill
+    it is then filled with "current" data, meaning data that has been
+    accumulated from the changes coming in.
 
-    The array is split in two: the first part, up to self.past, is the
-    data that we got by inquiring from the past. The range that we acutally
-    did inquire is self.startpast to self.endpast.
+    There is a second data structure, self.datas, which is a list of arrays
+    with averaged data, always self.base points are averaged over and
+    put into the next higher aggregated storage.
 
-    Starting at self.past, we have current data. self.startcurrent is the time
-    starting at which we have current data.
-    The current data reaches up to self.fill. If less than
-    self.spare slots are left over, we discard older current data,
-    moving the current start time forward.
-
-    When getting values from the past, we always ask for self.maxHistory
-    values, and start trying to get more data if the user zooms in if
-    less than self.minHistory points are visible. self.sparse is True
-    if there simply are no more data to zoom in."""
-    ini = 1000  # Initial size of data container
-    spare = 200 # Buffer until historic data is requested
-    maxHistory = 800 # Limits amount of data from past
+    Once the basic storage in self.x and self.y flows over, it gets replaced
+    by the averaged data in self.datas. """
+    generations = 4
+    base = 10  # number of points to combine per generation
+    size = 200
+    spare = 100
+    maxHistory = 500  # Limits amount of data from past
+    sparsesize = 400
     minHistory = 100  # minimum number of points shown (if possible)
+
+    dtype = numpy.dtype([("avgx", "f8"), ("avgy", "f8")])
 
     def __init__(self, box, curve, parent):
         QObject.__init__(self, parent)
         self.curve = curve
         self.box = box
-        self.data = numpy.empty((self.ini, 2), dtype=float) # Data container 
-        self.fill = 0 # Actual fill size (historic + current)
-        self.past = 0 # How much belongs to past
-        self.startcurrent = time.time()
-        self.sparse = False
+        self.datas = [numpy.empty(self.size, dtype=self.dtype)
+                      for i in range(self.generations)]
+
+        self.histsize = 0
+        self.fill = 0
+        rsize = self.size * self.generations + self.spare
+        self.x = numpy.empty(rsize, dtype=float)
+        self.y = numpy.empty(rsize, dtype=float)
+        self.dx = numpy.empty(rsize, dtype=float)
+        self.dy = numpy.empty(rsize, dtype=float)
+
+        self.fills = [0] * self.generations
         self.startpast = self.endpast = 0
         self.t0 = self.t1 = 0
         box.signalHistoricData.connect(self.onHistoricData)
         box.visibilityChanged.connect(self.onVisibilityChanged)
+        self.timer = None
 
     def addPoint(self, value, timestamp):
-        if self.fill >= self.data.shape[0]: # Have to get rid of data
-            # Emergency case, should only happen if historic data is slow
-            self.data[self.past:-self.spare, :] = (
-                self.data[self.past + self.spare:, :])
-            self.breaktime = self.data[self.past, 1]
-            self.fill -= self.spare
-        # Spare is touched, ask for historic data
-        elif self.fill == self.data.shape[0] - self.spare:
-            self.getPropertyHistory(self.data[0, 1],
-                self.data[(self.past + self.data.shape[0]) // 2, 1])
-        self.data[self.fill, :] = value, timestamp
-        if self.fill == self.past:
-            self.breaktime = timestamp
+        next = (timestamp, value)
+        n = 1
+        for i, data in reversed(list(enumerate(self.datas))):
+            data[self.fills[i]] = next
+            self.fills[i] += 1
+            if self.fills[i] < len(data):
+                break
+            next = (data[:self.base]["avgx"].mean(),
+                    data[:self.base]["avgy"].mean())
+            data[:-self.base] = data[self.base:]
+            self.fills[i] -= self.base
+            n *= self.base
+        else:
+            self.datas[0][1:] = self.datas[0][:-1]
+            self.fills[0] -= 1
+
+        self.x[self.fill] = timestamp
+        self.y[self.fill] = value
+        self.dx[self.fill] = self.dy[self.fill] = 0
         self.fill += 1
+
+        if self.fill == len(self.x):
+            self.fill_current()
         self.update()
 
+    def fill_current(self):
+        pos = self.histsize
+        for fill, data in zip(self.fills, self.datas):
+            d = data[:fill]
+            self.x[pos:pos + fill] = d["avgx"]
+            self.y[pos:pos + fill] = d["avgy"]
+            pos += fill
+        self.fill = pos
 
     def getPropertyHistory(self, t0, t1):
-        self.startpast = t0
-        self.endpast = t1
         t0 = str(datetime.datetime.utcfromtimestamp(t0).isoformat())
         t1 = str(datetime.datetime.utcfromtimestamp(t1).isoformat())
         self.box.getPropertyHistory(t0, t1, self.maxHistory)
 
-
     def changeInterval(self, t0, t1):
-        # t0 represent the oldest value displayed in the widget 
-        if t0 < self.startpast or (self.endpast < self.startcurrent and
-                t1 > self.endpast and t0 < self.startcurrent):
-            self.getPropertyHistory(t0, min(t1, self.startcurrent))
-        if t1 < self.startcurrent and not self.sparse:
-            p0 = self.data[:self.fill, 1].searchsorted(t0)
-            p1 = self.data[:self.fill, 1].searchsorted(t1)
-            if p1 - p0 < self.minHistory:
-                self.getPropertyHistory(t0, t1)
+        p0 = self.x[:self.fill].searchsorted(t0)
+        p1 = self.x[:self.fill].searchsorted(t1)
+        if (p1 - p0 < self.minHistory and self.histsize > self.sparsesize or
+                self.x[p0] > 0.9 * self.t0 + 0.1 * self.t1 or
+                p1 < self.histsize and
+                self.x[p1 - 1] < 0.1 * self.t0 + 0.9 * self.t1):
+            self.getPropertyHistory(t0, t1)
         self.t0 = t0
         self.t1 = t1
 
-
     def update(self):
-        self.curve.set_data(self.data[:self.fill, 1], self.data[:self.fill, 0])
+        """show the new data to screen
+
+        As showing the data is actually a time consuming task, it is only
+        done if the event loop has nothing else in it. """
+        if self.timer is None:
+            self.timer = self.startTimer(0)
+
+    def timerEvent(self, event):
+        if Network().isDataPending():
+            return
+        self.killTimer(self.timer)
+        self.timer = None
+        self.curve.set_data(self.x[:self.fill], self.y[:self.fill])
 
     @pyqtSlot(bool)
     def onVisibilityChanged(self, visible):
-        if visible and self.t1 >= self.startcurrent:
+        if visible and self.t1 >= self.x[self.histsize]:
             self.getPropertyHistory(self.t0, self.t1)
 
     @pyqtSlot(object, object)
     def onHistoricData(self, box, data):
         if not data:
             return
-        l = [(e['v'], Timestamp.fromHashAttributes(e.getAttributes('v')).
-             toTimestamp()) for e in data]
-        self.sparse = len(l) < self.maxHistory / 2
-        pos = self.data[self.past:self.fill, 1].searchsorted(l[-1][1])
-        newsize = max(self.ini, self.fill - pos - self.past + self.spare)
-        data = numpy.empty((len(l) + newsize, 2), dtype=float)
-        data[:len(l), :] = l
-        newfill = len(l) + self.fill - pos - self.past
-        data[len(l):newfill, :] = self.data[pos + self.past:self.fill, :]
-        self.fill = newfill
-        self.data = data
-        self.past = len(l)
-        if pos > 0:
-            self.startcurrent = self.endpast
+
+        rsize = self.size * self.generations + len(data) + self.spare
+        x = numpy.empty(rsize, dtype=float)
+        y = numpy.empty(rsize, dtype=float)
+
+        for i, d in enumerate(data):
+            x[i] = Timestamp.fromHashAttributes(d['v', ...]).toTimestamp()
+            y[i] = d["v"]
+
+        p0 = self.x[:self.fill].searchsorted(self.t0)
+        p1 = self.x[:self.fill].searchsorted(self.t1)
+        np0 = x[:len(data)].searchsorted(self.t0)
+        np1 = x[:len(data)].searchsorted(self.t1)
+
+        span = (self.x[p1 - 1] - self.x[p0]) / (self.t1 - self.t0)
+        nspan = (x[np1 - 1] - x[np0]) / (self.t1 - self.t0)
+
+        if (np1 - np0 < p1 - p0) and not nspan > span < 0.9:
+            return
+
+        end = x[len(data) - 1]
+        for i, d in enumerate(self.datas):
+            fill = self.fills[i]
+            if fill == 0:
+                continue
+            pos = d[:fill]["avgx"].searchsorted(end)
+            if pos == 0:
+                break
+            d[:fill - pos] = d[pos:fill]
+            self.fills[i] = fill - pos
+
+        self.histsize = len(data)
+        self.x = x
+        self.y = y
+        self.dx = numpy.zeros(rsize, dtype=float)
+        self.dy = numpy.zeros(rsize, dtype=float)
+        self.fill_current()
         self.update()
 
 
