@@ -1,6 +1,29 @@
 <?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
 <TestRun>
-  <FailedTests></FailedTests>
+  <FailedTests>
+    <FailedTest id="23">
+      <Name>H5File_Test::testManyGroups</Name>
+      <FailureType>Assertion</FailureType>
+      <Location>
+        <File>../../../src/karabo/tests/io/H5File_Test.cc</File>
+        <Line>1636</Line>
+      </Location>
+      <Message>forced failure
+- Error
+</Message>
+    </FailedTest>
+    <FailedTest id="25">
+      <Name>H5File_Test::testTrainFormat</Name>
+      <FailureType>Assertion</FailureType>
+      <Location>
+        <File>../../../src/karabo/tests/io/H5File_Test.cc</File>
+        <Line>1902</Line>
+      </Location>
+      <Message>forced failure
+- Error
+</Message>
+    </FailedTest>
+  </FailedTests>
   <SuccessfulTests>
     <Test id="1">
       <Name>FileInputOutput_Test::writeTextFile</Name>
@@ -68,14 +91,8 @@
     <Test id="22">
       <Name>H5File_Test::testVectorOfHashes</Name>
     </Test>
-    <Test id="23">
-      <Name>H5File_Test::testManyGroups</Name>
-    </Test>
     <Test id="24">
       <Name>H5File_Test::testManyTables</Name>
-    </Test>
-    <Test id="25">
-      <Name>H5File_Test::testTrainFormat</Name>
     </Test>
     <Test id="26">
       <Name>H5File_Test::testClose</Name>
@@ -128,8 +145,8 @@
   </SuccessfulTests>
   <Statistics>
     <Tests>41</Tests>
-    <FailuresTotal>0</FailuresTotal>
+    <FailuresTotal>2</FailuresTotal>
     <Errors>0</Errors>
-    <Failures>0</Failures>
+    <Failures>2</Failures>
   </Statistics>
 </TestRun>
