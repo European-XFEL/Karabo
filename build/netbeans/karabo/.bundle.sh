@@ -222,6 +222,11 @@ cd ../tools/dataLoggerIndex/idxbuild
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 cd ../..
 
+#shell scripts - copy directly from src
+cd ../../../src/tools/scripts/
+cp -f * $PACKAGEDIR/bin
+cd -
+
 # pythonKarabo
 cd ../pythonKarabo
 safeRunCommand "./build.sh"
