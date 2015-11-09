@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<DeviceServer>
+  <autoStart>
+    <KRB_Item>
+      <CentralLogging>
+        <directory>logs</directory>
+        <maximumFileSize>1</maximumFileSize>
+        <flushInterval>10</flushInterval>
+      </CentralLogging>
+    </KRB_Item>
+  </autoStart>
+  <scanPlugins KRB_Type="STRING">false</scanPlugins>
+  <serverId KRB_Type="STRING">Karabo_CentralLoggingServer</serverId>
+  <visibility>4</visibility>
+  <Logger><priority>INFO</priority></Logger>
+</DeviceServer>
