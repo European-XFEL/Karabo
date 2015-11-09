@@ -1,0 +1,23 @@
+****************************
+  What's New in Karabo 1.4
+****************************
+
+This chapter explains the new features in Karabo 1.4.
+
+
+New Features
+============
+
+Device Ids with Slashes
+-----------------------
+
+Since release 1.4.0, device ids are allowed to contain slashes ('/') to support the 
+European XFEL naming convention.
+
+To allow that, the file names used for data logging had to be changed in a non-backward
+compatible way. If an existing installation is upgraded from 1.3.X to 1.4.0 or beyond,
+manual intervention is needed to keep the logged data history accessible. For that purpose
+a script is provided in $KARABO/bin: ``convertKaraboHistoryFrom13X.sh``.
+It has to be run once on the host of the data logger server(s). Consult the ``--help``
+option of the script for further details.
+
