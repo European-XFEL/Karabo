@@ -150,15 +150,13 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_configMutex);
                 if (m_configStream.is_open()) {
                     m_configStream << m_lastDataTimestamp.toIso8601Ext() << "|" << fixed << m_lastDataTimestamp.toTimestamp()
-                            << "|" << m_lastDataTimestamp.getSeconds() << "|" << m_lastDataTimestamp.getFractionalSeconds()
                             << "|" << m_lastDataTimestamp.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
                     long position = m_configStream.tellp();
                     m_configStream.close();
                     string contentPath = get<string>("directory") + "/" + m_deviceToBeLogged + "/raw/archive_index.txt";
                     ofstream contentStream(contentPath.c_str(), ios::app);
                     contentStream << "-LOG " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp()
-                            << " " << m_lastDataTimestamp.getSeconds() << " " << m_lastDataTimestamp.getFractionalSeconds()
-                            << " " << m_lastDataTimestamp.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
+                            << " " << m_lastDataTimestamp.getTrainId() << " " << position << " " << (m_user.empty()?".":m_user) << " " << m_lastIndex << "\n";
                     contentStream.close();
                     //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued index stream closed";
 
@@ -205,7 +203,7 @@ namespace karabo {
             int runNum = 0x0F0B1B2B;
 
             m_user = getSenderInfo("slotChanged")->getUserIdOfSender();
-            if (m_user.size() == 0) m_user = "operator";
+            if (m_user.size() == 0) m_user = "";
 
             vector<string> paths;
             configuration.getPaths(paths);
@@ -239,8 +237,8 @@ namespace karabo {
 
                 size_t position = m_configStream.tellp(); // get current file size
 
-                m_configStream << t.toIso8601Ext() << "|" << fixed << t.toTimestamp() << "|" << t.getSeconds() << "|"
-                        << t.getFractionalSeconds() << "|" << t.getTrainId() << "|" << path << "|" << type << "|"
+                m_configStream << t.toIso8601Ext() << "|" << fixed << t.toTimestamp() << "|"
+                        << t.getTrainId() << "|" << path << "|" << type << "|"
                         << value << "|" << m_user;
                 if (m_pendingLogin) m_configStream << "|LOGIN\n";
                 else m_configStream << "|VALID\n";
@@ -254,8 +252,8 @@ namespace karabo {
                         contentStream << "=NEW ";
                     }
 
-                    contentStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " "
-                            << t.getFractionalSeconds() << " " << t.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
+                    contentStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " "
+                            << t.getTrainId() << " " << position << " " << (m_user.empty()? "." : m_user) << " " << m_lastIndex << "\n";
                     contentStream.close();
 
                     m_pendingLogin = false;

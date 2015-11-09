@@ -287,19 +287,19 @@ namespace karabo {
                                 if (line.empty()) continue;
                                 vector<string> tokens;
                                 boost::split(tokens, line, boost::is_any_of("|"));
-                                if (tokens.size() != 10) {
+                                if (tokens.size() != 8) {
                                     KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record: tokens.size() = " << tokens.size();
                                     continue; // This record is corrupted -- skip it
                                 }
 
                                 //df >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> trainId >> path >> type >> value >> user >> flag;
 
-                                const string& flag = tokens[9];
+                                const string& flag = tokens[7];
                                 if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
                                     result[result.size() - 1].setAttribute("v", "isLast", 'L');
                                 }
 
-                                const string& path = tokens[5];
+                                const string& path = tokens[3];
                                 if (path != property) {
                                     // if you don't like the index record (for example, it pointed to the wrong property) just skip it
                                     KARABO_LOG_FRAMEWORK_WARN << "The index for \"" << deviceId << "\", property : \"" << property
@@ -309,14 +309,21 @@ namespace karabo {
                                 }
                                 
                                 Hash hash;
-                                const string& type = tokens[6];
-                                const string& value = tokens[7];
+                                const string& type = tokens[4];
+                                const string& value = tokens[5];
                                 Hash::Node& node = hash.set<string>("v", value);
                                 node.setType(Types::from<FromLiteral>(type));
 
-                                unsigned long long trainId = fromString<unsigned long long>(tokens[4]);
-                                unsigned long long seconds = fromString<unsigned long long>(tokens[2]);
-                                unsigned long long fraction = fromString<unsigned long long>(tokens[3]);
+                                unsigned long long trainId = fromString<unsigned long long>(tokens[2]);
+                                unsigned long long seconds = 0;
+                                unsigned long long fraction = 0;
+                                {
+                                    vector<string> tparts;
+                                    boost::split(tparts, tokens[1], boost::is_any_of("."));
+                                    assert(tparts.size() == 2);
+                                    seconds  = fromString<unsigned long long>(tparts[0]);
+                                    fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL; // ATTOSEC
+                                }
                                 Timestamp tst(Epochstamp(seconds, fraction), Trainstamp(trainId));
                                 Hash::Attributes& attrs = hash.getAttributes("v");
                                 tst.toHashAttributes(attrs);
@@ -413,25 +420,32 @@ namespace karabo {
                             vector<string> tokens;
                             boost::split(tokens, line, boost::is_any_of("|"));
 
-                            if (tokens.size() != 10)
+                            if (tokens.size() != 8)
                                 continue; // skip corrupted line
 
-                            const string& flag = tokens[9];
+                            const string& flag = tokens[7];
                             if (flag == "LOGOUT")
                                 break;
 
-                            const string& path = tokens[5];
+                            const string& path = tokens[3];
                             if (!schema.has(path)) continue;
 
-                            unsigned long long seconds = fromString<unsigned long long>(tokens[2]);
-                            unsigned long long fraction = fromString<unsigned long long>(tokens[3]);
-                            unsigned long long train = fromString<unsigned long long>(tokens[4]);
+                            unsigned long long seconds = 0;
+                            unsigned long long fraction = 0;
+                            {
+                                vector<string> tparts;
+                                boost::split(tparts, tokens[1], boost::is_any_of("."));
+                                assert(tparts.size() == 2);
+                                seconds  = fromString<unsigned long long>(tparts[0]);
+                                fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL;
+                            }
+                            unsigned long long train = fromString<unsigned long long>(tokens[2]);
                             current = Epochstamp(seconds, fraction);
                             if (current > target)
                                 break;
                             Timestamp timestamp(current, Trainstamp(train));
-                            const string& type = tokens[6];
-                            const string& val = tokens[7];
+                            const string& type = tokens[4];
+                            const string& val = tokens[5];
                             Hash::Node& node = hash.set<string>(path, val);
                             node.setType(Types::from<FromLiteral>(type));
                             Hash::Attributes& attrs = node.getAttributes();
@@ -449,7 +463,7 @@ namespace karabo {
 
         DataLoggerIndex DataLogReader::findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint) {
             string timestampAsIso8061;
-            double timestampAsDouble;
+            string timestampAsDouble;
             unsigned long long seconds, fraction;
             string event;
             string tail;
@@ -464,14 +478,20 @@ namespace karabo {
                 return entry;
 
             ifstream ifs(contentpath.c_str());
-            while (ifs >> event >> timestampAsIso8061 >> timestampAsDouble >> seconds >> fraction) {
+            while (ifs >> event >> timestampAsIso8061 >> timestampAsDouble) {
                 // read the rest of the line (upto '\n')
                 string line;
                 if (!getline(ifs, line)) {
                     ifs.close();
                     throw KARABO_IO_EXCEPTION("Premature EOF while reading index file \"" + contentpath + "\"");
                 }
-
+                {
+                    std::vector<std::string> tparts;
+                    boost::split(tparts, timestampAsDouble, boost::is_any_of("."));
+                    assert(tparts.size() == 2);
+                    seconds = fromString<unsigned long long>(tparts[0]);
+                    fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL;
+                }
                 Epochstamp epochstamp(seconds, fraction);
                 if (epochstamp > target) {
                     if (!tail.empty()) {
@@ -495,7 +515,7 @@ namespace karabo {
 
         DataLoggerIndex DataLogReader::findNearestLoggerIndex(const std::string& deviceId, const karabo::util::Epochstamp& target) {
             string timestampAsIso8061;
-            double timestampAsDouble;
+            string timestampAsDouble;
             unsigned long long seconds, fraction;
             string event;
 
@@ -505,13 +525,20 @@ namespace karabo {
             if (!bf::exists(bf::path(contentpath))) return nearest;
             ifstream contentstream(contentpath.c_str());
 
-            while (contentstream >> event >> timestampAsIso8061 >> timestampAsDouble >> seconds >> fraction) {
+            while (contentstream >> event >> timestampAsIso8061 >> timestampAsDouble) {
                 // read the rest of the line (upto '\n')
                 string line;
                 if (!getline(contentstream, line)) {
                     contentstream.close();
                     KARABO_LOG_WARN << "Premature EOF while reading index file \"" << contentpath + "\" in findNearestLoggerIndex";
                     return nearest;
+                }
+                {
+                    std::vector<std::string> tparts;
+                    boost::split(tparts, timestampAsDouble, boost::is_any_of("."));
+                    assert(tparts.size() == 2);
+                    seconds = fromString<unsigned long long>(tparts[0]);
+                    fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL;
                 }
                 Epochstamp epochstamp(seconds, fraction);
                 if (epochstamp <= target || nearest.m_fileindex == -1) {
