@@ -12,6 +12,7 @@ Contents:
    tools/index
    documentation
    whatsnew/1.3   
+   whatsnew/1.4   
    :maxdepth: 2
 
 
