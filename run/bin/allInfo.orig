@@ -29,7 +29,6 @@ export KARABO_BROKER_HOSTS="exfl-broker:7777"
 # This setting is the default, it will try the XFEL broker first and failover to a local if unsuccessful
 #export KARABO_BROKER_HOSTS="exfl-broker:7777,localhost:7777"
 
-
 #################
 # Broker Topic  #
 #################
@@ -74,26 +73,31 @@ KARABO_SERVERS="../servers"
 
 # Better don't touch
 
+logLevel=INFO
+serverId=Karabo_CentralLoggingServer
+ALLINFO[0]="$KARABO_SERVERS/centralLoggingServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
+
+
 logLevel=INFO  
 serverId=Karabo_GuiServer
 port=44444
-ALLINFO[0]="$KARABO_SERVERS/guiServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel DeviceServer.autoStart[0].GuiServerDevice.port=$port:0:1000:yes"
+ALLINFO[1]="$KARABO_SERVERS/guiServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel DeviceServer.autoStart[0].GuiServerDevice.port=$port:0:1000:yes"
 
 logLevel=INFO
 serverId=Karabo_DataLoggerServer
-ALLINFO[1]="$KARABO_SERVERS/dataLoggerServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
+ALLINFO[2]="$KARABO_SERVERS/dataLoggerServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
 
 logLevel=INFO
 serverId=Karabo_DLManagerServer
-ALLINFO[2]="$KARABO_SERVERS/dataLoggerManagerServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
+ALLINFO[3]="$KARABO_SERVERS/dataLoggerManagerServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
 
 logLevel=INFO
 serverId=Karabo_ProjectServer
-ALLINFO[3]="$KARABO_SERVERS/projectServer/startCppServer:DeviceServer.Logger.priority=$logLevel DeviceServer.serverId=$serverId:0:1000:yes"
+ALLINFO[4]="$KARABO_SERVERS/projectServer/startCppServer:DeviceServer.Logger.priority=$logLevel DeviceServer.serverId=$serverId:0:1000:yes"
 
 logLevel=INFO
 serverId=Karabo_MacroServer
-ALLINFO[4]="$KARABO_SERVERS/macroServer/startPythonServerApi2:DeviceServer.serverId=$serverId:0:1000:yes"
+ALLINFO[5]="$KARABO_SERVERS/macroServer/startPythonServerApi2:DeviceServer.serverId=$serverId:0:1000:yes"
 
 
 #####################
