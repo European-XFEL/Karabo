@@ -1241,6 +1241,8 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karabo/net/TcpChannel.cc"
             ex="false"
             tool="1"
@@ -3149,6 +3151,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/TcpChannel.cc"
             ex="false"
