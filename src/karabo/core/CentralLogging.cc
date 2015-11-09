@@ -19,6 +19,10 @@ namespace karabo {
  
  
         void CentralLogging::expectedParameters(Schema& expected) {
+            
+            OVERWRITE_ELEMENT(expected).key("deviceId")
+                    .setNewDefaultValue("clog_0")
+                    .commit();
  
             PATH_ELEMENT(expected).key("directory")
                     .displayedName("Directory")
@@ -147,8 +151,12 @@ namespace karabo {
                     }
                     if (m_logstream.tellp() > 0) m_logstream << "\n";
                 }
- 
-                m_logstream << data << "\n";
+                
+                string message = data;
+                boost::replace_all(message, "#", "\n");
+                boost::replace_all(message, "|", "\t");
+                
+                m_logstream << message;
                 set("counter", get<long long>("counter") + 1);
  
                 if (m_logstream.tellp() >= get<int>("maximumFileSize")*1000000) {
