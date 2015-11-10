@@ -1,23 +1,29 @@
 __author__="Irina Kozlova <irina.kozlova at xfel.eu>"
 __date__ ="$Oct 9, 2013$"
 
-
+import os.path as op
 import unittest
-from karabo.karathon import *
+
 import numpy
+
+from karabo.karathon import *
+
 
 class  RawImageData_TestCase(unittest.TestCase):
     def setUp(self):
-        self.resourcesdir = "../../../../src/pythonKarabo/tests/tests_api_1/resources/"
-    
+        self.resourcesdir = op.join(op.dirname(__file__), 'resources')
+
     def test_rawimagedata(self):
         
         try:
-            image = numpy.fromfile(self.resourcesdir+"image_0001.raw", dtype=numpy.uint32)            
+            image = numpy.fromfile(op.join(self.resourcesdir, "image_0001.raw"),
+                                   dtype=numpy.uint32)
             self.assertEqual(image.size, 1048576)
             image = image.reshape(1024, 1024)
             
-            # params: numpy array, optional copy flag (True), optional dimensions (guessed from ndarray), optional encoding (guessed from ndarray), optional endianness (CPU endianness)
+            # params: numpy array, optional copy flag (True), optional
+            # dimensions (guessed from ndarray), optional encoding (guessed
+            # from ndarray), optional endianness (CPU endianness)
             rdata = RawImageData(image)
             
             self.assertEqual(rdata.getData().size, 1048576)
