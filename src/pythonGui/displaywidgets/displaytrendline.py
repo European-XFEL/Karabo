@@ -24,7 +24,7 @@ from guiqwt.tools import SelectPointTool
 from guiqwt.builder import make
 from guiqwt import signals
 
-from karabo.hashtypes import Simple
+from karabo.hash import Simple
 from karabo.timestamp import Timestamp
 
 

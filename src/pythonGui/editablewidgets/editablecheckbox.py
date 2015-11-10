@@ -24,7 +24,7 @@ __all__ = ["EditableCheckBox"]
 from util import SignalBlocker
 from widget import EditableWidget
 
-from karabo.hashtypes import Bool
+from karabo.hash import Bool
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QCheckBox

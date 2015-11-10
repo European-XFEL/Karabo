@@ -5,8 +5,7 @@ This is really weird, why should everything be defined in karabo.device?
 So now karabo.device star-imports this module, which does the old stuff. """
 
 from karabo.enums import MetricPrefix, Unit, EncodingType
-from karabo.hash import Hash
-from karabo.hashtypes import Type
+from karabo.hash import Hash, Type
 from karabo.schema import *
 import karabo.schema
 
@@ -99,7 +98,7 @@ class Leaf(Dotter):
         super(Leaf, self).commit()
 
 
-for t in hashtypes.Type.types:
+for t in Type.types:
     if t is not None:
         name = "{}_ELEMENT".format(t.hashname())
         globals()[name] = type(name, (Leaf,), dict(hashname=t.hashname()))

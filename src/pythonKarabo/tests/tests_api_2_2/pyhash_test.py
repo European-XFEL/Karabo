@@ -1,7 +1,6 @@
 import unittest
-from karabo.hash import (Hash, XMLWriter, XMLParser, BinaryWriter,
+from karabo.hash import (Hash, Schema, XMLWriter, XMLParser, BinaryWriter,
                          BinaryParser)
-from karabo.hashtypes import Schema_ as Schema
 import numpy
 from numpy.testing import assert_equal
 

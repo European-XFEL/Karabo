@@ -7,7 +7,7 @@ import sys
 from subprocess import call
 
 from karabo.schema import Configurable
-from karabo.hashtypes import String
+from karabo.hash import String
 from karabo.enums import Assignment, AccessLevel
 
 
