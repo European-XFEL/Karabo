@@ -1,9 +1,7 @@
 
 import karabo.hash
-from karabo import hashtypes
 from karabo.enums import AccessLevel, AccessMode, Assignment
-from karabo.hashtypes import (Descriptor, Schema_ as Schema,  # this is not nice
-                              Attribute)
+from karabo.hash import Descriptor, Attribute, Schema
 from karabo.registry import Registry
 
 from asyncio import coroutine, gather
@@ -82,7 +80,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
 
     @classmethod
     def getClassSchema(cls, rules=None):
-        schema = karabo.schema.Schema(cls.__name__, hash=rules)
+        schema = Schema(cls.__name__, hash=rules)
         for c in cls.__mro__[::-1]:
             if hasattr(c, "expectedParameters"):
                 c.expectedParameters(schema)

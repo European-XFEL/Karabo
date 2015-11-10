@@ -6,7 +6,7 @@ from PyQt4.QtGui import QAction, QCheckBox, QInputDialog
 
 from numpy import log2
 
-from karabo.hashtypes import Integer
+from karabo.hash import Integer
 
 class SingleBit(DisplayWidget):
     category = Integer
