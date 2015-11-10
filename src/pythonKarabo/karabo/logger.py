@@ -4,8 +4,7 @@ import time
 import weakref
 
 from karabo.enums import Assignment
-from karabo.hash import Hash
-from karabo.hashtypes import String, StringList
+from karabo.hash import Hash, String, StringList
 from karabo.schema import Configurable, ListOfNodes
 
 

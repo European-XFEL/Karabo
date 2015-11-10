@@ -1,0 +1,3 @@
+
+class KaraboError(Exception):
+    pass

@@ -9,7 +9,7 @@
 """
 
 from karabo.hash import Hash
-from karabo import hashtypes
+import karabo.hash as hashmod
 from karabo.enums import AccessMode, AccessLevel
 from registry import Monkey
 from network import Network
@@ -195,7 +195,7 @@ class _BoxValue(object):
         self.value.__dict__[attr] = value
 
 
-class Descriptor(hashtypes.Descriptor, metaclass=Monkey):
+class Descriptor(hashmod.Descriptor, metaclass=Monkey):
     # Means that parent class is overwritten/updated
 
     def completeItem(self, treeWidget, item, box, isClass):
@@ -225,7 +225,7 @@ class Descriptor(hashtypes.Descriptor, metaclass=Monkey):
             instance.__dict__[self.key]._set(self.cast(value), None)
 
 
-class Type(hashtypes.Type, metaclass=Monkey):
+class Type(hashmod.Type, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     icon = icons.undefined
 
@@ -311,12 +311,12 @@ class Type(hashtypes.Type, metaclass=Monkey):
             return box.value
 
 
-class Char(hashtypes.Char, metaclass=Monkey):
+class Char(hashmod.Char, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     icon = icons.string
 
 
-class String(hashtypes.String, metaclass=Monkey):
+class String(hashmod.String, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     icon = icons.string
 
@@ -328,17 +328,17 @@ class String(hashtypes.String, metaclass=Monkey):
         return item
 
 
-class Integer(hashtypes.Integer, metaclass=Monkey):
+class Integer(hashmod.Integer, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     icon = icons.int
 
 
-class Number(hashtypes.Number, metaclass=Monkey):
+class Number(hashmod.Number, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     icon = icons.float
 
 
-class Bool(hashtypes.Bool, metaclass=Monkey):
+class Bool(hashmod.Bool, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     icon = icons.boolean
 
@@ -353,7 +353,7 @@ class Object(object):
         else:
             self.__dummies__ = {}
         for k, v in sdict.items():
-            if isinstance(v, hashtypes.Descriptor):
+            if isinstance(v, hashmod.Descriptor):
                 b = getattr(box.boxvalue, k, None)
                 if b is None:
                     b = Box(box.path + (k,), v, box)
@@ -392,7 +392,7 @@ class Dummy(object):
     All the actual functionality is done in Box."""
 
 
-class Schema(hashtypes.Descriptor):
+class Schema(hashmod.Descriptor):
     def __init__(self, name='DUNNO'):
         self.dict = OrderedDict()
         self.cls = None
@@ -462,7 +462,7 @@ class Schema(hashtypes.Descriptor):
 
     def _item(self, treeWidget, parent, box, isClass):
         for k, v in self.dict.items():
-            if isinstance(v, hashtypes.Descriptor):
+            if isinstance(v, hashmod.Descriptor):
                 try:
                     c = getattr(box.boxvalue, k)
                 except AttributeError:
@@ -742,7 +742,7 @@ class ChoiceOfNodes(Schema):
         box.signalUpdateComponent.connect(other.slotSet)
 
 
-class ListOfNodes(hashtypes.Descriptor):
+class ListOfNodes(hashmod.Descriptor):
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
         return ListOfNodes()
@@ -776,7 +776,7 @@ class ListOfNodes(hashtypes.Descriptor):
         box.descriptor = None
 
 
-class VectorHash(hashtypes.VectorHash, metaclass=Monkey):
+class VectorHash(hashmod.VectorHash, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     #icon = icons.string
  

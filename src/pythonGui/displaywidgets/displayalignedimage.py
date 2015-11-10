@@ -13,7 +13,7 @@ from widget import DisplayWidget
 import numpy as np
 from guiqwt.plot import ImageDialog
 from guiqwt.builder import make
-from karabo import hashtypes
+from karabo.hash import Type
 
 from PyQt4.QtGui import (QSlider, QWidget, QHBoxLayout, QVBoxLayout,
                             QComboBox, QSpinBox, QLabel)
@@ -247,7 +247,7 @@ class DisplayAlignedImage(DisplayWidget):
         # Data type information
         type = value.dataType
         try:
-            type = hashtypes.Type.fromname[type].numpy
+            type = Type.fromname[type].numpy
         except KeyError as e:
             e.message = 'Image element has improper type "{}"'.format(type)
             raise

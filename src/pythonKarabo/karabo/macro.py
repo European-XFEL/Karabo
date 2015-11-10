@@ -6,10 +6,10 @@ import sys
 import threading
 import weakref
 
-from karabo import KaraboError
 from karabo.enums import AccessLevel, AccessMode
 from karabo.eventloop import EventLoop
-from karabo.hashtypes import Descriptor, Int32 as Int, Slot, String, Type
+from karabo.exceptions import KaraboError
+from karabo.hash import Descriptor, Int32 as Int, Slot, String, Type
 from karabo.device_client import waitUntilNew, Proxy, getDevice
 from karabo.python_device import Device
 

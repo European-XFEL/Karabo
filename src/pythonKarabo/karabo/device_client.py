@@ -16,9 +16,8 @@ from functools import wraps
 import time
 from weakref import WeakSet
 
-from karabo import KaraboError
-from karabo.hash import Hash
-from karabo.hashtypes import Slot, Type, Descriptor
+from karabo.exceptions import KaraboError
+from karabo.hash import Hash, Slot, Type, Descriptor
 from karabo.signalslot import slot
 from karabo.python_device import Device
 

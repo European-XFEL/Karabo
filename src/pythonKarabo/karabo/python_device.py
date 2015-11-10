@@ -6,16 +6,17 @@ import datetime
 import sys
 import socket
 from abc import ABCMeta, abstractmethod
+
 from karabo.async import NewValueTimestamp
-from karabo.hash import BinaryParser, Hash, HashMergePolicy
-from karabo.hashtypes import Bool, Int32, UInt32, String, Type
 from karabo.logger import Logger
-from karabo.schema import Configurable, Schema, Validator, Node
+from karabo.schema import Configurable, Validator, Node
 from karabo.signalslot import (SignalSlotable, Signal, ConnectionType, slot,
                                coslot, replySlot)
 from karabo.timestamp import Timestamp
-from karabo import hashtypes, KaraboError
 from karabo.enums import AccessLevel, AccessMode, Assignment
+from karabo.exceptions import KaraboError
+from karabo.hash import (BinaryParser, Bool, Hash, HashType, Int32, UInt32,
+                         Schema, SchemaHashType, String, Type, HashMergePolicy)
 from karabo.registry import Registry
 from karabo.eventloop import EventLoop
 from karabo.launcher import getClassSchema_async, sameThread, legacy
@@ -76,9 +77,9 @@ class Device(SignalSlotable):
                displayedName="Logger",
                requiredAccessLevel=AccessLevel.EXPERT)
 
-    signalChanged = Signal(hashtypes.Hash(), hashtypes.String())
-    signalStateChanged = Signal(hashtypes.Hash(), hashtypes.String())
-    signalSchemaUpdated = Signal(hashtypes.Schema(), hashtypes.String())
+    signalChanged = Signal(HashType(), String())
+    signalStateChanged = Signal(HashType(), String())
+    signalSchemaUpdated = Signal(SchemaHashType(), String())
 
     subclasses = {}
 
@@ -417,11 +418,9 @@ class PythonDevice(Device):
     def noStateTransition(self):
         self.signalNoTransition("No state transition possible", self.deviceId)
 
-    signalNoTransition = Signal(hashtypes.String(), hashtypes.String())
-    signalProgressUpdated = Signal(hashtypes.Int32(), hashtypes.String(),
-                                   hashtypes.String())
-    signalNotification = Signal(hashtypes.String(), hashtypes.String(),
-                                hashtypes.String(), hashtypes.String())
+    signalNoTransition = Signal(String(), String())
+    signalProgressUpdated = Signal(Int32(), String(), String())
+    signalNotification = Signal(String(), String(), String(), String())
 
     def _initDeviceSlots(self):
         self.signalChanged.connect("*", "slotChanged", ConnectionType.NO_TRACK)

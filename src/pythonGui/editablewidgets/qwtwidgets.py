@@ -8,7 +8,7 @@
 from util import SignalBlocker
 from widget import EditableWidget
 
-from karabo.hashtypes import Number, Integer
+from karabo.hash import Number, Integer
 
 from PyQt4.Qwt5.Qwt import QwtSlider, QwtKnob
 

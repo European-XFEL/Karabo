@@ -1,9 +1,8 @@
 from __future__ import unicode_literals
-from karabo import hashtypes
-from karabo.hash import BinaryParser, Hash
-from karabo.hashtypes import String, Int32, Type, Slot
+from karabo.hash import (BinaryParser, Hash, HashType, Int32, Schema, Slot,
+                         String, Type)
 from karabo.enums import AccessLevel, Assignment, AccessMode
-from karabo.schema import Schema, Configurable
+from karabo.schema import Configurable
 from karabo.p2p import NetworkOutput
 from karabo.timestamp import Timestamp
 from karabo.registry import Registry
@@ -128,7 +127,7 @@ class SignalSlotable(Configurable):
 
         class Spam(SignalSlotable):
             signalHam = Signal(String(), Int())"""
-    signalChanged = Signal(hashtypes.Hash(), hashtypes.String())
+    signalChanged = Signal(HashType(), String())
 
     _deviceId_ = String(
         displayedName="_DeviceID_",
