@@ -1,17 +1,20 @@
 __author__="Irina Kozlova <irina.kozlova at xfel.eu>"
 __date__ ="$Sep 30, 2013$"
 
-
+import os.path as op
 import unittest
+
+from PIL import Image
+
 from karabo.karathon import *
 from karabo.decorators import *
 from .configuration_example_classes import SomeClass
-from PIL import Image
+
 
 class  CpuImage_TestCase(unittest.TestCase):
     def setUp(self):
-        self.resourcesdir = "../../../../src/pythonKarabo/tests/tests_api_1/resources/"
-    
+        self.resourcesdir = op.join(op.dirname(__file__), 'resources')
+
     def test_cpuimage_float(self):
         try:
             img = CpuImageFLOAT()
@@ -21,7 +24,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             self.fail("test_cpuimage_float exception group 1: " + str(e))
         
         try:
-            img = CpuImageUINT8(self.resourcesdir+"european-xfel-logo-greyscales.tif")
+            img = CpuImageUINT8(op.join(self.resourcesdir, "european-xfel-logo-greyscales.tif"))
             self.assertEqual(img.dimensionality(), 2)
             self.assertEqual(img.dimX(), 331)
             self.assertEqual(img.dimY(), 331)
@@ -56,7 +59,7 @@ class  CpuImage_TestCase(unittest.TestCase):
     def test_cpuimage_read_tif(self):
         try:
             img = CpuImageUINT8()
-            img.read(self.resourcesdir+"european-xfel-logo-greyscales.tif")
+            img.read(op.join(self.resourcesdir, "european-xfel-logo-greyscales.tif"))
             self.assertEqual(img.dimensionality(), 2)
             self.assertEqual(img.dimX(), 331)
             self.assertEqual(img.dimY(), 331)
@@ -69,7 +72,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             
     def test_cpuimage_save(self):
         try:
-            img = CpuImageUINT8(self.resourcesdir+"european-xfel-logo-greyscales.tif")
+            img = CpuImageUINT8(op.join(self.resourcesdir, "european-xfel-logo-greyscales.tif"))
             Image.fromarray(img.getData()).save("/tmp/logo_savedFile.tif")
         except Exception as e:
             self.fail("test_cpuimage_save exception: " + str(e))                 
@@ -77,7 +80,7 @@ class  CpuImage_TestCase(unittest.TestCase):
     def test_cpuimage_getheader(self):  
         try:
             img = CpuImageUINT8()
-            img.read(self.resourcesdir+"european-xfel-logo-greyscales.tif")
+            img.read(op.join(self.resourcesdir, "european-xfel-logo-greyscales.tif"))
             h = img.getHeader()
             self.assertEqual(h.get("__dimX"), 331)
             self.assertEqual(h.get("__dimY"), 331)
@@ -88,7 +91,7 @@ class  CpuImage_TestCase(unittest.TestCase):
     def test_cpuimage_getstatistics(self):
         try:
             img = CpuImageUINT8()
-            img.read(self.resourcesdir+"european-xfel-logo-greyscales.tif")
+            img.read(op.join(self.resourcesdir, "european-xfel-logo-greyscales.tif"))
             self.assertEqual(img.pixelType(), "UINT8")
             self.assertEqual(img.size(), 109561)
             self.assertEqual(img.byteSize(), 109561)
@@ -108,7 +111,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             
     def test_cpuimage_assign(self):
         try:
-            fileName = self.resourcesdir+"european-xfel-logo-greyscales.tif"
+            fileName = op.join(self.resourcesdir, "european-xfel-logo-greyscales.tif")
             img = CpuImageUINT8(fileName)
             img2 = CpuImageUINT8()
             img2.assign(img)
@@ -124,7 +127,7 @@ class  CpuImage_TestCase(unittest.TestCase):
           
     def test_cpuimage_getData(self):
         try:
-            img = CpuImageUINT8(self.resourcesdir+"european-xfel-logo-greyscales.tif")
+            img = CpuImageUINT8(op.join(self.resourcesdir, "european-xfel-logo-greyscales.tif"))
             pix = img.getData()
             self.assertEqual(str(pix.dtype), 'uint8')
             self.assertEqual(pix.ndim, 2)
@@ -136,7 +139,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             
     def test_cpuimage_assign_ndarray(self):
         try:
-            img = CpuImageUINT8(self.resourcesdir+"european-xfel-logo-greyscales.tif")
+            img = CpuImageUINT8(op.join(self.resourcesdir, "european-xfel-logo-greyscales.tif"))
             pix = img.getData()
             
             img2 = CpuImageUINT8()
@@ -164,7 +167,7 @@ class  CpuImage_TestCase(unittest.TestCase):
     def test_cpuimage_read_png(self):
         try:
             img = CpuImageUINT8()
-            img.read(self.resourcesdir+"image_0001A.png")
+            img.read(op.join(self.resourcesdir, "image_0001A.png"))
             self.assertEqual(img.dimensionality(), 2)
             self.assertEqual(img.dimX(), 800)
             self.assertEqual(img.dimY(), 600)
