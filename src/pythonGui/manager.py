@@ -27,7 +27,6 @@ from messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
 from network import Network
 from projectmodel import ProjectModel
-from sqldatabase import SqlDatabase
 from util import getSaveFileName
 
 from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
@@ -50,7 +49,7 @@ class _Manager(QObject):
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
-    signalLogDataAvailable = pyqtSignal(str) # logData
+    signalLogDataAvailable = pyqtSignal(object) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
     
     signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
@@ -61,13 +60,9 @@ class _Manager(QObject):
 
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
-        
+
         # Check GUI version
         self._checkVersion()
-        
-        # Initiate database connection
-        self.sqlDatabase = SqlDatabase()
-        self.sqlDatabase.openConnection()
         
         # Model for navigation views
         self.systemTopology = NavigationTreeModel(self)
@@ -125,10 +120,6 @@ class _Manager(QObject):
         
         # State, if instantiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
-
-
-    def closeDatabaseConnection(self):
-        self.sqlDatabase.closeConnection()
 
 
     def _clearDeviceParameterPage(self, deviceId):
@@ -380,8 +371,8 @@ class _Manager(QObject):
                                                   Hash(classId, conf.toHash())))
 
 
-    def handle_log(self, message):
-        self.signalLogDataAvailable.emit(message)
+    def handle_log(self, messages):
+        self.signalLogDataAvailable.emit(messages)
 
 
     def handle_brokerInformation(self, **kwargs):
@@ -412,14 +403,11 @@ class _Manager(QObject):
         # Check for existing stuff and remove
         instanceIds, serverClassIds = self.systemTopology.detectExistingInstances(topologyEntry)
         for id in instanceIds:
-            timestamp = datetime.now()
-            # TODO: better format for timestamp and timestamp generation in karabo
-            timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-            logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
-                         "Detected dirty shutdown for instance \"" + id + "\", which " \
-                         "is coming up now.#"
-            # A log message is triggered
-            self.handle_log(logMessage)
+            logMessage = dict(
+                timestamp=datetime.now().isoformat(), type="INFO", category=id,
+                message='Detected dirty shutdown for instance "{}", '
+                        'which is coming up now.'.format(id))
+            self.handle_log([logMessage])
             
             # Clear deviceId parameter page, if existent
             self._clearDeviceParameterPage(id)

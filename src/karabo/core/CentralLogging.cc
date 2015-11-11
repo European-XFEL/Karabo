@@ -99,10 +99,7 @@ namespace karabo {
                 m_loggerConnection->start();
                 m_loggerChannel = m_loggerConnection->createChannel();
                 m_loggerChannel->setFilter("target = 'log'");
-                // TODO: This is for "branch 1.3 GUI client" style log messages
-                m_loggerChannel->readAsyncHashString(boost::bind(&karabo::core::CentralLogging::logHandler, this, _1, _2, _3));
-                // TODO: This is for "future GUI client" style log messages
-                //m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::core::CentralLogging::logHandler, this, _1, _2, _3));
+                m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::core::CentralLogging::logHandler, this, _1, _2, _3));
                 m_logThread = boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
  
                 m_timer.expires_from_now(boost::posix_time::seconds(get<int>("flushInterval")));
@@ -134,14 +131,14 @@ namespace karabo {
             m_timer.expires_from_now(boost::posix_time::seconds(get<int>("flushInterval")));
             m_timer.async_wait(boost::bind(&CentralLogging::flushHandler, this, boost::asio::placeholders::error));
         }
- 
- 
+
+
         void CentralLogging::logHandler(karabo::net::BrokerChannel::Pointer channel,
-                                        const karabo::util::Hash::Pointer& header, const std::string& data) {
+                                        const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "logHandler called ...";
                 boost::mutex::scoped_lock lock(m_streamMutex);
- 
+
                 if (!m_logstream.is_open()) {
                     string logname = get<string>("directory") + "/log_" + toString(m_lastIndex) + ".txt";
                     m_logstream.open(logname.c_str(), ios::out | ios::app);
@@ -151,62 +148,28 @@ namespace karabo {
                     }
                     if (m_logstream.tellp() > 0) m_logstream << "\n";
                 }
-                
-                string message = data;
-                boost::replace_all(message, "#", "\n");
-                boost::replace_all(message, "|", "\t");
-                
-                m_logstream << message;
-                set("counter", get<long long>("counter") + 1);
- 
+
+                if (data->has("messages")) {
+                    const vector<Hash>& vechash = data->get<std::vector<util::Hash> >("messages");
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Log " << vechash.size();
+                    for (vector<Hash>::const_iterator it = vechash.begin(); it != vechash.end(); ++it) {
+                        m_logstream << it->get<string>("timestamp") << "\t" << it->get<string>("type") << "\t"
+                                << it->get<string>("category") << "\t" << it->get<string>("message") << "\n";
+                    }
+                    set("counter", get<long long>("counter") + vechash.size());
+                }
+
                 if (m_logstream.tellp() >= get<int>("maximumFileSize")*1000000) {
                     m_logstream.close();
                     m_lastIndex = incrementLastIndex();
                 }
- 
+
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();
             }
         }
- 
-//        TODO: This is for new "future GUI client" style log messages ...  
-//        void CentralLogging::logHandler(karabo::net::BrokerChannel::Pointer channel,
-//                                        const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data) {
-//            try {
-//                KARABO_LOG_FRAMEWORK_DEBUG << "logHandler called ...";
-//                boost::mutex::scoped_lock lock(m_streamMutex);
-// 
-//                if (!m_logstream.is_open()) {
-//                    string logname = get<string>("directory") + "/log_" + toString(m_lastIndex) + ".txt";
-//                    m_logstream.open(logname.c_str(), ios::out | ios::app);
-//                    if (!m_logstream.is_open()) {
-//                        KARABO_LOG_FRAMEWORK_ERROR << "Failed to open \"" << logname << "\". Check permissions.";
-//                        return;
-//                    }
-//                    if (m_logstream.tellp() > 0) m_logstream << "\n";
-//                }
-// 
-//                if (data->has("messages")) {
-//                    const vector<Hash>& vechash = data->get<std::vector<util::Hash> >("messages");
-//                    KARABO_LOG_FRAMEWORK_DEBUG << "Log " << vechash.size();
-//                    for (vector<Hash>::const_iterator it = vechash.begin(); it != vechash.end(); ++it) {
-//                        m_logstream << it->get<string>("timestamp") << "\t" << it->get<string>("type") << "\t"
-//                                << it->get<string>("category") << "\t" << it->get<string>("message") << "\n";
-//                    }
-//                    set("counter", get<long long>("counter") + vechash.size());
-//                }
-// 
-//                if (m_logstream.tellp() >= get<int>("maximumFileSize")*1000000) {
-//                    m_logstream.close();
-//                    m_lastIndex = incrementLastIndex();
-//                }
-// 
-//            } catch (const Exception& e) {
-//                KARABO_LOG_FRAMEWORK_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();
-//            }
-//        }
- 
- 
+
+
         int CentralLogging::determineLastIndex() {
             string lastIndexFilename = get<string>("directory") + "/LastIndex.txt";
             int idx;

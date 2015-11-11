@@ -119,7 +119,7 @@ class DeviceServer(SignalSlotable):
                     "layout", Hash("Pattern", Hash(
                         "format", "%d{%F %H:%M:%S} %p  %c  : %m%n")),
                     "filename", "device-server.log"))]))],
-             "appenders", [
+            "appenders", [
                 Hash("Ostream", Hash("layout", Hash(
                     "Pattern", Hash("format", "%p %c  : %m%n")))),
                 Hash("RollingFile", Hash(
@@ -127,9 +127,9 @@ class DeviceServer(SignalSlotable):
                     Hash("Pattern", Hash("format",
                                          "%d{%F %H:%M:%S} %p  %c  : %m%n")),
                     "filename", "device-server.log")),
-                Hash("Network", Hash("layout", Hash(
-                    "Pattern", Hash("format",
-                                    "%d{%F %H:%M:%S} | %p | %c | %m"))))])
+                # network appender has fixed layout => nothing to specify here
+                Hash("Network", Hash())
+            ])
 
     def run(self):
         self.log.setBroker(self._ss)
