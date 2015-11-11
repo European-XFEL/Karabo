@@ -1,11 +1,13 @@
 import unittest
-from karabo.hash import (Hash, Schema, XMLWriter, XMLParser, BinaryWriter,
-                         BinaryParser)
+from zlib import adler32
+
 import numpy
 from numpy.testing import assert_equal
 
+from karabo.hash import (Hash, Schema, XMLWriter, XMLParser, BinaryWriter,
+                         BinaryParser)
 from karabo.karathon import BinarySerializerHash
-from zlib import adler32
+
 
 class Hash_TestCase(unittest.TestCase):
 

@@ -6,12 +6,12 @@ import sys
 import threading
 import weakref
 
+from karabo.device_client import waitUntilNew, Proxy, getDevice
 from karabo.enums import AccessLevel, AccessMode
 from karabo.eventloop import EventLoop
-from karabo.exceptions import KaraboError
 from karabo.hash import Descriptor, Int32 as Int, Slot, String, Type
-from karabo.device_client import waitUntilNew, Proxy, getDevice
 from karabo.python_device import Device
+
 
 def Monitor():
     def outer(prop):

@@ -2,13 +2,11 @@ __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 8, 2013 12:55:50 PM$"
 
 import os
-import os.path
 import sys
-from subprocess import call
 
-from karabo.schema import Configurable
-from karabo.hash import String
 from karabo.enums import Assignment, AccessLevel
+from karabo.hash import String
+from karabo.schema import Configurable
 
 
 class PluginLoader(Configurable):

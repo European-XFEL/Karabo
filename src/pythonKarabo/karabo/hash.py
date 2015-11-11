@@ -11,16 +11,15 @@ from collections import OrderedDict
 from enum import Enum
 from io import BytesIO
 import numbers
-from xml.etree import ElementTree
 from struct import pack, unpack, calcsize
 import sys
+from xml.etree import ElementTree
 
 import numpy as np
 
-import karabo
-from karabo.registry import Registry
 from karabo.enums import AccessLevel, AccessMode, Assignment
 from karabo.exceptions import KaraboError
+from karabo.registry import Registry
 
 
 class Attribute(object):
@@ -743,7 +742,7 @@ class SchemaHashType(HashType):
             else:
                 assert isinstance(data.hash[p], Hash), \
                     "no proper node: {}".format(p)
-        writer = karabo.hash.BinaryWriter()
+        writer = BinaryWriter()
         h = writer.write(data.hash)
         s = data.name.encode('utf8')
         file.writeFormat('I', len(h) + len(s) + 1)

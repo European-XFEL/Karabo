@@ -1,19 +1,16 @@
 from __future__ import unicode_literals
-from karabo.hash import (BinaryParser, Hash, HashType, Int32, Schema, Slot,
-                         String, Type)
-from karabo.enums import AccessLevel, Assignment, AccessMode
-from karabo.schema import Configurable
-from karabo.p2p import NetworkOutput
-from karabo.timestamp import Timestamp
-from karabo.registry import Registry
-
 from asyncio import (async, CancelledError, coroutine, Future, get_event_loop,
                      iscoroutinefunction, sleep, TimeoutError, wait, wait_for)
-from functools import wraps
 import random
-import sys
 import time
 import weakref
+
+from karabo.enums import AccessLevel, Assignment, AccessMode
+from karabo.hash import (BinaryParser, Hash, HashType, Int32, Schema, Slot,
+                         String, Type)
+from karabo.p2p import NetworkOutput
+from karabo.registry import Registry
+from karabo.schema import Configurable
 
 
 class Signal(object):
