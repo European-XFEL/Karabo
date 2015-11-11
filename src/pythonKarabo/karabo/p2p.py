@@ -7,7 +7,7 @@ from struct import pack, unpack, calcsize
 import numpy
 
 from karabo.enums import Assignment, AccessMode
-from karabo.hash import Hash, XMLParser, VectorString, String
+from karabo.hash import Hash, VectorString, String
 from karabo.schema import Configurable
 
 

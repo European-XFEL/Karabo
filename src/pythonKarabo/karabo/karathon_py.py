@@ -2,14 +2,14 @@
 
 Historically, all devices just did a `from karabo.device import *`.
 This is really weird, why should everything be defined in karabo.device?
-So now karabo.device star-imports this module, which does the old stuff. """
-
-from karabo.enums import MetricPrefix, Unit, EncodingType
-from karabo.hash import Hash, Type
-from karabo.schema import *
-import karabo.schema
+So now karabo.device star-imports this module, which does the old stuff.
+"""
 
 from enum import Enum
+
+from karabo.enums import MetricPrefix, Unit, EncodingType
+from karabo.hash import Hash, Schema, Type
+from karabo.schema import Validator
 
 __all__ = ["MetricPrefix", "Unit", "EncodingType", "Hash", "Validator",
            "Schema", "PATH_ELEMENT", "NODE_ELEMENT", "SLOT_ELEMENT",

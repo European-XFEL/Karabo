@@ -1,18 +1,16 @@
-import karabo
-
 from asyncio import (async, coroutine, gather, set_event_loop,
                      TimeoutError)
-from unittest import TestCase, main
 import sys
 import time
+from unittest import TestCase, main
 
 from karabo.api import Slot, Int, sleep
-from karabo.macro import Macro
-from karabo.python_device import Device
-from karabo.python_server import KaraboStream
 from karabo.device_client import (waitUntilNew, waitUntil, setWait, setNoWait,
                                   getDevice, executeNoWait, updateDevice,
                                   Queue)
+from karabo.macro import Macro
+from karabo.python_device import Device
+from karabo.python_server import KaraboStream
 
 from .eventloop import startDevices, stopDevices, sync_tst, async_tst
 
