@@ -6,7 +6,7 @@ import unittest
 
 import numpy
 
-from karabo.karathon import *
+from karathon import *
 
 
 class  RawImageData_TestCase(unittest.TestCase):

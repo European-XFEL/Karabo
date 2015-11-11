@@ -1,3 +1,15 @@
+safeRunCommand() {
+    typeset cmnd="$*"
+    typeset ret_code
+
+    eval $cmnd
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+        printf "Error : [%d] when executing command: '$cmnd'" $ret_code
+        exit $ret_code
+    fi
+}
+
 usage()
 {
   cat <<EOF
@@ -107,6 +119,9 @@ fi
 mkdir -p $HOME/.karabo
 echo $installDir/karabo-$VERSION > $HOME/.karabo/karaboFramework
 #echo "https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo" > $HOME/.karabo/karaboSvnPath
+# fix the shebang line of Python entry-points
+safeRunCommand "$installDir/karabo-$VERSION/bin/.fix-python-scripts.sh" $installDir/karabo-$VERSION
+
 # change sipconfig.py
 #
 # find site-packages directory using installed python

@@ -3,7 +3,8 @@
 # and open the template in the editor.
 
 import unittest
-from karabo.karathon import (Hash, NDArray, BinarySerializerHash)
+
+from karathon import Hash, NDArray, BinarySerializerHash
 import numpy as np
 
 

@@ -1,8 +1,8 @@
 from abc import (ABCMeta, abstractmethod)
 from karabo.decorators import (KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
 from karabo.no_fsm import NoFsm
-from karabo.karathon import (OVERWRITE_ELEMENT, SLOT_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT
-                            , Schema, SignalSlotable, Unit, MetricPrefix)
+from karathon import (OVERWRITE_ELEMENT, SLOT_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
+                      Schema, SignalSlotable, Unit, MetricPrefix)
 
 __author__ = "esenov"
 __date__ = "$Apr 22, 2015 4:14:47 PM$"
