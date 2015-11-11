@@ -40,13 +40,10 @@ namespace karabo {
             int incrementLastIndex();
  
             void flushHandler(const boost::system::error_code& ec);
-            
-            void logHandler(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const std::string& data);
- 
-            //TODO: This is for new "future GUI client" style log messages ... 
-            //void logHandler(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data);
- 
- 
+
+            void logHandler(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data);
+
+
         private:
  
             unsigned int m_lastIndex;
