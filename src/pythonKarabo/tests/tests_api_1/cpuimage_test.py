@@ -6,7 +6,7 @@ import unittest
 
 from PIL import Image
 
-from karabo.karathon import *
+from karathon import *
 from karabo.decorators import *
 from .configuration_example_classes import SomeClass
 

@@ -5,7 +5,8 @@ import sys
 import unittest
 import time
 import platform
-from karabo.karathon import *
+
+from karathon import *
 
 
 class  Timestamp_TestCase(unittest.TestCase):

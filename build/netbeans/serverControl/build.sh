@@ -1,11 +1,12 @@
 #!/bin/bash
 CWD=$(pwd)
 DIST=dist/$(uname -s)
-# clean previous dist folder - in case of file/folders deletion/creation in oryginal source folder
+# clean previous dist folder - in case of file/folders deletion/creation in original source folder
 rm -rf dist
 mkdir -p $DIST/lib
 mkdir -p $DIST/bin
 cd $DIST/bin
+
 cat > karabo-server-control <<End-of-file
 #!/bin/bash
 #
@@ -20,17 +21,13 @@ if [ "\$OS" = "Darwin" ]; then
     export PATH=/opt/local/bin:\$PATH
     export PYTHONPATH=\$KARABO/lib:\$PYTHONPATH
     export DYLD_LIBRARY_PATH=\$KARABO/lib:\$KARABO/extern/lib:\$DYLD_LIBRARY_PATH
-    PYKARABO=\$KARABO/lib
-else
-    # Is a site-package in the shipped bundled python environment
-    PYKARABO=\$(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 fi
 
-python3 \$PYKARABO/karabo/karaboServerControl.py "\$@"
+python3 karaboServerControl.py "\$@"
 End-of-file
+
 chmod a+x karabo-server-control
-cd ../lib
-cp -rf ../../../../../../src/serverControl .
-rm -f `find . -type f -name *.pyc`
-rm -rf `find . -type d -name .svn`
+cp -f ../../../../../../src/serverControl/*.sh .
+cp -f ../../../../../../src/serverControl/karaboServerControl.py .
+cp -f ../../../../../../src/serverControl/config.ini .
 cd $CWD

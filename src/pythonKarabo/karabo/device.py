@@ -8,10 +8,11 @@ import datetime
 import sys
 import socket
 import re
+
 from PIL import Image
 import numpy as np
-from abc import ABCMeta, abstractmethod
-from karabo.karathon import *
+
+from karathon import *
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.configurator import Configurator
 from karabo.no_fsm import NoFsm
