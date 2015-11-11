@@ -49,7 +49,7 @@ class OkErrorFsm(base.BaseFsm):
         #  Source-State    Event     Target-State  Action          Guard
         stateMachineTransitionTable = [
             ('Ok', 'ErrorFoundEvent', 'Error', 'ErrorFoundAction', 'none'),
-            ('Error', 'ResetEvent',    'Ok',   'none',             'none')
+            ('Error', 'ResetEvent',    'Ok',   'ResetAction',             'none')
         ]
 
         #                           Name                Transition-Table  Initial-State
