@@ -291,7 +291,8 @@ class GuiServer(DeviceClientBase):
                     raise
             else:
                 for c in self.channels:
-                    self.respond(c, "log", message=message.data)
+                    self.respond(c, "log", messages=Hash.decode(
+                        message.data, "Bin")["messages"])
 
     def updateSystemTopology(self, instanceId, info, task):
         entry = super().updateSystemTopology(instanceId, info, task)

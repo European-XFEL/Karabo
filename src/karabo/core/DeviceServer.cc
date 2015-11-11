@@ -319,8 +319,7 @@ namespace karabo {
 
             config.set("appenders", newAppenders);
 
-            config.set("appenders[2].Network.layout", Hash());
-            config.set("appenders[2].Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
+            // network appender has fixed format (the one expected by GUI)
             config.set("appenders[2].Network.connection", m_connectionConfiguration);
 
             Hash category = config.get<Hash>("karabo");
