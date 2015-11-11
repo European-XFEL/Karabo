@@ -30,7 +30,12 @@ class NotificationPanel(Dockable, QWidget):
         mainLayout.addWidget(self.__logWidget)
         
         Manager().signalNotificationAvailable.connect(self.onNotificationAvailable)
+
     def onNotificationAvailable(self, timestamp, type, shortMessage, detailedMessage, deviceId):
-        # Change notification string to logwidget style string
-        data = timestamp + " | " + type + " | " + deviceId + " | " + shortMessage + detailedMessage + "#"
+        data = {
+            'type': type,
+            'category': deviceId,
+            'message': shortMessage + detailedMessage,
+            'timestamp': timestamp,
+        }
         self.__logWidget.addNotificationMessage(data)

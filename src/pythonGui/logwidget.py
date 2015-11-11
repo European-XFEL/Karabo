@@ -284,6 +284,8 @@ class LogWidget(QWidget):
 
         return filterWidget
 
+    def addNotificationMessage(self, msg):
+        self.onLogDataAvailable([msg])
 
     def onLogDataAvailable(self, logData):
         new = [Log(i, messageType=log["type"], instanceId=log["category"],
