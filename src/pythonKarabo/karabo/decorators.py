@@ -1,5 +1,5 @@
-from karabo.karathon import AssemblyRules, AccessType, READ, WRITE, INIT
 from karabo.configurator import Configurator
+from karathon import AssemblyRules, AccessType, READ, WRITE, INIT
 
 __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ = "$Aug 2, 2012 10:39:43 AM$"

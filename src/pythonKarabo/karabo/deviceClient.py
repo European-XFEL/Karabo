@@ -3,10 +3,10 @@
 # Author: <burkhard.heisen@xfel.eu>
 #
 
-from karabo.karathon import DeviceClient as CppDeviceClient
-from karabo.karathon import Hash
-from karabo.karathon import TextSerializerHash
-import karabo.karathon as krb
+from karathon import DeviceClient as CppDeviceClient
+from karathon import Hash
+from karathon import TextSerializerHash
+import karathon as krb
 
 from karabo.deviceclientproject import DeviceClientProject
 

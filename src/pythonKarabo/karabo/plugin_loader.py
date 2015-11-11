@@ -10,7 +10,7 @@ from subprocess import call
 import sys
 
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-from karabo.karathon import PATH_ELEMENT
+from karathon import PATH_ELEMENT
 
 
 @KARABO_CONFIGURATION_BASE_CLASS

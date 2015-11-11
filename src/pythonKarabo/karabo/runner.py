@@ -5,7 +5,7 @@ import os
 import sys
 import traceback
 from karabo.configurator import Configurator
-from karabo.karathon import Hash, loadFromFile, saveToFile
+from karathon import Hash, loadFromFile, saveToFile
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
 @KARABO_CONFIGURATION_BASE_CLASS

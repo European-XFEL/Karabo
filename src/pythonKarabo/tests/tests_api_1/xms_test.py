@@ -5,7 +5,9 @@ import unittest
 import threading
 import time
 import socket
-from karabo.karathon import *
+
+from karathon import *
+
 
 class RemoteClient(threading.Thread):
     def __init__(self, instanceId):
