@@ -143,7 +143,7 @@ namespace karabo {
                 m_loggerConnection->start();
                 m_loggerChannel = m_loggerConnection->createChannel();
                 m_loggerChannel->setFilter("target = 'log'");
-                m_loggerChannel->readAsyncHashString(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2, _3));
+                m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2, _3));
                 boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
 
                 // Start the guiDebugChannel
@@ -953,9 +953,10 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const std::string& logMessage) {
+        void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel,
+                const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data) {
             try {
-                Hash h("type", "log", "message", logMessage);
+                Hash h("type", "log", "messages", data->get<std::vector<util::Hash> >("messages"));
                 // Broadcast to all GUIs
                 safeAllClientsWrite(h);
 
