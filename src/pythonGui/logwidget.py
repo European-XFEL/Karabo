@@ -12,10 +12,7 @@
 __all__ = ["LogWidget", "LogQueryModel"]
 
 
-import globals
-import icons
-from manager import Manager
-from util import getSaveFileName
+from collections import namedtuple
 
 from PyQt4.QtCore import (QAbstractTableModel, QDate, QDateTime,
                           QModelIndex, Qt)
@@ -24,12 +21,13 @@ from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QLabel, QLineEdit, QPushButton, QTableView,
                          QToolButton, QVBoxLayout, QWidget)
 
-from collections import namedtuple
+import globals
+import icons
+from manager import Manager
+from util import getSaveFileName
 
 
 class LogWidget(QWidget):
-
-
     def __init__(self, parent=None, isLogData=True):
         # parent - parent widget
         # isLogData - describes whether this widget is a normal log or an notification widget
@@ -288,15 +286,13 @@ class LogWidget(QWidget):
 
 
     def onLogDataAvailable(self, logData):
-        new = [Log(
-                len(self.logs) + i + 1,
-                dateTime=QDateTime.fromString(l["timestamp"], Qt.ISODate),
-                messageType=l["type"], instanceId=l["category"],
-                description=l["message"], additionalDescription="")
-               for i, l in enumerate(logData)]
+        new = [Log(i, messageType=log["type"], instanceId=log["category"],
+                   description=log["message"], additionalDescription="",
+                   dateTime=QDateTime.fromString(log["timestamp"], Qt.ISODate))
+               for i, log in enumerate(logData, start=len(self.logs) + 1)]
         self.logs.extend(new)
-        for l in self.filter(new):
-            self.queryModel.add(l)
+        for log in self.filter(new):
+            self.queryModel.add(log)
 
     def onFilterOptionVisible(self, checked):
         """
@@ -321,16 +317,17 @@ class LogWidget(QWidget):
     def filter(self, g):
         """ filter relevant items from generator g"""
         if self.isLogData:
-            s = dict(DEBUG=self.pbFilterDebug, INFO=self.pbFilterInfo,
-                     WARN=self.pbFilterWarn, ERROR=self.pbFilterError)
+            buttons = dict(DEBUG=self.pbFilterDebug, INFO=self.pbFilterInfo,
+                           WARN=self.pbFilterWarn, ERROR=self.pbFilterError)
         else:
-            s = dict(ERROR=self.pbFilterError, ALARM_LOW=self.pbFilterAlarm,
-                     ALARM_HIGH=self.pbFilterAlarm,
-                     WARN_LOW=self.pbFilterWarning,
-                     WARN_HIGH=self.pbFilterWarning)
-        msgs = {k for k, v in s.items() if v.isChecked()}
-        if msgs:
-            g = (l for l in g if (l.messageType in msgs))
+            buttons = dict(ERROR=self.pbFilterError,
+                           ALARM_LOW=self.pbFilterAlarm,
+                           ALARM_HIGH=self.pbFilterAlarm,
+                           WARN_LOW=self.pbFilterWarning,
+                           WARN_HIGH=self.pbFilterWarning)
+        types = {k for k, v in buttons.items() if v.isChecked()}
+        if types:
+            g = (log for log in g if (log.messageType in types))
 
         if self.gbDate.isChecked():
             startDateTime = self.dtStartDate.dateTime()
@@ -347,16 +344,18 @@ class LogWidget(QWidget):
                 self.dtStartDate.setDateTime(endDateTime)
                 self.dtEndDate.setDateTime(startDateTime)
 
-            g = (l for l in g if startDateTime < l.dateTime < endDateTime)
+            g = (log for log in g
+                 if startDateTime < log.dateTime < endDateTime)
 
         text = self.leSearch.text()
         if text:
             ins = self.pbSearchInsId.isChecked()
             des = self.pbSearchDescr.isChecked()
             add = self.pbSearchAddDescr.isChecked()
-            g = (l for l in g if (ins and text in l.instanceId) or
-                                 (des and text in l.description) or
-                                 (add and text in l.additionalDescription))
+            g = (log for log in g
+                 if (ins and text in log.instanceId) or
+                    (des and text in log.description) or
+                    (add and text in log.additionalDescription))
         return list(g)
 
     def onItemDoubleClicked(self, index):
