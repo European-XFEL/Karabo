@@ -1,17 +1,14 @@
-import karabo
-karabo.api_version = 2
-
 from asyncio import (async, coroutine, gather, set_event_loop, sleep,
                      TimeoutError)
-from unittest import TestCase, main
-import sys
 import time
+from unittest import TestCase, main
 
 from karabo.api import Slot, Int, waitUntil
 from karabo.macro import Macro, Monitor, RemoteDevice
 from karabo.python_device import Device
 
 from .eventloop import startDevices, stopDevices, sync_tst
+
 
 class Remote(Device):
     counter = Int(defaultValue=-1)

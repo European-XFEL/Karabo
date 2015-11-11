@@ -1,5 +1,3 @@
-import karabo
-
 from asyncio import (
     async, CancelledError, coroutine, Future, start_server, get_event_loop,
     IncompleteReadError, open_connection, shield, sleep, wait_for)

@@ -8,18 +8,17 @@ import socket
 from abc import ABCMeta, abstractmethod
 
 from karabo.async import NewValueTimestamp
-from karabo.logger import Logger
-from karabo.schema import Configurable, Validator, Node
-from karabo.signalslot import (SignalSlotable, Signal, ConnectionType, slot,
-                               coslot, replySlot)
-from karabo.timestamp import Timestamp
 from karabo.enums import AccessLevel, AccessMode, Assignment
+from karabo.eventloop import EventLoop
 from karabo.exceptions import KaraboError
 from karabo.hash import (BinaryParser, Bool, Hash, HashType, Int32, UInt32,
                          Schema, SchemaHashType, String, Type, HashMergePolicy)
-from karabo.registry import Registry
-from karabo.eventloop import EventLoop
 from karabo.launcher import getClassSchema_async, sameThread, legacy
+from karabo.logger import Logger
+from karabo.schema import Validator, Node
+from karabo.signalslot import (SignalSlotable, Signal, ConnectionType, slot,
+                               coslot, replySlot)
+from karabo.timestamp import Timestamp
 
 
 class Device(SignalSlotable):

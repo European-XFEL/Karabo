@@ -1,18 +1,17 @@
 from asyncio import (async, coroutine, CancelledError, get_event_loop,
                      set_event_loop, create_subprocess_exec, wait_for, gather,
                      Task)
-import sys
-import os.path
 from importlib import import_module
+from os.path import basename, dirname
 from subprocess import PIPE
-
-import karabo
-
-if __name__ == "__main__":
-    _, fn, cls, what = sys.argv
+import sys
 
 from karabo.hash import BinaryWriter, BinaryParser
 from karabo.eventloop import EventLoop
+
+
+if __name__ == "__main__":
+    _, fn, cls, what = sys.argv
 
 
 @coroutine
@@ -93,15 +92,14 @@ def getClassSchema_async(cls, rules=None):
 
 
 if __name__ == "__main__":
-    sys.path.insert(0, os.path.dirname(fn))
+    sys.path.insert(0, dirname(fn))
     assert fn.endswith(".py")
-    import_module(os.path.basename(fn)[:-3])
+    import_module(basename(fn)[:-3])
 
     if what in ("legacy", "schema"):
-        from karabo.device import PythonDevice
-        from karabo.karathon import BinarySerializerHash
         from karabo.configurator import Configurator
-        from karabo.karathon import Hash, Validator
+        from karabo.device import PythonDevice
+        from karabo.karathon import BinarySerializerHash, Hash, Validator
 
     if what == "legacy":
         s = BinarySerializerHash.create("Bin")

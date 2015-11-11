@@ -17,7 +17,6 @@ import sys
 
 import IPython
 
-import karabo
 from karabo import device_client
 from karabo.device_client import (
     getDevice, waitUntil, waitUntilNew, setWait, setNoWait, execute,

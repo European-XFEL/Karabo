@@ -6,35 +6,32 @@ __date__ ="$Jul 26, 2012 10:06:25 AM$"
 
 from asyncio import (async, coroutine, get_event_loop, set_event_loop, sleep,
                      create_subprocess_exec, wait, wait_for)
+import copy
+from importlib import import_module
 import os
 import os.path
-import sys
-import signal
-import copy
-import socket
 import platform
-import threading
+import signal
+import socket
+import sys
 import time
-import inspect
 import traceback
+
 import numpy
-from importlib import import_module
-from subprocess import Popen, PIPE
 
-import karabo
-
-from karabo.python_loader import PluginLoader
-from karabo.python_device import Device, SignalSlotable
+from karabo.enums import AccessLevel, AccessMode, Assignment
+from karabo.eventloop import EventLoop
 from karabo.hash import (BinaryParser, BinaryWriter, Hash, Int32,
                          SchemaHashType, String, StringList, XMLParser,
                          saveToFile)
-from karabo.schema import Validator, Node
 from karabo.logger import Logger
-from karabo.signalslot import (ConnectionType, Signal, slot, coslot)
-from karabo.enums import AccessLevel, AccessMode, Assignment
-from karabo.eventloop import EventLoop
 from karabo.output import KaraboStream
+from karabo.python_loader import PluginLoader
+from karabo.python_device import Device, SignalSlotable
+from karabo.schema import Validator, Node
+from karabo.signalslot import (ConnectionType, Signal, slot, coslot)
 
+# XXX: These imports are needed for their side-effects...
 import karabo.metamacro  # add a default Device MetaMacro
 import karabo.ipython
 

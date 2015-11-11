@@ -1,15 +1,15 @@
-from asyncio import (async, coroutine, gather, get_event_loop, set_event_loop,
-                     sleep, wait_for, TimeoutError)
+from asyncio import (async, coroutine, get_event_loop, sleep, wait_for,
+                     TimeoutError)
 from datetime import datetime
 import gc
 from unittest import TestCase, main
 
 from karabo import openmq
 from karabo.api import Slot, Int
-from karabo.hash import Hash, VectorChar
-from karabo.python_device import Device
 from karabo.device_client import (waitUntilNew, getDevice, waitUntil, setWait,
                                   setNoWait, Queue)
+from karabo.hash import Hash, VectorChar
+from karabo.python_device import Device
 from karabo.schema import Configurable, Node
 
 from .eventloop import startDevices, stopDevices, async_tst

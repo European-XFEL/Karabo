@@ -1,22 +1,20 @@
-import karabo
-
 from asyncio import async, coroutine, get_event_loop, set_event_loop, sleep
-from itertools import count
 import gc
-from unittest import TestCase, main, skip
+from itertools import count
 import sys
 import time
+from unittest import TestCase, main, skip
 import weakref
 
 from karabo.api import Int, Slot
 from karabo.cli import connectDevice, DeviceClient
-from karabo.eventloop import NoEventLoop
-from karabo.macro import Macro, EventThread, RemoteDevice
-from karabo.hash import Hash
-from karabo.python_server import DeviceServer
 from karabo.device_client import (
     getDevice, instantiate, DeviceClientBase, getDevices)
+from karabo.eventloop import NoEventLoop
+from karabo.hash import Hash
+from karabo.macro import Macro, EventThread, RemoteDevice
 from karabo.python_device import Device
+from karabo.python_server import DeviceServer
 
 from .eventloop import setEventLoop
 

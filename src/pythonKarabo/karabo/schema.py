@@ -1,13 +1,11 @@
-
-import karabo.hash
-from karabo.enums import AccessLevel, AccessMode, Assignment
-from karabo.hash import Descriptor, Attribute, Schema
-from karabo.registry import Registry
-
 from asyncio import coroutine, gather
+from collections import OrderedDict
 from enum import Enum
 from functools import partial
-from collections import OrderedDict
+
+from karabo.enums import AccessLevel, AccessMode, Assignment
+from karabo.hash import Attribute, Descriptor, Hash, Schema
+from karabo.registry import Registry
 
 
 class MetaConfigurable(type(Registry)):
@@ -146,7 +144,7 @@ class Node(Descriptor):
         class Outer(Configurable):
             inner = Node(Inner)
     """
-    defaultValue = karabo.hash.Hash()
+    defaultValue = Hash()
 
     def __init__(self, cls, **kwargs):
         self.cls = cls
@@ -172,7 +170,7 @@ class Node(Descriptor):
         yield from gather(*setters)
 
     def asHash(self, instance):
-        r = karabo.hash.Hash()
+        r = Hash()
         for k in self.cls._allattrs:
             a = getattr(instance, k, None)
             if a is not None:
@@ -189,7 +187,7 @@ class ChoiceOfNodes(Node):
         return ret
 
     def subschema(self):
-        h = karabo.hash.Hash()
+        h = Hash()
         for k, v in self.cls._subclasses.items():
             h[k] = v.getClassSchema().hash
             h[k, "nodeType"] = 1
@@ -201,13 +199,13 @@ class ChoiceOfNodes(Node):
             break  # there should be only one entry
 
     def asHash(self, instance):
-        r = karabo.hash.Hash()
+        r = Hash()
         t = type(instance)
         for k in t._allattrs:
             a = getattr(instance, k, None)
             if a is not None:
                 r[k] = getattr(t, k).asHash(a)
-        return karabo.hash.Hash(t.__name__, r)
+        return Hash(t.__name__, r)
 
 
 class ListOfNodes(Node):
@@ -219,31 +217,30 @@ class ListOfNodes(Node):
         return ret
 
     def subschema(self):
-        h = karabo.hash.Hash()
+        h = Hash()
         for k, v in self.cls._subclasses.items():
             h[k] = v.getClassSchema().hash
             h[k, "nodeType"] = 1
         return h
 
     def __set__(self, instance, value):
-        if isinstance(value, karabo.hash.Hash):
+        if isinstance(value, Hash):
             l = [self.cls._subclasses[k](v, instance, self.key)
                  for k, v in value.items()]
         else:
-            l = [self.cls._subclasses[k](karabo.hash.Hash(),
-                    instance, self.key)
+            l = [self.cls._subclasses[k](Hash(), instance, self.key)
                  for k in value]
         instance.setValue(self, l)
 
     def asHash(self, instance):
         l = []
         for v in instance:
-            r = karabo.hash.Hash()
+            r = Hash()
             t = type(v)
             for k in t._allattrs:
                 r[k] = getattr(t, k).asHash(getattr(v, k))
             l.append(r)
-        return karabo.hash.Hash(self.key, l)
+        return Hash(self.key, l)
 
 
 class Validator(object):
@@ -262,33 +259,29 @@ class Validator(object):
             assert 'nodeType' in a
             if a['nodeType'] == 3:
                 if k in object:
-                    object[k] = [[karabo.hash.Hash(kk,
-                                                   self.r_validate(v[kk], vv))
+                    object[k] = [[Hash(kk, self.r_validate(v[kk], vv))
                                   for kk, vv in vvv.items()][0]
                                  for vvv in object[k]]
                 elif self.injectDefaults:
                     dv = a.get('defaultValue', [])
                     if isinstance(dv, str):
                         dv = dv.split()
-                    object[k] = [karabo.hash.Hash(
-                                 vv, self.r_validate(v[vv],
-                                                     karabo.hash.Hash()))
+                    object[k] = [Hash(vv, self.r_validate(v[vv], Hash()))
                                  for vv in dv]
             elif a['nodeType'] == 2:
                 if k in object:
-                    object[k] = [karabo.hash.Hash(kk,
-                                                  self.r_validate(v[kk], vv))
+                    object[k] = [Hash(kk, self.r_validate(v[kk], vv))
                                  for kk, vv in object[k].items()][0]
                 elif self.injectDefaults and "defaultValue" in a:
                     dv = a['defaultValue']
-                    object[k] = karabo.hash.Hash(
-                        dv, self.r_validate(v[dv], karabo.hash.Hash()))
+                    object[k] = Hash(
+                        dv, self.r_validate(v[dv], Hash()))
             elif k in object:
                 object[k] = self.r_validate(v, object[k])
             elif self.injectDefaults and 'defaultValue' in a:
                 object[k] = a['defaultValue']
             elif a['nodeType'] == 1:
-                object[k] = self.r_validate(v, karabo.hash.Hash())
+                object[k] = self.r_validate(v, Hash())
             else:
                 pass
                 #print 'not validated:', k

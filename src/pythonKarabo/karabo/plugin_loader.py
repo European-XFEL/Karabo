@@ -5,9 +5,10 @@ __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 8, 2013 12:55:50 PM$"
 
 import os
-import sys
-from subprocess import call
 import re
+from subprocess import call
+import sys
+
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.karathon import PATH_ELEMENT
 

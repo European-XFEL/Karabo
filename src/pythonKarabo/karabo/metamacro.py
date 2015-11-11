@@ -1,9 +1,9 @@
 from asyncio import coroutine, gather
 
 from karabo.enums import AccessLevel, AccessMode
-from karabo.python_device import Device
 from karabo.hash import String, Int32
 from karabo.macro import Macro
+from karabo.python_device import Device
 
 
 class MetaMacro(Device):
