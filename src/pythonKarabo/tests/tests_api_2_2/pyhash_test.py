@@ -6,7 +6,7 @@ from numpy.testing import assert_equal
 
 from karabo.hash import (Hash, Schema, XMLWriter, XMLParser, BinaryWriter,
                          BinaryParser)
-from karabo.karathon import BinarySerializerHash
+from karathon import BinarySerializerHash
 
 
 class Hash_TestCase(unittest.TestCase):

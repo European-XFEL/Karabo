@@ -4,7 +4,7 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Apr 11, 2013 4:20:13 PM$"
 
-from karabo.karathon import Hash, Schema, AssemblyRules, AccessType, READ, WRITE, INIT, Validator
+from karathon import Hash, Schema, AssemblyRules, AccessType, READ, WRITE, INIT, Validator
 
 class Configurator(object):
     '''

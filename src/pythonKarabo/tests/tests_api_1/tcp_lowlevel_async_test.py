@@ -5,7 +5,9 @@ import unittest
 import threading
 import time
 import sys
-from karabo.karathon import (Connection, Channel, Hash)
+
+from karathon import Connection, Channel, Hash
+
 
 class Server(threading.Thread):
     

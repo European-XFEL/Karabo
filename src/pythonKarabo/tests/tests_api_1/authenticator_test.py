@@ -2,7 +2,8 @@
 # and open the template in the editor.
 
 import unittest
-from karabo.karathon import *
+
+from karathon import *
 
 
 class  Authenticator_TestCase(unittest.TestCase):
