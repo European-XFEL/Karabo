@@ -41,13 +41,13 @@ public:
   
   typedef std::map<SlotId, Stats> SlotStatsMap;
 
-  /// Constructor with length of intervall to use for averaging.
+  /// Constructor with length of interval to use for averaging.
   BrokerStatistics(util::TimeValue intervalSec)
-    : m_interval(intervalSec, 0ll), m_start() {}
+    : m_interval(intervalSec, 0ll), m_start(0ull, 0ull) {}
 
   // virtual ~BrokerStatistics() {} // no need for virtual...
 
-  /// Handle message, i.e. increase statistics and possibly print.
+  /// Register a message, i.e. increase statistics and possibly print.
   void registerMessage(net::BrokerChannel::Pointer /*channel*/,
                        const util::Hash::Pointer& header,
                        const char* /*body*/, const size_t& bodySize);
@@ -64,16 +64,22 @@ private:
                        float elapsedSeconds) const;
 
   /// The keys of StatsMap must either support
-  /// ostream& operator<<(ostream&, const KeyType&))
-  /// or there must be a specialisation of BrokerStatistics::printLine for KeyType.
+  /// ostream& operator<<(ostream&, const KeyType&),
+  /// preferably with a width of 59 characters or there must be a specialisation
+  /// of BrokerStatistics::printId for IdType=KeyType.
   template <typename StatsMap>
   Stats printStatistics(const StatsMap& statsMap,
                        const util::Epochstamp& timeStamp,
                        float elapsedSeconds) const;
 
+  /// Helper of printStatistics.
   template <class IdType>
   void printLine(const IdType& id, const Stats& stats,
                  float elapsedSeconds) const;
+
+  /// Helper of printLine (see also printStatistics).
+  template <class IdType>
+  void printId(std::ostream& out, const IdType& id) const;
 
   const util::TimeDuration m_interval;
   util::Epochstamp m_start;
@@ -87,33 +93,63 @@ private:
   static const std::string m_delimLine;
 };
 
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
 const std::string BrokerStatistics::m_delimLine
 ("===============================================================================\n");
 
-std::ostream& operator<<(std::ostream& stream, const BrokerStatistics::SignalId& id)
+////////////////////////////////////////////////////////////////////////////
+
+template <class IdType>
+void BrokerStatistics::printId(std::ostream& out, const IdType& id) const
 {
-  stream << std::setw(39) << id.first 
-         << std::setw(20) << id.second;
-  return stream;
+    out << std::left << std::setw(59) << id;
 }
-// This does not work since SlotId id just an std::string...
-// Therefore we treat that in the default implementation.
-//std::ostream& operator<<(std::ostream& stream, const BrokerStatistics::SlotId& id)
-//{
-//    stream << std::setw(59) << id << ": ";
-//    return stream;
-//}
+
+template <>
+void BrokerStatistics::printId(std::ostream& out, const SignalId& id) const
+{
+    out << std::left
+        << std::setw(39) << id.first
+        << std::setw(20) << id.second;
+}
+
+template <>
+void BrokerStatistics::printId(std::ostream& out, const SlotId& id) const
+{
+    // SlotId is a string with a colon
+    std::vector<std::string> deviceSlot;
+    boost::split(deviceSlot, id, boost::is_any_of(":"));
+
+    const std::string& slotName = (deviceSlot.size() >= 2 ? deviceSlot[1] : "");
+    out << std::left
+        << std::setw(39) << deviceSlot[0]
+        << std::setw(20) << slotName;
+
+    // Create a warning if deviceSlot.size() > 2, at least once?
+}
+
+////////////////////////////////////////////////////////////////////////////
 
 void BrokerStatistics::registerMessage(net::BrokerChannel::Pointer /*channel*/,
                                        const util::Hash::Pointer& header,
                                        const char* /*body*/,
                                        const size_t& bodySize)
 {
+  // In the very first call we reset the start time.
+  // Otherwise (if the constructor initialises m_start with 'now') starting this
+  // tool and then starting the first device in the topic leads to wrongly low
+  // rates.
+  if (!m_start.getSeconds()) m_start.now();
 
+  // Register for per sender and per (intended) receiver:
   this->registerPerSignal(header, bodySize);
   this->registerPerSlot(header, bodySize);
   
-  // Now it might be time to print and reset:
+  // Now it might be time to print and reset.
+  // Since it is done inside registerMessage, one does not get any printout if
+  // the watched topic is silent :-(. But then we do not need monitoring anyway. 
   const util::Epochstamp now;
   const util::TimeDuration diff = now.elapsed(m_start);
   if (diff >= m_interval) {
@@ -243,7 +279,8 @@ void BrokerStatistics::printLine(const IdType& id, const Stats& stats,
 {
     const float kBytes = stats.first ? stats.second/(1000.f*stats.first) : 0.f;
     
-    std::cout << std::left << std::setw(59) << id << ":"
+    this->printId(std::cout, id);
+    std::cout << ":"
               << std::right << std::setw(6) << stats.first/elapsedSeconds << " Hz,"
               << std::right << std::setw(6) << kBytes << " kB\n";
 }
