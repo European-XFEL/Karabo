@@ -4,10 +4,16 @@ Created on Oct 17, 2012
 @author: Sergey Esenov <serguei.essenov@xfel.eu>, Irina Kozlova <irina.kozlova@xfel.eu>
 '''
 
-import unittest
-import numpy as np
-from karathon import *
 import copy
+import unittest
+
+import numpy as np
+
+from karathon import (
+    Hash, HashAttributes, Types, VectorHash,
+    isStdVectorDefaultConversion, setStdVectorDefaultConversion, similar
+)
+
 
 class  Hash_TestCase(unittest.TestCase):
 

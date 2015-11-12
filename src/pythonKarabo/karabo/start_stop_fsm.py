@@ -7,7 +7,12 @@ __date__ ="$May 10, 2013 2:35:08 PM$"
 from karabo.decorators import KARABO_CLASSINFO
 import karabo.base_fsm as base
 from karathon import SLOT_ELEMENT
-from karabo.fsm import *
+from karabo.fsm import (
+    KARABO_FSM_ACTION0, KARABO_FSM_ACTION2,
+    KARABO_FSM_EVENT0, KARABO_FSM_EVENT2,
+    KARABO_FSM_STATE_EE, KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE
+)
+
 
 @KARABO_CLASSINFO("StartStopFsm", "1.0")
 class StartStopFsm(base.BaseFsm):

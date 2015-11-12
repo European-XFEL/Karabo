@@ -1,7 +1,10 @@
 import unittest
 
-from karathon import *
-from .configuration_example_classes import *
+from karathon import (
+    BinarySerializerHash, Hash, InputHash, OutputHash,
+    TextSerializerHash, TextSerializerSchema, loadFromFile, saveToFile, similar
+)
+from .configuration_example_classes import Shape
 
 
 class  Serializer_TestCase(unittest.TestCase):
