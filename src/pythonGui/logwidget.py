@@ -284,6 +284,13 @@ class LogWidget(QWidget):
 
         return filterWidget
 
+    def onNotificationAvailable(self, deviceId, messageType, shortMsg,
+                                detailedMsg):
+        new = Log(len(self.logs), messageType=messageType, instanceId=deviceId,
+                  description=shortMsg, additionalDescription=detailedMsg,
+                  dateTime=QDateTime.currentDateTime())
+        self.logs.append(new)
+        self.queryModel.add(new)
 
     def onLogDataAvailable(self, logData):
         new = [Log(i, messageType=log["type"], instanceId=log["category"],

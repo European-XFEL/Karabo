@@ -29,8 +29,5 @@ class NotificationPanel(Dockable, QWidget):
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.__logWidget)
         
-        Manager().signalNotificationAvailable.connect(self.onNotificationAvailable)
-    def onNotificationAvailable(self, timestamp, type, shortMessage, detailedMessage, deviceId):
-        # Change notification string to logwidget style string
-        data = timestamp + " | " + type + " | " + deviceId + " | " + shortMessage + detailedMessage + "#"
-        self.__logWidget.addNotificationMessage(data)
+        Manager().signalNotificationAvailable.connect(
+            self.__logWidget.onNotificationAvailable)
