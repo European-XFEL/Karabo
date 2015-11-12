@@ -314,7 +314,7 @@ void printHelp(const char* name)
 
 int main(int argc, char** argv) {
 
-  util::TimeValue intervall = 20ull; // in seconds
+  util::TimeValue interval = 20ull; // in seconds
   if (argc > 1) {
     const std::string arg1(argv[1]);
     if (arg1 == "-h" || arg1 == "--help") {
@@ -323,7 +323,7 @@ int main(int argc, char** argv) {
     } else {
       const long int argument = strtol(argv[1], 0, 0);
       if (argument > 0) {
-        intervall = static_cast<util::TimeValue>(argument);
+        interval = static_cast<util::TimeValue>(argument);
       } else { // Maybe not an unsigned integer or 0 passed.
         std::cerr << "Refusing time interval '" << argv[1] << "'." << std::endl;
         return EXIT_FAILURE;
@@ -351,7 +351,7 @@ int main(int argc, char** argv) {
               << connection->getBrokerTopic() << "'\n   on broker '"
               << connection->getBrokerHostname() << ":" 
               << connection->getBrokerPort() << "',\n" 
-              << "intervall is " << intervall << " s."
+              << "intervall is " << interval << " s."
               << std::endl;
     
     // Here we could add some filtering, e.g. based on command line
@@ -361,7 +361,7 @@ int main(int argc, char** argv) {
     // }
 
     // Register our registration message as async reader:
-    boost::shared_ptr<BrokerStatistics> stats(new BrokerStatistics(intervall));
+    boost::shared_ptr<BrokerStatistics> stats(new BrokerStatistics(interval));
     channel->readAsyncHashRaw(boost::bind(&BrokerStatistics::registerMessage,
                                           stats, _1, _2, _3, _4));
 
