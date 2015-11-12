@@ -50,7 +50,7 @@ class _Manager(QObject):
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
     signalLogDataAvailable = pyqtSignal(object) # logData
-    signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
+    signalNotificationAvailable = pyqtSignal(str, str, str, str)
     
     signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
     signalProjectLoaded = pyqtSignal(str, object, object) # projectName, metaData, data
@@ -558,11 +558,8 @@ class _Manager(QObject):
 
 
     def handle_notification(self, deviceId, messageType, shortMsg, detailedMsg):
-        timestamp = datetime.now()
-        # TODO: better format for timestamp and timestamp generation in karabo
-        timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        self.signalNotificationAvailable.emit(timestamp, messageType, shortMsg,
-                                              detailedMsg, deviceId)
+        self.signalNotificationAvailable.emit(deviceId, messageType, shortMsg,
+                                              detailedMsg)
 
     def handle_networkData(self, name, data):
         deviceId, property = name.split(":")
