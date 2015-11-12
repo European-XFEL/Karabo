@@ -3,7 +3,8 @@
 # and open the template in the editor.
 
 import unittest
-from karabo.karathon import (Hash, ImageData, ChannelSpace, Encoding)
+
+from karathon import Hash, ImageData, ChannelSpace, Encoding
 import numpy as np
 
 

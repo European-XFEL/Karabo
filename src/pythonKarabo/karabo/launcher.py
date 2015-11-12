@@ -99,7 +99,7 @@ if __name__ == "__main__":
     if what in ("legacy", "schema"):
         from karabo.configurator import Configurator
         from karabo.device import PythonDevice
-        from karabo.karathon import BinarySerializerHash, Hash, Validator
+        from karathon import BinarySerializerHash, Hash, Validator
 
     if what == "legacy":
         s = BinarySerializerHash.create("Bin")

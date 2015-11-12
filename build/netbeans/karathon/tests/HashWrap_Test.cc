@@ -50,7 +50,7 @@ HashWrap_Test::~HashWrap_Test() {
 }
 
 void HashWrap_Test::setUp() {
-    bp::exec("from libkarathon import *\n", o_global, o_global);
+    bp::exec("from karathon import *\n", o_global, o_global);
 }
 
 void HashWrap_Test::tearDown() {

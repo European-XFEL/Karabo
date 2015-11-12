@@ -17,6 +17,7 @@ import sys
 
 import IPython
 
+import karabo
 from karabo import device_client
 from karabo.device_client import (
     getDevice, waitUntil, waitUntilNew, setWait, setNoWait, execute,
@@ -26,6 +27,7 @@ from karabo.eventloop import NoEventLoop
 from karabo.macro import Macro
 
 
+# NOTE: This is the namespace for ikarabo
 __all__ = ["getDevice", "waitUntil", "waitUntilNew", "setWait", "setNoWait",
            "execute", "executeNoWait", "getDevices", "getClasses",
            "getServers", "instantiate", "connectDevice", "shutdown",
