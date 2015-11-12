@@ -45,21 +45,24 @@ class ConfigurationPanel(Dockable, QWidget):
         mainSplitter = QSplitter(Qt.Vertical)
 
         # Layout for navigation and project tree
-        navSplitter = QSplitter(Qt.Vertical)
+        self.navSplitter = QSplitter(Qt.Vertical)
         # Navigation tree
         self.twNavigation = NavigationTreeView(self)
         self.twNavigation.model().signalItemChanged.connect(self.onDeviceItemChanged)
         self.twNavigation.hide()
-        navSplitter.addWidget(self.twNavigation)
+        self.navSplitter.addWidget(self.twNavigation)
 
         # Project tree
         self.twProject = ProjectTreeView(self)
         self.twProject.model().signalItemChanged.connect(self.onDeviceItemChanged)
         self.twProject.hide()
-        navSplitter.addWidget(self.twProject)
+        self.navSplitter.addWidget(self.twProject)
 
-        navSplitter.setStretchFactor(0, 1)
-        navSplitter.setStretchFactor(1, 1)
+        self.navSplitter.setStretchFactor(0, 1)
+        self.navSplitter.setStretchFactor(1, 1)
+
+        # The navSplitter should only show when the panel is undocked.
+        self.navSplitter.hide()
 
         # Stacked widget for configuration parameters
         self.__swParameterEditor = QStackedWidget(None)
@@ -83,7 +86,7 @@ class ConfigurationPanel(Dockable, QWidget):
         topWidget = QWidget(mainSplitter)
 
         splitTopPanes = QSplitter(Qt.Horizontal, topWidget)
-        splitTopPanes.addWidget(navSplitter)
+        splitTopPanes.addWidget(self.navSplitter)
         splitTopPanes.addWidget(self.__swParameterEditor)
 
         splitTopPanes.setStretchFactor(0, 1)
@@ -700,10 +703,12 @@ class ConfigurationPanel(Dockable, QWidget):
         self.twNavigation.onOpenFromProject()
 
     def onUndock(self):
+        self.navSplitter.show()
         self.twNavigation.show()
         self.twProject.show()
 
     def onDock(self):
+        self.navSplitter.hide()
         self.twNavigation.hide()
         self.twProject.hide()
 
