@@ -1,6 +1,7 @@
 
 import unittest
-from karabo.karathon import *
+
+from karathon import *
 from .configuration_example_classes import *
 
 

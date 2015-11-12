@@ -2,7 +2,7 @@
 # and open the template in the editor.
 
 from karabo.decorators import *
-from karabo.karathon import *
+from karathon import *
 import unittest
 
 @KARABO_CONFIGURATION_BASE_CLASS

@@ -103,7 +103,7 @@ void *import_numpy()
 }
 
 
-BOOST_PYTHON_MODULE(karathon_bin) {
+BOOST_PYTHON_MODULE(karathon) {
     PyEval_InitThreads();
     import_numpy();
 

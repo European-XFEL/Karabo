@@ -18,4 +18,4 @@ if [ -z $KARABO ]; then
     fi
 fi
 
-exec $KARABO/bin/ikarabo
+exec $KARABO/extern/bin/ikarabo

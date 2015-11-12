@@ -5,7 +5,7 @@ __date__ ="$Jul 2, 2013$"
     @@@(corresponds to test in karabo: xip_test/Image_Test.cc )
 import os.path as op
 import unittest
-from karabo.karathon import *
+from karathon import *
 
 class  Image_TestCase(unittest.TestCase):
     def setUp(self):

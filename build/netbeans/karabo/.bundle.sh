@@ -75,6 +75,7 @@ elif [ "$OS" = "Darwin" ]; then
 fi
 
 EXTRACT_SCRIPT=$(pwd)/.extract.sh
+PYTHON_FIXER_SCRIPT=$(pwd)/.fix-python-scripts.sh
 PACKAGEDIR=$(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
@@ -114,7 +115,7 @@ if [ "$OS" = "Darwin" ]; then
 
     cd $DISTDIR/$CONF/$PLATFORM/lib
     # Python needs to see bindings as .so, even on MacOSX
-    ln -sf karathon.dylib karathon_bin.so
+    ln -sf karathon.dylib karathon.so
     #install_name_tool -add_rpath "$PACKAGEDIR/lib" karathon.so
     #install_name_tool -add_rpath "$PACKAGEDIR/extern/lib" karathon.so
     cp karathon* $PYKARABO/
@@ -123,86 +124,14 @@ if [ "$OS" = "Darwin" ]; then
 else
     # Use karabo embedded python interpretor
     PATH=$PACKAGEDIR/extern/bin:$PATH
-    PYTHON_INTERPRETOR=`python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" $PACKAGEDIR/extern/bin/python3`
-    PYKARABO=`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`/karabo
-    [ -e $PYKARABO ] && [ ! -d $PYKARABO ] && echo "Cannot create $PYKARABO directory"
-    [ -d $PYKARABO ] && rm -rf $PYKARABO/* # <-- clean 
-    [ ! -d $PYKARABO ] && mkdir $PYKARABO  # <-- create PYKARABO if needed
+    SITE_PACKAGES=`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`
 
-    cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $PYKARABO/karathon_bin.so # <-- karathon.so 
+    cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $SITE_PACKAGES/ # <-- karathon.so
 
-    # Copying 'extern' has resulted in changing python interpreter path for scripts in 'bin' directory
-    # <-- replace 1st line by proper interp path
-    [ -f $PACKAGEDIR/extern/bin/ipython ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipython
-    [ -f $PACKAGEDIR/extern/bin/ipython3 ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipython3
-    [ -f $PACKAGEDIR/extern/bin/ipython3.4-config ] && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipython3.4-config
-    [ -f $PACKAGEDIR/extern/bin/2to3 ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/2to3
-    [ -f $PACKAGEDIR/extern/bin/2to3-3.4 ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/2to3-3.4
-    [ -f $PACKAGEDIR/extern/bin/easy_install ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/easy_install
-    [ -f $PACKAGEDIR/extern/bin/easy_install-3.4 ]  && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/easy_install-3.4
-    [ -f $PACKAGEDIR/extern/bin/f2py3 ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/f2py3
-    [ -f $PACKAGEDIR/extern/bin/idle3.4 ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/idle3.4
-    [ -f $PACKAGEDIR/extern/bin/cygdb ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/cygdb
-    [ -f $PACKAGEDIR/extern/bin/cython ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/cython
-    [ -f $PACKAGEDIR/extern/bin/guidata-tests ]     && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/guidata-tests
-    [ -f $PACKAGEDIR/extern/bin/guiqwt-tests ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/guiqwt-tests
-    [ -f $PACKAGEDIR/extern/bin/idle ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/idle
-    [ -f $PACKAGEDIR/extern/bin/ipcluster ]         && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipcluster
-    [ -f $PACKAGEDIR/extern/bin/ipcluster3 ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipcluster3
-    [ -f $PACKAGEDIR/extern/bin/ipcontroller ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipcontroller
-    [ -f $PACKAGEDIR/extern/bin/ipcontroller3 ]     && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipcontroller3
-    [ -f $PACKAGEDIR/extern/bin/ipengine ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipengine
-    [ -f $PACKAGEDIR/extern/bin/ipengine3 ]         && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipengine3
-    [ -f $PACKAGEDIR/extern/bin/iplogger ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/iplogger
-    [ -f $PACKAGEDIR/extern/bin/iptest ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/iptest
-    [ -f $PACKAGEDIR/extern/bin/iptest3 ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/iptest3
-    [ -f $PACKAGEDIR/extern/bin/irunner ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/irunner
-    [ -f $PACKAGEDIR/extern/bin/nosetests ]         && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/nosetests
-    [ -f $PACKAGEDIR/extern/bin/nosetests-3.4 ]     && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/nosetests-3.4
-    [ -f $PACKAGEDIR/extern/bin/pip ]               && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pip
-    [ -f $PACKAGEDIR/extern/bin/pip3 ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pip3
-    [ -f $PACKAGEDIR/extern/bin/pip3.4 ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pip3.4
-    [ -f $PACKAGEDIR/extern/bin/pnuke ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pnuke
-    [ -f $PACKAGEDIR/extern/bin/prsync ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/prsync
-    [ -f $PACKAGEDIR/extern/bin/pscp ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pscp
-    [ -f $PACKAGEDIR/extern/bin/pslurp ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pslurp
-    [ -f $PACKAGEDIR/extern/bin/pssh ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pssh
-    [ -f $PACKAGEDIR/extern/bin/pssh-askpass ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pssh-askpass
-    [ -f $PACKAGEDIR/extern/bin/pycolor ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pycolor
-    [ -f $PACKAGEDIR/extern/bin/pydoc ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pydoc
-    [ -f $PACKAGEDIR/extern/bin/pydoc3.4 ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pydoc3.4
-    [ -f $PACKAGEDIR/extern/bin/pygmentize ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pygmentize
-    [ -f $PACKAGEDIR/extern/bin/pyvenv-3.4 ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pyvenv-3.4
-    [ -f $PACKAGEDIR/extern/bin/rst2html.py ]       && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2html.py
-    [ -f $PACKAGEDIR/extern/bin/rst2latex.py ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2latex.py
-    [ -f $PACKAGEDIR/extern/bin/rst2man.py ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2man.py
-    [ -f $PACKAGEDIR/extern/bin/rst2odt_prepstyles.py ]    && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2odt_prepstyles.py
-    [ -f $PACKAGEDIR/extern/bin/rst2odt.py ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2odt.py
-    [ -f $PACKAGEDIR/extern/bin/rst2pseudoxml.py ]  && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2pseudoxml.py
-    [ -f $PACKAGEDIR/extern/bin/rst2s5.py ]         && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2s5.py
-    [ -f $PACKAGEDIR/extern/bin/rst2xetex.py ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2xetex.py
-    [ -f $PACKAGEDIR/extern/bin/rst2xml.py ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2xml.py
-    [ -f $PACKAGEDIR/extern/bin/rstpep2html.py ]    && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rstpep2html.py
-    [ -f $PACKAGEDIR/extern/bin/sphinx-apidoc ]     && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-apidoc
-    [ -f $PACKAGEDIR/extern/bin/sphinx-autogen ]    && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-autogen
-    [ -f $PACKAGEDIR/extern/bin/sphinx-build ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-build
-    [ -f $PACKAGEDIR/extern/bin/sphinx-quickstart ] && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-quickstart
-    [ -f $PACKAGEDIR/extern/bin/sift ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sift
-    [ -f $PACKAGEDIR/extern/bin/smtpd.py ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/smtpd.py
-    [ -f $PACKAGEDIR/extern/bin/wheel ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/wheel
-    # TODO: Some files from 'bin' are still not converted: pyuic4
     [ -d $PACKAGEDIR/extern/include/python3.4m ]  && (cd $PACKAGEDIR/extern/include; rm -f python3.4; ln -s python3.4m python3.4)
 fi
 
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
-
-# Check if symbolic link "libkarathon.so" exists. If not, create it! 
-if [ ! -L $PYKARABO/libkarathon.so ]; then 
-    cd $PYKARABO/                       # go to python 'site-packages/karabo' directory
-    ln -s karathon_bin.so libkarathon.so    # create symbolic link
-    cd -                                # return back to previous working directory
-fi
-
 
 # deviceServer
 cd ../deviceServer
@@ -227,11 +156,15 @@ cd ../../../src/tools/scripts/
 cp -f * $PACKAGEDIR/bin
 cd -
 
+# Correct python interpreter path for scripts in 'bin' directory
+# <-- replace 1st line by "/usr/bin/env python3" and set PATH
+safeRunCommand "$PYTHON_FIXER_SCRIPT" $(readlink -f $PACKAGEDIR)
+export PATH=$PACKAGEDIR/extern/bin:$PATH
+
 # pythonKarabo
 cd ../pythonKarabo
-safeRunCommand "./build.sh"
+safeRunCommand "./build.sh" $PACKAGEDIR
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib/pythonKarabo/karabo/. $PYKARABO/  	# <-- 'karabo' package: __init__.py, ...                      
 
 # pythonGui
 if [ $BUNDLE_OPTION = "NoGui" ]; then
@@ -243,23 +176,15 @@ elif [ $BUNDLE_OPTION = "Gui" ]; then
    cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 fi
 
-# pythonCli
-cd ../pythonCli
-safeRunCommand "./build.sh"
-cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib/pythonCli/. $PYKARABO/
-
 # serverControl
 cd ../serverControl
 safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib/serverControl/. $PYKARABO/
 
 # pythonTools (deprecated)
 #cd ../pythonTools
 #safeRunCommand "./build.sh"
 #cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-#cp -rf $DISTDIR/$OS/lib/pythonTools/. $PYKARABO/
 
 if [ "$BUNDLE_ACTION" = "package" ]; then
     # Build the docs
@@ -282,11 +207,13 @@ cp .bundle-cppplugin.sh .bundle-pythonplugin.sh $PACKAGEDIR/bin
 cp .bundle-dependency.sh .bundle-pythondependency.sh $PACKAGEDIR/bin
 cp .extract-cppplugin.sh .extract-pythonplugin.sh $PACKAGEDIR/bin
 cp .extract-dependency.sh $PACKAGEDIR/bin
-cp .set_relative_rpath.py $PACKAGEDIR/bin
+cp .fix-python-scripts.sh .set_relative_rpath.py $PACKAGEDIR/bin
 
 if [ "$OS" = "Linux" ]; then
 	PACKAGEDIR=$(readlink -f $PACKAGEDIR)
 fi
+
+safeRunCommand "$PACKAGEDIR/bin/.fix-python-scripts.sh $PACKAGEDIR"
 
 if [ "$BUNDLE_ACTION" = "package" ]; then
     # Tar it

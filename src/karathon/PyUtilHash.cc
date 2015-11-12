@@ -255,13 +255,13 @@ void exportPyUtilHash() {
     h.def("getValues", &HashWrap().getValues,
           "Returns list of values associated with keys visible on the top level of the tree hierarchy.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
-          "\tprint h.getValues()\n\n... returns:\n\t[<libkarathon.Hash at 0x3188b18>,\n\t <libkarathon.Hash at 0x3188f68>,\n"
+          "\tprint h.getValues()\n\n... returns:\n\t[<karathon.Hash at 0x3188b18>,\n\t <karathon.Hash at 0x3188f68>,\n"
           "\t [True, False, True, True]]\n");
 
     h.def("values", &HashWrap().getValues,
           "Returns list of values associated with keys visible on the top level of the tree hierarchy.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
-          "\tprint h.values()\n\n... returns:\n\t[<libkarathon.Hash at 0x3188b18>,\n\t <libkarathon.Hash at 0x3188f68>,\n"
+          "\tprint h.values()\n\n... returns:\n\t[<karathon.Hash at 0x3188b18>,\n\t <karathon.Hash at 0x3188f68>,\n"
           "\t [True, False, True, True]]\n");
     h.def("getPaths", &HashWrap().getPaths, (bp::arg("target_container")),
           "Put into the target container the full paths of current Hash object.\n"

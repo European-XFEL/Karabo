@@ -15,7 +15,7 @@ from subprocess import Popen
 import threading
 import time
 import inspect
-from karabo.karathon import *
+from karathon import *
 from karabo.fsm import *
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.plugin_loader import PluginLoader
@@ -645,14 +645,15 @@ class Launcher(object):
         if self.child.poll() is None:
             self.child.wait()
 
-def main(args):
+def main(args=None):
+    args = args or sys.argv
     try:
         server = Runner(DeviceServer).instantiate(args)
         if server:
             server.run()
     except Exception as e:
         print("Exception caught: " + str(e))
-    
-    
+
+
 if __name__ == '__main__':
     main(sys.argv)
