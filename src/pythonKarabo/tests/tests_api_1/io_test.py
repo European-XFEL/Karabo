@@ -1,7 +1,8 @@
 import unittest
 
-from karathon import *
-from .configuration_example_classes import *
+from karathon import (Hash, InputSchema, OutputSchema, Schema,
+                      loadFromFile, saveToFile, similar)
+from .configuration_example_classes import TestStruct1
 
 
 class  Io_TestCase(unittest.TestCase):

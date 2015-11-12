@@ -6,7 +6,7 @@ import unittest
 import time
 import platform
 
-from karathon import *
+from karathon import Epochstamp, Timestamp, Trainstamp
 
 
 class  Timestamp_TestCase(unittest.TestCase):

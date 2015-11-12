@@ -6,7 +6,7 @@ import threading
 import time
 import sys
 
-from karathon import Connection, Channel, Hash
+from karathon import Connection, Hash
 
 
 class Server(threading.Thread):

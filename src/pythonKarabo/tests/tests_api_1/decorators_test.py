@@ -1,9 +1,12 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
-from karabo.decorators import *
-from karathon import *
 import unittest
+
+from karabo.configurator import Configurator
+from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from karathon import INT32_ELEMENT,STRING_ELEMENT, Hash, Types
+
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("ExampleBase", "1.0")

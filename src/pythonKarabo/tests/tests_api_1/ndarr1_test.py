@@ -4,7 +4,7 @@
 
 import unittest
 
-from karathon import Hash, NDArray, BinarySerializerHash
+from karathon import NDArray, BinarySerializerHash
 import numpy as np
 
 
