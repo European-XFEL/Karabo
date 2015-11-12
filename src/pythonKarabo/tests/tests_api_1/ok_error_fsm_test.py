@@ -3,7 +3,9 @@
 # and open the template in the editor.
 
 import unittest
-from karabo.ok_error_fsm import *
+
+from karabo.ok_error_fsm import OkErrorFsm
+
 
 class OkErrorUser(OkErrorFsm):
     def __init__(self, configuration):
