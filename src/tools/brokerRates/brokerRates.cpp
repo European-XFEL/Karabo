@@ -214,7 +214,7 @@ void BrokerStatistics::printStatistics(const util::Epochstamp& timeStamp,
   // Print kind of header
   std::cout << "\n" << m_delimLine << m_delimLine
             << std::setprecision(2) << std::fixed // 2 digits, keep 0s
-            << timeStamp.toFormattedString() << " - average over "
+            << timeStamp.toFormattedString() << " (UTC) - average over "
             << elapsedSeconds << " s:\n";
 
   
