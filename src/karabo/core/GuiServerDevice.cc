@@ -968,7 +968,8 @@ namespace karabo {
 
         void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
             try {
-                if (errorCode.value() != 2 && errorCode.value() != 32 && errorCode.value() != 104) { // NOT End of file or Broken pipe
+                if (errorCode.value() != 2 && errorCode.value() != 32 && errorCode.value() != 104) {
+                    // NOT End of file or Broken pipe: an unknown reason why connection to GUI client stopped.
                     KARABO_LOG_ERROR << "Tcp channel error, code: " << errorCode.value() << ", message: " << errorCode.message();
                     return;
                 }
@@ -986,7 +987,7 @@ namespace karabo {
                         // Remove channel as such
                         m_channels.erase(it);
                     }
-
+                    KARABO_LOG_FRAMEWORK_INFO << m_channels.size() << " client(s) left.";
                 }
 
                 {
@@ -1012,6 +1013,7 @@ namespace karabo {
                             m_networkConnections.erase(iter++);
                         } else ++iter;
                     }
+                    KARABO_LOG_FRAMEWORK_INFO << m_networkConnections.size() << " p2p channel(s) left.";
                 }
 
             } catch (const Exception& e) {
