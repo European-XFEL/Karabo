@@ -124,6 +124,7 @@ bundle: build
 	cd ../karathon; $(MAKE) CONF=$(CONF)
 	cd ../deviceServer; $(MAKE) CONF=$(CONF)
 	cd ../brokerMessageLogger; $(MAKE) CONF=$(CONF)
+	cd ../tools/brokerRates; $(MAKE) CONF=$(CONF)
 	cd ../tools/dataLoggerIndex/idxview; $(MAKE) CONF=$(CONF)
 	cd ../tools/dataLoggerIndex/idxbuild; $(MAKE) CONF=$(CONF)
 
