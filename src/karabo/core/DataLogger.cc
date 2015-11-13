@@ -325,6 +325,10 @@ namespace karabo {
                         if (m_configStream.is_open()) {
                             m_configStream.flush();
                         }
+                        for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
+                            MetaData::Pointer mdp = it->second;
+                            if (mdp && mdp->idxStream.is_open()) mdp->idxStream.flush();
+                        }
                     }
                     // here the interruption enabled again
                     int millis = get<int>("flushInterval") * 1000;
