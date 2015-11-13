@@ -151,6 +151,11 @@ cd ../tools/dataLoggerIndex/idxbuild
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 cd ../..
 
+# brokerRates
+cd ../tools/brokerRates
+cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
+cd ../
+
 #shell scripts - copy directly from src
 cd ../../../src/tools/scripts/
 cp -f * $PACKAGEDIR/bin
