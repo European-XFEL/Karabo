@@ -6,34 +6,14 @@ import time
 import weakref
 
 from karabo.enums import AccessLevel, Assignment, AccessMode
-from karabo.hash import (BinaryParser, Hash, HashType, Int32, Schema, Slot,
-                         String, Type)
+from karabo.hash import Hash, HashType, Int32, String
 from karabo.p2p import NetworkOutput
-from karabo.registry import Registry
 from karabo.schema import Configurable
 
 
 class Signal(object):
     def __init__(self, *args):
         self.args = args
-
-
-class Device(Registry):
-    @classmethod
-    def schematize(cls):
-        schema = Schema(cls.__name__, hash)
-        for k, v in cls.__dict__.items():
-            if isinstance(v, Type):
-                h = Hash()
-                hash[k] = h
-                hash[k, 'nodeType'] = 0
-                hash[k, 'valueType'] = v.hashname()
-        return schema
-
-    @classmethod
-    def register(cls, name, dict):
-        super(Device, cls).register(name, dict)
-        #globalDevice.slotNewClassAvailable('bla', name, cls.schematize())
 
 
 def slot(f):
@@ -74,12 +54,6 @@ def replySlot(name):
         f.slot = inner
         return f
     return outer
-
-
-class DeviceServer(Device):
-    def __init__(self, deviceId):
-        Device.__init__(self, deviceId, type="server", serverId=deviceId,
-                        version=23, host="exflpcx18981", visibility=0)
 
 
 class ConnectionType(object):
@@ -235,8 +209,6 @@ class SignalSlotable(Configurable):
                                format(self.deviceId))
         except TimeoutError:
             pass
-        except Exception as e:
-            raise
         self.run()
         self.__randPing = 0
         self._ss.emit('call', {'*': ['slotInstanceNew']},
@@ -269,10 +241,6 @@ class SignalSlotable(Configurable):
     def slotDisconnectFromSignal(self, signal, target, slot):
         getattr(self, signal).disconnect(target, slot)
         return True
-
-    @staticmethod
-    def create(serverid):
-        return SignalSlotable(serverid)
 
     def updateInstanceInfo(self, info):
         self.info.merge(info)
