@@ -263,7 +263,7 @@ class EventLoop(SelectorEventLoop):
         else:
             self.topic = getpass.getuser()
         self.connection = None
-        self.changedFuture = Future(loop=self)  # call if some property changes
+        self.changedFutures = set()  # call if some property changes
         self.set_default_executor(ThreadPoolExecutor(200))
         self.set_exception_handler(EventLoop.exceptionHandler)
 
@@ -364,6 +364,15 @@ class EventLoop(SelectorEventLoop):
             return Task.current_task(loop=self).instance()
         except AttributeError:
             return None
+
+    @coroutine
+    def waitForChanges(self):
+        f = Future(loop=self)
+        self.changedFutures.add(f)
+        try:
+            yield from f
+        finally:
+            self.changedFutures.remove(f)
 
     def sync(self, coro, timeout):
         assert timeout == 5  # that is the default, i.e., none has been given

@@ -309,9 +309,8 @@ class SignalSlotable(Configurable):
         if d is not None:
             d._onChanged(configuration)
         loop = get_event_loop()
-        if not loop.changedFuture.done():
-            loop.changedFuture.set_result(None)
-        loop.changedFuture = Future(loop=loop)
+        for f in loop.changedFutures:
+            f.set_result(None)
 
     @coroutine
     def onCancelled(self, slot):
