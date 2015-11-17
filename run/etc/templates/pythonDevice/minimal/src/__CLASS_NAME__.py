@@ -4,12 +4,14 @@ __author__="__EMAIL__"
 __date__ ="__DATE__"
 __copyright__="Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved."
 
-import time
 import sys
-from karabo.device import *
+import time
+
+from karabo.decorators import KARABO_CLASSINFO
+from karabo.device import PythonDevice, launchPythonDevice
 
 
-@KARABO_CLASSINFO("__CLASS_NAME__", "1.3")
+@KARABO_CLASSINFO("__CLASS_NAME__", "1.4")
 class __CLASS_NAME__(PythonDevice):
 
     @staticmethod
