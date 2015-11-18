@@ -184,8 +184,8 @@ class Broker:
 
         slots = (message.properties['slotFunctions'][1:-1]).decode(
             "utf8").split('||')
-        return {k: v.split(",") for k, v in (s.split(":") for s in slots)}, \
-                params
+        return ({k: v.split(",") for k, v in (s.split(":") for s in slots)},
+                params)
 
 
 class NoEventLoop(AbstractEventLoop):
@@ -276,7 +276,7 @@ class EventLoop(SelectorEventLoop):
                 p["MQAckTimeout"] = 0
                 try:
                     self.connection = openmq.Connection(p, "guest", "guest")
-                    break;
+                    break
                 except:
                     self.connection = None
             self.connection.start()
