@@ -184,8 +184,14 @@ class Local(Macro):
         self.cancel_slot = slot
 
     @Slot()
-    def cancelled(self):
+    def sleepalot(self):
+        self.slept = 0
+        time.sleep(1)
+        self.slept = 1
+        sleep(0.1)
+        self.slept = 2
         sleep(10)
+        self.slept = 3
 
 
 class Tests(TestCase):
@@ -306,10 +312,22 @@ class Tests(TestCase):
     @async_tst
     def test_cancel(self):
         with (yield from getDevice("local")) as d:
-            async(d.cancelled())
+            # cancel during non-karabo sleep
+            local.cancel_slot = None
+            task = async(d.sleepalot())
             yield from sleep(0.1)
             yield from d.cancel()
-        self.assertEqual(local.cancel_slot, Local.cancelled)
+            yield from sleep(1)
+            self.assertEqual(local.cancel_slot, Local.sleepalot)
+            self.assertEqual(local.slept, 1)
+
+            # cancel during karabo sleep
+            local.cancel_slot = None
+            task = async(d.sleepalot())
+            yield from sleep(1.3)
+            yield from d.cancel()
+            self.assertEqual(local.slept, 2)
+            self.assertEqual(local.cancel_slot, Local.sleepalot)
 
 
 def setUpModule():
