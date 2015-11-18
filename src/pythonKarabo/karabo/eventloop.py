@@ -1,6 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
-from asyncio import (AbstractEventLoop, coroutine, Future,
+from asyncio import (AbstractEventLoop, CancelledError, coroutine, Future,
                      get_event_loop, Queue, set_event_loop, SelectorEventLoop,
                      Task, TimeoutError)
 from concurrent.futures import ThreadPoolExecutor
