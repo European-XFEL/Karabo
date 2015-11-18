@@ -1,23 +1,15 @@
-from asyncio import async, coroutine, Future, gather, sleep, TimeoutError
-import threading
-import os
-import time
-import datetime
-import sys
+from asyncio import gather
 import socket
-from abc import ABCMeta, abstractmethod
 
 from karabo.enums import AccessLevel, AccessMode, Assignment
-from karabo.eventloop import EventLoop
 from karabo.exceptions import KaraboError
-from karabo.hash import (BinaryParser, Bool, Hash, HashType, Int32, UInt32,
-                         Schema, SchemaHashType, String, Type, HashMergePolicy)
-from karabo.launcher import getClassSchema_async, sameThread, legacy
+from karabo.hash import (Bool, Hash, HashType, Int32,
+                         Schema, SchemaHashType, String)
+from karabo.launcher import sameThread
 from karabo.logger import Logger
 from karabo.schema import Validator, Node
-from karabo.signalslot import (SignalSlotable, Signal, ConnectionType, slot,
+from karabo.signalslot import (SignalSlotable, Signal, slot,
                                coslot, replySlot)
-from karabo.timestamp import Timestamp
 
 
 class Device(SignalSlotable):
@@ -154,8 +146,7 @@ class Device(SignalSlotable):
     @slot
     def slotGetSchema(self, onlyCurrentState):
         if onlyCurrentState:
-            currentState = self.state
-            return self._getStateDependentSchema(currentState), self.deviceId
+            raise RuntimeError("not implemented")
         else:
             return self.fullSchema, self.deviceId
 
@@ -170,26 +161,3 @@ class Device(SignalSlotable):
     @slot
     def slotInstanceGone(self, instanceId, info):
         pass
-
-    def _getStateDependentSchema(self, state):
-        with self._stateDependentSchemaLock:
-            if state in self._stateDependentSchema:
-                return self._stateDependentSchema[state]
-            self._stateDependentSchema[state] = self.getClassSchema(
-                AssemblyRules(AccessType(READ | WRITE | INIT), state))
-            if not self._injectedSchema.empty():
-                self._stateDependentSchema[state] += self._injectedSchema
-            return self._stateDependentSchema[state]
-
-
-def launchPythonDevice():
-    script, modname, classid, xmlfile = tuple(sys.argv)
-    config = PythonDevice.loadConfiguration(xmlfile)
-
-    try:
-        device = PythonDevice.subclasses[classid](config)
-        device.run()
-    except Exception as e:
-        print("Exception caught:", str(e))
-        raise
-    os._exit(77)
