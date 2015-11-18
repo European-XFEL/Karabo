@@ -83,10 +83,12 @@ simple and should look like:
     __date__ ="June  8, 2015, 01:53 PM"
     __copyright__="Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved."
     
-    from scpi.scpi_device_2 import *
+    from karabo.decorators import KARABO_CLASSINFO
+    from karabo.device import launchPythonDevice
+    from scpi.scpi_device_2 import ScpiDevice2, ScpiOkErrorFsm
+    
     
     @KARABO_CLASSINFO("MyScpiDevice", "1.2 1.3")
-
     class MyScpiDevice(ScpiDevice2, ScpiOkErrorFsm):
     
         def __init__(self, configuration):
@@ -124,10 +126,12 @@ force the Karabo device to follow the hardware state.
     __date__ ="June  8, 2015, 01:53 PM"
     __copyright__="Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved."
     
-    from scpi.scpi_device_2 import *
+    from karabo.decorators import KARABO_CLASSINFO
+    from karabo.device import launchPythonDevice
+    from scpi.scpi_device_2 import ScpiDevice2, ScpiOnOffFsm
+    
     
     @KARABO_CLASSINFO("MyScpiDevice", "1.2 1.3")
-    
     class MyScpiDevice(ScpiDevice2, ScpiOnOffFsm):
     
         def __init__(self, configuration):
@@ -173,11 +177,13 @@ like
     __date__ ="June  9, 2015, 01:55 PM"
     __copyright__="Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved."
     
-    from scpi.scpi_device_2 import *
+    from karabo.decorators import KARABO_CLASSINFO
+    from karabo.device import launchPythonDevice
+    from scpi.scpi_device_2 import ScpiDevice2, ScpiStartStopFsm
+    
     
     @KARABO_CLASSINFO("MyScpiDevice", "1.2 1.3")
-    
-    class MyScpiDevice(ScpiDevice, ScpiStartStopFsm):
+    class MyScpiDevice(ScpiDevice2, ScpiStartStopFsm):
     
         def __init__(self, configuration):
             # always call superclass constructor first!
