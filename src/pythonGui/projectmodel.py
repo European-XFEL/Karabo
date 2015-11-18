@@ -791,6 +791,11 @@ class ProjectModel(QStandardItemModel):
                 self.projectClose(p)
                 break
 
+    def selectAllProjects(self):
+        sm = self.selectionModel
+        sm.clearSelection()
+        for i in range(self.rowCount()):
+            sm.select(self.index(i, 0), sm.Select)
 
     def closeAllProjects(self):
         """

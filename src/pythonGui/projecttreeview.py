@@ -85,10 +85,7 @@ class ProjectTreeView(QTreeView):
 
 
     def closeAllProjects(self):
-        sm = self.model().selectionModel
-        sm.clearSelection()
-        for i in range(self.model().rowCount()):
-            sm.select(self.model().index(i, 0), sm.Select)
+        self.model().selectAllProjects()
         return self.onCloseProject()
 
 
