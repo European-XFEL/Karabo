@@ -194,6 +194,20 @@ convertsecs() {
  printf "%02d day(s) %02d hour(s) %02d minute(s) %02d second(s)\n" $d $h $m $s
 }
 
+# Argument is a path to a directory. If it does not exist, it will be tried to
+# created it, including its full path depth, i.e. using mkdir -p.
+# If that creation fails, return 1, else 0. 
+function takeCareDirExists()
+{
+    targetDir=$1
+    if ! mkdir -p $targetDir ; then  # create if not yet there
+        echo "ERROR: Cannot create directory '$targetDir': Is there a file?" >&2
+        return 1
+    else
+        return 0
+    fi
+}
+
 # Etc directory (global variable)
 etcDir="$scriptDir/etc"
 
@@ -1235,7 +1249,12 @@ function buildPackage() {
 	make -j${numMakeThreads} CONF=$buildType
 	# link only when library.so file exist otherwise explicit '*/*' link created
 	if [ $? -eq 0 ]; then
-	    cd $scriptDir/servers/cppDeviceServer/plugins
+            # pluginDir should exist - but not in case of a fresh git checkout
+            pluginDir=$scriptDir/servers/cppDeviceServer/plugins
+            if ! takeCareDirExists $pluginDir ; then
+                return 1
+            fi
+            cd $pluginDir
 	    find $scriptDir/packages/$cat/$pck/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
             if [ $? -ne 0 ]; then
                 # failure of making the link FIXME: what if no .so exists?
@@ -1245,7 +1264,12 @@ function buildPackage() {
             return 1  # failure of make
 	fi
     else
-	cd $scriptDir/servers/pythonDeviceServer/plugins
+        # pluginDir should exist - but not in case of a fresh git checkout
+        pluginDir=$scriptDir/servers/pythonDeviceServer/plugins
+        if ! takeCareDirExists $pluginDir ; then
+            return 1
+        fi
+	cd $pluginDir
 	find $scriptDir/packages/$cat/$pck/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
         if [ $? -ne 0 ]; then
             return 1  # failure of making the link FIXME: what if no .py exists?
@@ -1372,9 +1396,19 @@ function installPlugin () {
     popd
 
     if [ `find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1 -type f -name \*.so` ]; then
-        ( cd $scriptDir/servers/cppDeviceServer/plugins; find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1  -type f -name \*.so -exec ln -sf {} \; )
+        # pluginDir should exist - but not in case of a fresh git checkout
+        pluginDir=$scriptDir/servers/cppDeviceServer/plugins
+        if ! takeCareDirExists $pluginDir ; then
+            return 1
+        fi
+        ( cd $pluginDir; find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1  -type f -name \*.so -exec ln -sf {} \; )
     elif [ `find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1 -type f -name \*.py` ]; then
-        ( cd $scriptDir/servers/pythonDeviceServer/plugins; find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \; )
+        # pluginDir should exist - but not in case of a fresh git checkout
+        pluginDir=$scriptDir/servers/pythonDeviceServer/plugins
+        if ! takeCareDirExists $pluginDir ; then
+            return 1
+        fi
+        ( cd $pluginDir; find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \; )
     fi
     dependsPath=$binInstallDir/$pluginName-$pluginVersion-${VERSION}/DEPENDS
 
