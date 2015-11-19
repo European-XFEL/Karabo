@@ -121,6 +121,7 @@ namespace karabo {
             
         private:
             
+            static boost::mutex m_propFileInfoMutex;
             static std::map<std::string, PropFileInfo::Pointer > m_mapPropFileInfo;
             IndexBuilderService* m_ibs;
         };  
