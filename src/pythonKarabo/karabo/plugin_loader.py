@@ -1,16 +1,13 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
-
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 8, 2013 12:55:50 PM$"
 
-import os
-import re
-from subprocess import call
+import os.path as op
 import sys
 
+from pkg_resources import WorkingSet
+
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-from karathon import PATH_ELEMENT
+from karathon import PATH_ELEMENT, STRING_ELEMENT
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -19,21 +16,46 @@ class PluginLoader(object):
 
     @staticmethod
     def expectedParameters(expected):
-        
         e = PATH_ELEMENT(expected).key("pluginDirectory")
-        e.displayedName("Plugin Directory").description("Directory to search for plugins")
-        e.assignmentOptional().defaultValue("plugins")
-        e.isDirectory().expertAccess().commit()
+        e.displayedName("Plugin Directory")
+        e.description("Directory to search for plugins")
+        e.isDirectory().assignmentOptional().defaultValue("plugins")
+        e.expertAccess().commit()
+
+        e = STRING_ELEMENT(expected).key("pluginNamespace")
+        e.displayedName("Plugin Namespace")
+        e.description("Namespace to search for plugins")
+        e.assignmentOptional().defaultValue("karabo.python_device.api_1")
+        e.expertAccess().commit()
 
     def __init__(self, input):
-        if "pluginDirectory" in input:
-            self.plugins = input["pluginDirectory"]
+        self._entrypoints = []
+        if "pluginNamespace" in input:
+            self.namespace = input["pluginNamespace"]
         else:
-            self.plugins = os.environ['PWD'] + "/plugins"
-        sys.path.append(self.plugins)
+            msg = "A namespace must be defined for plugins to load."
+            raise ValueError(msg)
+        if "pluginDirectory" in input:
+            self.directory = op.abspath(input["pluginDirectory"])
+        else:
+            msg = "A directory must be defined for plugins to load."
+            raise ValueError(msg)
+        sys.path.append(self.directory)
 
     def getPluginDirectory(self):
-        return self.plugins
+        return self.directory
+
+    def getPluginNamespace(self):
+        return self.namespace
+
+    def getPlugin(self, name):
+        for ep in self._entrypoints:
+            if ep.name == name:
+                return ep
+        else:
+            raise RuntimeError("Plugin {} not found!".format(name))
 
     def update(self):
-        return [n[:-3] for n in os.listdir(self.plugins) if n.endswith(".py")]
+        ws = WorkingSet()
+        self._entrypoints = list(ws.iter_entry_points(self.namespace))
+        return self._entrypoints

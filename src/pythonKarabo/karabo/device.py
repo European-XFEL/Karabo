@@ -880,19 +880,30 @@ class PythonDevice(NoFsm):
         loadFromFile(hash, xmlfile)
         os.remove(xmlfile)
         return hash
- 
+
+
 def launchPythonDevice():
-    script, modname, classid, xmlfile = tuple(sys.argv)
+    from karabo.plugin_loader import PluginLoader
+
+    # NOTE: The first argument is '-c'
+    _, plugindir, modname, classid, xmlfile = tuple(sys.argv)
     config = PythonDevice.loadConfiguration(xmlfile)
-    srcdir = os.path.dirname(script)
-    if srcdir not in sys.path:
-        sys.path.append(srcdir)
-        
+    loader = PluginLoader.create(
+        "PythonPluginLoader",
+        Hash("pluginNamespace", "karabo.python_device.api_1",
+             "pluginDirectory", plugindir)
+    )
+    loader.update()
+
     try:
+        # Load the module containing classid so that it gets registered.
+        entrypoint = loader.getPlugin(modname)
+        deviceClass = entrypoint.load()
+        assert deviceClass.__classid__ == classid
+
         device = Configurator(PythonDevice).create(classid, config)
         device.run()
         device.__del__()
     except Exception as e:
         print("Exception caught: " + str(e))
     os._exit(77)
-    
