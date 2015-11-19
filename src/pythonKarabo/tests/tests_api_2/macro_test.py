@@ -186,9 +186,9 @@ class Local(Macro):
     @Slot()
     def sleepalot(self):
         self.slept = 0
-        time.sleep(1)
+        time.sleep(0.1)
         self.slept = 1
-        sleep(0.1)
+        sleep(0.01)
         self.slept = 2
         sleep(10)
         self.slept = 3
@@ -311,23 +311,34 @@ class Tests(TestCase):
 
     @async_tst
     def test_cancel(self):
+        """test proper cancellation of slots
+
+        when a slot is cancelled, test that
+          * the onCancelled callback is called (which sets cancel_slot)
+          * the slot got cancelled in the right place (slept has right value)
+          * the task gets properly marked done
+        Test that for both if the slot is stuck in a karabo function, or not.
+        """
         with (yield from getDevice("local")) as d:
             # cancel during non-karabo sleep
             local.cancel_slot = None
             task = async(d.sleepalot())
-            yield from sleep(0.1)
+            yield from sleep(0.01)
             yield from d.cancel()
-            yield from sleep(1)
+            yield from sleep(0.1)
             self.assertEqual(local.cancel_slot, Local.sleepalot)
             self.assertEqual(local.slept, 1)
+            assert task.done()
 
             # cancel during karabo sleep
             local.cancel_slot = None
             task = async(d.sleepalot())
-            yield from sleep(1.3)
+            yield from sleep(0.13)
             yield from d.cancel()
+            yield from sleep(0.01)
             self.assertEqual(local.slept, 2)
             self.assertEqual(local.cancel_slot, Local.sleepalot)
+            assert task.done()
 
 
 def setUpModule():
