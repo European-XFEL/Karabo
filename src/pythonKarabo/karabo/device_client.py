@@ -374,7 +374,7 @@ def waitUntil(condition):
     in a with statement)"""
     loop = get_event_loop()
     while not condition():
-        yield from loop.changedFuture
+        yield from loop.waitForChanges()
 
 
 def _createProxyDict(hash, prefix):
