@@ -104,14 +104,15 @@ echo  " unpacking finished successfully"
 # Any script here will happen after the tar file extract.
 echo
 echo -n "Running post install script..."
-#if [ "x${KARABO}x" != "xx" ]; then
-#   if [ ! -d ${KARABO}/pythonplugins ]; then
-#      mkdir ${KARABO}/pythonplugins || echo_exit "Cannot create directory ${KARABO}/pythonplugins"
-#   fi
-#   echo "Creating link to plugins folder..."
-#   #olddir=`pwd`; cd ${KARABO}/plugins; ln -sf $installDir/$PLUGINNAME-$VERSION/*; cd $olddir
-#   olddir=`pwd`; cd ${KARABO}/pythonplugins; find $installDir/$PLUGINNAME-$VERSION -type f -exec ln -sf {} \; ; cd $olddir
-#fi
+if [ ! -z $KARABO ]; then
+    if [ $(uname -s) == "Darwin" ]; then
+        PIP=/opt/local/bin/pip
+    else
+        PIP=$KARABO/extern/bin/pip
+    fi
+    destDir=$installDir/$PLUGINNAME-$VERSION-$KARABOVERSION
+    $PIP install -U --no-index --target $installDir $destDir/*.whl
+fi
 echo " done."
 echo
 echo " Package was successfully installed to: $installDir/$PLUGINNAME-$VERSION-$KARABOVERSION"
