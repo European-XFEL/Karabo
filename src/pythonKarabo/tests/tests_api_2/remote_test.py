@@ -176,26 +176,6 @@ class Local(Device):
 
     @Slot()
     @coroutine
-    def waituntil(self):
-        with (yield from getDevice("remote")) as d:
-            d.counter = 0
-            yield from waitUntil(lambda: d.counter == 0)
-            self.f1 = d.counter
-            task = async(d.count())
-            try:
-                yield from waitUntil(lambda: d.counter > 10)
-                self.f2 = d.counter
-                try:
-                    yield from wait_for(waitUntil(lambda: d.counter > 40),
-                                        timeout=3)
-                    self.timeout = False
-                except TimeoutError:
-                    self.timeout = True
-            finally:
-                yield from task
-
-    @Slot()
-    @coroutine
     def waituntilnew(self):
         with (yield from getDevice("remote")) as d:
             d.counter = 0
@@ -391,11 +371,22 @@ class Tests(TestCase):
 
     @async_tst
     def test_waituntil(self):
-        yield from local.waituntil()
-        self.assertEqual(local.f1, 0)
-        self.assertEqual(local.f2, 11)
-        self.assertTrue(local.timeout)
-
+        with (yield from getDevice("remote")) as d:
+            d.counter = 0
+            yield from waitUntil(lambda: d.counter == 0)
+            self.assertEqual(d.counter, 0)
+            task = async(d.count())
+            try:
+                with self.assertRaises(TimeoutError):
+                    yield from wait_for(waitUntil(lambda: d.counter > 10),
+                                        timeout=0.1)
+                yield from waitUntil(lambda: d.counter > 10)
+                self.assertEqual(d.counter, 11)
+                with self.assertRaises(TimeoutError):
+                    yield from wait_for(waitUntil(lambda: d.counter > 40),
+                                        timeout=1)
+            finally:
+                yield from task
 
     @async_tst
     def test_waituntilnew(self):
