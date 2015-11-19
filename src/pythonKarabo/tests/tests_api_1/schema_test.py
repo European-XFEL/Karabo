@@ -1,9 +1,15 @@
 
 import unittest
 
-from karathon import *
-from .configuration_example_classes import *
-
+from karabo.configurator import Configurator
+from karathon import (
+    METER, MICRO, MANDATORY, READ, WRITE, INIT,
+    AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
+    Hash, Logger, MetricPrefix, NodeType, Schema, Types, Unit, Validator
+)
+from .configuration_example_classes import (
+    Base, GraphicsRenderer, GraphicsRenderer1, Shape, SomeClass, TestStruct1
+)
 
 class  Schema_TestCase(unittest.TestCase):
     #def setUp(self):
