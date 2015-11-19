@@ -8,8 +8,7 @@ from karabo.hash import (Bool, Hash, HashType, Int32,
 from karabo.launcher import sameThread
 from karabo.logger import Logger
 from karabo.schema import Validator, Node
-from karabo.signalslot import (SignalSlotable, Signal, slot,
-                               coslot, replySlot)
+from karabo.signalslot import SignalSlotable, Signal, slot, coslot
 
 
 class Device(SignalSlotable):
@@ -118,7 +117,7 @@ class Device(SignalSlotable):
         self.initInfo()
         super().run()
 
-    @replySlot("slotChanged")
+    @slot
     def slotGetConfiguration(self):
         return self.configurationAsHash(), self.deviceId
 
