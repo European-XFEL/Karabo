@@ -1,21 +1,19 @@
 from __future__ import absolute_import, unicode_literals
 
-from asyncio import (AbstractEventLoop, async, coroutine, Future,
+from asyncio import (AbstractEventLoop, coroutine, Future,
                      get_event_loop, Queue, set_event_loop, SelectorEventLoop,
                      Task, TimeoutError)
-from copy import copy
 from concurrent.futures import ThreadPoolExecutor
 import getpass
 from itertools import count
 import os
 import queue
 import socket
-import sys
 import threading
 import weakref
 
 from karabo import openmq
-from karabo.hash import Hash, BinaryWriter, Type, Slot
+from karabo.hash import Hash
 
 
 class Broker:
@@ -186,22 +184,9 @@ class Broker:
 
         slots = (message.properties['slotFunctions'][1:-1]).decode(
             "utf8").split('||')
-        return {k: v.split(",") for k, v in (s.split(":") for s in slots)}, \
-                params
+        return ({k: v.split(",") for k, v in (s.split(":") for s in slots)},
+                params)
 
-
-class Client(object):
-    def onChanged(self, hash):
-        for k, v in hash.iteritems():
-            a = getattr(type(self), k, None)
-            if a is not None:
-                self.__dict__[a.key] = v
-                for f in self._futures.get(a, []):
-                    f.set_result(v)
-
-    def setValue(self, attr, value):
-        self._device._ss.emit("call", {deviceId: ["slotReconfigure"]},
-                              Hash(attr.key, value))
 
 class NoEventLoop(AbstractEventLoop):
     Queue = queue.Queue
@@ -291,50 +276,12 @@ class EventLoop(SelectorEventLoop):
                 p["MQAckTimeout"] = 0
                 try:
                     self.connection = openmq.Connection(p, "guest", "guest")
-                    break;
+                    break
                 except:
                     self.connection = None
             self.connection.start()
 
         return Broker(self, deviceId, classId)
-
-    @coroutine
-    def get_device(self, deviceId):
-        f = self.device.slotSchemaUpdated[self.deviceId]
-        self.device._ss.emit("call", {self.deviceId: ["slotGetSchema"]}, False)
-        schema = yield from f
-        f = self.device.slotChanged[self.deviceId]
-        self.device._ss.emit("call", {self.deviceId: ["slotGetConfiguration"]})
-        self.device._ss.connect(self.deviceId, "signalChanged",
-                                self.device.slotChanged)
-        hash = yield from f
-
-        dict = {}
-        for k, v, a in self.schema.hash.iterall():
-            if a["nodeType"] == 0:
-                d = Type.fromname[a["valueType"]]()
-                d.key = k
-                dict[k] = d
-            elif a["nodeType"] == 1 and a["displayType"] == "Slot":
-                s = Slot()
-                s.method = lambda self, name=k: self._device._ss.emit(
-                    "call", {self.deviceId: [name]})
-                dict[k] = s
-        cls = type(self.schema.name.encode("ascii"), (Client,), dict)
-        o = cls()
-        o._device = self.device
-        o._futures = {}
-        self.device.clients[self.deviceId] = o
-        o.onChanged(hash)
-        return o
-
-    @coroutine
-    def getValueFuture(self, device, attr):
-        return device._futures.setdefault(attr, Future(loop=self))
-
-    @coroutine
-    def waitForChanges(self):
-        yield from self.changedFuture
 
     def create_task(self, coro, instance=None):
         task = super().create_task(coro)
@@ -344,7 +291,7 @@ class EventLoop(SelectorEventLoop):
             instance._tasks.add(task)
             task.add_done_callback(instance._tasks.remove)
             task.instance = weakref.ref(instance, lambda _: task.cancel())
-        except (AttributeError, TypeError) as e:
+        except (AttributeError, TypeError):
             pass
         return task
 
