@@ -1,6 +1,7 @@
 from asyncio import async, coroutine, get_event_loop, set_event_loop, sleep
 import gc
 from itertools import count
+import os
 import sys
 import time
 from unittest import TestCase, main, skip
@@ -54,6 +55,19 @@ class Other(Device):
 
 
 class Tests(TestCase):
+
+    def setUp(self):
+        # Change the current directory to the directory containing this test.
+        # DeviceServer looks for a file named serverId.xml in the current
+        # directory, so we should use the one that comes with the unit tests
+        # to avoid creating a new one in a random part of the user's filesystem
+        self.__starting_dir = os.curdir
+        this_dir = os.path.dirname(os.path.abspath(__file__))
+        os.chdir(this_dir)
+
+    def tearDown(self):
+        os.chdir(self.__starting_dir)
+
     def test_delete(self):
         remote = Remote()
         remote.count()
