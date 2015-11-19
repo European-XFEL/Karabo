@@ -4,8 +4,9 @@
 
 import unittest
 
-from karathon import Hash, ImageData, ChannelSpace, Encoding
 import numpy as np
+
+from karathon import ImageData, ChannelSpace, Encoding
 
 
 class  ImageData_TestCase(unittest.TestCase):

@@ -24,7 +24,14 @@ Consider the code of our device - ConveyorPy.py:
     __copyright__="Copyright (c) 2010-2014 European XFEL GmbH Hamburg. All rights reserved."
     
     import time
-    from karabo.device import *
+
+    from karabo.decorators import KARABO_CLASSINFO
+    from karabo.device import PythonDevice, launchPythonDevice
+    from karathon import (
+        BOOL_ELEMENT, DOUBLE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
+        Unit,
+    )
+
 
     @KARABO_CLASSINFO("ConveyorPy", "1.3")
     class ConveyorPy(PythonDevice):
@@ -205,11 +212,16 @@ Consider the code of our device - ConveyorPy.py:
 Consider the main steps of the code above, that are important to
 mention while writing devices in Python:
 
-1. Import all modules from karabo.device:
+1. Import needed pieces from the karabo and karathon packages:
 
   .. code-block:: python
 
-      from karabo.device import *
+      from karabo.decorators import KARABO_CLASSINFO
+      from karabo.device import PythonDevice, launchPythonDevice
+      from karathon import (
+          BOOL_ELEMENT, DOUBLE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
+          Unit
+      )
   
 2. Decide whether you want to use an FSM. In our example we don't use
    it, which is the current raccomandation is to use NoFsm. If you

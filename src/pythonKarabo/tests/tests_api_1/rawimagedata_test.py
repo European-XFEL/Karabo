@@ -6,7 +6,7 @@ import unittest
 
 import numpy
 
-from karathon import *
+from karathon import ChannelSpaceType, EncodingType, RawImageData
 
 
 class  RawImageData_TestCase(unittest.TestCase):

@@ -6,9 +6,7 @@ import unittest
 
 from PIL import Image
 
-from karathon import *
-from karabo.decorators import *
-from .configuration_example_classes import SomeClass
+from karathon import CpuImageFLOAT, CpuImageUINT8
 
 
 class  CpuImage_TestCase(unittest.TestCase):

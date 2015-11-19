@@ -3,7 +3,7 @@
 
 import unittest
 
-from karathon import *
+from karathon import Authenticator, Epochstamp, TIME_UNITS
 
 
 class  Authenticator_TestCase(unittest.TestCase):
