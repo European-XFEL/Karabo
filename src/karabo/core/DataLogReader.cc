@@ -142,11 +142,12 @@ namespace karabo {
                 
                 // Register a property in prop file for indexing if it is not there
                 try {
+                    boost::mutex::scoped_lock lock(m_propFileInfoMutex);
                     bf::path propPath(get<string>("directory") + "/" + deviceId + "/raw/properties_with_index.txt");
                     if (!bf::exists(propPath)) {
                         // create prop file 
                         m_mapPropFileInfo[deviceId] = PropFileInfo::Pointer(new PropFileInfo());
-                        boost::mutex::scoped_lock lock(m_mapPropFileInfo[deviceId]->filelock);
+                        //boost::mutex::scoped_lock lock(m_mapPropFileInfo[deviceId]->filelock);
                         ofstream out(propPath.c_str(), ios::out|ios::app);
                         out << property << "\n";
                         out.close();
@@ -184,7 +185,7 @@ namespace karabo {
                             // not found, then add to vector
                             ptr->properties.push_back(property);
                             {
-                                boost::mutex::scoped_lock lock(ptr->filelock);
+                                //boost::mutex::scoped_lock lock(ptr->filelock);
                                 ofstream out(propPath.c_str(), ios::out|ios::app);
                                 out << property << "\n";
                                 out.close();
@@ -755,4 +756,5 @@ namespace karabo {
 #undef ROUND1MS
 }
 
+boost::mutex karabo::core::DataLogReader::m_propFileInfoMutex;
 std::map<std::string, karabo::core::PropFileInfo::Pointer > karabo::core::DataLogReader::m_mapPropFileInfo;
