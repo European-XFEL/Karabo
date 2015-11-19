@@ -3,12 +3,16 @@ from setuptools import setup, find_packages
 setup(
     name="karabo",
     version="1.3",
-    packages=find_packages(exclude=["tests", "tests.*"]),
     author="Karabo Team",
     author_email="karabo@xfel.eu",
     description=
         "This is the graphical user interface of the Karabo control system",
     url="http://karabo.eu",
+    packages=find_packages(),
+    package_data={
+        'karabo.tests.tests_api_1': ['resources/*.*'],
+        'karabo.tests.tests_api_2': ['*.xml'],
+    },
     entry_points={'console_scripts': [
                   'karabo_device_server=karabo.device_server:main',
                   'ideviceclient=karabo.ideviceclient:main',
