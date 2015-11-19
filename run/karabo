@@ -194,6 +194,20 @@ convertsecs() {
  printf "%02d day(s) %02d hour(s) %02d minute(s) %02d second(s)\n" $d $h $m $s
 }
 
+# Argument is a path to a directory. If it does not exist, it will be tried to
+# created it, including its full path depth, i.e. using mkdir -p.
+# If that creation fails, return 1, else 0. 
+function takeCareDirExists()
+{
+    targetDir=$1
+    if ! mkdir -p $targetDir ; then  # create if not yet there
+        echo "ERROR: Cannot create directory '$targetDir': Is there a file?" >&2
+        return 1
+    else
+        return 0
+    fi
+}
+
 # Etc directory (global variable)
 etcDir="$scriptDir/etc"
 
@@ -1237,8 +1251,7 @@ function buildPackage() {
 	if [ $? -eq 0 ]; then
             # pluginDir should exist - but not in case of a fresh git checkout
             pluginDir=$scriptDir/servers/cppDeviceServer/plugins
-            if ! mkdir -p $pluginDir ; then  # create if not yet there
-                echo "ERROR: Cannot create directory '$pluginDir': Is there a file?" >&2
+            if ! takeCareDirExists $pluginDir ; then
                 return 1
             fi
             cd $pluginDir
@@ -1253,8 +1266,7 @@ function buildPackage() {
     else
         # pluginDir should exist - but not in case of a fresh git checkout
         pluginDir=$scriptDir/servers/pythonDeviceServer/plugins
-        if ! mkdir -p $pluginDir ; then  # create if not yet there
-            echo "ERROR: Cannot create directory '$pluginDir': Is there a file?" >&2
+        if ! takeCareDirExists $pluginDir ; then
             return 1
         fi
 	cd $pluginDir
@@ -1386,16 +1398,14 @@ function installPlugin () {
     if [ `find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1 -type f -name \*.so` ]; then
         # pluginDir should exist - but not in case of a fresh git checkout
         pluginDir=$scriptDir/servers/cppDeviceServer/plugins
-        if ! mkdir -p $pluginDir ; then  # create if not yet there
-            echo "ERROR: Cannot create directory '$pluginDir': Is there a file?" >&2
+        if ! takeCareDirExists $pluginDir ; then
             return 1
         fi
         ( cd $pluginDir; find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1  -type f -name \*.so -exec ln -sf {} \; )
     elif [ `find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1 -type f -name \*.py` ]; then
         # pluginDir should exist - but not in case of a fresh git checkout
         pluginDir=$scriptDir/servers/pythonDeviceServer/plugins
-        if ! mkdir -p $pluginDir ; then  # create if not yet there
-            echo "ERROR: Cannot create directory '$pluginDir': Is there a file?" >&2
+        if ! takeCareDirExists $pluginDir ; then
             return 1
         fi
         ( cd $pluginDir; find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \; )
