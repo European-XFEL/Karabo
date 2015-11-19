@@ -1,8 +1,8 @@
 """This is the machinery to communicate with remote devices.
 
 Usually, one communicated with a remote device by creating a device
-proxy :class:`Proxy` using :func:`getDevice`. This is a convenient way to access
-a remote device often.
+proxy :class:`Proxy` using :func:`getDevice`. This is a convenient way to
+access a remote device often.
 
 A more rare usecase is that many remote devices should be accessed, but
 only very simple. This can be achieved by functions which operate directly
@@ -20,6 +20,7 @@ from karabo.exceptions import KaraboError
 from karabo.hash import Hash, Slot, Type, Descriptor
 from karabo.signalslot import slot
 from karabo.python_device import Device
+
 
 class DeviceClientBase(Device):
     abstract = True
@@ -64,6 +65,7 @@ class DeviceClientBase(Device):
 
 def synchronize(func):
     coro = asyncio.coroutine(func)
+
     @wraps(coro)
     def wrapper(*args, timeout=5, **kwargs):
         return get_event_loop().sync(coro(*args, **kwargs), timeout)
@@ -485,6 +487,7 @@ def getDevices(serverId=None):
         return [k for k, v, a in instance.systemTopology["device"].iterall()
                 if a["serverId"] == serverId]
 
+
 def getServers():
     """Return a list of currently running servers"""
     return list(get_instance().systemTopology["server"])
@@ -502,9 +505,12 @@ def instantiate(serverId, classId, deviceId="", configuration=Hash(),
     """Instantiate and configure a device on a running server
 
     Arguments:
-      * *serverId*: The serverId of the server on which the device should be started.
-      * *classId*: The classId of the device (corresponding plugin must already be loaded on the server)
-      * *deviceId*: The future name of the device in the Karabo installation (will fail if not unique)
+      * *serverId*: The serverId of the server on which the device should be
+        started.
+      * *classId*: The classId of the device (corresponding plugin must already
+        be loaded on the server)
+      * *deviceId*: The future name of the device in the Karabo installation
+        (will fail if not unique)
       * *configuration*: the configuration of the device (optional)
 
     The keyword arguments are used to further configure the device. """
@@ -519,7 +525,7 @@ def instantiate(serverId, classId, deviceId="", configuration=Hash(),
 
 @synchronize
 def instantiateNoWait(serverId, classId, deviceId="", configuration=Hash(),
-                **kwargs):
+                      **kwargs):
     """Instantiate and configure a device on a running server
 
     Non-waiting version of :func:`instantiate`"""
