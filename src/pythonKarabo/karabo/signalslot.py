@@ -43,19 +43,6 @@ def coslot(f):
     return f
 
 
-def replySlot(name):
-    def outer(f):
-        def inner(device, message, args):
-            ret = f(device, *args)
-            device._ss.reply(message, ret)
-            device._ss.emit("call", {
-                message.properties["signalInstanceId"].decode("utf8"): [name]},
-                *ret)
-        f.slot = inner
-        return f
-    return outer
-
-
 class ConnectionType(object):
     NO_TRACK = 0
 
