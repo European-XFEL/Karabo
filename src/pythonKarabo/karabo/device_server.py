@@ -15,13 +15,25 @@ from subprocess import Popen
 import threading
 import time
 import inspect
-from karathon import *
-from karabo.fsm import *
+
+from karabo.fsm import (
+    KARABO_FSM_EVENT0, KARABO_FSM_EVENT2,
+    KARABO_FSM_ACTION2, KARABO_FSM_NO_TRANSITION_ACTION,
+    KARABO_FSM_STATE, KARABO_FSM_STATE_E,
+    KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE
+)
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.plugin_loader import PluginLoader
 from karabo.configurator import Configurator
 from karabo.device import PythonDevice
 from karabo.runner import Runner
+from karathon import (
+    CHOICE_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
+    PATH_ELEMENT, STRING_ELEMENT,
+    AccessLevel, AppenderConfigurator, BrokerConnection, CategoryConfigurator,
+    ConnectionType, Hash, Logger, Priority, Schema, SignalSlotable,
+    loadFromFile, saveToFile
+)
 
 
 @KARABO_CONFIGURATION_BASE_CLASS

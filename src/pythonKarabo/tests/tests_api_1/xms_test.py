@@ -6,7 +6,7 @@ import threading
 import time
 import socket
 
-from karathon import *
+from karathon import Hash, SignalSlotable
 
 
 class RemoteClient(threading.Thread):

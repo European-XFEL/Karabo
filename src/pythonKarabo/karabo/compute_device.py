@@ -8,9 +8,15 @@ from abc import abstractmethod
 import threading
 
 import karabo.base_fsm as base
-from karabo.configurator import *
-from karabo.device import *
-from karabo.fsm import *
+from karabo.decorators import KARABO_CLASSINFO
+from karabo.device import PythonDevice
+from karabo.fsm import (
+    KARABO_FSM_STATE, KARABO_FSM_STATE_E, KARABO_FSM_STATE_EE,
+    KARABO_FSM_INTERRUPT_STATE, KARABO_FSM_EVENT0, KARABO_FSM_EVENT2,
+    KARABO_FSM_ACTION0, KARABO_FSM_ACTION2, KARABO_FSM_GUARD0,
+    KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE
+)
+from karathon import BOOL_ELEMENT, INT32_ELEMENT, SLOT_ELEMENT
 
 
 @KARABO_CLASSINFO("ComputeFsm", "1.0")

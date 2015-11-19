@@ -23,7 +23,7 @@ Macros section in the project and add a macro, calling it for example
 *helloWorld* (the name must be a python literal, so no spaces are allowed).
 An editor opens in the central panel, where you can enter the macro::
 
-    from karabo.api import *  # import everything important for macros
+    from karabo.api import Macro, Slot
 
     class HelloWorld(Macro):
         @Slot()
@@ -37,6 +37,8 @@ the console, that's just what one expects.
 
 Let's now add a property. Just replace the class by::
 
+    from karabo.api import Macro, Slot, String
+
     class HelloYou(Macro):
         name = String()
 
@@ -49,6 +51,8 @@ the hello button, will greet you.
 
 Sometimes the property names need some more explanation, which can be done as
 follows::
+
+    from karabo.api import Macro, Slot, String
 
     class HelloYou(Macro):
         name = String(displayedName="User Name",
