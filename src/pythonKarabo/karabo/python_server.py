@@ -4,32 +4,26 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Jul 26, 2012 10:06:25 AM$"
 
-from asyncio import (async, coroutine, get_event_loop, set_event_loop, sleep,
-                     create_subprocess_exec, wait, wait_for)
+from asyncio import async, coroutine, set_event_loop, sleep, wait
 import copy
-from importlib import import_module
 import os
-import os.path
-import platform
-import signal
-import socket
 import sys
-import time
+import socket
 import traceback
 
 import numpy
 
 from karabo.enums import AccessLevel, AccessMode, Assignment
 from karabo.eventloop import EventLoop
-from karabo.hash import (BinaryParser, BinaryWriter, Hash, Int32,
-                         SchemaHashType, String, StringList, XMLParser,
-                         saveToFile)
+from karabo.hash import (Hash, XMLParser, saveToFile, SchemaHashType, String,
+                         StringList, Int32)
 from karabo.logger import Logger
 from karabo.output import KaraboStream
+from karabo.python_device import Device
 from karabo.python_loader import PluginLoader
-from karabo.python_device import Device, SignalSlotable
 from karabo.schema import Validator, Node
-from karabo.signalslot import (ConnectionType, Signal, slot, coslot)
+from karabo.signalslot import (ConnectionType, SignalSlotable, Signal, slot,
+                               coslot)
 
 # XXX: These imports are needed for their side-effects...
 import karabo.metamacro  # add a default Device MetaMacro
@@ -65,6 +59,13 @@ class DeviceServer(SignalSlotable):
         description="Directory to search for plugins",
         assignment=Assignment.OPTIONAL, defaultValue="plugins",
         displayType="directory", requiredAccessLevel=AccessLevel.EXPERT)
+
+    pluginNamespace = String(
+        displayedName="Plugin Namespace",
+        description="Namespace to search for plugins",
+        assignment=Assignment.OPTIONAL,
+        defaultValue="karabo.python_device.api_2",
+        requiredAccessLevel=AccessLevel.EXPERT)
 
     log = Node(Logger,
                description="Logging settings",
@@ -104,7 +105,8 @@ class DeviceServer(SignalSlotable):
         self.deviceId = self._deviceId_ = self.serverId
 
         self.pluginLoader = PluginLoader(
-            Hash("pluginDirectory", self.pluginDirectory))
+            Hash("pluginNamespace", self.pluginNamespace,
+                 "pluginDirectory", self.pluginDirectory))
         self.pid = os.getpid()
         self.seqnum = 0
 
@@ -164,17 +166,20 @@ class DeviceServer(SignalSlotable):
     def scanPlugins(self):
         availableModules = set()
         while self.running:
-            for name in self.pluginLoader.update():
-                if name in availableModules:
+            entrypoints = self.pluginLoader.update()
+            for ep in entrypoints:
+                if ep.name in availableModules:
                     continue
                 try:
-                    module = import_module(name)
+                    # Call the entrypoint,
+                    # This registers the contained device class
+                    ep.load()
                 except Exception as e:
-                    self.log.WARN("scanPlugins: Cannot import module {} -- {}".
-                                  format(name,e))
+                    self.log.WARN("scanPlugins: Cannot load plugin {} -- {}".
+                                  format(ep.name, e))
                     traceback.print_exc()
                 else:
-                    availableModules.add(name)
+                    availableModules.add(ep.name)
                     self.notifyNewDeviceAction()
             yield from sleep(3)
 
