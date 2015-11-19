@@ -2,12 +2,13 @@
 """
 
 from .device_client import (
-    DeviceClientBase, Proxy, ProxySlot, ProxyNode, AutoDisconnectProxy,
-    SubProxy, OneShotQueue, getHistory, waitUntilNew, waitUntil, setWait,
-    setNoWait, getDevice, executeNoWait, updateDevice, sleep
+    connectDevice, DeviceClientBase, disconnectDevice, Proxy, ProxySlot,
+    ProxyNode, AutoDisconnectProxy, SubProxy, getHistory, waitUntilNew,
+    waitUntil, setWait, instantiate, instantiateNoWait, shutdown,
+    shutdownNoWait, setNoWait, getClasses, getDevice, getDevices, getServers,
+    execute, executeNoWait, updateDevice, sleep
 )
 from .enums import AccessLevel, AccessMode, Assignment, MetricPrefix, Unit
-from .eventloop import Broker, EventLoop, NoEventLoop
 from .exceptions import KaraboError
 from .hash import (
     Attribute, Bool, Byte, Char, ComplexDouble, ComplexFloat, Descriptor,
@@ -24,5 +25,5 @@ from .macro import Macro, Monitor
 from .python_device import Device
 from .registry import MetaRegistry, Registry
 from .schema import Configurable, Node, ChoiceOfNodes, ListOfNodes, Validator
-from .signalslot import Signal, SignalSlotable, slot, coslot, replySlot
+from .signalslot import Signal, SignalSlotable, slot, coslot
 from .timestamp import Timestamp
