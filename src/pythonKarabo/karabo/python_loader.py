@@ -29,12 +29,6 @@ class PluginLoader(Configurable):
         self._entrypoints = []
         sys.path.append(self.pluginDirectory)
 
-    def getPluginDirectory(self):
-        return self.pluginDirectory
-
-    def getPluginNamespace(self):
-        return self.pluginNamespace
-
     def getPlugin(self, name):
         for ep in self._entrypoints:
             if ep.name == name:

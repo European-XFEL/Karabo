@@ -175,8 +175,9 @@ class DeviceServer(SignalSlotable):
                     # This registers the contained device class
                     ep.load()
                 except Exception as e:
-                    self.log.WARN("scanPlugins: Cannot load plugin {} -- {}".
-                                  format(ep.name, e))
+                    self.logger.exception(
+                        "scanPlugins: Cannot load plugin {} -- {}"
+                        .format(ep.name, e))
                     traceback.print_exc()
                 else:
                     availableModules.add(ep.name)
