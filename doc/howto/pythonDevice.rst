@@ -30,13 +30,13 @@ Consider the code of our device - ConveyorPy.py:
 
     from karabo.decorators import KARABO_CLASSINFO
     from karabo.device import PythonDevice
-    from karabo.no_fsm import NoFsm, Worker
+    from karabo.no_fsm import Worker
     from karathon import (
         BOOL_ELEMENT, DOUBLE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, Unit
     )
 
     @KARABO_CLASSINFO("ConveyorPy", "1.3")
-    class ConveyorPy(PythonDevice, NoFsm):
+    class ConveyorPy(PythonDevice):
         @staticmethod
         def expectedParameters(expected):
             """ Description of device parameters statically known
@@ -192,18 +192,24 @@ Consider the code of our device - ConveyorPy.py:
 Consider the main steps of the code above, that are important to mention while
 writing devices in Python:
 
-1. Import all from karathon:
+1. Import needed pieces from the karabo and karathon packages:
 
   .. code-block:: python
 
-      from karathon import *
-  
+      from karabo.decorators import KARABO_CLASSINFO
+      from karabo.device import PythonDevice
+      from karabo.no_fsm import Worker
+      from karathon import (
+          BOOL_ELEMENT, DOUBLE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
+          Unit
+      )
+
 2. Decide whether you want to use an FSM. In our example we don't use it,
    therefore we have:
 
    .. code-block:: python
 
-     from karabo.no_fsm import NoFsm, Worker
+     from karabo.no_fsm import Worker
 
    The current recommendation is to use NoFsm. If you need an FSM, read
    :ref:`this <stateMachines>` section.
@@ -256,6 +262,47 @@ writing devices in Python:
    usage.
 
 
+The "Worker" class
+------------------
+
+The ``Worker`` class is suitable for executing periodic tasks. It is defined
+in the ``karabo.no_fsm`` module, from which it must be imported,
+
+.. code-block:: python
+
+    from karabo.no_fsm import Worker
+
+It can be instantiated and started like this:
+
+.. code-block:: python
+
+    self.counter = 0
+    self.timeout = 1000  # milliseconds
+    self.repetition = -1  # forever
+    self.worker = Worker(self.hook, self.timeout, self.repetition).start()
+
+The 'repetition' parameter will specify how many times the task has to
+be executed (-1 means 'forever'), the 'timeout' parameter will set the
+interval between two calls, ``self.hook`` is the callback function defined
+by the user, for example:
+
+.. code-block:: python
+
+    def hook(self):
+        self.counter += 1
+        self.log.INFO("*** periodicAction : counter = " + str(self.counter))
+
+The worker can then be stopped like this:
+
+.. code-block:: python
+
+    if self.worker is not None:
+        if self.worker.is_running():
+            self.worker.stop()
+        self.worker.join()
+        self.worker = None
+
+
 Pythonic API based on native Python
 ===================================
 
@@ -263,7 +310,7 @@ A device is not much more than a macro that runs on a server for a longer
 time. So it is written mostly in the same way. The biggest difference
 is that it inherits from :class:`karabo.python_device.PythonDevice` instead of
 :class:`karabo.python_device.Macro`. But the main difference is actually that
-a macro is something you may write quick&dirty, while a device should be
+a macro is something you may write quick & dirty, while a device should be
 written with more care. To give an example:
 
 .. code-block:: python
