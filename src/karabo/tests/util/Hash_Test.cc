@@ -712,7 +712,7 @@ void Hash_Test::testErase()
 //    map["15"] = -3;
 //    CPPUNIT_ASSERT(map.size() == 2);
 //
-//    map.erase("1"); // non existing key ==> no influence on size, no exception!
+//    map.erase("1"); // non existing key ==> nothing happens, no exception!
 //    CPPUNIT_ASSERT(map.size() == 2);
 //
 //    map.erase("15");
@@ -728,7 +728,7 @@ void Hash_Test::testErase()
     // Start testing Hash::erase on h1
     CPPUNIT_ASSERT(h1.size() == 4);
 
-    // erase existing key => size decreases
+    // erase existing key on first level => size decreases
     h1.erase("a");
     CPPUNIT_ASSERT(h1.has("a") == false);
     CPPUNIT_ASSERT(h1.size() == 3);
@@ -755,14 +755,14 @@ void Hash_Test::testErase()
     h1.erase("e.f");
     CPPUNIT_ASSERT(h1.has("e.f.g") == false);
     CPPUNIT_ASSERT(h1.has("e.f.h") == false);
-    CPPUNIT_ASSERT(h1.has("e.f") == false); // stays!
-    CPPUNIT_ASSERT(h1.has("e") == true); // of course stays as well
+    CPPUNIT_ASSERT(h1.has("e.f") == false);
+    CPPUNIT_ASSERT(h1.has("e") == true); // stays
     CPPUNIT_ASSERT(h1.size() == 3);
 
     // Start testing Hash::eraseFound on h2
     CPPUNIT_ASSERT(h2.size() == 4);
 
-    // erase existing key => return true and size decreases
+    // erase existing key => return true; it is on first level => size decreases
     CPPUNIT_ASSERT(h2.eraseFound("a") == true);
     CPPUNIT_ASSERT(h2.has("a") == false);
     CPPUNIT_ASSERT(h2.size() == 3);
@@ -788,7 +788,7 @@ void Hash_Test::testErase()
     // now testing Hash::erasePath on h3
     CPPUNIT_ASSERT(h3.size() == 4);
 
-    // erase existing key => size decreases
+    // erase existing key on first level => size decreases
     h3.erasePath("a");
     CPPUNIT_ASSERT(h3.has("a") == false);
     CPPUNIT_ASSERT(h3.size() == 3);
