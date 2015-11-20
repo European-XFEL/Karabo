@@ -235,11 +235,11 @@ namespace karabo {
 
             /**
              * Remove the element identified by 'key' if it exists. 
-             * Otherwise, it return silently.
-             * If 'key' is a composite element, all its descendents are removed. 
-             * The path to 'key' is, however, not removed in this case.
-             * Example: erase ("a.b.c") will remove "c", but "a" and "b" should 
-             * not be removed even when "c" is the only child of "b".
+             * If 'key' does not exist, throw karabo::util::ParameterException.
+             * If 'key' is a composite element, all its descendents are removed
+             * as well. The path to 'key' is not removed.
+             * Example: erase ("a.b.c") will remove "c", but "a.b" should
+             * not be removed even if "c" is the only child of "a.b".
              * @return No
              */
             void erase(const std::string& path, const char separator = '.');
@@ -247,23 +247,24 @@ namespace karabo {
             /**
              * Remove the element identified by 'key' if it exists. 
              * Otherwise, do nothing.
-             * If 'key' is a composite element, all its descendents are removed. 
-             * The path to 'key' is, however, not removed in this case.
-             * Example: erase ("a.b.c") will remove "c", but "a" and "b" should 
-             * not be removed even when "c" is the only child of "b".
+             * If 'key' is a composite element, all its descendents are removed
+             * as well. The path to 'key' is not removed.
+             * Example: erase ("a.b.c") will remove "c", but "a.b" should
+             * not be removed even if "c" is the only child of "a.b".
              * @return true if key exists, otherwise false
              */
             bool eraseFound(const std::string& path, const char separator = '.');
             
             /**
-             * Remove the element identified by 'key' if it exists. 
-             * Otherwise, it return silently.
-             * If 'key' is a composite element, all its descendents are removed. 
-             * The path to 'key' is removed as well if parent containers are getting empty.
-             * Example: eraseKey ("a.b.c") will remove "c", but "a" and "b" should 
-             * be removed as well if "c" is the only child of "b" and this will recursively
-             * be continued to the root.  If "a.b.c" the only element in Hash then
-             * eraseKey("a.b.c") will result in empty hash.
+             * Remove the element identified by 'key' if it exists.
+             * If 'key' does not exist, throw karabo::util::ParameterException.
+             * If 'key' is composite (e.g. "a.b.c") and its last component ("c")
+             * is the only child of its parent, the parent is removed as well.
+             * This removal is recursively continued to the root.
+             * Example: erasePath("a.b.c") will remove "c" and "b" will
+             * be removed as well if "c" is the only child of "a.b".
+             * If "a.b.c" is the only element in the Hash, then
+             * erasePath("a.b.c") will result in an empty hash.
              * @return No
              */
             void erasePath(const std::string& path, const char separator = '.');
