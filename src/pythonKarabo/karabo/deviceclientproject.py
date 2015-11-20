@@ -4,13 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
 """
 This module contains a class which represents the project related datastructure.
 """
-
-__all__ = ["DeviceClientProject", "ProjectDevice"]
-
 
 from karabo.hash import Hash, XMLParser, XMLWriter
 from karabo.project import Project, BaseDevice, BaseDeviceGroup
