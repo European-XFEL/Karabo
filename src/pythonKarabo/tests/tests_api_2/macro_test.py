@@ -4,7 +4,7 @@ import sys
 import time
 from unittest import TestCase, main
 
-from karabo.api import Slot, Int, sleep
+from karabo.api import Slot, Int, sleep as karabo_sleep
 from karabo.device_client import (waitUntilNew, waitUntil, setWait, setNoWait,
                                   getDevice, executeNoWait, updateDevice,
                                   Queue)
@@ -44,7 +44,7 @@ class Remote(Device):
     def count(self):
         for i in range(30):
             self.counter = i
-            yield from sleep(0.1)
+            yield from karabo_sleep(0.1)
 
     @Slot()
     @coroutine
@@ -146,7 +146,7 @@ class Local(Macro):
     def waituntilnew(self):
         with getDevice("remote") as d:
             d.counter = 0
-            sleep(0.1)
+            karabo_sleep(0.1)
             executeNoWait(d, "count")
             for i in range(30):
                 j = waitUntilNew(d).counter
@@ -181,17 +181,19 @@ class Local(Macro):
             d.doit()
 
     def onCancelled(self, slot):
-        self.cancel_slot = slot
+        self.cancelled_slot = slot
 
     @Slot()
     def sleepalot(self):
-        self.slept = 0
-        time.sleep(0.1)
-        self.slept = 1
-        sleep(0.01)
-        self.slept = 2
-        sleep(10)
-        self.slept = 3
+        non_karabo_sleep = time.sleep
+        self.slept_count = 0
+
+        non_karabo_sleep(0.1)
+        self.slept_count = 1
+        karabo_sleep(0.01)
+        self.slept_count = 2
+        karabo_sleep(10)
+        self.slept_count = 3
 
 
 class Tests(TestCase):
@@ -300,7 +302,7 @@ class Tests(TestCase):
         remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
             yield from remote.error()
-            yield from sleep(0.1)
+            yield from karabo_sleep(0.1)
         self.assertTrue(remote.done)
         self.assertIs(local.exc_slot, Local.error)
         self.assertIsInstance(local.exception, RuntimeError)
@@ -314,30 +316,30 @@ class Tests(TestCase):
         """test proper cancellation of slots
 
         when a slot is cancelled, test that
-          * the onCancelled callback is called (which sets cancel_slot)
+          * the onCancelled callback is called (which sets cancelled_slot)
           * the slot got cancelled in the right place (slept has right value)
           * the task gets properly marked done
         Test that for both if the slot is stuck in a karabo function, or not.
         """
         with (yield from getDevice("local")) as d:
             # cancel during non-karabo sleep
-            local.cancel_slot = None
+            local.cancelled_slot = None
             task = async(d.sleepalot())
-            yield from sleep(0.01)
+            yield from karabo_sleep(0.01)  # shorter than the first sleep
             yield from d.cancel()
-            yield from sleep(0.1)
-            self.assertEqual(local.cancel_slot, Local.sleepalot)
-            self.assertEqual(local.slept, 1)
+            yield from karabo_sleep(0.1)
+            self.assertEqual(local.cancelled_slot, Local.sleepalot)
+            self.assertEqual(local.slept_count, 1)
             assert task.done()
 
             # cancel during karabo sleep
-            local.cancel_slot = None
+            local.cancelled_slot = None
             task = async(d.sleepalot())
-            yield from sleep(0.13)
+            yield from karabo_sleep(0.13)  # longer than the first two sleeps
             yield from d.cancel()
-            yield from sleep(0.01)
-            self.assertEqual(local.slept, 2)
-            self.assertEqual(local.cancel_slot, Local.sleepalot)
+            yield from karabo_sleep(0.01)
+            self.assertEqual(local.slept_count, 2)
+            self.assertEqual(local.cancelled_slot, Local.sleepalot)
             assert task.done()
 
 
