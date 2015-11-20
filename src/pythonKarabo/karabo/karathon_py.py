@@ -11,13 +11,6 @@ from karabo.enums import MetricPrefix, Unit, EncodingType
 from karabo.hash import Hash, Schema, Type
 from karabo.schema import Validator
 
-__all__ = ["MetricPrefix", "Unit", "EncodingType", "Hash", "Validator",
-           "Schema", "PATH_ELEMENT", "NODE_ELEMENT", "SLOT_ELEMENT",
-           "IMAGE_ELEMENT", "OVERWRITE_ELEMENT", "CHOICE_ELEMENT",
-           "LIST_ELEMENT", "RawImageData", "AccessType", "AssemblyRules",
-           "READ", "WRITE", "INIT"]
-
-
 AccessType = int
 AssemblyRules = int
 READ = 1
@@ -27,8 +20,6 @@ INIT = 4
 
 def publish(enum):
     globals().update((e.name, e) for e in enum)
-    __all__.extend(e.name for e in enum)
-
 
 publish(MetricPrefix)
 publish(Unit)
@@ -102,7 +93,6 @@ for t in Type.types:
     if t is not None:
         name = "{}_ELEMENT".format(t.hashname())
         globals()[name] = type(name, (Leaf,), dict(hashname=t.hashname()))
-        __all__.append(name)
 
 
 class PATH_ELEMENT(STRING_ELEMENT):
