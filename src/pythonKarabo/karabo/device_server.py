@@ -387,8 +387,8 @@ class DeviceServer(object):
         if self.needScanPlugins:
             msg = ('Keep watching path: "{}" '
                    'and namespace: "{}" for Device plugins').format(
-                self.pluginLoader.getPluginDirectory(),
-                self.pluginLoader.getPluginNamespace())
+                self.pluginLoader.pluginDirectory,
+                self.pluginLoader.pluginNamespace)
             self.log.INFO(msg)
             self.pluginThread = threading.Thread(target = self.scanPlugins)
             self.scanning = True
@@ -479,7 +479,7 @@ class DeviceServer(object):
                 self.seqnum += 1
                 filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
             saveToFile(config, filename, Hash("format.Xml.indentation", 2))
-            params = [self.pluginLoader.getPluginDirectory(), modname, classid, filename]
+            params = [self.pluginLoader.pluginDirectory, modname, classid, filename]
             
             launcher = Launcher(params)
             launcher.start()
@@ -565,8 +565,7 @@ class Launcher(object):
         self.args = params
 
     def start(self):
-        args = [sys.executable]
-        args.append("-c")
+        args = [sys.executable, "-c"]
         args.append("from karabo.device import launchPythonDevice;"
                     "launchPythonDevice()")
         args.extend(self.args)

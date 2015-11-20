@@ -31,22 +31,16 @@ class PluginLoader(object):
     def __init__(self, input):
         self._entrypoints = []
         if "pluginNamespace" in input:
-            self.namespace = input["pluginNamespace"]
+            self.pluginNamespace = input["pluginNamespace"]
         else:
             msg = "A namespace must be defined for plugins to load."
             raise ValueError(msg)
         if "pluginDirectory" in input:
-            self.directory = op.abspath(input["pluginDirectory"])
+            self.pluginDirectory = op.abspath(input["pluginDirectory"])
         else:
             msg = "A directory must be defined for plugins to load."
             raise ValueError(msg)
-        sys.path.append(self.directory)
-
-    def getPluginDirectory(self):
-        return self.directory
-
-    def getPluginNamespace(self):
-        return self.namespace
+        sys.path.append(self.pluginDirectory)
 
     def getPlugin(self, name):
         for ep in self._entrypoints:
@@ -57,5 +51,5 @@ class PluginLoader(object):
 
     def update(self):
         ws = WorkingSet()
-        self._entrypoints = list(ws.iter_entry_points(self.namespace))
+        self._entrypoints = list(ws.iter_entry_points(self.pluginNamespace))
         return self._entrypoints
