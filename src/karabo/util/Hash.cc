@@ -110,24 +110,12 @@ namespace karabo {
         //            return getNode(path, separator).getValueAsString();
         //        }
 
-        void Hash::erase(const std::string& path, const char separator) {
+        bool Hash::erase(const std::string& path, const char separator) {
             std::string key;
             Hash& hash = getLastHash(path, key, separator);
             int index = karabo::util::getAndCropIndex(key);
             if (index == -1) {
-                hash.m_container.erase(key);
-            } else {
-                std::vector<Hash>& vect = hash.m_container.get<vector<Hash> >(key);
-                vect.erase(vect.begin() + index);
-            }
-        }
-
-        bool Hash::eraseFound(const std::string& path, const char separator) {
-            std::string key;
-            Hash& hash = getLastHash(path, key, separator);
-            int index = karabo::util::getAndCropIndex(key);
-            if (index == -1) {
-                return hash.m_container.eraseFound(key);
+                return (hash.m_container.erase(key) != 0);
             } else {
                 std::vector<Hash>& vect = hash.m_container.get<vector<Hash> >(key);
                 vect.erase(vect.begin() + index);
@@ -480,7 +468,7 @@ namespace karabo {
             getPaths(other, candidates, "", separator); // may be optimized to avoid list creation 
             if (candidates.empty()) return;
             for (vector<string>::const_iterator it = candidates.begin(); it != candidates.end(); ++it) {
-                this->eraseFound(*it, separator);
+                this->erase(*it, separator);
             }
         }
 
