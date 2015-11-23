@@ -707,19 +707,6 @@ void Hash_Test::testSubtract() {
 
 void Hash_Test::testErase()
 {
-//    std::map<std::string, int> map;
-//    map["5"] = 3;
-//    map["15"] = -3;
-//    CPPUNIT_ASSERT(map.size() == 2);
-//
-//    map.erase("1"); // non existing key ==> nothing happens, no exception!
-//    CPPUNIT_ASSERT(map.size() == 2);
-//
-//    map.erase("15");
-//    CPPUNIT_ASSERT(map.size() == 1);
-//
-//    CPPUNIT_ASSERT(map["5"] == 3);
-
     // prepare 3 identical hashes
     Hash h1("a", 1, "b", 2, "c.d", 31, "e.f.g", 411, "e.f.h", 412, "e.i", 42);
     Hash h2(h1);
@@ -729,30 +716,22 @@ void Hash_Test::testErase()
     CPPUNIT_ASSERT(h1.size() == 4);
 
     // erase existing key on first level => size decreases
-    h1.erase("a");
+    CPPUNIT_ASSERT(h1.erase("a") == true);
     CPPUNIT_ASSERT(h1.has("a") == false);
     CPPUNIT_ASSERT(h1.size() == 3);
 
-    // FIXME:
-    // This behaviour differs from std::map::erase and is in contrast to the
-    // previous documentation of Hash::erase! What is intended?
-    bool paramExcept = false;
-    try {
-        // non-existing key: exception
-        h1.erase("a");
-    } catch (karabo::util::ParameterException &ex) {
-        paramExcept = true;
-    }
-    CPPUNIT_ASSERT(paramExcept == true);
+    // non-existing key - return false and keep size: 
+    CPPUNIT_ASSERT(h1.erase("a") == false);
+    CPPUNIT_ASSERT(h1.size() == 3);
 
     // "c.d": composite key without siblings
-    h1.erase("c.d");
+    CPPUNIT_ASSERT(h1.erase("c.d") == true);
     CPPUNIT_ASSERT(h1.has("c.d") == false);
     CPPUNIT_ASSERT(h1.has("c") == true);
     CPPUNIT_ASSERT(h1.size() == 3);  // "c" still in!
 
     // "e.f": composite key with two children and a sibling
-    h1.erase("e.f");
+    CPPUNIT_ASSERT(h1.erase("e.f") == true);
     CPPUNIT_ASSERT(h1.has("e.f.g") == false);
     CPPUNIT_ASSERT(h1.has("e.f.h") == false);
     CPPUNIT_ASSERT(h1.has("e.f") == false);
@@ -769,6 +748,7 @@ void Hash_Test::testErase()
 
     // non-existing key: return false
     CPPUNIT_ASSERT(h2.eraseFound("a") == false);
+    CPPUNIT_ASSERT(h2.size() == 3);
 
     // "c.d": composite key without siblings
     CPPUNIT_ASSERT(h2.eraseFound("c.d") == true);
@@ -793,17 +773,9 @@ void Hash_Test::testErase()
     CPPUNIT_ASSERT(h3.has("a") == false);
     CPPUNIT_ASSERT(h3.size() == 3);
 
-    // FIXME:
-    // This behaviour differs from previous documentation - and is probably
-    // caused by Hash::erase throwing on non-existing key...
-    paramExcept = false;
-    try {
-        // non-existing key: exception
-        h3.erasePath("a");
-    } catch (karabo::util::ParameterException &ex) {
-        paramExcept = true;
-    }
-    CPPUNIT_ASSERT(paramExcept == true);
+    // non-existing key: size just stays as it is
+    h3.erasePath("a");
+    CPPUNIT_ASSERT(h3.size() == 3);
 
 
     // "c.d": composite key without siblings

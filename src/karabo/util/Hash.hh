@@ -235,17 +235,6 @@ namespace karabo {
 
             /**
              * Remove the element identified by 'key' if it exists. 
-             * If 'key' does not exist, throw karabo::util::ParameterException.
-             * If 'key' is a composite element, all its descendents are removed
-             * as well. The path to 'key' is not removed.
-             * Example: erase ("a.b.c") will remove "c", but "a.b" should
-             * not be removed even if "c" is the only child of "a.b".
-             * @return No
-             */
-            void erase(const std::string& path, const char separator = '.');
-
-            /**
-             * Remove the element identified by 'key' if it exists. 
              * Otherwise, do nothing.
              * If 'key' is a composite element, all its descendents are removed
              * as well. The path to 'key' is not removed.
@@ -253,12 +242,19 @@ namespace karabo {
              * not be removed even if "c" is the only child of "a.b".
              * @return true if key exists, otherwise false
              */
-            bool eraseFound(const std::string& path, const char separator = '.');
+            bool erase(const std::string& path, const char separator = '.');
+
+            /**
+             * Deprecated - same as eraseFound(path, separator)
+             */
+            KARABO_DEPRECATED inline bool eraseFound(const std::string& path, const char separator = '.')
+            {
+                return this->erase(path, separator);
+            }
             
             /**
              * Remove the element identified by 'key' if it exists.
-             * If 'key' does not exist, throw karabo::util::ParameterException.
-             * If 'key' is composite (e.g. "a.b.c") and its last component ("c")
+             * If 'key' is composite (e.g. "a.b.c") and the last component ("c")
              * is the only child of its parent, the parent is removed as well.
              * This removal is recursively continued to the root.
              * Example: erasePath("a.b.c") will remove "c" and "b" will

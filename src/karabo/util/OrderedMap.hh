@@ -117,9 +117,14 @@ namespace karabo {
 
             inline bool has(const KeyType& key) const;
 
-            inline bool eraseFound(const KeyType& key);
+            KARABO_DEPRECATED inline bool eraseFound(const KeyType& key);
             
-            inline void erase(const KeyType& key);
+            /**
+             * Erase element identified by key if key exists.
+             * @param key
+             * @return number of elements erased, i.e. 0 or 1.
+             */
+            inline size_t erase(const KeyType& key);
 
             inline size_t size() const;
 
@@ -340,21 +345,21 @@ namespace karabo {
         }
 
         template<class KeyType, class MappedType>
-        inline void OrderedMap<KeyType, MappedType>::erase(const KeyType& key) {
-            if (!eraseFound(key))
-                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
-        }
-
-        template<class KeyType, class MappedType>
-        inline bool OrderedMap<KeyType, MappedType>::eraseFound(const KeyType& key) {
+        inline size_t OrderedMap<KeyType, MappedType>::erase(const KeyType& key) {
             map_iterator it;
 
             if ((it = find(key)) != m_mapNodes.end()) {
                 m_listNodes.remove(&it->second);
-                m_mapNodes.erase(/*hash*/(key));
-                return true;
+                m_mapNodes.erase(/*hash*/(key)); // log in map size
+//                m_mapNodes.erase(it);              // amortized constant
+                return 1;
             }
-            return false;
+            return 0;
+        }
+
+        template<class KeyType, class MappedType>
+        inline bool OrderedMap<KeyType, MappedType>::eraseFound(const KeyType& key) {
+            return (this->erase(key) != 0);
         }
 
         template<class KeyType, class MappedType>
