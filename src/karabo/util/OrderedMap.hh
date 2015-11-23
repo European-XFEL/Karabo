@@ -350,8 +350,7 @@ namespace karabo {
 
             if ((it = find(key)) != m_mapNodes.end()) {
                 m_listNodes.remove(&it->second);
-                m_mapNodes.erase(/*hash*/(key)); // log in map size
-//                m_mapNodes.erase(it);              // amortized constant
+                m_mapNodes.erase(it);
                 return 1;
             }
             return 0;
