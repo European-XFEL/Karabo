@@ -28,84 +28,100 @@ from karabo.hash import Simple
 from karabo.timestamp import Timestamp
 
 
+class _Generation(object):
+    """ This holds a single generation of a Curve's data.
+    """
+    size = 200
+    base = 10  # number of points to combine per generation
+
+    def __init__(self):
+        self.fill = 0
+        self.xs = numpy.empty(self.size, dtype=float)
+        self.ys = numpy.empty(self.size, dtype=float)
+
+    def addPoint(self, x, y):
+        self.xs[self.fill] = x
+        self.ys[self.fill] = y
+        self.fill += 1
+
+        if self.fill == self.size:
+            return self.reduceData()
+        return None
+
+    def reduceData(self):
+        x = self.xs[:self.base].mean()
+        y = self.ys[:self.base].mean()
+        self.xs[:-self.base] = self.xs[self.base:]
+        self.ys[:-self.base] = self.ys[self.base:]
+        self.fill -= self.base
+        return x, y
+
+
 class Curve(QObject):
     """This holds the data for one curve
 
-    the currently to be shown data is in self.x and self.y.
+    The currently to be shown data is in self.x and self.y.
     Up to self.histsize it is filled with historical data, up to self.fill
     it is then filled with "current" data, meaning data that has been
     accumulated from the changes coming in.
 
-    There is a second data structure, self.datas, which is a list of arrays
-    with averaged data, always self.base points are averaged over and
-    put into the next higher aggregated storage.
+    There is a second data structure, self.generations, which is a list of
+    _Generation objects containing averaged data, always `base` points are
+    averaged over and put into the next higher aggregated storage.
 
     Once the basic storage in self.x and self.y flows over, it gets replaced
-    by the averaged data in self.datas. """
-    generations = 4
-    base = 10  # number of points to combine per generation
-    size = 200
+    by the averaged data in self.generations.
+    """
+    genCount = 4
     spare = 100
     maxHistory = 500  # Limits amount of data from past
     sparsesize = 400
     minHistory = 100  # minimum number of points shown (if possible)
 
-    dtype = numpy.dtype([("avgx", "f8"), ("avgy", "f8")])
-
     def __init__(self, box, curve, parent):
         QObject.__init__(self, parent)
         self.curve = curve
         self.box = box
-        self.datas = [numpy.empty(self.size, dtype=self.dtype)
-                      for i in range(self.generations)]
+        self.generations = [_Generation() for i in range(self.genCount)]
 
         self.histsize = 0
         self.fill = 0
-        rsize = self.size * self.generations + self.spare
-        self.x = numpy.empty(rsize, dtype=float)
-        self.y = numpy.empty(rsize, dtype=float)
-        self.dx = numpy.empty(rsize, dtype=float)
-        self.dy = numpy.empty(rsize, dtype=float)
+        arraysize = self.spare + sum([g.size for g in self.generations], 0)
+        self.x = numpy.empty(arraysize, dtype=float)
+        self.y = numpy.empty(arraysize, dtype=float)
 
-        self.fills = [0] * self.generations
-        self.startpast = self.endpast = 0
         self.t0 = self.t1 = 0
         box.signalHistoricData.connect(self.onHistoricData)
         box.visibilityChanged.connect(self.onVisibilityChanged)
         self.timer = None
 
-    def addPoint(self, value, timestamp):
-        next = (timestamp, value)
-        n = 1
-        for i, data in reversed(list(enumerate(self.datas))):
-            data[self.fills[i]] = next
-            self.fills[i] += 1
-            if self.fills[i] < len(data):
-                break
-            next = (data[:self.base]["avgx"].mean(),
-                    data[:self.base]["avgy"].mean())
-            data[:-self.base] = data[self.base:]
-            self.fills[i] -= self.base
-            n *= self.base
-        else:
-            self.datas[0][1:] = self.datas[0][:-1]
-            self.fills[0] -= 1
 
+    def addPoint(self, value, timestamp):
+        # Fill the generations data, possibly propagating averaged values
+        point = (timestamp, value)
+        for gen in reversed(self.generations):
+            point = gen.addPoint(*point)
+            if point is None:
+                break
+
+        # Fill the main data buffer
         self.x[self.fill] = timestamp
         self.y[self.fill] = value
-        self.dx[self.fill] = self.dy[self.fill] = 0
         self.fill += 1
 
+        # When the main buffer fills up, copy the generations data
         if self.fill == len(self.x):
             self.fill_current()
         self.update()
 
     def fill_current(self):
         pos = self.histsize
-        for fill, data in zip(self.fills, self.datas):
-            d = data[:fill]
-            self.x[pos:pos + fill] = d["avgx"]
-            self.y[pos:pos + fill] = d["avgy"]
+        for gen in self.generations:
+            fill = gen.fill
+            if fill == 0:
+                continue
+            self.x[pos:pos + fill] = gen.xs[:fill]
+            self.y[pos:pos + fill] = gen.ys[:fill]
             pos += fill
         self.fill = pos
 
@@ -126,10 +142,11 @@ class Curve(QObject):
         self.t1 = t1
 
     def update(self):
-        """show the new data to screen
+        """ Show the new data on screen
 
         As showing the data is actually a time consuming task, it is only
-        done if the event loop has nothing else in it. """
+        done if the event loop has no other events pending.
+        """
         if self.timer is None:
             self.timer = self.startTimer(0)
 
@@ -150,9 +167,11 @@ class Curve(QObject):
         if not data:
             return
 
-        rsize = self.size * self.generations + len(data) + self.spare
-        x = numpy.empty(rsize, dtype=float)
-        y = numpy.empty(rsize, dtype=float)
+        datasize = len(data)
+        gensize = sum([g.size for g in self.generations], 0)
+        arraysize = datasize + gensize + self.spare
+        x = numpy.empty(arraysize, dtype=float)
+        y = numpy.empty(arraysize, dtype=float)
 
         for i, d in enumerate(data):
             x[i] = Timestamp.fromHashAttributes(d['v', ...]).toTimestamp()
@@ -160,8 +179,8 @@ class Curve(QObject):
 
         p0 = self.x[:self.fill].searchsorted(self.t0)
         p1 = self.x[:self.fill].searchsorted(self.t1)
-        np0 = x[:len(data)].searchsorted(self.t0)
-        np1 = x[:len(data)].searchsorted(self.t1)
+        np0 = x[:datasize].searchsorted(self.t0)
+        np1 = x[:datasize].searchsorted(self.t1)
 
         span = (self.x[p1 - 1] - self.x[p0]) / (self.t1 - self.t0)
         nspan = (x[np1 - 1] - x[np0]) / (self.t1 - self.t0)
@@ -169,22 +188,21 @@ class Curve(QObject):
         if (np1 - np0 < p1 - p0) and not nspan > span < 0.9:
             return
 
-        end = x[len(data) - 1]
-        for i, d in enumerate(self.datas):
-            fill = self.fills[i]
+        # If the history overlaps generation data, favor the history data.
+        end = x[datasize - 1]
+        for gen in self.generations:
+            fill = gen.fill
             if fill == 0:
                 continue
-            pos = d[:fill]["avgx"].searchsorted(end)
+            pos = gen.xs[:fill].searchsorted(end)
             if pos == 0:
                 break
-            d[:fill - pos] = d[pos:fill]
-            self.fills[i] = fill - pos
+            gen.xs[:fill - pos] = gen.xs[pos:fill]
+            gen.fill = fill - pos
 
-        self.histsize = len(data)
+        self.histsize = datasize
         self.x = x
         self.y = y
-        self.dx = numpy.zeros(rsize, dtype=float)
-        self.dy = numpy.zeros(rsize, dtype=float)
         self.fill_current()
         self.update()
 
