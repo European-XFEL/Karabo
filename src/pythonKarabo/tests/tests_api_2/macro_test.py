@@ -328,9 +328,16 @@ class Tests(TestCase):
             # cancel during non-karabo sleep
             local.cancelled_slot = None
             task = async(d.sleepalot())
-            yield from karabo_sleep(0.01)  # shorter than the first sleep
+            # Sleep for a short time so that the macro gets started
+            yield from karabo_sleep(0.01)
+            # Cancel the macro, which is in a non-interruptable non-karabo
+            # sleep.
+            # (which is just a place-holder for any other type of
+            #  non-interruptable code)
             yield from d.cancel()
-            yield from karabo_sleep(0.1)
+            # Finally, sleep for long enough that the macro runs in to the
+            # karabo sleep which CAN be interrupted.
+            yield from karabo_sleep(0.2)
             self.assertEqual(local.cancelled_slot, Local.sleepalot)
             self.assertEqual(local.slept_count, 1)
             assert task.done()
@@ -338,8 +345,12 @@ class Tests(TestCase):
             # cancel during karabo sleep
             local.cancelled_slot = None
             task = async(d.sleepalot())
-            yield from karabo_sleep(0.13)  # longer than the first two sleeps
+            # Sleep for long enough for the macro to end up in the really long
+            # sleep at the end
+            yield from karabo_sleep(0.13)
+            # Then cancel, while the macro is in that interruptable sleep
             yield from d.cancel()
+            # Sleep a little while, so the task can finish
             yield from karabo_sleep(0.01)
             self.assertEqual(local.slept_count, 2)
             self.assertEqual(local.cancelled_slot, Local.sleepalot)
