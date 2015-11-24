@@ -20,11 +20,11 @@ Consider the code of our device - ConveyorPy.py:
 .. code-block:: python
 
     #!/usr/bin/env python
-    
+
     __author__="john.smith@xfel.eu"
     __date__ ="November, 2014, 05:26 PM"
     __copyright__="Copyright (c) 2010-2014 European XFEL GmbH Hamburg. All rights reserved."
-    
+
     import sys
     import time
 
@@ -44,43 +44,40 @@ Consider the code of our device - ConveyorPy.py:
             (
             # Button definitions
             SLOT_ELEMENT(expected).key("start")
-             .displayedName("Start").description("Instructs device to go to started state")
-             .allowedStates("Stopped")
-             .commit()
-             ,
+                    .displayedName("Start")
+                    .description("Instructs device to go to started state")
+                    .allowedStates("Stopped")
+                    .commit(),
             SLOT_ELEMENT(expected).key("stop")
-             .displayedName("Stop").description("Instructs device to go to stopped state")
-             .allowedStates("Started")
-             .commit()
-             ,
+                    .displayedName("Stop")
+                    .description("Instructs device to go to stopped state")
+                    .allowedStates("Started")
+                    .commit(),
             SLOT_ELEMENT(expected).key("reset")
-             .displayedName("Reset").description("Resets the device in case of an error")
-             .allowedStates("Error")
-             .commit()
-             ,
+                    .displayedName("Reset")
+                    .description("Resets the device in case of an error")
+                    .allowedStates("Error")
+                    .commit(),
             # Other elements
             DOUBLE_ELEMENT(expected).key("targetSpeed")
-             .displayedName("Target Conveyor Speed")
-             .description("Configures the speed of the conveyor belt")
-             .unit(Unit.METER_PER_SECOND)
-             .assignmentOptional().defaultValue(0.8)
-             .reconfigurable()
-             .commit()
-             ,
+                    .displayedName("Target Conveyor Speed")
+                    .description("Configures the speed of the conveyor belt")
+                    .unit(Unit.METER_PER_SECOND)
+                    .assignmentOptional().defaultValue(0.8)
+                    .reconfigurable()
+                    .commit(),
             DOUBLE_ELEMENT(expected).key("currentSpeed")
-             .displayedName("Current Conveyor Speed")
-             .description("Shows the current speed of the conveyor")
-             .readOnly()
-             .commit()
-             ,
-            BOOL_ELEMENT(expected)
-             .key("reverseDirection").displayedName("Reverse Direction")
-             .description("Reverses the direction of the conveyor band")
-             .assignmentOptional().defaultValue(False).reconfigurable()
-             .allowedStates("Ok.Stopped")
-             .commit()
-            ,
-            )
+                    .displayedName("Current Conveyor Speed")
+                    .description("Shows the current speed of the conveyor")
+                    .readOnly()
+                    .commit(),
+            BOOL_ELEMENT(expected).key("reverseDirection")
+                    .displayedName("Reverse Direction")
+                    .description("Reverses the direction of the conveyor band")
+                    .assignmentOptional().defaultValue(False).reconfigurable()
+                    .allowedStates("Ok.Stopped")
+                    .commit(),
+        )
 
         def __init__(self, configuration):
             # Always call PythonDevice constructor first!
@@ -89,7 +86,7 @@ Consider the code of our device - ConveyorPy.py:
             self.registerInitialFunction(self.initialState)
             # Register slots
             self.registerSlot(self.start)
-            self.registerSlot(self.stop) 
+            self.registerSlot(self.stop)
             self.registerSlot(self.reset)
             self.worker = None
             self.timeout = 1000  # milliseconds
@@ -105,21 +102,22 @@ Consider the code of our device - ConveyorPy.py:
                 self.set("currentSpeed", 0.0)
                 self.stop()
             except Exception as e:
-                print("'initialState' method failed : {}".format(e))
+                self.log.ERROR("'initialState' method failed : {}".format(e))
                 self.exceptionFound("'initialState' method failed", str(e))
 
         def start(self):
             try:
-                self.updateState("Starting...") # set this if long-lasting work follows
+                self.updateState("Starting") # set this if long-lasting work follows
 
                 # Retrieve current values from our own device-state
-                tgtSpeed     = self.get("targetSpeed")
+                tgtSpeed = self.get("targetSpeed")
                 currentSpeed = self.get("currentSpeed")
 
                 # If we do not stand still here that is an error
                 if currentSpeed > 0.0:
                     raise ValueError("Conveyer does not stand still at start-up")
 
+                # Separate ramping into 50 steps
                 increase = tgtSpeed / 50.0
 
                 # Simulate a slow ramping up of the conveyor
@@ -130,14 +128,14 @@ Consider the code of our device - ConveyorPy.py:
                 # Be sure to finally run with targetSpeed
                 self.set("currentSpeed", tgtSpeed)
 
-                self.updateState("Started")      # reached the state "Ok.Started"
+                self.updateState("Started") # reached the state "Started"
 
                 # start worker that will call 'hook' method repeatedly
                 self.counter = 0
                 self.worker = Worker(self.hook, self.timeout, self.repetition).start()
 
             except Exception as e:
-                print("'start' method failed : {}".format(e))
+                self.log.ERROR("'start' method failed : {}".format(e))
                 self.exceptionFound("'start' method failed", str(e))
 
         def hook(self):
@@ -158,7 +156,7 @@ Consider the code of our device - ConveyorPy.py:
                 # Retrieve current value from our own device-state
                 currentSpeed = self.get("currentSpeed")
                 if currentSpeed != 0:
-                    self.updateState("Stopping...") # set this if long-lasting work follows
+                    self.updateState("Stopping") # set this if long-lasting work follows
                     # Separate ramping into 50 steps
                     decrease = currentSpeed / 50.0
                     # Simulate a slow ramping down of the conveyor
@@ -169,9 +167,9 @@ Consider the code of our device - ConveyorPy.py:
                     # Be sure to finally stand still
                     self.set("currentSpeed", 0)
 
-                self.updateState("Stopped")      # reached the state "Ok.Stopped"
-            except Exception as e:            
-                print("'stop' method failed : {}".format(e))
+                self.updateState("Stopped") # reached the state "Stopped"
+            except Exception as e:
+                self.log.ERROR("'stop' method failed : {}".format(e))
                 self.exceptionFound("'stop' method failed", str(e))
 
         def reset(self):
@@ -189,8 +187,8 @@ Consider the code of our device - ConveyorPy.py:
         # Put more state machine actions here if needed...
 
 
-Consider the main steps of the code above, that are important to mention while
-writing devices in Python:
+Consider the main steps of the code above, that are important to
+mention while writing devices in Python:
 
 1. Import needed pieces from the karabo and karathon packages:
 
@@ -235,7 +233,7 @@ writing devices in Python:
          self.registerInitialFunction(self.initialState)
          # Register slots
          self.registerSlot(self.start)
-         self.registerSlot(self.stop) 
+         self.registerSlot(self.stop)
          self.registerSlot(self.reset)
          self.worker = None
          self.timeout = 1000  # milliseconds
@@ -246,8 +244,8 @@ writing devices in Python:
    Then you need to register the function that will be called when the device
    is instantiated.
 
-   Finally you have to register all the slots: in the example start, stop and
-   reset.
+   Finally you have to register all the slots: in the example start,
+   stop and reset.
 
 5. Define static method ``expectedParameters``, where you should describe what
    properties are available on this device.
