@@ -16,17 +16,12 @@ safeRunCommand() {
 developmentMode=0
 stopDevelopment=0
 
-until [ -z "$1" ]; do
-    if [ $1 = "develop" ]; then
-        developmentMode=1
-        if [ $2 = "-u" ]; then
-            stopDevelopment=1
-        fi
-        shift; shift
-    else
-        shift
+if [ "$1" = "develop" ]; then
+    developmentMode=1
+    if [ "$2" = "-u" ]; then
+        stopDevelopment=1
     fi
-done
+fi
 
 OS=$(uname -s)
 MACHINE=$(uname -m)
