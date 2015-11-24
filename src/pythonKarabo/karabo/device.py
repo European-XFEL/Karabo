@@ -29,10 +29,9 @@ from karabo.configurator import Configurator
 from karabo.no_fsm import NoFsm
 
 def isCpuImage(value):
-    return (type(value) is CpuImageCHAR or type(value) is CpuImageDOUBLE
-            or type(value) is CpuImageFLOAT or type(value) is CpuImageINT16
-            or type(value) is CpuImageINT32 or type(value) is CpuImageUINT16
-            or type(value) is CpuImageUINT8)
+    return isinstance(value, (CpuImageCHAR, CpuImageDOUBLE, CpuImageFLOAT,
+                              CpuImageINT16, CpuImageINT32, CpuImageUINT16,
+                              CpuImageUINT8))
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonDevice", "1.0")
@@ -369,12 +368,12 @@ class PythonDevice(NoFsm):
             # key, value, timestamp args
             if len(pars) == 3:
                 key, value, stamp = pars
-                if type(stamp) is not Timestamp:
+                if not isinstance(stamp, Timestamp):
                     raise TypeError("The 3rd argument should be Timestamp")
                 if isCpuImage(value):
                     self._setImage(key, value)
-                    return;
-                elif type(value) is RawImageData:
+                    return
+                elif isinstance(value, RawImageData):
                     self._setRawImageData(key, value)
                     return
                 pars = tuple([Hash(key, value), stamp])
@@ -382,18 +381,18 @@ class PythonDevice(NoFsm):
             # hash args
             if len(pars) == 1:
                 h = pars[0]
-                if type(h) is not Hash:
+                if not isinstance(h, Hash):
                     raise TypeError("The only argument should be a Hash")
                 pars = tuple([h, self._getActualTimestamp()])   # add timestamp
             
             # key, value or hash, timestamp args
             if len(pars) == 2:
-                if type(pars[0]) is not Hash:
+                if not isinstance(pars[0], Hash):
                     key, value = pars
                     if isCpuImage(value):
                         self._setImage(key, value)
                         return
-                    elif type(value) is RawImageData:
+                    elif isinstance(value, RawImageData):
                         self._setRawImageData(key, value)
                         return
                     pars = tuple([Hash(key,value), self._getActualTimestamp()])
@@ -405,7 +404,7 @@ class PythonDevice(NoFsm):
                     if isCpuImage(value):
                         self._setImage(key, value)    # process images individually
                         hash.erasePath(key)      # clear hash from images 
-                    elif type(value) is RawImageData:
+                    elif isinstance(value, RawImageData):
                         self._setRawImageData(key, value)
                         hash.erasePath(key)
         
@@ -448,22 +447,22 @@ class PythonDevice(NoFsm):
             channelName, key, value = pars
             if isCpuImage(value):
                 dataval = ImageData(value)
-            elif type(value) is Data or type(value) is ImageData or type(value) is NDArray:
+            elif isinstance(value, (Data, ImageData, NDArray)):
                 dataval = value
-            elif type(value) is Image.Image:
-                dataval = ImageData(np.array(value)) 
+            elif isinstance(value, Image.Image):
+                dataval = ImageData(np.array(value))
             else:
                 raise ValueError('The type of value is neither a "CpuImage" nor a "Data"')
             data = Data(key, dataval)
         elif len(pars) == 2:
             channelName, data = pars
-            if type(data) is ImageData or type(data) is NDArray:
+            if isinstance(data, (ImageData, NDArray)):
                 data = Data(data.hash())
-            elif type(data) is Image.Image:
+            elif isinstance(data, Image.Image):
                 img = data
                 imgdata = ImageData(np.array(img))
                 data = Data(imgdata.hash())
-            elif type(data) is Data:
+            elif isinstance(data, Data):
                 pass
             else:
                 raise ValueError('Unsupported type of value: {}'.format(type(data)))
