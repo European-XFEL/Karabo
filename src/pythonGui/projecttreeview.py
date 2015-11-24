@@ -85,7 +85,8 @@ class ProjectTreeView(QTreeView):
 
 
     def closeAllProjects(self):
-        return self.model().closeAllProjects()
+        self.model().selectAllProjects()
+        return self.onCloseProject()
 
 
     def getProjectSaveName(self, saveTo=ProjectAccess.CLOUD, title="Save project", action="Save"):
@@ -151,12 +152,12 @@ class ProjectTreeView(QTreeView):
                                      self.projectDialog.location)
 
 
-    def projectSave(self):
+    def projectSave(self, project=None):
         """
         The current project is saved to either the CLOUD or LOCALLY.
         \return True, if project saved successfully, else False
         """
-        project = self.model().currentProject()
+        project = project or self.model().currentProject()
 
         if project.access == ProjectAccess.CLOUD:
             msgBox = QMessageBox(QMessageBox.Question, "Check in project", 
@@ -532,20 +533,13 @@ class ProjectTreeView(QTreeView):
         for index in selectedIndexes:
             project = index.data(ProjectModel.ITEM_OBJECT)
 
-            reply = QMessageBox.question(None, 'Close project',
-                "Do you really want to close the project \"<b>{}</b>\"?"
-                .format(project.name), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-            if reply == QMessageBox.No:
-                continue
-            
             if project.isModified:
                 reply = QMessageBox.question(None, "Save changes before closing",
                     "Do you want to save your project<br><b>\"{}\"</b><br>before closing?"
                     .format(project.name),
                     QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
                 if reply == QMessageBox.Save:
-                    self.projectSave()
+                    self.projectSave(project)
 
             projects.append(project)
         
@@ -576,13 +570,3 @@ class ProjectTreeView(QTreeView):
             self.writeProjectData(name, data)
         else:
             text = "Project {} could not be saved properly.".format(name)
-
-
-    def onProjectClosed(self, name, success, data):
-        if success:
-            text = "Project {} closed successfully.".format(name)
-            # Write cloud project to local file system
-            self.writeProjectData(name, data)
-        else:
-            text = "Project {} could not be closed properly.".format(name)
-
