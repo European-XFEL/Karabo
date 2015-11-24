@@ -4,7 +4,7 @@ import sys
 import time
 from unittest import TestCase, main
 
-from karabo.api import Slot, Int, sleep as karabo_sleep
+from karabo.api import Slot, Int, sleep
 from karabo.device_client import (waitUntilNew, waitUntil, setWait, setNoWait,
                                   getDevice, executeNoWait, updateDevice,
                                   Queue)
@@ -44,7 +44,7 @@ class Remote(Device):
     def count(self):
         for i in range(30):
             self.counter = i
-            yield from karabo_sleep(0.1)
+            yield from sleep(0.1)
 
     @Slot()
     @coroutine
@@ -146,7 +146,7 @@ class Local(Macro):
     def waituntilnew(self):
         with getDevice("remote") as d:
             d.counter = 0
-            karabo_sleep(0.1)
+            sleep(0.1)
             executeNoWait(d, "count")
             for i in range(30):
                 j = waitUntilNew(d).counter
@@ -186,6 +186,7 @@ class Local(Macro):
     @Slot()
     def sleepalot(self):
         non_karabo_sleep = time.sleep
+        karabo_sleep = sleep
         self.slept_count = 0
 
         non_karabo_sleep(0.1)
@@ -302,7 +303,7 @@ class Tests(TestCase):
         remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
             yield from remote.error()
-            yield from karabo_sleep(0.1)
+            yield from sleep(0.1)
         self.assertTrue(remote.done)
         self.assertIs(local.exc_slot, Local.error)
         self.assertIsInstance(local.exception, RuntimeError)
@@ -321,6 +322,8 @@ class Tests(TestCase):
           * the task gets properly marked done
         Test that for both if the slot is stuck in a karabo function, or not.
         """
+        # Rename sleep to make it clean which sleep is being used
+        karabo_sleep = sleep
         with (yield from getDevice("local")) as d:
             # cancel during non-karabo sleep
             local.cancelled_slot = None
