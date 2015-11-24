@@ -1,0 +1,17 @@
+****************************
+  What's New in Karabo 1.5
+****************************
+
+This chapter explains the changes in Karabo 1.5 with respect to the 1.4 releases.
+
+
+Backward Incompatibilities
+==========================
+
+``erase(key)`` and ``eraseFound(key)`` of ``Hash`` and ``OrderedMap``
+-------------------------------------------------------------------
+The method ``erase`` does not throw an exception if given a non-existing key.
+Instead, a return value indicates whether something has beenremoved or not.
+Since that was exactly the behaviour of ``eraseFound(key)``,
+that method has been removed.
+
