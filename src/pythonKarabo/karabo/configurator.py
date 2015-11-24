@@ -121,7 +121,7 @@ class Configurator(object):
             configuration = args[1]
             validation = args[2]
         elif len(args) == 2:
-            if type(args[1]) == bool:
+            if isinstance(args[1], bool):
                 configuration = args[0]
                 validation = args[1]
                 classid = list(configuration.keys())[0]
