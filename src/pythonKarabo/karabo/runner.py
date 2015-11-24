@@ -47,7 +47,7 @@ class Runner(object):
                 self.processOption(firstArg[2:], args)
                 return Hash()
             if firstArg[0:1] == "-":
-                processOption(firstArg[1:], args)
+                self.processOption(firstArg[1:], args)
                 return Hash()
             if firstArg == "help":
                 self.processOption(firstArg, args)
@@ -100,7 +100,7 @@ class Runner(object):
                 # TODO implement
             else:
                 print("Runner-Version: %s" % Runner.__version__);
-                print("%s--Version: %s" % (theClass.__name__, theClass.__version__))
+                print("%s--Version: %s" % (self.theClass.__name__, self.theClass.__version__))
         else:
             self.showUsage(args[0])
     
