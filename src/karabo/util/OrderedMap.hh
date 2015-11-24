@@ -117,8 +117,6 @@ namespace karabo {
 
             inline bool has(const KeyType& key) const;
 
-            KARABO_DEPRECATED inline bool eraseFound(const KeyType& key);
-            
             /**
              * Erase element identified by key if key exists.
              * @param key
@@ -354,11 +352,6 @@ namespace karabo {
                 return 1;
             }
             return 0;
-        }
-
-        template<class KeyType, class MappedType>
-        inline bool OrderedMap<KeyType, MappedType>::eraseFound(const KeyType& key) {
-            return (this->erase(key) != 0);
         }
 
         template<class KeyType, class MappedType>

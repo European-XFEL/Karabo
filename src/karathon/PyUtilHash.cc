@@ -297,17 +297,14 @@ void exportPyUtilHash() {
           "Check if 'path' is known in current Hash object. Use this form if you use the default separator.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\t...\n\tif 'a.b.c' in h:\n\t\th['a.b.c'] = 2");
     h.def("erase", &HashWrap().erase, (bp::arg("path"), bp::arg("sep") = "."),
-          "h.erase(path) -> remove item identified by 'path' from 'h' (in place)\nExample:\n"
+          "h.erase(path) -> remove item identified by 'path' from 'h' if it exists (in place)\n"
+          "Returns True if path is found, otherwise False\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\tprint h\n\t"
           "del h['b.x']\n\tprint h\n\th.erase('b.y')\n\tprint h\n\tdel h['b']");
     h.def("__delitem__", &HashWrap().erase, (bp::arg("path"), bp::arg("sep") = "."),
           "del h[path] <==> h.erase(path)\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\tprint h\n\t"
           "del h['b.x']\n\tprint h\n\th.erase('b.y')\n\tprint h\n\tdel h['b']");
-    h.def("eraseFound", &HashWrap().eraseFound, (bp::arg("path"), bp::arg("sep") = "."),
-          "h.eraseFound(path) -> remove item identified by 'path' from 'h' (in place) if it was found.\n"
-          "Returns True if path is found, otherwise False"
-          );
     h.def("erasePath", &HashWrap().erasePath, (bp::arg("path"), bp::arg("sep") = "."),
           "h.erase(path) -> remove item identified by 'path' from 'h' (in place)\nExample:\n"
           "\th = Hash('a[0].b[0].c', 1, 'b[0].c.d', 2, 'c.d[0].e', 3, 'd.e', 4, 'e', 5, 'f.g.h.i.j.k', 6)\n\tprint h\n\t"

@@ -245,14 +245,6 @@ namespace karabo {
             bool erase(const std::string& path, const char separator = '.');
 
             /**
-             * Deprecated - same as eraseFound(path, separator)
-             */
-            KARABO_DEPRECATED inline bool eraseFound(const std::string& path, const char separator = '.')
-            {
-                return this->erase(path, separator);
-            }
-            
-            /**
              * Remove the element identified by 'key' if it exists.
              * If 'key' is composite (e.g. "a.b.c") and the last component ("c")
              * is the only child of its parent, the parent is removed as well.
