@@ -766,6 +766,8 @@ class DeviceClient(object):
         
         
     def _hashImageToGuiqwtImage(self, hashImage):
+        from guiqwt.builder import make
+
         # TODO encoding stuff and color images
         data = self._hashImageToNumpyImage(hashImage)
         return make.image(data, title="Image", colormap='gray') 

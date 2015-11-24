@@ -318,7 +318,7 @@ class SharedDurableConsumer(_DurableConsumer):
         dll.MQCreateSharedDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")),
-            c_bool(noLocal), byref(self.handle))
+            byref(self.handle))
 
 
 class _AsyncConsumer(_Consumer):

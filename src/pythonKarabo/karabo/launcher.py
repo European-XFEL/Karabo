@@ -19,7 +19,7 @@ def newProcess(cls, config):
     def callback():
         loop = EventLoop()
         set_event_loop(loop)
-        device = self.cls(self.config)
+        device = cls(config)
         device.startInstance(loop)
         try:
             loop.run_forever()
@@ -36,7 +36,7 @@ def newThread(cls, config):
     def callback():
         loop = EventLoop()
         set_event_loop(loop)
-        device = self.cls(self.config)
+        device = cls(config)
         device.startInstance(loop)
         try:
             loop.run_forever()
