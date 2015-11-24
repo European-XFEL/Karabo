@@ -194,7 +194,7 @@ class Configurator(object):
                 format(listname))
         instances = []
         for hash in input[listname]:
-            instances.append(create(hash, validation))
+            instances.append(self.create(hash, validation))
         return instances
             
     def getRegisteredClasses(self):
