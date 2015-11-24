@@ -181,11 +181,20 @@ class Local(Macro):
             d.doit()
 
     def onCancelled(self, slot):
-        self.cancel_slot = slot
+        self.cancelled_slot = slot
 
     @Slot()
-    def cancelled(self):
-        sleep(10)
+    def sleepalot(self):
+        non_karabo_sleep = time.sleep
+        karabo_sleep = sleep
+        self.slept_count = 0
+
+        non_karabo_sleep(0.1)
+        self.slept_count = 1
+        karabo_sleep(0.01)
+        self.slept_count = 2
+        karabo_sleep(10)
+        self.slept_count = 3
 
 
 class Tests(TestCase):
@@ -305,11 +314,47 @@ class Tests(TestCase):
 
     @async_tst
     def test_cancel(self):
+        """test proper cancellation of slots
+
+        when a slot is cancelled, test that
+          * the onCancelled callback is called (which sets cancelled_slot)
+          * the slot got cancelled in the right place (slept has right value)
+          * the task gets properly marked done
+        Test that for both if the slot is stuck in a karabo function, or not.
+        """
+        # Rename sleep to make it clean which sleep is being used
+        karabo_sleep = sleep
         with (yield from getDevice("local")) as d:
-            async(d.cancelled())
-            yield from sleep(0.1)
+            # cancel during non-karabo sleep
+            local.cancelled_slot = None
+            task = async(d.sleepalot())
+            # Sleep for a short time so that the macro gets started
+            yield from karabo_sleep(0.01)
+            # Cancel the macro, which is in a non-interruptable non-karabo
+            # sleep.
+            # (which is just a place-holder for any other type of
+            #  non-interruptable code)
             yield from d.cancel()
-        self.assertEqual(local.cancel_slot, Local.cancelled)
+            # Finally, sleep for long enough that the macro runs in to the
+            # karabo sleep which CAN be interrupted.
+            yield from karabo_sleep(0.2)
+            self.assertEqual(local.cancelled_slot, Local.sleepalot)
+            self.assertEqual(local.slept_count, 1)
+            assert task.done()
+
+            # cancel during karabo sleep
+            local.cancelled_slot = None
+            task = async(d.sleepalot())
+            # Sleep for long enough for the macro to end up in the really long
+            # sleep at the end
+            yield from karabo_sleep(0.13)
+            # Then cancel, while the macro is in that interruptable sleep
+            yield from d.cancel()
+            # Sleep a little while, so the task can finish
+            yield from karabo_sleep(0.01)
+            self.assertEqual(local.slept_count, 2)
+            self.assertEqual(local.cancelled_slot, Local.sleepalot)
+            assert task.done()
 
 
 def setUpModule():
