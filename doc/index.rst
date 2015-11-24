@@ -13,6 +13,7 @@ Contents:
    documentation
    whatsnew/1.3   
    whatsnew/1.4   
+   whatsnew/1.5
    :maxdepth: 2
 
 
