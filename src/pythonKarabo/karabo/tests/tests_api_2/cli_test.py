@@ -10,7 +10,7 @@ import weakref
 from karabo.api import Int, Slot
 from karabo.cli import connectDevice, DeviceClient
 from karabo.device_client import (
-    getDevice, instantiate, DeviceClientBase, getDevices)
+    getDevice, instantiate, shutdown, DeviceClientBase, getDevices)
 from karabo.eventloop import NoEventLoop
 from karabo.hash import Hash
 from karabo.macro import Macro, EventThread, RemoteDevice
@@ -32,6 +32,10 @@ class Remote(Macro):
     @Slot()
     def instantiate(self):
         instantiate("testServer", "Other", "other")
+
+    @Slot()
+    def shutdown(self):
+        shutdown("other")
 
 
 class NoRemote(Macro):
@@ -126,12 +130,17 @@ class Tests(TestCase):
         task = loop.create_task(self.init_macroserver(server), server)
         proxy = loop.run_until_complete(task)
         self.assertEqual(proxy.s, "done")
-        async(server.slotKillServer())
+        loop.create_task(server.slotKillServer(), server)
         loop.run_forever()
         loop.close()
 
     @coroutine
     def init_server(self, server):
+        """initialize the device server and a device on it
+
+        the device on the device server is started from within a
+        macro `remote`, such that we can test device instantiation
+        from macros."""
         yield from server.startInstance()
         remote = Remote(_deviceId_="remote")
         yield from remote.startInstance()
@@ -140,12 +149,38 @@ class Tests(TestCase):
         yield from sleep(4)
         return (yield from getDevice("other"))
 
+    @coroutine
+    def shutdown_server(self):
+        """shutdown the device started by `init_server`
+
+        Again a macro is called to shut down the device on the server,
+        to test device shutdown in macros"""
+        proxy = yield from getDevice("remote")
+        yield from proxy.shutdown()
+        yield from sleep(0.1)
+
     def test_server(self):
+        """test the full lifetime of a python device server
+
+        this test
+          * starts a device server
+          * starts a macro which tells said device server to start a device
+          * let the macro tell to shut down that device
+          * checks everything is cleaned up afterwards
+          * kills the device server
+        """
         loop = setEventLoop()
         server = DeviceServer(dict(serverId="testServer"))
-        task = loop.create_task(self.init_server(server), server)
-        proxy = loop.run_until_complete(task)
+        proxy = loop.run_until_complete(
+            loop.create_task(self.init_server(server), server))
         self.assertEqual(proxy.something, 333)
+        self.assertIn("other", server.deviceInstanceMap)
+        r = weakref.ref(server.deviceInstanceMap["other"])
+        loop.run_until_complete(
+            loop.create_task(self.shutdown_server(), server))
+        self.assertNotIn("other", server.deviceInstanceMap)
+        gc.collect()
+        self.assertIsNone(r())
         async(server.slotKillServer())
         loop.run_forever()
         loop.close()
@@ -156,6 +191,11 @@ class Tests(TestCase):
         yield from self.other.startInstance()
 
     def test_autodisconnect(self):
+        """test the automatic disconnect after 15 s ATTENION! LONG TEST!
+
+        this tests that a device connected to by connectDevice automatically
+        disconnects again after 15 s. Unfortunately this means the test
+        needs to run very long..."""
         devices = DeviceClient(_deviceId_="ikarabo-test")
         oel = get_event_loop()
         set_event_loop(NoEventLoop(devices))

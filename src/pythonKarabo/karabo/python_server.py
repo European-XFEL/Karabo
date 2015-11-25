@@ -258,18 +258,19 @@ class DeviceServer(SignalSlotable):
 
     @coslot
     def slotKillServer(self):
-        done, pending = yield from wait(
-            [d.slotKillDevice() for d in self.deviceInstanceMap.values()],
-            timeout=10)
+        if self.deviceInstanceMap:
+            done, pending = yield from wait(
+                [d.slotKillDevice() for d in self.deviceInstanceMap.values()],
+                timeout=10)
 
-        if pending:
-            print("some devices could not be killed")
+            if pending:
+                self.logger.warning("some devices could not be killed")
         self.stopEventLoop()
         self._ss.emit("call", {"*": ["slotDeviceServerInstanceGone"]},
                       self.serverId)
 
     @slot
-    def slotDeviceGone(self, id):
+    def slotInstanceGone(self, id, info):
         self.deviceInstanceMap.pop(id, None)
 
     @coslot
