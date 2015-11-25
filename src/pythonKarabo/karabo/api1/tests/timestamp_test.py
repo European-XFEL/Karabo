@@ -6,8 +6,10 @@ import unittest
 import time
 import platform
 
-from karabo.api_1 import Epochstamp, Timestamp, Trainstamp
-
+from karabo.api_1 import (Epochstamp, Timestamp, Trainstamp,
+                          TimeDuration, Hash, Types,
+                          ATTOSEC, FEMTOSEC, PICOSEC, NANOSEC,
+                          MICROSEC, MILLISEC)
 
 class  Timestamp_TestCase(unittest.TestCase):
     #def setUp(self):
@@ -114,6 +116,101 @@ class  Timestamp_TestCase(unittest.TestCase):
         self.assertEqual(ts01.getSeconds(), 1356441936, "1st timestamp number of seconds must be 1356441936");
         self.assertEqual(ts01.getFractionalSeconds(), 789333123456789123, "1st timestamp number of fractional seconds must be 789333123456789123");
 
+    def test_timeduration(self):
+
+        try:
+            durZero = TimeDuration()
+            self.assertEqual(durZero.getSeconds(), 0)
+            self.assertEqual(durZero.getFractions(), 0)
+        except Exception as e:
+            self.fail(" testing default constructed time duration to be zero: " + str(e))
+
+
+        try:
+            seconds = 3600 # one hour
+            fractionsAtto = 4565460000000 # 456.546 micro seconds
+
+            dur1 = TimeDuration(seconds, fractionsAtto)
+            self.assertEqual(dur1.getSeconds(), 0)
+            self.assertEqual(dur1.getTotalSeconds(), seconds)
+            self.assertEqual(dur1.getMinutes(), 0)
+            self.assertEqual(dur1.getTotalMinutes(), 60)
+            self.assertEqual(dur1.getHours(), 1)
+            self.assertEqual(dur1.getTotalHours(), 1)
+            self.assertEqual(dur1.getFractions(ATTOSEC),  fractionsAtto);
+            self.assertEqual(dur1.getFractions(FEMTOSEC), fractionsAtto // 1000)
+            self.assertEqual(dur1.getFractions(PICOSEC),  fractionsAtto // 1000000)
+            self.assertEqual(dur1.getFractions(NANOSEC),  fractionsAtto // 1000000000)
+            self.assertEqual(dur1.getFractions(MICROSEC), fractionsAtto // 1000000000000)
+            self.assertEqual(dur1.getFractions(MILLISEC), fractionsAtto // 1000000000000000)
+
+        except Exception as e:
+            self.fail(" testing construction from seconds and fractions: " + str(e))
+
+        try:
+            hash = Hash()
+            # Cannot use Hash("seconds", seconds,"fractions", fractionsAtto),
+            # but have to set explicitely with type, otherwise it is int32...
+            hash.setAs("seconds", seconds, Types.UINT64)
+            hash.setAs("fractions", fractionsAtto, Types.UINT64)
+            dur2 = TimeDuration(hash)
+            self.assertEqual(dur1 - dur2, durZero)
+        except Exception as e:
+            self.fail(" testing construction from hash: " + str(e))
+
+
+        try:
+            # Test equal comparisons
+            durA = TimeDuration(123, 4567890000)
+            durB = TimeDuration(123, 4567890000)
+            self.assertTrue(durA == durB)
+            self.assertTrue(durA <= durB)
+            self.assertTrue(durA >= durB)
+            self.assertFalse(durA != durB)
+
+            # Test larger/smaller comparisons with equal seconds
+            durC = TimeDuration(123, 4567890000)
+            durD = TimeDuration(123, 4567890001)
+            self.assertTrue(durC != durD)
+            self.assertTrue(durC <  durD)
+            self.assertTrue(durC <= durD)
+            self.assertTrue(durD >  durC)
+            self.assertTrue(durD >= durC)
+            self.assertFalse(durD <  durC)
+            self.assertFalse(durD <= durC)
+            self.assertFalse(durC >  durD)
+            self.assertFalse(durC >= durD)
+
+            # Test larger/smaller comparisons with equal fractions
+            durE = TimeDuration(3, 4567890000)
+            durF = TimeDuration(4, 4567890000)
+            self.assertTrue(durE != durF)
+            self.assertTrue(durE <  durF)
+            self.assertTrue(durE <= durF)
+            self.assertTrue(durF >  durE)
+            self.assertTrue(durF >= durE)
+            self.assertFalse(durF <  durE)
+            self.assertFalse(durF <= durE)
+            self.assertFalse(durE >  durF)
+            self.assertFalse(durE >= durF)
+
+            # Test larger/smaller comparisons with seconds smaller, fractions larger
+            durG = TimeDuration(444, 4567890000)
+            durH = TimeDuration(555, 1234560000)
+            self.assertTrue(durG != durH)
+            self.assertTrue(durG <  durH)
+            self.assertTrue(durG <= durH)
+            self.assertTrue(durH >  durG)
+            self.assertTrue(durH >= durG)
+            self.assertFalse(durH <  durG)
+            self.assertFalse(durH <= durG)
+            self.assertFalse(durG >  durH)
+            self.assertFalse(durG >= durH)
+
+            # Skip here testing operator+, operator- and operator/, see C++ tests.
+
+        except Exception as e:
+            self.fail(" testing comparison operators: " + str(e))
 
 if __name__ == '__main__':
     unittest.main()
