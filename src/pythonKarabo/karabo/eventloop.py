@@ -162,6 +162,7 @@ class Broker:
                 slot = slots = None
         finally:
             self.emit('call', {'*': ['slotInstanceGone']}, self.deviceId, info)
+            consumer.close()
 
     def decodeMessage(self, message):
         hash = Hash.decode(message.data, "Bin")

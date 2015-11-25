@@ -206,7 +206,6 @@ class SignalSlotable(Configurable):
     def slotKillDevice(self):
         for t in self._tasks:
             t.cancel()
-        yield from wait(self._tasks)
         return True
 
     def call(self, device, target, *args):
