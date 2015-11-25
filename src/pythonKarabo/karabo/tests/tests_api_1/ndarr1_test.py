@@ -67,7 +67,7 @@ class  Ndarr1_TestCase(unittest.TestCase):
         try:
             self.assertEqual(str(nd.hash().getType("data")), "ARRAY_CHAR")
             archive = ser.save(nd.hash())
-            assert(type(archive) == bytes)
+            assert isinstance(archive, bytes)
             nd2 = NDArray(ser.load(archive))
             self.assertEqual(str(nd2.hash().getType("data")), "VECTOR_CHAR")
             b = nd2.getData()
