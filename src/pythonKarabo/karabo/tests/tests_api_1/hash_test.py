@@ -199,7 +199,7 @@ class  Hash_TestCase(unittest.TestCase):
             h = Hash('a.b.c', [1, 2, 3, 4, 5, 6, 7], 'b.c.d', [False, False, True, True, True, False, True])
             self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), True)
             self.assertEqual(h.isType('a.b.c', Types.VECTOR_INT32), True)
-            self.assertEqual(str(type(h['a.b.c'])), "<class 'list'>")
+            self.assertIsInstance(h['a.b.c'], list)
             try:
                 setStdVectorDefaultConversion(Types.VECTOR_INT32)
             except RuntimeError as e:
@@ -208,8 +208,8 @@ class  Hash_TestCase(unittest.TestCase):
             setStdVectorDefaultConversion(Types.NUMPY)
             self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), False)
             self.assertEqual(isStdVectorDefaultConversion(Types.NUMPY), True)
-            self.assertEqual(str(type(h['a.b.c'])), "<class 'numpy.ndarray'>")
-            self.assertEqual(str(type(h['b.c.d'])), "<class 'numpy.ndarray'>")
+            self.assertIsInstance(h['a.b.c'], np.ndarray)
+            self.assertIsInstance(h['b.c.d'], np.ndarray)
             setStdVectorDefaultConversion(Types.PYTHON)
             self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), True)
         except Exception as e:
