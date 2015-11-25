@@ -345,10 +345,14 @@ different ways. The first way is by using the ``karabo`` script again:
 
 Building the device in this way **does not install the device**. To install the
 device, you should run the self-extracting shell script which is created by the
-rebuild command.
+rebuild command. This script is located in a directory in the device's directory.
+The name is generated with the format:
+<device dir>/package/<OS>/<OS version>/<OS arch>/<device name>-<version>-<version>-<OS>-<OS version>-<OS arch>.sh
+Devices installed using the script will be installed into the active Karabo
+version.
 
 The second way to build a pythonDevice enables development of the device's code
-without needed to reinstall after making changes to the code. To use this
+without the need to reinstall after making changes to the code. To use this
 method, you should first navigate to the device's source directory. Then run the
 following command:
 
