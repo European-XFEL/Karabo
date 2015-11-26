@@ -10,8 +10,9 @@ Backward Incompatibilities
 
 ``erase(key)`` and ``eraseFound(key)`` of ``Hash`` and ``OrderedMap``
 -------------------------------------------------------------------
-The method ``erase`` does not throw an exception if given a non-existing key.
-Instead, a return value indicates whether something has beenremoved or not.
-Since that was exactly the behaviour of ``eraseFound(key)``,
+The method ``erase`` does not anymnore throw an exception if given a
+non-existing key.
+Instead, a return value indicates whether something has been removed or not.
+Since that was exactly the behaviour of ``eraseFound(key)`` before,
 that method has been removed.
 
