@@ -831,6 +831,8 @@ class  Hash_TestCase(unittest.TestCase):
 
 
     def test_erase(self):
+
+        # first testing erasePath
         try:
             h = Hash('a[0].b[0].c', 1, 'b[0].c.d', 2, 'c.d[0].e', 3, 'd.e', 4, 'e', 5, 'f.g.h.i.j.k', 6)
             self.assertTrue('a' in h)
@@ -868,7 +870,41 @@ class  Hash_TestCase(unittest.TestCase):
             self.assertEqual(h['e'], 5)
         except Exception as e:
             self.fail("test_erase exception 3: " + str(e))
-        
+
+
+        # now testing erase
+        h1 = Hash('a', 1, 'b', 2, 'c.d', 31, 'e.f.g', 411, 'e.f.h', 412, 'e.i', 42)
+
+        try:
+            self.assertEqual(len(h1), 4)
+
+            # erase existing key on first level => size decreases
+            self.assertTrue(h1.erase('a'))
+            self.assertFalse('a' in h1)
+            self.assertEqual(len(h1), 3)
+
+            # non-existing key - return false and keep size:
+            self.assertFalse(h1.erase('a'))
+            self.assertEqual(len(h1), 3)
+
+            # 'c.d': composite key without siblings
+            self.assertTrue(h1.erase('c.d'));
+            self.assertFalse('c.d' in h1)
+            self.assertTrue('c' in h1)
+            self.assertEqual(len(h1), 3)  # 'c' still in!
+
+            # 'e.f': composite key with two children and a sibling
+            self.assertTrue(h1.erase('e.f'))
+            self.assertFalse('e.f.g' in h1)
+            self.assertFalse('e.f.h' in h1)
+            self.assertFalse('e.f' in h1)
+            self.assertTrue('e' in h1) # stays
+            self.assertEqual(len(h1), 3)
+        except Exception as e:
+            self.fail("test_erase exception 3: " + str(e))
+
+
+
         
 if __name__ == '__main__':
     unittest.main()

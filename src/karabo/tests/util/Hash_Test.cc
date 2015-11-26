@@ -705,6 +705,66 @@ void Hash_Test::testSubtract() {
     CPPUNIT_ASSERT(h3.get<int>("b.c.d") == 33);
 }
 
+void Hash_Test::testErase()
+{
+    // prepare two identical hashes
+    Hash h1("a", 1, "b", 2, "c.d", 31, "e.f.g", 411, "e.f.h", 412, "e.i", 42);
+    Hash h2(h1);
+
+    // Start testing Hash::erase on h1
+    CPPUNIT_ASSERT(h1.size() == 4);
+
+    // erase existing key on first level => size decreases
+    CPPUNIT_ASSERT(h1.erase("a") == true);
+    CPPUNIT_ASSERT(h1.has("a") == false);
+    CPPUNIT_ASSERT(h1.size() == 3);
+
+    // non-existing key - return false and keep size: 
+    CPPUNIT_ASSERT(h1.erase("a") == false);
+    CPPUNIT_ASSERT(h1.size() == 3);
+
+    // "c.d": composite key without siblings
+    CPPUNIT_ASSERT(h1.erase("c.d") == true);
+    CPPUNIT_ASSERT(h1.has("c.d") == false);
+    CPPUNIT_ASSERT(h1.has("c") == true);
+    CPPUNIT_ASSERT(h1.size() == 3);  // "c" still in!
+
+    // "e.f": composite key with two children and a sibling
+    CPPUNIT_ASSERT(h1.erase("e.f") == true);
+    CPPUNIT_ASSERT(h1.has("e.f.g") == false);
+    CPPUNIT_ASSERT(h1.has("e.f.h") == false);
+    CPPUNIT_ASSERT(h1.has("e.f") == false);
+    CPPUNIT_ASSERT(h1.has("e") == true); // stays
+    CPPUNIT_ASSERT(h1.size() == 3);
+
+    // now testing Hash::erasePath on h2
+    CPPUNIT_ASSERT(h2.size() == 4);
+
+    // erase existing key on first level => size decreases
+    h2.erasePath("a");
+    CPPUNIT_ASSERT(h2.has("a") == false);
+    CPPUNIT_ASSERT(h2.size() == 3);
+
+    // non-existing key: size just stays as it is
+    h2.erasePath("a");
+    CPPUNIT_ASSERT(h2.size() == 3);
+
+
+    // "c.d": composite key without siblings
+    h2.erasePath("c.d");
+    CPPUNIT_ASSERT(h2.has("c.d") == false);
+    CPPUNIT_ASSERT(h2.has("c") == false); // removed since nothing left
+    CPPUNIT_ASSERT(h2.size() == 2);
+
+    // "e.f": composite key with two children and a sibling
+    h2.erasePath("e.f");
+    CPPUNIT_ASSERT(h2.has("e.f.g") == false);
+    CPPUNIT_ASSERT(h2.has("e.f.h") == false);
+    CPPUNIT_ASSERT(h2.has("e.f") == false);
+    CPPUNIT_ASSERT(h2.has("e") == true); // stays since there is "e.i"
+    CPPUNIT_ASSERT(h2.size() == 2);
+}
+
 namespace helper {
 
     class Helper {
