@@ -10,7 +10,7 @@ setup(
     url="http://karabo.eu",
     packages=find_packages(),
     package_data={
-        'karabo.tests.tests_api_1': ['resources/*.*'],
+        'karabo._api1.tests': ['resources/*.*'],
         'karabo.tests.tests_api_2': ['*.xml'],
     },
     entry_points={'console_scripts': [
