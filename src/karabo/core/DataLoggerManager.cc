@@ -58,7 +58,9 @@ namespace karabo {
 
             VECTOR_STRING_ELEMENT(expected).key("serverList")
                     .displayedName("Server list")
-                    .description("List of device server IDs where the DataLogger instance run. The load balancing is round-robin.")
+                    .description("List of device server IDs where the DataLogger instance run. "
+                    "The load balancing is round-robin. If empty, try to get from logger map "
+                    "or, as last source, just use the server of this device.")
                     .init()
                     .assignmentOptional().defaultValue(emptyVec)
                     .commit();
@@ -81,12 +83,13 @@ namespace karabo {
                     .commit();
         }
 
-        DataLoggerManager::DataLoggerManager(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
-            string filename = "loggermap.xml";
+        DataLoggerManager::DataLoggerManager(const Hash& input)
+        : karabo::core::Device<karabo::core::OkErrorFsm>(input),
+                m_serverList(input.get<vector<string> >("serverList")),
+                m_serverIndex(0), m_saved(false)
+        {
+            const string filename("loggermap.xml");
             //set<int>("nThreads", 10);
-            m_serverList = input.get<vector<string> >("serverList");
-            m_serverIndex = 0;
-            m_saved = false;
             m_loggerMap.clear();
             if (boost::filesystem::exists(filename)) {
                 karabo::io::loadFromFile(m_loggerMap, filename);
@@ -113,6 +116,18 @@ namespace karabo {
             KARABO_SYSTEM_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
             KARABO_SLOT(slotGetLoggerMap);
 
+            // Server list must not be empty. If it is configured to be empty,
+            // try other sources: our logger map or, if that is empty as well,
+            // just use our server.
+            if (m_serverList.empty()) {
+                m_loggerMap.getPaths(m_serverList); // or just getKeys(..)?
+                if (m_serverList.empty()) {
+                    m_serverList.push_back(this->getServerId());
+                }
+                // Keep device property in sync:
+                this->set("serverList", m_serverList);
+            }
+
             // try to restart readers and loggers if needed - it works reliably on "stopped" system
             restartReadersAndLoggers();
         }
@@ -120,7 +135,7 @@ namespace karabo {
         void DataLoggerManager::restartReadersAndLoggers() {
             Hash runtimeInfo = remote().getSystemInformation();
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "okStateOnEntry : runtime system information ...\n" << runtimeInfo;
+            KARABO_LOG_FRAMEWORK_DEBUG << "restartReadersAndLoggers: runtime system information ...\n" << runtimeInfo;
 
             boost::mutex::scoped_lock lock(m_handlerMutex);
 
@@ -203,6 +218,8 @@ namespace karabo {
                         boost::mutex::scoped_lock lock(m_handlerMutex);
                         if (deviceExists) {
                             if (loggerExists) {
+                                // Device was dead and came back so quickly that we did not notice
+                                // => just re-establish the connections.
                                 connect(deviceId, "signalChanged", loggerId, "slotChanged");
                                 connect(deviceId, "signalStateChanged", loggerId, "slotChanged");
                             } else {
@@ -210,6 +227,10 @@ namespace karabo {
                                 if (m_loggerMap.has(loggerId)) {
                                     serverId = m_loggerMap.get<string>(loggerId);
                                 } else {
+                                    if (m_serverList.empty()) {
+                                        // Cannot happen (see okStateOnEntry), but for better diagnostics in case it does:
+                                        throw KARABO_LOGIC_EXCEPTION("List of servers for data logging is empty.");
+                                    }
                                     m_serverIndex %= m_serverList.size();
                                     serverId = m_serverList[m_serverIndex++];
                                     m_loggerMap.set(loggerId, serverId);
@@ -268,7 +289,11 @@ namespace karabo {
                 }
 
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << e;
+                KARABO_LOG_ERROR << "In instanceNewHandler:\n" << e;
+            } catch (const std::exception& e) {
+                KARABO_LOG_ERROR << "In instanceNewHandler: " << e.what() << ".";
+            } catch (...) {
+                KARABO_LOG_ERROR << "Unknown exception in instanceNewHandler.";
             }
         }
 
