@@ -69,6 +69,10 @@ namespace karabo {
             } catch (const karabo::util::Exception& e) {
                 invalidateSenderInformation();
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("An exception was thrown in slot \"" + m_slotFunction + "\""));
+            } catch (const std::exception& e) {
+                invalidateSenderInformation();
+                std::string msg(e.what());
+                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION(((msg += " was thrown in slot \"") += m_slotFunction) += "\""));
             } catch (...) {
                 invalidateSenderInformation();
                 KARABO_RETHROW;
