@@ -104,16 +104,11 @@ namespace karathon {
               const bp::object& type,
               const std::string& separator = ".");
         
-        static void
+        static bool
         erase(karabo::util::Hash& self,
               const bp::object & keyObj,
               const std::string& separator = ".");
 
-        static bool
-        eraseFound(karabo::util::Hash& self,
-              const bp::object & keyObj,
-              const std::string& separator = ".");
-        
         static void
         erasePath(karabo::util::Hash& self,
               const bp::object & keyObj,
