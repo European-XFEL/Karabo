@@ -1270,6 +1270,9 @@ function buildPackage() {
         if [ $? -ne 0 ]; then
             return 1  # Failure
         fi
+        # Install the package
+        pluginDir=$scriptDir/servers/pythonDeviceServer/plugins
+        find package -executable -name \*.sh -exec {} --prefix=$pluginDir \;
     fi
     return 0  # looks like success...
 }

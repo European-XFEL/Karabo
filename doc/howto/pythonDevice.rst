@@ -343,15 +343,22 @@ different ways. The first way is by using the ``karabo`` script again:
     $ # Note that PACKAGE_NAME and PACKAGE_CATEGORY are the same as above
     $ karabo rebuild PACKAGE_NAME PACKAGE_CATEGORY
 
-Building the device in this way **does not install the device**. To install the
-device, you should run the self-extracting shell script which is created by the
-rebuild command. This script is located in a directory in the device's directory.
-The name is generated with the format:
-<device dir>/package/<OS>/<OS version>/<OS arch>/<device name>-<version>-<version>-<OS>-<OS version>-<OS arch>.sh
-Devices installed using the script will be installed into the active Karabo
-version.
+Building the device in this way automatically installs it to the
+run/servers/pythonDeviceServer/plugins directory. If you would like to choose
+where the device is installed, read below about the self-extracting shell script.
 
-The second way to build a pythonDevice enables development of the device's code
+To build a redistributable self-extracting installer for a pythonDevice,
+navigate to the device's source code directory and run the following command:
+
+.. code-block:: shell
+
+    $ ./build-package.sh
+
+A self-extracting shell script will be saved by the build command. It's in a
+deeply nested directory in the "package" directory in the device's directory.
+Run this script to install the device at a location of your choice.
+
+The third way to build a pythonDevice enables development of the device's code
 without the need to reinstall after making changes to the code. To use this
 method, you should first navigate to the device's source directory. Then run the
 following command:
@@ -361,10 +368,17 @@ following command:
     $ ./build-package.sh develop
 
 That will make a link to the device's source code directory so that it is
-visible to the device server's plugin discovery code. After saving changes to
-the device's source code, you can simply instantiate a new instance of the
-device to get the changes. **You should be careful to stop any devices that were
-instantiated with older versions of the code.**
+visible to the device server's plugin discovery code. Note that currently
+running device servers will not immediately see a device installed in this way.
+The test device server should be restarted after running the above command.
+After restarting the server, further changes to the device's source code will be
+immediately available without an installation step. You can simply instantiate
+a new instance of the device to get the changes.
+**You should be careful to stop any devices that were instantiated with older
+versions of the code.**
+Note that you will only see the results of changes in newly created device
+instances and not in, for example, the configuration associated with the device
+class.
 
 When you are done developing the device, you should remove this link with the
 following command:
