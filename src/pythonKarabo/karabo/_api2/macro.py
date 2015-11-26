@@ -6,11 +6,11 @@ import sys
 import threading
 import weakref
 
-from karabo.device_client import waitUntilNew, Proxy, getDevice
-from karabo.enums import AccessLevel, AccessMode
-from karabo.eventloop import EventLoop
-from karabo.hash import Descriptor, Int32 as Int, Slot, String, Type
-from karabo.python_device import Device
+from .device import Device
+from .device_client import waitUntilNew, Proxy, getDevice
+from .enums import AccessLevel, AccessMode
+from .eventloop import EventLoop
+from .hash import Descriptor, Int32 as Int, Slot, String, Type
 
 
 def Monitor():

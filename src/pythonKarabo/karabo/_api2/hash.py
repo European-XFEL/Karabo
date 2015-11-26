@@ -17,9 +17,9 @@ from xml.etree import ElementTree
 
 import numpy as np
 
-from karabo.enums import AccessLevel, AccessMode, Assignment
-from karabo.exceptions import KaraboError
-from karabo.registry import Registry
+from .enums import AccessLevel, AccessMode, Assignment
+from .exceptions import KaraboError
+from .registry import Registry
 
 
 class Attribute(object):

@@ -9,7 +9,7 @@ __all__ = ["DisplayImageStack"]
 from widget import DisplayWidget
 import copy
 import icons
-from karabo import enums
+from karabo.api_2 import ChannelSpaceType
 from schema import ImageNode
 
 import numpy as np
@@ -779,10 +779,10 @@ class ImageStack(DisplayWidget):
             return
         if (dimX < 1 or dimY < 1 or dimZ < 1 or
             len(data) < dimX * dimY * dimZ *
-                        int(enums.ChannelSpaceType[cs].split("_")[1]) // 8):
+                        int(ChannelSpaceType[cs].split("_")[1]) // 8):
             return
 
-        s, l, _ = enums.ChannelSpaceType[cs].split("_")
+        s, l, _ = ChannelSpaceType[cs].split("_")
         t = getattr(np, dict(s="int", u="uint", f="float")[s] + l)
         data = np.frombuffer(value.data.value, t).reshape((dimZ, dimY, dimX))
 

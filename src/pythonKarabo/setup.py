@@ -11,10 +11,10 @@ setup(
     packages=find_packages(),
     package_data={
         'karabo._api1.tests': ['resources/*.*'],
-        'karabo.tests.tests_api_2': ['*.xml'],
+        'karabo._api2.tests': ['*.xml'],
     },
     entry_points={'console_scripts': [
-                  'karabo_device_server=karabo.device_server:main',
+                  'karabo_device_server=karabo._api1.device_server:main',
                   'ideviceclient=karabo.ideviceclient:main',
                   'ikarabo=karabo.ikarabo:main',
                   'convert-karabo-device-project=karabo.convert_device_project:main',

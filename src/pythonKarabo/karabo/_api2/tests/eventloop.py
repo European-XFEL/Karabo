@@ -1,7 +1,7 @@
 from asyncio import coroutine, gather, set_event_loop, wait_for
 from functools import wraps
 
-from karabo.eventloop import EventLoop
+from karabo._api2.eventloop import EventLoop
 
 
 def async_tst(f):

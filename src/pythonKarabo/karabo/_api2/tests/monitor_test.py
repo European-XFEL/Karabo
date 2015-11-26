@@ -4,8 +4,8 @@ import time
 from unittest import TestCase, main
 
 from karabo.api import Slot, Int, waitUntil
-from karabo.macro import Macro, Monitor, RemoteDevice
-from karabo.python_device import Device
+from karabo._api2.device import Device
+from karabo._api2.macro import Macro, Monitor, RemoteDevice
 
 from .eventloop import startDevices, stopDevices, sync_tst
 
