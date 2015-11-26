@@ -8,10 +8,10 @@ from IPython.kernel.channelsabc import ChannelABC, HBChannelABC
 from IPython.kernel.manager import KernelManager
 from IPython.kernel import KernelClient
 
-from karabo.enums import AccessLevel, AccessMode
-from karabo.hash import VectorChar, Slot, Int32
-from karabo.python_device import Device
-from karabo.signalslot import coslot
+from .device import Device
+from .enums import AccessLevel, AccessMode
+from .hash import VectorChar, Slot, Int32
+from .signalslot import coslot
 
 
 class ChannelMixin(ZMQSocketChannel, ChannelABC):

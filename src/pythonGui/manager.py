@@ -20,8 +20,7 @@ __all__ = ["Manager"]
 from configuration import Configuration, BulkNotifications
 from dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
-from karabo.hash import Hash, XMLWriter, XMLParser
-from karabo.project import ProjectConfiguration
+from karabo.api_2 import Hash, XMLWriter, XMLParser, ProjectConfiguration
 import globals
 from messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel

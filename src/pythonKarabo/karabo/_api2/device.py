@@ -1,14 +1,13 @@
 from asyncio import gather
 import socket
 
-from karabo.enums import AccessLevel, AccessMode, Assignment
-from karabo.exceptions import KaraboError
-from karabo.hash import (Bool, Hash, HashType, Int32,
-                         Schema, SchemaHashType, String)
-from karabo.launcher import sameThread
-from karabo.logger import Logger
-from karabo.schema import Validator, Node
-from karabo.signalslot import SignalSlotable, Signal, slot, coslot
+from .enums import AccessLevel, AccessMode, Assignment
+from .exceptions import KaraboError
+from .hash import Bool, Hash, HashType, Int32, Schema, SchemaHashType, String
+from .launcher import sameThread
+from .logger import Logger
+from .schema import Validator, Node
+from .signalslot import SignalSlotable, Signal, slot, coslot
 
 
 class Device(SignalSlotable):

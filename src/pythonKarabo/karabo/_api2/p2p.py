@@ -6,9 +6,9 @@ from struct import pack, unpack, calcsize
 
 import numpy
 
-from karabo.enums import Assignment, AccessMode
-from karabo.hash import Hash, VectorString, String
-from karabo.schema import Configurable
+from .enums import Assignment, AccessMode
+from .hash import Hash, VectorString, String
+from .schema import Configurable
 
 
 class Channel:

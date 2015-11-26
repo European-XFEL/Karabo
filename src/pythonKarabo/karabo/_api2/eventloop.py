@@ -12,8 +12,8 @@ import socket
 import threading
 import weakref
 
-from karabo import openmq
-from karabo.hash import Hash
+from . import openmq
+from .hash import Hash
 
 
 class Broker:

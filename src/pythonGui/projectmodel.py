@@ -29,8 +29,7 @@ import manager
 import network
 from util import getSaveFileName
 
-from karabo.hash import Hash
-from karabo.project import Project, ProjectAccess, Monitor
+from karabo.api_2 import Hash, Project, ProjectAccess, Monitor
 
 from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QFileInfo, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,

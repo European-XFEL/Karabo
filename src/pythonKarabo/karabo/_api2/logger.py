@@ -4,8 +4,8 @@ import logging
 import traceback
 import weakref
 
-from karabo.hash import Hash, StringList
-from karabo.schema import Configurable, ListOfNodes
+from .hash import Hash, StringList
+from .schema import Configurable, ListOfNodes
 
 
 class _Filter(logging.Filter):

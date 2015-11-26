@@ -24,7 +24,7 @@ __all__ = ["DisplayCheckBox"]
 from util import SignalBlocker
 from widget import DisplayWidget
 
-from karabo.hash import Bool
+from karabo.api_2 import Bool
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QCheckBox

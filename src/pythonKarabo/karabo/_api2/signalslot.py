@@ -5,10 +5,10 @@ import random
 import time
 import weakref
 
-from karabo.enums import AccessLevel, Assignment, AccessMode
-from karabo.hash import Hash, HashType, Int32, String
-from karabo.p2p import NetworkOutput
-from karabo.schema import Configurable
+from .enums import AccessLevel, Assignment, AccessMode
+from .hash import Hash, HashType, Int32, String
+from .p2p import NetworkOutput
+from .schema import Configurable
 
 
 class Signal(object):

@@ -4,9 +4,9 @@ from zlib import adler32
 import numpy
 from numpy.testing import assert_equal
 
-from karabo.hash import (Hash, Schema, XMLWriter, XMLParser, BinaryWriter,
-                         BinaryParser)
-from karathon import BinarySerializerHash
+from karabo.api_1 import BinarySerializerHash
+from karabo.api_2 import (Hash, Schema, XMLWriter, XMLParser, BinaryWriter,
+                          BinaryParser)
 
 
 class Hash_TestCase(unittest.TestCase):

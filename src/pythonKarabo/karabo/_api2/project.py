@@ -10,8 +10,6 @@
 This module contains a class which represents project related datastructures.
 """
 
-from karabo.hash import XMLParser, XMLWriter
-
 from enum import Enum
 import hashlib
 import os.path
@@ -19,6 +17,8 @@ import urllib.request, urllib.error, urllib.parse
 import urllib.parse
 from uuid import uuid4
 from zipfile import ZipFile, ZIP_DEFLATED
+
+from .hash import XMLParser, XMLWriter
 
 
 class ProjectAccess(Enum):

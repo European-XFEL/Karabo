@@ -5,14 +5,14 @@ from functools import wraps
 import os
 from weakref import WeakValueDictionary
 
-from karabo import openmq
 from karabo.api import Int, Assignment
-from karabo.device_client import DeviceClientBase
-from karabo.enums import Unit, MetricPrefix
-from karabo.exceptions import KaraboError
-from karabo.hash import Hash
-from karabo.p2p import Channel
-from karabo.signalslot import slot
+from . import openmq
+from .device_client import DeviceClientBase
+from .enums import Unit, MetricPrefix
+from .exceptions import KaraboError
+from .hash import Hash
+from .p2p import Channel
+from .signalslot import slot
 
 
 def parallel(f):

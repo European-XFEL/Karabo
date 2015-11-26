@@ -1,13 +1,13 @@
 import os.path as op
 
-from ..import_checker import check_for_star_imports
+from karabo.testing.import_checker import check_for_star_imports
 
 
 def test_device_api_2_import():
     """ This is a smoke test that makes sure all of the bits available in API 2
     are still there.
     """
-    import karabo.device_api_2
+    import karabo.api_2
 
 
 def test_device_api_2_no_star_imports():
@@ -18,7 +18,7 @@ def test_device_api_2_no_star_imports():
     is broken. We should avoid that.
     """
     try:
-        import karabo.device_api_2 as api_mod
+        import karabo.api_2 as api_mod
     except ImportError:
         # We don't care about import errors here, just star imports.
         return

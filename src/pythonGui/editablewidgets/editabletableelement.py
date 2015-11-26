@@ -24,7 +24,7 @@ __all__ = ["EditableTableElement"]
 from util import SignalBlocker
 from widget import DisplayWidget, EditableWidget
 
-from karabo.hash import Hash, Type, VectorHash
+from karabo.api_2 import Hash, Type, VectorHash
 
 from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog, QComboBox,
                         QVBoxLayout, QWidget, QDialogButtonBox, QCheckBox)

@@ -1,7 +1,7 @@
 from asyncio import async, coroutine, get_event_loop, TimeoutError
 import threading
 
-from karabo.python_device import Device
+from .device import Device
 
 
 class SyncDevice(Device):

@@ -6,8 +6,8 @@ from os.path import basename, dirname
 from subprocess import PIPE
 import sys
 
-from karabo.hash import BinaryWriter, BinaryParser
-from karabo.eventloop import EventLoop
+from .hash import BinaryWriter, BinaryParser
+from .eventloop import EventLoop
 
 
 if __name__ == "__main__":

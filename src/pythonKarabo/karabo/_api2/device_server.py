@@ -13,21 +13,20 @@ import traceback
 
 import numpy
 
-from karabo.enums import AccessLevel, AccessMode, Assignment
-from karabo.eventloop import EventLoop
-from karabo.hash import (Hash, XMLParser, saveToFile, SchemaHashType, String,
-                         StringList, Int32)
-from karabo.logger import Logger
-from karabo.output import KaraboStream
-from karabo.python_device import Device
-from karabo.python_loader import PluginLoader
-from karabo.schema import Validator, Node
-from karabo.signalslot import (ConnectionType, SignalSlotable, Signal, slot,
-                               coslot)
+from .device import Device
+from .enums import AccessLevel, AccessMode, Assignment
+from .eventloop import EventLoop
+from .hash import (Hash, XMLParser, saveToFile, SchemaHashType, String,
+                   StringList, Int32)
+from .logger import Logger
+from .output import KaraboStream
+from .plugin_loader import PluginLoader
+from .schema import Validator, Node
+from .signalslot import ConnectionType, SignalSlotable, Signal, slot, coslot
 
 # XXX: These imports are needed for their side-effects...
-import karabo.metamacro  # add a default Device MetaMacro
-import karabo.ipython
+import karabo._api2.metamacro  # add a default Device MetaMacro
+import karabo._api2.ipython
 
 
 class DeviceServer(SignalSlotable):
