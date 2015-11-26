@@ -12,7 +12,7 @@
 __all__ = ["ListEdit"]
 
 
-from karabo.hash import Simple
+from karabo.api_2 import Simple
 import numpy
 from PyQt4.QtCore import QCoreApplication
 from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,

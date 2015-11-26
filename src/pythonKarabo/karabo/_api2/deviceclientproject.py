@@ -8,14 +8,12 @@
 This module contains a class which represents the project related datastructure.
 """
 
-from karabo.hash import Hash, XMLParser, XMLWriter
-from karabo.project import Project, BaseDevice, BaseDeviceGroup
-
 import csv
 from datetime import datetime
-import os.path
-
 from threading import Timer
+
+from .hash import Hash, XMLParser, XMLWriter
+from .project import Project, BaseDevice, BaseDeviceGroup
 
 
 class ProjectDevice(BaseDevice):

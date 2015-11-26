@@ -3,9 +3,9 @@ from collections import OrderedDict
 from enum import Enum
 from functools import partial
 
-from karabo.enums import AccessLevel, AccessMode, Assignment
-from karabo.hash import Attribute, Descriptor, Hash, Schema
-from karabo.registry import Registry
+from .enums import AccessLevel, AccessMode, Assignment
+from .hash import Attribute, Descriptor, Hash, Schema
+from .registry import Registry
 
 
 class MetaConfigurable(type(Registry)):

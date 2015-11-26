@@ -22,7 +22,7 @@ from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from projectmodel import ProjectModel
 from util import getSaveFileName
 
-from karabo.project import Monitor, Project, ProjectAccess, ProjectConfiguration
+from karabo.api_2 import Monitor, Project, ProjectAccess, ProjectConfiguration
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,

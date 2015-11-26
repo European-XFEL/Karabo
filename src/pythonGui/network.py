@@ -22,8 +22,7 @@ from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
                           QCryptographicHash, QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.authenticator import Authenticator
-from karabo.hash import Hash, BinaryParser, BinaryWriter
-from karabo.enums import AccessLevel
+from karabo.api_2 import Hash, BinaryParser, BinaryWriter, AccessLevel
 
 import globals
 import socket

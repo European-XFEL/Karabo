@@ -17,9 +17,9 @@ import network
 import globals
 import widget
 
-from karabo.hash import Hash, Integer, Schema, XMLParser
-from karabo.enums import AccessLevel
-from karabo.project import ProjectAccess
+from karabo.api_2 import (
+    AccessLevel, Hash, Integer, ProjectAccess, Schema, XMLParser
+)
 from itertools import count
 
 from os import path

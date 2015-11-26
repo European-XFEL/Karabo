@@ -8,13 +8,11 @@
 .. autoclass:: Box
 """
 
-from karabo.hash import Hash
-import karabo.hash as hashmod
-from karabo.enums import AccessMode, AccessLevel
+from karabo.api_2 import AccessMode, AccessLevel, Hash, Timestamp
+import karabo._api2.hash as hashmod
 from registry import Monkey
 from network import Network
 import icons
-from karabo.timestamp import Timestamp
 
 from components import (ChoiceComponent, EditableApplyLaterComponent,
                         EditableNoApplyComponent)

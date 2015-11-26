@@ -18,13 +18,13 @@ import sys
 import IPython
 
 import karabo
-from karabo import device_client
-from karabo.device_client import (
+from . import device_client
+from .device_client import (
     getDevice, waitUntil, waitUntilNew, setWait, setNoWait, execute,
     executeNoWait, DeviceClientBase, getDevices, getClasses, getServers,
     instantiate, shutdown, shutdownNoWait, instantiateNoWait, disconnectDevice)
-from karabo.eventloop import NoEventLoop
-from karabo.macro import Macro
+from .eventloop import NoEventLoop
+from .macro import Macro
 
 
 # NOTE: This is the namespace for ikarabo

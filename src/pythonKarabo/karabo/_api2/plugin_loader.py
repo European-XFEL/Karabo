@@ -5,9 +5,9 @@ import sys
 
 from pkg_resources import WorkingSet
 
-from karabo.schema import Configurable
-from karabo.hash import String
-from karabo.enums import Assignment, AccessLevel
+from .enums import Assignment, AccessLevel
+from .hash import String
+from .schema import Configurable
 
 
 class PluginLoader(Configurable):
