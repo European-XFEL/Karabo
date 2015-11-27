@@ -6,7 +6,7 @@ import os.path as op
 import stat
 import sys
 
-from karabo.device import PythonDevice
+from karabo.api_1 import PythonDevice
 
 BUILD_PACKAGE_FILE = """\
 #!/bin/bash
