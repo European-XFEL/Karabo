@@ -13,6 +13,15 @@ safeRunCommand() {
     fi
 }
 
+developmentMode=0
+stopDevelopment=0
+
+if [ "$1" = "develop" ]; then
+    developmentMode=1
+    if [ "$2" = "-u" ]; then
+        stopDevelopment=1
+    fi
+fi
 
 OS=$(uname -s)
 MACHINE=$(uname -m)
@@ -70,14 +79,38 @@ EXTRACT_SCRIPT=$KARABO/bin/.extract-pythonplugin.sh
 PACKAGEDIR=$(pwd)/package/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
+if [ $OS == "Darwin" ]; then
+    PYTHON=/opt/local/bin/python3
+else
+    PYTHON=$KARABO/extern/bin/python3
+fi
+
 # Always clean the bundle
 rm -rf $PACKAGEDIR
 
 # Start fresh
 mkdir -p $PACKAGEDIR
 
-# cp -f src/*.py $PACKAGEDIR
-find src -maxdepth 1 -type f -not -name main.py -name \*.py -exec cp {} $PACKAGEDIR \;
+if [[ "$developmentMode" == "1" ]]; then
+    # Install in the current user's home directory
+    if [[ "$stopDevelopment" = "1" ]]; then
+        echo
+        echo "Uninstalling development package."
+        echo
+        extraArgs="-u"
+    else
+        echo
+        echo "Installing in development mode. Changes to the source will be immediately available without rebuilding."
+        echo
+        extraArgs=
+    fi
+    $PYTHON setup.py develop --user $extraArgs
+    # We're done
+    exit 0
+else
+    safeRunCommand "$PYTHON setup.py bdist_wheel"
+    mv dist/*.whl $PACKAGEDIR
+fi
 
 # copy DEPENDS file if exists
 if [ -e DEPENDS ]; then cp DEPENDS $PACKAGEDIR; fi
