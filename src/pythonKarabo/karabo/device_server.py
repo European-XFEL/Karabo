@@ -95,6 +95,13 @@ class DeviceServer(object):
                     .expertAccess()
                     .commit()
                     ,
+            STRING_ELEMENT(expected).key("pluginNamespace")
+                    .displayedName("Plugin Namespace")
+                    .description("Namespace to search for plugins")
+                    .assignmentOptional().defaultValue("karabo.python_device.api_1")
+                    .expertAccess()
+                    .commit()
+                    ,
             NODE_ELEMENT(expected).key("Logger")
                     .description("Logging settings")
                     .displayedName("Logger")
@@ -285,7 +292,8 @@ class DeviceServer(object):
         self.connectionParameters = copy.copy(input['connection.' + self.connectionType])
         self.pluginLoader = PluginLoader.create(
             "PythonPluginLoader",
-            Hash("pluginDirectory", input['pluginDirectory']))
+            Hash("pluginNamespace", input['pluginNamespace'],
+                 "pluginDirectory", input['pluginDirectory']))
         self.loadLogger(input)
         self.pid = os.getpid()
         self.seqnum = 0
@@ -377,71 +385,44 @@ class DeviceServer(object):
     def okStateOnEntry(self):
         self.log.INFO("DeviceServer starts up with id: {}".format(self.serverid))
         if self.needScanPlugins:
-            self.log.INFO("Keep watching directory: \"{}\" for Device plugins".format(self.pluginLoader.getPluginDirectory()))
+            msg = ('Keep watching path: "{}" '
+                   'and namespace: "{}" for Device plugins').format(
+                self.pluginLoader.pluginDirectory,
+                self.pluginLoader.pluginNamespace)
+            self.log.INFO(msg)
             self.pluginThread = threading.Thread(target = self.scanPlugins)
             self.scanning = True
             self.pluginThread.start()
     
-    def import_plugin(self, modname):
-        script = os.path.realpath(self.pluginLoader.getPluginDirectory() + "/" + modname + ".py")
-        try:
-            savedSysPath = copy.copy(sys.path)
-            sys.path.append(os.path.dirname(script))
-            module = __import__(modname)
-        finally:
-            sys.path = copy.copy(savedSysPath)
-        return module
-        
+    def import_plugin(self, name):
+        """ Return the device class defined by an entrypoint.
+        """
+        entrypoint = self.pluginLoader.getPlugin(name)
+        return entrypoint.load()
+
     def scanPlugins(self):
-        self.blacklist = []
-        self.availableModules = dict()
+        self.availableModules = {}
         while self.scanning:
-            modules = self.pluginLoader.update()   # just list of modules in plugins dir
-            for name in modules:
-                if name in self.blacklist:
-                    continue
-                if name in self.availableModules:
+            entrypoints = self.pluginLoader.update()
+            for ep in entrypoints:
+                if ep.name in self.availableModules:
                     continue
                 try:
-                    module = self.import_plugin(name)
+                    deviceClass = ep.load()
                 except ImportError as e:
-                    self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(name,e))
+                    self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(ep.name, e))
                     continue
-                if "PythonDevice" not in dir(module):
-                    if name not in self.blacklist:
-                        self.blacklist.append(name)
-                    continue
-                candidates = [module.PythonDevice]
-                #
-                # IMPORTANT!
-                # We do an assumption that module contains only one user device
-                #
-                for item in dir(module):
-                    obj = getattr(module, item)
-                    if inspect.isclass(obj) and issubclass(obj, module.PythonDevice):
-                        candidates.append(obj)
 
-                def mostDerived(candidates):
-                    tree = inspect.getclasstree(candidates, 1)  # build inheritance tree
-                    try:
-                        while True:
-                            c, b = tree[0]
-                            tree = tree[1]
-                    except IndexError as e:
-                        pass
-                    return c
-
-                # get mostDerived from tree
-                deviceClass = mostDerived(candidates)  # most derived class in hierarchy
+                classid = deviceClass.__classid__
                 try:
-                    schema = Configurator(PythonDevice).getSchema(deviceClass.__classid__)
-                    self.availableModules[name] = deviceClass.__classid__
-                    self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": schema}
+                    schema = Configurator(PythonDevice).getSchema(classid)
+                    self.availableModules[ep.name] = classid
+                    self.availableDevices[classid] = {"mustNotify": True, "module": ep.name, "xsd": schema}
                     self.newPluginAvailable()
-                    print("Successfully loaded plugin: \"{}.py\"".format(name))
+                    self.log.INFO('Successfully loaded plugin: "{}:{}"'.format(ep.module_name, ep.name))
                 except (RuntimeError, AttributeError) as e:
                     self.log.ERROR("Failure while building schema for class {}, base class {} and bases {} : {}".format(
-                        deviceClass.__classid__, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
+                        classid, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
             time.sleep(3)
         self.ss.stopEventLoop()
     
@@ -455,12 +436,9 @@ class DeviceServer(object):
         self.log.ERROR("{} -- {}".format(m1,m2))
     
     def slotStartDevice(self, configuration):
-        if configuration.has('classId'):
-            self.instantiateNew(configuration)
-        else:
-            self.instantiateOld(configuration)
+        self.instantiateDevice(configuration)
 
-    def instantiateNew(self, input_config):
+    def instantiateDevice(self, input_config):
         classid = input_config['classId']
         
         self.log.INFO("Trying to start {}...".format(classid))
@@ -473,9 +451,7 @@ class DeviceServer(object):
         config['_serverId_'] = self.serverid
 
         # Inject deviceId
-        if 'deviceId' not in input_config:
-            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(classid)
-        elif len(input_config['deviceId']) == 0:
+        if 'deviceId' not in input_config or len(input_config['deviceId']) == 0:
             config['_deviceId_'] = self._generateDefaultDeviceInstanceId(classid)
         else:
             config['_deviceId_'] = input_config['deviceId']
@@ -486,93 +462,28 @@ class DeviceServer(object):
         # Add logger configuration from DeviceServer:
         config['Logger'] = copy.copy(self.loggerConfiguration)
 
-        deviceid = config['_deviceId_']
-
         # create temporary instance to check the configuration parameters are valid
         try:
-            pluginDir = self.pluginLoader.getPluginDirectory()
-            modname = self.availableDevices[classid]["module"]
-            module = self.import_plugin(modname)
-            UserDevice = getattr(module, classid)
-            schema = UserDevice.getSchema(classid)
-            #validator = Validator()
-            #self.log.DEBUG("Trying to validate  the configuration on device server")
-            #validated = validator.validate(schema, config)
-            #self.log.DEBUG("Validated configuration is ...\n{}".format(validated))
-            
             if "_deviceId_" in config:
-                device = config["_deviceId_"]
+                deviceid = config["_deviceId_"]
             else:
-                raise RuntimeError("Access to {}._deviceId_ failed".
-                                   format(classid))
-            script = os.path.realpath(pluginDir + "/" + modname + ".py")
+                msg = "Access to {}._deviceId_ failed".format(classid)
+                raise RuntimeError(msg)
+
+            modname = self.availableDevices[classid]["module"]
+            # NOTE: Device class should be imported using self.import_plugin()
+            # and device schema should be validated here.
+
             filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
             while os.path.isfile(filename):
                 self.seqnum += 1
                 filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
             saveToFile(config, filename, Hash("format.Xml.indentation", 2))
-            params = [script, modname, classid, filename]
+            params = [self.pluginLoader.pluginDirectory, modname, classid, filename]
             
-            launcher = Launcher(device, script, params)
+            launcher = Launcher(params)
             launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
-            #del validated
-            self.ss.reply(True, deviceid)
-        except Exception as e:
-            self.log.WARN("Device '{}' could not be started because: {}".format(classid, e))
-            self.ss.reply(False, "Device '{}' could not be started because: {}".format(classid, e))
-
-    def instantiateOld(self, input_config):
-        # Input 'config' parameter comes from GUI or DeviceClient
-        classid = next(iter(input_config)).getKey()
-        
-        self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n{}".format(input_config))
-        
-        config = copy.copy(input_config[classid])
-        config["_serverId_"] = self.serverid
-        if "deviceId" in config:
-            deviceid = config["deviceId"]
-        else:
-            deviceid = self._generateDefaultDeviceInstanceId(classid)
-            
-        config["_deviceId_"] = deviceid
-
-        # Add connection type and parameters used by device server for connecting to broker
-        config['_connection_.' + self.connectionType] = self.connectionParameters;
-        
-        # Add logger configuration from DeviceServer:
-        config["Logger"] = copy.copy(self.loggerConfiguration)
-        
-        # create temporary instance to check the configuration parameters are valid
-        try:
-            pluginDir = self.pluginLoader.getPluginDirectory()
-            modname = self.availableDevices[classid]["module"]
-            module = self.import_plugin(modname)
-            userDevice = getattr(module, classid)
-            schema = userDevice.getSchema(classid)
-            #validator = Validator()
-            #self.log.DEBUG("Trying to validate  the configuration on device server")
-            #validated = validator.validate(schema, config)
-            #self.log.DEBUG("Validated configuration is ...\n{}".format(validated))
-            
-            if "_deviceId_" in config:
-                device = config["_deviceId_"]
-            else:
-                raise RuntimeError("Access to {}._deviceId_ failed".
-                                   format(classid))
-            script = os.path.realpath(pluginDir + "/" + modname + ".py")
-            filename = "/tmp/{}.().configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
-            while os.path.isfile(filename):
-                self.seqnum += 1
-                filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
-            saveToFile(config, filename, Hash("format.Xml.indentation", 2))
-            params = [script, modname, classid, filename]
-            
-            launcher = Launcher(device, script, params)
-            launcher.start()
-            self.deviceInstanceMap[deviceid] = launcher
-            #del validated
             self.ss.reply(True, deviceid)
         except Exception as e:
             self.log.WARN("Device '{}' could not be started because: {}".format(classid, e))
@@ -645,17 +556,26 @@ class DeviceServer(object):
                 _id = self.serverid + "_" + devClassId + "_" + str(_index)
             return _id
 
+
 class Launcher(object):
-    def __init__(self, device, script, params):
-        self.script = script
+    """ Launches a PythonDevice in its own interpreter.
+    """
+
+    def __init__(self, params):
         self.args = params
 
     def start(self):
-        self.child = Popen([sys.executable] + self.args)
+        args = [sys.executable, "-c"]
+        args.append("from karabo.device import launchPythonDevice;"
+                    "launchPythonDevice()")
+        args.extend(self.args)
+
+        self.child = Popen(args)
 
     def join(self):
         if self.child.poll() is None:
             self.child.wait()
+
 
 def main(args=None):
     args = args or sys.argv
@@ -666,6 +586,5 @@ def main(args=None):
     except Exception as e:
         print("Exception caught: " + str(e))
 
-
 if __name__ == '__main__':
-    main(sys.argv)
+    main()
