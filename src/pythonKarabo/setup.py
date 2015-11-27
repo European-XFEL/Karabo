@@ -15,8 +15,8 @@ setup(
     },
     entry_points={'console_scripts': [
                   'karabo_device_server=karabo._api1.device_server:main',
-                  'ideviceclient=karabo.ideviceclient:main',
-                  'ikarabo=karabo.ikarabo:main',
-                  'convert-karabo-device-project=karabo.convert_device_project:main',
+                  'ideviceclient=karabo.interactive.ideviceclient:main',
+                  'ikarabo=karabo.interactive.ikarabo:main',
+                  'convert-karabo-device-project=karabo.interactive.convert_device_project:main',
                   ]},
 )
