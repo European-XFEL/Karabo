@@ -25,8 +25,8 @@ from .schema import Validator, Node
 from .signalslot import ConnectionType, SignalSlotable, Signal, slot, coslot
 
 # XXX: These imports are needed for their side-effects...
-import karabo._api2.metamacro  # add a default Device MetaMacro
-import karabo._api2.ipython
+import karabo.api2.metamacro  # add a default Device MetaMacro
+import karabo.api2.ipython
 
 
 class DeviceServer(SignalSlotable):

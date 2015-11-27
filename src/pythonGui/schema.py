@@ -9,7 +9,7 @@
 """
 
 from karabo.api_2 import AccessMode, AccessLevel, Hash, Timestamp
-import karabo._api2.hash as hashmod
+import karabo.api2.hash as hashmod
 from registry import Monkey
 from network import Network
 import icons

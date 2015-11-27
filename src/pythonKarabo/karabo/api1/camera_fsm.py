@@ -4,7 +4,7 @@
 __author__="andrea.parenti@xfel.eu"
 __date__ ="August  7, 2013"
 
-import karabo._api1.base_fsm as base
+import karabo.api1.base_fsm as base
 from karathon import SLOT_ELEMENT
 from .decorators import KARABO_CLASSINFO
 from .fsm import (
