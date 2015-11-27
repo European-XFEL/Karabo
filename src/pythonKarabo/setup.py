@@ -17,5 +17,6 @@ setup(
                   'karabo_device_server=karabo.device_server:main',
                   'ideviceclient=karabo.ideviceclient:main',
                   'ikarabo=karabo.ikarabo:main',
+                  'convert-karabo-device-project=karabo.convert_device_project:main',
                   ]},
 )

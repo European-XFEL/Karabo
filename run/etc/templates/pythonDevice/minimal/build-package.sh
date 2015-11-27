@@ -9,5 +9,5 @@ if [ -z $KARABO ]; then
     fi
 fi
 
-$KARABO/bin/.bundle-pythonplugin.sh
+$KARABO/bin/.bundle-pythonplugin.sh "$@"
 
