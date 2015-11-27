@@ -7,7 +7,7 @@ __date__ ="$Sep 10, 2013 4:17:06 PM$"
 from abc import abstractmethod
 import threading
 
-import karabo._api1.base_fsm as base
+import karabo.api1.base_fsm as base
 from karathon import BOOL_ELEMENT, INT32_ELEMENT, SLOT_ELEMENT
 from .decorators import KARABO_CLASSINFO
 from .device import PythonDevice

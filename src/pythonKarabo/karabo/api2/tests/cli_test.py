@@ -8,14 +8,14 @@ from unittest import TestCase, main, skip
 import weakref
 
 from karabo.api import Int, Slot
-from karabo._api2.cli import connectDevice, DeviceClient
-from karabo._api2.device import Device
-from karabo._api2.device_client import (
+from karabo.api2.cli import connectDevice, DeviceClient
+from karabo.api2.device import Device
+from karabo.api2.device_client import (
     getDevice, instantiate, shutdown, DeviceClientBase, getDevices)
-from karabo._api2.device_server import DeviceServer
-from karabo._api2.eventloop import NoEventLoop
-from karabo._api2.hash import Hash
-from karabo._api2.macro import Macro, EventThread, RemoteDevice
+from karabo.api2.device_server import DeviceServer
+from karabo.api2.eventloop import NoEventLoop
+from karabo.api2.hash import Hash
+from karabo.api2.macro import Macro, EventThread, RemoteDevice
 
 from .eventloop import setEventLoop
 

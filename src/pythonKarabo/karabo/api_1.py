@@ -1,23 +1,23 @@
 """ This module provides all the API 1 names which a Device might need.
 """
 
-from ._api1.camera_interface import CameraInterface
-from ._api1.configurator import Configurator
-from ._api1.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-from ._api1.base_fsm import BaseFsm
-from ._api1.camera_fsm import CameraFsm
-from ._api1.compute_device import ComputeFsm
-from ._api1.no_fsm import NoFsm
-from ._api1.ok_error_fsm import OkErrorFsm
-from ._api1.start_stop_fsm import StartStopFsm
-from ._api1.start_stop_fsm_periodic import StartStopFsmPeriodic
-from ._api1.device import PythonDevice, isCpuImage, launchPythonDevice
-from ._api1.device_server import DeviceServer, Launcher
-from ._api1.motor_interface import MotorInterface
-from ._api1.plugin_loader import PluginLoader
-from ._api1.runner import Runner
+from .api1.camera_interface import CameraInterface
+from .api1.configurator import Configurator
+from .api1.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from .api1.base_fsm import BaseFsm
+from .api1.camera_fsm import CameraFsm
+from .api1.compute_device import ComputeFsm
+from .api1.no_fsm import NoFsm
+from .api1.ok_error_fsm import OkErrorFsm
+from .api1.start_stop_fsm import StartStopFsm
+from .api1.start_stop_fsm_periodic import StartStopFsmPeriodic
+from .api1.device import PythonDevice, isCpuImage, launchPythonDevice
+from .api1.device_server import DeviceServer, Launcher
+from .api1.motor_interface import MotorInterface
+from .api1.plugin_loader import PluginLoader
+from .api1.runner import Runner
 
-from ._api1.fsm import (
+from .api1.fsm import (
     KARABO_FSM_EVENT0, KARABO_FSM_EVENT1, KARABO_FSM_EVENT2, KARABO_FSM_EVENT3,
     KARABO_FSM_EVENT4,
     KARABO_FSM_STATE, KARABO_FSM_STATE_E, KARABO_FSM_STATE_EE,

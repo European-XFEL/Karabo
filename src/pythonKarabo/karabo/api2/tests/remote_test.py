@@ -5,12 +5,12 @@ import gc
 from unittest import TestCase, main, expectedFailure
 
 from karabo.api import Slot, Int
-from karabo._api2.device import Device
-from karabo._api2.device_client import (
+from karabo.api2.device import Device
+from karabo.api2.device_client import (
     waitUntilNew, getDevice, waitUntil, setWait, setNoWait, Queue)
-from karabo._api2.hash import Hash, VectorChar
-from karabo._api2 import openmq
-from karabo._api2.schema import Configurable, Node
+from karabo.api2.hash import Hash, VectorChar
+from karabo.api2 import openmq
+from karabo.api2.schema import Configurable, Node
 
 from .eventloop import startDevices, stopDevices, async_tst
 

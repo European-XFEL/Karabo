@@ -1,21 +1,19 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
-
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 10, 2013 2:35:08 PM$"
 
-import karabo._api1.base_fsm as base
+import karabo.api1.base_fsm as base
 from karathon import SLOT_ELEMENT
 from .decorators import KARABO_CLASSINFO
 from .fsm import (
-    KARABO_FSM_ACTION0, KARABO_FSM_ACTION2,
+    KARABO_FSM_ACTION0, KARABO_FSM_ACTION2, KARABO_FSM_PERIODIC_ACTION,
     KARABO_FSM_EVENT0, KARABO_FSM_EVENT2,
-    KARABO_FSM_STATE_EE, KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE
+    KARABO_FSM_STATE_AEE, KARABO_FSM_STATE_EE,
+    KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE
 )
 
 
-@KARABO_CLASSINFO("StartStopFsm", "1.0")
-class StartStopFsm(base.BaseFsm):
+@KARABO_CLASSINFO("StartStopFsmPeriodic", "1.0")
+class StartStopFsmPeriodic(base.BaseFsm):
     
     @staticmethod
     def expectedParameters(expected):
@@ -36,7 +34,7 @@ class StartStopFsm(base.BaseFsm):
         e.commit()
 
     def __init__(self, configuration):
-        super(StartStopFsm, self).__init__(configuration)
+        super(StartStopFsmPeriodic, self).__init__(configuration)
         
         #**************************************************************
         #*                        Events                              *
@@ -47,11 +45,17 @@ class StartStopFsm(base.BaseFsm):
         KARABO_FSM_EVENT0(self, 'StopEvent',  'stop')
 
         #**************************************************************
+        #*                        State Actions                       *
+        #**************************************************************
+
+        KARABO_FSM_PERIODIC_ACTION('PeriodicAction', 1000, -1, self.periodicAction)
+        
+        #**************************************************************
         #*                        States                              *
         #**************************************************************
         KARABO_FSM_STATE_EE('Error',   self.errorStateOnEntry,   self.errorStateOnExit)
         KARABO_FSM_STATE_EE('Initialization', self.initializationStateOnEntry, self.initializationStateOnExit)
-        KARABO_FSM_STATE_EE('Started', self.startedStateOnEntry, self.startedStateOnExit)
+        KARABO_FSM_STATE_AEE('Started', 'PeriodicAction', self.startedStateOnEntry, self.startedStateOnExit)
         KARABO_FSM_STATE_EE('Stopped', self.stoppedStateOnEntry, self.stoppedStateOnExit)
 
         #**************************************************************
@@ -91,6 +95,9 @@ class StartStopFsm(base.BaseFsm):
         KARABO_FSM_STATE_MACHINE('StartStopMachine', startStopMachineTransitionTable, 'Initialization')
         self.fsm = KARABO_FSM_CREATE_MACHINE('StartStopMachine')
     
+    def stop(self):
+        self.fsm.stop()
+        
     def getFsm(self):
         return self.fsm
     
@@ -140,4 +147,6 @@ class StartStopFsm(base.BaseFsm):
         
     def resetAction(self):
         print("Reset action executed")
-        
+
+    def periodicAction(self, expired):
+        print("*** periodicAction called ***")
