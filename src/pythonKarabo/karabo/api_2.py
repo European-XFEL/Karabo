@@ -1,19 +1,19 @@
 """ This module provides all the API 2 names which a Device might need.
 """
 
-from ._api2.device_client import (
+from .api2.device_client import (
     connectDevice, DeviceClientBase, disconnectDevice, Proxy, ProxySlot,
     ProxyNode, AutoDisconnectProxy, SubProxy, getHistory, waitUntilNew,
     waitUntil, setWait, instantiate, instantiateNoWait, shutdown,
     shutdownNoWait, setNoWait, getClasses, getDevice, getDevices, getServers,
     execute, executeNoWait, updateDevice, sleep
 )
-from ._api2.enums import (
+from .api2.enums import (
     AccessLevel, AccessMode, Assignment, ChannelSpaceType, EncodingType,
     MetricPrefix, Unit
 )
-from ._api2.exceptions import KaraboError
-from ._api2.hash import (
+from .api2.exceptions import KaraboError
+from .api2.hash import (
     Attribute, Bool, Byte, Char, ComplexDouble, ComplexFloat, Descriptor,
     Double, Element, Enumable, Float, Hash, HashElement, HashMergePolicy,
     HashType, Int16, Int32, Int64, Int8, Integer, ListElement, Number,
@@ -24,14 +24,14 @@ from ._api2.hash import (
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
     VectorUInt64, VectorUInt8, XMLWriter, XMLParser, BinaryWriter, BinaryParser
 )
-from ._api2.macro import Macro, Monitor
-from ._api2.device import Device
-from ._api2.project import (
+from .api2.macro import Macro, Monitor
+from .api2.device import Device
+from .api2.project import (
     BaseDevice, BaseDeviceGroup, Project, ProjectAccess, ProjectConfiguration
 )
-from ._api2.registry import MetaRegistry, Registry
-from ._api2.schema import (
+from .api2.registry import MetaRegistry, Registry
+from .api2.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes, Validator
 )
-from ._api2.signalslot import Signal, SignalSlotable, slot, coslot
-from ._api2.timestamp import Timestamp
+from .api2.signalslot import Signal, SignalSlotable, slot, coslot
+from .api2.timestamp import Timestamp

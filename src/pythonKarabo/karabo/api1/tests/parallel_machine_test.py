@@ -7,7 +7,7 @@ from karabo.api_1 import (
     KARABO_FSM_NO_TRANSITION_ACTION, KARABO_FSM_EVENT2, KARABO_FSM_EVENT0, KARABO_FSM_INTERRUPT_STATE_EE,
     KARABO_FSM_STATE_EE, KARABO_FSM_ACTION0, KARABO_FSM_STATE_MACHINE, KARABO_FSM_CREATE_MACHINE
 )
-from karabo._api1.fsm import event_instance
+from karabo.api1.fsm import event_instance
 
 
 class ParallelMachine(object):

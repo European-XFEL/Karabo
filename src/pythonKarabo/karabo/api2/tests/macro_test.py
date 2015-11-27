@@ -5,12 +5,12 @@ import time
 from unittest import TestCase, main
 
 from karabo.api import Slot, Int, sleep
-from karabo._api2.device import Device
-from karabo._api2.device_client import (
+from karabo.api2.device import Device
+from karabo.api2.device_client import (
     waitUntilNew, waitUntil, setWait, setNoWait, getDevice, executeNoWait,
     updateDevice, Queue)
-from karabo._api2.device_server import KaraboStream
-from karabo._api2.macro import Macro
+from karabo.api2.device_server import KaraboStream
+from karabo.api2.macro import Macro
 
 from .eventloop import startDevices, stopDevices, sync_tst, async_tst
 

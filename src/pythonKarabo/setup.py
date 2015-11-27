@@ -10,11 +10,11 @@ setup(
     url="http://karabo.eu",
     packages=find_packages(),
     package_data={
-        'karabo._api1.tests': ['resources/*.*'],
-        'karabo._api2.tests': ['*.xml'],
+        'karabo.api1.tests': ['resources/*.*'],
+        'karabo.api2.tests': ['*.xml'],
     },
     entry_points={'console_scripts': [
-                  'karabo_device_server=karabo._api1.device_server:main',
+                  'karabo_device_server=karabo.api1.device_server:main',
                   'ideviceclient=karabo.interactive.ideviceclient:main',
                   'ikarabo=karabo.interactive.ikarabo:main',
                   'convert-karabo-device-project=karabo.interactive.convert_device_project:main',
