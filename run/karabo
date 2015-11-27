@@ -1272,6 +1272,9 @@ function buildPackage() {
         fi
         # Install the package
         pluginDir=$scriptDir/servers/pythonDeviceServer/plugins
+        if ! takeCareDirExists $pluginDir ; then
+            return 1
+        fi
         find package -executable -name \*.sh -exec {} --prefix=$pluginDir \;
     fi
     return 0  # looks like success...
