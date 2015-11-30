@@ -126,7 +126,7 @@ like unit conversions. This is what monitors are for.
 At the beginning of the macro, we need to define which devices we want
 to monitor. This is done with a ``RemoteDevice`` declaration::
 
-    from karabo.macro import RemoteDevice, Monitor
+    from karabo.api_2 import RemoteDevice, Monitor
 
     class MyMonitor(Macro):
         someDevice = RemoteDevice("some_interesting_device")
