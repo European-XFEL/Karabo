@@ -4,12 +4,13 @@
 
 # print help message if first argument asks for help
 nox="false"  #  i.e. _do_ use separate xterms
+icon=""
 if [ ${#@} -gt 0 ]; then
     if [ $1 == "-h" ] || [ $1 == "-help" ] || [ $1 == "--help" ]; then
         echo
         echo "allStart - start applications as defined in allInfo file"
         echo
-        echo "  allStart [-h|-help|--help|-nox|--nox]"
+        echo "  allStart [-h|-help|--help|-nox|--nox|-iconize|--iconize]"
         echo
         echo "If any of the help options is given, print this help."
         echo
@@ -26,9 +27,15 @@ if [ ${#@} -gt 0 ]; then
         echo "Using the 'showLogs' script, server log files can nevertheless"
         echo "be investigated."
         echo
+        echo "If any of the 'iconize xterms' options (-iconize|--iconize) is given, all"
+        echo "visible xterms are iconized on startup."
+        echo
         exit 0
     elif [ $1 == "-nox" ] || [ $1 == "--nox" ]; then
         nox="true"
+        # shift  # must not remove from argument list to keep it in .allInfo
+    elif [ $1 == "-iconize" ] || [ $1 == "--iconize" ]; then
+        icon="-iconic"
         # shift  # must not remove from argument list to keep it in .allInfo
     else
         echo "Unknown option '$1', please consult help: $0 --help"
@@ -107,7 +114,7 @@ do
             $target $params > /dev/null 2>&1 &
         else
             echo "INFO Starting: xterm $options $display -e bash -c \"$target $params\" &"
-            xterm $options $display -e bash -c "$target $params" &
+            xterm $options $icon $display -e bash -c "$target $params" &
         fi
 	# store name and pid of started process
         bg=$!
