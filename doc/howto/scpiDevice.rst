@@ -83,8 +83,7 @@ simple and should look like:
     __date__ ="June  8, 2015, 01:53 PM"
     __copyright__="Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved."
     
-    from karabo.decorators import KARABO_CLASSINFO
-    from karabo.device import launchPythonDevice
+    from karabo.api_1 import KARABO_CLASSINFO, launchPythonDevice
     from scpi.scpi_device_2 import ScpiDevice2, ScpiOkErrorFsm
     
     
@@ -126,8 +125,7 @@ force the Karabo device to follow the hardware state.
     __date__ ="June  8, 2015, 01:53 PM"
     __copyright__="Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved."
     
-    from karabo.decorators import KARABO_CLASSINFO
-    from karabo.device import launchPythonDevice
+    from karabo.api_1 import KARABO_CLASSINFO, launchPythonDevice
     from scpi.scpi_device_2 import ScpiDevice2, ScpiOnOffFsm
     
     
@@ -177,8 +175,7 @@ like
     __date__ ="June  9, 2015, 01:55 PM"
     __copyright__="Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved."
     
-    from karabo.decorators import KARABO_CLASSINFO
-    from karabo.device import launchPythonDevice
+    from karabo.api_1 import KARABO_CLASSINFO, launchPythonDevice
     from scpi.scpi_device_2 import ScpiDevice2, ScpiStartStopFsm
     
     
@@ -260,7 +257,7 @@ The "sendOnConnect" Parameter
 
 Commands to be sent to the instrument when the Karabo device connects
 to it (for example some initial configuration), can be listed in the
-__init__ function; for example
+``__init__`` function; for example
 
 .. code-block:: python
 
@@ -335,7 +332,7 @@ If the terminator is not set in the Karabo device, the default one will be used 
 .. _scpi-timeout-parameter:
 
 The "scpiTimeout" Parameter
------------------------------
+---------------------------
 
 The default scpi communication timeout used in the base class is 1
 second. This value is normally ok, but some instruments (eg the
@@ -622,7 +619,7 @@ in the preprocessConfiguration function,
             temp = inputConfig.get('temperature') # eg -23.15
             temp100 = np.int16(100*temp) # -2315
             tempBytes = temp100.tostring() # b'\xf5\xf6'
-	    tempHex = '%02X%02X'%(tempBytes[0], tempBytes[1]) # 'F5F6'
+            tempHex = '%02X%02X'%(tempBytes[0], tempBytes[1]) # 'F5F6'
 
             self.set('temperatureHex', tempHex)
 
