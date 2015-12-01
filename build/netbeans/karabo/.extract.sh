@@ -1,3 +1,11 @@
+get_abs_path() {
+     local PARENT_DIR=$(dirname "$1")
+     cd "$PARENT_DIR"
+     local ABS_PATH="$(pwd -P)"/"$(basename "$1")"
+     cd - >/dev/null
+     echo "$ABS_PATH"
+}
+
 safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
@@ -113,6 +121,11 @@ echo  " unpacking finished successfully"
 # Any script here will happen after the tar file extract.
 echo
 echo -n " Running post install script..."
+
+# Fix up the venv activation script
+venvDir=$(get_abs_path $installDir/karabo-$VERSION)
+sed "s%__VENV_DIR__%$venvDir%g" $venvDir/karaboRun/bin/activate.tmpl > $venvDir/karaboRun/bin/activate
+
 if [ "$runDir" != "0" ]; then
     cp -rf $installDir/karabo-$VERSION/karaboRun $runDir/
 fi
