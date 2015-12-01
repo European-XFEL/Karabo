@@ -25,7 +25,7 @@ import sys
 from widget import DisplayWidget
 from randomcolor import RandomColor
 
-from karabo.hash import NumpyVector
+from karabo.api_2 import NumpyVector
 
 from guiqwt.plot import CurveDialog
 from guiqwt.builder import make

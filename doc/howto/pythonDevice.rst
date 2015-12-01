@@ -28,12 +28,11 @@ Consider the code of our device - ConveyorPy.py:
     import sys
     import time
 
-    from karabo.decorators import KARABO_CLASSINFO
-    from karabo.device import PythonDevice
-    from karabo.no_fsm import Worker
-    from karathon import (
+    from karabo.api_1 import (
+        KARABO_CLASSINFO, PythonDevice, Worker,
         BOOL_ELEMENT, DOUBLE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, Unit
     )
+
 
     @KARABO_CLASSINFO("ConveyorPy", "1.3")
     class ConveyorPy(PythonDevice):
@@ -190,14 +189,12 @@ Consider the code of our device - ConveyorPy.py:
 Consider the main steps of the code above, that are important to
 mention while writing devices in Python:
 
-1. Import needed pieces from the karabo and karathon packages:
+1. Import needed pieces from the karabo.api_1 package:
 
   .. code-block:: python
 
-      from karabo.decorators import KARABO_CLASSINFO
-      from karabo.device import PythonDevice
-      from karabo.no_fsm import Worker
-      from karathon import (
+      from karabo.api_1 import (
+          KARABO_CLASSINFO, PythonDevice, Worker,
           BOOL_ELEMENT, DOUBLE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
           Unit
       )
@@ -207,7 +204,7 @@ mention while writing devices in Python:
 
    .. code-block:: python
 
-     from karabo.no_fsm import Worker
+     from karabo.api_1 import Worker
 
    The current recommendation is to use NoFsm. If you need an FSM, read
    :ref:`this <stateMachines>` section.
@@ -264,11 +261,11 @@ The "Worker" class
 ------------------
 
 The ``Worker`` class is suitable for executing periodic tasks. It is defined
-in the ``karabo.no_fsm`` module, from which it must be imported,
+in the ``karabo.api_1`` module, from which it must be imported,
 
 .. code-block:: python
 
-    from karabo.no_fsm import Worker
+    from karabo.api_1 import Worker
 
 It can be instantiated and started like this:
 
@@ -306,14 +303,14 @@ Pythonic API based on native Python
 
 A device is not much more than a macro that runs on a server for a longer
 time. So it is written mostly in the same way. The biggest difference
-is that it inherits from :class:`karabo.python_device.PythonDevice` instead of
-:class:`karabo.python_device.Macro`. But the main difference is actually that
+is that it inherits from :class:`karabo.api_2.PythonDevice` instead of
+:class:`karabo.api_2.Macro`. But the main difference is actually that
 a macro is something you may write quick & dirty, while a device should be
 written with more care. To give an example:
 
 .. code-block:: python
 
-    from karabo.python_device import PythonDevice
+    from karabo.api_2 import PythonDevice
 
     class TestDevice(PythonDevice):
         __version__ = "1.3 1.4"

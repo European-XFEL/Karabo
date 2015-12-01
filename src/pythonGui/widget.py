@@ -24,7 +24,7 @@ from PyQt4.QtGui import QLabel, QPixmap
 from registry import Registry
 import os.path
 
-from karabo.hash import String
+from karabo.api_2 import String
 
 import gui
 

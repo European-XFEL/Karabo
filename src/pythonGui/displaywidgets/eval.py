@@ -7,7 +7,7 @@ from PyQt4.QtGui import QAction, QInputDialog, QLineEdit, QMessageBox
 from util import SignalBlocker
 from widget import DisplayWidget
 
-from karabo.hash import String, Simple
+from karabo.api_2 import String, Simple
 
 from PyQt4.QtGui import QLineEdit, QInputDialog, QAction
 

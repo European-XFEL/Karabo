@@ -1,7 +1,7 @@
 
 
 from widget import DisplayWidget, EditableWidget
-from karabo.hash import Integer
+from karabo.api_2 import Integer
 
 from PyQt4.QtCore import QSize, Qt, pyqtSignal
 from PyQt4.QtGui import QWidget, QPainter
