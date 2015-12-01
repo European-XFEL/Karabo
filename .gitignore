@@ -33,5 +33,6 @@ run/servers/projectServer/projects/
 src/karabo/tests/io/resources/*
 src/pythonKarabo/build/
 src/pythonKarabo/dist/
+src/pythonKarabo/karabo/_version.py
 build/netbeans/*/*.log
 !.gitignore
