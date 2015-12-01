@@ -15,9 +15,10 @@ __all__ = ["Device", "DeviceGroup", "GuiProject", "Macro", "Category"]
 
 from configuration import Configuration
 from scene import Scene
-from karabo.enums import AccessMode
-from karabo.hash import Hash, StringList, XMLParser, XMLWriter
-from karabo.project import BaseDevice, BaseDeviceGroup, Monitor, Project
+from karabo.api_2 import (
+    AccessMode, Hash, StringList, XMLParser, XMLWriter, BaseDevice,
+    BaseDeviceGroup, Monitor, Project
+)
 import manager
 from network import network
 

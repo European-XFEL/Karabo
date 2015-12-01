@@ -13,7 +13,7 @@ __all__ = ["DeviceDialog", "DeviceGroupDialog", "DeviceDefinitionWidget"]
 
 import globals
 
-from karabo.enums import AccessLevel
+from karabo.api_2 import AccessLevel
 from .duplicatedialog import DuplicateWidget
 
 from PyQt4.QtCore import pyqtSignal

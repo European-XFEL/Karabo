@@ -26,7 +26,7 @@ from listedit import ListEdit
 from util import SignalBlocker
 from widget import EditableWidget, DisplayWidget
 
-from karabo.hash import Vector
+from karabo.api_2 import Vector
 
 from PyQt4.QtGui import QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget
 

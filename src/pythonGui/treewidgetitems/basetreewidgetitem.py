@@ -18,7 +18,7 @@ from collections import OrderedDict
 
 from .popupwidget import PopupWidget
 
-from karabo.hash import Type
+from karabo.api_2 import Type
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QCursor, QTreeWidgetItem

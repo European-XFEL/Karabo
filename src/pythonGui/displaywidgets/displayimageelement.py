@@ -23,7 +23,7 @@ __all__ = ["DisplayImageElement"]
 from schema import ImageNode
 from widget import DisplayWidget
 
-from karabo.hash import Type
+from karabo.api_2 import Type
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap

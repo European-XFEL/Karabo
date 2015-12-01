@@ -22,8 +22,8 @@ __all__ = ["DisplayLabel"]
 
 
 from widget import DisplayWidget
-from karabo.hash import (Double, Float, Hash, String, Simple, Type, HashType,
-                         VectorDouble, VectorFloat, VectorHash)
+from karabo.api_2 import (Double, Float, Hash, String, Simple, Type, HashType,
+                          VectorDouble, VectorFloat, VectorHash)
 import decimal
 import re
 
