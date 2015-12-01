@@ -21,7 +21,7 @@
 __all__ = ["DisplayLineEdit"]
 
 
-from karabo.hash import String
+from karabo.api_2 import String
 from util import SignalBlocker
 from widget import DisplayWidget
 

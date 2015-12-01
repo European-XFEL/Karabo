@@ -14,8 +14,7 @@ __all__ = ["NavigationTreeModel"]
 
 from enums import NavigationItemTypes
 import globals
-from karabo.hash import Hash
-from karabo.enums import AccessLevel
+from karabo.api_2 import Hash, AccessLevel
 import manager
 from treenode import TreeNode
 import icons

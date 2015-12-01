@@ -3,7 +3,7 @@ from const import ns_karabo
 import icons
 from widget import DisplayWidget
 
-from karabo.hash import Integer, Number, String
+from karabo.api_2 import Integer, Number, String
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer

@@ -22,7 +22,7 @@ __all__ = ["EditableChoiceElement"]
 
 
 from widget import EditableWidget
-from karabo.hash import Hash
+from karabo.api_2 import Hash
 from schema import Schema, Descriptor, ChoiceOfNodes
 from util import SignalBlocker
 

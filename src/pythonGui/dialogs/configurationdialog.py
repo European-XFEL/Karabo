@@ -12,7 +12,7 @@ __all__ = ["SelectProjectDialog", "SelectProjectConfigurationDialog",
            "SelectMultipleProjectConfigurationDialog"]
 
 
-from karabo.project import ProjectConfiguration
+from karabo.api_2 import ProjectConfiguration
 
 from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit,
