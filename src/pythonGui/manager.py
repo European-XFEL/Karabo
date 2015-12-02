@@ -388,6 +388,11 @@ class _Manager(QObject):
             v.updateStatus()
         self.projectTopology.updateNeeded()
 
+    def handle_systemVersion(self, version):
+        """ Handle the version number reply from the GUI server.
+        """
+        pass
+
     def handle_replyInit(self, deviceId, ok, error):
         device = self.deviceData.get(deviceId)
         if device is not None:
