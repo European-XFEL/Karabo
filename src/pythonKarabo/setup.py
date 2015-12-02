@@ -18,17 +18,11 @@ def _get_src_dist_version():
     # must be a source distribution, use existing version file
     try:
         from karabo._version import vcs_revision as vcs_rev
-        from karabo._version import full_version as full_v
+        from karabo._version import vcs_revision_count as dev_num
     except ImportError:
         raise ImportError("Unable to import vcs_revision. Try removing "
                           "karabo/_version.py and the build directory "
                           "before building.")
-
-    match = re.match(r'.*?\.dev(?P<dev_num>\d+)', full_v)
-    if match is None:
-        dev_num = '0'
-    else:
-        dev_num = match.group('dev_num')
 
     return vcs_rev, dev_num
 
@@ -41,10 +35,8 @@ def _write_version_py(filename='karabo/_version.py'):
 version = '{version}'
 full_version = '{full_version}'
 vcs_revision = '{vcs_revision}'
+vcs_revision_count = '{vcs_revision_count}'
 is_released = {is_released}
-
-if not is_released:
-    version = full_version
 """
     fullversion = VERSION
     vcs_rev, dev_num = 'Unknown', '0'
@@ -68,15 +60,17 @@ if not is_released:
         fp.write(template.format(version=VERSION,
                                  full_version=fullversion,
                                  vcs_revision=vcs_rev,
+                                 vcs_revision_count=dev_num,
                                  is_released=IS_RELEASED))
 
+    return fullversion
+
 if __name__ == '__main__':
-    _write_version_py()
-    from karabo.packaging.versioning import get_karabo_version
+    version = _write_version_py()
 
     setup(
         name="karabo",
-        version=get_karabo_version(),
+        version=version,
         author="Karabo Team",
         author_email="karabo@xfel.eu",
         description="This is the Python interface of the Karabo control system",
