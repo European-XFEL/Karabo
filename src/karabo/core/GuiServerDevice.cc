@@ -23,7 +23,7 @@ using namespace karabo::xms;
 namespace karabo {
     namespace core {
 
-
+        
         KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, GuiServerDevice)
 
         void GuiServerDevice::expectedParameters(Schema& expected) {
@@ -162,6 +162,13 @@ namespace karabo {
         void GuiServerDevice::onConnect(karabo::net::Channel::Pointer channel) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
+                
+                // Set 2 different queues for publishing (writeAsync) to the GUI client...
+                // priority 3 bound to REJECT_OLDEST dropping policy
+                channel->setAsyncChannelPolicy(REMOVE_OLDEST, "REMOVE_OLDEST");
+                // priority 4 should be LOSSLESS
+                channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
+                
                 channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1));
                 channel->setErrorHandler(boost::bind(&karabo::core::GuiServerDevice::onError, this, channel, _1));
 
@@ -170,7 +177,7 @@ namespace karabo {
                 brokerInfo.set("host", this->getConnection()->getBrokerHostname());
                 brokerInfo.set("port", this->getConnection()->getBrokerPort());
                 brokerInfo.set("topic", this->getConnection()->getBrokerTopic());
-                channel->write(brokerInfo);
+                channel->writeAsync(brokerInfo);
 
                 // Register channel
                 registerConnect(channel);
@@ -327,17 +334,17 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::safeClientWrite(const karabo::net::Channel::Pointer channel, const karabo::util::Hash& message) {
+        void GuiServerDevice::safeClientWrite(const karabo::net::Channel::Pointer channel, const karabo::util::Hash& message, int prio) {
             boost::mutex::scoped_lock lock(m_channelMutex);
-            if (channel && channel->isOpen()) channel->write(message);
+            if (channel && channel->isOpen()) channel->writeAsync(message, prio);
         }
 
 
-        void GuiServerDevice::safeAllClientsWrite(const karabo::util::Hash& message) {
+        void GuiServerDevice::safeAllClientsWrite(const karabo::util::Hash& message, int prio) {
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
             for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                if (it->first && it->first->isOpen()) it->first->write(message);
+                if (it->first && it->first->isOpen()) it->first->writeAsync(message, prio);
             }
         }
 
@@ -523,7 +530,7 @@ namespace karabo {
                 Hash h("type", "propertyHistory", "deviceId", deviceId,
                        "property", property, "data", data);
 
-                safeClientWrite(channel, h);
+                safeClientWrite(channel, h, REMOVE_OLDEST);
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in propertyHistory " << e.userFriendlyMsg();
@@ -613,7 +620,7 @@ namespace karabo {
                     for (; range.first != range.second; range.first++) {
                         Hash h("type", "networkData", "name", range.first->second.name, "data", data);
                         //cout << h << endl;
-                        safeClientWrite(range.first->second.channel, h);
+                        safeClientWrite(range.first->second.channel, h, REMOVE_OLDEST);
                     }
                 }
                 input->update();
@@ -778,7 +785,7 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
                     if (it != m_channels.end()) {
-                        channel->write(h); // send back to requestor
+                        channel->writeAsync(h); // send back to requestor
                     }
                 }
             } catch (const Exception& e) {
@@ -842,7 +849,7 @@ namespace karabo {
 
                     // Broadcast to all GUIs
                     for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                        it->first->write(h);
+                        it->first->writeAsync(h);
                         // and remove the instance from channel
                         it->second.erase(instanceId);
                     }
@@ -888,7 +895,7 @@ namespace karabo {
                 for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     // Optimization: broadcast only to visible DeviceInstances
                     if (it->second.find(deviceId) != it->second.end()) {
-                        if (it->first && it->first->isOpen()) it->first->write(h);
+                        if (it->first && it->first->isOpen()) it->first->writeAsync(h);
                     }
                 }
             } catch (const Exception& e) {
@@ -958,7 +965,7 @@ namespace karabo {
             try {
                 Hash h("type", "log", "messages", data->get<std::vector<util::Hash> >("messages"));
                 // Broadcast to all GUIs
-                safeAllClientsWrite(h);
+                safeAllClientsWrite(h, REMOVE_OLDEST);
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();

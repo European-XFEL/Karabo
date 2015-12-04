@@ -24,12 +24,12 @@ namespace karabo {
 
             typedef boost::shared_ptr<Message> Pointer;
 
-            Message() : m_body(new std::vector<char>), m_header(new std::vector<char>()) {
+            Message() : m_body(new std::vector<char>), m_header() {
             }
 
             Message(const char* data, size_t data_len, const char* header = 0, size_t header_len = 0)
             : m_body(new std::vector<char>)
-            , m_header(new std::vector<char>()) {
+            , m_header() {
 
                 if (data != NULL && data_len > 0) {
                     m_body->assign(data, data + data_len);
@@ -38,13 +38,11 @@ namespace karabo {
                 }
 
                 if (header != NULL && header_len > 0) {
-                    m_header->assign(header, header + header_len);
-                } else {
-                    m_header->clear();
+                    m_header = boost::shared_ptr<std::vector<char> >(new std::vector<char>(header, header + header_len));
                 }
             }
 
-            Message(const std::vector<char>& data, const std::vector<char>& header = std::vector<char>())
+            Message(const std::vector<char>& data, const std::vector<char>& header)
             : m_body(new std::vector<char>())
             , m_header(new std::vector<char>()) {
 
@@ -52,10 +50,13 @@ namespace karabo {
                 if (header.size() > 0) m_header->assign(header.begin(), header.end());
             }
 
-            Message(const VectorCharPointer& data, const VectorCharPointer& header = VectorCharPointer()) : m_body(data), m_header(header) {
+            Message(const VectorCharPointer& data) : m_body(data), m_header() {
+            }
+
+            Message(const VectorCharPointer& data, const VectorCharPointer& header) : m_body(data), m_header(header) {
             }
             
-            Message(const char* data, size_t size, const VectorCharPointer& header = VectorCharPointer()) : m_body(new std::vector<char>()), m_header(header) {
+            Message(const char* data, size_t size, const VectorCharPointer& header) : m_body(new std::vector<char>()), m_header(header) {
                 if (data != NULL && size > 0) {
                     m_body->assign(data, data + size);
                 } else {
@@ -63,11 +64,11 @@ namespace karabo {
                 }
             }
             
-            Message(const std::vector<char>& data, const VectorCharPointer& header = VectorCharPointer()) : m_body(new std::vector<char>()), m_header(header) {
+            Message(const std::vector<char>& data, const VectorCharPointer& header) : m_body(new std::vector<char>()), m_header(header) {
                 if (data.size() > 0) m_body->assign(data.begin(), data.end());
             }
             
-            Message(const std::string& data, const VectorCharPointer& header = VectorCharPointer()) : m_body(new std::vector<char>()), m_header(header) {
+            Message(const std::string& data, const VectorCharPointer& header) : m_body(new std::vector<char>()), m_header(header) {
                 if (data.size() > 0) m_body->assign(data.begin(), data.end());
             }
 
@@ -78,20 +79,12 @@ namespace karabo {
                 return 0;
             }
 
-            const std::vector<char>& body() const {
-                return *m_body;
+            const VectorCharPointer& body() const {
+                return m_body;
             }
 
-            std::vector<char>& body() {
-                return *m_body;
-            }
-
-            const std::vector<char>& header() const {
-                return *m_header;
-            }
-
-            std::vector<char>& header() {
-                return *m_header;
+            const VectorCharPointer& header() const {
+                return m_header;
             }
 
 
@@ -197,7 +190,7 @@ namespace karabo {
 
         public:
 
-            RejectNewestQueue() : LosslessQueue(), m_capacity(10) {
+            RejectNewestQueue() : LosslessQueue(), m_capacity(1000) {
             }
 
             virtual ~RejectNewestQueue() {
@@ -227,7 +220,7 @@ namespace karabo {
 
         public:
 
-            RemoveOldestQueue() : m_queue(10) {
+            RemoveOldestQueue() : m_queue(1000) {
             }
 
             virtual ~RemoveOldestQueue() {
