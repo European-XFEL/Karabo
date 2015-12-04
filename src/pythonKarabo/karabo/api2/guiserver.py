@@ -337,7 +337,7 @@ class GuiServer(DeviceClientBase):
 
 if __name__ == "__main__":
     from asyncio import set_event_loop
-    from karabo.eventloop import EventLoop
+    from .eventloop import EventLoop
 
     loop = EventLoop()
     set_event_loop(loop)
