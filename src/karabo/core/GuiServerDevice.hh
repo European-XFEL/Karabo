@@ -33,6 +33,8 @@ namespace karabo {
 	    };
 
             typedef std::multimap<karabo::xms::InputChannel::Pointer, NetworkConnection> NetworkMap;
+            
+            enum QueueBehaviorsTypes { REMOVE_OLDEST = 3, LOSSLESS };
 
             karabo::net::IOService::Pointer m_ioService;
             karabo::net::Connection::Pointer m_dataConnection;
@@ -72,9 +74,9 @@ namespace karabo {
 
         private: // Functions
             
-            void safeClientWrite(const karabo::net::Channel::Pointer channel, const karabo::util::Hash& message);
+            void safeClientWrite(const karabo::net::Channel::Pointer channel, const karabo::util::Hash& message, int prio = LOSSLESS);
             
-            void safeAllClientsWrite(const karabo::util::Hash& message);
+            void safeAllClientsWrite(const karabo::util::Hash& message, int prio = LOSSLESS);
 
             void onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorMessage);
 

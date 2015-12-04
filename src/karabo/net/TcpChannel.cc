@@ -1096,16 +1096,20 @@ namespace karabo {
             
             if (!m_message) return;
             
-            const std::vector<char>& header = m_message->header();
-            m_headerSize = header.size();
-            const std::vector<char>& data = m_message->body();
-            m_bodySize = data.size();
-            
             vector<const_buffer> buf;
-            buf.push_back(buffer(&m_headerSize, sizeof(unsigned int)));
-            buf.push_back(buffer(header));
+            
+            if (m_message->header()) {
+                VectorCharPointer hdr = m_message->header();
+                m_headerSize = hdr->size();
+                buf.push_back(buffer(&m_headerSize, sizeof(unsigned int)));
+                buf.push_back(buffer(*hdr));
+            }
+            
+            const VectorCharPointer& data = m_message->body();
+            m_bodySize = data->size();
+            
             buf.push_back(buffer(&m_bodySize, sizeof(unsigned int)));
-            buf.push_back(buffer(data));
+            buf.push_back(buffer(*data));
             
             boost::asio::async_write(m_socket, buf, boost::bind(&TcpChannel::doWriteHandler, this
                     , boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred()));
@@ -1135,6 +1139,40 @@ namespace karabo {
                 m_socket.close();
             }
         } 
+
+
+        void TcpChannel::writeAsync(const char* data, const size_t& dsize, int prio) {
+            Message::Pointer mp(new Message(data, dsize));
+            writeAsync(mp, prio);
+        }
+
+
+        void TcpChannel::writeAsync(const vector<char>& data, int prio) {
+            VectorCharPointer pdata = VectorCharPointer(new vector<char>(data.begin(), data.end()));
+            Message::Pointer mp(new Message(pdata));
+            writeAsync(mp, prio);
+        }
+
+
+        void TcpChannel::writeAsync(const VectorCharPointer& data, int prio) {
+            Message::Pointer mp(new Message(data));
+            writeAsync(mp, prio);
+        }
+
+
+        void TcpChannel::writeAsync(const std::string& data, int prio) {
+            VectorCharPointer pdata = VectorCharPointer(new vector<char>(data.begin(), data.end()));
+            Message::Pointer mp(new Message(pdata));
+            writeAsync(mp, prio);
+        }
+
+
+        void TcpChannel::writeAsync(const karabo::util::Hash& data, int prio) {
+            VectorCharPointer pdata(new std::vector<char>());
+            prepareVectorFromHash(data, *pdata);
+            Message::Pointer mp(new Message(pdata));
+            this->writeAsync(mp, prio);
+        }
 
 
         void TcpChannel::writeAsync(const char* hdr, const size_t& hsize, const char* data, const size_t& dsize, int prio) {
