@@ -263,6 +263,16 @@ namespace karabo {
                 return m_socket;
             }
 
+            void writeAsync(const char* data, const size_t& size, int prio);
+
+            void writeAsync(const std::vector<char>& data, int prio);
+
+            void writeAsync(const boost::shared_ptr<std::vector<char> >& data, int prio);
+
+            void writeAsync(const std::string& data, int prio);
+
+            void writeAsync(const karabo::util::Hash& data, int prio);
+
             void writeAsync(const karabo::util::Hash& header, const char* data, const size_t& size, int prio);
 
             void writeAsync(const karabo::util::Hash& header, const std::vector<char>& data, int prio);
