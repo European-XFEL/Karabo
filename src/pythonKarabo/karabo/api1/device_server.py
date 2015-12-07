@@ -566,7 +566,7 @@ class Launcher(object):
 
     def start(self):
         args = [sys.executable, "-c"]
-        args.append("from karabo.device import launchPythonDevice;"
+        args.append("from karabo.api1.device import launchPythonDevice;"
                     "launchPythonDevice()")
         args.extend(self.args)
 
