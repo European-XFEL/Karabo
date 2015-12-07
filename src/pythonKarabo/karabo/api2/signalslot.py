@@ -80,8 +80,8 @@ class SignalSlotable(Configurable):
 
     ::
 
-        from karabo import String, Int
-        from karabo.signalslotable import SignalSlotable, Signal
+        from karabo.api_2 import String, Int
+        from karabo.api_2 import SignalSlotable, Signal
 
         class Spam(SignalSlotable):
             signalHam = Signal(String(), Int())"""

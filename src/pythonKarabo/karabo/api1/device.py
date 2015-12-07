@@ -884,7 +884,7 @@ class PythonDevice(NoFsm):
 
 
 def launchPythonDevice():
-    from karabo.plugin_loader import PluginLoader
+    from .plugin_loader import PluginLoader
 
     # NOTE: The first argument is '-c'
     _, plugindir, modname, classid, xmlfile = tuple(sys.argv)
