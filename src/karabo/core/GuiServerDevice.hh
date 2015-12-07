@@ -156,6 +156,7 @@ namespace karabo {
             void registerConnect(const karabo::net::Channel::Pointer& channel);
             
             void sendSystemTopology(karabo::net::Channel::Pointer channel);
+            void sendSystemVersion(karabo::net::Channel::Pointer channel);
 
             void instanceNewHandler(const karabo::util::Hash& topologyEntry);
 
