@@ -276,7 +276,7 @@ namespace karabo {
                     unsigned int major = versionParts[0];
                     unsigned int minor = versionParts[1];
                     // Versions earlier than 1.5.0 of the GUI don't understand a systemVersion message.
-                    if (major >= 1 && minor >= 5) sendSystemVersion(channel);
+                    if ((major >= 1 && minor >= 5) || major >=2) sendSystemVersion(channel);
                 }
 
                 // if ok
