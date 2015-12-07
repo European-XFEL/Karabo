@@ -270,6 +270,15 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
                 // Check valid login
                 KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username");
+
+                vector<unsigned int> versionParts = karabo::util::fromString<unsigned int, vector>(hash.get<string>("version"), ".");
+                if (versionParts.size() >= 2) {
+                    unsigned int major = versionParts[0];
+                    unsigned int minor = versionParts[1];
+                    // Versions earlier than 1.5.0 of the GUI don't understand a systemVersion message.
+                    if ((major >= 1 && minor >= 5) || major >=2) sendSystemVersion(channel);
+                }
+
                 // if ok
                 sendSystemTopology(channel);
                 // else sendBadLogin
@@ -790,6 +799,19 @@ namespace karabo {
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in projectClosed(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::sendSystemVersion(karabo::net::Channel::Pointer channel) {
+            try {
+                string const version = karabo::util::Version::getVersion();
+                KARABO_LOG_FRAMEWORK_DEBUG << "sendSystemVersion";
+                KARABO_LOG_FRAMEWORK_DEBUG << version;
+                Hash h("type", "systemVersion", "version", version);
+                safeClientWrite(channel, h);
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in sendSystemVersion(): " << e.userFriendlyMsg();
             }
         }
 
