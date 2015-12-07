@@ -10,10 +10,6 @@ from .hash import BinaryWriter, BinaryParser
 from .eventloop import EventLoop
 
 
-if __name__ == "__main__":
-    _, fn, cls, what = sys.argv
-
-
 @coroutine
 def newProcess(cls, config):
     def callback():
@@ -92,13 +88,14 @@ def getClassSchema_async(cls, rules=None):
 
 
 if __name__ == "__main__":
+    _, fn, cls, what = sys.argv
     sys.path.insert(0, dirname(fn))
     assert fn.endswith(".py")
     import_module(basename(fn)[:-3])
 
     if what in ("legacy", "schema"):
-        from karabo.configurator import Configurator
-        from karabo.device import PythonDevice
+        from karabo.api1.configurator import Configurator
+        from karabo.api1.device import PythonDevice
         from karathon import BinarySerializerHash, Hash, Validator
 
     if what == "legacy":
@@ -115,7 +112,7 @@ if __name__ == "__main__":
         s = BinarySerializerHash.create("Bin")
         sys.stdout.buffer.write(s.save(h))
     elif what == "run":
-        from karabo.device import Device
+        from .device import Device
 
         config = BinaryParser.read(sys.stdin.buffer)
         loop = EventLoop()
