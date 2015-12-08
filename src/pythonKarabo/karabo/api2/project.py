@@ -44,9 +44,8 @@ class Project(object):
     MACROS_KEY = "macros"
     MONITORS_KEY = "monitors"
     RESOURCES_KEY = "resources"
-    
-    PROJECT_SUFFIX = "krb"
 
+    PROJECT_SUFFIX = "krb"
 
     def __init__(self, filename):
         super(Project, self).__init__()
@@ -59,15 +58,15 @@ class Project(object):
         # List of devices
         self.devices = []
         # Map for {deviceId, [ProjectConfiguration]}
-        self.configurations = dict()
+        self.configurations = {}
         self.macros = {}
-        self.resources = {}
         self.monitors = []
+        self.resources = {}
+        self.scenes = []
 
         self.monitorFilename = ""
         self.monitorInterval = 0
         self.isMonitoring = False
-
 
     @property
     def name(self):
@@ -80,7 +79,6 @@ class Project(object):
         else:
             return r
 
-
     @property
     def basename(self):
         """
@@ -92,48 +90,16 @@ class Project(object):
         else:
             return b
 
-
-    def addDevice(self, device):
-        self.devices.append(device)
-        device.project = self
-
-
-    def insertDevice(self, index, device):
-        self.devices.insert(index, device)
-        device.project = self
-
-
-    def getDevice(self, id):
-        """
-        The first occurence of the device (group) with the given \id is returned.
-        """
-        for device in self.devices:
-            if id == device.id:
-                return device
-        return None
-
-
-    def addDeviceGroup(self, deviceGroup):
-        self.devices.append(deviceGroup)
-        deviceGroup.project = self
-
-
-    def insertDeviceGroup(self, index, deviceGroup):
-        self.devices.insert(index, deviceGroup)
-        deviceGroup.project = self
-
-
     def addConfiguration(self, deviceId, configuration):
         if deviceId in self.configurations:
             self.configurations[deviceId].append(configuration)
         else:
             self.configurations[deviceId] = [configuration]
 
-
     def removeConfiguration(self, deviceId, configuration):
         """
         Remove the ProjectConfiguration from the configurations dictionary.
-        
+
         If the list of device configurations just has the given configuration,
         the complete entry is removed.
         """
@@ -143,11 +109,60 @@ class Project(object):
             else:
                 self.configurations[deviceId].remove(configuration)
 
+    def addDevice(self, device):
+        self.devices.append(device)
+        device.project = self
+
+    def insertDevice(self, index, device):
+        self.devices.insert(index, device)
+        device.project = self
+
+    def getDevice(self, devId):
+        """
+        The first occurrence of the device (group) with the given \devId is
+        returned.
+        """
+        for device in self.devices:
+            if devId == device.id:
+                return device
+        return None
+
+    def getDevices(self, deviceIds):
+        """
+        This function returns a list of all associated devices for the given
+        \deviceIds.
+        """
+        devices = []
+        for d in self.devices:
+            if d.deviceId in deviceIds:
+                devices.append(d)
+        return devices
+
+    def addDeviceGroup(self, deviceGroup):
+        self.devices.append(deviceGroup)
+        deviceGroup.project = self
+
+    def insertDeviceGroup(self, index, deviceGroup):
+        self.devices.insert(index, deviceGroup)
+        deviceGroup.project = self
+
+    def addMacro(self, macro):
+        self.macros[macro.name] = macro
+
+    def getMacro(self, name):
+        """ Return the macro with the given \name
+        """
+        return self.macros[name]
+
+    def removeMacro(self, name):
+        """ Remove the macro with the given \name
+        """
+        if name in self.macros:
+            del self.macros[name]
 
     def addMonitor(self, monitor):
         self.monitors.append(monitor)
         monitor.project = self
-
 
     def getMonitor(self, name):
         """
@@ -157,7 +172,6 @@ class Project(object):
             if name == monitor.name:
                 return monitor
         return None
-
 
     def addResource(self, category, data):
         """add the data into the resources of given category
@@ -169,6 +183,25 @@ class Project(object):
         self.resources.setdefault(category, set()).add(digest)
         return "project:resources/{}/{}".format(category, digest)
 
+    def addScene(self, scene):
+        self.scenes.append(scene)
+
+    def getScene(self, filename):
+        """ The first occurrence of a scene with the given \filename is
+        returned.
+        """
+        for scene in self.scenes:
+            if filename == scene.filename:
+                return scene
+
+    def removeScene(self, filename):
+        """ The first occurrence of a scene with the given \filename is
+        removed.
+        """
+        for scene in self.scenes:
+            if filename == scene.filename:
+                self.scenes.remove(scene)
+                return
 
     def getURL(self, url):
         """retrieve the URL and return its content
@@ -186,19 +219,6 @@ class Project(object):
         else:
             return urllib.request.urlopen(url).read()
 
-
-    def getDevices(self, deviceIds):
-        """
-        This function returns a list of all associated devices for the given
-        \deviceIds.
-        """
-        devices = []
-        for d in self.devices:
-            if d.deviceId in deviceIds:
-                devices.append(d)
-        return devices
-
-
     def remove(self, object):
         """
         The \object should be removed from this project.
@@ -207,96 +227,31 @@ class Project(object):
         """
         raise NotImplementedError("Project.remove")
 
+    def unzip(self, factories=None):
+        """ Read the zip file zf. The file must already be open for reading.
+        """
+        # FIXME: Resolve the circular import be removing import of Project
+        # FIXME: in the projectio module.
+        from .projectio import read_project
 
-    def unzip(self):
-        """read the zip file zf. The file must already be open for reading."""
-        with ZipFile(self.filename, "r") as zf:
-            data = zf.read("{}.xml".format(self.PROJECT_KEY))
-            projectConfig = XMLParser().read(data)
+        objFactories = factories or  {
+            'Device': BaseDevice,
+            'DeviceGroup': BaseDeviceGroup,
+            'Macro': BaseMacro,
+            'Monitor': Monitor,
+            'ProjectConfiguration': ProjectConfiguration,
+            'Scene': BaseScene,
+        }
+        read_project(self.filename, objFactories, instance=self)
 
-            self.version = projectConfig[self.PROJECT_KEY, "version"]
-            self.uuid = projectConfig[self.PROJECT_KEY, ...].get("uuid",
-                                                                 self.uuid)
+    def zip(self, filename=None):
+        """ This method saves this project as a zip file.
+        """
+        # FIXME: Resolve the circular import be removing import of Project
+        # FIXME: in the projectio module.
+        from .projectio import write_project
 
-            self.parse(projectConfig[self.PROJECT_KEY], zf)
-
-
-    def parse(self, projectConfig, zf):
-        for d in projectConfig[self.DEVICES_KEY]:
-            group = d.get("group")
-            if group is not None:
-                filename = d.getAttribute("group", "filename")
-                data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
-                assert filename.endswith(".xml")
-                filename = filename[:-4]
-                for _, config in XMLParser().read(data).items():
-                    serverId = d.getAttribute("group", "serverId")
-                    classId = d.getAttribute("group", "classId")
-                    # This is currently for backporting
-                    if d.hasAttribute("group", "ifexists"):
-                        ifexists = d.getAttribute("group", "ifexists")
-                    else:
-                        ifexists = "ignore" # Use default
-                    
-                    deviceGroup = self.DeviceGroup(filename, serverId, classId, ifexists)
-                    deviceGroup.initConfig = config
-                    deviceGroup.project = self
-                    break # there better be only one!
-                
-                for item in group:
-                    serverId = item.get("serverId")
-                    filename = item.get("filename")
-                    data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
-                    assert filename.endswith(".xml")
-                    filename = filename[:-4]
-
-                    for classId, config in XMLParser().read(data).items():
-                        device = self.Device(serverId, classId, filename,
-                                             item.get("ifexists"))
-
-                        device.initConfig = config
-                        deviceGroup.addDevice(device)
-                        break # there better be only one!
-                self.addDeviceGroup(deviceGroup)
-            else:
-                serverId = d.get("serverId")
-                filename = d.get("filename")
-                data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
-                assert filename.endswith(".xml")
-                filename = filename[:-4]
-
-                for classId, config in XMLParser().read(data).items():
-                    device = self.Device(serverId, classId, filename,
-                                         d.get("ifexists"))
-                    device.initConfig = config
-                    break # there better be only one!
-                self.addDevice(device)
-        for deviceId, configList in projectConfig[
-                            self.CONFIGURATIONS_KEY].items():
-            # Vector of hashes
-            for c in configList:
-                filename = c.get("filename")
-                configuration = ProjectConfiguration(self, filename)
-                data = zf.read("{}/{}".format(self.CONFIGURATIONS_KEY,
-                                              filename))
-                configuration.fromXml(data)
-                self.addConfiguration(deviceId, configuration)
-        
-        # To be able to work even with older projects which do not have monitors yet
-        monitorHash = projectConfig.get(self.MONITORS_KEY)
-        if monitorHash is not None:
-            for m in monitorHash:
-                filename = m.get("filename")
-                assert filename.endswith(".xml")
-                data = zf.read("{}/{}".format(self.MONITORS_KEY, filename))
-                filename = filename[:-4]
-                monitor = Monitor(filename)
-                monitor.fromXml(data)
-                self.addMonitor(monitor)
-            
-        self.resources = {k: set(v) for k, v in
-                          projectConfig["resources"].items()}
-
+        write_project(self, path=self.filename)
 
     def instantiate(self, deviceIds):
         """
@@ -304,20 +259,17 @@ class Project(object):
         """
         raise NotImplementedError("Project.instantiate")
 
-
     def instantiateAll(self):
         """
         This function instantiates all project devices.
         """
         raise NotImplementedError("Project.instantiateAll")
 
-
     def shutdown(self, deviceIds):
         """
         This function shuts down the list of \devices.
         """
         raise NotImplementedError("Project.shutdown")
-
 
     def shutdownAll(self):
         """
@@ -327,7 +279,6 @@ class Project(object):
 
 
 class ProjectConfiguration(object):
-
     def __init__(self, project, name, hash=None):
         super(ProjectConfiguration, self).__init__()
         
@@ -341,13 +292,11 @@ class ProjectConfiguration(object):
         
         self.hash = hash
 
-
     def fromXml(self, xmlString):
         """
         This function loads the corresponding XML file of this configuration.
         """
         self.hash = XMLParser().read(xmlString)
-
 
     def toXml(self):
         """
@@ -357,8 +306,6 @@ class ProjectConfiguration(object):
 
 
 class BaseDevice(object):
-
-
     def __init__(self, serverId, classId, deviceId, ifexists):
         assert ifexists in ("ignore", "restart")
         
@@ -382,17 +329,44 @@ class BaseDeviceGroup(BaseDevice):
         self.devices = []
         self.project = None
 
-
     def addDevice(self, device):
         self.devices.append(device)
         device.project = self.project
+
+
+class BaseScene(object):
+    """ A simple scene object which supports round-trips between project files.
+    """
+    def __init__(self, project, filename):
+        self.project = project  # FIXME: This should really be a weakref
+        self.filename = filename
+
+    def fromXml(self, xmlString):
+        """ 'Initialize' the instance from some XML data.
+        """
+        self.__xmlData = xmlString
+
+    def toXml(self):
+        """ 'Serialize' the instance to XML.
+        """
+        return self.__xmlData
+
+
+class BaseMacro(object):
+    """ A simple macro object which supports file round-trips.
+    """
+    def __init__(self, project, name):
+        self.project = project
+        self.name = name
+        self.editor = None
+        self.instanceId = "Macro-{}-{}".format(self.project.name, self.name)
 
 
 class Monitor(object):
     """
     This class represents a datastructure which is needed for the later run-control.
     """
-    
+
     def __init__(self, name, config=None):
         super(Monitor, self).__init__()
         
@@ -410,7 +384,6 @@ class Monitor(object):
         # format
         self.config = config
 
-
     @property
     def name(self):
         """
@@ -422,13 +395,11 @@ class Monitor(object):
         else:
             return r
 
-
     def fromXml(self, xmlString):
         """
         This function loads the corresponding XML file of this configuration.
         """
         self.config = XMLParser().read(xmlString)
-
 
     def toXml(self):
         """
