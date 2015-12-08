@@ -11,6 +11,14 @@
 # DISTDIR (e.g. "dist"), CONF (e.g. "Debug"), PLATFORM (e.g. "GNU-Linux-x86"), BUNDLE_ACTION(package|install), BUNDLE_OPTION(Gui|NoGui)
 #
 
+get_abs_path() {
+     local PARENT_DIR=$(dirname "$1")
+     cd "$PARENT_DIR"
+     local ABS_PATH="$(pwd -P)"/"$(basename "$1")"
+     cd - >/dev/null
+     echo "$ABS_PATH"
+}
+
 safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
@@ -76,7 +84,7 @@ fi
 
 EXTRACT_SCRIPT=$(pwd)/.extract.sh
 PYTHON_FIXER_SCRIPT=$(pwd)/.fix-python-scripts.sh
-PACKAGEDIR=$(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
+PACKAGEDIR=$(get_abs_path $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME)
 INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
 # Always clean the bundle
@@ -202,6 +210,8 @@ fi
 # run (Karabo's run/package development environment)
 cd ../../../
 tar --exclude=.svn --exclude=run/servers/dataLoggerServer/karaboHistory -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
+# Activation script
+sed "s%__VENV_DIR__%$PACKAGEDIR%g" run/bin/activate.tmpl > $PACKAGEDIR/karaboRun/bin/activate
 # Version information
 echo $VERSION > $PACKAGEDIR/karaboRun/VERSION
 cd -
