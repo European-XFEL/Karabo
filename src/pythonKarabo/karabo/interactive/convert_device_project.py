@@ -4,6 +4,7 @@ import copy
 import os
 import os.path as op
 import stat
+import subprocess
 import sys
 
 from karabo.api_1 import PythonDevice
@@ -77,9 +78,11 @@ def build_setup_py_file(package_name, device_files):
     return SETUP_TEMPLATE.format(**kwargs)
 
 
-def create_package_directory(package_name, directory, common_prefix):
+def create_package_directory(package_name, directory, common_prefix,
+                             use_svn=False):
     """ Move all the Python source files to a new package directory.
     """
+    rename = svn_rename if use_svn else os.rename
     strip_common_prefix = lambda s: '...' + s[len(common_prefix):]
     package_dir = op.join(directory, package_name)
     if op.exists(package_dir):
@@ -91,13 +94,17 @@ def create_package_directory(package_name, directory, common_prefix):
     with open(op.join(package_dir, '__init__.py'), 'wt'):
         pass
 
+    if use_svn:
+        args = ['svn', 'add', package_name]
+        subprocess.check_call(args, cwd=directory)
+
     print('Moving Files:')
     filenames = [fn for fn in os.listdir(directory) if fn.endswith('.py')]
     for fn in filenames:
         src = op.join(directory, fn)
         dst = op.join(package_dir, fn)
         print(strip_common_prefix(src), '=>', strip_common_prefix(dst))
-        os.rename(src, dst)
+        rename(src, dst)
 
 
 @contextmanager
@@ -124,6 +131,12 @@ def execfile(path, mod_dict):
             error = '{}: {}'.format(type(ex).__name__, str(ex))
 
     return error
+
+
+def is_svn(directory):
+    """ Determine if a directory is tracked by SVN.
+    """
+    return op.exists(op.join(directory, '.svn'))
 
 
 def scan_modules(directory):
@@ -163,6 +176,14 @@ def show_device_errors(errors):
     print('Exiting.')
 
 
+def svn_rename(src, dst):
+    cwd = op.dirname(src)
+    src = src[len(cwd)+1:]
+    dst = dst[len(cwd)+1:]
+    args = ['svn', 'mv', src, dst]
+    subprocess.check_call(args, cwd=cwd)
+
+
 def main():
     description = ('Convert an old-style PythonDevice project to one which '
                    'builds as a standard Python package. NOTE: This will '
@@ -183,6 +204,9 @@ def main():
         print('"setup.py" already exists! Exiting.')
         sys.exit(1)
 
+    # Use SVN?
+    use_svn = is_svn(directory)
+
     # Find all the devices defined in the project
     device_files, errors = scan_modules(src_dir)
     # Bail out when no devices are found
@@ -193,7 +217,8 @@ def main():
     setup_py = build_setup_py_file(package_name, device_files)
     # Move *.py files to a new package directory
     common_prefix = op.dirname(directory)
-    create_package_directory(package_name, src_dir, common_prefix)
+    create_package_directory(package_name, src_dir, common_prefix,
+                             use_svn=use_svn)
 
     # Write setup.py
     with open(setup_path, 'w') as fp:
