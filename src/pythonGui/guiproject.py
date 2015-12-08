@@ -17,7 +17,7 @@ from configuration import Configuration
 from scene import Scene
 from karabo.api_2 import (
     AccessMode, Hash, StringList, XMLParser, XMLWriter, BaseDevice,
-    BaseDeviceGroup, Monitor, Project
+    BaseDeviceGroup, BaseMacro, Monitor, Project, ProjectConfiguration
 )
 import manager
 from network import network
@@ -488,157 +488,23 @@ class GuiProject(Project, QObject):
             self.monitors.pop(index)
             return index
 
-
-    def parse(self, projectConfig, zf):
-        super(GuiProject, self).parse(projectConfig, zf)
-        for s in projectConfig[self.SCENES_KEY]:
-            scene = Scene(self, s["filename"])
-            data = zf.read("{}/{}".format(self.SCENES_KEY, s["filename"]))
-            scene.fromXml(data)
-            self.addScene(scene)
-
-        for k in projectConfig.get(self.MACROS_KEY, []):
-            macro = Macro(self, k)
-            self.addMacro(macro)
-
+    def unzip(self, factories=None):
+        factories = factories or {
+            'Device': Device,
+            'DeviceGroup': DeviceGroup,
+            'Macro': Macro,
+            'Monitor': Monitor,
+            'ProjectConfiguration': ProjectConfiguration,
+            'Scene': Scene,
+        }
+        super(GuiProject, self).unzip(factories=factories)
         self.setModified(False)
-
 
     def zip(self, filename=None):
+        """ This method saves this project as a zip file.
         """
-        This method saves this project as a zip file.
-        """
-        projectConfig = Hash()
-        exception = None
-
-        if filename is None:
-            filename = self.filename
-
-        if os.path.exists(filename):
-            file = NamedTemporaryFile(dir=os.path.dirname(filename),
-                                      delete=False)
-        else:
-            file = filename
-
-        with ZipFile(file, mode="w", compression=ZIP_DEFLATED) as zf:
-            deviceHash = []
-            for deviceObj in self.devices:
-                if isinstance(deviceObj, Device):
-                    zf.writestr("{}/{}".format(self.DEVICES_KEY, deviceObj.filename),
-                                deviceObj.toXml())
-                    
-                    deviceHash.append(Hash("serverId", deviceObj.serverId,
-                                           "classId", deviceObj.classId,
-                                           "filename", deviceObj.filename,
-                                           "ifexists", deviceObj.ifexists))
-                else:
-                    group = []
-                    for device in deviceObj.devices:
-                        # In case this device of the group was never clicked, there might
-                        # be no configuration set... To prevent this, use configuration
-                        # of device group
-                        if deviceObj.descriptor is None:
-                            device.initConfig = deviceObj.initConfig
-                        else:
-                            device.initConfig = deviceObj.toHash()
-                        # Save configuration to XML file
-                        zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
-                                    device.toXml())
-                        group.append(Hash("serverId", device.serverId,
-                                          "classId", device.classId,
-                                          "filename", device.filename,
-                                          "ifexists", device.ifexists))
-                    # Save group configuration to file
-                    zf.writestr("{}/{}".format(self.DEVICES_KEY, deviceObj.filename),
-                                deviceObj.toXml())
-                    deviceGroupHash = Hash("group", group)
-                    deviceGroupHash.setAttribute("group", "filename", deviceObj.filename)
-                    deviceGroupHash.setAttribute("group", "serverId", deviceObj.serverId)
-                    deviceGroupHash.setAttribute("group", "classId", deviceObj.classId)
-                    deviceGroupHash.setAttribute("group", "ifexists", deviceObj.ifexists)
-                    
-                    deviceHash.append(deviceGroupHash)
-            projectConfig[self.DEVICES_KEY] = deviceHash
-            
-            for scene in self.scenes:
-                name = "{}/{}".format(self.SCENES_KEY, scene.filename)
-                try:
-                    zf.writestr(name, scene.toXml())
-                except Exception as e:
-                    if file is not self.filename:
-                        with ZipFile(self.filename, 'r') as zin:
-                            zf.writestr(name, zin.read(name))
-                    if exception is None:
-                        exception = e
-            projectConfig[self.SCENES_KEY] = [Hash("filename", scene.filename)
-                                              for scene in self.scenes]
-
-            configs = Hash()
-            for deviceId, configList in self.configurations.items():
-                configs[deviceId] = [Hash("filename", c.filename)
-                                     for c in configList]
-                for c in configList:
-                    zf.writestr("{}/{}".format(self.CONFIGURATIONS_KEY,
-                                               c.filename), c.toXml())
-            projectConfig[self.CONFIGURATIONS_KEY] = configs
-
-            resources = Hash()
-            if file is not self.filename:
-                with ZipFile(self.filename, "r") as zin:
-                    for k, v in self.resources.items():
-                        for fn in v:
-                            f = "resources/{}/{}".format(k, fn)
-                            zf.writestr(f, zin.read(f))
-                        resources[k] = StringList(v)
-            projectConfig["resources"] = resources
-
-            macros = Hash()
-            for m in self.macros.values():
-                f = "macros/{}.py".format(m.name)
-                if m.editor is None:
-                    with ZipFile(self.filename, "r") as zin:
-                        t = zin.read(f)
-                else:
-                    t = m.editor.edit.toPlainText()
-                zf.writestr(f, t)
-                try:
-                    zf.writestr(cache_from_source(f),
-                                marshal.dumps(compile(t, f, "exec")))
-                except SyntaxError:
-                    pass
-                macros[m.name] = f
-            projectConfig[self.MACROS_KEY] = macros
-
-            for monitor in self.monitors:
-                name = "{}/{}".format(self.MONITORS_KEY, monitor.filename)
-                try:
-                    zf.writestr(name, monitor.toXml())
-                except Exception as e:
-                    if file is not self.filename:
-                        with ZipFile(self.filename, 'r') as zin:
-                            zf.writestr(name, zin.read(name))
-                    if exception is None:
-                        exception = e
-            projectConfig[self.MONITORS_KEY] = [Hash("filename", monitor.filename)
-                                                for monitor in self.monitors]
-
-            # Create folder structure and save content
-            projectConfig = Hash(self.PROJECT_KEY, projectConfig)
-            projectConfig[self.PROJECT_KEY, "version"] = self.version
-            projectConfig[self.PROJECT_KEY, "uuid"] = self.uuid
-            zf.writestr("{}.xml".format(Project.PROJECT_KEY),
-                        XMLWriter().write(projectConfig))
-
-        if file is not filename:
-            file.close()
-            os.remove(filename)
-            os.rename(file.name, filename)
-
-        if exception is not None:
-            raise exception
-        
+        super(GuiProject, self).zip(filename=filename)
         self.setModified(False)
-
 
     def _instantiateDevice(self, device):
         if device.isOnline():
@@ -787,15 +653,11 @@ class GuiProject(Project, QObject):
             self.timerEvent(None, timestamp)
 
 
-class Macro(object):
+class Macro(BaseMacro):
     def __init__(self, project, name):
-        self.project = project
-        self.name = name
+        super(Macro, self).__init__(project, name)
         self.macros = {}
-        self.editor = None
-        self.instanceId = "Macro-{}-{}".format(self.project.name, self.name)
         self.instances = []
-
 
     def run(self):
         if self.editor is None:
@@ -806,7 +668,6 @@ class Macro(object):
                  "project", self.project.name,
                  "module", self.name)
         network.onInitDevice("Karabo_MacroServer", "MetaMacro", self.instanceId, h)
-
 
     def load(self):
         with ZipFile(self.project.filename, "r") as zf:
