@@ -76,7 +76,6 @@ elif [ "$OS" = "Darwin" ]; then
 fi
 
 EXTRACT_SCRIPT=$KARABO/bin/.extract-pythonplugin.sh
-PACKAGEDIR=$(pwd)/package/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
 if [ $OS == "Darwin" ]; then
@@ -85,11 +84,8 @@ else
     PYTHON=$KARABO/extern/bin/python3
 fi
 
-# Always clean the bundle
-rm -rf $PACKAGEDIR
-
-# Start fresh
-mkdir -p $PACKAGEDIR
+# Always clean the build artifacts
+rm -rf build/ dist/
 
 if [[ "$developmentMode" == "1" ]]; then
     # Install in the current user's home directory
@@ -109,25 +105,19 @@ if [[ "$developmentMode" == "1" ]]; then
     exit 0
 else
     safeRunCommand "$PYTHON setup.py bdist_wheel"
-    mv dist/*.whl $PACKAGEDIR
+    WHEELNAME=$(basename dist/*.whl)
 fi
-
-# copy DEPENDS file if exists
-if [ -e DEPENDS ]; then cp DEPENDS $PACKAGEDIR; fi
 
 # run custom script
 if [ -e $(pwd)/custom.sh ]; then $(pwd)/custom.sh; fi
 
-cd $PACKAGEDIR/../
-safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz $PACKAGENAME"
-
 # Create installation script
-echo -e '#!/bin/bash\n'"VERSION=$VERSION\nPLUGINNAME=$PLUGINNAME\nKARABOVERSION=$KARABOVERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
+echo -e '#!/bin/bash\n'"VERSION=$VERSION\nPLUGINNAME=$PLUGINNAME\nKARABOVERSION=$KARABOVERSION\nWHEELNAME=$WHEELNAME" | cat - $EXTRACT_SCRIPT dist/$WHEELNAME > $INSTALLSCRIPT
 chmod a+x $INSTALLSCRIPT
 
 
 echo
-echo "Created package: ${PACKAGEDIR%/*}/$INSTALLSCRIPT"
+echo "Created package: $INSTALLSCRIPT"
 echo
 
 
