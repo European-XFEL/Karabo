@@ -91,7 +91,7 @@ def git_version(path):
     """ Return the git revision as a string and a commit count
     """
     try:
-        cmd = 'git describe --tags'.split(' ')
+        cmd = 'git describe'.split(' ')
         out = subprocess.check_output(cmd, cwd=path).decode('ascii')
     except subprocess.CalledProcessError:
         out = ''
