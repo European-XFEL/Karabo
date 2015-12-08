@@ -1,33 +1,42 @@
 from functools import partial
+from os import environ
 import os.path as op
 import re
 import subprocess
 
 
-class OutputParseError(ValueError):
+class SvnParseError(ValueError):
     pass
 
 
 def _get_development_version(path):
-    """ Return the current development
+    """ Return the current development version.
     """
-    checkers = [partial(f, path)
-                for f in (_svn_dev_revision, _git_dev_revision)]
-    for check in checkers:
+    commit_count = '0'
+    generators = [partial(f, path) for f in (svn_version, git_version)]
+    for gen in generators:
+        vcs_version, commit_count = gen()
+        if vcs_version != 'Unknown':
+            break
+
+    return commit_count
+
+
+def _get_karabo_framework_path():
+    """ Get the filesystem location of the running Karabo framework.
+
+    FIXME: Use the VIRTUAL_ENV variable from the activation script later.
+    """
+    karabo = environ.get('KARABO', '')
+    if karabo == '':
+        path = op.expanduser(op.join('~', '.karabo', 'karaboFramework'))
         try:
-            return check()
-        except (subprocess.CalledProcessError, OutputParseError):
-            continue
+            with open(path, 'rt') as fp:
+                karabo = fp.read().strip()
+        except OSError:
+            raise RuntimeError("Karabo framework installation not found!")
 
-    return ''
-
-
-def _git_dev_revision(path):
-    """ Return the git commit count for the current branch on the given path.
-    """
-    cmd = 'git rev-list --count HEAD'.split(' ')
-    count = subprocess.check_output(cmd, cwd=path).decode('utf8')
-    return 'dev' + count.strip()
+    return karabo
 
 
 def _parse_svn_part(info_str, part_name):
@@ -36,41 +45,76 @@ def _parse_svn_part(info_str, part_name):
     part_name = 'revision': Gives the current SVN revision number
     part_name = 'branch': Gives the SVN branch name
     """
-    SVN_PARTS = {
+    svn_parts = {
         'revision': r'Revision\: (\d+)',
         'branch': r'URL\: .+/(.+)',
     }
-    match = re.search(SVN_PARTS[part_name], info_str)
+    match = re.search(svn_parts[part_name], info_str)
     if match is not None:
         return match.groups()[0]
-    raise OutputParseError('SVN {} not found!'.format(part_name))
+    raise SvnParseError('SVN {} not found!'.format(part_name))
 
 
-def _svn_dev_revision(path):
-    """ Determine version info in an SVN repository.
+def get_karabo_framework_version():
+    """ Return the current Karabo version contained in the VERSION file.
     """
-    cmd = ['svn', 'info', path]
-    output = subprocess.check_output(cmd).decode('utf8')
-    version = 'dev' + _parse_svn_part(output, 'revision')
+    karabo_path = _get_karabo_framework_path()
+    version_path = op.join(karabo_path, 'VERSION')
 
-    return version
+    with open(version_path, 'rt') as fp:
+        return fp.read().strip()
 
 
 def get_karabo_version():
-    """ Return the current Karabo version.
+    """ Return the current Karabo Python package version.
     """
-    # FIXME: Add version generation to Karabo's setup.py, then import the
-    # version number here.
-    return '1.5.0'
+    from karabo._version import full_version
+    return full_version
 
 
 def get_package_version(path):
-    """ Read the SVN or Git revision for a directory.
+    """ Get the package version for a device's repository.
 
-    Returns a PEP 440 compatible version string.
+    Returns a PEP 440 compatible version string which is a combination of the
+    active Karabo framework's version and the commit count of the device's
+    repository.
     """
     path = op.normpath(path)
-    karb_version = get_karabo_version()
+    karabo_version = get_karabo_version()
     dev_version = _get_development_version(path)
+    extra = '.dev{}'.format(dev_version) if dev_version != '0' else ''
 
-    return karb_version + ('.{}'.format(dev_version) if dev_version else '')
+    return karabo_version + extra
+
+
+def git_version(path):
+    """ Return the git revision as a string and a commit count
+    """
+    try:
+        cmd = 'git describe'.split(' ')
+        out = subprocess.check_output(cmd, cwd=path).decode('ascii')
+    except subprocess.CalledProcessError:
+        out = ''
+
+    expr = r'.*?\-(?P<count>\d+)-g(?P<hash>[a-fA-F0-9]+)'
+    match = re.match(expr, out)
+    if match is None:
+        git_revision, git_count = 'Unknown', '0'
+    else:
+        git_revision, git_count = match.group('hash'), match.group('count')
+
+    return git_revision, git_count
+
+
+def svn_version(path):
+    """ Return the SVN revision as a string and a commit count.
+    """
+    cmd = ['svn', 'info', path]
+    try:
+        out = subprocess.check_output(cmd).decode('ascii')
+        svn_branch = _parse_svn_part(out, 'branch')
+        svn_count = _parse_svn_part(out, 'revision')
+    except (subprocess.CalledProcessError, SvnParseError):
+        return 'Unknown', '0'
+
+    return '{}@r{}'.format(svn_branch, svn_count), svn_count
