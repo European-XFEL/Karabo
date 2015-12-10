@@ -27,7 +27,8 @@ from .api2.hash import (
 from .api2.macro import Macro, Monitor
 from .api2.device import Device
 from .api2.project import (
-    BaseDevice, BaseDeviceGroup, Project, ProjectAccess, ProjectConfiguration
+    BaseDevice, BaseDeviceGroup, BaseMacro, Project, ProjectAccess,
+    ProjectConfiguration
 )
 from .api2.registry import MetaRegistry, Registry
 from .api2.schema import (
