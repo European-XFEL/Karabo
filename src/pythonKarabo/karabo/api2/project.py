@@ -243,7 +243,7 @@ class Project(object):
             'Scene': BaseScene,
         }
         if factories is not None:
-            objFactories.update(**factories)
+            objFactories.update(factories)
 
         read_project(self.filename, objFactories, instance=self)
 

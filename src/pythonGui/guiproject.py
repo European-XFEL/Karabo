@@ -498,7 +498,7 @@ class GuiProject(Project, QObject):
             'Scene': Scene,
         }
         if factories is not None:
-            objFactories.update(**factories)
+            objFactories.update(factories)
 
         super(GuiProject, self).unzip(factories=objFactories)
         self.setModified(False)
