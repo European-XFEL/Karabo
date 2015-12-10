@@ -54,8 +54,11 @@ namespace karabo {
         
         
         class IndexBuilderService {
+        public:
+            KARABO_CLASSINFO(IndexBuilderService, "IndexBuilderService", "1.4")
+
         private:
-            static IndexBuilderService* m_instance;
+            static Pointer m_instance;
             
             boost::asio::io_service m_svc;
             
@@ -73,12 +76,10 @@ namespace karabo {
             
         public:
             
-            static IndexBuilderService* getInstance();
+            static Pointer getInstance();
            
             ~IndexBuilderService();
 
-            void stop();
-            
             void buildIndexFor(const std::string& commandLineArguments);
             
         private:
@@ -123,7 +124,7 @@ namespace karabo {
             
             static boost::mutex m_propFileInfoMutex;
             static std::map<std::string, PropFileInfo::Pointer > m_mapPropFileInfo;
-            IndexBuilderService* m_ibs;
+            IndexBuilderService::Pointer m_ibs;
         };  
     }
 }
