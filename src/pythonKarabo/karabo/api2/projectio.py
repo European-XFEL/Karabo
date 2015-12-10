@@ -1,5 +1,3 @@
-from importlib.util import cache_from_source
-import marshal
 import os
 from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -282,10 +280,10 @@ def _write_devices(zf, objects):
             zf.writestr("{}/{}".format(Project.DEVICES_KEY, deviceObj.filename),
                         deviceObj.toXml())
             deviceGroupHash = Hash("group", group)
-            deviceGroupHash.setAttribute("group", "filename", deviceObj.filename)
-            deviceGroupHash.setAttribute("group", "serverId", deviceObj.serverId)
-            deviceGroupHash.setAttribute("group", "classId", deviceObj.classId)
-            deviceGroupHash.setAttribute("group", "ifexists", deviceObj.ifexists)
+            deviceGroupHash["group", "filename"] = deviceObj.filename
+            deviceGroupHash["group", "serverId"] = deviceObj.serverId
+            deviceGroupHash["group", "classId"] = deviceObj.classId
+            deviceGroupHash["group", "ifexists"] = deviceObj.ifexists
 
             deviceHashes.append(deviceGroupHash)
 
