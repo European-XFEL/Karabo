@@ -30,7 +30,7 @@ import re
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLabel
 
-from numpy import ndarray, log10
+from numpy import log10, ndarray, number
 
 
 class DisplayLabel(DisplayWidget):
@@ -77,13 +77,16 @@ class DisplayLabel(DisplayWidget):
         except (TypeError, KeyError):
             if box.descriptor.relativeError is not None:
                 format = "{{:.{}g}}".format(
-                            int(-log10(box.descriptor.relativeError)))
+                            -int(log10(box.descriptor.relativeError)))
             elif box.descriptor.absoluteError is not None:
                 ae = box.descriptor.absoluteError
-                if ae > 1:
-                    format = "{:.0f}"
+                if ae < 1:
+                    format = "{{:.{}f}}".format(-int(log10(ae)))
+                elif isinstance(value, (Number, numpy.number)):
+                    format = "{{:.{}e}}".format(int(log10(value)) -
+                                                int(log10(ae)))
                 else:
-                    format = "{{:.{}f}}".format(int(-log10(ae)))
+                    format = "{:.0f}"
             elif isinstance(box.descriptor, (Float, VectorFloat)):
                 format = "{:.6g}"
             elif isinstance(box.descriptor, (Double, VectorDouble)):
@@ -91,11 +94,9 @@ class DisplayLabel(DisplayWidget):
             else:
                 format = "{}"
 
-        if isinstance(value, ndarray):
-            ret = str(value)
-        elif isinstance(value, list):
-            ret = '[' + ', '.join(format.format(v) for v in value[:4])
-            if len(value) > 4:
+        if isinstance(value, (list, ndarray)):
+            ret = '[' + ', '.join(format.format(v) for v in value[:10])
+            if len(value) > 10:
                 ret += ', ..]'
             else:
                 ret += ']'
