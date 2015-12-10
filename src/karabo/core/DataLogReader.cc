@@ -7,6 +7,7 @@
 #include <karabo/io/Input.hh>
 #include "DataLogReader.hh"
 #include "karabo/io/FileTools.hh"
+#include "karabo/util/Version.hh"
 
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
@@ -23,53 +24,47 @@ namespace karabo {
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>, DataLogReader)
 
         
-        IndexBuilderService* IndexBuilderService::m_instance = NULL;
+        IndexBuilderService::Pointer IndexBuilderService::m_instance;
         
         
-        IndexBuilderService* IndexBuilderService::getInstance() {
-            if (!m_instance) m_instance = new IndexBuilderService();
+        IndexBuilderService::Pointer IndexBuilderService::getInstance() {
+            if (!m_instance) m_instance.reset(new IndexBuilderService());
             return m_instance;
         }
         
         
-        void IndexBuilderService::stop() {
+        IndexBuilderService::~IndexBuilderService() {
+            // Clean up in the destructor which is called when m_instance goes
+            // out of scope, i.e. if the program finishes (tested!).
             m_svc.stop();
             m_thread.join();
         }
         
         
         void IndexBuilderService::buildIndexFor(const std::string& commandLineArguments) {
-            //boost::mutex::scoped_lock lock(m_mutex);
-            size_t size = m_cache.size();
-            m_cache.insert(commandLineArguments);
-            if (size == m_cache.size()) return;   // such a request was before
+            boost::mutex::scoped_lock lock(m_mutex);
+            if (!m_cache.insert(commandLineArguments).second) {
+                // such a request is in the queue
+               return;
+            }
             m_svc.post(boost::bind(&IndexBuilderService::build, this, commandLineArguments));
         }
         
         
         void IndexBuilderService::build(const std::string& commandLineArguments) {
             try {
-                std::cout << "\n********* Index File Building *********\n";
-                if (getenv("KARABO") == NULL) {
-                    std::string home(getenv("HOME"));
-                    std::string framework = home + "/.karabo/karaboFramework";
-                
-                    std::ifstream in(framework.c_str());
-                    std::string karabo((istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                    boost::trim(karabo);   // get rid of newline character at the end
-                    in.close();
-                    setenv("KARABO", karabo.c_str(), 1);
-                }
-                
-                std::string karabo(getenv("KARABO"));
-                
-                std::string command = karabo + "/bin/idxbuild " + commandLineArguments;
-                std::cout << "*** Execute : \"" << command << "\" ...\n";
-                int ret = system(command.c_str());
-                std::cout << "\n*** Command finished with return code " << ret << "\n" << std::endl;
+                const std::string karabo(Version::getPathToKaraboInstallation());
+                const std::string command = karabo + "/bin/idxbuild " + commandLineArguments;
+                KARABO_LOG_FRAMEWORK_INFO << "********* Index File Building *********\n"
+                        << "*** Execute :\n \"" << command << "\"\n***";
+                const int ret = system(command.c_str());
+                KARABO_LOG_FRAMEWORK_INFO << "*** Index file building command finished with return code " << ret;
             } catch (const std::exception& e) {
-                std::cout << "*** Standard Exception in 'build' method : " << e.what() << std::endl;
+                KARABO_LOG_FRAMEWORK_INFO << "*** Standard Exception in 'build' method : " << e.what();
             }
+            // Remove the request to allow another try even if we failed here.
+            boost::mutex::scoped_lock lock(m_mutex);
+            m_cache.erase(commandLineArguments);
         }
         
         
@@ -103,7 +98,6 @@ namespace karabo {
 
 
         DataLogReader::~DataLogReader() {
-            m_ibs->stop();
             KARABO_LOG_INFO << "dead.";
         }
 
@@ -122,6 +116,8 @@ namespace karabo {
                 try {
                     bf::path dirPath(get<string>("directory") + "/" + deviceId + "/raw/");
                     if (!bf::exists(dirPath) || !bf::is_directory(dirPath)) {
+                        KARABO_LOG_FRAMEWORK_WARN << "slotGetPropertyHistory: " << dirPath
+                                << " not existing or not a directory";
                         // We know nothing about requested 'deviceId', just return empty reply
                         reply(deviceId, property, vector<Hash>());
                         return;
@@ -265,11 +261,21 @@ namespace karabo {
                         if (df.is_open()) df.close();
                         string idxname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + property + "-index.bin";
                         string dataname = get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(fnum) + ".txt";
-                        if (!bf::exists(bf::path(idxname))) continue;
-                        if (!bf::exists(bf::path(dataname))) continue;
+                        if (!bf::exists(bf::path(idxname))) {
+                            KARABO_LOG_FRAMEWORK_WARN << "Miss file " << idxname;
+                            continue;
+                        }
+                        if (!bf::exists(bf::path(dataname))) {
+                            KARABO_LOG_FRAMEWORK_WARN << "Miss file " << dataname;
+                            continue;
+                        }
                         mf.open(idxname.c_str(), ios::in | ios::binary);
                         df.open(dataname.c_str());
-                        if (!mf.is_open() || !df.is_open()) continue;
+                        if (!mf.is_open() || !df.is_open()) {
+                            KARABO_LOG_FRAMEWORK_WARN << "Either " << dataname << " or "
+                                    << idxname << " could not be opened";
+                            continue;
+                        }
                         if (ii != 0) idxpos = 0;
 
                         //                    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: property : \"" << property << "\", fileNumber : " << fnum
