@@ -234,7 +234,7 @@ class Project(object):
         # FIXME: in the projectio module.
         from .projectio import read_project
 
-        objFactories = factories or  {
+        objFactories = {
             'Device': BaseDevice,
             'DeviceGroup': BaseDeviceGroup,
             'Macro': BaseMacro,
@@ -242,6 +242,9 @@ class Project(object):
             'ProjectConfiguration': ProjectConfiguration,
             'Scene': BaseScene,
         }
+        if factories is not None:
+            objFactories.update(**factories)
+
         read_project(self.filename, objFactories, instance=self)
 
     def zip(self, filename=None):

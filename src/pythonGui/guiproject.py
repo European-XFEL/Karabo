@@ -489,7 +489,7 @@ class GuiProject(Project, QObject):
             return index
 
     def unzip(self, factories=None):
-        factories = factories or {
+        objFactories = {
             'Device': Device,
             'DeviceGroup': DeviceGroup,
             'Macro': Macro,
@@ -497,7 +497,10 @@ class GuiProject(Project, QObject):
             'ProjectConfiguration': ProjectConfiguration,
             'Scene': Scene,
         }
-        super(GuiProject, self).unzip(factories=factories)
+        if factories is not None:
+            objFactories.update(**factories)
+
+        super(GuiProject, self).unzip(factories=objFactories)
         self.setModified(False)
 
     def zip(self, filename=None):
