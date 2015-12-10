@@ -2,7 +2,7 @@ import os
 from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from .hash import Hash, StringList, XMLParser, XMLWriter
+from .hash import Hash, StringList
 from .project import Project
 
 
@@ -88,7 +88,7 @@ def write_project(proj, path=None):
         projectConfig[Project.PROJECT_KEY, "version"] = proj.version
         projectConfig[Project.PROJECT_KEY, "uuid"] = proj.uuid
         zf.writestr("{}.xml".format(Project.PROJECT_KEY),
-                    XMLWriter().write(projectConfig))
+                    projectConfig.encode("XML"))
 
     if file is not path:
         file.close()
@@ -229,8 +229,7 @@ def _read_scenes(zf, projectConfig, projInstance, factories):
 def _read_xml_hash(zf, path):
     """ Read a Hash object (serialized as XML) from a zipfile.
     """
-    data = zf.read(path)
-    return XMLParser().read(data)
+    return Hash.decode(zf.read(path), 'XML')
 
 
 def _write_configurations(zf, objectsHash):
