@@ -90,18 +90,18 @@ INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.s
 # Always clean the bundle
 rm -rf $PACKAGEDIR
 
-# Start fresh
-mkdir -p $PACKAGEDIR
-
-# Normalize the PACKAGEDIR path (This must happen after mkdir!)
-PACKAGEDIR=$(get_abs_path $PACKAGEDIR)
-
 # Clean above, if we create a new package
 if [[ "$BUNDLE_ACTION" = "package" ]]; then
     if [ -d $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE ]; then 
         rm -rf $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE
     fi
 fi
+
+# Start fresh
+mkdir -p $PACKAGEDIR
+
+# Normalize the PACKAGEDIR path (This must happen after mkdir!)
+PACKAGEDIR=$(get_abs_path $PACKAGEDIR)
 
 # Version information
 echo $VERSION > $PACKAGEDIR/VERSION
