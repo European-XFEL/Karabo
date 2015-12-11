@@ -6,9 +6,11 @@ from karabo.api2.project import (
     Project, ProjectConfiguration, BaseDeviceGroup, BaseDevice, BaseMacro,
     BaseScene
 )
+import karabo.testing as testing_mod
 from karabo.testing.utils import temp_file
 
-TEST_PROJECT_PATH = op.join(op.dirname(__file__), 'reference.krb')
+TEST_PROJECT_PATH = op.join(op.dirname(testing_mod.__file__), 'resources',
+                            'reference.krb')
 
 
 @contextmanager
