@@ -2,12 +2,13 @@ from contextlib import contextmanager
 from zipfile import ZipFile
 
 from karabo.testing.utils import temp_file
-from ..model import ProjectData, ProjectKeys
+from ..constants import PROJECT_SUFFIX
+from ..model import ProjectData
 
 
 @contextmanager
 def temp_project():
-    with temp_file(suffix=ProjectKeys.PROJECT_SUFFIX) as fn:
+    with temp_file(suffix=PROJECT_SUFFIX) as fn:
         # Prime the file with a zip header
         with ZipFile(fn, 'w'):
             pass
