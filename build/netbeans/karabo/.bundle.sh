@@ -84,7 +84,7 @@ fi
 
 EXTRACT_SCRIPT=$(pwd)/.extract.sh
 PYTHON_FIXER_SCRIPT=$(pwd)/.fix-python-scripts.sh
-PACKAGEDIR=$(get_abs_path $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME)
+PACKAGEDIR=$(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
 # Always clean the bundle
@@ -99,6 +99,9 @@ fi
 
 # Start fresh
 mkdir -p $PACKAGEDIR
+
+# Normalize the PACKAGEDIR path (This must happen after mkdir!)
+PACKAGEDIR=$(get_abs_path $PACKAGEDIR)
 
 # Version information
 echo $VERSION > $PACKAGEDIR/VERSION
