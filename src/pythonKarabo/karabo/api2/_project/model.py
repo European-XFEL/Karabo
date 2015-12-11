@@ -5,12 +5,6 @@ import hashlib
 from uuid import uuid4
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from .configuration import ProjectConfigurationData
-from .device import DeviceData, DeviceGroupData
-from .macro import MacroData
-from .monitor import MonitorData
-from .scene import SceneData
-
 
 class ProjectAccess(Enum):
     """ These states describes the access to a project. """
@@ -75,7 +69,7 @@ class ProjectData(object):
         returned.
         """
         for device in self.devices:
-            if devId == device.id:
+            if devId == device.name:
                 return device
         return None
 
@@ -86,7 +80,7 @@ class ProjectData(object):
         """
         devices = []
         for d in self.devices:
-            if d.deviceId in deviceIds:
+            if d.name in deviceIds:
                 devices.append(d)
         return devices
 
@@ -168,33 +162,3 @@ class ProjectData(object):
         """
         if name in self.scenes:
             del self.scenes[name]
-
-    def unzip(self, factories=None):
-        """ Read the zip file zf. The file must already be open for reading.
-        """
-        # FIXME: Resolve the circular import be removing import of Project
-        # FIXME: in the projectio module.
-        from ..projectio import read_project
-
-        objFactories = {
-            'Device': DeviceData,
-            'DeviceGroup': DeviceGroupData,
-            'Macro': MacroData,
-            'Monitor': MonitorData,
-            'ProjectConfiguration': ProjectConfigurationData,
-            'Scene': SceneData,
-        }
-        if factories is not None:
-            objFactories.update(factories)
-
-        read_project(self.filename, objFactories, instance=self)
-
-    def zip(self, filename=None):
-        """ This method saves this project as a zip file.
-        """
-        # FIXME: Resolve the circular import be removing import of Project
-        # FIXME: in the projectio module.
-        from ..projectio import write_project
-
-        filename = filename or self.filename
-        write_project(self, path=filename)

@@ -1,9 +1,16 @@
 from contextlib import contextmanager
 from zipfile import ZipFile
 
+from karabo.api2.hash import Hash
 from karabo.testing.utils import temp_file
+
 from ..constants import PROJECT_SUFFIX
+from ..configuration import ProjectConfigurationData
+from ..device import DeviceData, DeviceGroupData
+from ..macro import MacroData
 from ..model import ProjectData
+from ..monitor import MonitorData
+from ..scene import SceneData
 
 
 @contextmanager
@@ -15,6 +22,43 @@ def temp_project():
         yield ProjectData(fn)
 
 
-def test_empty_project():
+def test_device():
+    config = Hash('maximumSpeed', 10.0)
+    NAME = 'conveyor0'
+    device = DeviceData('pythonServer', 'ConveyorPy', NAME, 'ignore',
+                        config=config)
     with temp_project() as proj:
-        proj.zip()
+        proj.addDevice(device)
+        assert proj.getDevice(NAME) is device
+        assert proj.getDevice('blah') is None
+        assert device in proj.getDevices([NAME])
+
+
+def test_device_group():
+    with temp_project() as proj:
+        pass
+
+
+def test_macro():
+    with temp_project() as proj:
+        pass
+
+
+def test_monitor():
+    with temp_project() as proj:
+        pass
+
+
+def test_project_config():
+    with temp_project() as proj:
+        pass
+
+
+def test_resource():
+    with temp_project() as proj:
+        pass
+
+
+def test_scene():
+    with temp_project() as proj:
+        pass
