@@ -5,19 +5,21 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from karabo.api2.hash import Hash, StringList
-from .model import ProjectData, ProjectKeys
+from .constants import (DEVICES_KEY, SCENES_KEY, CONFIGURATIONS_KEY, MACROS_KEY,
+                        MONITORS_KEY, PROJECT_KEY, RESOURCES_KEY)
+from .model import ProjectData
 
 
 def read_project(path, factories):
     """ Create a new project instance from a config Hash and open zipfile.
     """
     with ZipFile(path, "r") as zf:
-        filename = "{}.xml".format(ProjectKeys.PROJECT_KEY)
+        filename = "{}.xml".format(PROJECT_KEY)
         projectHash = _read_xml_hash(zf, filename)
-        config = projectHash[ProjectKeys.PROJECT_KEY, ...]
+        config = projectHash[PROJECT_KEY, ...]
         proj = ProjectData(path, config=config)
 
-        projectConfig = projectHash[ProjectKeys.PROJECT_KEY]
+        projectConfig = projectHash[PROJECT_KEY]
         _read_configurations(zf, projectConfig, proj, factories)
 
         dev_groups, devices = _read_devices(zf, projectConfig, factories)
@@ -39,7 +41,7 @@ def read_project(path, factories):
             proj.addScene(s)
 
         proj.resources = {k: set(v) for k, v in
-                          projectConfig[ProjectKeys.RESOURCES_KEY].items()}
+                          projectConfig[RESOURCES_KEY].items()}
 
     return proj
 
@@ -69,28 +71,28 @@ def write_project(proj, path=None):
     with _safeDestination(path) as fn:
         with ZipFile(fn, mode="w", compression=ZIP_DEFLATED) as zf:
             configs = _write_configurations(zf, proj.configurations)
-            projectConfig[ProjectKeys.CONFIGURATIONS_KEY] = configs
+            projectConfig[CONFIGURATIONS_KEY] = configs
 
             deviceHashes = _write_devices(zf, proj.devices)
-            projectConfig[ProjectKeys.DEVICES_KEY] = deviceHashes
+            projectConfig[DEVICES_KEY] = deviceHashes
 
             macros = _write_macros(zf, proj.macros.values())
-            projectConfig[ProjectKeys.MACROS_KEY] = macros
+            projectConfig[MACROS_KEY] = macros
 
             monitors = _write_monitors(zf, proj.monitors.values())
-            projectConfig[ProjectKeys.MONITORS_KEY] = monitors
+            projectConfig[MONITORS_KEY] = monitors
 
             resources = _write_resources(zf, proj, proj.resources)
-            projectConfig[ProjectKeys.RESOURCES_KEY] = resources
+            projectConfig[RESOURCES_KEY] = resources
 
             sceneHashes = _write_scenes(zf, proj.scenes.values())
-            projectConfig[ProjectKeys.SCENES_KEY] = sceneHashes
+            projectConfig[SCENES_KEY] = sceneHashes
 
             # Create folder structure and save content
-            projectConfig = Hash(ProjectKeys.PROJECT_KEY, projectConfig)
-            projectConfig[ProjectKeys.PROJECT_KEY, "version"] = proj.version
-            projectConfig[ProjectKeys.PROJECT_KEY, "uuid"] = proj.uuid
-            zf.writestr("{}.xml".format(ProjectKeys.PROJECT_KEY),
+            projectConfig = Hash(PROJECT_KEY, projectConfig)
+            projectConfig[PROJECT_KEY, "version"] = proj.version
+            projectConfig[PROJECT_KEY, "uuid"] = proj.uuid
+            zf.writestr("{}.xml".format(PROJECT_KEY),
                         projectConfig.encode("XML"))
 
 
@@ -98,8 +100,8 @@ def _read_configurations(zf, projectConfig, projInstance, factories):
     """ Read all the project configurations from a project zipfile.
     """
     factory = factories['ProjectConfiguration']
-    configItemsView = projectConfig[ProjectKeys.CONFIGURATIONS_KEY].items()
-    basePath = "{0}/{{}}".format(ProjectKeys.CONFIGURATIONS_KEY)
+    configItemsView = projectConfig[CONFIGURATIONS_KEY].items()
+    basePath = "{0}/{{}}".format(CONFIGURATIONS_KEY)
 
     for devId, configList in configItemsView:
         # Vector of hashes
@@ -115,9 +117,9 @@ def _read_devices(zf, projectConfig, factories):
     device_groups, devices = [], []
     deviceFactory = factories['Device']
     deviceGroupFactory = factories['DeviceGroup']
-    basePath = "{0}/{{}}.xml".format(ProjectKeys.DEVICES_KEY)
+    basePath = "{0}/{{}}.xml".format(DEVICES_KEY)
 
-    for dev in projectConfig[ProjectKeys.DEVICES_KEY]:
+    for dev in projectConfig[DEVICES_KEY]:
         group = dev.get("group")
         if group is not None:
             name = dev["group", "filename"]
@@ -179,9 +181,9 @@ def _read_macros(zf, projectConfig, factories):
     """
     macros = []
     factory = factories['Macro']
-    basePath = "{0}/{{}}.py".format(ProjectKeys.MACROS_KEY)
+    basePath = "{0}/{{}}.py".format(MACROS_KEY)
 
-    for k in projectConfig.get(ProjectKeys.MACROS_KEY, []):
+    for k in projectConfig.get(MACROS_KEY, []):
         macro = factory.deserialize(k, zf.read(basePath.format(k)))
         macros.append(macro)
 
@@ -193,9 +195,9 @@ def _read_monitors(zf, projectConfig, factories):
     """
     monitors = []
     factory = factories['Monitor']
-    basePath = '{0}/{{}}'.format(ProjectKeys.MONITORS_KEY)
+    basePath = '{0}/{{}}'.format(MONITORS_KEY)
 
-    for m in projectConfig.get(ProjectKeys.MONITORS_KEY, []):
+    for m in projectConfig.get(MONITORS_KEY, []):
         name = m['filename']
         assert name.endswith('.xml')
 
@@ -211,9 +213,9 @@ def _read_scenes(zf, projectConfig, factories):
     """
     scenes = []
     factory = factories['Scene']
-    basePath = '{0}/{{}}'.format(ProjectKeys.SCENES_KEY)
+    basePath = '{0}/{{}}'.format(SCENES_KEY)
 
-    for s in projectConfig.get(ProjectKeys.SCENES_KEY, []):
+    for s in projectConfig.get(SCENES_KEY, []):
         name = s['filename']
         scene = factory.deserialize(name, zf.read(basePath.format(name)))
         scenes.append(scene)
@@ -231,7 +233,7 @@ def _write_configurations(zf, objectsDict):
     """ Write all the project configurations to a project zipfile.
     """
     configs = Hash()
-    basePath = '{0}/{{}}'.format(ProjectKeys.CONFIGURATIONS_KEY)
+    basePath = '{0}/{{}}'.format(CONFIGURATIONS_KEY)
 
     for deviceId, configList in objectsDict.items():
         configs[deviceId] = [Hash('filename', c.name) for c in configList]
@@ -245,7 +247,7 @@ def _write_devices(zf, objects):
     """ Write all the devices to a project zipfile.
     """
     deviceHashes = []
-    basePath = '{0}/{{}}'.format(ProjectKeys.DEVICES_KEY)
+    basePath = '{0}/{{}}'.format(DEVICES_KEY)
 
     def _write(dev, hashList):
         zf.writestr(basePath.format(dev.name), dev.serialize())
@@ -280,7 +282,7 @@ def _write_macros(zf, objects):
     """ Write all the macros to a project zipfile.
     """
     macros = Hash()
-    basePath = '{0}/{{}}.py'.format(ProjectKeys.MACROS_KEY)
+    basePath = '{0}/{{}}.py'.format(MACROS_KEY)
 
     for m in objects:
         path = basePath.format(m.name)
@@ -294,7 +296,7 @@ def _write_monitors(zf, objects):
     """ Write all the monitors to a project zipfile.
     """
     monitors = []
-    basePath = '{0}/{{}}'.format(ProjectKeys.MONITORS_KEY)
+    basePath = '{0}/{{}}'.format(MONITORS_KEY)
 
     for monitor in objects:
         name = basePath.format(monitor.name)
@@ -323,7 +325,7 @@ def _write_scenes(zf, objects):
     """ Write all the scenes to a project zipfile.
     """
     sceneHashes = []
-    basePath = '{0}/{{}}'.format(ProjectKeys.SCENES_KEY)
+    basePath = '{0}/{{}}'.format(SCENES_KEY)
 
     for scene in objects:
         name = basePath.format(scene.name)
