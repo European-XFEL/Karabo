@@ -85,8 +85,10 @@ if ip is not None:
     Type karabo? for help
     """.format(version))
 
+    hostname = socket.gethostname().replace(".", "_")
     devices = DeviceClient(_deviceId_="ikarabo-{}-{}".format(
-        socket.gethostname(), os.getpid()))
+        hostname, os.getpid()))
+
     set_event_loop(NoEventLoop(devices))
 
     ip.set_hook("complete_command", device_completer,
