@@ -5,12 +5,17 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from karabo.api2.hash import Hash, StringList
+from .configuration import ProjectConfigurationData
 from .constants import (DEVICES_KEY, SCENES_KEY, CONFIGURATIONS_KEY, MACROS_KEY,
                         MONITORS_KEY, PROJECT_KEY, RESOURCES_KEY)
+from .device import DeviceData, DeviceGroupData
+from .macro import MacroData
 from .model import ProjectData
+from .monitor import MonitorData
+from .scene import SceneData
 
 
-def read_project(path, factories):
+def read_project(path):
     """ Create a new project instance from a config Hash and open zipfile.
     """
     with ZipFile(path, "r") as zf:
@@ -20,23 +25,23 @@ def read_project(path, factories):
         proj = ProjectData(path, config=config)
 
         projectConfig = projectHash[PROJECT_KEY]
-        _read_configurations(zf, projectConfig, proj, factories)
+        _read_configurations(zf, projectConfig, proj)
 
-        dev_groups, devices = _read_devices(zf, projectConfig, factories)
+        dev_groups, devices = _read_devices(zf, projectConfig)
         for grp in dev_groups:
             proj.addDeviceGroup(grp)
         for dev in devices:
             proj.addDevice(dev)
 
-        macros = _read_macros(zf, projectConfig, factories)
+        macros = _read_macros(zf, projectConfig)
         for m in macros:
             proj.addMacro(m)
 
-        monitors = _read_monitors(zf, projectConfig, factories)
+        monitors = _read_monitors(zf, projectConfig)
         for mon in monitors:
             proj.addMonitor(mon)
 
-        scenes = _read_scenes(zf, projectConfig, factories)
+        scenes = _read_scenes(zf, projectConfig)
         for s in scenes:
             proj.addScene(s)
 
@@ -96,10 +101,10 @@ def write_project(proj, path=None):
                         projectConfig.encode("XML"))
 
 
-def _read_configurations(zf, projectConfig, projInstance, factories):
+def _read_configurations(zf, projectConfig, projInstance):
     """ Read all the project configurations from a project zipfile.
     """
-    factory = factories['ProjectConfiguration']
+    factory = ProjectConfigurationData.deserialize
     configItemsView = projectConfig[CONFIGURATIONS_KEY].items()
     basePath = "{0}/{{}}".format(CONFIGURATIONS_KEY)
 
@@ -107,16 +112,14 @@ def _read_configurations(zf, projectConfig, projInstance, factories):
         # Vector of hashes
         for c in configList:
             name = c.get("filename")
-            config = factory.deserialize(name, zf.read(basePath.format(name)))
+            config = factory(name, zf.read(basePath.format(name)))
             projInstance.addConfiguration(devId, config)
 
 
-def _read_devices(zf, projectConfig, factories):
+def _read_devices(zf, projectConfig):
     """ Read all the devices from a project zipfile.
     """
     device_groups, devices = [], []
-    deviceFactory = factories['Device']
-    deviceGroupFactory = factories['DeviceGroup']
     basePath = "{0}/{{}}.xml".format(DEVICES_KEY)
 
     for dev in projectConfig[DEVICES_KEY]:
@@ -137,8 +140,8 @@ def _read_devices(zf, projectConfig, factories):
                 else:
                     ifexists = "ignore"  # Use default
 
-                devGroup = deviceGroupFactory(name, serverId, classId,
-                                              ifexists, config=config)
+                devGroup = DeviceGroupData(name, serverId, classId, ifexists,
+                                           config=config)
                 break  # there better be only one!
 
             for item in group:
@@ -151,8 +154,8 @@ def _read_devices(zf, projectConfig, factories):
                 ifexists = item.get("ifexists")
                 devConfig = _read_xml_hash(zf, configPath)
                 for classId, config in devConfig.items():
-                    device = deviceFactory(serverId, classId, name,
-                                           ifexists, config=config)
+                    device = DeviceData(serverId, classId, name, ifexists,
+                                        config=config)
                     devGroup.addDevice(device)
                     break  # there better be only one!
 
@@ -168,56 +171,55 @@ def _read_devices(zf, projectConfig, factories):
             configPath = basePath.format(name)
             devConfig = _read_xml_hash(zf, configPath)
             for classId, config in devConfig.items():
-                device = deviceFactory(serverId, classId, name, ifexists,
-                                       config=config)
+                device = DeviceData(serverId, classId, name, ifexists,
+                                    config=config)
                 devices.append(device)
                 break  # there better be only one!
 
     return device_groups, devices
 
 
-def _read_macros(zf, projectConfig, factories):
+def _read_macros(zf, projectConfig):
     """ Read all the macros from a project zipfile.
     """
     macros = []
-    factory = factories['Macro']
+    factory = MacroData.deserialize
     basePath = "{0}/{{}}.py".format(MACROS_KEY)
 
     for k in projectConfig.get(MACROS_KEY, []):
-        macro = factory.deserialize(k, zf.read(basePath.format(k)))
+        macro = factory(k, zf.read(basePath.format(k)))
         macros.append(macro)
 
     return macros
 
 
-def _read_monitors(zf, projectConfig, factories):
+def _read_monitors(zf, projectConfig):
     """ Read all the monitors from a project zipfile.
     """
     monitors = []
-    factory = factories['Monitor']
+    factory = MonitorData.deserialize
     basePath = '{0}/{{}}'.format(MONITORS_KEY)
 
     for m in projectConfig.get(MONITORS_KEY, []):
         name = m['filename']
         assert name.endswith('.xml')
 
-        data = zf.read(basePath.format(name))
-        monitor = factory.deserialize(name[:-4], data)
+        monitor = factory(name[:-4], zf.read(basePath.format(name)))
         monitors.append(monitor)
 
     return monitors
 
 
-def _read_scenes(zf, projectConfig, factories):
+def _read_scenes(zf, projectConfig):
     """ Read all the scenes from a project zipfile.
     """
     scenes = []
-    factory = factories['Scene']
+    factory = SceneData.deserialize
     basePath = '{0}/{{}}'.format(SCENES_KEY)
 
     for s in projectConfig.get(SCENES_KEY, []):
         name = s['filename']
-        scene = factory.deserialize(name, zf.read(basePath.format(name)))
+        scene = factory(name, zf.read(basePath.format(name)))
         scenes.append(scene)
 
     return scenes
