@@ -58,6 +58,11 @@ def write_project(proj, path=None):
     if path is None:
         path = proj.filename
 
+    if not exists(proj.filename) and path == proj.filename:
+        # Make sure the resource copying code doesn't barf.
+        with ZipFile(path, 'w'):
+            pass
+
     @contextmanager
     def _safeDestination(target):
         file = NamedTemporaryFile(delete=False)
@@ -81,7 +86,7 @@ def write_project(proj, path=None):
             resources = _write_resources(zf, proj, proj.resources)
             sceneHashes = _write_scenes(zf, proj.scenes.values())
 
-            # XXX: This order is meant to match the old oldering of the
+            # XXX: This order is meant to match the old ordering of the
             # project writing code. Since Hash objects are OrderedDicts, order
             # matters. (Because we want to produce identical output for
             # round-trip project data)
