@@ -15,9 +15,6 @@ def create_project(src, dest):
     for dev in iter_devices(src):
         proj.addDevice(dev)
 
-    # Prime the project file
-    with ZipFile(dest, 'w'):
-        pass
     write_project(proj, dest)
 
 
