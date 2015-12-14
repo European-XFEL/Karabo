@@ -15,7 +15,8 @@ class DeviceData(object):
         self.config = config or Hash()
 
     def serialize(self):
-        return self.config.encode('XML')
+        wrapper = Hash(self.classId, self.config)
+        return wrapper.encode('XML')
 
 
 class DeviceGroupData(DeviceData):
