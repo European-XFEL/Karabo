@@ -291,29 +291,35 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
 
             vector<string> tokens;
             boost::split(tokens, line, boost::is_any_of("|"));
+            unsigned int offset = 0;
             if (tokens.size() != 8) {
-                cout << "*** slotGetPropertyHistory: skip corrupted record : token.size() = " << tokens.size() << endl;
-                continue; // This record is corrupted -- skip it
+                if (tokens.size() == 10) { // probably old format from  1.4.X
+                    offset = 2;
+                } else {
+                    cout << "*** slotGetPropertyHistory: skip corrupted record : token.size() = " << tokens.size() << endl;
+                    continue; // This record is corrupted -- skip it
+                }
             }
             recnum++;
 
+            // With offset = 2 for raw files from 1.4.X and offset = 0 for later releases, we have:
             // tokens[0] => epochISO8601
             // tokens[1] => epochDouble
-            // tokens[2] => sTrainId
-            // tokens[3] => property name
-            // tokens[4] => property type
-            // tokens[5] => property value
-            // tokens[6] => user
-            // tokens[7] => flag
+            // tokens[2 + offset] => sTrainId
+            // tokens[3 + offset] => property name
+            // tokens[4 + offset] => property type
+            // tokens[5 + offset] => property value
+            // tokens[6 + offset] => user
+            // tokens[7 + offset] => flag
 
             unsigned long long seconds = 0;
             unsigned long long fraction = 0;
             {
                 vector<string> tparts;
                 boost::split(tparts, tokens[1], boost::is_any_of("."));
-                assert(tparts.size() == 2);
                 seconds  = fromString<unsigned long long>(tparts[0]);
-                fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL; // ATTOSEC
+                // If by chance we hit a full second without fractions, we have no ".":
+                if (tparts.size() >= 2) fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL; // ATTOSEC
             }
 
             //cout << "*** " << recnum << " *** "
@@ -334,28 +340,28 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             //cout << "*** Current schema for range from " << schemaRange.fromSeconds << "." << schemaRange.fromFraction
             //        << " to " << schemaRange.toSeconds << "." << schemaRange.toFraction << endl;
 
-            if ((tokens[7] == "LOGIN" || tokens[7] == "LOGOUT" || newFileFlag)) {
+            if ((tokens[7 + offset] == "LOGIN" || tokens[7 + offset] == "LOGOUT" || newFileFlag)) {
                 newFileFlag = false;
                 if (buildContent) {
                     string contentFile = historyDir + "/" + deviceId + "/raw/archive_index.txt";
                     ofstream ocs(contentFile.c_str(), ios::out | ios::app);
-                    if (tokens[7] == "LOGIN")
+                    if (tokens[7 + offset] == "LOGIN")
                         ocs << "+LOG ";
-                    else if (tokens[7] == "LOGOUT")
+                    else if (tokens[7 + offset] == "LOGOUT")
                         ocs << "-LOG ";
                     else
                         ocs << "=NEW ";
 
-                    ocs << tokens[0] << " " << tokens[1] << " " << " " << tokens[2]
-                        << " " << position << " " << tokens[6] << " " << number << "\n";
+                    ocs << tokens[0] << " " << tokens[1] << " " << " " << tokens[2 + offset]
+                        << " " << position << " " << tokens[6 + offset] << " " << number << "\n";
 
                     ocs.close();
                 }
                 
-                //cout << tokens[0] << " " << tokens[1] << " " << tokens[2]
-                //        << " " << position << " " << tokens[6] << " " << number << endl;
+                //cout << tokens[0] << " " << tokens[1] << " " << tokens[2 + offset]
+                //        << " " << position << " " << tokens[6 + offset] << " " << number << endl;
 
-                if (tokens[7] == "LOGOUT") {
+                if (tokens[7 + offset] == "LOGOUT") {
                     map<string, MetaData::Pointer>::iterator ii = idxMap.begin();
                     while (ii != idxMap.end()) {
                         MetaData::Pointer mdp = ii->second;
@@ -376,25 +382,25 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             }
 
             // token(3) is a property name
-            if (tokens[3] == ".") continue;
+            if (tokens[3 + offset] == ".") continue;
 
             // check if we have any property registered
             if (idxprops.empty()) continue;    // no interest for building binary index
-            if (find(idxprops.begin(), idxprops.end(), tokens[3]) == idxprops.end()) continue;  // property is not in the prop file
+            if (find(idxprops.begin(), idxprops.end(), tokens[3 + offset]) == idxprops.end()) continue;  // property is not in the prop file
             
             // Check if we need to build index for this property by inspecting schema ... checking only existence
-            if (schema->has(tokens[3])) {
-                map<string, MetaData::Pointer>::iterator it = idxMap.find(tokens[3]);
+            if (schema->has(tokens[3 + offset])) {
+                map<string, MetaData::Pointer>::iterator it = idxMap.find(tokens[3 + offset]);
                 MetaData::Pointer mdp;
                 if (it == idxMap.end()) {
                     mdp = MetaData::Pointer(new MetaData);
-                    mdp->idxFile = historyDir + "/" + deviceId + "/idx/archive_" + toString(number) + "-" + tokens[3] + "-index.bin";
+                    mdp->idxFile = historyDir + "/" + deviceId + "/idx/archive_" + toString(number) + "-" + tokens[3 + offset] + "-index.bin";
                     mdp->record.epochstamp = fromString<double>(tokens[1]);
-                    mdp->record.trainId = fromString<unsigned long long>(tokens[2]);
+                    mdp->record.trainId = fromString<unsigned long long>(tokens[2 + offset]);
                     mdp->record.positionInRaw = position;
                     mdp->record.extent1 = (expNum & 0xFFFFFF);
                     mdp->record.extent2 = (runNum & 0xFFFFFF);
-                    idxMap[tokens[3]] = mdp;
+                    idxMap[tokens[3 + offset]] = mdp;
                     // defer writing: write only if more changes come
                 } else {
                     mdp = it->second;
@@ -408,7 +414,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                         mdp->idxStream.write((char*) &mdp->record, sizeof (MetaData::Record));
                     }
                     mdp->record.epochstamp = fromString<double>(tokens[1]);
-                    mdp->record.trainId = fromString<unsigned long long>(tokens[2]);
+                    mdp->record.trainId = fromString<unsigned long long>(tokens[2 + offset]);
                     mdp->record.positionInRaw = position;
                     mdp->record.extent1 = (expNum & 0xFFFFFF);
                     mdp->record.extent2 = (runNum & 0xFFFFFF);
