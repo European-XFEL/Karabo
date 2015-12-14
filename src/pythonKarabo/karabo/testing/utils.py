@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 import os
 import tempfile
+from xml.dom import minidom
 from zipfile import ZipFile
 
 
@@ -18,11 +19,18 @@ def compare_zip_files(path0, path1):
 
         for name in names0:
             data0 = zip0.read(name).strip()
-            data1 = zip1.read(name)
+            data1 = zip1.read(name).strip()
             if data0 != data1:
                 return False
 
     return True
+
+
+def pretty_print_xml(data):
+    """ Pretty print some XML
+    """
+    dom = minidom.parseString(data)
+    print(dom.toprettyxml(indent=' '*2))
 
 
 @contextmanager

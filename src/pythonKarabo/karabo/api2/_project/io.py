@@ -27,9 +27,7 @@ def read_project(path):
         projectConfig = projectHash[PROJECT_KEY]
         _read_configurations(zf, projectConfig, proj)
 
-        dev_groups, devices = _read_devices(zf, projectConfig)
-        for grp in dev_groups:
-            proj.addDeviceGroup(grp)
+        devices = _read_devices(zf, projectConfig)
         for dev in devices:
             proj.addDevice(dev)
 
@@ -76,22 +74,22 @@ def write_project(proj, path=None):
     with _safeDestination(path) as fn:
         with ZipFile(fn, mode="w", compression=ZIP_DEFLATED) as zf:
             configs = _write_configurations(zf, proj.configurations)
-            projectConfig[CONFIGURATIONS_KEY] = configs
-
             deviceHashes = _write_devices(zf, proj.devices)
-            projectConfig[DEVICES_KEY] = deviceHashes
-
             macros = _write_macros(zf, proj.macros.values())
-            projectConfig[MACROS_KEY] = macros
-
             monitors = _write_monitors(zf, proj.monitors.values())
-            projectConfig[MONITORS_KEY] = monitors
-
             resources = _write_resources(zf, proj, proj.resources)
-            projectConfig[RESOURCES_KEY] = resources
-
             sceneHashes = _write_scenes(zf, proj.scenes.values())
+
+            # XXX: This order is meant to match the old oldering of the
+            # project writing code. Since Hash objects are OrderedDicts, order
+            # matters. (Because we want to produce identical output for
+            # round-trip project data)
+            projectConfig[DEVICES_KEY] = deviceHashes
             projectConfig[SCENES_KEY] = sceneHashes
+            projectConfig[CONFIGURATIONS_KEY] = configs
+            projectConfig[RESOURCES_KEY] = resources
+            projectConfig[MACROS_KEY] = macros
+            projectConfig[MONITORS_KEY] = monitors
 
             # Create folder structure and save content
             projectConfig = Hash(PROJECT_KEY, projectConfig)
@@ -99,6 +97,12 @@ def write_project(proj, path=None):
             projectConfig[PROJECT_KEY, "uuid"] = proj.uuid
             zf.writestr("{}.xml".format(PROJECT_KEY),
                         projectConfig.encode("XML"))
+
+
+def _add_xml_ext(name):
+    """ Most of the filenames need .xml on the end, so...
+    """
+    return name + '.xml'
 
 
 def _read_configurations(zf, projectConfig, projInstance):
@@ -119,7 +123,7 @@ def _read_configurations(zf, projectConfig, projInstance):
 def _read_devices(zf, projectConfig):
     """ Read all the devices from a project zipfile.
     """
-    device_groups, devices = [], []
+    devices = []
     basePath = "{0}/{{}}.xml".format(DEVICES_KEY)
 
     for dev in projectConfig[DEVICES_KEY]:
@@ -159,7 +163,7 @@ def _read_devices(zf, projectConfig):
                     devGroup.addDevice(device)
                     break  # there better be only one!
 
-            device_groups.append(devGroup)
+            devices.append(devGroup)
         else:
             serverId = dev.get("serverId")
             ifexists = dev.get("ifexists")
@@ -176,7 +180,7 @@ def _read_devices(zf, projectConfig):
                 devices.append(device)
                 break  # there better be only one!
 
-    return device_groups, devices
+    return devices
 
 
 def _read_macros(zf, projectConfig):
@@ -249,12 +253,13 @@ def _write_devices(zf, objects):
     """ Write all the devices to a project zipfile.
     """
     deviceHashes = []
-    basePath = '{0}/{{}}.xml'.format(DEVICES_KEY)
+    basePath = '{0}/{{}}'.format(DEVICES_KEY)
 
     def _write(dev, hashList):
-        zf.writestr(basePath.format(dev.name), dev.serialize())
+        filename = _add_xml_ext(dev.name)
+        zf.writestr(basePath.format(filename), dev.serialize())
         hashList.append(Hash('serverId', dev.serverId, 'classId', dev.classId,
-                             'filename', dev.name, 'ifexists', dev.ifexists))
+                             'filename', filename, 'ifexists', dev.ifexists))
 
     for deviceObj in objects:
         if not hasattr(deviceObj, 'devices'):
@@ -267,10 +272,11 @@ def _write_devices(zf, objects):
                 _write(device, group)
 
             # Save group configuration to file
-            zf.writestr(basePath.format(deviceObj.name), deviceObj.serialize())
+            filename = _add_xml_ext(deviceObj.name)
+            zf.writestr(basePath.format(filename), deviceObj.serialize())
 
             deviceGroupHash = Hash('group', group)
-            deviceGroupHash['group', 'filename'] = deviceObj.name
+            deviceGroupHash['group', 'filename'] = filename
             deviceGroupHash['group', 'serverId'] = deviceObj.serverId
             deviceGroupHash['group', 'classId'] = deviceObj.classId
             deviceGroupHash['group', 'ifexists'] = deviceObj.ifexists
@@ -298,12 +304,13 @@ def _write_monitors(zf, objects):
     """ Write all the monitors to a project zipfile.
     """
     monitors = []
-    basePath = '{0}/{{}}.xml'.format(MONITORS_KEY)
+    basePath = '{0}/{{}}'.format(MONITORS_KEY)
 
     for monitor in objects:
-        name = basePath.format(monitor.name)
-        zf.writestr(name, monitor.serialize())
-        monitors.append(Hash("filename", monitor.name))
+        filename = _add_xml_ext(monitor.name)
+        path = basePath.format(filename)
+        zf.writestr(path, monitor.serialize())
+        monitors.append(Hash("filename", filename))
 
     return monitors
 

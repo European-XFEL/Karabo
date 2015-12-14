@@ -1,7 +1,5 @@
 import os.path as op
 
-from nose.tools import raises
-
 import karabo.testing as testing_pkg
 from karabo.testing.utils import compare_zip_files, temp_file
 from ..io import read_project, write_project
@@ -19,8 +17,6 @@ def test_read_project():
     # FIXME: Actually look at the project's contents
 
 
-# FIXME: This test is currently broken
-@raises(AssertionError)
 def test_project_round_trip():
     proj = read_project(TEST_PROJECT_PATH)
 
