@@ -24,6 +24,8 @@ __all__ = ["DisplayLabel"]
 from widget import DisplayWidget
 from karabo.api_2 import (Double, Float, Hash, String, Simple, Type, HashType,
                           VectorDouble, VectorFloat, VectorHash)
+
+from numbers import Number
 import decimal
 import re
 
@@ -75,16 +77,20 @@ class DisplayLabel(DisplayWidget):
             format = dict(bin='b{:b}', oct='o{:o}', hex='0x{:X}'
                           )[box.descriptor.displayType[:3]]
         except (TypeError, KeyError):
-            if box.descriptor.relativeError is not None:
+            abserr = box.descriptor.absoluteError
+            relerr = box.descriptor.relativeError
+            if relerr is not None and (abserr is None or
+                     not isinstance(value, (Number, number)) or
+                     relerr * value > abserr):
                 format = "{{:.{}g}}".format(
                             -int(log10(box.descriptor.relativeError)))
-            elif box.descriptor.absoluteError is not None:
-                ae = box.descriptor.absoluteError
-                if ae < 1:
-                    format = "{{:.{}f}}".format(-int(log10(ae)))
-                elif isinstance(value, (Number, numpy.number)):
-                    format = "{{:.{}e}}".format(int(log10(value)) -
-                                                int(log10(ae)))
+            elif abserr is not None:
+                if abserr < 1:
+                    format = "{{:.{}f}}".format(-int(log10(abserr)))
+                elif (isinstance(value, (Number, number)) and
+                        abs(value) > abserr):
+                    format = "{{:.{}e}}".format(int(log10(abs(value))) -
+                                                int(log10(abserr)))
                 else:
                     format = "{:.0f}"
             elif isinstance(box.descriptor, (Float, VectorFloat)):
