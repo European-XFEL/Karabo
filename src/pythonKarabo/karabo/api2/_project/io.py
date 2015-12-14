@@ -1,7 +1,6 @@
 from contextlib import contextmanager
-from os import remove
-from os.path import exists
-from shutil import copyfile
+from os import remove, rename
+from os.path import dirname, exists
 from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -65,17 +64,13 @@ def write_project(proj, path=None):
 
     @contextmanager
     def _safeDestination(target):
-        file = NamedTemporaryFile(delete=False)
-
-        try:
+        with NamedTemporaryFile(dir=dirname(target), delete=False) as file:
             yield file.name
 
             # Move to the target path when everything is safely written
             if exists(target):
                 remove(target)
-            copyfile(file.name, target)
-        finally:
-            file.close()
+            rename(file.name, target)
 
     with _safeDestination(path) as fn:
         with ZipFile(fn, mode="w", compression=ZIP_DEFLATED) as zf:
