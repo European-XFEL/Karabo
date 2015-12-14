@@ -1,6 +1,28 @@
 from contextlib import contextmanager
 import os
 import tempfile
+from zipfile import ZipFile
+
+
+def compare_zip_files(path0, path1):
+    """ Given the paths of two zip files, compare their contents and return
+    True if they match.
+    """
+    with ZipFile(path0, 'r') as zip0, ZipFile(path1, 'r') as zip1:
+        names0, names1 = zip0.namelist(), zip1.namelist()
+        names0.sort()
+        names1.sort()
+        if names0 != names1:
+            print("names not equal", names0, names1)
+            return False
+
+        for name in names0:
+            data0 = zip0.read(name).strip()
+            data1 = zip1.read(name)
+            if data0 != data1:
+                return False
+
+    return True
 
 
 @contextmanager

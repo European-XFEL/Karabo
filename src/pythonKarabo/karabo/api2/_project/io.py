@@ -140,7 +140,7 @@ def _read_devices(zf, projectConfig):
                 else:
                     ifexists = "ignore"  # Use default
 
-                devGroup = DeviceGroupData(name, serverId, classId, ifexists,
+                devGroup = DeviceGroupData(serverId, classId, name, ifexists,
                                            config=config)
                 break  # there better be only one!
 
@@ -249,7 +249,7 @@ def _write_devices(zf, objects):
     """ Write all the devices to a project zipfile.
     """
     deviceHashes = []
-    basePath = '{0}/{{}}'.format(DEVICES_KEY)
+    basePath = '{0}/{{}}.xml'.format(DEVICES_KEY)
 
     def _write(dev, hashList):
         zf.writestr(basePath.format(dev.name), dev.serialize())
@@ -298,7 +298,7 @@ def _write_monitors(zf, objects):
     """ Write all the monitors to a project zipfile.
     """
     monitors = []
-    basePath = '{0}/{{}}'.format(MONITORS_KEY)
+    basePath = '{0}/{{}}.xml'.format(MONITORS_KEY)
 
     for monitor in objects:
         name = basePath.format(monitor.name)
