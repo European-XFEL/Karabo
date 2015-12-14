@@ -79,11 +79,13 @@ if __name__ == '__main__':
         package_data={
             'karabo.api1.tests': ['resources/*.*'],
             'karabo.api2.tests': ['*.xml'],
+            'karabo.testing': ['resources/*.*'],
         },
         entry_points={'console_scripts': [
                       'karabo_device_server=karabo.api1.device_server:main',
                       'ideviceclient=karabo.interactive.ideviceclient:main',
                       'ikarabo=karabo.interactive.ikarabo:main',
                       'convert-karabo-device-project=karabo.interactive.convert_device_project:main',
+                      'generate-karabo-project=karabo.interactive.project_generator:main',
                       ]},
     )
