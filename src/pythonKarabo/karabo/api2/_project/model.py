@@ -84,12 +84,6 @@ class ProjectData(object):
                 devices.append(d)
         return devices
 
-    def addDeviceGroup(self, deviceGroup):
-        self.devices.append(deviceGroup)
-
-    def insertDeviceGroup(self, index, deviceGroup):
-        self.devices.insert(index, deviceGroup)
-
     def addMacro(self, macro):
         name = macro.name
         assert name not in self.macros
