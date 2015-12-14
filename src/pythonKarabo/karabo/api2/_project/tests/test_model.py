@@ -35,30 +35,50 @@ def test_device():
 
 
 def test_device_group():
+    config = Hash('maximumSpeed', 10.0)
+    NAME = 'conveyor0'
+    device = DeviceData('pythonServer', 'ConveyorPy', NAME, 'ignore',
+                        config=config)
+    group = DeviceGroupData('pythonServer', 'ConveyorPy', 'group', 'ignore',
+                            config=config)
     with temp_project() as proj:
-        pass
+        group.addDevice(device)
+        proj.addDevice(group)
+        assert proj.getDevice('group') is group
 
 
 def test_macro():
+    macro = MacroData('mac', code='print("Hello World")')
     with temp_project() as proj:
-        pass
+        proj.addMacro(macro)
+        assert proj.getMacro('mac') is macro
 
 
 def test_monitor():
+    monitor = MonitorData('mon')
     with temp_project() as proj:
-        pass
+        proj.addMonitor(monitor)
+        assert proj.getMonitor('mon') is monitor
 
 
 def test_project_config():
+    config = ProjectConfigurationData('conf')
     with temp_project() as proj:
-        pass
+        proj.addConfiguration('devID', config)
+        assert 'devID' in proj.configurations
 
 
 def test_resource():
+    category = 'projections'
+    data = b'here is some data'
     with temp_project() as proj:
-        pass
+        name = proj.addResource(category, data)
+        assert proj.getResource(category, name) == data
 
 
 def test_scene():
+    data = '<xml/>'
+    scene = SceneData('sceeny', data)
     with temp_project() as proj:
-        pass
+        proj.addScene(scene)
+        assert proj.getScene('sceeny') is scene
