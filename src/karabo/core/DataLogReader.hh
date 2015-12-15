@@ -55,6 +55,7 @@ namespace karabo {
         
         class IndexBuilderService {
         public:
+            // Needed for 'Pointer' and KARABO_LOG_FRAMEWORK
             KARABO_CLASSINFO(IndexBuilderService, "IndexBuilderService", "1.4")
 
         private:
@@ -78,7 +79,8 @@ namespace karabo {
             
             static Pointer getInstance();
            
-            ~IndexBuilderService();
+            // Virtual destructor needed since KARABO_CLASSINFO adds virtual methods:
+            virtual ~IndexBuilderService();
 
             void buildIndexFor(const std::string& commandLineArguments);
             
