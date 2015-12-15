@@ -46,6 +46,11 @@ namespace karabo {
             MetaSearchResult() : fromFileNumber(0), toFileNumber(0), fromRecord(0), toRecord(0) {
             }
         };
+
+        /// Convert an std::string that represents a double of the seconds since Unix epoch
+        /// to an Epochstamp
+        util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble);
+
     }
 }
 
