@@ -6,6 +6,7 @@
 #include <streambuf>
 #include <karabo/io/Input.hh>
 #include "DataLogReader.hh"
+#include "karabo/core/DataLoggerStructs.hh"
 #include "karabo/io/FileTools.hh"
 #include "karabo/util/Version.hh"
 
@@ -328,18 +329,8 @@ namespace karabo {
                                 node.setType(Types::from<FromLiteral>(type));
 
                                 unsigned long long trainId = fromString<unsigned long long>(tokens[2 + offset]);
-                                unsigned long long seconds = 0;
-                                unsigned long long fraction = 0;
-                                // If offset >= 2, i.e. old format from Karabo 1.4.X, we could get seconds and fractions
-                                // directly from tokens[2] and tokens[3], respectively...
-                                {
-                                    vector<string> tparts;
-                                    boost::split(tparts, tokens[1], boost::is_any_of("."));
-                                    seconds  = fromString<unsigned long long>(tparts[0]);
-                                    // If by chance we hit a full second without fractions, we have no ".":
-                                    if (tparts.size() >= 2) fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL; // ATTOSEC
-                                }
-                                Timestamp tst(Epochstamp(seconds, fraction), Trainstamp(trainId));
+                                const Epochstamp epochstamp(stringDoubleToEpochstamp(tokens[1]));
+                                Timestamp tst(epochstamp, Trainstamp(trainId));
                                 Hash::Attributes& attrs = hash.getAttributes("v");
                                 tst.toHashAttributes(attrs);
                                 result.push_back(hash);
@@ -451,20 +442,8 @@ namespace karabo {
 
                             const string& path = tokens[3 + offset];
                             if (!schema.has(path)) continue;
-
-                            unsigned long long seconds = 0;
-                            unsigned long long fraction = 0;
-                            // If offset >= 2, i.e. old format from Karabo 1.4, we could get seconds and fractions
-                            // directly from tokens[2] and tokens[3], respectively...
-                            {
-                                vector<string> tparts;
-                                boost::split(tparts, tokens[1], boost::is_any_of("."));
-                                seconds  = fromString<unsigned long long>(tparts[0]);
-                                // If by chance we hit a full second without fractions, we have no ".":
-                                if (tparts.size() >= 2) fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL;
-                            }
+                            current = stringDoubleToEpochstamp(tokens[1]);
                             unsigned long long train = fromString<unsigned long long>(tokens[2]);
-                            current = Epochstamp(seconds, fraction);
                             if (current > target)
                                 break;
                             Timestamp timestamp(current, Trainstamp(train));
@@ -488,7 +467,6 @@ namespace karabo {
         DataLoggerIndex DataLogReader::findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint) {
             string timestampAsIso8061;
             string timestampAsDouble;
-            unsigned long long seconds, fraction;
             string event;
             string tail;
             DataLoggerIndex entry;
@@ -509,26 +487,18 @@ namespace karabo {
                     ifs.close();
                     throw KARABO_IO_EXCEPTION("Premature EOF while reading index file \"" + contentpath + "\"");
                 }
-                {
-                    std::vector<std::string> tparts;
-                    boost::split(tparts, timestampAsDouble, boost::is_any_of("."));
-                    assert(tparts.size() == 2);  // FIXME: No! If by chance no fraction of second! - No - we write with std::fixed!
-                    seconds = fromString<unsigned long long>(tparts[0]);
-                    fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL;
-                }
-                Epochstamp epochstamp(seconds, fraction);
+                const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
                 if (epochstamp > target) {
                     if (!tail.empty()) {
                         stringstream ss(tail);
                         unsigned long long dummy;
                         ss >> dummy;
-                        if (seconds == dummy) {
+                        if (epochstamp.getSeconds() == dummy) {
                             // old format from 1.4.X, i.e. seconds and fractions follow as ULL after timestampAsDouble
                             ss >> dummy; // get rid of fractions
                         } else {
-                            entry.m_train == dummy;
+                            entry.m_train = dummy;
                         }
-                        //ss >> entry.m_train >> entry.m_position >> entry.m_user >> entry.m_fileindex;
                         ss >> entry.m_position >> entry.m_user >> entry.m_fileindex;
                     }
                     break;
@@ -549,7 +519,6 @@ namespace karabo {
         DataLoggerIndex DataLogReader::findNearestLoggerIndex(const std::string& deviceId, const karabo::util::Epochstamp& target) {
             string timestampAsIso8061;
             string timestampAsDouble;
-            unsigned long long seconds, fraction;
             string event;
 
             DataLoggerIndex nearest;
@@ -566,15 +535,7 @@ namespace karabo {
                     KARABO_LOG_WARN << "Premature EOF while reading index file \"" << contentpath + "\" in findNearestLoggerIndex";
                     return nearest;
                 }
-                //Epochstamp epochstamp(doubleStringtoEpochstamp(timestampAsDouble));
-                {
-                    std::vector<std::string> tparts;
-                    boost::split(tparts, timestampAsDouble, boost::is_any_of("."));
-                    assert(tparts.size() == 2); // must be true since double printed using std::fixed
-                    seconds = fromString<unsigned long long>(tparts[0]);
-                    fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL;
-                }
-                Epochstamp epochstamp(seconds, fraction);
+                const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
                 if (epochstamp <= target || nearest.m_fileindex == -1) {
                     //in case of time point before target time or there is no record before target time point, hence, use this one
                     nearest.m_event = event;
@@ -582,12 +543,11 @@ namespace karabo {
                     stringstream ss(line);
                     unsigned long long dummy;
                     ss >> dummy;
-//                    if (epochstamp.getSeconds() == dummy) {
-                    if (seconds == dummy) {
+                    if (epochstamp.getSeconds() == dummy) {
                         // old format from 1.4.X, i.e. seconds and fractions follow as ULL after timestampAsDouble
                         ss >> dummy; // get rid of fractions
                     } else {
-                        nearest.m_train == dummy;
+                        nearest.m_train = dummy;
                     }
                     ss >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
                 }
