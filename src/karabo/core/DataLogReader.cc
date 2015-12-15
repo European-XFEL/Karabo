@@ -2,6 +2,7 @@
 #include <vector>
 #include <cstdlib>
 #include <sstream>
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <streambuf>
 #include <karabo/io/Input.hh>
@@ -493,10 +494,18 @@ namespace karabo {
                         stringstream ss(tail);
                         unsigned long long dummy;
                         ss >> dummy;
-                        if (epochstamp.getSeconds() == dummy) {
-                            // old format from 1.4.X, i.e. seconds and fractions follow as ULL after timestampAsDouble
-                            ss >> dummy; // get rid of fractions
+                        // If seconds == dummy, we very likely have old format from 1.4.X where seconds and fractions
+                        // follow as ULL after timestampAsDouble - then we have (as usual) train, position, user and index.
+                        // In case by chance we have trainId == seconds, we double check that there is a space in front
+                        // of each of the six words in the tail (sec, fraction, train, position, user, index):
+                        if (epochstamp.getSeconds() == dummy && std::count(tail.begin(), tail.end(), ' ') == 6) {
+                                ss >> dummy; // get rid of fractions
                         } else {
+                            if (epochstamp.getSeconds() == dummy) {
+                                KARABO_LOG_FRAMEWORK_WARN << "findLoggerIndexTimepoint: Value after timestamp as double "
+                                        << "equals full seconds (" << dummy << "), i.e. looks like 1.4.X format, but tail of line '"
+                                        << tail << "' does not have six words with a space in front of each.";
+                            }
                             entry.m_train = dummy;
                         }
                         ss >> entry.m_position >> entry.m_user >> entry.m_fileindex;
@@ -543,10 +552,18 @@ namespace karabo {
                     stringstream ss(line);
                     unsigned long long dummy;
                     ss >> dummy;
-                    if (epochstamp.getSeconds() == dummy) {
-                        // old format from 1.4.X, i.e. seconds and fractions follow as ULL after timestampAsDouble
+                    // If seconds == dummy, we very likely have old format from 1.4.X where seconds and fractions
+                    // follow as ULL after timestampAsDouble - then we have (as usual) train, position, user and index.
+                    // In case by chance we have trainId == seconds, we double check that there is a space in front
+                    // of each of the six words in the tail (sec, fraction, train, position, user, index):
+                    if (epochstamp.getSeconds() == dummy && std::count(line.begin(), line.end(), ' ') == 6) {
                         ss >> dummy; // get rid of fractions
                     } else {
+                        if (epochstamp.getSeconds() == dummy) {
+                            KARABO_LOG_FRAMEWORK_WARN << "findNearestLoggerIndex: Value after timestamp as double "
+                                        << "equals full seconds (" << dummy << "), i.e. looks like 1.4.X format, but tail of "
+                                        << "line '" << line << "' does not have six words with spaces in front of each.";
+                        }
                         nearest.m_train = dummy;
                     }
                     ss >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
