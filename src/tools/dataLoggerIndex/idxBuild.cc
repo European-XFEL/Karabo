@@ -293,10 +293,10 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             boost::split(tokens, line, boost::is_any_of("|"));
             unsigned int offset = 0;
             if (tokens.size() != 8) {
-                if (tokens.size() == 10) { // probably old format from  1.4.X
+                if (tokens.size() == 10) { // old format from 1.4.X
                     offset = 2;
                 } else {
-                    cout << "*** slotGetPropertyHistory: skip corrupted record : token.size() = " << tokens.size() << endl;
+                    cout << "*** idxBuild: skip corrupted record : token.size() = " << tokens.size() << endl;
                     continue; // This record is corrupted -- skip it
                 }
             }
@@ -312,20 +312,13 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             // tokens[6 + offset] => user
             // tokens[7 + offset] => flag
 
-            unsigned long long seconds = 0;
-            unsigned long long fraction = 0;
-            {
-                vector<string> tparts;
-                boost::split(tparts, tokens[1], boost::is_any_of("."));
-                seconds  = fromString<unsigned long long>(tparts[0]);
-                // If by chance we hit a full second without fractions, we have no ".":
-                if (tparts.size() >= 2) fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL; // ATTOSEC
-            }
+            const Epochstamp epstamp(karabo::core::stringDoubleToEpochstamp(tokens[1]));
 
             //cout << "*** " << recnum << " *** "
             //        "\t" << "position in input : " << position << ", epoch: " << seconds << "." << fraction << endl;
 
-            while (seconds > schemaRange.toSeconds || (seconds == schemaRange.toSeconds && fraction > schemaRange.toFraction)) {
+            while (epstamp.getSeconds() > schemaRange.toSeconds ||
+                    (epstamp.getSeconds() == schemaRange.toSeconds && epstamp.getFractionalSeconds() > schemaRange.toFraction)) {
                 if (sfs.fail()) break;
                 schemaRange.fromSeconds = schemaRange.toSeconds;
                 schemaRange.fromFraction = schemaRange.toFraction;
