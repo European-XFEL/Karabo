@@ -6,7 +6,7 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include "DataLoggerStructs.hh"
+#include "DataLogUtils.hh"
 
 #include "karabo/util/StringTools.hh"
 

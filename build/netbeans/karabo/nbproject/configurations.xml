@@ -7,12 +7,12 @@
         <itemPath>../../../src/karabo/core/CentralLogging.hh</itemPath>
         <itemPath>../../../src/karabo/core/DataLogReader.cc</itemPath>
         <itemPath>../../../src/karabo/core/DataLogReader.hh</itemPath>
+        <itemPath>../../../src/karabo/core/DataLogUtils.cc</itemPath>
+        <itemPath>../../../src/karabo/core/DataLogUtils.hh</itemPath>
         <itemPath>../../../src/karabo/core/DataLogger.cc</itemPath>
         <itemPath>../../../src/karabo/core/DataLogger.hh</itemPath>
         <itemPath>../../../src/karabo/core/DataLoggerManager.cc</itemPath>
         <itemPath>../../../src/karabo/core/DataLoggerManager.hh</itemPath>
-        <itemPath>../../../src/karabo/core/DataLoggerStructs.cc</itemPath>
-        <itemPath>../../../src/karabo/core/DataLoggerStructs.hh</itemPath>
         <itemPath>../../../src/karabo/core/Device.hh</itemPath>
         <itemPath>../../../src/karabo/core/GuiServerDevice.cc</itemPath>
         <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
@@ -573,6 +573,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/core/DataLogUtils.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLogUtils.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/core/DataLogger.cc"
             ex="false"
             tool="1"
@@ -589,16 +599,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DataLoggerManager.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerStructs.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerStructs.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2487,6 +2487,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/core/DataLogUtils.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLogUtils.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/core/DataLogger.cc"
             ex="false"
             tool="1"
@@ -2503,16 +2513,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DataLoggerManager.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerStructs.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerStructs.hh"
             ex="false"
             tool="3"
             flavor2="0">

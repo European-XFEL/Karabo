@@ -7,7 +7,7 @@
 #include <streambuf>
 #include <karabo/io/Input.hh>
 #include "DataLogReader.hh"
-#include "karabo/core/DataLoggerStructs.hh"
+#include "karabo/core/DataLogUtils.hh"
 #include "karabo/io/FileTools.hh"
 #include "karabo/util/Version.hh"
 

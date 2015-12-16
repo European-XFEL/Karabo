@@ -11,7 +11,7 @@
 #include <boost/filesystem.hpp>
 #include "Device.hh"
 #include "OkErrorFsm.hh"
-#include "DataLoggerStructs.hh"
+#include "DataLogUtils.hh"
 
 
 /**

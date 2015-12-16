@@ -16,7 +16,7 @@
 #include "Device.hh"
 #include "OkErrorFsm.hh"
 #include "Worker.hh"
-#include "DataLoggerStructs.hh"
+#include "DataLogUtils.hh"
 
 /**
  * The main karabo namespace
