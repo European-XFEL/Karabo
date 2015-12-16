@@ -100,7 +100,7 @@ namespace karabo {
 
 
         DataLogReader::~DataLogReader() {
-            KARABO_LOG_INFO << "dead.";
+            KARABO_LOG_FRAMEWORK_DEBUG << this->getInstanceId() << " being destructed.";
         }
 
 
