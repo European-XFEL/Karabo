@@ -76,7 +76,7 @@ elif [ "$OS" = "Darwin" ]; then
 fi
 
 EXTRACT_SCRIPT=$KARABO/bin/.extract-pythonplugin.sh
-INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+INSTALLSCRIPT=package/${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
 if [ $OS == "Darwin" ]; then
     PYTHON=/opt/local/bin/python3
@@ -85,7 +85,10 @@ else
 fi
 
 # Always clean the build artifacts
-rm -rf build/ dist/
+rm -rf build/ dist/ package/
+
+# Create the output directory
+mkdir package
 
 if [[ "$developmentMode" == "1" ]]; then
     # Install in the current user's home directory
