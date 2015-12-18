@@ -2,11 +2,14 @@
 #include <vector>
 #include <cstdlib>
 #include <sstream>
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <streambuf>
 #include <karabo/io/Input.hh>
 #include "DataLogReader.hh"
+#include "karabo/core/DataLogUtils.hh"
 #include "karabo/io/FileTools.hh"
+#include "karabo/util/Version.hh"
 
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
@@ -23,53 +26,47 @@ namespace karabo {
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>, DataLogReader)
 
         
-        IndexBuilderService* IndexBuilderService::m_instance = NULL;
+        IndexBuilderService::Pointer IndexBuilderService::m_instance;
         
         
-        IndexBuilderService* IndexBuilderService::getInstance() {
-            if (!m_instance) m_instance = new IndexBuilderService();
+        IndexBuilderService::Pointer IndexBuilderService::getInstance() {
+            if (!m_instance) m_instance.reset(new IndexBuilderService());
             return m_instance;
         }
         
         
-        void IndexBuilderService::stop() {
+        IndexBuilderService::~IndexBuilderService() {
+            // Clean up in the destructor which is called when m_instance goes
+            // out of scope, i.e. if the program finishes (tested!).
             m_svc.stop();
             m_thread.join();
         }
         
         
         void IndexBuilderService::buildIndexFor(const std::string& commandLineArguments) {
-            //boost::mutex::scoped_lock lock(m_mutex);
-            size_t size = m_cache.size();
-            m_cache.insert(commandLineArguments);
-            if (size == m_cache.size()) return;   // such a request was before
+            boost::mutex::scoped_lock lock(m_mutex);
+            if (!m_cache.insert(commandLineArguments).second) {
+                // such a request is in the queue
+               return;
+            }
             m_svc.post(boost::bind(&IndexBuilderService::build, this, commandLineArguments));
         }
         
         
         void IndexBuilderService::build(const std::string& commandLineArguments) {
             try {
-                std::cout << "\n********* Index File Building *********\n";
-                if (getenv("KARABO") == NULL) {
-                    std::string home(getenv("HOME"));
-                    std::string framework = home + "/.karabo/karaboFramework";
-                
-                    std::ifstream in(framework.c_str());
-                    std::string karabo((istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                    boost::trim(karabo);   // get rid of newline character at the end
-                    in.close();
-                    setenv("KARABO", karabo.c_str(), 1);
-                }
-                
-                std::string karabo(getenv("KARABO"));
-                
-                std::string command = karabo + "/bin/idxbuild " + commandLineArguments;
-                std::cout << "*** Execute : \"" << command << "\" ...\n";
-                int ret = system(command.c_str());
-                std::cout << "\n*** Command finished with return code " << ret << "\n" << std::endl;
+                const std::string karabo(Version::getPathToKaraboInstallation());
+                const std::string command = karabo + "/bin/idxbuild " + commandLineArguments;
+                KARABO_LOG_FRAMEWORK_INFO << "********* Index File Building *********\n"
+                        << "*** Execute :\n \"" << command << "\"\n***";
+                const int ret = system(command.c_str());
+                KARABO_LOG_FRAMEWORK_INFO << "*** Index file building command finished with return code " << ret;
             } catch (const std::exception& e) {
-                std::cout << "*** Standard Exception in 'build' method : " << e.what() << std::endl;
+                KARABO_LOG_FRAMEWORK_INFO << "*** Standard Exception in 'build' method : " << e.what();
             }
+            // Remove the request to allow another try even if we failed here.
+            boost::mutex::scoped_lock lock(m_mutex);
+            m_cache.erase(commandLineArguments);
         }
         
         
@@ -103,8 +100,7 @@ namespace karabo {
 
 
         DataLogReader::~DataLogReader() {
-            m_ibs->stop();
-            KARABO_LOG_INFO << "dead.";
+            KARABO_LOG_FRAMEWORK_DEBUG << this->getInstanceId() << " being destructed.";
         }
 
 
@@ -122,6 +118,8 @@ namespace karabo {
                 try {
                     bf::path dirPath(get<string>("directory") + "/" + deviceId + "/raw/");
                     if (!bf::exists(dirPath) || !bf::is_directory(dirPath)) {
+                        KARABO_LOG_FRAMEWORK_WARN << "slotGetPropertyHistory: " << dirPath
+                                << " not existing or not a directory";
                         // We know nothing about requested 'deviceId', just return empty reply
                         reply(deviceId, property, vector<Hash>());
                         return;
@@ -265,11 +263,21 @@ namespace karabo {
                         if (df.is_open()) df.close();
                         string idxname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + property + "-index.bin";
                         string dataname = get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(fnum) + ".txt";
-                        if (!bf::exists(bf::path(idxname))) continue;
-                        if (!bf::exists(bf::path(dataname))) continue;
+                        if (!bf::exists(bf::path(idxname))) {
+                            KARABO_LOG_FRAMEWORK_WARN << "Miss file " << idxname;
+                            continue;
+                        }
+                        if (!bf::exists(bf::path(dataname))) {
+                            KARABO_LOG_FRAMEWORK_WARN << "Miss file " << dataname;
+                            continue;
+                        }
                         mf.open(idxname.c_str(), ios::in | ios::binary);
                         df.open(dataname.c_str());
-                        if (!mf.is_open() || !df.is_open()) continue;
+                        if (!mf.is_open() || !df.is_open()) {
+                            KARABO_LOG_FRAMEWORK_WARN << "Either " << dataname << " or "
+                                    << idxname << " could not be opened";
+                            continue;
+                        }
                         if (ii != 0) idxpos = 0;
 
                         //                    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: property : \"" << property << "\", fileNumber : " << fnum
@@ -288,19 +296,25 @@ namespace karabo {
                                 if (line.empty()) continue;
                                 vector<string> tokens;
                                 boost::split(tokens, line, boost::is_any_of("|"));
+                                unsigned int offset = 0;
                                 if (tokens.size() != 8) {
-                                    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record: tokens.size() = " << tokens.size();
-                                    continue; // This record is corrupted -- skip it
+                                    if (tokens.size() == 10) {
+                                        // old format from 1.4.X: repeats seconds and fractions at indices 2 and 3
+                                        offset = 2;
+                                    } else {
+                                        KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record: tokens.size() = " << tokens.size();
+                                        continue; // This record is corrupted -- skip it
+                                    }
                                 }
 
                                 //df >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> trainId >> path >> type >> value >> user >> flag;
 
-                                const string& flag = tokens[7];
+                                const string& flag = tokens[7 + offset];
                                 if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
                                     result[result.size() - 1].setAttribute("v", "isLast", 'L');
                                 }
 
-                                const string& path = tokens[3];
+                                const string& path = tokens[3 + offset];
                                 if (path != property) {
                                     // if you don't like the index record (for example, it pointed to the wrong property) just skip it
                                     KARABO_LOG_FRAMEWORK_WARN << "The index for \"" << deviceId << "\", property : \"" << property
@@ -310,22 +324,14 @@ namespace karabo {
                                 }
                                 
                                 Hash hash;
-                                const string& type = tokens[4];
-                                const string& value = tokens[5];
+                                const string& type = tokens[4 + offset];
+                                const string& value = tokens[5 + offset];
                                 Hash::Node& node = hash.set<string>("v", value);
                                 node.setType(Types::from<FromLiteral>(type));
 
-                                unsigned long long trainId = fromString<unsigned long long>(tokens[2]);
-                                unsigned long long seconds = 0;
-                                unsigned long long fraction = 0;
-                                {
-                                    vector<string> tparts;
-                                    boost::split(tparts, tokens[1], boost::is_any_of("."));
-                                    assert(tparts.size() == 2);
-                                    seconds  = fromString<unsigned long long>(tparts[0]);
-                                    fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL; // ATTOSEC
-                                }
-                                Timestamp tst(Epochstamp(seconds, fraction), Trainstamp(trainId));
+                                unsigned long long trainId = fromString<unsigned long long>(tokens[2 + offset]);
+                                const Epochstamp epochstamp(stringDoubleToEpochstamp(tokens[1]));
+                                Timestamp tst(epochstamp, Trainstamp(trainId));
                                 Hash::Attributes& attrs = hash.getAttributes("v");
                                 tst.toHashAttributes(attrs);
                                 result.push_back(hash);
@@ -421,32 +427,29 @@ namespace karabo {
                             vector<string> tokens;
                             boost::split(tokens, line, boost::is_any_of("|"));
 
-                            if (tokens.size() != 8)
-                                continue; // skip corrupted line
+                            unsigned int offset = 0;
+                            if (tokens.size() != 8) {
+                                if (tokens.size() == 10) {
+                                    // old format from 1.4.X: repeats seconds and fractions at indices 2 and 3
+                                    offset = 2;
+                                } else {
+                                    continue; // skip corrupted line
+                                }
+                            }
 
-                            const string& flag = tokens[7];
+                            const string& flag = tokens[7 + offset];
                             if (flag == "LOGOUT")
                                 break;
 
-                            const string& path = tokens[3];
+                            const string& path = tokens[3 + offset];
                             if (!schema.has(path)) continue;
-
-                            unsigned long long seconds = 0;
-                            unsigned long long fraction = 0;
-                            {
-                                vector<string> tparts;
-                                boost::split(tparts, tokens[1], boost::is_any_of("."));
-                                assert(tparts.size() == 2);
-                                seconds  = fromString<unsigned long long>(tparts[0]);
-                                fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL;
-                            }
+                            current = stringDoubleToEpochstamp(tokens[1]);
                             unsigned long long train = fromString<unsigned long long>(tokens[2]);
-                            current = Epochstamp(seconds, fraction);
                             if (current > target)
                                 break;
                             Timestamp timestamp(current, Trainstamp(train));
-                            const string& type = tokens[4];
-                            const string& val = tokens[5];
+                            const string& type = tokens[4 + offset];
+                            const string& val = tokens[5 + offset];
                             Hash::Node& node = hash.set<string>(path, val);
                             node.setType(Types::from<FromLiteral>(type));
                             Hash::Attributes& attrs = node.getAttributes();
@@ -465,7 +468,6 @@ namespace karabo {
         DataLoggerIndex DataLogReader::findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint) {
             string timestampAsIso8061;
             string timestampAsDouble;
-            unsigned long long seconds, fraction;
             string event;
             string tail;
             DataLoggerIndex entry;
@@ -486,18 +488,27 @@ namespace karabo {
                     ifs.close();
                     throw KARABO_IO_EXCEPTION("Premature EOF while reading index file \"" + contentpath + "\"");
                 }
-                {
-                    std::vector<std::string> tparts;
-                    boost::split(tparts, timestampAsDouble, boost::is_any_of("."));
-                    assert(tparts.size() == 2);
-                    seconds = fromString<unsigned long long>(tparts[0]);
-                    fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL;
-                }
-                Epochstamp epochstamp(seconds, fraction);
+                const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
                 if (epochstamp > target) {
                     if (!tail.empty()) {
                         stringstream ss(tail);
-                        ss >> entry.m_train >> entry.m_position >> entry.m_user >> entry.m_fileindex;
+                        unsigned long long dummy;
+                        ss >> dummy;
+                        // If seconds == dummy, we very likely have old format from 1.4.X where seconds and fractions
+                        // follow as ULL after timestampAsDouble - then we have (as usual) train, position, user and index.
+                        // In case by chance we have trainId == seconds, we double check that there is a space in front
+                        // of each of the six words in the tail (sec, fraction, train, position, user, index):
+                        if (epochstamp.getSeconds() == dummy && std::count(tail.begin(), tail.end(), ' ') == 6) {
+                                ss >> dummy; // get rid of fractions
+                        } else {
+                            if (epochstamp.getSeconds() == dummy) {
+                                KARABO_LOG_FRAMEWORK_WARN << "findLoggerIndexTimepoint: Value after timestamp as double "
+                                        << "equals full seconds (" << dummy << "), i.e. looks like 1.4.X format, but tail of line '"
+                                        << tail << "' does not have six words with a space in front of each.";
+                            }
+                            entry.m_train = dummy;
+                        }
+                        ss >> entry.m_position >> entry.m_user >> entry.m_fileindex;
                     }
                     break;
                 } else {
@@ -517,7 +528,6 @@ namespace karabo {
         DataLoggerIndex DataLogReader::findNearestLoggerIndex(const std::string& deviceId, const karabo::util::Epochstamp& target) {
             string timestampAsIso8061;
             string timestampAsDouble;
-            unsigned long long seconds, fraction;
             string event;
 
             DataLoggerIndex nearest;
@@ -534,20 +544,29 @@ namespace karabo {
                     KARABO_LOG_WARN << "Premature EOF while reading index file \"" << contentpath + "\" in findNearestLoggerIndex";
                     return nearest;
                 }
-                {
-                    std::vector<std::string> tparts;
-                    boost::split(tparts, timestampAsDouble, boost::is_any_of("."));
-                    assert(tparts.size() == 2);
-                    seconds = fromString<unsigned long long>(tparts[0]);
-                    fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL;
-                }
-                Epochstamp epochstamp(seconds, fraction);
+                const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
                 if (epochstamp <= target || nearest.m_fileindex == -1) {
                     //in case of time point before target time or there is no record before target time point, hence, use this one
                     nearest.m_event = event;
                     nearest.m_epoch = epochstamp;
                     stringstream ss(line);
-                    ss >> nearest.m_train >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
+                    unsigned long long dummy;
+                    ss >> dummy;
+                    // If seconds == dummy, we very likely have old format from 1.4.X where seconds and fractions
+                    // follow as ULL after timestampAsDouble - then we have (as usual) train, position, user and index.
+                    // In case by chance we have trainId == seconds, we double check that there is a space in front
+                    // of each of the six words in the tail (sec, fraction, train, position, user, index):
+                    if (epochstamp.getSeconds() == dummy && std::count(line.begin(), line.end(), ' ') == 6) {
+                        ss >> dummy; // get rid of fractions
+                    } else {
+                        if (epochstamp.getSeconds() == dummy) {
+                            KARABO_LOG_FRAMEWORK_WARN << "findNearestLoggerIndex: Value after timestamp as double "
+                                        << "equals full seconds (" << dummy << "), i.e. looks like 1.4.X format, but tail of "
+                                        << "line '" << line << "' does not have six words with spaces in front of each.";
+                        }
+                        nearest.m_train = dummy;
+                    }
+                    ss >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
                 }
                 // Stop loop if greater than target time point
                 if (epochstamp > target)
@@ -590,8 +609,10 @@ namespace karabo {
             //        << path << "\", in range from " << efrom.toIso8601Ext() << " (" << fixed << from << ")"
             //        << " to " << eto.toIso8601Ext() << " (" << fixed << to << ")";
 
-            if (endnum < startnum)
+            if (endnum < startnum) {
+              KARABO_LOG_FRAMEWORK_ERROR << deviceId << "." << path << ": " << startnum << " " << tonum << " " << endnum;
                 throw KARABO_PARAMETER_EXCEPTION("start file number greater than end file number.");
+            }
 
             ifstream f;
             size_t fnum = startnum;

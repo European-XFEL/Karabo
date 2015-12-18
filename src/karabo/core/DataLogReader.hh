@@ -11,7 +11,7 @@
 #include <boost/filesystem.hpp>
 #include "Device.hh"
 #include "OkErrorFsm.hh"
-#include "DataLoggerStructs.hh"
+#include "DataLogUtils.hh"
 
 
 /**
@@ -54,8 +54,12 @@ namespace karabo {
         
         
         class IndexBuilderService {
+        public:
+            // Needed for 'Pointer' and KARABO_LOG_FRAMEWORK
+            KARABO_CLASSINFO(IndexBuilderService, "IndexBuilderService", "1.4")
+
         private:
-            static IndexBuilderService* m_instance;
+            static Pointer m_instance;
             
             boost::asio::io_service m_svc;
             
@@ -73,12 +77,11 @@ namespace karabo {
             
         public:
             
-            static IndexBuilderService* getInstance();
+            static Pointer getInstance();
            
-            ~IndexBuilderService();
+            // Virtual destructor needed since KARABO_CLASSINFO adds virtual methods:
+            virtual ~IndexBuilderService();
 
-            void stop();
-            
             void buildIndexFor(const std::string& commandLineArguments);
             
         private:
@@ -123,7 +126,7 @@ namespace karabo {
             
             static boost::mutex m_propFileInfoMutex;
             static std::map<std::string, PropFileInfo::Pointer > m_mapPropFileInfo;
-            IndexBuilderService* m_ibs;
+            IndexBuilderService::Pointer m_ibs;
         };  
     }
 }
