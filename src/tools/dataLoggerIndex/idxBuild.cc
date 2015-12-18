@@ -14,7 +14,7 @@
 #include <boost/algorithm/string/predicate.hpp> 
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Exception.hh>
-#include <karabo/core/DataLoggerStructs.hh>
+#include <karabo/core/DataLogUtils.hh>
 #include <karabo/io/TextSerializer.hh>
 #include <karabo/util/Schema.hh>
 
