@@ -57,6 +57,18 @@
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
+        <requiredProjects>
+          <makeArtifact PL="../../../karabo"
+                        CT="2"
+                        CN="Debug"
+                        AC="true"
+                        BL="false"
+                        WD="../../../karabo"
+                        BC="${MAKE} -j 4 -f Makefile CONF=Debug"
+                        CC="${MAKE} -j 4 -f Makefile CONF=Debug clean"
+                        OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
+          </makeArtifact>
+        </requiredProjects>
       </compileType>
       <item path="../../../../../src/tools/dataLoggerIndex/idxBuild.cc"
             ex="false"
@@ -103,6 +115,18 @@
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
+        <requiredProjects>
+          <makeArtifact PL="../../../karabo"
+                        CT="2"
+                        CN="Release"
+                        AC="false"
+                        BL="false"
+                        WD="../../../karabo"
+                        BC="${MAKE} -j 4 -f Makefile CONF=Release"
+                        CC="${MAKE} -j 4 -f Makefile CONF=Release clean"
+                        OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
+          </makeArtifact>
+        </requiredProjects>
       </compileType>
       <item path="../../../../../src/tools/dataLoggerIndex/idxBuild.cc"
             ex="false"

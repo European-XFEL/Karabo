@@ -14,7 +14,7 @@
 #include <boost/algorithm/string/predicate.hpp> 
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Exception.hh>
-#include <karabo/core/DataLoggerStructs.hh>
+#include <karabo/core/DataLogUtils.hh>
 #include <karabo/io/TextSerializer.hh>
 #include <karabo/util/Schema.hh>
 
@@ -291,35 +291,34 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
 
             vector<string> tokens;
             boost::split(tokens, line, boost::is_any_of("|"));
+            unsigned int offset = 0;
             if (tokens.size() != 8) {
-                cout << "*** slotGetPropertyHistory: skip corrupted record : token.size() = " << tokens.size() << endl;
-                continue; // This record is corrupted -- skip it
+                if (tokens.size() == 10) { // old format from 1.4.X
+                    offset = 2;
+                } else {
+                    cout << "*** idxBuild: skip corrupted record : token.size() = " << tokens.size() << endl;
+                    continue; // This record is corrupted -- skip it
+                }
             }
             recnum++;
 
-            // tokens[0] => epochISO8601
-            // tokens[1] => epochDouble
-            // tokens[2] => sTrainId
-            // tokens[3] => property name
-            // tokens[4] => property type
-            // tokens[5] => property value
-            // tokens[6] => user
-            // tokens[7] => flag
+            // With offset = 2 for raw files from 1.4.X and offset = 0 for later releases, we have:
+            const string& epochISO8601 = tokens[0];
+            const string& epochDoubleStr = tokens[1];
+            const string& trainIdStr = tokens[2 + offset];
+            const string& property = tokens[3 + offset];
+            // tokens[4 + offset] => property type
+            // tokens[5 + offset] => property value
+            const string& user = tokens[6 + offset];
+            const string& flag = tokens[7 + offset];
 
-            unsigned long long seconds = 0;
-            unsigned long long fraction = 0;
-            {
-                vector<string> tparts;
-                boost::split(tparts, tokens[1], boost::is_any_of("."));
-                assert(tparts.size() == 2);
-                seconds  = fromString<unsigned long long>(tparts[0]);
-                fraction = fromString<unsigned long long>(tparts[1]) * 1000000000000ULL; // ATTOSEC
-            }
+            const Epochstamp epstamp(karabo::core::stringDoubleToEpochstamp(epochDoubleStr));
 
             //cout << "*** " << recnum << " *** "
             //        "\t" << "position in input : " << position << ", epoch: " << seconds << "." << fraction << endl;
 
-            while (seconds > schemaRange.toSeconds || (seconds == schemaRange.toSeconds && fraction > schemaRange.toFraction)) {
+            while (epstamp.getSeconds() > schemaRange.toSeconds ||
+                    (epstamp.getSeconds() == schemaRange.toSeconds && epstamp.getFractionalSeconds() > schemaRange.toFraction)) {
                 if (sfs.fail()) break;
                 schemaRange.fromSeconds = schemaRange.toSeconds;
                 schemaRange.fromFraction = schemaRange.toFraction;
@@ -334,28 +333,28 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             //cout << "*** Current schema for range from " << schemaRange.fromSeconds << "." << schemaRange.fromFraction
             //        << " to " << schemaRange.toSeconds << "." << schemaRange.toFraction << endl;
 
-            if ((tokens[7] == "LOGIN" || tokens[7] == "LOGOUT" || newFileFlag)) {
+            if ((flag == "LOGIN" || flag == "LOGOUT" || newFileFlag)) {
                 newFileFlag = false;
                 if (buildContent) {
                     string contentFile = historyDir + "/" + deviceId + "/raw/archive_index.txt";
                     ofstream ocs(contentFile.c_str(), ios::out | ios::app);
-                    if (tokens[7] == "LOGIN")
+                    if (flag == "LOGIN")
                         ocs << "+LOG ";
-                    else if (tokens[7] == "LOGOUT")
+                    else if (flag == "LOGOUT")
                         ocs << "-LOG ";
                     else
                         ocs << "=NEW ";
 
-                    ocs << tokens[0] << " " << tokens[1] << " " << " " << tokens[2]
-                        << " " << position << " " << tokens[6] << " " << number << "\n";
+                    ocs << epochISO8601 << " " << epochDoubleStr << " " << " " << trainIdStr
+                        << " " << position << " " << user << " " << number << "\n";
 
                     ocs.close();
                 }
                 
-                //cout << tokens[0] << " " << tokens[1] << " " << tokens[2]
-                //        << " " << position << " " << tokens[6] << " " << number << endl;
+                //cout << epochISO8601 << " " << epochDouble << " " << trainIdStr
+                //        << " " << position << " " << user << " " << number << endl;
 
-                if (tokens[7] == "LOGOUT") {
+                if (flag == "LOGOUT") {
                     map<string, MetaData::Pointer>::iterator ii = idxMap.begin();
                     while (ii != idxMap.end()) {
                         MetaData::Pointer mdp = ii->second;
@@ -375,26 +374,25 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                 }
             }
 
-            // token(3) is a property name
-            if (tokens[3] == ".") continue;
+            if (property == ".") continue;
 
             // check if we have any property registered
             if (idxprops.empty()) continue;    // no interest for building binary index
-            if (find(idxprops.begin(), idxprops.end(), tokens[3]) == idxprops.end()) continue;  // property is not in the prop file
+            if (find(idxprops.begin(), idxprops.end(), property) == idxprops.end()) continue;  // property is not in the prop file
             
             // Check if we need to build index for this property by inspecting schema ... checking only existence
-            if (schema->has(tokens[3])) {
-                map<string, MetaData::Pointer>::iterator it = idxMap.find(tokens[3]);
+            if (schema->has(property)) {
+                map<string, MetaData::Pointer>::iterator it = idxMap.find(property);
                 MetaData::Pointer mdp;
                 if (it == idxMap.end()) {
                     mdp = MetaData::Pointer(new MetaData);
-                    mdp->idxFile = historyDir + "/" + deviceId + "/idx/archive_" + toString(number) + "-" + tokens[3] + "-index.bin";
-                    mdp->record.epochstamp = fromString<double>(tokens[1]);
-                    mdp->record.trainId = fromString<unsigned long long>(tokens[2]);
+                    mdp->idxFile = historyDir + "/" + deviceId + "/idx/archive_" + toString(number) + "-" + property + "-index.bin";
+                    mdp->record.epochstamp = fromString<double>(epochDoubleStr);
+                    mdp->record.trainId = fromString<unsigned long long>(trainIdStr);
                     mdp->record.positionInRaw = position;
                     mdp->record.extent1 = (expNum & 0xFFFFFF);
                     mdp->record.extent2 = (runNum & 0xFFFFFF);
-                    idxMap[tokens[3]] = mdp;
+                    idxMap[property] = mdp;
                     // defer writing: write only if more changes come
                 } else {
                     mdp = it->second;
@@ -407,8 +405,8 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                         // write (flush) deferred record
                         mdp->idxStream.write((char*) &mdp->record, sizeof (MetaData::Record));
                     }
-                    mdp->record.epochstamp = fromString<double>(tokens[1]);
-                    mdp->record.trainId = fromString<unsigned long long>(tokens[2]);
+                    mdp->record.epochstamp = fromString<double>(epochDoubleStr);
+                    mdp->record.trainId = fromString<unsigned long long>(trainIdStr);
                     mdp->record.positionInRaw = position;
                     mdp->record.extent1 = (expNum & 0xFFFFFF);
                     mdp->record.extent2 = (runNum & 0xFFFFFF);
