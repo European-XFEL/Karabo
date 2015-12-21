@@ -183,10 +183,7 @@ namespace karabo {
                 return;
             }
 
-            //const bool newPropToIndex = 
-            this->updatePropsToIndex();
-            // if newPropToIndex is true, open new file for m_configStream,
-            // but only if we really log something!
+            const bool newPropToIndex = this->updatePropsToIndex();
 
             // TODO: Define these variables: each of them uses 24 bits
             int expNum = 0x0F0A1A2A;
@@ -199,6 +196,14 @@ namespace karabo {
             configuration.getPaths(paths);
 
             boost::mutex::scoped_lock lock(m_configMutex);
+            if (newPropToIndex) {
+                // DataLogReader got request for history of a property not indexed
+                // so far, that means it triggered the creation of an index file
+                // for that property. Since we cannot be sure that the index creation
+                // has finished when we want to add a new index entry, we close the
+                // file and thus won't touch this new index file (but start a new one).
+                this->ensureFileClosed(); // must be protected by m_configMutex
+            }
             
             for (size_t i = 0; i < paths.size(); ++i) {
                 const string& path = paths[i];
@@ -288,13 +293,12 @@ namespace karabo {
             long maxFilesize = get<int>("maximumFileSize") * 1000000; // times to 1000000 because maximumFilesSize in MBytes
             long position = m_configStream.tellp();
             if (maxFilesize <= position) {
-                this->closeFile();
+                this->ensureFileClosed();
             }
         }
 
         bool DataLogger::updatePropsToIndex()
         {
-            // m_deviceToBeLogged replaced 'deviceId' argument of slotChanged
             boost::filesystem::path propPath(get<string>("directory") + "/" + m_deviceToBeLogged + "/raw/properties_with_index.txt");
             if (boost::filesystem::exists(propPath)) {
                 const size_t propsize = boost::filesystem::file_size(propPath);
@@ -318,13 +322,16 @@ namespace karabo {
             return false;
         }
 
-        void DataLogger::closeFile()
+        void DataLogger::ensureFileClosed()
         {
-            // increment index number for configuration file
-            m_lastIndex = this->incrementLastIndex(m_deviceToBeLogged);
-            // We touch m_configStream and thus have to rely that the code calling
-            // this method is protected by the 'm_configMutex' (as documented).
-            m_configStream.close();
+            // We touch m_configStream and m_idxMap. Thus we have to rely that the
+            // code calling this method is protected by the 'm_configMutex'
+            // (as requested by documentation).
+            if (m_configStream.is_open()) {
+                // increment index number for configuration file
+                m_lastIndex = this->incrementLastIndex(m_deviceToBeLogged);
+                m_configStream.close();
+            }
 
             for (std::map<std::string, MetaData::Pointer>::iterator it = m_idxMap.begin(), endIt = m_idxMap.end();
                     it != endIt; ++it) {
