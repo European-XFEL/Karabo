@@ -177,25 +177,16 @@ namespace karabo {
             // To write log I need schema ...
             if (m_currentSchema.empty()) return;
 
-            bool propPathExists = false;
-            boost::filesystem::path propPath(get<string>("directory") + "/" + deviceId + "/raw/properties_with_index.txt");
-            if (boost::filesystem::exists(propPath)) {
-                propPathExists = true;
-                size_t propsize = boost::filesystem::file_size(propPath);
-                time_t lasttime = boost::filesystem::last_write_time(propPath);
-                // read prop file only if it was changed
-                if (m_propsize != propsize || m_lasttime != lasttime) {
-                    m_propsize = propsize;
-                    m_lasttime = lasttime;
-                    // re-read prop file
-                    ifstream in(propPath.c_str());
-                    string content(propsize, ' ');
-                    content.assign((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
-                    in.close();
-                    m_idxprops.clear();
-                    boost::split(m_idxprops, content, boost::is_any_of("\n"));
-                }
+            if (deviceId != m_deviceToBeLogged) {
+                KARABO_LOG_ERROR << "slotChanged called from " << deviceId
+                                 << ", but logging only " << m_deviceToBeLogged;
+                return;
             }
+
+            //const bool newPropToIndex = 
+            this->updatePropsToIndex();
+            // if newPropToIndex is true, open new file for m_configStream,
+            // but only if we really log something!
 
             // TODO: Define these variables: each of them uses 24 bits
             int expNum = 0x0F0A1A2A;
@@ -260,7 +251,7 @@ namespace karabo {
                 }
 
                 // check if we have property registered
-                if (!propPathExists) continue;
+                //if (!propPathExists) continue;
                 if (find(m_idxprops.begin(), m_idxprops.end(), path) == m_idxprops.end()) continue;
 
                 // Check if we need to build index for this property by inspecting schema ... checking only existence
@@ -310,6 +301,31 @@ namespace karabo {
             }
         }
 
+        bool DataLogger::updatePropsToIndex()
+        {
+            // m_deviceToBeLogged replaced 'deviceId' argument of slotChanged
+            boost::filesystem::path propPath(get<string>("directory") + "/" + m_deviceToBeLogged + "/raw/properties_with_index.txt");
+            if (boost::filesystem::exists(propPath)) {
+                const size_t propsize = boost::filesystem::file_size(propPath);
+                const time_t lasttime = boost::filesystem::last_write_time(propPath);
+                // read prop file only if it was changed
+                if (m_propsize != propsize || m_lasttime != lasttime) {
+                    m_propsize = propsize;
+                    m_lasttime = lasttime;
+                    // re-read prop file
+                    ifstream in(propPath.c_str());
+                    string content(propsize, ' ');
+                    content.assign((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
+                    in.close();
+                    m_idxprops.clear();
+                    boost::split(m_idxprops, content, boost::is_any_of("\n"));
+                    // Could do more clever gymnastics to check whether content of
+                    // m_idxprops now really differs from old content...
+                    return true;
+                }
+            }
+            return false;
+        }
 
         void DataLogger::flushThread() {
             //------------------------------------------------- make this thread sensible to external interrupts
