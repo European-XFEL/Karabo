@@ -65,6 +65,9 @@ namespace karabo {
 
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
+            /// Helper function to update m_idxprops, returns whether m_idxprops changed.
+            bool updatePropsToIndex();
+
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
             /**
