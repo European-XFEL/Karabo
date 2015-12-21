@@ -251,7 +251,6 @@ namespace karabo {
                 }
 
                 // check if we have property registered
-                //if (!propPathExists) continue;
                 if (find(m_idxprops.begin(), m_idxprops.end(), path) == m_idxprops.end()) continue;
 
                 // Check if we need to build index for this property by inspecting schema ... checking only existence
@@ -289,15 +288,7 @@ namespace karabo {
             long maxFilesize = get<int>("maximumFileSize") * 1000000; // times to 1000000 because maximumFilesSize in MBytes
             long position = m_configStream.tellp();
             if (maxFilesize <= position) {
-                // increment index number for configuration file
-                m_lastIndex = incrementLastIndex(deviceId);
-                m_configStream.close();
-
-                for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
-                    MetaData::Pointer mdp = it->second;
-                    if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
-                }
-                m_idxMap.clear();
+                this->closeFile();
             }
         }
 
@@ -325,6 +316,22 @@ namespace karabo {
                 }
             }
             return false;
+        }
+
+        void DataLogger::closeFile()
+        {
+            // increment index number for configuration file
+            m_lastIndex = this->incrementLastIndex(m_deviceToBeLogged);
+            // We touch m_configStream and thus have to rely that the code calling
+            // this method is protected by the 'm_configMutex' (as documented).
+            m_configStream.close();
+
+            for (std::map<std::string, MetaData::Pointer>::iterator it = m_idxMap.begin(), endIt = m_idxMap.end();
+                    it != endIt; ++it) {
+                MetaData::Pointer mdp = it->second;
+                if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
+            }
+            m_idxMap.clear();
         }
 
         void DataLogger::flushThread() {

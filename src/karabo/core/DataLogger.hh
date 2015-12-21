@@ -68,6 +68,10 @@ namespace karabo {
             /// Helper function to update m_idxprops, returns whether m_idxprops changed.
             bool updatePropsToIndex();
 
+            /// Helper to close archive file, usually to continue with a new one.
+            /// Must be called under protection of the 'm_configMutex' mutex.
+            void closeFile();
+
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
             /**
