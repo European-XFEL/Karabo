@@ -40,7 +40,6 @@ namespace karabo {
             std::string m_user;
             karabo::util::Timestamp m_lastDataTimestamp;
             bool m_pendingLogin;
-            bool m_newFile;
 
             long m_startPosition;
             boost::thread m_flushThread;

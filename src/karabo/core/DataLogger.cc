@@ -72,7 +72,6 @@ namespace karabo {
 
 
         DataLogger::DataLogger(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
-            m_newFile = false;
             m_pendingLogin = true;
             m_idxprops.clear();
             m_propsize = 0;
@@ -221,6 +220,7 @@ namespace karabo {
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 m_lastDataTimestamp = t;
 
+                bool newFile = false;
                 if (!m_configStream.is_open()) {
                     string configName = get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(m_lastIndex) + ".txt";
                     m_configStream.open(configName.c_str(), ios::out | ios::app);
@@ -232,7 +232,7 @@ namespace karabo {
                         // Make sure that the file contains '\n' (newline) at the end of previous round
                         m_configStream << '\n';
                     } else
-                        m_newFile = true;
+                        newFile = true;
                 }
 
                 size_t position = m_configStream.tellp(); // get current file size
@@ -243,7 +243,7 @@ namespace karabo {
                 if (m_pendingLogin) m_configStream << "|LOGIN\n";
                 else m_configStream << "|VALID\n";
 
-                if (m_pendingLogin || m_newFile) {
+                if (m_pendingLogin || newFile) {
                     string contentPath = get<string>("directory") + "/" + deviceId + "/raw/archive_index.txt";
                     ofstream contentStream(contentPath.c_str(), ios::app);
                     if (m_pendingLogin) {
@@ -257,7 +257,6 @@ namespace karabo {
                     contentStream.close();
 
                     m_pendingLogin = false;
-                    m_newFile = false;
                 }
 
                 // check if we have property registered
