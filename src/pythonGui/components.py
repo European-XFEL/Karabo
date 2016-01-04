@@ -423,10 +423,10 @@ class EditableApplyLaterComponent(BaseComponent):
     @pyqtSlot()
     def updateButtons(self):
         """ update the buttons to reflect the current state of affairs """
-        allowed = self.boxes[0].isAllowed()
+        box = self.boxes[0]
+        allowed = box.isAllowed()
         self.acApply.setEnabled(allowed)
 
-        EPSILON = 1e-4
         value = self.__currentDisplayValue
 
         if value is None:
@@ -434,7 +434,14 @@ class EditableApplyLaterComponent(BaseComponent):
         elif (isinstance(value, (numbers.Complex, numpy.inexact))
                 and not isinstance(value, numbers.Integral)):
             diff = abs(value - self.widgetFactory.value)
-            isEqualEditable = diff < EPSILON
+            absErr = box.descriptor.absoluteError
+            relErr = box.descriptor.relativeError
+            if absErr is not None:
+                isEqualEditable = diff < absErr
+            elif relErr is not None:
+                isEqualEditable = diff < abs(value * relErr)
+            else:
+                isEqualEditable = diff < 1e-4
         elif isinstance(value, list):
             if len(value) != len(self.widgetFactory.value):
                 isEqualEditable = False
