@@ -87,7 +87,7 @@ class _Manager(QObject):
         if platform.startswith("win"):
             # TODO: hardcoded version needs to be updated - find better solution
             # for Windows
-            globals.GUI_VERSION = "1.3"
+            globals.GUI_VERSION = "1.5"
             return
 
         # Find Karabo installation directory:
