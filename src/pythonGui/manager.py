@@ -31,7 +31,7 @@ from util import getSaveFileName
 from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
-import os.path
+import os
 from sys import platform
 
 
@@ -89,16 +89,24 @@ class _Manager(QObject):
             # for Windows
             globals.GUI_VERSION = "1.3"
             return
-        
-        filePath = os.path.join(globals.HIDDEN_KARABO_FOLDER, "karaboFramework")
-        karaboVersionPath = ""
-        try:
-            with open(filePath, 'r') as file:
-                karaboVersionPath = os.path.join(file.readline().rstrip(), "VERSION")
-        except IOError:
-            print("Path does not exists: ", filePath)
-            globals.GUI_VERSION = ""
 
+        # Find Karabo installation directory:
+        # - precedence has KARABO environment variable
+        # - otherwise fall back to content of file "karaboFramework" in hidden folder
+        if 'KARABO' in os.environ:
+            installDir = os.environ["KARABO"]
+        else:
+            filePath = os.path.join(globals.HIDDEN_KARABO_FOLDER, "karaboFramework")
+            try:
+                with open(filePath, 'r') as file:
+                    installDir = file.readline().rstrip()
+            except IOError:
+                print("Path does not exists: ", filePath)
+                globals.GUI_VERSION = ""
+                return
+
+        # Finally read out file "VERSION" from installation directory
+        karaboVersionPath = os.path.join(installDir, "VERSION")
         try:
             with open(karaboVersionPath, 'r') as file:
                 globals.GUI_VERSION = file.readline().rstrip()
