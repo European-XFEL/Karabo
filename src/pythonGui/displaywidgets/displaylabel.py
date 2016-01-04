@@ -24,13 +24,15 @@ __all__ = ["DisplayLabel"]
 from widget import DisplayWidget
 from karabo.api_2 import (Double, Float, Hash, String, Simple, Type, HashType,
                           VectorDouble, VectorFloat, VectorHash)
+
+from numbers import Number
 import decimal
 import re
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLabel
 
-from numpy import ndarray
+from numpy import log10, ndarray, number
 
 
 class DisplayLabel(DisplayWidget):
@@ -75,18 +77,32 @@ class DisplayLabel(DisplayWidget):
             format = dict(bin='b{:b}', oct='o{:o}', hex='0x{:X}'
                           )[box.descriptor.displayType[:3]]
         except (TypeError, KeyError):
-            if isinstance(box.descriptor, (Float, VectorFloat)):
+            abserr = box.descriptor.absoluteError
+            relerr = box.descriptor.relativeError
+            if relerr is not None and (abserr is None or
+                     not isinstance(value, (Number, number)) or
+                     relerr * value > abserr):
+                format = "{{:.{}g}}".format(
+                            -int(log10(box.descriptor.relativeError)))
+            elif abserr is not None:
+                if abserr < 1:
+                    format = "{{:.{}f}}".format(-int(log10(abserr)))
+                elif (isinstance(value, (Number, number)) and
+                        abs(value) > abserr):
+                    format = "{{:.{}e}}".format(int(log10(abs(value))) -
+                                                int(log10(abserr)))
+                else:
+                    format = "{:.0f}"
+            elif isinstance(box.descriptor, (Float, VectorFloat)):
                 format = "{:.6g}"
             elif isinstance(box.descriptor, (Double, VectorDouble)):
                 format = "{:.10g}"
             else:
                 format = "{}"
 
-        if isinstance(value, ndarray):
-            ret = str(value)
-        elif isinstance(value, list):
-            ret = '[' + ', '.join(format.format(v) for v in value[:4])
-            if len(value) > 4:
+        if isinstance(value, (list, ndarray)):
+            ret = '[' + ', '.join(format.format(v) for v in value[:10])
+            if len(value) > 10:
                 ret += ', ..]'
             else:
                 ret += ']'
