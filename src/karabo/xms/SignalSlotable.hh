@@ -1021,89 +1021,100 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             void registerSignal(const std::string& funcName) {
-                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return; // Already registered
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_producerChannel, m_instanceId, funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL));
-                boost::function<void() > f(boost::bind(&karabo::xms::Signal::emit0, s));
-                storeSignal(funcName, s, f);
+                SignalInstancePointer s = addSignalIfNew(funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL);
+                if (s) {
+                    boost::function<void() > f(boost::bind(&karabo::xms::Signal::emit0, s));
+                    m_emitFunctions.set(funcName, f);
+                }
             }
 
             template <class A1>
             void registerSignal(const std::string& funcName) {
-                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_producerChannel, m_instanceId, funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL));
-                boost::function<void (const A1&) > f(boost::bind(&karabo::xms::Signal::emit1<A1>, s, _1));
-                storeSignal(funcName, s, f);
+                SignalInstancePointer s = addSignalIfNew(funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL);
+                if (s) {
+                    boost::function<void (const A1&) > f(boost::bind(&karabo::xms::Signal::emit1<A1>, s, _1));
+                    m_emitFunctions.set(funcName, f);
+                }
             }
 
             template <class A1, class A2>
             void registerSignal(const std::string& funcName) {
-                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_producerChannel, m_instanceId, funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL));
-                boost::function<void (const A1&, const A2&) > f(boost::bind(&karabo::xms::Signal::emit2<A1, A2>, s, _1, _2));
-                storeSignal(funcName, s, f);
+                SignalInstancePointer s = addSignalIfNew(funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL);
+                if (s) {
+                    boost::function<void (const A1&, const A2&) > f(boost::bind(&karabo::xms::Signal::emit2<A1, A2>, s, _1, _2));
+                    m_emitFunctions.set(funcName, f);
+                }
             }
 
             template <class A1, class A2, class A3>
             void registerSignal(const std::string& funcName) {
-                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_producerChannel, m_instanceId, funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL));
-                boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
-                storeSignal(funcName, s, f);
+                SignalInstancePointer s = addSignalIfNew(funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL);
+                if (s) {
+                    boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
+                    m_emitFunctions.set(funcName, f);
+                }
             }
 
             template <class A1, class A2, class A3, class A4>
             void registerSignal(const std::string& funcName) {
-                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_producerChannel, m_instanceId, funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL));
-                boost::function<void (const A1&, const A2&, const A3&, const A4&) > f(boost::bind(&karabo::xms::Signal::emit4<A1, A2, A3, A4>, s, _1, _2, _3, _4));
-                storeSignal(funcName, s, f);
+                SignalInstancePointer s = addSignalIfNew(funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL);
+                if (s) {
+                    boost::function<void (const A1&, const A2&, const A3&, const A4&) > f(boost::bind(&karabo::xms::Signal::emit4<A1, A2, A3, A4>, s, _1, _2, _3, _4));
+                    m_emitFunctions.set(funcName, f);
+                }
             }
 
             void registerSystemSignal(const std::string& funcName) {
-                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return; // Already registered
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_producerChannel, m_instanceId, funcName));
-                boost::function<void() > f(boost::bind(&karabo::xms::Signal::emit0, s));
-                storeSignal(funcName, s, f);
+                SignalInstancePointer s = addSignalIfNew(funcName);
+                if (s) {
+                    boost::function<void() > f(boost::bind(&karabo::xms::Signal::emit0, s));
+                    m_emitFunctions.set(funcName, f);
+                }
             }
 
             template <class A1>
             void registerSystemSignal(const std::string& funcName) {
-                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_producerChannel, m_instanceId, funcName));
-                boost::function<void (const A1&) > f(boost::bind(&karabo::xms::Signal::emit1<A1>, s, _1));
-                storeSignal(funcName, s, f);
+                SignalInstancePointer s = addSignalIfNew(funcName);
+                if (s) {
+                    boost::function<void (const A1&) > f(boost::bind(&karabo::xms::Signal::emit1<A1>, s, _1));
+                    m_emitFunctions.set(funcName, f);
+                }
             }
 
             template <class A1, class A2>
             void registerSystemSignal(const std::string& funcName) {
-                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_producerChannel, m_instanceId, funcName));
-                boost::function<void (const A1&, const A2&) > f(boost::bind(&karabo::xms::Signal::emit2<A1, A2>, s, _1, _2));
-                storeSignal(funcName, s, f);
+                SignalInstancePointer s = addSignalIfNew(funcName);
+                if (s) {
+                    boost::function<void (const A1&, const A2&) > f(boost::bind(&karabo::xms::Signal::emit2<A1, A2>, s, _1, _2));
+                    m_emitFunctions.set(funcName, f);
+                }
             }
 
             template <class A1, class A2, class A3>
             void registerSystemSignal(const std::string& funcName) {
-                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_producerChannel, m_instanceId, funcName));
-                boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
-                storeSignal(funcName, s, f);
+                SignalInstancePointer s = addSignalIfNew(funcName);
+                if (s) {
+                    boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
+                    m_emitFunctions.set(funcName, f);
+                }
             }
 
             template <class A1, class A2, class A3, class A4>
             void registerSystemSignal(const std::string& funcName) {
-                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_producerChannel, m_instanceId, funcName));
-                boost::function<void (const A1&, const A2&, const A3&, const A4&) > f(boost::bind(&karabo::xms::Signal::emit4<A1, A2, A3, A4>, s, _1, _2, _3, _4));
-                storeSignal(funcName, s, f);
+                SignalInstancePointer s = addSignalIfNew(funcName);
+                if (s) {
+                    boost::function<void (const A1&, const A2&, const A3&, const A4&) > f(boost::bind(&karabo::xms::Signal::emit4<A1, A2, A3, A4>, s, _1, _2, _3, _4));
+                    m_emitFunctions.set(funcName, f);
+                }
             }
 
             template <class A1, class A2, class A3>
             void registerHeartbeatSignal(const std::string& funcName) {
-                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_heartbeatProducerChannel, m_instanceId, funcName, 9));
-                boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
-                storeSignal(funcName, s, f);
+                SignalInstancePointer s = storeSignal(funcName, 9);
+                if (s) {
+                    boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
+                    m_emitFunctions.set(funcName, f);
+                }
             }
 
             void registerSlot(const boost::function<void () >& slot, const std::string& funcName) {
@@ -1289,10 +1300,14 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             std::pair<std::string, std::string> splitIntoInstanceIdAndFunctionName(const std::string& signalOrSlotId, const char sep = ':') const;
 
+            SignalInstancePointer addSignalIfNew(const std::string& signalFunction, int priority = KARABO_SYS_PRIO, int messageTimeToLive = KARABO_SYS_TTL);
+
+            void storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance);
+
             template <class TFunc>
             void storeSignal(const std::string& signalFunction, const SignalInstancePointer& signalInstance, const TFunc& emitFunction) {
-                    m_signalInstances[signalFunction] = signalInstance;
-                    m_emitFunctions.set(signalFunction, emitFunction);
+                storeSignal(signalFunction, signalInstance);
+                m_emitFunctions.set(signalFunction, emitFunction);
             }
 
             template <class TFunc>
@@ -1307,7 +1322,7 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             void registerReply(const karabo::util::Hash& reply);
-            
+
         private: // Functions
 
             void _runEventLoop();

@@ -1692,6 +1692,19 @@ namespace karabo {
             return std::make_pair(instanceId, functionName);
         }
 
+        SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction, int priority, int messageTimeToLive) {
+            if (m_signalInstances.find(signalFunction) != m_signalInstances.end()) {
+                SignalInstancePointer s;
+                return s;
+            }
+            SignalInstancePointer s(new Signal(this, m_producerChannel, m_instanceId, signalFunction, priority, messageTimeToLive));
+            storeSignal(signalFunction, s);
+            return s;
+        }
+
+        void SignalSlotable::storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance) {
+            m_signalInstances[signalFunction] = signalInstance;
+        }
 
         //        void SignalSlotable::refreshTimeToLiveForConnectedSlot(const std::string& instanceId, int countdown, const karabo::util::Hash & instanceInfo) {
         //
