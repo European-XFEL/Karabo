@@ -4,6 +4,17 @@ from collections import defaultdict
 __handlers = defaultdict(list)
 
 
+def _clear_handlers():
+    """ XXX: THIS IS ONLY TO BE USED BE TESTING CODE.
+    """
+    from sys import modules
+    if 'nose' not in modules:
+        raise RuntimeError('This function must only be called when testing!!!')
+
+    # Clear the handlers
+    __handlers.clear()
+
+
 def _get_klass_key(klass):
     if hasattr(klass, 'klass'):
         return klass.klass
