@@ -12,25 +12,6 @@ def _get_klass_key(klass):
     return klass
 
 
-def submitAction(action):
-    """ Dispatch a single action using the appropriate handlers.
-    """
-    handlers = __handlers[action.klass]
-    for handler in handlers:
-        handler.handle(action)
-
-
-def submitActionSync(action):
-    """ Dispatch a single action synchronously using the appropriate handler.
-    """
-    handlers = __handlers[action.klass]
-    assert len(handlers) == 1
-
-    handler = handlers[0]
-    resultAction = handler.handleSync(action)
-    submitAction(resultAction)
-
-
 def addHandler(klass, handler):
     """ Add a handler for actions of type `klass`.
     """
@@ -44,3 +25,23 @@ def removeHandler(klass, handler):
     klass_key = _get_klass_key(klass)
     handlers = __handlers[klass_key]
     handlers.remove(handler)
+
+
+def submitAction(action):
+    """ Dispatch a single action using the appropriate handlers.
+    """
+    handlers = __handlers[_get_klass_key(action)]
+    for handler in handlers:
+        handler.handle(action)
+
+
+def submitActionSync(action):
+    """ Dispatch a single action synchronously using the appropriate handler.
+    """
+    handlers = __handlers[_get_klass_key(action)]
+    assert len(handlers) == 1
+    handler = handlers[0]
+
+    newAction = handler.handleSync(action)
+    assert newAction is not None, 'Synchronous handlers must return an action'
+    submitAction(newAction)
