@@ -31,8 +31,22 @@ from util import getSaveFileName
 from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
-import os.path
+import os
 from sys import platform
+
+
+def _cat_text_file(filePath):
+    """
+    Open text file and return its content after stripping any trailing
+    whitspace (i.e. also newline). Return None if an IOError occurs.
+    """
+    try:
+        with open(filePath, 'r') as file:
+            return file.readline().rstrip()
+    except IOError:
+        print("IOError in_cat_text_file: Cannot open '" + filePath + "'.")
+
+    return None
 
 
 class _Manager(QObject):
@@ -84,27 +98,25 @@ class _Manager(QObject):
         This function checks the current version of the GUI and save its value
         to the global variable GUI_VERSION.
         """
+        # TODO: hardcoded version needs to be updated
+        globals.GUI_VERSION = "1.5"
         if platform.startswith("win"):
-            # TODO: hardcoded version needs to be updated - find better solution
-            # for Windows
-            globals.GUI_VERSION = "1.3"
-            return
-        
-        filePath = os.path.join(globals.HIDDEN_KARABO_FOLDER, "karaboFramework")
-        karaboVersionPath = ""
-        try:
-            with open(filePath, 'r') as file:
-                karaboVersionPath = os.path.join(file.readline().rstrip(), "VERSION")
-        except IOError:
-            print("Path does not exists: ", filePath)
-            globals.GUI_VERSION = ""
+            return  # Just the hardcoded version - find better solution for Windows
 
-        try:
-            with open(karaboVersionPath, 'r') as file:
-                globals.GUI_VERSION = file.readline().rstrip()
-        except IOError:
-            print("Can not open: ", karaboVersionPath)
-            globals.GUI_VERSION = ""
+        # Find Karabo installation directory:
+        # - precedence has KARABO environment variable
+        # - otherwise fall back to content of file "karaboFramework" in hidden folder
+        installDir = os.environ.get("KARABO")  # i.e. None if KARABO not set
+        if installDir is None:
+            filePath = os.path.join(globals.HIDDEN_KARABO_FOLDER, "karaboFramework")
+            installDir = _cat_text_file(filePath)
+
+        # Finally read out file "VERSION" from installation directory
+        if installDir is not None:
+            karaboVersionPath = os.path.join(installDir, "VERSION")
+            version = _cat_text_file(karaboVersionPath)
+            if version is not None:
+                globals.GUI_VERSION = version
 
 
     # Sets all parameters to start configuration
