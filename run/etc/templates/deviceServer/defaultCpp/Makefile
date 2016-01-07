@@ -59,7 +59,7 @@ $(CP) -f nbproject/Karabo-variables-$(CURRENT_PLATFORM).mk nbproject/Makefile-va
 endif
 
 ifndef KARABO
-	KARABO := $(shell cat ${HOME}/.karabo/karaboFramework)
+    $(error The $$KARABO must be set before building. Source the activate script for the desired Karabo framework.)
 endif
 
 # build
