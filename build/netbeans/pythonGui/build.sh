@@ -12,17 +12,17 @@ cat > karabo-gui <<End-of-file
 # This file was automatically generated. Do not edit.
 #
 SCRIPT_DIR=\$(dirname \`[[ \$0 = /* ]] && echo "\$0" || echo "\$PWD/\${0#./}"\`)
-KARABO=\$SCRIPT_DIR/..
+KARABO_DIR=\$SCRIPT_DIR/..
 OS=\$(uname -s)
-export PATH=\$KARABO/extern/bin:\$PATH
-export PYTHONPATH=\$KARABO/extern/lib/karabo_python
+export PATH=\$KARABO_DIR/extern/bin:\$PATH
+export PYTHONPATH=\$KARABO_DIR/extern/lib/karabo_python
 if [ "\$OS" = "Darwin" ]; then
     export PATH=/opt/local/bin:\$PATH
-    export PYTHONPATH=\$KARABO/lib:\$PYTHONPATH
-    export DYLD_LIBRARY_PATH=\$KARABO/lib:\$KARABO/extern/lib:\$DYLD_LIBRARY_PATH
+    export PYTHONPATH=\$KARABO_DIR/lib:\$PYTHONPATH
+    export DYLD_LIBRARY_PATH=\$KARABO_DIR/lib:\$KARABO_DIR/extern/lib:\$DYLD_LIBRARY_PATH
 fi
 
-cd \$KARABO/lib/pythonGui  
+cd \$KARABO_DIR/lib/pythonGui
 python3 karabo-gui.py "\$@"
 cd -
 End-of-file
