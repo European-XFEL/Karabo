@@ -260,33 +260,27 @@ namespace karabo {
 
                 // Check if we need to build index for this property by inspecting schema ... checking only existence
                 if (m_currentSchema.has(path)) {
-                    map<string, MetaData::Pointer>::iterator it = m_idxMap.find(path);
-                    MetaData::Pointer mdp;
-                    if (it == m_idxMap.end()) {
+                    MetaData::Pointer& mdp = m_idxMap[path]; //Pointer by reference!
+                    bool first = false;
+                    if (!mdp) {
+                        // a property not yet indexed - create meta data and set file
                         mdp = MetaData::Pointer(new MetaData);
                         mdp->idxFile = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(m_lastIndex)
                                 + "-" + path + "-index.bin";
-                        mdp->record.epochstamp = t.toTimestamp();
-                        mdp->record.trainId = t.getTrainId();
-                        mdp->record.positionInRaw = position;
-                        mdp->record.extent1 = (expNum & 0xFFFFFF);
-                        mdp->record.extent2 = (runNum & 0xFFFFFF) | (1 << 30);
-                        m_idxMap[path] = mdp;
-                        // defer writing: write only if more changes come
-                    } else {
-                        mdp = it->second;
-                        if (!mdp->idxStream.is_open()) {
-                            mdp->idxStream.open(mdp->idxFile.c_str(), ios::out | ios::app | ios::binary);
-                            // write (flush) deferred record
-                            mdp->idxStream.write((char*) &mdp->record, sizeof (MetaData::Record));
-                        }
-                        mdp->record.epochstamp = t.toTimestamp();
-                        mdp->record.trainId = t.getTrainId();
-                        mdp->record.positionInRaw = position;
-                        mdp->record.extent1 = (expNum & 0xFFFFFF);
-                        mdp->record.extent2 = (runNum & 0xFFFFFF);
-                        mdp->idxStream.write((char*) &mdp->record, sizeof (MetaData::Record));
+                        first = true;
                     }
+                    if (!mdp->idxStream.is_open()) {
+                        mdp->idxStream.open(mdp->idxFile.c_str(), ios::out | ios::app | ios::binary);
+                    }
+                    mdp->record.epochstamp = t.toTimestamp();
+                    mdp->record.trainId = t.getTrainId();
+                    mdp->record.positionInRaw = position;
+                    mdp->record.extent1 = (expNum & 0xFFFFFF);
+                    mdp->record.extent2 = (runNum & 0xFFFFFF);
+                    if (first) {
+                        mdp->record.extent2 |= (1 << 30);
+                    }
+                    mdp->idxStream.write((char*) &mdp->record, sizeof (MetaData::Record));
                 }
             }
 
