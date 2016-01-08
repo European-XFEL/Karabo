@@ -40,9 +40,7 @@ namespace karabo {
             std::string m_user;
             karabo::util::Timestamp m_lastDataTimestamp;
             bool m_pendingLogin;
-            bool m_newFile;
 
-            long m_startPosition;
             boost::thread m_flushThread;
             
             std::map<std::string, karabo::core::MetaData::Pointer> m_idxMap;
@@ -65,6 +63,13 @@ namespace karabo {
             void okStateOnEntry();
 
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
+
+            /// Helper function to update m_idxprops, returns whether m_idxprops changed.
+            bool updatePropsToIndex();
+
+            /// Helper to ensure archive file is closed.
+            /// Must be called under protection of the 'm_configMutex' mutex.
+            void ensureFileClosed();
 
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
