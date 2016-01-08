@@ -72,7 +72,6 @@ namespace karabo {
 
 
         DataLogger::DataLogger(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
-            m_newFile = false;
             m_pendingLogin = true;
             m_idxprops.clear();
             m_propsize = 0;
@@ -178,25 +177,13 @@ namespace karabo {
             // To write log I need schema ...
             if (m_currentSchema.empty()) return;
 
-            bool propPathExists = false;
-            boost::filesystem::path propPath(get<string>("directory") + "/" + deviceId + "/raw/properties_with_index.txt");
-            if (boost::filesystem::exists(propPath)) {
-                propPathExists = true;
-                size_t propsize = boost::filesystem::file_size(propPath);
-                time_t lasttime = boost::filesystem::last_write_time(propPath);
-                // read prop file only if it was changed
-                if (m_propsize != propsize || m_lasttime != lasttime) {
-                    m_propsize = propsize;
-                    m_lasttime = lasttime;
-                    // re-read prop file
-                    ifstream in(propPath.c_str());
-                    string content(propsize, ' ');
-                    content.assign((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
-                    in.close();
-                    m_idxprops.clear();
-                    boost::split(m_idxprops, content, boost::is_any_of("\n"));
-                }
+            if (deviceId != m_deviceToBeLogged) {
+                KARABO_LOG_ERROR << "slotChanged called from " << deviceId
+                                 << ", but logging only " << m_deviceToBeLogged;
+                return;
             }
+
+            const bool newPropToIndex = this->updatePropsToIndex();
 
             // TODO: Define these variables: each of them uses 24 bits
             int expNum = 0x0F0A1A2A;
@@ -209,6 +196,14 @@ namespace karabo {
             configuration.getPaths(paths);
 
             boost::mutex::scoped_lock lock(m_configMutex);
+            if (newPropToIndex) {
+                // DataLogReader got request for history of a property not indexed
+                // so far, that means it triggered the creation of an index file
+                // for that property. Since we cannot be sure that the index creation
+                // has finished when we want to add a new index entry, we close the
+                // file and thus won't touch this new index file (but start a new one).
+                this->ensureFileClosed(); // must be protected by m_configMutex
+            }
             
             for (size_t i = 0; i < paths.size(); ++i) {
                 const string& path = paths[i];
@@ -221,6 +216,7 @@ namespace karabo {
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 m_lastDataTimestamp = t;
 
+                bool newFile = false;
                 if (!m_configStream.is_open()) {
                     string configName = get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(m_lastIndex) + ".txt";
                     m_configStream.open(configName.c_str(), ios::out | ios::app);
@@ -232,7 +228,7 @@ namespace karabo {
                         // Make sure that the file contains '\n' (newline) at the end of previous round
                         m_configStream << '\n';
                     } else
-                        m_newFile = true;
+                        newFile = true;
                 }
 
                 size_t position = m_configStream.tellp(); // get current file size
@@ -243,7 +239,7 @@ namespace karabo {
                 if (m_pendingLogin) m_configStream << "|LOGIN\n";
                 else m_configStream << "|VALID\n";
 
-                if (m_pendingLogin || m_newFile) {
+                if (m_pendingLogin || newFile) {
                     string contentPath = get<string>("directory") + "/" + deviceId + "/raw/archive_index.txt";
                     ofstream contentStream(contentPath.c_str(), ios::app);
                     if (m_pendingLogin) {
@@ -257,11 +253,9 @@ namespace karabo {
                     contentStream.close();
 
                     m_pendingLogin = false;
-                    m_newFile = false;
                 }
 
                 // check if we have property registered
-                if (!propPathExists) continue;
                 if (find(m_idxprops.begin(), m_idxprops.end(), path) == m_idxprops.end()) continue;
 
                 // Check if we need to build index for this property by inspecting schema ... checking only existence
@@ -299,18 +293,53 @@ namespace karabo {
             long maxFilesize = get<int>("maximumFileSize") * 1000000; // times to 1000000 because maximumFilesSize in MBytes
             long position = m_configStream.tellp();
             if (maxFilesize <= position) {
-                // increment index number for configuration file
-                m_lastIndex = incrementLastIndex(deviceId);
-                m_configStream.close();
-
-                for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
-                    MetaData::Pointer mdp = it->second;
-                    if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
-                }
-                m_idxMap.clear();
+                this->ensureFileClosed();
             }
         }
 
+        bool DataLogger::updatePropsToIndex()
+        {
+            boost::filesystem::path propPath(get<string>("directory") + "/" + m_deviceToBeLogged + "/raw/properties_with_index.txt");
+            if (boost::filesystem::exists(propPath)) {
+                const size_t propsize = boost::filesystem::file_size(propPath);
+                const time_t lasttime = boost::filesystem::last_write_time(propPath);
+                // read prop file only if it was changed
+                if (m_propsize != propsize || m_lasttime != lasttime) {
+                    m_propsize = propsize;
+                    m_lasttime = lasttime;
+                    // re-read prop file
+                    ifstream in(propPath.c_str());
+                    string content(propsize, ' ');
+                    content.assign((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
+                    in.close();
+                    m_idxprops.clear();
+                    boost::split(m_idxprops, content, boost::is_any_of("\n"));
+                    // Could do more clever gymnastics to check whether content of
+                    // m_idxprops now really differs from old content...
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        void DataLogger::ensureFileClosed()
+        {
+            // We touch m_configStream and m_idxMap. Thus we have to rely that the
+            // code calling this method is protected by the 'm_configMutex'
+            // (as requested by documentation).
+            if (m_configStream.is_open()) {
+                // increment index number for configuration file
+                m_lastIndex = this->incrementLastIndex(m_deviceToBeLogged);
+                m_configStream.close();
+            }
+
+            for (std::map<std::string, MetaData::Pointer>::iterator it = m_idxMap.begin(), endIt = m_idxMap.end();
+                    it != endIt; ++it) {
+                MetaData::Pointer mdp = it->second;
+                if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
+            }
+            m_idxMap.clear();
+        }
 
         void DataLogger::flushThread() {
             //------------------------------------------------- make this thread sensible to external interrupts
