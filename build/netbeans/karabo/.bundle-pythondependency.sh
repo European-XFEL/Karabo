@@ -18,13 +18,8 @@ originalPwd=$(pwd)
 OS=$(uname -s)
 
 if [ -z $KARABO ]; then
-    if [ -e $HOME/.karabo/karaboFramework ]; then
-        KARABO=$(cat $HOME/.karabo/karaboFramework)
-        KARABOVERSION=$(cat $KARABO/VERSION)
-    else
-      echo "ERROR Could not find karabo Framework. Make sure you have installed karabo Framework."
-      exit 1
-    fi
+  echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
+  exit 1
 else
     KARABOVERSION=$(cat $KARABO/VERSION)
 fi
