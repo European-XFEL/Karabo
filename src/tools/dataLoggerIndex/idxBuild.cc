@@ -155,11 +155,14 @@ int main(int argc, char** argv) {
     
     
     vector<string> devices;
-    findDevices(karaboHistory, "", devices);
-    
+    if (requestedDeviceId.empty()) {
+        findDevices(karaboHistory, "", devices);
+    } else {
+        devices.push_back(requestedDeviceId);
+    }
+
     for (vector<string>::const_iterator it = devices.begin(); it != devices.end(); ++it) {
         const string& deviceId = *it;
-        if (!requestedDeviceId.empty() && requestedDeviceId != deviceId) continue;
         bf::path rawdir(karaboHistory + "/" + deviceId + "/raw");
         if (!bf::exists(rawdir))
             throw KARABO_PARAMETER_EXCEPTION("Directory \"" + rawdir.string() + "\" does not exist!");
@@ -175,7 +178,7 @@ int main(int argc, char** argv) {
         }
     }
     
-    cout << devices.size() << " devices found ... process only those that require indexing ..." << endl;
+    cout << devices.size() << " devices to process found... process only properties that require indexing ..." << endl;
 
     for (vector<string>::const_iterator it = devices.begin(); it != devices.end(); ++it) {
         string deviceId = *it;
@@ -382,40 +385,25 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             
             // Check if we need to build index for this property by inspecting schema ... checking only existence
             if (schema->has(property)) {
-                map<string, MetaData::Pointer>::iterator it = idxMap.find(property);
-                MetaData::Pointer mdp;
-                if (it == idxMap.end()) {
+                MetaData::Pointer& mdp = idxMap[property]; //Pointer by reference!
+                if (!mdp) {
+                    // a property not yet indexed - create meta data and set file
                     mdp = MetaData::Pointer(new MetaData);
                     mdp->idxFile = historyDir + "/" + deviceId + "/idx/archive_" + toString(number) + "-" + property + "-index.bin";
-                    mdp->record.epochstamp = fromString<double>(epochDoubleStr);
-                    mdp->record.trainId = fromString<unsigned long long>(trainIdStr);
-                    mdp->record.positionInRaw = position;
-                    mdp->record.extent1 = (expNum & 0xFFFFFF);
-                    mdp->record.extent2 = (runNum & 0xFFFFFF);
-                    idxMap[property] = mdp;
-                    // defer writing: write only if more changes come
-                } else {
-                    mdp = it->second;
-                    if (!mdp->idxStream.is_open()) {
-                        mdp->idxStream.open(mdp->idxFile.c_str(), ios::out | ios::trunc | ios::binary);
-                        if (mdp->marker) {
-                            mdp->marker = false;
-                            mdp->record.extent2 |= (1 << 30);
-                        }
-                        // write (flush) deferred record
-                        mdp->idxStream.write((char*) &mdp->record, sizeof (MetaData::Record));
-                    }
-                    mdp->record.epochstamp = fromString<double>(epochDoubleStr);
-                    mdp->record.trainId = fromString<unsigned long long>(trainIdStr);
-                    mdp->record.positionInRaw = position;
-                    mdp->record.extent1 = (expNum & 0xFFFFFF);
-                    mdp->record.extent2 = (runNum & 0xFFFFFF);
-                    if (mdp->marker) {
-                        mdp->marker = false;
-                        mdp->record.extent2 |= (1 << 30);
-                    }
-                    mdp->idxStream.write((char*) &mdp->record, sizeof (MetaData::Record));
                 }
+                if (!mdp->idxStream.is_open()) {
+                    mdp->idxStream.open(mdp->idxFile.c_str(), ios::out | ios::trunc | ios::binary);
+                }
+                mdp->record.epochstamp = fromString<double>(epochDoubleStr);
+                mdp->record.trainId = fromString<unsigned long long>(trainIdStr);
+                mdp->record.positionInRaw = position;
+                mdp->record.extent1 = (expNum & 0xFFFFFF);
+                mdp->record.extent2 = (runNum & 0xFFFFFF);
+                if (mdp->marker) {
+                    mdp->marker = false;
+                    mdp->record.extent2 |= (1 << 30);
+                }
+                mdp->idxStream.write((char*) &mdp->record, sizeof (MetaData::Record));
             }
         }
     }
