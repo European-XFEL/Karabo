@@ -58,24 +58,7 @@ namespace karabo {
             const char* tmp = getenv("KARABO");
             if (tmp) karabo = tmp;
             if (karabo.empty()) {
-                // get from content of $HOME/.karabo/karaboFramework
-                if(!getenv("HOME")) {
-                    throw KARABO_IO_EXCEPTION("$HOME environment variable is not defined but needed to get the path to the Karabo installation.");
-                }
-                const std::string home(getenv("HOME"));
-                const boost::filesystem::path karaboLocationFile(home + "/.karabo/karaboFramework");
-                if (boost::filesystem::exists(karaboLocationFile)) {
-                    std::ifstream file(karaboLocationFile.string().c_str());
-                    if (!file) {
-                        throw KARABO_IO_EXCEPTION("Cannot open file: " + karaboLocationFile.string());
-                    }
-                    std::stringstream buffer;
-                    buffer << file.rdbuf(); // read complete file
-                    karabo = buffer.str();
-                    boost::trim(karabo); // get rid of newline character at the end
-                } else {
-                    throw KARABO_IO_EXCEPTION(karaboLocationFile.string() + " not found -- needed to get path to installation.");
-                }
+                throw KARABO_INIT_EXCEPTION("$KARABO environment variable is not defined but needed to get the path to the Karabo installation.");
             }
             return karabo;
         }
