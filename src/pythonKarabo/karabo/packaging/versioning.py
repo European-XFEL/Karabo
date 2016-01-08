@@ -24,17 +24,12 @@ def _get_development_version(path):
 
 def _get_karabo_framework_path():
     """ Get the filesystem location of the running Karabo framework.
-
-    FIXME: Use the VIRTUAL_ENV variable from the activation script later.
     """
-    karabo = environ.get('KARABO', '')
-    if karabo == '':
-        path = op.expanduser(op.join('~', '.karabo', 'karaboFramework'))
-        try:
-            with open(path, 'rt') as fp:
-                karabo = fp.read().strip()
-        except OSError:
-            raise RuntimeError("Karabo framework installation not found!")
+    karabo = environ.get('KARABO')
+    if karabo is None:
+        msg = ("$KARABO env variable not defined! Source the activate script "
+               "for the desired Karabo framework to address this issue.")
+        raise RuntimeError(msg)
 
     return karabo
 
