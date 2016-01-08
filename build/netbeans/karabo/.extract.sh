@@ -123,42 +123,42 @@ echo
 echo -n " Running post install script..."
 
 # Fix up the venv activation script
-venvDir=$(get_abs_path $installDir/karabo-$VERSION)
-sed "s%__VENV_DIR__%$venvDir%g" $venvDir/karaboRun/bin/activate.tmpl > $venvDir/karaboRun/bin/activate
+KARABO=$(get_abs_path $installDir/karabo-$VERSION)
+sed "s%__VENV_DIR__%$KARABO%g" $venvDir/karaboRun/bin/activate.tmpl > $venvDir/karaboRun/bin/activate
 
 if [ "$runDir" != "0" ]; then
-    cp -rf $installDir/karabo-$VERSION/karaboRun $runDir/
+    cp -rf $KARABO/karaboRun $runDir/
 fi
 mkdir -p $HOME/.karabo
-echo $installDir/karabo-$VERSION > $HOME/.karabo/karaboFramework
+echo $KARABO > $HOME/.karabo/karaboFramework
 #echo "https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo" > $HOME/.karabo/karaboSvnPath
 # fix the shebang line of Python entry-points
-safeRunCommand "$installDir/karabo-$VERSION/bin/.fix-python-scripts.sh" $installDir/karabo-$VERSION
+safeRunCommand "$KARABO/bin/.fix-python-scripts.sh" $KARABO
 
 # change sipconfig.py
 #
 # find site-packages directory using installed python
-sitePackagesDir=`$installDir/karabo-$VERSION/extern/bin/python -c "import site; print(site.getsitepackages()[0])"`
-includeDir=`$installDir/karabo-$VERSION/extern/bin/python3-config --includes`
-configDir=`$installDir/karabo-$VERSION/extern/bin/python3-config --configdir`
+sitePackagesDir=`$KARABO/extern/bin/python -c "import site; print(site.getsitepackages()[0])"`
+includeDir=`$KARABO/extern/bin/python3-config --includes`
+configDir=`$KARABO/extern/bin/python3-config --configdir`
 cd $sitePackagesDir
 sitePackagesDir=${sitePackagesDir##*/extern/}
 includeDir=${includeDir##*/extern/}
 configDir=${configDir##*/extern/}
-sed -i "/'default_bin_dir'/c\    'default_bin_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/bin'," sipconfig.py
-sed -i "/'default_mod_dir'/c\    'default_mod_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/$sitePackagesDir'," sipconfig.py
-sed -i "/'default_sip_dir'/c\    'default_sip_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/share/sip'," sipconfig.py
-sed -i "/'py_conf_inc_dir'/c\    'py_conf_inc_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/$includeDir'," sipconfig.py
-sed -i "/'py_inc_dir'/c\    'py_inc_dir':         '`cat $HOME/.karabo/karaboFramework`/extern/$includeDir'," sipconfig.py
-sed -i "/'py_lib_dir'/c\    'py_lib_dir':         '`cat $HOME/.karabo/karaboFramework`/extern/$configDir'," sipconfig.py
-sed -i "/'sip_bin'/c\    'sip_bin':            '`cat $HOME/.karabo/karaboFramework`/extern/bin/sip'," sipconfig.py
-sed -i "/'sip_inc_dir'/c\    'sip_inc_dir':        '`cat $HOME/.karabo/karaboFramework`/extern/$includeDir'," sipconfig.py
-sed -i "/'sip_mod_dir'/c\    'sip_mod_dir':        '`cat $HOME/.karabo/karaboFramework`/extern/$sitePackagesDir'," sipconfig.py
+sed -i "/'default_bin_dir'/c\    'default_bin_dir':    '$KARABO/extern/bin'," sipconfig.py
+sed -i "/'default_mod_dir'/c\    'default_mod_dir':    '$KARABO/extern/$sitePackagesDir'," sipconfig.py
+sed -i "/'default_sip_dir'/c\    'default_sip_dir':    '$KARABO/extern/share/sip'," sipconfig.py
+sed -i "/'py_conf_inc_dir'/c\    'py_conf_inc_dir':    '$KARABO/extern/$includeDir'," sipconfig.py
+sed -i "/'py_inc_dir'/c\    'py_inc_dir':         '$KARABO/extern/$includeDir'," sipconfig.py
+sed -i "/'py_lib_dir'/c\    'py_lib_dir':         '$KARABO/extern/$configDir'," sipconfig.py
+sed -i "/'sip_bin'/c\    'sip_bin':            '$KARABO/extern/bin/sip'," sipconfig.py
+sed -i "/'sip_inc_dir'/c\    'sip_inc_dir':        '$KARABO/extern/$includeDir'," sipconfig.py
+sed -i "/'sip_mod_dir'/c\    'sip_mod_dir':        '$KARABO/extern/$sitePackagesDir'," sipconfig.py
 cd -
 echo " done."
 echo
 echo
-echo " Karabo framework was successfully installed to: $installDir/karabo-$VERSION"
+echo " Karabo framework was successfully installed to: $KARABO"
 echo
 if [ "$runDir" != "0" ]; then
     echo " Karabo's run environment was successfully installed to: $runDir/karaboRun"
