@@ -625,7 +625,7 @@ function checkoutPackage() {
             echo " done."
             echo " Package was checked out to $packageDevPath/packages/$categoryDep/$packageDep"
         elif [[ "$isSvn" == "0" && "$skip" == "0" ]]; then
-            svn export -r $revision $svnPath/$categoryDep/$packageDep/$tagDep $packagePathDep
+            svn export -r $revision $svnPath/$categoryDep/$packageDep/$tagDep $packageDepPath
             echo " done."
             echo " Package was exported to $packageDevPath/packages/$categoryDep/$packageDep"
         fi
