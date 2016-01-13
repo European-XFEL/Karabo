@@ -124,7 +124,7 @@ echo -n " Running post install script..."
 
 # Fix up the venv activation script
 KARABO=$(get_abs_path $installDir/karabo-$VERSION)
-sed "s%__VENV_DIR__%$KARABO%g" $venvDir/karaboRun/bin/activate.tmpl > $venvDir/karaboRun/bin/activate
+sed "s%__VENV_DIR__%$KARABO%g" $KARABO/bin/activate.tmpl > $KARABO/activate
 
 if [ "$runDir" != "0" ]; then
     cp -rf $KARABO/karaboRun $runDir/
