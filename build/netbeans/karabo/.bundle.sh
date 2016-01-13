@@ -214,7 +214,7 @@ fi
 cd ../../../
 tar --exclude=.svn --exclude=run/servers/dataLoggerServer/karaboHistory -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
 # Activation script
-sed "s%__VENV_DIR__%$PACKAGEDIR%g" run/bin/activate.tmpl > $PACKAGEDIR/karaboRun/bin/activate
+sed "s%__VENV_DIR__%$PACKAGEDIR%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
 # Version information
 echo $VERSION > $PACKAGEDIR/karaboRun/VERSION
 cd -
