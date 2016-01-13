@@ -15,44 +15,46 @@ def _clear_handlers():
     __handlers.clear()
 
 
-def _get_klass_key(klass):
-    if hasattr(klass, 'klass'):
-        return klass.klass
+def _get_action_type(obj):
+    # obj is either an action class or instance
+    if hasattr(obj, 'action_type'):
+        return obj.action_type
 
-    assert isinstance(klass, str)
-    return klass
+    # OR a string
+    assert isinstance(obj, str)
+    return obj
 
 
-def addHandler(klass, handler):
-    """ Add a handler for actions of type `klass`.
+def addHandler(action_class, handler):
+    """ Add a handler for actions of type `action_class`.
     """
-    klass_key = _get_klass_key(klass)
-    __handlers[klass_key].append(handler)
+    action_type = _get_action_type(action_class)
+    __handlers[action_type].append(handler)
 
 
-def removeHandler(klass, handler):
+def removeHandler(action_class, handler):
     """ Remove a previously registered handler.
     """
-    klass_key = _get_klass_key(klass)
-    handlers = __handlers[klass_key]
+    action_type = _get_action_type(action_class)
+    handlers = __handlers[action_type]
     handlers.remove(handler)
 
 
-def submitAction(action):
+def submitAction(action_inst):
     """ Dispatch a single action using the appropriate handlers.
     """
-    handlers = __handlers[_get_klass_key(action)]
+    handlers = __handlers[_get_action_type(action_inst)]
     for handler in handlers:
-        handler.handle(action)
+        handler.handle(action_inst)
 
 
-def submitActionSync(action):
+def submitActionSync(action_inst):
     """ Dispatch a single action synchronously using the appropriate handler.
     """
-    handlers = __handlers[_get_klass_key(action)]
+    handlers = __handlers[_get_action_type(action_inst)]
     assert len(handlers) == 1
     handler = handlers[0]
 
-    newAction = handler.handleSync(action)
+    newAction = handler.handleSync(action_inst)
     assert newAction is not None, 'Synchronous handlers must return an action'
     submitAction(newAction)
