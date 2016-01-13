@@ -7,7 +7,7 @@ from ..handler import BaseHandler
 
 
 class MyBaseAction(BaseAction):
-    klass = 'mine'
+    action_type = 'mine'
 
 
 class MyActionA(MyBaseAction):
@@ -15,7 +15,7 @@ class MyActionA(MyBaseAction):
 
 
 class MyActionB(MyBaseAction):
-    klass = 'action_b'
+    action_type = 'action_b'
 
 
 class CountingHandler(BaseHandler):
@@ -32,9 +32,14 @@ class CountingHandler(BaseHandler):
 
 
 def test_add_remove():
-    handler = CountingHandler([])
-    addHandler(MyActionA, handler)
-    removeHandler('mine', handler)
+    handler0 = CountingHandler([])
+    handler1 = CountingHandler([])
+
+    addHandler(MyActionA, handler0)
+    removeHandler(MyActionA, handler0)
+
+    addHandler('foo', handler1)
+    removeHandler('foo', handler1)
 
 
 def test_submit():
