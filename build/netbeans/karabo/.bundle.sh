@@ -246,9 +246,8 @@ if [ "$BUNDLE_ACTION" = "package" ]; then
     PACKAGEDIR=$(pwd)/karabo
 fi
 
-# Update the karabo installation location
+# Make sure the ~/.karabo directory exists
 mkdir -p $HOME/.karabo
-echo $PACKAGEDIR > $HOME/.karabo/karaboFramework
 
 echo
 echo "Created karaboFramework bundle under: $PACKAGEDIR"
