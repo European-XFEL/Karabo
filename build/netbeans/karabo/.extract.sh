@@ -130,9 +130,11 @@ if [ "$runDir" != "0" ]; then
     cp -rf $KARABO/karaboRun $runDir/
     ln -s $KARABO/activate $runDir/karaboRun/activate
 fi
+
+# Make sure the ~/.karabo directory exists
 mkdir -p $HOME/.karabo
-echo $KARABO > $HOME/.karabo/karaboFramework
 #echo "https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo" > $HOME/.karabo/karaboSvnPath
+
 # fix the shebang line of Python entry-points
 safeRunCommand "$KARABO/bin/.fix-python-scripts.sh" $KARABO
 
