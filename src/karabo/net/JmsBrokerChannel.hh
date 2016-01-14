@@ -275,6 +275,12 @@ namespace karabo {
              * This stops the asynchronous processing.
              */
             void close();
+            
+            void closeConsumer();
+            
+            void closeProducer();
+            
+            void closeSession();
 
             void ensureExistenceOfConsumer();
 
