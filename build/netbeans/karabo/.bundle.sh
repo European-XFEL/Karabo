@@ -11,6 +11,8 @@
 # DISTDIR (e.g. "dist"), CONF (e.g. "Debug"), PLATFORM (e.g. "GNU-Linux-x86"), BUNDLE_ACTION(package|install), BUNDLE_OPTION(Gui|NoGui)
 #
 
+echo "### Now building Karabo... ###";
+
 get_abs_path() {
      local PARENT_DIR=$(dirname "$1")
      cd "$PARENT_DIR"

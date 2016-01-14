@@ -32,19 +32,22 @@ fi
 # Parse command line
 if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
     cat <<End-of-help
-Usage: $0 Debug|Release|Clean|Clean-All [flags]
+Usage: $0 Debug|Release|Dependencies|Clean|Clean-All [flags]
 
 Available flags:
   --auto      - Tries to automatically install needed system packages (sudo rights required!)
   --noBundle  - Only installs Karabo, does not create the software bundle
 
-Note: "Clean" cleans all Karabo code (src folder)
+Note: "Dependencies" builds only the external dependencies
+      "Clean" cleans all Karabo code (src folder)
       "Clean-All" additionally cleans all external dependencies (extern folder)
 
 End-of-help
 
     exit 0
 fi
+
+EXTERN_ONLY="n"
 
 # Fetch configuration type (Release or Debug)
 if [[ $1 = "Release" || $1 = "Debug" ]]; then
@@ -67,9 +70,12 @@ elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     safeRunCommand "cd $scriptDir"
     rm -rf package
     exit 0
+elif [[ $1 = "Dependencies" ]]; then
+    echo "Building external dependencies"
+    EXTERN_ONLY="y"
 else
     echo
-    echo "Invalid option supplied. Allowed options: Release|Debug|Clean|Clean-All"
+    echo "Invalid option supplied. Allowed options: Release|Debug|Dependencies|Clean|Clean-All"
     echo
     exit 1
 fi
@@ -166,7 +172,9 @@ sleep 2
 
 safeRunCommand "cd $scriptDir/build/netbeans/karabo"
 
-if [ "$BUNDLE" = "y" ]; then
+if [ $EXTERN_ONLY = "y" ]; then
+    safeRunCommand "make -j$NUM_CORES extern"
+elif [ "$BUNDLE" = "y" ]; then
     safeRunCommand "make CONF=$CONF -j$NUM_CORES bundle-package"
 else
     safeRunCommand "make CONF=$CONF -j$NUM_CORES bundle-install"
