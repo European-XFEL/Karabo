@@ -13,12 +13,12 @@ environment variable which is used by various scripts and programs in Karabo.
 
 To source the activate script, simply run this command::
 
-  $ source <path to karabo>/karaboRun/bin/activate
+  $ source <path to karabo>/activate  # There is also a symlink to this script in the run directory!
 
 Then later, if you would like to undo the environment changes resulting from
 activation, the ``deactivate`` command can be run like this::
 
-  $ source deactivate
+  $ deactivate
 
 
 TBD
