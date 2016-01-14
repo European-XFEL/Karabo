@@ -1,16 +1,26 @@
-****************************
-  What's New in Karabo 1.5
-****************************
+************************
+What's New in Karabo 1.5
+************************
 
 This chapter explains the changes in Karabo 1.5 with respect to the 1.4 releases.
 
 
-Backward Incompatibilities
-==========================
+Shell Environment Changes
+=========================
+
+The ``~/.karabo`` directory is no longer being relied up for locating the currently
+installed Karabo framework. Instead, an activation script is created when
+building or installing Karabo which makes necessary modifications to the shell
+environment so that Karabo can run. A more in-depth description is available at
+:ref:`run-scripts`.
+
+
+API Backward Incompatibilities
+==============================
 
 ``erase(key)`` and ``eraseFound(key)`` of ``Hash`` and ``OrderedMap``
--------------------------------------------------------------------
-The method ``erase`` does not anymnore throw an exception if given a
+---------------------------------------------------------------------
+The method ``erase`` does not anymore throw an exception if given a
 non-existing key.
 Instead, a return value indicates whether something has been removed or not.
 Since that was exactly the behaviour of ``eraseFound(key)`` before,
