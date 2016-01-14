@@ -174,6 +174,9 @@ safeRunCommand "cd $scriptDir/build/netbeans/karabo"
 
 if [ $EXTERN_ONLY = "y" ]; then
     safeRunCommand "make -j$NUM_CORES extern"
+    if [ "$BUNDLE" = "y" ]; then
+        safeRunCommand "make -j$NUM_CORES package-extern"
+    fi
 elif [ "$BUNDLE" = "y" ]; then
     safeRunCommand "make CONF=$CONF -j$NUM_CORES bundle-package"
 else

@@ -55,6 +55,7 @@ CONF ?= Debug
 KARABO = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
 EXTERN_DIR ?= $(CND_BASEDIR)/../../../extern
 EXTERN_DISTDIR = $(EXTERN_DIR)/$(CND_PLATFORM_$(CONF))
+EXTERN_BUNDLE_NAME ?= $(EXTERN_DISTDIR).tar.gz
 export PKG_CONFIG_PATH=.
 
 # Sphinx documentation related
@@ -119,6 +120,8 @@ clean-extern:
 	rm -f .marker.txt
 	rm -rf $(EXTERN_DISTDIR)
 	cd $(EXTERN_DIR)/resources; find . -mindepth 2 -maxdepth 2 -type d -not -path \*.svn\* -exec rm -rf {} \;  
+package-extern: extern
+	tar -zcf $(EXTERN_BUNDLE_NAME) $(EXTERN_DISTDIR)
 
 bundle: build
 	cd ../karathon; $(MAKE) CONF=$(CONF)
