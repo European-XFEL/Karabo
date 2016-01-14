@@ -103,15 +103,10 @@ class _Manager(QObject):
         if platform.startswith("win"):
             return  # Just the hardcoded version - find better solution for Windows
 
-        # Find Karabo installation directory:
-        # - precedence has KARABO environment variable
-        # - otherwise fall back to content of file "karaboFramework" in hidden folder
+        # Find Karabo installation directory using the KARABO env variable
         installDir = os.environ.get("KARABO")  # i.e. None if KARABO not set
-        if installDir is None:
-            filePath = os.path.join(globals.HIDDEN_KARABO_FOLDER, "karaboFramework")
-            installDir = _cat_text_file(filePath)
 
-        # Finally read out file "VERSION" from installation directory
+        # Read out file "VERSION" from installation directory
         if installDir is not None:
             karaboVersionPath = os.path.join(installDir, "VERSION")
             version = _cat_text_file(karaboVersionPath)

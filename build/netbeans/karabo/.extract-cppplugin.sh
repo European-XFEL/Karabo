@@ -46,20 +46,8 @@ echo " #####################################################################"
 echo
 installDir=$HOME/packages
 if [ -z $KARABO ]; then
-    if [ -e $HOME/.karabo/karaboFramework ]; then
-        KARABO=$(cat $HOME/.karabo/karaboFramework)
-        LOCALKARABOVERSION=$(cat $KARABO/VERSION)
-        if [ "$LOCALKARABOVERSION" == "$KARABOVERSION" ]; then
-           installDir=$KARABO/plugins
-        else
-           echo "Plugin was compiled with different karaboFramework version"
-           echo "than installed one: $KARABOVERSION vs. $LOCALKARABOVERSION"
-           echo " "
-        fi
-    else
-      echo "ERROR Could not find karaboFramework. Make sure you have installed the karaboFramework"
-      echo "and create links to installed plugins"
-    fi
+    echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
+    exit 1
 else
     LOCALKARABOVERSION=$(cat $KARABO/VERSION)
     if [ "$LOCALKARABOVERSION" == "$KARABOVERSION" ]; then
