@@ -74,4 +74,3 @@ done
 
 cd $CWD
 echo "### All external dependencies successfully installed/already present. ###";
-echo "### Now building Karabo... ###";
