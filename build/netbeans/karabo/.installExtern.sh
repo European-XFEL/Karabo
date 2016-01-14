@@ -32,21 +32,23 @@ if [ "$WHAT" != "" ]; then
     DEPENDENCIES=( $WHAT )
 fi
 
-#check if .marker.txt exists or not => if it does then read contents.
+
+MARKER_PATH=$INSTALL_PREFIX/.marker.txt
+
+# Move the marker file from its old location if it's there.
+if [ -f ./.marker.txt ]; then mv ./.marker.txt $MARKER_PATH; fi
+
+#check if $MARKER_PATH exists or not => if it does then read contents.
 #Otherwise create the file and input names of packages one by one as they are installed.
-if [ ! -f ./.marker.txt ]; then touch ./.marker.txt; fi
+if [ ! -f $MARKER_PATH ]; then touch $MARKER_PATH; fi
 
-#save original IFS value
-oldIFS=$IFS;
-
-IFS=$'\r\n' MARKER=$(cat ./.marker.txt)
-
-#revert to original IFS value
-IFS=$oldIFS;
+# Read the marker file into a variable as a list
+IFS=$'\r\n' MARKER=$(cat $MARKER_PATH)
+unset IFS
 
 #function to check existence of element in array
 elementIn() {
-	local e
+    local e
     for e in ${@:2}; do	[[ "$e" == "$1" ]] && return 0; done
     return 1
 }
@@ -57,9 +59,8 @@ do
     :
     elementIn "$i" "${MARKER[@]}"
     vin=$?
-    if [ $vin -eq 0 -a "$WHAT" = "" ]
-    then
-	continue;
+    if [ $vin -eq 0 -a "$WHAT" = "" ]; then
+        continue
     fi
     $EXTERN_DIR/install.sh $i $INSTALL_PREFIX    
     rv=$?
@@ -69,7 +70,7 @@ do
         echo
         exit $rv
     fi
-    echo $i >> ./.marker.txt
+    echo $i >> $MARKER_PATH
 done
 
 cd $CWD
