@@ -128,7 +128,7 @@ sed "s%__VENV_DIR__%$KARABO%g" $KARABO/bin/activate.tmpl > $KARABO/activate
 
 if [ "$runDir" != "0" ]; then
     cp -rf $KARABO/karaboRun $runDir/
-    ln -s $KARABO/activate $runDir/karaboRun/activate
+    ln -sf $KARABO/activate $runDir/karaboRun/activate
 fi
 
 # Make sure the ~/.karabo directory exists
