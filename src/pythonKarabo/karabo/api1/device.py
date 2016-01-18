@@ -647,13 +647,16 @@ class PythonDevice(NoFsm):
         #-------------------------------------------- register intrinsic signals
         self._ss.registerSignal("signalChanged", Hash, str)                # changeHash, instanceId        
         self._ss.registerSystemSignal("signalStateChanged", Hash, str)                # changeHash, instanceId        
-        
+
         self._ss.registerSystemSignal("signalNoTransition", str, str)                 # 
-        self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", ConnectionType.NO_TRACK, False)        
-        
+        # Here we could connect everybody to our signalNoTransition. But that is dangerous for the broker topic
+        # as long as we can have instances around that do not acknowledge.
+        #self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", ConnectionType.NO_TRACK, False)
+
         self._ss.registerSystemSignal("signalNotification", str, str, str, str)     # type, shortMessage, detailedMessage, deviceId
-        self._ss.connect("", "signalNotification", "*", "slotNotification", ConnectionType.NO_TRACK, False)
-        
+        # For now do not connect everybody to our signalNotification, see above.
+        #self._ss.connect("", "signalNotification", "*", "slotNotification", ConnectionType.NO_TRACK, False)
+
         self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
                 
         #---------------------------------------------- register intrinsic slots

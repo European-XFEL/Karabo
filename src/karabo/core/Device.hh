@@ -974,10 +974,13 @@ namespace karabo {
                 KARABO_SYSTEM_SIGNAL2("signalStateChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
 
                 KARABO_SYSTEM_SIGNAL2("signalNoTransition", string, string);
-                connect("", "signalNoTransition", "*", "slotNoTransition", NO_TRACK);
+                // Here we could connect everybody to our signalNoTransition. But that is dangerous for the broker topic
+                // as long as we can have instances around that do not acknowledge.
+                //connect("", "signalNoTransition", "*", "slotNoTransition", NO_TRACK);
 
                 KARABO_SYSTEM_SIGNAL4("signalNotification", string /*type*/, string /*messageShort*/, string /*messageDetail*/, string /*deviceId*/);
-                connect("", "signalNotification", "*", "slotNotification", NO_TRACK);
+                // For now do not connect everybody to our signalNotification, see above.
+                //connect("", "signalNotification", "*", "slotNotification", NO_TRACK);
 
                 KARABO_SYSTEM_SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
 
