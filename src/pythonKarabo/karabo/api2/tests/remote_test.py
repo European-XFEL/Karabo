@@ -79,7 +79,7 @@ class Remote(Device):
     def count(self):
         for i in range(30):
             self.counter = i
-            yield from sleep(0.1)
+            yield from sleep(0.02)
 
     generic = Superslot()
     generic_int = SuperInteger()
@@ -139,16 +139,17 @@ class Tests(TestCase):
         """test values are not updating when disconnected"""
         d = yield from getDevice("remote")
         task = async(d.count())
-        yield from sleep(0.3)
+        yield from sleep(0.1)
         self.assertEqual(d.counter, -1)
-        yield from sleep(0.3)
+        yield from sleep(0.1)
         with (yield from d):
             tmp = d.counter
             self.assertNotEqual(d.counter, -1)
-        yield from sleep(1)
-        self.assertTrue(tmp < 7 and (0 <= d.counter - tmp < 2))
+        yield from sleep(0.1)
+        self.assertLess(tmp, 12)
+        self.assertLess(d.counter - tmp, 2)
         with d:
-            yield from sleep(2)
+            yield from sleep(0.3)
             self.assertEqual(d.counter, 29)
         yield from task
 
@@ -334,7 +335,7 @@ class Tests(TestCase):
                 for i in range(1, 30):
                     j = yield from q.get()
                     self.assertEqual(i, j)
-                    yield from sleep(i * 0.01)
+                    yield from sleep(i * 0.003)
             finally:
                 yield from task
 
