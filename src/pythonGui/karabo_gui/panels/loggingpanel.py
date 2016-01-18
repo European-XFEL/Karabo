@@ -13,7 +13,7 @@ __all__ = ["LoggingPanel"]
 
 
 from docktabwindow import Dockable
-import icons
+import karabo_gui.icons as icons
 from manager import Manager
 from logwidget import LogWidget
 

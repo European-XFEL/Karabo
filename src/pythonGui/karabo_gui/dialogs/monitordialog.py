@@ -7,7 +7,7 @@
 
 __all__ = ["MonitorDialog", "DevicePropertyDialog"]
 
-import icons
+import karabo_gui.icons as icons
 import manager
 from schema import Schema, SlotNode
 

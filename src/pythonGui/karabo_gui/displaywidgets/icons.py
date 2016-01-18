@@ -1,6 +1,6 @@
 
 from const import ns_karabo
-import icons
+import karabo_gui.icons as icons
 from widget import DisplayWidget
 
 from karabo.api_2 import Integer, Number, String

@@ -11,10 +11,10 @@
 
 
 
-__all__ = ["DisplayFileOut"]
+__all__ = ["DisplayFileIn"]
 
 
-import icons
+import karabo_gui.icons as icons
 from util import SignalBlocker
 from widget import DisplayWidget
 
@@ -23,13 +23,13 @@ from karabo.api_2 import String
 from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 
-class DisplayFileOut(DisplayWidget):
+class DisplayFileIn(DisplayWidget):
     category = String
-    displayType = "fileOut"
-    alias = "File Out"
+    displayType = "fileIn"
+    alias = "File In"
 
     def __init__(self, box, parent):
-        super(DisplayFileOut, self).__init__(box)
+        super(DisplayFileIn, self).__init__(box)
         
         self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
@@ -38,12 +38,12 @@ class DisplayFileOut(DisplayWidget):
         self.__lePath = QLineEdit()
         self.__lePath.setReadOnly(True)
         hLayout.addWidget(self.__lePath)
-
+        
         text = "Select directory"
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
         self.__tbPath.setToolTip(text)
-        self.__tbPath.setIcon(icons.fileout)
+        self.__tbPath.setIcon(icons.filein)
         self.__tbPath.setEnabled(False)
         self.__tbPath.setMaximumSize(25,25)
         hLayout.addWidget(self.__tbPath)

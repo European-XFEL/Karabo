@@ -9,45 +9,44 @@
    and is created by the factory class EditableWidget.
 """
 
-__all__ = ["EditableDirectory"]
+__all__ = ["EditableFileOut"]
 
-
-import icons
+import karabo_gui.icons as icons
+from util import getSaveFileName
 from util import SignalBlocker
 from widget import EditableWidget
 
 from karabo.api_2 import String
 
-from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QLineEdit, QToolButton,
-                         QWidget)
+from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 
-class EditableDirectory(EditableWidget):
+class EditableFileOut(EditableWidget):
     category = String
     priority = 20
-    displayType = "directory"
-    alias = "Directory"
+    displayType = "fileOut"
+    alias = "File Out"
 
     def __init__(self, box, parent):
-        super(EditableDirectory, self).__init__(box)
+        super(EditableFileOut, self).__init__(box)
         
         self.compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
-        
+
         self.lePath = QLineEdit()
         self.lePath.textChanged.connect(self.onEditingFinished)
         hLayout.addWidget(self.lePath)
         
-        text = "Select directory"
+        text = "Select output file"
         self.tbPath = QToolButton()
         self.tbPath.setStatusTip(text)
         self.tbPath.setToolTip(text)
-        self.tbPath.setIcon(icons.open)
+        self.tbPath.setIcon(icons.fileout)
         self.tbPath.setMaximumSize(25, 25)
-        self.tbPath.clicked.connect(self.onDirectoryClicked)
+        self.tbPath.clicked.connect(self.onFileOutClicked)
         hLayout.addWidget(self.tbPath)
-
+        
         # Needed for updates during input, otherwise cursor jumps to end of input
         self.lastCursorPos = 0
 
@@ -68,7 +67,7 @@ class EditableDirectory(EditableWidget):
 
         with SignalBlocker(self.lePath):
             self.lePath.setText(value)
-
+        
         self.lePath.setCursorPosition(self.lastCursorPos)
 
 
@@ -77,10 +76,10 @@ class EditableDirectory(EditableWidget):
         EditableWidget.onEditingFinished(self, value)
 
 
-    def onDirectoryClicked(self):
-        directory = QFileDialog.getExistingDirectory(None, "Select directory")
-        if not directory:
+    def onFileOutClicked(self):
+        filename = getSaveFileName("Select output file")
+        if not filename:
             return
 
-        self.lePath.setText(directory)
+        self.lePath.setText(filename)
 

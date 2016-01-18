@@ -9,26 +9,27 @@
    and is created by the factory class EditableWidget.
 """
 
-__all__ = ["EditableFileOut"]
+__all__ = ["EditableFileIn"]
 
-import icons
-from util import getSaveFileName
+
+import karabo_gui.icons as icons
 from util import SignalBlocker
 from widget import EditableWidget
 
 from karabo.api_2 import String
 
-from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
+from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QLineEdit, QToolButton,
+                         QWidget)
 
 
-class EditableFileOut(EditableWidget):
+class EditableFileIn(EditableWidget):
     category = String
     priority = 20
-    displayType = "fileOut"
-    alias = "File Out"
+    displayType = "fileIn"
+    alias = "File In"
 
     def __init__(self, box, parent):
-        super(EditableFileOut, self).__init__(box)
+        super(EditableFileIn, self).__init__(box)
         
         self.compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.compositeWidget)
@@ -38,15 +39,15 @@ class EditableFileOut(EditableWidget):
         self.lePath.textChanged.connect(self.onEditingFinished)
         hLayout.addWidget(self.lePath)
         
-        text = "Select output file"
+        text = "Select input file"
         self.tbPath = QToolButton()
         self.tbPath.setStatusTip(text)
         self.tbPath.setToolTip(text)
-        self.tbPath.setIcon(icons.fileout)
+        self.tbPath.setIcon(icons.filein)
         self.tbPath.setMaximumSize(25, 25)
-        self.tbPath.clicked.connect(self.onFileOutClicked)
+        self.tbPath.clicked.connect(self.onFileInClicked)
         hLayout.addWidget(self.tbPath)
-        
+
         # Needed for updates during input, otherwise cursor jumps to end of input
         self.lastCursorPos = 0
 
@@ -67,7 +68,7 @@ class EditableFileOut(EditableWidget):
 
         with SignalBlocker(self.lePath):
             self.lePath.setText(value)
-        
+
         self.lePath.setCursorPosition(self.lastCursorPos)
 
 
@@ -76,10 +77,10 @@ class EditableFileOut(EditableWidget):
         EditableWidget.onEditingFinished(self, value)
 
 
-    def onFileOutClicked(self):
-        filename = getSaveFileName("Select output file")
-        if not filename:
+    def onFileInClicked(self):
+        fileIn = QFileDialog.getOpenFileName(None, "Select input file")
+        if not fileIn:
             return
 
-        self.lePath.setText(filename)
+        self.lePath.setText(fileIn)
 
