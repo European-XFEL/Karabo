@@ -8,7 +8,7 @@ __all__ = ["DisplayImageStack"]
 
 from widget import DisplayWidget
 import copy
-import icons
+import karabo_gui.icons as icons
 from karabo.api_2 import ChannelSpaceType
 from schema import ImageNode
 

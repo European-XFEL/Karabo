@@ -14,7 +14,7 @@ __all__ = ["ProjectTreeView"]
 
 import globals
 
-from dialogs.projectdialog import ProjectDialog, ProjectSaveDialog, ProjectLoadDialog
+from karabo_gui.dialogs.projectdialog import ProjectDialog, ProjectSaveDialog, ProjectLoadDialog
 from scene import Scene
 from manager import Manager
 from network import Network

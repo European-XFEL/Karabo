@@ -21,7 +21,7 @@
 __all__ = ["EditableList"]
 
 
-import icons
+import karabo_gui.icons as icons
 from listedit import ListEdit
 from util import SignalBlocker
 from widget import EditableWidget, DisplayWidget
