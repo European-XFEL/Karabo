@@ -13,7 +13,7 @@ __all__ = ["ProjectPanel"]
 
 from docktabwindow import Dockable
 from projecttreeview import ProjectTreeView
-import icons
+import karabo_gui.icons as icons
 import manager
 
 from PyQt4.QtCore import pyqtSignal

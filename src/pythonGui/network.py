@@ -14,7 +14,7 @@
 
 __all__ = ["Network"]
 
-from dialogs.logindialog import LoginDialog
+from karabo_gui.dialogs.logindialog import LoginDialog
 from struct import pack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket

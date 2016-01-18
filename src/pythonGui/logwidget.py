@@ -22,7 +22,7 @@ from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QToolButton, QVBoxLayout, QWidget)
 
 import globals
-import icons
+import karabo_gui.icons as icons
 from manager import Manager
 from util import getSaveFileName
 

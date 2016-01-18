@@ -12,22 +12,22 @@
 __all__ = ["MainWindow"]
 
 import os.path
-import icons
+import karabo_gui.icons as icons
 
 from docktabwindow import DockTabWindow
 import globals
 from karabo.api_2 import AccessLevel
 from network import Network
 
-from panels.configurationpanel import ConfigurationPanel
-from panels.custommiddlepanel import CustomMiddlePanel
-from panels.loggingpanel import LoggingPanel
-from panels.macropanel import MacroPanel
-from panels.navigationpanel import NavigationPanel
-from panels.notificationpanel import NotificationPanel
-from panels.placeholderpanel import PlaceholderPanel
-from panels.projectpanel import ProjectPanel
-from panels.scriptingpanel import ScriptingPanel
+from karabo_gui.panels.configurationpanel import ConfigurationPanel
+from karabo_gui.panels.custommiddlepanel import CustomMiddlePanel
+from karabo_gui.panels.loggingpanel import LoggingPanel
+from karabo_gui.panels.macropanel import MacroPanel
+from karabo_gui.panels.navigationpanel import NavigationPanel
+from karabo_gui.panels.notificationpanel import NotificationPanel
+from karabo_gui.panels.placeholderpanel import PlaceholderPanel
+from karabo_gui.panels.projectpanel import ProjectPanel
+from karabo_gui.panels.scriptingpanel import ScriptingPanel
 
 from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (QAction, QActionGroup, qApp, QMainWindow, QMenu,

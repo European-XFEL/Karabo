@@ -11,11 +11,11 @@
 
 
 
-__all__ = ["DisplayFileIn"]
+__all__ = ["DisplayDirectory"]
 
 
-import icons
 from util import SignalBlocker
+import karabo_gui.icons as icons
 from widget import DisplayWidget
 
 from karabo.api_2 import String
@@ -23,13 +23,13 @@ from karabo.api_2 import String
 from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 
-class DisplayFileIn(DisplayWidget):
+class DisplayDirectory(DisplayWidget):
     category = String
-    displayType = "fileIn"
-    alias = "File In"
+    displayType = "directory"
+    alias = "Directory"
 
     def __init__(self, box, parent):
-        super(DisplayFileIn, self).__init__(box)
+        super(DisplayDirectory, self).__init__(box)
         
         self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
@@ -43,7 +43,7 @@ class DisplayFileIn(DisplayWidget):
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
         self.__tbPath.setToolTip(text)
-        self.__tbPath.setIcon(icons.filein)
+        self.__tbPath.setIcon(icons.open)
         self.__tbPath.setEnabled(False)
         self.__tbPath.setMaximumSize(25,25)
         hLayout.addWidget(self.__tbPath)

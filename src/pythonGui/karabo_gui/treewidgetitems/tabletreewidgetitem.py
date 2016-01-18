@@ -1,6 +1,6 @@
 #############################################################################
-# Author: <kerstin.weger@xfel.eu>
-# Created on May 11, 2013
+# Author: <steffen.hauf@xfel.eu>
+# Created on August 11, 2015
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
@@ -9,26 +9,26 @@
    an attribute item and its parameters.
 """
 
-__all__ = ["PropertyTreeWidgetItem"]
+__all__ = ["TableTreeWidgetItem"]
 
 
 from .basetreewidgetitem import BaseTreeWidgetItem
 from components import DisplayComponent
-import icons
+import karabo_gui.icons as icons
 
 from PyQt4.QtCore import Qt, QSize
 from PyQt4.QtGui import QAction, QCursor, QMenu
 
-class PropertyTreeWidgetItem(BaseTreeWidgetItem):
+class TableTreeWidgetItem(BaseTreeWidgetItem):
 
 
     def __init__(self, box, parent, parentItem=None):
-        super(PropertyTreeWidgetItem, self).__init__(box, parent, parentItem)
+        super(TableTreeWidgetItem, self).__init__(box, parent, parentItem)
         
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, icons.folder)
 
-        self.displayComponent = DisplayComponent("DisplayLabel", self.box,
+        self.displayComponent = DisplayComponent("DisplayTableElement", self.box,
                                                  self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)

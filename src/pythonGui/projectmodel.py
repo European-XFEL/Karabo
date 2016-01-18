@@ -16,13 +16,13 @@ __all__ = ["ProjectModel"]
 
 from configuration import Configuration
 import globals
-import icons
-from dialogs.configurationdialog import SelectMultipleProjectConfigurationDialog
-from dialogs.devicedialogs import DeviceGroupDialog
-from dialogs.dialogs import MacroDialog
-from dialogs.duplicatedialog import DuplicateDialog
-from dialogs.monitordialog import MonitorDialog
-from dialogs.scenedialog import SceneDialog
+import karabo_gui.icons as icons
+from karabo_gui.dialogs.configurationdialog import SelectMultipleProjectConfigurationDialog
+from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
+from karabo_gui.dialogs.dialogs import MacroDialog
+from karabo_gui.dialogs.duplicatedialog import DuplicateDialog
+from karabo_gui.dialogs.monitordialog import MonitorDialog
+from karabo_gui.dialogs.scenedialog import SceneDialog
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from scene import Scene
 import manager

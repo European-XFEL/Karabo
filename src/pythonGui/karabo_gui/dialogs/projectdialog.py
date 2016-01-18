@@ -8,7 +8,7 @@
 __all__ = ["ProjectSaveDialog", "ProjectLoadDialog"]
 
 import globals
-import icons
+import karabo_gui.icons as icons
 from karabo.api_2 import ProjectAccess
 from messagebox import MessageBox
 import network

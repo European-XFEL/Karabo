@@ -10,7 +10,7 @@ from docktabwindow import Dockable
 import gui
 from PyQt4.QtCore import QObject, QMimeData, QPoint, Qt, pyqtSignal
 from PyQt4.QtGui import QApplication, QDropEvent, QWidget
-import icons
+import karabo_gui.icons as icons
 from manager import Manager
 import manager
 import network

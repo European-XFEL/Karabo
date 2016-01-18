@@ -30,7 +30,7 @@ from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog, QComboBo
                         QVBoxLayout, QWidget, QDialogButtonBox, QCheckBox)
 from PyQt4.QtCore import *
 
-import icons
+import karabo_gui.icons as icons
 
 import manager
 

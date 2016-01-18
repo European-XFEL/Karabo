@@ -9,10 +9,10 @@
    and is created by the factory class EditableWidget.
 """
 
-__all__ = ["EditableFileIn"]
+__all__ = ["EditableDirectory"]
 
 
-import icons
+import karabo_gui.icons as icons
 from util import SignalBlocker
 from widget import EditableWidget
 
@@ -22,30 +22,30 @@ from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QLineEdit, QToolButton,
                          QWidget)
 
 
-class EditableFileIn(EditableWidget):
+class EditableDirectory(EditableWidget):
     category = String
     priority = 20
-    displayType = "fileIn"
-    alias = "File In"
+    displayType = "directory"
+    alias = "Directory"
 
     def __init__(self, box, parent):
-        super(EditableFileIn, self).__init__(box)
+        super(EditableDirectory, self).__init__(box)
         
         self.compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
-
+        
         self.lePath = QLineEdit()
         self.lePath.textChanged.connect(self.onEditingFinished)
         hLayout.addWidget(self.lePath)
         
-        text = "Select input file"
+        text = "Select directory"
         self.tbPath = QToolButton()
         self.tbPath.setStatusTip(text)
         self.tbPath.setToolTip(text)
-        self.tbPath.setIcon(icons.filein)
+        self.tbPath.setIcon(icons.open)
         self.tbPath.setMaximumSize(25, 25)
-        self.tbPath.clicked.connect(self.onFileInClicked)
+        self.tbPath.clicked.connect(self.onDirectoryClicked)
         hLayout.addWidget(self.tbPath)
 
         # Needed for updates during input, otherwise cursor jumps to end of input
@@ -77,10 +77,10 @@ class EditableFileIn(EditableWidget):
         EditableWidget.onEditingFinished(self, value)
 
 
-    def onFileInClicked(self):
-        fileIn = QFileDialog.getOpenFileName(None, "Select input file")
-        if not fileIn:
+    def onDirectoryClicked(self):
+        directory = QFileDialog.getExistingDirectory(None, "Select directory")
+        if not directory:
             return
 
-        self.lePath.setText(fileIn)
+        self.lePath.setText(directory)
 

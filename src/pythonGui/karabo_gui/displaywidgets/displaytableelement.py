@@ -21,7 +21,7 @@
 __all__ = ["DisplayTableElement"]
 
 
-from editablewidgets.editabletableelement import *
+from karabo_gui.editablewidgets.editabletableelement import *
 from PyQt4.QtCore import *
 from karabo.api_2 import Hash, VectorHash
 
