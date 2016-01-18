@@ -81,12 +81,6 @@ class Remote(Device):
             self.counter = i
             yield from sleep(0.1)
 
-    @Slot()
-    @coroutine
-    def error(self):
-        with (yield from getDevice("local")) as d:
-            yield from d.error()
-
     generic = Superslot()
     generic_int = SuperInteger()
     logmessage = VectorChar()
@@ -102,163 +96,6 @@ class Remote(Device):
 
 
 class Local(Device):
-    @Slot()
-    @coroutine
-    def letitdo(self):
-        with (yield from getDevice("remote")) as d:
-            yield from d.doit()
-
-    @Slot()
-    @coroutine
-    def letitchange(self):
-        with (yield from getDevice("remote")) as d:
-            yield from d.changeit()
-
-    @Slot()
-    @coroutine
-    def disconnect(self):
-        d = yield from getDevice("remote")
-        task = async(d.count())
-        yield from sleep(0.3)
-        self.f1 = d.counter
-        yield from sleep(0.3)
-        with (yield from d):
-            self.f2 = d.counter
-        yield from sleep(1)
-        self.f3 = d.counter
-        with d:
-            yield from sleep(2)
-            self.f4 = d.counter
-        yield from task
-
-    @Slot()
-    @coroutine
-    def letset(self):
-        with (yield from getDevice("remote")) as d:
-            self.f1 = d.value
-            d.value = 10
-            yield from sleep(0.1)
-            self.f2 = d.value
-            yield from d.changeit()
-            yield from sleep(0.1)
-            self.f3 = d.value
-
-    @Slot()
-    @coroutine
-    def dogeneric(self):
-        d = yield from getDevice("remote")
-        yield from d.generic()
-
-    @Slot()
-    @coroutine
-    def dogenericint(self):
-        d = yield from getDevice("remote")
-        d.generic_int = 33
-        yield from d
-
-    @Slot()
-    @coroutine
-    def other(self):
-        with (yield from getDevice("remote")) as d:
-            d.other = 102
-
-    @Slot()
-    @coroutine
-    def setwait(self):
-        d = yield from getDevice("remote")
-        yield from setWait(d, value=200, counter=300)
-
-    @Slot()
-    @coroutine
-    def setnowait(self):
-        d = yield from getDevice("remote")
-        setNoWait(d, value=200, counter=300)
-
-    @Slot()
-    @coroutine
-    def waituntilnew(self):
-        with (yield from getDevice("remote")) as d:
-            d.counter = 0
-            yield from sleep(0.1)
-            task = async(d.count())
-            try:
-                for i in range(30):
-                    j = yield from waitUntilNew(d).counter
-                    if i != j:
-                        self.max = i
-                        break
-                else:
-                    self.max = 30
-            finally:
-                yield from task
-
-    @Slot()
-    @coroutine
-    def waituntildevice(self):
-        with (yield from getDevice("remote")) as d:
-            d.counter = 0
-            yield from sleep(0.1)
-            task = async(d.count())
-            try:
-                for i in range(30):
-                    h = yield from waitUntilNew(d)
-                    if i != h["counter"]:
-                        self.max = i
-                        break
-                else:
-                    self.max = 30
-            finally:
-                yield from task
-
-    @Slot()
-    @coroutine
-    def collect_set(self):
-        with (yield from getDevice("remote")) as d:
-            d.once = 3
-            d.once = 7
-            d.once = 10
-
-    @Slot()
-    @coroutine
-    def disallowed(self):
-        with (yield from getDevice("remote")) as d:
-            d.disallowed_int = 333
-            yield from sleep(0.1)
-            self.f1 = d.value
-            yield from d.disallow()
-            yield from sleep(0.1)
-            self.f2 = d.value
-            d.disallowed_int = 444
-            yield from sleep(0.1)
-            self.f3 = d.value
-            yield from d.disallow()
-            self.f4 = d.value
-
-    @Slot()
-    @coroutine
-    def queue(self):
-        with (yield from getDevice("remote")) as d:
-            self.good = 0
-            task = async(d.count())
-            yield from waitUntil(lambda: d.counter == 0)
-            try:
-                q = Queue(d).counter
-                for i in range(1, 30):
-                    j = yield from q.get()
-                    if i == j:
-                        self.good += 1
-                    yield from sleep(i * 0.01)
-            finally:
-                yield from task
-
-    @coroutine
-    def nested(self):
-        with (yield from getDevice("remote")) as d:
-            self.f1 = d.nested.val
-            self.f2 = d.nested.nestnest.value
-            d.nested.val = 4
-            d.nested.nestnest.value = 5
-
     @Slot()
     @coroutine
     def error(self):
@@ -277,91 +114,99 @@ class Local(Device):
         with (yield from getDevice("remote")) as d:
             yield from d.doit()
 
-    @coroutine
-    def loginfo(self):
-        with (yield from getDevice("remote")) as d:
-            t = async(d.read_log())
-            yield from sleep(0.1)
-            self.logger.warning("this is an info")
-            yield from t
-
-
-    @coroutine
-    def logexception(self):
-        with (yield from getDevice("remote")) as d:
-            t = async(d.read_log())
-            yield from sleep(0.1)
-            try:
-                raise RuntimeError
-            except Exception:
-                self.logger.exception("expected exception")
-            yield from t
-
 
 class Tests(TestCase):
     @async_tst
     def test_execute(self):
+        """test the execution of remote slots"""
         self.assertFalse(remote.done)
-        yield from local.letitdo()
+        with (yield from getDevice("remote")) as d:
+            yield from d.doit()
         yield from sleep(0.1)
         self.assertTrue(remote.done)
 
     @async_tst
     def test_change(self):
+        """test changing a remote parameter"""
         remote.value = 7
-        yield from local.letitchange()
+        with (yield from getDevice("remote")) as d:
+            yield from d.changeit()
         yield from sleep(0.1)
         self.assertEqual(remote.value, 3)
 
     @async_tst
     def test_disconnect(self):
-        yield from local.disconnect()
-        self.assertEqual(local.f1, -1)
-        self.assertNotEqual(local.f2, -1)
-        self.assertTrue(local.f2 < 7 and (0 <= local.f3 - local.f2 < 2))
-        self.assertEqual(local.f4, 29)
-
+        """test values are not updating when disconnected"""
+        d = yield from getDevice("remote")
+        task = async(d.count())
+        yield from sleep(0.3)
+        self.assertEqual(d.counter, -1)
+        yield from sleep(0.3)
+        with (yield from d):
+            tmp = d.counter
+            self.assertNotEqual(d.counter, -1)
+        yield from sleep(1)
+        self.assertTrue(tmp < 7 and (0 <= d.counter - tmp < 2))
+        with d:
+            yield from sleep(2)
+            self.assertEqual(d.counter, 29)
+        yield from task
 
     @async_tst
     def test_set(self):
+        """test setting of remote values works"""
         remote.value = 7
-        yield from local.letset()
-        self.assertEqual(local.f1, 7)
-        self.assertEqual(local.f2, 10)
-        self.assertEqual(local.f3, 6)
-
+        with (yield from getDevice("remote")) as d:
+            self.assertEqual(d.value, 7)
+            d.value = 10
+            yield from sleep(0.1)
+            self.assertEqual(d.value, 10)
+            yield from d.changeit()
+            yield from sleep(0.1)
+            self.assertEqual(d.value, 6)
 
     @async_tst
     def test_generic(self):
+        """test calling a generic slot"""
         remote.value = 7
-        yield from local.dogeneric()
+        d = yield from getDevice("remote")
+        yield from d.generic()
         yield from sleep(0.1)
         self.assertEqual(remote.value, 22)
 
     @async_tst
     def test_generic_int(self):
+        """test setting a generic property"""
         remote.value = 7
-        yield from local.dogenericint()
+        d = yield from getDevice("remote")
+        d.generic_int = 33
+        yield from d
         yield from sleep(0.1)
         self.assertEqual(remote.value, 66)
 
     @async_tst
-    def test_other(self):
-        yield from local.other()
+    def test_setter(self):
+        """test setting a property with a setter method"""
+        with (yield from getDevice("remote")) as d:
+            d.other = 102
         yield from sleep(0.1)
         self.assertEqual(remote.value, 102)
 
     @async_tst
     def test_setwait(self):
-        yield from local.setwait()
+        """test the setWait coroutine"""
+        d = yield from getDevice("remote")
+        yield from setWait(d, value=200, counter=300)
         self.assertEqual(remote.value, 200)
         self.assertEqual(remote.counter, 300)
 
     @async_tst
     def test_setnowait(self):
+        """test the setNoWait coroutine"""
         remote.value = 0
         remote.counter = 0
-        yield from local.setnowait()
+        d = yield from getDevice("remote")
+        setNoWait(d, value=200, counter=300)
         self.assertEqual(remote.value, 0)
         self.assertEqual(remote.counter, 0)
         yield from sleep(0.1)
@@ -371,6 +216,7 @@ class Tests(TestCase):
 
     @async_tst
     def test_waituntil(self):
+        """test the waitUntil coroutine"""
         with (yield from getDevice("remote")) as d:
             d.counter = 0
             yield from waitUntil(lambda: d.counter == 0)
@@ -390,33 +236,67 @@ class Tests(TestCase):
 
     @async_tst
     def test_waituntilnew(self):
-        yield from local.waituntilnew()
-        self.assertEqual(local.max, 30)
+        """test the waitUntilNew coroutine for properties"""
+        with (yield from getDevice("remote")) as d:
+            d.counter = 0
+            yield from sleep(0.1)
+            task = async(d.count())
+            try:
+                for i in range(30):
+                    j = yield from waitUntilNew(d).counter
+                    self.assertEqual(i, j)
+            finally:
+                yield from task
 
     @async_tst
     def test_waituntildevice(self):
-        yield from local.waituntildevice()
-        self.assertEqual(local.max, 30)
+        """test the waitUntilNew coroutine for devices"""
+        with (yield from getDevice("remote")) as d:
+            d.counter = 0
+            yield from sleep(0.1)
+            task = async(d.count())
+            try:
+                for i in range(30):
+                    h = yield from waitUntilNew(d)
+                    self.assertEqual(i, h["counter"])
+            finally:
+                yield from task
 
     @async_tst
     def test_collect(self):
-        yield from local.collect_set()
+        """test that multiple settings are gathered into one"""
+        with (yield from getDevice("remote")) as d:
+            d.once = 3
+            d.once = 7
+            d.once = 10
         yield from sleep(0.1)
         self.assertEqual(remote.once_value, 10)
 
     @async_tst
     def test_disallow(self):
+        """test that values cannot be set if in wrong state"""
         with self.assertLogs(logger="remote", level="ERROR"):
-            yield from local.disallowed()
-        self.assertEqual(local.f1, 333)
-        self.assertEqual(local.f2, 777)
-        self.assertEqual(local.f3, 777)
-        self.assertEqual(local.f4, 777)
+            with (yield from getDevice("remote")) as d:
+                d.disallowed_int = 333
+                yield from sleep(0.1)
+                self.assertEqual(d.value, 333)
+                yield from d.disallow()
+                yield from sleep(0.1)
+                self.assertEqual(d.value, 777)
+                d.disallowed_int = 444
+                yield from sleep(0.1)
+                self.assertEqual(d.value, 777)
+                yield from d.disallow()
+                self.assertEqual(d.value, 777)
 
-    @expectedFailure
     @async_tst
     def test_log(self):
-        yield from local.loginfo()
+        """test the logging of warnings and exceptions"""
+        with (yield from getDevice("remote")) as d:
+            t = async(d.read_log())
+            yield from sleep(0.1)
+            local.logger.warning("this is an info")
+            yield from t
         hash = Hash.decode(remote.logmessage, "Bin")
         hash = hash["messages"][0]
         self.assertEqual(hash["message"], "this is an info")
@@ -424,7 +304,14 @@ class Tests(TestCase):
         self.assertEqual(hash["category"], "local")
         self.assertEqual(hash["timestamp"][:18],
                          datetime.now().isoformat()[:18])
-        yield from local.logexception()
+        with (yield from getDevice("remote")) as d:
+            t = async(d.read_log())
+            yield from sleep(0.1)
+            try:
+                raise RuntimeError
+            except Exception:
+                local.logger.exception("expected exception")
+            yield from t
         hash = Hash.decode(remote.logmessage, "Bin")
         hash = hash["messages"][0]
         self.assertEqual(hash["message"], "expected exception")
@@ -432,31 +319,48 @@ class Tests(TestCase):
         self.assertEqual(hash["category"], "local")
         self.assertEqual(hash["timestamp"][:18],
                          datetime.now().isoformat()[:18])
-        self.assertEqual(hash["funcname"], "logexception")
+        self.assertEqual(hash["funcname"], "test_log")
         self.assertEqual(hash["module"], "remote_test")
         self.assertEqual(len(hash["traceback"]), 3)
 
     @async_tst
     def test_queue(self):
-        yield from local.queue()
-        self.assertEqual(local.good, 29)
+        """test queues of properties"""
+        with (yield from getDevice("remote")) as d:
+            task = async(d.count())
+            yield from waitUntil(lambda: d.counter == 0)
+            try:
+                q = Queue(d).counter
+                for i in range(1, 30):
+                    j = yield from q.get()
+                    self.assertEqual(i, j)
+                    yield from sleep(i * 0.01)
+            finally:
+                yield from task
 
     @async_tst
     def test_nested(self):
+        """test accessing nested properties"""
         remote.nested.val = 3
         remote.nested.nestnest.value = 7
-        yield from local.nested()
-        yield from sleep(1)
-        self.assertEqual(local.f1, 3)
-        self.assertEqual(local.f2, 7)
+        with (yield from getDevice("remote")) as d:
+            self.assertEqual(d.nested.val, 3)
+            self.f1 = d.nested.val
+            self.f2 = d.nested.nestnest.value
+            self.assertEqual(d.nested.nestnest.value, 7)
+            d.nested.val = 4
+            d.nested.nestnest.value = 5
+        yield from sleep(0.1)
         self.assertEqual(remote.nested.val, 4)
         self.assertEqual(remote.nested.nestnest.value, 5)
 
     @async_tst
     def test_error(self):
+        """test error reporting and calling of error methods"""
         remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
-            yield from remote.error()
+            with (yield from getDevice("local")) as d:
+                yield from d.error()
             yield from sleep(0.1)
         self.assertTrue(remote.done)
         remote.done = False
@@ -469,6 +373,7 @@ class Tests(TestCase):
 
     @async_tst
     def test_task_error(self):
+        """test that errors of created tasks are properly reported"""
         remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
             with (yield from getDevice("local")) as d:
