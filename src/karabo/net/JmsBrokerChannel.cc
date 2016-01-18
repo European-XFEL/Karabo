@@ -522,7 +522,9 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "An exception during JMS broker message reception occurred: \n" << e;
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "An unknown exception during JMS broker message reception occurred";
-            }
+            }            
+            // Stop the subscription to the broker as we do not listen anymore            
+            closeConsumer();
         }
 
 
@@ -839,6 +841,9 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
+            
+            // Stop the subscription to the broker as we do not listen anymore            
+            closeConsumer();
         }
 
 
