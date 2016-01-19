@@ -19,6 +19,7 @@
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Version.hh>
+#include <karabo/util/Configurator.hh>
 #include <karabo/io/Input.hh>
 #include <karabo/io/Output.hh>
 #include <karabo/log/Logger.hh>
@@ -496,76 +497,53 @@ namespace karabo {
 
         void DeviceServer::slotStartDevice(const karabo::util::Hash& configuration) {
 
-            if (configuration.has("classId")) {
-                instantiateNew(configuration);
-            } else {
-                instantiateOld(configuration);
-            }
+            const std::pair<std::string, util::Hash>& classIdConfig
+                = this->prepareInstantiate(configuration);
+
+            KARABO_LOG_INFO << "Trying to start " << classIdConfig.first << "...";
+            KARABO_LOG_DEBUG << "with the following configuration:\n" << configuration;
+
+            this->instantiate(classIdConfig);
         }
 
 
-        void DeviceServer::instantiateNew(const karabo::util::Hash& hash) {
-            try {
+        std::pair<std::string, util::Hash>
+        DeviceServer::prepareInstantiate(const karabo::util::Hash& configuration)
+        {
 
-                std::string classId = hash.get<string>("classId");
-
-                KARABO_LOG_INFO << "Trying to start " << classId << "...";
-                KARABO_LOG_DEBUG << "with the following configuration:\n" << hash;
+            if (configuration.has("classId")) {
+                // New style
+                const std::string& classId = configuration.get<string>("classId");
 
                 // Get configuration
-                Hash config = hash.get<Hash>("configuration");
+                Hash config(configuration.get<Hash>("configuration"));
 
                 // Inject serverId
                 config.set("_serverId_", m_serverId);
 
-                // Inject deviceId
-                if (!hash.has("deviceId")) {
+                // Inject deviceId use - sensible default in case no device instance id is supplied
+                if (!configuration.has("deviceId")) {
                     config.set("_deviceId_", this->generateDefaultDeviceId(classId));
-                } else if (hash.get<string>("deviceId").empty()) {
+                } else if (configuration.get<string>("deviceId").empty()) {
                     config.set("_deviceId_", this->generateDefaultDeviceId(classId));
                 } else {
-                    config.set("_deviceId_", hash.get<string>("deviceId"));
+                    config.set("_deviceId_", configuration.get<string>("deviceId"));
                 }
 
                 // Inject connection
                 config.set("_connection_", m_connectionConfiguration);
 
+                return std::make_pair(classId, config);
+            } else {
+                // Old style, e.g. used for auto started devices
+                const std::string& classId = configuration.begin()->getKey();
 
-                string deviceInstanceId;
-                {
-                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-
-                    BaseDevice::Pointer device = BaseDevice::create(classId, config); // TODO If constructor blocks, we are lost here!!
-                    boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
-
-                    // Associate deviceInstance with its thread
-                    deviceInstanceId = device->getInstanceId();
-                    m_deviceInstanceMap[deviceInstanceId] = t;
-                }
-
-                // Answer initiation of device
-                reply(true, deviceInstanceId); // TODO think about
-
-            } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Device could not be started because: " << e.userFriendlyMsg();
-                reply(false, "Device could not be started because: " + e.userFriendlyMsg());
-                return;
-            }
-        }
-
-
-        void DeviceServer::instantiateOld(const karabo::util::Hash& hash) {
-            try {
-                std::string classId = hash.begin()->getKey();
-
-                KARABO_LOG_INFO << "Trying to start " << classId << "...";
-                KARABO_LOG_DEBUG << "with the following configuration:\n" << hash;
-
-                // Inject device-server information
-                Hash modifiedConfig(hash);
+                // Get configuration
+                Hash modifiedConfig(configuration);
                 Hash& tmp = modifiedConfig.begin()->getValue<Hash>();
+                // Inject serverId
                 tmp.set("_serverId_", m_serverId);
-                // Apply sensible default in case no device instance id is supplied
+                // Inject deviceId use - sensible default in case no device instance id is supplied
                 if (!tmp.has("deviceId")) {
                     tmp.set("_deviceId_", this->generateDefaultDeviceId(classId));
                 } else if (tmp.get<string>("deviceId").empty()) {
@@ -576,23 +554,43 @@ namespace karabo {
 
                 // Inject connection
                 tmp.set("_connection_", m_connectionConfiguration);
-                
-                BaseDevice::Pointer device = BaseDevice::create(modifiedConfig); // TODO If constructor blocks, we are lost here!!
-                boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
 
-                // Associate deviceInstance with its thread
-                string deviceInstanceId = device->getInstanceId();
-                m_deviceInstanceMap[deviceInstanceId] = t;
+                return util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
+            }
+        }
+
+
+        void DeviceServer::instantiate(const std::pair<std::string, util::Hash>& classIdConfig)
+        {
+            const std::string& classId = classIdConfig.first;
+            const util::Hash& config = classIdConfig.second;
+            try {
+
+                BaseDevice::Pointer device = BaseDevice::create(classId, config); // TODO If constructor blocks, we are lost here!!
+                {
+                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                    boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
+
+                    // Associate deviceInstance with its thread
+                    m_deviceInstanceMap[device->getInstanceId()] = t;
+                }
 
                 // Answer initiation of device
-                reply(true, deviceInstanceId); // TODO think about
+                reply(true, device->getInstanceId()); // TODO think about
 
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Device could not be started because: " << e.userFriendlyMsg();
-                reply(false, "Device could not be started because: " + e.userFriendlyMsg());
-                return;
+                const std::string message("Device of class " + classId + " could not be started because: " + e.userFriendlyMsg());
+                KARABO_LOG_ERROR << message;
+                reply(false, message);
+            } catch (const std::exception& se) {
+                const std::string message("Device of class " + classId + " could not be started because of standard exception: ");
+                KARABO_LOG_ERROR << message << se.what();
+                reply(false, message + se.what());
+            } catch (...) {
+                const std::string message("Device of class " + classId + " could not be started because of unknown exception");
+                KARABO_LOG_ERROR << message;
+                reply(false, message);
             }
-
         }
 
 

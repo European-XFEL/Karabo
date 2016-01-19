@@ -446,21 +446,16 @@ namespace karathon {
     }
 
 
-    void SignalSlotableWrap::registerSlotPy(const bp::object& slotFunction, const SlotType& slotType) {
+    void SignalSlotableWrap::registerSlotPy(const bp::object& slotFunction) {
 
         std::string functionName = bp::extract<std::string>((slotFunction.attr("__name__")));
-        SlotInstances* slotInstances;
-        if (slotType == LOCAL) slotInstances = &(m_localSlotInstances);
-        else slotInstances = &(m_globalSlotInstances);
-
-
-        SlotInstances::const_iterator it = slotInstances->find(functionName);
-        if (it != slotInstances->end()) { // Already registered
+        SlotInstances::const_iterator it = m_slotInstances.find(functionName);
+        if (it != m_slotInstances.end()) { // Already registered
             (boost::static_pointer_cast<SlotWrap >(it->second))->registerSlotFunction(slotFunction);
         } else {
             boost::shared_ptr<SlotWrap> s(new SlotWrap(functionName));
             s->registerSlotFunction(slotFunction); // Bind user's slot-function to Slot
-            (*slotInstances)[functionName] = s;
+            m_slotInstances[functionName] = s;
         }
     }
 

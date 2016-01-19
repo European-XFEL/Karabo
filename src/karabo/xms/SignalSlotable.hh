@@ -362,8 +362,7 @@ namespace karabo {
             int m_nThreads;
             
             SignalInstances m_signalInstances;
-            SlotInstances m_localSlotInstances;
-            SlotInstances m_globalSlotInstances;
+            SlotInstances m_slotInstances;
             // TODO Split into two mutexes
             mutable boost::mutex m_signalSlotInstancesMutex;
 
@@ -464,17 +463,6 @@ namespace karabo {
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
 
-            /**
-             * Slots may be of two different types:
-             * SPECIFIC: The slot is unique in the given network
-             * GLOBAL: Any signal that is connected with a compatible function signature will trigger this slot
-             *
-             */
-            enum SlotType {
-                LOCAL,
-                GLOBAL
-            };
-
             enum ConnectionType {
                 NO_TRACK,
                 TRACK,
@@ -511,18 +499,6 @@ namespace karabo {
             #define KARABO_SLOT3(slotName, a1, a2, a3) this->registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName);
             #define KARABO_SLOT4(slotName, a1, a2, a3, a4) this->registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName);
 
-            #define GLOBAL_SLOT0(slotName) this->registerSlot(boost::bind(&Self::slotName,this),#slotName, GLOBAL);
-            #define GLOBAL_SLOT1(slotName, a1) this->registerSlot<a1>(boost::bind(&Self::slotName,this,_1),#slotName, GLOBAL);
-            #define GLOBAL_SLOT2(slotName, a1, a2) this->registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName, GLOBAL);
-            #define GLOBAL_SLOT3(slotName, a1, a2, a3) this->registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName, GLOBAL);
-            #define GLOBAL_SLOT4(slotName, a1, a2, a3, a4) this->registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName, GLOBAL);
-
-            #define KARABO_GLOBAL_SLOT0(slotName) this->registerSlot(boost::bind(&Self::slotName,this),#slotName, GLOBAL);
-            #define KARABO_GLOBAL_SLOT1(slotName, a1) this->registerSlot<a1>(boost::bind(&Self::slotName,this,_1),#slotName, GLOBAL);
-            #define KARABO_GLOBAL_SLOT2(slotName, a1, a2) this->registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName, GLOBAL);
-            #define KARABO_GLOBAL_SLOT3(slotName, a1, a2, a3) this->registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName, GLOBAL);
-            #define KARABO_GLOBAL_SLOT4(slotName, a1, a2, a3, a4) this->registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName, GLOBAL);
-            
             #define KARABO_ON_INPUT(channelName, funcName) this->registerInputHandler(channelName, boost::bind(&Self::funcName,this,_1));
             #define KARABO_ON_DATA(channelName, funcName) this->registerDataHandler(channelName, boost::bind(&Self::funcName,this,_1));
             #define KARABO_ON_EOS(channelName, funcName) this->registerEndOfStreamHandler(channelName, boost::bind(&Self::funcName,this,_1));
@@ -531,7 +507,6 @@ namespace karabo {
             #define _KARABO_SIGNAL_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
             #define _KARABO_SYSTEM_SIGNAL_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
             #define _KARABO_SLOT_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
-            #define _KARABO_GLOBAL_SLOT_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
 
             #define KARABO_SIGNAL(...) \
 _KARABO_SIGNAL_N(,##__VA_ARGS__, \
@@ -558,15 +533,6 @@ KARABO_SLOT3(__VA_ARGS__), \
 KARABO_SLOT2(__VA_ARGS__), \
 KARABO_SLOT1(__VA_ARGS__), \
 KARABO_SLOT0(__VA_ARGS__) \
-)
-
-            #define KARABO_GLOBAL_SLOT(...) \
-_KARABO_GLOBAL_SLOT_N(,##__VA_ARGS__, \
-KARABO_GLOBAL_SLOT4(__VA_ARGS__), \
-KARABO_GLOBAL_SLOT3(__VA_ARGS__), \
-KARABO_GLOBAL_SLOT2(__VA_ARGS__), \
-KARABO_GLOBAL_SLOT1(__VA_ARGS__), \
-KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 )
 
             /**
@@ -1110,77 +1076,77 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
                 storeSignal(funcName, s, f);
             }
 
-            SlotInstances* getSlotInstancesPtr(const SlotType& slotType) {
-                if (slotType == LOCAL) return &(m_localSlotInstances);
-                else return &(m_globalSlotInstances);
-            }
 
-            void registerSlot(const boost::function<void () >& slot, const std::string& funcName, const SlotType& slotType = LOCAL) {
+            void registerSlot(const boost::function<void () >& slot, const std::string& funcName) {
 
-                SlotInstances* slotInstances = getSlotInstancesPtr(slotType);
-                SlotInstances::const_iterator it = slotInstances->find(funcName);
-                if (it != slotInstances->end()) { // Already registered, append another callback
+                // FIXME: Need to use m_signalSlotInstancesMutex?
+                SlotInstances::const_iterator it = m_slotInstances.find(funcName);
+                if (it != m_slotInstances.end()) { // Already registered, append another callback
                     (boost::static_pointer_cast<karabo::xms::Slot0 >(it->second))->registerSlotFunction(slot);
                 } else { // New local slot
                     boost::shared_ptr<karabo::xms::Slot0> s(new karabo::xms::Slot0(funcName));
                     // Bind user's slot-function to Slot
                     s->registerSlotFunction(slot);
                     // Book-keep slot
-                    (*slotInstances)[funcName] = s;
+                    m_slotInstances[funcName] = s;
                 }
             }
 
             template <class A1>
-            void registerSlot(const boost::function<void (const A1&) >& slot, const std::string& funcName, const SlotType& slotType = LOCAL) {
-                SlotInstances* slotInstances = getSlotInstancesPtr(slotType);
-                SlotInstances::const_iterator it = slotInstances->find(funcName);
-                if (it != slotInstances->end()) {
+            void registerSlot(const boost::function<void (const A1&) >& slot, const std::string& funcName) { //, const SlotType& slotType = LOCAL) {
+
+                // FIXME: Need to use m_signalSlotInstancesMutex?
+                SlotInstances::const_iterator it = m_slotInstances.find(funcName);
+                if (it != m_slotInstances.end()) {
                     (boost::static_pointer_cast<karabo::xms::Slot1<A1> >(it->second))->registerSlotFunction(slot);
                 } else {
                     boost::shared_ptr<karabo::xms::Slot1<A1> > s(new karabo::xms::Slot1<A1 > (funcName));
                     s->registerSlotFunction(slot);
-                    (*slotInstances)[funcName] = s;
+                    m_slotInstances[funcName] = s;
 
                 }
             }
 
             template <class A1, class A2>
-            void registerSlot(const boost::function<void (const A1&, const A2&) >& slot, const std::string& funcName, const SlotType& slotType = LOCAL) {
-                SlotInstances* slotInstances = getSlotInstancesPtr(slotType);
-                SlotInstances::const_iterator it = slotInstances->find(funcName);
-                if (it != slotInstances->end()) {
+            void registerSlot(const boost::function<void (const A1&, const A2&) >& slot, const std::string& funcName) { //, const SlotType& slotType = LOCAL) {
+
+                // FIXME: Need to use m_signalSlotInstancesMutex?
+                SlotInstances::const_iterator it = m_slotInstances.find(funcName);
+                if (it != m_slotInstances.end()) {
                     (boost::static_pointer_cast<karabo::xms::Slot2<A1, A2> >(it->second))->registerSlotFunction(slot);
                 } else {
                     boost::shared_ptr<karabo::xms::Slot2<A1, A2> > s(new karabo::xms::Slot2<A1, A2 > (funcName));
                     s->registerSlotFunction(slot);
-                    (*slotInstances)[funcName] = s;
+                    m_slotInstances[funcName] = s;
                 }
             }
 
             template <class A1, class A2, class A3>
-            void registerSlot(const boost::function<void (const A1&, const A2&, const A3&) >& slot, const std::string& funcName, const SlotType& slotType = LOCAL) {
-                SlotInstances* slotInstances = getSlotInstancesPtr(slotType);
-                SlotInstances::const_iterator it = slotInstances->find(funcName);
-                if (it != slotInstances->end()) {
+            void registerSlot(const boost::function<void (const A1&, const A2&, const A3&) >& slot, const std::string& funcName) { //, const SlotType& slotType = LOCAL) {
+
+                // FIXME: Need to use m_signalSlotInstancesMutex?
+                SlotInstances::const_iterator it = m_slotInstances.find(funcName);
+                if (it != m_slotInstances.end()) {
                     (boost::static_pointer_cast<karabo::xms::Slot3<A1, A2, A3> >(it->second))->registerSlotFunction(slot);
                 } else {
                     boost::shared_ptr<karabo::xms::Slot3<A1, A2, A3> > s(new karabo::xms::Slot3<A1, A2, A3 > (funcName));
                     s->registerSlotFunction(slot);
-                    (*slotInstances)[funcName] = s;
+                    m_slotInstances[funcName] = s;
 
                 }
             }
 
             template <class A1, class A2, class A3, class A4>
-            void registerSlot(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& slot, const std::string& funcName, const SlotType& slotType = LOCAL) {
-                SlotInstances* slotInstances = getSlotInstancesPtr(slotType);
-                SlotInstances::const_iterator it = slotInstances->find(funcName);
-                if (it != slotInstances->end()) {
+            void registerSlot(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& slot, const std::string& funcName) { //, const SlotType& slotType = LOCAL) {
+
+                // FIXME: Need to use m_signalSlotInstancesMutex?
+                SlotInstances::const_iterator it = m_slotInstances.find(funcName);
+                if (it != m_slotInstances.end()) {
                     (boost::static_pointer_cast<karabo::xms::Slot4<A1, A2, A3, A4> >(it->second))->registerSlotFunction(slot);
                 } else {
                     boost::shared_ptr<karabo::xms::Slot4<A1, A2, A3, A4> > s(new karabo::xms::Slot4<A1, A2, A3, A4 > (funcName));
                     s->registerSlotFunction(slot);
-                    (*slotInstances)[funcName] = s;
+                    m_slotInstances[funcName] = s;
                 }
             }
 
@@ -1314,11 +1280,6 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
             std::pair<std::string, std::string> splitIntoInstanceIdAndFunctionName(const std::string& signalOrSlotId, const char sep = ':') const;
 
-            std::string prepareInstanceId(const SlotType& slotType) const {
-                if (slotType == LOCAL) return m_instanceId;
-                else return "*";
-            }
-
             template <class TFunc>
             void storeSignal(const std::string& signalFunction, const SignalInstancePointer& signalInstance, const TFunc& emitFunction) {
                 m_signalInstances[signalFunction] = signalInstance;
@@ -1433,16 +1394,13 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             static int godEncode(const std::string& password);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
-            bool hasLocalSlot(const std::string& slotFunction) const;
+            bool hasSlot(const std::string& slotFunction) const;
 
             // Thread-safe, locks m_signalSlotInstancesMutex
-            SlotInstancePointer getLocalSlot(const std::string& slotFunction) const;
+            SlotInstancePointer getSlot(const std::string& slotFunction) const;
 
             // Thread-safe, locks m_signalSlotInstancesMutex
-            void removeLocalSlot(const std::string& slotFunction);
-
-            // Thread-safe, locks m_signalSlotInstancesMutex
-            SlotInstancePointer getGlobalSlot(const std::string& slotFunction) const;
+            void removeSlot(const std::string& slotFunction);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             bool hasSignal(const std::string& signalFunction) const;

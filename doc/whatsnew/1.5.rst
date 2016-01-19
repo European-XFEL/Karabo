@@ -29,9 +29,19 @@ that method has been removed.
 Python API 1 & 2 Modules
 ------------------------
 
-All imports from Python device and macro code must the new API modules:
+All imports from Python device and macro code must use the new API modules:
 ``karabo.api_1`` and ``karabo.api_2``. Imports from other modules in the
 ``karabo`` package are not recommended and will possibly break in the future.
 Names in the API modules are intended to be stable over time and any breaking
 changes will first cause a ``DeprecationWarning`` for one or more releases and
 only later stop working.
+
+
+Unify global and local slots in C++ and Python API1
+---------------------------------------------------
+There is only one type of slots left, as in Python API 2. They can be
+called globally or specifically, i.e. using either ``'*'`` or the target's
+instance ID, respectively.
+If a C++ device used the macro ``KARABO_GLOBAL_SLOT`` to register a global
+slot, it has to be changed to use ``KARABO_SLOT``.
+
