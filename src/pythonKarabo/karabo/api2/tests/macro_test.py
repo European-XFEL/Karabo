@@ -44,7 +44,7 @@ class Remote(Device):
     def count(self):
         for i in range(30):
             self.counter = i
-            yield from sleep(0.1)
+            yield from sleep(0.02)
 
     @Slot()
     @coroutine
@@ -68,106 +68,8 @@ class Local(Macro):
         print("superpuper", end="hero")
 
     @Slot()
-    def letitdo(self):
-        with getDevice("remote") as d:
-            d.doit()
-
-    @Slot()
-    def letitchange(self):
-        with getDevice("remote") as d:
-            d.changeit()
-
-    @Slot()
-    def disconnect(self):
-        d = getDevice("remote")
-        executeNoWait(d, "count")
-        time.sleep(0.3)
-        self.f1 = d.counter
-        time.sleep(0.3)
-        with updateDevice(d):
-            self.f2 = d.counter
-        time.sleep(1)
-        self.f3 = d.counter
-        with d:
-            time.sleep(2)
-            self.f4 = d.counter
-
-    @Slot()
-    def letset(self):
-        with getDevice("remote") as d:
-            self.f1 = d.value
-            d.value = 10
-            time.sleep(0.1)
-            self.f2 = d.value
-            d.changeit()
-            time.sleep(0.1)
-            self.f3 = d.value
-
-    @Slot()
-    def dogeneric(self):
-        d = getDevice("remote")
-        d.generic()
-
-
-    @Slot()
-    def other(self):
-        with getDevice("remote") as d:
-            d.other = 102
-
-    @Slot()
     def selfcall(self):
-        self.other()
-
-    @Slot()
-    def setwait(self):
-        d = getDevice("remote")
-        setWait(d, value=200, counter=300)
-
-    @Slot()
-    def setnowait(self):
-        d = getDevice("remote")
-        setNoWait(d, value=200, counter=300)
-
-    @Slot()
-    def waituntil(self):
-        with getDevice("remote") as d:
-            d.counter = 0
-            self.f1 = d.counter
-            executeNoWait(d, "count")
-            waitUntil(lambda: d.counter > 10)
-            self.f2 = d.counter
-            try:
-                waitUntil(lambda: d.counter > 40, timeout=3)
-                self.timeout = False
-            except TimeoutError:
-                self.timeout = True
-
-    @Slot()
-    def waituntilnew(self):
-        with getDevice("remote") as d:
-            d.counter = 0
-            sleep(0.1)
-            executeNoWait(d, "count")
-            for i in range(30):
-                j = waitUntilNew(d).counter
-                if i != j:
-                    self.max = i
-                    break
-            else:
-                self.max = 30
-
-    @Slot()
-    def queue(self):
-        with getDevice("remote") as d:
-            self.good = 0
-            executeNoWait(d, "count")
-            waitUntil(lambda: d.counter == 0)
-            q = Queue(d).counter
-            for i in range(1, 30):
-                j = q.get()
-                if i == j:
-                    self.good += 1
-                time.sleep(i * 0.01)
+        self.marker = 77
 
     @Slot()
     def error(self):
@@ -200,68 +102,93 @@ class Local(Macro):
 class Tests(TestCase):
     @sync_tst
     def test_execute(self):
+        """test the execution of remote commands"""
         remote.done = False
-        local.letitdo()
-        time.sleep(0.1)
+        with getDevice("remote") as d:
+            d.doit()
+        time.sleep(0.01)
         self.assertTrue(remote.done)
 
     @sync_tst
     def test_change(self):
+        """test that changes on a remote device reach the macro"""
         remote.value = 7
-        local.letitchange()
-        time.sleep(0.1)
+        with getDevice("remote") as d:
+            d.changeit()
+        time.sleep(0.01)
         self.assertEqual(remote.value, 3)
 
     @sync_tst
     def test_disconnect(self):
-        local.disconnect()
-        self.assertEqual(local.f1, -1)
-        self.assertNotEqual(local.f2, -1)
-        self.assertEqual(local.f2, local.f3)
-        self.assertEqual(local.f4, 29)
-
+        """check that we don't get updates when we're not connected"""
+        d = getDevice("remote")
+        executeNoWait(d, "count")
+        time.sleep(0.1)
+        self.assertEqual(d.counter, -1)
+        time.sleep(0.1)
+        with updateDevice(d):
+            self.assertNotEqual(d.counter, -1)
+            self.assertNotEqual(d.counter, 29)
+            last = d.counter
+        time.sleep(0.1)
+        self.assertEqual(last, d.counter)
+        with d:
+            time.sleep(0.3)
+            self.assertEqual(d.counter, 29)
 
     @sync_tst
     def test_set(self):
+        """test setting of parameters on a remote device"""
         remote.value = 7
-        local.letset()
-        self.assertEqual(local.f1, 7)
-        self.assertEqual(local.f2, 10)
-        self.assertEqual(local.f3, 6)
-
+        with getDevice("remote") as d:
+            self.assertEqual(d.value, 7)
+            d.value = 10
+            time.sleep(0.1)
+            self.assertEqual(d.value, 10)
+            d.changeit()
+            time.sleep(0.1)
+            self.assertEqual(d.value, 6)
 
     @sync_tst
     def test_generic(self):
+        """call a generic slot"""
         remote.value = 7
-        local.dogeneric()
+        d = getDevice("remote")
+        d.generic()
         time.sleep(0.1)
         self.assertEqual(remote.value, 22)
 
     @sync_tst
     def test_other(self):
+        """test properties with special setters"""
         remote.value = 7
-        local.other()
+        with getDevice("remote") as d:
+            d.other = 102
         time.sleep(0.1)
         self.assertEqual(remote.value, 102)
 
     @sync_tst
     def test_selfcall(self):
-        remote.value = 7
+        """test that slots can be called like normal methods"""
         local.selfcall()
-        time.sleep(0.1)
-        self.assertEqual(remote.value, 102)
+        self.assertEqual(local.marker, 77)
 
     @sync_tst
     def test_setwait(self):
-        local.setwait()
+        """test the setWait function"""
+        d = getDevice("remote")
+        setWait(d, value=200, counter=300)
+
         self.assertEqual(remote.value, 200)
         self.assertEqual(remote.counter, 300)
 
     @sync_tst
     def test_setnowait(self):
+        """test the setNoWait function"""
         remote.value = 0
         remote.counter = 0
-        local.setnowait()
+        d = getDevice("remote")
+        setNoWait(d, value=200, counter=300)
         self.assertEqual(remote.value, 0)
         self.assertEqual(remote.counter, 0)
         time.sleep(0.1)
@@ -270,18 +197,30 @@ class Tests(TestCase):
 
     @sync_tst
     def test_waituntil(self):
-        local.waituntil()
-        self.assertEqual(local.f1, 0)
-        self.assertEqual(local.f2, 11)
-        self.assertTrue(local.timeout)
+        """test the waitUntil function"""
+        with getDevice("remote") as d:
+            d.counter = 0
+            self.assertEqual(d.counter, 0)
+            executeNoWait(d, "count")
+            waitUntil(lambda: d.counter > 10)
+            self.assertEqual(d.counter, 11)
+            with self.assertRaises(TimeoutError):
+                waitUntil(lambda: d.counter > 40, timeout=1)
 
     @sync_tst
     def test_waituntilnew(self):
-        local.waituntilnew()
-        self.assertEqual(local.max, 30)
+        """test the waitUntilNew function"""
+        with getDevice("remote") as d:
+            d.counter = 0
+            sleep(0.01)
+            executeNoWait(d, "count")
+            for i in range(30):
+                j = waitUntilNew(d).counter
+                self.assertEqual(i, j)
 
     @async_tst
-    def test_remotecalls(self):
+    def test_print(self):
+        """test that macros can print via expected parameters"""
         sys.stdout = KaraboStream(sys.stdout)
         try:
             self.assertEqual(local.state, "Idle...")
@@ -295,11 +234,19 @@ class Tests(TestCase):
 
     @sync_tst
     def test_queue(self):
-        local.queue()
-        self.assertEqual(local.good, 29)
+        """test change queues of properties"""
+        with getDevice("remote") as d:
+            executeNoWait(d, "count")
+            waitUntil(lambda: d.counter == 0)
+            q = Queue(d).counter
+            for i in range(1, 30):
+                j = q.get()
+                self.assertEqual(i, j)
+                time.sleep(i * 0.002)
 
     @async_tst
     def test_error(self):
+        """test that errors are properly logged and error functions called"""
         remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
             yield from remote.error()
@@ -325,7 +272,7 @@ class Tests(TestCase):
         # Rename sleep to make it clean which sleep is being used
         karabo_sleep = sleep
         with (yield from getDevice("local")) as d:
-            # cancel during non-karabo sleep
+            # cancel during time.sleep
             local.cancelled_slot = None
             task = async(d.sleepalot())
             # Sleep for a short time so that the macro gets started
@@ -337,12 +284,12 @@ class Tests(TestCase):
             yield from d.cancel()
             # Finally, sleep for long enough that the macro runs in to the
             # karabo sleep which CAN be interrupted.
-            yield from karabo_sleep(0.2)
+            yield from karabo_sleep(0.13)
             self.assertEqual(local.cancelled_slot, Local.sleepalot)
             self.assertEqual(local.slept_count, 1)
             assert task.done()
 
-            # cancel during karabo sleep
+            # cancel during karabo.sleep
             local.cancelled_slot = None
             task = async(d.sleepalot())
             # Sleep for long enough for the macro to end up in the really long
