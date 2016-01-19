@@ -128,12 +128,15 @@ class SignalSlotable(Configurable):
             server.addChild(self.deviceId, self)
         return loop.create_task(self.run_async(), self)
 
+
+    # slotPing _is_ a slot, but not using the official decorator.
+    # See the definition of 'inner' below.
     def slotPing(self, instanceId, rand, track=None):
         """return our info to show that we are here"""
         # during startup, we ping possible other instances with our name,
         # no response means that we are alone. To avoid that we respond
         # ourselves, we set self.__randPing to a random value and pass it
-        # as the parameter rand, so that we now we pinged ourselves.
+        # as the parameter rand, so that we know we pinged ourselves.
         # Once we know we are alone, self.__randPing is set to 0 meaning
         # that we start responding to other pings.
         if rand:
@@ -145,6 +148,7 @@ class SignalSlotable(Configurable):
 
     def inner(self, message, args):
         ret = self.slotPing(*args)
+        # In contrast to normal slots, let slotPing not send an empty reply.
         if ret is not None:
             self._ss.reply(message, ret)
     slotPing.slot = inner
@@ -186,8 +190,8 @@ class SignalSlotable(Configurable):
         async(self._ss.consume(self))
         try:
             yield from wait_for(
-                self.call("*", "slotPing", self.deviceId,
-                          self.__randPing, False), timeout=3)
+                self.call(self.deviceId, "slotPing", self.deviceId,
+                          self.__randPing, False), timeout=1)
             try:
                 yield from self.slotKillDevice()
             except CancelledError:
@@ -197,7 +201,7 @@ class SignalSlotable(Configurable):
         except TimeoutError:
             pass
         self.run()
-        self.__randPing = 0
+        self.__randPing = 0  # Start answering on slotPing with argument rand=0.
         self._ss.emit('call', {'*': ['slotInstanceNew']},
                       self.deviceId, self.info)
         async(self.heartbeats())
