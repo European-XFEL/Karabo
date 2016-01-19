@@ -649,8 +649,6 @@ class PythonDevice(NoFsm):
         self._ss.registerSystemSignal("signalStateChanged", Hash, str)                # changeHash, instanceId        
 
         self._ss.registerSystemSignal("signalNotification", str, str, str, str)     # type, shortMessage, detailedMessage, deviceId
-        # For now do not connect everybody to our signalNotification, see above.
-        #self._ss.connect("", "signalNotification", "*", "slotNotification", ConnectionType.NO_TRACK, False)
 
         self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
                 

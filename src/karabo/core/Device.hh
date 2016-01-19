@@ -972,8 +972,6 @@ namespace karabo {
                 KARABO_SYSTEM_SIGNAL2("signalStateChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
 
                 KARABO_SYSTEM_SIGNAL4("signalNotification", string /*type*/, string /*messageShort*/, string /*messageDetail*/, string /*deviceId*/);
-                // For now do not connect everybody to our signalNotification, see above.
-                //connect("", "signalNotification", "*", "slotNotification", NO_TRACK);
 
                 KARABO_SYSTEM_SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
 
