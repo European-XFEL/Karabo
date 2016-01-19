@@ -14,7 +14,7 @@ __all__ = ["BaseComponent"]
 
 import manager
 from network import Network
-import icons
+import karabo_gui.icons as icons
 
 from layouts import ProxyWidget
 from registry import Loadable

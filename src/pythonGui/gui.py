@@ -22,7 +22,7 @@ def init(app):
     from manager import Manager
     import karabo # XXX: I think this could be for side effects?
     import gui_registry_loader # XXX: Only imported for side-effects
-    import icons
+    import karabo_gui.icons as icons
     import numpy
 
     numpy.set_printoptions(suppress=True, threshold=10)

@@ -11,7 +11,7 @@ __all__ = ["MacroPanel"]
 
 
 from docktabwindow import Dockable
-import icons
+import karabo_gui.icons as icons
 from manager import getDevice
 from util import getSaveFileName
 

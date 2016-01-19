@@ -12,7 +12,7 @@
 __all__ = ["DockTabWindow", "Dockable"]
 
 
-import icons
+import karabo_gui.icons as icons
 from toolbar import ToolBar
 
 from PyQt4.QtCore import pyqtSignal, pyqtSlot

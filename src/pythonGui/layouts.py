@@ -5,10 +5,10 @@
 #############################################################################
 
 
-import icons
+import karabo_gui.icons as icons
 from registry import Loadable
 from const import ns_svg, ns_karabo
-import sceneitems
+import karabo_gui.sceneitems as sceneitems
 
 from PyQt4.QtCore import pyqtSlot, QRect, QSize, Qt
 from PyQt4.QtGui import (QAction, QBoxLayout, QGridLayout, QLabel,

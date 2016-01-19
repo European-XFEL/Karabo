@@ -10,17 +10,17 @@
 
 from components import (DisplayComponent, EditableApplyLaterComponent)
 
-from dialogs.dialogs import PenDialog, TextDialog
-from dialogs.devicedialogs import DeviceGroupDialog
+from karabo_gui.dialogs.dialogs import PenDialog, TextDialog
+from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from enums import NavigationItemTypes
 from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
-from sceneitems.workflowitems import (Item, WorkflowConnection, WorkflowItem, 
+from karabo_gui.sceneitems.workflowitems import (Item, WorkflowConnection, WorkflowItem,
                                       WorkflowGroupItem)
 
 from registry import Loadable, Registry
 from const import ns_karabo, ns_svg
 import pathparser
-import icons
+import karabo_gui.icons as icons
 import manager
 from widget import DisplayWidget, EditableWidget
 
