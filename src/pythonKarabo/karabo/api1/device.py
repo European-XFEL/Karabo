@@ -635,7 +635,7 @@ class PythonDevice(NoFsm):
                       detailedMessage, self.deviceid)
 
     def noStateTransition(self):
-        self._ss.emit("signalNoTransition", "No state transition possible", self.deviceid)
+        self.log.WARN("Device \"{}\" does not allow the transition for this event.".format(self.deviceid))
         
     def onTimeUpdate(self, id, sec, frac, period):
         pass
@@ -647,13 +647,9 @@ class PythonDevice(NoFsm):
         #-------------------------------------------- register intrinsic signals
         self._ss.registerSignal("signalChanged", Hash, str)                # changeHash, instanceId        
         self._ss.registerSystemSignal("signalStateChanged", Hash, str)                # changeHash, instanceId        
-        
-        self._ss.registerSystemSignal("signalNoTransition", str, str)                 # 
-        self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", ConnectionType.NO_TRACK, False)        
-        
+
         self._ss.registerSystemSignal("signalNotification", str, str, str, str)     # type, shortMessage, detailedMessage, deviceId
-        self._ss.connect("", "signalNotification", "*", "slotNotification", ConnectionType.NO_TRACK, False)
-        
+
         self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
                 
         #---------------------------------------------- register intrinsic slots
