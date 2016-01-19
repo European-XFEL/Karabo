@@ -1245,6 +1245,22 @@ namespace karabo {
         }
 
 
+        SignalSlotable::SlotInstancePointer SignalSlotable::preRegisterSlot(const std::string &funcName) {
+            SlotInstancePointer ret;
+            // FIXME: Need to use m_signalSlotInstancesMutex?
+            SlotInstances::const_iterator it = m_slotInstances.find(funcName);
+            if (it != m_slotInstances.end()) {
+                ret = it->second;
+            }
+            return ret;
+        }
+
+
+        void SignalSlotable::registerNewSlot(const std::string &funcName, SlotInstancePointer instance) {
+            m_slotInstances[funcName] = instance;
+        }
+
+
         //        void SignalSlotable::registerConnectionForTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType) {
         //
         //            // Signal or slot is remote
