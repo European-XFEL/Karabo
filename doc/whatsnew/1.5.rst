@@ -44,4 +44,3 @@ called globally or specifically, i.e. using either ``'*'`` or the target's
 instance ID, respectively.
 If a C++ device used the macro ``KARABO_GLOBAL_SLOT`` to register a global
 slot, it has to be changed to use ``KARABO_SLOT``.
-
