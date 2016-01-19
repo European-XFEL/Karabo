@@ -14,9 +14,9 @@ __all__ = ["NavigationTreeView"]
 
 
 from enums import NavigationItemTypes
-import icons
+import karabo_gui.icons as icons
 from manager import Manager
-from treewidgetitems.popupwidget import PopupWidget
+from karabo_gui.treewidgetitems.popupwidget import PopupWidget
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QMenu, QTreeView)
