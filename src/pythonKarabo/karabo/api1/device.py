@@ -635,7 +635,7 @@ class PythonDevice(NoFsm):
                       detailedMessage, self.deviceid)
 
     def noStateTransition(self):
-        self._ss.emit("signalNoTransition", "No state transition possible", self.deviceid)
+        self.log.WARN("Device \"{}\" does not allow the transition for this event.".format(self.deviceid))
         
     def onTimeUpdate(self, id, sec, frac, period):
         pass
@@ -647,11 +647,6 @@ class PythonDevice(NoFsm):
         #-------------------------------------------- register intrinsic signals
         self._ss.registerSignal("signalChanged", Hash, str)                # changeHash, instanceId        
         self._ss.registerSystemSignal("signalStateChanged", Hash, str)                # changeHash, instanceId        
-
-        self._ss.registerSystemSignal("signalNoTransition", str, str)                 # 
-        # Here we could connect everybody to our signalNoTransition. But that is dangerous for the broker topic
-        # as long as we can have instances around that do not acknowledge.
-        #self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", ConnectionType.NO_TRACK, False)
 
         self._ss.registerSystemSignal("signalNotification", str, str, str, str)     # type, shortMessage, detailedMessage, deviceId
         # For now do not connect everybody to our signalNotification, see above.

@@ -833,10 +833,8 @@ namespace karabo {
                 if (result && what.size() == 2) {
                     eventName = what.str(1);
                 }
-                std::ostringstream msg;
-                msg << "Current state of device \"" << m_classId << "\" does not allow any transition for event \"" << eventName << "\"";
-                KARABO_LOG_WARN << msg.str();
-                emit("signalNoTransition", msg.str(), getInstanceId());
+                KARABO_LOG_WARN << "Current state of device \"" << getInstanceId()
+                        << "\" does not allow a transition for event \"" << eventName << "\".";
             }
 
             // Use execute instead to trigger your error event
@@ -972,11 +970,6 @@ namespace karabo {
                 KARABO_SIGNAL2("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
                 
                 KARABO_SYSTEM_SIGNAL2("signalStateChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
-
-                KARABO_SYSTEM_SIGNAL2("signalNoTransition", string, string);
-                // Here we could connect everybody to our signalNoTransition. But that is dangerous for the broker topic
-                // as long as we can have instances around that do not acknowledge.
-                //connect("", "signalNoTransition", "*", "slotNoTransition", NO_TRACK);
 
                 KARABO_SYSTEM_SIGNAL4("signalNotification", string /*type*/, string /*messageShort*/, string /*messageDetail*/, string /*deviceId*/);
                 // For now do not connect everybody to our signalNotification, see above.

@@ -621,9 +621,7 @@ namespace karabo {
             if (result && what.size() == 2) {
                 eventName = what.str(1);
             }
-            ostringstream msg;
-            msg << "DeviceServer \"" << getInstanceId() << "\" does not allow a transition for event \"" << eventName << "\"";
-            KARABO_LOG_DEBUG << msg.str();
+            KARABO_LOG_WARN << "Current state of server \"" << getInstanceId() << "\" does not allow a transition for event \"" << eventName << "\"";
         }
 
 
