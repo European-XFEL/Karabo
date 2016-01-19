@@ -998,30 +998,26 @@ namespace karabo {
 
 
         void DeviceClient::_slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
-            // KARABO_LOG_FRAMEWORK_WARN << "Call non-thread-safe _slotChanged";
-            // GF: lock and unlock by hand - is this exception safe?
-            m_runtimeSystemDescriptionMutex.lock();
-            // TODO Optimize speed
-            string path(findInstance(instanceId));
-            if (path.empty()) {
-                path = "device." + instanceId + ".configuration";
-            } else {
-                path += ".configuration";
+            {
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                // TODO Optimize speed
+                string path(findInstance(instanceId));
+                if (path.empty()) {
+                    path = "device." + instanceId + ".configuration";
+                } else {
+                    path += ".configuration";
+                }
+                if (m_runtimeSystemDescription.has(path)) {
+                    Hash& tmp = m_runtimeSystemDescription.get<Hash>(path);
+                    tmp.merge(hash);
+                } else {
+                    m_runtimeSystemDescription.set(path, hash);
+                }
             }
-            if (m_runtimeSystemDescription.has(path)) {
-                Hash& tmp = m_runtimeSystemDescription.get<Hash>(path);
-                tmp.merge(hash);
-                m_runtimeSystemDescriptionMutex.unlock();
-                // NOTE: This will block us here, i.e. we are deaf for other changes...
-                // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
-                notifyDeviceChangedMonitors(hash, instanceId);
-                notifyPropertyChangedMonitors(hash, instanceId);
-            } else {
-                m_runtimeSystemDescription.set(path, hash);
-                m_runtimeSystemDescriptionMutex.unlock();
-                notifyDeviceChangedMonitors(hash, instanceId);
-                notifyPropertyChangedMonitors(hash, instanceId);
-            }
+            // NOTE: This will block us here, i.e. we are deaf for other changes...
+            // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
+            notifyDeviceChangedMonitors(hash, instanceId);
+            notifyPropertyChangedMonitors(hash, instanceId);
         }
 
 
