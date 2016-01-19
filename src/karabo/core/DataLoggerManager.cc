@@ -199,12 +199,16 @@ namespace karabo {
 
         void DataLoggerManager::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
             try {
-                const std::string& type = topologyEntry.begin()->getKey();
-                KARABO_LOG_FRAMEWORK_DEBUG << "instanceNewHandler --> " << type;
+                const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
+                // const ref is fine even for temporary std::string
+                const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
+                                                 topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
+                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler --> instanceId: '" << instanceId
+                        << "', type: '" << type << "'";
 
                 if (type == "device") { // Take out only devices for the time being
                     const Hash& entry = topologyEntry.begin()->getValue<Hash>();
-                    const string& deviceId = entry.begin()->getKey();
+                    const string& deviceId = instanceId;
 
                     // Check if the device should be archived 
                     if (entry.hasAttribute(deviceId, "archive") && (entry.getAttribute<bool>(deviceId, "archive") == true)) {
@@ -251,7 +255,7 @@ namespace karabo {
                     }
                 } else if (type == "server") {
                     const Hash& entry = topologyEntry.begin()->getValue<Hash>();
-                    const string& serverId = entry.begin()->getKey();
+                    const string& serverId = instanceId;
                     if (find(m_serverList.begin(), m_serverList.end(), serverId) != m_serverList.end()) {
                         instantiateReaders(serverId);
 
@@ -298,9 +302,11 @@ namespace karabo {
         }
 
         void DataLoggerManager::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            const std::string& type = instanceInfo.get<string>("type");
-            std::string serverId = "";
-            if (instanceInfo.has("serverId")) serverId = instanceInfo.get<string>("serverId");
+            // const ref is fine even for temporary std::string
+            const std::string& type = (instanceInfo.has("type") && instanceInfo.is<std::string>("type") ?
+                                       instanceInfo.get<std::string>("type") : std::string("unknown"));
+            const std::string& serverId = (instanceInfo.has("serverId") && instanceInfo.is<std::string>("serverId") ?
+                                           instanceInfo.get<string>("serverId") : std::string("?"));
 
             KARABO_LOG_FRAMEWORK_INFO << "instanceGoneHandler -->  instanceId : \""
                     << instanceId << "\", type : " << type << " on server \"" << serverId << "\"";
