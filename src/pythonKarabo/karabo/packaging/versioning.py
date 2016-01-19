@@ -88,7 +88,7 @@ def git_version(path):
     try:
         cmd = 'git describe'.split(' ')
         out = subprocess.check_output(cmd, cwd=path).decode('ascii')
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, OSError):
         out = ''
 
     expr = r'.*?\-(?P<count>\d+)-g(?P<hash>[a-fA-F0-9]+)'
@@ -109,7 +109,7 @@ def svn_version(path):
         out = subprocess.check_output(cmd).decode('ascii')
         svn_branch = _parse_svn_part(out, 'branch')
         svn_count = _parse_svn_part(out, 'revision')
-    except (subprocess.CalledProcessError, SvnParseError):
+    except (subprocess.CalledProcessError, OSError, SvnParseError):
         return 'Unknown', '0'
 
     return '{}@r{}'.format(svn_branch, svn_count), svn_count
