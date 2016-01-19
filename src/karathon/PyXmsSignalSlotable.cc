@@ -24,12 +24,6 @@ namespace bp = boost::python;
 
 
 void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable 
-    bp::enum_< SignalSlotable::SlotType > ("SlotType")
-            .value("LOCAL", SignalSlotable::LOCAL)
-            .value("GLOBAL", SignalSlotable::GLOBAL)
-            .export_values()
-            ;
-
     bp::enum_< SignalSlotable::ConnectionType > ("ConnectionType")
             .value("NO_TRACK", SignalSlotable::NO_TRACK)
             .value("TRACK", SignalSlotable::TRACK)
@@ -195,7 +189,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (string const & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceId)
                  , bp::return_value_policy< bp::copy_const_reference > ())
 
-            .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), (bp::arg("slotFunction"), bp::arg("slotType") = SignalSlotable::LOCAL))
+            .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), (bp::arg("slotFunction")))
 
             //.def("registerSlot", (&SignalSlotableWrap::registerMemberSlotPy), (bp::arg("slotFunction"), bp::arg("selfObject"), bp::arg("slotType") = SignalSlotable::SPECIFIC))
 
