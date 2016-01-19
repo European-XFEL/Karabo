@@ -13,7 +13,7 @@ __all__ = ["CommandTreeWidgetItem"]
 
 from .basetreewidgetitem import BaseTreeWidgetItem
 from components import DisplayComponent
-import icons
+import karabo_gui.icons as icons
 import manager
 from network import Network
 

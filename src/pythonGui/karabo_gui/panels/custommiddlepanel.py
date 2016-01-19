@@ -13,7 +13,7 @@ __all__ = ["CustomMiddlePanel"]
 
 
 from docktabwindow import Dockable
-import icons
+import karabo_gui.icons as icons
 from network import Network
 from toolbar import ToolBar
 

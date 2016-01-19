@@ -14,7 +14,7 @@ __all__ = ["ConfigurationPanel"]
 
 from docktabwindow import DockTabWindow, Dockable
 from .documentationpanel import DocumentationPanel
-import icons
+import karabo_gui.icons as icons
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget

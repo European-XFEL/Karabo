@@ -17,7 +17,7 @@ import globals
 from karabo.api_2 import Hash, AccessLevel
 import manager
 from treenode import TreeNode
-import icons
+import karabo_gui.icons as icons
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
                           QModelIndex, Qt, pyqtSignal)
