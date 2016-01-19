@@ -502,7 +502,7 @@ class DeviceServer(object):
 
     
     def noStateTransition(self):
-        self.log.DEBUG("DeviceServer \"{}\" does not allow the transition for this event".format(self.serverid))
+        self.log.WARN("DeviceServer \"{}\" does not allow the transition for this event.".format(self.serverid))
    
     def slotKillServer(self):
         self.log.INFO("Received kill signal")

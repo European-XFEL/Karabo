@@ -833,10 +833,8 @@ namespace karabo {
                 if (result && what.size() == 2) {
                     eventName = what.str(1);
                 }
-                std::ostringstream msg;
-                msg << "Current state of device \"" << m_classId << "\" does not allow any transition for event \"" << eventName << "\"";
-                KARABO_LOG_WARN << msg.str();
-                emit("signalNoTransition", msg.str(), getInstanceId());
+                KARABO_LOG_WARN << "Current state of device \"" << getInstanceId()
+                        << "\" does not allow a transition for event \"" << eventName << "\".";
             }
 
             // Use execute instead to trigger your error event
@@ -973,11 +971,7 @@ namespace karabo {
                 
                 KARABO_SYSTEM_SIGNAL2("signalStateChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
 
-                KARABO_SYSTEM_SIGNAL2("signalNoTransition", string, string);
-                connect("", "signalNoTransition", "*", "slotNoTransition", NO_TRACK);
-
                 KARABO_SYSTEM_SIGNAL4("signalNotification", string /*type*/, string /*messageShort*/, string /*messageDetail*/, string /*deviceId*/);
-                connect("", "signalNotification", "*", "slotNotification", NO_TRACK);
 
                 KARABO_SYSTEM_SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
 
