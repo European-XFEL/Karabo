@@ -297,6 +297,8 @@ namespace karabo {
             }
 
             virtual ~Device() {
+                KARABO_LOG_FRAMEWORK_INFO << "Device destructor of '" << getInstanceId() << "' called.";
+                std::cout << "Device destructor of '" << getInstanceId() << "' called." << std::endl;
                 KARABO_LOG_FRAMEWORK_TRACE << "Device::~Device() dtor : m_deviceClient.use_count()="
                         << m_deviceClient.use_count() << "\n"
 #ifdef __linux__
