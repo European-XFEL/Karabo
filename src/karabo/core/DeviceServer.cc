@@ -481,11 +481,14 @@ namespace karabo {
 
 
         void DeviceServer::stopDeviceServer() {
+            KARABO_LOG_FRAMEWORK_INFO << "In stopDeviceServer";
             m_doScanPlugins = false;
             if (m_pluginThread.joinable()) m_pluginThread.join();
+            KARABO_LOG_FRAMEWORK_INFO << "stopDeviceServer: joined plugin thread";
             stopEventLoop();
             // TODO Remove from here and use the one from run() method
             m_serverIsRunning = false;
+            KARABO_LOG_FRAMEWORK_INFO << "stopDeviceServer: DONE";
         }
 
 
@@ -497,17 +500,19 @@ namespace karabo {
 
         void DeviceServer::slotStartDevice(const karabo::util::Hash& configuration) {
 
-            const std::pair<std::string, util::Hash>& classIdConfig
-                    = this->prepareInstantiate(configuration);
+            typedef std::pair<std::string, std::pair<std::string, util::Hash> > ReturnType;
+            const ReturnType& idAndClassIdConfig = this->prepareInstantiate(configuration);
 
-            KARABO_LOG_INFO << "Trying to start " << classIdConfig.first << "...";
+            const std::string& deviceId = idAndClassIdConfig.first;
+            KARABO_LOG_INFO << "Trying to start a '" << idAndClassIdConfig.second.first
+                    << "' with deviceId '" << deviceId << "'...";
             KARABO_LOG_DEBUG << "with the following configuration:\n" << configuration;
 
-            this->instantiate(classIdConfig);
+            this->instantiate(deviceId, idAndClassIdConfig.second);
         }
 
 
-        std::pair<std::string, util::Hash>
+        std::pair<std::string, std::pair<std::string, util::Hash> >
         DeviceServer::prepareInstantiate(const karabo::util::Hash& configuration) {
 
             if (configuration.has("classId")) {
@@ -532,7 +537,8 @@ namespace karabo {
                 // Inject connection
                 config.set("_connection_", m_connectionConfiguration);
 
-                return std::make_pair(classId, config);
+                return std::make_pair(config.get<std::string>("_deviceId_"),
+                                      std::make_pair(classId, config));
             } else {
                 // Old style, e.g. used for auto started devices
                 const std::string& classId = configuration.begin()->getKey();
@@ -554,32 +560,44 @@ namespace karabo {
                 // Inject connection
                 tmp.set("_connection_", m_connectionConfiguration);
 
-                return util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
+                return std::make_pair(tmp.get<std::string>("_deviceId_"),
+                                      util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig));
             }
         }
 
 
-        void DeviceServer::instantiate(const std::pair<std::string, util::Hash>& classIdConfig) {
+        void DeviceServer::instantiate(const std::string& deviceId, const std::pair<std::string, util::Hash>& classIdConfig) {
             const std::string& classId = classIdConfig.first;
             const util::Hash& config = classIdConfig.second;
-            const std::string& deviceId = config.get<std::string>("_deviceId_");
             try {
 
+                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+
+                // Associate deviceInstance with DeviceInstanceEntry object
+                DeviceInstanceEntry& deviceEntry = m_deviceInstanceMap[deviceId];
+                if (deviceEntry.m_deviceThread) {
+                    // There is already such a device. If joining works, it's just a "zombie".
+                    if (deviceEntry.m_deviceThread->try_join_for(boost::chrono::milliseconds(100))) {
+                        m_deviceThreads.remove_thread(deviceEntry.m_deviceThread);
+                    } else {
+                        std::string message("Device of class " + classId + " could not be started: ");
+                        reply(false, ((message += "deviceId '") += deviceId) += "' already exists on server.");
+                        KARABO_LOG_FRAMEWORK_WARN << message;
+                        return;
+                    }
+                }
                 BaseDevice::Pointer device = BaseDevice::create(classId, config); // TODO If constructor blocks, we are lost here!!
-                if (!device)
+                if (!device) {
+                    m_deviceInstanceMap.erase(deviceId);
                     throw KARABO_PARAMETER_EXCEPTION("Failed to create device of class " + classId + " with configuration...");
+                }
 
                 device->setDeviceServerPointer(this);
                 device->injectConnection(deviceId, m_connection);
                 
-                {
-                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-                    // Associate deviceInstance with DeviceInstanceEntry object
-                    m_deviceInstanceMap[deviceId] = DeviceInstanceEntry();
-                    m_deviceInstanceMap[deviceId].m_device = device;
-                    m_deviceInstanceMap[deviceId].m_deviceThread =
-                            m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
-                }
+                deviceEntry.m_device = device;
+                deviceEntry.m_deviceThread =
+                        m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
 
                 // Answer initiation of device
                 reply(true, deviceId); // TODO think about
@@ -644,6 +662,7 @@ namespace karabo {
                     call(it->first, "slotKillDevice");
                 }
 
+                KARABO_LOG_FRAMEWORK_INFO << "device map size: " << m_deviceInstanceMap.size();
                 for (DeviceInstanceMap::iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
                     it->second.m_deviceThread->join();
                     m_deviceThreads.remove_thread(it->second.m_deviceThread);
@@ -658,6 +677,7 @@ namespace karabo {
 
             // Stop device server
             stopDeviceServer();
+            KARABO_LOG_FRAMEWORK_INFO << "Leaving slotKillDevice";
         }
 
 
