@@ -276,6 +276,12 @@ namespace karabo {
              */
             void close();
 
+            void closeConsumer();
+
+            void closeProducer();
+
+            void closeSession();
+
             void ensureExistenceOfConsumer();
 
             void readBinaryMessage(karabo::util::Hash& header, std::vector<char>& body, bool withHeader);

@@ -11,7 +11,6 @@
 
 #include <snappy.h>
 #include <karabo/log.hpp>
-//#include <karabo/util/SignalHandler.hh>
 #include "JmsBrokerConnection.hh"
 #include "JmsBrokerChannel.hh"
 #include "JmsBrokerIOService.hh"
@@ -69,7 +68,6 @@ namespace karabo {
 
 
         JmsBrokerChannel::~JmsBrokerChannel() {
-            //cout << "****** " << BOOST_CURRENT_FUNCTION << " ENTRY ******" << endl;
             close();
 
             boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
@@ -82,7 +80,6 @@ namespace karabo {
                     }
                 }
             }
-            //cout << "****** " << BOOST_CURRENT_FUNCTION << " EXIT  ******" << endl;
         }
 
 
@@ -526,6 +523,8 @@ namespace karabo {
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "An unknown exception during JMS broker message reception occurred";
             }
+            // Stop the subscription to the broker as we do not listen anymore
+            closeConsumer();
         }
 
 
@@ -613,6 +612,8 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
+            // Stop the subscription to the broker as we do not listen anymore
+            closeConsumer();
         }
 
 
@@ -695,6 +696,9 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
+
+            // Stop the subscription to the broker as we do not listen anymore
+            closeConsumer();
         }
 
 
@@ -802,6 +806,9 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
+
+            // Stop the subscription to the broker as we do not listen anymore
+            closeConsumer();
         }
 
 
@@ -834,6 +841,9 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
+
+            // Stop the subscription to the broker as we do not listen anymore
+            closeConsumer();
         }
 
 
@@ -866,6 +876,8 @@ namespace karabo {
                 Exception::memorize();
             }
 
+            // Stop the subscription to the broker as we do not listen anymore
+            closeConsumer();
         }
 
 
@@ -1208,12 +1220,6 @@ namespace karabo {
             m_signalError.connect(handler);
         }
 
-
-        //        void JmsBrokerChannel::waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id) {
-        //            m_ioService->registerWaitChannel(this, handler, milliseconds, id);
-        //        }
-
-
         void JmsBrokerChannel::deadlineTimer(const WaitHandler& handler, int milliseconds, const std::string& id) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(milliseconds));
             handler(shared_from_this(), id);
@@ -1222,22 +1228,32 @@ namespace karabo {
 
         void JmsBrokerChannel::close() {
             m_isStopped = true;
+            m_hasAsyncHandler = false;
 
+            closeProducer();
+            closeConsumer();
+            closeSession();
+        }
+
+
+        void JmsBrokerChannel::closeProducer() {
             MQCloseMessageProducer(m_producerHandle);
             m_producerHandle.handle = invalidProducer.handle;
             m_hasProducer = false;
+        }
 
-            MQCloseMessageConsumer(m_consumerHandle);
+        void JmsBrokerChannel::closeConsumer() {
+             MQCloseMessageConsumer(m_consumerHandle);
             m_consumerHandle.handle = invalidConsumer.handle;
             m_hasConsumer = false;
+        }
 
+        void JmsBrokerChannel::closeSession() {
             MQFreeDestination(m_destinationHandle);
             m_destinationHandle.handle = invalidDestination.handle;
 
             MQCloseSession(m_sessionHandle);
             m_sessionHandle.handle = invalidSession.handle;
-
-            m_hasAsyncHandler = false;
         }
 
 
