@@ -522,8 +522,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "An exception during JMS broker message reception occurred: \n" << e;
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "An unknown exception during JMS broker message reception occurred";
-            }            
-            // Stop the subscription to the broker as we do not listen anymore            
+            }
+            // Stop the subscription to the broker as we do not listen anymore
             closeConsumer();
         }
 
@@ -612,7 +612,7 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
-            // Stop the subscription to the broker as we do not listen anymore            
+            // Stop the subscription to the broker as we do not listen anymore
             closeConsumer();
         }
 
@@ -696,9 +696,9 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
-            
-            // Stop the subscription to the broker as we do not listen anymore            
-            closeConsumer();            
+
+            // Stop the subscription to the broker as we do not listen anymore
+            closeConsumer();
         }
 
 
@@ -806,8 +806,8 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
-            
-            // Stop the subscription to the broker as we do not listen anymore            
+
+            // Stop the subscription to the broker as we do not listen anymore
             closeConsumer();
         }
 
@@ -841,8 +841,8 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
-            
-            // Stop the subscription to the broker as we do not listen anymore            
+
+            // Stop the subscription to the broker as we do not listen anymore
             closeConsumer();
         }
 
@@ -875,9 +875,9 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
-            
-            // Stop the subscription to the broker as we do not listen anymore            
-            closeConsumer();                     
+
+            // Stop the subscription to the broker as we do not listen anymore
+            closeConsumer();
         }
 
 
@@ -1227,27 +1227,27 @@ namespace karabo {
 
 
         void JmsBrokerChannel::close() {
-            m_isStopped = true;     
+            m_isStopped = true;
             m_hasAsyncHandler = false;
-            
+
             closeProducer();
             closeConsumer();
             closeSession();
         }
-        
-        
+
+
         void JmsBrokerChannel::closeProducer() {
             MQCloseMessageProducer(m_producerHandle);
             m_producerHandle.handle = invalidProducer.handle;
             m_hasProducer = false;
         }
-        
+
         void JmsBrokerChannel::closeConsumer() {
              MQCloseMessageConsumer(m_consumerHandle);
             m_consumerHandle.handle = invalidConsumer.handle;
             m_hasConsumer = false;
         }
-        
+
         void JmsBrokerChannel::closeSession() {
             MQFreeDestination(m_destinationHandle);
             m_destinationHandle.handle = invalidDestination.handle;
