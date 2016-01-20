@@ -134,6 +134,7 @@ class Hash_TestCase(unittest.TestCase):
         h["bool"] = True
         h["int"] = 4
         h["string"] = "bla"
+        h["stringlist"] = ["bla", "blub"]
         h["chars"] = b"bla"
         h["vector"] = numpy.arange(7, dtype=numpy.int64)
         h["emptyvector"] = numpy.array([])
@@ -152,13 +153,14 @@ class Hash_TestCase(unittest.TestCase):
 
 
     def check_hash(self, h):
-        keys = ["bool", "int", "string", "chars", "vector", "emptyvector",
-                "hash", "schema"]
+        keys = ["bool", "int", "string", "stringlist", "chars", "vector",
+                "emptyvector", "hash", "schema"]
         self.assertEqual(list(h.keys()), keys)
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
         self.assertEqual(h["string"], "bla")
         self.assertTrue(isinstance(h["string"], str))
+        self.assertEqual(h["stringlist"], ["bla", "blub"])
         self.assertEqual(h["chars"], b"bla")
         self.assertTrue(isinstance(h["chars"], bytes))
         self.assertEqual(h["hash.a"], 3)
@@ -194,8 +196,8 @@ class Hash_TestCase(unittest.TestCase):
         w = BinaryWriter()
         r = BinaryParser()
         s = w.write(self.create_hash())
-        self.assertEqual(adler32(s), 2002923287)
         self.check_hash(r.read(s))
+        self.assertEqual(adler32(s), 4156503663)
 
 
     def test_cpp(self):

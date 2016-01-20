@@ -1108,7 +1108,7 @@ class Hash(OrderedDict):
                 elem = HashElement(p)
                 elem.children = value
             elif (isinstance(value, list) and
-                  not isinstance(value, Special)):
+                  (not value or isinstance(value[0], Hash))):
                 elem = ListElement(p)
                 elem.data = value
             else:
