@@ -182,12 +182,13 @@ namespace karabo {
 
             std::string generateDefaultDeviceId(const std::string& classId);
 
-            /// Helper to create extract classId and configuration to be passed to instantiate.
-            std::pair<std::string, util::Hash>
+            /// Helper to create classId and configuration to be passed to instantiate.
+            /// Returns a pair of the deviceId and another pair containing classId and configuration.
+            std::pair<std::string, std::pair<std::string, util::Hash> >
             prepareInstantiate(const util::Hash& configuration);
 
             /// Helper for slotStartDevice - e.g. sets the reply.
-            void instantiate(const std::pair<std::string, util::Hash>& classIdAndConfig);
+            void instantiate(const std::string& deviceId, const std::pair<std::string, util::Hash>& classIdAndConfig);
 
             void slotLoggerPriority(const std::string& prio);
 
