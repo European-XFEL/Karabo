@@ -481,14 +481,11 @@ namespace karabo {
 
 
         void DeviceServer::stopDeviceServer() {
-            KARABO_LOG_FRAMEWORK_INFO << "In stopDeviceServer";
             m_doScanPlugins = false;
             if (m_pluginThread.joinable()) m_pluginThread.join();
-            KARABO_LOG_FRAMEWORK_INFO << "stopDeviceServer: joined plugin thread";
             stopEventLoop();
             // TODO Remove from here and use the one from run() method
             m_serverIsRunning = false;
-            KARABO_LOG_FRAMEWORK_INFO << "stopDeviceServer: DONE";
         }
 
 
@@ -582,7 +579,7 @@ namespace karabo {
                     } else {
                         std::string message("Device of class " + classId + " could not be started: ");
                         reply(false, ((message += "deviceId '") += deviceId) += "' already exists on server.");
-                        KARABO_LOG_FRAMEWORK_WARN << message;
+                        KARABO_LOG_WARN << message;
                         return;
                     }
                 }
@@ -662,7 +659,6 @@ namespace karabo {
                     call(it->first, "slotKillDevice");
                 }
 
-                KARABO_LOG_FRAMEWORK_INFO << "device map size: " << m_deviceInstanceMap.size();
                 for (DeviceInstanceMap::iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
                     it->second.m_deviceThread->join();
                     m_deviceThreads.remove_thread(it->second.m_deviceThread);
@@ -677,7 +673,7 @@ namespace karabo {
 
             // Stop device server
             stopDeviceServer();
-            KARABO_LOG_FRAMEWORK_INFO << "Leaving slotKillDevice";
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotKillServer DONE";
         }
 
 
