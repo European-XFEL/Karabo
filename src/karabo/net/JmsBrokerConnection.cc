@@ -292,9 +292,12 @@ namespace karabo {
 
                 MQ_SAFE_CALL(MQStartConnection(m_connectionHandle));
                 m_hasConnection = true;
-                for (set<BrokerChannel::Pointer>::iterator it = m_channels.begin(); it != m_channels.end(); it++) {
-                    boost::shared_ptr<JmsBrokerChannel> p = boost::dynamic_pointer_cast<JmsBrokerChannel>(*it);
-                    p->setSessionFalse();
+                for (set<boost::weak_ptr<JmsBrokerChannel> >::iterator it = m_channels.begin(); it != m_channels.end(); it++) {
+                    if (it->expired()) {
+                        m_channels.erase(it);
+                    } else {
+                        it->lock()->setSessionFalse();
+                    }
                 }
             }
         }
@@ -445,9 +448,9 @@ namespace karabo {
 
 
         BrokerChannel::Pointer JmsBrokerConnection::createChannel(const std::string& subDestination) {
-            BrokerChannel::Pointer channel(new JmsBrokerChannel(shared_from_this(), subDestination));
+            JmsBrokerChannel::Pointer channel(new JmsBrokerChannel(shared_from_this(), subDestination));
             m_channels.insert(channel); // add this additional bookkeeping needed for live reconnection on the fly
-            return channel;
+            return boost::static_pointer_cast<BrokerChannel>(channel);
         }
 
     } // namespace net

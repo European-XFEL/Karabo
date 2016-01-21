@@ -60,7 +60,7 @@ namespace karabo {
             bool m_closeOldConnection;
             MQConnectionHandle m_connectionHandle;
 
-            std::set<BrokerChannel::Pointer> m_channels;
+            std::set<boost::weak_ptr<karabo::net::JmsBrokerChannel> > m_channels;
 
         public:
 
