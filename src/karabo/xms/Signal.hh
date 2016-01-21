@@ -93,7 +93,7 @@ namespace karabo {
         protected:
 
             SignalSlotable* m_signalSlotable;
-            karabo::net::BrokerChannel::Pointer m_channel;
+            const karabo::net::BrokerChannel::Pointer& m_channel;
             std::string m_signalInstanceId;
             std::string m_signalFunction;
             std::string m_registeredSlotsString;

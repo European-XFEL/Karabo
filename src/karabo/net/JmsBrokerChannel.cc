@@ -72,9 +72,9 @@ namespace karabo {
 
             boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
             if (jbc) {
-                set<BrokerChannel::Pointer>& channels = jbc->m_channels;
-                for (set<BrokerChannel::Pointer>::iterator it = channels.begin(); it != channels.end(); it++) {
-                    if ((*it).get() == this) {
+                set<boost::weak_ptr<JmsBrokerChannel> >& channels = jbc->m_channels;
+                for (set<boost::weak_ptr<JmsBrokerChannel> >::iterator it = channels.begin(); it != channels.end(); it++) {
+                    if (it->lock().get() == this) {
                         channels.erase(it);
                         break;
                     }
