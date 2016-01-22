@@ -21,7 +21,7 @@
 __all__ = ["DisplayLabel"]
 
 
-from widget import DisplayWidget
+from karabo_gui.widget import DisplayWidget
 from karabo.api_2 import (Double, Float, Hash, String, Simple, Type, HashType,
                           VectorDouble, VectorFloat, VectorHash)
 

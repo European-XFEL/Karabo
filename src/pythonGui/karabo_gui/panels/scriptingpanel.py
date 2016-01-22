@@ -11,9 +11,9 @@
 
 __all__ = ["ScriptingPanel"]
 
-from docktabwindow import Dockable
-from ipythonwidget import IPythonWidget
-from network import network
+from karabo_gui.docktabwindow import Dockable
+from karabo_gui.ipythonwidget import IPythonWidget
+from karabo_gui.network import network
 
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 

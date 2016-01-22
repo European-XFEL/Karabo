@@ -15,7 +15,6 @@ from .basetreewidgetitem import BaseTreeWidgetItem
 from components import DisplayComponent
 import karabo_gui.icons as icons
 import manager
-from network import Network
 
 from PyQt4.QtGui import QPushButton
 

@@ -14,9 +14,9 @@
 __all__ = ["DisplayDirectory"]
 
 
-from util import SignalBlocker
+from karabo_gui.util import SignalBlocker
 import karabo_gui.icons as icons
-from widget import DisplayWidget
+from karabo_gui.widget import DisplayWidget
 
 from karabo.api_2 import String
 

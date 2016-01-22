@@ -10,7 +10,7 @@
 __all__ = ["TaurusWheelEditWrapper"]
 
 
-from widget import EditableWidget
+from karabo_gui.widget import EditableWidget
 # not yet working under ubuntu 12.04
 #from taurus.qt.qtgui.input import TaurusWheelEdit
 

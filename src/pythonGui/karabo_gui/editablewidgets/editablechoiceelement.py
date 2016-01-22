@@ -21,10 +21,10 @@
 __all__ = ["EditableChoiceElement"]
 
 
-from widget import EditableWidget
+from karabo_gui.widget import EditableWidget
 from karabo.api_2 import Hash
 from schema import Schema, Descriptor, ChoiceOfNodes
-from util import SignalBlocker
+from karabo_gui.util import SignalBlocker
 
 from PyQt4.QtCore import QEvent
 from PyQt4.QtGui import QComboBox

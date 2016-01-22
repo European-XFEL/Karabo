@@ -6,9 +6,9 @@ from PyQt4.QtGui import QAction, QDoubleSpinBox, QInputDialog
 
 from karabo.api_2 import Number
 
-from const import ns_karabo
-from util import SignalBlocker
-from widget import DisplayWidget, EditableWidget
+from karabo_gui.const import ns_karabo
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import DisplayWidget, EditableWidget
 
 
 class FloatSpinBox(EditableWidget, DisplayWidget):

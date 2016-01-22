@@ -12,8 +12,8 @@
 __all__ = ["ParameterTreeWidget"]
 
 from components import BaseComponent, EditableApplyLaterComponent
-import globals
-from network import Network
+import karabo_gui.globals as globals
+from karabo_gui.network import Network
 from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
 from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt
