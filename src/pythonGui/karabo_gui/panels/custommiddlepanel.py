@@ -12,10 +12,9 @@
 __all__ = ["CustomMiddlePanel"]
 
 
-from docktabwindow import Dockable
+from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
-from network import Network
-from toolbar import ToolBar
+from karabo_gui.toolbar import ToolBar
 
 from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (QAction, QPalette, QSizePolicy, QScrollArea, QWidget)

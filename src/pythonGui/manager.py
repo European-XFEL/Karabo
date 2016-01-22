@@ -21,12 +21,12 @@ from configuration import Configuration, BulkNotifications
 from karabo_gui.dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
 from karabo.api_2 import Hash, XMLWriter, XMLParser, ProjectConfiguration
-import globals
-from messagebox import MessageBox
+import karabo_gui.globals as globals
+from karabo_gui.messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
-from network import Network
+from karabo_gui.network import Network
 from projectmodel import ProjectModel
-from util import getSaveFileName
+from karabo_gui.util import getSaveFileName
 
 from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)

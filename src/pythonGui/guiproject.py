@@ -20,7 +20,7 @@ from karabo.api_2 import (
     BaseDeviceGroup, BaseMacro, Monitor, Project, ProjectConfiguration
 )
 import manager
-from network import network
+from karabo_gui.network import network
 
 from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import QMessageBox

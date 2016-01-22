@@ -12,13 +12,13 @@
 __all__ = ["ConfigurationPanel"]
 
 
-from docktabwindow import DockTabWindow, Dockable
+from karabo_gui.docktabwindow import DockTabWindow, Dockable
 from .documentationpanel import DocumentationPanel
 import karabo_gui.icons as icons
 from manager import Manager
-from navigationtreeview import NavigationTreeView
-from parametertreewidget import ParameterTreeWidget
-from projecttreeview import ProjectTreeView
+from karabo_gui.navigationtreeview import NavigationTreeView
+from karabo_gui.parametertreewidget import ParameterTreeWidget
+from karabo_gui.projecttreeview import ProjectTreeView
 
 from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,

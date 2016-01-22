@@ -22,9 +22,9 @@ __all__ = ["EditableList"]
 
 
 import karabo_gui.icons as icons
-from listedit import ListEdit
-from util import SignalBlocker
-from widget import EditableWidget, DisplayWidget
+from karabo_gui.listedit import ListEdit
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import EditableWidget, DisplayWidget
 
 from karabo.api_2 import Vector
 

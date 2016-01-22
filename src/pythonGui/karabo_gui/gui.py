@@ -17,11 +17,11 @@ def init(app):
     of the splash screen. We want the user to know that something is happening
     soon after they launch the GUI.
     """
-    from mainwindow import MainWindow
-    from network import Network
+    from karabo_gui.mainwindow import MainWindow
+    from karabo_gui.network import Network
     from manager import Manager
     import karabo # XXX: I think this could be for side effects?
-    import gui_registry_loader # XXX: Only imported for side-effects
+    import karabo_gui.gui_registry_loader # XXX: Only imported for side-effects
     import karabo_gui.icons as icons
     import numpy
 
@@ -53,6 +53,8 @@ def init(app):
 
 def excepthook(type, value, traceback):
     from PyQt4.QtGui import QMessageBox
+
+    from karabo_gui.network import Network
 
     print_exception(type, value, traceback)
     mb = QMessageBox(getattr(value, "icon", QMessageBox.Critical),

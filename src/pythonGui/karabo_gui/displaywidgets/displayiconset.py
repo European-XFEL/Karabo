@@ -1,5 +1,5 @@
-from const import ns_karabo
-from widget import DisplayWidget
+from karabo_gui.const import ns_karabo
+from karabo_gui.widget import DisplayWidget
 
 from karabo.api_2 import String
 

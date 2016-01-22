@@ -6,8 +6,8 @@
 
 
 import karabo_gui.icons as icons
-from registry import Loadable
-from const import ns_svg, ns_karabo
+from karabo_gui.registry import Loadable
+from karabo_gui.const import ns_svg, ns_karabo
 import karabo_gui.sceneitems as sceneitems
 
 from PyQt4.QtCore import pyqtSlot, QRect, QSize, Qt

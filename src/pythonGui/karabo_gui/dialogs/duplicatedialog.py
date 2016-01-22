@@ -12,7 +12,7 @@ This module contains a class which represents the dialog to duplicate devices.
 __all__ = ["DuplicateDialog", "DuplicateWidget"]
 
 
-import globals
+import karabo_gui.globals as globals
 
 from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QGroupBox,

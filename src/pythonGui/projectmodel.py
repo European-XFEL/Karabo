@@ -15,7 +15,7 @@ __all__ = ["ProjectModel"]
 
 
 from configuration import Configuration
-import globals
+import karabo_gui.globals as globals
 import karabo_gui.icons as icons
 from karabo_gui.dialogs.configurationdialog import SelectMultipleProjectConfigurationDialog
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
@@ -26,8 +26,8 @@ from karabo_gui.dialogs.scenedialog import SceneDialog
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from scene import Scene
 import manager
-import network
-from util import getSaveFileName
+import karabo_gui.network as network
+from karabo_gui.util import getSaveFileName
 
 from karabo.api_2 import Hash, Project, ProjectAccess, Monitor
 
