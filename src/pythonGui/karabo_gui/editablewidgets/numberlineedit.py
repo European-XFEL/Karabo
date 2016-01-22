@@ -8,8 +8,8 @@
 __all__ = ["IntLineEdit", "DoubleLineEdit"]
 
 
-from util import SignalBlocker
-from widget import DisplayWidget, EditableWidget
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import QLineEdit, QDoubleValidator, QPalette, QValidator

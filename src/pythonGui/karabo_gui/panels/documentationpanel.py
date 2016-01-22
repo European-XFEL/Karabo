@@ -15,7 +15,7 @@ from PyQt4.QtCore import QUrl
 from PyQt4.QtGui import QTabWidget, QVBoxLayout, QWidget
 from PyQt4.QtWebKit import QWebPage, QWebView
 
-from docktabwindow import Dockable
+from karabo_gui.docktabwindow import Dockable
 
 
 class DocumentationPanel(Dockable, QWidget):

@@ -8,11 +8,11 @@ import pickle
 import base64
 from xml.etree.ElementTree import Element
 
-from const import ns_karabo
+from karabo_gui.const import ns_karabo
 from manager import getDevice
-from network import Network
-from util import SignalBlocker
-from widget import DisplayWidget
+from karabo_gui.network import Network
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import DisplayWidget
 
 from PyQt4.QtCore import Qt, QObject, QTimer, pyqtSlot
 

@@ -11,7 +11,7 @@ This module contains classes of dialogs and widgets for devices.
 
 __all__ = ["DeviceDialog", "DeviceGroupDialog", "DeviceDefinitionWidget"]
 
-import globals
+import karabo_gui.globals as globals
 
 from karabo.api_2 import AccessLevel
 from .duplicatedialog import DuplicateWidget

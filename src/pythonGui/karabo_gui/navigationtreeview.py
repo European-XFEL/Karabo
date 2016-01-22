@@ -13,7 +13,7 @@
 __all__ = ["NavigationTreeView"]
 
 
-from enums import NavigationItemTypes
+from karabo_gui.enums import NavigationItemTypes
 import karabo_gui.icons as icons
 from manager import Manager
 from karabo_gui.treewidgetitems.popupwidget import PopupWidget

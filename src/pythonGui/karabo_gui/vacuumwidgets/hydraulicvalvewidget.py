@@ -12,7 +12,7 @@
 __all__ = ["HydraulicValveWidget"]
 
 
-from widget import VacuumWidget
+from karabo_gui.widget import VacuumWidget
 
 
 class HydraulicValveWidget(VacuumWidget):

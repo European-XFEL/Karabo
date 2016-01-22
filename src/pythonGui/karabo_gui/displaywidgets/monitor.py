@@ -5,8 +5,8 @@ from PyQt4.QtGui import QAction, QInputDialog, QPushButton
 
 from karabo.api_2 import Simple, String
 
-from util import getSaveFileName
-from widget import DisplayWidget
+from karabo_gui.util import getSaveFileName
+from karabo_gui.widget import DisplayWidget
 
 
 class Monitor(DisplayWidget):

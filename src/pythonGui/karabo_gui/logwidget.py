@@ -21,10 +21,10 @@ from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QLabel, QLineEdit, QPushButton, QTableView,
                          QToolButton, QVBoxLayout, QWidget)
 
-import globals
+import karabo_gui.globals as globals
 import karabo_gui.icons as icons
 from manager import Manager
-from util import getSaveFileName
+from karabo_gui.util import getSaveFileName
 
 
 class LogWidget(QWidget):

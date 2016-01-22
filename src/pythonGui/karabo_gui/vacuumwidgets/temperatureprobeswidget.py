@@ -12,7 +12,7 @@
 __all__ = ["TemperatureProbeWidget"]
 
 
-from widget import VacuumWidget
+from karabo_gui.widget import VacuumWidget
 
 
 class TemperatureProbeWidget(VacuumWidget):
