@@ -10,19 +10,19 @@
 
 from karabo.api_2 import AccessMode, AccessLevel, Hash, Timestamp
 import karabo.api2.hash as hashmod
-from registry import Monkey
-from network import Network
+from karabo_gui.registry import Monkey
+from karabo_gui.network import Network
 import karabo_gui.icons as icons
 
 from components import (ChoiceComponent, EditableApplyLaterComponent,
                         EditableNoApplyComponent)
-import globals
+import karabo_gui.globals as globals
 
 from karabo_gui.treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
 from karabo_gui.treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem
 from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 from karabo_gui.treewidgetitems.tabletreewidgetitem import TableTreeWidgetItem
-from widget import DisplayWidget, EditableWidget
+from karabo_gui.widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 

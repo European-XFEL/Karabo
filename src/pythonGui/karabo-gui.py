@@ -8,7 +8,7 @@ sip.setapi("QVariant", 2)
 sip.setapi("QUrl", 2)
 
 sys.karabo_gui = True
-import gui
+import karabo_gui.gui as gui
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QApplication, QSplashScreen, QPixmap

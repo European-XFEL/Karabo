@@ -10,7 +10,7 @@
 __all__ = ["TaurusLabelWrapper"]
 
 
-from widget import DisplayWidget
+from karabo_gui.widget import DisplayWidget
 # not yet working under ubuntu 12.04
 #from taurus.qt.qtgui.display import TaurusLabel
 

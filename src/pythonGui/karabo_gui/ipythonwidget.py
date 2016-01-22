@@ -22,7 +22,7 @@ from IPython.kernel.inprocess import channels
 from karabo.api_2 import Hash
 
 import manager
-from network import network
+from karabo_gui.network import network
 
 class IPythonWidget(RichIPythonWidget):
     def __init__(self, banner=None, *args, **kwargs):

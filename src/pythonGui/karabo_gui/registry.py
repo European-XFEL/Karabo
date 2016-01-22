@@ -4,7 +4,7 @@ inherit from a certain parent. """
 from PyQt4.QtCore import Qt, QObject
 from PyQt4.QtGui import QAction
 from karabo.api_2 import Registry
-from const import ns_karabo
+from karabo_gui.const import ns_karabo
 
 
 def Monkey(name, bases, dict):

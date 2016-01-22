@@ -9,7 +9,7 @@ __all__ = ["DisplayChoiceElement"]
 
 
 from schema import ChoiceOfNodes
-from widget import DisplayWidget
+from karabo_gui.widget import DisplayWidget
 
 from PyQt4.QtGui import QComboBox
 

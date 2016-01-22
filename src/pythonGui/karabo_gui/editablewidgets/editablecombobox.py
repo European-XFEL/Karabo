@@ -21,8 +21,8 @@
 __all__ = ["EditableComboBox"]
 
 
-from util import SignalBlocker
-from widget import EditableWidget
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import EditableWidget
 
 from PyQt4.QtCore import QEvent
 from PyQt4.QtGui import QComboBox

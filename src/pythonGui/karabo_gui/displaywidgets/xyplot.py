@@ -2,7 +2,7 @@
 __all__ = ["XYPlot"]
 
 
-from widget import DisplayWidget
+from karabo_gui.widget import DisplayWidget
 
 from karabo.api_2 import Simple
 

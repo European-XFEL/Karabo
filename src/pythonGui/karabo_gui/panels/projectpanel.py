@@ -11,8 +11,8 @@
 
 __all__ = ["ProjectPanel"]
 
-from docktabwindow import Dockable
-from projecttreeview import ProjectTreeView
+from karabo_gui.docktabwindow import Dockable
+from karabo_gui.projecttreeview import ProjectTreeView
 import karabo_gui.icons as icons
 import manager
 

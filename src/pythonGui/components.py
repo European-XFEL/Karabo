@@ -13,14 +13,14 @@ __all__ = ["BaseComponent"]
 
 
 import manager
-from network import Network
+from karabo_gui.network import Network
 import karabo_gui.icons as icons
 
-from layouts import ProxyWidget
-from registry import Loadable
-from const import ns_karabo
-from messagebox import MessageBox
-from widget import EditableWidget, DisplayWidget, Widget
+from karabo_gui.layouts import ProxyWidget
+from karabo_gui.registry import Loadable
+from karabo_gui.const import ns_karabo
+from karabo_gui.messagebox import MessageBox
+from karabo_gui.widget import EditableWidget, DisplayWidget, Widget
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMessageBox,

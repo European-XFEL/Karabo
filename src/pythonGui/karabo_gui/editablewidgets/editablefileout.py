@@ -12,9 +12,9 @@
 __all__ = ["EditableFileOut"]
 
 import karabo_gui.icons as icons
-from util import getSaveFileName
-from util import SignalBlocker
-from widget import EditableWidget
+from karabo_gui.util import getSaveFileName
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import EditableWidget
 
 from karabo.api_2 import String
 

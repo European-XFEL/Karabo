@@ -4,8 +4,8 @@ import traceback
 
 from PyQt4.QtGui import QAction, QInputDialog, QLineEdit, QMessageBox
 
-from util import SignalBlocker
-from widget import DisplayWidget
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import DisplayWidget
 
 from karabo.api_2 import String, Simple
 

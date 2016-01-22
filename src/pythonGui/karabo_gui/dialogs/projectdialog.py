@@ -7,11 +7,11 @@
 
 __all__ = ["ProjectSaveDialog", "ProjectLoadDialog"]
 
-import globals
+import karabo_gui.globals as globals
 import karabo_gui.icons as icons
 from karabo.api_2 import ProjectAccess
-from messagebox import MessageBox
-import network
+from karabo_gui.messagebox import MessageBox
+import karabo_gui.network as network
 
 from PyQt4 import uic
 from PyQt4.QtCore import (QDir, Qt)

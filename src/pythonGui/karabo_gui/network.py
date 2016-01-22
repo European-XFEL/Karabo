@@ -24,7 +24,7 @@ from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.authenticator import Authenticator
 from karabo.api_2 import Hash, BinaryParser, BinaryWriter, AccessLevel
 
-import globals
+import karabo_gui.globals as globals
 import socket
 from struct import unpack
 

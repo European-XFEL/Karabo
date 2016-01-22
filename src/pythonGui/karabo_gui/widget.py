@@ -21,12 +21,12 @@ __all__ = ["DisplayWidget"]
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QLabel, QPixmap
-from registry import Registry
+from karabo_gui.registry import Registry
 import os.path
 
 from karabo.api_2 import String
 
-import gui
+import karabo_gui.gui as gui
 
 
 class Widget(Registry, QObject):

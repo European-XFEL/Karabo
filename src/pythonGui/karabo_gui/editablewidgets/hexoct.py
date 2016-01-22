@@ -8,8 +8,8 @@
 __all__ = ["Hexadecimal"]
 
 
-from util import SignalBlocker
-from widget import DisplayWidget, EditableWidget
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import DisplayWidget, EditableWidget
 
 from karabo.api_2 import Integer
 
