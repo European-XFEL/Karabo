@@ -12,15 +12,14 @@ configuration panel containing the parameters of a device.
 
 __all__ = ["ProjectTreeView"]
 
-import globals
+import karabo_gui.globals as globals
 
 from karabo_gui.dialogs.projectdialog import ProjectDialog, ProjectSaveDialog, ProjectLoadDialog
 from scene import Scene
 from manager import Manager
-from network import Network
+from karabo_gui.network import Network
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from projectmodel import ProjectModel
-from util import getSaveFileName
 
 from karabo.api_2 import Monitor, Project, ProjectAccess, ProjectConfiguration
 

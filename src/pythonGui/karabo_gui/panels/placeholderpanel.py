@@ -12,7 +12,7 @@ __all__ = ["PlaceholderPanel"]
 
 import sys
 
-from docktabwindow import Dockable
+from karabo_gui.docktabwindow import Dockable
 
 from PyQt4.QtGui import QLabel, QVBoxLayout, QWidget
 

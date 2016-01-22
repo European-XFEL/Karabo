@@ -20,9 +20,9 @@
 
 __all__ = ["DisplayCommand"]
 
-from const import ns_karabo
+from karabo_gui.const import ns_karabo
 from karabo_gui.displaywidgets.icons import Item, SelectionDialog
-from widget import DisplayWidget
+from karabo_gui.widget import DisplayWidget
 
 from schema import SlotNode
 

@@ -10,10 +10,10 @@
 __all__ = ["MacroPanel"]
 
 
-from docktabwindow import Dockable
+from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
 from manager import getDevice
-from util import getSaveFileName
+from karabo_gui.util import getSaveFileName
 
 from PyQt4.QtCore import Qt, pyqtSignal, QEvent
 from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QMessageBox,

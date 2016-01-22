@@ -7,10 +7,10 @@
 
 __all__ = ["WorkflowItem", "WorkflowGroupItem", "WorkflowChannel", "WorkflowConnection"]
 
-from const import ns_karabo
-from layouts import ProxyWidget
+from karabo_gui.const import ns_karabo
+from karabo_gui.layouts import ProxyWidget
 import manager
-from registry import Loadable
+from karabo_gui.registry import Loadable
 from schema import Dummy, Schema
 import scene
 

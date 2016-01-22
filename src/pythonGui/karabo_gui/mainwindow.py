@@ -14,10 +14,10 @@ __all__ = ["MainWindow"]
 import os.path
 import karabo_gui.icons as icons
 
-from docktabwindow import DockTabWindow
-import globals
+from karabo_gui.docktabwindow import DockTabWindow
+import karabo_gui.globals as globals
 from karabo.api_2 import AccessLevel
-from network import Network
+from karabo_gui.network import Network
 
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.custommiddlepanel import CustomMiddlePanel

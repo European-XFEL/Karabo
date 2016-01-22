@@ -12,17 +12,17 @@ from components import (DisplayComponent, EditableApplyLaterComponent)
 
 from karabo_gui.dialogs.dialogs import PenDialog, TextDialog
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
-from enums import NavigationItemTypes
-from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
+from karabo_gui.enums import NavigationItemTypes
+from karabo_gui.layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
 from karabo_gui.sceneitems.workflowitems import (Item, WorkflowConnection, WorkflowItem,
                                       WorkflowGroupItem)
 
-from registry import Loadable, Registry
-from const import ns_karabo, ns_svg
-import pathparser
+from karabo_gui.registry import Loadable, Registry
+from karabo_gui.const import ns_karabo, ns_svg
+import karabo_gui.pathparser as pathparser
 import karabo_gui.icons as icons
 import manager
-from widget import DisplayWidget, EditableWidget
+from karabo_gui.widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import (pyqtSignal, Qt, QByteArray, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,

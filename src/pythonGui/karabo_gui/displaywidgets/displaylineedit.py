@@ -22,8 +22,8 @@ __all__ = ["DisplayLineEdit"]
 
 
 from karabo.api_2 import String
-from util import SignalBlocker
-from widget import DisplayWidget
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import DisplayWidget
 
 from PyQt4.QtGui import QLineEdit
 

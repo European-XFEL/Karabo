@@ -22,7 +22,7 @@ __all__ = ["DisplayPyCode"]
 
 
 from karabo.api_2 import String
-from widget import DisplayWidget
+from karabo_gui.widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
