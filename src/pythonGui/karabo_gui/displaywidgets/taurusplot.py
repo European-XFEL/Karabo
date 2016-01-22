@@ -10,7 +10,7 @@
 __all__ = ["TaurusPlotWrapper"]
 
 
-from widget import DisplayWidget
+from karabo_gui.widget import DisplayWidget
 
 #from ..extern.taurus import TaurusCustomSettings
 #from ..extern.taurus.qt.qtgui.plot import *

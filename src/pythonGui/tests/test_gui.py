@@ -6,16 +6,16 @@ sip.setapi("QString", 2)
 sip.setapi("QVariant", 2)
 sip.setapi("QUrl", 2)
 
-from docktabwindow import Dockable
-import gui
+from karabo_gui.docktabwindow import Dockable
+import karabo_gui.gui as gui
 from PyQt4.QtCore import QObject, QMimeData, QPoint, Qt, pyqtSignal
 from PyQt4.QtGui import QApplication, QDropEvent, QWidget
 import karabo_gui.icons as icons
 from manager import Manager
 import manager
-import network
-import globals
-import widget
+import karabo_gui.network as network
+import karabo_gui.globals as globals
+import karabo_gui.widget as widget
 
 from karabo.api_2 import (
     AccessLevel, Hash, Integer, ProjectAccess, Schema, XMLParser

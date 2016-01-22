@@ -12,10 +12,10 @@
 __all__ = ["LoggingPanel"]
 
 
-from docktabwindow import Dockable
+from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
 from manager import Manager
-from logwidget import LogWidget
+from karabo_gui.logwidget import LogWidget
 
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 

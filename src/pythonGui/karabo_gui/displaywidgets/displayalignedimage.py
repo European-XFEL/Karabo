@@ -8,7 +8,7 @@ __all__ = ["DisplayAlignedImage"]
 
 
 from schema import ImageNode
-from widget import DisplayWidget
+from karabo_gui.widget import DisplayWidget
 
 import numpy as np
 from guiqwt.plot import ImageDialog

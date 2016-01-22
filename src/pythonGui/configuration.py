@@ -15,7 +15,7 @@ __all__ = ["Configuration"]
 
 from schema import Schema, Box
 import manager
-from network import Network
+from karabo_gui.network import Network
 
 from PyQt4.QtCore import pyqtSignal
 

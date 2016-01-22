@@ -22,8 +22,7 @@ __all__ = ["DisplayPlot", "PlotItem"]
 
 
 import sys
-from widget import DisplayWidget
-from randomcolor import RandomColor
+from karabo_gui.widget import DisplayWidget
 
 from karabo.api_2 import NumpyVector
 

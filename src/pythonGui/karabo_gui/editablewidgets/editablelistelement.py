@@ -21,9 +21,9 @@
 __all__ = ["EditableListElement"]
 
 
-from widget import DisplayWidget, EditableWidget
+from karabo_gui.widget import DisplayWidget, EditableWidget
 from karabo.api_2 import Hash, VectorString
-from stringlistedit import StringListEdit
+from karabo_gui.stringlistedit import StringListEdit
 
 from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import QDialog, QPushButton
