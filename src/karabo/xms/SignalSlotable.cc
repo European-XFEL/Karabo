@@ -736,8 +736,12 @@ namespace karabo {
 
         void SignalSlotable::registerDefaultSignalsAndSlots() {
 
-            // Emits a "still-alive" signal
-            registerHeartbeatSignal<string, int, Hash>("signalHeartbeat");
+            // The heartbeat signal goes through a different topic, so we
+            // cannot use the normal registerSignal.
+            SignalInstancePointer heartbeatSignal(new karabo::xms::Signal(this, m_heartbeatProducerChannel, m_instanceId, "signalHeartbeat", 9));
+            storeSignal("signalHeartbeat", heartbeatSignal);
+            boost::function<void (const string&, const int&, const Hash&)> f = boost::bind(&Signal::emit3<string, int, Hash>, heartbeatSignal, _1, _2, _3);
+            m_emitFunctions.set("signalHeartbeat", f);
 
             // Listener for heartbeats
             KARABO_SLOT3(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
