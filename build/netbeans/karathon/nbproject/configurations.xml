@@ -257,6 +257,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyUtilDims.cc"
             ex="false"
@@ -677,6 +682,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyUtilDims.cc"
             ex="false"

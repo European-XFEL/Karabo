@@ -29,12 +29,21 @@ namespace karabo {
      * Namespace for package core
      */
     namespace core {
+        
+        class BaseDevice;
 
         /**
          * The DeviceServer class.
          */
-        class DeviceServer : public karabo::xms::SignalSlotable {
-            typedef std::map<std::string, boost::thread*> DeviceInstanceMap;
+        class DeviceServer : public karabo::xms::SignalSlotable {           
+
+            struct DeviceInstanceEntry {
+                boost::thread* m_deviceThread;
+                boost::shared_ptr<BaseDevice> m_device;
+            };
+
+
+            typedef std::map<std::string, DeviceInstanceEntry> DeviceInstanceMap;
 
             krb_log4cpp::Category* m_log;
             karabo::log::Logger::Pointer m_logger;
@@ -62,7 +71,7 @@ namespace karabo {
             std::string m_serverId;
 
             int m_heartbeatIntervall;
-                       
+
         public:
 
             KARABO_CLASSINFO(DeviceServer, "DeviceServer", karabo::util::Version::getVersion())
@@ -184,8 +193,16 @@ namespace karabo {
 
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
 
-
+            friend bool tryToCallDirectly(boost::any server,
+                    const std::string& instanceId,
+                    const karabo::util::Hash::Pointer& header,
+                    const karabo::util::Hash::Pointer& body);
         };
+
+        bool tryToCallDirectly(boost::any server,
+                const std::string& instanceId,
+                const karabo::util::Hash::Pointer& header,
+                const karabo::util::Hash::Pointer& body);
     }
 }
 
