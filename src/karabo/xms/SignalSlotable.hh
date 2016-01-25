@@ -1108,15 +1108,6 @@ KARABO_SLOT0(__VA_ARGS__) \
                 }
             }
 
-            template <class A1, class A2, class A3>
-            void registerHeartbeatSignal(const std::string& funcName) {
-                SignalInstancePointer s = storeSignal(funcName, 9);
-                if (s) {
-                    boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
-                    m_emitFunctions.set(funcName, f);
-                }
-            }
-
             void registerSlot(const boost::function<void () >& slot, const std::string& funcName) {
                 typename karabo::xms::Slot0::Pointer s = boost::static_pointer_cast<karabo::xms::Slot0>(preRegisterSlot(funcName));
                 if (!s) {
