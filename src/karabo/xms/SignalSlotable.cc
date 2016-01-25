@@ -22,6 +22,7 @@
 
 #include "SignalSlotable.hh"
 #include "karabo/util/Version.hh"
+#include "karabo/core/DeviceServer.hh"
 
 namespace karabo {
     namespace xms {
@@ -34,6 +35,46 @@ namespace karabo {
 
         /// Milliseconds of timeout when asking for validity of my id at startup:
         const int msPingTimeoutInIsValidInstanceId = 1000;
+
+        // Static initializations
+        std::set<int> SignalSlotable::m_reconnectIntervals = std::set<int>();
+        boost::uuids::random_generator SignalSlotable::Requestor::m_uuidGenerator;
+
+
+        SignalSlotable::Caller::Caller(const SignalSlotable* signalSlotable) : m_signalSlotable(signalSlotable) {
+        }
+
+
+        void SignalSlotable::Caller::sendMessage(const std::string& slotInstanceId,
+                                                 const karabo::util::Hash::Pointer& header,
+                                                 const karabo::util::Hash::Pointer& body) const {
+            try {
+                // try shortcut first
+                if (m_signalSlotable && karabo::core::tryToCallDirectly(m_signalSlotable->m_deviceServerPointer, slotInstanceId, header, body))
+                    return;
+                if (m_signalSlotable && m_signalSlotable->m_producerChannel)
+                    m_signalSlotable->m_producerChannel->write(*header, *body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+                else
+                    throw KARABO_PARAMETER_EXCEPTION("Caller::sendMessage  : m_signalSlotable = 0 or m_signalSlotable->m_producerChannel is 0");
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Problems sending message"));
+            }
+        }
+
+
+        karabo::util::Hash::Pointer SignalSlotable::Caller::prepareHeader(const std::string& slotInstanceId,
+                                                                          const std::string& slotFunction) const {
+            karabo::util::Hash::Pointer header(new Hash);
+            header->set("signalInstanceId", m_signalSlotable->getInstanceId());
+            header->set("signalFunction", "__call__");
+            header->set("slotInstanceIds", "|" + slotInstanceId + "|");
+            header->set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
+            header->set("hostName", boost::asio::ip::host_name());
+            header->set("userName", m_signalSlotable->getUserName());
+            header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
+            return header;
+        }
+
 
         void SignalSlotable::Requestor::Receiver::receive(SignalSlotable::Requestor *ss) {
             try {
@@ -50,10 +91,6 @@ namespace karabo {
             }
 
         }
-
-        // Static initializations
-        std::set<int> SignalSlotable::m_reconnectIntervals = std::set<int>();
-        boost::uuids::random_generator SignalSlotable::Requestor::m_uuidGenerator;
 
 
         SignalSlotable::Requestor::Requestor(SignalSlotable* signalSlotable) :
@@ -132,19 +169,19 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SignalSlotable() : m_randPing(rand() + 2) {
+        SignalSlotable::SignalSlotable() : m_randPing(rand() + 2), m_deviceServerPointer(0) {
         }
 
 
         SignalSlotable::SignalSlotable(const string& instanceId,
-                                       const BrokerConnection::Pointer& connection) : m_randPing(rand() + 2) {
+                                       const BrokerConnection::Pointer& connection) : m_randPing(rand() + 2), m_deviceServerPointer(0) {
             init(instanceId, connection);
         }
 
 
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                                        const std::string& brokerType,
-                                       const karabo::util::Hash& brokerConfiguration) : m_randPing(rand() + 2) {
+                                       const karabo::util::Hash& brokerConfiguration) : m_randPing(rand() + 2), m_deviceServerPointer(0) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
@@ -177,6 +214,11 @@ namespace karabo {
             m_heartbeatConsumerChannel = m_connection->createChannel("beats");
 
             registerDefaultSignalsAndSlots();
+        }
+
+
+        void SignalSlotable::setDeviceServerPointer(boost::any serverPtr) {
+            m_deviceServerPointer = serverPtr;
         }
 
 
@@ -230,7 +272,7 @@ namespace karabo {
         }
 
 
-        long long SignalSlotable::getEpochMillis() {
+        long long SignalSlotable::getEpochMillis() const {
             using namespace boost::gregorian;
             using namespace boost::local_time;
             using namespace boost::posix_time;
@@ -484,6 +526,7 @@ namespace karabo {
                     boost::trim_if(slotFunctions, boost::is_any_of("|"));
                     boost::split(allSlots, slotFunctions, boost::is_any_of("|"), boost::token_compress_on);
 
+
                     BOOST_FOREACH(const string& instanceSlots, allSlots) {
                         //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Processing instanceSlots: " << instanceSlots;
                         const size_t pos = instanceSlots.find_first_of(":");
@@ -497,6 +540,8 @@ namespace karabo {
                         if (!globalCall && instanceId != m_instanceId) continue;
 
                         const vector<string> slotFunctions = karabo::util::fromString<string, vector>(instanceSlots.substr(pos + 1));
+
+
                         BOOST_FOREACH(const string& slotFunction, slotFunctions) {
                             //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call local " << slotFunction << " if registered";
 
@@ -531,7 +576,7 @@ namespace karabo {
                             } else if (!globalCall) {
                                 // Warn on non-existing slot, but only if directly addressed:
                                 const std::string& signalInstanceId = (header.has("signalInstanceId") ? // const ref is essential!
-                                    header.get<std::string>("signalInstanceId") : std::string("unknown"));
+                                        header.get<std::string>("signalInstanceId") : std::string("unknown"));
                                 KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a message from '"
                                         << signalInstanceId << "' to non-existing slot \"" << slotFunction << "\"";
                             } else {
@@ -1639,12 +1684,12 @@ namespace karabo {
             try {
 
                 while (m_doTracking) {
-                    
+
                     if (!m_connection->isConnected()) {
                         boost::this_thread::sleep(boost::posix_time::seconds(5));
                         continue;
                     }
-                    
+
                     if (m_trackAllInstances) {
 
                         //cout << "COUNTDOWN" << endl;
@@ -1881,9 +1926,9 @@ namespace karabo {
                 const std::string& instanceId = outputChannels[j].get<string > ("instanceId");
                 const std::string& channelId = outputChannels[j].get<string > ("channelId");
                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
-                        .receiveAsync<bool, karabo::util::Hash>(boost::bind(&SignalSlotable::onInputChannelConnectInfo,
-                                                                            this, channel, handler,
-                                                                            instanceId, channelId, _1, _2));
+                        .receiveAsync<bool, karabo::util::Hash > (boost::bind(&SignalSlotable::onInputChannelConnectInfo,
+                                                                              this, channel, handler,
+                                                                              instanceId, channelId, _1, _2));
             }
 
         }
@@ -1896,7 +1941,7 @@ namespace karabo {
             if (channelExists) {
                 channel->connect(info); // Synchronous
                 handler();
-            }  else {
+            } else {
                 KARABO_LOG_FRAMEWORK_ERROR << "Could not find outputChannel \"" << channelId << "\" on instanceId \"" << instanceId << "\"";
             }
         }
@@ -2004,6 +2049,11 @@ namespace karabo {
 
         void SignalSlotable::registerPerformanceStatisticsHandler(const UpdatePerformanceStatisticsHandler& updatePerformanceStatisticsHandler) {
             m_updatePerformanceStatistics = updatePerformanceStatisticsHandler;
+        }
+
+
+        void injectEventExternally(karabo::xms::SignalSlotable* that, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
+            that->injectEvent(that->m_consumerChannel, header, body);
         }
     }
 }
