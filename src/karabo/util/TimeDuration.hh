@@ -218,8 +218,7 @@ namespace karabo {
         }
 
         inline bool TimeDuration::operator >=(const TimeDuration& other) const {
-            return (m_Seconds >= other.m_Seconds) ||
-                    ((m_Seconds == other.m_Seconds) && (m_Fractions >= other.m_Fractions));
+            return !(*this < other);
         }
 
         inline bool TimeDuration::operator<(const TimeDuration& other) const {
@@ -228,8 +227,7 @@ namespace karabo {
         }
 
         inline bool TimeDuration::operator <=(const TimeDuration& other) const {
-            return (m_Seconds <= other.m_Seconds) ||
-                    ((m_Seconds == other.m_Seconds) && (m_Fractions <= other.m_Fractions));
+            return !(*this > other);
         }
 
         inline TimeDuration TimeDuration::operator +(const TimeDuration& other) const {
