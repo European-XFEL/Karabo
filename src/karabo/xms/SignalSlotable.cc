@@ -1261,7 +1261,12 @@ namespace karabo {
 
 
         void SignalSlotable::registerNewSlot(const std::string &funcName, SlotInstancePointer instance) {
-            m_slotInstances[funcName] = instance;
+            SlotInstancePointer& newinstance = m_slotInstances[funcName];
+            if (newinstance) {
+                throw KARABO_SIGNALSLOT_EXCEPTION("The slot \"" + funcName + "\" has been registered with two different signatures");
+            } else {
+                newinstance = instance;
+            }
         }
 
 

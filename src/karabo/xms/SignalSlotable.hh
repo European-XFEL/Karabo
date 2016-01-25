@@ -1109,7 +1109,7 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             void registerSlot(const boost::function<void () >& slot, const std::string& funcName) {
-                typename karabo::xms::Slot0::Pointer s = boost::static_pointer_cast<karabo::xms::Slot0>(preRegisterSlot(funcName));
+                typename karabo::xms::Slot0::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot0>(preRegisterSlot(funcName));
                 if (!s) {
                     s = typename karabo::xms::Slot0::Pointer(new karabo::xms::Slot0(funcName));
                     registerNewSlot(funcName, s);
@@ -1119,7 +1119,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1>
             void registerSlot(const boost::function<void (const A1&) >& slot, const std::string& funcName) {
-                typename karabo::xms::Slot1<A1>::Pointer s = boost::static_pointer_cast<karabo::xms::Slot1<A1> >(preRegisterSlot(funcName));
+                typename karabo::xms::Slot1<A1>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot1<A1> >(preRegisterSlot(funcName));
                 if (!s) {
                     s = typename boost::shared_ptr<karabo::xms::Slot1<A1> >(new karabo::xms::Slot1<A1 >(funcName));
                     registerNewSlot(funcName, s);
@@ -1129,7 +1129,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2>
             void registerSlot(const boost::function<void (const A1&, const A2&) >& slot, const std::string& funcName) {
-                typename karabo::xms::Slot2<A1, A2>::Pointer s = boost::static_pointer_cast<karabo::xms::Slot2<A1, A2> >(preRegisterSlot(funcName));
+                typename karabo::xms::Slot2<A1, A2>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot2<A1, A2> >(preRegisterSlot(funcName));
                 if (!s) {
                     s = typename karabo::xms::Slot2<A1, A2>::Pointer(new karabo::xms::Slot2<A1, A2>(funcName));
                     registerNewSlot(funcName, s);
@@ -1139,7 +1139,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2, class A3>
             void registerSlot(const boost::function<void (const A1&, const A2&, const A3&) >& slot, const std::string& funcName) {
-                typename karabo::xms::Slot3<A1, A2, A3>::Pointer s = boost::static_pointer_cast<karabo::xms::Slot3<A1, A2, A3> >(preRegisterSlot(funcName));
+                typename karabo::xms::Slot3<A1, A2, A3>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot3<A1, A2, A3> >(preRegisterSlot(funcName));
                 if (!s) {
                     s = typename karabo::xms::Slot3<A1, A2, A3>::Pointer(new karabo::xms::Slot3<A1, A2, A3>(funcName));
                     registerNewSlot(funcName, s);
@@ -1149,7 +1149,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2, class A3, class A4>
             void registerSlot(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& slot, const std::string& funcName) {
-                typename karabo::xms::Slot4<A1, A2, A3, A4>::Pointer s = boost::static_pointer_cast<karabo::xms::Slot4<A1, A2, A3, A4> >(preRegisterSlot(funcName));
+                typename karabo::xms::Slot4<A1, A2, A3, A4>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot4<A1, A2, A3, A4> >(preRegisterSlot(funcName));
                 if (!s) {
                     s = typename karabo::xms::Slot4<A1, A2, A3, A4>::Pointer(new karabo::xms::Slot4<A1, A2, A3, A4>(funcName));
                     registerNewSlot(funcName, s);
