@@ -155,6 +155,10 @@ class Hash_TestCase(unittest.TestCase):
 
 
     def check_hash_simple(self, h):
+        """check that the hash *h* is the same as created by `create_hash`
+
+        This method is simple enough that it works for both C++ and
+        Python-only hashes."""
         keys = ["bool", "int", "string", "stringlist", "chars", "vector",
                 "emptyvector", "hash", "hashlist", "emptystringlist", "schema"]
         self.assertEqual(list(h.keys()), keys)
@@ -174,6 +178,10 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(h["emptystringlist"], [])
 
     def check_hash(self, h):
+        """check that the hash *h* is the same as created by `create_hash`
+
+        This method does advanced checking only available for
+        Python-only hashes."""
         self.check_hash_simple(h)
         self.assertIsInstance(h["chars"], bytes)
         self.assertTrue(h["bool", "bool"] is False)
