@@ -139,6 +139,8 @@ class Hash_TestCase(unittest.TestCase):
         h["vector"] = numpy.arange(7, dtype=numpy.int64)
         h["emptyvector"] = numpy.array([])
         h["hash"] = Hash("a", 3, "b", 7.1)
+        h["hashlist"] = [Hash("a", 3), Hash()]
+        h["emptystringlist"] = []
 
         h["bool", "bool"] = False
         h["int", "float"] = 7.3
@@ -152,9 +154,9 @@ class Hash_TestCase(unittest.TestCase):
         return h
 
 
-    def check_hash(self, h):
+    def check_hash(self, h, cpp=False):
         keys = ["bool", "int", "string", "stringlist", "chars", "vector",
-                "emptyvector", "hash", "schema"]
+                "emptyvector", "hash", "hashlist", "emptystringlist", "schema"]
         self.assertEqual(list(h.keys()), keys)
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
@@ -162,12 +164,19 @@ class Hash_TestCase(unittest.TestCase):
         self.assertTrue(isinstance(h["string"], str))
         self.assertEqual(h["stringlist"], ["bla", "blub"])
         self.assertEqual(h["chars"], b"bla")
-        self.assertTrue(isinstance(h["chars"], bytes))
         self.assertEqual(h["hash.a"], 3)
         self.assertEqual(h["hash.b"], 7.1)
+        self.assertEqual(len(h["hashlist"]), 2)
+        self.assertEqual(h["hashlist"][0]["a"], 3)
+        self.assertEqual(len(h["hashlist"][1]), 0)
         assert_equal(h["vector"], numpy.arange(7))
         assert_equal(h["emptyvector"], numpy.array([]))
+        self.assertEqual(h["emptystringlist"], [])
 
+        if cpp:
+            return
+
+        self.assertIsInstance(h["chars"], bytes)
         self.assertTrue(h["bool", "bool"] is False)
         self.assertEqual(h["int", "float"], 7.3)
         self.assertEqual(h["hash", "int"], 3)
@@ -206,6 +215,7 @@ class Hash_TestCase(unittest.TestCase):
         s = w.write(self.create_hash())
         ser = BinarySerializerHash.create("Bin")
         h = ser.load(s)
+        self.check_hash(h, True)
         ret = Hash.decode(ser.save(h), "Bin")
         self.check_hash(ret)
 
