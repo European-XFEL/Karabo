@@ -154,7 +154,7 @@ class Hash_TestCase(unittest.TestCase):
         return h
 
 
-    def check_hash(self, h, cpp=False):
+    def check_hash_simple(self, h):
         keys = ["bool", "int", "string", "stringlist", "chars", "vector",
                 "emptyvector", "hash", "hashlist", "emptystringlist", "schema"]
         self.assertEqual(list(h.keys()), keys)
@@ -173,9 +173,8 @@ class Hash_TestCase(unittest.TestCase):
         assert_equal(h["emptyvector"], numpy.array([]))
         self.assertEqual(h["emptystringlist"], [])
 
-        if cpp:
-            return
-
+    def check_hash(self, h):
+        self.check_hash_simple(h)
         self.assertIsInstance(h["chars"], bytes)
         self.assertTrue(h["bool", "bool"] is False)
         self.assertEqual(h["int", "float"], 7.3)
@@ -206,7 +205,7 @@ class Hash_TestCase(unittest.TestCase):
         r = BinaryParser()
         s = w.write(self.create_hash())
         self.check_hash(r.read(s))
-        self.assertEqual(adler32(s), 4156503663)
+        self.assertEqual(adler32(s), 3186835738)
 
 
     def test_cpp(self):
@@ -215,7 +214,7 @@ class Hash_TestCase(unittest.TestCase):
         s = w.write(self.create_hash())
         ser = BinarySerializerHash.create("Bin")
         h = ser.load(s)
-        self.check_hash(h, True)
+        self.check_hash_simple(h)
         ret = Hash.decode(ser.save(h), "Bin")
         self.check_hash(ret)
 
