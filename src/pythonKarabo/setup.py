@@ -28,7 +28,8 @@ def _get_src_dist_version():
 
 
 def _write_version_py(filename='karabo/_version.py'):
-    from karabo.packaging.versioning import git_version, svn_version
+    from karabo.packaging.versioning import (git_version, svn_version,
+                                             jsvn_version)
 
     template = """\
 # THIS FILE IS GENERATED FROM SETUP.PY
@@ -45,6 +46,7 @@ is_released = {is_released}
     path = op.normpath(op.dirname(__file__))
     version_generators = (
         partial(svn_version, path),
+        partial(jsvn_version, path),
         partial(git_version, path),
         _get_src_dist_version,
     )

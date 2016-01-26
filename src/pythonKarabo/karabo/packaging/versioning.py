@@ -13,7 +13,8 @@ def _get_development_version(path):
     """ Return the current development version.
     """
     commit_count = '0'
-    generators = [partial(f, path) for f in (svn_version, git_version)]
+    generators = [partial(f, path)
+                  for f in (svn_version, jsvn_version, git_version)]
     for gen in generators:
         vcs_version, commit_count = gen()
         if vcs_version != 'Unknown':
@@ -88,7 +89,7 @@ def git_version(path):
     try:
         cmd = 'git describe'.split(' ')
         out = subprocess.check_output(cmd, cwd=path).decode('ascii')
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, OSError):
         out = ''
 
     expr = r'.*?\-(?P<count>\d+)-g(?P<hash>[a-fA-F0-9]+)'
@@ -101,15 +102,19 @@ def git_version(path):
     return git_revision, git_count
 
 
-def svn_version(path):
+def svn_version(path, svn_cmd='svn'):
     """ Return the SVN revision as a string and a commit count.
     """
-    cmd = ['svn', 'info', path]
+    cmd = [svn_cmd, 'info', path]
     try:
         out = subprocess.check_output(cmd).decode('ascii')
         svn_branch = _parse_svn_part(out, 'branch')
         svn_count = _parse_svn_part(out, 'revision')
-    except (subprocess.CalledProcessError, SvnParseError):
+    except (subprocess.CalledProcessError, OSError, SvnParseError):
         return 'Unknown', '0'
 
     return '{}@r{}'.format(svn_branch, svn_count), svn_count
+
+
+# Define this where it can be imported.
+jsvn_version = partial(svn_version, svn_cmd='jsvn')
