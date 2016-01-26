@@ -642,6 +642,8 @@ class VectorString(Vector):
 
     @staticmethod
     def fromstring(s):
+        if not s:
+            return StringList()
         return StringList(ss.strip() for ss in s.split(','))
 
     @classmethod
@@ -846,7 +848,7 @@ def _gettype(data):
             if data:
                 return _gettype(data[0]).vectortype
             else:
-                return VectorHash
+                return VectorString
         elif data is None:
             return None_
         else:
@@ -1108,7 +1110,7 @@ class Hash(OrderedDict):
                 elem = HashElement(p)
                 elem.children = value
             elif (isinstance(value, list) and
-                  (not value or isinstance(value[0], Hash))):
+                  value and isinstance(value[0], Hash)):
                 elem = ListElement(p)
                 elem.data = value
             else:
