@@ -15,25 +15,16 @@ __all__ = ["Device", "DeviceGroup", "GuiProject", "Macro", "Category"]
 
 from configuration import Configuration
 from scene import Scene
-from karabo.api_2 import (
-    AccessMode, Hash, StringList, XMLParser, XMLWriter, BaseDevice,
-    BaseDeviceGroup, BaseMacro, Monitor, Project, ProjectConfiguration
-)
+from karabo.api2.project import (BaseDevice, BaseDeviceGroup, BaseMacro,
+                                 Monitor, Project, ProjectConfiguration)
+from karabo.api_2 import AccessMode, Hash, XMLParser, XMLWriter
 import manager
 from karabo_gui.network import network
 
 from PyQt4.QtCore import pyqtSignal, QObject
-from PyQt4.QtGui import QMessageBox
 
 import csv
 from datetime import datetime
-from importlib import import_module, reload
-from importlib.util import cache_from_source
-import marshal
-import os.path
-import sys
-from tempfile import NamedTemporaryFile
-import types
 from zipfile import ZipFile, ZIP_DEFLATED
 
 
