@@ -199,7 +199,6 @@ void TimeClasses_Test::testTimeDuration() {
     const TimeDuration durL(222ull, 222222222222222ull);
     const TimeDuration durM(444ull, 444444444444444ull);
     CPPUNIT_ASSERT(std::abs(durM / durL) - 2.L < 1.e-18L);
-
 }
 
 
