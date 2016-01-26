@@ -134,10 +134,13 @@ class Hash_TestCase(unittest.TestCase):
         h["bool"] = True
         h["int"] = 4
         h["string"] = "bla"
+        h["stringlist"] = ["bla", "blub"]
         h["chars"] = b"bla"
         h["vector"] = numpy.arange(7, dtype=numpy.int64)
         h["emptyvector"] = numpy.array([])
         h["hash"] = Hash("a", 3, "b", 7.1)
+        h["hashlist"] = [Hash("a", 3), Hash()]
+        h["emptystringlist"] = []
 
         h["bool", "bool"] = False
         h["int", "float"] = 7.3
@@ -151,21 +154,36 @@ class Hash_TestCase(unittest.TestCase):
         return h
 
 
-    def check_hash(self, h):
-        keys = ["bool", "int", "string", "chars", "vector", "emptyvector",
-                "hash", "schema"]
+    def check_hash_simple(self, h):
+        """check that the hash *h* is the same as created by `create_hash`
+
+        This method is simple enough that it works for both C++ and
+        Python-only hashes."""
+        keys = ["bool", "int", "string", "stringlist", "chars", "vector",
+                "emptyvector", "hash", "hashlist", "emptystringlist", "schema"]
         self.assertEqual(list(h.keys()), keys)
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
         self.assertEqual(h["string"], "bla")
         self.assertTrue(isinstance(h["string"], str))
+        self.assertEqual(h["stringlist"], ["bla", "blub"])
         self.assertEqual(h["chars"], b"bla")
-        self.assertTrue(isinstance(h["chars"], bytes))
         self.assertEqual(h["hash.a"], 3)
         self.assertEqual(h["hash.b"], 7.1)
+        self.assertEqual(len(h["hashlist"]), 2)
+        self.assertEqual(h["hashlist"][0]["a"], 3)
+        self.assertEqual(len(h["hashlist"][1]), 0)
         assert_equal(h["vector"], numpy.arange(7))
         assert_equal(h["emptyvector"], numpy.array([]))
+        self.assertEqual(h["emptystringlist"], [])
 
+    def check_hash(self, h):
+        """check that the hash *h* is the same as created by `create_hash`
+
+        This method does advanced checking only available for
+        Python-only hashes."""
+        self.check_hash_simple(h)
+        self.assertIsInstance(h["chars"], bytes)
         self.assertTrue(h["bool", "bool"] is False)
         self.assertEqual(h["int", "float"], 7.3)
         self.assertEqual(h["hash", "int"], 3)
@@ -194,8 +212,8 @@ class Hash_TestCase(unittest.TestCase):
         w = BinaryWriter()
         r = BinaryParser()
         s = w.write(self.create_hash())
-        self.assertEqual(adler32(s), 2002923287)
         self.check_hash(r.read(s))
+        self.assertEqual(adler32(s), 3186835738)
 
 
     def test_cpp(self):
@@ -204,6 +222,7 @@ class Hash_TestCase(unittest.TestCase):
         s = w.write(self.create_hash())
         ser = BinarySerializerHash.create("Bin")
         h = ser.load(s)
+        self.check_hash_simple(h)
         ret = Hash.decode(ser.save(h), "Bin")
         self.check_hash(ret)
 
