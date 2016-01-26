@@ -156,6 +156,8 @@ namespace karabo {
 
 
         std::string DeviceClient::findInstance(const std::string &instanceId) const {
+            // NOT: boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            //      As documented, that is callers responsibility.
             for (Hash::const_iterator it = m_runtimeSystemDescription.begin(); it != m_runtimeSystemDescription.end(); ++it) {
                 Hash& tmp = it->getValue<Hash>();
                 boost::optional<Hash::Node&> node = tmp.find(instanceId);
@@ -200,6 +202,17 @@ namespace karabo {
             }
         }
 
+        util::Hash DeviceClient::getSectionFromRuntimeDescription(const std::string& section) const
+        {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+
+            boost::optional<const util::Hash::Node&> sectionNode = m_runtimeSystemDescription.find(section);
+            if (sectionNode && sectionNode->is<util::Hash>()) {
+                return sectionNode->getValue<util::Hash>();
+            } else {
+                return util::Hash();
+            }
+        }
 
         void DeviceClient::removeFromSystemTopology(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
@@ -228,39 +241,33 @@ namespace karabo {
         void DeviceClient::_slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             try {
 
-                string path(prepareTopologyPath(instanceId, instanceInfo));
+                const string path(prepareTopologyPath(instanceId, instanceInfo));
                 if (!existsInRuntimeSystemDescription(path)) return;
-
-                string instanceType = getInstanceType(instanceInfo);
-
-                Hash deviceSection;
-                if (instanceType == "server") {
-                    boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                    if (m_runtimeSystemDescription.has("device")) {
-                        deviceSection = m_runtimeSystemDescription.get<Hash>("device");
-                    }
-                }
-
-                if (!deviceSection.empty()) {
-                    for (Hash::const_iterator it = deviceSection.begin(); it != deviceSection.end(); ++it) {
-                        const Hash::Attributes& attributes = it->getAttributes();
-                        if (attributes.has("serverId") && attributes.get<string>("serverId") == instanceId) {
-                            string deviceId = it->getKey();
-                            Hash deviceInstanceInfo;
-                            for (Hash::Attributes::const_iterator jt = attributes.begin(); jt != attributes.end(); ++jt) {
-                                deviceInstanceInfo.set(jt->getKey(), jt->getValueAsAny());
-                            }
-                            if (m_instanceGoneHandler) m_instanceGoneHandler(deviceId, deviceInstanceInfo);
-                            eraseFromRuntimeSystemDescription("device." + deviceId);
-                            eraseFromInstanceUsage(deviceId);
-                        }
-                    }
-                }
 
                 eraseFromRuntimeSystemDescription(path);
                 eraseFromInstanceUsage(instanceId);
                 if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
 
+                if (getInstanceType(instanceInfo) != "server") return;
+
+                // It is a server, so treat also all its devices as dead.
+                const Hash deviceSection(getSectionFromRuntimeDescription("device"));
+
+                for (Hash::const_iterator it = deviceSection.begin(); it != deviceSection.end(); ++it) {
+                    const Hash::Attributes& attributes = it->getAttributes();
+                    if (attributes.has("serverId") && attributes.get<string>("serverId") == instanceId) {
+                        // OK, device belongs to the server that is gone.
+                        const string& deviceId = it->getKey();
+                        Hash deviceInstanceInfo;
+                        for (Hash::Attributes::const_iterator jt = attributes.begin(); jt != attributes.end(); ++jt) {
+                            deviceInstanceInfo.set(jt->getKey(), jt->getValueAsAny());
+                        }
+                        // Call the slot of our SignalSlotable to deregister the device.
+                        // This will erase it from the tracked list and brings us back into this method.
+                        xms::SignalSlotable::Pointer p(m_signalSlotable.lock());
+                        if (p) p->call("", "slotInstanceGone", deviceId, deviceInstanceInfo);
+                    }
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in _slotInstanceGone: " << e;
             } catch (...) {
@@ -991,29 +998,26 @@ namespace karabo {
 
 
         void DeviceClient::_slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
-
-            m_runtimeSystemDescriptionMutex.lock();
-            // TODO Optimize speed
-            string path(findInstance(instanceId));
-            if (path.empty()) {
-                path = "device." + instanceId + ".configuration";
-            } else {
-                path += ".configuration";
+            {
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                // TODO Optimize speed
+                string path(findInstance(instanceId));
+                if (path.empty()) {
+                    path = "device." + instanceId + ".configuration";
+                } else {
+                    path += ".configuration";
+                }
+                if (m_runtimeSystemDescription.has(path)) {
+                    Hash& tmp = m_runtimeSystemDescription.get<Hash>(path);
+                    tmp.merge(hash);
+                } else {
+                    m_runtimeSystemDescription.set(path, hash);
+                }
             }
-            if (m_runtimeSystemDescription.has(path)) {
-                Hash& tmp = m_runtimeSystemDescription.get<Hash>(path);
-                tmp.merge(hash);
-                m_runtimeSystemDescriptionMutex.unlock();
-                // NOTE: This will block us here, i.e. we are deaf for other changes...
-                // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
-                notifyDeviceChangedMonitors(hash, instanceId);
-                notifyPropertyChangedMonitors(hash, instanceId);
-            } else {
-                m_runtimeSystemDescription.set(path, hash);
-                m_runtimeSystemDescriptionMutex.unlock();
-                notifyDeviceChangedMonitors(hash, instanceId);
-                notifyPropertyChangedMonitors(hash, instanceId);
-            }
+            // NOTE: This will block us here, i.e. we are deaf for other changes...
+            // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
+            notifyDeviceChangedMonitors(hash, instanceId);
+            notifyPropertyChangedMonitors(hash, instanceId);
         }
 
 

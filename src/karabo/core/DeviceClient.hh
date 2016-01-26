@@ -660,7 +660,14 @@ namespace karabo {
 
             void eraseFromRuntimeSystemDescription(const std::string& path);
 
+            /// Get section (e.g. "device") from runtime description.
+            /// Returns empty Hash if section does not exist.
+            util::Hash getSectionFromRuntimeDescription(const std::string& section) const;
+
         private:
+            /// Find full path of 'instanceId' in m_runtimeSystemDescription,
+            /// empty if path does not exist.
+            /// NOTE: To be called under protection of m_runtimeSystemDescriptionMutex.
             std::string findInstance(const std::string &instanceId) const;
         };
     }
