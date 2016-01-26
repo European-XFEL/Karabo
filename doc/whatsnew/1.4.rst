@@ -21,3 +21,26 @@ a script is provided in $KARABO/bin: ``convertKaraboHistoryFrom13X.sh``.
 It has to be run once on the host of the data logger server(s). Consult the ``--help``
 option of the script for further details.
 
+=========
+Bug Fixes
+=========
+
+1.4.2
+-----
+* Several fixes to improve the stability of Karabo, especially cases where the
+  broker topic continuously filled with unacknowledged messages until the topic
+  was full and Karabo became not responsive.
+* Fixes in reading back device history. It is recommended to rebuild the index
+  files in the ``karaboHistory`` directory of the data logger server(s) using
+  the ``idxbuild`` executable (in ``$KARABO/bin``). Avoid doing that while the
+  system is running.
+
+
+Regressions
+===========
+
+1.4.2
+-----
+One of the fixes to stabilise Karabo disables the registration of a new callback
+inside a callback of the ``JmsBrokerConnection`` - a feature that is not used
+in Karabo.
