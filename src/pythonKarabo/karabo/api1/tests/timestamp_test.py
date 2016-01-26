@@ -212,6 +212,7 @@ class  Timestamp_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail(" testing comparison operators: " + str(e))
 
+
 if __name__ == '__main__':
     unittest.main()
 

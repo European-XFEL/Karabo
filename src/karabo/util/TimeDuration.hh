@@ -212,7 +212,7 @@ namespace karabo {
             return (m_Seconds != other.m_Seconds) || (m_Fractions != other.m_Fractions);
         }
 
-        inline bool TimeDuration::operator>(const TimeDuration& other) const {
+        inline bool TimeDuration::operator >(const TimeDuration& other) const {
             return (m_Seconds > other.m_Seconds) ||
                     ((m_Seconds == other.m_Seconds) && (m_Fractions > other.m_Fractions));
         }
@@ -221,7 +221,7 @@ namespace karabo {
             return !(*this < other);
         }
 
-        inline bool TimeDuration::operator<(const TimeDuration& other) const {
+        inline bool TimeDuration::operator <(const TimeDuration& other) const {
             return (m_Seconds < other.m_Seconds) ||
                     ((m_Seconds == other.m_Seconds) && (m_Fractions < other.m_Fractions));
         }
