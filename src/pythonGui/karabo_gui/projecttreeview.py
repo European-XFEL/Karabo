@@ -21,7 +21,8 @@ from karabo_gui.network import Network
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from projectmodel import ProjectModel
 
-from karabo.api_2 import Monitor, Project, ProjectAccess, ProjectConfiguration
+from karabo.api2.project import (Monitor, Project, ProjectAccess,
+                                 ProjectConfiguration)
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
