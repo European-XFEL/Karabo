@@ -832,7 +832,15 @@ namespace karabo {
 
         void GuiServerDevice::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting availability of new instance";
+
+                const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
+                // const ref is fine even for temporary std::string
+                const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
+                                                 topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
+                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler --> instanceId: '" << instanceId
+                        << "', type: '" << type << "'";
+
+
                 Hash h("type", "instanceNew", "topologyEntry", topologyEntry);
                 safeAllClientsWrite(h);
 
@@ -864,9 +872,12 @@ namespace karabo {
 
         void GuiServerDevice::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance gone";
-                std::string type("unknown");
-                if (instanceInfo.has("type")) instanceInfo.get("type", type);
+                // const ref is fine even for temporary std::string
+                const std::string& type = (instanceInfo.has("type") && instanceInfo.is<std::string>("type") ?
+                                           instanceInfo.get<std::string>("type") : std::string("unknown"));
+                KARABO_LOG_FRAMEWORK_INFO << "instanceGoneHandler --> instanceId: '" << instanceId
+                        << "', type: '" << type << "'";
+
                 Hash h("type", "instanceGone", "instanceId", instanceId, "instanceType", type);
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
