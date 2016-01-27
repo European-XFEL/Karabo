@@ -913,10 +913,6 @@ class ProjectModel(QStandardItemModel):
                         "occurred."
             raise
 
-        # Open new loaded project scenes
-        for scene in project.scenes:
-            self.signalAddScene.emit(scene)
-        
         self.selectObject(project)
         self.updateMacros()
         return project
