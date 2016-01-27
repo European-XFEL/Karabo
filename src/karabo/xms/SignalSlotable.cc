@@ -1249,7 +1249,7 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SlotInstancePointer SignalSlotable::preRegisterSlot(const std::string &funcName) {
+        SignalSlotable::SlotInstancePointer SignalSlotable::findSlot(const std::string &funcName) {
             SlotInstancePointer ret;
             // FIXME: Need to use m_signalSlotInstancesMutex?
             SlotInstances::const_iterator it = m_slotInstances.find(funcName);
