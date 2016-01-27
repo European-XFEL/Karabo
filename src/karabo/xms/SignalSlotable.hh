@@ -1108,8 +1108,13 @@ KARABO_SLOT0(__VA_ARGS__) \
                 }
             }
 
+            /*
+             * Register a new slot function for a slot. A new slot is generated
+             * if so necessary. It is checked that the signature of the new
+             * slot is the same as an already registered one.
+             */
             void registerSlot(const boost::function<void () >& slot, const std::string& funcName) {
-                typename karabo::xms::Slot0::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot0>(preRegisterSlot(funcName));
+                typename karabo::xms::Slot0::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot0>(findSlot(funcName));
                 if (!s) {
                     s = typename karabo::xms::Slot0::Pointer(new karabo::xms::Slot0(funcName));
                     registerNewSlot(funcName, s);
@@ -1119,7 +1124,10 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1>
             void registerSlot(const boost::function<void (const A1&) >& slot, const std::string& funcName) {
-                typename karabo::xms::Slot1<A1>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot1<A1> >(preRegisterSlot(funcName));
+                // Note that the dynamic_pointer_cast will destroy the
+                // result if the function signatures don't match. registerNewSlot
+                // will complain then later.
+                typename karabo::xms::Slot1<A1>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot1<A1> >(findSlot(funcName));
                 if (!s) {
                     s = typename boost::shared_ptr<karabo::xms::Slot1<A1> >(new karabo::xms::Slot1<A1 >(funcName));
                     registerNewSlot(funcName, s);
@@ -1129,7 +1137,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2>
             void registerSlot(const boost::function<void (const A1&, const A2&) >& slot, const std::string& funcName) {
-                typename karabo::xms::Slot2<A1, A2>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot2<A1, A2> >(preRegisterSlot(funcName));
+                typename karabo::xms::Slot2<A1, A2>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot2<A1, A2> >(findSlot(funcName));
                 if (!s) {
                     s = typename karabo::xms::Slot2<A1, A2>::Pointer(new karabo::xms::Slot2<A1, A2>(funcName));
                     registerNewSlot(funcName, s);
@@ -1139,7 +1147,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2, class A3>
             void registerSlot(const boost::function<void (const A1&, const A2&, const A3&) >& slot, const std::string& funcName) {
-                typename karabo::xms::Slot3<A1, A2, A3>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot3<A1, A2, A3> >(preRegisterSlot(funcName));
+                typename karabo::xms::Slot3<A1, A2, A3>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot3<A1, A2, A3> >(findSlot(funcName));
                 if (!s) {
                     s = typename karabo::xms::Slot3<A1, A2, A3>::Pointer(new karabo::xms::Slot3<A1, A2, A3>(funcName));
                     registerNewSlot(funcName, s);
@@ -1149,7 +1157,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2, class A3, class A4>
             void registerSlot(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& slot, const std::string& funcName) {
-                typename karabo::xms::Slot4<A1, A2, A3, A4>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot4<A1, A2, A3, A4> >(preRegisterSlot(funcName));
+                typename karabo::xms::Slot4<A1, A2, A3, A4>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot4<A1, A2, A3, A4> >(findSlot(funcName));
                 if (!s) {
                     s = typename karabo::xms::Slot4<A1, A2, A3, A4>::Pointer(new karabo::xms::Slot4<A1, A2, A3, A4>(funcName));
                     registerNewSlot(funcName, s);
@@ -1353,8 +1361,12 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             bool tryToConnectToSignal(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const int& connectionType, const bool isVerbose);
 
-            SlotInstancePointer preRegisterSlot(const std::string &funcName);
+            SlotInstancePointer findSlot(const std::string &funcName);
 
+            /*
+             * Register a new slot *instance* under name *funcName*.
+             * This will raise an error if the slot already exists.
+             */
             void registerNewSlot(const std::string &funcName, SlotInstancePointer instance);
 
             void slotConnectToSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
