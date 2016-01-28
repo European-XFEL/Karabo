@@ -52,7 +52,9 @@ namespace karabo {
 
             bool isWorking();
             
-            void registerMessageReceiver(const boost::function<void ()>& function);
+            boost::thread* registerMessageReceiver(const boost::function<void ()>& function);
+
+            void unregisterMessageReceiver(boost::thread* t);
 
             void registerTextMessageChannel(JmsBrokerChannel* channel);
 

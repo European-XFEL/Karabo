@@ -118,6 +118,10 @@ namespace karabo {
             
             // MQ Acknowledge Mode for session
             MQAckMode m_ackMode;
+            
+            bool m_consumerActive;
+            
+            std::vector<boost::thread*> m_registeredMessageReceivers;
 
         public:
 

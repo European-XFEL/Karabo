@@ -58,6 +58,7 @@ namespace karabo {
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::iterator ChannelIterator;
             
             karabo::util::Hash m_loggerMap;
+            karabo::util::Hash m_loggerInput;
 
         public:
 
