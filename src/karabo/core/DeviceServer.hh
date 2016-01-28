@@ -38,6 +38,8 @@ namespace karabo {
         class DeviceServer : public karabo::xms::SignalSlotable {           
 
             struct DeviceInstanceEntry {
+                /// Initialise bare pointer with 0.
+                DeviceInstanceEntry() : m_deviceThread(0) {}
                 boost::thread* m_deviceThread;
                 boost::shared_ptr<BaseDevice> m_device;
             };
