@@ -44,12 +44,12 @@ namespace karabo {
         }
 
         bool JmsBrokerIOService::activateRegisteredMessageReceivers() {
-            boost::mutex::scoped_lock lock(m_mutex);
-            if (m_messageReceivers.empty()) return false;
-            for (size_t i = 0; i < m_messageReceivers.size(); ++i) {
-                m_threadGroup.create_thread(m_messageReceivers[i]);
-            }
-            m_messageReceivers.clear();
+//            boost::mutex::scoped_lock lock(m_mutex);
+//            if (m_messageReceivers.empty()) return false;
+//            for (size_t i = 0; i < m_messageReceivers.size(); ++i) {
+//                m_threadGroup.create_thread(m_messageReceivers[i]);
+//            }
+//            m_messageReceivers.clear();
             return true;
         }
 
@@ -85,13 +85,14 @@ namespace karabo {
         }
 
 
-        void JmsBrokerIOService::registerMessageReceiver(const boost::function<void ()>& function) {
-            //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
-            if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
-                m_messageReceivers.push_back(function);
-            } else if (m_status == WORKING) {
-                m_threadGroup.create_thread(function);
-            }
+        boost::thread* JmsBrokerIOService::registerMessageReceiver(const boost::function<void ()>& function) {
+            return m_threadGroup.create_thread(function);
+        }
+
+
+        void JmsBrokerIOService::unregisterMessageReceiver(boost::thread* t) {
+            t->join();
+            m_threadGroup.remove_thread(t);
         }
 
 

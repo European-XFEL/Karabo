@@ -46,6 +46,7 @@ namespace karabo {
 
         private:
  
+            karabo::util::Hash m_loggerInput;
             unsigned int m_lastIndex;
             std::fstream m_logstream;
             boost::mutex m_streamMutex;

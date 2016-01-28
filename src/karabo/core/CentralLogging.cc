@@ -56,22 +56,8 @@ namespace karabo {
  
         CentralLogging::CentralLogging(const karabo::util::Hash& input) : Device<>(input), m_svc(), m_timer(m_svc) {
  
-            registerInitialFunction(boost::bind(&karabo::core::CentralLogging::initialize, this));
- 
-            // Inherit from device connection settings
-            Hash loggerInput = input;
-            string hostname = getConnection()->getBrokerHostname();
-            unsigned int port = getConnection()->getBrokerPort();
-            const vector<string>& brokers = getConnection()->getBrokerHosts();
-            string host = hostname + ":" + toString(port);
- 
-            loggerInput.set("loggerConnection.Jms.hostname", host);
-            loggerInput.set("loggerConnection.Jms.port", port);
-            loggerInput.set("loggerConnection.Jms.brokerHosts", brokers);
- 
-            m_loggerConnection = BrokerConnection::createChoice("loggerConnection", loggerInput);
-            m_loggerIoService = m_loggerConnection->getIOService();
- 
+            KARABO_INITIAL_FUNCTION(initialize)
+            m_loggerInput = input;
         }
  
  
@@ -88,6 +74,19 @@ namespace karabo {
  
  
         void CentralLogging::initialize() {
+            // Inherit from device connection settings
+            string hostname = getConnection()->getBrokerHostname();
+            unsigned int port = getConnection()->getBrokerPort();
+            const vector<string>& brokers = getConnection()->getBrokerHosts();
+            string host = hostname + ":" + toString(port);
+ 
+            m_loggerInput.set("loggerConnection.Jms.hostname", host);
+            m_loggerInput.set("loggerConnection.Jms.port", port);
+            m_loggerInput.set("loggerConnection.Jms.brokerHosts", brokers);
+ 
+            m_loggerConnection = BrokerConnection::createChoice("loggerConnection", m_loggerInput);
+            m_loggerIoService = m_loggerConnection->getIOService();
+ 
             try {
                 if (!boost::filesystem::exists(get<string>("directory"))) {
                     boost::filesystem::create_directory(get<string>("directory"));

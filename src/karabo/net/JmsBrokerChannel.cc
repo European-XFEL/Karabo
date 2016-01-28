@@ -39,7 +39,8 @@ namespace karabo {
         , m_hasConsumer(false)
         , m_hasProducer(false)
         , m_subDestination(subDestination)
-        , m_hasSession(false) {
+        , m_hasSession(false)
+        , m_consumerActive(false) {
 
             m_sessionHandle.handle     = invalidSession.handle;
             m_destinationHandle.handle = invalidDestination.handle;
@@ -69,7 +70,7 @@ namespace karabo {
 
         JmsBrokerChannel::~JmsBrokerChannel() {
             close();
-
+            
             boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
             if (jbc) {
                 set<boost::weak_ptr<JmsBrokerChannel> >& channels = jbc->m_channels;
@@ -80,6 +81,13 @@ namespace karabo {
                     }
                 }
             }
+                        
+            if (m_consumerActive) {
+                m_isStopped = true;
+                boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+            }
+            for (vector<boost::thread*>::iterator it = m_registeredMessageReceivers.begin(); it!=m_registeredMessageReceivers.end(); ++it)
+                m_ioService->unregisterMessageReceiver(*it);
         }
 
 
@@ -496,7 +504,8 @@ namespace karabo {
             m_readRawHandler = readHandler;
 
             // Start listening for messages by starting an individual thread
-            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForRawMessages, this));
+            boost::thread* t = m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForRawMessages, this));
+            if (t != 0) m_registeredMessageReceivers.push_back(t);
         }
 
 
@@ -512,7 +521,7 @@ namespace karabo {
         void JmsBrokerChannel::listenForRawMessages() {
 
             try {
-
+                m_consumerActive = true;
                 bool messageReceived = false;
                 do {
                     messageReceived = signalIncomingBinaryMessage(false);
@@ -523,8 +532,7 @@ namespace karabo {
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "An unknown exception during JMS broker message reception occurred";
             }
-            // Stop the subscription to the broker as we do not listen anymore
-            closeConsumer();
+            m_consumerActive = false;
         }
 
 
@@ -593,14 +601,15 @@ namespace karabo {
             m_readStringHandler = readHandler;
 
             // Start listening for messages by starting an individual thread
-            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForStringMessages, this));
-
+            boost::thread* t = m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForStringMessages, this));
+            if (t != 0) m_registeredMessageReceivers.push_back(t);
         }
 
 
         void JmsBrokerChannel::listenForStringMessages() {
 
             try {
+                m_consumerActive = true;
                 bool messageReceived = false;
                 do {
                     messageReceived = signalIncomingTextMessage(false);
@@ -612,8 +621,7 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
-            // Stop the subscription to the broker as we do not listen anymore
-            closeConsumer();
+            m_consumerActive = false;
         }
 
 
@@ -679,12 +687,14 @@ namespace karabo {
             m_readHashHandler = readHandler;
 
             // Start listening for messages by starting an individual thread
-            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashMessages, this));
+            boost::thread* t = m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashMessages, this));
+            if (t != 0) m_registeredMessageReceivers.push_back(t);
         }
 
 
         void JmsBrokerChannel::listenForHashMessages() {
             try {
+                m_consumerActive = true;
                 bool messageReceived = false;
                 do {
                     messageReceived = signalIncomingHashMessage(false);
@@ -696,9 +706,7 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
-
-            // Stop the subscription to the broker as we do not listen anymore
-            closeConsumer();
+            m_consumerActive = false;
         }
 
 
@@ -786,7 +794,8 @@ namespace karabo {
             m_readHashRawHandler = readHandler;
 
             // Start listening for messages by starting an individual thread          
-            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashRawMessages, this));
+            boost::thread* t = m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashRawMessages, this));
+            if (t != 0) m_registeredMessageReceivers.push_back(t);
 
         }
 
@@ -794,7 +803,7 @@ namespace karabo {
         void JmsBrokerChannel::listenForHashRawMessages() {
 
             try {
-
+                m_consumerActive = true;
                 bool messageReceived = false;
                 do {
                     messageReceived = signalIncomingBinaryMessage(true);
@@ -806,9 +815,7 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
-
-            // Stop the subscription to the broker as we do not listen anymore
-            closeConsumer();
+            m_consumerActive = false;
         }
 
 
@@ -822,14 +829,15 @@ namespace karabo {
             m_readHashStringHandler = readHandler;
 
             // Start listening for messages by starting an individual thread                        
-            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashStringMessages, this));
+            boost::thread* t = m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashStringMessages, this));
+            if (t != 0) m_registeredMessageReceivers.push_back(t);
         }
 
 
         void JmsBrokerChannel::listenForHashStringMessages() {
 
             try {
-
+                m_consumerActive = true;
                 bool messageReceived = false;
                 do {
                     messageReceived = signalIncomingTextMessage(true);
@@ -841,9 +849,7 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
-
-            // Stop the subscription to the broker as we do not listen anymore
-            closeConsumer();
+            m_consumerActive = false;
         }
 
 
@@ -856,14 +862,15 @@ namespace karabo {
             m_readHashHashHandler = readHandler;
 
             // Start listening for messages by starting an individual thread                        
-            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashHashMessages, this));
+            boost::thread* t = m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashHashMessages, this));
+            if (t != 0) m_registeredMessageReceivers.push_back(t);
         }
 
 
         void JmsBrokerChannel::listenForHashHashMessages() {
 
             try {
-
+                m_consumerActive = true;
                 bool messageReceived = false;
                 do {
                     messageReceived = signalIncomingHashMessage(true);
@@ -875,9 +882,7 @@ namespace karabo {
             } catch (...) {
                 Exception::memorize();
             }
-
-            // Stop the subscription to the broker as we do not listen anymore
-            closeConsumer();
+            m_consumerActive = false;
         }
 
 

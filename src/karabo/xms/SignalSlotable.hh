@@ -412,6 +412,7 @@ namespace karabo {
 
             karabo::net::BrokerIOService::Pointer m_ioService;
             karabo::net::BrokerConnection::Pointer m_connection;
+            bool m_connectionInjected;
             karabo::net::BrokerChannel::Pointer m_producerChannel;
             karabo::net::BrokerChannel::Pointer m_consumerChannel;
             karabo::net::BrokerChannel::Pointer m_heartbeatProducerChannel;
@@ -1271,6 +1272,8 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             bool ensureOwnInstanceIdUnique();
+            
+            void injectConnection(const std::string& instanceId, const karabo::net::BrokerConnection::Pointer& connection);
 
             void setDeviceServerPointer(boost::any serverPtr);
 
@@ -1313,8 +1316,8 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class TFunc>
             void storeSignal(const std::string& signalFunction, const SignalInstancePointer& signalInstance, const TFunc& emitFunction) {
-                m_signalInstances[signalFunction] = signalInstance;
-                m_emitFunctions.set(signalFunction, emitFunction);
+                    m_signalInstances[signalFunction] = signalInstance;
+                    m_emitFunctions.set(signalFunction, emitFunction);
             }
 
             template <class TFunc>
@@ -1329,7 +1332,7 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             void registerReply(const karabo::util::Hash& reply);
-
+            
         private: // Functions
 
             void _runEventLoop();
