@@ -87,27 +87,8 @@ namespace karabo {
             m_dataConnection = Connection::create("Tcp", h);
             m_ioService = m_dataConnection->getIOService();
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading
-
-            // Inherit from device connection settings
-            Hash loggerInput = config;
-            string hostname = getConnection()->getBrokerHostname();
-            unsigned int port = getConnection()->getBrokerPort();
-            const vector<string>& brokers = getConnection()->getBrokerHosts();
-            string host = hostname + ":" + toString(port);
-
-
-            loggerInput.set("loggerConnection.Jms.hostname", host);
-            loggerInput.set("loggerConnection.Jms.port", port);
-            loggerInput.set("loggerConnection.Jms.brokerHosts", brokers);
-
-            m_loggerConnection = BrokerConnection::createChoice("loggerConnection", loggerInput);
-            m_loggerIoService = m_loggerConnection->getIOService();
-
-            // This creates a connection in order to forward exceptions happened in the GUI
-            m_guiDebugConnection = BrokerConnection::create("Jms", Hash("destinationName", "karaboGuiDebug",
-                                                                        "hostname", host,
-                                                                        "port", port,
-                                                                        "brokerHosts", brokers));
+            
+            m_loggerInput = config;
         }
 
 
@@ -119,6 +100,25 @@ namespace karabo {
 
 
         void GuiServerDevice::initialize() {
+            // Inherit from device connection settings
+            string hostname = getConnection()->getBrokerHostname();
+            unsigned int port = getConnection()->getBrokerPort();
+            const vector<string>& brokers = getConnection()->getBrokerHosts();
+            string host = hostname + ":" + toString(port);
+
+
+            m_loggerInput.set("loggerConnection.Jms.hostname", host);
+            m_loggerInput.set("loggerConnection.Jms.port", port);
+            m_loggerInput.set("loggerConnection.Jms.brokerHosts", brokers);
+
+            m_loggerConnection = BrokerConnection::createChoice("loggerConnection", m_loggerInput);
+            m_loggerIoService = m_loggerConnection->getIOService();
+
+            // This creates a connection in order to forward exceptions happened in the GUI
+            m_guiDebugConnection = BrokerConnection::create("Jms", Hash("destinationName", "karaboGuiDebug",
+                                                                        "hostname", host,
+                                                                        "port", port,
+                                                                        "brokerHosts", brokers));
             try {
 
                 trackAllInstances();

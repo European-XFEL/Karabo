@@ -169,19 +169,21 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SignalSlotable() : m_randPing(rand() + 2), m_deviceServerPointer(0) {
+        SignalSlotable::SignalSlotable()
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
         }
 
 
-        SignalSlotable::SignalSlotable(const string& instanceId,
-                                       const BrokerConnection::Pointer& connection) : m_randPing(rand() + 2), m_deviceServerPointer(0) {
+        SignalSlotable::SignalSlotable(const string& instanceId, const BrokerConnection::Pointer& connection)
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
             init(instanceId, connection);
         }
 
 
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                                        const std::string& brokerType,
-                                       const karabo::util::Hash& brokerConfiguration) : m_randPing(rand() + 2), m_deviceServerPointer(0) {
+                                       const karabo::util::Hash& brokerConfiguration)
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
@@ -202,12 +204,15 @@ namespace karabo {
 
             // Currently only removes dots
             sanifyInstanceId(m_instanceId);
-
-            // Create the managing ioService object
-            m_ioService = m_connection->getIOService();
-
-            // Start connection (and take the default channel for signals)
-            m_connection->start();
+            if (m_connectionInjected) {
+                m_ioService.reset();
+            } else {
+                // Create the managing ioService object
+                m_ioService = m_connection->getIOService();
+            
+                // Start connection (and take the default channel for signals)
+                m_connection->start();
+            }
             m_producerChannel = m_connection->createChannel();
             m_consumerChannel = m_connection->createChannel();
             m_heartbeatProducerChannel = m_connection->createChannel("beats");
@@ -216,6 +221,12 @@ namespace karabo {
             registerDefaultSignalsAndSlots();
         }
 
+            
+        void SignalSlotable::injectConnection(const std::string& instanceId, const karabo::net::BrokerConnection::Pointer& connection) {
+            m_connectionInjected = true;
+            init(instanceId, connection);
+        }
+        
 
         void SignalSlotable::setDeviceServerPointer(boost::any serverPtr) {
             m_deviceServerPointer = serverPtr;
@@ -446,7 +457,8 @@ namespace karabo {
 
         void SignalSlotable::startBrokerMessageConsumption() {
 
-            m_brokerThread = boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_ioService));
+            if (!m_connectionInjected)
+                m_brokerThread = boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_ioService));
 
             // Prepare the slot selector
             string selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'";
@@ -456,8 +468,10 @@ namespace karabo {
 
 
         void SignalSlotable::stopBrokerMessageConsumption() {
-            m_ioService->stop();
-            m_brokerThread.join();
+            if (!m_connectionInjected) {
+                m_ioService->stop();
+                m_brokerThread.join();
+            }
         }
 
 

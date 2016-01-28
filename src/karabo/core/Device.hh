@@ -293,28 +293,7 @@ namespace karabo {
 
                 // Setup device logger
                 m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + instanceId
-
-                // Instantiate connection
-                karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("_connection_", configuration);
-
-                // Initialize the SignalSlotable instance
-                init(m_deviceId, connection);
-
-                // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
-                this->initFsmSlots(); // requires template CONCEPT
-
-                // Initialize Device slots
-                this->initDeviceSlots();
-
-                // Register guard for slot calls
-                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1));
-
-                // Register exception handler
-                this->registerExceptionHandler(boost::bind(&karabo::core::Device<FSM>::exceptionFound, this, _1));
-
-                // Register updateLatencies handler
-                this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies, this, _1, _2, _3));
-
+                
             }
 
             virtual ~Device() {
@@ -882,7 +861,7 @@ namespace karabo {
 
             virtual void preDestruction() {
             }
-
+            
         private: // Functions
 
             /**
@@ -890,6 +869,31 @@ namespace karabo {
              * The call to run is blocking and afterwards communication should happen only via call-backs
              */
             void run() {
+
+                if (!m_connection) {
+                    m_connectionInjected = false;
+                    
+                    // Instantiate connection
+                    karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("_connection_", m_parameters);
+                
+                    // Initialize the SignalSlotable instance
+                    init(m_deviceId, connection);
+                }
+
+                // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
+                this->initFsmSlots(); // requires template CONCEPT
+
+                // Initialize Device slots
+                this->initDeviceSlots();
+
+                // Register guard for slot calls
+                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1));
+
+                // Register exception handler
+                this->registerExceptionHandler(boost::bind(&karabo::core::Device<FSM>::exceptionFound, this, _1));
+
+                // Register updateLatencies handler
+                this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies, this, _1, _2, _3));
 
                 // This initializations or done here and not in the constructor as they involve virtual function calls
                 this->initClassId();

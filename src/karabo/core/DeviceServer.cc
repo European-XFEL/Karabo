@@ -562,6 +562,7 @@ namespace karabo {
         void DeviceServer::instantiate(const std::pair<std::string, util::Hash>& classIdConfig) {
             const std::string& classId = classIdConfig.first;
             const util::Hash& config = classIdConfig.second;
+            const std::string& deviceId = config.get<std::string>("_deviceId_");
             try {
 
                 BaseDevice::Pointer device = BaseDevice::create(classId, config); // TODO If constructor blocks, we are lost here!!
@@ -569,18 +570,19 @@ namespace karabo {
                     throw KARABO_PARAMETER_EXCEPTION("Failed to create device of class " + classId + " with configuration...");
 
                 device->setDeviceServerPointer(this);
-
+                device->injectConnection(deviceId, m_connection);
+                
                 {
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
                     // Associate deviceInstance with DeviceInstanceEntry object
-                    m_deviceInstanceMap[device->getInstanceId()] = DeviceInstanceEntry();
-                    m_deviceInstanceMap[device->getInstanceId()].m_device = device;
-                    m_deviceInstanceMap[device->getInstanceId()].m_deviceThread =
+                    m_deviceInstanceMap[deviceId] = DeviceInstanceEntry();
+                    m_deviceInstanceMap[deviceId].m_device = device;
+                    m_deviceInstanceMap[deviceId].m_deviceThread =
                             m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
                 }
 
                 // Answer initiation of device
-                reply(true, device->getInstanceId()); // TODO think about
+                reply(true, deviceId); // TODO think about
 
             } catch (const Exception& e) {
                 const std::string message("Device of class " + classId + " could not be started because: " + e.userFriendlyMsg());
@@ -690,9 +692,10 @@ namespace karabo {
 
             DeviceInstanceMap::iterator it = m_deviceInstanceMap.find(instanceId);
             if (it != m_deviceInstanceMap.end()) {
-                it->second.m_deviceThread->join();
-                m_deviceThreads.remove_thread(it->second.m_deviceThread);
+                boost::thread* t = it->second.m_deviceThread;
                 m_deviceInstanceMap.erase(it);
+                t->join();
+                m_deviceThreads.remove_thread(t);
                 KARABO_LOG_INFO << "Device: \"" << instanceId << "\" removed from server.";
             }
         }
