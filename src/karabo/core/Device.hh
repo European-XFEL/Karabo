@@ -297,8 +297,6 @@ namespace karabo {
             }
 
             virtual ~Device() {
-                KARABO_LOG_FRAMEWORK_INFO << "Device destructor of '" << getInstanceId() << "' called.";
-                std::cout << "Device destructor of '" << getInstanceId() << "' called." << std::endl;
                 KARABO_LOG_FRAMEWORK_TRACE << "Device::~Device() dtor : m_deviceClient.use_count()="
                         << m_deviceClient.use_count() << "\n"
 #ifdef __linux__
@@ -774,8 +772,8 @@ namespace karabo {
                     if (boost::regex_match(currentState, m_errorRegex)) {
                         updateInstanceInfo(karabo::util::Hash("status", "error"));
                     } else {
-                        // Reset the error status
-                        if (getInstanceInfo().get<std::string>("status") == "error") {
+                        // Reset the error status - protect against non-initialised instanceInfo
+                        if (!getInstanceInfo().has("status") || getInstanceInfo().get<std::string>("status") == "error") {
                             updateInstanceInfo(karabo::util::Hash("status", "ok"));
                         }
                     }
