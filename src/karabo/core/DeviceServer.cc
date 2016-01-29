@@ -576,6 +576,7 @@ namespace karabo {
                     // There is already such a device. If joining works, it's just a "zombie".
                     if (deviceEntry.m_deviceThread->try_join_for(boost::chrono::milliseconds(100))) {
                         m_deviceThreads.remove_thread(deviceEntry.m_deviceThread);
+                        delete deviceEntry.m_deviceThread;
                     } else {
                         std::string message("Device of class " + classId + " could not be started: ");
                         reply(false, ((message += "deviceId '") += deviceId) += "' already exists on server.");
@@ -662,6 +663,7 @@ namespace karabo {
                 for (DeviceInstanceMap::iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
                     it->second.m_deviceThread->join();
                     m_deviceThreads.remove_thread(it->second.m_deviceThread);
+                    delete it->second.m_deviceThread;
                 }
 
                 m_deviceInstanceMap.clear();
@@ -712,6 +714,7 @@ namespace karabo {
                 m_deviceInstanceMap.erase(it);
                 t->join();
                 m_deviceThreads.remove_thread(t);
+                delete t;
                 KARABO_LOG_INFO << "Device: \"" << instanceId << "\" removed from server.";
             }
         }
