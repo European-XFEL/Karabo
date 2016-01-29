@@ -704,7 +704,7 @@ namespace karabo {
 
         void DeviceServer::slotDeviceGone(const std::string & instanceId) {
 
-            KARABO_LOG_WARN << "Device \"" << instanceId << "\" notifies future death.";
+            KARABO_LOG_FRAMEWORK_INFO << "Device '" << instanceId << "' notifies future death.";
 
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
 
@@ -715,7 +715,7 @@ namespace karabo {
                 t->join();
                 m_deviceThreads.remove_thread(t);
                 delete t;
-                KARABO_LOG_INFO << "Device: \"" << instanceId << "\" removed from server.";
+                KARABO_LOG_INFO << "Device '" << instanceId << "' removed from server.";
             }
         }
 
