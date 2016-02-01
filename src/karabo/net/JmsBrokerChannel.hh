@@ -80,9 +80,12 @@ namespace karabo {
             SignalError m_signalError;
 
             // Types needed by the OpenMQ API
-            boost::mutex m_sessionHandleMutex;
-            MQSessionHandle m_sessionHandle;
-            MQDestinationHandle m_destinationHandle;
+            boost::mutex m_sessionProducerHandleMutex;
+            boost::mutex m_sessionConsumerHandleMutex;
+            MQSessionHandle m_sessionProducerHandle;
+            MQSessionHandle m_sessionConsumerHandle;
+            MQDestinationHandle m_destinationProducerHandle;
+            MQDestinationHandle m_destinationConsumerHandle;
             MQBool m_isTransacted;
 
             // Save for synchronous communication
@@ -114,7 +117,8 @@ namespace karabo {
             std::string m_subDestination;
 
             // Flag: initialization required
-            bool m_hasSession;
+            bool m_hasProducerSession;
+            bool m_hasConsumerSession;
             
             // MQ Acknowledge Mode for session
             MQAckMode m_ackMode;
@@ -284,8 +288,6 @@ namespace karabo {
 
             void closeProducer();
 
-            void closeSession();
-
             void ensureExistenceOfConsumer();
 
             void readBinaryMessage(karabo::util::Hash& header, std::vector<char>& body, bool withHeader);
@@ -302,7 +304,9 @@ namespace karabo {
 
             void ensureProducerAvailable();
 
-            void ensureSessionAvailable();
+            void ensureProducerSessionAvailable();
+
+            void ensureConsumerSessionAvailable();
 
             void ensureConnectionAvailable();
 
