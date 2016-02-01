@@ -497,19 +497,20 @@ namespace karabo {
 
         void DeviceServer::slotStartDevice(const karabo::util::Hash& configuration) {
 
-            typedef std::pair<std::string, std::pair<std::string, util::Hash> > ReturnType;
-            const ReturnType& idAndClassIdConfig = this->prepareInstantiate(configuration);
+            const boost::tuple<std::string, std::string, util::Hash>& idClassIdConfig
+                    = this->prepareInstantiate(configuration);
 
-            const std::string& deviceId = idAndClassIdConfig.first;
-            KARABO_LOG_INFO << "Trying to start a '" << idAndClassIdConfig.second.first
+            const std::string& deviceId = idClassIdConfig.get<0>();
+            const std::string& classId = idClassIdConfig.get<1>();
+            KARABO_LOG_INFO << "Trying to start a '" << classId
                     << "' with deviceId '" << deviceId << "'...";
             KARABO_LOG_DEBUG << "with the following configuration:\n" << configuration;
 
-            this->instantiate(deviceId, idAndClassIdConfig.second);
+            this->instantiate(deviceId, classId, idClassIdConfig.get<2>());
         }
 
 
-        std::pair<std::string, std::pair<std::string, util::Hash> >
+        boost::tuple<std::string, std::string, util::Hash>
         DeviceServer::prepareInstantiate(const karabo::util::Hash& configuration) {
 
             if (configuration.has("classId")) {
@@ -534,8 +535,7 @@ namespace karabo {
                 // Inject connection
                 config.set("_connection_", m_connectionConfiguration);
 
-                return std::make_pair(config.get<std::string>("_deviceId_"),
-                                      std::make_pair(classId, config));
+                return boost::make_tuple(config.get<std::string>("_deviceId_"), classId, config);
             } else {
                 // Old style, e.g. used for auto started devices
                 const std::string& classId = configuration.begin()->getKey();
@@ -557,15 +557,14 @@ namespace karabo {
                 // Inject connection
                 tmp.set("_connection_", m_connectionConfiguration);
 
-                return std::make_pair(tmp.get<std::string>("_deviceId_"),
-                                      util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig));
+                const std::pair<std::string, util::Hash>& idCfg
+                        = util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
+                return boost::make_tuple(tmp.get<std::string>("_deviceId_"), idCfg.first, idCfg.second);
             }
         }
 
 
-        void DeviceServer::instantiate(const std::string& deviceId, const std::pair<std::string, util::Hash>& classIdConfig) {
-            const std::string& classId = classIdConfig.first;
-            const util::Hash& config = classIdConfig.second;
+        void DeviceServer::instantiate(const std::string& deviceId, const std::string& classId, const util::Hash& config) {
             try {
 
                 boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
