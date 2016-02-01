@@ -21,7 +21,7 @@ namespace karabo {
 
         void JmsBrokerIOService::run() {
             m_status = RUNNING;
-            while (activateRegisteredMessageReceivers() /*|| activateRegisteredWaitHandlers()*/) {
+            if (activateRegisteredMessageReceivers() && m_threadGroup.size() > 0) {
                 m_threadGroup.join_all(); // Whilst this blocks, new message handlers can be registered. If no one was registered the while will return.
             }
             m_status = IDLE;
@@ -86,6 +86,7 @@ namespace karabo {
 
 
         boost::thread* JmsBrokerIOService::registerMessageReceiver(const boost::function<void ()>& function) {
+            m_status = WORKING;
             return m_threadGroup.create_thread(function);
         }
 
