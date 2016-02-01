@@ -11,6 +11,8 @@
 #ifndef KARABO_CORE_DEVICESERVER_HH
 #define	KARABO_CORE_DEVICESERVER_HH
 
+#include "boost/tuple/tuple.hpp"
+
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/PluginLoader.hh>
 #include <karabo/xms/SignalSlotable.hh>
@@ -184,13 +186,13 @@ namespace karabo {
 
             std::string generateDefaultDeviceId(const std::string& classId);
 
-            /// Helper to create classId and configuration to be passed to instantiate.
-            /// Returns a pair of the deviceId and another pair containing classId and configuration.
-            std::pair<std::string, std::pair<std::string, util::Hash> >
+            /// Helper to create input passed to instantiate.
+            /// Returns a tuple of the deviceId, the classId and the configuration.
+            boost::tuple<std::string, std::string, util::Hash>
             prepareInstantiate(const util::Hash& configuration);
 
             /// Helper for slotStartDevice - e.g. sets the reply.
-            void instantiate(const std::string& deviceId, const std::pair<std::string, util::Hash>& classIdAndConfig);
+            void instantiate(const std::string& deviceId, const std::string& classId, const util::Hash& config);
 
             void slotLoggerPriority(const std::string& prio);
 
