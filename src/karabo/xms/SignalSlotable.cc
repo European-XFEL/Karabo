@@ -214,9 +214,31 @@ namespace karabo {
 
 
         SignalSlotable::~SignalSlotable() {
-            // Unregister current instance in static store
+            // Last chance to deregister from static map, but should already be done...
+            this->deregisterFromShortcutMessaging();
+        }
+
+
+        void SignalSlotable::deregisterFromShortcutMessaging() {
             boost::mutex::scoped_lock lock(m_instanceMapMutex);
-            m_instanceMap.erase(m_instanceId); // if not in map - who cares?
+            std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.find(m_instanceId);
+            // Let's be sure that we remove ourself:
+            if (it != m_instanceMap.end() && it->second == this) {
+                m_instanceMap.erase(it);
+            }
+        }
+
+
+        void SignalSlotable::registerForShortcutMessaging() {
+            boost::mutex::scoped_lock lock(m_instanceMapMutex);
+            SignalSlotable*& instance = m_instanceMap[m_instanceId];
+            if (!instance) {
+                instance = this;
+            } else if (instance != this) {
+                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Cannot register "
+                        << "for short-cut messaging since there is already another instance.";
+                // Do not dare to call methods on instance - could already be destructed...?
+            }
         }
 
 
@@ -411,9 +433,8 @@ namespace karabo {
                 stopEventLoop();
                 return result.first;
             } else {
-                // We are unique - so now we can register ourself in static store
-                boost::mutex::scoped_lock lock(m_instanceMapMutex);
-                m_instanceMap[m_instanceId] = this;
+                // We are unique - so now we can register ourself for short-cut messaging.
+                this->registerForShortcutMessaging();
             }
 
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id '" << m_instanceId
@@ -495,6 +516,7 @@ namespace karabo {
 
 
         void SignalSlotable::stopBrokerMessageConsumption() {
+            this->deregisterFromShortcutMessaging(); // stop short-cut messaging as well
             if (!m_connectionInjected) {
                 m_ioService->stop();
                 m_brokerThread.join();
