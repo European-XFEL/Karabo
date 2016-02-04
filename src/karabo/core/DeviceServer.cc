@@ -569,15 +569,12 @@ namespace karabo {
                 if (!device)
                     throw KARABO_PARAMETER_EXCEPTION("Failed to create device of class " + classId + " with configuration...");
 
-                device->setDeviceServerPointer(this);
                 device->injectConnection(deviceId, m_connection);
                 
                 {
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
                     // Associate deviceInstance with DeviceInstanceEntry object
-                    m_deviceInstanceMap[deviceId] = DeviceInstanceEntry();
-                    m_deviceInstanceMap[deviceId].m_device = device;
-                    m_deviceInstanceMap[deviceId].m_deviceThread =
+                    m_deviceInstanceMap[deviceId] =
                             m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
                 }
 
@@ -645,8 +642,8 @@ namespace karabo {
                 }
 
                 for (DeviceInstanceMap::iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
-                    it->second.m_deviceThread->join();
-                    m_deviceThreads.remove_thread(it->second.m_deviceThread);
+                    it->second->join();
+                    m_deviceThreads.remove_thread(it->second);
                 }
 
                 m_deviceInstanceMap.clear();
@@ -661,29 +658,6 @@ namespace karabo {
         }
 
 
-        bool tryToCallDirectly(boost::any server, const std::string& instanceId,
-                               const karabo::util::Hash::Pointer& header,
-                               const karabo::util::Hash::Pointer& body) {
-            if (instanceId == "*" || instanceId.empty() || server.type() != typeid (karabo::core::DeviceServer*))
-                return false;
-            karabo::core::DeviceServer* that = boost::any_cast<karabo::core::DeviceServer*>(server);
-            if (!that) return false;
-
-            boost::mutex::scoped_lock lock(that->m_deviceInstanceMutex);
-
-            karabo::core::DeviceServer::DeviceInstanceMap::iterator it = that->m_deviceInstanceMap.find(instanceId);
-            if (it == that->m_deviceInstanceMap.end()) return false;
-
-            if (instanceId == that->getInstanceId()) {
-                // DeviceServer itself
-                that->injectEvent(that->m_consumerChannel, header, body);
-            } else {
-                karabo::xms::injectEventExternally(it->second.m_device.get(), header, body);
-            }
-            return true;
-        }
-
-
         void DeviceServer::slotDeviceGone(const std::string & instanceId) {
 
             KARABO_LOG_WARN << "Device \"" << instanceId << "\" notifies future death.";
@@ -692,10 +666,9 @@ namespace karabo {
 
             DeviceInstanceMap::iterator it = m_deviceInstanceMap.find(instanceId);
             if (it != m_deviceInstanceMap.end()) {
-                boost::thread* t = it->second.m_deviceThread;
+                it->second->join();
+                m_deviceThreads.remove_thread(it->second);
                 m_deviceInstanceMap.erase(it);
-                t->join();
-                m_deviceThreads.remove_thread(t);
                 KARABO_LOG_INFO << "Device: \"" << instanceId << "\" removed from server.";
             }
         }
