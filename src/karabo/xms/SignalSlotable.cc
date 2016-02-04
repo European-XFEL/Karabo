@@ -73,8 +73,11 @@ namespace karabo {
                                                  const karabo::util::Hash::Pointer& header,
                                                  const karabo::util::Hash::Pointer& body) const {
             try {
+                // Empty slotInstanceId means self messaging:
+                const std::string& instanceId = (slotInstanceId.empty() && m_signalSlotable ?
+                    m_signalSlotable->getInstanceId() : slotInstanceId);
                 // try shortcut first
-                if (m_signalSlotable && m_signalSlotable->tryToCallDirectly(slotInstanceId, header, body))
+                if (m_signalSlotable && m_signalSlotable->tryToCallDirectly(instanceId, header, body))
                     return;
                 if (m_signalSlotable && m_signalSlotable->m_producerChannel)
                     m_signalSlotable->m_producerChannel->write(*header, *body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
