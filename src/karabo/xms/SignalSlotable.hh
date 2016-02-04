@@ -504,7 +504,9 @@ namespace karabo {
             // Possible device server pointer for shortcut calls
             boost::any m_deviceServerPointer;
 
-
+            static std::map<std::string, SignalSlotable*> m_instanceMap;
+            static boost::mutex m_instanceMapMutex;
+            
         public:
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
@@ -1455,10 +1457,9 @@ KARABO_SLOT0(__VA_ARGS__) \
                     const std::string& instanceId, const std::string& channelId,
                     bool channelExists, const karabo::util::Hash& info);
 
-            friend void injectEventExternally(karabo::xms::SignalSlotable*, const karabo::util::Hash::Pointer&, const karabo::util::Hash::Pointer&);
+            bool tryToCallDirectly(const std::string& instanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) const;
         };
 
-        void injectEventExternally(karabo::xms::SignalSlotable* that, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
     }
 }
 

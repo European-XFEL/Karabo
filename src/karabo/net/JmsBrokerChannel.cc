@@ -73,25 +73,30 @@ namespace karabo {
 
 
         JmsBrokerChannel::~JmsBrokerChannel() {
-            close();
-            
-            boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
-            if (jbc) {
-                set<boost::weak_ptr<JmsBrokerChannel> >& channels = jbc->m_channels;
-                for (set<boost::weak_ptr<JmsBrokerChannel> >::iterator it = channels.begin(); it != channels.end(); it++) {
-                    if (it->lock().get() == this) {
-                        channels.erase(it);
-                        break;
+            close();            
+            {
+                boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
+                if (jbc) {
+                    set<boost::weak_ptr<JmsBrokerChannel> >& channels = jbc->m_channels;
+                    for (set<boost::weak_ptr<JmsBrokerChannel> >::iterator it = channels.begin(); it != channels.end(); it++) {
+                        if (it->lock().get() == this) {
+                            channels.erase(it);
+                            break;
+                        }
                     }
                 }
             }
-                        
-            if (m_consumerActive) {
+            
+            if (m_registeredMessageReceivers.size() == 0) return;            
+            
+            while (m_consumerActive) {
                 m_isStopped = true;
-                boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+                boost::this_thread::sleep(boost::posix_time::milliseconds(200));
             }
+            
             for (vector<boost::thread*>::iterator it = m_registeredMessageReceivers.begin(); it!=m_registeredMessageReceivers.end(); ++it)
                 m_ioService->unregisterMessageReceiver(*it);
+            m_registeredMessageReceivers.clear();
         }
 
 
