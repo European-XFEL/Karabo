@@ -501,9 +501,6 @@ namespace karabo {
             ExceptionHandler m_exceptionHandler;
             UpdatePerformanceStatisticsHandler m_updatePerformanceStatistics;
 
-            // Possible device server pointer for shortcut calls
-            boost::any m_deviceServerPointer;
-
             static std::map<std::string, SignalSlotable*> m_instanceMap;
             static boost::mutex m_instanceMapMutex;
             
