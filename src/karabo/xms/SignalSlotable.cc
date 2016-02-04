@@ -47,19 +47,21 @@ namespace karabo {
             if (instanceId == "*" || instanceId.empty())
                 return false;
             
-            SignalSlotable* that;
+            SignalSlotable* that = 0;
             {
                 boost::mutex::scoped_lock lock(m_instanceMapMutex);
                 std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.find(instanceId);
-                if (it == m_instanceMap.end())
-                    return false;
-                if (!it->second)
-                    return false;
-                that = it->second;
+                if (it != m_instanceMap.end()) {
+                    that = it->second;
+                }
             }
             
-            that->injectEvent(that->m_consumerChannel, header, body);
-            return true;
+            if (that) {
+                that->injectEvent(that->m_consumerChannel, header, body);
+                return true;
+            } else {
+                return false;
+            }
         }
 
 
@@ -192,12 +194,12 @@ namespace karabo {
 
 
         SignalSlotable::SignalSlotable()
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
+        : m_connectionInjected(false), m_randPing(rand() + 2) {
         }
 
 
         SignalSlotable::SignalSlotable(const string& instanceId, const BrokerConnection::Pointer& connection)
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
+        : m_connectionInjected(false), m_randPing(rand() + 2) {
             init(instanceId, connection);
         }
 
@@ -205,7 +207,7 @@ namespace karabo {
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                                        const std::string& brokerType,
                                        const karabo::util::Hash& brokerConfiguration)
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
+        : m_connectionInjected(false), m_randPing(rand() + 2) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
@@ -214,9 +216,7 @@ namespace karabo {
         SignalSlotable::~SignalSlotable() {
             // Unregister current instance in static store
             boost::mutex::scoped_lock lock(m_instanceMapMutex);
-            std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.find(m_instanceId);
-            if (it != m_instanceMap.end())
-                m_instanceMap.erase(it);
+            m_instanceMap.erase(m_instanceId); // if not in map - who cares?
         }
 
 
@@ -228,12 +228,6 @@ namespace karabo {
             m_connection = connection;
             m_instanceId = instanceId;
             m_nThreads = 2;
-            
-            // Register current instance in static store
-            {
-                boost::mutex::scoped_lock lock(m_instanceMapMutex);
-                m_instanceMap[m_instanceId] = this;
-            }
             
             // Currently only removes dots
             sanifyInstanceId(m_instanceId);
@@ -260,11 +254,6 @@ namespace karabo {
             init(instanceId, connection);
         }
         
-
-        void SignalSlotable::setDeviceServerPointer(boost::any serverPtr) {
-            m_deviceServerPointer = serverPtr;
-        }
-
 
         std::pair<bool, std::string > SignalSlotable::isValidInstanceId(const std::string & instanceId) {
             // Ping any guy with my id. If there is one, he will answer, if not, we timeout.
@@ -421,7 +410,12 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << result.second;
                 stopEventLoop();
                 return result.first;
+            } else {
+                // We are unique - so now we can register ourself in static store
+                boost::mutex::scoped_lock lock(m_instanceMapMutex);
+                m_instanceMap[m_instanceId] = this;
             }
+
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id '" << m_instanceId
                     << "' and uses " << m_nThreads << " threads.";
 
