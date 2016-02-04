@@ -1358,6 +1358,13 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void registerDefaultSignalsAndSlots();
 
+            /// Register myself for short-cut messaging (i.e. bypass broker if in same process).
+            /// Must not be called before instance ID is checked to be unique in overall system.
+            void registerForShortcutMessaging();
+
+            /// Deregister myself from short-cut messaging.
+            void deregisterFromShortcutMessaging();
+
             void startTrackingSystem();
 
             void stopTrackingSystem();
