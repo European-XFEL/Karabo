@@ -274,7 +274,10 @@ namespace karabo {
 
 
         std::string DeviceServer::generateDefaultServerId() const {
-            return string(boost::asio::ip::host_name() + "_Server_" + karabo::util::toString(getpid()));
+            string hostname = boost::asio::ip::host_name();
+            vector<string> tokens;
+            boost::split(tokens, hostname, boost::is_any_of("."));
+            return tokens.at(0) + "_Server_" + karabo::util::toString(getpid());
         }
 
 
@@ -342,10 +345,16 @@ namespace karabo {
 
             m_serverIsRunning = true;
 
+            // Get hostname, stripping off domain name
+            string hostname = boost::asio::ip::host_name();
+            vector<string> tokens;
+            boost::split(tokens, hostname, boost::is_any_of("."));
+            hostname = tokens.at(0);
+
             // Initialize category
             m_log = &(karabo::log::Logger::getLogger(m_serverId));
 
-            KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << boost::asio::ip::host_name();
+            KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << hostname;
             KARABO_LOG_INFO << "ServerId: " << m_serverId;
             KARABO_LOG_INFO << "Broker (host:port:topic): " << m_connectionConfiguration.get<string>("Jms.hostname") << ":"
                     << m_connectionConfiguration.get<string>("Jms.destinationName");
@@ -359,7 +368,7 @@ namespace karabo {
             instanceInfo.set("type", "server");
             instanceInfo.set("serverId", m_serverId);
             instanceInfo.set("version", karabo::util::Version::getVersion());
-            instanceInfo.set("host", boost::asio::ip::host_name());
+            instanceInfo.set("host", hostname);
             instanceInfo.set("visibility", m_visibility);
             boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, m_heartbeatIntervall, instanceInfo));
 
