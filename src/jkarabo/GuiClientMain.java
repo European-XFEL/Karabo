@@ -42,9 +42,16 @@ public class GuiClientMain {
             //System.out.println("Connection to GuiServerDevice lost.");
         }
 
+        protected void onInitReply(String deviceId, boolean success, String message) {
+            if (success)
+                System.out.println("onInitReply(...)  :  deviceId = \"" + deviceId + "\" is OK.");
+            else
+                System.out.println("onInitReply(...)  :  deviceId = \"" + deviceId + "\" failed : " + message);
+        }
+        
         @Override
-        protected void onBrokerInfo(String host, int port, String topic) {
-            //System.out.println("BrokerInfo: host=" + host + ", port=" + port + ", topic=" + topic);
+        protected void onSystemVersion(String systemVersion) {
+            System.out.println("onSystemVersion() : System version is \"" +  systemVersion + "\"");
         }
 
         @Override
@@ -118,8 +125,11 @@ public class GuiClientMain {
         }
 
         @Override
-        protected void onDeviceSchema(String deviceId, Schema schema) {
-            System.out.println("**** onDeviceSchema: deviceId=" + deviceId + " ... " + "SCHEMA content");
+        protected void onDeviceSchema(String deviceId, Schema schema, Hash configuration) {
+            if (configuration.empty())
+                System.out.println("**** onDeviceSchema: deviceId=" + deviceId + " ... " + "SCHEMA content");
+            else
+                System.out.println("**** onDeviceSchema: deviceId=" + deviceId + " ... " + "SCHEMA content" + " and configuration");
         }
 
         @Override
@@ -209,8 +219,38 @@ public class GuiClientMain {
         }
 
         @Override
-        protected void onLogging(String message) {
+        protected void onLogging(VectorHash message) {
+            
             //System.out.println("onLogging: message is " + message);
+        }
+        
+        @Override
+        protected void onAvailableProjects(Hash projects) {
+            System.out.println("onAvailableProjects  ...\n" + projects);
+        }
+        
+        @Override
+        protected void onNewProject(String projectName, boolean success, char[] data) {
+            System.out.println("onNewProject(...)  :  project = \"" + projectName + "\"");
+        }
+        
+        @Override
+        protected void onLoadProject(String projectName, Hash metaData, char[] data) {
+            System.out.println("onLoadProject(...)  :  project = \"" + projectName + "\" and metaData ...\n" + metaData);
+        }
+        
+        @Override
+        protected void onSaveProject(String projectName, boolean success, char[] data) {
+            System.out.println("onSaveProject(...)  :  project = \"" + projectName + "\"");
+        }
+        
+        @Override
+        protected void onCloseProject(String projectName, boolean success, char[] data) {
+            System.out.println("onCloseProject(...)  :  project = \"" + projectName + "\"");
+        }
+        
+        protected void onNetworkData(String name, Hash data) {
+            System.out.println("onNetworkData(...)  :  " + name + " ->\n" + data);
         }
     }
 
@@ -233,7 +273,7 @@ public class GuiClientMain {
                 }
                 System.out.println("GUI client successfully connected.\nSend login information: \"operator\", \"\", \"LOCAL\"");
                 // Provide login info (for the time being, default one)
-                client.login("operator", "", "LOCAL");
+                client.login("operator", "karabo", "", "LOCAL");
                 // All other communications will happen in thread
                 // main thread just wait for joining
                 client.join();
