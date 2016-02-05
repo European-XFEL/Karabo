@@ -501,9 +501,6 @@ namespace karabo {
             ExceptionHandler m_exceptionHandler;
             UpdatePerformanceStatisticsHandler m_updatePerformanceStatistics;
 
-            // Possible device server pointer for shortcut calls
-            boost::any m_deviceServerPointer;
-
             static std::map<std::string, SignalSlotable*> m_instanceMap;
             static boost::mutex m_instanceMapMutex;
             
@@ -1360,6 +1357,13 @@ KARABO_SLOT0(__VA_ARGS__) \
             void emitHeartbeat();
 
             void registerDefaultSignalsAndSlots();
+
+            /// Register myself for short-cut messaging (i.e. bypass broker if in same process).
+            /// Must not be called before instance ID is checked to be unique in overall system.
+            void registerForShortcutMessaging();
+
+            /// Deregister myself from short-cut messaging.
+            void deregisterFromShortcutMessaging();
 
             void startTrackingSystem();
 
