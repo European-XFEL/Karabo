@@ -47,19 +47,21 @@ namespace karabo {
             if (instanceId == "*" || instanceId.empty())
                 return false;
             
-            SignalSlotable* that;
+            SignalSlotable* that = 0;
             {
                 boost::mutex::scoped_lock lock(m_instanceMapMutex);
                 std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.find(instanceId);
-                if (it == m_instanceMap.end())
-                    return false;
-                if (!it->second)
-                    return false;
-                that = it->second;
+                if (it != m_instanceMap.end()) {
+                    that = it->second;
+                }
             }
             
-            that->injectEvent(that->m_consumerChannel, header, body);
-            return true;
+            if (that) {
+                that->injectEvent(that->m_consumerChannel, header, body);
+                return true;
+            } else {
+                return false;
+            }
         }
 
 
@@ -71,8 +73,11 @@ namespace karabo {
                                                  const karabo::util::Hash::Pointer& header,
                                                  const karabo::util::Hash::Pointer& body) const {
             try {
+                // Empty slotInstanceId means self messaging:
+                const std::string& instanceId = (slotInstanceId.empty() && m_signalSlotable ?
+                    m_signalSlotable->getInstanceId() : slotInstanceId);
                 // try shortcut first
-                if (m_signalSlotable && m_signalSlotable->tryToCallDirectly(slotInstanceId, header, body))
+                if (m_signalSlotable && m_signalSlotable->tryToCallDirectly(instanceId, header, body))
                     return;
                 if (m_signalSlotable && m_signalSlotable->m_producerChannel)
                     m_signalSlotable->m_producerChannel->write(*header, *body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
@@ -192,12 +197,12 @@ namespace karabo {
 
 
         SignalSlotable::SignalSlotable()
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
+        : m_connectionInjected(false), m_randPing(rand() + 2) {
         }
 
 
         SignalSlotable::SignalSlotable(const string& instanceId, const BrokerConnection::Pointer& connection)
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
+        : m_connectionInjected(false), m_randPing(rand() + 2) {
             init(instanceId, connection);
         }
 
@@ -205,18 +210,38 @@ namespace karabo {
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                                        const std::string& brokerType,
                                        const karabo::util::Hash& brokerConfiguration)
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
+        : m_connectionInjected(false), m_randPing(rand() + 2) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
 
 
         SignalSlotable::~SignalSlotable() {
-            // Unregister current instance in static store
+            // Last chance to deregister from static map, but should already be done...
+            this->deregisterFromShortcutMessaging();
+        }
+
+
+        void SignalSlotable::deregisterFromShortcutMessaging() {
             boost::mutex::scoped_lock lock(m_instanceMapMutex);
             std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.find(m_instanceId);
-            if (it != m_instanceMap.end())
+            // Let's be sure that we remove ourself:
+            if (it != m_instanceMap.end() && it->second == this) {
                 m_instanceMap.erase(it);
+            }
+        }
+
+
+        void SignalSlotable::registerForShortcutMessaging() {
+            boost::mutex::scoped_lock lock(m_instanceMapMutex);
+            SignalSlotable*& instance = m_instanceMap[m_instanceId];
+            if (!instance) {
+                instance = this;
+            } else if (instance != this) {
+                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Cannot register "
+                        << "for short-cut messaging since there is already another instance.";
+                // Do not dare to call methods on instance - could already be destructed...?
+            }
         }
 
 
@@ -228,12 +253,6 @@ namespace karabo {
             m_connection = connection;
             m_instanceId = instanceId;
             m_nThreads = 2;
-            
-            // Register current instance in static store
-            {
-                boost::mutex::scoped_lock lock(m_instanceMapMutex);
-                m_instanceMap[m_instanceId] = this;
-            }
             
             // Currently only removes dots
             sanifyInstanceId(m_instanceId);
@@ -260,11 +279,6 @@ namespace karabo {
             init(instanceId, connection);
         }
         
-
-        void SignalSlotable::setDeviceServerPointer(boost::any serverPtr) {
-            m_deviceServerPointer = serverPtr;
-        }
-
 
         std::pair<bool, std::string > SignalSlotable::isValidInstanceId(const std::string & instanceId) {
             // Ping any guy with my id. If there is one, he will answer, if not, we timeout.
@@ -421,7 +435,11 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << result.second;
                 stopEventLoop();
                 return result.first;
+            } else {
+                // We are unique - so now we can register ourself for short-cut messaging.
+                this->registerForShortcutMessaging();
             }
+
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id '" << m_instanceId
                     << "' and uses " << m_nThreads << " threads.";
 
@@ -501,6 +519,7 @@ namespace karabo {
 
 
         void SignalSlotable::stopBrokerMessageConsumption() {
+            this->deregisterFromShortcutMessaging(); // stop short-cut messaging as well
             if (!m_connectionInjected) {
                 m_ioService->stop();
                 m_brokerThread.join();
