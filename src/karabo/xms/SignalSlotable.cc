@@ -736,8 +736,12 @@ namespace karabo {
 
         void SignalSlotable::registerDefaultSignalsAndSlots() {
 
-            // Emits a "still-alive" signal
-            registerHeartbeatSignal<string, int, Hash>("signalHeartbeat");
+            // The heartbeat signal goes through a different topic, so we
+            // cannot use the normal registerSignal.
+            SignalInstancePointer heartbeatSignal(new karabo::xms::Signal(this, m_heartbeatProducerChannel, m_instanceId, "signalHeartbeat", 9));
+            storeSignal("signalHeartbeat", heartbeatSignal);
+            boost::function<void (const string&, const int&, const Hash&)> f = boost::bind(&Signal::emit3<string, int, Hash>, heartbeatSignal, _1, _2, _3);
+            m_emitFunctions.set("signalHeartbeat", f);
 
             // Listener for heartbeats
             KARABO_SLOT3(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
@@ -1245,6 +1249,27 @@ namespace karabo {
         }
 
 
+        SignalSlotable::SlotInstancePointer SignalSlotable::findSlot(const std::string &funcName) {
+            SlotInstancePointer ret;
+            // FIXME: Need to use m_signalSlotInstancesMutex?
+            SlotInstances::const_iterator it = m_slotInstances.find(funcName);
+            if (it != m_slotInstances.end()) {
+                ret = it->second;
+            }
+            return ret;
+        }
+
+
+        void SignalSlotable::registerNewSlot(const std::string &funcName, SlotInstancePointer instance) {
+            SlotInstancePointer& newinstance = m_slotInstances[funcName];
+            if (newinstance) {
+                throw KARABO_SIGNALSLOT_EXCEPTION("The slot \"" + funcName + "\" has been registered with two different signatures");
+            } else {
+                newinstance = instance;
+            }
+        }
+
+
         //        void SignalSlotable::registerConnectionForTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType) {
         //
         //            // Signal or slot is remote
@@ -1676,6 +1701,19 @@ namespace karabo {
             return std::make_pair(instanceId, functionName);
         }
 
+        SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction, int priority, int messageTimeToLive) {
+            if (m_signalInstances.find(signalFunction) != m_signalInstances.end()) {
+                SignalInstancePointer s;
+                return s;
+            }
+            SignalInstancePointer s(new Signal(this, m_producerChannel, m_instanceId, signalFunction, priority, messageTimeToLive));
+            storeSignal(signalFunction, s);
+            return s;
+        }
+
+        void SignalSlotable::storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance) {
+            m_signalInstances[signalFunction] = signalInstance;
+        }
 
         //        void SignalSlotable::refreshTimeToLiveForConnectedSlot(const std::string& instanceId, int countdown, const karabo::util::Hash & instanceInfo) {
         //
