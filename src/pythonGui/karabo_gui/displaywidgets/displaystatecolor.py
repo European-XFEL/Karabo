@@ -1,4 +1,6 @@
+from collections import OrderedDict
 import os.path as op
+from xml.etree.ElementTree import Element
 
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, pyqtSlot
@@ -6,6 +8,7 @@ from PyQt4.QtGui import (
     QAction, QColor, QColorDialog, QDialog, QInputDialog, QLabel
 )
 
+from karabo_gui.const import ns_karabo
 from karabo_gui.widget import DisplayWidget
 from karabo.api_2 import String
 
@@ -72,10 +75,7 @@ class DisplayStateColor(DisplayWidget):
     def __init__(self, box, parent):
         super(DisplayStateColor, self).__init__(box)
 
-        self._stateMap = {
-            'error': ERROR_COLOR,
-        }
-
+        self._stateMap = OrderedDict(error=ERROR_COLOR)
         self.value = None
 
         self.widget = QLabel(parent)
@@ -103,16 +103,41 @@ class DisplayStateColor(DisplayWidget):
 
         bgColor = self._stateMap.get(value.lower(), DEFAULT_COLOR)
         self._setColor(bgColor)
-
         self.value = value
-        self.widget.setText(value[:30])
+
+    def save(self, element):
+        """ Save to a scene SVG.
+        """
+        for name, color in self._stateMap.items():
+            sub = Element(ns_karabo + "sc")
+            sub.text = name
+            red, green, blue, alpha = color
+            sub.set('red', str(red))
+            sub.set('green', str(green))
+            sub.set('blue', str(blue))
+            sub.set('alpha', str(alpha))
+            element.append(sub)
+
+    def load(self, element):
+        """ Load from a scene SVG.
+        """
+        states = OrderedDict()
+        for sub in element:
+            key = sub.text
+            red = int(sub.get('red'))
+            green = int(sub.get('green'))
+            blue = int(sub.get('blue'))
+            alpha = int(sub.get('alpha'))
+            states[key] = (red, green, blue, alpha)
+        self._stateMap = states
 
     @pyqtSlot()
     def onChangeColors(self):
-        dialog = StateColorDialog(parent=self.widget, items=self._stateMap)
+        items = OrderedDict(self._stateMap)
+        dialog = StateColorDialog(parent=self.widget, items=items)
         result = dialog.exec_()
         if result == QDialog.Accepted:
-            self._stateMap = dialog.items
+            self._stateMap = OrderedDict(dialog.items)
 
         box = self.boxes[0]
         if box.hasValue():
