@@ -1108,7 +1108,7 @@ KARABO_SLOT0(__VA_ARGS__) \
                 }
             }
 
-            /*
+            /**
              * Register a new slot function for a slot. A new slot is generated
              * if so necessary. It is checked that the signature of the new
              * slot is the same as an already registered one.
