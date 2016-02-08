@@ -27,7 +27,6 @@ class StateColorDialog(QDialog):
         uiPath = op.join(op.dirname(__file__), 'displaystatecolor.ui')
         uic.loadUi(uiPath, self)
 
-        self.stateColor.setObjectName(OBJECT_NAME)
         self.stateList.addItems([name.capitalize() for name in items])
         self.items = items
 
