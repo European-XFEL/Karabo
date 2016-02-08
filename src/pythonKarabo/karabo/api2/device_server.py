@@ -135,7 +135,6 @@ class DeviceServer(SignalSlotable):
         super().run()
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
                       format(self.hostname))
-        self._registerAndConnectSignalsAndSlots()
         self.notifyNewDeviceAction()
         async(self.scanPlugins())
         sys.stdout = KaraboStream(sys.stdout)
@@ -150,16 +149,6 @@ class DeviceServer(SignalSlotable):
 
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
-
-    signalNewDeviceClassAvailable = Signal(String(), String(), SchemaHashType())
-    signalClassSchema = Signal(SchemaHashType(), String(), String())
-
-    def _registerAndConnectSignalsAndSlots(self):
-        self.signalNewDeviceClassAvailable.connect(
-            "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK)
-
-        self.signalClassSchema.connect("*", "slotClassSchema",
-                                       ConnectionType.NO_TRACK)
 
     @coroutine
     def scanPlugins(self):
