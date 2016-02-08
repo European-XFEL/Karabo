@@ -129,11 +129,12 @@ class Tests(TestCase):
         with updateDevice(d):
             self.assertNotEqual(d.counter, -1)
             self.assertNotEqual(d.counter, 29)
-            last = d.counter
+        time.sleep(0.1)
+        last = d.counter
         time.sleep(0.1)
         self.assertEqual(last, d.counter)
         with d:
-            time.sleep(0.3)
+            time.sleep(0.4)
             self.assertEqual(d.counter, 29)
 
     @sync_tst
@@ -250,7 +251,7 @@ class Tests(TestCase):
         remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
             yield from remote.error()
-            yield from sleep(0.1)
+            yield from sleep(0.2)
         self.assertTrue(remote.done)
         self.assertIs(local.exc_slot, Local.error)
         self.assertIsInstance(local.exception, RuntimeError)
@@ -298,7 +299,7 @@ class Tests(TestCase):
             # Then cancel, while the macro is in that interruptable sleep
             yield from d.cancel()
             # Sleep a little while, so the task can finish
-            yield from karabo_sleep(0.01)
+            yield from karabo_sleep(0.03)
             self.assertEqual(local.slept_count, 2)
             self.assertEqual(local.cancelled_slot, Local.sleepalot)
             assert task.done()
