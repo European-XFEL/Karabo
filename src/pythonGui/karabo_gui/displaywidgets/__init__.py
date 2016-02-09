@@ -7,9 +7,9 @@
 # define package displaywidgets
 
 __all__ = ["displaybitfield",
-    "displaycheckbox", "displaychoiceelement", "displaycombobox",
-    "displaycommand", "displaydirectory", "displayfilein", "displayfileout",
-    "displayplot", "displayiconset", "displayimageelement", "displayimage",
-    "displaylabel", # "displayimagestack",
+    "displaycheckbox", "displaychoiceelement", "displaystatecolor",
+    "displaycombobox", "displaycommand", "displaydirectory",
+    "displayfilein", "displayfileout", "displayplot", "displayiconset",
+    "displayimageelement", "displayimage", "displaylabel", # "displayimagestack",
     "displaylineedit", "displaytrendline", "displaytableelement",# "displaypycode"
     "icons", "eval", "xyplot", "monitor", "displayalignedimage", ]
