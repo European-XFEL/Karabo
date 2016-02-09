@@ -4,7 +4,6 @@ import socket
 from .enums import AccessLevel, AccessMode, Assignment
 from .exceptions import KaraboError
 from .hash import Bool, Hash, HashType, Int32, Schema, SchemaHashType, String
-from .launcher import sameThread
 from .logger import Logger
 from .schema import Validator, Node
 from .signalslot import SignalSlotable, Signal, slot, coslot
@@ -70,8 +69,6 @@ class Device(SignalSlotable):
     signalSchemaUpdated = Signal(SchemaHashType(), String())
 
     subclasses = {}
-
-    launch = classmethod(sameThread)
 
     def __init__(self, configuration):
         super(Device, self).__init__(configuration)
