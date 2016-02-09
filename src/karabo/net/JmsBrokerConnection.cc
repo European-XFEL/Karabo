@@ -413,6 +413,7 @@ namespace karabo {
 
 
         void JmsBrokerConnection::start() {
+            MQ_SAFE_CALL(MQStartConnection(m_connectionHandle));
         }
 
 

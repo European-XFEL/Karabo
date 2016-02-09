@@ -22,7 +22,6 @@
 
 #include "SignalSlotable.hh"
 #include "karabo/util/Version.hh"
-#include "karabo/core/DeviceServer.hh"
 
 namespace karabo {
     namespace xms {
@@ -39,6 +38,31 @@ namespace karabo {
         // Static initializations
         std::set<int> SignalSlotable::m_reconnectIntervals = std::set<int>();
         boost::uuids::random_generator SignalSlotable::Requestor::m_uuidGenerator;
+        std::map<std::string, SignalSlotable*> SignalSlotable::m_instanceMap;
+        boost::mutex SignalSlotable::m_instanceMapMutex;
+        
+
+        bool SignalSlotable::tryToCallDirectly(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
+                                               const karabo::util::Hash::Pointer& body) const {
+            if (instanceId == "*" || instanceId.empty())
+                return false;
+            
+            SignalSlotable* that = 0;
+            {
+                boost::mutex::scoped_lock lock(m_instanceMapMutex);
+                std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.find(instanceId);
+                if (it != m_instanceMap.end()) {
+                    that = it->second;
+                }
+            }
+            
+            if (that) {
+                that->injectEvent(that->m_consumerChannel, header, body);
+                return true;
+            } else {
+                return false;
+            }
+        }
 
 
         SignalSlotable::Caller::Caller(const SignalSlotable* signalSlotable) : m_signalSlotable(signalSlotable) {
@@ -49,8 +73,11 @@ namespace karabo {
                                                  const karabo::util::Hash::Pointer& header,
                                                  const karabo::util::Hash::Pointer& body) const {
             try {
+                // Empty slotInstanceId means self messaging:
+                const std::string& instanceId = (slotInstanceId.empty() && m_signalSlotable ?
+                    m_signalSlotable->getInstanceId() : slotInstanceId);
                 // try shortcut first
-                if (m_signalSlotable && karabo::core::tryToCallDirectly(m_signalSlotable->m_deviceServerPointer, slotInstanceId, header, body))
+                if (m_signalSlotable && m_signalSlotable->tryToCallDirectly(instanceId, header, body))
                     return;
                 if (m_signalSlotable && m_signalSlotable->m_producerChannel)
                     m_signalSlotable->m_producerChannel->write(*header, *body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
@@ -170,12 +197,12 @@ namespace karabo {
 
 
         SignalSlotable::SignalSlotable()
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
+        : m_connectionInjected(false), m_randPing(rand() + 2) {
         }
 
 
         SignalSlotable::SignalSlotable(const string& instanceId, const BrokerConnection::Pointer& connection)
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
+        : m_connectionInjected(false), m_randPing(rand() + 2) {
             init(instanceId, connection);
         }
 
@@ -183,13 +210,38 @@ namespace karabo {
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                                        const std::string& brokerType,
                                        const karabo::util::Hash& brokerConfiguration)
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_deviceServerPointer(0) {
+        : m_connectionInjected(false), m_randPing(rand() + 2) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
 
 
         SignalSlotable::~SignalSlotable() {
+            // Last chance to deregister from static map, but should already be done...
+            this->deregisterFromShortcutMessaging();
+        }
+
+
+        void SignalSlotable::deregisterFromShortcutMessaging() {
+            boost::mutex::scoped_lock lock(m_instanceMapMutex);
+            std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.find(m_instanceId);
+            // Let's be sure that we remove ourself:
+            if (it != m_instanceMap.end() && it->second == this) {
+                m_instanceMap.erase(it);
+            }
+        }
+
+
+        void SignalSlotable::registerForShortcutMessaging() {
+            boost::mutex::scoped_lock lock(m_instanceMapMutex);
+            SignalSlotable*& instance = m_instanceMap[m_instanceId];
+            if (!instance) {
+                instance = this;
+            } else if (instance != this) {
+                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Cannot register "
+                        << "for short-cut messaging since there is already another instance.";
+                // Do not dare to call methods on instance - could already be destructed...?
+            }
         }
 
 
@@ -201,7 +253,7 @@ namespace karabo {
             m_connection = connection;
             m_instanceId = instanceId;
             m_nThreads = 2;
-
+            
             // Currently only removes dots
             sanifyInstanceId(m_instanceId);
             if (m_connectionInjected) {
@@ -227,11 +279,6 @@ namespace karabo {
             init(instanceId, connection);
         }
         
-
-        void SignalSlotable::setDeviceServerPointer(boost::any serverPtr) {
-            m_deviceServerPointer = serverPtr;
-        }
-
 
         std::pair<bool, std::string > SignalSlotable::isValidInstanceId(const std::string & instanceId) {
             // Ping any guy with my id. If there is one, he will answer, if not, we timeout.
@@ -388,7 +435,11 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << result.second;
                 stopEventLoop();
                 return result.first;
+            } else {
+                // We are unique - so now we can register ourself for short-cut messaging.
+                this->registerForShortcutMessaging();
             }
+
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id '" << m_instanceId
                     << "' and uses " << m_nThreads << " threads.";
 
@@ -468,6 +519,7 @@ namespace karabo {
 
 
         void SignalSlotable::stopBrokerMessageConsumption() {
+            this->deregisterFromShortcutMessaging(); // stop short-cut messaging as well
             if (!m_connectionInjected) {
                 m_ioService->stop();
                 m_brokerThread.join();
@@ -684,8 +736,12 @@ namespace karabo {
 
         void SignalSlotable::registerDefaultSignalsAndSlots() {
 
-            // Emits a "still-alive" signal
-            registerHeartbeatSignal<string, int, Hash>("signalHeartbeat");
+            // The heartbeat signal goes through a different topic, so we
+            // cannot use the normal registerSignal.
+            SignalInstancePointer heartbeatSignal(new karabo::xms::Signal(this, m_heartbeatProducerChannel, m_instanceId, "signalHeartbeat", 9));
+            storeSignal("signalHeartbeat", heartbeatSignal);
+            boost::function<void (const string&, const int&, const Hash&)> f = boost::bind(&Signal::emit3<string, int, Hash>, heartbeatSignal, _1, _2, _3);
+            m_emitFunctions.set("signalHeartbeat", f);
 
             // Listener for heartbeats
             KARABO_SLOT3(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
@@ -1193,6 +1249,27 @@ namespace karabo {
         }
 
 
+        SignalSlotable::SlotInstancePointer SignalSlotable::findSlot(const std::string &funcName) {
+            SlotInstancePointer ret;
+            // FIXME: Need to use m_signalSlotInstancesMutex?
+            SlotInstances::const_iterator it = m_slotInstances.find(funcName);
+            if (it != m_slotInstances.end()) {
+                ret = it->second;
+            }
+            return ret;
+        }
+
+
+        void SignalSlotable::registerNewSlot(const std::string &funcName, SlotInstancePointer instance) {
+            SlotInstancePointer& newinstance = m_slotInstances[funcName];
+            if (newinstance) {
+                throw KARABO_SIGNALSLOT_EXCEPTION("The slot \"" + funcName + "\" has been registered with two different signatures");
+            } else {
+                newinstance = instance;
+            }
+        }
+
+
         //        void SignalSlotable::registerConnectionForTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType) {
         //
         //            // Signal or slot is remote
@@ -1624,6 +1701,19 @@ namespace karabo {
             return std::make_pair(instanceId, functionName);
         }
 
+        SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction, int priority, int messageTimeToLive) {
+            if (m_signalInstances.find(signalFunction) != m_signalInstances.end()) {
+                SignalInstancePointer s;
+                return s;
+            }
+            SignalInstancePointer s(new Signal(this, m_producerChannel, m_instanceId, signalFunction, priority, messageTimeToLive));
+            storeSignal(signalFunction, s);
+            return s;
+        }
+
+        void SignalSlotable::storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance) {
+            m_signalInstances[signalFunction] = signalInstance;
+        }
 
         //        void SignalSlotable::refreshTimeToLiveForConnectedSlot(const std::string& instanceId, int countdown, const karabo::util::Hash & instanceInfo) {
         //
@@ -2066,8 +2156,5 @@ namespace karabo {
         }
 
 
-        void injectEventExternally(karabo::xms::SignalSlotable* that, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
-            that->injectEvent(that->m_consumerChannel, header, body);
-        }
     }
 }

@@ -39,15 +39,7 @@ namespace karabo {
          */
         class DeviceServer : public karabo::xms::SignalSlotable {           
 
-            struct DeviceInstanceEntry {
-                /// Initialise bare pointer with 0.
-                DeviceInstanceEntry() : m_deviceThread(0) {}
-                boost::thread* m_deviceThread;
-                boost::shared_ptr<BaseDevice> m_device;
-            };
-
-
-            typedef std::map<std::string, DeviceInstanceEntry> DeviceInstanceMap;
+            typedef std::map<std::string, boost::thread*> DeviceInstanceMap;
 
             krb_log4cpp::Category* m_log;
             karabo::log::Logger::Pointer m_logger;
@@ -198,16 +190,8 @@ namespace karabo {
 
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
 
-            friend bool tryToCallDirectly(boost::any server,
-                    const std::string& instanceId,
-                    const karabo::util::Hash::Pointer& header,
-                    const karabo::util::Hash::Pointer& body);
         };
 
-        bool tryToCallDirectly(boost::any server,
-                const std::string& instanceId,
-                const karabo::util::Hash::Pointer& header,
-                const karabo::util::Hash::Pointer& body);
     }
 }
 

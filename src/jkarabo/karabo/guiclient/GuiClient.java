@@ -6,6 +6,7 @@
 package karabo.guiclient;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -399,23 +400,48 @@ public abstract class GuiClient implements Runnable {
         String type = hash.get("type");
         //System.out.println("onRead: type is \"" + type + "\"");
         switch (type) {
-            case "brokerInformation":
-                onBrokerInfo((String) hash.get("host"), (int) hash.get("port"), (String) hash.get("topic"));
-                break;
-            case "systemTopology":
-                onSystemTopology((Hash) hash.get("systemTopology"));
+            case "initReply":
+                onInitReply((String) hash.get("deviceId"), (boolean) hash.get("success"), (String) hash.get("message"));
                 break;
             case "deviceConfiguration":
                 onDeviceConfiguration((String) hash.get("deviceId"), (Hash) hash.get("configuration"));
                 break;
-            case "deviceSchema":
-                onDeviceSchema((String) hash.get("deviceId"), (Schema) hash.get("schema"));
-                break;
             case "classSchema":
                 onClassSchema((String) hash.get("serverId"), (String) hash.get("classId"), (Schema) hash.get("schema"));
                 break;
+            case "deviceSchema":
+            {
+                Hash config = new Hash();
+                if (hash.has("configuration")) config = (Hash) hash.get("configuration");
+                onDeviceSchema((String) hash.get("deviceId"), (Schema) hash.get("schema"), config);
+                break;
+            }
             case "propertyHistory":
                 onPropertyHistory((String) hash.get("deviceId"), (String) hash.get("property"), (VectorHash) hash.get("data"));
+                break;
+            case "networkData":
+                onNetworkData((String) hash.get("name"), (Hash) hash.get("data"));
+                break;
+            case "availableProjects":
+                onAvailableProjects((Hash) hash.get("availableProjects"));
+                break;
+            case "projectNew":
+                onNewProject((String) hash.get("name"), (boolean) hash.get("success"), (char[]) hash.get("data"));
+                break;
+            case "projectLoaded":
+                onLoadProject((String) hash.get("name"), (Hash) hash.get("metaData"), (char[]) hash.get("buffer"));
+                break;
+            case "projectSaved":
+                onSaveProject((String) hash.get("name"), (boolean) hash.get("success"), (char[]) hash.get("data"));
+                break;
+            case "projectClosed":
+                onCloseProject((String) hash.get("name"), (boolean) hash.get("success"), (char[]) hash.get("data"));
+                break;
+            case "systemVersion":
+                onSystemVersion((String) hash.get("version"));
+                break;
+            case "systemTopology":
+                onSystemTopology((Hash) hash.get("systemTopology"));
                 break;
             case "instanceNew":
                 onInstanceNew((Hash) hash.get("topologyEntry"));
@@ -431,7 +457,7 @@ public abstract class GuiClient implements Runnable {
                         (String) hash.get("shortMsg"), (String) hash.get("detailedMsg"));
                 break;
             case "log":
-                onLogging((String) hash.get("message"));
+                onLogging((VectorHash) hash.get("messages"));
                 break;
             default:
                 LOG.warn("Unsupported type: " + type);
@@ -450,21 +476,14 @@ public abstract class GuiClient implements Runnable {
     protected abstract void onDisconnect();
 
     /**
-     * This callback should be implemented by user. It will be called if GuiServer sends information about JMS broker
-     *
-     * @param host broker host name
-     * @param port broker host port
-     * @param topic the topic used by broker for messaging
+     * Acknowledgment message after initiating a device instance
+     * 
+     * @param deviceId  Device instance ID created
+     * @param success   Success or failure flag (boolean)
+     * @param message   Error message
      */
-    protected abstract void onBrokerInfo(String host, int port, String topic);
-
-    /**
-     * It will be called if GuiServer sends system network topology.
-     *
-     * @param systemTopology is a Hash containing topologies details.
-     */
-    protected abstract void onSystemTopology(Hash systemTopology);
-
+    protected abstract void onInitReply(String deviceId, boolean success, String message);
+    
     /**
      * This callback should be implemented by user. It will be called if GuiServer sends changed configuration of the
      * device.
@@ -491,8 +510,9 @@ public abstract class GuiClient implements Runnable {
      *
      * @param deviceId device ID
      * @param schema full schema for parameters describing such device
+     * @param configuration optional configuration (may be empty)
      */
-    protected abstract void onDeviceSchema(String deviceId, Schema schema);
+    protected abstract void onDeviceSchema(String deviceId, Schema schema, Hash configuration);
 
     /**
      * This callback should be implemented by user. It will be called if GuiServer sends historic data in form of vector
@@ -505,10 +525,90 @@ public abstract class GuiClient implements Runnable {
     protected abstract void onPropertyHistory(String deviceId, String property, VectorHash data);
 
     /**
+     * This callback should be implemented by user. It will be called if some device sends via GuiServer actively some data
+     * 
+     * @param name   Name identifying the device and channel
+     * @param data   Hash object containing information to be present on GUI client
+     */
+    protected abstract void onNetworkData(String name, Hash data);
+    
+    /**
+     * This callback should be implemented by user. It will be called if GuiServer sends Hash with projects
+     * @param availableProjects  Hash consisting of  key-value pairs: project name -> project
+     *        projectName1 ->
+     *              "version" -> version [String]
+     *              "author"  -> user [String]. Examples: operator, admin, ...
+     *              "creationDate" -> epoch [double]
+     *              "lastModified" -> epoch [double]
+     *              "checkedOut"   -> true/false [boolean]
+     *              "checkoutBy"   -> username [String].  Example: operator
+     *        projectName2 ->
+     *              "version" -> version2 ...
+     *              ...
+     */
+    protected abstract void onAvailableProjects(Hash availableProjects);
+    
+    /**
+     * This callback should be implemented by user. It will be called if ProjectServer sends via GuiServer an
+     * acknowledgment that new project was created or not
+     * 
+     * @param projectName is project name [String]
+     * @param success     true or failure
+     * @param data        project zip image?
+     */
+    protected abstract void onNewProject(String projectName, boolean success, char[] data);
+
+    /**
+     * This callback should be implemented by user. It will be called if ProjectServer sends via GuiServer an
+     * acknowledgment about loaded project
+     * 
+     * @param projectName 
+     * @param metaData 
+     * @param data  
+     */
+    protected abstract void onLoadProject(String projectName, Hash metaData, char[] data);
+    
+    /**
+     * This callback should be implemented by user. It will be called if GuiServer sends Hash object
+     * 
+     * @param projectName
+     * @param success
+     * @param data 
+     */
+    protected abstract void onSaveProject(String projectName, boolean success, char[] data);
+    
+    /**
+     * This callback should be implemented by user. It will be called if GuiServer sends Hash object
+     * 
+     * @param projectName
+     * @param success
+     * @param data 
+     */
+    protected abstract void onCloseProject(String projectName, boolean success, char[] data);
+    
+    /**
+     * This callback should be implemented by user. It will be called if GuiServer sends system version.
+     * 
+     * @param systemVersion  system version as a String
+     */
+    protected abstract void onSystemVersion(String systemVersion);
+
+    /**
+     * It will be called if GuiServer sends system network topology.
+     *
+     * @param systemTopology is a Hash containing topology details ...
+     *      "type"           ->  "systemTopology"  [String]
+     *      "systemTopology" ->  topology          [Hash]
+     */
+    protected abstract void onSystemTopology(Hash systemTopology);
+
+    /**
      * This callback should be implemented by user. It will be called if GuiServer sends topology entry related to the
      * new, just created, device instance
      *
-     * @param topologyEntry Hash object describing instance topology in detail.
+     * @param topologyEntry Hash object describing instance topology in detail ...
+     *      "type"          -> "instanceNew"    [String]
+     *      "topologyEntry" -> topologyEntry    [Hash]
      */
     protected abstract void onInstanceNew(Hash topologyEntry);
 
@@ -517,6 +617,8 @@ public abstract class GuiClient implements Runnable {
      * to existing device instance
      *
      * @param topologyEntry Hash object describing instance topology in detail.
+     *      "type"          -> "instanceUpdated"    [String]
+     *      "topologyEntry" -> topologyEntry        [Hash]
      */
     protected abstract void onInstanceUpdated(Hash topologyEntry);
 
@@ -543,21 +645,29 @@ public abstract class GuiClient implements Runnable {
      * This callback should be implemented by user. It will be called if GuiServer sends a message that should be
      * logged.
      *
-     * @param message message sent
+     * @param messages messages sent as VectorHash
      */
-    protected abstract void onLogging(String message);
+    protected abstract void onLogging(VectorHash messages);
 
     /**
      * Send login information to get an access to the GuiServer
      *
      * @param username user name in the system
+     * @param password user password in the system
      * @param sessionToken received session token
      * @param provider provider type (at the moment, "LOCAL" or "KERBEROS")
      * @throws IOException reported in case of IO problems
      * @throws InterruptedException reported if interrupted by user
      */
-    public void login(String username, String sessionToken, String provider) throws IOException, InterruptedException {
-        send(new Hash("type", "login", "username", username, "sessionToken", sessionToken, "provider", provider));
+    public void login(String username, String password, String sessionToken, String provider) throws IOException, InterruptedException {
+        Hash h = new Hash();
+        h.set("type", "login");
+        h.set("username", username);
+        h.set("provider", provider);
+        h.set("sessionToken", sessionToken);
+        h.set("host", InetAddress.getLocalHost().getHostName());
+        h.set("version", "r19108");
+        send(h);
     }
 
     /**
@@ -705,6 +815,18 @@ public abstract class GuiClient implements Runnable {
     }
     
     /**
+     * Subscribed or Un-subscribed to output channel name (deviceId:name-of-channel). Example: gen-000:output
+     * 
+     * @param channelName String consisting of deviceId and channel name (oft "output") separated by ":"
+     * @param subscribe Flag meaning subscribe to channel (true) or not (false)
+     * @throws IOException reported in case of IO problems
+     * @throws InterruptedException reported if interrupted by user
+     */
+    public void subscribeNetwork(String channelName, boolean subscribe) throws IOException, InterruptedException {
+        send(new Hash("type", "subscribeNetwork", "channelName", channelName, "subscribe", subscribe));
+    }
+    
+    /**
      * Inform GuiServer about error traceback
      * 
      * @param traceback string representing error traceback
@@ -713,5 +835,40 @@ public abstract class GuiClient implements Runnable {
      */
     public void error(String traceback) throws IOException, InterruptedException {
         send(new Hash("type", "error", "traceback", traceback));
+    }
+    
+    /**
+     * Request GUI server to reply available project entries
+     * 
+     * @throws IOException
+     * @throws InterruptedException 
+     */
+    public void getAvailableProjects() throws IOException, InterruptedException {
+        send(new Hash("type", "getAvailableProjects"));
+    }
+    
+    /**
+     * 
+     * 
+     * @param projectName
+     * @param username
+     * @throws IOException
+     * @throws InterruptedException 
+     */
+    public void loadProject(String projectName, String username) throws IOException, InterruptedException {
+        send(new Hash("type", "loadProject", "user", username, "name", projectName));
+    }
+    
+    
+    public void newProject() {
+        
+    }
+    
+    public void saveProject() {
+        
+    }
+    
+    public void closeProject() {
+        
     }
 }
