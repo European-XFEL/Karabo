@@ -39,8 +39,8 @@ from numpy import log10, ndarray, number
 class ErrorState(Enum):
     """this is the state as shown by the background color"""
     fine = "225,242,225,128"
-    warn = "255,255,240,128"
-    alarm = "255,255,225,128"
+    warn = "255,255,125,128"
+    alarm = "255,125,125,128"
     error = "225,155,155,128"
 
 
@@ -78,9 +78,7 @@ class DisplayLabel(DisplayWidget):
         self.widget.setStyleSheet("QLabel {{ background-color : rgba({}); }}".
                                   format(state.value))
 
-    def valueChanged(self, box, value, timestamp=None):
-        desc = box.descriptor
-
+    def __checkAlarms(self, desc, value):
         if ((desc.alarmLow is not None and value < desc.alarmLow) or
                 (desc.alarmHigh is not None and value > desc.alarmHigh)):
             self.errorState = ErrorState.alarm
@@ -90,6 +88,11 @@ class DisplayLabel(DisplayWidget):
         else:
             self.errorState = ErrorState.fine
         self.setBackground()
+
+    def valueChanged(self, box, value, timestamp=None):
+        desc = box.descriptor
+
+        self.__checkAlarms(desc, value)
 
         if (not isinstance(desc, Type)
             or isinstance(desc, (HashType, VectorHash))):
