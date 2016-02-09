@@ -77,10 +77,10 @@ void JmsBroker_Test::testMethod() {
 
     //channel->setErrorHandler(&onError);
     
-    boost::this_thread::sleep(boost::posix_time::millisec(100));
+    boost::this_thread::yield();
 
     channel->write(Hash("randomHeaderGarbage", "indeed"), "Random message body");
-
+    
     ioService->run();
 
 //    CPPUNIT_ASSERT(m_messagesRead == 2); // See above about r19057/788969b143709327c7346. :-(
