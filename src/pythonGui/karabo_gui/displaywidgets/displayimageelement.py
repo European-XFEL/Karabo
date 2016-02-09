@@ -27,6 +27,7 @@ from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
 from schema import ImageNode
 from karabo.api_2 import Type
 from karabo_gui.const import LIGHT_GREEN, LIGHT_RED
+from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 
 
@@ -46,6 +47,11 @@ class DisplayImageElement(DisplayWidget):
         self.image.setMaximumHeight(125)
         self.image.setMinimumWidth(125)
         self.image.setWordWrap(True)
+
+        objectName = generateObjectName(self)
+        self._styleSheet = ("QLabel#{}".format(objectName) +
+                            " {{ background-color : rgba{}; }}")
+        self.image.setObjectName(objectName)
         self.setErrorState(False)
         self.value = None
 
@@ -55,7 +61,7 @@ class DisplayImageElement(DisplayWidget):
 
     def setErrorState(self, isError):
         color = LIGHT_RED if isError else LIGHT_GREEN
-        ss = "QLabel {{ background-color : rgba{}; }}".format( color)
+        ss = self._styleSheet.format( color)
         self.image.setStyleSheet(ss)
 
     def valueChanged(self, box, value, timestamp=None):

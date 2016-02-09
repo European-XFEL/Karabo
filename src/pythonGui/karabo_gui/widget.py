@@ -26,6 +26,7 @@ from PyQt4.QtGui import QLabel, QPixmap
 from karabo.api_2 import String
 from karabo_gui.const import LIGHT_GREEN, LIGHT_RED
 from karabo_gui.registry import Registry
+from karabo_gui.util import generateObjectName
 import karabo_gui.gui as gui
 
 
@@ -166,6 +167,11 @@ class VacuumWidget(DisplayWidget):
         DisplayWidget.__init__(self, box)
 
         self.widget = QLabel(parent)
+
+        objectName = generateObjectName(self)
+        self._styleSheet = ("QLabel#{}".format(objectName) +
+                            " {{ background-color : rgba{}; }}")
+        self.widget.setObjectName(objectName)
         self.setErrorState(False)
 
 
@@ -187,7 +193,7 @@ class VacuumWidget(DisplayWidget):
 
     def setErrorState(self, isError):
         color = LIGHT_RED if isError else LIGHT_GREEN
-        ss = "QLabel {{ background-color : rgba{}; }}".format(color)
+        ss = self._styleSheet.format(color)
         self.widget.setStyleSheet(ss)
 
 
