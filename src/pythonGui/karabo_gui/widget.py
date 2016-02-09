@@ -18,14 +18,14 @@
 
 __all__ = ["DisplayWidget"]
 
+import os.path
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QLabel, QPixmap
-from karabo_gui.registry import Registry
-import os.path
 
 from karabo.api_2 import String
-
+from karabo_gui.const import LIGHT_GREEN, LIGHT_RED
+from karabo_gui.registry import Registry
 import karabo_gui.gui as gui
 
 
@@ -186,12 +186,9 @@ class VacuumWidget(DisplayWidget):
 
 
     def setErrorState(self, isError):
-        if isError:
-            self.widget.setStyleSheet( # light red
-                "QLabel { background-color : rgba(255,155,155,128); }")
-        else:
-            self.widget.setStyleSheet( # light green
-                "QLabel { background-color : rgba(225,242,225,128); }")
+        color = LIGHT_RED if isError else LIGHT_GREEN
+        ss = "QLabel {{ background-color : rgba{}; }}".format(color)
+        self.widget.setStyleSheet(ss)
 
 
 class EditableWidget(Widget):
