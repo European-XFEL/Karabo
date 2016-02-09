@@ -20,28 +20,25 @@
 
 __all__ = ["DisplayLabel"]
 
-
-from karabo_gui.widget import DisplayWidget
-from karabo.api_2 import (Double, Float, Hash, String, Simple, Type, HashType,
-                          VectorDouble, VectorFloat, VectorHash)
-
 from enum import Enum
 from numbers import Number
-import decimal
-import re
 
+from numpy import log10, ndarray, number
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLabel
 
-from numpy import log10, ndarray, number
+from karabo_gui.const import LIGHT_GREEN, LIGHT_RED
+from karabo_gui.widget import DisplayWidget
+from karabo.api_2 import (Double, Float, String, Simple, Type, HashType,
+                          VectorDouble, VectorFloat, VectorHash)
 
 
 class ErrorState(Enum):
     """this is the state as shown by the background color"""
-    fine = "225,242,225,128"
-    warn = "255,255,125,128"
-    alarm = "255,125,125,128"
-    error = "225,155,155,128"
+    fine = LIGHT_GREEN
+    warn = (255, 255, 125, 128)
+    alarm = (255, 125, 125, 128)
+    error = LIGHT_RED
 
 
 class DisplayLabel(DisplayWidget):
@@ -75,8 +72,8 @@ class DisplayLabel(DisplayWidget):
         else:
             state = self.errorState
 
-        self.widget.setStyleSheet("QLabel {{ background-color : rgba({}); }}".
-                                  format(state.value))
+        ss = "QLabel {{ background-color : rgba{}; }}".format(state.value)
+        self.widget.setStyleSheet(ss)
 
     def __checkAlarms(self, desc, value):
         if ((desc.alarmLow is not None and value < desc.alarmLow) or

@@ -8,17 +8,14 @@ from PyQt4.QtGui import (
     QAction, QColor, QColorDialog, QDialog, QInputDialog, QLabel
 )
 
-from karabo_gui.const import ns_karabo
+from karabo_gui.const import ns_karabo, LIGHT_GREEN, LIGHT_RED
 from karabo_gui.widget import DisplayWidget
 from karabo.api_2 import String
 
-LABEL_COLOR_STYLESHEET = "QLabel#stateColor {{ background-color : rgba{}; }}"
+LABEL_COLOR_STYLESHEET = "QLabel {{ background-color : rgba{}; }}"
 BUTTON_COLOR_STYLESHEET = """
-QPushButton#stateColor {{ background-color : rgba{}; border: none; }}
+QPushButton {{ background-color : rgba{}; border: none; }}
 """
-OBJECT_NAME = "stateColor"
-ERROR_COLOR = (255, 155, 155, 128)
-DEFAULT_COLOR = (225, 242, 225, 128)
 
 
 class StateColorDialog(QDialog):
@@ -74,11 +71,10 @@ class DisplayStateColor(DisplayWidget):
     def __init__(self, box, parent):
         super(DisplayStateColor, self).__init__(box)
 
-        self._stateMap = OrderedDict(error=ERROR_COLOR)
+        self._stateMap = OrderedDict(error=LIGHT_RED)
         self.value = None
 
         self.widget = QLabel(parent)
-        self.widget.setObjectName(OBJECT_NAME)
         self.widget.setAutoFillBackground(True)
         self.widget.setAlignment(Qt.AlignCenter)
         self.widget.setMinimumWidth(160)
@@ -90,8 +86,8 @@ class DisplayStateColor(DisplayWidget):
         self.widget.addAction(action)
 
     def setErrorState(self, isError):
-        bgColor = ERROR_COLOR if isError else DEFAULT_COLOR
-        self._setColor(bgColor)
+        color = LIGHT_RED if isError else LIGHT_GREEN
+        self._setColor(color)
 
     def valueChanged(self, box, value, timestamp=None):
         if not isinstance(box.descriptor, String):
@@ -100,7 +96,7 @@ class DisplayStateColor(DisplayWidget):
         if value is None:
             return
 
-        bgColor = self._stateMap.get(value.lower(), DEFAULT_COLOR)
+        bgColor = self._stateMap.get(value.lower(), LIGHT_GREEN)
         self._setColor(bgColor)
         self.value = value
 
