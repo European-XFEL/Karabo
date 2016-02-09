@@ -72,7 +72,7 @@ class DisplayStateColor(DisplayWidget):
         super(DisplayStateColor, self).__init__(box)
 
         self._stateMap = OrderedDict(error=ERROR_COLOR)
-        self.value = None
+        self._staticText = ""
 
         self.widget = QLabel(parent)
         self.widget.setAutoFillBackground(True)
@@ -86,9 +86,12 @@ class DisplayStateColor(DisplayWidget):
                             " {{ background-color : rgba{}; }}")
         self.widget.setObjectName(objectName)
 
-        action = QAction("Edit State Colors...", self.widget)
-        action.triggered.connect(self.onChangeColors)
-        self.widget.addAction(action)
+        colorAction = QAction("Edit State Colors...", self.widget)
+        colorAction.triggered.connect(self._onChangeColors)
+        textAction = QAction("Edit Static Text...", self.widget)
+        textAction.triggered.connect(self._onChangeStaticText)
+        self.widget.addAction(colorAction)
+        self.widget.addAction(textAction)
 
     def setErrorState(self, isError):
         color = ERROR_COLOR if isError else OK_COLOR
@@ -103,11 +106,14 @@ class DisplayStateColor(DisplayWidget):
 
         bgColor = self._stateMap.get(value.lower(), OK_COLOR)
         self._setColor(bgColor)
-        self.value = value
+
+        if self.widget.text() != self._staticText:
+            self.widget.setText(self._staticText)
 
     def save(self, element):
         """ Save to a scene SVG.
         """
+        element.set('staticText', self._staticText)
         for name, color in self._stateMap.items():
             sub = Element(ns_karabo + "sc")
             sub.text = name
@@ -130,9 +136,10 @@ class DisplayStateColor(DisplayWidget):
             alpha = int(sub.get('alpha'))
             states[key] = (red, green, blue, alpha)
         self._stateMap = states
+        self._staticText = element.get('staticText', '')
 
     @pyqtSlot()
-    def onChangeColors(self):
+    def _onChangeColors(self):
         items = OrderedDict(self._stateMap)
         dialog = StateColorDialog(parent=self.widget, items=items)
         result = dialog.exec_()
@@ -142,6 +149,14 @@ class DisplayStateColor(DisplayWidget):
         box = self.boxes[0]
         if box.hasValue():
             self.valueChanged(box, box.value)
+
+    @pyqtSlot()
+    def _onChangeStaticText(self):
+        text, ok = QInputDialog.getText(self.widget, "Change static text",
+                                        "Static text:")
+        if ok:
+            self._staticText = text
+            self.widget.setText(self._staticText)
 
     def _setColor(self, color):
         ss = self._styleSheet.format(color)
