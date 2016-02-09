@@ -9,12 +9,12 @@ from PyQt4.QtGui import (
 )
 
 from karabo_gui.const import ns_karabo, LIGHT_GREEN, LIGHT_RED
+from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 from karabo.api_2 import String
 
-LABEL_COLOR_STYLESHEET = "QLabel {{ background-color : rgba{}; }}"
 BUTTON_COLOR_STYLESHEET = """
-QPushButton {{ background-color : rgba{}; border: none; }}
+QPushButton#stateColor {{ background-color : rgba{}; border: none; }}
 """
 
 
@@ -81,6 +81,11 @@ class DisplayStateColor(DisplayWidget):
         self.widget.setMinimumHeight(32)
         self.widget.setWordWrap(True)
 
+        objectName = generateObjectName(self)
+        self._styleSheet = ("QLabel#{}".format(objectName) +
+                            " {{ background-color : rgba{}; }}")
+        self.widget.setObjectName(objectName)
+
         action = QAction("Edit State Colors...", self.widget)
         action.triggered.connect(self.onChangeColors)
         self.widget.addAction(action)
@@ -139,5 +144,5 @@ class DisplayStateColor(DisplayWidget):
             self.valueChanged(box, box.value)
 
     def _setColor(self, color):
-        styleSheet = LABEL_COLOR_STYLESHEET.format(color)
-        self.widget.setStyleSheet(styleSheet)
+        ss = self._styleSheet.format(color)
+        self.widget.setStyleSheet(ss)

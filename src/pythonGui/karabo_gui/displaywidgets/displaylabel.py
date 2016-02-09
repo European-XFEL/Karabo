@@ -28,6 +28,7 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLabel
 
 from karabo_gui.const import LIGHT_GREEN, LIGHT_RED
+from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 from karabo.api_2 import (Double, Float, String, Simple, Type, HashType,
                           VectorDouble, VectorFloat, VectorHash)
@@ -56,6 +57,11 @@ class DisplayLabel(DisplayWidget):
         self.widget.setMinimumWidth(160)
         self.widget.setMinimumHeight(32)
         self.widget.setWordWrap(True)
+
+        objectName = generateObjectName(self)
+        self._styleSheet = ("QLabel#{}".format(objectName) +
+                            " {{ background-color : rgba{}; }}")
+        self.widget.setObjectName(objectName)
         self.inError = False
         self.errorState = ErrorState.fine
 
@@ -72,7 +78,7 @@ class DisplayLabel(DisplayWidget):
         else:
             state = self.errorState
 
-        ss = "QLabel {{ background-color : rgba{}; }}".format(state.value)
+        ss = self._styleSheet.format(state.value)
         self.widget.setStyleSheet(ss)
 
     def __checkAlarms(self, desc, value):
