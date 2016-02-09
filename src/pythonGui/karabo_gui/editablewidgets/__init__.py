@@ -6,8 +6,21 @@
 
 # define package editablewidgets
 
-__all__ = ["editablecheckbox", "editablechoiceelement", "editablecombobox",
-           "editabledirectory", "numberlineedit", "editablefilein",
-           "editablefileout", "editablelineedit", "editablelistelement",
-           "editablelist", "editablespinbox", "floatspinbox",
-           "hexoct", "singlebit", "qwtwidgets", "editabletableelement"]
+__all__ = [
+    "editablecheckbox",
+    "editablechoiceelement",
+    "editablecombobox",
+    "editabledirectory",
+    "editablefilein",
+    "editablefileout",
+    "editablelineedit",
+    "editablelist",
+    "editablelistelement",
+    "editablespinbox",
+    "editabletableelement",
+    "floatspinbox",
+    "hexoct",
+    "numberlineedit",
+    "qwtwidgets",
+    "singlebit",
+]
