@@ -83,7 +83,6 @@ class DisplayLabel(DisplayWidget):
 
         if ((desc.alarmLow is not None and value < desc.alarmLow) or
                 (desc.alarmHigh is not None and value > desc.alarmHigh)):
-            print(box, value, desc.alarmLow)
             self.errorState = ErrorState.alarm
         elif ((desc.warnLow is not None and value < desc.warnLow) or
                 (desc.warnHigh is not None and value > desc.warnHigh)):
