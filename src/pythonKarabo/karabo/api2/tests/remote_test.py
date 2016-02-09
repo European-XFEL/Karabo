@@ -149,7 +149,7 @@ class Tests(TestCase):
         self.assertLess(tmp, 12)
         self.assertLess(d.counter - tmp, 2)
         with d:
-            yield from sleep(0.3)
+            yield from sleep(0.5)
             self.assertEqual(d.counter, 29)
         yield from task
 
