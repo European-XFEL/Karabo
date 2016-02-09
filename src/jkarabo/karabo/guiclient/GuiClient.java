@@ -860,15 +860,15 @@ public abstract class GuiClient implements Runnable {
     }
     
     
-    public void newProject() {
-        
+    public void newProject(String projectName, String username, char[] data) throws IOException, InterruptedException {
+        send(new Hash("type", "newProject", "author", username, "name", projectName, "data", data));
     }
     
-    public void saveProject() {
-        
+    public void saveProject(String projectName, String username, char[] data) throws IOException, InterruptedException {
+        send(new Hash("type", "saveProject", "user", username, "name", projectName, "data", data));
     }
     
-    public void closeProject() {
-        
+    public void closeProject(String projectName, String username) throws IOException, InterruptedException {
+        send(new Hash("type", "closeProject", "user", username, "name", projectName));
     }
 }
