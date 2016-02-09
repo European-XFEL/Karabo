@@ -1114,9 +1114,9 @@ KARABO_SLOT0(__VA_ARGS__) \
              * slot is the same as an already registered one.
              */
             void registerSlot(const boost::function<void () >& slot, const std::string& funcName) {
-                typename karabo::xms::Slot0::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot0>(findSlot(funcName));
+                karabo::xms::Slot0::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot0>(findSlot(funcName));
                 if (!s) {
-                    s = typename karabo::xms::Slot0::Pointer(new karabo::xms::Slot0(funcName));
+                    s = karabo::xms::Slot0::Pointer(new karabo::xms::Slot0(funcName));
                     registerNewSlot(funcName, s);
                 }
                 s->registerSlotFunction(slot);
