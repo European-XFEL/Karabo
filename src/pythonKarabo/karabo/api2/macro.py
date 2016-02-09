@@ -138,8 +138,8 @@ class Macro(Device):
                 _wrapslot(v, k)
         super().register(name, dict)
         Macro.subclasses.append(cls)
-        cls._monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
-                         if hasattr(m, "monitor")]
+        cls.__monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
+                          if hasattr(m, "monitor")]
 
     def __init__(self, configuration=None, may_start_thread=True, **kwargs):
         if configuration is None:
@@ -176,7 +176,7 @@ class Macro(Device):
                                   format(remote.id, self.deviceId))
             else:
                 setattr(self, key, d)
-                holders.append(self._holdDevice(d))
+                holders.append(self.__holdDevice(d))
 
         ts = type(self)
         attributes = ((k, getattr(ts, k)) for k in dir(ts))
@@ -186,11 +186,15 @@ class Macro(Device):
             async(h)
         self.state = "Idle..."
 
-    def _holdDevice(self, d):
+    def __holdDevice(self, d):
+        """keep the connection to a remote device
+
+        this method holds the connection to the RemoteDevice d, and calls
+        all monitors upon changes in this device."""
         with d:
             while True:
                 yield from waitUntilNew(d)
-                for m in self._monitors:
+                for m in self.__monitors:
                     try:
                         setattr(self, m.key, m.monitor(self))
                     except Exception:
