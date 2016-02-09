@@ -501,17 +501,20 @@ namespace karabo {
 
         void DeviceServer::slotStartDevice(const karabo::util::Hash& configuration) {
 
-            const std::pair<std::string, util::Hash>& classIdConfig
+            const boost::tuple<std::string, std::string, util::Hash>& idClassIdConfig
                     = this->prepareInstantiate(configuration);
 
-            KARABO_LOG_INFO << "Trying to start " << classIdConfig.first << "...";
+            const std::string& deviceId = idClassIdConfig.get<0>();
+            const std::string& classId = idClassIdConfig.get<1>();
+            KARABO_LOG_INFO << "Trying to start a '" << classId
+                    << "' with deviceId '" << deviceId << "'...";
             KARABO_LOG_DEBUG << "with the following configuration:\n" << configuration;
 
-            this->instantiate(classIdConfig);
+            this->instantiate(deviceId, classId, idClassIdConfig.get<2>());
         }
 
 
-        std::pair<std::string, util::Hash>
+        boost::tuple<std::string, std::string, util::Hash>
         DeviceServer::prepareInstantiate(const karabo::util::Hash& configuration) {
 
             if (configuration.has("classId")) {
@@ -536,7 +539,7 @@ namespace karabo {
                 // Inject connection
                 config.set("_connection_", m_connectionConfiguration);
 
-                return std::make_pair(classId, config);
+                return boost::make_tuple(config.get<std::string>("_deviceId_"), classId, config);
             } else {
                 // Old style, e.g. used for auto started devices
                 const std::string& classId = configuration.begin()->getKey();
@@ -558,29 +561,42 @@ namespace karabo {
                 // Inject connection
                 tmp.set("_connection_", m_connectionConfiguration);
 
-                return util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
+                const std::pair<std::string, util::Hash>& idCfg
+                        = util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
+                return boost::make_tuple(tmp.get<std::string>("_deviceId_"), idCfg.first, idCfg.second);
             }
         }
 
 
-        void DeviceServer::instantiate(const std::pair<std::string, util::Hash>& classIdConfig) {
-            const std::string& classId = classIdConfig.first;
-            const util::Hash& config = classIdConfig.second;
-            const std::string& deviceId = config.get<std::string>("_deviceId_");
+        void DeviceServer::instantiate(const std::string& deviceId, const std::string& classId, const util::Hash& config) {
             try {
 
+                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+
+                // Add a place (pointer by ref!) for the device thread in the instance map:
+                boost::thread*& deviceThread = m_deviceInstanceMap[deviceId];
+                if (deviceThread) {
+                    // There is already such a device. If joining works, it's just a "zombie".
+                    if (deviceThread->try_join_for(boost::chrono::milliseconds(100))) {
+                        m_deviceThreads.remove_thread(deviceThread);
+                        delete deviceThread;
+                    } else {
+                        std::string message("Device of class " + classId + " could not be started: ");
+                        reply(false, ((message += "deviceId '") += deviceId) += "' already exists on server.");
+                        KARABO_LOG_WARN << message;
+                        return;
+                    }
+                }
                 BaseDevice::Pointer device = BaseDevice::create(classId, config); // TODO If constructor blocks, we are lost here!!
-                if (!device)
+                if (!device) {
+                    m_deviceInstanceMap.erase(deviceId);
                     throw KARABO_PARAMETER_EXCEPTION("Failed to create device of class " + classId + " with configuration...");
+                }
 
                 device->injectConnection(deviceId, m_connection);
-                
-                {
-                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-                    // Associate deviceInstance with DeviceInstanceEntry object
-                    m_deviceInstanceMap[deviceId] =
-                            m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
-                }
+
+                // Create the thread for the device and place it (indirectly) into the device instance map):
+                deviceThread = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
 
                 // Answer initiation of device
                 reply(true, deviceId); // TODO think about
@@ -648,6 +664,7 @@ namespace karabo {
                 for (DeviceInstanceMap::iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
                     it->second->join();
                     m_deviceThreads.remove_thread(it->second);
+                    delete it->second;
                 }
 
                 m_deviceInstanceMap.clear();
@@ -659,12 +676,13 @@ namespace karabo {
 
             // Stop device server
             stopDeviceServer();
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotKillServer DONE";
         }
 
 
         void DeviceServer::slotDeviceGone(const std::string & instanceId) {
 
-            KARABO_LOG_WARN << "Device \"" << instanceId << "\" notifies future death.";
+            KARABO_LOG_FRAMEWORK_INFO << "Device '" << instanceId << "' notifies future death.";
 
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
 
@@ -672,8 +690,9 @@ namespace karabo {
             if (it != m_deviceInstanceMap.end()) {
                 it->second->join();
                 m_deviceThreads.remove_thread(it->second);
+                delete it->second;
                 m_deviceInstanceMap.erase(it);
-                KARABO_LOG_INFO << "Device: \"" << instanceId << "\" removed from server.";
+                KARABO_LOG_INFO << "Device '" << instanceId << "' removed from server.";
             }
         }
 
