@@ -112,12 +112,12 @@ class Tests(TestCase):
 
     @coroutine
     def init_macroserver(self, server):
-        yield from server.startInstance()
         config = Hash("project", "test", "module", "test", "code", self.code)
         h = Hash("classId", "MetaMacro", "configuration", config,
                  "deviceId", "bla")
+        yield from sleep(1.1)
         yield from server.call("Karabo_MacroServer", "slotStartDevice", h)
-        yield from sleep(4)
+        yield from sleep(1.1)
         proxy = yield from getDevice("bla-TestMacro")
         with proxy:
             yield from proxy.do()
@@ -127,6 +127,7 @@ class Tests(TestCase):
     def test_macroserver(self):
         loop = setEventLoop()
         server = DeviceServer(dict(serverId="Karabo_MacroServer"))
+        server.startInstance()
         task = loop.create_task(self.init_macroserver(server), server)
         proxy = loop.run_until_complete(task)
         self.assertEqual(proxy.s, "done")
@@ -141,7 +142,6 @@ class Tests(TestCase):
         the device on the device server is started from within a
         macro `remote`, such that we can test device instantiation
         from macros."""
-        yield from server.startInstance()
         remote = Remote(_deviceId_="remote")
         yield from remote.startInstance()
         proxy = yield from getDevice("remote")
@@ -171,6 +171,7 @@ class Tests(TestCase):
         """
         loop = setEventLoop()
         server = DeviceServer(dict(serverId="testServer"))
+        server.startInstance()
         proxy = loop.run_until_complete(
             loop.create_task(self.init_server(server), server))
         self.assertEqual(proxy.something, 333)
@@ -227,7 +228,6 @@ class Tests(TestCase):
 
     @coroutine
     def init_topo(self, dc):
-        yield from dc.startInstance()
         other = Other(dict(_deviceId_="other", _serverId_="tserver"))
         self.assertNotIn("other", getDevices())
         self.assertNotIn("other", getDevices("tserver"))
@@ -240,6 +240,7 @@ class Tests(TestCase):
     def test_topology(self):
         loop = setEventLoop()
         dc = DeviceClient(dict(_deviceId_="dc"))
+        dc.startInstance()
         task = loop.create_task(self.init_topo(dc), dc)
         loop.run_until_complete(task)
         loop.close()

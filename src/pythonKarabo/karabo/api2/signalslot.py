@@ -120,6 +120,11 @@ class SignalSlotable(Configurable):
         self._tasks = set()
 
     def startInstance(self, server=None, *, loop=None):
+        """Start this (device) instance
+
+        This sets up everything for the instance to run, and then runs
+        all initializing code. It returns the task in which this initializing
+        code is running."""
         if loop is None:
             loop = get_event_loop()
         self._ss = loop.getBroker(self.deviceId, type(self).__name__)
