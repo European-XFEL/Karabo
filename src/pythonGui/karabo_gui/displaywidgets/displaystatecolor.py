@@ -113,7 +113,7 @@ class DisplayStateColor(DisplayWidget):
     def save(self, element):
         """ Save to a scene SVG.
         """
-        element.set('staticText', self._staticText)
+        element.set(ns_karabo + 'staticText', self._staticText)
         for name, color in self._stateMap.items():
             sub = Element(ns_karabo + "sc")
             sub.text = name
@@ -129,6 +129,8 @@ class DisplayStateColor(DisplayWidget):
         """
         states = OrderedDict()
         for sub in element:
+            if sub.tag != (ns_karabo + "sc"):
+                continue
             key = sub.text
             red = int(sub.get('red'))
             green = int(sub.get('green'))
@@ -136,7 +138,7 @@ class DisplayStateColor(DisplayWidget):
             alpha = int(sub.get('alpha'))
             states[key] = (red, green, blue, alpha)
         self._stateMap = states
-        self._staticText = element.get('staticText', '')
+        self._staticText = element.get(ns_karabo + 'staticText', '')
 
     @pyqtSlot()
     def _onChangeColors(self):
