@@ -1,10 +1,11 @@
-from PyQt4.QtGui import QDialog, QFileDialog
-
 import weakref
+from uuid import uuid4
+
+from PyQt4.QtGui import QDialog, QFileDialog
 
 
 class Weak(object):
-    """ this declares a member variable of a class to be weak
+    """ This declares a member variable of a class to be weak
 
     use as follows:
 
@@ -14,15 +15,14 @@ class Weak(object):
             def __init__(self, ham):
                 self.ham = ham # use like a normal variable
 
-    to define a weak variable ham.  """
+    to define a weak variable ham.
+    """
 
     def __get__(self, instance, owner):
         return instance.__dict__[self]()
 
-
     def __set__(self, instance, value):
         instance.__dict__[self] = weakref.ref(value)
-
 
     def __delete__(self, instance):
         del instance.__dict__[self]
@@ -33,13 +33,15 @@ class SignalBlocker(object):
     def __init__(self, object):
         self.object = object
 
-
     def __enter__(self):
         self.state = self.object.blockSignals(True)
 
-
     def __exit__(self, a, b, c):
         self.object.blockSignals(self.state)
+
+
+def generateObjectName(widget):
+    return "{0}_{1}".format(widget.__class__.__name__, uuid4().hex)
 
 
 def getSaveFileName(title, dir="", description="", suffix="", filter=None, selectFile=""):
