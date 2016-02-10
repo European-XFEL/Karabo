@@ -26,7 +26,7 @@ from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
 
 from schema import ImageNode
 from karabo.api_2 import Type
-from karabo_gui.const import LIGHT_GREEN, LIGHT_RED
+from karabo_gui.const import OK_COLOR, ERROR_COLOR
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 
@@ -60,7 +60,7 @@ class DisplayImageElement(DisplayWidget):
         return self.image
 
     def setErrorState(self, isError):
-        color = LIGHT_RED if isError else LIGHT_GREEN
+        color = ERROR_COLOR if isError else OK_COLOR
         ss = self._styleSheet.format( color)
         self.image.setStyleSheet(ss)
 

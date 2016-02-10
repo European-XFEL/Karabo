@@ -20,8 +20,8 @@ ElementTree.register_namespace("krb", ns_karabo[1:-1])
 ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 
 # Commonly used colors
-LIGHT_GREEN = (225, 242, 225, 128)
-LIGHT_RED = (255, 155, 155, 128)
+OK_COLOR = (225, 242, 225, 128)
+ERROR_COLOR = (255, 155, 155, 128)
 
 # Parameter item properties
 INTERNAL_KEY           = Qt.UserRole
