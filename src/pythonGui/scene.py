@@ -30,8 +30,8 @@ from PyQt4.QtCore import (pyqtSignal, Qt, QByteArray, QEvent, QSize, QRect, QLin
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
                          QDialog, QDialogButtonBox, QFrame, QLabel, QLayout,
                          QKeySequence, QMenu,QMessageBox, QPalette, QPainter,
-                         QPen, QStackedLayout,QStandardItemModel, QStandardItem,
-                         QTreeView, QVBoxLayout, QWidget)
+                         QPen, QSizePolicy, QStackedLayout,QStandardItemModel,
+                         QStandardItem, QTreeView, QVBoxLayout, QWidget)
 
 from PyQt4.QtSvg import QSvgWidget
 
@@ -1018,10 +1018,11 @@ class Scene(QSvgWidget):
         self.tabVisible = False
 
         self.setFocusPolicy(Qt.StrongFocus)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Expanding,
+                                       QSizePolicy.Expanding))
         self.setAcceptDrops(True)
         self.setAttribute(Qt.WA_MouseTracking)
         self.setBackgroundRole(QPalette.Window)
-        self.resize(1024, 768)
 
 
     def setModified(self):
