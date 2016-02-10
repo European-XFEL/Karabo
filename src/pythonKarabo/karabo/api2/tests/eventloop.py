@@ -30,16 +30,10 @@ def setEventLoop():
 def startDevices(*devices):
     global loop
     loop = setEventLoop()
-    if len(devices) > 1:
-        loop.run_until_complete(gather(*(d.startInstance() for d in devices)))
-    else:
-        loop.run_until_complete(devices[0].startInstance())
+    loop.run_until_complete(gather(*(d.startInstance() for d in devices)))
     return loop
 
 
 def stopDevices(*devices):
-    if len(devices) > 1:
-        loop.run_until_complete(gather(*(d.slotKillDevice() for d in devices)))
-    else:
-        loop.run_until_complete(devices[0].slotKillDevice())
+    loop.run_until_complete(gather(*(d.slotKillDevice() for d in devices)))
     loop.close()
