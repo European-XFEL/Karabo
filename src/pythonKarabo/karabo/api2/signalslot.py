@@ -117,7 +117,6 @@ class SignalSlotable(Configurable):
         self.info = Hash("heartbeatInterval", self.heartbeatInterval)
         self._devices = {}
         self.__randPing = random.randint(2, 0x7fffffff)
-        self._tasks = set()
 
     def startInstance(self, server=None, *, loop=None):
         """Start this (device) instance
@@ -192,7 +191,22 @@ class SignalSlotable(Configurable):
 
     @coroutine
     def run_async(self):
-        async(self._ss.consume(self))
+        """start everything needed for this device
+
+        This coroutine is called once a device is started. Overwrite this
+        method if you want code to be called at startup time. Don't forget
+        to yield from super.
+
+        This method also calls ``self.run``, so if you don't need a coroutine,
+        it's easier to overwrite ``run``.
+
+        This method is supposed to return once everything is up and running.
+        If you have long-running tasks, start them with async.
+
+        Return a future which represents the Karabo event dispatcher.
+        Once this future is done, the entire device is considered dead, and
+        all other still running tasks should be cancelled as well."""
+        self.mainloop = async(self._ss.main(self))
         try:
             yield from wait_for(
                 self.call(self.deviceId, "slotPing", self.deviceId,
@@ -206,16 +220,14 @@ class SignalSlotable(Configurable):
         except TimeoutError:
             pass
         self.run()
-        self.__randPing = 0  # Start answering on slotPing with argument rand=0.
+        self.__randPing = 0  # Start answering on slotPing with argument rand=0
         self._ss.emit('call', {'*': ['slotInstanceNew']},
                       self.deviceId, self.info)
         async(self.heartbeats())
 
     @coslot
     def slotKillDevice(self):
-        for t in self._tasks:
-            t.cancel()
-        return True
+        self.mainloop.cancel()
 
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
