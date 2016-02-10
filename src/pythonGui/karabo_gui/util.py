@@ -1,31 +1,6 @@
-import weakref
 from uuid import uuid4
 
 from PyQt4.QtGui import QDialog, QFileDialog
-
-
-class Weak(object):
-    """ This declares a member variable of a class to be weak
-
-    use as follows:
-
-        class Spam(object):
-            ham = Weak()
-
-            def __init__(self, ham):
-                self.ham = ham # use like a normal variable
-
-    to define a weak variable ham.
-    """
-
-    def __get__(self, instance, owner):
-        return instance.__dict__[self]()
-
-    def __set__(self, instance, value):
-        instance.__dict__[self] = weakref.ref(value)
-
-    def __delete__(self, instance):
-        del instance.__dict__[self]
 
 
 class SignalBlocker(object):
