@@ -23,6 +23,10 @@ ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 OK_COLOR = (225, 242, 225, 128)
 ERROR_COLOR = (255, 155, 155, 128)
 
+# Scene dimensions
+SCENE_MIN_WIDTH = 1024
+SCENE_MIN_HEIGHT = 768
+
 # Parameter item properties
 INTERNAL_KEY           = Qt.UserRole
 VALUE_TYPE             = Qt.UserRole + 1
