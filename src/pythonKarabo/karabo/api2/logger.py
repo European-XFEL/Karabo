@@ -1,8 +1,8 @@
 from bisect import bisect
+from contextlib import contextmanager
 from datetime import datetime
 import logging
 import traceback
-import weakref
 
 from .hash import Hash, StringList
 from .schema import Configurable, ListOfNodes
@@ -11,19 +11,10 @@ from .schema import Configurable, ListOfNodes
 class _Filter(logging.Filter):
     def __init__(self, parent):
         super().__init__()
-        self.parent = weakref.ref(parent, self.remove)
-        self.added = []
+        self.parent = parent
 
     def filter(self, *args, **kwargs):
-        return self.parent().filter(*args, **kwargs)
-
-    def remove(self, parent):
-        for a in self.added:
-            a.removeFilter(self)
-
-    def addTo(self, what):
-        self.added.append(what)
-        what.addFilter(self)
+        return self.parent.filter(*args, **kwargs)
 
 
 class Filter(Configurable):
@@ -43,26 +34,17 @@ class Handler(Configurable):
         super().__init__(config, parent, key)
         self.handler = _Handler(self)
         for f in self.filters:
-            f.filter.addTo(self.handler)
+            self.handler.addFilter(f.filter)
         self.parent = parent
 
 
 class _Handler(logging.Handler):
     def __init__(self, parent):
         super().__init__()
-        self.parent = weakref.ref(parent, self.remove)
-        self.added = []
+        self.parent = parent
 
     def emit(self, *args, **kwargs):
-        return self.parent().emit(*args, **kwargs)
-
-    def remove(self, parent):
-        for a in self.added:
-            a.removeHandler(self)
-
-    def addTo(self, what):
-        self.added.append(what)
-        what.addHandler(self)
+        return self.parent.emit(*args, **kwargs)
 
 
 class NetworkHandler(Handler):
@@ -100,13 +82,26 @@ class Logger(Configurable):
         description="Global filters for logging",
         displayedName="Filters", defaultValue=StringList())
 
+    @contextmanager
     def setBroker(self, broker):
+        """Once a device is up and running, set the broker
+
+        This method adds the log handlers and filters defined for a device
+        to the Python logging loggers. This can only be done once we
+        have a connection to the broker, and should stop once we loose it."""
         self.logger = logging.getLogger(broker.deviceId)
-        self.broker = broker
         for h in self.handlers:
-            h.handler.addTo(self.logger)
+            self.logger.addHandler(h.handler)
         for f in self.filters:
-            f.filter.addTo(self.logger)
+            self.logger.addFilter(f.filter)
+        self.broker = broker
+        try:
+            yield
+        finally:
+            for h in self.handlers:
+                self.logger.removeHandler(h.handler)
+            for f in self.filters:
+                self.logger.removeFilter(f.filter)
 
     def INFO(self, what):
         """ legacy """
