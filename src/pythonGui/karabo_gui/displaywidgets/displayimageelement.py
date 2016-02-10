@@ -20,15 +20,16 @@
 
 __all__ = ["DisplayImageElement"]
 
-from schema import ImageNode
-from karabo_gui.widget import DisplayWidget
-
-from karabo.api_2 import Type
-
+import numpy as np
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
 
-import numpy as np
+from schema import ImageNode
+from karabo.api_2 import Type
+from karabo_gui.const import OK_COLOR, ERROR_COLOR
+from karabo_gui.util import generateObjectName
+from karabo_gui.widget import DisplayWidget
+
 
 class DisplayImageElement(DisplayWidget):
     category = ImageNode
@@ -46,21 +47,22 @@ class DisplayImageElement(DisplayWidget):
         self.image.setMaximumHeight(125)
         self.image.setMinimumWidth(125)
         self.image.setWordWrap(True)
+
+        objectName = generateObjectName(self)
+        self._styleSheet = ("QLabel#{}".format(objectName) +
+                            " {{ background-color : rgba{}; }}")
+        self.image.setObjectName(objectName)
         self.setErrorState(False)
         self.value = None
-
 
     @property
     def widget(self):
         return self.image
 
-
     def setErrorState(self, isError):
-        if isError is True:
-            self.image.setStyleSheet("QLabel { background-color : rgba(255,155,155,128); }") # light red
-        else:
-            self.image.setStyleSheet("QLabel { background-color : rgba(225,242,225,128); }") # light green
-
+        color = ERROR_COLOR if isError else OK_COLOR
+        ss = self._styleSheet.format( color)
+        self.image.setStyleSheet(ss)
 
     def valueChanged(self, box, value, timestamp=None):
         if self.value is not None or value is self.value:
