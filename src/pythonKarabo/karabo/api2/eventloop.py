@@ -285,6 +285,15 @@ class EventLoop(SelectorEventLoop):
         return Broker(self, deviceId, classId)
 
     def create_task(self, coro, instance=None):
+        """Create a new task, running coroutine *coro*
+
+        As an extension to the standard library method, in Karabo we track
+        which device started a task, so that we can cancel them once the
+        device goes away.
+
+        *instance* is the device this task should belong to, it defaults
+        to the caller's device if existent. Note that a device first
+        has to be started with ``startInstance`` before this will work."""
         task = super().create_task(coro)
         try:
             if instance is None:
@@ -293,6 +302,8 @@ class EventLoop(SelectorEventLoop):
             task.add_done_callback(instance._tasks.remove)
             task.instance = weakref.ref(instance, lambda _: task.cancel())
         except (AttributeError, TypeError):
+            # create_task has been called from outside a Karabo context
+            # this happens in tests and while bootstrapping.
             pass
         return task
 
