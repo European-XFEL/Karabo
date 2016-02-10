@@ -27,7 +27,7 @@ from numpy import log10, ndarray, number
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLabel
 
-from karabo_gui.const import LIGHT_GREEN, LIGHT_RED
+from karabo_gui.const import OK_COLOR, ERROR_COLOR
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 from karabo.api_2 import (Double, Float, String, Simple, Type, HashType,
@@ -36,10 +36,10 @@ from karabo.api_2 import (Double, Float, String, Simple, Type, HashType,
 
 class ErrorState(Enum):
     """this is the state as shown by the background color"""
-    fine = LIGHT_GREEN
+    fine = OK_COLOR
     warn = (255, 255, 125, 128)
     alarm = (255, 125, 125, 128)
-    error = LIGHT_RED
+    error = ERROR_COLOR
 
 
 class DisplayLabel(DisplayWidget):
