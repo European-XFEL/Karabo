@@ -8,17 +8,14 @@ from PyQt4.QtGui import (
     QAction, QColor, QColorDialog, QDialog, QInputDialog, QLabel
 )
 
-from karabo_gui.const import ns_karabo
+from karabo_gui.const import ns_karabo, OK_COLOR, ERROR_COLOR
+from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 from karabo.api_2 import String
 
-LABEL_COLOR_STYLESHEET = "QLabel#stateColor {{ background-color : rgba{}; }}"
 BUTTON_COLOR_STYLESHEET = """
 QPushButton#stateColor {{ background-color : rgba{}; border: none; }}
 """
-OBJECT_NAME = "stateColor"
-ERROR_COLOR = (255, 155, 155, 128)
-DEFAULT_COLOR = (225, 242, 225, 128)
 
 
 class StateColorDialog(QDialog):
@@ -78,20 +75,24 @@ class DisplayStateColor(DisplayWidget):
         self.value = None
 
         self.widget = QLabel(parent)
-        self.widget.setObjectName(OBJECT_NAME)
         self.widget.setAutoFillBackground(True)
         self.widget.setAlignment(Qt.AlignCenter)
         self.widget.setMinimumWidth(160)
         self.widget.setMinimumHeight(32)
         self.widget.setWordWrap(True)
 
+        objectName = generateObjectName(self)
+        self._styleSheet = ("QLabel#{}".format(objectName) +
+                            " {{ background-color : rgba{}; }}")
+        self.widget.setObjectName(objectName)
+
         action = QAction("Edit State Colors...", self.widget)
         action.triggered.connect(self.onChangeColors)
         self.widget.addAction(action)
 
     def setErrorState(self, isError):
-        bgColor = ERROR_COLOR if isError else DEFAULT_COLOR
-        self._setColor(bgColor)
+        color = ERROR_COLOR if isError else OK_COLOR
+        self._setColor(color)
 
     def valueChanged(self, box, value, timestamp=None):
         if not isinstance(box.descriptor, String):
@@ -100,7 +101,7 @@ class DisplayStateColor(DisplayWidget):
         if value is None:
             return
 
-        bgColor = self._stateMap.get(value.lower(), DEFAULT_COLOR)
+        bgColor = self._stateMap.get(value.lower(), OK_COLOR)
         self._setColor(bgColor)
         self.value = value
 
@@ -143,5 +144,5 @@ class DisplayStateColor(DisplayWidget):
             self.valueChanged(box, box.value)
 
     def _setColor(self, color):
-        styleSheet = LABEL_COLOR_STYLESHEET.format(color)
-        self.widget.setStyleSheet(styleSheet)
+        ss = self._styleSheet.format(color)
+        self.widget.setStyleSheet(ss)

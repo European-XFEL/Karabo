@@ -20,28 +20,26 @@
 
 __all__ = ["DisplayLabel"]
 
-
-from karabo_gui.widget import DisplayWidget
-from karabo.api_2 import (Double, Float, Hash, String, Simple, Type, HashType,
-                          VectorDouble, VectorFloat, VectorHash)
-
 from enum import Enum
 from numbers import Number
-import decimal
-import re
 
+from numpy import log10, ndarray, number
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLabel
 
-from numpy import log10, ndarray, number
+from karabo_gui.const import OK_COLOR, ERROR_COLOR
+from karabo_gui.util import generateObjectName
+from karabo_gui.widget import DisplayWidget
+from karabo.api_2 import (Double, Float, String, Simple, Type, HashType,
+                          VectorDouble, VectorFloat, VectorHash)
 
 
 class ErrorState(Enum):
     """this is the state as shown by the background color"""
-    fine = "225,242,225,128"
-    warn = "255,255,125,128"
-    alarm = "255,125,125,128"
-    error = "225,155,155,128"
+    fine = OK_COLOR
+    warn = (255, 255, 125, 128)
+    alarm = (255, 125, 125, 128)
+    error = ERROR_COLOR
 
 
 class DisplayLabel(DisplayWidget):
@@ -59,6 +57,11 @@ class DisplayLabel(DisplayWidget):
         self.widget.setMinimumWidth(160)
         self.widget.setMinimumHeight(32)
         self.widget.setWordWrap(True)
+
+        objectName = generateObjectName(self)
+        self._styleSheet = ("QLabel#{}".format(objectName) +
+                            " {{ background-color : rgba{}; }}")
+        self.widget.setObjectName(objectName)
         self.inError = False
         self.errorState = ErrorState.fine
 
@@ -75,8 +78,8 @@ class DisplayLabel(DisplayWidget):
         else:
             state = self.errorState
 
-        self.widget.setStyleSheet("QLabel {{ background-color : rgba({}); }}".
-                                  format(state.value))
+        ss = self._styleSheet.format(state.value)
+        self.widget.setStyleSheet(ss)
 
     def __checkAlarms(self, desc, value):
         if ((desc.alarmLow is not None and value < desc.alarmLow) or
