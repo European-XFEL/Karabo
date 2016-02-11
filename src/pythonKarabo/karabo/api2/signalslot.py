@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from asyncio import (async, CancelledError, coroutine, Future, get_event_loop,
                      iscoroutinefunction, sleep, TimeoutError, wait, wait_for)
+import logging
 import random
 import time
 import weakref
@@ -33,8 +34,9 @@ def coslot(f):
         except CancelledError:
             raise
         except Exception:
-            device.logger.exception('exception in slot "{}" of device "{}"'.
-                                    format(f.__qualname__, device.deviceId))
+            logger = logging.getLogger(device.deviceId)
+            logger.exception('exception in slot "{}" of device "{}"'.
+                             format(f.__qualname__, device.deviceId))
 
     def outer(device, message, args):
         async(inner(device, message, args))
@@ -295,14 +297,9 @@ class SignalSlotable(Configurable):
     def onException(self, slot, exception, traceback):
         pass
 
-    @coroutine
-    def _logException(self, coro):
-        try:
-            yield from coro
-        except:
-            self.logger.exception("error in error handler")
-
     def _onException(self, slot, exc, tb):
+        logger = logging.getLogger(self.deviceId)
+
         if isinstance(exc, CancelledError):
             m = self.onCancelled
             args = slot,
@@ -310,15 +307,21 @@ class SignalSlotable(Configurable):
             m = self.onException
             args = slot, exc, tb
             if slot is None:
-                self.logger.error('error in device "%s"', self.deviceId,
-                                  exc_info=(type(exc), exc, tb))
+                logger.error('error in device "%s"', self.deviceId,
+                             exc_info=(type(exc), exc, tb))
             else:
-                self.logger.error('error in slot "%s" of device "%s"',
-                                  slot.key, self.deviceId,
-                                  exc_info=(type(exc), exc, tb))
+                logger.error('error in slot "%s" of device "%s"',
+                             slot.key, self.deviceId,
+                             exc_info=(type(exc), exc, tb))
+
+        @coroutine
+        def logException(coro):
+            try:
+                yield from coro
+            except:
+                logger.exception("error in error handler")
 
         if iscoroutinefunction(m):
-            async(self._logException(m(*args)))
+            async(logException(m(*args)))
         else:
-            async(self._logException(
-                get_event_loop().start_thread(m, *args)))
+            async(logException(get_event_loop().start_thread(m, *args)))
