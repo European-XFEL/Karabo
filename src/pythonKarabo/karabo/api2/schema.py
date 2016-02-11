@@ -2,10 +2,12 @@ from asyncio import coroutine, gather
 from collections import OrderedDict
 from enum import Enum
 from functools import partial
+import weakref
 
 from .enums import AccessLevel, AccessMode, Assignment
 from .hash import Attribute, Descriptor, Hash, Schema
 from .registry import Registry
+from .weak import Weak
 
 
 class MetaConfigurable(type(Registry)):
@@ -28,6 +30,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             eggs = String()
     """
     _subclasses = { }
+    __parent = Weak()
     schema = None
 
     def __init__(self, configuration={}, parent=None, key=None):
@@ -46,8 +49,8 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         this class you only need to have parent and key as a parameter
         if your class should be usable as a component in another class.
         """
-        self._parent = parent
-        self._key = key
+        self.__parent = parent
+        self.__key = key
         for k in self._allattrs:
             t = getattr(type(self), k)
             if k in configuration:
@@ -115,13 +118,14 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         return ListOfNodes(cls, **kwargs)
 
     def setValue(self, descriptor, value):
-        if self._parent is not None:
-            self._parent.setChildValue(self._key + "." + descriptor.key, value)
+        if self.__parent is not None:
+            self.__parent.setChildValue(
+                self.__key + "." + descriptor.key, value)
         self.__dict__[descriptor.key] = value
 
     def setChildValue(self, key, value):
-        if self._parent is not None:
-            self._parent.setChildValue(self._key + "." + key, value)
+        if self.__parent is not None:
+            self.__parent.setChildValue(self.__key + "." + key, value)
 
     def run(self):  # endpoint for multiple inheritance
         self.running = True
