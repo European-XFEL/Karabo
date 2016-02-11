@@ -103,6 +103,11 @@ class Local(Device):
 
     @Slot()
     @coroutine
+    def error_in_error(self):
+        raise RuntimeError
+
+    @Slot()
+    @coroutine
     def task_error(self):
         async(self.error())
 
@@ -111,8 +116,11 @@ class Local(Device):
         self.exc_slot = slot
         self.exception = exc
         self.traceback = tb
-        with (yield from getDevice("remote")) as d:
-            yield from d.doit()
+        if slot is Local.error_in_error:
+            raise RuntimeError
+        else:
+            with (yield from getDevice("remote")) as d:
+                yield from d.doit()
 
 
 class Tests(TestCase):
@@ -366,6 +374,23 @@ class Tests(TestCase):
         self.assertTrue(remote.done)
         remote.done = False
         self.assertIs(local.exc_slot, Local.error)
+        self.assertIsInstance(local.exception, RuntimeError)
+        local.traceback.tb_lasti  # stupid check whether that is a traceback
+        del local.exc_slot
+        del local.exception
+        del local.traceback
+
+    @async_tst
+    def test_error_in_error(self):
+        """test what happens if an error happens in an error method"""
+        remote.done = False
+        with self.assertLogs(logger="local", level="ERROR") as logs:
+            with (yield from getDevice("local")) as d:
+                yield from d.error_in_error()
+            yield from sleep(0.1)
+        self.assertEqual(logs.records[-1].msg, "error in error handler")
+        self.assertFalse(remote.done)
+        self.assertIs(local.exc_slot, Local.error_in_error)
         self.assertIsInstance(local.exception, RuntimeError)
         local.traceback.tb_lasti  # stupid check whether that is a traceback
         del local.exc_slot
