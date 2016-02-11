@@ -987,7 +987,8 @@ class Lower(SimpleAction):
 
 class Scene(QSvgWidget):
     signalSceneItemSelected = pyqtSignal(object)
-    
+    signalSceneLinkTriggered = pyqtSignal(str)
+
     def __init__(self, project, name, parent=None, designMode=True):
         super(Scene, self).__init__(parent)
 
