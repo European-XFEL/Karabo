@@ -1,9 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 
-from asyncio import (AbstractEventLoop, CancelledError, coroutine, Future,
-                     get_event_loop, Queue, set_event_loop, SelectorEventLoop,
-                     Task, TimeoutError)
+from asyncio import (AbstractEventLoop, CancelledError, coroutine, gather,
+                     Future, get_event_loop, Queue, set_event_loop,
+                     SelectorEventLoop, Task, TimeoutError)
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import ExitStack
 import getpass
 from itertools import count
 import os
@@ -29,6 +30,7 @@ class Broker:
         self.deviceId = deviceId
         self.classId = classId
         self.repliers = {}
+        self.tasks = set()
 
     def send(self, p, args):
         hash = Hash()
@@ -123,7 +125,7 @@ class Broker:
             self.session, self.destination,
             "slotInstanceIds LIKE '%|{0.deviceId}|%' "
             "OR slotInstanceIds LIKE '%|*|%'".format(self), False)
-        info = device.info
+        self.info = device.info
         try:
             while True:
                 device = weakref.ref(device)
@@ -139,7 +141,7 @@ class Broker:
                     device = device()
                     if device is None:
                         return
-                info = device.info
+                self.info = device.info
                 try:
                     slots, params = self.decodeMessage(message)
                 except:
@@ -161,8 +163,26 @@ class Broker:
                         "internal error while executing slot")
                 slot = slots = None
         finally:
-            self.emit('call', {'*': ['slotInstanceGone']}, self.deviceId, info)
             consumer.close()
+
+    @coroutine
+    def main(self, device):
+        """This is the main loop of a device
+
+        A device is running if this coroutine is still running. If you
+        want to stop a device, cancel this coroutine. """
+        with ExitStack() as self.exitStack:
+            device = weakref.ref(device)
+            try:
+                yield from self.consume(device())
+            finally:
+                self.emit('call', {'*': ['slotInstanceGone']},
+                                   self.deviceId, self.info)
+                me = Task.current_task()
+                tasks = [t for t in self.tasks if t is not me]
+                for t in tasks:
+                    t.cancel()
+                yield from gather(*tasks, return_exceptions=True)
 
     def decodeMessage(self, message):
         hash = Hash.decode(message.data, "Bin")
@@ -298,8 +318,8 @@ class EventLoop(SelectorEventLoop):
         try:
             if instance is None:
                 instance = get_event_loop().instance()
-            instance._tasks.add(task)
-            task.add_done_callback(instance._tasks.remove)
+            instance._ss.tasks.add(task)
+            task.add_done_callback(instance._ss.tasks.remove)
             task.instance = weakref.ref(instance, lambda _: task.cancel())
         except (AttributeError, TypeError):
             # create_task has been called from outside a Karabo context
