@@ -225,6 +225,7 @@ class Tests(TestCase):
         t = time.time()
         sleep(6)
         self.assertGreater(time.time() - t, 6)
+    test_sleep.slow = 1
 
     @async_tst
     def test_print(self):
