@@ -199,9 +199,9 @@ class MainWindow(QMainWindow):
         self.configurationTab.addDockableTab(self.configurationPanel, "Configurator")
         self.signalGlobalAccessLevelChanged.connect(self.configurationPanel.onGlobalAccessLevelChanged)
         
-        mainSplitter.setStretchFactor(0,1)
-        mainSplitter.setStretchFactor(1,2)
-        mainSplitter.setStretchFactor(2,3)
+        mainSplitter.setStretchFactor(0,2)
+        mainSplitter.setStretchFactor(1,6)
+        mainSplitter.setStretchFactor(2,1)
 
         self.setCentralWidget(mainSplitter)
 
