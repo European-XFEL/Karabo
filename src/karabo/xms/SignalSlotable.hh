@@ -662,12 +662,6 @@ KARABO_SLOT0(__VA_ARGS__) \
              */
             void stopEventLoop();
 
-            // TODO make this functions private and allow SLOT to access them
-            void setSenderInfo(const karabo::util::Hash& senderInfo);
-
-            // TODO make this functions private and allow SLOT to access them
-            const karabo::util::Hash& getSenderInfo() const;
-
             /**
              * Access to the identification of the current instance using signals and slots
              * @return instanceId
