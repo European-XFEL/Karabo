@@ -449,6 +449,7 @@ namespace karathon {
     void SignalSlotableWrap::registerSlotPy(const bp::object& slotFunction) {
 
         std::string functionName = bp::extract<std::string>((slotFunction.attr("__name__")));
+        boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
         SlotInstances::const_iterator it = m_slotInstances.find(functionName);
         if (it != m_slotInstances.end()) { // Already registered
             (boost::static_pointer_cast<SlotWrap >(it->second))->registerSlotFunction(slotFunction);
