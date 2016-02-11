@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 import getpass
 from itertools import count
+import logging
 import os
 import queue
 import socket
@@ -31,6 +32,7 @@ class Broker:
         self.classId = classId
         self.repliers = {}
         self.tasks = set()
+        self.logger = logging.getLogger(deviceId)
 
     def send(self, p, args):
         hash = Hash()
@@ -145,7 +147,7 @@ class Broker:
                 try:
                     slots, params = self.decodeMessage(message)
                 except:
-                    device.logger.exception("malformated message")
+                    self.logger.exception("malformated message")
                     continue
                 try:
                     slots = [getattr(device, s)
@@ -153,13 +155,13 @@ class Broker:
                             [getattr(device, s) for s in slots.get("*", [])
                              if hasattr(device, s)]
                 except AttributeError:
-                    device.logger.exception("slot does not exist")
+                    self.logger.exception("slot does not exist")
                     continue
                 try:
                     for slot in slots:
                         slot.slot(device, message, params)
                 except:
-                    device.logger.exception(
+                    self.logger.exception(
                         "internal error while executing slot")
                 slot = slots = None
         finally:
