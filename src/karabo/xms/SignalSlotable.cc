@@ -970,7 +970,7 @@ namespace karabo {
 
 
         const SignalSlotable::SlotInstancePointer & SignalSlotable::getSenderInfo(const std::string & slotFunction) {
-            // GF: Need to use m_signalSlotInstancesMutex ?
+            boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             SlotInstancesConstIt it = m_slotInstances.find(slotFunction);
             if (it == m_slotInstances.end()) throw KARABO_SIGNALSLOT_EXCEPTION("No slot-object could be found for slotFunction \"" + slotFunction + "\"");
             return it->second;
@@ -980,12 +980,13 @@ namespace karabo {
         void SignalSlotable::slotGetAvailableFunctions(const std::string & type) {
             std::vector<string> functions;
             if (type == "signals") {
+                boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
                 for (SignalInstancesConstIt it = m_signalInstances.begin(); it != m_signalInstances.end(); ++it) {
                     const string& function = it->first;
                     functions.push_back(function);
                 }
             } else if (type == "slots") {
-                // GF: Need to use m_signalSlotInstancesMutex ?
+                boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
                 for (SlotInstancesConstIt it = m_slotInstances.begin(); it != m_slotInstances.end(); ++it) {
                     const string& function = it->first;
                     // Filter out service slots // TODO finally update to last set of those
@@ -1251,7 +1252,7 @@ namespace karabo {
 
         SignalSlotable::SlotInstancePointer SignalSlotable::findSlot(const std::string &funcName) {
             SlotInstancePointer ret;
-            // FIXME: Need to use m_signalSlotInstancesMutex?
+            boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             SlotInstances::const_iterator it = m_slotInstances.find(funcName);
             if (it != m_slotInstances.end()) {
                 ret = it->second;
@@ -1261,6 +1262,7 @@ namespace karabo {
 
 
         void SignalSlotable::registerNewSlot(const std::string &funcName, SlotInstancePointer instance) {
+            boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             SlotInstancePointer& newinstance = m_slotInstances[funcName];
             if (newinstance) {
                 throw KARABO_SIGNALSLOT_EXCEPTION("The slot \"" + funcName + "\" has been registered with two different signatures");
@@ -1381,6 +1383,7 @@ namespace karabo {
 
 
         void SignalSlotable::slotConnectToSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotFunction, const int& connectionType) {
+            boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             if (m_slotInstances.find(slotFunction) != m_slotInstances.end()) {
 
                 //                if (connectionType != NO_TRACK && signalInstanceId != m_instanceId) {
@@ -1702,6 +1705,7 @@ namespace karabo {
         }
 
         SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction, int priority, int messageTimeToLive) {
+            // boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             if (m_signalInstances.find(signalFunction) != m_signalInstances.end()) {
                 SignalInstancePointer s;
                 return s;
