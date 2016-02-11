@@ -1705,10 +1705,12 @@ namespace karabo {
         }
 
         SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction, int priority, int messageTimeToLive) {
-            // boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-            if (m_signalInstances.find(signalFunction) != m_signalInstances.end()) {
-                SignalInstancePointer s;
-                return s;
+            {
+                boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
+                if (m_signalInstances.find(signalFunction) != m_signalInstances.end()) {
+                    SignalInstancePointer s;
+                    return s;
+                }
             }
             SignalInstancePointer s(new Signal(this, m_producerChannel, m_instanceId, signalFunction, priority, messageTimeToLive));
             storeSignal(signalFunction, s);
