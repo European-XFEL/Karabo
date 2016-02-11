@@ -18,7 +18,7 @@ from karabo_gui.sceneitems.workflowitems import (Item, WorkflowConnection, Workf
                                       WorkflowGroupItem)
 
 from karabo_gui.registry import Loadable, Registry
-from karabo_gui.const import ns_karabo, ns_svg
+from karabo_gui.const import ns_karabo, ns_svg, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
 import karabo_gui.pathparser as pathparser
 import karabo_gui.icons as icons
 import manager
@@ -30,8 +30,8 @@ from PyQt4.QtCore import (pyqtSignal, Qt, QByteArray, QEvent, QSize, QRect, QLin
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
                          QDialog, QDialogButtonBox, QFrame, QLabel, QLayout,
                          QKeySequence, QMenu,QMessageBox, QPalette, QPainter,
-                         QPen, QStackedLayout,QStandardItemModel, QStandardItem,
-                         QTreeView, QVBoxLayout, QWidget)
+                         QPen, QSizePolicy, QStackedLayout,QStandardItemModel,
+                         QStandardItem, QTreeView, QVBoxLayout, QWidget)
 
 from PyQt4.QtSvg import QSvgWidget
 
@@ -1018,11 +1018,11 @@ class Scene(QSvgWidget):
         self.tabVisible = False
 
         self.setFocusPolicy(Qt.StrongFocus)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setAcceptDrops(True)
         self.setAttribute(Qt.WA_MouseTracking)
         self.setBackgroundRole(QPalette.Window)
-        self.resize(1024, 768)
-
+        self.resize(SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 
     def setModified(self):
         """
@@ -1144,7 +1144,8 @@ class Scene(QSvgWidget):
         self.clean()
         FixedLayout.load(root, widget=self.inner)
         self.setTabVisible(visible)
-        self.resize(int(root.get('width', 1024)), int(root.get('height', 768)))
+        self.resize(max(int(root.get('width', 0)), SCENE_MIN_WIDTH),
+                    max(int(root.get('height', 0)), SCENE_MIN_HEIGHT))
         self.layout().setGeometry(self.geometry())
         self.ilayout.setGeometry(self.inner.geometry())
         self.designMode = True
@@ -1165,10 +1166,10 @@ class Scene(QSvgWidget):
         tree = ElementTree.ElementTree(root)
         e = self.ilayout.element()
         root.extend(ee for ee in e)
-        root.set('width', str(self.width()))
-        root.set('height', str(self.height()))
+        width, height = self._getMinimumSvgBounds(tree)
+        root.set('width', str(width))
+        root.set('height', str(height))
         return ElementTree.tostring(root)
-
 
     def mimeData(self):
         e = self.ilayout.element(selected=True)
@@ -1569,3 +1570,15 @@ class Scene(QSvgWidget):
         self.clear_selection()
         self.update()
 
+    def _getMinimumSvgBounds(self, tree):
+        width, height = 0, 0
+        for item in self.ilayout:
+            geom = item.geometry()
+            width = max(geom.right(), width)
+            height = max(geom.bottom(), height)
+
+        for elem in tree.iter():
+            width = max(int(elem.get('width', 0)), width)
+            height = max(int(elem.get('height', 0)), height)
+
+        return width, height
