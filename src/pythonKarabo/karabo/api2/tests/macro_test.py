@@ -52,12 +52,6 @@ class Remote(Device):
         with (yield from getDevice("local")) as l:
             yield from l.remotecalls()
 
-    @Slot()
-    @coroutine
-    def error(self):
-        with (yield from getDevice("local")) as d:
-            yield from d.error()
-
     generic = Superslot()
 
 
@@ -75,12 +69,19 @@ class Local(Macro):
     def error(self):
         raise RuntimeError
 
+    @Slot()
+    def error_in_error(self):
+        raise RuntimeError
+
     def onException(self, slot, exc, tb):
         self.exc_slot = slot
         self.exception = exc
         self.traceback = tb
-        with getDevice("remote") as d:
-            d.doit()
+        if self.exc_slot is Local.error_in_error:
+            raise RuntimeError
+        else:
+            with getDevice("remote") as d:
+                d.doit()
 
     def onCancelled(self, slot):
         self.cancelled_slot = slot
@@ -249,11 +250,29 @@ class Tests(TestCase):
     def test_error(self):
         """test that errors are properly logged and error functions called"""
         remote.done = False
-        with self.assertLogs(logger="local", level="ERROR"):
-            yield from remote.error()
-            yield from sleep(0.2)
+        with self.assertLogs(logger="local", level="ERROR"), \
+                (yield from getDevice("local")) as d:
+            yield from d.error()
+            yield from sleep(0.1)
         self.assertTrue(remote.done)
         self.assertIs(local.exc_slot, Local.error)
+        self.assertIsInstance(local.exception, RuntimeError)
+        local.traceback.tb_lasti  # stupid check whether that is a traceback
+        del local.exc_slot
+        del local.exception
+        del local.traceback
+
+    @async_tst
+    def test_error_in_error(self):
+        """test that errors in error handlers are properly logged"""
+        remote.done = False
+        with self.assertLogs(logger="local", level="ERROR") as logs, \
+                (yield from getDevice("local")) as d:
+            yield from d.error_in_error()
+            yield from sleep(0.1)
+        self.assertFalse(remote.done)
+        self.assertEqual(logs.records[-1].msg, "error in error handler")
+        self.assertIs(local.exc_slot, Local.error_in_error)
         self.assertIsInstance(local.exception, RuntimeError)
         local.traceback.tb_lasti  # stupid check whether that is a traceback
         del local.exc_slot
