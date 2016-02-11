@@ -209,6 +209,8 @@
       <itemPath>../../../src/karabo/net/AbstractIOService.hh</itemPath>
       <itemPath>../../../src/karabo/net/IOService.hh</itemPath>
       <itemPath>../../../src/karabo/net/Queues.hh</itemPath>
+      <itemPath>../../../src/karabo/net/utils.cc</itemPath>
+      <itemPath>../../../src/karabo/net/utils.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f3" displayName="pugiXml" projectFiles="true">
       <itemPath>../../../src/karabo/pugiXml/pugiconfig.hpp</itemPath>
@@ -1281,6 +1283,10 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/utils.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/utils.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/pugiXml/pugiconfig.hpp"
             ex="false"
@@ -3207,6 +3213,10 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/utils.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/utils.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/pugiXml/pugiconfig.hpp"
             ex="false"
