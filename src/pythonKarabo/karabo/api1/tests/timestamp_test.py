@@ -149,12 +149,13 @@ class  Timestamp_TestCase(unittest.TestCase):
 
         try:
             hash = Hash()
-            # Cannot use Hash("seconds", seconds,"fractions", fractionsAtto),
-            # but have to set explicitely with type, otherwise it is int32...
-            hash.setAs("seconds", seconds, Types.UINT64)
-            hash.setAs("fractions", fractionsAtto, Types.UINT64)
+            # Cannot use Hash("seconds", 987, "fractions", 123),
+            # but have to set explicitely with type, otherwise Hash uses int32...
+            hash.setAs("seconds", 987, Types.UINT64)
+            hash.setAs("fractions", 123, Types.UINT64)
             dur2 = TimeDuration(hash)
-            self.assertEqual(dur1 - dur2, durZero)
+            dur3 = TimeDuration(987, 123)
+            self.assertEqual(dur3 - dur2, durZero)
         except Exception as e:
             self.fail(" testing construction from hash: " + str(e))
 
