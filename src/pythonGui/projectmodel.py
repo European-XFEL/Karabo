@@ -62,6 +62,9 @@ class ProjectModel(QStandardItemModel):
         # List stores projects
         self.projects = []
 
+        # The set of scenes which have been opened.
+        self._openedScenes = set()
+
         # Dialog to add and change a device
         self.deviceDialog = None
         
@@ -829,8 +832,8 @@ class ProjectModel(QStandardItemModel):
         project list.
         """
         for scene in project.scenes:
-            self.signalRemoveScene.emit(scene)
-        
+            self.closeScene(scene)
+
         for m in project.macros.values():
             self.signalRemoveMacro.emit(m)
         
@@ -1158,6 +1161,11 @@ class ProjectModel(QStandardItemModel):
         
         return scene
 
+    def closeScene(self, scene):
+        if scene in self._openedScenes:
+            self._openedScenes.remove(scene)
+            scene.signalSceneLinkTriggered.disconnect(self.openSceneLink)
+        self.signalRemoveScene.emit(scene)
 
     def duplicateScene(self, scene):
         dialog = DuplicateDialog(scene.filename[:-4])
@@ -1172,10 +1180,17 @@ class ProjectModel(QStandardItemModel):
         
         self.selectObject(newScene)
 
-
     def openScene(self, scene):
+        if scene not in self._openedScenes:
+            self._openedScenes.add(scene)
+            scene.signalSceneLinkTriggered.connect(self.openSceneLink)
+
         self.signalAddScene.emit(scene)
 
+    def openSceneLink(self, sceneName):
+        scene = self.project.getScene(sceneName)
+        if scene is not None:
+            self.openScene(scene)
 
     def editMacro(self, macro):
         if macro is None:
@@ -1564,7 +1579,7 @@ class ProjectModel(QStandardItemModel):
         project.remove(object)
         
         if isinstance(object, Scene):
-            self.signalRemoveScene.emit(object)
+            self.closeScene(object)
         
         if isinstance(object, Macro):
             self.signalRemoveMacro.emit(object)
