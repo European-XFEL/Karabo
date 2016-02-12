@@ -255,23 +255,30 @@ namespace karathon {
             return karabo::util::Types::BOOL;
         }
         if (PyLong_Check(obj.ptr())) {
-            try {
-                any = static_cast<int> (bp::extract<int>(obj));
-            } catch (...) {
-                try {
-                    any = static_cast<unsigned int> (bp::extract<unsigned int>(obj));
-                } catch (...) {
-                    try {
-                        any = static_cast<long long> (bp::extract<long long>(obj));
-                    } catch (...) {
-                        any = static_cast<unsigned long long> (bp::extract<unsigned long long>(obj));
-                        return karabo::util::Types::UINT64;
-                    }
-                    return karabo::util::Types::INT64;
+            int overflow = 0;
+            long longValue;
+            PY_LONG_LONG longLongValue;
+
+            longValue = PyLong_AsLongAndOverflow(obj.ptr(), &overflow);
+            if (overflow != 0) {
+                if (longValue < 0) {
+                    any = static_cast<int>(longValue);
+                    return karabo::util::Types::INT32;
                 }
-                return karabo::util::Types::UINT32;
+                else {
+                    any = static_cast<unsigned int>(longValue);
+                    return karabo::util::Types::UINT32;
+                }
             }
-            return karabo::util::Types::INT32;
+
+            longLongValue = PyLong_AsLongLongAndOverflow(obj.ptr(), &overflow);
+            if (longLongValue < 0) {
+                any = static_cast<long long>(longLongValue);
+                return karabo::util::Types::INT64;
+            }
+
+            any = static_cast<unsigned long long>(longLongValue);
+            return karabo::util::Types::UINT64;
         }
         if (PyFloat_Check(obj.ptr())) {
             double b = bp::extract<double>(obj);
