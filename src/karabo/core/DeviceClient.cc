@@ -983,6 +983,7 @@ namespace karabo {
                 p->connect(instanceId, "signalStateChanged", "", "_slotChanged");
                 p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
             } else if (m_instanceUsage[instanceId] >= CONNECTION_KEEP_ALIVE) { // Died before
+                // Should not be reached since if died instance is also removed from m_instanceUsage.
                 p->connect(instanceId, "signalChanged", "", "_slotChanged");
                 p->connect(instanceId, "signalStateChanged", "", "_slotChanged");
                 p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
@@ -1167,39 +1168,55 @@ if (nodeData) {\
                 KARABO_LOG_FRAMEWORK_INFO << "Fail to reply because broker connection was expired.";
                 return;
             }
-            m_signalSlotable.lock()->reply(getSystemTopology());
+            p->reply(getSystemTopology());
         }
 
 
         void DeviceClient::age() {
             try {
                 while (m_getOlder) { // Loop forever
-                    for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); ++it) { // Loop connected instances
+                    {
+                        boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+                        // Loop connected instances
+                        for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); /*NOT ++it*/) {
 
-                        if (isImmortal(it->first)) continue; // Immortal, registered monitors will have this status
+                            if (isImmortal(it->first)) { // Immortal, registered monitors will have this status
+                                ++it; // since no increment in for-construct above...
+                                continue;
+                            }
 
-                        it->second++; // Others just age
-                        if (it->second == CONNECTION_KEEP_ALIVE) { // Too old
-                            //cout << "Instance " << it->first << " got too old. It will die a natural death." << endl;
-                            {
+                            it->second++; // Others just age
+                            if (it->second >= CONNECTION_KEEP_ALIVE) { // Too old
                                 karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
                                 if (!p) break;
                                 p->disconnect(it->first, "signalChanged", "", "_slotChanged", false);
+                                p->disconnect(it->first, "signalStateChanged", "", "_slotChanged", false);
                                 p->disconnect(it->first, "signalSchemaUpdated", "", "_slotSchemaUpdated", false);
+                                const std::string path("device." + it->first + ".configuration");
+                                // erase invalidates 'it', so use post-increment
+                                m_instanceUsage.erase(it++); // other iterators stay valid
+                                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                                m_runtimeSystemDescription.erase(path);
+                            } else {
+                                ++it;
                             }
-                            std::string path("device." + it->first + ".configuration");
-                            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                            if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
                         }
                     }
                     boost::this_thread::sleep(boost::posix_time::seconds(1));
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e;
+                // Aging is essential, so go on. Wait a little in case of repeating error conditions.
+                boost::this_thread::sleep(boost::posix_time::seconds(5));
+                this->age();
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered system exception: " << e.what();
+                boost::this_thread::sleep(boost::posix_time::seconds(5));
+                this->age();
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in aging thread";
+                boost::this_thread::sleep(boost::posix_time::seconds(5));
+                this->age();
             }
         }
 
