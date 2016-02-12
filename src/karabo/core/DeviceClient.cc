@@ -11,6 +11,7 @@
 #include <karabo/webAuth/Authenticator.hh>
 
 #include "DeviceClient.hh"
+#include "karabo/net/utils.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -41,7 +42,7 @@ namespace karabo {
             instanceInfo.set("lang", "c++");
             instanceInfo.set("visibility", 4);
             instanceInfo.set("compatibility", DeviceClient::classInfo().getVersion());
-            instanceInfo.set("host", boost::asio::ip::host_name());
+            instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("status", "ok");
             
             m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_internalSignalSlotable, 60, instanceInfo));
@@ -967,10 +968,7 @@ namespace karabo {
 
 
         std::string DeviceClient::generateOwnInstanceId() {
-            std::string hostname(boost::asio::ip::host_name());
-            std::vector<std::string> tokens;
-            boost::split(tokens, hostname, boost::is_any_of("."));
-            return std::string(tokens[0] + "_DeviceClient_" + karabo::util::toString(getpid()));
+            return std::string(net::bareHostName() + "_DeviceClient_" + karabo::util::toString(getpid()));
         }
 
 
