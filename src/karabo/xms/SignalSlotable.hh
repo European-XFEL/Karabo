@@ -662,12 +662,6 @@ KARABO_SLOT0(__VA_ARGS__) \
              */
             void stopEventLoop();
 
-            // TODO make this functions private and allow SLOT to access them
-            void setSenderInfo(const karabo::util::Hash& senderInfo);
-
-            // TODO make this functions private and allow SLOT to access them
-            const karabo::util::Hash& getSenderInfo() const;
-
             /**
              * Access to the identification of the current instance using signals and slots
              * @return instanceId
@@ -1114,6 +1108,8 @@ KARABO_SLOT0(__VA_ARGS__) \
              * slot is the same as an already registered one.
              */
             void registerSlot(const boost::function<void () >& slot, const std::string& funcName) {
+                // Note that the dynamic_pointer_cast will destroy the result if the function
+                // signatures don't match, registerNewSlot will complain then later.
                 karabo::xms::Slot0::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot0>(findSlot(funcName));
                 if (!s) {
                     s = karabo::xms::Slot0::Pointer(new karabo::xms::Slot0(funcName));
@@ -1124,9 +1120,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1>
             void registerSlot(const boost::function<void (const A1&) >& slot, const std::string& funcName) {
-                // Note that the dynamic_pointer_cast will destroy the
-                // result if the function signatures don't match. registerNewSlot
-                // will complain then later.
+                // About the dynamic_pointer_cast: see non-template version of registerSlot.
                 typename karabo::xms::Slot1<A1>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot1<A1> >(findSlot(funcName));
                 if (!s) {
                     s = typename boost::shared_ptr<karabo::xms::Slot1<A1> >(new karabo::xms::Slot1<A1 >(funcName));
@@ -1137,6 +1131,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2>
             void registerSlot(const boost::function<void (const A1&, const A2&) >& slot, const std::string& funcName) {
+                // About the dynamic_pointer_cast: see non-template version of registerSlot.
                 typename karabo::xms::Slot2<A1, A2>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot2<A1, A2> >(findSlot(funcName));
                 if (!s) {
                     s = typename karabo::xms::Slot2<A1, A2>::Pointer(new karabo::xms::Slot2<A1, A2>(funcName));
@@ -1147,6 +1142,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2, class A3>
             void registerSlot(const boost::function<void (const A1&, const A2&, const A3&) >& slot, const std::string& funcName) {
+                // About the dynamic_pointer_cast: see non-template version of registerSlot.
                 typename karabo::xms::Slot3<A1, A2, A3>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot3<A1, A2, A3> >(findSlot(funcName));
                 if (!s) {
                     s = typename karabo::xms::Slot3<A1, A2, A3>::Pointer(new karabo::xms::Slot3<A1, A2, A3>(funcName));
@@ -1157,6 +1153,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2, class A3, class A4>
             void registerSlot(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& slot, const std::string& funcName) {
+                // About the dynamic_pointer_cast: see non-template version of registerSlot.
                 typename karabo::xms::Slot4<A1, A2, A3, A4>::Pointer s = boost::dynamic_pointer_cast<karabo::xms::Slot4<A1, A2, A3, A4> >(findSlot(funcName));
                 if (!s) {
                     s = typename karabo::xms::Slot4<A1, A2, A3, A4>::Pointer(new karabo::xms::Slot4<A1, A2, A3, A4>(funcName));
@@ -1299,10 +1296,6 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             std::pair<std::string, std::string> splitIntoInstanceIdAndFunctionName(const std::string& signalOrSlotId, const char sep = ':') const;
 
-            SignalInstancePointer addSignalIfNew(const std::string& signalFunction, int priority = KARABO_SYS_PRIO, int messageTimeToLive = KARABO_SYS_TTL);
-
-            void storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance);
-
             template <class TFunc>
             void storeSignal(const std::string& signalFunction, const SignalInstancePointer& signalInstance, const TFunc& emitFunction) {
                 storeSignal(signalFunction, signalInstance);
@@ -1323,6 +1316,21 @@ KARABO_SLOT0(__VA_ARGS__) \
             void registerReply(const karabo::util::Hash& reply);
 
         private: // Functions
+
+            /**
+             * Helper for register(System)Signal: If signalFunction is not yet known, creates the corresponding
+             * Signal and adds it to the internal container. Otherwise an empty pointer is returned.
+             * @param signalFunction
+             * @param priority is passed further to the Signal
+             * @param messageTimeToLive is passed further to the Signal
+             * @return pointer to new Signal or empty pointer
+             */
+            SignalInstancePointer addSignalIfNew(const std::string& signalFunction, int priority = KARABO_SYS_PRIO, int messageTimeToLive = KARABO_SYS_TTL);
+
+            /**
+             * Helper to store signalInstance in container with signalFunction as key.
+             */
+            void storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance);
 
             void _runEventLoop();
 
