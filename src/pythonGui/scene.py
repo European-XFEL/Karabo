@@ -10,7 +10,7 @@
 
 from components import (DisplayComponent, EditableApplyLaterComponent)
 
-from karabo_gui.dialogs.dialogs import PenDialog, TextDialog
+from karabo_gui.dialogs.dialogs import PenDialog, TextDialog, SceneLinkDialog
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
@@ -594,6 +594,82 @@ class Rectangle(Shape):
         pendialog = PenDialog(self.pen, self.brush)
         pendialog.exec_()
         parent.setModified()
+
+
+class SceneLink(Shape):
+    xmltag = ns_karabo + "scenelink"
+    text = "Add scene link"
+    icon = icons.link
+
+    def set_points(self, start, end):
+        self.rect = QRect(start, end).normalized()
+
+    def draw(self, painter):
+        if self.selected:
+            painter.setPen(self.pen)
+            painter.drawRect(self.rect)
+
+        pt = self.rect.topLeft()
+        rects = [QRect(pt, QSize(7, 7)),
+                 QRect(pt + QPoint(11, 0), QSize(7, 7))]
+
+        cornerPen = QPen(self.pen)
+        cornerPen.setColor(Qt.darkGray)
+        cornerPen.setWidth(3)
+        painter.setPen(cornerPen)
+        painter.drawRects(rects)
+        cornerPen.setColor(Qt.lightGray)
+        painter.setPen(cornerPen)
+        painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
+
+    def element(self):
+        ret = ElementTree.Element(
+            ns_karabo + "scenelink", x=str(self.rect.x()),
+            y=str(self.rect.y()), width=str(self.rect.width()),
+            height=str(self.rect.height()), target=self.target)
+        return ret
+
+    def contains(self, p):
+        l, r = self.rect.left(), self.rect.right()
+        t, b = self.rect.top(), self.rect.bottom()
+        x, y = p.x(), p.y()
+        return l < x < r and t < y < b
+
+    def geometry(self):
+        return self.rect
+
+    def set_geometry(self, rect):
+        self.rect = rect
+
+    def translate(self, p):
+        self.rect.translate(p)
+
+    @staticmethod
+    def load(e, layout):
+        ret = SceneLink()
+        ret.target = e.get("target", "")
+        ret.rect = QRect(float(e.get("x")), float(e.get("y")),
+                         float(e.get("width")), float(e.get("height")))
+        layout.shapes.append(ret)
+
+        pen = QPen(Qt.black)
+        pen.setCapStyle(Qt.FlatCap)
+        pen.setStyle(Qt.SolidLine)
+        pen.setJoinStyle(Qt.SvgMiterJoin)
+        ret.pen = pen
+
+        return ret
+
+    def edit(self, parent):
+        project = parent.project
+        dialog = SceneLinkDialog(project, self.target, parent=parent)
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            if dialog.sceneSelection > -1:
+                selectedScene = project.scenes[dialog.sceneSelection]
+                self.target = selectedScene.filename
+            else:
+                self.target = ""
 
 
 class Path(Shape):
