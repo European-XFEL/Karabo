@@ -258,7 +258,7 @@ namespace karathon {
             long long const kNegInt32Min = -(1LL<<31);
             long long const kPosUint32Max = (1LL<<32)-1;
             long long const kPosInt32Max = (1LL<<31)-1;
-            long long const kPosInt64Max = (1LL<<63)-1;
+            long long const kPosInt64Max = (1ULL<<63)-1;
             int overflow = 0;
             PY_LONG_LONG value = PyLong_AsLongLongAndOverflow(obj.ptr(), &overflow);
             if (overflow == 0) {
@@ -292,9 +292,10 @@ namespace karathon {
                 }
             }
 
-            // Don't fall through...
-            any = static_cast<long long>(bp::extract<long long>(obj));
-            return karabo::util::Types::INT64;
+            // Try UINT64. Raises a Python exception if it overflows...
+            unsigned long long val = PyLong_AsUnsignedLongLong(obj.ptr());
+            any = val;
+            return karabo::util::Types::UINT64;
         }
         if (PyFloat_Check(obj.ptr())) {
             double b = bp::extract<double>(obj);
