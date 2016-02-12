@@ -1296,10 +1296,6 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             std::pair<std::string, std::string> splitIntoInstanceIdAndFunctionName(const std::string& signalOrSlotId, const char sep = ':') const;
 
-            SignalInstancePointer addSignalIfNew(const std::string& signalFunction, int priority = KARABO_SYS_PRIO, int messageTimeToLive = KARABO_SYS_TTL);
-
-            void storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance);
-
             template <class TFunc>
             void storeSignal(const std::string& signalFunction, const SignalInstancePointer& signalInstance, const TFunc& emitFunction) {
                 storeSignal(signalFunction, signalInstance);
@@ -1320,6 +1316,21 @@ KARABO_SLOT0(__VA_ARGS__) \
             void registerReply(const karabo::util::Hash& reply);
 
         private: // Functions
+
+            /**
+             * Helper for register(System)Signal: If signalFunction is not yet known, creates the corresponding
+             * Signal and adds it to the internal container. Otherwise an empty pointer is returned.
+             * @param signalFunction
+             * @param priority is passed further to the Signal
+             * @param messageTimeToLive is passed further to the Signal
+             * @return pointer to new Signal or empty pointer
+             */
+            SignalInstancePointer addSignalIfNew(const std::string& signalFunction, int priority = KARABO_SYS_PRIO, int messageTimeToLive = KARABO_SYS_TTL);
+
+            /**
+             * Helper to store signalInstance in container with signalFunction as key.
+             */
+            void storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance);
 
             void _runEventLoop();
 
