@@ -343,8 +343,26 @@ class  Hash_TestCase(unittest.TestCase):
             self.assertEqual(h.getType("a"), Types.DOUBLE)
         except Exception as e:
             self.fail("test_getAs exception group 14: " + str(e))
-            
-        
+
+    def test_intUnboxingEdgeCases(self):
+        h = Hash("a", -(2**31-1))
+        self.assertEqual(h.getType("a"), Types.INT32)
+
+        h = Hash("a", 2**31-1)
+        self.assertEqual(h.getType("a"), Types.INT32)
+
+        h = Hash("a", 2**32-1)
+        self.assertEqual(h.getType("a"), Types.UINT32)
+
+        h = Hash("a", 2**32)
+        self.assertEqual(h.getType("a"), Types.INT64)
+
+        h = Hash("a", -(2**63-1))
+        self.assertEqual(h.getType("a"), Types.INT64)
+
+        h = Hash("a", 2**63-1)
+        self.assertEqual(h.getType("a"), Types.INT64)
+
     def test_find(self):
         try:
             h = Hash("a.b.c1.d", 1)
