@@ -106,6 +106,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator.o \
 	${OBJECTDIR}/_ext/1103112890/TcpChannel.o \
 	${OBJECTDIR}/_ext/1103112890/TcpConnection.o \
+	${OBJECTDIR}/_ext/1103112890/utils.o \
 	${OBJECTDIR}/_ext/1080827789/pugixml.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/163016059/ByteSwap.o \
@@ -547,6 +548,11 @@ ${OBJECTDIR}/_ext/1103112890/TcpConnection.o: ../../../src/karabo/net/TcpConnect
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/TcpConnection.o ../../../src/karabo/net/TcpConnection.cc
+
+${OBJECTDIR}/_ext/1103112890/utils.o: ../../../src/karabo/net/utils.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/utils.o ../../../src/karabo/net/utils.cc
 
 ${OBJECTDIR}/_ext/1080827789/pugixml.o: ../../../src/karabo/pugiXml/pugixml.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1080827789
@@ -1982,6 +1988,19 @@ ${OBJECTDIR}/_ext/1103112890/TcpConnection_nomain.o: ${OBJECTDIR}/_ext/110311289
 	    $(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/TcpConnection_nomain.o ../../../src/karabo/net/TcpConnection.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/TcpConnection.o ${OBJECTDIR}/_ext/1103112890/TcpConnection_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/utils_nomain.o: ${OBJECTDIR}/_ext/1103112890/utils.o ../../../src/karabo/net/utils.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/utils.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/utils_nomain.o ../../../src/karabo/net/utils.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/utils.o ${OBJECTDIR}/_ext/1103112890/utils_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1080827789/pugixml_nomain.o: ${OBJECTDIR}/_ext/1080827789/pugixml.o ../../../src/karabo/pugiXml/pugixml.cpp 
