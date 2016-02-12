@@ -363,6 +363,9 @@ class  Hash_TestCase(unittest.TestCase):
         h = Hash("a", 2**63-1)
         self.assertEqual(h.getType("a"), Types.INT64)
 
+        h = Hash("a", 2**64-1)
+        self.assertEqual(h.getType("a"), Types.UINT64)
+
     def test_find(self):
         try:
             h = Hash("a.b.c1.d", 1)
