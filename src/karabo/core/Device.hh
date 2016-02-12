@@ -14,6 +14,7 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <string>
+#include <karabo/net/utils.hh>
 #include <karabo/util.hpp>
 #include <karabo/util/SignalHandler.hh>
 #include <karabo/xms.hpp>
@@ -907,7 +908,7 @@ namespace karabo {
                 instanceInfo.set("serverId", m_serverId);
                 instanceInfo.set("visibility", this->get<int >("visibility"));
                 instanceInfo.set("compatibility", Device::classInfo().getVersion());
-                instanceInfo.set("host", boost::asio::ip::host_name());
+                instanceInfo.set("host", net::bareHostName());
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
 

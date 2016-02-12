@@ -13,8 +13,8 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/thread.hpp>
-#include <boost/asio.hpp>
 
+#include <karabo/net/utils.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ChoiceElement.hh>
@@ -274,10 +274,7 @@ namespace karabo {
 
 
         std::string DeviceServer::generateDefaultServerId() const {
-            string hostname = boost::asio::ip::host_name();
-            vector<string> tokens;
-            boost::split(tokens, hostname, boost::is_any_of("."));
-            return tokens.at(0) + "_Server_" + karabo::util::toString(getpid());
+            return net::bareHostName() += "_Server_" + util::toString(getpid());
         }
 
 
@@ -345,16 +342,11 @@ namespace karabo {
 
             m_serverIsRunning = true;
 
-            // Get hostname, stripping off domain name
-            string hostname = boost::asio::ip::host_name();
-            vector<string> tokens;
-            boost::split(tokens, hostname, boost::is_any_of("."));
-            hostname = tokens.at(0);
-
             // Initialize category
             m_log = &(karabo::log::Logger::getLogger(m_serverId));
 
-            KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << hostname;
+            const std::string hostName = net::bareHostName();
+            KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << hostName;
             KARABO_LOG_INFO << "ServerId: " << m_serverId;
             KARABO_LOG_INFO << "Broker (host:port:topic): " << m_connectionConfiguration.get<string>("Jms.hostname") << ":"
                     << m_connectionConfiguration.get<string>("Jms.destinationName");
@@ -368,7 +360,7 @@ namespace karabo {
             instanceInfo.set("type", "server");
             instanceInfo.set("serverId", m_serverId);
             instanceInfo.set("version", karabo::util::Version::getVersion());
-            instanceInfo.set("host", hostname);
+            instanceInfo.set("host", hostName);
             instanceInfo.set("visibility", m_visibility);
             boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, m_heartbeatIntervall, instanceInfo));
 
