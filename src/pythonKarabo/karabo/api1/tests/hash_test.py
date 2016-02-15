@@ -344,6 +344,18 @@ class  Hash_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_getAs exception group 14: " + str(e))
 
+    def test_setAs(self):
+        testTypes = (Types.INT8,  Types.UINT8,  Types.INT16, Types.UINT16,
+                     Types.INT32, Types.UINT32, Types.INT64, Types.UINT64,
+                     Types.FLOAT, Types.DOUBLE)
+
+        h = Hash()
+        for t in testTypes:
+            h.setAs("a", 5, t)
+            self.assertEqual(h.getType("a"), t,
+                             "Setting as type " + str(t) + " failed")
+            self.assertEqual(h["a"], 5, "Equality failed for type " + str(t))
+
     def test_intUnboxingEdgeCases(self):
         values_and_types = {
             -(2**31): Types.INT32,
