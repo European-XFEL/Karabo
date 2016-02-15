@@ -345,26 +345,23 @@ class  Hash_TestCase(unittest.TestCase):
             self.fail("test_getAs exception group 14: " + str(e))
 
     def test_intUnboxingEdgeCases(self):
-        h = Hash("a", -(2**31))
-        self.assertEqual(h.getType("a"), Types.INT32)
-
-        h = Hash("a", 2**31-1)
-        self.assertEqual(h.getType("a"), Types.INT32)
-
-        h = Hash("a", 2**32-1)
-        self.assertEqual(h.getType("a"), Types.UINT32)
-
-        h = Hash("a", 2**32)
-        self.assertEqual(h.getType("a"), Types.INT64)
-
-        h = Hash("a", -(2**63))
-        self.assertEqual(h.getType("a"), Types.INT64)
-
-        h = Hash("a", 2**63-1)
-        self.assertEqual(h.getType("a"), Types.INT64)
-
-        h = Hash("a", 2**64-1)
-        self.assertEqual(h.getType("a"), Types.UINT64)
+        values_and_types = {
+            -(2**31): Types.INT32,
+            2**31-1: Types.INT32,
+            2**32-1: Types.UINT32,
+            2**32: Types.INT64,
+            -(2**63): Types.INT64,
+            2**63-1: Types.INT64,
+            2**64-1: Types.UINT64,
+        }
+        for value, type_ in values_and_types.items():
+            msg = "Failed to unbox {0}".format(value)
+            try:
+                h = Hash("a", value)
+                self.assertEqual(h.getType("a"), type_, msg=msg)
+                self.assertEqual(h["a"], value, msg=msg)
+            except OverflowError:
+                self.fail(msg)
 
     def test_find(self):
         try:
