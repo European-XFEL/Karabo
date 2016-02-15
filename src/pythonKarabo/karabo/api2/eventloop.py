@@ -356,7 +356,6 @@ class EventLoop(SelectorEventLoop):
             self.changedFutures.remove(f)
 
     def sync(self, coro, timeout):
-        assert timeout == 5  # that is the default, i.e., none has been given
         return coro
 
     def close(self):

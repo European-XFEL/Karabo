@@ -220,6 +220,13 @@ class Tests(TestCase):
                 j = waitUntilNew(d).counter
                 self.assertEqual(i, j)
 
+    @sync_tst
+    def test_sleep(self):
+        t = time.time()
+        sleep(6)
+        self.assertGreater(time.time() - t, 6)
+    test_sleep.slow = 1
+
     @async_tst
     def test_print(self):
         """test that macros can print via expected parameters"""

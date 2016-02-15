@@ -225,6 +225,7 @@ class Tests(TestCase):
         del self.other
         thread.stop()
         EventThread.instance = None
+    test_autodisconnect.slow = 1
 
     @coroutine
     def init_topo(self, dc):

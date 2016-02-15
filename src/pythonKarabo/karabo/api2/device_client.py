@@ -631,10 +631,11 @@ def updateDevice(device):
     return device
 
 
-@synchronize
+# we don't use @synchronize here, as it has a default timeout of 5 s,
+# which would make sleep time out, certainly not desired behavior.
 def sleep(delay, result=None):
     """do nothing for *delay* seconds
 
     This method should be preferred over :func:`time.sleep`, as it is
     interruptable."""
-    return (yield from asyncio.sleep(delay, result))
+    return get_event_loop().sync(asyncio.sleep(delay, result), -1)
