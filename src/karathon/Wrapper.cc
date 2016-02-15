@@ -255,23 +255,47 @@ namespace karathon {
             return karabo::util::Types::BOOL;
         }
         if (PyLong_Check(obj.ptr())) {
-            try {
-                any = static_cast<int> (bp::extract<int>(obj));
-            } catch (...) {
-                try {
-                    any = static_cast<unsigned int> (bp::extract<unsigned int>(obj));
-                } catch (...) {
-                    try {
-                        any = static_cast<long long> (bp::extract<long long>(obj));
-                    } catch (...) {
-                        any = static_cast<unsigned long long> (bp::extract<unsigned long long>(obj));
+            long long const kNegInt32Min = -(1LL<<31);
+            long long const kPosUint32Max = (1LL<<32)-1;
+            long long const kPosInt32Max = (1LL<<31)-1;
+            long long const kPosInt64Max = (1ULL<<63)-1;
+            int overflow = 0;
+            PY_LONG_LONG value = PyLong_AsLongLongAndOverflow(obj.ptr(), &overflow);
+            if (overflow == 0) {
+                if (value < 0) {
+                    if (value < kNegInt32Min) {
+                        any = static_cast<long long>(value);
+                        return karabo::util::Types::INT64;
+                    }
+                    else {
+                        any = static_cast<int>(value);
+                        return karabo::util::Types::INT32;
+                    }
+                }
+                else {
+                    if (value > kPosUint32Max) {
+                        if (value <= kPosInt64Max) {
+                            any = static_cast<long long>(value);
+                            return karabo::util::Types::INT64;
+                        }
+                        any = static_cast<unsigned long long>(value);
                         return karabo::util::Types::UINT64;
                     }
-                    return karabo::util::Types::INT64;
+                    else {
+                        if (value <= kPosInt32Max) {
+                            any = static_cast<int>(value);
+                            return karabo::util::Types::INT32;
+                        }
+                        any = static_cast<unsigned int>(value);
+                        return karabo::util::Types::UINT32;
+                    }
                 }
-                return karabo::util::Types::UINT32;
             }
-            return karabo::util::Types::INT32;
+
+            // Try UINT64. Raises a Python exception if it overflows...
+            unsigned long long val = PyLong_AsUnsignedLongLong(obj.ptr());
+            any = val;
+            return karabo::util::Types::UINT64;
         }
         if (PyFloat_Check(obj.ptr())) {
             double b = bp::extract<double>(obj);

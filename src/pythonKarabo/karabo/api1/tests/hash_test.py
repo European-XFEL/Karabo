@@ -343,8 +343,38 @@ class  Hash_TestCase(unittest.TestCase):
             self.assertEqual(h.getType("a"), Types.DOUBLE)
         except Exception as e:
             self.fail("test_getAs exception group 14: " + str(e))
-            
-        
+
+    def test_setAs(self):
+        testTypes = (Types.INT8,  Types.UINT8,  Types.INT16, Types.UINT16,
+                     Types.INT32, Types.UINT32, Types.INT64, Types.UINT64,
+                     Types.FLOAT, Types.DOUBLE)
+
+        h = Hash()
+        for t in testTypes:
+            h.setAs("a", 5, t)
+            self.assertEqual(h.getType("a"), t,
+                             "Setting as type " + str(t) + " failed")
+            self.assertEqual(h["a"], 5, "Equality failed for type " + str(t))
+
+    def test_intUnboxingEdgeCases(self):
+        values_and_types = {
+            -(2**31): Types.INT32,
+            2**31-1: Types.INT32,
+            2**32-1: Types.UINT32,
+            2**32: Types.INT64,
+            -(2**63): Types.INT64,
+            2**63-1: Types.INT64,
+            2**64-1: Types.UINT64,
+        }
+        for value, type_ in values_and_types.items():
+            msg = "Failed to unbox {0}".format(value)
+            try:
+                h = Hash("a", value)
+                self.assertEqual(h.getType("a"), type_, msg=msg)
+                self.assertEqual(h["a"], value, msg=msg)
+            except OverflowError:
+                self.fail(msg)
+
     def test_find(self):
         try:
             h = Hash("a.b.c1.d", 1)
