@@ -186,6 +186,9 @@ class Broker:
                     t.cancel()
                 yield from gather(*tasks, return_exceptions=True)
 
+    def enter_context(self, context):
+        return self.exitStack.enter_context(context)
+
     def decodeMessage(self, message):
         hash = Hash.decode(message.data, "Bin")
         params = []
