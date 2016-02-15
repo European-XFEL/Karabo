@@ -345,7 +345,7 @@ class  Hash_TestCase(unittest.TestCase):
             self.fail("test_getAs exception group 14: " + str(e))
 
     def test_intUnboxingEdgeCases(self):
-        h = Hash("a", -(2**31-1))
+        h = Hash("a", -(2**31))
         self.assertEqual(h.getType("a"), Types.INT32)
 
         h = Hash("a", 2**31-1)
@@ -357,7 +357,7 @@ class  Hash_TestCase(unittest.TestCase):
         h = Hash("a", 2**32)
         self.assertEqual(h.getType("a"), Types.INT64)
 
-        h = Hash("a", -(2**63-1))
+        h = Hash("a", -(2**63))
         self.assertEqual(h.getType("a"), Types.INT64)
 
         h = Hash("a", 2**63-1)
