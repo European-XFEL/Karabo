@@ -1188,7 +1188,8 @@ class ProjectModel(QStandardItemModel):
         self.signalAddScene.emit(scene)
 
     def openSceneLink(self, sceneName):
-        scene = self.project.getScene(sceneName)
+        project = self.currentProject()
+        scene = project.getScene(sceneName)
         if scene is not None:
             self.openScene(scene)
 

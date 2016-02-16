@@ -24,9 +24,9 @@ import karabo_gui.icons as icons
 import manager
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
-from PyQt4.QtCore import (pyqtSignal, Qt, QByteArray, QEvent, QSize, QRect, QLine,
-                          QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
-                          QPoint, QPointF)
+from PyQt4.QtCore import (pyqtSignal, pyqtSlot, Qt, QByteArray, QEvent, QSize,
+                          QRect, QLine, QFileInfo, QBuffer, QIODevice,
+                          QMimeData, QRectF, QPoint, QPointF)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
                          QDialog, QDialogButtonBox, QFrame, QLabel, QLayout,
                          QKeySequence, QMenu,QMessageBox, QPalette, QPainter,
@@ -598,14 +598,19 @@ class Rectangle(Shape):
 
 
 class SceneLink(QPushButton, Loadable):
-    hasBackground = False
-
-    def __init__(self, target, parent=None):
+    def __init__(self, target, signalOpenScene, parent=None):
         QPushButton.__init__(self, parent)
         Loadable.__init__(self)
 
         self.setCursor(Qt.PointingHandCursor)
         self.target = target
+        self.clicked.connect(self.whenClicked)
+        self.signalOpenScene = signalOpenScene
+
+    @pyqtSlot(bool)
+    def whenClicked(self, checked):
+        if len(self.target) > 0:
+            self.signalOpenScene.emit(self.target)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -634,8 +639,10 @@ class SceneLink(QPushButton, Loadable):
 
     @staticmethod
     def load(elem, layout):
-        proxy = ProxyWidget(layout.parentWidget())
-        link = SceneLink(elem.get(ns_karabo + "target"), proxy)
+        parent = layout.parentWidget().parent()
+        proxy = ProxyWidget(parent.inner)
+        link = SceneLink(elem.get(ns_karabo + "target"),
+                         parent.signalSceneLinkTriggered, parent=proxy)
         proxy.setWidget(link)
         layout.loadPosition(elem, proxy)
         return proxy
@@ -664,7 +671,7 @@ class SceneLinkAction(Action):
             else:
                 target = ""
             p = ProxyWidget(parent.inner)
-            link = SceneLink(target, parent=p)
+            link = SceneLink(target, parent.signalSceneLinkTriggered, parent=p)
             p.setWidget(link)
             p.fixed_geometry = QRect(event.pos(), p.sizeHint())
             parent.ilayout.add_item(p)
