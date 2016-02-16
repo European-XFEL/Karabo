@@ -333,7 +333,7 @@ class getHistory:
             if id not in instance.loggerMap:
                 raise KaraboError('no logger for device "{}"'.
                                   format(self.proxy._deviceId))
-        reader = "DataLogReader-{}".format(instance.loggerMap[id])
+        reader = "DataLogReader0-{}".format(instance.loggerMap[id])
         deviceId, property, data = yield from get_instance().call(
             reader, "slotGetPropertyHistory", self.proxy._deviceId, attr,
             Hash("from", self.begin, "to", self.end,
