@@ -194,6 +194,11 @@ class Project(object):
             if filename == scene.filename:
                 return scene
 
+    def getSceneNames(self):
+        """ All the scene names for this project.
+        """
+        return [scene.filename for scene in self.scenes]
+
     def removeScene(self, filename):
         """ The first occurrence of a scene with the given \filename is
         removed.

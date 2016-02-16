@@ -653,15 +653,11 @@ class SceneLink(QPushButton, Loadable):
         return proxy
 
     def edit(self, parent):
-        project = parent.project
-        dialog = SceneLinkDialog(project, self.target, parent=parent)
+        names = parent.project.getSceneNames()
+        dialog = SceneLinkDialog(names, self.target, parent=parent)
         result = dialog.exec_()
         if result == QDialog.Accepted:
-            if dialog.sceneSelection > -1:
-                selectedScene = project.scenes[dialog.sceneSelection]
-                self.target = selectedScene.filename
-            else:
-                self.target = ""
+            self.target = dialog.selectedScene
             parent.setModified()
 
 
@@ -678,15 +674,11 @@ class SceneLinkAction(Action):
         return action
 
     def mousePressEvent(self, parent, event):
-        project = parent.project
-        dialog = SceneLinkDialog(project, "", parent=parent)
+        names = parent.project.getSceneNames()
+        dialog = SceneLinkDialog(names, "", parent=parent)
         result = dialog.exec_()
         if result == QDialog.Accepted:
-            if dialog.sceneSelection > -1:
-                selectedScene = project.scenes[dialog.sceneSelection]
-                target = selectedScene.filename
-            else:
-                target = ""
+            target = dialog.selectedScene
             p = ProxyWidget(parent.inner)
             link = SceneLink(target, parent.signalSceneLinkTriggered, parent=p)
             p.setWidget(link)
