@@ -338,22 +338,25 @@ class getHistory:
 
     @synchronize
     def __getattr(self, attr):
-        assert isinstance(getattr(type(self.proxy), attr), Type)
+        if isinstance(self.proxy, Proxy):
+            assert isinstance(getattr(type(self.proxy), attr), Type)
+            deviceId = self.proxy._deviceId
+        else:
+            deviceId = str(self.proxy)
         instance = get_instance()
-        id = "DataLogger-{}".format(self.proxy._deviceId)
+        id = "DataLogger-{}".format(deviceId)
         if id not in instance.loggerMap:
             instance.loggerMap = yield from instance.call(
                 "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
             if id not in instance.loggerMap:
                 raise KaraboError('no logger for device "{}"'.
-                                  format(self.proxy._deviceId))
+                                  format(deviceId))
         reader = "DataLogReader0-{}".format(instance.loggerMap[id])
-        deviceId, property, data = yield from get_instance().call(
-            reader, "slotGetPropertyHistory", self.proxy._deviceId, attr,
+        r_deviceId, r_attr, data = yield from get_instance().call(
+            reader, "slotGetPropertyHistory", deviceId, attr,
             Hash("from", self.begin, "to", self.end,
                  "maxNumData", self.maxNumData))
-        assert deviceId == self.proxy._deviceId
-        assert property == attr
+        assert r_deviceId == deviceId and r_attr == attr
         return [(Decimal(int(d["v", "frac"])) / 10 ** 18 +
                  Decimal(int(d["v", "sec"])), d["v", "tid"],
                  "isLast" in d["v", ...], d["v"]) for d in data]
