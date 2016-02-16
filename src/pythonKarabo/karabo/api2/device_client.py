@@ -16,6 +16,9 @@ from functools import wraps
 import time
 from weakref import WeakSet
 
+import dateutil.parser
+import dateutil.tz
+
 from .device import Device
 from .exceptions import KaraboError
 from .hash import Hash, Slot, Type, Descriptor
@@ -315,10 +318,17 @@ class getHistory:
     reduced appropriately to still span the full timespan."""
     def __init__(self, proxy, begin, end, maxNumData=0, *, timeout=5):
         self.proxy = proxy
-        self.begin = begin
-        self.end = end
+        self.begin = self.__parse(begin)
+        self.end = self.__parse(end)
         self.maxNumData = maxNumData
         self.timeout = timeout
+
+    def __parse(self, date):
+        d = dateutil.parser.parse(date)
+        if d.tzinfo is None:
+            d = d.replace(tzinfo=dateutil.tz.tzlocal())
+        return d.astimezone(dateutil.tz.tzutc()).replace(
+            tzinfo=None).isoformat()
 
     def __dir__(self):
         return dir(self.proxy)
