@@ -30,8 +30,9 @@ from PyQt4.QtCore import (pyqtSignal, Qt, QByteArray, QEvent, QSize, QRect, QLin
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
                          QDialog, QDialogButtonBox, QFrame, QLabel, QLayout,
                          QKeySequence, QMenu,QMessageBox, QPalette, QPainter,
-                         QPen, QSizePolicy, QStackedLayout,QStandardItemModel,
-                         QStandardItem, QTreeView, QVBoxLayout, QWidget)
+                         QPen, QPushButton, QSizePolicy, QStackedLayout,
+                         QStandardItemModel, QStandardItem, QTreeView,
+                         QVBoxLayout, QWidget)
 
 from PyQt4.QtSvg import QSvgWidget
 
@@ -596,80 +597,97 @@ class Rectangle(Shape):
         parent.setModified()
 
 
-class SceneLink(Shape):
-    xmltag = ns_karabo + "scenelink"
+class SceneLink(QPushButton, Loadable):
+    hasBackground = False
+
+    def __init__(self, target, parent=None):
+        QPushButton.__init__(self, parent)
+        Loadable.__init__(self)
+
+        self.setObjectName("scnLnk")
+        self.setCursor(Qt.PointingHandCursor)
+        self.target = target
+
+        ss = """
+QPushButton#scnLnk {
+    background-color: transparent;
+    border: 2px solid black;
+}
+QPushButton#scnLnk:pressed {
+    background-color: transparent;
+    border: none;
+}
+QPushButton#scnLnk:pressed {
+    background-color: transparent;
+    border: none;
+}
+"""
+        self.setStyleSheet(ss)
+
+    def save(self, elem):
+        elem.set(ns_karabo + "class", "SceneLink")
+        elem.set(ns_karabo + "target", self.target)
+
+    @staticmethod
+    def load(elem, layout):
+        proxy = ProxyWidget(layout.parentWidget())
+        link = SceneLink(elem.get(ns_karabo + "target"), proxy)
+        proxy.setWidget(link)
+        layout.loadPosition(elem, proxy)
+        return proxy
+
+
+class SceneLinkAction(Action):
     text = "Add scene link"
     icon = icons.link
 
-    def set_points(self, start, end):
-        self.rect = QRect(start, end).normalized()
+    @classmethod
+    def add_action(cls, source, parent):
+        action = super(SceneLinkAction, cls).add_action(source, parent)
+        c = cls()
+        c.action = action
+        action.triggered.connect(partial(parent.set_current_action, c))
+        return action
 
     def draw(self, painter):
-        if self.selected:
-            painter.setPen(self.pen)
-            painter.drawRect(self.rect)
-
-        pt = self.rect.topLeft()
+        pt = QPoint(0, 0)
         rects = [QRect(pt, QSize(7, 7)),
                  QRect(pt + QPoint(11, 0), QSize(7, 7))]
 
-        cornerPen = QPen(self.pen)
-        cornerPen.setColor(Qt.darkGray)
-        cornerPen.setWidth(3)
-        painter.setPen(cornerPen)
-        painter.drawRects(rects)
-        cornerPen.setColor(Qt.lightGray)
-        painter.setPen(cornerPen)
-        painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
-
-    def element(self):
-        ret = ElementTree.Element(
-            ns_karabo + "scenelink", x=str(self.rect.x()),
-            y=str(self.rect.y()), width=str(self.rect.width()),
-            height=str(self.rect.height()), target=self.target)
-        return ret
-
-    def contains(self, p):
-        l, r = self.rect.left(), self.rect.right()
-        t, b = self.rect.top(), self.rect.bottom()
-        x, y = p.x(), p.y()
-        return l < x < r and t < y < b
-
-    def geometry(self):
-        return self.rect
-
-    def set_geometry(self, rect):
-        self.rect = rect
-
-    def translate(self, p):
-        self.rect.translate(p)
-
-    @staticmethod
-    def load(e, layout):
-        ret = SceneLink()
-        ret.target = e.get("target", "")
-        ret.rect = QRect(float(e.get("x")), float(e.get("y")),
-                         float(e.get("width")), float(e.get("height")))
-        layout.shapes.append(ret)
-
-        pen = QPen(Qt.black)
+        pen = QPen(Qt.darkGray)
         pen.setCapStyle(Qt.FlatCap)
         pen.setStyle(Qt.SolidLine)
         pen.setJoinStyle(Qt.SvgMiterJoin)
-        ret.pen = pen
+        pen.setWidth(3)
+        painter.setPen(pen)
+        painter.drawRects(rects)
+        pen.setColor(Qt.lightGray)
+        painter.setPen(pen)
+        painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
 
-        return ret
-
-    def edit(self, parent):
+    def mousePressEvent(self, parent, event):
         project = parent.project
-        dialog = SceneLinkDialog(project, self.target, parent=parent)
+        dialog = SceneLinkDialog(project, "", parent=parent)
         result = dialog.exec_()
         if result == QDialog.Accepted:
             if dialog.sceneSelection > -1:
                 selectedScene = project.scenes[dialog.sceneSelection]
-                self.target = selectedScene.filename
+                target = selectedScene.filename
             else:
-                self.target = ""
+                target = ""
+            p = ProxyWidget(parent.inner)
+            link = SceneLink(target, parent=p)
+            p.setWidget(link)
+            p.fixed_geometry = QRect(event.pos(), p.sizeHint())
+            parent.ilayout.add_item(p)
+            parent.set_current_action(None)
+            parent.setModified()
+
+    def mouseReleaseEvent(self, parent, event):
+        pass
+
+    def mouseMoveEvent(self, parent, event):
+        pass
 
 
 class Path(Shape):
