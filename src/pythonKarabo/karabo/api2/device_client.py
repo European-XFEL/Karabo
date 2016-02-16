@@ -313,17 +313,21 @@ class getHistory:
     Another parameter, *maxNumData*, may be given, which gives the maximum
     number of data points to be returned. The returned data will be
     reduced appropriately to still span the full timespan."""
-    def __init__(self, proxy, begin, end, maxNumData=0):
+    def __init__(self, proxy, begin, end, maxNumData=0, *, timeout=5):
         self.proxy = proxy
         self.begin = begin
         self.end = end
         self.maxNumData = maxNumData
+        self.timeout = timeout
 
     def __dir__(self):
         return dir(self.proxy)
 
-    @synchronize
     def __getattr__(self, attr):
+        return self.__getattr(attr, timeout=self.timeout)
+
+    @synchronize
+    def __getattr(self, attr):
         assert isinstance(getattr(type(self.proxy), attr), Type)
         instance = get_instance()
         id = "DataLogger-{}".format(self.proxy._deviceId)
