@@ -667,7 +667,7 @@ class SceneLink(QPushButton, Loadable):
 
 class SceneLinkAction(Action):
     text = "Add scene link"
-    icon = icons.link
+    icon = icons.scenelink
 
     @classmethod
     def add_action(cls, source, parent):
