@@ -120,7 +120,10 @@ namespace karabo {
             MetaSearchResult navigateMetaRange(const std::string& deviceId, size_t startnum, size_t endnum, const std::string& path,
                                                const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to);
 
-            size_t findPositionOfEpochstamp(std::ifstream& f, double t, size_t& left, size_t& right);
+            /// Find index of that MetaData::Record in 'f' (between indices 'left' and 'right')
+            /// that matches the Epochstamp 'stamp'. In case no exact match (within 1 ms) is found,
+            /// 'preferBefore' decides whether the index with a smaller or larger time stamp is returned.
+            size_t findPositionOfEpochstamp(std::ifstream& f, double stamp, size_t left, size_t right, bool preferBefore);
             
         private:
             
