@@ -185,8 +185,6 @@ namespace karabo {
         void DeviceClient::_slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceNew was called for: " << instanceId;
 
-            string path(prepareTopologyPath(instanceId, instanceInfo));
-
             Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
             mergeIntoRuntimeSystemDescription(entry);            
 
@@ -327,6 +325,7 @@ namespace karabo {
         Hash DeviceClient::getSystemInformation() {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());
             initTopology();
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             return m_runtimeSystemDescription;
         }
 
@@ -980,8 +979,8 @@ namespace karabo {
                 p->connect(instanceId, "signalChanged", "", "_slotChanged");
                 p->connect(instanceId, "signalStateChanged", "", "_slotChanged");
                 p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
-            } else if (m_instanceUsage[instanceId] >= CONNECTION_KEEP_ALIVE) { // Died before
-                // Should not be reached since if died instance is also removed from m_instanceUsage.
+            } else if (m_instanceUsage[instanceId] >= CONNECTION_KEEP_ALIVE) { // Too old
+                // Should not be reached since instance is also removed from m_instanceUsage.
                 p->connect(instanceId, "signalChanged", "", "_slotChanged");
                 p->connect(instanceId, "signalStateChanged", "", "_slotChanged");
                 p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
@@ -1178,13 +1177,10 @@ if (nodeData) {\
                         // Loop connected instances
                         for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); /*NOT ++it*/) {
 
-                            if (isImmortal(it->first)) { // Immortal, registered monitors will have this status
-                                ++it; // since no increment in for-construct above...
-                                continue;
-                            }
-
-                            it->second++; // Others just age
-                            if (it->second >= CONNECTION_KEEP_ALIVE) { // Too old
+                            it->second++; // All just age (but some do not die).
+                            if (!this->isImmortal(it->first) // registered monitors are immortal
+                                    && it->second >= CONNECTION_KEEP_ALIVE) {
+                                // mortal and too old
                                 karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
                                 if (!p) break;
                                 p->disconnect(it->first, "signalChanged", "", "_slotChanged", false);
@@ -1193,8 +1189,8 @@ if (nodeData) {\
                                 const std::string path("device." + it->first + ".configuration");
                                 // erase invalidates 'it', so use post-increment
                                 m_instanceUsage.erase(it++); // other iterators stay valid
-                                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                                m_runtimeSystemDescription.erase(path);
+                                // Since we stopped listening, remove configuration from system description.
+                                this->eraseFromRuntimeSystemDescription(path);
                             } else {
                                 ++it;
                             }
