@@ -510,22 +510,25 @@ namespace karabo {
 
         void GuiServerDevice::onGetPropertyHistory(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onGetPropertyHistory";
-                string deviceId = info.get<string > ("deviceId");
-                string property = info.get<string > ("property");
-                string t0 = info.get<string > ("t0");
-                string t1 = info.get<string > ("t1");
+                const string& deviceId = info.get<string > ("deviceId");
+                const string& property = info.get<string > ("property");
+                const string& t0 = info.get<string > ("t0");
+                const string& t1 = info.get<string > ("t1");
                 int maxNumData = 0;
                 if (info.has("maxNumData")) maxNumData = info.getAs<int>("maxNumData");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onGetPropertyHistory: " << deviceId << "." << property << ", "
+                        << t0 << " - " << t1 << " (" << maxNumData << " points)";
 
                 Hash args("from", t0, "to", t1, "maxNumData", maxNumData);
 
-                string loggerId = DATALOGGER_PREFIX + deviceId;
+                const string loggerId = DATALOGGER_PREFIX + deviceId;
                 if (m_loggerMap.has(loggerId)) {
                     static int i = 0;
-                    string readerId = DATALOGREADER_PREFIX + toString(i++ % DATALOGREADERS_PER_SERVER) + "-" + m_loggerMap.get<string>(loggerId);
+                    const string readerId = DATALOGREADER_PREFIX + toString(i++ % DATALOGREADERS_PER_SERVER) += "-" + m_loggerMap.get<string>(loggerId);
                     request(readerId, "slotGetPropertyHistory", deviceId, property, args)
                             .receiveAsync<string, string, vector<Hash> >(boost::bind(&karabo::core::GuiServerDevice::propertyHistory, this, channel, _1, _2, _3));
+                } else {
+                    KARABO_LOG_FRAMEWORK_WARN << "onGetPropertyHistory: No '" << loggerId << "' in map.";
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetPropertyHistory(): " << e.userFriendlyMsg();
@@ -536,7 +539,8 @@ namespace karabo {
         void GuiServerDevice::propertyHistory(karabo::net::Channel::Pointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
             try {
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history";
+                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history: "
+                        << deviceId << "." << property << " " << data.size();
 
                 Hash h("type", "propertyHistory", "deviceId", deviceId,
                        "property", property, "data", data);
