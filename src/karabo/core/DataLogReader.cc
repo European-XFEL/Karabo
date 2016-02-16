@@ -233,8 +233,10 @@ namespace karabo {
                 DataLoggerIndex idxTo = findNearestLoggerIndex(deviceId, to);
                 p.stopPeriod("findingNearestIndex");
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "Event: \"" << idxFrom.m_event << "\", epoch: " << idxFrom.m_epoch.toIso8601Ext()
-                        << ", pos: " << idxFrom.m_position << ", fileindex: " << idxFrom.m_fileindex;
+                KARABO_LOG_FRAMEWORK_DEBUG << "From - Event: \"" << idxFrom.m_event << "\", epoch: " << idxFrom.m_epoch.toIso8601Ext()
+                        << ", pos: " << idxFrom.m_position << ", fileindex: " << idxFrom.m_fileindex
+                        << ", To - Event: \"" << idxTo.m_event << "\", epoch: " << idxTo.m_epoch.toIso8601Ext()
+                        << ", pos: " << idxTo.m_position << ", fileindex: " << idxTo.m_fileindex;
                 if (idxFrom.m_fileindex == -1) {
                     KARABO_LOG_WARN << "Requested time point \"" << params.get<string>("from") << "\" for device configuration is earlier than anything logged";
                     reply(deviceId, property, result);
@@ -665,7 +667,7 @@ namespace karabo {
 
                 // epochLeft < from < epochRight
                 result.fromFileNumber = fnum;
-                result.fromRecord = findPositionOfEpochstamp(f, from, recLeft, recRight);
+                result.fromRecord = findPositionOfEpochstamp(f, from, recLeft, recRight, false);
                 break;
             }
 
@@ -678,7 +680,7 @@ namespace karabo {
                     if (ROUND1MS(to) == ROUND1MS(lastEpochInFile))
                         result.toRecord = nrecs - 1;
                     else
-                        result.toRecord = findPositionOfEpochstamp(f, to, recLeft, recRight);
+                        result.toRecord = findPositionOfEpochstamp(f, to, recLeft, recRight, true);
                     result.nrecList.push_back(result.toRecord + 1 - result.fromRecord);
                     if (f.is_open()) f.close();
                     return result;
@@ -736,7 +738,7 @@ namespace karabo {
 
                 // epochLeft < to < epochRight
                 result.toFileNumber = fnum;
-                result.toRecord = findPositionOfEpochstamp(f, to, recLeft, recRight);
+                result.toRecord = findPositionOfEpochstamp(f, to, recLeft, recRight, true);
                 result.nrecList.push_back(result.toRecord + 1);
                 break;
             }
@@ -745,31 +747,40 @@ namespace karabo {
         }
 
 
-        size_t DataLogReader::findPositionOfEpochstamp(ifstream& f, double t, size_t& left, size_t& right) {
+        size_t DataLogReader::findPositionOfEpochstamp(ifstream& f, double t, size_t left, size_t right, bool preferBefore) {
             MetaData::Record records[128];
+            const double roundedT = ROUND1MS(t);
+            // Recursively narrow the search until at most 128 records are left.
             while ((right - left) > 128) {
                 // divide by 2 and check middle point
-                size_t recnum = left + (right - left) / 2;
+                const size_t recnum = left + (right - left) / 2;
                 f.seekg(recnum * sizeof (MetaData::Record));
                 f.read((char*) records, sizeof (MetaData::Record));
-                double epoch = records[0].epochstamp;
-                if (ROUND1MS(t) == ROUND1MS(epoch))
+                const double epoch = records[0].epochstamp;
+                if (ROUND1MS(epoch) == roundedT) {
                     return recnum;
-                if (t < epoch) {
+                } else if (t < epoch) {
                     right = recnum;
                 } else {
                     left = recnum;
                 }
             }
 
-            left++;
+            // Load all records from left to (including) right:
             f.seekg(left * sizeof (MetaData::Record));
-            f.read((char*) records, (right - left) * sizeof (MetaData::Record));
-            for (size_t i = 0; i < (right + 1 - left); i++) {
-                double epoch = records[i].epochstamp;
-                if (ROUND1MS(t) >= ROUND1MS(epoch)) return (left + i);
+            f.read((char*) records, (right - left + 1) * sizeof (MetaData::Record));
+            // Loop and find record with best matching timestamp:
+            size_t i = 0;
+            for ( ; i <= (right - left); ++i) {
+                const double epoch = records[i].epochstamp;
+                // In case we never reach the return or break below, the input 'right' is wrong!
+                if (ROUND1MS(epoch) == roundedT) {
+                    return left + i;
+                } else if (epoch > t) {
+                    break;
+                }
             }
-            throw KARABO_PARAMETER_EXCEPTION("Epochstamp was not found! Timestamp " + toString(t) + " is wrong!");
+            return left + i - (preferBefore ? 1 : 0);
         }
     }
 
