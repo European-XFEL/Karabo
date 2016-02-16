@@ -284,25 +284,28 @@ class PenStyleComboBox(QComboBox):
 
 
 class SceneLinkDialog(QDialog):
-    def __init__(self, project, target, parent=None):
+    def __init__(self, sceneNames, target, parent=None):
         super(SceneLinkDialog, self).__init__(parent=parent)
         uic.loadUi(path.join(path.dirname(__file__), 'scenelink.ui'), self)
 
+        self._selectedScene = 0
+        self._sceneNames = sceneNames
         sceneCombo = self.sceneSelectCombo
-        for scene in project.scenes:
-            sceneCombo.addItem(scene.filename)
+        for name in sceneNames:
+            sceneCombo.addItem(name)
 
         targetIndex = sceneCombo.findText(target)
         if targetIndex > -1:
-            self.selectedScene = targetIndex
-        else:
-            self.selectedScene = 0
-        sceneCombo.setCurrentIndex(self.selectedScene)
+            self._selectedScene = targetIndex
+
+        sceneCombo.setCurrentIndex(self._selectedScene)
 
     @property
-    def sceneSelection(self):
-        return self.selectedScene - 1
+    def selectedScene(self):
+        if self._selectedScene == 0:
+            return ""
+        return self._sceneNames[self._selectedScene - 1]
 
     @pyqtSlot(int)
     def on_sceneSelectCombo_currentIndexChanged(self, index):
-        self.selectedScene = index
+        self._selectedScene = index
