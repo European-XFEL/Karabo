@@ -604,25 +604,29 @@ class SceneLink(QPushButton, Loadable):
         QPushButton.__init__(self, parent)
         Loadable.__init__(self)
 
-        self.setObjectName("scnLnk")
         self.setCursor(Qt.PointingHandCursor)
         self.target = target
 
-        ss = """
-QPushButton#scnLnk {
-    background-color: transparent;
-    border: 2px solid black;
-}
-QPushButton#scnLnk:pressed {
-    background-color: transparent;
-    border: none;
-}
-QPushButton#scnLnk:pressed {
-    background-color: transparent;
-    border: none;
-}
-"""
-        self.setStyleSheet(ss)
+    def paintEvent(self, event):
+        painter = QPainter(self)
+
+        boundary = self.rect().adjusted(2, 2, -2, -2)
+        pt = boundary.topLeft()
+        rects = [QRect(pt, QSize(7, 7)),
+                 QRect(pt + QPoint(11, 0), QSize(7, 7))]
+
+        pen = QPen(Qt.black)
+        pen.setCapStyle(Qt.FlatCap)
+        pen.setStyle(Qt.SolidLine)
+        pen.setJoinStyle(Qt.SvgMiterJoin)
+        painter.drawRect(boundary)
+        pen.setColor(Qt.darkGray)
+        pen.setWidth(3)
+        painter.setPen(pen)
+        painter.drawRects(rects)
+        pen.setColor(Qt.lightGray)
+        painter.setPen(pen)
+        painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
 
     def save(self, elem):
         elem.set(ns_karabo + "class", "SceneLink")
@@ -649,22 +653,6 @@ class SceneLinkAction(Action):
         action.triggered.connect(partial(parent.set_current_action, c))
         return action
 
-    def draw(self, painter):
-        pt = QPoint(0, 0)
-        rects = [QRect(pt, QSize(7, 7)),
-                 QRect(pt + QPoint(11, 0), QSize(7, 7))]
-
-        pen = QPen(Qt.darkGray)
-        pen.setCapStyle(Qt.FlatCap)
-        pen.setStyle(Qt.SolidLine)
-        pen.setJoinStyle(Qt.SvgMiterJoin)
-        pen.setWidth(3)
-        painter.setPen(pen)
-        painter.drawRects(rects)
-        pen.setColor(Qt.lightGray)
-        painter.setPen(pen)
-        painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
-
     def mousePressEvent(self, parent, event):
         project = parent.project
         dialog = SceneLinkDialog(project, "", parent=parent)
@@ -687,6 +675,9 @@ class SceneLinkAction(Action):
         pass
 
     def mouseMoveEvent(self, parent, event):
+        pass
+
+    def draw(self, painter):
         pass
 
 
