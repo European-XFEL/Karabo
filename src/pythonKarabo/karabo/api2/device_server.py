@@ -130,7 +130,7 @@ class DeviceServer(SignalSlotable):
             ])
 
     def run(self):
-        self.log.setBroker(self._ss)
+        self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
         super().run()
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
