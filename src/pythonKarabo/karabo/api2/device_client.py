@@ -314,9 +314,9 @@ class getHistory:
     afterwards), and the value of the property at that time.
 
     Another parameter, *maxNumData*, may be given, which gives the maximum
-    number of data points to be returned. The returned data will be
-    reduced appropriately to still span the full timespan."""
-    def __init__(self, proxy, begin, end, maxNumData=0, *, timeout=5):
+    number of data points to be returned. It defaults to 10000. The returned
+    data will be reduced appropriately to still span the full timespan."""
+    def __init__(self, proxy, begin, end, maxNumData=10000, *, timeout=5):
         self.proxy = proxy
         self.begin = self.__parse(begin)
         self.end = self.__parse(end)
