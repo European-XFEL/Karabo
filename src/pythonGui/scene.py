@@ -436,6 +436,11 @@ class Label(QLabel, Loadable):
         label.setStyleSheet("".join(ss))
         return proxy
 
+    def edit(self, parent):
+        dialog = TextDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+            parent.setModified()
+
 
 class LabelAction(Action):
     text = "Add text"
@@ -646,6 +651,18 @@ class SceneLink(QPushButton, Loadable):
         proxy.setWidget(link)
         layout.loadPosition(elem, proxy)
         return proxy
+
+    def edit(self, parent):
+        project = parent.project
+        dialog = SceneLinkDialog(project, self.target, parent=parent)
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            if dialog.sceneSelection > -1:
+                selectedScene = project.scenes[dialog.sceneSelection]
+                self.target = selectedScene.filename
+            else:
+                self.target = ""
+            parent.setModified()
 
 
 class SceneLinkAction(Action):
@@ -1424,10 +1441,8 @@ class Scene(QSvgWidget):
         if w is not None:
             while not isinstance(w, ProxyWidget):
                 w = w.parent()
-            if isinstance(w.widget, Label):
-                dialog = TextDialog(w.widget)
-                dialog.exec_()
-                self.setModified()
+            if isinstance(w.widget, (Label, SceneLink)):
+                w.widget.edit(self)
             return
         item = self.ilayout.itemAtPosition(event.pos())
         if item is None:
