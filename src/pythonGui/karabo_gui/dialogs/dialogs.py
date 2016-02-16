@@ -289,7 +289,6 @@ class SceneLinkDialog(QDialog):
         uic.loadUi(path.join(path.dirname(__file__), 'scenelink.ui'), self)
 
         sceneCombo = self.sceneSelectCombo
-        sceneCombo.addItem("")
         for scene in project.scenes:
             sceneCombo.addItem(scene.filename)
 
@@ -299,12 +298,11 @@ class SceneLinkDialog(QDialog):
         else:
             self.selectedScene = 0
         sceneCombo.setCurrentIndex(self.selectedScene)
-        sceneCombo.currentIndexChanged.connect(self._onSceneChanged)
 
     @property
     def sceneSelection(self):
         return self.selectedScene - 1
 
     @pyqtSlot(int)
-    def _onSceneChanged(self, index):
+    def on_sceneSelectCombo_currentIndexChanged(self, index):
         self.selectedScene = index
