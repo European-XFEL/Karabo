@@ -31,7 +31,8 @@ namespace karabo {
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
-        , m_getOlder(true) {
+        , m_getOlder(true)
+        , m_loggerMapCached(false) {
 
             std::string ownInstanceId = generateOwnInstanceId();
             m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
@@ -53,9 +54,7 @@ namespace karabo {
                 return;
             }
                 
-            // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
-            //m_ageingThread.detach();
 
             this->setupSlots();
         }
@@ -68,11 +67,10 @@ namespace karabo {
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
-        , m_getOlder(true) {
-            
-            // TODO Comment in to activate aging
+        , m_getOlder(true)
+        , m_loggerMapCached(false) {
+
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
-            //m_ageingThread.detach();
 
             this->setupSlots();
         }
@@ -104,6 +102,7 @@ namespace karabo {
             p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::_slotInstanceNew, this, _1, _2), "_slotInstanceNew");
             p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::_slotInstanceGone, this, _1, _2), "_slotInstanceGone");
             p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated");
+            p->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::_slotLoggerMap, this, _1), "_slotLoggerMap");
             p->connect("", "signalInstanceNew", "", "_slotInstanceNew");
             p->connect("", "signalInstanceGone", "", "_slotInstanceGone");
         }
@@ -843,6 +842,56 @@ namespace karabo {
         }
 
 
+        bool DeviceClient::cacheLoggerMap(bool toggle) {
+            if (toggle == m_loggerMapCached) return true;
+
+            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+            if (!p) {
+                KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
+                return false;
+            } else {
+                if (toggle) {
+                    // connect and request a first time
+                    if (p->connect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap",
+                            SignalSlotable::RECONNECT, false)) {
+                        // If we cannot connect, request makes no sense
+                        Hash loggerMap;
+                        try {
+                            p->request(core::DATALOGMANAGER_ID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(loggerMap);
+                            // Next 3 lines would better fit in an else block as in Python's try-except-else...
+                            boost::mutex::scoped_lock lock(m_loggerMapMutex);
+                            m_loggerMap = loggerMap;
+                            m_loggerMapCached = true;
+                            return true;
+                        } catch (const TimeoutException&) {
+                            return false;
+                        }
+                    } else {
+                        KARABO_LOG_FRAMEWORK_WARN << "Failed to connect _slotLoggerMap";
+                        return false;
+                    }
+                } else {
+                    m_loggerMapCached = false;
+                    // disconnect and clear (since otherwise possibly wrong info)
+                    if (!p->disconnect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap", false)) {
+                        KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect _slotLoggerMap";
+                        return false;
+                    }
+                    boost::mutex::scoped_lock lock(m_loggerMapMutex);
+                    m_loggerMap.clear();
+                    return true;
+                }
+            }
+        }
+
+
+        void DeviceClient::_slotLoggerMap(const karabo::util::Hash& loggerMap) {
+            KARABO_LOG_FRAMEWORK_INFO << "DeviceClient::_slotLoggerMap called";
+            boost::mutex::scoped_lock lock(m_loggerMapMutex);
+            m_loggerMap = loggerMap;
+        }
+
+
         std::vector<karabo::util::Hash> DeviceClient::getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, int maxNumData) {
             return getPropertyHistory(deviceId, key, from, to, maxNumData);
         }
@@ -873,28 +922,45 @@ namespace karabo {
         }
 
 
-        std::string DeviceClient::getDataLogReader(const std::string& deviceId) const {
-            std::string dataLogReader;
-            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-            if (p) {
-                Hash loggerMap; // to become map with key=loggerId, value=server
-                try {
-                    p->request(core::DATALOGMANAGER_INSTANCEID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(loggerMap);
-                } catch (const TimeoutException&) {
-                    // Will fail below due to empty map...
-                }
-                const std::string loggerId(core::DATALOGGER_PREFIX + deviceId);
-                if (loggerMap.has(loggerId)) {
-                    // there is a server - so assemble the instanceId of a log reader
-                    static int i = 0; // just choose an 'arbitrary' reader
-                    (dataLogReader += core::DATALOGREADER_PREFIX) += toString(i++ % core::DATALOGREADERS_PER_SERVER)
-                            += "-" + loggerMap.get<std::string>(loggerId);
-                } else {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Cannot find data log reader for logger '" << loggerId << "'";
-                }
-            } else {
-                KARABO_LOG_FRAMEWORK_ERROR << "SignalSlotable object is not valid (destroyed).";
+        std::string DeviceClient::getDataLogReader(const std::string& deviceId) {
+            std::string dataLogReader; // the result
+
+            // Try to get server - 1st try from map:
+            std::string dataLogServer;
+            const std::string loggerId(core::DATALOGGER_PREFIX + deviceId);
+            if (m_loggerMapCached) {
+                boost::mutex::scoped_lock lock(m_loggerMapMutex);
+                if (m_loggerMap.has(loggerId)) {
+                    dataLogServer = m_loggerMap.get<std::string>(loggerId);
+                } // else: empty loggerMap, i.e. not tracked, or non-existing/non-logged device
             }
+            // 2nd try: request map from log manager:
+            if (dataLogServer.empty()) {
+                karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+                if (p) {
+                    Hash localLogMap; // to become map with key=loggerId, value=server
+                    try {
+                        p->request(core::DATALOGMANAGER_ID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(localLogMap);
+                    } catch (const TimeoutException&) {
+                        // Will fail below due to empty map...
+                    }
+                    if (localLogMap.has(loggerId)) {
+                        dataLogServer = localLogMap.get<std::string>(loggerId);
+                    }
+                } else {
+                    KARABO_LOG_FRAMEWORK_ERROR << "SignalSlotable object is not valid (destroyed).";
+                }
+            }
+
+            if (dataLogServer.empty()) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed to find data log reader for logger '" << loggerId << "'";
+            } else {
+                // Assemble the instanceId of a log reader
+                static int i = 0; // just choose an 'arbitrary' reader
+                (dataLogReader += core::DATALOGREADER_PREFIX) += toString(i++ % core::DATALOGREADERS_PER_SERVER)
+                        += "-" + dataLogServer;
+            }
+
             return dataLogReader;
         }
 
@@ -903,7 +969,7 @@ namespace karabo {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(make_pair<Hash, Schema>(Hash(), Schema()));
             Hash hash;
             Schema schema;
-            m_signalSlotable.lock()->request(core::DATALOGMANAGER_INSTANCEID, "slotGetConfigurationFromPast", deviceId, timepoint)
+            m_signalSlotable.lock()->request(core::DATALOGMANAGER_ID, "slotGetConfigurationFromPast", deviceId, timepoint)
                 .timeout(60000).receive(hash, schema);
             return make_pair(hash, schema);
         }
