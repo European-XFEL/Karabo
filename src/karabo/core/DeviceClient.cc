@@ -31,7 +31,6 @@ namespace karabo {
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
-        , m_masterMode(NO_MASTER)
         , m_getOlder(true) {
 
             std::string ownInstanceId = generateOwnInstanceId();
@@ -69,7 +68,6 @@ namespace karabo {
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
-        , m_masterMode(NO_MASTER)
         , m_getOlder(true) {
             
             // TODO Comment in to activate aging
