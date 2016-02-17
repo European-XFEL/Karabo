@@ -207,6 +207,7 @@ namespace karabo {
                 if (params.has("to")) to = Epochstamp(params.get<string>("to"));
                 unsigned int maxNumData = 0;
                 if (params.has("maxNumData")) maxNumData = params.getAs<int>("maxNumData");
+                if (0 == maxNumData) maxNumData = 100;
 
                 int lastFileIndex = getFileIndex(deviceId);
                 if (lastFileIndex < 0) {
