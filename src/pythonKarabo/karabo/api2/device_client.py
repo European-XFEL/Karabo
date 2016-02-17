@@ -313,6 +313,13 @@ class getHistory:
     the last row in a set (typically, the device has been switched off
     afterwards), and the value of the property at that time.
 
+    The dates of the timespan are parsed using
+    :func:`dateutil.parser.parse`, allowing many ways to write the date.
+    The most precise way is to write "2009-09-01T15:32:12 UTC", but you may
+    omit any part, like "10:32", only giving the time, where we assume
+    the current day.  Unless specified otherwise, your local timezone is
+    assumed.
+
     Another parameter, *maxNumData*, may be given, which gives the maximum
     number of data points to be returned. It defaults to 10000. The returned
     data will be reduced appropriately to still span the full timespan."""
