@@ -65,13 +65,6 @@ namespace karabo {
             
         protected: // members
 
-            enum MasterMode {
-
-                IS_MASTER,
-                HAS_MASTER,
-                NO_MASTER
-            };
-
             /**
              * server +
              *   <serverId> type host version status deviceClasses +
@@ -114,13 +107,9 @@ namespace karabo {
 
             int m_internalTimeout;
 
-            std::string m_masterDeviceId;
-
             bool m_isAdvancedMode; // DEPRECATED
             
             bool m_topologyInitialized;
-
-            MasterMode m_masterMode;
 
             boost::thread m_ageingThread;
 
