@@ -325,12 +325,12 @@ class getHistory:
     data will be reduced appropriately to still span the full timespan."""
     def __init__(self, proxy, begin, end, maxNumData=10000, *, timeout=5):
         self.proxy = proxy
-        self.begin = self.__parse(begin)
-        self.end = self.__parse(end)
+        self.begin = self._parse(begin)
+        self.end = self._parse(end)
         self.maxNumData = maxNumData
         self.timeout = timeout
 
-    def __parse(self, date):
+    def _parse(self, date):
         d = dateutil.parser.parse(date)
         if d.tzinfo is None:
             d = d.replace(tzinfo=dateutil.tz.tzlocal())
@@ -341,24 +341,28 @@ class getHistory:
         return dir(self.proxy)
 
     def __getattr__(self, attr):
-        return self.__getattr(attr, timeout=self.timeout)
+        return self._synchronized_getattr(attr, timeout=self.timeout)
 
     @synchronize
-    def __getattr(self, attr):
+    def _synchronized_getattr(self, attr):
+        # this method contains a lot of hard-coded strings. It follows
+        # GuiServerDevice::onGetPropertyHistory. One day we should
+        # de-hard-code both.
         if isinstance(self.proxy, Proxy):
+            # does the attribute actually exist?
             assert isinstance(getattr(type(self.proxy), attr), Type)
             deviceId = self.proxy._deviceId
         else:
             deviceId = str(self.proxy)
         instance = get_instance()
-        id = "DataLogger-{}".format(deviceId)
-        if id not in instance.loggerMap:
+        did = "DataLogger-{}".format(deviceId)
+        if did not in instance.loggerMap:
             instance.loggerMap = yield from instance.call(
                 "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
-            if id not in instance.loggerMap:
+            if did not in instance.loggerMap:
                 raise KaraboError('no logger for device "{}"'.
                                   format(deviceId))
-        reader = "DataLogReader0-{}".format(instance.loggerMap[id])
+        reader = "DataLogReader0-{}".format(instance.loggerMap[did])
         r_deviceId, r_attr, data = yield from get_instance().call(
             reader, "slotGetPropertyHistory", deviceId, attr,
             Hash("from", self.begin, "to", self.end,
