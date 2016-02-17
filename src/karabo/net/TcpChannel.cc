@@ -7,7 +7,6 @@
 #include <karabo/util/Hash.hh>
 #include <boost/pointer_cast.hpp>
 #include <snappy.h>
-#include "karabo/log/Logger.hh"
 #include "Channel.hh"
 #include "TcpChannel.hh"
 #include "AsioIOService.hh"
@@ -47,7 +46,6 @@ namespace karabo {
 
 
         TcpChannel::~TcpChannel() {
-            KARABO_LOG_FRAMEWORK_DEBUG << "TcpChannel::~TcpChannel() DTOR";
             close();
         }
 
@@ -272,6 +270,14 @@ namespace karabo {
         }
 
 
+        void TcpChannel::readAsyncHashPointer(const ReadHashPointerHandler& handler) {
+            if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
+            m_activeHandler = TcpChannel::HASH_POINTER;
+            m_readHandler = handler;
+            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+        }
+
+
         void TcpChannel::readAsyncHashVector(const ReadHashVectorHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH_VECTOR;
@@ -302,6 +308,15 @@ namespace karabo {
         void TcpChannel::readAsyncHashHash(const ReadHashHashHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH_HASH;
+            m_readHeaderFirst = true;
+            m_readHandler = handler;
+            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+        }
+
+
+        void TcpChannel::readAsyncHashPointerHashPointer(const ReadHashPointerHashPointerHandler& handler) {
+            if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
+            m_activeHandler = TcpChannel::HASH_POINTER_HASH_POINTER;
             m_readHeaderFirst = true;
             m_readHandler = handler;
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
@@ -344,6 +359,13 @@ namespace karabo {
                     Hash h;
                     this->prepareHashFromData(h);
                     boost::any_cast<ReadHashHandler>(m_readHandler) (h);
+                    break;
+                }
+                case HASH_POINTER:
+                {
+                    Hash::Pointer h(new Hash);
+                    this->prepareHashFromData(*h);
+                    boost::any_cast<ReadHashPointerHandler>(m_readHandler) (h);
                     break;
                 }
 
@@ -400,6 +422,21 @@ namespace karabo {
                     Hash body;
                     this->prepareHashFromData(body);
                     boost::any_cast<ReadHashHashHandler>(m_readHandler) (header, body);
+                    break;
+                }
+
+                case HASH_POINTER_HASH_POINTER:
+                {
+                    Hash::Pointer header(new Hash);
+                    this->prepareHashFromHeader(*header);
+                    if (header->has("__compression__")) {
+                        boost::shared_ptr<std::vector<char> > tmp(new std::vector<char>());
+                        tmp.swap(m_inboundData);
+                        decompress(*header, *tmp, *m_inboundData);
+                    }
+                    Hash::Pointer body(new Hash);
+                    this->prepareHashFromData(*body);
+                    boost::any_cast<ReadHashPointerHashPointerHandler>(m_readHandler) (header, body);
                     break;
                 }
                 default:
@@ -1007,16 +1044,12 @@ namespace karabo {
 
 
         void TcpChannel::close() {
-            KARABO_LOG_FRAMEWORK_DEBUG << "TcpChannel::close() : is open? : " << boolalpha << m_socket.is_open();
             boost::system::error_code ec;
             m_timer.cancel(ec);
-            if (ec)
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::close() : timer cancel : "
-                        << ec.value() << " -- " << ec.message();
+            if (ec) cout << "WARN  : TCP : Timer cancellation failed: #" << ec.value() << " -- " << ec.message() << endl;
+            ec.clear();
             m_socket.close(ec);
-            if (ec)
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::close() : socket close : "
-                        << ec.value() << " -- " << ec.message();
+            if (ec) cout << "WARN  : TCP : Socket closing failed. #" << ec.value() << " -- " << ec.message() << endl;
         }
 
 
