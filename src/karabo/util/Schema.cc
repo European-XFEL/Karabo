@@ -96,6 +96,7 @@ namespace karabo {
 
         void Schema::merge(const Schema& schema) {
             this->getParameterHash().merge(schema.getParameterHash());
+            updateAliasMap();                                        
         }
 
         bool Schema::empty() const {
