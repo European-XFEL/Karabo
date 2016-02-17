@@ -9,6 +9,7 @@
 #include <karabo/log/Logger.hh>
 #include <karabo/io/FileTools.hh>
 #include <karabo/webAuth/Authenticator.hh>
+#include <karabo/core/DataLogUtils.hh>
 
 #include "DeviceClient.hh"
 #include "karabo/net/utils.hh"
@@ -849,14 +850,54 @@ namespace karabo {
         }
 
 
-        std::vector<karabo::util::Hash> DeviceClient::getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, int maxNumData) {
-            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(vector<Hash>());
+        std::vector<karabo::util::Hash> DeviceClient::getPropertyHistory(const std::string& deviceId, const std::string& property, const std::string& from, std::string to, int maxNumData) {
+            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+            if (!p) {
+                KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
+                return vector<Hash>();
+            }
             if (to.empty()) to = karabo::util::Epochstamp().toIso8601();
-            vector<Hash> result;
-            // TODO Make this a global slot later
-            Hash args("from", from, "to", to, "maxNumData", maxNumData);
-            m_signalSlotable.lock()->request("Karabo_DataLoggerManager_0", "slotGetPropertyHistory", deviceId, key, args).timeout(60000).receive(result);
+
+            const std::string dataLogReader(this->getDataLogReader(deviceId));
+            std::vector<Hash> result;
+            std::string dummy1, dummy2; // deviceId and property (as our input - relevant for receiveAsync)
+            const Hash args("from", from, "to", to, "maxNumData", maxNumData);
+
+            try {
+                // Increasing timeout since getting history may take a while...
+                p->request(dataLogReader, "slotGetPropertyHistory", deviceId, property, args)
+                    .timeout(10 * m_internalTimeout).receive(dummy1, dummy2, result);
+            } catch (const TimeoutException&) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Request to DataLogReader '" << dataLogReader
+                        << "' timed out for device.property '" << deviceId << "." << property << "'.";
+            }
             return result;
+        }
+
+
+        std::string DeviceClient::getDataLogReader(const std::string& deviceId) const {
+            std::string dataLogReader;
+            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+            if (p) {
+                Hash loggerMap; // to become map with key=loggerId, value=server
+                try {
+                    p->request(core::DATALOGMANAGER_INSTANCEID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(loggerMap);
+                } catch (const TimeoutException&) {
+                    // Will fail below due to empty map...
+                }
+                const std::string loggerId(core::DATALOGGER_PREFIX + deviceId);
+                if (loggerMap.has(loggerId)) {
+                    // there is a server - so assemble the instanceId of a log reader
+                    static int i = 0; // just choose an 'arbitrary' reader
+                    (dataLogReader += core::DATALOGREADER_PREFIX) += toString(i++ % core::DATALOGREADERS_PER_SERVER)
+                            += "-" + loggerMap.get<std::string>(loggerId);
+                } else {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Cannot find data log reader for logger '" << loggerId << "'";
+                }
+            } else {
+                KARABO_LOG_FRAMEWORK_ERROR << "SignalSlotable object is not valid (destroyed).";
+            }
+            return dataLogReader;
         }
 
 
@@ -864,7 +905,8 @@ namespace karabo {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(make_pair<Hash, Schema>(Hash(), Schema()));
             Hash hash;
             Schema schema;
-            m_signalSlotable.lock()->request("Karabo_DataLoggerManager_0", "slotGetConfigurationFromPast", deviceId, timepoint).timeout(60000).receive(hash, schema);
+            m_signalSlotable.lock()->request(core::DATALOGMANAGER_INSTANCEID, "slotGetConfigurationFromPast", deviceId, timepoint)
+                .timeout(60000).receive(hash, schema);
             return make_pair(hash, schema);
         }
 
