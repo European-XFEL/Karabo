@@ -39,11 +39,13 @@ namespace karabo {
             typedef boost::function<void (std::vector<char>&) > ReadVectorHandler;
             typedef boost::function<void (std::string&) > ReadStringHandler;
             typedef boost::function<void (karabo::util::Hash&) > ReadHashHandler;
+            typedef boost::function<void (karabo::util::Hash::Pointer&) > ReadHashPointerHandler;
             typedef boost::function<void (boost::shared_ptr<std::vector<char> >&) > ReadVectorPointerHandler;
 
             typedef boost::function<void (karabo::util::Hash&, std::vector<char>&) > ReadHashVectorHandler;
             typedef boost::function<void (karabo::util::Hash&, std::string&) > ReadHashStringHandler;
             typedef boost::function<void (karabo::util::Hash&, karabo::util::Hash&) > ReadHashHashHandler;
+            typedef boost::function<void (karabo::util::Hash::Pointer&, karabo::util::Hash::Pointer&) > ReadHashPointerHashPointerHandler;
             typedef boost::function<void (karabo::util::Hash&, boost::shared_ptr<std::vector<char> >&) > ReadHashVectorPointerHandler;
 
             typedef boost::function<void () > WriteCompleteHandler;
@@ -223,6 +225,15 @@ namespace karabo {
 
 
             /**
+             * Asynchronously reads data into a hash. All memory management is done by the API.
+             * @param handler Call-function of signature: void (Channel::Pointer, const karabo::util::Hash&)
+             */
+            virtual void readAsyncHashPointer(const ReadHashPointerHandler& handler) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+
+
+            /**
              * Asynchronously reads data into a vector<char>. All memory management is done by the API.
              * @param handler Call-function of signature: void (Channel::Pointer, const std::vector<char>&)
              */
@@ -257,6 +268,14 @@ namespace karabo {
              * @param handler Call-function of signature: void (Channel::Pointer, const karabo::util::Hash&, const karabo::util::Hash&)
              */
             virtual void readAsyncHashHash(const ReadHashHashHandler& handler) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+
+            /**
+             * Asynchronously reads data into a hash header and a hash body. All memory management is done by the API.
+             * @param handler Call-function of signature: void (Channel::Pointer, const karabo::util::Hash&, const karabo::util::Hash&)
+             */
+            virtual void readAsyncHashPointerHashPointer(const ReadHashPointerHashPointerHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
