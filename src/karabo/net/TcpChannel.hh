@@ -32,6 +32,8 @@ namespace karabo {
                 HASH_HASH,
                 VECTOR_POINTER,
                 HASH_VECTOR_POINTER,
+                HASH_POINTER,
+                HASH_POINTER_HASH_POINTER,
             };
             
             TcpConnection::Pointer m_connectionPointer;
@@ -179,6 +181,8 @@ namespace karabo {
             
             void readAsyncHash(const ReadHashHandler& handler);
             
+            void readAsyncHashPointer(const ReadHashPointerHandler& handler);
+            
             void readAsyncVectorPointer(const ReadVectorPointerHandler& handler);
             
             //**************************************************************/
@@ -190,6 +194,8 @@ namespace karabo {
             void readAsyncHashString(const ReadHashStringHandler& handler);
             
             void readAsyncHashHash(const ReadHashHashHandler& handler);
+            
+            void readAsyncHashPointerHashPointer(const ReadHashPointerHashPointerHandler& handler);
             
             void readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler);
 

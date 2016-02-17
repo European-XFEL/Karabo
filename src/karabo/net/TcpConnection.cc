@@ -122,7 +122,6 @@ namespace karabo {
             m_acceptor.reset();
             m_resolver.reset();
             m_boostIoServicePointer.reset();
-            KARABO_LOG_FRAMEWORK_DEBUG << "TcpConnection::~TcpConnection() DTOR";
         }
         
         
@@ -168,7 +167,7 @@ namespace karabo {
                 new_channel = this->createChannel();
                 TcpChannel::Pointer ch = boost::static_pointer_cast<TcpChannel > (new_channel);
                 m_acceptor->accept(ch->socket());
-                KARABO_LOG_FRAMEWORK_DEBUG << "Accepted new connection: " << ch->socket().remote_endpoint().address() << ":" << ch->socket().remote_endpoint().port();
+                //KARABO_LOG_FRAMEWORK_DEBUG << "Accepted new connection: " << ch->socket().remote_endpoint().address() << ":" << ch->socket().remote_endpoint().port();
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -184,7 +183,7 @@ namespace karabo {
                 new_channel = this->createChannel();
                 TcpChannel::Pointer ch = boost::static_pointer_cast<TcpChannel > (new_channel);
                 ch->socket().connect(*endpoint_iterator);
-                KARABO_LOG_FRAMEWORK_DEBUG << "Connected to: " << ch->socket().remote_endpoint().address() << ":" << ch->socket().remote_endpoint().port();
+                //KARABO_LOG_FRAMEWORK_DEBUG << "Connected to: " << ch->socket().remote_endpoint().address() << ":" << ch->socket().remote_endpoint().port();
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -247,17 +246,16 @@ namespace karabo {
 
 
         void TcpConnection::acceptHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
-            if (!e) {
-                {
-                TcpChannel::Pointer tc = boost::static_pointer_cast<TcpChannel > (channel);
-                KARABO_LOG_FRAMEWORK_DEBUG << "Accepted new connection: " << tc->socket().remote_endpoint().address() << ":" << tc->socket().remote_endpoint().port();
-                }
-                handler(channel);
-            } else {
-                if (m_errorHandler)
+            try {
+                if (!e)
+                    handler(channel);
+                else if (m_errorHandler)
                     m_errorHandler(e);
-                else
-                    throw KARABO_NETWORK_EXCEPTION(e.message());
+                else if (e.value() != 125) {   // 125 -- Operation canceled
+                    cout << "ERROR  : TCP : Accept handler got code #" << e.value() << " -- " << e.message() << endl;
+                }
+            } catch (...) {
+                KARABO_RETHROW
             }
         }
 
@@ -295,10 +293,6 @@ namespace karabo {
         void TcpConnection::connectHandler(const Channel::Pointer& channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
                 if (!e) {
-                    {
-                    TcpChannel::Pointer tc = boost::static_pointer_cast<TcpChannel > (channel);
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Connected to: " << tc->socket().remote_endpoint().address() << ":" << tc->socket().remote_endpoint().port();
-                    }
                     handler(channel);
                 } else {
                     if (m_errorHandler)
@@ -315,22 +309,16 @@ namespace karabo {
         void TcpConnection::stop() {
             boost::system::error_code ec;
             if (m_connectionType == "server" && m_acceptor) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "TcpConnection::stop() - server.";
                 m_acceptor->cancel(ec);
-                if (ec)
-                    KARABO_LOG_FRAMEWORK_ERROR << "TcpConnection::stop() - server acceptor cancel : "
-                            << ec.value() << " -- " << ec.message();
+                if (ec) cout << "WARN  :  Acceptor cancellation failed: #" << ec.value() << " -- " << ec.message() << endl;
+                ec.clear();
                 m_acceptor->close(ec);
-                if (ec)
-                    KARABO_LOG_FRAMEWORK_ERROR << "TcpConnection::stop() - server acceptor close : "
-                            << ec.value() << " -- " << ec.message();
+                if (ec) cout << "WARN  :  Acceptor closing failed: #" << ec.value() << " -- " << ec.message() << endl;
                 m_acceptor.reset();
             } else if (m_resolver) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "TcpConnection::stop() - client.";
                 m_resolver->cancel();
                 m_resolver.reset();
             }
-            //m_service->stop();
             m_boostIoServicePointer.reset();
             m_service.reset();
         }
