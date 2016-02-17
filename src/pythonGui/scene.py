@@ -10,7 +10,7 @@
 
 from components import (DisplayComponent, EditableApplyLaterComponent)
 
-from karabo_gui.dialogs.dialogs import PenDialog, TextDialog
+from karabo_gui.dialogs.dialogs import PenDialog, TextDialog, SceneLinkDialog
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
@@ -24,14 +24,15 @@ import karabo_gui.icons as icons
 import manager
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
-from PyQt4.QtCore import (pyqtSignal, Qt, QByteArray, QEvent, QSize, QRect, QLine,
-                          QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
-                          QPoint, QPointF)
+from PyQt4.QtCore import (pyqtSignal, pyqtSlot, Qt, QByteArray, QEvent, QSize,
+                          QRect, QLine, QFileInfo, QBuffer, QIODevice,
+                          QMimeData, QRectF, QPoint, QPointF)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
                          QDialog, QDialogButtonBox, QFrame, QLabel, QLayout,
                          QKeySequence, QMenu,QMessageBox, QPalette, QPainter,
-                         QPen, QSizePolicy, QStackedLayout,QStandardItemModel,
-                         QStandardItem, QTreeView, QVBoxLayout, QWidget)
+                         QPen, QPushButton, QSizePolicy, QStackedLayout,
+                         QStandardItemModel, QStandardItem, QTreeView,
+                         QVBoxLayout, QWidget)
 
 from PyQt4.QtSvg import QSvgWidget
 
@@ -435,6 +436,11 @@ class Label(QLabel, Loadable):
         label.setStyleSheet("".join(ss))
         return proxy
 
+    def edit(self, parent):
+        dialog = TextDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+            parent.setModified()
+
 
 class LabelAction(Action):
     text = "Add text"
@@ -594,6 +600,101 @@ class Rectangle(Shape):
         pendialog = PenDialog(self.pen, self.brush)
         pendialog.exec_()
         parent.setModified()
+
+
+class SceneLink(QPushButton, Loadable):
+    def __init__(self, target, signalOpenScene, parent=None):
+        QPushButton.__init__(self, parent)
+        Loadable.__init__(self)
+
+        self.setCursor(Qt.PointingHandCursor)
+        self.target = target
+        self.clicked.connect(self.whenClicked)
+        self.signalOpenScene = signalOpenScene
+
+    @pyqtSlot(bool)
+    def whenClicked(self, checked):
+        if len(self.target) > 0:
+            self.signalOpenScene.emit(self.target)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+
+        boundary = self.rect().adjusted(2, 2, -2, -2)
+        pt = boundary.topLeft()
+        rects = [QRect(pt, QSize(7, 7)),
+                 QRect(pt + QPoint(11, 0), QSize(7, 7))]
+
+        pen = QPen(Qt.black)
+        pen.setCapStyle(Qt.FlatCap)
+        pen.setStyle(Qt.SolidLine)
+        pen.setJoinStyle(Qt.SvgMiterJoin)
+        painter.drawRect(boundary)
+        pen.setColor(Qt.darkGray)
+        pen.setWidth(3)
+        painter.setPen(pen)
+        painter.drawRects(rects)
+        pen.setColor(Qt.lightGray)
+        painter.setPen(pen)
+        painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
+
+    def save(self, elem):
+        elem.set(ns_karabo + "class", "SceneLink")
+        elem.set(ns_karabo + "target", self.target)
+
+    @staticmethod
+    def load(elem, layout):
+        parent = layout.parentWidget().parent()
+        proxy = ProxyWidget(parent.inner)
+        link = SceneLink(elem.get(ns_karabo + "target"),
+                         parent.signalSceneLinkTriggered, parent=proxy)
+        proxy.setWidget(link)
+        layout.loadPosition(elem, proxy)
+        return proxy
+
+    def edit(self, parent):
+        names = parent.project.getSceneNames()
+        dialog = SceneLinkDialog(names, self.target, parent=parent)
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            self.target = dialog.selectedScene
+            parent.setModified()
+
+
+class SceneLinkAction(Action):
+    text = "Add scene link"
+    icon = icons.scenelink
+
+    @classmethod
+    def add_action(cls, source, parent):
+        action = super(SceneLinkAction, cls).add_action(source, parent)
+        c = cls()
+        c.action = action
+        action.triggered.connect(partial(parent.set_current_action, c))
+        return action
+
+    def mousePressEvent(self, parent, event):
+        names = parent.project.getSceneNames()
+        dialog = SceneLinkDialog(names, "", parent=parent)
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            target = dialog.selectedScene
+            p = ProxyWidget(parent.inner)
+            link = SceneLink(target, parent.signalSceneLinkTriggered, parent=p)
+            p.setWidget(link)
+            p.fixed_geometry = QRect(event.pos(), p.sizeHint())
+            parent.ilayout.add_item(p)
+            parent.set_current_action(None)
+            parent.setModified()
+
+    def mouseReleaseEvent(self, parent, event):
+        pass
+
+    def mouseMoveEvent(self, parent, event):
+        pass
+
+    def draw(self, painter):
+        pass
 
 
 class Path(Shape):
@@ -987,7 +1088,8 @@ class Lower(SimpleAction):
 
 class Scene(QSvgWidget):
     signalSceneItemSelected = pyqtSignal(object)
-    
+    signalSceneLinkTriggered = pyqtSignal(str)
+
     def __init__(self, project, name, parent=None, designMode=True):
         super(Scene, self).__init__(parent)
 
@@ -1331,10 +1433,8 @@ class Scene(QSvgWidget):
         if w is not None:
             while not isinstance(w, ProxyWidget):
                 w = w.parent()
-            if isinstance(w.widget, Label):
-                dialog = TextDialog(w.widget)
-                dialog.exec_()
-                self.setModified()
+            if isinstance(w.widget, (Label, SceneLink)):
+                w.widget.edit(self)
             return
         item = self.ilayout.itemAtPosition(event.pos())
         if item is None:
