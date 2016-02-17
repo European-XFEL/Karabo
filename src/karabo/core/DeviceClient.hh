@@ -384,6 +384,9 @@ namespace karabo {
 
             karabo::util::vector<karabo::util::Hash> getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
 
+            /// Returns instanceId of data log reader for data of given device. Could be empty.
+            std::string getDataLogReader(const std::string& deviceId) const;
+
             std::pair<karabo::util::Hash, karabo::util::Schema> getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
             void registerInstanceNewMonitor(const InstanceNewHandler& callBackFunction);
