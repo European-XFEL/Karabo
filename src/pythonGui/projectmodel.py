@@ -1144,7 +1144,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def _createScene(self, project, sceneName):
-        scene = Scene(project, sceneName)
+        scene = Scene(project, sceneName, designMode=True)
         project.addScene(scene)
         
         return scene
