@@ -509,6 +509,9 @@ namespace karabo {
 
 
         void GuiServerDevice::onGetPropertyHistory(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            // Before even thinking about changing this method, don't forget
+            // that all changes must also be reflected in Python API2's
+            // device_client.getHistory.
             try {
                 const string& deviceId = info.get<string > ("deviceId");
                 const string& property = info.get<string > ("property");
