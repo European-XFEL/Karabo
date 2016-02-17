@@ -13,7 +13,7 @@
 namespace karabo {
     namespace core {
 
-        char const * const DATALOGMANAGER_INSTANCEID = "Karabo_DataLoggerManager_0";
+        char const * const DATALOGMANAGER_ID = "Karabo_DataLoggerManager_0";
         char const * const DATALOGGER_PREFIX = "DataLogger-";
         char const * const DATALOGREADER_PREFIX = "DataLogReader";
         unsigned int const DATALOGREADERS_PER_SERVER = 2;
