@@ -596,7 +596,7 @@ class ComplexFloat(Number, Type):
 
     @classmethod
     def write(cls, file, data):
-        file.writeFormatMulti(cls.format, data.real, data.imag)
+        file.writeFormat(cls.format, data.real, data.imag)
 
 
 class VectorComplexFloat(NumpyVector):
@@ -615,7 +615,7 @@ class ComplexDouble(Number, Type):
 
     @classmethod
     def write(cls, file, data):
-        file.writeFormatMulti(cls.format, data.real, data.imag)
+        file.writeFormat(cls.format, data.real, data.imag)
 
 
 class VectorComplexDouble(NumpyVector):
@@ -1330,12 +1330,8 @@ class BinaryParser(object):
 
 
 class BinaryWriter(Writer):
-    def writeFormat(self, fmt, data):
-        s = pack(fmt.encode("ascii"), data)
-        self.file.write(s)
-
-    def writeFormatMulti(self, fmt, *data):
-        s = pack(fmt.encode("ascii"), *data)
+    def writeFormat(self, fmt, *data):
+        s = pack(fmt, *data)
         self.file.write(s)
 
     def writeKey(self, key):
