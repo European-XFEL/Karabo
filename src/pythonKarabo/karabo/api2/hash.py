@@ -590,6 +590,14 @@ class ComplexFloat(Number, Type):
     format = "ff"
     numpy = np.complex64
 
+    @classmethod
+    def fromstring(cls, s):
+        return cls.numpy(complex(s))
+
+    @classmethod
+    def write(cls, file, data):
+        file.writeFormat(cls.format, data.real, data.imag)
+
 
 class VectorComplexFloat(NumpyVector):
     basetype = ComplexFloat
@@ -600,6 +608,14 @@ class ComplexDouble(Number, Type):
     number = 26
     format = "dd"
     numpy = np.complex128
+
+    @classmethod
+    def fromstring(cls, s):
+        return cls.numpy(complex(s))
+
+    @classmethod
+    def write(cls, file, data):
+        file.writeFormat(cls.format, data.real, data.imag)
 
 
 class VectorComplexDouble(NumpyVector):
@@ -1314,10 +1330,9 @@ class BinaryParser(object):
 
 
 class BinaryWriter(Writer):
-    def writeFormat(self, fmt, data):
-        s = pack(fmt.encode("ascii"), data)
+    def writeFormat(self, fmt, *data):
+        s = pack(fmt, *data)
         self.file.write(s)
-
 
     def writeKey(self, key):
         key = key.encode('utf8')
