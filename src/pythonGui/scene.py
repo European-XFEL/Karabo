@@ -1090,7 +1090,7 @@ class Scene(QSvgWidget):
     signalSceneItemSelected = pyqtSignal(object)
     signalSceneLinkTriggered = pyqtSignal(str)
 
-    def __init__(self, project, name, parent=None, designMode=True):
+    def __init__(self, project, name, parent=None, designMode=False):
         super(Scene, self).__init__(parent)
 
         self.project = project
@@ -1250,8 +1250,7 @@ class Scene(QSvgWidget):
                     max(int(root.get('height', 0)), SCENE_MIN_HEIGHT))
         self.layout().setGeometry(self.geometry())
         self.ilayout.setGeometry(self.inner.geometry())
-        self.designMode = True
-        
+
         ar = QByteArray()
         buf = QBuffer(ar)
         buf.open(QIODevice.WriteOnly)

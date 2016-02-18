@@ -29,7 +29,6 @@ class CustomMiddlePanel(Dockable, QScrollArea):
 
         # Reference to underlying scene object
         self.scene = scene
-        self.scene.designMode = isConnectedToServer
         self.setWidget(self.scene)
         
         self.setupActions(isConnectedToServer)
