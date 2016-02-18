@@ -36,5 +36,6 @@ src/karabo/tests/io/resources/*
 src/pythonKarabo/build/
 src/pythonKarabo/dist/
 src/pythonKarabo/karabo/_version.py
+src/pythonGui/krbgui/_version.py
 build/netbeans/*/*.log
 !.gitignore
