@@ -4,54 +4,6 @@ import numbers
 import numpy as np
 
 
-def _get_type(value):
-    """ Figure out the KRB_Type to mark a value with.
-    """
-    if isinstance(value, np.ndarray):
-        numpy_type_names = {
-            np.bool_: 'BoolArray',
-            np.int8: 'Int8Array',
-            np.uint8: 'UInt8Array',
-            np.int16: 'Int16Array',
-            np.uint16: 'UInt16Array',
-            np.int32: 'Int32Array',
-            np.uint32: 'UInt32Array',
-            np.int64: 'Int64Array',
-            np.uint64: 'UInt64Array',
-            np.float32: 'Float32Array',
-            np.float64: 'Float64Array',
-            np.complex64: 'Complex64Array',
-            np.complex128: 'Complex128Array',
-        }
-        return numpy_type_names[value.dtype.type]
-    elif isinstance(value, Hash):
-        return 'Hash'
-    elif isinstance(value, Schema):
-        return 'Schema'
-    elif isinstance(value, bool):
-        return 'Bool'
-    elif isinstance(value, numbers.Integral):
-        return 'Int32'
-    elif isinstance(value, numbers.Real):
-        return 'Float64'
-    elif isinstance(value, numbers.Complex):
-        return 'Complex128'
-    elif isinstance(value, bytes):
-        return 'Bytes'
-    elif isinstance(value, str):
-        return 'String'
-    elif isinstance(value, list):
-        if value:
-            subtype = _get_type(value[0])
-            return subtype + 'List'
-        else:
-            return 'StringList'
-    elif value is None:
-        return 'None'
-    else:
-        raise TypeError('unknown data type "{0}"'.format(value.__class__))
-
-
 class Hash(OrderedDict):
     """This is the fundamental data structure of Karabo
 
@@ -71,7 +23,7 @@ class Hash(OrderedDict):
     """
 
     def __init__(self, *args):
-        self.__node_attrs__ = {'KRB_Type': 'Hash'}
+        self.__node_attrs__ = _get_empty_attr_dict('Hash')
         if len(args) == 1:
             arg = args[0]
             if isinstance(arg, Hash):
@@ -127,13 +79,13 @@ class Hash(OrderedDict):
             node, key = self._path(str(key), auto=True)
             if key not in node:
                 value_type = _get_type(value)
-                node_attrs = {'KRB_Type': value_type, 'KRB_AttrTypes': {}}
+                node_attrs = _get_empty_attr_dict(value_type)
                 node.__node_attrs__[key] = node_attrs
             node.__setitem__(key, value)
         else:
             if key not in self.__node_attrs__:
                 value_type = _get_type(value)
-                node_attrs = {'KRB_Type': value_type, 'KRB_AttrTypes': {}}
+                node_attrs = _get_empty_attr_dict(value_type)
                 self.__node_attrs__[key] = node_attrs
             super(Hash, self).__setitem__(key, value)
 
@@ -253,3 +205,57 @@ class Schema(object):
         else:
             self.hash = hash
         self.rules = rules
+
+
+# Helper functions
+
+def _get_empty_attr_dict(value_type):
+    return {'KRB_Type': value_type, 'KRB_AttrTypes': {}}
+
+
+def _get_type(value):
+    """ Figure out the KRB_Type to mark a value with.
+    """
+    if isinstance(value, np.ndarray):
+        numpy_type_names = {
+            np.bool_: 'BoolArray',
+            np.int8: 'Int8Array',
+            np.uint8: 'UInt8Array',
+            np.int16: 'Int16Array',
+            np.uint16: 'UInt16Array',
+            np.int32: 'Int32Array',
+            np.uint32: 'UInt32Array',
+            np.int64: 'Int64Array',
+            np.uint64: 'UInt64Array',
+            np.float32: 'Float32Array',
+            np.float64: 'Float64Array',
+            np.complex64: 'Complex64Array',
+            np.complex128: 'Complex128Array',
+        }
+        return numpy_type_names[value.dtype.type]
+    elif isinstance(value, Hash):
+        return 'Hash'
+    elif isinstance(value, Schema):
+        return 'Schema'
+    elif isinstance(value, bool):
+        return 'Bool'
+    elif isinstance(value, numbers.Integral):
+        return 'Int32'
+    elif isinstance(value, numbers.Real):
+        return 'Float64'
+    elif isinstance(value, numbers.Complex):
+        return 'Complex128'
+    elif isinstance(value, bytes):
+        return 'Bytes'
+    elif isinstance(value, str):
+        return 'String'
+    elif isinstance(value, list):
+        if value:
+            subtype = _get_type(value[0])
+            return subtype + 'List'
+        else:
+            return 'StringList'
+    elif value is None:
+        return 'None'
+    else:
+        raise TypeError('unknown data type "{0}"'.format(value.__class__))
