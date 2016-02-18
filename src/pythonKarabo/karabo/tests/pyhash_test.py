@@ -134,6 +134,7 @@ class Hash_TestCase(unittest.TestCase):
         h["bool"] = True
         h["int"] = 4
         h["string"] = "bla"
+        h["complex"] = complex(1.0, 0.42)
         h["stringlist"] = ["bla", "blub"]
         h["chars"] = b"bla"
         h["vector"] = numpy.arange(7, dtype=numpy.int64)
@@ -159,13 +160,15 @@ class Hash_TestCase(unittest.TestCase):
 
         This method is simple enough that it works for both C++ and
         Python-only hashes."""
-        keys = ["bool", "int", "string", "stringlist", "chars", "vector",
-                "emptyvector", "hash", "hashlist", "emptystringlist", "schema"]
+        keys = ["bool", "int", "string", "complex", "stringlist", "chars",
+                "vector", "emptyvector", "hash", "hashlist", "emptystringlist",
+                "schema"]
         self.assertEqual(list(h.keys()), keys)
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
         self.assertEqual(h["string"], "bla")
         self.assertTrue(isinstance(h["string"], str))
+        self.assertEqual(h["complex"], complex(1.0, 0.42))
         self.assertEqual(h["stringlist"], ["bla", "blub"])
         self.assertEqual(h["chars"], b"bla")
         self.assertEqual(h["hash.a"], 3)
@@ -213,7 +216,7 @@ class Hash_TestCase(unittest.TestCase):
         r = BinaryParser()
         s = w.write(self.create_hash())
         self.check_hash(r.read(s))
-        self.assertEqual(adler32(s), 3186835738)
+        self.assertEqual(adler32(s), 3040627137)
 
 
     def test_cpp(self):
