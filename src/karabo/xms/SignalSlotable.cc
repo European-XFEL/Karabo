@@ -64,7 +64,14 @@ namespace karabo {
             }
         }
 
+        
+        void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
+                                       const karabo::util::Hash::Pointer& body, int prio, int timeToLive) const {
+                if (tryToCallDirectly(instanceId, header, body)) return;
+                m_producerChannel->write(*header, *body, prio, timeToLive);
+        }
 
+        
         SignalSlotable::Caller::Caller(const SignalSlotable* signalSlotable) : m_signalSlotable(signalSlotable) {
         }
 
@@ -73,16 +80,11 @@ namespace karabo {
                                                  const karabo::util::Hash::Pointer& header,
                                                  const karabo::util::Hash::Pointer& body) const {
             try {
-                // Empty slotInstanceId means self messaging:
-                const std::string& instanceId = (slotInstanceId.empty() && m_signalSlotable ?
-                    m_signalSlotable->getInstanceId() : slotInstanceId);
-                // try shortcut first
-                if (m_signalSlotable && m_signalSlotable->tryToCallDirectly(instanceId, header, body))
-                    return;
-                if (m_signalSlotable && m_signalSlotable->m_producerChannel)
-                    m_signalSlotable->m_producerChannel->write(*header, *body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
-                else
+                if (!m_signalSlotable)
                     throw KARABO_PARAMETER_EXCEPTION("Caller::sendMessage  : m_signalSlotable = 0 or m_signalSlotable->m_producerChannel is 0");
+                // Empty slotInstanceId means self messaging:
+                const std::string& instanceId = (slotInstanceId.empty() ?  m_signalSlotable->getInstanceId() : slotInstanceId);
+                m_signalSlotable->doSendMessage(instanceId, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Problems sending message"));
             }
@@ -131,33 +133,33 @@ namespace karabo {
         }
 
 
-        karabo::util::Hash SignalSlotable::Requestor::prepareHeader(const std::string& slotInstanceId, const std::string& slotFunction) {
-            karabo::util::Hash header;
-            header.set("replyTo", m_replyId);
-            header.set("signalInstanceId", m_signalSlotable->getInstanceId());
-            header.set("signalFunction", "__request__");
-            header.set("slotInstanceIds", "|" + slotInstanceId + "|");
-            header.set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
-            header.set("hostName", boost::asio::ip::host_name());
-            header.set("userName", m_signalSlotable->getUserName());
+        karabo::util::Hash::Pointer SignalSlotable::Requestor::prepareHeader(const std::string& slotInstanceId, const std::string& slotFunction) {
+            karabo::util::Hash::Pointer header(new karabo::util::Hash);
+            header->set("replyTo", m_replyId);
+            header->set("signalInstanceId", m_signalSlotable->getInstanceId());
+            header->set("signalFunction", "__request__");
+            header->set("slotInstanceIds", "|" + slotInstanceId + "|");
+            header->set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
+            header->set("hostName", boost::asio::ip::host_name());
+            header->set("userName", m_signalSlotable->getUserName());
             return header;
         }
 
 
-        karabo::util::Hash SignalSlotable::Requestor::prepareHeaderNoWait(const std::string& requestSlotInstanceId,
+        karabo::util::Hash::Pointer SignalSlotable::Requestor::prepareHeaderNoWait(const std::string& requestSlotInstanceId,
                                                                           const std::string& requestSlotFunction,
                                                                           const std::string& replySlotInstanceId,
                                                                           const std::string& replySlotFunction) {
 
-            karabo::util::Hash header;
-            header.set("replyInstanceIds", "|" + replySlotInstanceId + "|");
-            header.set("replyFunctions", "|" + replySlotInstanceId + ":" + replySlotFunction + "|");
-            header.set("signalInstanceId", m_signalSlotable->getInstanceId());
-            header.set("signalFunction", "__requestNoWait__");
-            header.set("slotInstanceIds", "|" + requestSlotInstanceId + "|");
-            header.set("slotFunctions", "|" + requestSlotInstanceId + ":" + requestSlotFunction + "|");
-            header.set("hostName", boost::asio::ip::host_name());
-            header.set("userName", m_signalSlotable->getUserName());
+            karabo::util::Hash::Pointer header(new karabo::util::Hash);
+            header->set("replyInstanceIds", "|" + replySlotInstanceId + "|");
+            header->set("replyFunctions", "|" + replySlotInstanceId + ":" + replySlotFunction + "|");
+            header->set("signalInstanceId", m_signalSlotable->getInstanceId());
+            header->set("signalFunction", "__requestNoWait__");
+            header->set("slotInstanceIds", "|" + requestSlotInstanceId + "|");
+            header->set("slotFunctions", "|" + requestSlotInstanceId + ":" + requestSlotFunction + "|");
+            header->set("hostName", boost::asio::ip::host_name());
+            header->set("userName", m_signalSlotable->getUserName());
             return header;
 
         }
@@ -175,9 +177,9 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::Requestor::sendRequest(const karabo::util::Hash& header, const karabo::util::Hash& body) const {
+        void SignalSlotable::Requestor::sendRequest(const std::string& instanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) const {
             try {
-                m_signalSlotable->m_producerChannel->write(header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+                m_signalSlotable->doSendMessage(instanceId, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Problems sending request"));
             }

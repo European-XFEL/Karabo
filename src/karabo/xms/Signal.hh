@@ -54,30 +54,30 @@ namespace karabo {
             void unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction = "");
 
             void emit0() {
-                send(karabo::util::Hash());
+                send(karabo::util::Hash::Pointer(new karabo::util::Hash));
             }
 
             template <class A1>
             void emit1(const A1& a1) {
-                karabo::util::Hash message("a1", a1);
+                karabo::util::Hash::Pointer message(new karabo::util::Hash("a1", a1));
                 send(message);
             }
 
             template <class A1, class A2>
             void emit2(const A1& a1, const A2& a2) {
-                karabo::util::Hash message("a1", a1, "a2", a2);
+                karabo::util::Hash::Pointer message(new karabo::util::Hash("a1", a1, "a2", a2));
                 send(message);
             }
 
             template <class A1, class A2, class A3>
             void emit3(const A1& a1, const A2& a2, const A3& a3) {
-                karabo::util::Hash message("a1", a1, "a2", a2, "a3", a3);
+                karabo::util::Hash::Pointer message(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
                 send(message);
             }
 
             template <class A1, class A2, class A3, class A4>
             void emit4(const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
-                karabo::util::Hash message("a1", a1, "a2", a2, "a3", a3, "a4", a4);
+                karabo::util::Hash::Pointer message(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
                 send(message);
             }
             
@@ -86,9 +86,9 @@ namespace karabo {
 
             void updateConnectedSlotsString();
 
-            void send(const karabo::util::Hash& message);
+            void send(const karabo::util::Hash::Pointer& message);
 
-            karabo::util::Hash prepareHeader() const;
+            karabo::util::Hash::Pointer prepareHeader() const;
 
         protected:
 
