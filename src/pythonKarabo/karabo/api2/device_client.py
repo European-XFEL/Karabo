@@ -16,6 +16,9 @@ from functools import wraps
 import time
 from weakref import WeakSet
 
+import dateutil.parser
+import dateutil.tz
+
 from .device import Device
 from .exceptions import KaraboError
 from .hash import Hash, Slot, Type, Descriptor
@@ -310,36 +313,61 @@ class getHistory:
     the last row in a set (typically, the device has been switched off
     afterwards), and the value of the property at that time.
 
+    The dates of the timespan are parsed using
+    :func:`dateutil.parser.parse`, allowing many ways to write the date.
+    The most precise way is to write "2009-09-01T15:32:12 UTC", but you may
+    omit any part, like "10:32", only giving the time, where we assume
+    the current day.  Unless specified otherwise, your local timezone is
+    assumed.
+
     Another parameter, *maxNumData*, may be given, which gives the maximum
-    number of data points to be returned. The returned data will be
-    reduced appropriately to still span the full timespan."""
-    def __init__(self, proxy, begin, end, maxNumData=0):
+    number of data points to be returned. It defaults to 10000. The returned
+    data will be reduced appropriately to still span the full timespan."""
+    def __init__(self, proxy, begin, end, maxNumData=10000, *, timeout=5):
         self.proxy = proxy
-        self.begin = begin
-        self.end = end
+        self.begin = self._parse(begin)
+        self.end = self._parse(end)
         self.maxNumData = maxNumData
+        self.timeout = timeout
+
+    def _parse(self, date):
+        d = dateutil.parser.parse(date)
+        if d.tzinfo is None:
+            d = d.replace(tzinfo=dateutil.tz.tzlocal())
+        return d.astimezone(dateutil.tz.tzutc()).replace(
+            tzinfo=None).isoformat()
 
     def __dir__(self):
         return dir(self.proxy)
 
-    @synchronize
     def __getattr__(self, attr):
-        assert isinstance(getattr(type(self.proxy), attr), Type)
+        return self._synchronized_getattr(attr, timeout=self.timeout)
+
+    @synchronize
+    def _synchronized_getattr(self, attr):
+        # this method contains a lot of hard-coded strings. It follows
+        # GuiServerDevice::onGetPropertyHistory. One day we should
+        # de-hard-code both.
+        if isinstance(self.proxy, Proxy):
+            # does the attribute actually exist?
+            assert isinstance(getattr(type(self.proxy), attr), Type)
+            deviceId = self.proxy._deviceId
+        else:
+            deviceId = str(self.proxy)
         instance = get_instance()
-        id = "DataLogger-{}".format(self.proxy._deviceId)
-        if id not in instance.loggerMap:
+        did = "DataLogger-{}".format(deviceId)
+        if did not in instance.loggerMap:
             instance.loggerMap = yield from instance.call(
                 "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
-            if id not in instance.loggerMap:
+            if did not in instance.loggerMap:
                 raise KaraboError('no logger for device "{}"'.
-                                  format(self.proxy._deviceId))
-        reader = "DataLogReader-{}".format(instance.loggerMap[id])
-        deviceId, property, data = yield from get_instance().call(
-            reader, "slotGetPropertyHistory", self.proxy._deviceId, attr,
+                                  format(deviceId))
+        reader = "DataLogReader0-{}".format(instance.loggerMap[did])
+        r_deviceId, r_attr, data = yield from get_instance().call(
+            reader, "slotGetPropertyHistory", deviceId, attr,
             Hash("from", self.begin, "to", self.end,
                  "maxNumData", self.maxNumData))
-        assert deviceId == self.proxy._deviceId
-        assert property == attr
+        assert r_deviceId == deviceId and r_attr == attr
         return [(Decimal(int(d["v", "frac"])) / 10 ** 18 +
                  Decimal(int(d["v", "sec"])), d["v", "tid"],
                  "isLast" in d["v", ...], d["v"]) for d in data]

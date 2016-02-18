@@ -22,7 +22,8 @@ from . import device_client
 from .device_client import (
     getDevice, waitUntil, waitUntilNew, setWait, setNoWait, execute,
     executeNoWait, DeviceClientBase, getDevices, getClasses, getServers,
-    instantiate, shutdown, shutdownNoWait, instantiateNoWait, disconnectDevice)
+    instantiate, shutdown, shutdownNoWait, instantiateNoWait, disconnectDevice,
+    getHistory)
 from .eventloop import NoEventLoop
 from .macro import Macro
 
@@ -31,7 +32,8 @@ from .macro import Macro
 __all__ = ["getDevice", "waitUntil", "waitUntilNew", "setWait", "setNoWait",
            "execute", "executeNoWait", "getDevices", "getClasses",
            "getServers", "instantiate", "connectDevice", "shutdown",
-           "shutdownNoWait", "instantiateNoWait", "karabo", "disconnectDevice"]
+           "shutdownNoWait", "instantiateNoWait", "karabo", "disconnectDevice",
+           "getHistory"]
 
 
 class DeviceClient(Macro, DeviceClientBase):
@@ -93,6 +95,6 @@ if ip is not None:
 
     ip.set_hook("complete_command", device_completer,
                 re_key=".*((get|connect)Device|execute(NoWait)?|"
-                       "set(No)?Wait|shutdown(NoWait)?)\(")
+                       "set(No)?Wait|shutdown(NoWait)?|getHistory)\(")
     ip.set_hook("complete_command", class_completer,
                 re_key=".*instantiate(NoWait)?\(")
