@@ -63,33 +63,40 @@ namespace karabo {
             }
         }
 
-        void Signal::send(const karabo::util::Hash& message) {
+        void Signal::send(const karabo::util::Hash::Pointer& message) {
             using namespace karabo::util;
             try {
-                karabo::util::Hash header = prepareHeader();
+                // Do not send if no slots are connected except heartbeats.
+                // Heartbeats always have slotInstanceId == __none__ 
+                if (m_signalFunction != "signalHeartbeat" && m_registeredSlotInstanceIdsString == "__none__") return;
+                
+                karabo::util::Hash::Pointer header = prepareHeader();
                 // In case we are connected to a single local instance we shortcut the broker
-                if ((m_registeredSlots.size() == 1) && 
-                        (m_registeredSlots.find(m_signalSlotable->m_instanceId) != m_registeredSlots.end())) {
-                    m_signalSlotable->injectEvent(m_channel, Hash::Pointer(new Hash(header)), Hash::Pointer(new Hash(message)));
-                } else {
-                    // Do not send if no slots are connected except heartbeats.
-                    // Heartbeats always have slotInstanceId == __none__ 
-                    if (m_signalFunction != "signalHeartbeat" && m_registeredSlotInstanceIdsString == "__none__") return;
-                    m_channel->write(header, message, m_priority, m_messageTimeToLive);
+                if (m_registeredSlots.size() == 1) {
+                    const string& slotInstanceId = m_registeredSlots.begin()->first;
+                    // Check if slot is on the same instance (device)
+                    if (m_signalSlotable->m_instanceId == slotInstanceId) {
+                        m_signalSlotable->injectEvent(m_channel, header, message);
+                        return;
+                    }
+                    m_signalSlotable->doSendMessage(slotInstanceId, header, message, m_priority, m_messageTimeToLive);
+                    return;
                 }
+                m_channel->write(*header, *message, m_priority, m_messageTimeToLive);
+                
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))
             }
         }
 
-        karabo::util::Hash Signal::prepareHeader() const {
-            karabo::util::Hash header;            
-            header.set("signalInstanceId", m_signalInstanceId);
-            header.set("signalFunction", m_signalFunction);
-            header.set("slotInstanceIds", m_registeredSlotInstanceIdsString);
-            header.set("slotFunctions", m_registeredSlotsString);
-            header.set("hostName", boost::asio::ip::host_name());
-            header.set("userName", m_signalSlotable->getUserName());
+        karabo::util::Hash::Pointer Signal::prepareHeader() const {
+            karabo::util::Hash::Pointer header(new karabo::util::Hash);            
+            header->set("signalInstanceId", m_signalInstanceId);
+            header->set("signalFunction", m_signalFunction);
+            header->set("slotInstanceIds", m_registeredSlotInstanceIdsString);
+            header->set("slotFunctions", m_registeredSlotsString);
+            header->set("hostName", boost::asio::ip::host_name());
+            header->set("userName", m_signalSlotable->getUserName());
             return header;
         }
 
