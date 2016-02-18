@@ -207,7 +207,6 @@ namespace karabo {
                 if (params.has("to")) to = Epochstamp(params.get<string>("to"));
                 unsigned int maxNumData = 0;
                 if (params.has("maxNumData")) maxNumData = params.getAs<int>("maxNumData");
-                if (0 == maxNumData) maxNumData = 100;
 
                 int lastFileIndex = getFileIndex(deviceId);
                 if (lastFileIndex < 0) {
@@ -249,9 +248,11 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "MetaSearchResult: from : filenum=" << msr.fromFileNumber << " record=" << msr.fromRecord
                         << ", to : filenum=" << msr.toFileNumber << " record=" << msr.toRecord << ", list: " << toString(msr.nrecList);
 
+                // add together the number of data points in all files
                 size_t ndata = 0;
                 for (vector<size_t>::iterator it = msr.nrecList.begin(); it != msr.nrecList.end(); it++) ndata += *it;
-                size_t reductionFactor = (ndata + maxNumData - 1) / maxNumData;
+                // reduction factor to skip data points - nothing skipped if zero
+                const size_t reductionFactor = (maxNumData ? (ndata + maxNumData - 1) / maxNumData : 0);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: total " << ndata << " data points and reductionFactor : " << reductionFactor;
 
@@ -290,7 +291,7 @@ namespace karabo {
                         for (size_t i = 0; i < msr.nrecList[ii]; i++) {
                             MetaData::Record record;
                             mf.read((char*) &record, sizeof (MetaData::Record));
-                            if ((indx++ % reductionFactor) != 0 && (record.extent2 & (1 << 30)) == 0)
+                            if (reductionFactor && (indx++ % reductionFactor) != 0 && (record.extent2 & (1 << 30)) == 0)
                                 continue; // skip data point
 
                             df.seekg(record.positionInRaw, ios::beg);
