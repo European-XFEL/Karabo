@@ -455,13 +455,42 @@ class DeviceClient(object):
         return self.__client.get(instanceId, propertyName)
     
     
-    def getFromPast(self, deviceId, propertyName, t0, t1 = None, maxNumData = 0):
+    def getFromPast(self, deviceId, propertyName, t0, t1 = None, maxNumData = 10000):
+        """Deprecated, use getPropertyHistory instead"""
+        return self.getPropertyHistory(deviceId, propertyName, t0, t1=t1, maxNumData=maxNumData)
+
+
+    def getPropertyHistory(self, deviceId, propertyName, t0, t1 = None, maxNumData = 10000):
+        """
+        get the history of device properties
+
+        with this function one can get all values of a property in a given
+        timespan::
+
+            getHistory(deviceId, propertyName, "2015-12-01", "2015-12-02")
+
+        returns a list of Hashes, which contain all changes of *propertyName*
+        between the two given dates. Each Hash has a node with key 'v'. Its
+        value is the one of the property at the time defined by the attributes
+        'sec' and 'frac' which holds the seconds and attoseconds, respectively,
+        since 1970-01-01 UTC. The attribute 'tid' holds the train ID.
+
+        The dates of the timespan are parsed using
+        :func:`dateutil.parser.parse`, allowing many ways to write the date.
+        The most precise way is to write "2015-12-01T15:32:12 UTC", but you may
+        omit any part, like "10:32", only giving the time, where we assume
+        the current day.  Unless specified otherwise, your local timezone is
+        assumed.
+
+        Another parameter, *maxNumData*, may be given, which gives the maximum
+        number of data points to be returned. The returned data will be
+        reduced appropriately to still span the full timespan. *maxNumData=0*
+        means no reduction - note that the history request might timeout.
+        """
         utc_t0 = self._fromTimeStringToUtcString(t0)
-        if t1 is None:            
-            return self.__client.getFromPast(deviceId, propertyName, utc_t0, datetime.datetime.now().isoformat(), maxNumData)
-        else:
-            utc_t1 = self._fromTimeStringToUtcString(t1)
-            return self.__client.getFromPast(deviceId, propertyName, utc_t0, utc_t1, maxNumData)
+        utc_t1 = self._fromTimeStringToUtcString(t1) if t1 is not None else datetime.datetime.now().isoformat()
+
+        return self.__client.getFromPast(deviceId, propertyName, utc_t0, utc_t1, maxNumData)
                 
     
     def getDeviceHistory(self, deviceId, timepoint):
