@@ -20,9 +20,9 @@ namespace karathon {
     SignalSlotableWrap::RequestorWrap& SignalSlotableWrap::RequestorWrap::requestPy(const std::string& slotInstanceId,
                                                                                     const std::string& slotFunction) {
         try {
-            karabo::util::Hash payload;
+            karabo::util::Hash::Pointer payload(new karabo::util::Hash);
             ScopedGILRelease nogil;
-            sendRequest(prepareHeader(slotInstanceId, slotFunction), payload);
+            sendRequest(slotInstanceId, prepareHeader(slotInstanceId, slotFunction), payload);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -34,11 +34,11 @@ namespace karathon {
                                                                                     const std::string& slotFunction,
                                                                                     const bp::object& a1) {
         try {
-            karabo::util::Hash payload;
-            HashWrap::set(payload, "a1", a1);
+            karabo::util::Hash::Pointer payload(new karabo::util::Hash);
+            HashWrap::set(*payload, "a1", a1);
 
             ScopedGILRelease nogil;
-            sendRequest(prepareHeader(slotInstanceId, slotFunction), payload);
+            sendRequest(slotInstanceId, prepareHeader(slotInstanceId, slotFunction), payload);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -51,12 +51,12 @@ namespace karathon {
                                                                                     const bp::object& a1,
                                                                                     const bp::object& a2) {
         try {
-            karabo::util::Hash payload;
-            HashWrap::set(payload, "a1", a1);
-            HashWrap::set(payload, "a2", a2);
+            karabo::util::Hash::Pointer payload(new karabo::util::Hash);
+            HashWrap::set(*payload, "a1", a1);
+            HashWrap::set(*payload, "a2", a2);
 
             ScopedGILRelease nogil;
-            sendRequest(prepareHeader(slotInstanceId, slotFunction), payload);
+            sendRequest(slotInstanceId, prepareHeader(slotInstanceId, slotFunction), payload);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -70,13 +70,13 @@ namespace karathon {
                                                                                     const bp::object& a2,
                                                                                     const bp::object& a3) {
         try {
-            karabo::util::Hash payload;
-            HashWrap::set(payload, "a1", a1);
-            HashWrap::set(payload, "a2", a2);
-            HashWrap::set(payload, "a3", a3);
+            karabo::util::Hash::Pointer payload(new karabo::util::Hash);
+            HashWrap::set(*payload, "a1", a1);
+            HashWrap::set(*payload, "a2", a2);
+            HashWrap::set(*payload, "a3", a3);
 
             ScopedGILRelease nogil;
-            sendRequest(prepareHeader(slotInstanceId, slotFunction), payload);
+            sendRequest(slotInstanceId, prepareHeader(slotInstanceId, slotFunction), payload);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -91,14 +91,14 @@ namespace karathon {
                                                                                     const bp::object& a3,
                                                                                     const bp::object& a4) {
         try {
-            karabo::util::Hash payload;
-            HashWrap::set(payload, "a1", a1);
-            HashWrap::set(payload, "a2", a2);
-            HashWrap::set(payload, "a3", a3);
-            HashWrap::set(payload, "a4", a4);
+            karabo::util::Hash::Pointer payload(new karabo::util::Hash);
+            HashWrap::set(*payload, "a1", a1);
+            HashWrap::set(*payload, "a2", a2);
+            HashWrap::set(*payload, "a3", a3);
+            HashWrap::set(*payload, "a4", a4);
 
             ScopedGILRelease nogil;
-            sendRequest(prepareHeader(slotInstanceId, slotFunction), payload);
+            sendRequest(slotInstanceId, prepareHeader(slotInstanceId, slotFunction), payload);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -111,9 +111,9 @@ namespace karathon {
                                                                                           const std::string replySlotInstanceId,
                                                                                           const std::string& replySlotFunction) {
         try {
-            karabo::util::Hash payload;
+            karabo::util::Hash::Pointer payload(new karabo::util::Hash);
             ScopedGILRelease nogil;
-            sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), payload);
+            sendRequest(requestSlotInstanceId, prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), payload);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -127,11 +127,11 @@ namespace karathon {
                                                                                           const std::string& replySlotFunction,
                                                                                           const bp::object& a1) {
         try {
-            karabo::util::Hash payload;
-            HashWrap::set(payload, "a1", a1);
+            karabo::util::Hash::Pointer payload(new karabo::util::Hash);
+            HashWrap::set(*payload, "a1", a1);
 
             ScopedGILRelease nogil;
-            sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), payload);
+            sendRequest(requestSlotInstanceId, prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), payload);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -145,12 +145,12 @@ namespace karathon {
                                                                                            const std::string& replySlotFunction,
                                                                                            const bp::object& a1, const bp::object & a2) {
         try {
-            karabo::util::Hash payload;
-            HashWrap::set(payload, "a1", a1);
-            HashWrap::set(payload, "a2", a2);
+            karabo::util::Hash::Pointer payload(new karabo::util::Hash);
+            HashWrap::set(*payload, "a1", a1);
+            HashWrap::set(*payload, "a2", a2);
 
             ScopedGILRelease nogil;
-            sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), payload);
+            sendRequest(requestSlotInstanceId, prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), payload);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -163,13 +163,13 @@ namespace karathon {
                                                                                            const std::string replySlotInstanceId,
                                                                                            const std::string& replySlotFunction, const bp::object& a1, const bp::object& a2, const bp::object & a3) {
         try {
-            karabo::util::Hash payload;
-            HashWrap::set(payload, "a1", a1);
-            HashWrap::set(payload, "a2", a2);
-            HashWrap::set(payload, "a3", a3);
+            karabo::util::Hash ::Pointer payload(new karabo::util::Hash);
+            HashWrap::set(*payload, "a1", a1);
+            HashWrap::set(*payload, "a2", a2);
+            HashWrap::set(*payload, "a3", a3);
 
             ScopedGILRelease nogil;
-            sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), payload);
+            sendRequest(requestSlotInstanceId, prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), payload);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -182,14 +182,14 @@ namespace karathon {
                                                                                            const std::string replySlotInstanceId,
                                                                                            const std::string& replySlotFunction, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object & a4) {
         try {
-            karabo::util::Hash payload;
-            HashWrap::set(payload, "a1", a1);
-            HashWrap::set(payload, "a2", a2);
-            HashWrap::set(payload, "a3", a3);
-            HashWrap::set(payload, "a4", a4);
+            karabo::util::Hash::Pointer payload(new karabo::util::Hash);
+            HashWrap::set(*payload, "a1", a1);
+            HashWrap::set(*payload, "a2", a2);
+            HashWrap::set(*payload, "a3", a3);
+            HashWrap::set(*payload, "a4", a4);
 
             ScopedGILRelease nogil;
-            sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), payload);
+            sendRequest(requestSlotInstanceId, prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), payload);
         } catch (...) {
             KARABO_RETHROW
         }

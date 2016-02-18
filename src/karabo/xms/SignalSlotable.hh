@@ -123,31 +123,41 @@ namespace karabo {
                 }
 
                 Requestor& request(const std::string& slotInstanceId, const std::string& slotFunction) {
-                    sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash());
+                    karabo::util::Hash::Pointer header = prepareHeader(slotInstanceId, slotFunction);
+                    karabo::util::Hash::Pointer body(new karabo::util::Hash());
+                    sendRequest(slotInstanceId, header, body);
                     return *this;
                 }
 
                 template <class A1>
                 Requestor& request(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1) {
-                    sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1));
+                    karabo::util::Hash::Pointer header = prepareHeader(slotInstanceId, slotFunction);
+                    karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1));
+                    sendRequest(slotInstanceId, header, body);
                     return *this;
                 }
 
                 template <class A1, class A2>
                 Requestor& request(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2) {
-                    sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2));
+                    karabo::util::Hash::Pointer header = prepareHeader(slotInstanceId, slotFunction);
+                    karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1, "a2", a2));
+                    sendRequest(slotInstanceId, header, body);
                     return *this;
                 }
 
                 template <class A1, class A2, class A3>
                 Requestor& request(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3) {
-                    sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
+                    karabo::util::Hash::Pointer header = prepareHeader(slotInstanceId, slotFunction);
+                    karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
+                    sendRequest(slotInstanceId, header, body);
                     return *this;
                 }
 
                 template <class A1, class A2, class A3, class A4>
                 Requestor& request(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
-                    sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
+                    karabo::util::Hash::Pointer header = prepareHeader(slotInstanceId, slotFunction);
+                    karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
+                    sendRequest(slotInstanceId, header, body);
                     return *this;
                 }
 
@@ -158,7 +168,9 @@ namespace karabo {
                         const std::string& requestSlotFunction,
                         const std::string replySlotInstanceId,
                         const std::string& replySlotFunction) {
-                    sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash());
+                    karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
+                    karabo::util::Hash::Pointer body(new karabo::util::Hash());
+                    sendRequest(requestSlotInstanceId, header, body);
                     return *this;
                 }
 
@@ -169,7 +181,9 @@ namespace karabo {
                         const std::string replySlotInstanceId,
                         const std::string& replySlotFunction,
                         const A1& a1) {
-                    sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1));
+                    karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
+                    karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1));
+                    sendRequest(requestSlotInstanceId, header, body);
                     return *this;
                 }
 
@@ -180,7 +194,9 @@ namespace karabo {
                         const std::string replySlotInstanceId,
                         const std::string& replySlotFunction,
                         const A1& a1, const A2& a2) {
-                    sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1, "a2", a2));
+                    karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
+                    karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1, "a2", a2));
+                    sendRequest(requestSlotInstanceId, header, body);
                     return *this;
                 }
 
@@ -190,7 +206,9 @@ namespace karabo {
                         const std::string& requestSlotFunction,
                         const std::string replySlotInstanceId,
                         const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3) {
-                    sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
+                    karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
+                    karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
+                    sendRequest(requestSlotInstanceId, header, body);
                     return *this;
                 }
 
@@ -199,7 +217,9 @@ namespace karabo {
                         const std::string& requestSlotFunction,
                         const std::string replySlotInstanceId,
                         const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
-                    sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
+                    karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
+                    karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
+                    sendRequest(requestSlotInstanceId, header, body);
                     return *this;
                 }
 
@@ -354,16 +374,16 @@ namespace karabo {
 
             protected: // functions
 
-                karabo::util::Hash prepareHeader(const std::string& slotInstanceId, const std::string& slotFunction);
+                karabo::util::Hash::Pointer prepareHeader(const std::string& slotInstanceId, const std::string& slotFunction);
 
-                karabo::util::Hash prepareHeaderNoWait(const std::string& requestSlotInstanceId, const std::string& requestSlotFunction,
+                karabo::util::Hash::Pointer prepareHeaderNoWait(const std::string& requestSlotInstanceId, const std::string& requestSlotFunction,
                         const std::string& replySlotInstanceId, const std::string& replySlotFunction);
 
                 void registerRequest();
 
                 static std::string generateUUID();
 
-                void sendRequest(const karabo::util::Hash& header, const karabo::util::Hash& body) const;
+                void sendRequest(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) const;
 
                 void receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
 
@@ -1468,6 +1488,8 @@ KARABO_SLOT0(__VA_ARGS__) \
                     bool channelExists, const karabo::util::Hash& info);
 
             bool tryToCallDirectly(const std::string& instanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) const;
+            
+            void doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio, int timeTpLive) const;
         };
 
     }
