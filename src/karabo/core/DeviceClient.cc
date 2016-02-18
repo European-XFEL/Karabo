@@ -849,40 +849,39 @@ namespace karabo {
             if (!p) {
                 KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
                 return false;
-            } else {
-                if (toggle) {
-                    // connect and request a first time
-                    if (p->connect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap",
-                            SignalSlotable::RECONNECT, false)) {
-                        // If we cannot connect, request makes no sense
-                        Hash loggerMap;
-                        try {
-                            p->request(core::DATALOGMANAGER_ID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(loggerMap);
-                            // Next 3 lines would better fit in an else block as in Python's try-except-else...
-                            boost::mutex::scoped_lock lock(m_loggerMapMutex);
-                            m_loggerMap = loggerMap;
-                            m_loggerMapCached = true;
-                            return true;
-                        } catch (const TimeoutException&) {
-                            return false;
-                        }
-                    } else {
-                        KARABO_LOG_FRAMEWORK_WARN << "Failed to connect _slotLoggerMap";
+            } else if (toggle) {
+                // connect and request a first time
+                if (p->connect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap",
+                        SignalSlotable::RECONNECT, false)) {
+                    // If we cannot connect, request makes no sense
+                    Hash loggerMap;
+                    try {
+                        p->request(core::DATALOGMANAGER_ID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(loggerMap);
+                        // Next 3 lines would better fit in an else block as in Python's try-except-else...
+                        boost::mutex::scoped_lock lock(m_loggerMapMutex);
+                        m_loggerMap = loggerMap;
+                        m_loggerMapCached = true;
+                        return true;
+                    } catch (const TimeoutException&) {
                         return false;
                     }
                 } else {
-                    m_loggerMapCached = false;
-                    // disconnect and clear (since otherwise possibly wrong info)
-                    if (!p->disconnect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap", false)) {
-                        KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect _slotLoggerMap";
-                        return false;
-                    }
-                    boost::mutex::scoped_lock lock(m_loggerMapMutex);
-                    m_loggerMap.clear();
-                    return true;
+                    KARABO_LOG_FRAMEWORK_WARN << "Failed to connect _slotLoggerMap";
+                    return false;
                 }
+            } else {
+                m_loggerMapCached = false;
+                // disconnect and clear (since otherwise possibly wrong info)
+                if (!p->disconnect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap", false)) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect _slotLoggerMap";
+                    return false;
+                }
+                boost::mutex::scoped_lock lock(m_loggerMapMutex);
+                m_loggerMap.clear();
+                return true;
             }
         }
+
 
 
         void DeviceClient::_slotLoggerMap(const karabo::util::Hash& loggerMap) {
