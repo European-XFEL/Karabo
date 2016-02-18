@@ -65,13 +65,6 @@ namespace karabo {
             
         protected: // members
 
-            enum MasterMode {
-
-                IS_MASTER,
-                HAS_MASTER,
-                NO_MASTER
-            };
-
             /**
              * server +
              *   <serverId> type host version status deviceClasses +
@@ -114,17 +107,19 @@ namespace karabo {
 
             int m_internalTimeout;
 
-            std::string m_masterDeviceId;
-
             bool m_isAdvancedMode; // DEPRECATED
             
             bool m_topologyInitialized;
 
-            MasterMode m_masterMode;
-
             boost::thread m_ageingThread;
 
             bool m_getOlder;
+
+            boost::mutex m_loggerMapMutex;
+
+            util::Hash m_loggerMap;
+
+            bool m_loggerMapCached;
 
             InstanceNewHandler m_instanceNewHandler;
             InstanceUpdatedHandler m_instanceUpdatedHandler;
@@ -379,10 +374,18 @@ namespace karabo {
                 }
                 return boost::any();
             }
+
+            /// Switch on/off to cache an always up-to-date logger map.
+            /// Caching speeds up repeated calls to getPropertyHistory.
+            /// Returns success of action.
+            bool cacheLoggerMap(bool toggle);
             
             karabo::util::vector<karabo::util::Hash> getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
 
             karabo::util::vector<karabo::util::Hash> getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
+
+            /// Returns instanceId of data log reader for data of given device. Could be empty.
+            std::string getDataLogReader(const std::string& deviceId);
 
             std::pair<karabo::util::Hash, karabo::util::Schema> getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
@@ -613,6 +616,8 @@ namespace karabo {
             virtual void _slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
             virtual void _slotClassSchema(const karabo::util::Schema& schema, const std::string& classId, const std::string& serverId);
+
+            virtual void _slotLoggerMap(const karabo::util::Hash& loggerMap);
 
             static std::string generateOwnInstanceId();
 
