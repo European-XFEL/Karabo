@@ -80,8 +80,8 @@ namespace karabo {
 
             template<typename T>
             inline void writeComplexValue(std::ostream& os, const std::complex<T>& value) {
-                writeSingleValue(os, value.imag());
                 writeSingleValue(os, value.real());
+                writeSingleValue(os, value.imag());
             }
 
             template<typename T>
@@ -138,7 +138,9 @@ namespace karabo {
 
             template<typename T>
             inline std::complex<T> readComplexValue(std::istream& is) {
-                return std::complex<T > (readSingleValue<T > (is), readSingleValue<T > (is));
+                T const real = readSingleValue<T>(is);
+                T const imag = readSingleValue<T>(is);
+                return std::complex<T > (real, imag);
             }
 
             template<typename T>
