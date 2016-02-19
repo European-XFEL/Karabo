@@ -51,7 +51,7 @@ class PluginLoader(object):
         sys.path.append(self.pluginDirectory)
 
         self._filter_entrypoints = ()
-        if "pluginName" in config:
+        if "pluginName" in config and config["pluginName"]:
             self._filter_entrypoints = (config["pluginName"],)
 
     def getPlugin(self, name):
