@@ -58,6 +58,13 @@ namespace karabo {
             const char* tmp = getenv("KARABO");
             if (tmp) karabo = tmp;
             if (karabo.empty()) {
+                // Check whether we are acting as framework developers
+                // In this case the path to the installed framework is like that 
+                // (as we are sitting in build/netbeans/karabo)
+                karabo = "../../../karabo";
+                if (boost::filesystem::exists(karabo)) {
+                    return karabo;
+                }
                 throw KARABO_INIT_EXCEPTION("$KARABO environment variable is not defined but needed to get the path to the Karabo installation.");
             }
             return karabo;

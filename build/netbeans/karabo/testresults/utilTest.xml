@@ -242,9 +242,12 @@
     <Test id="80">
       <Name>Types_Test::testConvert</Name>
     </Test>
+    <Test id="81">
+      <Name>Version_Test::testVersion</Name>
+    </Test>
   </SuccessfulTests>
   <Statistics>
-    <Tests>80</Tests>
+    <Tests>81</Tests>
     <FailuresTotal>0</FailuresTotal>
     <Errors>0</Errors>
     <Failures>0</Failures>

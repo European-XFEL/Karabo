@@ -70,23 +70,9 @@ function getEmail() {
 }
 
 function getKaraboFramework() {
-    if [ -f "${HOME}/.karabo/karaboFramework" ];then
-        local tmp=`cat ${HOME}/.karabo/karaboFramework`
-        if [ -d $tmp ]; then
-            karaboFramework=$tmp
-        fi
-    fi
-    if [ ! -f $karaboFramework/bin/karabo-deviceserver ]; then
-        echo
-        read -e -p "Please enter the path to the Karabo framework installation: " karaboFramework
-        if [ -f $karaboFramework/bin/karabo-deviceserver ]; then
-            echo
-            echo "The path to the Karabo framework installation is stored in ${HOME}/.karabo/karaboFramework"
-            echo
-            echo $karaboFramework > $HOME/.karabo/karaboFramework
-        else
-            echo "### WARNING $karaboFramework is not a valid path. Nothing done."
-        fi
+    if [ -z $KARABO ]; then
+	echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
+	exit 1
     fi
 }
 
