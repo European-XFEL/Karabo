@@ -67,7 +67,7 @@ if [ "$BUNDLE_ACTION" = "package" ]; then
         PACKAGENAME=karabo-$VERSION
     fi
 elif [ "$BUNDLE_ACTION" = "install" ]; then
-    PACKAGENAME=karabo
+    PACKAGENAME=karabo-$VERSION
 fi
 
 NUM_CORES=2  # default
@@ -88,16 +88,14 @@ EXTRACT_SCRIPT=$(pwd)/.extract.sh
 PYTHON_FIXER_SCRIPT=$(pwd)/.fix-python-scripts.sh
 PACKAGEDIR=$(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+BASEDIR=$(pwd)/../../../
+BASEDIR=$(get_abs_path $BASEDIR)
 
 # Always clean the bundle
-rm -rf $PACKAGEDIR
-
-# Clean above, if we create a new package
-if [[ "$BUNDLE_ACTION" = "package" ]]; then
-    if [ -d $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE ]; then 
-        rm -rf $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE
-    fi
+if [ -d $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE ]; then 
+    rm -rf $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE
 fi
+rm -f $BASEDIR/karabo
 
 # Start fresh
 mkdir -p $PACKAGEDIR
@@ -216,7 +214,7 @@ fi
 cd ../../../
 tar --exclude=.svn --exclude=run/servers/dataLoggerServer/karaboHistory -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
 # Activation script
-sed "s%__VENV_DIR__%$PACKAGEDIR%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
+sed "s%__VENV_DIR__%$BASEDIR/karabo%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
 ln -s $PACKAGEDIR/activate $PACKAGEDIR/karaboRun/activate
 # Version information
 echo $VERSION > $PACKAGEDIR/karaboRun/VERSION
@@ -244,12 +242,15 @@ if [ "$BUNDLE_ACTION" = "package" ]; then
     # Create installation script
     echo -e '#!/bin/bash\n'"VERSION=$VERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
     chmod a+x $INSTALLSCRIPT
-    ln -sf $PACKAGEDIR karabo
-    PACKAGEDIR=$(pwd)/karabo
 fi
 
 # Make sure the ~/.karabo directory exists
 mkdir -p $HOME/.karabo
+
+# Create a shortcut to the installed karabo bundle
+cd $BASEDIR
+ln -sf $PACKAGEDIR karabo
+
 
 echo
 echo "Created karaboFramework bundle under: $PACKAGEDIR"
