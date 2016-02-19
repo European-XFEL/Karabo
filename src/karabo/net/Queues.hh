@@ -27,56 +27,16 @@ namespace karabo {
             Message() : m_body(new std::vector<char>), m_header() {
             }
 
-            Message(const char* data, size_t data_len, const char* header = 0, size_t header_len = 0)
-            : m_body(new std::vector<char>)
-            , m_header() {
-
-                if (data != NULL && data_len > 0) {
-                    m_body->assign(data, data + data_len);
-                } else {
-                    m_body->clear();
-                }
-
-                if (header != NULL && header_len > 0) {
-                    m_header = boost::shared_ptr<std::vector<char> >(new std::vector<char>(header, header + header_len));
-                }
-            }
-
-            Message(const std::vector<char>& data, const std::vector<char>& header)
-            : m_body(new std::vector<char>())
-            , m_header(new std::vector<char>()) {
-
-                if (data.size() > 0) m_body->assign(data.begin(), data.end());
-                if (header.size() > 0) m_header->assign(header.begin(), header.end());
-            }
-
             Message(const VectorCharPointer& data) : m_body(data), m_header() {
             }
 
             Message(const VectorCharPointer& data, const VectorCharPointer& header) : m_body(data), m_header(header) {
             }
             
-            Message(const char* data, size_t size, const VectorCharPointer& header) : m_body(new std::vector<char>()), m_header(header) {
-                if (data != NULL && size > 0) {
-                    m_body->assign(data, data + size);
-                } else {
-                    m_body->clear();
-                }
+            Message(const Message& other) : m_body(other.body()), m_header(other.header()) {
             }
             
-            Message(const std::vector<char>& data, const VectorCharPointer& header) : m_body(new std::vector<char>()), m_header(header) {
-                if (data.size() > 0) m_body->assign(data.begin(), data.end());
-            }
-            
-            Message(const std::string& data, const VectorCharPointer& header) : m_body(new std::vector<char>()), m_header(header) {
-                if (data.size() > 0) m_body->assign(data.begin(), data.end());
-            }
-
             virtual ~Message() {
-            }
-
-            virtual int priority() {
-                return 0;
             }
 
             const VectorCharPointer& body() const {
