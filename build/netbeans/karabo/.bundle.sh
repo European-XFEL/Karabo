@@ -14,11 +14,19 @@
 echo "### Now building Karabo... ###";
 
 get_abs_path() {
-     local PARENT_DIR=$(dirname "$1")
-     cd "$PARENT_DIR"
-     local ABS_PATH="$(pwd -P)"/"$(basename "$1")"
-     cd - >/dev/null
-     echo "$ABS_PATH"
+    local PARENT_DIR=$(dirname "$1")
+    local BASENAME=$(basename "$1")
+    case $BASENAME in
+    ..)
+        cd "$1"
+        local ABS_PATH="$(pwd -P)"
+        ;;
+    *)
+        cd "$PARENT_DIR"
+        local ABS_PATH="$(pwd -P)"/"$BASENAME"
+    esac
+    cd - >/dev/null
+    echo "$ABS_PATH"
 }
 
 safeRunCommand() {
@@ -88,8 +96,7 @@ EXTRACT_SCRIPT=$(pwd)/.extract.sh
 PYTHON_FIXER_SCRIPT=$(pwd)/.fix-python-scripts.sh
 PACKAGEDIR=$(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
-BASEDIR=$(pwd)/../../../
-BASEDIR=$(get_abs_path $BASEDIR)
+BASEDIR=$(get_abs_path $(pwd)/../../../)
 
 # Always clean the bundle
 if [ -d $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE ]; then 
