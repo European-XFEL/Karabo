@@ -20,6 +20,7 @@ else
             exit 1
         fi
     fi
+fi
 
 echo "This is a self-extracting archive."
 echo -n " Extracting files, please wait..."
