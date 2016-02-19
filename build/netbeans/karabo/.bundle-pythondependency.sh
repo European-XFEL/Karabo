@@ -1,19 +1,5 @@
 #!/bin/bash
 
-safeRunCommand() {
-    typeset cmnd="$*"
-    typeset ret_code
-
-    echo cmnd=$cmnd
-    eval $cmnd
-    ret_code=$?
-    if [ $ret_code != 0 ]; then
-        printf "Error : [%d] when executing command: '$cmnd'" $ret_code
-        echo
-        exit $ret_code
-    fi
-}
-
 originalPwd=$(pwd)
 OS=$(uname -s)
 MACHINE=$(uname -m)
@@ -51,7 +37,6 @@ else
   PYTHON=$KARABO/extern/bin/python
   PIP=$KARABO/extern/bin/pip
   WHEEL_INSTALL_FLAGS=
-  export PATH=$KARABO/extern/bin/:$PATH
 fi
 
 
@@ -60,7 +45,7 @@ rm -rf $DISTDIR
 # Start fresh
 mkdir -p $DISTDIR
 
-###### dependency custom code #################################
+###### Run dependency custom code to build the wheel ##########################
 source $originalPwd/build.config
 
 # Create installation script
