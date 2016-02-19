@@ -28,19 +28,31 @@ class PluginLoader(object):
         e.assignmentOptional().defaultValue("karabo.python_device.api_1")
         e.expertAccess().commit()
 
-    def __init__(self, input):
+        e = STRING_ELEMENT(expected).key("pluginName")
+        e.displayedName("Exclusive Plugin Name")
+        e.description("Entrypoint name for a single plugin to load")
+        e.assignmentOptional().defaultValue("")
+        e.expertAccess()
+        e.commit()
+
+    def __init__(self, config):
         self._entrypoints = []
-        if "pluginNamespace" in input:
-            self.pluginNamespace = input["pluginNamespace"]
+        if "pluginNamespace" in config:
+            self.pluginNamespace = config["pluginNamespace"]
         else:
             msg = "A namespace must be defined for plugins to load."
             raise ValueError(msg)
-        if "pluginDirectory" in input:
-            self.pluginDirectory = op.abspath(input["pluginDirectory"])
+
+        if "pluginDirectory" in config:
+            self.pluginDirectory = op.abspath(config["pluginDirectory"])
         else:
             msg = "A directory must be defined for plugins to load."
             raise ValueError(msg)
         sys.path.append(self.pluginDirectory)
+
+        self._filter_entrypoints = ()
+        if "pluginName" in config:
+            self._filter_entrypoints = (config["pluginName"],)
 
     def getPlugin(self, name):
         for ep in self._entrypoints:
@@ -51,5 +63,9 @@ class PluginLoader(object):
 
     def update(self):
         ws = WorkingSet()
-        self._entrypoints = list(ws.iter_entry_points(self.pluginNamespace))
+        epoints = list(ws.iter_entry_points(self.pluginNamespace))
+        if len(self._filter_entrypoints) > 0:
+            epoints = [ep for ep in epoints
+                       if ep.name in self._filter_entrypoints]
+        self._entrypoints = epoints
         return self._entrypoints
