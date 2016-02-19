@@ -16,6 +16,7 @@ from .api1.device_server import DeviceServer, Launcher
 from .api1.motor_interface import MotorInterface
 from .api1.plugin_loader import PluginLoader
 from .api1.runner import Runner
+from .api1.server_entry_point import runSingleDeviceServer
 
 from .api1.fsm import (
     KARABO_FSM_EVENT0, KARABO_FSM_EVENT1, KARABO_FSM_EVENT2, KARABO_FSM_EVENT3,
