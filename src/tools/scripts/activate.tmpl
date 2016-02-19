@@ -44,6 +44,11 @@ deactivate () {
         export PYTHONHOME
         unset _OLD_KARABO_PYTHONHOME
     fi
+    
+    # remove .karabo/karaboFramework file
+    if [ -e "$HOME/.karabo/karaboFramework" ] ; then
+	rm -f "$HOME/.karabo/karaboFramework"
+    fi
 
     # This should detect bash and zsh, which have a hash command that must
     # be called to get it to forget past commands.  Without forgetting
@@ -66,8 +71,11 @@ KARABO="__VENV_DIR__"
 export KARABO
 
 _OLD_KARABO_PATH="$PATH"
-PATH="$KARABO/extern/bin:$PATH"
+PATH="$KARABO/bin:$KARABO/extern/bin:$PATH"
 export PATH
+
+# for backward compatibility (and NetBeans) set the path in .karabo/karaboFramework
+echo $KARABO > $HOME/.karabo/karaboFramework
 
 # unset PYTHONHOME if set
 # this will fail if PYTHONHOME is set to the empty string (which is bad anyway)
