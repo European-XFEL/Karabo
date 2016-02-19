@@ -107,9 +107,6 @@ rm -f $BASEDIR/karabo
 # Start fresh
 mkdir -p $PACKAGEDIR
 
-# Normalize the PACKAGEDIR path (This must happen after mkdir!)
-PACKAGEDIR=$(get_abs_path $PACKAGEDIR)
-
 # Version information
 echo $VERSION > $PACKAGEDIR/VERSION
 
