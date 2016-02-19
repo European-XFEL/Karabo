@@ -58,7 +58,7 @@ namespace karabo {
             // MQ channel supported parameters
             unsigned int m_bodySize;
             unsigned int m_headerSize;
-            Message::Pointer m_message;
+            boost::mutex m_queueMutex;
             std::vector<karabo::net::Queue::Pointer> m_queue;
             std::string m_policy;
             bool m_writeInProgress;
@@ -351,7 +351,7 @@ namespace karabo {
             
             bool isEmpty();
             
-            void doWriteHandler(boost::system::error_code, std::size_t length);
+            void doWriteHandler(Message::Pointer& msg, boost::system::error_code, std::size_t length);
             
         };
     }
