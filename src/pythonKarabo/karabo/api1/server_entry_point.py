@@ -1,13 +1,17 @@
+from os.path import basename
+import sys
 
-def runSingleDeviceServer(pluginName):
+
+def runSingleDeviceServer(*pluginNames, serverId=""):
     """ Run an API 1 device server with a single device.
     """
     from karabo.api_1 import DeviceServer, Hash
 
+    serverId = serverId or basename(sys.argv[0])
     configuration = Hash(
-        "DeviceServer.serverId", "PythonAPI1-Server-" + pluginName,
+        "DeviceServer.serverId", serverId,
         "DeviceServer.Logger.priority", "INFO",
-        "DeviceServer.pluginName", pluginName,
+        "DeviceServer.pluginNames", ",".join(pluginNames),
     )
 
     try:
