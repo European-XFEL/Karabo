@@ -28,9 +28,9 @@ class PluginLoader(object):
         e.assignmentOptional().defaultValue("karabo.python_device.api_1")
         e.expertAccess().commit()
 
-        e = STRING_ELEMENT(expected).key("pluginName")
-        e.displayedName("Exclusive Plugin Name")
-        e.description("Entrypoint name for a single plugin to load")
+        e = STRING_ELEMENT(expected).key("pluginNames")
+        e.displayedName("Devices to Load")
+        e.description("Comma separated list of class names of devices which should be loaded")
         e.assignmentOptional().defaultValue("")
         e.expertAccess()
         e.commit()
@@ -51,8 +51,10 @@ class PluginLoader(object):
         sys.path.append(self.pluginDirectory)
 
         self._filter_entrypoints = ()
-        if "pluginName" in config and config["pluginName"]:
-            self._filter_entrypoints = (config["pluginName"],)
+        pluginNames = config["pluginNames"]
+        if len(pluginNames) > 0:
+            filt = [n for n in pluginNames.split(",") if len(n) > 0]
+            self._filter_entrypoints = tuple(filt)
 
     def getPlugin(self, name):
         for ep in self._entrypoints:
