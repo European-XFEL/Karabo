@@ -150,41 +150,6 @@ class Hash(OrderedDict):
             else:
                 self[k, ...] = other[k, ...].copy()
 
-    def get(self, item, default=None):
-        try:
-            return self[item]
-        except KeyError:
-            return default
-
-    def set(self, item, value):
-        self[item] = value
-
-    def setAttribute(self, item, key, value):
-        self[item, key] = value
-
-    def getAttribute(self, item, key):
-        return self[item, key]
-
-    def getAttributes(self, item):
-        return self[item, ...]
-
-    def has(self, item):
-        return item in self
-
-    def getKeys(self, keys=None):
-        localkeys = list(self.keys())
-        if keys is None:
-            return localkeys
-        else:
-            keys.extend(localkeys)
-            return keys
-
-    def hasAttribute(self, item, key):
-        return key in self[item, ...]
-
-    def erase(self, key):
-        del self[key]
-
     def paths(self):
         ret = []
         for k, v in self.items():
@@ -192,9 +157,6 @@ class Hash(OrderedDict):
                 ret.extend(k + '.' + kk for kk in v.paths())
             ret.append(k)
         return ret
-
-    def empty(self):
-        return len(self) == 0
 
 
 class Schema(object):
