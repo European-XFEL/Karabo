@@ -102,9 +102,9 @@ class DeviceServer(object):
                     .expertAccess()
                     .commit()
                     ,
-            STRING_ELEMENT(expected).key("pluginName")
-                    .displayedName("Exclusive Plugin Name")
-                    .description("Entrypoint name for a single plugin to load")
+            STRING_ELEMENT(expected).key("pluginNames")
+                    .displayedName("Devices to Load")
+                    .description("Comma separated list of class names of devices which should be loaded")
                     .assignmentOptional().defaultValue("")
                     .expertAccess()
                     .commit()
@@ -301,7 +301,7 @@ class DeviceServer(object):
             "PythonPluginLoader",
             Hash("pluginNamespace", input["pluginNamespace"],
                  "pluginDirectory", input["pluginDirectory"],
-                 "pluginName", input["pluginName"]))
+                 "pluginNames", input["pluginNames"]))
         self.loadLogger(input)
         self.pid = os.getpid()
         self.seqnum = 0
