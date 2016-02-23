@@ -236,6 +236,7 @@ class SignalSlotable(Configurable):
         self._ss.call("call", {device: [target]}, reply, args)
         future = Future(loop=self._ss.loop)
         self._ss.repliers[reply] = future
+        future.add_done_callback(lambda _: self._ss.repliers.pop(reply))
         return future
 
     def stopEventLoop(self):
