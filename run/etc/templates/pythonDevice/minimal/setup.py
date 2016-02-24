@@ -26,6 +26,9 @@ setup(name='__PACKAGE_NAME__',
           'karabo.python_device.api_1': [
               '__CLASS_NAME__ = __PACKAGE_NAME__.__CLASS_NAME__:__CLASS_NAME__',
           ],
+          'console_scripts': [
+              '__CLASS_NAME__-server = __PACKAGE_NAME__.server.__CLASS_NAME__:main',
+          ],
       },
       package_data={},
       requires=[],
