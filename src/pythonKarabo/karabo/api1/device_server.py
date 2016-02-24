@@ -102,6 +102,13 @@ class DeviceServer(object):
                     .expertAccess()
                     .commit()
                     ,
+            STRING_ELEMENT(expected).key("pluginNames")
+                    .displayedName("Devices to Load")
+                    .description("Comma separated list of class names of devices which should be loaded")
+                    .assignmentOptional().defaultValue("")
+                    .expertAccess()
+                    .commit()
+                    ,
             NODE_ELEMENT(expected).key("Logger")
                     .description("Logging settings")
                     .displayedName("Logger")
@@ -292,8 +299,9 @@ class DeviceServer(object):
         self.connectionParameters = copy.copy(input['connection.' + self.connectionType])
         self.pluginLoader = PluginLoader.create(
             "PythonPluginLoader",
-            Hash("pluginNamespace", input['pluginNamespace'],
-                 "pluginDirectory", input['pluginDirectory']))
+            Hash("pluginNamespace", input["pluginNamespace"],
+                 "pluginDirectory", input["pluginDirectory"],
+                 "pluginNames", input["pluginNames"]))
         self.loadLogger(input)
         self.pid = os.getpid()
         self.seqnum = 0
@@ -563,8 +571,8 @@ class Launcher(object):
 
     def start(self):
         args = [sys.executable, "-c"]
-        args.append("from karabo.api1.device import launchPythonDevice;"
-                    "launchPythonDevice()")
+        args.append("'from karabo.api1.device import launchPythonDevice;"
+                    "launchPythonDevice()'")
         args.extend(self.args)
 
         self.child = Popen(args)
