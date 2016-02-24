@@ -178,7 +178,7 @@ cd -
 
 # Correct python interpreter path for scripts in 'bin' directory
 # <-- replace 1st line by "/usr/bin/env python3" and set PATH
-safeRunCommand "$PYTHON_FIXER_SCRIPT" $(readlink -f $PACKAGEDIR)
+safeRunCommand "$PYTHON_FIXER_SCRIPT" $PACKAGEDIR
 export PATH=$PACKAGEDIR/extern/bin:$PATH
 
 # pythonKarabo
@@ -231,10 +231,6 @@ cp .bundle-dependency.sh .bundle-pythondependency.sh $PACKAGEDIR/bin
 cp .extract-cppplugin.sh .extract-pythonplugin.sh $PACKAGEDIR/bin
 cp .extract-dependency.sh $PACKAGEDIR/bin
 cp .fix-python-scripts.sh .set_relative_rpath.py $PACKAGEDIR/bin
-
-if [ "$OS" = "Linux" ]; then
-    PACKAGEDIR=$(readlink -f $PACKAGEDIR)
-fi
 
 safeRunCommand "$PACKAGEDIR/bin/.fix-python-scripts.sh $PACKAGEDIR"
 
