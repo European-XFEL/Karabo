@@ -53,9 +53,10 @@ class Remote(Device):
     @Int(allowedStates=["Other state"])
     def disallowed_int(self, value):
         self.value = value
+        self.state = "uninitialized"
 
     @Slot(allowedStates=["uninitialized"])
-    def disallow(self):
+    def allow(self):
         self.state = "Other state"
         self.value = 777
 
@@ -284,19 +285,34 @@ class Tests(TestCase):
     @async_tst
     def test_disallow(self):
         """test that values cannot be set if in wrong state"""
-        with self.assertLogs(logger="remote", level="ERROR"):
-            with (yield from getDevice("remote")) as d:
-                d.disallowed_int = 333
-                yield from sleep(0.1)
-                self.assertEqual(d.value, 333)
-                yield from d.disallow()
-                yield from sleep(0.1)
+        with (yield from getDevice("remote")) as d:
+            try:
+                d.value = 7
+                # disallowed_int is normally not allowed
+                with self.assertLogs(logger="remote", level="ERROR"):
+                    d.disallowed_int = 333
+                    yield from sleep(0.02)
+                self.assertEqual(d.value, 7)
+                # allow set value to 777 and is changing state such that
+                # disallowed_int can be set ...
+                yield from d.allow()
+                yield from sleep(0.02)
                 self.assertEqual(d.value, 777)
+                d.value = 4
+                # ... but it cannot be called itself anymore ...
+                with self.assertLogs(logger="remote", level="ERROR"):
+                    yield from d.allow()
+                self.assertEqual(d.value, 4)
+                # ... but disallowed_int sets this back ...
                 d.disallowed_int = 444
-                yield from sleep(0.1)
+                yield from sleep(0.02)
+                self.assertEqual(d.value, 444)
+                # ... so allow can be called again!
+                yield from d.allow()
                 self.assertEqual(d.value, 777)
-                yield from d.disallow()
-                self.assertEqual(d.value, 777)
+            finally:
+                # set the state back
+                d.disallowed_int = 7
 
     @async_tst
     def test_log(self):
