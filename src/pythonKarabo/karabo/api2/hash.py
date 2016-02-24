@@ -195,7 +195,7 @@ class Descriptor(object):
             msg = 'property "{}" is not reconfigurable'.format(self.key)
             raise KaraboError(msg)
         elif (self.allowedStates is not None and
-              instance.state in self.allowedStates):
+              instance.state not in self.allowedStates):
             msg = 'setting "{}" is not allowed in state "{}"'.format(
                 self.key, instance.state)
             raise KaraboError(msg)
