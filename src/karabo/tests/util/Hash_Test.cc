@@ -862,6 +862,8 @@ void Hash_Test::testHas()
     // Test also vector<Hash> on first level:
     CPPUNIT_ASSERT(h1.has("b") == true);
     CPPUNIT_ASSERT(h1.has("b[2]") == false);
+    // And now some index on a non-existing vector<Hash>:
+    CPPUNIT_ASSERT(h1.has("c[0]") == false);
 }
 
 void Hash_Test::testIs()
