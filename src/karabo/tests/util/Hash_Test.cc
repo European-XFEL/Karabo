@@ -442,7 +442,7 @@ void Hash_Test::testGetAs() {
             oss << h;            
         } catch (Exception& e) {
             cerr << e;
-            KARABO_RETHROW(e);
+            KARABO_RETHROW_AS(e);
         }
     }
 }
