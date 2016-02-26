@@ -195,7 +195,7 @@ namespace karabo {
         }
 
         const Hash* Hash::getLastHashPtr(const std::string& path, std::string& lastKey, const char separator) const {
-            // Should we add an error code to be returned as argument by value?
+            // TODO: We should add an error code to be returned as argument by value.
             if (path.empty()) return 0;
             std::vector<std::string> tokens;
             karabo::util::tokenize(path, tokens, separator);
