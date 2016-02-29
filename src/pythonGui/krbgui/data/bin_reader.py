@@ -3,6 +3,7 @@ from struct import calcsize, unpack
 
 import numpy as np
 from .hash import Hash, Schema
+from .typenums import HashType
 
 
 def read_array(fp, dtype=None):
@@ -31,17 +32,17 @@ def read_hash(fp):
     hsh = Hash()
     for i in range(member_count):
         key = read_key(fp)
-        type_num = read_simple(fp, fmt='I')
-        type_name, reader = READER_MAP[type_num]
+        type_enum = HashType(read_simple(fp, fmt='I'))
+        reader = __READER_MAP[type_enum]
 
         attr_count = read_simple(fp, fmt='I')
         attr_types = {}
-        attrs = {'KRB_Type': type_name, 'KRB_AttrTypes': attr_types}
+        attrs = {'KRB_Type': type_enum.name, 'KRB_AttrTypes': attr_types}
         for j in range(attr_count):
             akey = read_key(fp)
-            atype_num = read_simple(fp, fmt='I')
-            atype_name, areader = READER_MAP[atype_num]
-            attr_types[akey] = atype_name
+            atype_enum = HashType(read_simple(fp, fmt='I'))
+            areader = __READER_MAP[atype_enum]
+            attr_types[akey] = atype_enum.name
             attrs[akey] = areader(fp)
 
         hsh[key] = reader(fp)
@@ -77,39 +78,39 @@ def read_string(fp):
     return str(fp.read(size), 'utf8')
 
 
-READER_MAP = {
-    0: ('Bool', partial(read_simple, fmt='?')),
-    1: ('BoolArray', partial(read_array, dtype=np.bool_)),
-    2: ('Char', partial(read_simple, fmt='c')),
-    3: ('Bytes', read_bytes),
-    4: ('Int8', partial(read_simple, fmt='b')),
-    5: ('Int8Array', partial(read_array, dtype=np.int8)),
-    6: ('UInt8', partial(read_simple, fmt='B')),
-    7: ('UInt8Array', partial(read_array, dtype=np.uint8)),
-    8: ('Int16', partial(read_simple, fmt='h')),
-    9: ('Int16Array', partial(read_array, dtype=np.int16)),
-    10: ('UInt16', partial(read_simple, fmt='H')),
-    11: ('UInt16Array', partial(read_array, dtype=np.uint16)),
-    12: ('Int32', partial(read_simple, fmt='i')),
-    13: ('Int32Array', partial(read_array, dtype=np.int32)),
-    14: ('UInt32', partial(read_simple, fmt='I')),
-    15: ('UInt32Array', partial(read_array, dtype=np.uint32)),
-    16: ('Int64', partial(read_simple, fmt='q')),
-    17: ('Int64Array', partial(read_array, dtype=np.int64)),
-    18: ('UInt64', partial(read_simple, fmt='Q')),
-    19: ('UInt64Array', partial(read_array, dtype=np.uint64)),
-    20: ('Float32', partial(read_simple, fmt='f')),
-    21: ('Float32Array', partial(read_array, dtype=np.float32)),
-    22: ('Float64', partial(read_simple, fmt='d')),
-    23: ('Float64Array', partial(read_array, dtype=np.float64)),
-    24: ('Complex64', partial(read_complex, fmt='ff')),
-    25: ('Complex64Array', partial(read_array, dtype=np.complex64)),
-    26: ('Complex128', partial(read_complex, fmt='dd')),
-    27: ('Complex128Array', partial(read_array, dtype=np.complex128)),
-    28: ('String', read_string),
-    29: ('StringList', partial(read_list, reader=read_string)),
-    30: ('Hash', read_hash),
-    31: ('HashList', partial(read_list, reader=read_hash)),
-    47: ('Schema', read_schema),
-    50: ('None', read_empty),
+__READER_MAP = {
+    HashType.Bool: partial(read_simple, fmt='?'),
+    HashType.BoolArray: partial(read_array, dtype=np.bool_),
+    HashType.Char: partial(read_simple, fmt='c'),
+    HashType.Bytes: read_bytes,
+    HashType.Int8: partial(read_simple, fmt='b'),
+    HashType.Int8Array: partial(read_array, dtype=np.int8),
+    HashType.UInt8: partial(read_simple, fmt='B'),
+    HashType.UInt8Array: partial(read_array, dtype=np.uint8),
+    HashType.Int16: partial(read_simple, fmt='h'),
+    HashType.Int16Array: partial(read_array, dtype=np.int16),
+    HashType.UInt16: partial(read_simple, fmt='H'),
+    HashType.UInt16Array: partial(read_array, dtype=np.uint16),
+    HashType.Int32: partial(read_simple, fmt='i'),
+    HashType.Int32Array: partial(read_array, dtype=np.int32),
+    HashType.UInt32: partial(read_simple, fmt='I'),
+    HashType.UInt32Array: partial(read_array, dtype=np.uint32),
+    HashType.Int64: partial(read_simple, fmt='q'),
+    HashType.Int64Array: partial(read_array, dtype=np.int64),
+    HashType.UInt64: partial(read_simple, fmt='Q'),
+    HashType.UInt64Array: partial(read_array, dtype=np.uint64),
+    HashType.Float32: partial(read_simple, fmt='f'),
+    HashType.Float32Array: partial(read_array, dtype=np.float32),
+    HashType.Float64: partial(read_simple, fmt='d'),
+    HashType.Float64Array: partial(read_array, dtype=np.float64),
+    HashType.Complex64: partial(read_complex, fmt='ff'),
+    HashType.Complex64Array: partial(read_array, dtype=np.complex64),
+    HashType.Complex128: partial(read_complex, fmt='dd'),
+    HashType.Complex128Array: partial(read_array, dtype=np.complex128),
+    HashType.String: read_string,
+    HashType.StringList: partial(read_list, reader=read_string),
+    HashType.Hash: read_hash,
+    HashType.HashList: partial(read_list, reader=read_hash),
+    HashType.Schema: read_schema,
+    HashType.None_: read_empty,
 }
