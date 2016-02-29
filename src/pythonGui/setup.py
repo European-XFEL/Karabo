@@ -1,27 +1,82 @@
-__author__="teichman"
-__date__ ="$Dec 16, 2013 10:50:32 AM$"
+from functools import partial
+import os.path as op
 
-from setuptools import setup,find_packages
+from setuptools import setup, find_packages
 
-setup (
-  name = 'pythonGui',
-  version = '0.1',
-  packages = find_packages(),
+MAJOR = 1
+MINOR = 5
+MICRO = 0
+IS_RELEASED = False
+VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+VERSION_FILE_PATH = 'krbgui/_version.py'
 
-  # Declare your packages' dependencies here, for eg:
-  install_requires=['foo>=3'],
 
-  # Fill in these to make your Egg ready for upload to
-  # PyPI
-  author = 'teichman',
-  author_email = '',
+def _get_src_dist_version():
+    if not op.exists(VERSION_FILE_PATH):
+        return 'Unknown', '0'
 
-  summary = 'Just another Python package for the cheese shop',
-  url = '',
-  license = '',
-  long_description= 'Long description of the package',
+    # must be a source distribution, use existing version file
+    try:
+        from krbgui._version import vcs_revision as vcs_rev
+        from krbgui._version import vcs_revision_count as dev_num
+    except ImportError:
+        raise ImportError("Unable to import vcs_revision. Try removing "
+                          + VERSION_FILE_PATH + " and the build directory "
+                          "before building.")
 
-  # could also include long_description, download_url, classifiers, etc.
+    return vcs_rev, dev_num
 
-  
-)
+
+def _write_version_py(filename=VERSION_FILE_PATH):
+    from karabo.packaging.versioning import (git_version, svn_version,
+                                             jsvn_version)
+
+    template = """\
+# THIS FILE IS GENERATED FROM SETUP.PY. DO NOT EDIT.
+version = '{version}'
+full_version = '{full_version}'
+vcs_revision = '{vcs_revision}'
+vcs_revision_count = '{vcs_revision_count}'
+is_released = {is_released}
+"""
+    fullversion = VERSION
+    vcs_rev, dev_num = 'Unknown', '0'
+
+    # Try many ways to get version info
+    path = op.normpath(op.dirname(__file__))
+    version_generators = (
+        partial(git_version, path),
+        _get_src_dist_version,
+    )
+    for version_gen in version_generators:
+        vcs_rev, dev_num = version_gen()
+        if vcs_rev != 'Unknown':
+            break
+
+    if not IS_RELEASED:
+        fullversion += '.dev{0}'.format(dev_num)
+
+    with open(filename, "wt") as fp:
+        fp.write(template.format(version=VERSION,
+                                 full_version=fullversion,
+                                 vcs_revision=vcs_rev,
+                                 vcs_revision_count=dev_num,
+                                 is_released=IS_RELEASED))
+
+    return fullversion
+
+if __name__ == '__main__':
+    version = _write_version_py()
+
+    PKG = 'krbgui'
+    setup(
+        name=PKG,
+        version=version,
+        author="Karabo Team",
+        author_email="karabo@xfel.eu",
+        description="This is the Karabo GUI",
+        url="http://karabo.eu",
+        packages=[PKG] + [PKG + '.' + pkg for pkg in find_packages(PKG)],
+        package_data={
+        },
+    )
