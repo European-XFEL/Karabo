@@ -91,7 +91,7 @@ class Device(SignalSlotable):
             Device.subclasses[name] = cls
 
     def initInfo(self):
-        info = self.info
+        info = self._ss.info
         info["type"] = "device"
         info["classId"] = self.classId
         info["serverId"] = self.serverId
