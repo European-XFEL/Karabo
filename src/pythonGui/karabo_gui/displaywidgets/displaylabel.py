@@ -107,7 +107,7 @@ class DisplayLabel(DisplayWidget):
         self.value = value
 
         if isinstance(value, str):
-            self.widget.setText(value[:30])
+            self.widget.setText(value)
             return
         elif isinstance(value, bytes):
             return
