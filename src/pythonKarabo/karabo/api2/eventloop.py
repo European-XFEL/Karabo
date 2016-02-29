@@ -45,11 +45,11 @@ class Broker:
         m.properties = p
         self.producer.send(m, 1, 4, 100000)
 
-    def heartbeat(self, interval, info):
+    def heartbeat(self, interval):
         h = Hash()
         h["a1"] = self.deviceId
         h["a2"] = interval
-        h["a3"] = info
+        h["a3"] = self.info
         m = openmq.BytesMessage()
         m.data = h.encode("Bin")
         p = openmq.Properties()
@@ -127,7 +127,6 @@ class Broker:
             self.session, self.destination,
             "slotInstanceIds LIKE '%|{0.deviceId}|%' "
             "OR slotInstanceIds LIKE '%|*|%'".format(self), False)
-        self.info = device.info
         try:
             while True:
                 device = weakref.ref(device)
@@ -143,7 +142,6 @@ class Broker:
                     device = device()
                     if device is None:
                         return
-                self.info = device.info
                 try:
                     slots, params = self.decodeMessage(message)
                 except:

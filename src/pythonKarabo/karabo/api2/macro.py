@@ -151,9 +151,9 @@ class Macro(Device):
 
     def initInfo(self):
         super().initInfo()
-        self.info["type"] = "macro"
-        self.info["project"] = self.project
-        self.info["module"] = self.module
+        self._ss.info["type"] = "macro"
+        self._ss.info["project"] = self.project
+        self._ss.info["module"] = self.module
 
     @coroutine
     def run_async(self):

@@ -116,7 +116,6 @@ class SignalSlotable(Configurable):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
         super().__init__(configuration)
         self.deviceId = self._deviceId_
-        self.info = Hash("heartbeatInterval", self.heartbeatInterval)
         self._devices = {}
         self.__randPing = random.randint(2, 0x7fffffff)
 
@@ -129,6 +128,7 @@ class SignalSlotable(Configurable):
         if loop is None:
             loop = get_event_loop()
         self._ss = loop.getBroker(self.deviceId, type(self).__name__)
+        self._ss.info = Hash("heartbeatInterval", self.heartbeatInterval)
         self._sethash = {}
         if server is not None:
             server.addChild(self.deviceId, self)
@@ -147,10 +147,10 @@ class SignalSlotable(Configurable):
         # that we start responding to other pings.
         if rand:
             if instanceId == self.deviceId and self.__randPing != rand:
-                return self.info
+                return self._ss.info
         elif self.__randPing == 0:
             self._ss.emit("call", {instanceId: ["slotPingAnswer"]},
-                          self.deviceId, self.info)
+                          self.deviceId, self._ss.info)
 
     def inner(self, message, args):
         ret = self.slotPing(*args)
@@ -186,7 +186,7 @@ class SignalSlotable(Configurable):
     def heartbeats(self):
         while self is not None:
             interval = self.heartbeatInterval
-            self._ss.heartbeat(interval, self.info)
+            self._ss.heartbeat(interval)
             self = weakref.ref(self)
             yield from sleep(interval)
             self = self()
@@ -224,7 +224,7 @@ class SignalSlotable(Configurable):
         self.run()
         self.__randPing = 0  # Start answering on slotPing with argument rand=0
         self._ss.emit('call', {'*': ['slotInstanceNew']},
-                      self.deviceId, self.info)
+                      self.deviceId, self._ss.info)
         async(self.heartbeats())
 
     @coslot
