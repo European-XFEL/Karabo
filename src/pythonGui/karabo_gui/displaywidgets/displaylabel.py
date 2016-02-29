@@ -107,7 +107,9 @@ class DisplayLabel(DisplayWidget):
         self.value = value
 
         if isinstance(value, str):
-            self.widget.setText(value[:30])
+            # Make sure that long binary data (e.g. image) is not shown,
+            # Otherwise slowness is the case
+            self.widget.setText(value[:255])
             return
         elif isinstance(value, bytes):
             return
