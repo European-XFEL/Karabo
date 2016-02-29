@@ -571,8 +571,8 @@ class Launcher(object):
 
     def start(self):
         args = [sys.executable, "-c"]
-        args.append("'from karabo.api1.device import launchPythonDevice;"
-                    "launchPythonDevice()'")
+        args.append("from karabo.api1.device import launchPythonDevice;"
+                    "launchPythonDevice()")
         args.extend(self.args)
 
         self.child = Popen(args)
