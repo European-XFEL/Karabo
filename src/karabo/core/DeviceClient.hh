@@ -689,6 +689,9 @@ namespace karabo {
         private:
             /// As findInstanceSafe, but to be called under protection of m_runtimeSystemDescriptionMutex.
             std::string findInstance(const std::string &instanceId) const;
+
+            /// Actually process data in 'signalChangedMap' - try/catch should be outside.
+            void doSendSignalsChanged(const SignalChangedMap &signalChangedMap);
         };
     }
 }
