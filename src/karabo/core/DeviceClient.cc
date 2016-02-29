@@ -1135,10 +1135,17 @@ namespace karabo {
             // NOTE: This will block us here, i.e. we are deaf for other changes...
             // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
             notifyPropertyChangedMonitors(hash, instanceId);
-            boost::mutex::scoped_lock lock(m_signalsChangedMutex);
-            // Just book keep paths here and call 'notifyDeviceChangedMonitors'
-            // later with content from m_runtimeSystemDescription.
-            hash.getPaths(m_signalsChanged[instanceId]);
+            if (m_runSignalsChangedThread) {
+                boost::mutex::scoped_lock lock(m_signalsChangedMutex);
+                // Just book keep paths here and call 'notifyDeviceChangedMonitors'
+                // later with content from m_runtimeSystemDescription.
+                hash.getPaths(m_signalsChanged[instanceId]);
+            } else {
+                // There is a tiny (!) risk here: The last loop of the corresponding thread
+                // might still be running and _later_ call 'notifyDeviceChangedMonitors'
+                // with an older value...
+                notifyDeviceChangedMonitors(hash, instanceId);
+            }
         }
 
 
@@ -1343,49 +1350,10 @@ if (nodeData) {\
                     // Get map of all properties that changed (and clear original)
                     SignalChangedMap localChanged;
                     {
-                        boost::mutex::scoped_lock(m_signalsChangedMutex);
+                        boost::mutex::scoped_lock lock(m_signalsChangedMutex);
                         m_signalsChanged.swap(localChanged);
                     }
-                    // Now iterate on devices (i.e. keys in map)
-                    for (SignalChangedMap::const_iterator mapIt = localChanged.begin(), mapEnd = localChanged.end();
-                            mapIt != mapEnd; ++mapIt) {
-                        const std::string& instanceId = mapIt->first;
-                        const std::set<std::string>& properties = mapIt->second;
-                        // Get path of instance in runtime system description and then its configuration
-                        const std::string path(this->findInstanceSafe(instanceId));
-                        // FIXME: get const back once Hash::find(..) const is fixed!
-                        /*const*/ util::Hash config(this->getSectionFromRuntimeDescription(path + ".configuration"));
-                        if (config.empty()) { // might have failed if instance not monitored anymore
-                            KARABO_LOG_FRAMEWORK_WARN << "Instance '" << instanceId << "' gone, cannot forward its signalChanged";
-                            continue;
-                        }
-                        // Now collect all changed properties (including their attributes).
-                        util::Hash toSend;
-                        for (std::set<std::string>::const_iterator it = properties.begin(), iEnd = properties.end();
-                                it != iEnd; ++it) {
-                            //FIXME: get last const back once Hash::find(..) const is fixed!
-                            const boost::optional</*const*/ util::Hash::Node&> propertyNode = config.find(*it);
-                            if (!propertyNode) {
-                                KARABO_LOG_FRAMEWORK_INFO << "sendSignalsChanged: no '" << *it << "' for " << instanceId;
-                                continue;
-                            }
-                            // Use Hash::setNode below to copy the full property with its attributes. But that uses
-                            // 'propertyNode's key, not full path => find (or even create) direct mother:
-                            util::Hash* motherNode = &toSend;
-                            const std::string::size_type posOfDot = it->find_last_of('.'); // I'd love to get '.' from Hash!
-                            if (posOfDot != std::string::npos) {
-                                // So '*it' is a path with nested keys => find or create mother.
-                                const std::string motherNodePath(*it, 0, posOfDot);
-                                if (toSend.has(motherNodePath)) {
-                                    motherNode = &(toSend.get<util::Hash>(motherNodePath));
-                                } else {
-                                    motherNode = toSend.bindPointer<util::Hash>(motherNodePath);
-                                }
-                            }
-                            motherNode->setNode(propertyNode.get());
-                        }
-                        this->notifyDeviceChangedMonitors(toSend, instanceId);
-                    }
+                    this->doSendSignalsChanged(localChanged);
                 } catch (const Exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Exception encountered in 'sendSignalsChanged': " << e;
                 } catch (const std::exception& e) {
@@ -1395,6 +1363,58 @@ if (nodeData) {\
                 }
                 boost::this_thread::sleep(boost::posix_time::seconds(1));
             }
+            // Just in case anything was added before 'm_runSignalsChangedThread' was set to false
+            // and while we processed the previous content (keep lock until done completely):
+            try {
+                boost::mutex::scoped_lock lock(m_signalsChangedMutex);
+                this->doSendSignalsChanged(m_signalsChanged);
+                m_signalsChanged.clear();
+            } catch (...) { // lazy to catch all levels - we are anyway done with the thread...
+                KARABO_LOG_FRAMEWORK_ERROR << "Exception encountered when leaving 'sendSignalsChanged'";
+            }
+        }
+
+        void DeviceClient::doSendSignalsChanged(const SignalChangedMap& localChanged) {
+            // Iterate on devices (i.e. keys in map)
+            for (SignalChangedMap::const_iterator mapIt = localChanged.begin(), mapEnd = localChanged.end();
+                    mapIt != mapEnd; ++mapIt) {
+                const std::string& instanceId = mapIt->first;
+                const std::set<std::string>& properties = mapIt->second;
+                // Get path of instance in runtime system description and then its configuration
+                const std::string path(this->findInstanceSafe(instanceId));
+                // FIXME: get const back once Hash::find(..) const is fixed!
+                /*const*/ util::Hash config(this->getSectionFromRuntimeDescription(path + ".configuration"));
+                if (config.empty()) { // might have failed if instance not monitored anymore
+                    KARABO_LOG_FRAMEWORK_WARN << "Instance '" << instanceId << "' gone, cannot forward its signalChanged";
+                    continue;
+                }
+                // Now collect all changed properties (including their attributes).
+                util::Hash toSend;
+                for (std::set<std::string>::const_iterator it = properties.begin(), iEnd = properties.end();
+                        it != iEnd; ++it) {
+                    //FIXME: get last const back once Hash::find(..) const is fixed!
+                    const boost::optional</*const*/ util::Hash::Node&> propertyNode = config.find(*it);
+                    if (!propertyNode) {
+                        KARABO_LOG_FRAMEWORK_INFO << "sendSignalsChanged: no '" << *it << "' for " << instanceId;
+                        continue;
+                    }
+                    // Use Hash::setNode below to copy the full property with its attributes. But that uses
+                    // 'propertyNode's key, not full path => find (or even create) direct mother:
+                    util::Hash* motherNode = &toSend;
+                    const std::string::size_type posOfDot = it->find_last_of('.'); // I'd love to get '.' from Hash!
+                    if (posOfDot != std::string::npos) {
+                        // So '*it' is a path with nested keys => find or create mother.
+                        const std::string motherNodePath(*it, 0, posOfDot);
+                        if (toSend.has(motherNodePath)) {
+                            motherNode = &(toSend.get<util::Hash>(motherNodePath));
+                        } else {
+                            motherNode = toSend.bindPointer<util::Hash>(motherNodePath);
+                        }
+                    }
+                    motherNode->setNode(propertyNode.get());
+                } // end loop on changed properties
+                this->notifyDeviceChangedMonitors(toSend, instanceId);
+            } // end loop on instances
         }
 
         void DeviceClient::immortalize(const std::string& deviceId) {
