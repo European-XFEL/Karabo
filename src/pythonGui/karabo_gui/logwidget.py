@@ -58,6 +58,7 @@ class LogWidget(QWidget):
         vLayout.addWidget(self.filterWidget)
 
         self.logs = [ ]
+        self.lastnumber = 0
         self.queryModel = LogQueryModel()
         twLogTable = QTableView(self)
         vLayout.addWidget(twLogTable)
@@ -286,20 +287,33 @@ class LogWidget(QWidget):
 
     def onNotificationAvailable(self, deviceId, messageType, shortMsg,
                                 detailedMsg):
-        new = Log(len(self.logs), messageType=messageType, instanceId=deviceId,
-                  description=shortMsg, additionalDescription=detailedMsg,
+        new = Log(self.lastnumber, messageType=messageType,
+                  instanceId=deviceId, description=shortMsg,
+                  additionalDescription=detailedMsg,
                   dateTime=QDateTime.currentDateTime())
+        self.lastnumber += 1
         self.logs.append(new)
         self.queryModel.add(new)
+        self.prune()
 
     def onLogDataAvailable(self, logData):
         new = [Log(i, messageType=log["type"], instanceId=log["category"],
                    description=log["message"], additionalDescription="",
                    dateTime=QDateTime.fromString(log["timestamp"], Qt.ISODate))
-               for i, log in enumerate(logData, start=len(self.logs) + 1)]
+               for i, log in enumerate(logData, start=self.lastnumber + 1)]
+        self.lastnumber += len(logData)
         self.logs.extend(new)
         for log in self.filter(new):
             self.queryModel.add(log)
+        self.prune()
+
+    def prune(self):
+        """delete the oldest 10000 entries if we have more than 100000"""
+        if len(self.logs) < 100000:
+            return
+        self.logs.sort(key=lambda l: l.dateTime, reverse=True)
+        self.logs = self.logs[:-10000]
+        self.onFilterChanged()
 
     def onFilterOptionVisible(self, checked):
         """
