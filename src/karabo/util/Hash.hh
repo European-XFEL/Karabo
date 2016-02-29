@@ -250,14 +250,20 @@ namespace karabo {
             bool erase(const std::string& path, const char separator = '.');
 
             /**
-             * Remove the element identified by 'key' if it exists.
+             * Remove the element identified by 'path' if it exists.
              * If 'key' is composite (e.g. "a.b.c") and the last component ("c")
              * is the only child of its parent, the parent is removed as well.
              * This removal is recursively continued to the root.
-             * Example: erasePath("a.b.c") will remove "c" and "b" will
-             * be removed as well if "c" is the only child of "a.b".
-             * If "a.b.c" is the only element in the Hash, then
-             * erasePath("a.b.c") will result in an empty hash.
+             * Example 1: erasePath("a.b.c") will remove "c" and "b" will
+             *            be removed as well if "c" is the only child of "a.b".
+             *            If "a.b.c" is the only element in the Hash, then
+             *            erasePath("a.b.c") will result in an empty hash.
+             * If 'path' refers to a Hash inside a vector<Hash>, that element of
+             * the vector is erased, i.e. the vector shrinks. If the element was
+             * the only one in the vector, the vector will be removed as well
+             * Example 2: erase ("a.b[0]") will remove element 0 of "b". If "b"
+             *            had a size of 1, b will be removed completely (and 'a'
+             *            as well in case of no other child).
              * @return No
              */
             void erasePath(const std::string& path, const char separator = '.');

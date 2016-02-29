@@ -113,12 +113,20 @@ namespace karabo {
 
         bool Hash::erase(const std::string& path, const char separator) {
             std::string key;
-            Hash& hash = getLastHash(path, key, separator);
+            Hash* hash = getLastHashPtr(path, key, separator);
+            if (!hash) {
+                return false;
+            }
             int index = karabo::util::getAndCropIndex(key);
             if (index == -1) {
-                return (hash.m_container.erase(key) != 0);
+                return (hash->m_container.erase(key) != 0);
             } else {
-                std::vector<Hash>& vect = hash.m_container.get<vector<Hash> >(key);
+                Container::map_iterator it = hash->m_container.find(key);
+                if (it == hash->m_container.mend()) {
+                    // Could be 'erase("a[2]")', but there is no "a" at all!
+                    return false;
+                }
+                std::vector<Hash>& vect = hash->m_container.get<vector<Hash> >(it);
                 if (static_cast<unsigned int>(index) >= vect.size()) {
                     return false;
                 } else {
@@ -156,7 +164,12 @@ namespace karabo {
                         thePath = concat(tokens, --length, sep);
                         if (thePath.empty()) break;
                     } else {
-                        std::vector<Hash>& vect = hash->m_container.get<vector<Hash> >(key);
+                        Container::map_iterator it = hash->m_container.find(key);
+                        if (it == hash->m_container.mend()) {
+                            // Could be 'erasePath("a[2]")', but there is no "a" at all.
+                            break;
+                        }
+                        std::vector<Hash>& vect = hash->m_container.get<vector<Hash> >(it);
                         if (static_cast<unsigned int>(index) < vect.size()) {
                             vect.erase(vect.begin() + index);
                         }
