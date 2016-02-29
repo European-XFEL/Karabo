@@ -122,8 +122,6 @@ unit_registry.Quantity = QuantityValue
 unit_registry.define("number = count = #")
 unit_registry.define("electronvolt = eV")
 unit_registry.define("degree_celsius = degC")
-unit_registry.define("lumen = cd * sr = lm")
-unit_registry.define("lux = lm / m ** 2 = lx")
 unit_registry.define("katal = mol / s = kat")
 unit_registry.define("pixel = count = px")
 unit_registry.define("meter_per_second = m / s")
