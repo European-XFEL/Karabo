@@ -88,16 +88,18 @@ if [ -d $RESOURCE_PATH ]; then
 
         echo -e "\n### Extracting $RESOURCE_NAME"
         safeRunCommand "$EXTRACT_COMMAND"
-        cd $DEP_NAME
+        if [ -d "$DEP_NAME" ]; then
+            # Not every package extracts something...
+            cd $DEP_NAME
+        fi
 
         echo -e "\n### Configuring $RESOURCE_NAME"
-        #echo $CONFIGURE_COMMAND
         safeRunCommand "$CONFIGURE_COMMAND"
 
         echo -e "\n### Compiling $RESOURCE_NAME"
         safeRunCommand "$MAKE_COMMAND"
 
-	echo -e "\n### Installing $RESOURCE_NAME"
+        echo -e "\n### Installing $RESOURCE_NAME"
         safeRunCommand "$INSTALL_COMMAND"
     fi
     cd $scriptDir
