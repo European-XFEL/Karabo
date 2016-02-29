@@ -14,11 +14,19 @@
 echo "### Now building Karabo... ###";
 
 get_abs_path() {
-     local PARENT_DIR=$(dirname "$1")
-     cd "$PARENT_DIR"
-     local ABS_PATH="$(pwd -P)"/"$(basename "$1")"
-     cd - >/dev/null
-     echo "$ABS_PATH"
+    local PARENT_DIR=$(dirname "$1")
+    local BASENAME=$(basename "$1")
+    case $BASENAME in
+    ..)
+        cd "$1"
+        local ABS_PATH="$(pwd -P)"
+        ;;
+    *)
+        cd "$PARENT_DIR"
+        local ABS_PATH="$(pwd -P)"/"$BASENAME"
+    esac
+    cd - >/dev/null
+    echo "$ABS_PATH"
 }
 
 safeRunCommand() {
@@ -84,24 +92,20 @@ elif [ "$OS" = "Darwin" ]; then
     NUM_CORES=`sysctl hw.ncpu | awk '{print $2}'`
 fi
 
+BASEDIR=$(get_abs_path $(pwd)/../../../)
 EXTRACT_SCRIPT=$(pwd)/.extract.sh
 PYTHON_FIXER_SCRIPT=$(pwd)/.fix-python-scripts.sh
-PACKAGEDIR=$(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
+PACKAGEDIR=$BASEDIR/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
-BASEDIR=$(pwd)/../../../
-BASEDIR=$(get_abs_path $BASEDIR)
 
 # Always clean the bundle
-if [ -d $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE ]; then 
-    rm -rf $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE
+if [ -d $BASEDIR/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE ]; then
+    rm -rf $BASEDIR/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE
 fi
 rm -f $BASEDIR/karabo
 
 # Start fresh
 mkdir -p $PACKAGEDIR
-
-# Normalize the PACKAGEDIR path (This must happen after mkdir!)
-PACKAGEDIR=$(get_abs_path $PACKAGEDIR)
 
 # Version information
 echo $VERSION > $PACKAGEDIR/VERSION
@@ -109,7 +113,7 @@ echo $VERSION > $PACKAGEDIR/VERSION
 # karabo
 cp -rf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
-cp -rf ../../../extern/$PLATFORM $PACKAGEDIR/extern
+cp -rf $BASEDIR/extern/$PLATFORM $PACKAGEDIR/extern
 cp karaboPackageDependencies-${PLATFORM}.pc $PACKAGEDIR/lib/karaboDependencies.pc
 
 # karathon
@@ -168,13 +172,13 @@ cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 cd ../
 
 #shell scripts - copy directly from src
-cd ../../../src/tools/scripts/
+cd $BASEDIR/src/tools/scripts/
 cp -f * $PACKAGEDIR/bin
 cd -
 
 # Correct python interpreter path for scripts in 'bin' directory
 # <-- replace 1st line by "/usr/bin/env python3" and set PATH
-safeRunCommand "$PYTHON_FIXER_SCRIPT" $(readlink -f $PACKAGEDIR)
+safeRunCommand "$PYTHON_FIXER_SCRIPT" $PACKAGEDIR
 export PATH=$PACKAGEDIR/extern/bin:$PATH
 
 # pythonKarabo
@@ -204,14 +208,14 @@ cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 
 if [ "$BUNDLE_ACTION" = "package" ]; then
     # Build the docs
-    pushd ../../../doc
+    pushd $BASEDIR/doc
     safeRunCommand "./build.sh" $PACKAGEDIR $VERSION
     cp -rf .build/html $PACKAGEDIR/docs
     popd
 fi
 
 # run (Karabo's run/package development environment)
-cd ../../../
+cd $BASEDIR
 tar --exclude=.svn --exclude=run/servers/dataLoggerServer/karaboHistory -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
 # Activation script
 sed "s%__VENV_DIR__%$BASEDIR/karabo%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
@@ -227,10 +231,6 @@ cp .bundle-dependency.sh .bundle-pythondependency.sh $PACKAGEDIR/bin
 cp .extract-cppplugin.sh .extract-pythonplugin.sh $PACKAGEDIR/bin
 cp .extract-dependency.sh $PACKAGEDIR/bin
 cp .fix-python-scripts.sh .set_relative_rpath.py $PACKAGEDIR/bin
-
-if [ "$OS" = "Linux" ]; then
-	PACKAGEDIR=$(readlink -f $PACKAGEDIR)
-fi
 
 safeRunCommand "$PACKAGEDIR/bin/.fix-python-scripts.sh $PACKAGEDIR"
 
