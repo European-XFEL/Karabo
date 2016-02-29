@@ -183,15 +183,6 @@ class SignalSlotable(Configurable):
             return False, Hash()
 
     @coroutine
-    def heartbeats(self):
-        while self is not None:
-            interval = self.heartbeatInterval
-            self._ss.heartbeat(interval)
-            self = weakref.ref(self)
-            yield from sleep(interval)
-            self = self()
-
-    @coroutine
     def run_async(self):
         """start everything needed for this device
 
@@ -223,9 +214,7 @@ class SignalSlotable(Configurable):
             pass
         self.run()
         self.__randPing = 0  # Start answering on slotPing with argument rand=0
-        self._ss.emit('call', {'*': ['slotInstanceNew']},
-                      self.deviceId, self._ss.info)
-        async(self.heartbeats())
+        async(self._ss.notify_network())
 
     @coslot
     def slotKillDevice(self):
