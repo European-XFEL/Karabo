@@ -825,22 +825,35 @@ void Hash_Test::testErase()
     CPPUNIT_ASSERT(hVector.erase("a[0]") == true);
     CPPUNIT_ASSERT(hVector.get<vector<Hash> >("a").size() == 2);
     CPPUNIT_ASSERT(hVector.get<int>("a[1].b") == 111);
+    // index on non-existing key
+    CPPUNIT_ASSERT(hVector.erase("c[2]") == false);
+    CPPUNIT_ASSERT(hVector.erase("a.c[2]") == false);
+    CPPUNIT_ASSERT(hVector.erase("a[0].c[1]") == false);
 
     // Now testing erasePath for paths containing indices.
     Hash hVector2("a[2].b", 111);
     CPPUNIT_ASSERT(hVector2.get<vector<Hash> >("a").size() == 3);
     Hash copy = hVector2;
     hVector2.erasePath("a[3]"); // nothing happens (not even an exception)
-    //CPPUNIT_ASSERT(similar(hVector2, copy));
     CPPUNIT_ASSERT(hVector2 == copy);
     hVector2.erasePath("a[3].b"); // nothing happens (not even an exception)
-    //CPPUNIT_ASSERT(similar(hVector2, copy));
     CPPUNIT_ASSERT(hVector2 == copy);
     hVector2.erasePath("a[0]"); // shrunk
     CPPUNIT_ASSERT(hVector2.get<vector<Hash> >("a").size() == 2);
     CPPUNIT_ASSERT(hVector2.get<int>("a[1].b") == 111);
     hVector2.erasePath("a[1].b"); // erase a[1] as well since b is only daughter
     CPPUNIT_ASSERT(hVector2.get<vector<Hash> >("a").size() == 1);
+    // index for non-existing key must neither throw nor touch the content
+    copy = hVector2;
+    hVector2.erasePath("c[2]");
+    CPPUNIT_ASSERT(hVector2 == copy);
+    hVector2.erasePath("a.c[2]");
+    CPPUNIT_ASSERT(hVector2 == copy);
+    hVector2.erasePath("a[0].c[1]");
+    CPPUNIT_ASSERT(hVector2 == copy);
+    // single element vector<Hash>: vector is removed completely
+    hVector2.erasePath("a[0]");
+    CPPUNIT_ASSERT(hVector2.has("a") == false);
 }
 
 
