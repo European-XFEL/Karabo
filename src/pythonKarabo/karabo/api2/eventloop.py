@@ -2,7 +2,7 @@ from __future__ import absolute_import, unicode_literals
 
 from asyncio import (AbstractEventLoop, CancelledError, coroutine, gather,
                      Future, get_event_loop, Queue, set_event_loop,
-                     SelectorEventLoop, Task, TimeoutError)
+                     SelectorEventLoop, sleep, Task, TimeoutError)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 import getpass
@@ -57,6 +57,22 @@ class Broker:
         p["__format"] = "Bin"
         m.properties = p
         self.hbproducer.send(m, 1, 4, 100000)
+
+    @coroutine
+    def notify_network(self):
+        """notify the network that we are alive
+
+        we send out an instance new and gone, and the heartbeats in between."""
+        self.emit('call', {'*': ['slotInstanceNew']},
+                  self.deviceId, self.info)
+        try:
+            while True:
+                interval = self.info["heartbeatInterval"]
+                self.heartbeat(interval)
+                yield from sleep(interval)
+        finally:
+            self.emit('call', {'*': ['slotInstanceGone']},
+                      self.deviceId, self.info)
 
     def call(self, signal, targets, reply, args):
         p = openmq.Properties()
@@ -176,8 +192,6 @@ class Broker:
             try:
                 yield from self.consume(device())
             finally:
-                self.emit('call', {'*': ['slotInstanceGone']},
-                                   self.deviceId, self.info)
                 me = Task.current_task()
                 tasks = [t for t in self.tasks if t is not me]
                 for t in tasks:
