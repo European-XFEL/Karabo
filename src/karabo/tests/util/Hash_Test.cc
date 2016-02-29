@@ -455,28 +455,11 @@ void Hash_Test::testFind() {
         boost::optional<Hash::Node&> node = h.find("a.b.c1.d");
         if (node) CPPUNIT_ASSERT(node->getValue<int>() == 1);
         else CPPUNIT_ASSERT(false);
-//        CPPUNIT_ASSERT(!node == false);
-//        CPPUNIT_ASSERT(node->getValue<int>() == 1);
 
         node = h.find("a.b.c1.f");
         if (node) CPPUNIT_ASSERT(false);
         else CPPUNIT_ASSERT(true);
-//        CPPUNIT_ASSERT(!node == true);
-//        node = h.find("a.c1.d");
-//        CPPUNIT_ASSERT(!node == true);
     }
-
-//    {
-//        // now test same as above, but the const version (i.e. Hash::find(..) const)
-//        const Hash h("a.b.c1.d", 1);
-//        boost::optional<const Hash::Node&> node = h.find("a.b.c1.d");
-//        if (node) CPPUNIT_ASSERT(node->getValue<int>() == 1);
-//        else CPPUNIT_ASSERT(false);
-//        node = h.find("a.b.c1.f");
-//        CPPUNIT_ASSERT(!node);
-////        if (node) CPPUNIT_ASSERT(false);
-////        else CPPUNIT_ASSERT(true);
-//    }
 
     {
         Hash h("a.b.c", "1");
