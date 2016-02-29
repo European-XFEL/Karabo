@@ -218,6 +218,6 @@ def _get_type(value):
         else:
             return 'StringList'
     elif value is None:
-        return 'None'
+        return 'None_'
     else:
         raise TypeError('unknown data type "{0}"'.format(value.__class__))
