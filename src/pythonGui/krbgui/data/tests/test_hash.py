@@ -124,11 +124,12 @@ def test_merge():
 
 
 def test_repr():
+    REPR = "<foo{'KRB_AttrTypes': {}, 'KRB_Type': <HashType.Int32: 12>}: 42>"
     h = Hash()
     assert repr(h) == "<>"
 
     h["foo"] = 42
-    assert repr(h) == "<foo{'KRB_AttrTypes': {}, 'KRB_Type': 'Int32'}: 42>"
+    assert repr(h) == REPR
 
 
 def test_paths_and_keys():
