@@ -129,7 +129,6 @@ class SignalSlotable(Configurable):
         if loop is None:
             loop = get_event_loop()
         self._ss = loop.getBroker(self.deviceId, type(self).__name__)
-        self._ss.info = Hash("heartbeatInterval", self.heartbeatInterval)
         self._sethash = {}
         if server is not None:
             server.addChild(self.deviceId, self)
@@ -215,7 +214,7 @@ class SignalSlotable(Configurable):
             pass
         self.run()
         self.__randPing = 0  # Start answering on slotPing with argument rand=0
-        async(self._ss.notify_network())
+        async(self._ss.notify_network(self.heartbeatInterval))
 
     @coslot
     def slotKillDevice(self):
@@ -243,9 +242,7 @@ class SignalSlotable(Configurable):
         return True
 
     def updateInstanceInfo(self, info):
-        self._ss.info.merge(info)
-        self._ss.emit('call', {'*': ['slotInstanceUpdated']},
-                      self.deviceId, self._ss.info)
+        self._ss.updateInstanceInfo(info)
 
     def setValue(self, attr, value):
         self.__dict__[attr.key] = value
