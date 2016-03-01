@@ -33,6 +33,8 @@ class Broker:
         self.repliers = {}
         self.tasks = set()
         self.logger = logging.getLogger(deviceId)
+        self.info = Hash()
+        self.alive = False
 
     def send(self, p, args):
         hash = Hash()
@@ -59,20 +61,22 @@ class Broker:
         self.hbproducer.send(m, 1, 4, 100000)
 
     @coroutine
-    def notify_network(self):
+    def notify_network(self, interval):
         """notify the network that we are alive
 
         we send out an instance new and gone, and the heartbeats in between."""
+        self.info["heartbeatInterval"] = interval
         self.emit('call', {'*': ['slotInstanceNew']},
                   self.deviceId, self.info)
+        self.alive = True
         try:
             while True:
-                interval = self.info["heartbeatInterval"]
                 self.heartbeat(interval)
                 yield from sleep(interval)
         finally:
             self.emit('call', {'*': ['slotInstanceGone']},
                       self.deviceId, self.info)
+            self.alive = False
 
     def call(self, signal, targets, reply, args):
         p = openmq.Properties()
@@ -200,6 +204,17 @@ class Broker:
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
+
+    def updateInstanceInfo(self, info):
+        """update the short information about this instance
+
+        the instance info hash contains a very brief summary of the device.
+        It is regularly published, and even lives longer than a device,
+        as it is published with the message that the device died."""
+        self.info.merge(info)
+        if self.alive:
+            self.emit("call", {"*", ["slotInstanceUpdated"]},
+                      self.deviceId, self.info)
 
     def decodeMessage(self, message):
         hash = Hash.decode(message.data, "Bin")
