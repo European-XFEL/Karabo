@@ -243,9 +243,9 @@ class SignalSlotable(Configurable):
         return True
 
     def updateInstanceInfo(self, info):
-        self.info.merge(info)
+        self._ss.info.merge(info)
         self._ss.emit('call', {'*': ['slotInstanceUpdated']},
-                      self.deviceId, self.info)
+                      self.deviceId, self._ss.info)
 
     def setValue(self, attr, value):
         self.__dict__[attr.key] = value

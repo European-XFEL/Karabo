@@ -131,6 +131,14 @@ class DeviceServer(SignalSlotable):
 
     def run(self):
         self._ss.enter_context(self.log.setBroker(self._ss))
+
+        info = self._ss.info
+        info["type"] = "server"
+        info["serverId"] = self.serverId
+        info["version"] = self.__class__.__version__
+        info["host"] = self.hostname
+        info["visibility"] = self.visibility.value
+
         self.logger = self.log.logger
         super().run()
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
@@ -139,13 +147,6 @@ class DeviceServer(SignalSlotable):
         async(self.scanPlugins())
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
-
-        info = self.info
-        info["type"] = "server"
-        info["serverId"] = self.serverId
-        info["version"] = self.__class__.__version__
-        info["host"] = self.hostname
-        info["visibility"] = self.visibility.value
 
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
