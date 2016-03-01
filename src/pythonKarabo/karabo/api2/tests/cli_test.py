@@ -146,7 +146,7 @@ class Tests(TestCase):
         yield from remote.startInstance()
         proxy = yield from getDevice("remote")
         yield from proxy.instantiate()
-        yield from sleep(4)
+        yield from sleep(1.1)
         return (yield from getDevice("other"))
 
     @coroutine
@@ -157,7 +157,7 @@ class Tests(TestCase):
         to test device shutdown in macros"""
         proxy = yield from getDevice("remote")
         yield from proxy.shutdown()
-        yield from sleep(0.1)
+        yield from sleep(0.02)
 
     def test_server(self):
         """test the full lifetime of a python device server
