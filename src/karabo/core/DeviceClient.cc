@@ -45,7 +45,7 @@ namespace karabo {
             instanceInfo.set("compatibility", DeviceClient::classInfo().getVersion());
             instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("status", "ok");
-            
+
             m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_internalSignalSlotable, 60, instanceInfo));
             boost::this_thread::sleep(boost::posix_time::milliseconds(100));
             bool ok = m_internalSignalSlotable->ensureOwnInstanceIdUnique();
@@ -53,7 +53,7 @@ namespace karabo {
                 m_eventThread.join(); // Blocks
                 return;
             }
-                
+
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
 
             this->setupSlots();
@@ -96,8 +96,8 @@ namespace karabo {
 
         void DeviceClient::setupSlots() {
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-            p->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::_slotChanged, this, _1, _2), "_slotChanged");            
-            p->registerSlot<Schema, string, string > (boost::bind(&karabo::core::DeviceClient::_slotClassSchema, this, _1, _2, _3), "_slotClassSchema");            
+            p->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::_slotChanged, this, _1, _2), "_slotChanged");
+            p->registerSlot<Schema, string, string > (boost::bind(&karabo::core::DeviceClient::_slotClassSchema, this, _1, _2, _3), "_slotClassSchema");
             p->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::_slotSchemaUpdated, this, _1, _2), "_slotSchemaUpdated");
             p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::_slotInstanceNew, this, _1, _2), "_slotInstanceNew");
             p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::_slotInstanceGone, this, _1, _2), "_slotInstanceGone");
@@ -107,26 +107,26 @@ namespace karabo {
             p->connect("", "signalInstanceGone", "", "_slotInstanceGone");
         }
 
-//
-//        void DeviceClient::checkMaster() {
-//            try {
-//                m_signalSlotable.lock()->request("*", "slotMasterPing").timeout(100).receive(m_masterDeviceId);
-//            } catch (karabo::util::TimeoutException&) {
-//                karabo::util::Exception::clearTrace();
-//                // Allow for any Karabo_Master to become master
-//                if (m_signalSlotable.lock()->getInstanceId().substr(0, 13) == "Karabo_Master") {
-//                    KARABO_LOG_FRAMEWORK_INFO << "Instance \"" << m_signalSlotable.lock()->getInstanceId() << "\" is becoming master";
-//                    m_signalSlotable.lock()->registerSlot<string > (boost::bind(&karabo::core::DeviceClient::slotMasterPing, this), "slotMasterPing", SignalSlotable::GLOBAL);
-//                    m_masterMode = IS_MASTER;
-//                } else { // stand-alone mode
-//                    KARABO_LOG_FRAMEWORK_DEBUG << "No master instance found. Running in stand-alone mode";
-//                    m_masterMode = NO_MASTER;
-//                }
-//                return;
-//            }
-//            KARABO_LOG_FRAMEWORK_DEBUG << "Master instance found (\"" << m_masterDeviceId << "\")";
-//            m_masterMode = HAS_MASTER;
-//        }
+        //
+        //        void DeviceClient::checkMaster() {
+        //            try {
+        //                m_signalSlotable.lock()->request("*", "slotMasterPing").timeout(100).receive(m_masterDeviceId);
+        //            } catch (karabo::util::TimeoutException&) {
+        //                karabo::util::Exception::clearTrace();
+        //                // Allow for any Karabo_Master to become master
+        //                if (m_signalSlotable.lock()->getInstanceId().substr(0, 13) == "Karabo_Master") {
+        //                    KARABO_LOG_FRAMEWORK_INFO << "Instance \"" << m_signalSlotable.lock()->getInstanceId() << "\" is becoming master";
+        //                    m_signalSlotable.lock()->registerSlot<string > (boost::bind(&karabo::core::DeviceClient::slotMasterPing, this), "slotMasterPing", SignalSlotable::GLOBAL);
+        //                    m_masterMode = IS_MASTER;
+        //                } else { // stand-alone mode
+        //                    KARABO_LOG_FRAMEWORK_DEBUG << "No master instance found. Running in stand-alone mode";
+        //                    m_masterMode = NO_MASTER;
+        //                }
+        //                return;
+        //            }
+        //            KARABO_LOG_FRAMEWORK_DEBUG << "Master instance found (\"" << m_masterDeviceId << "\")";
+        //            m_masterMode = HAS_MASTER;
+        //        }
 
 
         void DeviceClient::cacheAvailableInstances() {
@@ -184,12 +184,12 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceNew was called for: " << instanceId;
 
             Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
-            mergeIntoRuntimeSystemDescription(entry);            
+            mergeIntoRuntimeSystemDescription(entry);
 
             if (m_instanceNewHandler) m_instanceNewHandler(entry);
-        }      
+        }
 
-        
+
         void DeviceClient::eraseFromRuntimeSystemDescription(const std::string& path) {
             try {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
@@ -313,7 +313,7 @@ namespace karabo {
 
 
         void DeviceClient::initTopology() {
-            if (!m_topologyInitialized) {         
+            if (!m_topologyInitialized) {
                 this->cacheAvailableInstances();
                 m_topologyInitialized = true;
             }
@@ -470,18 +470,20 @@ namespace karabo {
 
         karabo::util::Schema DeviceClient::getDeviceSchemaNoWait(const std::string& instanceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Schema());
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            std::string path(findInstance(instanceId));
-            boost::optional<Hash::Node&> node;
-            if (!path.empty()) {
-                path += ".fullSchema";
-                node = m_runtimeSystemDescription.find(path);
+            {
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::string path(findInstance(instanceId));
+                boost::optional<Hash::Node&> node;
+                if (!path.empty()) {
+                    path += ".fullSchema";
+                    node = m_runtimeSystemDescription.find(path);
+                }
+                if (node && !node->getValue<Schema>().empty())
+                    return node->getValue<Schema>();
             }
-            if (!node || node->getValue<Schema>().empty()) { // Not found, request it                
-                m_signalSlotable.lock()->requestNoWait(instanceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
-                return Schema();
-            }
-            return node->getValue<Schema>();
+
+            m_signalSlotable.lock()->requestNoWait(instanceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
+            return Schema();
         }
 
 
@@ -828,15 +830,20 @@ namespace karabo {
 
         karabo::util::Hash DeviceClient::getConfigurationNoWait(const std::string& deviceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            stayConnected(deviceId);
-            std::string path(findInstance(deviceId));
-            if (!path.empty()) {
-                path += ".configuration";
-                boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
-                if (node && !node->getValue<Hash>().empty())
-                    return node->getValue<Hash>();
+            {
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::string path(findInstance(deviceId));
+                if (!path.empty()) {
+                    path += ".configuration";
+                    boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+                    if (node && !node->getValue<Hash>().empty())
+                        return node->getValue<Hash>();
+                }
             }
+            
+            // "stayConnected" is expensive under the high load due to contention on its mutex
+            stayConnected(deviceId);
+            
             m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
             return Hash();
         }
@@ -852,7 +859,7 @@ namespace karabo {
             } else if (toggle) {
                 // connect and request a first time
                 if (p->connect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap",
-                        SignalSlotable::RECONNECT, false)) {
+                               SignalSlotable::RECONNECT, false)) {
                     // If we cannot connect, request makes no sense
                     Hash loggerMap;
                     try {
@@ -912,7 +919,7 @@ namespace karabo {
             try {
                 // Increasing timeout since getting history may take a while...
                 p->request(dataLogReader, "slotGetPropertyHistory", deviceId, property, args)
-                    .timeout(10 * m_internalTimeout).receive(dummy1, dummy2, result);
+                        .timeout(10 * m_internalTimeout).receive(dummy1, dummy2, result);
             } catch (const TimeoutException&) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Request to DataLogReader '" << dataLogReader
                         << "' timed out for device.property '" << deviceId << "." << property << "'.";
@@ -969,7 +976,7 @@ namespace karabo {
             Hash hash;
             Schema schema;
             m_signalSlotable.lock()->request(core::DATALOGMANAGER_ID, "slotGetConfigurationFromPast", deviceId, timepoint)
-                .timeout(60000).receive(hash, schema);
+                    .timeout(60000).receive(hash, schema);
             return make_pair(hash, schema);
         }
 
@@ -1076,21 +1083,22 @@ namespace karabo {
         }
 
 
+        bool DeviceClient::isNotInUse(const std::string & instanceId) {
+            boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+            bool result = (m_instanceUsage.find(instanceId) == m_instanceUsage.end()) || (m_instanceUsage[instanceId] >= CONNECTION_KEEP_ALIVE);
+            m_instanceUsage[instanceId] = 0;
+            return result;
+        }
+
+
         void DeviceClient::stayConnected(const std::string & instanceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-            boost::mutex::scoped_lock lock(m_instanceUsageMutex);
-            if (m_instanceUsage.find(instanceId) == m_instanceUsage.end()) { // Not there yet
-                p->connect(instanceId, "signalChanged", "", "_slotChanged");
-                p->connect(instanceId, "signalStateChanged", "", "_slotChanged");
-                p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
-            } else if (m_instanceUsage[instanceId] >= CONNECTION_KEEP_ALIVE) { // Too old
-                // Should not be reached since instance is also removed from m_instanceUsage.
+            if (isNotInUse(instanceId)) { // Not there yet
                 p->connect(instanceId, "signalChanged", "", "_slotChanged");
                 p->connect(instanceId, "signalStateChanged", "", "_slotChanged");
                 p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
             }
-            m_instanceUsage[instanceId] = 0;
         }
 
 
@@ -1277,6 +1285,7 @@ if (nodeData) {\
         void DeviceClient::age() {
             try {
                 while (m_getOlder) { // Loop forever
+                    vector<string> forDisconnect;
                     {
                         boost::mutex::scoped_lock lock(m_instanceUsageMutex);
                         // Loop connected instances
@@ -1285,19 +1294,27 @@ if (nodeData) {\
                             it->second++; // All just age (but some do not die).
                             if (!this->isImmortal(it->first) // registered monitors are immortal
                                     && it->second >= CONNECTION_KEEP_ALIVE) {
-                                // mortal and too old
-                                karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-                                if (!p) break;
-                                p->disconnect(it->first, "signalChanged", "", "_slotChanged", false);
-                                p->disconnect(it->first, "signalStateChanged", "", "_slotChanged", false);
-                                p->disconnect(it->first, "signalSchemaUpdated", "", "_slotSchemaUpdated", false);
-                                const std::string path("device." + it->first + ".configuration");
-                                // erase invalidates 'it', so use post-increment
-                                m_instanceUsage.erase(it++); // other iterators stay valid
-                                // Since we stopped listening, remove configuration from system description.
-                                this->eraseFromRuntimeSystemDescription(path);
+                                forDisconnect.push_back(it->first);   // we do this to reduce mutex locking time
+                                m_instanceUsage.erase(it++);
                             } else {
                                 ++it;
+                            }
+                        }
+                    }
+                    
+                    {
+                        karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+                        if (p) {
+                            for (size_t i = 0; i < forDisconnect.size(); ++i) {
+                                const string& instanceId = forDisconnect[i];
+
+                                p->disconnect(instanceId, "signalChanged", "", "_slotChanged", false);
+                                p->disconnect(instanceId, "signalStateChanged", "", "_slotChanged", false);
+                                p->disconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated", false);
+
+                                const std::string path("device." + instanceId + ".configuration");
+                                // Since we stopped listening, remove configuration from system description.
+                                this->eraseFromRuntimeSystemDescription(path);
                             }
                         }
                     }
@@ -1356,9 +1373,9 @@ if (nodeData) {\
             if (node) type = node->getValue<string>();
             return type;
         }
-        
+
         bool DeviceClient::hasAttribute(const std::string& instanceId, const std::string& key, const std::string& attribute, const char keySep) {
-            return cacheAndGetConfiguration(instanceId).hasAttribute(key, attribute, keySep); 
+            return cacheAndGetConfiguration(instanceId).hasAttribute(key, attribute, keySep);
         }
 
 #undef KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN
