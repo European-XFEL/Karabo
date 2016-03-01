@@ -123,6 +123,7 @@ namespace karabo {
 
             boost::thread m_signalsChangedThread;
             bool m_runSignalsChangedThread;
+            boost::posix_time::milliseconds m_signalsChangedInterval;
             boost::mutex m_signalsChangedMutex;
             SignalChangedMap m_signalsChanged; /// map of collected signalChanged
 
@@ -188,11 +189,11 @@ namespace karabo {
             // DEPRECATE
             void disableAdvancedMode();
             
-            /**
-             * Switch on buithe mechanism of polling network environment known to broker
-             */
-            void enableTopologyBuilding();
-            void disableTopologyBuilding();
+//            /**
+//             * Switch on buithe mechanism of polling network environment known to broker
+//             */
+//            void enableTopologyBuilding();
+//            void disableTopologyBuilding();
             
             /**
              * Set ageing on or off (on by default)
@@ -200,7 +201,15 @@ namespace karabo {
              */
             void setAgeing(bool toggle);
 
-
+            /**
+             * Set interval to wait between subsequent (for the same instance)
+             * calls to handlers registered via registerDeviceMonitor.
+             * Changes received within that interval will be cached and, in case of
+             * several updates of the same property within the interval, only the most
+             * up-to-date value will be handled.
+             * If negative, switch off caching and call handler immediately.
+             */
+            void setDeviceMonitorInterval(long int milliseconds);
 
             /**
              * Allows asking whether an instance is online in the current distributed system

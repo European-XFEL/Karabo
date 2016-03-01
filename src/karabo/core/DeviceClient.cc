@@ -32,7 +32,8 @@ namespace karabo {
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
         , m_getOlder(true)
-        , m_runSignalsChangedThread(true)
+        , m_runSignalsChangedThread(false)
+        , m_signalsChangedInterval(-1)
         , m_loggerMapCached(false) {
 
             std::string ownInstanceId = generateOwnInstanceId();
@@ -57,7 +58,6 @@ namespace karabo {
 
             this->setAgeing(true);
             this->setupSlots();
-            m_signalsChangedThread = boost::thread(boost::bind(&karabo::core::DeviceClient::sendSignalsChanged, this));
         }
 
 
@@ -69,12 +69,12 @@ namespace karabo {
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
         , m_getOlder(true)
-        , m_runSignalsChangedThread(true)
+        , m_runSignalsChangedThread(false)
+        , m_signalsChangedInterval(-1)
         , m_loggerMapCached(false) {
 
             this->setAgeing(true);
             this->setupSlots();
-            m_signalsChangedThread = boost::thread(boost::bind(&karabo::core::DeviceClient::sendSignalsChanged, this));
         }
 
 
@@ -83,10 +83,8 @@ namespace karabo {
             setAgeing(false); // Joins the thread
             KARABO_LOG_FRAMEWORK_TRACE << "DeviceClient::~DeviceClient() : age thread is joined";
             // Stop thread sending the collected signal(State)Changed
-            m_runSignalsChangedThread = false;
-            if (m_signalsChangedThread.joinable()) {
-                m_signalsChangedThread.join();
-            }
+            setDeviceMonitorInterval(-1);
+
             if (!m_isShared) {
                 if (m_internalSignalSlotable) {
                     m_internalSignalSlotable->stopEventLoop();
@@ -318,6 +316,22 @@ namespace karabo {
             }
         }
 
+        void DeviceClient::setDeviceMonitorInterval(long int milliseconds) {
+            if (milliseconds >= 0) {
+                m_signalsChangedInterval = boost::posix_time::milliseconds(milliseconds);
+                if (!m_runSignalsChangedThread) {
+                    // Should wait until the thread is not anymore joinable
+                    // (in case it is currently being joined)?
+                    m_runSignalsChangedThread = true;
+                    m_signalsChangedThread = boost::thread(boost::bind(&karabo::core::DeviceClient::sendSignalsChanged, this));
+                }
+            } else if (m_runSignalsChangedThread) {
+                m_runSignalsChangedThread = false;
+                if (m_signalsChangedThread.joinable()) {
+                    m_signalsChangedThread.join();
+                }
+            }
+        }
 
         std::pair<bool, std::string> DeviceClient::exists(const std::string& instanceId) {
             if (m_signalSlotable.expired())
@@ -1361,7 +1375,7 @@ if (nodeData) {\
                 } catch (...) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in 'sendSignalsChanged'";
                 }
-                boost::this_thread::sleep(boost::posix_time::seconds(1));
+                boost::this_thread::sleep(m_signalsChangedInterval);
             }
             // Just in case anything was added before 'm_runSignalsChangedThread' was set to false
             // and while we processed the previous content (keep lock until done completely):
