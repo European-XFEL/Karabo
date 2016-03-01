@@ -14,6 +14,7 @@ from karabo.api2.device_client import (
     getDevice, instantiate, shutdown, DeviceClientBase, getDevices)
 from karabo.api2.device_server import DeviceServer
 from karabo.api2.eventloop import NoEventLoop
+from karabo.api2.exceptions import KaraboError
 from karabo.api2.hash import Hash
 from karabo.api2.macro import Macro, EventThread, RemoteDevice
 
@@ -233,7 +234,14 @@ class Tests(TestCase):
         self.assertNotIn("other", getDevices())
         self.assertNotIn("other", getDevices("tserver"))
         yield from other.startInstance()
-        yield from sleep(1)
+        yield from sleep(0.1)
+        self.assertIn("other", getDevices())
+        self.assertIn("other", getDevices("tserver"))
+        self.assertNotIn("other", getDevices("bserver"))
+
+        double = Other(dict(_deviceId_="other", _serverId_="bserver"))
+        with self.assertRaises(KaraboError):
+            yield from double.startInstance()
         self.assertIn("other", getDevices())
         self.assertIn("other", getDevices("tserver"))
         self.assertNotIn("other", getDevices("bserver"))
