@@ -66,8 +66,6 @@ class Tests(TestCase):
         mps = QuantityValue(1, Unit.METER_PER_SECOND)
         pixel = QuantityValue(1, Unit.PIXEL)
         kat = QuantityValue(1, Unit.KATAL)
-        lux = QuantityValue(1, Unit.LUX)
-        lumen = QuantityValue(1, Unit.LUMEN)
         degC = QuantityValue(1, Unit.DEGREE_CELSIUS)
         eV = QuantityValue(1, Unit.ELECTRONVOLT)
         number = QuantityValue(1, Unit.NUMBER)
@@ -79,7 +77,6 @@ class Tests(TestCase):
 
         # check correct dimensionality:
         eV + QuantityValue("1 J")
-        lumen / lux + QuantityValue("1 m^2")
         kat / mps + QuantityValue("1 mol / m")
 
 if __name__ == "__main__":
