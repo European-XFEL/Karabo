@@ -288,6 +288,7 @@ class Tests(TestCase):
         with (yield from getDevice("remote")) as d:
             try:
                 d.value = 7
+                yield from sleep(0.02)
                 # disallowed_int is normally not allowed
                 with self.assertLogs(logger="remote", level="ERROR"):
                     d.disallowed_int = 333
