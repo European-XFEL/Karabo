@@ -316,12 +316,16 @@ namespace karabo {
             }
         }
 
+
         void DeviceClient::setDeviceMonitorInterval(long int milliseconds) {
             if (milliseconds >= 0) {
                 m_signalsChangedInterval = boost::posix_time::milliseconds(milliseconds);
                 if (!m_runSignalsChangedThread) {
-                    // Should wait until the thread is not anymore joinable
-                    // (in case it is currently being joined)?
+                    // Extra protection: If a previous thread is not yet finished,
+                    //                   wait until it is before restarting.
+                    if (m_signalsChangedThread.joinable()) {
+                        m_signalsChangedThread.join();
+                    }
                     m_runSignalsChangedThread = true;
                     m_signalsChangedThread = boost::thread(boost::bind(&karabo::core::DeviceClient::sendSignalsChanged, this));
                 }
@@ -332,6 +336,7 @@ namespace karabo {
                 }
             }
         }
+
 
         std::pair<bool, std::string> DeviceClient::exists(const std::string& instanceId) {
             if (m_signalSlotable.expired())
