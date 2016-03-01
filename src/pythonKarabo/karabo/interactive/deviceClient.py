@@ -538,8 +538,20 @@ class DeviceClient(object):
         
     def unregisterDeviceMonitor(self, instanceId):
         self.__client.unregisterDeviceMonitor(instanceId)
-         
-         
+
+
+    def setDeviceMonitorInterval(self, milliseconds):
+        """
+        Set interval to wait between subsequent (for the same instance)
+        calls to handlers registered via registerDeviceMonitor.
+        Changes received within that interval will be cached and, in case of
+        several updates of the same property within the interval, only the most
+        up-to-date value will be handled.
+        If negative, switch off caching and call handler immediately.
+        """
+        self.__client.setDeviceMonitorInterval(milliseconds)
+
+
     def registerPropertyMonitor(self, instanceId, propertyName, callbackFunction, userData = None):
         """
         This function can be used to register an asynchronous call-back on change of the specified property.
