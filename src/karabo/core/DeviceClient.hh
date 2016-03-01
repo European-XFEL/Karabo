@@ -188,13 +188,7 @@ namespace karabo {
 
             // DEPRECATE
             void disableAdvancedMode();
-            
-//            /**
-//             * Switch on buithe mechanism of polling network environment known to broker
-//             */
-//            void enableTopologyBuilding();
-//            void disableTopologyBuilding();
-            
+
             /**
              * Set ageing on or off (on by default)
              * @return 
