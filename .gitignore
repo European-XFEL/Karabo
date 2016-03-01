@@ -20,7 +20,7 @@ GNU-Linux-x86
 .*
 *~
 *.orig
-karabo
+/karabo
 package/
 run/bin/allInfo
 run/etc/*.log
