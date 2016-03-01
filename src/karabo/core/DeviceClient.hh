@@ -674,6 +674,8 @@ namespace karabo {
             /// empty if path does not exist.
             /// NOTE: To be called under protection of m_runtimeSystemDescriptionMutex.
             std::string findInstance(const std::string &instanceId) const;
+            
+            bool isNotInUse(const std::string & instanceId);
         };
     }
 }
