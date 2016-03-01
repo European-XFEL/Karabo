@@ -234,25 +234,36 @@ namespace karabo {
             void clear();
 
             /**
-             * Remove the element identified by 'key' if it exists. 
+             * Remove the element identified by 'path' if it exists. 
              * Otherwise, do nothing.
-             * If 'key' is a composite element, all its descendents are removed
-             * as well. The path to 'key' is not removed.
-             * Example: erase ("a.b.c") will remove "c", but "a.b" should
-             * not be removed even if "c" is the only child of "a.b".
+             * If 'path' is a composite element, all its descendents are removed
+             * as well. The path up to the last part of 'path' is not removed.
+             * Example 1: erase ("a.b.c") will remove "c", but "a.b" should
+             *            not be removed even if "c" is the only child of "a.b".
+             * If 'path' refers to a Hash inside a vector<Hash>, that element of
+             * the vector is erased, i.e. the vector shrinks.
+             * Example 2: erase ("a.b[1]") will remove element 1 of "b". If "b"
+             *            had a size above 2, the old element "b[2]" will now be
+             *            referred to as "b[1]".
              * @return true if key exists, otherwise false
              */
             bool erase(const std::string& path, const char separator = '.');
 
             /**
-             * Remove the element identified by 'key' if it exists.
+             * Remove the element identified by 'path' if it exists.
              * If 'key' is composite (e.g. "a.b.c") and the last component ("c")
              * is the only child of its parent, the parent is removed as well.
              * This removal is recursively continued to the root.
-             * Example: erasePath("a.b.c") will remove "c" and "b" will
-             * be removed as well if "c" is the only child of "a.b".
-             * If "a.b.c" is the only element in the Hash, then
-             * erasePath("a.b.c") will result in an empty hash.
+             * Example 1: erasePath("a.b.c") will remove "c" and "b" will
+             *            be removed as well if "c" is the only child of "a.b".
+             *            If "a.b.c" is the only element in the Hash, then
+             *            erasePath("a.b.c") will result in an empty hash.
+             * If 'path' refers to a Hash inside a vector<Hash>, that element of
+             * the vector is erased, i.e. the vector shrinks. If the element was
+             * the only one in the vector, the vector will be removed as well
+             * Example 2: erase ("a.b[0]") will remove element 0 of "b". If "b"
+             *            had a size of 1, b will be removed completely (and 'a'
+             *            as well in case of no other child).
              * @return No
              */
             void erasePath(const std::string& path, const char separator = '.');
@@ -574,6 +585,9 @@ namespace karabo {
             Hash& getLastHash(const std::string& path, std::string& last_key, const char separator = '.');
             const Hash& getLastHash(const std::string& path, std::string& last_key, const char separator = '.') const;
 
+            Hash* getLastHashPtr(const std::string& path, std::string& last_key, const char separator = '.');
+            const Hash* getLastHashPtr(const std::string& path, std::string& last_key, const char separator = '.') const;
+
             const Hash & thisAsConst() const {
                 return const_cast<const Hash &> (*this);
             }
@@ -644,13 +658,18 @@ namespace karabo {
         }
 
         template<> inline const Hash& Hash::get(const std::string& path, const char separator) const {
+            // TODO: To reduce code in header, move implementation to getHash or sth. like that...
             std::string key;
             const Hash& hash = getLastHash(path, key, separator);
             int index = karabo::util::getAndCropIndex(key);
             if (index == -1) {
                 return hash.m_container.get<Hash > (key);
             } else {
-                return hash.m_container.get<vector<Hash> >(key)[index];
+                const vector<Hash>& hashVec = hash.m_container.get<vector<Hash> >(key);
+                if (static_cast<unsigned int>(index) >= hashVec.size()) {
+                    throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" + path + "'.");
+                }
+                return hashVec[index];
             }
         }
 
@@ -682,6 +701,7 @@ namespace karabo {
 
         template<>
         inline Hash::Node& Hash::set(const std::string& path, const Hash& value, const char separator) {
+            // TODO: To reduce code in header, move implementation to setHash or sth. like that...
 
             std::vector<std::string> tokens;
             karabo::util::tokenize(path, tokens, separator);
@@ -749,12 +769,18 @@ namespace karabo {
         }
 
         template <typename ValueType> bool Hash::is(const std::string & path, const char separator) const {
+            // TODO: remove detailed implementation from header by calling something like
+            //       return this->is(typeid (ValueType), path, separator);
             std::string tmp(path);
             int index = karabo::util::getAndCropIndex(tmp);
             if (index == -1) {
                 return getNode(tmp, separator).is<ValueType > ();
             } else {
-                return typeid (getNode(tmp, separator).getValue<vector<Hash> >()[index]) == typeid (ValueType);
+                const vector<Hash>& hashVec = getNode(tmp, separator).getValue<vector<Hash> >();
+                if (index >= hashVec.size()) {
+                    throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" + path + "'.");
+                }
+                return typeid (hashVec[index]) == typeid (ValueType);
             }
         }
 
