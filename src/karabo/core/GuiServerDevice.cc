@@ -70,6 +70,15 @@ namespace karabo {
                     .init()
                     .commit();
 
+            INT32_ELEMENT(expected).key("propertyUpdateInterval")
+                    .displayedName("Property update interval")
+                    .description("Minimum interval between subsequent property updates forwarded to clients.")
+                    .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
+                    .assignmentOptional().defaultValue(500)
+                    .minExc(100).maxInc(1000) // not faster than 10 Hz, 1 Hz is already slow
+                    .init()
+                    .commit();
+
         }
 
 
@@ -122,6 +131,9 @@ namespace karabo {
             try {
 
                 trackAllInstances();
+
+                // Protect clients from too frequent updates of a single property:
+                remote().setDeviceMonitorInterval(this->get<int>("propertyUpdateInterval"));
 
                 remote().getSystemInformation();
 
@@ -368,6 +380,7 @@ namespace karabo {
                 Hash config = remote().getConfigurationNoWait(deviceId);
 
                 if (!config.empty()) {
+                    // Can't we just use 'config' instead of 'remote().get(deviceId)'?
                     Hash h("type", "deviceConfiguration", "deviceId", deviceId, "configuration", remote().get(deviceId));
                     safeClientWrite(channel, h);
                 }
