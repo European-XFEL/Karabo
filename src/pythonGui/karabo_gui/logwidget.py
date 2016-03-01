@@ -58,7 +58,7 @@ class LogWidget(QWidget):
         vLayout.addWidget(self.filterWidget)
 
         self.logs = [ ]
-        self.lastnumber = 0
+        self.tailindex = 0
         self.queryModel = LogQueryModel()
         twLogTable = QTableView(self)
         vLayout.addWidget(twLogTable)
@@ -287,11 +287,11 @@ class LogWidget(QWidget):
 
     def onNotificationAvailable(self, deviceId, messageType, shortMsg,
                                 detailedMsg):
-        new = Log(self.lastnumber, messageType=messageType,
+        new = Log(self.tailindex, messageType=messageType,
                   instanceId=deviceId, description=shortMsg,
                   additionalDescription=detailedMsg,
                   dateTime=QDateTime.currentDateTime())
-        self.lastnumber += 1
+        self.tailindex += 1
         self.logs.append(new)
         self.queryModel.add(new)
         self.prune()
@@ -300,8 +300,8 @@ class LogWidget(QWidget):
         new = [Log(i, messageType=log["type"], instanceId=log["category"],
                    description=log["message"], additionalDescription="",
                    dateTime=QDateTime.fromString(log["timestamp"], Qt.ISODate))
-               for i, log in enumerate(logData, start=self.lastnumber + 1)]
-        self.lastnumber += len(logData)
+               for i, log in enumerate(logData, start=self.tailindex + 1)]
+        self.tailindex += len(logData)
         self.logs.extend(new)
         for log in self.filter(new):
             self.queryModel.add(log)
