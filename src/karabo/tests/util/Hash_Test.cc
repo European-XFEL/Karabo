@@ -126,7 +126,6 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<string > ("d") == "4");
         CPPUNIT_ASSERT(h.get<std::vector<unsigned int> >("e")[0] == 5);
         CPPUNIT_ASSERT(h.get<std::vector<Hash::Pointer > > ("f")[3]->get<int>("a") == 6);
-        cout << h;
 
     }
 
@@ -236,9 +235,9 @@ void Hash_Test::testGetSet() {
     }
 
     {
-        Hash h("a[0]", Hash("a", 1), "a[1]", Hash("a", 1));
+        Hash h("a[0]", Hash("a", 1), "a[1]", Hash("a", 2));
         CPPUNIT_ASSERT(h.get<int>("a[0].a") == 1);
-        CPPUNIT_ASSERT(h.get<int>("a[1].a") == 1);
+        CPPUNIT_ASSERT(h.get<int>("a[1].a") == 2);
     }
 
     {
@@ -279,7 +278,43 @@ void Hash_Test::testGetSet() {
         CPPUNIT_ASSERT(h.is<int>("a") == true);
     }
 
+    {
+        // test that correct exceptions  are thrown
+        Hash h("a", 77, "b[1].c", 88);
+        // no exceptions:
+        h.get<int>("a");
+        h.get<Hash>("b[0]");
+        h.get<Hash>("b[1]");
+        h.get<int>("b[1].c");
 
+        // non-existing "normal" path
+        bool caught1 = false;
+        try {
+            h.get<int>("c");
+        } catch (karabo::util::ParameterException const& e) {
+            caught1 = true;
+        }
+        CPPUNIT_ASSERT(caught1 == true);
+
+        // non-existing index of vector that is last item
+        CPPUNIT_ASSERT(h.get<vector<Hash> >("b").size() == 2);
+        bool caught2 = false;
+        try {
+            h.get<Hash>("b[2]");
+        } catch (karabo::util::ParameterException const& e) {
+            caught2 = true;
+        }
+        CPPUNIT_ASSERT(caught2 == true);
+
+        // item under non-existing index of vector
+        bool caught3 = false;
+        try {
+            h.get<int>("b[2].c");
+        } catch (karabo::util::ParameterException const& e) {
+            caught3 = true;
+        }
+        CPPUNIT_ASSERT(caught3 == true);
+    }
 }
 
 
@@ -407,7 +442,7 @@ void Hash_Test::testGetAs() {
             oss << h;            
         } catch (Exception& e) {
             cerr << e;
-            KARABO_RETHROW(e);
+            KARABO_RETHROW_AS(e);
         }
     }
 }
@@ -420,6 +455,7 @@ void Hash_Test::testFind() {
         boost::optional<Hash::Node&> node = h.find("a.b.c1.d");
         if (node) CPPUNIT_ASSERT(node->getValue<int>() == 1);
         else CPPUNIT_ASSERT(false);
+
         node = h.find("a.b.c1.f");
         if (node) CPPUNIT_ASSERT(false);
         else CPPUNIT_ASSERT(true);
@@ -763,7 +799,126 @@ void Hash_Test::testErase()
     CPPUNIT_ASSERT(h2.has("e.f") == false);
     CPPUNIT_ASSERT(h2.has("e") == true); // stays since there is "e.i"
     CPPUNIT_ASSERT(h2.size() == 2);
+
+    // Now testing erasure of elements in a vector<Hash>.
+    Hash hVector("a[2].b", 111);
+    CPPUNIT_ASSERT(hVector.get<vector<Hash> >("a").size() == 3);
+    CPPUNIT_ASSERT(hVector.erase("a[3]") == false);
+    CPPUNIT_ASSERT(hVector.get<vector<Hash> >("a").size() == 3);
+    CPPUNIT_ASSERT(hVector.erase("a[0]") == true);
+    CPPUNIT_ASSERT(hVector.get<vector<Hash> >("a").size() == 2);
+    CPPUNIT_ASSERT(hVector.get<int>("a[1].b") == 111);
+    // index on non-existing key
+    CPPUNIT_ASSERT(hVector.erase("c[2]") == false);
+    CPPUNIT_ASSERT(hVector.erase("a.c[2]") == false);
+    CPPUNIT_ASSERT(hVector.erase("a[0].c[1]") == false);
+
+    // Now testing erasePath for paths containing indices.
+    Hash hVector2("a[2].b", 111);
+    CPPUNIT_ASSERT(hVector2.get<vector<Hash> >("a").size() == 3);
+    Hash copy = hVector2;
+    hVector2.erasePath("a[3]"); // nothing happens (not even an exception)
+    CPPUNIT_ASSERT(hVector2 == copy);
+    hVector2.erasePath("a[3].b"); // nothing happens (not even an exception)
+    CPPUNIT_ASSERT(hVector2 == copy);
+    hVector2.erasePath("a[0]"); // shrunk
+    CPPUNIT_ASSERT(hVector2.get<vector<Hash> >("a").size() == 2);
+    CPPUNIT_ASSERT(hVector2.get<int>("a[1].b") == 111);
+    hVector2.erasePath("a[1].b"); // erase a[1] as well since b is only daughter
+    CPPUNIT_ASSERT(hVector2.get<vector<Hash> >("a").size() == 1);
+    // index for non-existing key must neither throw nor touch the content
+    copy = hVector2;
+    hVector2.erasePath("c[2]");
+    CPPUNIT_ASSERT(hVector2 == copy);
+    hVector2.erasePath("a.c[2]");
+    CPPUNIT_ASSERT(hVector2 == copy);
+    hVector2.erasePath("a[0].c[1]");
+    CPPUNIT_ASSERT(hVector2 == copy);
+    // single element vector<Hash>: vector is removed completely
+    hVector2.erasePath("a[0]");
+    CPPUNIT_ASSERT(hVector2.has("a") == false);
 }
+
+
+void Hash_Test::testHas()
+{
+    // Hash::has(path) is already used a lot in other tests, but some corner cases
+    // are missing, e.g. non-existing array indices at different positions in path.
+    Hash h1("a.b[2]", Hash(), "b[1]", Hash());
+    CPPUNIT_ASSERT(h1.has("a") == true);
+    CPPUNIT_ASSERT(h1.has("a.b") == true);
+    CPPUNIT_ASSERT(h1.has("a.b[0]") == true);
+    CPPUNIT_ASSERT(h1.has("a.b[1]") == true);
+    CPPUNIT_ASSERT(h1.has("a.b[2]") == true);
+    CPPUNIT_ASSERT(h1.has("a.b[2].some") == false);
+    CPPUNIT_ASSERT(h1.has("a.b[2].some.other") == false);
+    CPPUNIT_ASSERT(h1.has("a.b[3]") == false);
+    CPPUNIT_ASSERT(h1.has("a.b[3].some") == false);
+    CPPUNIT_ASSERT(h1.has("a.b[3].some.other") == false);
+    // Test also vector<Hash> on first level:
+    CPPUNIT_ASSERT(h1.has("b") == true);
+    CPPUNIT_ASSERT(h1.has("b[2]") == false);
+    // And now some index on a non-existing vector<Hash>:
+    CPPUNIT_ASSERT(h1.has("c[0]") == false);
+}
+
+void Hash_Test::testIs()
+{
+    // Test different cases: paths without indices, with index at end or in the middle.
+    Hash h("a", 77, "b[1].d", 88.8, "b[2].c", 88);
+    CPPUNIT_ASSERT(h.is<int>("a") == true);
+    CPPUNIT_ASSERT(h.is<vector<Hash> >("b") == true);
+    CPPUNIT_ASSERT(h.is<Hash>("b[0]") == true);
+    CPPUNIT_ASSERT(h.is<double>("b[1].d") == true);
+    CPPUNIT_ASSERT(h.is<Hash>("b[2]") == true);
+    CPPUNIT_ASSERT(h.is<int>("b[2].c") == true);
+
+    // Check for false on wrong type - cannot test all wrong types...
+    CPPUNIT_ASSERT(h.is<float>("a") == false);
+    CPPUNIT_ASSERT(h.is<Hash>("b") == false);
+    CPPUNIT_ASSERT(h.is<int>("b[0]") == false);
+    CPPUNIT_ASSERT(h.is<float>("b[1].d") == false);
+    CPPUNIT_ASSERT(h.is<vector<Hash> >("b[2]") == false);
+    CPPUNIT_ASSERT(h.is<double>("b[2].c") == false);
+
+    // Check exceptions on bad paths:
+    // 1) non-existing "normal" path
+    bool caught1 = false;
+    try {
+        h.is<int>("c");
+    } catch (karabo::util::ParameterException const& e) {
+        caught1 = true;
+    }
+    CPPUNIT_ASSERT(caught1 == true);
+
+    // 2) non-existing index of vector that is last item
+    bool caught2 = false;
+    try {
+        h.is<Hash>("b[3]");
+    } catch (karabo::util::ParameterException const& e) {
+        caught2 = true;
+    }
+    CPPUNIT_ASSERT(caught2 == true);
+
+    // 3) item under non-existing index of vector
+    bool caught3 = false;
+    try {
+        h.is<int>("b[3].d");
+    } catch (karabo::util::ParameterException const& e) {
+        caught3 = true;
+    }
+    CPPUNIT_ASSERT(caught3 == true);
+
+    // 4) non-existing item under existing index of vector
+    bool caught4 = false;
+    try {
+        h.is<int>("b[0].a");
+    } catch (karabo::util::ParameterException const& e) {
+        caught4 = true;
+    }
+    CPPUNIT_ASSERT(caught4 == true);
+}
+
 
 namespace helper {
 
