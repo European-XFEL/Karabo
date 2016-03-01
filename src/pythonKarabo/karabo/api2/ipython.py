@@ -9,8 +9,8 @@ from IPython.kernel.manager import KernelManager
 from IPython.kernel import KernelClient
 
 from .device import Device
-from .enums import AccessLevel, AccessMode
-from .hash import VectorChar, Slot, Int32
+from .enums import AccessLevel, AccessMode, Assignment
+from .hash import Bool, Int32, Slot, VectorChar
 from .signalslot import coslot
 
 
@@ -61,6 +61,10 @@ class Client(KernelClient):
 
 
 class IPythonKernel(Device):
+    archive = Bool(
+        displayedName="Archive", accessMode=AccessMode.RECONFIGURABLE,
+        assignment=Assignment.OPTIONAL, defaultValue=False)
+
     @VectorChar(
         accessMode=AccessMode.RECONFIGURABLE,
         requiredAccessLevel=AccessLevel.EXPERT)
