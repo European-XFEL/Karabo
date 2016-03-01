@@ -6,6 +6,7 @@ import random
 import time
 import weakref
 
+from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
 from .hash import Hash, HashType, Int32, String
 from .p2p import NetworkOutput
@@ -208,8 +209,8 @@ class SignalSlotable(Configurable):
                 yield from self.slotKillDevice()
             except CancelledError:
                 pass
-            raise RuntimeError('deviceId "{}" already in use'.
-                               format(self.deviceId))
+            raise KaraboError('deviceId "{}" already in use'.
+                              format(self.deviceId))
         except TimeoutError:
             pass
         self.run()
