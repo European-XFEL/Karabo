@@ -5,7 +5,7 @@ from unittest import TestCase, main
 from karabo.api2.enums import Unit, MetricPrefix
 from karabo.api2.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
-    StringList)
+    VectorStringValue)
 
 
 class Tests(TestCase):
@@ -49,7 +49,7 @@ class Tests(TestCase):
             e = EnumValue(F.a, d)
 
     def test_stringlist(self):
-        l = StringList(["a", "b", "c"], 3)
+        l = VectorStringValue(["a", "b", "c"], 3)
         self.assertEqual(l, ["a", "b", "c"])
         self.assertEqual(l.descriptor, 3)
 
