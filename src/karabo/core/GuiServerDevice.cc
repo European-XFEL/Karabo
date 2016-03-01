@@ -380,8 +380,8 @@ namespace karabo {
 
         void GuiServerDevice::onKillServer(const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onKillServer";
                 string serverId = info.get<string > ("serverId");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onKillServer : \"" << serverId << "\"";
                 // TODO Supply user specific context
                 call(serverId, "slotKillServer");
             } catch (const Exception& e) {
@@ -392,8 +392,8 @@ namespace karabo {
 
         void GuiServerDevice::onKillDevice(const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onKillDevice";
                 string deviceId = info.get<string > ("deviceId");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onKillDevice : \"" << deviceId << "\"";
                 call(deviceId, "slotKillDevice");
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onKillDevice(): " << e.userFriendlyMsg();
@@ -406,6 +406,8 @@ namespace karabo {
                 bool registerFlag = false;
                 string deviceId = info.get<string > ("deviceId");
 
+                KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice : \"" << deviceId << "\"";
+                
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
@@ -442,6 +444,8 @@ namespace karabo {
                 bool unregisterFlag = false;
                 string deviceId = info.get<string > ("deviceId");
 
+                KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice : \"" << deviceId << "\"";
+                
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
@@ -468,7 +472,6 @@ namespace karabo {
 
         void GuiServerDevice::onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onGetClassSchema";
                 string serverId = info.get<string > ("serverId");
                 string classId = info.get<string> ("classId");
                 Schema schema = remote().getClassSchemaNoWait(serverId, classId);
@@ -477,6 +480,9 @@ namespace karabo {
                     Hash h("type", "classSchema", "serverId", serverId,
                            "classId", classId, "schema", schema);
                     safeClientWrite(channel, h);
+                    KARABO_LOG_FRAMEWORK_INFO << "onGetClassSchema : serverId=\"" << serverId << "\", classId=\"" << classId << "\" +";
+                } else {
+                    KARABO_LOG_FRAMEWORK_INFO << "onGetClassSchema : serverId=\"" << serverId << "\", classId=\"" << classId << "\" ...";
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetClassSchema(): " << e.userFriendlyMsg();
@@ -488,18 +494,13 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema";
                 string deviceId = info.get<string > ("deviceId");
-
+                
                 Schema schema = remote().getDeviceSchemaNoWait(deviceId);
-                Hash config = remote().getConfigurationNoWait(deviceId);
-
+                
                 if (!schema.empty()) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";
                     Hash h("type", "deviceSchema", "deviceId", deviceId,
-                           "schema", schema);
-                    if (!config.empty()) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Adding configuration, too";
-                        h.set("configuration", config);
-                    }
+                           "schema", schema, "configuration", Hash());
                     safeClientWrite(channel, h);
                 }
             } catch (const Exception& e) {
@@ -558,7 +559,8 @@ namespace karabo {
 
         void GuiServerDevice::onSubscribeNetwork(Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork:\n" << info;
+                KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork : channelName = \"" << info.get<string>("channelName") << "\" " 
+                        << (info.get<bool>("subscribe") ? "+" : "-");
                 string channelName = info.get<string>("channelName");
                 bool subscribe = info.get<bool>("subscribe");
                 NetworkMap::iterator iter;
@@ -628,7 +630,7 @@ namespace karabo {
 
         void GuiServerDevice::onNetworkData(const InputChannel::Pointer& input) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onNetworkData";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onNetworkData ....";
 
                 for (size_t i = 0; i < input->size(); ++i) {
                     Hash::Pointer data = input->read(i);
@@ -675,7 +677,7 @@ namespace karabo {
 
         void GuiServerDevice::onNewProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onNewProject";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onNewProject :  info ...\n" << info;
 
                 string author = info.get<string > ("author");
                 string projectName = info.get<string > ("name");
@@ -710,7 +712,7 @@ namespace karabo {
 
         void GuiServerDevice::onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onLoadProject";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onLoadProject : info ...\n" << info;
 
                 string userName = info.get<string > ("user");
                 string projectName = info.get<string > ("name");
@@ -776,7 +778,7 @@ namespace karabo {
 
         void GuiServerDevice::onCloseProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onCloseProject";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onCloseProject : info ...\n" << info;
 
                 string userName = info.get<string > ("user");
                 string projectName = info.get<string > ("name");
@@ -1017,13 +1019,13 @@ namespace karabo {
 
         void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
             try {
-                if (errorCode.value() != 2 && errorCode.value() != 32 && errorCode.value() != 104) {
-                    // NOT End of file or Broken pipe: an unknown reason why connection to GUI client stopped.
-                    KARABO_LOG_ERROR << "Tcp channel error, code: " << errorCode.value() << ", message: " << errorCode.message();
-                    return;
-                }
+//                if (errorCode.value() != 2 && errorCode.value() != 32 && errorCode.value() != 104) {
+//                    // NOT End of file or Broken pipe: an unknown reason why connection to GUI client stopped.
+//                    KARABO_LOG_ERROR << "Tcp channel error, code: " << errorCode.value() << ", message: " << errorCode.message();
+//                    return;
+//                }
 
-                KARABO_LOG_INFO << "TCP socket got \"" << errorCode.message() << "\", client dropped the connection";
+                KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
 
                 // TODO Fork on error message
                 std::set<std::string> deviceIds; // empty set
