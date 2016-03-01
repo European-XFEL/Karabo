@@ -69,18 +69,19 @@ namespace karabo {
         }
 
         bool Hash::has(const std::string& path, const char separator) const {
-            try {
-                std::string key;
-                const Hash& hash = getLastHash(path, key, separator);
-                int index = karabo::util::getAndCropIndex(key);
-                if (index == -1) {
-                    return hash.m_container.has(key);
-                } else {
-                    return static_cast<int> (hash.m_container.get<vector<Hash> >(key).size()) > index;
-                }
-            } catch (...) {
+            std::string key;
+            const Hash* hash = getLastHashPtr(path, key, separator);
+            if (!hash) {
+                return false; // invalid path (empty, wrong sub-key or bad index)
             }
-            return false;
+            int index = karabo::util::getAndCropIndex(key);
+            if (!hash->m_container.has(key)) {
+                return false; // e.g. asking for 'key[1]', but there is no 'key'
+            } else if (index == -1) {
+                return true;
+            } else {
+                return hash->m_container.get<vector<Hash> >(key).size() > static_cast<unsigned int> (index);
+            }
         }
 
         Hash::Node& Hash::setNode(const Hash::Node& srcElement) {
@@ -102,24 +103,36 @@ namespace karabo {
             if (index == -1) {
                 return hash.m_container.is(key, type);
             } else {
-                return typeid (hash.m_container.get<vector<Hash> >(key)[index]) == typeid (Hash);
+                const vector<Hash>& hashVec = hash.m_container.get<vector<Hash> >(key);
+                if (static_cast<unsigned int>(index) >= hashVec.size()) {
+                    throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" + path + "'.");
+                }
+                return true; // by definition of hashVec (or already an exception)!
             }
         }
 
-        //        std::string Hash::getString(const std::string & path, const char separator) const {
-        //            return getNode(path, separator).getValueAsString();
-        //        }
-
         bool Hash::erase(const std::string& path, const char separator) {
             std::string key;
-            Hash& hash = getLastHash(path, key, separator);
+            Hash* hash = getLastHashPtr(path, key, separator);
+            if (!hash) {
+                return false;
+            }
             int index = karabo::util::getAndCropIndex(key);
             if (index == -1) {
-                return (hash.m_container.erase(key) != 0);
+                return (hash->m_container.erase(key) != 0);
             } else {
-                std::vector<Hash>& vect = hash.m_container.get<vector<Hash> >(key);
-                vect.erase(vect.begin() + index);
-                return true;
+                Container::map_iterator it = hash->m_container.find(key);
+                if (it == hash->m_container.mend()) {
+                    // Could be 'erase("a[2]")', but there is no "a" at all!
+                    return false;
+                }
+                std::vector<Hash>& vect = hash->m_container.get<vector<Hash> >(it);
+                if (static_cast<unsigned int>(index) >= vect.size()) {
+                    return false;
+                } else {
+                    vect.erase(vect.begin() + index);
+                    return true;
+                }
             }
         }
 
@@ -133,7 +146,7 @@ namespace karabo {
         }
 
         void Hash::erasePath(const std::string& path, const char separator) {
-            string sep(1, separator);
+            const std::string sep(1, separator);
             std::vector<std::string> tokens;
             karabo::util::tokenize(path, tokens, separator);
             size_t length = tokens.size();
@@ -141,16 +154,25 @@ namespace karabo {
             try {
                 while (length > 0 && !thePath.empty()) {
                     std::string key;
-                    Hash& hash = getLastHash(thePath, key, separator);
+                    Hash* hash = getLastHashPtr(thePath, key, separator);
+                    if (!hash) {
+                        break; // probably wrong sub-key or bad index
+                    }
                     int index = karabo::util::getAndCropIndex(key); // key cleared from possible []
                     if (index == -1) {
-                        hash.m_container.erase(key);
+                        hash->m_container.erase(key);
                         thePath = concat(tokens, --length, sep);
-                        if (thePath.empty())
-                            break;
+                        if (thePath.empty()) break;
                     } else {
-                        std::vector<Hash>& vect = hash.m_container.get<vector<Hash> >(key);
-                        vect.erase(vect.begin() + index);
+                        Container::map_iterator it = hash->m_container.find(key);
+                        if (it == hash->m_container.mend()) {
+                            // Could be 'erasePath("a[2]")', but there is no "a" at all.
+                            break;
+                        }
+                        std::vector<Hash>& vect = hash->m_container.get<vector<Hash> >(it);
+                        if (static_cast<unsigned int>(index) < vect.size()) {
+                            vect.erase(vect.begin() + index);
+                        }
                         if (!vect.empty()) break;
                         thePath = concat(tokens, --length, sep);
                         if (thePath.empty()) {
@@ -165,30 +187,56 @@ namespace karabo {
                         break;
                 }
             } catch (const karabo::util::Exception& e) {
-                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst erasing path (" + path + ") from Hash"));
+                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst erasing path '" + path + "' from Hash"));
             }
         }
 
         const Hash& Hash::getLastHash(const std::string& path, std::string& lastKey, const char separator) const {
-            if (path.empty()) throw KARABO_PARAMETER_EXCEPTION("Illegal call to get with empty path");
+            const Hash* hash = getLastHashPtr(path, lastKey, separator);
+            if (!hash) {
+                if (path.empty()) throw KARABO_PARAMETER_EXCEPTION("Illegal call with empty path");
+                else {
+                    // If getLastHashPtr would provide an error code, we could be more specific...
+                    throw KARABO_PARAMETER_EXCEPTION("non-existing key, wrong type or index out of range in '" + path + "'.");
+                }
+            }
+            return *hash;
+        }
+
+        Hash& Hash::getLastHash(const std::string& path, std::string& last_key, const char separator) {
+            return const_cast<Hash&> (thisAsConst().getLastHash(path, last_key, separator));
+        }
+
+        const Hash* Hash::getLastHashPtr(const std::string& path, std::string& lastKey, const char separator) const {
+            // TODO: We should add an error code to be returned as argument by value.
+            if (path.empty()) return 0;
             std::vector<std::string> tokens;
             karabo::util::tokenize(path, tokens, separator);
 
             const Hash* tmp = this;
             for (size_t i = 0; i < tokens.size() - 1; ++i) {
                 int index = karabo::util::getAndCropIndex(tokens[i]);
+                Container::const_map_iterator it = tmp->m_container.find(tokens[i]);
+                if (it == tmp->m_container.mend()) return 0;
+                const Hash::Node& node = it->second;
                 if (index == -1) {
-                    tmp = &tmp->m_container.getNode(tokens[i]).getValue<Hash > ();
+                    if (!node.is<Hash>()) return 0;
+                    tmp = &node.getValue<Hash>();
                 } else {
-                    tmp = &tmp->m_container.getNode(tokens[i]).getValue<vector<Hash> > ()[index];
+                    if (!node.is<vector<Hash> >()) return 0;
+                    const vector<Hash>& hashVec = node.getValue<vector<Hash> >();
+                    if (static_cast<unsigned int>(index) >= hashVec.size()) {
+                        return 0;
+                    }
+                    tmp = &(hashVec[index]);
                 }
             }
             lastKey.swap(tokens.back());
-            return *tmp;
+            return tmp;
         }
 
-        Hash & Hash::getLastHash(const std::string& path, std::string& last_key, const char separator) {
-            return const_cast<Hash&> (thisAsConst().getLastHash(path, last_key, separator));
+        Hash* Hash::getLastHashPtr(const std::string& path, std::string& last_key, const char separator) {
+            return const_cast<Hash*> (thisAsConst().getLastHashPtr(path, last_key, separator));
         }
 
         const Hash::Node& Hash::getNode(const std::string& path, const char separator) const {

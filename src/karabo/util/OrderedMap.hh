@@ -124,6 +124,13 @@ namespace karabo {
              */
             inline size_t erase(const KeyType& key);
 
+            /**
+             * Erase element identified by map_iterator.
+             * @param it - a valid map_iterator
+             * @return no
+             */
+            inline void erase(const map_iterator& it);
+
             inline size_t size() const;
 
             inline bool empty() const;
@@ -352,6 +359,13 @@ namespace karabo {
                 return 1;
             }
             return 0;
+        }
+
+        template<class KeyType, class MappedType>
+        inline void OrderedMap<KeyType, MappedType>::erase(const map_iterator& it) {
+            // it must be valid!
+            m_listNodes.remove(&it->second);
+            m_mapNodes.erase(it);
         }
 
         template<class KeyType, class MappedType>
