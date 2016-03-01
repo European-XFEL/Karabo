@@ -28,7 +28,7 @@ def write_hash(fp, hsh):
     write_simple(fp, member_count, fmt='I')
     for key, value, attrs in hsh.iterall():
         attr_types = attrs.pop('KRB_AttrTypes')
-        type_enum = getattr(HashType, attrs.pop('KRB_Type'))
+        type_enum = attrs.pop('KRB_Type')
         attr_count = len(attrs)
         writer = __WRITER_MAP[type_enum]
 
@@ -36,7 +36,7 @@ def write_hash(fp, hsh):
         write_simple(fp, type_enum.value, fmt='I')
         write_simple(fp, attr_count, fmt='I')
         for akey, avalue in attrs.items():
-            atype_enum = getattr(HashType, attr_types[akey])
+            atype_enum = attr_types[akey]
             awriter = __WRITER_MAP[atype_enum]
             write_key(fp, akey)
             write_simple(fp, atype_enum.value, fmt='I')
