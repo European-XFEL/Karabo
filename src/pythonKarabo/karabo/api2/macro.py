@@ -10,7 +10,7 @@ from .device import Device
 from .device_client import waitUntilNew, Proxy, getDevice
 from .enums import AccessLevel, AccessMode
 from .eventloop import EventLoop
-from .hash import Descriptor, Int32 as Int, Slot, String, Type
+from .hash import Descriptor, Hash, Int32 as Int, Slot, String, Type
 
 
 def Monitor():
@@ -149,18 +149,19 @@ class Macro(Device):
         if may_start_thread and not isinstance(get_event_loop(), EventLoop):
             self._thread = EventThread.start_macro(self, configuration)
 
-    def initInfo(self):
-        super().initInfo()
-        self._ss.info["type"] = "macro"
-        self._ss.info["project"] = self.project
-        self._ss.info["module"] = self.module
-
     @coroutine
     def run_async(self):
         """ implement the RemoteDevice functionality, upon
         starting the device the devices are searched and then
         assigned to the object's properties """
         yield from super().run_async()
+
+        info = Hash()
+        info["type"] = "macro"
+        info["project"] = self.project
+        info["module"] = self.module
+        self.updateInstanceInfo(info)
+
         self.state = "SearchRemotes..."
         holders = []
 
