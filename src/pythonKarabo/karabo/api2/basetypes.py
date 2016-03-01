@@ -66,8 +66,8 @@ class StringValue(OverloadValue, str):
     pass
 
 
-class StringList(KaraboValue, list):
-    """A Karabo VectorString corresponds to a Python list.
+class VectorStringValue(KaraboValue, list):
+    """A Karabo VectorStringValue corresponds to a Python list.
 
     We should check that only strings are entered"""
     def __init__(self, value=None, descriptor=None):
@@ -78,7 +78,7 @@ class StringList(KaraboValue, list):
         self.descriptor = descriptor
 
     def __repr__(self):
-        return "$" + super().__repr__(self)
+        return "VectorString" + super().__repr__(self)
 
 
 # Pint is based on the concept of a unit registry. For each unit registry,

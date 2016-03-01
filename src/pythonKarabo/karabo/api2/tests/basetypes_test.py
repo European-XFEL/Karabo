@@ -1,12 +1,11 @@
 from enum import Enum
+from itertools import product
 from unittest import TestCase, main
 
 from karabo.api2.enums import Unit, MetricPrefix
 from karabo.api2.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
     StringList)
-
-from itertools import product
 
 
 class Tests(TestCase):
