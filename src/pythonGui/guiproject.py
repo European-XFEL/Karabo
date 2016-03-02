@@ -314,8 +314,6 @@ class GuiProject(Project, QObject):
     def __init__(self, filename):
         super(GuiProject, self).__init__(filename)
 
-        # List of Scene
-        self.scenes = []
         self.modules = { } # the modules in the macro context
         
         # States whether the project was changed or not
@@ -429,6 +427,27 @@ class GuiProject(Project, QObject):
         self.scenes.append(scene)
         self.signalSceneAdded.emit(scene)
         self.setModified(True)
+
+
+    def insertScene(self, index, scene):
+        """
+        Insert \scene at given \index and update project model.
+        """
+        Project.insertScene(self, index, scene)
+
+
+    def duplicateScene(self, scene):
+        """
+        The \scene is copied into a \newScene.
+        This newScene object replaces the old one.
+        """
+        # Copy \scene into \newScene
+        newScene = scene.copy()
+        
+        # Remove old scene from project
+        index = self.remove(scene)
+        # Insert \newScene
+        self.insertScene(index, newScene)
 
 
     def addConfiguration(self, deviceId, configuration):

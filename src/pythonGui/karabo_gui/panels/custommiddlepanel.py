@@ -37,7 +37,7 @@ class CustomMiddlePanel(Dockable, QScrollArea):
 
 ### virtual functions ###
     def closeEvent(self, event):
-        if self.scene.close():
+        if self.scene.aboutToClose():
             event.accept()
         else:
             event.ignore()

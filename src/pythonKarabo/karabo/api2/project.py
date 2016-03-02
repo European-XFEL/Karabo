@@ -186,6 +186,10 @@ class Project(object):
     def addScene(self, scene):
         self.scenes.append(scene)
 
+    def insertScene(self, index, scene):
+        self.scenes.insert(index, scene)
+        scene.project = self
+
     def getScene(self, filename):
         """ The first occurrence of a scene with the given \filename is
         returned.
