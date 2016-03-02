@@ -34,7 +34,6 @@ class _Network(QObject):
     signalServerConnectionChanged = pyqtSignal(bool)
     signalUserChanged = pyqtSignal()
     signalReceivedData = pyqtSignal(object)
-    signalNetworkDone = pyqtSignal()
 
     def __init__(self):
         super(_Network, self).__init__()
@@ -211,8 +210,6 @@ class _Network(QObject):
                 self.bytesNeeded = next(self.runner)
                 if not isinstance(e, StopIteration):
                     raise
-        self.signalNetworkDone.emit()
-
 
     def isDataPending(self):
         return self.tcpSocket.bytesAvailable() >= self.bytesNeeded
