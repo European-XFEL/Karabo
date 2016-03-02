@@ -80,7 +80,6 @@ class CustomMiddlePanel(Dockable, QScrollArea):
 
 
     def onDesignModeChanged(self, isChecked):
-        print("onDesignModeChanged", isChecked)
         self.drawingToolBar.setVisible(isChecked)
         if isChecked:
             text = "Change to control mode"
