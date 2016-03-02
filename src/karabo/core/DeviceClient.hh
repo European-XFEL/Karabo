@@ -404,9 +404,11 @@ namespace karabo {
                                          const boost::function<void (const std::string& /*deviceId*/, const std::string& /*key*/, const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/) >& callbackFunction) {
                 karabo::util::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
-                    boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);
-                    m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction);
+                    {
+                        boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                        m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction);
+                    }
                     immortalize(instanceId);
                     return true;
                 } else {
@@ -421,10 +423,12 @@ namespace karabo {
                                          const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/, const boost::any& /*userData*/) >& callbackFunction, const UserDataType& userData) {
                 karabo::util::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
-                    boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);
-                    m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction);
-                    m_propertyChangedHandlers.set(instanceId + "." + key + "._userData", userData);
+                    {
+                        boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                        m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction);
+                        m_propertyChangedHandlers.set(instanceId + "." + key + "._userData", userData);
+                    }
                     immortalize(instanceId);
                     return true;
                 } else {
@@ -442,11 +446,13 @@ namespace karabo {
             void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&, const boost::any&)>& callbackFunction,
                                        const UserDataType& userData) {
 
-                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 // Make sure we are caching this instanceId
                 this->cacheAndGetConfiguration(instanceId);
-                m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction);
-                m_deviceChangedHandlers.set(instanceId + "._userData", userData);
+                {
+                    boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+                    m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction);
+                    m_deviceChangedHandlers.set(instanceId + "._userData", userData);
+                }
                 immortalize(instanceId);
             }
 
@@ -675,7 +681,8 @@ namespace karabo {
             /// NOTE: To be called under protection of m_runtimeSystemDescriptionMutex.
             std::string findInstance(const std::string &instanceId) const;
             
-            bool isNotInUse(const std::string & instanceId);
+            /// Returns true if explicit "connect" call should done for "instanceId"  
+            bool connectNeeded(const std::string & instanceId);
         };
     }
 }
