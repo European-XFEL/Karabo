@@ -18,8 +18,8 @@ from karabo_gui.dialogs.logindialog import LoginDialog
 from struct import pack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
-                          QCryptographicHash, QObject)
+from PyQt4.QtCore import (pyqtSignal, pyqtSlot, QByteArray, QCoreApplication,
+                          QCryptographicHash, QObject, QTimer)
 from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.authenticator import Authenticator
 from karabo.api_2 import Hash, BinaryParser, BinaryWriter, AccessLevel
@@ -51,6 +51,9 @@ class _Network(QObject):
         self.sessionToken = ""
 
         self.tcpSocket = None
+        self.timer = QTimer(self)
+        self.timer.setInterval(0)
+        self.timer.timeout.connect(self.onReadServerData)
         
         self.requestQueue = [ ]
 
@@ -106,7 +109,7 @@ class _Network(QObject):
         self.runner = self.processInput()
         self.bytesNeeded = next(self.runner)
         self.tcpSocket.disconnected.connect(self.onDisconnected)
-        self.tcpSocket.readyRead.connect(self.onReadServerData)
+        self.tcpSocket.readyRead.connect(self.timer.start)
         self.tcpSocket.error.connect(self.onSocketError)
 
         self.tcpSocket.connectToHost(hostname, port)
@@ -199,9 +202,9 @@ class _Network(QObject):
         except Exception as e:
             print("Logout problem. Please verify, if service is running. " + str(e))
 
-
+    @pyqtSlot()
     def onReadServerData(self):
-        while self.isDataPending():
+        if self.isDataPending():
             try:
                 self.bytesNeeded = self.runner.send(self.tcpSocket.read(
                     self.bytesNeeded))
@@ -210,6 +213,8 @@ class _Network(QObject):
                 self.bytesNeeded = next(self.runner)
                 if not isinstance(e, StopIteration):
                     raise
+        else:
+            self.timer.stop()
 
     def isDataPending(self):
         return self.tcpSocket.bytesAvailable() >= self.bytesNeeded
