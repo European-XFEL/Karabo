@@ -303,6 +303,7 @@ class GuiProject(Project, QObject):
     signalDeviceGroupAdded = pyqtSignal(object)
     signalDeviceGroupInserted = pyqtSignal(int, object)
     signalSceneAdded = pyqtSignal(object)
+    signalSceneInserted = pyqtSignal(int, object)
     signalConfigurationAdded = pyqtSignal(str, object)
     #signalResourceAdded = pytqtSignal()
     signalMacroAdded = pyqtSignal(object)
@@ -434,6 +435,7 @@ class GuiProject(Project, QObject):
         Insert \scene at given \index and update project model.
         """
         Project.insertScene(self, index, scene)
+        self.signalSceneInserted.emit(index, scene)
 
 
     def duplicateScene(self, scene):
