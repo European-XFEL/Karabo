@@ -46,12 +46,12 @@ class CustomMiddlePanel(Dockable, QScrollArea):
 
 
     def setupActions(self, isConnectedToServer):
-        text = "Change to control mode"
+        text = "Change to design mode"
         self.__acDesignMode = QAction(icons.transform, text, self)
         self.__acDesignMode.setToolTip(text)
         self.__acDesignMode.setStatusTip(text)
         self.__acDesignMode.setCheckable(True)
-        self.__acDesignMode.setChecked(isConnectedToServer)
+        self.__acDesignMode.setChecked(False)
         self.__acDesignMode.setEnabled(isConnectedToServer)
         self.__acDesignMode.toggled.connect(self.onDesignModeChanged)
        
@@ -80,6 +80,7 @@ class CustomMiddlePanel(Dockable, QScrollArea):
 
 
     def onDesignModeChanged(self, isChecked):
+        print("onDesignModeChanged", isChecked)
         self.drawingToolBar.setVisible(isChecked)
         if isChecked:
             text = "Change to control mode"
