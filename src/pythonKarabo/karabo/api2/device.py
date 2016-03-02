@@ -90,17 +90,6 @@ class Device(SignalSlotable):
         if "abstract" not in dict:
             Device.subclasses[name] = cls
 
-    def initInfo(self):
-        info = self.info
-        info["type"] = "device"
-        info["classId"] = self.classId
-        info["serverId"] = self.serverId
-        info["visibility"] = self.visibility.value
-        info["compatibility"] = self.__class__.__version__
-        info["host"] = self.hostname
-        info["status"] = "ok"
-        info["archive"] = self.archive
-
     def initSchema(self):
         self.staticSchema = self.getClassSchema()
         self.fullSchema = Schema(self.classId)
@@ -110,7 +99,18 @@ class Device(SignalSlotable):
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
         self.initSchema()
-        self.initInfo()
+
+        info = Hash()
+        info["type"] = "device"
+        info["classId"] = self.classId
+        info["serverId"] = self.serverId
+        info["visibility"] = self.visibility.value
+        info["compatibility"] = self.__class__.__version__
+        info["host"] = self.hostname
+        info["status"] = "ok"
+        info["archive"] = self.archive
+        self.updateInstanceInfo(info)
+
         super().run()
 
     @slot
