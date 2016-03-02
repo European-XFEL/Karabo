@@ -1126,6 +1126,18 @@ class Scene(QSvgWidget):
         self.setBackgroundRole(QPalette.Window)
         self.resize(SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 
+
+    def copy(self):
+        """
+        This scene gets copied into a new scene object which is returned.
+        """
+        scene = Scene(self.project, self.filename)
+        xml = self.toXml()
+        scene.fromXml(xml)
+        
+        return scene
+
+
     def setModified(self):
         """
         This scene was modified and this needs to be broadcasted to the project.
@@ -1150,26 +1162,45 @@ class Scene(QSvgWidget):
         self.current_action.action.setChecked(True)
 
 
-    def closeEvent(self, event):
-        if len(self.ilayout) == 0 and not self.ilayout.shapes:
-            return
+    def aboutToClose(self):
+        """
+        Before closing the scene make sure to save modifications and take
+        care of the scene data for reopening.
+        """
+        if not self.commitBeforeClosing():
+            return False
+        
+        # FIXME: Intermediate solution to not crash GUI because of destroyed
+        # scene object
+        self.project.duplicateScene(self)
+        return True
 
-        messageBox = QMessageBox(self)
-        messageBox.setWindowTitle("Save scene before closing")
-        messageBox.setText("Do you want to save your scene before closing?")
-        messageBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
-                                      QMessageBox.Cancel)
-        messageBox.setDefaultButton(QMessageBox.Save)
 
-        reply = messageBox.exec_()
+    def commitBeforeClosing(self):
+        """
+        Check whether the scene has changed and allow user to save the scene to
+        the project file.
+        """
+        # Scene empty or project modified?
+        if (len(self.ilayout) == 0 and not self.ilayout.shapes) or \
+            not self.project.isModified:
+            return True
+                
+        msgBox = QMessageBox(self)
+        msgBox.setWindowTitle("Save scene before closing")
+        msgBox.setText("Do you want to save your scene before closing?")
+        msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
+                                  QMessageBox.Cancel)
+        msgBox.setDefaultButton(QMessageBox.Save)
+
+        reply = msgBox.exec_()
         if reply == QMessageBox.Cancel:
-            event.ignore()
-            return
+            return False
 
         if reply == QMessageBox.Save:
             self.project.zip()
         
-        event.accept()
+        return True
 
 
     @property
@@ -1188,17 +1219,8 @@ class Scene(QSvgWidget):
 
 
     def reset(self):
-        if len(self.ilayout) == 0 and not self.ilayout.shapes:
-            return
-
-        reply = QMessageBox.question(
-            self, "Save scene before closing",
-            "Do you want to save your scene before closing?",
-            QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
-
-        if reply == QMessageBox.Save:
-            self.project.zip()
-
+        self.commitBeforeClosing()
+        
         self.clean()
         self.inner.setLayout(FixedLayout())
         self.layout().addWidget(self.inner)
