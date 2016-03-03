@@ -45,6 +45,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyLogLogger.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilDateTimeString.o \
+	${OBJECTDIR}/_ext/381567218/PyUtilDetectorGeometry.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilDims.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilEpochstamp.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilHash.o \
@@ -150,6 +151,11 @@ ${OBJECTDIR}/_ext/381567218/PyUtilDateTimeString.o: ../../../src/karathon/PyUtil
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilDateTimeString.o ../../../src/karathon/PyUtilDateTimeString.cc
+
+${OBJECTDIR}/_ext/381567218/PyUtilDetectorGeometry.o: ../../../src/karathon/PyUtilDetectorGeometry.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilDetectorGeometry.o ../../../src/karathon/PyUtilDetectorGeometry.cc
 
 ${OBJECTDIR}/_ext/381567218/PyUtilDims.o: ../../../src/karathon/PyUtilDims.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -411,6 +417,19 @@ ${OBJECTDIR}/_ext/381567218/PyUtilDateTimeString_nomain.o: ${OBJECTDIR}/_ext/381
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilDateTimeString_nomain.o ../../../src/karathon/PyUtilDateTimeString.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilDateTimeString.o ${OBJECTDIR}/_ext/381567218/PyUtilDateTimeString_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PyUtilDetectorGeometry_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilDetectorGeometry.o ../../../src/karathon/PyUtilDetectorGeometry.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyUtilDetectorGeometry.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilDetectorGeometry_nomain.o ../../../src/karathon/PyUtilDetectorGeometry.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilDetectorGeometry.o ${OBJECTDIR}/_ext/381567218/PyUtilDetectorGeometry_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/PyUtilDims_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilDims.o ../../../src/karathon/PyUtilDims.cc 
