@@ -1,9 +1,31 @@
+from contextlib import closing
 from functools import partial
 from io import BytesIO
 from struct import pack
 
 from .typenums import HashType
 
+
+def write_binary_hash(hsh):
+    """ Convert a Hash to a string of bytes.
+    """
+    b_io = BytesIO()
+    with closing(b_io) as fp:
+        write_hash(fp, hsh)
+        return fp.getvalue()
+
+
+def write_binary_schema(schema):
+    """ Convert a Schema to a string of bytes.
+    """
+    b_io = BytesIO()
+    with closing(b_io) as fp:
+        write_schema(fp, schema)
+        return fp.getvalue()
+
+
+#######################
+# Writer implementation
 
 def write_array(fp, arr):
     write_simple(fp, len(arr), fmt='I')
@@ -58,9 +80,7 @@ def write_list(fp, lst, writer=None):
 
 
 def write_schema(fp, sch):
-    mem_file = BytesIO()
-    write_hash(mem_file, sch.hash)
-    buffer = mem_file.getvalue()
+    buffer = write_binary_hash(sch.hash)
     key = sch.name.encode('utf8')
 
     write_simple(fp, len(buffer) + len(key) + 1, fmt='I')
