@@ -438,10 +438,10 @@ class GuiProject(Project, QObject):
         self.signalSceneInserted.emit(index, scene)
 
 
-    def duplicateScene(self, scene):
+    def replaceScene(self, scene):
         """
-        The \scene is copied into a \newScene.
-        This newScene object replaces the old one.
+        The \scene is copied into a \newScene. This newScene object replaces the
+        old one.
         """
         # Copy \scene into \newScene
         newScene = scene.copy()
@@ -450,6 +450,7 @@ class GuiProject(Project, QObject):
         index = self.remove(scene)
         # Insert \newScene
         self.insertScene(index, newScene)
+        self.setModified(False)
 
 
     def addConfiguration(self, deviceId, configuration):
