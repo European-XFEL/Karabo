@@ -13,17 +13,19 @@ class KaraboValue:
 
 class SimpleValue(KaraboValue):
     """Base class for values which need no special treatment"""
-    def __init__(self, value, *, descriptor=None):
+    def __init__(self, value, *, descriptor=None, timestamp=None):
         self.value = value
         self.descriptor = descriptor
+        self.timestamp = timestamp
 
 
 class BoolValue(SimpleValue):
     """This conains bools.
 
     We cannot inherit from bool, so we need a brand-new class"""
-    def __init__(self, value, *, descriptor=None):
-        super().__init__(bool(value), descriptor=descriptor)
+    def __init__(self, value, *, descriptor=None, timestamp=None):
+        super().__init__(bool(value), descriptor=descriptor,
+                         timestamp=timestamp)
 
     def __bool__(self):
         return self.value
@@ -35,10 +37,10 @@ class EnumValue(SimpleValue):
     We can define enums in the expected parameters. This contains a value of
     them. Unfortunately, it is impossible to use the "is" operator as with
     bare enums, one has to use == instead. """
-    def __init__(self, value, descriptor):
+    def __init__(self, value, descriptor, *, timestamp=None):
         if not isinstance(value, descriptor.enum):
             raise TypeError("value is not element of enum in descriptor")
-        super().__init__(value, descriptor=descriptor)
+        super().__init__(value, descriptor=descriptor, timestamp=timestamp)
 
     def __eq__(self, other):
         if isinstance(other, EnumValue):
@@ -49,9 +51,10 @@ class EnumValue(SimpleValue):
 
 class OverloadValue(KaraboValue):
     """This mixin class extends existing Python classes"""
-    def __new__(cls, value, *, descriptor=None):
+    def __new__(cls, value, *, descriptor=None, timestamp=None):
         self = super().__new__(cls, value)
         self.descriptor = descriptor
+        self.timestamp = timestamp
         return self
 
 
@@ -69,12 +72,13 @@ class VectorStringValue(KaraboValue, list):
     """A Karabo VectorStringValue corresponds to a Python list.
 
     We should check that only strings are entered"""
-    def __init__(self, value=None, *, descriptor=None):
+    def __init__(self, value=None, *, descriptor=None, timestamp=None):
         if value is None:
             super().__init__()
         else:
             super().__init__(value)
         self.descriptor = descriptor
+        self.timestamp = timestamp
 
     def __repr__(self):
         return "VectorString" + super().__repr__(self)
@@ -95,7 +99,7 @@ class QuantityValue(KaraboValue, Quantity):
     Vectors are represented by numpy arrays. """
 
     def __new__(cls, value, unit=None, metricPrefix=MetricPrefix.NONE, *,
-                descriptor=None):
+                descriptor=None, timestamp=None):
         # weirdly, Pint uses __new__. Dunno why, but we need to follow.
         if isinstance(unit, Unit):
             if unit is Unit.NOT_ASSIGNED:
@@ -110,6 +114,7 @@ class QuantityValue(KaraboValue, Quantity):
         else:
             self = super().__new__(cls, value, unit)
         self.descriptor = descriptor
+        self.timestamp = timestamp
         return self
 
 # Whenever Pint does calculations, it returns the results as an objecti
