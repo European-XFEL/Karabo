@@ -10,14 +10,28 @@ from karabo.api2.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
     VectorStringValue, wrap)
 from karabo.api2.hash import Int32
+from karabo.api2.timestamp import Timestamp
 
 
 class Tests(TestCase):
+    t1 = Timestamp("2009-09-01")
+    t2 = Timestamp("1978-04-07")
+
     def test_str(self):
         s = StringValue("abc", descriptor=5, timestamp=3)
         self.assertEqual(s, "abc")
         self.assertEqual(s.descriptor, 5)
         self.assertEqual(s.timestamp, 3)
+
+        q = QuantityValue("3 m", timestamp=self.t1)
+        s = StringValue("bla {}", timestamp=self.t2)
+        self.assertEqual(s.format(q).timestamp, self.t1)
+        s = StringValue("bla {blub}", timestamp=self.t2)
+        self.assertEqual(s.format(blub=q).timestamp, self.t1)
+
+        q = QuantityValue("3 m", timestamp=self.t2)
+        s = StringValue("bla {}", timestamp=self.t1)
+        self.assertEqual(s.format(q).timestamp, self.t1)
 
         b = VectorCharValue(b"ase", descriptor=7, timestamp=2)
         self.assertEqual(b, b"ase")
@@ -47,21 +61,25 @@ class Tests(TestCase):
             enum = E
 
         d = Descriptor()
-        e = EnumValue(E.a, descriptor=d, timestamp=22)
+        e = EnumValue(E.a, descriptor=d, timestamp=self.t1)
+        f = EnumValue(E.b, descriptor=d, timestamp=self.t2)
         self.assertEqual(e, E.a)
         self.assertNotEqual(e, E.b)
         self.assertEqual(e.descriptor, d)
         self.assertNotEqual(e, F.a)
-        self.assertEqual(e.timestamp, 22)
+        self.assertEqual(e.timestamp, self.t1)
+        self.assertEqual((e == f).timestamp, self.t1)
 
         with self.assertRaises(TypeError):
             e = EnumValue(F.a, d)
 
     def test_stringlist(self):
-        l = VectorStringValue(["a", "b", "c"], descriptor=3, timestamp=100)
+        l = VectorStringValue(["a", "b", "c"], descriptor=3, timestamp=self.t2)
         self.assertEqual(l, ["a", "b", "c"])
         self.assertEqual(l.descriptor, 3)
-        self.assertEqual(l.timestamp, 100)
+        self.assertEqual(l.timestamp, self.t2)
+
+        self.assertEqual((3 * l).timestamp, self.t2)
 
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
@@ -71,7 +89,7 @@ class Tests(TestCase):
 
     def test_unit_descriptor(self):
         d1 = Int32(unitSymbol=Unit.METER)
-        d2 = Int32(unitSymbol=Unit.SECOND)
+        Int32(unitSymbol=Unit.SECOND)
 
         a = QuantityValue("1 m", descriptor=d1, timestamp=9)
         self.assertEqual(a.magnitude, 1)
@@ -135,6 +153,15 @@ class Tests(TestCase):
         w = wrap(["bla"])
         self.assertEqual(w, ["bla"])
         self.assertEqual(w.descriptor, None)
+
+    def test_timestamp(self):
+        a = QuantityValue("1 m", timestamp=self.t1)
+        b = QuantityValue("2 m", timestamp=self.t2)
+        self.assertEqual((a + b).timestamp, self.t1)
+        self.assertEqual((a * 3).timestamp, self.t1)
+        self.assertEqual((3 * b).timestamp, self.t2)
+        self.assertEqual((a == b).timestamp, self.t1)
+        self.assertEqual(numpy.sin(a / b).timestamp, self.t1)
 
 
 if __name__ == "__main__":

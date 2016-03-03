@@ -3,12 +3,17 @@
 Karabo keeps some metadata with its values. This module contains the
 classes which have the metadata attached."""
 from enum import Enum
+from functools import wraps
+import inspect
+from itertools import chain
 import numbers
 
 import numpy
 import pint
 
 from .enums import MetricPrefix, Unit
+from .registry import Registry
+from .timestamp import Timestamp
 
 
 def wrap(data):
@@ -28,9 +33,48 @@ def wrap(data):
         raise TypeError('cannot wrap "{}" into Karabo type'.format(type(data)))
 
 
-class KaraboValue:
+def create_wrapper(attr):
+    @wraps(attr)
+    def wrapper(*args, **kwargs):
+        newest = None
+        for a in chain(args, kwargs.values()):
+            ts = getattr(a, "timestamp", None)
+            if isinstance(ts, Timestamp) and (newest is None or ts > newest):
+                newest = ts
+        ret = attr(*args, **kwargs)
+        try:
+            if newest is not None:
+                if isinstance(ret, tuple):
+                    ret = tuple(wrap(r) for r in ret)
+                    for r in ret:
+                        ret.timestamp = newest
+                else:
+                    ret = wrap(ret)
+                    ret.timestamp = newest
+        except TypeError:
+            pass
+        return ret
+    return wrapper
+
+
+attr_blacklist = {"__len__", "__contains__", "__complex__", "__int__",
+                  "__float__", "__index__", "__bool__", "__getattribute__",
+                  "__getattr__", "__init__", "__new__", "__setattr__",
+                  "__array_prepare__", "__hash__", "__str__", "__repr__"}
+
+
+class KaraboValue(Registry):
     """This is the baseclass for all Karabo values"""
-    pass
+    @classmethod
+    def register(cls, name, d):
+        attrs = [a for a in dir(cls)
+                 if ((len(a) > 4 and a[:2] == "__" and a[:2] == "__") or
+                     (not a.startswith("_"))) and (a not in attr_blacklist)]
+
+        for name in attrs:
+            attr = getattr(cls, name)
+            if inspect.isfunction(attr) or inspect.ismethoddescriptor(attr):
+                setattr(cls, name, create_wrapper(attr))
 
 
 class SimpleValue(KaraboValue):
@@ -48,6 +92,9 @@ class BoolValue(SimpleValue):
     def __init__(self, value, *, descriptor=None, timestamp=None):
         super().__init__(bool(value), descriptor=descriptor,
                          timestamp=timestamp)
+
+    def __eq__(self, other):
+        return self.value == bool(other)
 
     def __bool__(self):
         return self.value
@@ -81,15 +128,19 @@ class OverloadValue(KaraboValue):
         self.timestamp = timestamp
         return self
 
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return str(self) == str(other)
+        else:
+            return super().__eq__(other)
+
 
 class VectorCharValue(OverloadValue, bytes):
     """A Karabo VectorChar is a Python bytes object"""
-    pass
 
 
 class StringValue(OverloadValue, str):
     """A Karabo String is a Python str"""
-    pass
 
 
 class VectorStringValue(KaraboValue, list):
