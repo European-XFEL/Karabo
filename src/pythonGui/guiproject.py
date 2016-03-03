@@ -303,6 +303,7 @@ class GuiProject(Project, QObject):
     signalDeviceGroupAdded = pyqtSignal(object)
     signalDeviceGroupInserted = pyqtSignal(int, object)
     signalSceneAdded = pyqtSignal(object)
+    signalSceneInserted = pyqtSignal(int, object)
     signalConfigurationAdded = pyqtSignal(str, object)
     #signalResourceAdded = pytqtSignal()
     signalMacroAdded = pyqtSignal(object)
@@ -314,8 +315,6 @@ class GuiProject(Project, QObject):
     def __init__(self, filename):
         super(GuiProject, self).__init__(filename)
 
-        # List of Scene
-        self.scenes = []
         self.modules = { } # the modules in the macro context
         
         # States whether the project was changed or not
@@ -342,13 +341,13 @@ class GuiProject(Project, QObject):
 
 
     def addDevice(self, device):
-        Project.addDevice(self, device)
+        super(GuiProject, self).addDevice(device)
         self.signalDeviceAdded.emit(device)
         self.setupDeviceToProject(device)
 
 
     def insertDevice(self, index, device):
-        Project.insertDevice(self, index, device)
+        super(GuiProject, self).insertDevice(index, device)
         self.signalDeviceInserted.emit(index, device)
         self.setupDeviceToProject(device)
 
@@ -377,13 +376,13 @@ class GuiProject(Project, QObject):
 
 
     def addDeviceGroup(self, deviceGroup):
-        Project.addDeviceGroup(self, deviceGroup)
+        super(GuiProject, self).addDeviceGroup(deviceGroup)
         self.signalDeviceGroupAdded.emit(deviceGroup)
         self.setupDeviceGroupToProject(deviceGroup)
 
 
     def insertDeviceGroup(self, index, deviceGroup):
-        Project.insertDeviceGroup(self, index, deviceGroup)
+        super(GuiProject, self).insertDeviceGroup(index, deviceGroup)
         self.signalDeviceGroupInserted.emit(index, deviceGroup)
         self.setupDeviceGroupToProject(deviceGroup)
 
@@ -431,8 +430,32 @@ class GuiProject(Project, QObject):
         self.setModified(True)
 
 
+    def insertScene(self, index, scene):
+        """
+        Insert \scene at given \index and update project model.
+        """
+        super(GuiProject, self).insertScene(index, scene)
+        self.signalSceneInserted.emit(index, scene)
+
+
+    def replaceScene(self, scene):
+        """
+        The \scene is copied into a \newScene. This newScene object replaces the
+        old one.
+        """
+        currentlyModified = self.isModified
+        # Copy \scene into \newScene
+        newScene = scene.copy()
+        
+        # Remove old scene from project
+        index = self.remove(scene)
+        # Insert \newScene
+        self.insertScene(index, newScene)
+        self.setModified(currentlyModified)
+
+
     def addConfiguration(self, deviceId, configuration):
-        Project.addConfiguration(self, deviceId, configuration)
+        super(GuiProject, self).addConfiguration(deviceId, configuration)
         self.signalConfigurationAdded.emit(deviceId, configuration)
         self.setModified(True)
 
@@ -444,7 +467,7 @@ class GuiProject(Project, QObject):
 
 
     def addMonitor(self, monitor):
-        Project.addMonitor(self, monitor)
+        super(GuiProject, self).addMonitor(monitor)
         self.signalMonitorAdded.emit(monitor)
         self.setModified(True)
 
@@ -452,7 +475,7 @@ class GuiProject(Project, QObject):
     def addResource(self, category, data):
         #self.signalResourceAdded.emit(category, data)
         self.setModified(True)
-        return Project.addResource(self, category, data)
+        return super(GuiProject, self).addResource(category, data)
 
 
     def remove(self, object):
