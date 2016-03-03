@@ -163,6 +163,15 @@ class Tests(TestCase):
         self.assertEqual((a == b).timestamp, self.t1)
         self.assertEqual(numpy.sin(a / b).timestamp, self.t1)
 
+    def test_timestamp(self):
+        a = QuantityValue("1 m", timestamp=self.t1)
+        b = QuantityValue("2 m", timestamp=self.t2)
+        self.assertEqual((a + b).timestamp, self.t1)
+        self.assertEqual((a * 3).timestamp, self.t1)
+        self.assertEqual((3 * b).timestamp, self.t2)
+        self.assertEqual((a == b).timestamp, self.t1)
+        self.assertEqual(numpy.sin(a / b).timestamp, self.t1)
+
         c = a + 1j * b
         self.assertEqual(c.timestamp, self.t1)
         self.assertEqual(c.imag.timestamp, self.t1)
