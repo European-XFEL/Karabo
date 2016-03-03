@@ -525,7 +525,7 @@ namespace karabo {
                 } else {
                     path += ".activeSchema." + state;
                     boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
-                    if (node) node->getValue<Schema>();
+                    if (node) return node->getValue<Schema>();
                 }
             }
             // Not found, request and cache it
@@ -808,12 +808,12 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 path = findInstance(deviceId);
-                boost::optional<Hash::Node&> node;
+                
                 if (path.empty()) {
                     path = "device." + deviceId + ".configuration";
                 } else {
                     path += ".configuration";
-                    node = m_runtimeSystemDescription.find(path);
+                    boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
                     if (node) result = node->getValue<Hash>();
                 }
             }
@@ -1025,20 +1025,20 @@ namespace karabo {
         void DeviceClient::registerDeviceMonitor(const std::string& deviceId, const boost::function<void (const std::string& /*deviceId*/, const karabo::util::Hash& /*config*/)> & callbackFunction) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
             stayConnected(deviceId);
-            m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
             {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 m_deviceChangedHandlers.set(deviceId + "._function", callbackFunction);
             }
+            m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
             immortalize(deviceId);
         }
 
 
         void DeviceClient::unregisterPropertyMonitor(const std::string& instanceId, const std::string& key) {
-            boost::optional<Hash::Node&> node;
+            bool isMortal = false;
             {
                 boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
-                node = m_propertyChangedHandlers.find(instanceId);
+                boost::optional<Hash::Node&> node = m_propertyChangedHandlers.find(instanceId);
                 if (node) {
                     Hash& tmp = node->getValue<Hash >();
                     boost::optional<Hash::Node&> tmpNode = tmp.find(key);
@@ -1047,10 +1047,11 @@ namespace karabo {
                     }
                     if (tmp.empty()) {
                         m_propertyChangedHandlers.erase(node->getKey());
+                        isMortal = true;
                     }
                 }
             }
-            if (node) mortalize(instanceId);
+            if (isMortal) mortalize(instanceId);
         }
 
 
@@ -1109,12 +1110,10 @@ namespace karabo {
                 m_instanceUsage[instanceId] = 0;
                 return true;
             }
-            if (it->second >= CONNECTION_KEEP_ALIVE) {
-                it->second = 0;    // reset the counter
-                return true;
-            }
-            it->second = 0;   // reset the counter
-            return false;
+            
+            bool result = (it->second >= CONNECTION_KEEP_ALIVE);
+            it->second = 0;    // reset the counter
+            return result;
         }
 
 
