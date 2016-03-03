@@ -8,23 +8,23 @@ def benchmark_read_func(read_func, hash_buffer, num_iters=10):
     """ Runs `read_func` `num_iters` times on the data in `read_buffer` and
     returns the avg. call duration.
     """
-    elapsed_time = 0
+    start_time = time.process_time()
     for i in range(num_iters):
-        start_time = time.perf_counter()
         read_func(hash_buffer)
-        elapsed_time += time.perf_counter() - start_time
+    elapsed_time = time.process_time() - start_time
 
     return elapsed_time / num_iters
 
 
 def benchmark_wrapper(func, args):
+    total_time = 0
     perf_time, count = 0, 0
     iter_counts = (10, 100, 1000, 10000, 100000)
     for count in iter_counts:
         start_time = time.time()
         perf_time = func(*args, num_iters=count)
-        elapsed_time = time.time() - start_time
-        if elapsed_time > 2.0:
+        total_time += time.time() - start_time
+        if total_time > 2.0:
             break
 
     return perf_time, count
@@ -108,22 +108,22 @@ def get_hash_buffer(hash_create_func, write_func, hash_factory):
 
 
 def run_benchmark(args):
-    API_FUNCS = [
-        get_api_1_funcs(), get_api_2_funcs(), get_api_refactor_funcs()
+    API_FUNC_GETTERS = [
+        get_api_1_funcs, get_api_2_funcs, get_api_refactor_funcs
     ]
     RUNS = [
         ('Array', create_array_hash),
         ('Flat', create_flat_hash),
         ('Deep', create_deep_hash),
     ]
+    MSG = '{}: API {} took {:.6f} s/call | {:.2f} calls/s ({} iterations)'
 
-    read_func, write_func, hash_factory = API_FUNCS[args.api - 1]
+    read_func, write_func, hash_factory = API_FUNC_GETTERS[args.api - 1]()
     for name, create_func in RUNS:
         buffer = get_hash_buffer(create_func, write_func, hash_factory)
         f_args = (read_func, buffer)
         avg_time, iterations = benchmark_wrapper(benchmark_read_func, f_args)
-        print('{}: API {} ran in {} secs ({} iterations)'.format(
-                name, args.api, avg_time, iterations))
+        print(MSG.format(name, args.api, avg_time, 1/avg_time, iterations))
 
 
 def main():
@@ -133,7 +133,8 @@ def main():
                         help='Which API to benchmark')
 
     args = parser.parse_args()
-    run_benchmark(args)
+    if args.api <= 3:
+        run_benchmark(args)
 
 if __name__ == '__main__':
     main()
