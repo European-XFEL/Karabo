@@ -263,8 +263,8 @@ namespace karabo {
                     size_t indx = 0;
                     size_t idxpos = msr.fromRecord;
                     for (size_t fnum = msr.fromFileNumber, ii = 0; fnum <= msr.toFileNumber && ii < msr.nrecList.size(); fnum++, ii++) {
-                        if (mf.is_open()) mf.close();
-                        if (df.is_open()) df.close();
+                        if (mf && mf.is_open()) mf.close();
+                        if (df && df.is_open()) df.close();
                         string idxname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + property + "-index.bin";
                         string dataname = get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(fnum) + ".txt";
                         if (!bf::exists(bf::path(idxname))) {
@@ -277,7 +277,7 @@ namespace karabo {
                         }
                         mf.open(idxname.c_str(), ios::in | ios::binary);
                         df.open(dataname.c_str());
-                        if (!mf.is_open() || !df.is_open()) {
+                        if (!mf || !mf.is_open() || !df || !df.is_open()) {
                             KARABO_LOG_FRAMEWORK_WARN << "Either " << dataname << " or "
                                     << idxname << " could not be opened";
                             continue;
@@ -345,8 +345,8 @@ namespace karabo {
                             //}
                         }
                     }
-                    if (mf.is_open()) mf.close();
-                    if (df.is_open()) df.close();
+                    if (mf && mf.is_open()) mf.close();
+                    if (df && df.is_open()) df.close();
 
                 }
 
@@ -633,11 +633,11 @@ namespace karabo {
 
             // Find record number of "from" in index file ..
             for (; fnum <= tonum; fnum++) {
-                if (f.is_open()) f.close();
+                if (f && f.is_open()) f.close();
 
                 fname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + path + "-index.bin";
                 f.open(fname.c_str(), ios::in | ios::binary | ios::ate);
-                if (!f.is_open()) continue;
+                if (!f || !f.is_open()) continue;
                 filesize = f.tellg();
                 nrecs = filesize / sizeof (MetaData::Record);
                 assert(filesize % sizeof (MetaData::Record) == 0);
@@ -684,7 +684,7 @@ namespace karabo {
                     else
                         result.toRecord = findPositionOfEpochstamp(f, to, recLeft, recRight, true);
                     result.nrecList.push_back(result.toRecord + 1 - result.fromRecord);
-                    if (f.is_open()) f.close();
+                    if (f && f.is_open()) f.close();
                     return result;
                 }
             }
@@ -695,7 +695,7 @@ namespace karabo {
 
             // ... check next files
             for (; fnum <= endnum; fnum++) {
-                if (f.is_open()) f.close();
+                if (f && f.is_open()) f.close();
 
                 fname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + path + "-index.bin";
                 filesize = bf::file_size(fname, ec);
@@ -708,7 +708,7 @@ namespace karabo {
                 }
 
                 f.open(fname.c_str(), ios::in | ios::binary);
-                if (!f.is_open()) continue;
+                if (!f || !f.is_open()) continue;
 
                 // read first record
                 f.read((char*) &record, sizeof (MetaData::Record));
@@ -744,7 +744,7 @@ namespace karabo {
                 result.nrecList.push_back(result.toRecord + 1);
                 break;
             }
-            if (f.is_open()) f.close();
+            if (f && !f.is_open()) f.close();
             return result;
         }
 
