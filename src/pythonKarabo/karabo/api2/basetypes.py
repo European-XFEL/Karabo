@@ -11,10 +11,9 @@ class KaraboValue:
     """This is the baseclass for all Karabo values"""
     pass
 
-
 class SimpleValue(KaraboValue):
     """Base class for values which need no special treatment"""
-    def __init__(self, value, descriptor=None):
+    def __init__(self, value, *, descriptor=None):
         self.value = value
         self.descriptor = descriptor
 
@@ -23,8 +22,8 @@ class BoolValue(SimpleValue):
     """This conains bools.
 
     We cannot inherit from bool, so we need a brand-new class"""
-    def __init__(self, value, descriptor=None):
-        super().__init__(bool(value), descriptor)
+    def __init__(self, value, *, descriptor=None):
+        super().__init__(bool(value), descriptor=descriptor)
 
     def __bool__(self):
         return self.value
@@ -39,7 +38,7 @@ class EnumValue(SimpleValue):
     def __init__(self, value, descriptor):
         if not isinstance(value, descriptor.enum):
             raise TypeError("value is not element of enum in descriptor")
-        super().__init__(value, descriptor)
+        super().__init__(value, descriptor=descriptor)
 
     def __eq__(self, other):
         if isinstance(other, EnumValue):
@@ -50,7 +49,7 @@ class EnumValue(SimpleValue):
 
 class OverloadValue(KaraboValue):
     """This mixin class extends existing Python classes"""
-    def __new__(cls, value, descriptor=None):
+    def __new__(cls, value, *, descriptor=None):
         self = super().__new__(cls, value)
         self.descriptor = descriptor
         return self
@@ -70,7 +69,7 @@ class VectorStringValue(KaraboValue, list):
     """A Karabo VectorStringValue corresponds to a Python list.
 
     We should check that only strings are entered"""
-    def __init__(self, value=None, descriptor=None):
+    def __init__(self, value=None, *, descriptor=None):
         if value is None:
             super().__init__()
         else:
@@ -95,7 +94,7 @@ class QuantityValue(KaraboValue, Quantity):
     It has a unit (by virtue of inheriting a pint Quantity).
     Vectors are represented by numpy arrays. """
 
-    def __new__(cls, value, unit=None, metricPrefix=MetricPrefix.NONE,
+    def __new__(cls, value, unit=None, metricPrefix=MetricPrefix.NONE, *,
                 descriptor=None):
         # weirdly, Pint uses __new__. Dunno why, but we need to follow.
         if isinstance(unit, Unit):
