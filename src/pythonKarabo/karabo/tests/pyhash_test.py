@@ -6,7 +6,7 @@ from numpy.testing import assert_equal
 
 from karabo.api_1 import BinarySerializerHash
 from karabo.api_2 import (Hash, Schema, XMLWriter, XMLParser, BinaryWriter,
-                          BinaryParser)
+                          BinaryParser, NodeType)
 
 
 class Hash_TestCase(unittest.TestCase):
@@ -151,7 +151,7 @@ class Hash_TestCase(unittest.TestCase):
         h["vector", "complex"] = complex(1.0, 2.0)
         sh = Hash()
         sh["a"] = Hash()
-        sh["a", "nodeType"] = 0
+        sh["a", "nodeType"] = NodeType.Leaf
         h["schema"] = Schema("blub", hash=sh)
         return h
 
@@ -199,7 +199,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(h["schema"].name, "blub")
         sh = h["schema"].hash
         self.assertFalse(sh["a"].keys())
-        self.assertEqual(sh["a", "nodeType"], 0)
+        self.assertEqual(sh["a", "nodeType"], NodeType.Leaf)
 
 
     def test_xml(self):
