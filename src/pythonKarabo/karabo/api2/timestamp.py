@@ -1,5 +1,6 @@
 
 from datetime import datetime
+from functools import total_ordering
 
 import dateutil.parser
 import dateutil.tz
@@ -10,6 +11,7 @@ import time
 attosec = 10 ** 18  # current Karabo resolution is attoseconds
 
 
+@total_ordering
 class Timestamp(object):
     def __init__(self, date=None):
         """create a new timestamp
@@ -42,3 +44,13 @@ class Timestamp(object):
 
     def toLocal(self):
         return datetime.fromtimestamp(self.toTimestamp()).isoformat()
+
+    def __eq__(self, other):
+        if not isinstance(other, Timestamp):
+            return False
+        return self.time == other.time
+
+    def __lt__(self, other):
+        if not isinstance(other, Timestamp):
+            return NotImplemented
+        return self.time < other.time
