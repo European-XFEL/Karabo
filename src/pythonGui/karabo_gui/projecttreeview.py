@@ -41,6 +41,7 @@ class ProjectTreeView(QTreeView):
         self.model().signalExpandIndex.connect(self.setExpanded)
         self.setSelectionModel(self.model().selectionModel)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setDragDropMode(QAbstractItemView.DragOnly)
         #self.setDragDropMode(QAbstractItemView.DragDrop)#InternalMove)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
