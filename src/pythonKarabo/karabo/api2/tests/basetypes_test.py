@@ -10,22 +10,26 @@ from karabo.api2.basetypes import (
 
 class Tests(TestCase):
     def test_str(self):
-        s = StringValue("abc", descriptor=5)
+        s = StringValue("abc", descriptor=5, timestamp=3)
         self.assertEqual(s, "abc")
         self.assertEqual(s.descriptor, 5)
+        self.assertEqual(s.timestamp, 3)
 
-        b = VectorCharValue(b"ase", descriptor=7)
+        b = VectorCharValue(b"ase", descriptor=7, timestamp=2)
         self.assertEqual(b, b"ase")
         self.assertEqual(b.descriptor, 7)
+        self.assertEqual(b.timestamp, 2)
 
     def test_bool(self):
-        t = BoolValue(True, descriptor=7)
+        t = BoolValue(True, descriptor=7, timestamp=22)
         self.assertTrue(t)
         self.assertEqual(t.descriptor, 7)
+        self.assertEqual(t.timestamp, 22)
 
-        f = BoolValue(False, descriptor=3)
+        f = BoolValue(False, descriptor=3, timestamp=33)
         self.assertFalse(f)
         self.assertEqual(f.descriptor, 3)
+        self.assertEqual(f.timestamp, 33)
 
     def test_enum(self):
         class E(Enum):
@@ -39,19 +43,21 @@ class Tests(TestCase):
             enum = E
 
         d = Descriptor()
-        e = EnumValue(E.a, d)
+        e = EnumValue(E.a, d, timestamp=22)
         self.assertEqual(e, E.a)
         self.assertNotEqual(e, E.b)
         self.assertEqual(e.descriptor, d)
         self.assertNotEqual(e, F.a)
+        self.assertEqual(e.timestamp, 22)
 
         with self.assertRaises(TypeError):
             e = EnumValue(F.a, d)
 
     def test_stringlist(self):
-        l = VectorStringValue(["a", "b", "c"], descriptor=3)
+        l = VectorStringValue(["a", "b", "c"], descriptor=3, timestamp=100)
         self.assertEqual(l, ["a", "b", "c"])
         self.assertEqual(l.descriptor, 3)
+        self.assertEqual(l.timestamp, 100)
 
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
@@ -60,9 +66,10 @@ class Tests(TestCase):
         QuantityValue(1, Unit.NOT_ASSIGNED)
 
     def test_unit_descriptor(self):
-        a = QuantityValue("1 m", descriptor=7)
+        a = QuantityValue("1 m", descriptor=7, timestamp=9)
         self.assertEqual(a.magnitude, 1)
         self.assertEqual(a.descriptor, 7)
+        self.assertEqual(a.timestamp, 9)
 
     def test_special(self):
         vps = QuantityValue(1, Unit.VOLT_PER_SECOND)
