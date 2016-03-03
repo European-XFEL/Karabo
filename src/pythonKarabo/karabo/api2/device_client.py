@@ -20,6 +20,7 @@ import dateutil.parser
 import dateutil.tz
 
 from .device import Device
+from .enums import NodeType
 from .exceptions import KaraboError
 from .hash import Hash, Slot, Type, Descriptor
 from .signalslot import slot
@@ -408,12 +409,12 @@ def waitUntil(condition):
 def _createProxyDict(hash, prefix):
     dict = {}
     for k, v, a in hash.iterall():
-        if a["nodeType"] == 0:
+        if a["nodeType"] == NodeType.Leaf:
             d = Type.fromname[a["valueType"]]()
             d.key = k
             d.longkey = prefix + k
             dict[k] = d
-        elif a["nodeType"] == 1:
+        elif a["nodeType"] == NodeType.Node:
             if a.get("displayType") == "Slot":
                 del a["nodeType"]
                 dict[k] = ProxySlot()

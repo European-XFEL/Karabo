@@ -10,7 +10,7 @@ from .api2.device_client import (
 )
 from .api2.enums import (
     AccessLevel, AccessMode, Assignment, ChannelSpaceType, EncodingType,
-    MetricPrefix, Unit
+    MetricPrefix, NodeType, Unit
 )
 from .api2.exceptions import KaraboError
 from .api2.hash import (
