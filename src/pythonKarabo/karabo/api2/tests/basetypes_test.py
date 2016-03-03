@@ -2,12 +2,14 @@ from enum import Enum
 from itertools import product
 from unittest import TestCase, main
 
+import pint
 import numpy
 
 from karabo.api2.enums import Unit, MetricPrefix
 from karabo.api2.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
     VectorStringValue, wrap)
+from karabo.api2.hash import Int32
 
 
 class Tests(TestCase):
@@ -68,10 +70,16 @@ class Tests(TestCase):
         QuantityValue(1, Unit.NOT_ASSIGNED)
 
     def test_unit_descriptor(self):
-        a = QuantityValue("1 m", descriptor=7, timestamp=9)
+        d1 = Int32(unitSymbol=Unit.METER)
+        d2 = Int32(unitSymbol=Unit.SECOND)
+
+        a = QuantityValue("1 m", descriptor=d1, timestamp=9)
         self.assertEqual(a.magnitude, 1)
-        self.assertEqual(a.descriptor, 7)
+        self.assertEqual(a.descriptor, d1)
         self.assertEqual(a.timestamp, 9)
+
+        with self.assertRaises(pint.DimensionalityError):
+            QuantityValue("1 s", descriptor=d1)
 
     def test_special(self):
         vps = QuantityValue(1, Unit.VOLT_PER_SECOND)
