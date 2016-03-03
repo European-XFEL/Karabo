@@ -1118,6 +1118,7 @@ class Scene(QSvgWidget):
 
         self.designMode = designMode
         self.tabVisible = False
+        self.isModified = False
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -1142,6 +1143,7 @@ class Scene(QSvgWidget):
         """
         This scene was modified and this needs to be broadcasted to the project.
         """
+        self.isModified = True
         self.project.setModified(True)
 
 
@@ -1183,7 +1185,7 @@ class Scene(QSvgWidget):
         """
         # Scene empty or project modified?
         if (len(self.ilayout) == 0 and not self.ilayout.shapes) or \
-            not self.project.isModified:
+            not self.isModified:
             return True
                 
         msgBox = QMessageBox(self)

@@ -443,6 +443,7 @@ class GuiProject(Project, QObject):
         The \scene is copied into a \newScene. This newScene object replaces the
         old one.
         """
+        currentlyModified = self.isModified
         # Copy \scene into \newScene
         newScene = scene.copy()
         
@@ -450,7 +451,8 @@ class GuiProject(Project, QObject):
         index = self.remove(scene)
         # Insert \newScene
         self.insertScene(index, newScene)
-        self.setModified(False)
+        if not currentlyModified:
+            self.setModified(False)
 
 
     def addConfiguration(self, deviceId, configuration):
