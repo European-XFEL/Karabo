@@ -71,7 +71,7 @@ class ProjectModel(QStandardItemModel):
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
-
+        self.setSupportedDragActions(Qt.CopyAction)
 
     def flags(self, index):
         flags = QStandardItemModel.flags(self, index)
