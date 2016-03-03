@@ -451,8 +451,7 @@ class GuiProject(Project, QObject):
         index = self.remove(scene)
         # Insert \newScene
         self.insertScene(index, newScene)
-        if not currentlyModified:
-            self.setModified(False)
+        self.setModified(currentlyModified)
 
 
     def addConfiguration(self, deviceId, configuration):
