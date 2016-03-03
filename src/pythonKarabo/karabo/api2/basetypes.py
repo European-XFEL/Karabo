@@ -134,6 +134,10 @@ class QuantityValue(KaraboValue, Quantity):
             self = super().__new__(cls, value, (prefix + unit).lower())
         else:
             self = super().__new__(cls, value, unit)
+        if (descriptor is not None and
+                descriptor.dimensionality != self.dimensionality):
+            raise pint.DimensionalityError(descriptor.dimensionality,
+                                           self.dimensionality)
         self.descriptor = descriptor
         self.timestamp = timestamp
         return self
