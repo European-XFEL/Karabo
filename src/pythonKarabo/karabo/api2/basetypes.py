@@ -2,14 +2,35 @@
 
 Karabo keeps some metadata with its values. This module contains the
 classes which have the metadata attached."""
+import numbers
+
+import numpy
 import pint
 
 from .enums import MetricPrefix, Unit
 
 
+def wrap(data):
+    if isinstance(data, KaraboValue):
+        return data
+    elif isinstance(data, bool):
+        return BoolValue(data)
+    elif isinstance(data, str):
+        return StringValue(data)
+    elif isinstance(data, bytes):
+        return VectorCharValue(data)
+    elif isinstance(data, list):
+        return VectorStringValue(data)
+    elif isinstance(data, (numbers.Number, numpy.ndarray)):
+        return QuantityValue(data)
+    else:
+        raise TypeError('cannot wrap "{}" into Karabo type'.format(type(data)))
+
+
 class KaraboValue:
     """This is the baseclass for all Karabo values"""
     pass
+
 
 class SimpleValue(KaraboValue):
     """Base class for values which need no special treatment"""
