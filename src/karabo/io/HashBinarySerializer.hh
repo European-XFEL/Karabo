@@ -185,6 +185,9 @@ namespace karabo {
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const karabo::util::Schema&);
         
         template<>
+        void HashBinarySerializer::writeSingleValue(std::ostream& os, const karabo::util::Hash&);
+        
+        template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const karabo::util::CppNone& value);
 
         template<>
@@ -198,6 +201,9 @@ namespace karabo {
 
         template<>
         karabo::util::Schema HashBinarySerializer::readSingleValue(std::istream& is);
+        
+        template<>
+        karabo::util::Hash HashBinarySerializer::readSingleValue(std::istream& is);
 
 
 
