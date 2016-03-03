@@ -1172,7 +1172,7 @@ class Scene(QSvgWidget):
         
         # FIXME: Intermediate solution to not crash GUI because of destroyed
         # scene object
-        self.project.duplicateScene(self)
+        self.project.replaceScene(self)
         return True
 
 
