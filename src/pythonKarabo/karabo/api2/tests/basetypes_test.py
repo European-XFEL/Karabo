@@ -10,20 +10,20 @@ from karabo.api2.basetypes import (
 
 class Tests(TestCase):
     def test_str(self):
-        s = StringValue("abc", 5)
+        s = StringValue("abc", descriptor=5)
         self.assertEqual(s, "abc")
         self.assertEqual(s.descriptor, 5)
 
-        b = VectorCharValue(b"ase", 7)
+        b = VectorCharValue(b"ase", descriptor=7)
         self.assertEqual(b, b"ase")
         self.assertEqual(b.descriptor, 7)
 
     def test_bool(self):
-        t = BoolValue(True, 7)
+        t = BoolValue(True, descriptor=7)
         self.assertTrue(t)
         self.assertEqual(t.descriptor, 7)
 
-        f = BoolValue(False, 3)
+        f = BoolValue(False, descriptor=3)
         self.assertFalse(f)
         self.assertEqual(f.descriptor, 3)
 
@@ -49,7 +49,7 @@ class Tests(TestCase):
             e = EnumValue(F.a, d)
 
     def test_stringlist(self):
-        l = VectorStringValue(["a", "b", "c"], 3)
+        l = VectorStringValue(["a", "b", "c"], descriptor=3)
         self.assertEqual(l, ["a", "b", "c"])
         self.assertEqual(l.descriptor, 3)
 
@@ -58,6 +58,11 @@ class Tests(TestCase):
             if u is not Unit.NOT_ASSIGNED:
                 QuantityValue(1, u, p)
         QuantityValue(1, Unit.NOT_ASSIGNED)
+
+    def test_unit_descriptor(self):
+        a = QuantityValue("1 m", descriptor=7)
+        self.assertEqual(a.magnitude, 1)
+        self.assertEqual(a.descriptor, 7)
 
     def test_special(self):
         vps = QuantityValue(1, Unit.VOLT_PER_SECOND)
