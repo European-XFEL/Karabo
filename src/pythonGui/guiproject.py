@@ -341,13 +341,13 @@ class GuiProject(Project, QObject):
 
 
     def addDevice(self, device):
-        Project.addDevice(self, device)
+        super(GuiProject, self).addDevice(device)
         self.signalDeviceAdded.emit(device)
         self.setupDeviceToProject(device)
 
 
     def insertDevice(self, index, device):
-        Project.insertDevice(self, index, device)
+        super(GuiProject, self).insertDevice(index, device)
         self.signalDeviceInserted.emit(index, device)
         self.setupDeviceToProject(device)
 
@@ -376,13 +376,13 @@ class GuiProject(Project, QObject):
 
 
     def addDeviceGroup(self, deviceGroup):
-        Project.addDeviceGroup(self, deviceGroup)
+        super(GuiProject, self).addDeviceGroup(deviceGroup)
         self.signalDeviceGroupAdded.emit(deviceGroup)
         self.setupDeviceGroupToProject(deviceGroup)
 
 
     def insertDeviceGroup(self, index, deviceGroup):
-        Project.insertDeviceGroup(self, index, deviceGroup)
+        super(GuiProject, self).insertDeviceGroup(index, deviceGroup)
         self.signalDeviceGroupInserted.emit(index, deviceGroup)
         self.setupDeviceGroupToProject(deviceGroup)
 
@@ -434,7 +434,7 @@ class GuiProject(Project, QObject):
         """
         Insert \scene at given \index and update project model.
         """
-        Project.insertScene(self, index, scene)
+        super(GuiProject, self).insertScene(index, scene)
         self.signalSceneInserted.emit(index, scene)
 
 
@@ -453,7 +453,7 @@ class GuiProject(Project, QObject):
 
 
     def addConfiguration(self, deviceId, configuration):
-        Project.addConfiguration(self, deviceId, configuration)
+        super(GuiProject, self).addConfiguration(deviceId, configuration)
         self.signalConfigurationAdded.emit(deviceId, configuration)
         self.setModified(True)
 
@@ -465,7 +465,7 @@ class GuiProject(Project, QObject):
 
 
     def addMonitor(self, monitor):
-        Project.addMonitor(self, monitor)
+        super(GuiProject, self).addMonitor(monitor)
         self.signalMonitorAdded.emit(monitor)
         self.setModified(True)
 
@@ -473,7 +473,7 @@ class GuiProject(Project, QObject):
     def addResource(self, category, data):
         #self.signalResourceAdded.emit(category, data)
         self.setModified(True)
-        return Project.addResource(self, category, data)
+        return super(GuiProject, self).addResource(category, data)
 
 
     def remove(self, object):
