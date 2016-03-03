@@ -6,7 +6,7 @@ DIST=dist/$OS
 if [ "$OS" = "Darwin" ]; then
     PYTHON=/opt/local/bin/python
     KARABO=$($PYTHON -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$1")
-    PIP=$HOME/Library/Python/3.4/bin/pip
+    PIP=/opt/local/bin/pip
     PIP_EXTRA_ARGS="--root $KARABO/extern/"
 else
     KARABO=$(readlink -f "$1")
