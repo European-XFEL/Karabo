@@ -2,10 +2,12 @@ from enum import Enum
 from itertools import product
 from unittest import TestCase, main
 
+import numpy
+
 from karabo.api2.enums import Unit, MetricPrefix
 from karabo.api2.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
-    VectorStringValue)
+    VectorStringValue, wrap)
 
 
 class Tests(TestCase):
@@ -90,6 +92,42 @@ class Tests(TestCase):
         # check correct dimensionality:
         eV + QuantityValue("1 J")
         kat / mps + QuantityValue("1 mol / m")
+
+    def test_wrap(self):
+        w = wrap(True)
+        self.assertTrue(w)
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap(5)
+        self.assertEqual(w, 5)
+        self.assertEqual(w.magnitude, 5)
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap(5.5)
+        self.assertEqual(w, 5.5)
+        self.assertEqual(w.magnitude, 5.5)
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap(numpy.arange(10))
+        self.assertEqual(w[3], 3)
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap("hallo")
+        self.assertEqual(w, "hallo")
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap(b"hallo")
+        self.assertEqual(w, b"hallo")
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap([])
+        self.assertEqual(w, [])
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap(["bla"])
+        self.assertEqual(w, ["bla"])
+        self.assertEqual(w.descriptor, None)
+
 
 if __name__ == "__main__":
     main()
