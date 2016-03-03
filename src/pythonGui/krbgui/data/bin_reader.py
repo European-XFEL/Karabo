@@ -6,6 +6,37 @@ from .hash import Hash, Schema
 from .typenums import HashType
 
 
+class _IndexedBuffer(object):
+    """ A simple wrapper for byte buffers to make them look like a file that
+    can be read.
+    """
+    def __init__(self, buffer):
+        self.buffer = buffer
+        self.index = 0
+
+    def read(self, size):
+        start = self.index
+        self.index = end = start + size
+        return self.buffer[start:end]
+
+
+def read_binary_hash(buffer):
+    """ Read a Hash from a byte buffer.
+    """
+    fp = _IndexedBuffer(buffer)
+    return read_hash(fp)
+
+
+def read_binary_schema(buffer):
+    """ Read a Schema from a byte buffer.
+    """
+    fp = _IndexedBuffer(buffer)
+    return read_schema(fp)
+
+
+#######################
+# Reader implementation
+
 def read_array(fp, dtype=None):
     count = read_simple(fp, fmt='I')
     size = count * dtype().itemsize
