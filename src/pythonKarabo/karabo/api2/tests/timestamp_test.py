@@ -21,6 +21,15 @@ class Tests(TestCase):
         self.assertEqual(t.time, 1234000000000000005678)
         self.assertEqual(t.tid, 22)
 
+    def test_compare(self):
+        t1 = Timestamp()
+        t2 = Timestamp()
+        t3 = Timestamp(t2)
+
+        self.assertLess(t1, t2)
+        self.assertEqual(t2, t3)
+        self.assertGreater(t2, t1)
+
 
 if __name__ == "__main__":
     main()
