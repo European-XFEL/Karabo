@@ -1254,10 +1254,13 @@ class XMLParser(object):
 
 
     def factory(self, tag, attrs):
-        if attrs["KRB_Type"] == "HASH":
+        krb_type = attrs.get("KRB_Type", "")
+        if krb_type == "HASH":
             return HashElement(tag, attrs)
-        elif attrs["KRB_Type"] == "VECTOR_HASH":
+        elif krb_type == "VECTOR_HASH":
             return ListElement(tag, attrs)
+        elif tag == "KRB_Item":
+            return HashElement("", attrs)
         else:
             self.closelast()
             self.last = SimpleElement(tag, attrs)
