@@ -45,7 +45,7 @@ __all__ = ["EditableTableElement"]
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
 from karabo.api_2 import Hash, Type, VectorHash
-import karabo_gui.icons
+import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
 
 import schema
@@ -106,7 +106,7 @@ class TableModel(QAbstractTableModel):
             columnKey = self.columnHash.getKeys()[idx.column()]
             
             value = None
-            if self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing") and self.role == Qt.EditRole:
+            if self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing") and role == Qt.EditRole:
                 value = "="+self.cdata[idx.row()].getAttribute(columnKey, "isAliasing")
             else:
                 value = row[columnKey]
@@ -116,8 +116,8 @@ class TableModel(QAbstractTableModel):
         
         if role == Qt.DecorationRole:
             columnKey = self.columnHash.getKeys()[idx.column()]
-            if (self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing") and 
-                    self.role == Qt.DisplayRole):
+            if (self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing")): #and 
+                    #self.role == Qt.DisplayRole):
                         
                 monitoredDeviceId = (self.cdata[idx.row()]
                     .getAttribute(columnKey, "isAliasing").split(".")[0])
@@ -174,8 +174,9 @@ class TableModel(QAbstractTableModel):
             for k,v,a in self.cdata[row].iterall():
                 item[k] = v
                 for aa in a:
-                    if aa != "isAliasing":
-                        item.setAttribute(k, self.cdata[row].getAttribute(k, aa))
+                    
+                    if aa != "isAliasing" or k != cKey:
+                        item.setAttribute(k, aa, self.cdata[row].getAttribute(k, aa))
             self.cdata[row] = item
             
             self.connectedMonitors[resp].remove((row,col))
@@ -201,6 +202,8 @@ class TableModel(QAbstractTableModel):
             if role == Qt.DisplayRole:
                 
                 box.signalUpdateComponent.connect(self.monitorChanged)
+        elif "{}.{}".format(row,col) in self.connectedMonitorsByCell:
+            return box.value
         else:
             self.connectedMonitors[resp].append((row,col))
 
@@ -213,6 +216,8 @@ class TableModel(QAbstractTableModel):
         
         if not idx.isValid():
             return False
+        
+       
         
         if role == Qt.CheckStateRole:
             
@@ -254,15 +259,14 @@ class TableModel(QAbstractTableModel):
                 elif fromValueChanged and isAliasing != None:
                     value = self._addMonitor(row, col, isAliasing, role)
                     
-            elif role == Qt.EditRole and not fromValueChanged:
-                 #remove monitor if one exists
-                self._removeMonitor(row, col, role)
+            #elif role == Qt.EditRole and not fromValueChanged:
+                #remove monitor if one exists
+            #    self._removeMonitor(row, col, role)
             
-            #initiate monitors if displaying
-            if role == Qt.DisplayRole:
                 
-                if isAliasing != None:
-                    value = self._addMonitor(row, col, isAliasing, role)
+            if isAliasing != None:
+               
+                value = self._addMonitor(row, col, isAliasing, role)
                 
                     
             #now display value
@@ -457,7 +461,7 @@ class ComboBoxDelegate(QItemDelegate):
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
         selection = index.model().data(index, Qt.DisplayRole)
-        
+        print(selection)
         editor.setCurrentIndex(self.options.index(selection))
         editor.blockSignals(False)
 
@@ -466,6 +470,7 @@ class ComboBoxDelegate(QItemDelegate):
         self.commitData.emit(self.sender())
         
     def setModelData(self, editor, model, index):
+        print(editor.currentIndex())
         model.setData(index, self.options[editor.currentIndex()], Qt.EditRole)
         
         
@@ -601,6 +606,8 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             self.leftTableHeader.setContextMenuPolicy(Qt.CustomContextMenu)
             self.leftTableHeader.customContextMenuRequested.connect(self.headerPopUp)
         
+        
+        
         #add combo delegates where needed
         if self.role == Qt.EditRole:
             cHash = self.columnSchema.hash
@@ -613,7 +620,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                     self.widget.setItemDelegateForColumn(col, delegate)
                     self.colsWidthCombos.append(col)
         
-        self.tableModel.insertRows(0, 1, QModelIndex())
+        
         self.updateComboBoxes()
         
 
