@@ -40,6 +40,9 @@ class NodeType(IntEnum):
     ChoiceOfNodes = 2
     ListOfNodes = 3
 
+    def __str__(self):
+        return str(self.value)
+
 
 class MetricPrefix(Enum):
     """ This are all the defined prefixes in the SI system """
