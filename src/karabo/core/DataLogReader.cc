@@ -675,7 +675,13 @@ namespace karabo {
                     break;
                 }
 
-                if (from > epochRight) continue;
+                if (from > epochRight) {
+                    if (fnum == tonum) {
+                        // last time stamp of last file larger than out 'from' => give up!
+                        return result; // sum of result.nrecList is 0
+                    }
+                    continue;
+                }
 
                 // epochLeft < from < epochRight
                 result.fromFileNumber = fnum;
