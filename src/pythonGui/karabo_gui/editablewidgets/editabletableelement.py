@@ -5,17 +5,37 @@
 #############################################################################
 
 
-"""This module contains a class which represents a widget plugin for attributes
-   and is created by the factory class EditableWidget.
-   
-   Each plugin needs to implement the following interface:
-   
-   def getCategoryAliasClassName():
-       pass
-   
-    class Maker:
-        def make(self, **params):
-            return Attribute*(**params)
+"""
+This module contains a class which represents a widget plugin for tables and 
+is created as a composition of EditableWidget and DisplayWidget. Rendering in 
+read-only mode is controlled via the set readOnly method.
+
+The element is applicable for VECTOR_HASH data types, which have a "rowSchema" 
+attribute. The rowSchema is a Hash (schema.parameterHash to be precise), which
+defines the column layout, i.e. column count, column data types and column headers.
+
+In case the rowSchema contains a "displayedName" field this is used as the 
+column header, otherwise the field's key is used.
+
+For string fields with options supplied the cell is rendered as a drop down menu.
+Boolean fields are rendered as check boxes.
+
+Additional manipulation functionality includes, adding, deleting and duplicating
+rows (the latter require a cell or row to be selected).
+
+A right-click will display the cells data type both in Display and Edit mode. In
+edit mode additionally a pop-up menue is available which allows selection of
+device properties from instanciated devices. In this case the cell will "mirror"
+the selected propertiy and the field in the underlying Hash of this row will have 
+an "isAliasing=PARAM_PATH" added. This should be evaluated on device side whenever
+the current value of the parameter is needed.
+
+The Table widget supports drag and drop of deviceId's from the navigation and 
+project panel. Dropping on a string cell will replace the string with the deviceId.
+Dropping on a non-string cell or on an empty region will add a row in which the
+first string-type column encountered is pre-filled with the deviceID.
+
+
 """
 
 __all__ = ["EditableTableElement"]
