@@ -308,8 +308,6 @@ class Type(Descriptor, Registry):
 
     @classmethod
     def toString(cls, data):
-        if isinstance(data, Enum):
-            return str(data.value)
         return str(data)
 
     def asHash(self, data):
