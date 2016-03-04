@@ -229,8 +229,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "To (UTC):   " << to.toIso8601Ext();
 
                 p.startPeriod("findingNearestIndex");
-                DataLoggerIndex idxFrom = findNearestLoggerIndex(deviceId, from);
-                DataLoggerIndex idxTo = findNearestLoggerIndex(deviceId, to);
+                DataLoggerIndex idxFrom = findNearestLoggerIndex(deviceId, from, true); // before
+                DataLoggerIndex idxTo = findNearestLoggerIndex(deviceId, to, false); // after
                 p.stopPeriod("findingNearestIndex");
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "From - Event: \"" << idxFrom.m_event << "\", epoch: " << idxFrom.m_epoch.toIso8601Ext()
@@ -533,8 +533,8 @@ namespace karabo {
             return entry;
         }
 
-
-        DataLoggerIndex DataLogReader::findNearestLoggerIndex(const std::string& deviceId, const karabo::util::Epochstamp& target) {
+        DataLoggerIndex DataLogReader::findNearestLoggerIndex(const std::string& deviceId,
+                const karabo::util::Epochstamp& target, const bool before) {
             string timestampAsIso8061;
             string timestampAsDouble;
             string event;
@@ -545,6 +545,7 @@ namespace karabo {
             if (!bf::exists(bf::path(contentpath))) return nearest;
             ifstream contentstream(contentpath.c_str());
 
+            bool gotAfter = false;
             while (contentstream >> event >> timestampAsIso8061 >> timestampAsDouble) {
                 // read the rest of the line (upto '\n')
                 string line;
@@ -554,8 +555,16 @@ namespace karabo {
                     return nearest;
                 }
                 const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
-                if (epochstamp <= target || nearest.m_fileindex == -1) {
-                    //in case of time point before target time or there is no record before target time point, hence, use this one
+
+                if (epochstamp <= target || nearest.m_fileindex == -1 || (!before && !gotAfter)) {
+                    // We are here since
+                    // 1) target time is larger than current timestamp
+                    // 2) or we did not yet have any result
+                    // 3) or we search the first line with a timestamp larger than target, but did not yet find it
+                    if (!(epochstamp <= target || nearest.m_fileindex == -1)) {
+                        // We have case 3 - and will get what we want now.
+                        gotAfter = true;
+                    }
                     nearest.m_event = event;
                     nearest.m_epoch = epochstamp;
                     stringstream ss(line);
@@ -577,9 +586,8 @@ namespace karabo {
                     }
                     ss >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
                 }
-                // Stop loop if greater than target time point
-                if (epochstamp > target)
-                    break;
+                // Stop loop if greater than target time point or we search the first after the target and got it.
+                if (epochstamp > target && (before || gotAfter)) break;
             }
             contentstream.close();
             return nearest;
