@@ -297,7 +297,7 @@ class Type(Descriptor, Registry):
                 s += c.capitalize()
                 lastlower = c.islower()
             cls._hashname = s.rstrip('_')
-            cls.fromname[cls._hashname] = cls
+            cls.fromname[cls.hashname()] = cls
         if 'numpy' in dict:
             cls.strs[cls.numpy().dtype.str] = cls
 
@@ -779,6 +779,10 @@ class SchemaHashType(HashType):
     def fromstring(cls, s):
         name, xml = s.split(":", 1)
         return Schema(name, hash=Hash.decode(xml, "XML"))
+
+    @classmethod
+    def hashname(cls):
+        return 'SCHEMA'
 
 
 class Schema(Special):
