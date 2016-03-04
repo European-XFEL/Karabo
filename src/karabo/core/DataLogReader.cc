@@ -614,7 +614,6 @@ namespace karabo {
             MetaSearchResult result;
             size_t endnum = getFileIndex(deviceId);
 
-            result.fromFileNumber = startnum;
             result.toFileNumber = tonum;
             result.nrecList.clear();
 
@@ -720,7 +719,7 @@ namespace karabo {
                 result.nrecList.push_back(nrecs - result.fromRecord);
 
             // ... check next files for 'to' timestamp
-            for (; fnum <= endnum; fnum++) {
+            for (; fnum <= tonum; fnum++) {
                 try {
                     if (f && f.is_open()) f.close();
                 } catch(const std::exception& e) {
@@ -728,16 +727,19 @@ namespace karabo {
                 }
 
                 const std::string fname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + path + "-index.bin";
+                // nrecList musty have one entry per file, put 0 and overwrite once we know better
+                result.nrecList.push_back(0);
                 bs::error_code ec;
                 const size_t filesize = bf::file_size(fname, ec);
                 if (ec) continue;
                 nrecs = filesize / sizeof (MetaData::Record);
                 assert(filesize % sizeof (MetaData::Record) == 0);
                 if (fnum < tonum) {
-                    result.nrecList.push_back(nrecs);
+                    result.nrecList.back() = nrecs;
                     continue;
                 }
-
+                // Now we know: It is the last file! Find toRecord and number of points until it
+                result.toFileNumber = fnum;
                 try {
                     f.open(fname.c_str(), ios::in | ios::binary);
                     if (!f || !f.is_open()) continue;
@@ -750,9 +752,8 @@ namespace karabo {
                 const size_t recLeft = 0;
                 if (ROUND1MS(to) <= ROUND1MS(epochLeft)) {
                     // If '<', we are off by one and should go back to last record of previous file instead!
-                    result.toFileNumber = fnum;
                     result.toRecord = 0;
-                    result.nrecList.push_back(1);
+                    result.nrecList.back() = 1;
                     break;
                 }
 
@@ -765,22 +766,15 @@ namespace karabo {
                 }
                 const double epochRight = lastEpochInFile = record.epochstamp;
                 const size_t recRight = nrecs - 1;
-                if (ROUND1MS(to) == ROUND1MS(epochRight)) {
-                    result.toFileNumber = fnum;
+                if (ROUND1MS(to) >= ROUND1MS(epochRight)) {
                     result.toRecord = recRight;
-                    result.nrecList.push_back(nrecs);
+                    result.nrecList.back() = nrecs;
                     break;
-                }
-                if (to > epochRight) {
-                    // next file
-                    result.nrecList.push_back(nrecs);
-                    continue;
                 }
 
                 // epochLeft < to < epochRight
-                result.toFileNumber = fnum;
                 result.toRecord = findPositionOfEpochstamp(f, to, recLeft, recRight, true);
-                result.nrecList.push_back(result.toRecord + 1);
+                result.nrecList.back() = result.toRecord + 1;
                 break;
             }
             
