@@ -592,7 +592,11 @@ class ComplexFloat(Number, Type):
 
     @classmethod
     def fromstring(cls, s):
-        return cls.numpy(complex(s))
+        return complex(*[float(n) for n in s[1:-1].split(',')])
+
+    @classmethod
+    def toString(cls, data):
+        return "({},{})".format(data.real, data.imag)
 
     @classmethod
     def write(cls, file, data):
@@ -611,7 +615,11 @@ class ComplexDouble(Number, Type):
 
     @classmethod
     def fromstring(cls, s):
-        return cls.numpy(complex(s))
+        return complex(*[float(n) for n in s[1:-1].split(',')])
+
+    @classmethod
+    def toString(cls, data):
+        return "({},{})".format(data.real, data.imag)
 
     @classmethod
     def write(cls, file, data):
