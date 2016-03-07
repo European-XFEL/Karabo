@@ -151,7 +151,7 @@ class Hash_TestCase(unittest.TestCase):
         h["vector", "complex"] = complex(1.0, 2.0)
         sh = Hash()
         sh["a"] = Hash()
-        sh["a", "nodeType"] = NodeType.Leaf
+        sh["a", "nodeType"] = NodeType.Leaf.value
         h["schema"] = Schema("blub", hash=sh)
         return h
 
@@ -199,7 +199,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(h["schema"].name, "blub")
         sh = h["schema"].hash
         self.assertFalse(sh["a"].keys())
-        self.assertEqual(sh["a", "nodeType"], NodeType.Leaf)
+        self.assertEqual(sh["a", "nodeType"], NodeType.Leaf.value)
 
 
     def test_xml(self):
