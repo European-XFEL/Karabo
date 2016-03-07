@@ -616,7 +616,6 @@ namespace karabo {
             const double from = efrom.toTimestamp();
             const double to = eto.toTimestamp();
 
-
             // Find record number of "from" in index file ..
             size_t fnum = startnum;
             for (; fnum <= tonum; fnum++) {
@@ -660,35 +659,48 @@ namespace karabo {
             for (; fnum <= tonum; fnum++) {
 
                 const std::string fname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + path + "-index.bin";
-                // nrecList musty have one entry per file, put 0 and overwrite once we know better
+                // nrecList must have one entry per file, put 0 and overwrite once we know better
                 result.nrecList.push_back(0);
-                bs::error_code ec;
-                const size_t filesize = bf::file_size(fname, ec);
-                if (ec) continue;
+                result.toFileNumber = fnum; // best known value so far...
+
+                ifstream f;
+                size_t filesize = 0;
+                try {
+                    f.open(fname.c_str(), ios::in | ios::binary | ios::ate);
+                    if (!f || !f.is_open()) continue;
+                    filesize = f.tellg();
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
+                }
                 const size_t nrecs = filesize / sizeof (MetaData::Record);
                 assert(filesize % sizeof (MetaData::Record) == 0);
-                if (fnum < tonum) {
-                    result.nrecList.back() = nrecs;
-                    continue;
-                }
-                // Now we know: It is the last file! Find toRecord and number of points until it
-                result.toFileNumber = fnum;
-                ifstream f;
+
                 try {
-                    f.open(fname.c_str(), ios::in | ios::binary);
-                    if (!f || !f.is_open()) continue;
+                    // read last record
+                    f.seekg(filesize - sizeof (MetaData::Record), ios::beg);
+                    f.read((char*) &record, sizeof (MetaData::Record));
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
                 }
 
+                if (ROUND1MS(from) > ROUND1MS(record.epochstamp)) {
+                    // all the file is in range
+                    result.nrecList.back() = nrecs;
+                    continue;
+                }
+
+                // Now we know: It is the last file! Find toRecord and number of points until it
                 result.toRecord = findPositionOfEpochstamp(f, to, 0, nrecs - 1, true);
                 result.nrecList.back() = result.toRecord + 1;
                 break;
             }
 
             // Subtract records before fromRecords from first entry in list of number of records.
-            result.nrecList[0] -= result.fromRecord;
-            if (result.nrecList[0] < 0) result.nrecList[0] = 0; //case of trouble with bf::file_size
+            if (result.nrecList[0] >= result.fromRecord) { // These are all size_t, i.e. unsigned!
+                result.nrecList[0] -= result.fromRecord;
+            } else {
+                result.nrecList[0] = 0; //case of trouble with filesize
+            }
 
             return result;
         }
