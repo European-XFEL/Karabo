@@ -341,6 +341,9 @@ class DisplayTrendline(DisplayWidget):
 
         self.lasttime = timestamp.toTimestamp()
         self.wasVisible = True
+        self.updateLater()
+
+    def deferredUpdate(self):
         self.plot.replot()
 
     def scaleChanged(self):
