@@ -44,9 +44,11 @@ __all__ = ["EditableTableElement"]
 
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
-from karabo.api_2 import Hash, Type, VectorHash
+from karabo.api_2 import Hash, Type, VectorHash, SchemaHashType
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
+
+from karabo_gui.const import ns_karabo
 
 import schema
 import manager
@@ -62,8 +64,9 @@ import copy
 class TableModel(QAbstractTableModel):
     def __init__(self, columnSchema, editingFinished, parent=None, *args):
         super(QAbstractTableModel,self).__init__(parent, *args)
-        self.columnHash = columnSchema.hash
+        
         self.columnSchema = columnSchema
+        self.columnHash = self.columnSchema.hash if self.columnSchema is not None else Hash()
         self.cdata = []
         self.connectedMonitors = {}
         self.connectedMonitorsByCell = {}
@@ -93,7 +96,7 @@ class TableModel(QAbstractTableModel):
             return None
             #return QVariant()
             
-        if role == Qt.CheckStateRole:
+        if role == Qt.CheckStateRole and self.role == Qt.EditRole:
             row = self.cdata[idx.row()]
             columnKey = self.columnHash.getKeys()[idx.column()]
             value = row[columnKey]
@@ -157,7 +160,7 @@ class TableModel(QAbstractTableModel):
         
         cKey = self.columnHash.getKeys()[idx.column()]
         valueType = self.columnSchema.getValueType(cKey)() 
-        if isinstance(valueType, schema.Bool):
+        if isinstance(valueType, schema.Bool) and self.role == Qt.EditRole:
            
             return Qt.ItemIsUserCheckable | Qt.ItemIsSelectable | Qt.ItemIsEnabled
         
@@ -347,6 +350,8 @@ class TableModel(QAbstractTableModel):
         self.editingFinished(self.cdata)
         return True
     
+    
+    
     def duplicateRow(self, pos):
         
         self.insertRows(pos+1, 1, QModelIndex(), self.cdata[pos])
@@ -461,7 +466,7 @@ class ComboBoxDelegate(QItemDelegate):
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
         selection = index.model().data(index, Qt.DisplayRole)
-        print(selection)
+        
         editor.setCurrentIndex(self.options.index(selection))
         editor.blockSignals(False)
 
@@ -470,7 +475,7 @@ class ComboBoxDelegate(QItemDelegate):
         self.commitData.emit(self.sender())
         
     def setModelData(self, editor, model, index):
-        print(editor.currentIndex())
+        
         model.setData(index, self.options[editor.currentIndex()], Qt.EditRole)
         
         
@@ -479,7 +484,7 @@ class KaraboTableView(QTableView):
         super(KaraboTableView, self).__init__(*args)
         
         self.columnSchema  = columnSchema
-        self.cHash = self.columnSchema.hash
+        self.cHash = self.columnSchema.hash if self.columnSchema is not None else Hash()
         self.cKeys = self.cHash.getKeys()
         self.firstStringColumn = None
         #self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
@@ -577,23 +582,31 @@ class EditableTableElement(EditableWidget, DisplayWidget):
     def __init__(self, box, parent, role = Qt.EditRole):
         super(EditableTableElement, self).__init__(box)
         
-        self.role = role
+        self.role = role 
+        self.columnSchema = None
+        if hasattr(box.descriptor, "rowSchema"):
+            self.columnSchema = getattr(box.descriptor, "rowSchema")
+            self.columnHash = self.columnSchema.hash
+        else:
+            self.columnHash = Hash()
         
-        self.columnSchema = getattr(box.descriptor, "rowSchema")
-        self.columnHash = self.columnSchema.hash
+        
         self.tableModel = TableModel(self.columnSchema, self.onEditingFinished)
-        self.tableModel.setRole(role)
+        self.tableModel.setRole(self.role)
         
         self.widget = KaraboTableView(self.columnSchema)
         self.widget.setModel(self.tableModel)
-        self.widget.setSelectionBehavior(QAbstractItemView.SelectItems | QAbstractItemView.SelectRows | QAbstractItemView.SelectColumns)
+        self.widget.setSelectionBehavior(QAbstractItemView.SelectItems | \
+                QAbstractItemView.SelectRows | QAbstractItemView.SelectColumns)
         self.widget.horizontalHeader().setStretchLastSection(True)
         self.widget.verticalHeader()
-        if role == Qt.EditRole:
+        
+        if self.role == Qt.EditRole:
             self.widget.setEditTriggers(QAbstractItemView.SelectedClicked)
             self.widget.setAcceptDrops(True)
         else:
             self.widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        
         self.widget.setSelectionMode(QAbstractItemView.SingleSelection)
         
         #add context menu to cells
@@ -602,44 +615,58 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         
         #add context menu to headers to add and remove rows
         self.leftTableHeader = self.widget.verticalHeader()
-        if role == Qt.EditRole:
-            self.leftTableHeader.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.leftTableHeader.customContextMenuRequested.connect(self.headerPopUp)
-        
-        
-        
-        #add combo delegates where needed
+        self.colsWithCombos = []
         if self.role == Qt.EditRole:
+            self.leftTableHeader.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.leftTableHeader.customContextMenuRequested.connect(self._headerPopUp)
+ 
+            self._setComboBoxes(False)
+       
+        
+
+   
+        
+        
+  
+
+    def _setComboBoxes(self, ro):
+        if self.columnSchema is None:
+            return 
+        
+        if ro:
+            
+            #remove any combo delegate
             cHash = self.columnSchema.hash
             cKeys = self.columnHash.getKeys()
-            self.colsWidthCombos = []
+            self.colsWithCombos = []
             for col, cKey in enumerate(cKeys):
-                valueType = self.columnSchema.getValueType(cKey)()
+                
+                if cHash.hasAttribute(cKey, "options"):
+                    delegate = QStyledItemDelegate()
+                    self.widget.setItemDelegateForColumn(col, delegate)
+                    
+        else:
+            
+            self.leftTableHeader.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.leftTableHeader.customContextMenuRequested.connect(self._headerPopUp)
+ 
+            cHash = self.columnSchema.hash
+            cKeys = self.columnHash.getKeys()
+            self.colsWithCombos = []
+            for col, cKey in enumerate(cKeys):
+                
                 if cHash.hasAttribute(cKey, "options"):
                     delegate = ComboBoxDelegate(cHash.getAttribute(cKey, "options"))
                     self.widget.setItemDelegateForColumn(col, delegate)
-                    self.colsWidthCombos.append(col)
-        
-        
-        self.updateComboBoxes()
-        
-
-
-    @classmethod
-    def updateState(self):
-        try:
-            isAccessible = self.boxes[0].isAccessible()
-            if not isAccessible:
-                self.setReadOnly(True)
-            else:
-                self.setReadOnly(False)
-        except:
-            pass
-
-    def updateComboBoxes(self):
+                    self.colsWithCombos.append(col)
+            
+                    
+            self._updateComboBoxes()
+                    
+    def _updateComboBoxes(self):
         if self.role == Qt.EditRole:
             for row in range(0, self.tableModel.rowCount(None)):
-                for col in self.colsWidthCombos:
+                for col in self.colsWithCombos:
                     self.widget.openPersistentEditor(self.tableModel.index(row, col))
             
     @classmethod
@@ -653,6 +680,28 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         return ret
 
 
+
+    def save(self, element):
+        element.set(ns_karabo + "columnSchema", SchemaHashType.toString(self.columnSchema))
+        
+
+    def load(self, element):
+        try:
+            if self.columnSchema is None:
+                
+                self.columnSchema = SchemaHashType.fromstring(element.get(ns_karabo + "columnSchema"))
+                self.columnHash = self.columnSchema.hash
+                self.tableModel = TableModel(self.columnSchema, self.onEditingFinished)
+                self.tableModel.setRole(self.role)
+                self.widget.setModel(self.tableModel)
+                self._setComboBoxes(self.role == Qt.DisplayRole)
+                
+        except AttributeError:
+            print("Loading column schema failed. Maybe this is an older project"+ \
+                  "file. Try saving the project and reloading.")
+            pass
+            
+        
     def valueChanged(self, box, value, timestamp=None):
       
         if value is None:
@@ -667,6 +716,8 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         if self.tableModel.rowCount(None) < len(value):
             self.tableModel.insertRows(self.tableModel.rowCount(None),
                 len(value)- self.tableModel.rowCount(None), QModelIndex())
+                
+      
             
         for r, row in enumerate(value):
             ckeys = row.getKeys()
@@ -677,17 +728,18 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                     isAliasing = row.getAttribute(col, "isAliasing")
                 self.tableModel.setData(idx, row[col], self.role, isAliasing,
                     fromValueChanged = True)
-        #comboboxes:
-        self.updateComboBoxes()
+       
+        self._updateComboBoxes()
+      
 
 
     def onEditingFinished(self, value):
-        self.updateComboBoxes()
+        self._updateComboBoxes()
         EditableWidget.onEditingFinished(self, value)
         
         
         
-    def headerPopUp(self, pos):
+    def _headerPopUp(self, pos):
         idx = None
         for i in self.widget.selectionModel().selection().indexes():
             idx = i
@@ -753,7 +805,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         col = idx.column()
     
         setDefaultAction = None
-        #setDefaultAction.setEnabled(False)
+       
         cKey = None
         if col >= 0 and col < len(self.columnHash):
             cKey = self.columnHash.getKeys()[col]
@@ -794,26 +846,11 @@ class EditableTableElement(EditableWidget, DisplayWidget):
     def setReadOnly(self, ro):
         if ro:
             self.role = Qt.DisplayRole
-            #remove any combo delegate
-            cHash = self.columnSchema.hash
-            cKeys = self.columnHash.getKeys()
-            self.colsWidthCombos = []
-            for col, cKey in enumerate(cKeys):
-                valueType = self.columnSchema.getValueType(cKey)()
-                if cHash.hasAttribute(cKey, "options"):
-                    delegate = QStyledItemDelegate()
-                    self.widget.setItemDelegateForColumn(col, delegate)
-                    
         else:
             self.role = Qt.EditRole
-            #remove any combo delegate
-            cHash = self.columnSchema.hash
-            cKeys = self.columnHash.getKeys()
-            self.colsWidthCombos = []
-            for col, cKey in enumerate(cKeys):
-                valueType = self.columnSchema.getValueType(cKey)()
-                if cHash.hasAttribute(cKey, "options"):
-                    delegate = ComboBoxDelegate(cHash.getAttribute(cKey, "options"))
-                    self.widget.setItemDelegateForColumn(col, delegate)
-                    self.colsWidthCombos.append(col)
+        self.tableModel.setRole(self.role)
+        self._setComboBoxes(ro)
+        
+        
+        
             
