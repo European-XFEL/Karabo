@@ -627,9 +627,6 @@ namespace karabo {
 
             ifstream f;
             size_t fnum = startnum;
-            double firstEpochInFile = 0.0;
-            double lastEpochInFile = 0.0;
-            size_t nrecs = 0;
 
             // Find record number of "from" in index file ..
             for (; fnum <= tonum; fnum++) {
@@ -648,24 +645,8 @@ namespace karabo {
                 } catch(const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
                 }
-                nrecs = filesize / sizeof (MetaData::Record);
+                const size_t nrecs = filesize / sizeof (MetaData::Record);
                 assert(filesize % sizeof (MetaData::Record) == 0);
-
-                try {
-                    // read first record
-                    f.seekg(0, ios::beg);
-                    f.read((char*) &record, sizeof (MetaData::Record));
-                } catch(const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
-                }
-                const double epochLeft = firstEpochInFile = record.epochstamp;
-                const size_t recLeft = 0;
-
-                if (ROUND1MS(from) <= ROUND1MS(epochLeft)) {
-                    result.fromFileNumber = fnum;
-                    result.fromRecord = recLeft;
-                    break;
-                }
 
                 try {
                     // read last record
@@ -674,15 +655,8 @@ namespace karabo {
                 } catch(const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
                 }
-                const double epochRight = lastEpochInFile = record.epochstamp;
-                const size_t recRight = nrecs - 1;
-                if (ROUND1MS(from) == ROUND1MS(epochRight)) {
-                    result.fromFileNumber = fnum;
-                    result.fromRecord = recRight;
-                    break;
-                }
-
-                if (from > epochRight) {
+                if (ROUND1MS(from) > ROUND1MS(record.epochstamp)) {
+                    // This file is too far in the past - try next if there is one.
                     if (fnum == tonum) {
                         // last time stamp of last file larger than out 'from' => give up!
                         return result; // sum of result.nrecList is 0
@@ -690,35 +664,13 @@ namespace karabo {
                     continue;
                 }
 
-                // epochLeft < from < epochRight
+                // 'from' is in this file - look for the exact record and stop loop
                 result.fromFileNumber = fnum;
-                result.fromRecord = findPositionOfEpochstamp(f, from, recLeft, recRight, false);
+                result.fromRecord = findPositionOfEpochstamp(f, from, 0, nrecs - 1, false);
                 break;
             }
 
-            // If we found 'from' in last file, look for 'to' in same file
-            if (fnum == tonum && ROUND1MS(to) <= ROUND1MS(lastEpochInFile)) {
-                const size_t recLeft = result.fromRecord;
-                const size_t recRight = nrecs - 1;
-                result.toFileNumber = fnum;
-                if (ROUND1MS(to) == ROUND1MS(lastEpochInFile))
-                    result.toRecord = nrecs - 1;
-                else
-                    result.toRecord = findPositionOfEpochstamp(f, to, recLeft, recRight, true);
-                result.nrecList.push_back(result.toRecord + 1 - result.fromRecord);
-                try {
-                    if (f && f.is_open()) f.close();
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
-                }
-                return result;
-            }
-
-            fnum++;
-            if ((nrecs - result.fromRecord) > 0)
-                result.nrecList.push_back(nrecs - result.fromRecord);
-
-            // ... check next files for 'to' timestamp
+            // ... check current and next files for 'to' timestamp
             for (; fnum <= tonum; fnum++) {
                 try {
                     if (f && f.is_open()) f.close();
@@ -732,7 +684,7 @@ namespace karabo {
                 bs::error_code ec;
                 const size_t filesize = bf::file_size(fname, ec);
                 if (ec) continue;
-                nrecs = filesize / sizeof (MetaData::Record);
+                const size_t nrecs = filesize / sizeof (MetaData::Record);
                 assert(filesize % sizeof (MetaData::Record) == 0);
                 if (fnum < tonum) {
                     result.nrecList.back() = nrecs;
@@ -743,37 +695,13 @@ namespace karabo {
                 try {
                     f.open(fname.c_str(), ios::in | ios::binary);
                     if (!f || !f.is_open()) continue;
-                    // read first record
-                    f.read((char*) &record, sizeof (MetaData::Record));
-                } catch(const std::exception& e) {
+                    //                    // read first record
+                    //                    f.read((char*) &record, sizeof (MetaData::Record));
+                } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
                 }
-                const double epochLeft = firstEpochInFile = record.epochstamp;
-                const size_t recLeft = 0;
-                if (ROUND1MS(to) <= ROUND1MS(epochLeft)) {
-                    // If '<', we are off by one and should go back to last record of previous file instead!
-                    result.toRecord = 0;
-                    result.nrecList.back() = 1;
-                    break;
-                }
 
-                try {
-                    // read last record
-                    f.seekg(filesize - sizeof (MetaData::Record), ios::beg);
-                    f.read((char*) &record, sizeof (MetaData::Record));
-                } catch(const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
-                }
-                const double epochRight = lastEpochInFile = record.epochstamp;
-                const size_t recRight = nrecs - 1;
-                if (ROUND1MS(to) >= ROUND1MS(epochRight)) {
-                    result.toRecord = recRight;
-                    result.nrecList.back() = nrecs;
-                    break;
-                }
-
-                // epochLeft < to < epochRight
-                result.toRecord = findPositionOfEpochstamp(f, to, recLeft, recRight, true);
+                result.toRecord = findPositionOfEpochstamp(f, to, 0, nrecs - 1, true);
                 result.nrecList.back() = result.toRecord + 1;
                 break;
             }
@@ -783,6 +711,11 @@ namespace karabo {
             } catch(const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
             }
+
+            // Subtract records before fromRecords from first entry in list of number of records.
+            result.nrecList[0] -= result.fromRecord;
+            if (result.nrecList[0] < 0) result.nrecList[0] = 0; //case of trouble with bf::file_size
+
             return result;
         }
 
