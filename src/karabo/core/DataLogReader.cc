@@ -745,17 +745,21 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
             }
             // Loop and find record with best matching timestamp:
-            size_t i = 0;
-            for ( ; i <= (right - left); ++i) {
+            for (size_t i = 0; i <= (right - left); ++i) {
                 const double epoch = records[i].epochstamp;
-                // In case we never reach the return or break below, the input 'right' is wrong!
                 if (ROUND1MS(epoch) == roundedT) {
                     return left + i;
                 } else if (epoch > t) {
-                    break;
+                    if (preferBefore && i != 0) {
+                        return left + i - 1;
+                    } else {
+                        return left + i;
+                    }
                 }
             }
-            return left + i - (preferBefore ? 1 : 0);
+
+            // No epoch in record range matches 't' or is larger than it. Return end of range.
+            return right;
         }
     }
 
