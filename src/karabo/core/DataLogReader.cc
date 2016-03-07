@@ -612,18 +612,12 @@ namespace karabo {
                                                           const karabo::util::Epochstamp& efrom, const karabo::util::Epochstamp& eto) {
             MetaData::Record record;
             MetaSearchResult result;
-            size_t endnum = getFileIndex(deviceId);
 
             result.toFileNumber = tonum;
             result.nrecList.clear();
 
             const double from = efrom.toTimestamp();
             const double to = eto.toTimestamp();
-
-            if (endnum < startnum) {
-              KARABO_LOG_FRAMEWORK_ERROR << deviceId << "." << path << ": " << startnum << " " << tonum << " " << endnum;
-                throw KARABO_PARAMETER_EXCEPTION("start file number greater than end file number.");
-            }
 
             ifstream f;
             size_t fnum = startnum;
