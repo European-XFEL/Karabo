@@ -1,7 +1,6 @@
 from .utils import (create_api1_hash, create_api2_hash, create_refactor_hash,
                     check_hash, check_hash_simple)
-from ..xml_reader import read_xml_hash
-from ..xml_writer import write_xml_hash
+from ..api import read_xml_hash, write_xml_hash
 
 
 def test_xml_roundtrip():
