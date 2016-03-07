@@ -1,7 +1,7 @@
 from nose.tools import raises
 import numpy as np
 
-from ..hash import Hash, Schema
+from ..api import Hash, Schema
 from .utils import create_refactor_hash, check_hash
 
 
