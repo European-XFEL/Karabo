@@ -550,7 +550,7 @@ class  Hash_TestCase(unittest.TestCase):
             self.assertEqual(h.getAttribute("a.b.a.b","attr2"), 43, 'Should return 42')
             
             attrs = h.getAttributes("a.b.a.b")
-            self.assertEqual(attrs.size(), 2)
+            self.assertEqual(attrs.size(), 3)
             self.assertEqual(attrs.get("attr1"), True)
             self.assertEqual(attrs["attr1"], True)
             self.assertEqual(attrs.get("attr2"), 43)
