@@ -718,7 +718,7 @@ namespace karabo {
             MetaData::Record records[128];
             const double roundedT = ROUND1MS(t);
             // Recursively narrow the search until at most 128 records are left.
-            while ((right - left) > 128) {
+            while ((right - left) >= 128) {
                 // divide by 2 and check middle point
                 const size_t recnum = left + (right - left) / 2;
                 try {
