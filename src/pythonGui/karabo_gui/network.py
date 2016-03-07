@@ -204,7 +204,7 @@ class _Network(QObject):
 
     @pyqtSlot()
     def onReadServerData(self):
-        if self.isDataPending():
+        if self.tcpSocket.bytesAvailable() >= self.bytesNeeded:
             try:
                 self.bytesNeeded = self.runner.send(self.tcpSocket.read(
                     self.bytesNeeded))
@@ -215,10 +215,6 @@ class _Network(QObject):
                     raise
         else:
             self.timer.stop()
-
-    def isDataPending(self):
-        return self.tcpSocket.bytesAvailable() >= self.bytesNeeded
-
 
     def processInput(self):
         dataSize, = unpack(b"I", (yield 4))
