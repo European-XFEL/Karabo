@@ -163,11 +163,4 @@ class ElementBuilder(object):
         elif tag == "KRB_Item":
             return HashElement("", attrs)
         else:
-            self._close_last_elem()
-            self._last = XMLElement(tag, attrs)
-            return self._last
-
-    def _close_last_elem(self):
-        # while parsing ElementTree does not set text if the is none...
-        if self._last is not None and self._last.data is None:
-            self._last.text = ""
+            return XMLElement(tag, attrs)
