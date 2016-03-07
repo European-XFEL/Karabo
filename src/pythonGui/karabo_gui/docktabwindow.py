@@ -206,11 +206,26 @@ class DivWidget(QFrame):
         self.acDock.triggered.connect(self.onDock)
         self.acDock.setVisible(False)
 
+        text = "Maximize panel"
+        self.acMaximize = QAction(icons.maximize, "&Maximize", self)
+        self.acMaximize.setToolTip(text)
+        self.acMaximize.setStatusTip(text)
+        self.acMaximize.triggered.connect(self.onMaximize)
+
+        text = "Restore panel"
+        self.acMinimize = QAction(icons.minimize, "&Minimize", self)
+        self.acMinimize.setToolTip(text)
+        self.acMinimize.setStatusTip(text)
+        self.acMinimize.triggered.connect(self.onMinimize)
+        self.acMinimize.setVisible(False)
+
 
     def setupToolBar(self):
         self.toolBar = ToolBar("Standard")
         self.toolBar.addAction(self.acUndock)
         self.toolBar.addAction(self.acDock)
+        self.toolBar.addAction(self.acMaximize)
+        self.toolBar.addAction(self.acMinimize)
 
 
     def addToolBar(self, toolBar):
@@ -231,6 +246,14 @@ class DivWidget(QFrame):
         self.acUndock.setVisible(True)
         self.dockableWidget.onDock()
         self.dockWindow.onDock(self)
+
+    def onMaximize(self):
+        self.acMinimize.setVisible(True)
+        self.acMaximize.setVisible(False)
+
+    def onMinimize(self):
+        self.acMinimize.setVisible(False)
+        self.acMaximize.setVisible(True)
 
     def hasIcon(self):
         return self.icon is not None
