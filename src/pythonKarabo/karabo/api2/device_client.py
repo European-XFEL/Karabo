@@ -409,12 +409,13 @@ def waitUntil(condition):
 def _createProxyDict(hash, prefix):
     dict = {}
     for k, v, a in hash.iterall():
-        if a["nodeType"] == NodeType.Leaf:
+        nodeType = NodeType(a["nodeType"])
+        if nodeType is NodeType.Leaf:
             d = Type.fromname[a["valueType"]]()
             d.key = k
             d.longkey = prefix + k
             dict[k] = d
-        elif a["nodeType"] == NodeType.Node:
+        elif nodeType is NodeType.Node:
             if a.get("displayType") == "Slot":
                 del a["nodeType"]
                 dict[k] = ProxySlot()

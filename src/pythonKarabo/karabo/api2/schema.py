@@ -156,7 +156,7 @@ class Node(Descriptor):
 
     def parameters(self):
         ret = super(Node, self).parameters()
-        ret["nodeType"] = NodeType.Node
+        ret["nodeType"] = NodeType.Node.value
         return ret
 
     def subschema(self):
@@ -187,14 +187,14 @@ class ChoiceOfNodes(Node):
 
     def parameters(self):
         ret = super(ChoiceOfNodes, self).parameters()
-        ret["nodeType"] = NodeType.ChoiceOfNodes
+        ret["nodeType"] = NodeType.ChoiceOfNodes.value
         return ret
 
     def subschema(self):
         h = Hash()
         for k, v in self.cls._subclasses.items():
             h[k] = v.getClassSchema().hash
-            h[k, "nodeType"] = NodeType.Node
+            h[k, "nodeType"] = NodeType.Node.value
         return h
 
     def __set__(self, instance, value):
@@ -217,14 +217,14 @@ class ListOfNodes(Node):
 
     def parameters(self):
         ret = super(ListOfNodes, self).parameters()
-        ret["nodeType"] = NodeType.ListOfNodes
+        ret["nodeType"] = NodeType.ListOfNodes.value
         return ret
 
     def subschema(self):
         h = Hash()
         for k, v in self.cls._subclasses.items():
             h[k] = v.getClassSchema().hash
-            h[k, "nodeType"] = NodeType.Node
+            h[k, "nodeType"] = NodeType.Node.value
         return h
 
     def __set__(self, instance, value):
@@ -260,8 +260,8 @@ class Validator(object):
 
     def r_validate(self, subject, object):
         for k, v, a in subject.iterall():
-            assert 'nodeType' in a
-            if a['nodeType'] == NodeType.ListOfNodes:
+            nodeType = NodeType(a["nodeType"])
+            if nodeType is NodeType.ListOfNodes:
                 if k in object:
                     object[k] = [[Hash(kk, self.r_validate(v[kk], vv))
                                   for kk, vv in vvv.items()][0]
@@ -272,7 +272,7 @@ class Validator(object):
                         dv = dv.split()
                     object[k] = [Hash(vv, self.r_validate(v[vv], Hash()))
                                  for vv in dv]
-            elif a['nodeType'] == NodeType.ChoiceOfNodes:
+            elif nodeType is NodeType.ChoiceOfNodes:
                 if k in object:
                     object[k] = [Hash(kk, self.r_validate(v[kk], vv))
                                  for kk, vv in object[k].items()][0]
@@ -284,7 +284,7 @@ class Validator(object):
                 object[k] = self.r_validate(v, object[k])
             elif self.injectDefaults and 'defaultValue' in a:
                 object[k] = a['defaultValue']
-            elif a['nodeType'] == NodeType.Node:
+            elif nodeType is NodeType.Node:
                 object[k] = self.r_validate(v, Hash())
             else:
                 pass

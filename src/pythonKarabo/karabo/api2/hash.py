@@ -207,7 +207,7 @@ class Slot(Descriptor):
 
     def parameters(self):
         ret = super(Slot, self).parameters()
-        ret["nodeType"] = NodeType.Node
+        ret["nodeType"] = NodeType.Node.value
         ret["displayType"] = "Slot"
         return ret
 
@@ -315,7 +315,7 @@ class Type(Descriptor, Registry):
 
     def parameters(self):
         ret = super(Type, self).parameters()
-        ret["nodeType"] = NodeType.Leaf
+        ret["nodeType"] = NodeType.Leaf.value
         ret["valueType"] = self.hashname()
         return ret
 
@@ -771,7 +771,8 @@ class SchemaHashType(HashType):
     @classmethod
     def write(cls, file, data):
         for p in data.hash.paths():
-            if data.hash[p, "nodeType"] == NodeType.Leaf:
+            nodeType = data.hash[p, "nodeType"]
+            if nodeType is NodeType.Leaf:
                 assert not data.hash[p], "no proper leaf: {}".format(p)
             else:
                 assert isinstance(data.hash[p], Hash), \
