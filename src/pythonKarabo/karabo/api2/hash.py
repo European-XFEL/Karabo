@@ -297,7 +297,7 @@ class Type(Descriptor, Registry):
                 s += c.capitalize()
                 lastlower = c.islower()
             cls._hashname = s.rstrip('_')
-            cls.fromname[cls._hashname] = cls
+            cls.fromname[cls.hashname()] = cls
         if 'numpy' in dict:
             cls.strs[cls.numpy().dtype.str] = cls
 
@@ -592,7 +592,11 @@ class ComplexFloat(Number, Type):
 
     @classmethod
     def fromstring(cls, s):
-        return cls.numpy(complex(s))
+        return complex(*[float(n) for n in s[1:-1].split(',')])
+
+    @classmethod
+    def toString(cls, data):
+        return "({},{})".format(data.real, data.imag)
 
     @classmethod
     def write(cls, file, data):
@@ -611,7 +615,11 @@ class ComplexDouble(Number, Type):
 
     @classmethod
     def fromstring(cls, s):
-        return cls.numpy(complex(s))
+        return complex(*[float(n) for n in s[1:-1].split(',')])
+
+    @classmethod
+    def toString(cls, data):
+        return "({},{})".format(data.real, data.imag)
 
     @classmethod
     def write(cls, file, data):
@@ -779,6 +787,10 @@ class SchemaHashType(HashType):
     def fromstring(cls, s):
         name, xml = s.split(":", 1)
         return Schema(name, hash=Hash.decode(xml, "XML"))
+
+    @classmethod
+    def hashname(cls):
+        return 'SCHEMA'
 
 
 class Schema(Special):
@@ -1254,10 +1266,13 @@ class XMLParser(object):
 
 
     def factory(self, tag, attrs):
-        if attrs["KRB_Type"] == "HASH":
+        krb_type = attrs.get("KRB_Type", "")
+        if krb_type == "HASH":
             return HashElement(tag, attrs)
-        elif attrs["KRB_Type"] == "VECTOR_HASH":
+        elif krb_type == "VECTOR_HASH":
             return ListElement(tag, attrs)
+        elif tag == "KRB_Item":
+            return HashElement("", attrs)
         else:
             self.closelast()
             self.last = SimpleElement(tag, attrs)
