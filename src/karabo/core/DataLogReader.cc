@@ -619,18 +619,13 @@ namespace karabo {
             const double from = efrom.toTimestamp();
             const double to = eto.toTimestamp();
 
-            ifstream f;
             size_t fnum = startnum;
 
             // Find record number of "from" in index file ..
             for (; fnum <= tonum; fnum++) {
-                try {
-                    if (f && f.is_open()) f.close();
-                } catch(const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
-                }
 
                 const std::string fname(get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + path + "-index.bin");
+                ifstream f;
                 size_t filesize = 0;
                 try {
                     f.open(fname.c_str(), ios::in | ios::binary | ios::ate);
@@ -666,11 +661,6 @@ namespace karabo {
 
             // ... check current and next files for 'to' timestamp
             for (; fnum <= tonum; fnum++) {
-                try {
-                    if (f && f.is_open()) f.close();
-                } catch(const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
-                }
 
                 const std::string fname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + path + "-index.bin";
                 // nrecList musty have one entry per file, put 0 and overwrite once we know better
@@ -686,11 +676,10 @@ namespace karabo {
                 }
                 // Now we know: It is the last file! Find toRecord and number of points until it
                 result.toFileNumber = fnum;
+                ifstream f;
                 try {
                     f.open(fname.c_str(), ios::in | ios::binary);
                     if (!f || !f.is_open()) continue;
-                    //                    // read first record
-                    //                    f.read((char*) &record, sizeof (MetaData::Record));
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
                 }
@@ -700,11 +689,6 @@ namespace karabo {
                 break;
             }
             
-            try {
-                if (f && !f.is_open()) f.close();
-            } catch(const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
-            }
 
             // Subtract records before fromRecords from first entry in list of number of records.
             result.nrecList[0] -= result.fromRecord;
