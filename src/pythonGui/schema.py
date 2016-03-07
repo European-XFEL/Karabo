@@ -411,7 +411,7 @@ class Schema(hashmod.Descriptor):
         self.displayedName = key
         self.parseAttrs(self, attrs, parent)
         for k, h, a in hash.iterall():
-            self.dict[k] = nodes[a['nodeType']](k, h, a, self)
+            self.dict[k] = nodes[NodeType(a['nodeType'])](k, h, a, self)
         self.key = key
         return self
 
