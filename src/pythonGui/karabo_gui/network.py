@@ -24,6 +24,7 @@ from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.authenticator import Authenticator
 from karabo.api_2 import Hash, BinaryParser, BinaryWriter, AccessLevel
 
+from karabo_gui import background
 import karabo_gui.globals as globals
 import socket
 from struct import unpack
@@ -54,6 +55,7 @@ class _Network(QObject):
         self.timer = QTimer(self)
         self.timer.setInterval(0)
         self.timer.timeout.connect(self.onReadServerData)
+        background.initialize(self.timer.start)
         
         self.requestQueue = [ ]
 
@@ -213,7 +215,7 @@ class _Network(QObject):
                 self.bytesNeeded = next(self.runner)
                 if not isinstance(e, StopIteration):
                     raise
-        else:
+        elif not background.execute():
             self.timer.stop()
 
     def processInput(self):
