@@ -613,15 +613,12 @@ namespace karabo {
             MetaData::Record record;
             MetaSearchResult result;
 
-            result.toFileNumber = tonum;
-            result.nrecList.clear();
-
             const double from = efrom.toTimestamp();
             const double to = eto.toTimestamp();
 
-            size_t fnum = startnum;
 
             // Find record number of "from" in index file ..
+            size_t fnum = startnum;
             for (; fnum <= tonum; fnum++) {
 
                 const std::string fname(get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + path + "-index.bin");
@@ -688,7 +685,6 @@ namespace karabo {
                 result.nrecList.back() = result.toRecord + 1;
                 break;
             }
-            
 
             // Subtract records before fromRecords from first entry in list of number of records.
             result.nrecList[0] -= result.fromRecord;
