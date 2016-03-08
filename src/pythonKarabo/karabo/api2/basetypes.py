@@ -93,10 +93,12 @@ class SimpleValue(KaraboValue):
 
 
 class BoolValue(SimpleValue):
-    """This conains bools.
+    """This contains bools.
 
     We cannot inherit from bool, so we need a brand-new class"""
     def __init__(self, value, *, descriptor=None, timestamp=None):
+        if timestamp is None and isinstance(value, KaraboValue):
+            timestamp = value.timestamp
         super().__init__(bool(value), descriptor=descriptor,
                          timestamp=timestamp)
 
@@ -114,22 +116,32 @@ class EnumValue(SimpleValue):
     them. Unfortunately, it is impossible to use the "is" operator as with
     bare enums, one has to use == instead. """
     def __init__(self, value, *, descriptor=None, timestamp=None):
+        if isinstance(value, EnumValue):
+            if timestamp is None:
+                timestamp = value.timestamp
+            if descriptor is None:
+                descriptor = value.descriptor
+            value = value.enum
         if not isinstance(value, Enum):
-            raise TypeError("value must be an Enum")
+            raise TypeError("value must be and Enum")
         if descriptor is not None and not isinstance(value, descriptor.enum):
             raise TypeError("value is not element of enum in descriptor")
-        super().__init__(value, descriptor=descriptor, timestamp=timestamp)
+        super().__init__(value.value, descriptor=descriptor,
+                         timestamp=timestamp)
+        self.enum = value
 
     def __eq__(self, other):
         if isinstance(other, EnumValue):
-            return self.value is other.value
+            return self.enum is other.enum
         else:
-            return self.value is other
+            return self.enum is other
 
 
 class StringlikeValue(KaraboValue):
     """This mixin class extends existing Python classes"""
     def __new__(cls, value, *, descriptor=None, timestamp=None):
+        if timestamp is None and isinstance(value, KaraboValue):
+            timestamp = value.timestamp
         self = super().__new__(cls, value)
         self.descriptor = descriptor
         self.timestamp = timestamp
@@ -155,10 +167,12 @@ class VectorStringValue(KaraboValue, list):
 
     We should check that only strings are entered"""
     def __init__(self, value=None, *, descriptor=None, timestamp=None):
+        if timestamp is None and isinstance(value, KaraboValue):
+            timestamp = value.timestamp
         if value is None:
             super().__init__()
         else:
-            super().__init__(value)
+            super().__init__(str(s) for s in value)
         self.descriptor = descriptor
         self.timestamp = timestamp
 
@@ -183,6 +197,8 @@ class QuantityValue(KaraboValue, Quantity):
     def __new__(cls, value, unit=None, metricPrefix=MetricPrefix.NONE, *,
                 descriptor=None, timestamp=None):
         # weirdly, Pint uses __new__. Dunno why, but we need to follow.
+        if timestamp is None and isinstance(value, KaraboValue):
+            timestamp = value.timestamp
         if isinstance(unit, Unit):
             if unit is Unit.NOT_ASSIGNED:
                 unit = ""
@@ -195,6 +211,11 @@ class QuantityValue(KaraboValue, Quantity):
             self = super().__new__(cls, value, (prefix + unit).lower())
         else:
             self = super().__new__(cls, value, unit)
+            if (unit is None and descriptor is not None and
+                    not self.dimensionality):
+                self = QuantityValue(
+                    value, unit=descriptor.unitSymbol,
+                    metricPrefix=descriptor.metricPrefixSymbol)
         if (descriptor is not None and
                 descriptor.dimensionality != self.dimensionality):
             raise pint.DimensionalityError(descriptor.dimensionality,
