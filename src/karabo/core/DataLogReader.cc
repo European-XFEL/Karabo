@@ -616,8 +616,10 @@ namespace karabo {
             const double from = efrom.toTimestamp();
             const double to = eto.toTimestamp();
 
+            // Index file names before and after file number:
             const std::string namePrefix(get<string>("directory") + "/" + deviceId + "/idx/archive_");
             const std::string nameSuffix("-" + path + "-index.bin");
+            bool foundFirst = false;
 
             // Find record number of "from" in index file ..
             for (size_t fnum = startnum; fnum <= tonum; fnum++) {
@@ -632,7 +634,11 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
                 }
                 const size_t nrecs = filesize / sizeof (MetaData::Record);
-                assert(filesize % sizeof (MetaData::Record) == 0);
+                if (filesize % sizeof (MetaData::Record) != 0) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Index file " << fnum << " for '" << deviceId << "." << path
+                            << "' corrupt, skip it.";
+                    continue;
+                }
 
                 try {
                     // read last record
@@ -643,17 +649,18 @@ namespace karabo {
                 }
                 if (ROUND1MS(from) > ROUND1MS(record.epochstamp)) {
                     // This file is too far in the past - try next if there is one.
-                    if (fnum == tonum) {
-                        // last time stamp of last file larger than out 'from' => give up!
-                        return result; // sum of result.nrecList is 0
-                    }
                     continue;
                 }
 
                 // 'from' is in this file - look for the exact record and stop loop
                 result.fromFileNumber = fnum;
                 result.fromRecord = findPositionOfEpochstamp(f, from, 0, nrecs - 1, false);
+                foundFirst = true;
                 break;
+            }
+
+            if (!foundFirst) {
+                return result; // sum of result.nrecList is still 0
             }
 
             // Loop backwards (to open as few files as possible) to find file of 'to' timestamp
@@ -693,8 +700,12 @@ namespace karabo {
                 if (ec) continue;
 
                 const size_t nrecs = filesize / sizeof (MetaData::Record);
-                assert(filesize % sizeof (MetaData::Record) == 0);
-                result.nrecList.back() = nrecs;
+                if (filesize % sizeof (MetaData::Record) == 0) {
+                    result.nrecList.back() = nrecs;
+                } else {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Index file " << iFile << " for '" << deviceId << "." << path
+                            << "' corrupt, skip its content.";
+                }
             }
 
             // Find toRecord and correct number of records in last file.
