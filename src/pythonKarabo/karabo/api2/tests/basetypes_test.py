@@ -49,6 +49,10 @@ class Tests(TestCase):
         self.assertEqual(f.descriptor, 3)
         self.assertEqual(f.timestamp, 33)
 
+        c = BoolValue(f)
+        self.assertFalse(c)
+        self.assertEqual(c.timestamp, 33)
+
     def test_enum(self):
         class E(Enum):
             a = 3
@@ -73,13 +77,24 @@ class Tests(TestCase):
         with self.assertRaises(TypeError):
             e = EnumValue(F.a, d)
 
+        c = EnumValue(e)
+        self.assertEqual(c, e)
+        self.assertEqual(c, E.a)
+        self.assertEqual(c.timestamp, self.t1)
+
     def test_stringlist(self):
         l = VectorStringValue(["a", "b", "c"], descriptor=3, timestamp=self.t2)
         self.assertEqual(l, ["a", "b", "c"])
+        self.assertEqual(l[1], "b")
+        self.assertEqual(l[1].timestamp, self.t2)
         self.assertEqual(l.descriptor, 3)
         self.assertEqual(l.timestamp, self.t2)
 
         self.assertEqual((3 * l).timestamp, self.t2)
+
+        c = VectorStringValue(l)
+        self.assertEqual(c, l)
+        self.assertEqual(c.timestamp, self.t2)
 
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
@@ -95,6 +110,10 @@ class Tests(TestCase):
         self.assertEqual(a.magnitude, 1)
         self.assertEqual(a.descriptor, d1)
         self.assertEqual(a.timestamp, 9)
+
+        c = QuantityValue(a)
+        self.assertEqual(c.magnitude, 1)
+        self.assertEqual(c.timestamp, 9)
 
         with self.assertRaises(pint.DimensionalityError):
             QuantityValue("1 s", descriptor=d1)
