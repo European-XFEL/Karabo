@@ -56,6 +56,9 @@ class Enumable(object):
         else:
             return data.value
 
+    def toKaraboValue(self, data):
+        return basetypes.EnumValue(data, descriptor=self)
+
 
 class Simple(object):
     """This is the base for all numeric types
@@ -95,12 +98,24 @@ class Simple(object):
             ret = other
         else:
             ret = self.numpy(other)
+        self.check(ret)
+        return ret
+
+    def check(self, ret):
         if (self.minExc is not None and ret <= self.minExc or
                 self.minInc is not None and ret < self.minInc or
                 self.maxExc is not None and ret >= self.maxExc or
                 self.maxInc is not None and ret > self.maxInc):
             raise ValueError("value {} of {} not in allowed range".
                              format(ret, self.key))
+
+    def toKaraboValue(self, data):
+        if self.enum is not None:
+            return Enumable.toKaraboValue(self, data)
+        ret = basetypes.QuantityValue(data, descriptor=self).to(
+            basetypes.QuantityValue(1, descriptor=self))
+        ret.descriptor = self
+        self.check(ret.magnitude)
         return ret
 
     def getMinMax(self):
@@ -138,6 +153,14 @@ class Integer(Simple, Enumable):
             max = info.max
 
         return min, max
+
+    def toKaraboValue(self, data):
+        if self.enum is not None:
+            return Enumable.toKaraboValue(data)
+        ret = super().toKaraboValue(data)
+        return basetypes.QuantityValue(int(ret.magnitude), unit=ret.units,
+                                       descriptor=self,
+                                       timestamp=ret.timestamp)
 
 
 class Number(Simple):
@@ -427,6 +450,14 @@ class NumpyVector(Vector):
         assert ret.ndim == 1, "can only treat one-dimensional vectors"
         return ret
 
+    def toKaraboValue(self, data):
+        if not isinstance(data, basetypes.KaraboValue):
+            data = self.cast(data)
+        ret = basetypes.QuantityValue(data, descriptor=self).to(
+            basetypes.QuantityValue(1, descriptor=self))
+        ret.descriptor = self
+        return ret
+
 
 class Bool(Type):
     """This describes a boolean: ``True`` or ``False``"""
@@ -451,6 +482,9 @@ class Bool(Type):
 
     def cast(self, other):
         return bool(other)
+
+    def toKaraboValue(self, data):
+        return basetypes.BoolValue(data, descriptor=self)
 
 
 class VectorBool(NumpyVector):
@@ -500,6 +534,13 @@ class Char(Simple, Type):
                     return _Byte(o)
             raise
 
+    def toKaraboValue(self, data):
+        if isinstance(data, bytes):
+            if len(data) != 1:
+                raise ValueError("A character cannot have length other than 1")
+            data = data[0]
+        return basetypes.QuantityValue(data, descriptor=self)
+
 
 class _Byte(Special, str):
     """This represents just one byte, so that we can distinguish
@@ -540,6 +581,9 @@ class VectorChar(Vector):
             return other
         else:
             return bytes(other)
+
+    def toKaraboValue(self, data):
+        return basetypes.VectorCharValue(data, descriptor=self)
 
 
 class Int8(Integer, Type):
@@ -726,6 +770,9 @@ class String(Enumable, Type):
         else:
             return str(other)
 
+    def toKaraboValue(self, data):
+        return basetypes.StringValue(data, descriptor=self)
+
 
 class VectorString(Vector):
     basetype = String
@@ -754,6 +801,9 @@ class VectorString(Vector):
                     raise TypeError
                 return s
             return StringList(check(s) for s in other)
+
+    def toKaraboValue(self, data):
+        return basetypes.VectorStringValue(data, descriptor=self)
 
 
 class StringList(Special, list):
