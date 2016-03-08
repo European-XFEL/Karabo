@@ -3,6 +3,7 @@ from unittest import TestCase, main
 from karabo.middlelayer_api import hash as hashmod
 from karabo.middlelayer_api.basetypes import QuantityValue
 from karabo.middlelayer_api.enums import Unit, MetricPrefix
+from karabo.middlelayer_api.hash import Hash
 
 
 class Tests(TestCase):
@@ -11,10 +12,15 @@ class Tests(TestCase):
         value.timestamp = 7
         c = desc.toKaraboValue(value)
         self.assertEqual(c.timestamp, 7)
+        h = Hash()
+        h["a"] = value
+        h = Hash.decode(h.encode("Bin"), "Bin")
         if isinstance(desc, hashmod.NumpyVector):
             self.assertTrue((c == value).all())
+            self.assertTrue((h["a"] == value).all())
         else:
             self.assertTrue(c == value)
+            self.assertEqual(h["a"], value)
 
     def test_bool(self):
         d = hashmod.Bool()

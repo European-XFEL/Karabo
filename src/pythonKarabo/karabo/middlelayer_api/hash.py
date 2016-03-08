@@ -976,6 +976,8 @@ class None_(Type):
 
 
 def _gettype(data):
+    if isinstance(data, basetypes.KaraboValue) and data.descriptor is not None:
+        return data.descriptor
     try:
         if isinstance(data, np.ndarray):
             return NumpyVector.vstrs[data.dtype.str]
