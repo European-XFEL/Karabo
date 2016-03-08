@@ -49,11 +49,11 @@ class DockTabWindow(QTabWidget):
 #                                       "}")
 
 
-    def addDockableTab(self, dockWidget, label, icon=None):
+    def addDockableTab(self, dockWidget, label, mainWindow=None, icon=None):
         """
         This function gets a DockTabWindow, a label and optionally an icon.
         """
-        divWidget = DivWidget(self, dockWidget, label, icon)
+        divWidget = DivWidget(self, dockWidget, label, mainWindow, icon)
 
         index = self.addTab(divWidget, label)
         divWidget.index = index
@@ -138,10 +138,11 @@ class DockTabWindow(QTabWidget):
 
 
 class DivWidget(QFrame):
-    docked = pyqtSignal()
-    undocked = pyqtSignal()
+    # Signals to send to MainWindow
+    signalTabMaximize = pyqtSignal(object) # object - tabWidget
+    signalTabMinimize = pyqtSignal(object) # object - tabWidget
 
-    def __init__(self, dockWindow, dockableWidget, label, icon=None):
+    def __init__(self, dockWindow, dockableWidget, label, mainWindow=None, icon=None):
         super(DivWidget, self).__init__()
 
         self.setFrameStyle(QFrame.Box | QFrame.Plain)
@@ -150,8 +151,8 @@ class DivWidget(QFrame):
         self.index = -1
         self.label = label
         self.doesDockOnClose = True
-        self.dockableWidget = dockableWidget
-        self.dockWindow = dockWindow
+        self.dockableWidget = dockableWidget # panel
+        self.dockWindow = dockWindow # tab widget
 
         self.icon = icon
 
@@ -170,7 +171,10 @@ class DivWidget(QFrame):
 
         # Add custom actions to toolbar
         self.dockableWidget.setupToolBars(self.toolBar, self)
-
+        
+        if mainWindow is not None:
+            self.signalTabMaximize.connect(mainWindow.onTabMaximized)
+            self.signalTabMinimize.connect(mainWindow.onTabMinimized)
 
     def forceClose(self):
         """
@@ -212,7 +216,7 @@ class DivWidget(QFrame):
         self.acMaximize.setStatusTip(text)
         self.acMaximize.triggered.connect(self.onMaximize)
 
-        text = "Restore panel"
+        text = "Minimize panel"
         self.acMinimize = QAction(icons.minimize, "&Minimize", self)
         self.acMinimize.setToolTip(text)
         self.acMinimize.setStatusTip(text)
@@ -250,10 +254,28 @@ class DivWidget(QFrame):
     def onMaximize(self):
         self.acMinimize.setVisible(True)
         self.acMaximize.setVisible(False)
+        
+        i = self.dockWindow.count()
+        while i > -1:
+            i -= 1
+            w = self.dockWindow.widget(i)
+            if w != self:
+                self.dockWindow.removeTab(i)
+        self.signalTabMaximize.emit(self.dockWindow)
 
     def onMinimize(self):
         self.acMinimize.setVisible(False)
         self.acMaximize.setVisible(True)
+
+        for w in self.dockWindow.divWidgetList:
+            if w == self:
+                continue
+            
+            if w.hasIcon():
+                self.dockWindow.insertTab(w.index, w, w.icon, w.label)
+            else:
+                self.dockWindow.insertTab(w.index, w, w.label)
+        self.signalTabMinimize.emit(self.dockWindow)
 
     def hasIcon(self):
         return self.icon is not None
