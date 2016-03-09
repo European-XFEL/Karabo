@@ -57,6 +57,8 @@ class Enumable(object):
             return data.value
 
     def toKaraboValue(self, data):
+        if not isinstance(data, (self.enum, basetypes.EnumValue)):
+            data = self.enum(data)
         return basetypes.EnumValue(data, descriptor=self)
 
 
@@ -156,7 +158,7 @@ class Integer(Simple, Enumable):
 
     def toKaraboValue(self, data):
         if self.enum is not None:
-            return Enumable.toKaraboValue(data)
+            return Enumable.toKaraboValue(self, data)
         ret = super().toKaraboValue(data)
         return basetypes.QuantityValue(int(ret.magnitude), unit=ret.units,
                                        descriptor=self,
@@ -771,6 +773,8 @@ class String(Enumable, Type):
             return str(other)
 
     def toKaraboValue(self, data):
+        if self.enum is not None:
+            return Enumable.toKaraboValue(self, data)
         return basetypes.StringValue(data, descriptor=self)
 
 
@@ -1250,6 +1254,8 @@ class Hash(OrderedDict):
 
 
     def __setitem__(self, item, value):
+        if isinstance(value, basetypes.EnumValue):
+            value = value.value
         if isinstance(item, tuple):
             key, attr = item
             if attr is Ellipsis:
