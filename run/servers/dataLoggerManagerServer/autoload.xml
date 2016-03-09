@@ -3,7 +3,7 @@
   <autoStart>
     <KRB_Item>
       <DataLoggerManager>
-      <serverList KRB_Type="VECTOR_STRING">Karabo_DataLoggerServer0,Karabo_DataLoggerServer1,Karabo_DataLoggerServer2</serverList>
+      <serverList KRB_Type="VECTOR_STRING">Karabo_DataLoggerServer</serverList>
       </DataLoggerManager>
     </KRB_Item>
   </autoStart>
