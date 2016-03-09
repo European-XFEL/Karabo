@@ -4,6 +4,7 @@ from functools import total_ordering
 
 import dateutil.parser
 import dateutil.tz
+import numpy
 
 import time
 
@@ -38,6 +39,11 @@ class Timestamp(object):
         ret.time = attrs['frac'] + attrs['sec'] * RESOLUTION
         ret.tid = attrs['tid']
         return ret
+
+    def toHashAttributes(self, h, key):
+        h[key, "frac"] = numpy.uint64(self.time % RESOLUTION)
+        h[key, "sec"] = numpy.uint64(self.time // RESOLUTION)
+        h[key, "tid"] = self.tid
 
     def toTimestamp(self):
         return self.time / 10 ** 18

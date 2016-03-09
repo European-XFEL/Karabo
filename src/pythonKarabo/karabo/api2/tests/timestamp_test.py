@@ -3,6 +3,7 @@ from unittest import TestCase, main
 import time
 
 from karabo.api2.timestamp import Timestamp
+from karabo.api2.hash import Hash
 
 
 class Tests(TestCase):
@@ -21,11 +22,19 @@ class Tests(TestCase):
         t4 = Timestamp(t2)
         self.assertEqual(t3.toTimestamp(), 1240223542)
 
-    def test_hash(self):
+    def test_hash_read(self):
         self.assertIsNone(Timestamp.fromHashAttributes(dict()))
         t = Timestamp.fromHashAttributes(dict(sec=1234, frac=5678, tid=22))
         self.assertEqual(t.time, 1234000000000000005678)
         self.assertEqual(t.tid, 22)
+
+    def test_hash_write(self):
+        h = Hash("a", 3)
+        t = Timestamp("2009-09-01")
+        t.toHashAttributes(h, "a")
+        self.assertEqual(h["a", "sec"], 1251755999)
+        self.assertEqual(h["a", "frac"], 999999934711463936)
+        self.assertEqual(h["a", "tid"], 0)
 
     def test_compare(self):
         t1 = Timestamp()
