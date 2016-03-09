@@ -104,6 +104,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o \
 	${OBJECTDIR}/_ext/1103112890/NetworkAppender.o \
 	${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator.o \
+	${OBJECTDIR}/_ext/1103112890/PointToPoint.o \
 	${OBJECTDIR}/_ext/1103112890/TcpChannel.o \
 	${OBJECTDIR}/_ext/1103112890/TcpConnection.o \
 	${OBJECTDIR}/_ext/1103112890/utils.o \
@@ -538,6 +539,11 @@ ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator.o: ../../../src/karabo/
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator.o ../../../src/karabo/net/NetworkAppenderConfigurator.cc
+
+${OBJECTDIR}/_ext/1103112890/PointToPoint.o: ../../../src/karabo/net/PointToPoint.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/PointToPoint.o ../../../src/karabo/net/PointToPoint.cc
 
 ${OBJECTDIR}/_ext/1103112890/TcpChannel.o: ../../../src/karabo/net/TcpChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -1968,6 +1974,19 @@ ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator_nomain.o: ${OBJECTDIR}/
 	    $(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator_nomain.o ../../../src/karabo/net/NetworkAppenderConfigurator.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator.o ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/PointToPoint_nomain.o: ${OBJECTDIR}/_ext/1103112890/PointToPoint.o ../../../src/karabo/net/PointToPoint.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/PointToPoint.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/PointToPoint_nomain.o ../../../src/karabo/net/PointToPoint.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/PointToPoint.o ${OBJECTDIR}/_ext/1103112890/PointToPoint_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/TcpChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/TcpChannel.o ../../../src/karabo/net/TcpChannel.cc 
