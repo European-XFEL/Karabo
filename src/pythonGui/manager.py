@@ -513,9 +513,7 @@ class _Manager(QObject):
         self.signalUpdateScenes.emit()
 
 
-    def handle_deviceSchema(self, deviceId, schema, configuration=None):
-        # \configuration might set in the GuiServerDevice
-        # but is currently not used here
+    def handle_deviceSchema(self, deviceId, schema):
         if deviceId not in self.deviceData:
             print('not requested schema for device {} arrived'.format(deviceId))
             return
