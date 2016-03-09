@@ -11,6 +11,10 @@
 #ifndef KARABO_CORE_DEVICE_CLIENT_HH
 #define	KARABO_CORE_DEVICE_CLIENT_HH
 
+#include <map>
+#include <set>
+#include <string>
+
 namespace karabo {
 
     namespace core {
@@ -53,6 +57,8 @@ namespace karabo {
             friend class Device;
 
             typedef std::map<std::string, unsigned int> InstanceUsage;
+            /// keys are instance IDs, values are a sets of properties that changed
+            typedef std::map<std::string, std::set<std::string> > SignalChangedMap;
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceUpdatedHandler;
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceGoneHandler;
@@ -115,6 +121,12 @@ namespace karabo {
 
             bool m_getOlder;
 
+            boost::thread m_signalsChangedThread;
+            bool m_runSignalsChangedThread;
+            boost::posix_time::milliseconds m_signalsChangedInterval;
+            boost::mutex m_signalsChangedMutex;
+            SignalChangedMap m_signalsChanged; /// map of collected signalChanged
+
             boost::mutex m_loggerMapMutex;
 
             util::Hash m_loggerMap;
@@ -176,20 +188,22 @@ namespace karabo {
 
             // DEPRECATE
             void disableAdvancedMode();
-            
-            /**
-             * Switch on buithe mechanism of polling network environment known to broker
-             */
-            void enableTopologyBuilding();
-            void disableTopologyBuilding();
-            
+
             /**
              * Set ageing on or off (on by default)
              * @return 
              */
             void setAgeing(bool toggle);
 
-
+            /**
+             * Set interval to wait between subsequent (for the same instance)
+             * calls to handlers registered via registerDeviceMonitor.
+             * Changes received within that interval will be cached and, in case of
+             * several updates of the same property within the interval, only the most
+             * up-to-date value will be handled.
+             * If negative, switch off caching and call handler immediately.
+             */
+            void setDeviceMonitorInterval(long int milliseconds);
 
             /**
              * Allows asking whether an instance is online in the current distributed system
@@ -659,6 +673,8 @@ namespace karabo {
 
             void age();
 
+            void sendSignalsChanged();
+
             void immortalize(const std::string& deviceId);
 
             void mortalize(const std::string& deviceId);
@@ -675,13 +691,19 @@ namespace karabo {
             /// Returns empty Hash if section does not exist.
             util::Hash getSectionFromRuntimeDescription(const std::string& section) const;
 
-        private:
             /// Find full path of 'instanceId' in m_runtimeSystemDescription,
             /// empty if path does not exist.
-            /// NOTE: To be called under protection of m_runtimeSystemDescriptionMutex.
+            std::string findInstanceSafe(const std::string &instanceId) const;
+
+        private:
+            /// As findInstanceSafe, but to be called under protection of m_runtimeSystemDescriptionMutex.
             std::string findInstance(const std::string &instanceId) const;
+
+            /// Actually process data in 'signalChangedMap' - try/catch should be outside.
+            void doSendSignalsChanged(const SignalChangedMap &signalChangedMap);
             
-            /// Returns true if explicit "connect" call should done for "instanceId"  
+            /// Marks 'instanceId' as used.
+            /// Returns true if explicit "connect" call should still be done for it.
             bool connectNeeded(const std::string & instanceId);
         };
     }
