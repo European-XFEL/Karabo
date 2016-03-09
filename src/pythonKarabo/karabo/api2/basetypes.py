@@ -136,6 +136,12 @@ class EnumValue(SimpleValue):
         else:
             return self.enum is other
 
+    def __str__(self):
+        return str(self.enum)
+
+    def __repr__(self):
+        return repr(self.enum)
+
 
 class StringlikeValue(KaraboValue):
     """This mixin class extends existing Python classes"""
