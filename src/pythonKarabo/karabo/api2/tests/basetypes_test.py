@@ -43,11 +43,15 @@ class Tests(TestCase):
         self.assertTrue(t)
         self.assertEqual(t.descriptor, 7)
         self.assertEqual(t.timestamp, 22)
+        self.assertEqual(str(t), "True")
+        self.assertEqual(repr(t), "True")
 
         f = BoolValue(False, descriptor=3, timestamp=33)
         self.assertFalse(f)
         self.assertEqual(f.descriptor, 3)
         self.assertEqual(f.timestamp, 33)
+        self.assertEqual(str(f), "False")
+        self.assertEqual(repr(f), "False")
 
         c = BoolValue(f)
         self.assertFalse(c)

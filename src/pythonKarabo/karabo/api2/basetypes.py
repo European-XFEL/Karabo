@@ -108,6 +108,9 @@ class BoolValue(SimpleValue):
     def __bool__(self):
         return self.value
 
+    def __repr__(self):
+        return repr(self.value)
+
 
 class EnumValue(SimpleValue):
     """This contains an enum.
