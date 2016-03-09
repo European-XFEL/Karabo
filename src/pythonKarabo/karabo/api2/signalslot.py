@@ -6,6 +6,7 @@ import random
 import time
 import weakref
 
+from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
 from .hash import Hash, HashType, Int32, String
 from .p2p import NetworkOutput
@@ -116,7 +117,6 @@ class SignalSlotable(Configurable):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
         super().__init__(configuration)
         self.deviceId = self._deviceId_
-        self.info = Hash("heartbeatInterval", self.heartbeatInterval)
         self._devices = {}
         self.__randPing = random.randint(2, 0x7fffffff)
 
@@ -147,10 +147,10 @@ class SignalSlotable(Configurable):
         # that we start responding to other pings.
         if rand:
             if instanceId == self.deviceId and self.__randPing != rand:
-                return self.info
+                return self._ss.info
         elif self.__randPing == 0:
             self._ss.emit("call", {instanceId: ["slotPingAnswer"]},
-                          self.deviceId, self.info)
+                          self.deviceId, self._ss.info)
 
     def inner(self, message, args):
         ret = self.slotPing(*args)
@@ -183,15 +183,6 @@ class SignalSlotable(Configurable):
             return False, Hash()
 
     @coroutine
-    def heartbeats(self):
-        while self is not None:
-            interval = self.heartbeatInterval
-            self._ss.heartbeat(interval, self.info)
-            self = weakref.ref(self)
-            yield from sleep(interval)
-            self = self()
-
-    @coroutine
     def run_async(self):
         """start everything needed for this device
 
@@ -217,15 +208,13 @@ class SignalSlotable(Configurable):
                 yield from self.slotKillDevice()
             except CancelledError:
                 pass
-            raise RuntimeError('deviceId "{}" already in use'.
-                               format(self.deviceId))
+            raise KaraboError('deviceId "{}" already in use'.
+                              format(self.deviceId))
         except TimeoutError:
             pass
         self.run()
         self.__randPing = 0  # Start answering on slotPing with argument rand=0
-        self._ss.emit('call', {'*': ['slotInstanceNew']},
-                      self.deviceId, self.info)
-        async(self.heartbeats())
+        async(self._ss.notify_network(self.heartbeatInterval))
 
     @coslot
     def slotKillDevice(self):
@@ -253,9 +242,7 @@ class SignalSlotable(Configurable):
         return True
 
     def updateInstanceInfo(self, info):
-        self.info.merge(info)
-        self._ss.emit('call', {'*': ['slotInstanceUpdated']},
-                      self.deviceId, self.info)
+        self._ss.updateInstanceInfo(info)
 
     def setValue(self, attr, value):
         self.__dict__[attr.key] = value

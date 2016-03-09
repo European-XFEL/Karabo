@@ -114,7 +114,9 @@ namespace karabo {
         void HashBinarySerializer::writeAny(const boost::any& value, const Types::ReferenceType type, std::ostream& os) {
             switch (Types::category(type)) {
                 case Types::SCHEMA:
+                case Types::HASH: 
                 case Types::SIMPLE: return writeSingleValue(os, value, type);
+                case Types::VECTOR_HASH:
                 case Types::SEQUENCE: return writeSequence(os, value, type);
                 case Types::RAW_ARRAY: return writeRawArray(os, value, type);
                 default:
@@ -141,6 +143,7 @@ namespace karabo {
                 case Types::COMPLEX_DOUBLE: return writeSingleValue(os, boost::any_cast<const std::complex<double>& >(value));
                 case Types::STRING: return writeSingleValue(os, boost::any_cast<const std::string& > (value)); //               
                 case Types::SCHEMA: return writeSingleValue(os, boost::any_cast<const Schema& >(value));
+                case Types::HASH: return writeSingleValue(os, boost::any_cast<const Hash& > (value));
                 case Types::NONE: return writeSingleValue(os, boost::any_cast<const CppNone&>(value));
                 default:
                     throw KARABO_IO_EXCEPTION("Encountered unknown data type whilst writing to binary archive");
@@ -178,6 +181,11 @@ namespace karabo {
             writeSize(os, size);
             os.write(&archive[0], size);
         }
+        
+        template<>
+        void HashBinarySerializer::writeSingleValue(std::ostream& os, const Hash& hash) {
+            writeHash(hash, os);
+        }
 
 
         template<>
@@ -204,6 +212,7 @@ namespace karabo {
                 case Types::VECTOR_COMPLEX_DOUBLE: return writeSequence(os, boost::any_cast<const vector <std::complex<double> >& >(value));            
                 case Types::VECTOR_STRING: return writeSequence(os, boost::any_cast<const vector <std::string>& >(value));
                 case Types::VECTOR_BOOL: return writeSequence(os, boost::any_cast < const vector <bool>& >(value));
+                case Types::VECTOR_HASH: return writeSequence(os, boost::any_cast<const vector <Hash >& >(value));
                 case Types::VECTOR_NONE: return writeSequence(os, boost::any_cast < const vector <CppNone>& >(value));
                 default:
                     throw KARABO_IO_EXCEPTION("Encountered unknown array data type whilst writing to binary archive");
@@ -303,7 +312,20 @@ namespace karabo {
                     return;
                 case Types::RAW_ARRAY:
                 case Types::SEQUENCE: readSequence(is, value, type);
-                    return;               
+                    return;  
+                case Types::HASH:
+                    readHash(boost::any_cast<Hash& > (value), is);
+                    return;
+                case Types::VECTOR_HASH:
+                {
+                    unsigned size = readSize(is);
+                    value = std::vector<Hash > (size);
+                    std::vector<Hash>& result = boost::any_cast<std::vector<Hash>& >(value);
+                    for (unsigned i = 0; i < size; ++i) {
+                        readHash(result[i], is);
+                    }
+                    return;
+                }
                 default:
                     throw KARABO_IO_EXCEPTION("Could not properly categorize value \"" + Types::to<ToLiteral>(type) + "\" for reading from archive");
             }
@@ -344,6 +366,13 @@ namespace karabo {
         std::complex<float> HashBinarySerializer::readSingleValue(std::istream& is) {
             return readComplexValue<float> (is);
         }
+        
+        template<>
+        Hash HashBinarySerializer::readSingleValue(std::istream& is) {
+            Hash hash;
+            readHash(hash, is);
+            return hash;
+        }
 
 
         template<>
@@ -373,6 +402,7 @@ namespace karabo {
                 case Types::COMPLEX_DOUBLE: return boost::any(readSingleValue<std::complex<double> >(is));
                 case Types::STRING: return boost::any(readSingleValue<std::string > (is));
                 case Types::SCHEMA: return boost::any(readSingleValue<Schema >(is));
+                case Types::HASH: return boost::any(readSingleValue<Hash > (is));
                 case Types::NONE: return boost::any(readSingleValue<CppNone >(is));
                 default:
                     throw KARABO_IO_EXCEPTION("Encountered unknown data type whilst reading from binary archive");
@@ -411,6 +441,7 @@ namespace karabo {
                 case Types::VECTOR_DOUBLE: return readSequenceBulk<double>(is, result, size);
                 case Types::VECTOR_COMPLEX_FLOAT: return readSequence<std::complex<float> >(is, result, size);
                 case Types::VECTOR_COMPLEX_DOUBLE: return readSequence<std::complex<double> >(is, result, size);
+                case Types::VECTOR_HASH: return readSequence<Hash > (is, result, size);
                 case Types::VECTOR_NONE: return readSequence<CppNone > (is, result, size);
                 default:
                     throw KARABO_IO_EXCEPTION("Encountered unknown array data type whilst reading from binary archive");

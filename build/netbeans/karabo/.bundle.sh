@@ -124,16 +124,18 @@ if [ "$OS" = "Darwin" ]; then
     # On MacOSX we are currently not bundling the python environment, 
     # but rather use the OS provided one
 
+    SITE_PACKAGES=`/opt/local/bin/python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`
+
     # Location of python package: karabo (not within site-packages under MacOSX)
-    PYKARABO=$PACKAGEDIR/lib/karabo
-    mkdir -p $PYKARABO
+    # PYKARABO=$PACKAGEDIR/lib/karabo
+    # mkdir -p $PYKARABO
 
     cd $DISTDIR/$CONF/$PLATFORM/lib
     # Python needs to see bindings as .so, even on MacOSX
     ln -sf karathon.dylib karathon.so
     #install_name_tool -add_rpath "$PACKAGEDIR/lib" karathon.so
     #install_name_tool -add_rpath "$PACKAGEDIR/extern/lib" karathon.so
-    cp karathon* $PYKARABO/
+    cp karathon* $SITE_PACKAGES/
     cd -
 
 else

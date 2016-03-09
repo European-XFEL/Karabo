@@ -11,9 +11,10 @@ from karabo.api import Int, Slot
 from karabo.api2.cli import connectDevice, DeviceClient
 from karabo.api2.device import Device
 from karabo.api2.device_client import (
-    getDevice, instantiate, shutdown, DeviceClientBase, getDevices)
+    getDevice, instantiate, shutdown, DeviceClientBase, getDevices, getServers)
 from karabo.api2.device_server import DeviceServer
 from karabo.api2.eventloop import NoEventLoop
+from karabo.api2.exceptions import KaraboError
 from karabo.api2.hash import Hash
 from karabo.api2.macro import Macro, EventThread, RemoteDevice
 
@@ -159,22 +160,35 @@ class Tests(TestCase):
         yield from proxy.shutdown()
         yield from sleep(0.02)
 
+    @coroutine
+    def check_server_topology(self):
+        self.assertIn("testServer", getServers())
+        self.assertIn("other", getDevices("testServer"))
+
     def test_server(self):
         """test the full lifetime of a python device server
 
         this test
+          * starts a device client
           * starts a device server
           * starts a macro which tells said device server to start a device
+          * checks that the other device shows up in the topology
           * let the macro tell to shut down that device
           * checks everything is cleaned up afterwards
           * kills the device server
         """
         loop = setEventLoop()
+
+        dc = DeviceClient(dict(_deviceId_="dc"))
+        dc.startInstance()
+
         server = DeviceServer(dict(serverId="testServer"))
         server.startInstance()
         proxy = loop.run_until_complete(
             loop.create_task(self.init_server(server), server))
         self.assertEqual(proxy.something, 333)
+        loop.run_until_complete(
+            loop.create_task(self.check_server_topology(), dc))
         self.assertIn("other", server.deviceInstanceMap)
         r = weakref.ref(server.deviceInstanceMap["other"])
         loop.run_until_complete(
@@ -233,7 +247,14 @@ class Tests(TestCase):
         self.assertNotIn("other", getDevices())
         self.assertNotIn("other", getDevices("tserver"))
         yield from other.startInstance()
-        yield from sleep(1)
+        yield from sleep(0.1)
+        self.assertIn("other", getDevices())
+        self.assertIn("other", getDevices("tserver"))
+        self.assertNotIn("other", getDevices("bserver"))
+
+        double = Other(dict(_deviceId_="other", _serverId_="bserver"))
+        with self.assertRaises(KaraboError):
+            yield from double.startInstance()
         self.assertIn("other", getDevices())
         self.assertIn("other", getDevices("tserver"))
         self.assertNotIn("other", getDevices("bserver"))
