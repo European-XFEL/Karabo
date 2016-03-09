@@ -124,7 +124,7 @@ if [ "$OS" = "Darwin" ]; then
     # On MacOSX we are currently not bundling the python environment, 
     # but rather use the OS provided one
 
-    SITE_PACKAGES=`/opt/local/bin/python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`
+    SITE_PACKAGES=`/opt/local/bin/python -c "from site import USER_SITE; print(USER_SITE)"`
 
     # Location of python package: karabo (not within site-packages under MacOSX)
     # PYKARABO=$PACKAGEDIR/lib/karabo
