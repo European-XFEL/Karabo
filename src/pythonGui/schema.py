@@ -655,15 +655,17 @@ class ChoiceOfNodes(Schema):
         children = []
         for i in range(item.childCount()):
             child = item.child(i)
-
+            childKey = child.box.path[-1]
+            
             if item.defaultValue is None:
                 if i > 0:
                     child.setHidden(True)
                 else:
                     if box.current is None:
-                        box.current = child.text(0)
+                        # Set current choice elements via key
+                        box.current = childKey
             else:
-                if child.text(0) != item.defaultValue:
+                if childKey != item.defaultValue:
                     child.setHidden(True)
 
             if item.editableComponent is not None:

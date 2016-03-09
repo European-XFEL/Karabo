@@ -71,7 +71,7 @@ class ProjectModel(QStandardItemModel):
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
-
+        self.setSupportedDragActions(Qt.CopyAction)
 
     def flags(self, index):
         flags = QStandardItemModel.flags(self, index)
@@ -487,9 +487,10 @@ class ProjectModel(QStandardItemModel):
         item.setText(monitor.name)
 
 
-    def addSceneItem(self, scene):
+    def createSceneItem(self, scene):
         """
-        This function adds the given \scene at the right position to the model.
+        This function creates a QStandardItem for the given \scene and
+        returns it.
         """
         item = QStandardItem(scene.filename)
         item.setIcon(icons.image)
@@ -497,12 +498,33 @@ class ProjectModel(QStandardItemModel):
         item.setEditable(False)
         item.setToolTip(scene.filename)
         
+        return item
+
+
+    def addSceneItem(self, scene):
+        """
+        This function adds the given \scene at the right position to the model.
+        """
+        item = self.createSceneItem(scene)
+        
         project = scene.project
         projectItem = self.findItem(project)
         # Find folder for scenes
         parentItem = self.getCategoryItem(Project.SCENES_LABEL, projectItem)
         parentItem.appendRow(item)
         self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
+
+
+    def insertSceneItem(self, row, scene):
+        """
+        This function inserts the given \scene at the given \row of the model.
+        """
+        item = self.createSceneItem(scene)
+        
+        projectItem = self.findItem(scene.project)
+        # Find folder for devices
+        parentItem = self.getCategoryItem(Project.SCENES_LABEL, projectItem)
+        parentItem.insertRow(row, item)
 
 
     def renameScene(self, scene):
@@ -861,6 +883,7 @@ class ProjectModel(QStandardItemModel):
         project.signalDeviceGroupAdded.connect(self.addDeviceGroupItem)
         project.signalDeviceGroupInserted.connect(self.insertDeviceGroupItem)
         project.signalSceneAdded.connect(self.addSceneItem)
+        project.signalSceneInserted.connect(self.insertSceneItem)
         project.signalConfigurationAdded.connect(self.addConfigurationItem)
         project.signalMacroAdded.connect(self.addMacroItem)
         project.signalMacroChanged.connect(self.addMacroSubItems)

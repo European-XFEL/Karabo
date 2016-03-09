@@ -55,11 +55,13 @@ class EditableChoiceElement(EditableWidget):
     def typeChanged(self, box):
         for k, v in box.descriptor.dict.items():
             if isinstance(v, Descriptor):
-                self.widget.addItem(v.displayedName)
+                self.widget.addItem(v.displayedName, k)
 
     @property
     def value(self):
-        return self.widget.currentText()
+        index = self.widget.currentIndex()
+        data = self.widget.itemData(index)
+        return data
 
 
     def _updateChoiceItems(self, index):
@@ -78,7 +80,7 @@ class EditableChoiceElement(EditableWidget):
             childItem = parentItem.child(i)
             if parentItem.updateNeeded:
                 if parentItem.isChoiceElement:
-                    if parentItem.defaultValue in (None, childItem.text(0)):
+                    if parentItem.defaultValue in (None, childItem.box.path[-1]):
                         childItem.updateNeeded = True
                         childItem.setHidden(False)
                     else:
@@ -95,7 +97,7 @@ class EditableChoiceElement(EditableWidget):
         if not isinstance(value, str):
             value = box.current
 
-        index = self.widget.findText(value)
+        index = self.widget.findData(value)
         if index < 0:
             return
 
@@ -116,6 +118,6 @@ class EditableChoiceElement(EditableWidget):
 
         if not self.item.isChoiceElement:
             for i in range(self.widget.count()):
-                copyWidget.comboBox.addItem(self.widget.itemText(i))
+                copyWidget.comboBox.addItem(self.widget.itemText(i), self.widget.itemData(i))
 
         return copyWidget
