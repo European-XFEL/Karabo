@@ -50,23 +50,7 @@ BUNDLE_ACTION=$4
 BUNDLE_OPTION=$5
 OS=$(uname -s)
 MACHINE=$(uname -m)
-if tmp=$(svn info ../../../ | grep URL)
-then
-    VERSION=${tmp##*/}
-    if [ "$VERSION" = "trunk" ]; then
-        tmp=$(svn info ../../../ | grep Revision)
-        VERSION=r${tmp##*: }
-    fi
-elif tmp=$(jsvn info ../../../ | grep URL)
-then
-    VERSION=${tmp##*/}
-    if [ "$VERSION" = "trunk" ]; then
-        tmp=$(jsvn info ../../../ | grep Revision)
-        VERSION=r${tmp##*: }
-    fi
-else
-    VERSION=$(git rev-parse --short HEAD)
-fi
+VERSION=$(git rev-parse --short HEAD)
 
 if [ "$BUNDLE_ACTION" = "package" ]; then
     if [ $BUNDLE_OPTION = "NoGui" ]; then
@@ -218,7 +202,7 @@ fi
 
 # run (Karabo's run/package development environment)
 cd $BASEDIR
-tar --exclude=.svn --exclude=run/servers/dataLoggerServer/karaboHistory -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
+tar --exclude=run/servers/dataLoggerServer/karaboHistory -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
 # Activation script
 sed "s%__VENV_DIR__%$BASEDIR/karabo%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
 ln -s $PACKAGEDIR/activate $PACKAGEDIR/karaboRun/activate
