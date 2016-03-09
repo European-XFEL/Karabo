@@ -111,6 +111,9 @@ class BoolValue(SimpleValue):
     def __repr__(self):
         return repr(self.value)
 
+    def __hash__(self):
+        return hash(self.value)
+
 
 class EnumValue(SimpleValue):
     """This contains an enum.
@@ -145,6 +148,9 @@ class EnumValue(SimpleValue):
     def __repr__(self):
         return repr(self.enum)
 
+    def __hash__(self):
+        return hash(self.enum)
+
 
 class StringlikeValue(KaraboValue):
     """This mixin class extends existing Python classes"""
@@ -161,6 +167,9 @@ class StringlikeValue(KaraboValue):
             return str(self) == str(other)
         else:
             return super().__eq__(other)
+
+    def __hash__(self):
+        return super().__hash__()
 
 
 class VectorCharValue(StringlikeValue, bytes):
