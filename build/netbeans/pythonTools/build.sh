@@ -32,5 +32,4 @@ chmod u+x karabo-extractdata
 cd ../lib
 cp -rf ../../../../../../src/pythonTools .
 rm -f `find . -type f -name *.pyc`
-rm -rf `find . -type d -name .svn`
 cd $CWD

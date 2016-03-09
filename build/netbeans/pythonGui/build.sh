@@ -30,5 +30,4 @@ chmod a+x karabo-gui
 cd ../lib
 cp -rf ../../../../../../src/pythonGui .
 rm -f `find . -type f -name *.pyc`
-rm -rf `find . -type d -name .svn`
 cd $CWD
