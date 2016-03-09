@@ -92,21 +92,26 @@ MacOS X
 
   .. code-block:: bash
 
-    sudo port install gcc48
-    sudo port select --set gcc mp-gcc48
-    sudo port install nspr nss pkgconfig sqlite3 qt4-mac-sqlite3-plugin python34
+    sudo port install gcc49
+    sudo port select --set gcc mp-gcc49
+    sudo port install -f dbus
+    sudo port install sqlite3 qt4-mac-sqlite3-plugin python34
     sudo port select --set python python34
     sudo port install py34-pyqt4
+    sudo port install py34-Pillow
     sudo port install py34-numpy py34-scipy
     sudo port install py34-matplotlib +qt4
+    sudo port install py34-pyqwt  (not existing yet, see manual installation below)
     sudo port install py34-cython
     sudo port select --set cython cython34
-    sudo port install py34-ipython -scientific +notebook +pyqt4
+    sudo port install py34-ipython +notebook +pyqt4
     sudo port select --set sphinx py34-sphinx
     sudo port select --set ipython ipython34
     sudo port select --set nosetests nosetests34
-    sudo port install py34-suds-jurko gdb
-    sudo port install ImageMagick
+    sudo port install py34-suds-jurko
+    sudo port install py34-setuptools py34-pip
+    sudo port select --set pip pip34
+    sudo port install doxygen
 
   Comments:
 
@@ -138,14 +143,14 @@ MacOS X
    to : /opt/local/bin. Give a ToolCollection Name "GNU_MacPorts". Make
    it default.
 
-6. Patch NetBeans bug regarding Makefile paths
+6. Patch NetBeans bug regarding Makefile paths (ignore it if you compile Karabo with --auto flag):
 
   .. code-block:: bash
 
     cd /usr/bin
     sudo ln -sf /opt/local/bin/pkg-config pkg-config
 
-7. Create a symbolic link to python includes (boost needs this):
+7. Create a symbolic link to python includes (boost needs this) (ignore it if you compile Karabo with --auto flag):
 
   .. code-block:: bash
 
