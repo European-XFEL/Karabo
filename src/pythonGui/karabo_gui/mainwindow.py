@@ -414,38 +414,22 @@ class MainWindow(QMainWindow):
         """
         The given /tabWidget is about to be maximized.
         """
-        for i in range(self.rightArea.count()):
-            w = self.rightArea.widget(i)
-            if w != tabWidget:
-                w.hide()
-        
-        for i in range(self.middleArea.count()):
-            w = self.middleArea.widget(i)
-            if w != tabWidget:
-                w.hide()
-        
-        for i in range(self.leftArea.count()):
-            w = self.leftArea.widget(i)
-            if w != tabWidget:
-                w.hide()
+        areas = (self.rightArea, self.middleArea, self.leftArea)
+        for area in areas:
+            for i in range(area.count()):
+                w = area.widget(i)
+                if w != tabWidget:
+                    w.hide()
 
 
     def onTabMinimized(self, tabWidget):
         """
         The given /tabWidget is about to be minimized.
         """
-        for i in range(self.rightArea.count()):
-            w = self.rightArea.widget(i)
-            if w != tabWidget:
-                w.show()
-        
-        for i in range(self.middleArea.count()):
-            w = self.middleArea.widget(i)
-            if w != tabWidget:
-                w.show()
-        
-        for i in range(self.leftArea.count()):
-            w = self.leftArea.widget(i)
-            if w != tabWidget:
-                w.show()
+        areas = (self.rightArea, self.middleArea, self.leftArea)
+        for area in areas:
+            for i in range(area.count()):
+                w = area.widget(i)
+                if w != tabWidget:
+                    w.show()
 
