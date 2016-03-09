@@ -1,0 +1,40 @@
+######################################
+#   How to compile my device server  #
+######################################
+
+(1) Navigate to the `server` directory and type
+
+    make
+
+    Optionally specify CONF=Debug or CONF=Release for a debug
+    or release build (default: Debug)
+
+
+(2) For coding/compiling using netbeans, open the folder 
+    `server` this README as netbeans project
+
+    Note: If you are adding/deleting source files you need an 
+    initial build with NetBeans for regenerating the `Makefile`
+
+##################################
+#   How to run my device server  #
+##################################
+
+Once compiled navigate within the `server` folder to
+
+     dist/<CONF>/<PLATFORM>
+
+and start the executable like 
+
+    ./<DEVICE_SERVER> test
+
+with `test` being the instance name of your server
+which must be unique in a Karabo system. 
+
+
+GENERAL NOTE:
+
+  If you have an updated version of your device (recompiled code) it should be sufficient to kill (Ctrl-c) and restart the DeviceServer.
+
+  If you see a problem with your device, just kill your device server (Ctrl-c), go to the code, recompile
+  and start the server again. 

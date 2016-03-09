@@ -148,6 +148,7 @@ class Hash_TestCase(unittest.TestCase):
         h["hash", "int"] = 3
         h["string", "chars"] = b"blub"
         h["chars", "string"] = "laber"
+        h["vector", "complex"] = complex(1.0, 2.0)
         sh = Hash()
         sh["a"] = Hash()
         sh["a", "nodeType"] = 0
@@ -193,6 +194,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(h["string", "chars"], b"blub")
         self.assertTrue(isinstance(h["string", "chars"], bytes))
         self.assertEqual(h["chars", "string"], "laber")
+        self.assertEqual(h["vector", "complex"], complex(1.0, 2.0))
         self.assertTrue(isinstance(h["chars", "string"], str))
         self.assertEqual(h["schema"].name, "blub")
         sh = h["schema"].hash
@@ -216,7 +218,7 @@ class Hash_TestCase(unittest.TestCase):
         r = BinaryParser()
         s = w.write(self.create_hash())
         self.check_hash(r.read(s))
-        self.assertEqual(adler32(s), 3040627137)
+        self.assertEqual(adler32(s), 2640989770)
 
 
     def test_cpp(self):

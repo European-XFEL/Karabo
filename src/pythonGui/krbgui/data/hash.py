@@ -3,6 +3,8 @@ import numbers
 
 import numpy as np
 
+from .typenums import HashType
+
 
 class Hash(OrderedDict):
     """This is the fundamental data structure of Karabo
@@ -23,7 +25,7 @@ class Hash(OrderedDict):
     """
 
     def __init__(self, *args):
-        self.__node_attrs__ = _get_empty_attr_dict('Hash')
+        self.__node_attrs__ = _get_empty_attr_dict(HashType.Hash)
         if len(args) == 1:
             arg = args[0]
             if isinstance(arg, Hash):
@@ -180,44 +182,44 @@ def _get_type(value):
     """
     if isinstance(value, np.ndarray):
         numpy_type_names = {
-            np.bool_: 'BoolArray',
-            np.int8: 'Int8Array',
-            np.uint8: 'UInt8Array',
-            np.int16: 'Int16Array',
-            np.uint16: 'UInt16Array',
-            np.int32: 'Int32Array',
-            np.uint32: 'UInt32Array',
-            np.int64: 'Int64Array',
-            np.uint64: 'UInt64Array',
-            np.float32: 'Float32Array',
-            np.float64: 'Float64Array',
-            np.complex64: 'Complex64Array',
-            np.complex128: 'Complex128Array',
+            np.bool_: HashType.BoolArray,
+            np.int8: HashType.Int8Array,
+            np.uint8: HashType.UInt8Array,
+            np.int16: HashType.Int16Array,
+            np.uint16: HashType.UInt16Array,
+            np.int32: HashType.Int32Array,
+            np.uint32: HashType.UInt32Array,
+            np.int64: HashType.Int64Array,
+            np.uint64: HashType.UInt64Array,
+            np.float32: HashType.Float32Array,
+            np.float64: HashType.Float64Array,
+            np.complex64: HashType.Complex64Array,
+            np.complex128: HashType.Complex128Array,
         }
         return numpy_type_names[value.dtype.type]
     elif isinstance(value, Hash):
-        return 'Hash'
+        return HashType.Hash
     elif isinstance(value, Schema):
-        return 'Schema'
+        return HashType.Schema
     elif isinstance(value, bool):
-        return 'Bool'
+        return HashType.Bool
     elif isinstance(value, numbers.Integral):
-        return 'Int32'
+        return HashType.Int32
     elif isinstance(value, numbers.Real):
-        return 'Float64'
+        return HashType.Float64
     elif isinstance(value, numbers.Complex):
-        return 'Complex128'
+        return HashType.Complex128
     elif isinstance(value, bytes):
-        return 'Bytes'
+        return HashType.Bytes
     elif isinstance(value, str):
-        return 'String'
+        return HashType.String
     elif isinstance(value, list):
         if value:
             subtype = _get_type(value[0])
-            return subtype + 'List'
+            return HashType(subtype.value + 1)
         else:
-            return 'StringList'
+            return HashType.StringList
     elif value is None:
-        return 'None_'
+        return HashType.None_
     else:
         raise TypeError('unknown data type "{0}"'.format(value.__class__))

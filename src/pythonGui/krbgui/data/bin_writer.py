@@ -1,9 +1,31 @@
+from contextlib import closing
 from functools import partial
 from io import BytesIO
 from struct import pack
 
 from .typenums import HashType
 
+
+def write_binary_hash(hsh):
+    """ Convert a Hash to a string of bytes.
+    """
+    b_io = BytesIO()
+    with closing(b_io) as fp:
+        write_hash(fp, hsh)
+        return fp.getvalue()
+
+
+def write_binary_schema(schema):
+    """ Convert a Schema to a string of bytes.
+    """
+    b_io = BytesIO()
+    with closing(b_io) as fp:
+        write_schema(fp, schema)
+        return fp.getvalue()
+
+
+#######################
+# Writer implementation
 
 def write_array(fp, arr):
     write_simple(fp, len(arr), fmt='I')
@@ -28,7 +50,7 @@ def write_hash(fp, hsh):
     write_simple(fp, member_count, fmt='I')
     for key, value, attrs in hsh.iterall():
         attr_types = attrs.pop('KRB_AttrTypes')
-        type_enum = getattr(HashType, attrs.pop('KRB_Type'))
+        type_enum = attrs.pop('KRB_Type')
         attr_count = len(attrs)
         writer = __WRITER_MAP[type_enum]
 
@@ -36,7 +58,7 @@ def write_hash(fp, hsh):
         write_simple(fp, type_enum.value, fmt='I')
         write_simple(fp, attr_count, fmt='I')
         for akey, avalue in attrs.items():
-            atype_enum = getattr(HashType, attr_types[akey])
+            atype_enum = attr_types[akey]
             awriter = __WRITER_MAP[atype_enum]
             write_key(fp, akey)
             write_simple(fp, atype_enum.value, fmt='I')
@@ -58,9 +80,7 @@ def write_list(fp, lst, writer=None):
 
 
 def write_schema(fp, sch):
-    mem_file = BytesIO()
-    write_hash(mem_file, sch.hash)
-    buffer = mem_file.getvalue()
+    buffer = write_binary_hash(sch.hash)
     key = sch.name.encode('utf8')
 
     write_simple(fp, len(buffer) + len(key) + 1, fmt='I')

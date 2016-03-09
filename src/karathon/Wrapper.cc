@@ -302,6 +302,11 @@ namespace karathon {
             any = b;
             return karabo::util::Types::DOUBLE;
         }
+        if (PyComplex_Check(obj.ptr())) {
+            std::complex<double> b = bp::extract<std::complex<double> >(obj);
+            any = b;
+            return karabo::util::Types::COMPLEX_DOUBLE;
+        }
         if (PyUnicode_Check(obj.ptr())) {
             Py_ssize_t size;
             const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);

@@ -59,7 +59,7 @@ namespace karabo {
             
             karabo::util::Hash m_loggerMap;
             karabo::util::Hash m_loggerInput;
-
+            
         public:
 
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "1.0")

@@ -88,10 +88,7 @@ if [ -d $RESOURCE_PATH ]; then
 
         echo -e "\n### Extracting $RESOURCE_NAME"
         safeRunCommand "$EXTRACT_COMMAND"
-        if [ -d "$DEP_NAME" ]; then
-            # Not every package extracts something...
-            cd $DEP_NAME
-        fi
+        cd $DEP_NAME
 
         echo -e "\n### Configuring $RESOURCE_NAME"
         safeRunCommand "$CONFIGURE_COMMAND"

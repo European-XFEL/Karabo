@@ -39,6 +39,8 @@ Get and install python and required packages
     sudo port select --set ipython ipython34
     sudo port select --set nosetests nosetests34
     sudo port install py34-suds-jurko
+    sudo port install py34-setuptools py34-pip
+    sudo port select --set pip pip34
 
 8. Install guidata and guiqwt::
 
