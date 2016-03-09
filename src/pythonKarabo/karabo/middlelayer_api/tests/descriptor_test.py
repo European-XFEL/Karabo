@@ -1,7 +1,8 @@
+from enum import Enum
 from unittest import TestCase, main
 
 from karabo.middlelayer_api import hash as hashmod
-from karabo.middlelayer_api.basetypes import QuantityValue
+from karabo.middlelayer_api.basetypes import EnumValue, QuantityValue
 from karabo.middlelayer_api.enums import Unit, MetricPrefix
 from karabo.middlelayer_api.hash import Hash
 
@@ -20,7 +21,23 @@ class Tests(TestCase):
             self.assertTrue((h["a"] == value).all())
         else:
             self.assertTrue(c == value)
-            self.assertEqual(h["a"], value)
+            if isinstance(value, EnumValue):
+                self.assertEqual(h["a"], value.value)
+            else:
+                self.assertEqual(h["a"], value)
+
+    def test_int_enum(self):
+        class E(Enum):
+            a = 3
+        class F(Enum):
+            a = 3
+        d = hashmod.Int8(enum=E)
+        v = d.toKaraboValue(E.a)
+        self.assertIs(v.enum, E.a)
+        self.assertEqual(v.value, 3)
+        self.check_timestamp(d, v)
+        v = d.toKaraboValue(3)
+        self.assertIs(v.enum, E.a)
 
     def test_bool(self):
         d = hashmod.Bool()
@@ -114,6 +131,19 @@ class Tests(TestCase):
         with self.assertRaises(ValueError):
             v = d.toKaraboValue("7 m")
 
+    def test_float_enum(self):
+        class E(Enum):
+            a = 3.3
+        class F(Enum):
+            a = 3.3
+        d = hashmod.Int8(enum=E)
+        v = d.toKaraboValue(E.a)
+        self.assertIs(v.enum, E.a)
+        self.assertEqual(v.value, 3.3)
+        self.check_timestamp(d, v)
+        v = d.toKaraboValue(3.3)
+        self.assertIs(v.enum, E.a)
+
     def test_vector_floats(self):
         d = hashmod.VectorFloat()
         v = d.toKaraboValue([1, 2, 3])
@@ -171,6 +201,19 @@ class Tests(TestCase):
         self.check_timestamp(d, v)
         self.assertEqual(v, "bla")
         self.assertEqual(repr(v), "'bla'")
+
+    def test_string_enum(self):
+        class E(Enum):
+            a = "bla"
+        class F(Enum):
+            a = "bla"
+        d = hashmod.String(enum=E)
+        v = d.toKaraboValue(E.a)
+        self.assertIs(v.enum, E.a)
+        self.assertEqual(v.value, "bla")
+        self.check_timestamp(d, v)
+        v = d.toKaraboValue("bla")
+        self.assertIs(v.enum, E.a)
 
     def test_vector_string(self):
         d = hashmod.VectorString()
