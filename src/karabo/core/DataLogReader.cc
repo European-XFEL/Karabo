@@ -248,7 +248,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "MetaSearchResult: from : filenum=" << msr.fromFileNumber << " record=" << msr.fromRecord
                         << ", to : filenum=" << msr.toFileNumber << " record=" << msr.toRecord << ", list: " << toString(msr.nrecList);
                 const unsigned int numFiles = (msr.toFileNumber - msr.fromFileNumber + 1);
-                if (msr.nrecList.size() != numFiles) {
+                if (msr.nrecList.size() != numFiles && msr.nrecList.size()) {
                     KARABO_LOG_FRAMEWORK_ERROR << "MetaSearchResult mismatch: " << numFiles
                             << ", but list of records has " << msr.nrecList.size() << " entries.";
                 }
