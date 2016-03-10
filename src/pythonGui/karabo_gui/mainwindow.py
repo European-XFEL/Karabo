@@ -162,11 +162,11 @@ class MainWindow(QMainWindow):
         mainSplitter.setContentsMargins(5,5,5,5)
         
         self.navigationPanel = NavigationPanel()
-        leftArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.navigationTab = DockTabWindow("Navigation", leftArea)
-        self.navigationTab.addDockableTab(self.navigationPanel, "Navigation")
+        self.leftArea = QSplitter(Qt.Vertical, mainSplitter)
+        self.navigationTab = DockTabWindow("Navigation", self.leftArea)
+        self.navigationTab.addDockableTab(self.navigationPanel, "Navigation", self)
         self.signalGlobalAccessLevelChanged.connect(self.navigationPanel.onGlobalAccessLevelChanged)
-        leftArea.setStretchFactor(0,2)
+        self.leftArea.setStretchFactor(0,2)
 
         self.projectPanel = ProjectPanel()
         self.projectPanel.signalAddScene.connect(self.onAddScene)
@@ -174,29 +174,29 @@ class MainWindow(QMainWindow):
         self.projectPanel.signalRenameScene.connect(self.onRenameScene)
         self.projectPanel.signalAddMacro.connect(self.onAddMacro)
         self.projectPanel.signalRemoveMacro.connect(self.onRemoveMacro)
-        self.projectTab = DockTabWindow("Projects", leftArea)
-        self.projectTab.addDockableTab(self.projectPanel, "Projects")
-        leftArea.setStretchFactor(1,1)
+        self.projectTab = DockTabWindow("Projects", self.leftArea)
+        self.projectTab.addDockableTab(self.projectPanel, "Projects", self)
+        self.leftArea.setStretchFactor(1,1)
 
-        middleArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.middleTab = DockTabWindow("Custom view", middleArea)
+        self.middleArea = QSplitter(Qt.Vertical, mainSplitter)
+        self.middleTab = DockTabWindow("Custom view", self.middleArea)
         self.placeholderPanel = None
         self._showStartUpPage(False)
-        middleArea.setStretchFactor(0, 6)
+        self.middleArea.setStretchFactor(0, 6)
 
         self.loggingPanel = LoggingPanel()
         self.scriptingPanel = ScriptingPanel()
         self.notificationPanel = NotificationPanel()
-        self.outputTab = DockTabWindow("Output", middleArea)
-        self.outputTab.addDockableTab(self.loggingPanel, "Log")
-        self.outputTab.addDockableTab(self.scriptingPanel, "Console")
-        self.outputTab.addDockableTab(self.notificationPanel, "Notifications")
-        middleArea.setStretchFactor(1,1)
+        self.outputTab = DockTabWindow("Output", self.middleArea)
+        self.outputTab.addDockableTab(self.loggingPanel, "Log", self)
+        self.outputTab.addDockableTab(self.scriptingPanel, "Console", self)
+        self.outputTab.addDockableTab(self.notificationPanel, "Notifications", self)
+        self.middleArea.setStretchFactor(1,1)
 
         self.configurationPanel = ConfigurationPanel()
-        rightArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.configurationTab = DockTabWindow("Configuration", rightArea)
-        self.configurationTab.addDockableTab(self.configurationPanel, "Configurator")
+        self.rightArea = QSplitter(Qt.Vertical, mainSplitter)
+        self.configurationTab = DockTabWindow("Configuration", self.rightArea)
+        self.configurationTab.addDockableTab(self.configurationPanel, "Configurator", self)
         self.signalGlobalAccessLevelChanged.connect(self.configurationPanel.onGlobalAccessLevelChanged)
         
         mainSplitter.setStretchFactor(0,2)
@@ -228,7 +228,7 @@ class MainWindow(QMainWindow):
 
     def _createPlaceholderPanel(self):
         self.placeholderPanel = PlaceholderPanel()
-        self.middleTab.addDockableTab(self.placeholderPanel, "Start Page")
+        self.middleTab.addDockableTab(self.placeholderPanel, "Start Page", self)
         
 
 ### virtual functions ###
@@ -271,7 +271,7 @@ class MainWindow(QMainWindow):
                     return
 
         customView = CustomMiddlePanel(scene, self.acServerConnect.isChecked())
-        self.middleTab.addDockableTab(customView, scene.filename)
+        self.middleTab.addDockableTab(customView, scene.filename, self)
         customView.signalClosed.connect(self.onCustomViewRemoved)
         if self.middleTab.count() > 1:
             self.middleTab.updateTabsClosable()
@@ -317,7 +317,7 @@ class MainWindow(QMainWindow):
         
         if macro.editor is None:
             macroView = MacroPanel(macro)
-            self.middleTab.addDockableTab(macroView, macro.name)
+            self.middleTab.addDockableTab(macroView, macro.name, self)
             macro.editor = macroView
             if self.middleTab.count() > 1:
                 self.middleTab.updateTabsClosable()
@@ -408,3 +408,28 @@ class MainWindow(QMainWindow):
                 scene = divWidget.dockableWidget.scene
                 if scene.isVisible():
                     scene.update()
+
+   
+    def onTabMaximized(self, tabWidget):
+        """
+        The given /tabWidget is about to be maximized.
+        """
+        areas = (self.rightArea, self.middleArea, self.leftArea)
+        for area in areas:
+            for i in range(area.count()):
+                w = area.widget(i)
+                if w != tabWidget:
+                    w.hide()
+
+
+    def onTabMinimized(self, tabWidget):
+        """
+        The given /tabWidget is about to be minimized.
+        """
+        areas = (self.rightArea, self.middleArea, self.leftArea)
+        for area in areas:
+            for i in range(area.count()):
+                w = area.widget(i)
+                if w != tabWidget:
+                    w.show()
+
