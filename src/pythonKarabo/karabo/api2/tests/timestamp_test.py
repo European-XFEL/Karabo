@@ -9,11 +9,15 @@ class Tests(TestCase):
         t = Timestamp()
         self.assertLess(abs(t.toTimestamp() - time.time()), 0.001)
 
-        t2 = Timestamp(t)
-        self.assertLess(abs(t2.toTimestamp() - time.time()), 0.001)
+        t2 = Timestamp("2009-04-20T10:32:22 UTC")
+        self.assertEqual(t2.toTimestamp(), 1240223542)
 
-        t3 = Timestamp(t.toLocal())
-        self.assertLess(abs(t3.toTimestamp() - time.time()), 0.001)
+        t3 = Timestamp(t2.toLocal())
+        self.assertEqual(t3.toTimestamp(), 1240223542)
+        self.assertEqual(t3.toLocal(), "2009-04-20T12:32:22")
+
+        t4 = Timestamp(t2)
+        self.assertEqual(t3.toTimestamp(), 1240223542)
 
     def test_hash(self):
         self.assertIsNone(Timestamp.fromHashAttributes(dict()))
