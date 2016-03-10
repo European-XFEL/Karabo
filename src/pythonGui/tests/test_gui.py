@@ -276,7 +276,7 @@ class Tests(TestCase):
 
         net.called = []
         w = DockableWidget()
-        gui.window.middleTab.addDockableTab(w, "nix")
+        gui.window.middleTab.addDockableTab(w, "nix", gui.window)
         gui.window.middleTab.setCurrentIndex(1)
         self.assertFalse(scene.tabVisible)
         self.assertEqual(len(net.called), 2)

@@ -159,8 +159,13 @@ if [ "$SKIP" = "n" ]; then
         # Patch reported macports bug (#37201)
         #safeRunCommand "sudo cp -rf extern/resources/bundleMacOSX/sqldrivers /opt/local/share/qt4/plugins"
         # Patch NetBeans bug regarding Makefile pathes
+
         safeRunCommand "cd /usr/bin"
         safeRunCommand "sudo ln -sf /opt/local/bin/pkg-config pkg-config"
+        safeRunCommand "cd -"
+
+        safeRunCommand "cd /opt/local/Library/Frameworks/Python.framework/Versions/Current/include"
+        safeRunCommand "sudo ln -sf python3.4m python3.4"
         safeRunCommand "cd -"
     fi
 fi

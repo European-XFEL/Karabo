@@ -23,8 +23,9 @@ Get and install python and required packages
 5. Install MacPorts (install .pkg from www.macports.org)
 6. Install relevant packages using MacPorts. Go to a terminal and type::
 
-    sudo port install gcc48
-    sudo port select --set gcc mp-gcc48
+    sudo port install gcc49
+    sudo port select --set gcc mp-gcc49
+    sudo port install -f dbus
     sudo port install sqlite3 qt4-mac-sqlite3-plugin python34
     sudo port select --set python python34
     sudo port install py34-pyqt4
@@ -41,6 +42,7 @@ Get and install python and required packages
     sudo port install py34-suds-jurko
     sudo port install py34-setuptools py34-pip
     sudo port select --set pip pip34
+    sudo port install doxygen
 
 8. Install guidata and guiqwt::
 
