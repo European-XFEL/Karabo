@@ -8,7 +8,7 @@ import dateutil.tz
 import time
 
 
-attosec = 10 ** 18  # current Karabo resolution is attoseconds
+RESOLUTION = 10 ** 18  # current Karabo resolution is attoseconds
 
 
 @total_ordering
@@ -21,21 +21,21 @@ class Timestamp(object):
         dateutil"""
         self.tid = 0
         if date is None:
-            self.time = int(time.time() * attosec)
+            self.time = int(time.time() * RESOLUTION)
         elif isinstance(date, Timestamp):
             self.time = date.time
         else:
             d = dateutil.parser.parse(date)
             if d.tzinfo is None:
                 d = d.replace(tzinfo=dateutil.tz.tzlocal())
-            self.time = int(d.timestamp() * attosec)
+            self.time = int(d.timestamp() * RESOLUTION)
 
     @staticmethod
     def fromHashAttributes(attrs):
         if 'sec' not in attrs:
             return None
         ret = Timestamp()
-        ret.time = attrs['frac'] + attrs['sec'] * attosec
+        ret.time = attrs['frac'] + attrs['sec'] * RESOLUTION
         ret.tid = attrs['tid']
         return ret
 
