@@ -32,13 +32,16 @@ echo  " unpacking finished successfully"
 echo
 echo -n "Running wheel installation..."
 
-if [ $(uname -s) == "Darwin" ]; then
+OS=$(uname -s)
+if [ "$OS" == "Darwin" ]; then
     PIP=/opt/local/bin/pip
+    WHEEL_INSTALL_FLAGS="--user"
 else
     PIP=$KARABO/extern/bin/pip
+    WHEEL_INSTALL_FLAGS=
 fi
 
-$PIP install -U --no-index $WHEELNAME
+$PIP install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELNAME
 
 echo " done."
 echo
