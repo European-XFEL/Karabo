@@ -2,30 +2,38 @@ from enum import Enum
 from itertools import product
 from unittest import TestCase, main
 
+import pint
+import numpy
+
 from karabo.api2.enums import Unit, MetricPrefix
 from karabo.api2.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
-    VectorStringValue)
+    VectorStringValue, wrap)
+from karabo.api2.hash import Int32
 
 
 class Tests(TestCase):
     def test_str(self):
-        s = StringValue("abc", 5)
+        s = StringValue("abc", descriptor=5, timestamp=3)
         self.assertEqual(s, "abc")
         self.assertEqual(s.descriptor, 5)
+        self.assertEqual(s.timestamp, 3)
 
-        b = VectorCharValue(b"ase", 7)
+        b = VectorCharValue(b"ase", descriptor=7, timestamp=2)
         self.assertEqual(b, b"ase")
         self.assertEqual(b.descriptor, 7)
+        self.assertEqual(b.timestamp, 2)
 
     def test_bool(self):
-        t = BoolValue(True, 7)
+        t = BoolValue(True, descriptor=7, timestamp=22)
         self.assertTrue(t)
         self.assertEqual(t.descriptor, 7)
+        self.assertEqual(t.timestamp, 22)
 
-        f = BoolValue(False, 3)
+        f = BoolValue(False, descriptor=3, timestamp=33)
         self.assertFalse(f)
         self.assertEqual(f.descriptor, 3)
+        self.assertEqual(f.timestamp, 33)
 
     def test_enum(self):
         class E(Enum):
@@ -39,25 +47,39 @@ class Tests(TestCase):
             enum = E
 
         d = Descriptor()
-        e = EnumValue(E.a, d)
+        e = EnumValue(E.a, descriptor=d, timestamp=22)
         self.assertEqual(e, E.a)
         self.assertNotEqual(e, E.b)
         self.assertEqual(e.descriptor, d)
         self.assertNotEqual(e, F.a)
+        self.assertEqual(e.timestamp, 22)
 
         with self.assertRaises(TypeError):
             e = EnumValue(F.a, d)
 
     def test_stringlist(self):
-        l = VectorStringValue(["a", "b", "c"], 3)
+        l = VectorStringValue(["a", "b", "c"], descriptor=3, timestamp=100)
         self.assertEqual(l, ["a", "b", "c"])
         self.assertEqual(l.descriptor, 3)
+        self.assertEqual(l.timestamp, 100)
 
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
             if u is not Unit.NOT_ASSIGNED:
                 QuantityValue(1, u, p)
         QuantityValue(1, Unit.NOT_ASSIGNED)
+
+    def test_unit_descriptor(self):
+        d1 = Int32(unitSymbol=Unit.METER)
+        d2 = Int32(unitSymbol=Unit.SECOND)
+
+        a = QuantityValue("1 m", descriptor=d1, timestamp=9)
+        self.assertEqual(a.magnitude, 1)
+        self.assertEqual(a.descriptor, d1)
+        self.assertEqual(a.timestamp, 9)
+
+        with self.assertRaises(pint.DimensionalityError):
+            QuantityValue("1 s", descriptor=d1)
 
     def test_special(self):
         vps = QuantityValue(1, Unit.VOLT_PER_SECOND)
@@ -78,6 +100,42 @@ class Tests(TestCase):
         # check correct dimensionality:
         eV + QuantityValue("1 J")
         kat / mps + QuantityValue("1 mol / m")
+
+    def test_wrap(self):
+        w = wrap(True)
+        self.assertTrue(w)
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap(5)
+        self.assertEqual(w, 5)
+        self.assertEqual(w.magnitude, 5)
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap(5.5)
+        self.assertEqual(w, 5.5)
+        self.assertEqual(w.magnitude, 5.5)
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap(numpy.arange(10))
+        self.assertEqual(w[3], 3)
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap("hallo")
+        self.assertEqual(w, "hallo")
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap(b"hallo")
+        self.assertEqual(w, b"hallo")
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap([])
+        self.assertEqual(w, [])
+        self.assertEqual(w.descriptor, None)
+
+        w = wrap(["bla"])
+        self.assertEqual(w, ["bla"])
+        self.assertEqual(w.descriptor, None)
+
 
 if __name__ == "__main__":
     main()
