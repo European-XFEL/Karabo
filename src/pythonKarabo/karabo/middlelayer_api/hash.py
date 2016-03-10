@@ -57,8 +57,6 @@ class Enumable(object):
             return data.value
 
     def toKaraboValue(self, data):
-        if not isinstance(data, (self.enum, basetypes.EnumValue)):
-            data = self.enum(data)
         return basetypes.EnumValue(data, descriptor=self)
 
 

@@ -36,8 +36,8 @@ class Tests(TestCase):
         self.assertIs(v.enum, E.a)
         self.assertEqual(v.value, 3)
         self.check_timestamp(d, v)
-        v = d.toKaraboValue(3)
-        self.assertIs(v.enum, E.a)
+        with self.assertRaises(TypeError):
+            v = d.toKaraboValue(3)
 
     def test_bool(self):
         d = hashmod.Bool()
@@ -141,8 +141,8 @@ class Tests(TestCase):
         self.assertIs(v.enum, E.a)
         self.assertEqual(v.value, 3.3)
         self.check_timestamp(d, v)
-        v = d.toKaraboValue(3.3)
-        self.assertIs(v.enum, E.a)
+        with self.assertRaises(TypeError):
+            v = d.toKaraboValue(3.3)
 
     def test_vector_floats(self):
         d = hashmod.VectorFloat()
@@ -212,8 +212,8 @@ class Tests(TestCase):
         self.assertIs(v.enum, E.a)
         self.assertEqual(v.value, "bla")
         self.check_timestamp(d, v)
-        v = d.toKaraboValue("bla")
-        self.assertIs(v.enum, E.a)
+        with self.assertRaises(TypeError):
+            v = d.toKaraboValue("bla")
 
     def test_vector_string(self):
         d = hashmod.VectorString()
