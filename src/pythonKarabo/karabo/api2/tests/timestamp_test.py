@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest import TestCase, main
 import time
 
@@ -14,7 +15,8 @@ class Tests(TestCase):
 
         t3 = Timestamp(t2.toLocal())
         self.assertEqual(t3.toTimestamp(), 1240223542)
-        self.assertEqual(t3.toLocal(), "2009-04-20T12:32:22")
+        self.assertEqual(t3.toLocal(),
+                         datetime.fromtimestamp(1240223542).isoformat())
 
         t4 = Timestamp(t2)
         self.assertEqual(t3.toTimestamp(), 1240223542)
