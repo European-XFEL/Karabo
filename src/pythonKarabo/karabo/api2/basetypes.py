@@ -2,6 +2,7 @@
 
 Karabo keeps some metadata with its values. This module contains the
 classes which have the metadata attached."""
+from enum import Enum
 import numbers
 
 import numpy
@@ -58,8 +59,10 @@ class EnumValue(SimpleValue):
     We can define enums in the expected parameters. This contains a value of
     them. Unfortunately, it is impossible to use the "is" operator as with
     bare enums, one has to use == instead. """
-    def __init__(self, value, descriptor, *, timestamp=None):
-        if not isinstance(value, descriptor.enum):
+    def __init__(self, value, *, descriptor=None, timestamp=None):
+        if not isinstance(value, Enum):
+            raise TypeError("value must be an Enum")
+        if descriptor is not None and not isinstance(value, descriptor.enum):
             raise TypeError("value is not element of enum in descriptor")
         super().__init__(value, descriptor=descriptor, timestamp=timestamp)
 
