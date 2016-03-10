@@ -47,7 +47,7 @@ class Tests(TestCase):
             enum = E
 
         d = Descriptor()
-        e = EnumValue(E.a, d, timestamp=22)
+        e = EnumValue(E.a, descriptor=d, timestamp=22)
         self.assertEqual(e, E.a)
         self.assertNotEqual(e, E.b)
         self.assertEqual(e.descriptor, d)
