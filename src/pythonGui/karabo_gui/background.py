@@ -1,32 +1,42 @@
 """This module allows to run code with low priority"""
 
-from collections import deque
+from enum import Enum
+from functools import total_ordering
+from heapq import heappush, heappop
+
+from PyQt4.QtCore import QTimer
 
 
-queue = deque()
+@total_ordering
+class Priority(Enum):
+    NETWORK = 0
+    BACKGROUND = 1
+
+    def __lt__(self, other):
+        if isinstance(other, Priority):
+            return self.value < other.value
+        else:
+            return NotImplemented
 
 
-def executeLater(task):
+def executeLater(task, priority):
     """append a task to the queue of the ones to be executed"""
-    queue.append(task)
-    callback()
+    global counter
+    heappush(queue, (priority, counter, task))
+    counter += 1
+    timer.start()
 
 
-def execute():
-    """execute one task if existing
-
-    returns True if a task was executed, False if there was none."""
-    if queue:
-        t = queue.popleft()
-        t()
-        return True
-    else:
-        return False
+def timeout():
+    """execute one task if existing"""
+    _, _, task = heappop(queue)
+    if not queue:
+        timer.stop()
+    task()
 
 
-def initialize(cb):
-    """Initialize the callback of this module
-
-    the callback *cb* will be called once a task gets added to the queue"""
-    global callback
-    callback = cb
+queue = []
+counter = 0
+timer = QTimer()
+timer.setInterval(0)
+timer.timeout.connect(timeout)
