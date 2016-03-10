@@ -48,6 +48,10 @@ class DocumentationPanel(Dockable, QWidget):
 
 
     def setupToolBars(self, toolBar, parent):
+        # Disable minimize/maximize actions due to the fact that they do not work so far
+        parent.acMaximize.setVisible(False)
+        parent.acMinimize.setVisible(False)
+        
         self.acBackReport = self.reportView.pageAction(QWebPage.Back)
         self.acForwardReport = self.reportView.pageAction(QWebPage.Forward)
         self.acReloadReport = self.reportView.pageAction(QWebPage.Reload)
