@@ -206,7 +206,8 @@ namespace karabo {
                 // Prepare connection configuration given output channel information
                 karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
                 karabo::net::Connection::Pointer tcpConnection = karabo::net::Connection::create(config); // Instantiate
-
+                tcpConnection->setErrorHandler(boost::bind(&karabo::xms::InputChannel::onTcpConnectionError, this, tcpConnection, _1));
+                
                 if (!m_tcpIoService) {
                     // Get IO service and save for later sharing
                     m_tcpIoService = tcpConnection->getIOService();
@@ -308,19 +309,15 @@ namespace karabo {
         }
 
 
-        void InputChannel::onTcpConnectionError(karabo::net::Channel::Pointer, const karabo::net::ErrorCode& error) {
-            if (error.value() != 125 && error.value() != 2)
-                KARABO_LOG_FRAMEWORK_ERROR << error.value() << ": " << error.message();
-            else
-                KARABO_LOG_FRAMEWORK_DEBUG << "onTcpConnectionError : " << error.value() << ": " << error.message();
+        void InputChannel::onTcpConnectionError(const karabo::net::Connection::Pointer& connection, const karabo::net::ErrorCode& error) {
+            KARABO_LOG_FRAMEWORK_INFO << "onTcpConnectionError : code #" << error.value() << " -- \"" << error.message() << "\". Stop connection.";
+            connection->stop();
         }
 
 
-        void InputChannel::onTcpChannelError(karabo::net::Channel::Pointer, const karabo::net::ErrorCode& error) {
-            if (error.value() != 125 && error.value() != 2)
-                KARABO_LOG_FRAMEWORK_INFO << "onTcpChannelError : " << error.value() << ": " << error.message();
-            else
-                KARABO_LOG_FRAMEWORK_DEBUG << "onTcpChannelError : " << error.value() << ": " << error.message();            
+        void InputChannel::onTcpChannelError(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& error) {
+            KARABO_LOG_FRAMEWORK_INFO << "onTcpChannelError : code #" << error.value() << " -- \"" << error.message() << "\".  Close channel.";
+            channel->close();
         }
 
 
@@ -416,24 +413,25 @@ namespace karabo {
                 // set the guard: it is guaranteed that InputChannel object is alive
                 // ... or exception brings us out here
                 InputChannel::Pointer self = shared_from_this();
-
+                if (!self) return;
+                
                 // There is either m_inputHandler or m_dataHandler
                 // (or neither), see registerInputHandler and registerDataHandler.
                 if (m_inputHandler && m_dataHandler) {
                     // Just in case that the above promise is not the case...
-                    KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
+                    KARABO_LOG_FRAMEWORK_WARN << self->getInstanceId() << ": Clear "
                             << "input handler since we have a data handler.";
                     // Clear inputHandler since dataHandler is the recommended
                     // interface (though inputHandler is more general...).
-                    m_inputHandler.clear();
+                    self->m_inputHandler.clear();
                 }
 
                 if (m_dataHandler) {
-                    for (size_t i = 0; i < this->size(); ++i) {
-                        m_dataHandler(this->read(i));
+                    for (size_t i = 0; i < self->size(); ++i) {
+                        m_dataHandler(self->read(i));
                     }
                     if (m_tcpIoService)
-                        m_tcpIoService->post(boost::bind(&InputChannel::update, this));
+                        m_tcpIoService->post(boost::bind(&InputChannel::update, self));
                     else
                         update();
                 }
