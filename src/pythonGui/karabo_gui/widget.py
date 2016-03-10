@@ -151,7 +151,7 @@ class Widget(Registry, QObject):
             self.deferredUpdate()
             self.deferred = False
         if not self.deferred:
-            background.executeLater(updater)
+            background.executeLater(updater, background.Priority.BACKGROUND)
         self.deferred = True
 
     def deferredUpdate(self):

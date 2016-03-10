@@ -14,6 +14,8 @@
 
 __all__ = ["Network"]
 
+from functools import partial
+
 from karabo_gui.dialogs.logindialog import LoginDialog
 from struct import pack
 
@@ -22,7 +24,7 @@ from PyQt4.QtCore import (pyqtSignal, pyqtSlot, QByteArray, QCoreApplication,
                           QCryptographicHash, QObject, QTimer)
 from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.authenticator import Authenticator
-from karabo.api_2 import Hash, BinaryParser, BinaryWriter, AccessLevel
+from karabo.api_2 import Hash, BinaryWriter, AccessLevel
 
 from karabo_gui import background
 import karabo_gui.globals as globals
@@ -52,11 +54,6 @@ class _Network(QObject):
         self.sessionToken = ""
 
         self.tcpSocket = None
-        self.timer = QTimer(self)
-        self.timer.setInterval(0)
-        self.timer.timeout.connect(self.onReadServerData)
-        background.initialize(self.timer.start)
-        
         self.requestQueue = [ ]
 
 
@@ -108,10 +105,8 @@ class _Network(QObject):
 
         self.tcpSocket = QTcpSocket(self)
         self.tcpSocket.connected.connect(self.onConnected)
-        self.runner = self.processInput()
-        self.bytesNeeded = next(self.runner)
+        self.tcpSocket.readyRead.connect(lambda: next(self.dataReader))
         self.tcpSocket.disconnected.connect(self.onDisconnected)
-        self.tcpSocket.readyRead.connect(self.timer.start)
         self.tcpSocket.error.connect(self.onSocketError)
 
         self.tcpSocket.connectToHost(hostname, port)
@@ -204,27 +199,39 @@ class _Network(QObject):
         except Exception as e:
             print("Logout problem. Please verify, if service is running. " + str(e))
 
-    @pyqtSlot()
-    def onReadServerData(self):
-        if self.tcpSocket.bytesAvailable() >= self.bytesNeeded:
-            try:
-                self.bytesNeeded = self.runner.send(self.tcpSocket.read(
-                    self.bytesNeeded))
-            except Exception as e:
-                self.runner = self.processInput()
-                self.bytesNeeded = next(self.runner)
-                if not isinstance(e, StopIteration):
-                    raise
-        elif not background.execute():
-            self.timer.stop()
+    def onReadServerData(self, runner):
+        """chunk the data and distribute to runner
+
+        the iterator created by this generator function should be called
+        whenever more data is available.
+
+        *runner* is a generator that yields the number of bytes it wants
+        to process, and will be sent that number of bytes once they are
+        available. """
+        bytesNeeded = next(runner)
+        try:
+            while True:
+                while self.tcpSocket.bytesAvailable() >= bytesNeeded:
+                    bytesNeeded = runner.send(self.tcpSocket.read(bytesNeeded))
+                yield
+        finally:
+            runner.close()
+
+    def parseInput(self, data):
+        """parse the data and emit the signalReceivedData"""
+        self.signalReceivedData.emit(Hash.decode(data, "Bin"))
 
     def processInput(self):
-        dataSize, = unpack(b"I", (yield 4))
-        dataBytes = yield dataSize
+        """process chunks of input
 
-        h = BinaryParser().read(dataBytes)
-        self.signalReceivedData.emit(h)
+        this generator will yield the number of bytes it needs to proceed,
+        and do so once it gets a chunk of the desired size."""
+        while True:
+            dataSize, = unpack(b"I", (yield 4))
+            dataBytes = yield dataSize
 
+            background.executeLater(partial(self.parseInput, dataBytes),
+                                    background.Priority.NETWORK)
 
     def onSocketError(self, socketError):
         print("onSocketError", self.tcpSocket.errorString(), socketError)
@@ -292,11 +299,10 @@ class _Network(QObject):
         for r in self.requestQueue:
             self._tcpWriteHash(r)
         self.requestQueue = []
-
+        self.dataReader = self.onReadServerData(self.processInput())
 
     def onDisconnected(self):
         pass
-
 
     def onKillDevice(self, deviceId):
         h = Hash("type", "killDevice")
