@@ -29,14 +29,38 @@ namespace karabo {
             struct Producer {
                 // Producer typedefs ...
                 typedef std::map<Channel::Pointer, std::set<std::string> > ChannelToSlotInstanceIds;
+            
+            private:
+            
                 unsigned int m_port;
                 Connection::Pointer m_connection;
                 ChannelToSlotInstanceIds m_registeredChannels;
                 boost::mutex m_registeredChannelsMutex;
-
+                
+            public:
+                
+                KARABO_CLASSINFO(Producer, "PointToPointProducer", "1.0")
+                
                 Producer();
 
                 ~Producer();
+
+                IOService::Pointer getIOService() const {
+                    return m_connection->getIOService();
+                }
+                
+                unsigned int getPort() const {
+                    return m_port;
+                }
+                
+                bool publish(const std::string& slotInstanceId,
+                        const karabo::util::Hash::Pointer& header,
+                        const karabo::util::Hash::Pointer& body,
+                        int prio);
+
+                void publishIfConnected(std::map<std::string, std::set<std::string> >& registeredSlots,
+                        const karabo::util::Hash::Pointer& header,
+                        const karabo::util::Hash::Pointer& message, int prio);
 
                 void connectHandler(const karabo::net::Channel::Pointer& channel);
 
@@ -45,6 +69,11 @@ namespace karabo {
                 void channelErrorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec);
 
                 void stop();
+                
+            private:
+                void updateHeader(const karabo::util::Hash::Pointer& header,
+                        const std::map<std::string, std::set<std::string> >& registeredSlots) const;
+
             };
 
             struct Consumer {
@@ -55,20 +84,63 @@ namespace karabo {
                 // Mapping connectionString into (Connection, Channel) pointers
                 typedef std::map<std::string, std::pair<karabo::net::Connection::Pointer, karabo::net::Channel::Pointer> > OpenConnections;
 
+            private:
+                
                 OpenConnections m_openConnections; // key: connection_string 
                 ConnectedInstances m_connectedInstances;
                 boost::mutex m_connectedInstancesMutex;
 
+            public:
+                
+                KARABO_CLASSINFO(Consumer, "PointToPointConsumer", "1.0")
+                        
                 Consumer();
 
                 virtual ~Consumer();
 
-                void connectionErrorHandler(const std::string& signalInstanceId, const std::string& signalConnectionString,
-                        const karabo::net::Connection::Pointer& connection, const karabo::net::ErrorCode& ec);
-
-                void channelErrorHandler(const std::string& signalInstanceId, const std::string& signalConnectionString,
-                        const karabo::net::Connection::Pointer& connection, const karabo::net::Channel::Pointer& channel,
+                void connectionErrorHandler(const std::string& signalInstanceId,
+                        const std::string& signalConnectionString,
+                        const karabo::net::Connection::Pointer& connection,
                         const karabo::net::ErrorCode& ec);
+
+                void channelErrorHandler(const std::string& signalInstanceId,
+                        const std::string& signalConnectionString,
+                        const karabo::net::Connection::Pointer& connection,
+                        const karabo::net::Channel::Pointer& channel,
+                        const karabo::net::ErrorCode& ec);
+
+                void connect(const karabo::net::IOService::Pointer& svc,
+                        const std::string& signalInstanceId,
+                        const std::string& slotInstanceId,
+                        const std::string& signalConnectionString,
+                        const karabo::net::ConsumeHandler& handler);
+
+                void disconnect(const std::string& signalInstanceId, const std::string& slotInstanceId);
+
+                void consume(const karabo::net::Channel::Pointer& channel,
+                        karabo::util::Hash::Pointer& header,
+                        karabo::util::Hash::Pointer& body);
+                
+            private:
+                
+                void storeTcpConnectionInfo(const std::string& signalConnectionString,
+                        const karabo::net::Connection::Pointer& connection,
+                        const karabo::net::Channel::Pointer& channel) {
+                    if (m_openConnections.find(signalConnectionString) == m_openConnections.end())
+                        m_openConnections[signalConnectionString] = std::make_pair(connection, channel);
+                }
+
+                void storeSignalSlotConnectionInfo(const std::string& slotInstanceId,
+                        const std::string& signalInstanceId,
+                        const std::string& signalConnectionString,
+                        const ConsumeHandler& handler);
+
+                void connectHandler(const std::string& subscription,
+                        const std::string& instanceId,
+                        const std::string& connectionString,
+                        const karabo::net::ConsumeHandler& handler,
+                        const karabo::net::Connection::Pointer& connection,
+                        const karabo::net::Channel::Pointer& channel);
 
             };
 
@@ -96,23 +168,32 @@ namespace karabo {
             }
 
             void connect(const std::string& signalInstanceId, const std::string& slotInstanceId,
-                    const std::string& signalConnectionString, const karabo::net::ConsumeHandler& handler);
+                    const std::string& signalConnectionString, const karabo::net::ConsumeHandler& handler) {
+                m_consumer.connect(m_svc, signalInstanceId, slotInstanceId, signalConnectionString, handler);
+            }
 
-            void disconnect(const std::string& signalInstanceId, const std::string& slotInstanceId);
+            void disconnect(const std::string& signalInstanceId, const std::string& slotInstanceId) {
+                m_consumer.disconnect(signalInstanceId, slotInstanceId);
+            }
 
-            bool publish(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio);
+            bool publish(const std::string& slotInstanceId,
+                    const karabo::util::Hash::Pointer& header,
+                    const karabo::util::Hash::Pointer& body,
+                    int prio) {
+                return m_producer.publish(slotInstanceId, header, body, prio);
+            }
 
             void publishIfConnected(std::map<std::string, std::set<std::string> >& registeredSlots,
-                                    const karabo::util::Hash::Pointer& header,
-                                    const karabo::util::Hash::Pointer& message, int prio);
-            
+                    const karabo::util::Hash::Pointer& header,
+                    const karabo::util::Hash::Pointer& message, int prio) {
+                m_producer.publishIfConnected(registeredSlots, header, message, prio);
+            }
+
         private:
 
-            void updateHeader(const karabo::util::Hash::Pointer& header, const std::map<std::string, std::set<std::string> >& registeredSlots) const;
-
-            void consumerConnectHandler(const std::string& subscription, const std::string& instanceId, const std::string& connectionString, const karabo::net::ConsumeHandler& handler, const karabo::net::Connection::Pointer& connection, const karabo::net::Channel::Pointer& channel);
-
-            void consume(const karabo::net::Channel::Pointer& channel, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
+            void consume(const karabo::net::Channel::Pointer& channel, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body) {
+                m_consumer.consume(channel, header, body);
+            }
 
         };
     }
