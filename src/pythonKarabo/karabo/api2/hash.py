@@ -17,7 +17,8 @@ from xml.etree import ElementTree
 
 import numpy as np
 
-from .enums import AccessLevel, AccessMode, Assignment
+from . import basetypes
+from .enums import AccessLevel, AccessMode, Assignment, Unit, MetricPrefix
 from .exceptions import KaraboError
 from .registry import Registry
 
@@ -148,9 +149,6 @@ class Descriptor(object):
     assignment = Attribute(Assignment.OPTIONAL)
     requiredAccessLevel = Attribute(AccessLevel.OBSERVER)
     displayType = Attribute()
-    unitSymbol = Attribute("")
-    metricPrefixSymbol = Attribute("")
-    enum = None
 
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -268,6 +266,10 @@ class Special(object):
 
 class Type(Descriptor, Registry):
     """This is the base class for all types in the Karabo type hierarchy. """
+    unitSymbol = Attribute(Unit.NOT_ASSIGNED)
+    metricPrefixSymbol = Attribute(MetricPrefix.NONE)
+    enum = None
+
     types = [None] * 51
     fromname = { }
     strs = { }
@@ -278,6 +280,8 @@ class Type(Descriptor, Registry):
         super().__init__(**kwargs)
         if self.options is not None:
             self.options = [self.cast(o) for o in self.options]
+        self.dimensionality = basetypes.QuantityValue(
+            1, unit=self.unitSymbol).dimensionality
 
     @classmethod
     def hashname(cls):
