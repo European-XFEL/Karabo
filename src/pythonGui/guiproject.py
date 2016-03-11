@@ -305,6 +305,7 @@ class GuiProject(Project, QObject):
     signalSceneAdded = pyqtSignal(object)
     signalSceneInserted = pyqtSignal(int, object)
     signalConfigurationAdded = pyqtSignal(str, object)
+    signalConfigurationRemoved = pyqtSignal(str, object)
     #signalResourceAdded = pytqtSignal()
     signalMacroAdded = pyqtSignal(object)
     signalMacroChanged = pyqtSignal(object)
@@ -457,6 +458,12 @@ class GuiProject(Project, QObject):
     def addConfiguration(self, deviceId, configuration):
         super(GuiProject, self).addConfiguration(deviceId, configuration)
         self.signalConfigurationAdded.emit(deviceId, configuration)
+        self.setModified(True)
+
+
+    def removeConfiguration(self, deviceId, configuration):
+        super(GuiProject, self).removeConfiguration(deviceId, configuration)
+        self.signalRemoveObject.emit(configuration)
         self.setModified(True)
 
 
