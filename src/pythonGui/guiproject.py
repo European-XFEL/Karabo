@@ -305,7 +305,6 @@ class GuiProject(Project, QObject):
     signalSceneAdded = pyqtSignal(object)
     signalSceneInserted = pyqtSignal(int, object)
     signalConfigurationAdded = pyqtSignal(str, object)
-    signalConfigurationRemoved = pyqtSignal(str, object)
     #signalResourceAdded = pytqtSignal()
     signalMacroAdded = pyqtSignal(object)
     signalMacroChanged = pyqtSignal(object)
