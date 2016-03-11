@@ -305,6 +305,7 @@ class GuiProject(Project, QObject):
     signalSceneAdded = pyqtSignal(object)
     signalSceneInserted = pyqtSignal(int, object)
     signalConfigurationAdded = pyqtSignal(str, object)
+    signalConfigurationInserted = pyqtSignal(int, str, object)
     #signalResourceAdded = pytqtSignal()
     signalMacroAdded = pyqtSignal(object)
     signalMacroChanged = pyqtSignal(object)
@@ -460,10 +461,23 @@ class GuiProject(Project, QObject):
         self.setModified(True)
 
 
+    def insertConfiguration(self, index, deviceId, configuration):
+        super(GuiProject, self).addConfiguration(deviceId, configuration, index)
+        self.signalConfigurationInserted.emit(index, deviceId, configuration)
+        self.setModified(True)
+
+
     def removeConfiguration(self, deviceId, configuration):
-        super(GuiProject, self).removeConfiguration(deviceId, configuration)
+        """
+        The \configuration of the given /deviceId should be removed from this
+        project.
+        
+        Returns \index of the configuration list.
+        """
+        index = super(GuiProject, self).removeConfiguration(deviceId, configuration)
         self.signalRemoveObject.emit(configuration)
         self.setModified(True)
+        return index
 
 
     def addMacro(self, macro):
