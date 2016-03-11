@@ -20,23 +20,7 @@ fi
 if [ -f "VERSION" ]; then
     VERSION=$(cat VERSION)
 else
-    if tmp=$(svn info ../ | grep URL); then
-    
-	VERSION=${tmp##*/}
-	if [ "$VERSION" = "trunk" ]; then
-            tmp=$(svn info ../ | grep Revision)
-            VERSION=r${tmp##*: }
-	fi
-    elif tmp=$(jsvn info ../ | grep URL)
-    then
-	VERSION=${tmp##*/}
-	if [ "$VERSION" = "trunk" ]; then
-            tmp=$(jsvn info ../ | grep Revision)
-            VERSION=r${tmp##*: }
-	fi
-    else
-	VERSION=$(git rev-parse --short HEAD)
-    fi
+    VERSION=$(git rev-parse --short HEAD)
 fi
 #set temporary for testing
 #VERSION=1.2.3
