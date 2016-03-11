@@ -34,7 +34,7 @@ class Assignment(Enum):
     INTERNAL = 2
 
 
-class NodeType(Enum):
+class NodeType(IntEnum):
     Leaf = 0
     Node = 1
     ChoiceOfNodes = 2
