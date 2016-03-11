@@ -42,10 +42,6 @@ class DisplayCheckBox(DisplayWidget):
         self.widget.setEnabled(False)
 
 
-    def updateState(self):
-        pass
-
-
     @property
     def value(self):
         return self.widget.checkState() == Qt.Checked
