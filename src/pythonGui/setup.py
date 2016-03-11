@@ -28,8 +28,7 @@ def _get_src_dist_version():
 
 
 def _write_version_py(filename=VERSION_FILE_PATH):
-    from karabo.packaging.versioning import (git_version, svn_version,
-                                             jsvn_version)
+    from karabo.packaging.versioning import git_version
 
     template = """\
 # THIS FILE IS GENERATED FROM SETUP.PY. DO NOT EDIT.
