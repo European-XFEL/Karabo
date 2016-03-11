@@ -45,6 +45,7 @@ namespace karabo {
             channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
             channel->setAsyncChannelPolicy(4, "LOSSLESS");
             channel->readAsyncString(boost::bind(&PointToPoint::Producer::onSubscribe, this, channel, _1));
+            boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
             m_registeredChannels[channel] = std::set<std::string>();
         }
 
