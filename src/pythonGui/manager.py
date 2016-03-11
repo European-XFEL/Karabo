@@ -318,6 +318,9 @@ class _Manager(QObject):
 
 
     def onSaveToFile(self):
+        """
+        This function saves the current configuration of a device to a file.
+        """
         filename = getSaveFileName(
             "Save configuration as", globals.HIDDEN_KARABO_FOLDER,
             "Configuration (*.xml)", "xml")
@@ -337,6 +340,9 @@ class _Manager(QObject):
 
 
     def onSaveToProject(self):
+        """
+        This function saves the current configuration of a device to the project.
+        """
         # Open dialog to select project to which configuration should be saved
         dialog = SelectProjectDialog(self.projectTopology.projects)
         if dialog.exec_() == QDialog.Rejected:
