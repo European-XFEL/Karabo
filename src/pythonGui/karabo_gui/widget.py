@@ -159,6 +159,10 @@ class DisplayWidget(Widget):
         assert ro, "combined Editable and Display widgets: set setReadOnly!"
 
 
+    def updateState(self):
+        pass
+
+
 class VacuumWidget(DisplayWidget):
     menu = "Change vacuum widget"
     category = String
