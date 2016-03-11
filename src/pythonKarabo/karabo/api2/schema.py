@@ -156,7 +156,7 @@ class Node(Descriptor):
 
     def parameters(self):
         ret = super(Node, self).parameters()
-        ret["nodeType"] = NodeType.Node.value
+        ret["nodeType"] = NodeType.Node
         return ret
 
     def subschema(self):
@@ -187,14 +187,14 @@ class ChoiceOfNodes(Node):
 
     def parameters(self):
         ret = super(ChoiceOfNodes, self).parameters()
-        ret["nodeType"] = NodeType.ChoiceOfNodes.value
+        ret["nodeType"] = NodeType.ChoiceOfNodes
         return ret
 
     def subschema(self):
         h = Hash()
         for k, v in self.cls._subclasses.items():
             h[k] = v.getClassSchema().hash
-            h[k, "nodeType"] = NodeType.Node.value
+            h[k, "nodeType"] = NodeType.Node
         return h
 
     def __set__(self, instance, value):
@@ -217,14 +217,14 @@ class ListOfNodes(Node):
 
     def parameters(self):
         ret = super(ListOfNodes, self).parameters()
-        ret["nodeType"] = NodeType.ListOfNodes.value
+        ret["nodeType"] = NodeType.ListOfNodes
         return ret
 
     def subschema(self):
         h = Hash()
         for k, v in self.cls._subclasses.items():
             h[k] = v.getClassSchema().hash
-            h[k, "nodeType"] = NodeType.Node.value
+            h[k, "nodeType"] = NodeType.Node
         return h
 
     def __set__(self, instance, value):
