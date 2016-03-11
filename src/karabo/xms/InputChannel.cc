@@ -413,7 +413,7 @@ namespace karabo {
                 // set the guard: it is guaranteed that InputChannel object is alive
                 // ... or exception brings us out here
                 InputChannel::Pointer self = shared_from_this();
-                if (!self) return;
+                if (!self) return;  // redundant : if "shared_from_this" fails then exception will be thrown
                 
                 // There is either m_inputHandler or m_dataHandler
                 // (or neither), see registerInputHandler and registerDataHandler.

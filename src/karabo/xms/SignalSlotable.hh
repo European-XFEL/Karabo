@@ -564,9 +564,12 @@ namespace karabo {
 #define KARABO_SLOT3(slotName, a1, a2, a3) this->registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName);
 #define KARABO_SLOT4(slotName, a1, a2, a3, a4) this->registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName);
 
-#define KARABO_ON_INPUT(channelName, funcName) this->registerInputHandler(channelName, boost::bind(&Self::funcName,this,_1));
-#define KARABO_ON_DATA(channelName, funcName) this->registerDataHandler(channelName, boost::bind(&Self::funcName,this,_1));
-#define KARABO_ON_EOS(channelName, funcName) this->registerEndOfStreamHandler(channelName, boost::bind(&Self::funcName,this,_1));
+#define KARABO_ON_INPUT(channelName, funcName) \
+    this->registerInputHandler(channelName, boost::bind(&Self::funcName,boost::dynamic_pointer_cast<Self>(shared_from_this()),_1));
+#define KARABO_ON_DATA(channelName, funcName) \
+    this->registerDataHandler(channelName, boost::bind(&Self::funcName, boost::dynamic_pointer_cast<Self>(shared_from_this()),_1));
+#define KARABO_ON_EOS(channelName, funcName) \
+    this->registerEndOfStreamHandler(channelName, boost::bind(&Self::funcName,boost::dynamic_pointer_cast<Self>(shared_from_this()),_1));
 
 
 #define _KARABO_SIGNAL_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
