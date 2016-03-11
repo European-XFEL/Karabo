@@ -100,15 +100,7 @@ class DisplayImage(DisplayWidget):
         if self.axis == 2:
             npy = self.npy[:,:,self.selectedCell]
 	
-        if self.image is None:
-            # Some dtypes (eg uint32) are not displayed -> astype('float')
-            self.image = make.image(npy.astype('float'))
-            self.plot.add_item(self.image)
-        else:
-            self.image.set_data(npy.astype('float'))
-            self.plot.replot()
-            # Also update colormap axis for Image
-            self.plot.update_colormap_axis(self.plot.items[1])
+        self.setImage(npy)
     
     def setSlider(self, dimZ):
         self.slider.setMaximum(dimZ)
@@ -142,7 +134,7 @@ class DisplayImage(DisplayWidget):
             # Shape
             dimX = value.dims[2]
             dimY = value.dims[1]
-            dimZ = value.dims[0]                
+            dimZ = value.dims[0]
 
             if dimZ == 3:
                 # Format: RGB
@@ -208,13 +200,20 @@ class DisplayImage(DisplayWidget):
         if dimX < 1 or dimY < 1:
             raise RuntimeError('Image has less than two dimensions')
 
-        
+        self.setImage(npy)
+
+    def setImage(self, npy):
         if self.image is None:
             # Some dtypes (eg uint32) are not displayed -> astype('float')
             self.image = make.image(npy.astype('float'))
             self.plot.add_item(self.image)
+
         else:
-            self.image.set_data(npy.astype('float'))
+            if npy.ndim == 2:  # Grayscale
+                r = self.image.get_lut_range()  # This is the current range of the Z axis
+                if r[0] == r[1]:
+                    r = None #  If it was not set, let it autoscale
+                self.image.set_data(npy.astype('float'), lut_range=r)  # Set new data but keep old Z range
+            else:
+                self.image.set_data(npy.astype('float'))
             self.plot.replot()
-            # Also update colormap axis for Image
-            self.plot.update_colormap_axis(self.plot.items[1])
