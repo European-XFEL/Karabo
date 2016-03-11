@@ -1068,7 +1068,7 @@ class ProjectModel(QStandardItemModel):
                 return None
 
             # Overwrite existing device
-            index = project.remove(d)
+            index = project.remove(device)
             device = self.insertDevice(index, project, serverId,
                                        classId, deviceId, ifexists)
             return device
