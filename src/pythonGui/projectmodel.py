@@ -538,8 +538,8 @@ class ProjectModel(QStandardItemModel):
 
     def createConfigurationItem(self, deviceId, configuration):
         """
-        This function creates QStandardItems for the given /deviceId and 
-        /configuration as child item and returns them both.
+        This function creates QStandardItems for the given \deviceId and 
+        \configuration as child item and returns them both.
         """
         project = configuration.project
         projectItem = self.findItem(project)
@@ -562,20 +562,23 @@ class ProjectModel(QStandardItemModel):
         configItem.setEditable(False)
         configItem.setToolTip(configuration.filename)
         
-        self.signalExpandIndex.emit(self.indexFromItem(labelItem), True)
-        self.signalExpandIndex.emit(self.indexFromItem(deviceItem), True)
-        
-        return deviceItem, configItem
+        return labelItem, deviceItem, configItem
 
 
     def addConfigurationItem(self, deviceId, configuration):
-        deviceItem, configItem = self.createConfigurationItem(deviceId, configuration)
+        labelItem, deviceItem, configItem = self.createConfigurationItem(deviceId, configuration)
         deviceItem.appendRow(configItem)
+        
+        self.signalExpandIndex.emit(self.indexFromItem(labelItem), True)
+        self.signalExpandIndex.emit(self.indexFromItem(deviceItem), True)
 
 
     def insertConfigurationItem(self, row, deviceId, configuration):
-        deviceItem, configItem = self.createConfigurationItem(deviceId, configuration)
+        labelItem, deviceItem, configItem = self.createConfigurationItem(deviceId, configuration)
         deviceItem.insertRow(row, configItem)
+        
+        self.signalExpandIndex.emit(self.indexFromItem(labelItem), True)
+        self.signalExpandIndex.emit(self.indexFromItem(deviceItem), True)
 
 
     def addMacroItem(self, macro):
