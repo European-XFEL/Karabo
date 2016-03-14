@@ -38,11 +38,11 @@ def check_hash(h):
     assert isinstance(h["chars"], bytes)
     assert h["bool", "bool"] is False
     assert h["int", "float"] == 7.3
-    assert h["int", "complex"] == 1.0 + 1.0j
     assert h["hash", "int"] == 3
     assert h["string", "chars"] == b"blub"
     assert isinstance(h["string", "chars"], bytes)
     assert h["chars", "string"] == "laber"
+    assert h["vector", "complex"] == 1.0 + 1.0j
     assert isinstance(h["chars", "string"], str)
     assert h["schema"].name == "blub"
     sh = h["schema"].hash
@@ -71,6 +71,7 @@ def create_api1_hash():
     h.setAttribute("hash", "int", 3)
     h.setAttribute("string", "chars", b"blub")
     h.setAttribute("chars", "string", "laber")
+    h.setAttribute("vector", "complex", 1.0 + 1.0j)
 
     sh = Hash()
     sh.set("a", Hash())
@@ -98,10 +99,10 @@ def __api_2_style_hash(hash_klass, schema_klass):
 
     h["bool", "bool"] = False
     h["int", "float"] = 7.3
-    h["int", "complex"] = 1.0 + 1.0j
     h["hash", "int"] = 3
     h["string", "chars"] = b"blub"
     h["chars", "string"] = "laber"
+    h["vector", "complex"] = 1.0 + 1.0j
 
     sh = hash_klass()
     sh["a"] = hash_klass()
@@ -118,6 +119,6 @@ def create_api2_hash():
 
 
 def create_refactor_hash():
-    from ..hash import Hash, Schema
+    from krbgui.data.api import Hash, Schema
 
     return __api_2_style_hash(Hash, Schema)
