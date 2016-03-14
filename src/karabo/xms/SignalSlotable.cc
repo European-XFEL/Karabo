@@ -1740,7 +1740,6 @@ namespace karabo {
             return std::make_pair(instanceId, functionName);
         }
 
-
         SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction, int priority, int messageTimeToLive) {
             {
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
@@ -1753,7 +1752,6 @@ namespace karabo {
             storeSignal(signalFunction, s);
             return s;
         }
-
 
         void SignalSlotable::storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance) {
             m_signalInstances[signalFunction] = signalInstance;
