@@ -469,7 +469,7 @@ class GuiProject(Project, QObject):
 
     def removeConfiguration(self, deviceId, configuration):
         """
-        The \configuration of the given /deviceId should be removed from this
+        The \configuration of the given \deviceId should be removed from this
         project.
         
         Returns \index of the configuration list.
