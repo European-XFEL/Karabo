@@ -90,9 +90,12 @@ class Project(object):
         else:
             return b
 
-    def addConfiguration(self, deviceId, configuration):
+    def addConfiguration(self, deviceId, configuration, index=-1):
         if deviceId in self.configurations:
-            self.configurations[deviceId].append(configuration)
+            if index < 1:
+                self.configurations[deviceId].append(configuration)
+            else:
+                self.configurations[deviceId].insert(index, configuration)
         else:
             self.configurations[deviceId] = [configuration]
 
@@ -102,12 +105,22 @@ class Project(object):
 
         If the list of device configurations just has the given configuration,
         the complete entry is removed.
+        
+        The \index of the configuration in the list of device configurations is
+        returned.
+        If there was only this one configuration in list 0 is returned.
+        If the \deviceId can not be found in dict -1 is returned.
         """
         if configuration in self.configurations[deviceId]:
             if len(self.configurations[deviceId]) == 1:
                 del self.configurations[deviceId]
+                return 0
             else:
-                self.configurations[deviceId].remove(configuration)
+                index = self.configurations[deviceId].index(configuration)
+                self.configurations[deviceId].pop(index)
+                return index
+        
+        return -1
 
     def addDevice(self, device):
         self.devices.append(device)

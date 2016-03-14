@@ -536,31 +536,49 @@ class ProjectModel(QStandardItemModel):
         self.signalRenameScene.emit(scene)
 
 
-    def addConfigurationItem(self, deviceId, configuration):
+    def createConfigurationItem(self, deviceId, configuration):
+        """
+        This function creates QStandardItems for the given \deviceId and 
+        \configuration as child item and returns them both.
+        """
         project = configuration.project
         projectItem = self.findItem(project)
         # Find folder for configurations
-        parentItem = self.getCategoryItem(Project.CONFIGURATIONS_LABEL, projectItem)
+        labelItem = self.getCategoryItem(Project.CONFIGURATIONS_LABEL, projectItem)
         
         # Check, if item for this deviceId already exists
-        item = self.findItemString(deviceId, parentItem)
-        if item is None:
+        deviceItem = self.findItemString(deviceId, labelItem)
+        if deviceItem is None:
             # Add item for device it belongs to
-            item = QStandardItem(deviceId)
-            item.setEditable(False)
-            item.setToolTip(deviceId)
-            parentItem.appendRow(item)
-
+            deviceItem = QStandardItem(deviceId)
+            deviceItem.setEditable(False)
+            deviceItem.setToolTip(deviceId)
+            labelItem.appendRow(deviceItem)
+        
         # Add item with configuration file
         configItem = QStandardItem(configuration.filename)
         configItem.setIcon(icons.file)
         configItem.setData(configuration, ProjectModel.ITEM_OBJECT)
         configItem.setEditable(False)
         configItem.setToolTip(configuration.filename)
-        item.appendRow(configItem)
         
-        self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
-        self.signalExpandIndex.emit(self.indexFromItem(item), True)
+        return labelItem, deviceItem, configItem
+
+
+    def addConfigurationItem(self, deviceId, configuration):
+        labelItem, deviceItem, configItem = self.createConfigurationItem(deviceId, configuration)
+        deviceItem.appendRow(configItem)
+        
+        self.signalExpandIndex.emit(self.indexFromItem(labelItem), True)
+        self.signalExpandIndex.emit(self.indexFromItem(deviceItem), True)
+
+
+    def insertConfigurationItem(self, row, deviceId, configuration):
+        labelItem, deviceItem, configItem = self.createConfigurationItem(deviceId, configuration)
+        deviceItem.insertRow(row, configItem)
+        
+        self.signalExpandIndex.emit(self.indexFromItem(labelItem), True)
+        self.signalExpandIndex.emit(self.indexFromItem(deviceItem), True)
 
 
     def addMacroItem(self, macro):
@@ -885,6 +903,7 @@ class ProjectModel(QStandardItemModel):
         project.signalSceneAdded.connect(self.addSceneItem)
         project.signalSceneInserted.connect(self.insertSceneItem)
         project.signalConfigurationAdded.connect(self.addConfigurationItem)
+        project.signalConfigurationInserted.connect(self.insertConfigurationItem)
         project.signalMacroAdded.connect(self.addMacroItem)
         project.signalMacroChanged.connect(self.addMacroSubItems)
         project.signalMonitorAdded.connect(self.addMonitorItem)
@@ -1068,7 +1087,7 @@ class ProjectModel(QStandardItemModel):
                 return None
 
             # Overwrite existing device
-            index = project.remove(d)
+            index = project.remove(device)
             device = self.insertDevice(index, project, serverId,
                                        classId, deviceId, ifexists)
             return device
@@ -1560,18 +1579,13 @@ class ProjectModel(QStandardItemModel):
             parentIndex = index.parent()
             deviceId = parentIndex.data()
             configuration = index.data(ProjectModel.ITEM_OBJECT)
-            # Remove data from project
+            
             project = configuration.project
             project.removeConfiguration(deviceId, configuration)
-            project.setModified(True)
             
-            # Update model
-            if self.itemFromIndex(parentIndex).rowCount() == 1:
-                # Also remove deviceId item, if only one configuration is child
+            if project.configurations.get(deviceId) is None:
+                # Remove item for deviceId, if no configuration available anymore
                 self.removeRow(parentIndex.row(), parentIndex.parent())
-            else:
-                # Remove index from model
-                self.removeRow(index.row(), parentIndex)
 
 
     def onRemoveDevices(self):
