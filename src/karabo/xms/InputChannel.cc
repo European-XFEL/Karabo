@@ -413,25 +413,24 @@ namespace karabo {
                 // set the guard: it is guaranteed that InputChannel object is alive
                 // ... or exception brings us out here
                 InputChannel::Pointer self = shared_from_this();
-                if (!self) return;  // redundant : if "shared_from_this" fails then exception will be thrown
                 
                 // There is either m_inputHandler or m_dataHandler
                 // (or neither), see registerInputHandler and registerDataHandler.
                 if (m_inputHandler && m_dataHandler) {
                     // Just in case that the above promise is not the case...
-                    KARABO_LOG_FRAMEWORK_WARN << self->getInstanceId() << ": Clear "
+                    KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
                             << "input handler since we have a data handler.";
                     // Clear inputHandler since dataHandler is the recommended
                     // interface (though inputHandler is more general...).
-                    self->m_inputHandler.clear();
+                    m_inputHandler.clear();
                 }
 
                 if (m_dataHandler) {
-                    for (size_t i = 0; i < self->size(); ++i) {
-                        m_dataHandler(self->read(i));
+                    for (size_t i = 0; i < this->size(); ++i) {
+                        m_dataHandler(this->read(i));
                     }
                     if (m_tcpIoService)
-                        m_tcpIoService->post(boost::bind(&InputChannel::update, self));
+                        m_tcpIoService->post(boost::bind(&InputChannel::update, this));
                     else
                         update();
                 }
