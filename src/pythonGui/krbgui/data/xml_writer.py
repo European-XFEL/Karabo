@@ -1,5 +1,4 @@
 from base64 import b64encode
-from contextlib import closing, contextmanager
 from io import StringIO
 from xml.etree.ElementTree import ElementTree, Element
 
@@ -9,7 +8,8 @@ from .typenums import (
 
 
 def write_xml_hash(hsh):
-    with _stringio_context() as fp:
+    fp = StringIO()
+    with fp:
         attrs = {'KRB_Type': HASH_TYPE_TO_XML_TYPE[HashType.Hash],
                  'KRB_Artificial': ''}
         e = Element("root", attrib=attrs)
@@ -22,7 +22,8 @@ def write_xml_hash(hsh):
 
 
 def write_xml_schema(schema):
-    with _stringio_context() as fp:
+    fp = StringIO()
+    with fp:
         fp.write('{}:'.format(schema.name))
         fp.write(write_xml_hash(schema.hash))
         return fp.getvalue()
@@ -40,13 +41,6 @@ def _convert_attributes(attrs):
         ret[k] = '{}:{}'.format(atype_name, convert(v))
 
     return ret
-
-
-@contextmanager
-def _stringio_context():
-    s_io = StringIO()
-    with closing(s_io) as fp:
-        yield fp
 
 
 def _walk_hash(hsh):
