@@ -61,7 +61,7 @@ attr_blacklist = {"__len__", "__contains__", "__complex__", "__int__",
                   "__float__", "__index__", "__bool__", "__getattribute__",
                   "__getattr__", "__init__", "__new__", "__setattr__",
                   "__array_prepare__", "__hash__", "__str__", "__repr__",
-                  "register"}
+                  "__array_wrap__", "register"}
 
 
 class KaraboValue(Registry):
@@ -219,6 +219,19 @@ class QuantityValue(KaraboValue, Quantity):
         ret = super().__getattr__(attr)
         if callable(ret):
             return create_wrapper(ret, self.timestamp)
+        return ret
+
+    def __array_wrap__(self, obj, context=None):
+        ret = super().__array_wrap__(obj, context)
+        if not isinstance(ret, QuantityValue):
+            return ret
+        _, objs, _ = context
+        newest = None
+        for o in objs:
+            ts = getattr(o, "timestamp", None)
+            if isinstance(ts, Timestamp) and (newest is None or ts > newest):
+                newest = ts
+        ret.timestamp = newest
         return ret
 
 

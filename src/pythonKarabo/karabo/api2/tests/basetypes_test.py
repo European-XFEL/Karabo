@@ -174,6 +174,18 @@ class Tests(TestCase):
         self.assertEqual(a.T.timestamp, self.t1)
         self.assertEqual(a.sum().timestamp, self.t1)
 
+        a = QuantityValue(numpy.arange(10), "m", timestamp=self.t1)
+        b = a.reshape(2, 5)
+        c = QuantityValue(numpy.arange(5), "radian", timestamp=self.t2)
+        d = QuantityValue(numpy.arange(2, 7), "radian", timestamp=self.t1)
+        self.assertEqual(b.timestamp, self.t1)
+        self.assertEqual(b.shape, (2, 5))
+        self.assertEqual(b.ndim, 2)
+        self.assertEqual(b.size, 10)
+        self.assertEqual(b.dtype, int)
+        self.assertEqual(numpy.sin(c).timestamp, self.t2)
+        self.assertEqual(numpy.arctan2(d, c).timestamp, self.t1)
+        self.assertEqual(numpy.arctan2(c, d).timestamp, self.t1)
 
 if __name__ == "__main__":
     main()
