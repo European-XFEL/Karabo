@@ -163,12 +163,15 @@ class Hash(OrderedDict):
 
 class Schema(object):
     def __init__(self, name=None, rules=None, hash=None):
-        self.name = name
+        self.name = name or ''
         if hash is None:
             self.hash = Hash()
         else:
             self.hash = hash
         self.rules = rules
+
+    def __repr__(self):
+        return self.name + ':' + repr(self.hash)
 
 
 # Helper functions
