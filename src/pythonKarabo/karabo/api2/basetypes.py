@@ -33,10 +33,10 @@ def wrap(data):
         raise TypeError('cannot wrap "{}" into Karabo type'.format(type(data)))
 
 
-def create_wrapper(attr):
+def create_wrapper(attr, timestamp=None):
     @wraps(attr)
     def wrapper(*args, **kwargs):
-        newest = None
+        newest = timestamp
         for a in chain(args, kwargs.values()):
             ts = getattr(a, "timestamp", None)
             if isinstance(ts, Timestamp) and (newest is None or ts > newest):
@@ -60,7 +60,8 @@ def create_wrapper(attr):
 attr_blacklist = {"__len__", "__contains__", "__complex__", "__int__",
                   "__float__", "__index__", "__bool__", "__getattribute__",
                   "__getattr__", "__init__", "__new__", "__setattr__",
-                  "__array_prepare__", "__hash__", "__str__", "__repr__"}
+                  "__array_prepare__", "__hash__", "__str__", "__repr__",
+                  "register"}
 
 
 class KaraboValue(Registry):
@@ -195,6 +196,31 @@ class QuantityValue(KaraboValue, Quantity):
         self.descriptor = descriptor
         self.timestamp = timestamp
         return self
+
+    @property
+    def T(self):
+        ret = super().T
+        ret.timestamp = self.timestamp
+        return ret
+
+    @property
+    def real(self):
+        ret = super().real
+        ret.timestamp = self.timestamp
+        return ret
+
+    @property
+    def imag(self):
+        ret = super().imag
+        ret.timestamp = self.timestamp
+        return ret
+
+    def __getattr__(self, attr):
+        ret = super().__getattr__(attr)
+        if callable(ret):
+            return create_wrapper(ret, self.timestamp)
+        return ret
+
 
 # Whenever Pint does calculations, it returns the results as an objecti
 # of the registries' Quantity class. We set that to our own class so
