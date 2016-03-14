@@ -161,28 +161,21 @@ namespace karabo {
         }
 
 
-        void OutputChannel::onTcpConnectionError(const karabo::net::Connection::Pointer& conn, const karabo::net::ErrorCode& error) {
-            if (error.value() != 125 && error.value() != 2) //Don't report about 2:"End-of-file" and 125:"Operation cancelled"
-                KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
-            else
-                KARABO_LOG_FRAMEWORK_DEBUG << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
+        void OutputChannel::onTcpConnectionError(const karabo::net::Connection::Pointer& connection, const karabo::net::ErrorCode& error) {
+            KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
+            connection->stop();
         }
 
 
         void OutputChannel::onTcpChannelError(const TcpChannelPointer& channel, const karabo::net::ErrorCode& error) {
             using namespace karabo::net;
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
-            if (error.value() == 2) { // End of file
-                KARABO_LOG_FRAMEWORK_DEBUG << "Tcp channel (socket " << tch->socket().native()
-                    << ") error, code: " << error.value() << ", message: " << error.message();
-                // Unregister channel
-                onInputGone(channel);
-                m_dataChannels.erase(channel);
-                channel->close();
-                return;
-            }
-            KARABO_LOG_FRAMEWORK_ERROR << "Tcp channel (socket " << tch->socket().native()
-                    << ") error, code: " << error.value() << ", message: " << error.message();
+            KARABO_LOG_FRAMEWORK_INFO << "Tcp channel (socket " << tch->socket().native()
+                    << ") error, code #" << error.value() << " -- \"" << error.message() << "\".  Channel closed.";
+            // Unregister channel
+            onInputGone(channel);
+            m_dataChannels.erase(channel);
+            channel->close();
         }
 
 

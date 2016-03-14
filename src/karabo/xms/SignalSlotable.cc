@@ -40,13 +40,13 @@ namespace karabo {
         boost::uuids::random_generator SignalSlotable::Requestor::m_uuidGenerator;
         std::map<std::string, SignalSlotable*> SignalSlotable::m_instanceMap;
         boost::mutex SignalSlotable::m_instanceMapMutex;
-        
+
 
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                                const karabo::util::Hash::Pointer& body) const {
             if (instanceId == "*" || instanceId.empty())
                 return false;
-            
+
             SignalSlotable* that = 0;
             {
                 boost::mutex::scoped_lock lock(m_instanceMapMutex);
@@ -55,7 +55,7 @@ namespace karabo {
                     that = it->second;
                 }
             }
-            
+
             if (that) {
                 that->injectEvent(that->m_consumerChannel, header, body);
                 return true;
@@ -64,14 +64,14 @@ namespace karabo {
             }
         }
 
-        
+
         void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
-                                       const karabo::util::Hash::Pointer& body, int prio, int timeToLive) const {
-                if (tryToCallDirectly(instanceId, header, body)) return;
-                m_producerChannel->write(*header, *body, prio, timeToLive);
+                                           const karabo::util::Hash::Pointer& body, int prio, int timeToLive) const {
+            if (tryToCallDirectly(instanceId, header, body)) return;
+            m_producerChannel->write(*header, *body, prio, timeToLive);
         }
 
-        
+
         SignalSlotable::Caller::Caller(const SignalSlotable* signalSlotable) : m_signalSlotable(signalSlotable) {
         }
 
@@ -83,7 +83,7 @@ namespace karabo {
                 if (!m_signalSlotable)
                     throw KARABO_PARAMETER_EXCEPTION("Caller::sendMessage  : m_signalSlotable = 0 or m_signalSlotable->m_producerChannel is 0");
                 // Empty slotInstanceId means self messaging:
-                const std::string& instanceId = (slotInstanceId.empty() ?  m_signalSlotable->getInstanceId() : slotInstanceId);
+                const std::string& instanceId = (slotInstanceId.empty() ? m_signalSlotable->getInstanceId() : slotInstanceId);
                 m_signalSlotable->doSendMessage(instanceId, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Problems sending message"));
@@ -147,9 +147,9 @@ namespace karabo {
 
 
         karabo::util::Hash::Pointer SignalSlotable::Requestor::prepareHeaderNoWait(const std::string& requestSlotInstanceId,
-                                                                          const std::string& requestSlotFunction,
-                                                                          const std::string& replySlotInstanceId,
-                                                                          const std::string& replySlotFunction) {
+                                                                                   const std::string& requestSlotFunction,
+                                                                                   const std::string& replySlotInstanceId,
+                                                                                   const std::string& replySlotFunction) {
 
             karabo::util::Hash::Pointer header(new karabo::util::Hash);
             header->set("replyInstanceIds", "|" + replySlotInstanceId + "|");
@@ -255,7 +255,7 @@ namespace karabo {
             m_connection = connection;
             m_instanceId = instanceId;
             m_nThreads = 2;
-            
+
             // Currently only removes dots
             sanifyInstanceId(m_instanceId);
             if (m_connectionInjected) {
@@ -263,7 +263,7 @@ namespace karabo {
             } else {
                 // Create the managing ioService object
                 m_ioService = m_connection->getIOService();
-            
+
                 // Start connection (and take the default channel for signals)
                 m_connection->start();
             }
@@ -275,12 +275,12 @@ namespace karabo {
             registerDefaultSignalsAndSlots();
         }
 
-            
+
         void SignalSlotable::injectConnection(const std::string& instanceId, const karabo::net::BrokerConnection::Pointer& connection) {
             m_connectionInjected = true;
             init(instanceId, connection);
         }
-        
+
 
         std::pair<bool, std::string > SignalSlotable::isValidInstanceId(const std::string & instanceId) {
             // Ping any guy with my id. If there is one, he will answer, if not, we timeout.
@@ -742,7 +742,7 @@ namespace karabo {
             // cannot use the normal registerSignal.
             SignalInstancePointer heartbeatSignal(new karabo::xms::Signal(this, m_heartbeatProducerChannel, m_instanceId, "signalHeartbeat", 9));
             storeSignal("signalHeartbeat", heartbeatSignal);
-            boost::function<void (const string&, const int&, const Hash&)> f = boost::bind(&Signal::emit3<string, int, Hash>, heartbeatSignal, _1, _2, _3);
+            boost::function<void (const string&, const int&, const Hash&) > f = boost::bind(&Signal::emit3<string, int, Hash>, heartbeatSignal, _1, _2, _3);
             m_emitFunctions.set("signalHeartbeat", f);
 
             // Listener for heartbeats
@@ -1706,6 +1706,7 @@ namespace karabo {
             return std::make_pair(instanceId, functionName);
         }
 
+
         SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction, int priority, int messageTimeToLive) {
             {
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
@@ -1718,6 +1719,7 @@ namespace karabo {
             storeSignal(signalFunction, s);
             return s;
         }
+
 
         void SignalSlotable::storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance) {
             m_signalInstances[signalFunction] = signalInstance;
@@ -1893,17 +1895,17 @@ namespace karabo {
             if (channelConfig.has("schema")) channelConfig.erase("schema");
             InputChannel::Pointer channel = Configurator<InputChannel>::create("InputChannel", channelConfig);
             channel->setInstanceId(m_instanceId);
+            m_inputChannels[channelName] = channel;
             // in fact, only one of the following two can be set...
             if (onDataAvailableHandler) {
-                channel->registerDataHandler(onDataAvailableHandler);
+                this->registerDataHandler(channelName, onDataAvailableHandler);
             }
             if (onInputAvailableHandler) {
-                channel->registerInputHandler(onInputAvailableHandler);
+                this->registerInputHandler(channelName, onInputAvailableHandler);
             }
             if (onEndOfStreamEventHandler) {
-                channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
+                this->registerEndOfStreamHandler(channelName, onEndOfStreamEventHandler);
             }
-            m_inputChannels[channelName] = channel;
             return channel;
         }
 
@@ -1953,19 +1955,59 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::registerInputHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler) {
-            getInputChannel(channelName)->registerInputHandler(handler);
+        void SignalSlotable::inputHandlerWrap(const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler,
+                                              const karabo::xms::InputChannel::Pointer& input) {
+            try {
+                // Make sure that SignalSlotable shared pointer can be built (device still exists)...  otherwise exception is thrown
+                SignalSlotable::Pointer self = shared_from_this();
+                // call user callback
+                handler(input);
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_INFO << "\"inputHandlerWrap\" call is too late: Device is destroyed already -- " << e.what();
+            }
+        }
+
+
+        void SignalSlotable::registerInputHandler(const std::string& channelName,
+                                                  const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler) {
+            getInputChannel(channelName)->registerInputHandler(boost::bind(&SignalSlotable::inputHandlerWrap, this, handler, _1));
+        }
+
+
+        void SignalSlotable::dataHandlerWrap(const boost::function<void (const karabo::xms::Data&) >& handler,
+                                             const karabo::xms::Data& data) {
+            try {
+                // Make sure that SignalSlotable shared pointer can be built...  if not the we get exception
+                SignalSlotable::Pointer self = shared_from_this();
+                // call user callback
+                handler(data);
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_INFO << "\"dataHandlerWrap\" call is too late: Device is destroyed already -- " << e.what();
+            }
         }
 
 
         void SignalSlotable::registerDataHandler(const std::string& channelName,
                                                  const boost::function<void (const karabo::xms::Data&) >& handler) {
-            getInputChannel(channelName)->registerDataHandler(handler);
+            getInputChannel(channelName)->registerDataHandler(boost::bind(&SignalSlotable::dataHandlerWrap, this, handler, _1));
+        }
+
+
+        void SignalSlotable::endOfStreamHandlerWrap(const boost::function<void (const boost::shared_ptr<InputChannel>&) >& handler,
+                                                    const boost::shared_ptr<InputChannel>& input) {
+            try {
+                // Make sure that SignalSlotable shared pointer can be built (device still exists)...  otherwise exception is thrown
+                SignalSlotable::Pointer self = shared_from_this();
+                // call user callback
+                handler(input);
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_INFO << "\"endOfStreamHandlerWrap\" call is too late: Device is destroyed already -- " << e.what();
+            }
         }
 
 
         void SignalSlotable::registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler) {
-            getInputChannel(channelName)->registerEndOfStreamEventHandler(handler);
+            getInputChannel(channelName)->registerEndOfStreamEventHandler(boost::bind(&SignalSlotable::endOfStreamHandlerWrap, this, handler, _1));
         }
 
 
