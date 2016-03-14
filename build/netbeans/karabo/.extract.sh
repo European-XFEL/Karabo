@@ -141,7 +141,6 @@ fi
 
 # Make sure the ~/.karabo directory exists
 mkdir -p $HOME/.karabo
-#echo "https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo" > $HOME/.karabo/karaboSvnPath
 
 # fix the shebang line of Python entry-points
 safeRunCommand "$KARABO/bin/.fix-python-scripts.sh" $KARABO

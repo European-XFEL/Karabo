@@ -24,6 +24,7 @@ from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QLabel, QPixmap
 
 from karabo.api_2 import String
+from karabo_gui import background
 from karabo_gui.const import OK_COLOR, ERROR_COLOR
 from karabo_gui.registry import Registry
 from karabo_gui.util import generateObjectName
@@ -48,6 +49,7 @@ class Widget(Registry, QObject):
         super(Widget, self).__init__()
         if box is not None:
             self.boxes = [box]
+        self.deferred = False
 
 
     @classmethod
@@ -136,6 +138,27 @@ class Widget(Registry, QObject):
         self.typeChanged(box)
         self.updateState()
 
+    def updateLater(self):
+        """call longer-running code at a later time
+
+        If the widget has code that takes a while to run, it should be
+        moved to *deferredUpdate*, and the widget should call *updateLater*
+        to schedule this update. This keeps the GUI responsive.
+
+        This is especially important for values which change often, as
+        *deferredUpdate* will only be called once the many updates finished."""
+        def updater():
+            self.deferredUpdate()
+            self.deferred = False
+        if not self.deferred:
+            background.executeLater(updater, background.Priority.BACKGROUND)
+        self.deferred = True
+
+    def deferredUpdate(self):
+        """actually update widget as ordered by *updateLater*
+
+        Overwrite this method to run long-running code, and call
+        *updateLater* instead. The default implementation does nothing."""
 
     @property
     def project(self):
@@ -157,6 +180,10 @@ class DisplayWidget(Widget):
 
     def setReadOnly(self, ro):
         assert ro, "combined Editable and Display widgets: set setReadOnly!"
+
+
+    def updateState(self):
+        pass
 
 
 class VacuumWidget(DisplayWidget):
