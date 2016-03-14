@@ -92,8 +92,6 @@ class Curve(QObject):
         self.t0 = self.t1 = 0
         box.signalHistoricData.connect(self.onHistoricData)
         box.visibilityChanged.connect(self.onVisibilityChanged)
-        self.timer = None
-
 
     def addPoint(self, value, timestamp):
         # Fill the generations data, possibly propagating averaged values
@@ -141,19 +139,7 @@ class Curve(QObject):
         self.t1 = t1
 
     def update(self):
-        """ Show the new data on screen
-
-        As showing the data is actually a time consuming task, it is only
-        done if the event loop has no other events pending.
-        """
-        if self.timer is None:
-            self.timer = self.startTimer(0)
-
-    def timerEvent(self, event):
-        if Network().isDataPending():
-            return
-        self.killTimer(self.timer)
-        self.timer = None
+        """ Show the new data on screen """
         self.curve.set_data(self.x[:self.fill], self.y[:self.fill])
 
     @pyqtSlot(bool)
@@ -355,6 +341,9 @@ class DisplayTrendline(DisplayWidget):
 
         self.lasttime = timestamp.toTimestamp()
         self.wasVisible = True
+        self.updateLater()
+
+    def deferredUpdate(self):
         self.plot.replot()
 
     def scaleChanged(self):
