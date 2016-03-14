@@ -1,5 +1,4 @@
 from base64 import b64decode
-from functools import partial
 from xml.etree.ElementTree import XMLParser, TreeBuilder
 
 import numpy as np
@@ -29,10 +28,12 @@ def read_xml_schema(data):
     return Schema(name=name, hash=h)
 
 
-def _array_convert(value, dtype=None):
-    if len(value) == 0:
-        return np.array([], dtype=dtype)
-    return np.fromstring(value, dtype=dtype, sep=',')
+def _array_convert(dtype):
+    def converter(value):
+        if len(value) == 0:
+            return np.array([], dtype=dtype)
+        return np.fromstring(value, dtype=dtype, sep=',')
+    return converter
 
 
 def _complex_convert(value):
@@ -66,20 +67,20 @@ _CONVERTER_MAP = {
     HashType.Complex64: _complex_convert,
     HashType.Complex128: _complex_convert,
 
-    HashType.BoolArray: partial(_array_convert, dtype=np.bool_),
+    HashType.BoolArray: _array_convert(np.bool_),
     HashType.Bytes: b64decode,
-    HashType.Int8Array: partial(_array_convert, dtype=np.int8),
-    HashType.Int16Array: partial(_array_convert, dtype=np.int16),
-    HashType.Int32Array: partial(_array_convert, dtype=np.int32),
-    HashType.Int64Array: partial(_array_convert, dtype=np.int64),
-    HashType.UInt8Array: partial(_array_convert, dtype=np.uint8),
-    HashType.UInt16Array: partial(_array_convert, dtype=np.uint16),
-    HashType.UInt32Array: partial(_array_convert, dtype=np.uint32),
-    HashType.UInt64Array: partial(_array_convert, dtype=np.uint64),
-    HashType.Float32Array: partial(_array_convert, dtype=np.float32),
-    HashType.Float64Array: partial(_array_convert, dtype=np.float64),
-    HashType.Complex64Array: partial(_array_convert, dtype=np.complex64),
-    HashType.Complex128Array: partial(_array_convert, dtype=np.complex128),
+    HashType.Int8Array: _array_convert(np.int8),
+    HashType.Int16Array: _array_convert(np.int16),
+    HashType.Int32Array: _array_convert(np.int32),
+    HashType.Int64Array: _array_convert(np.int64),
+    HashType.UInt8Array: _array_convert(np.uint8),
+    HashType.UInt16Array: _array_convert(np.uint16),
+    HashType.UInt32Array: _array_convert(np.uint32),
+    HashType.UInt64Array: _array_convert(np.uint64),
+    HashType.Float32Array: _array_convert(np.float32),
+    HashType.Float64Array: _array_convert(np.float64),
+    HashType.Complex64Array: _array_convert(np.complex64),
+    HashType.Complex128Array: _array_convert(np.complex128),
 
     HashType.Hash: _passthrough,
     HashType.Schema: read_xml_schema,
