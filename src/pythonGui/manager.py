@@ -375,13 +375,13 @@ class _Manager(QObject):
             if overwrite:
                 # Overwrite existing device
                 index = project.removeConfiguration(deviceId, c)
-                project.insertConfiguration(index, conf.id, \
-                                            ProjectConfiguration(project, name, \
+                project.insertConfiguration(index, conf.id,
+                                            ProjectConfiguration(project, name,
                                             Hash(classId, conf.toHash())))
                 return
 
-            project.addConfiguration(conf.id, ProjectConfiguration(project, name,
-                                              Hash(classId, conf.toHash())))
+        project.addConfiguration(conf.id, ProjectConfiguration(project, name,
+                                          Hash(classId, conf.toHash())))
 
 
     def handle_log(self, messages):
