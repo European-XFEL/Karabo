@@ -1,4 +1,3 @@
-from contextlib import closing
 from functools import partial
 from io import BytesIO
 from struct import pack
@@ -9,8 +8,8 @@ from .typenums import HashType
 def write_binary_hash(hsh):
     """ Convert a Hash to a string of bytes.
     """
-    b_io = BytesIO()
-    with closing(b_io) as fp:
+    fp = BytesIO()
+    with fp:
         write_hash(fp, hsh)
         return fp.getvalue()
 
@@ -18,8 +17,8 @@ def write_binary_hash(hsh):
 def write_binary_schema(schema):
     """ Convert a Schema to a string of bytes.
     """
-    b_io = BytesIO()
-    with closing(b_io) as fp:
+    fp = BytesIO()
+    with fp:
         write_schema(fp, schema)
         return fp.getvalue()
 
