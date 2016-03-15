@@ -54,7 +54,6 @@ class _Network(QObject):
 
         self.tcpSocket = None
         self.requestQueue = [ ]
-        self.dataReader = self._networkReadGenerator()
 
     def connectToServer(self):
         """
@@ -297,6 +296,7 @@ class _Network(QObject):
         for r in self.requestQueue:
             self._tcpWriteHash(r)
         self.requestQueue = []
+        self.dataReader = self._networkReadGenerator()
 
     def onDisconnected(self):
         pass
