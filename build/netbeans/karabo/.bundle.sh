@@ -215,7 +215,7 @@ cd ../karabo
 cp .bundle-cppplugin.sh .bundle-pythonplugin.sh $PACKAGEDIR/bin
 cp .bundle-dependency.sh .bundle-pythondependency.sh $PACKAGEDIR/bin
 cp .extract-cppplugin.sh .extract-pythonplugin.sh $PACKAGEDIR/bin
-cp .extract-dependency.sh $PACKAGEDIR/bin
+cp .extract-dependency.sh .extract-pythondependency.sh $PACKAGEDIR/bin
 cp .fix-python-scripts.sh .set_relative_rpath.py $PACKAGEDIR/bin
 
 safeRunCommand "$PACKAGEDIR/bin/.fix-python-scripts.sh $PACKAGEDIR"
