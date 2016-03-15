@@ -48,9 +48,11 @@ mkdir -p $DISTDIR
 ###### Run dependency custom code to build the wheel ##########################
 source $originalPwd/build.config
 
-# Create installation script
+# Install the wheel which was created
 WHEELNAME=$(basename $DISTDIR/*.whl)
+$PIP install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELNAME
 
+# Create a self-extracting installation script
 echo -e '#!/bin/bash\n'"VERSION=$VERSION\nDEPNAME=$DEPNAME\nKARABOVERSION=$KARABOVERSION\nWHEELNAME=$WHEELNAME" | cat - $EXTRACT_SCRIPT $DISTDIR/$WHEELNAME > $INSTALLSCRIPT
 chmod a+x $INSTALLSCRIPT
 
