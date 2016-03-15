@@ -123,7 +123,7 @@ class EnumValue(SimpleValue):
             return self.value is other
 
 
-class OverloadValue(KaraboValue):
+class StringlikeValue(KaraboValue):
     """This mixin class extends existing Python classes"""
     def __new__(cls, value, *, descriptor=None, timestamp=None):
         self = super().__new__(cls, value)
@@ -138,11 +138,11 @@ class OverloadValue(KaraboValue):
             return super().__eq__(other)
 
 
-class VectorCharValue(OverloadValue, bytes):
+class VectorCharValue(StringlikeValue, bytes):
     """A Karabo VectorChar is a Python bytes object"""
 
 
-class StringValue(OverloadValue, str):
+class StringValue(StringlikeValue, str):
     """A Karabo String is a Python str"""
 
 
