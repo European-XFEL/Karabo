@@ -261,6 +261,8 @@ class Tests(TestCase):
         self.assertEqual(c.imag.timestamp, self.t1)
         self.assertEqual(c.real.timestamp, self.t1)
 
+        self.assertEqual(c.to("mm").timestamp, self.t1)
+
         a = QuantityValue(numpy.arange(10), "m", timestamp=self.t1)
         self.assertEqual(a[3].timestamp, self.t1)
         self.assertEqual(a[3:5].timestamp, self.t1)
