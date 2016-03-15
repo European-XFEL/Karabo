@@ -15,9 +15,10 @@
 __all__ = ["Network"]
 
 from functools import partial
+import socket
+from struct import calcsize, pack, unpack
 
 from karabo_gui.dialogs.logindialog import LoginDialog
-from struct import pack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt4.QtCore import (pyqtSignal, pyqtSlot, QByteArray, QCoreApplication,
@@ -28,8 +29,6 @@ from karabo.api_2 import Hash, BinaryWriter, AccessLevel
 
 from karabo_gui import background
 import karabo_gui.globals as globals
-import socket
-from struct import unpack
 
 
 class _Network(QObject):
@@ -55,7 +54,7 @@ class _Network(QObject):
 
         self.tcpSocket = None
         self.requestQueue = [ ]
-
+        self.dataReader = self._networkReadGenerator()
 
     def connectToServer(self):
         """
@@ -101,11 +100,10 @@ class _Network(QObject):
         self.provider = provider
         self.hostname = hostname
         self.port = port
-        self.dataSize = 0
 
         self.tcpSocket = QTcpSocket(self)
         self.tcpSocket.connected.connect(self.onConnected)
-        self.tcpSocket.readyRead.connect(lambda: next(self.dataReader))
+        self.tcpSocket.readyRead.connect(self.onReadServerData)
         self.tcpSocket.disconnected.connect(self.onDisconnected)
         self.tcpSocket.error.connect(self.onSocketError)
 
@@ -199,39 +197,46 @@ class _Network(QObject):
         except Exception as e:
             print("Logout problem. Please verify, if service is running. " + str(e))
 
-    def onReadServerData(self, runner):
-        """chunk the data and distribute to runner
+    def onReadServerData(self):
+        """ Run the network reader generator until it yields.
+        """
+        # self.dataReader is a generator object from self._networkReadGenerator
+        # Stepping it with next() causes network data to be read.
+        next(self.dataReader)
 
-        the iterator created by this generator function should be called
-        whenever more data is available.
+    def _networkReadGenerator(self):
+        """ A generator which continuously reads GUI server messages and yields
+        when there isn't enough buffered data to be read.
+        """
+        sizeFormat = 'I'  # unsigned int
+        bytesNeededSize = calcsize(sizeFormat)
 
-        *runner* is a generator that yields the number of bytes it wants
-        to process, and will be sent that number of bytes once they are
-        available. """
-        bytesNeeded = next(runner)
-        try:
+        while True:
+            bytesNeeded = 0
+            dataBytes = None
+
+            # Read the size of the Hash
             while True:
-                while self.tcpSocket.bytesAvailable() >= bytesNeeded:
-                    bytesNeeded = runner.send(self.tcpSocket.read(bytesNeeded))
+                if self.tcpSocket.bytesAvailable() >= bytesNeededSize:
+                    rawBytesNeeded = self.tcpSocket.read(bytesNeededSize)
+                    bytesNeeded = unpack(sizeFormat, rawBytesNeeded)[0]
+                    break
                 yield
-        finally:
-            runner.close()
+
+            # Read the Hash
+            while True:
+                if self.tcpSocket.bytesAvailable() >= bytesNeeded:
+                    dataBytes = self.tcpSocket.read(bytesNeeded)
+                    break
+                yield
+
+            # Do something with the Hash at some point in the future.
+            background.executeLater(partial(self.parseInput, dataBytes),
+                                    background.Priority.NETWORK)
 
     def parseInput(self, data):
         """parse the data and emit the signalReceivedData"""
         self.signalReceivedData.emit(Hash.decode(data, "Bin"))
-
-    def processInput(self):
-        """process chunks of input
-
-        this generator will yield the number of bytes it needs to proceed,
-        and do so once it gets a chunk of the desired size."""
-        while True:
-            dataSize, = unpack(b"I", (yield 4))
-            dataBytes = yield dataSize
-
-            background.executeLater(partial(self.parseInput, dataBytes),
-                                    background.Priority.NETWORK)
 
     def onSocketError(self, socketError):
         print("onSocketError", self.tcpSocket.errorString(), socketError)
@@ -299,7 +304,6 @@ class _Network(QObject):
         for r in self.requestQueue:
             self._tcpWriteHash(r)
         self.requestQueue = []
-        self.dataReader = self.onReadServerData(self.processInput())
 
     def onDisconnected(self):
         pass
