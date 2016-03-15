@@ -34,17 +34,21 @@ def wrap(data):
         raise TypeError('cannot wrap "{}" into Karabo type'.format(type(data)))
 
 
+def newest_timestamp(objs, newest=None):
+    for a in objs:
+        if (isinstance(a, KaraboValue) and a.timestamp is not None and
+                (newest is None or a.timestamp > newest)):
+            newest = a.timestamp
+    return newest
+
+
 def wrap_function(func, timestamp=None):
     """wrap the function func to return a KaraboValue with the newest
     timestamp of its parameters"""
     @wraps(func)
     def wrapper(*args, **kwargs):
-        newest = timestamp
-        for a in chain(args, kwargs.values()):
-            if (isinstance(a, KaraboValue) and a.timestamp is not None and
-                    (newest is None or a.timestamp > newest)):
-                newest = a.timestamp
         ret = func(*args, **kwargs)
+        newest = newest_timestamp(chain(args, kwargs.values()), timestamp)
         if newest is not None:
             try:
                 if isinstance(ret, tuple):
@@ -228,12 +232,7 @@ class QuantityValue(KaraboValue, Quantity):
         if not isinstance(ret, QuantityValue):
             return ret
         _, objs, _ = context
-        newest = None
-        for o in objs:
-            ts = getattr(o, "timestamp", None)
-            if isinstance(ts, Timestamp) and (newest is None or ts > newest):
-                newest = ts
-        ret.timestamp = newest
+        ret.timestamp = newest_timestamp(objs)
         return ret
 
 
