@@ -667,15 +667,18 @@ namespace karabo {
             }
 
             if (!foundFirst) {
-                return result; // sum of result.nrecList is still 0
+                return MetaSearchResult();
             }
 
-            // Loop backwards (to open as few files as possible) to find file of 'to' timestamp
-            for (size_t fnum = tonum; fnum >= result.fromFileNumber; --fnum) {
+            bool foundLast = false;
+            // Loop backwards (to open as few files as possible) to find file of 'to' timestamp.
+            // Loop on 'fnum + 1' to avoid decrementing 0 (of type size_t) which gives a large number and an endless loop
+            for (size_t fnumPlus1 = tonum + 1; fnumPlus1 > result.fromFileNumber; --fnumPlus1) {
+                result.toFileNumber = fnumPlus1 - 1; // best guess so far - to have for sure a result
 
                 ifstream f;
                 try {
-                    f.open((namePrefix + toString(fnum) + nameSuffix).c_str(), ios::in | ios::binary);
+                    f.open((namePrefix + toString(result.toFileNumber) + nameSuffix).c_str(), ios::in | ios::binary);
                     if (!f || !f.is_open()) continue;
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
@@ -692,9 +695,13 @@ namespace karabo {
                 if (ROUND1MS(record.epochstamp) > ROUND1MS(to)) {
                     continue; // Ignore file: it is completely after range.
                 } else {
-                    result.toFileNumber = fnum; // We found it!
+                    foundLast = true;
                     break;
                 }
+            }
+
+            if (!foundLast) {
+                return MetaSearchResult();
             }
 
             // Now find number of records in each file. Correct first/last file later.
