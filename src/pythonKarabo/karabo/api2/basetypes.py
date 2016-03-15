@@ -7,6 +7,7 @@ from functools import wraps
 import inspect
 from itertools import chain
 import numbers
+import re
 
 import numpy
 import pint
@@ -59,20 +60,19 @@ def wrap_function(func, timestamp=None):
     return wrapper
 
 
-attr_blacklist = {"__len__", "__contains__", "__complex__", "__int__",
-                  "__float__", "__index__", "__bool__", "__getattribute__",
-                  "__getattr__", "__init__", "__new__", "__setattr__",
-                  "__array_prepare__", "__hash__", "__str__", "__repr__",
-                  "__array_wrap__", "register"}
-
-
 class KaraboValue(Registry):
     """This is the baseclass for all Karabo values"""
+    __re = re.compile("__.*__|[^_].*")
+    __blacklist = {"__len__", "__contains__", "__complex__", "__int__",
+                   "__float__", "__index__", "__bool__", "__getattribute__",
+                   "__getattr__", "__init__", "__new__", "__setattr__",
+                   "__array_prepare__", "__hash__", "__str__", "__repr__",
+                   "__array_wrap__", "register"}
+
     @classmethod
     def register(cls, name, d):
         attrs = [a for a in dir(cls)
-                 if ((len(a) > 4 and a[:2] == "__" and a[:2] == "__") or
-                     (not a.startswith("_"))) and (a not in attr_blacklist)]
+                 if cls.__re.fullmatch(a) and a not in cls.__blacklist]
 
         for name in attrs:
             attr = getattr(cls, name)
