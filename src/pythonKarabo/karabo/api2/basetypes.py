@@ -33,26 +33,28 @@ def wrap(data):
         raise TypeError('cannot wrap "{}" into Karabo type'.format(type(data)))
 
 
-def create_wrapper(attr, timestamp=None):
-    @wraps(attr)
+def wrap_function(func, timestamp=None):
+    """wrap the function func to return a KaraboValue with the newest
+    timestamp of its parameters"""
+    @wraps(func)
     def wrapper(*args, **kwargs):
         newest = timestamp
         for a in chain(args, kwargs.values()):
-            ts = getattr(a, "timestamp", None)
-            if isinstance(ts, Timestamp) and (newest is None or ts > newest):
-                newest = ts
-        ret = attr(*args, **kwargs)
-        try:
-            if newest is not None:
+            if (isinstance(a, KaraboValue) and a.timestamp is not None and
+                    (newest is None or a.timestamp > newest)):
+                newest = a.timestamp
+        ret = func(*args, **kwargs)
+        if newest is not None:
+            try:
                 if isinstance(ret, tuple):
                     ret = tuple(wrap(r) for r in ret)
                     for r in ret:
-                        ret.timestamp = newest
+                        r.timestamp = newest
                 else:
                     ret = wrap(ret)
                     ret.timestamp = newest
-        except TypeError:
-            pass
+            except TypeError:
+                pass  # the wrapper didn't manage to wrap, just skip it
         return ret
     return wrapper
 
@@ -75,7 +77,7 @@ class KaraboValue(Registry):
         for name in attrs:
             attr = getattr(cls, name)
             if inspect.isfunction(attr) or inspect.ismethoddescriptor(attr):
-                setattr(cls, name, create_wrapper(attr))
+                setattr(cls, name, wrap_function(attr))
 
 
 class SimpleValue(KaraboValue):
@@ -218,7 +220,7 @@ class QuantityValue(KaraboValue, Quantity):
     def __getattr__(self, attr):
         ret = super().__getattr__(attr)
         if callable(ret):
-            return create_wrapper(ret, self.timestamp)
+            return wrap_function(ret, self.timestamp)
         return ret
 
     def __array_wrap__(self, obj, context=None):
