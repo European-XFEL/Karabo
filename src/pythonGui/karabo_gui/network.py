@@ -212,23 +212,16 @@ class _Network(QObject):
         bytesNeededSize = calcsize(sizeFormat)
 
         while True:
-            bytesNeeded = 0
-            dataBytes = None
-
             # Read the size of the Hash
-            while True:
-                if self.tcpSocket.bytesAvailable() >= bytesNeededSize:
-                    rawBytesNeeded = self.tcpSocket.read(bytesNeededSize)
-                    bytesNeeded = unpack(sizeFormat, rawBytesNeeded)[0]
-                    break
+            while self.tcpSocket.bytesAvailable() < bytesNeededSize:
                 yield
+            rawBytesNeeded = self.tcpSocket.read(bytesNeededSize)
+            bytesNeeded = unpack(sizeFormat, rawBytesNeeded)[0]
 
             # Read the Hash
-            while True:
-                if self.tcpSocket.bytesAvailable() >= bytesNeeded:
-                    dataBytes = self.tcpSocket.read(bytesNeeded)
-                    break
+            while self.tcpSocket.bytesAvailable() < bytesNeeded:
                 yield
+            dataBytes = self.tcpSocket.read(bytesNeeded)
 
             # Do something with the Hash at some point in the future.
             background.executeLater(partial(self.parseInput, dataBytes),
