@@ -11,6 +11,7 @@ from collections import OrderedDict
 from enum import Enum
 from io import BytesIO
 import numbers
+import pint
 from struct import pack, unpack, calcsize
 import sys
 from xml.etree import ElementTree
@@ -56,7 +57,9 @@ class Enumable(object):
         else:
             return data.value
 
-    def toKaraboValue(self, data):
+    def toKaraboValue(self, data, strict=True):
+        if not strict and not isinstance(data, self.enum):
+            data = self.enum(data)
         return basetypes.EnumValue(data, descriptor=self)
 
 
@@ -109,11 +112,18 @@ class Simple(object):
             raise ValueError("value {} of {} not in allowed range".
                              format(ret, self.key))
 
-    def toKaraboValue(self, data):
+    def toKaraboValue(self, data, strict=True):
         if self.enum is not None:
-            return Enumable.toKaraboValue(self, data)
-        ret = basetypes.QuantityValue(data, descriptor=self).to(
-            basetypes.QuantityValue(1, descriptor=self))
+            return Enumable.toKaraboValue(self, data, strict)
+        if not strict or not self.dimensionality or isinstance(data, str):
+            if isinstance(data, basetypes.KaraboValue):
+                ts = data.timestamp
+            else:
+                ts = None
+            data = basetypes.QuantityValue(data, descriptor=self, timestamp=ts)
+        elif not isinstance(data, basetypes.QuantityValue):
+            raise pint.DimensionalityError("no dimension", self.dimensionality)
+        ret = data.to(basetypes.QuantityValue(1, descriptor=self))
         ret.descriptor = self
         self.check(ret.magnitude)
         return ret
@@ -154,10 +164,10 @@ class Integer(Simple, Enumable):
 
         return min, max
 
-    def toKaraboValue(self, data):
+    def toKaraboValue(self, data, strict=True):
         if self.enum is not None:
-            return Enumable.toKaraboValue(self, data)
-        ret = super().toKaraboValue(data)
+            return Enumable.toKaraboValue(self, data, strict)
+        ret = super().toKaraboValue(data, strict)
         return basetypes.QuantityValue(int(ret.magnitude), unit=ret.units,
                                        descriptor=self,
                                        timestamp=ret.timestamp)
@@ -450,7 +460,7 @@ class NumpyVector(Vector):
         assert ret.ndim == 1, "can only treat one-dimensional vectors"
         return ret
 
-    def toKaraboValue(self, data):
+    def toKaraboValue(self, data, strict=True):
         if not isinstance(data, basetypes.KaraboValue):
             data = self.cast(data)
         ret = basetypes.QuantityValue(data, descriptor=self).to(
@@ -483,7 +493,7 @@ class Bool(Type):
     def cast(self, other):
         return bool(other)
 
-    def toKaraboValue(self, data):
+    def toKaraboValue(self, data, strict=True):
         return basetypes.BoolValue(data, descriptor=self)
 
 
@@ -534,7 +544,7 @@ class Char(Simple, Type):
                     return _Byte(o)
             raise
 
-    def toKaraboValue(self, data):
+    def toKaraboValue(self, data, strict=True):
         if isinstance(data, bytes):
             if len(data) != 1:
                 raise ValueError("A character cannot have length other than 1")
@@ -582,7 +592,7 @@ class VectorChar(Vector):
         else:
             return bytes(other)
 
-    def toKaraboValue(self, data):
+    def toKaraboValue(self, data, strict=True):
         return basetypes.VectorCharValue(data, descriptor=self)
 
 
@@ -770,9 +780,9 @@ class String(Enumable, Type):
         else:
             return str(other)
 
-    def toKaraboValue(self, data):
+    def toKaraboValue(self, data, strict=True):
         if self.enum is not None:
-            return Enumable.toKaraboValue(self, data)
+            return Enumable.toKaraboValue(self, data, strict)
         return basetypes.StringValue(data, descriptor=self)
 
 
@@ -804,7 +814,7 @@ class VectorString(Vector):
                 return s
             return StringList(check(s) for s in other)
 
-    def toKaraboValue(self, data):
+    def toKaraboValue(self, data, strict=True):
         return basetypes.VectorStringValue(data, descriptor=self)
 
 
@@ -978,8 +988,6 @@ class None_(Type):
 
 
 def _gettype(data):
-    if isinstance(data, basetypes.KaraboValue) and data.descriptor is not None:
-        return data.descriptor
     try:
         if isinstance(data, np.ndarray):
             return NumpyVector.vstrs[data.dtype.str]
@@ -1252,8 +1260,6 @@ class Hash(OrderedDict):
 
 
     def __setitem__(self, item, value):
-        if isinstance(value, basetypes.EnumValue):
-            value = value.value
         if isinstance(item, tuple):
             key, attr = item
             if attr is Ellipsis:
