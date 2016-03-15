@@ -31,8 +31,10 @@ namespace karabo {
          * The InputChannel class.
          */
         class InputChannel : public boost::enable_shared_from_this<InputChannel> {
-            typedef std::set<karabo::net::Connection::Pointer> TcpConnections;
-            typedef std::map<std::string /*host + port*/, karabo::net::Channel::Pointer> TcpChannels;
+            //typedef std::set<karabo::net::Connection::Pointer> TcpConnections;
+            //typedef std::map<std::string /*host + port*/, karabo::net::Channel::Pointer> TcpChannels;
+            typedef std::map<std::string, karabo::util::Hash> ConnectedOutputChannels;
+            typedef std::map<std::string, std::pair<karabo::net::Connection::Pointer, karabo::net::Channel::Pointer> > OpenConnections;
             typedef Memory<karabo::util::Hash> MemoryType;
 
             /// Callback on available data (per InputChannel)
@@ -46,7 +48,6 @@ namespace karabo {
 
             std::string m_instanceId;
 
-            std::vector<karabo::util::Hash> m_connectedOutputChannels;
             std::string m_dataDistribution;
             unsigned int m_minData;
             bool m_keepDataUntilNew;
@@ -63,8 +64,12 @@ namespace karabo {
             karabo::net::IOService::Pointer m_tcpIoService;
             boost::thread m_tcpIoServiceThread;
 
-            TcpConnections m_tcpConnections;
-            TcpChannels m_tcpChannels;
+            boost::mutex m_outputChannelsMutex;
+            ConnectedOutputChannels m_connectedOutputChannels;
+            OpenConnections m_openConnections;
+            
+            //TcpConnections m_tcpConnections;
+            //TcpChannels m_tcpChannels;
 
             bool m_isEndOfStream;
             bool m_respondToEndOfStream;
@@ -118,9 +123,9 @@ namespace karabo {
              * Each Hash in the vector has the following structure:
              * instanceId (STRING)
              * channelId (STRING)
-             * @return A vector of hashes describing the connected output channels
+             * @return Reference to vector of hashes describing the connected output channels
              */
-            std::vector<karabo::util::Hash> getConnectedOutputChannels();
+            std::map<std::string,karabo::util::Hash>& getConnectedOutputChannels();
 
             void read(karabo::util::Hash& data, size_t idx = 0);
 
@@ -141,6 +146,8 @@ namespace karabo {
             void connect(const karabo::util::Hash& outputChannelInfo);
 
             void disconnect(const karabo::util::Hash& outputChannelInfo);
+            
+            void disconnect(const std::string& connectionString);
             
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
@@ -177,9 +184,7 @@ namespace karabo {
             
             bool needsDeviceConnection() const;
             
-            void closeChannels();
-            
-            void stopConnections();
+            void closeChannelsAndStopConnections();
         };
 
         class InputChannelElement {
