@@ -247,11 +247,6 @@ namespace karabo {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "MetaSearchResult: from : filenum=" << msr.fromFileNumber << " record=" << msr.fromRecord
                         << ", to : filenum=" << msr.toFileNumber << " record=" << msr.toRecord << ", list: " << toString(msr.nrecList);
-                const unsigned int numFiles = (msr.toFileNumber - msr.fromFileNumber + 1);
-                if (msr.nrecList.size() != numFiles && msr.nrecList.size()) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "MetaSearchResult mismatch: " << numFiles
-                            << ", but list of records has " << msr.nrecList.size() << " entries.";
-                }
 
                 // add together the number of data points in all files
                 size_t ndata = 0;
@@ -261,17 +256,31 @@ namespace karabo {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: total " << ndata << " data points and reductionFactor : " << reductionFactor;
 
-                if (ndata) {
+                if (msr.toFileNumber < msr.fromFileNumber) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "MetaSearchResult: bad file range " << msr.fromFileNumber
+                            << "-" << msr.toFileNumber << ", skip everything.";
+                } else if (ndata) {
+                    const unsigned int numFiles = (msr.toFileNumber - msr.fromFileNumber + 1);
+                    if (msr.nrecList.size() != numFiles) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "MetaSearchResult mismatch: " << numFiles
+                                << ", but list of records has " << msr.nrecList.size() << " entries.";
+                        // Heal as good as we can (nrecList cannot be empty here - ndata would be zero).
+                        if (msr.nrecList.size() > numFiles) {
+                            msr.nrecList.resize(numFiles);
+                        } else if (msr.nrecList.size() < numFiles) {
+                            msr.toFileNumber -= (numFiles - msr.nrecList.size());
+                        }
+                    }
 
+                    // Loop in parallel on index and raw data files:
                     ifstream df;
                     ifstream mf;
-                    size_t indx = 0;
-                    size_t idxpos = msr.fromRecord;
-                    for (size_t fnum = msr.fromFileNumber, ii = 0; fnum <= msr.toFileNumber && ii < msr.nrecList.size(); fnum++, ii++) {
+                    size_t indx = 0; // counter of processed records in index files
+                    for (size_t fnum = msr.fromFileNumber; fnum <= msr.toFileNumber; ++fnum) {
                         if (mf && mf.is_open()) mf.close();
                         if (df && df.is_open()) df.close();
-                        string idxname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + property + "-index.bin";
-                        string dataname = get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(fnum) + ".txt";
+                        const string idxname = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum) + "-" + property + "-index.bin";
+                        const string dataname = get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(fnum) + ".txt";
                         if (!bf::exists(bf::path(idxname))) {
                             KARABO_LOG_FRAMEWORK_WARN << "Miss file " << idxname;
                             continue;
@@ -287,13 +296,13 @@ namespace karabo {
                                     << idxname << " could not be opened";
                             continue;
                         }
-                        if (ii != 0) idxpos = 0;
 
-                        //                    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: property : \"" << property << "\", fileNumber : " << fnum
-                        //                                               << ", ii=" << ii << ", idx start position=" << idxpos;
-
+                        // Set start position in index file - i.e. file beginning except for first file.
+                        const size_t idxpos = (fnum == msr.fromFileNumber ? msr.fromRecord : 0);
                         mf.seekg(idxpos * sizeof (MetaData::Record), ios::beg);
-                        for (size_t i = 0; i < msr.nrecList[ii]; i++) {
+                        // Now loop to read all records in index file and eventually process raw file entries.
+                        const size_t numRecords = msr.nrecList[fnum - msr.fromFileNumber];
+                        for (size_t iRec = 0; iRec < numRecords; ++iRec) {
                             MetaData::Record record;
                             mf.read((char*) &record, sizeof (MetaData::Record));
                             if (reductionFactor && (indx++ % reductionFactor) != 0 && (record.extent2 & (1 << 30)) == 0)
@@ -316,8 +325,6 @@ namespace karabo {
                                     }
                                 }
 
-                                //df >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> trainId >> path >> type >> value >> user >> flag;
-
                                 const string& flag = tokens[7 + offset];
                                 if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
                                     result[result.size() - 1].setAttribute("v", "isLast", 'L');
@@ -338,9 +345,9 @@ namespace karabo {
                                 Hash::Node& node = hash.set<string>("v", value);
                                 node.setType(Types::from<FromLiteral>(type));
 
-                                unsigned long long trainId = fromString<unsigned long long>(tokens[2 + offset]);
+                                const unsigned long long trainId = fromString<unsigned long long>(tokens[2 + offset]);
                                 const Epochstamp epochstamp(stringDoubleToEpochstamp(tokens[1]));
-                                Timestamp tst(epochstamp, Trainstamp(trainId));
+                                const Timestamp tst(epochstamp, Trainstamp(trainId));
                                 Hash::Attributes& attrs = hash.getAttributes("v");
                                 tst.toHashAttributes(attrs);
                                 result.push_back(hash);
