@@ -111,6 +111,9 @@ class Tests(TestCase):
         self.assertEqual(c, l)
         self.assertEqual(c.timestamp, self.t2)
 
+        c = VectorStringValue(s for s in l)
+        self.assertEqual(c, l)
+
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
             if u is not Unit.NOT_ASSIGNED:
