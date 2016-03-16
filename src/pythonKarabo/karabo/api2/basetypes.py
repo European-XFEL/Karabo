@@ -196,7 +196,11 @@ class VectorStringValue(KaraboValue, list):
         if value is None:
             super().__init__()
         else:
-            super().__init__(str(s) for s in value)
+            super().__init__(value)
+            for s in value:
+                if not isinstance(s, str):
+                    raise TypeError(
+                        "Vector of strings can only contain strings")
         self.descriptor = descriptor
         self.timestamp = timestamp
 
