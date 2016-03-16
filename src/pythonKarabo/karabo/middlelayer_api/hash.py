@@ -463,8 +463,15 @@ class NumpyVector(Vector):
     def toKaraboValue(self, data, strict=True):
         if not isinstance(data, basetypes.KaraboValue):
             data = self.cast(data)
-        ret = basetypes.QuantityValue(data, descriptor=self).to(
-            basetypes.QuantityValue(1, descriptor=self))
+        if not strict or not self.dimensionality or isinstance(data, str):
+            if isinstance(data, basetypes.KaraboValue):
+                ts = data.timestamp
+            else:
+                ts = None
+            data = basetypes.QuantityValue(data, descriptor=self, timestamp=ts)
+        elif not isinstance(data, basetypes.QuantityValue):
+            raise pint.DimensionalityError("no dimension", self.dimensionality)
+        ret = data.to(basetypes.QuantityValue(1, descriptor=self))
         ret.descriptor = self
         return ret
 
