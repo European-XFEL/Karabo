@@ -66,7 +66,7 @@ def wrap_function(func, timestamp=None):
 
 class KaraboValue(Registry):
     """This is the baseclass for all Karabo values"""
-    __re = re.compile("__.*__|[^_].*")
+    __re = re.compile(r"__\w*__|[^_]\w*")
     __blacklist = {"__len__", "__contains__", "__complex__", "__int__",
                    "__float__", "__index__", "__bool__", "__getattribute__",
                    "__getattr__", "__init__", "__new__", "__setattr__",
