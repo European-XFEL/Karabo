@@ -164,7 +164,7 @@ namespace karabo {
         }
 
 
-        std::map<std::string, karabo::util::Hash>& InputChannel::getConnectedOutputChannels() {
+        std::map<std::string, karabo::util::Hash> InputChannel::getConnectedOutputChannels() {
             return m_connectedOutputChannels;
         }
 
@@ -326,7 +326,7 @@ namespace karabo {
 
             const std::string& memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
             const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
-            const std::string& port = outputChannelInfo.getAs<std::string>("port");
+            unsigned int port = outputChannelInfo.get<unsigned int>("port");
 
             channel->setErrorHandler(boost::bind(&karabo::xms::InputChannel::onTcpChannelError, this, channel, _1));
             channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
@@ -338,7 +338,7 @@ namespace karabo {
                 outputChannelString = outputChannelInfo.get<string>("outputChannelString");
             } else {
                 for (ConnectedOutputChannels::const_iterator it = m_connectedOutputChannels.begin(); it != m_connectedOutputChannels.end(); ++it) {
-                    if (!it->second.empty() && it->second.get<string>("hostname") == hostname && it->second.getAs<string>("port") == port) {
+                    if (!it->second.empty() && it->second.get<string>("hostname") == hostname && it->second.get<unsigned>("port") == port) {
                         outputChannelString = it->first;
                         break;
                     }
@@ -666,7 +666,13 @@ namespace karabo {
             }
         }
 
+        
+        void InputChannel::updateOutputChannelConfiguration(const std::string& outputChannelString, const karabo::util::Hash& config) {
+            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            m_connectedOutputChannels[outputChannelString] = config;
+        }
 
+        
         bool InputChannel::needsDeviceConnection() const {
             return true;
         }

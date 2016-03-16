@@ -2061,8 +2061,8 @@ namespace karabo {
         
         void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, int trails, int sleep) {
             // Loop connected outputs
-            std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
-            for (std::map<std::string, karabo::util::Hash>::iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
+            const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
+            for (std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
                 const string& outputChannelString = it->first;
                 connectInputToOutputChannel(channel, outputChannelString, trails, sleep);
             }
@@ -2073,13 +2073,14 @@ namespace karabo {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "connectInputToOutputChannel  on \"" << m_instanceId << "\"  : outputChannelString is \"" << outputChannelString << "\"";
 
-            std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
-            std::map<std::string, karabo::util::Hash>::iterator it = outputChannels.find(outputChannelString);
+            std::map<std::string, karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
+            std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.find(outputChannelString);
             if (it == outputChannels.end()) return;
-
-            Hash& channelInfo = it->second;
-
-            bool channelExists = channelInfo.has("outputChannelInfo");
+            
+            // it->first => outputChannelString (STRING)
+            // it->second => outputChannelInfo  (HASH)  with connection parameters
+            
+            bool channelExists = !it->second.empty();
             if (!channelExists) {
                 karabo::util::Hash reply;
 
@@ -2115,15 +2116,14 @@ namespace karabo {
                                 << ":" << reply.get<unsigned int>("port");
                         reply.set("connectionString", oss.str());
                         reply.set("outputChannelString", outputChannelString);
-                        channelInfo.set("outputChannelInfo", reply);
+                        channel->updateOutputChannelConfiguration(outputChannelString, reply);
+                        outputChannels = channel->getConnectedOutputChannels(); // update outputChannels with new copy
                     }
-                    KARABO_LOG_FRAMEWORK_DEBUG << "connectInputToOutputChannel  on \"" << m_instanceId << "\"  :  "
-                            << "outputChannelInfo is ...\n" << channelInfo.get<Hash>("outputChannelInfo");
                     break;
                 }
             }
             if (channelExists) {
-                channel->connect(channelInfo.get<Hash>("outputChannelInfo")); // Synchronous
+                channel->connect(outputChannels[outputChannelString]);  // Synchronous
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "Could not find outputChannel \"" << outputChannelString
                         << "\". Perhaps device with output channel is not online yet.";
@@ -2133,8 +2133,8 @@ namespace karabo {
 
         void SignalSlotable::connectInputChannelAsync(const InputChannel::Pointer& channel, const boost::function<void() >& handler) {
             // Loop connected outputs
-            std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
-            for (std::map<std::string, karabo::util::Hash>::iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
+            const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
+            for (std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
                 const std::string& outputChannelString = it->first;
 
                 std::vector<std::string> v;
