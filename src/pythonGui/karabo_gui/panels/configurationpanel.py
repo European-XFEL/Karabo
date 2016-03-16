@@ -76,7 +76,7 @@ class ConfigurationPanel(Dockable, QWidget):
         waitWidget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         waitWidget.setAutoFillBackground(True)
         waitWidget.setBackgroundRole(QPalette.Base)
-        movie = QMovie(os.path.join("icons", "wait"))
+        movie = QMovie(os.path.join("karabo_gui", "icons", "wait"))
         waitWidget.setMovie(movie)
         movie.start()
         self.__swParameterEditor.addWidget(waitWidget)
