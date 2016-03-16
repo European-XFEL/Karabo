@@ -30,6 +30,10 @@ class ProjectDialog(QDialog):
         QDialog.__init__(self)
         uic.loadUi(os.path.join(os.path.dirname(__file__), 'projectdialog.ui'), self)
         
+        self.cbSaveTo.currentIndexChanged.connect(self.onSaveToChanged)
+        # States whether the project server has already sent information about the CLOUD projects
+        self.hasCloudProjects = False
+        
         # Request all available projects in cloud
         network.Network().onGetAvailableProjects()
         
@@ -116,9 +120,13 @@ class ProjectDialog(QDialog):
         if self.swSaveTo.currentIndex() == 2:
             self.swSaveTo.setCurrentIndex(ProjectAccess.CLOUD.value)
         
-        if not self.leFilename.isEnabled():
-            self.leFilename.setEnabled(True)
-            self.leFilename.setFocus(Qt.OtherFocusReason)
+        self.setFilenameEnabled(True)
+        self.hasCloudProjects = True
+
+
+    def setFilenameEnabled(self, enable):
+        self.leFilename.setEnabled(enable)
+        self.leFilename.setFocus(Qt.OtherFocusReason)
 
 
     def onChanged(self, text):
@@ -135,6 +143,17 @@ class ProjectDialog(QDialog):
             return
         
         self.leFilename.setText(current.data())
+
+
+    def onSaveToChanged(self, index):
+        if not self.hasCloudProjects and index == 0:
+                # Show waiting page
+                self.swSaveTo.setCurrentIndex(2)
+                self.setFilenameEnabled(False)
+                return
+        
+        self.swSaveTo.setCurrentIndex(index)
+        self.setFilenameEnabled(True)
 
 
 class ProjectSaveDialog(ProjectDialog):
