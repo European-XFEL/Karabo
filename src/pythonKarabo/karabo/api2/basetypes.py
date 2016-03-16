@@ -177,6 +177,10 @@ class StringlikeValue(KaraboValue):
     def __hash__(self):
         return super().__hash__()
 
+    @property
+    def value(self):
+        return self
+
 
 class VectorCharValue(StringlikeValue, bytes):
     """A Karabo VectorChar is a Python bytes object"""
@@ -206,6 +210,10 @@ class VectorStringValue(KaraboValue, list):
 
     def __repr__(self):
         return "VectorString" + super().__repr__()
+
+    @property
+    def value(self):
+        return self
 
 
 # Pint is based on the concept of a unit registry. For each unit registry,
@@ -269,6 +277,10 @@ class QuantityValue(KaraboValue, Quantity):
         ret = super().imag
         ret.timestamp = self.timestamp
         return ret
+
+    @property
+    def value(self):
+        return self.magnitude
 
     def __getattr__(self, attr):
         ret = super().__getattr__(attr)
