@@ -27,7 +27,7 @@ elif [ "$OS" = "Darwin" ]; then
 fi
 
 EXTRACT_SCRIPT=$KARABO/bin/.extract-pythondependency.sh
-INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+INSTALLSCRIPT=$DISTDIR/${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
 if [ "$OS" == "Darwin" ]; then
   PYTHON=python3.4
@@ -48,10 +48,13 @@ mkdir -p $DISTDIR
 ###### Run dependency custom code to build the wheel ##########################
 source $originalPwd/build.config
 
-# Create installation script
+# Install the wheel which was created
 WHEELNAME=$(basename $DISTDIR/*.whl)
+WHEELFILE=$DISTDIR/$WHEELNAME
+$PIP install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELFILE
 
-echo -e '#!/bin/bash\n'"VERSION=$VERSION\nDEPNAME=$DEPNAME\nKARABOVERSION=$KARABOVERSION\nWHEELNAME=$WHEELNAME" | cat - $EXTRACT_SCRIPT $DISTDIR/$WHEELNAME > $INSTALLSCRIPT
+# Create a self-extracting installation script
+echo -e '#!/bin/bash\n'"VERSION=$VERSION\nDEPNAME=$DEPNAME\nKARABOVERSION=$KARABOVERSION\nWHEELNAME=$WHEELNAME" | cat - $EXTRACT_SCRIPT $WHEELFILE > $INSTALLSCRIPT
 chmod a+x $INSTALLSCRIPT
 
 cd $originalPwd
