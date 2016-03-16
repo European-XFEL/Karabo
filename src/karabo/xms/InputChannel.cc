@@ -244,7 +244,7 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_outputChannelsMutex);
                 for (ConnectedOutputChannels::const_iterator it = m_connectedOutputChannels.begin(); it != m_connectedOutputChannels.end(); ++it) {
                     if (it->second.empty()) continue;
-                    if (it->second.get<string>("hostname") != "hostname") continue;
+                    if (it->second.get<string>("hostname") != hostname) continue;
                     if (it->second.get<unsigned int>("port") != port) continue;
                     outputChannelString = it->first;
                     break;
