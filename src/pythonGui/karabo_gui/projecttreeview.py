@@ -90,6 +90,10 @@ class ProjectTreeView(QTreeView):
         return self.onCloseProject()
 
 
+    def modifiedProjects(self):
+        return self.model().modifiedProjects()
+
+
     def getProjectSaveName(self, saveTo=ProjectAccess.CLOUD, title="Save project", action="Save"):
         """
         Returns a tuple containing the filepath, project name and the location

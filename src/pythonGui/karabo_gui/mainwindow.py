@@ -109,15 +109,14 @@ class MainWindow(QMainWindow):
         self.tbAccessLevel.setMenu(self.mAccessLevel)
         
         text = "Connect to server"
-        self.acServerConnect = QAction(icons.remote,
-                                         "&Connect to server", self)
+        self.acServerConnect = QAction(icons.remote, "&{}".format(text), self)
         self.acServerConnect.setStatusTip(text)
         self.acServerConnect.setToolTip(text)
         self.acServerConnect.setCheckable(True)
         self.acServerConnect.triggered.connect(Network().onServerConnection)
 
-        text = "Exit application"
-        self.acExit = QAction(icons.exit, '&Exit', self)
+        text = "Exit"
+        self.acExit = QAction(icons.exit, "&{}".format(text), self)
         self.acExit.setStatusTip(text)
         self.acExit.setToolTip(text)
         self.acExit.setShortcut('Ctrl+Q')
@@ -207,8 +206,30 @@ class MainWindow(QMainWindow):
 
 
     def _quit(self):
-        self.projectPanel.closeAllProjects()
-        self.signalQuitApplication.emit()
+        # Check for project changes
+        projects = self.projectPanel.modifiedProjects()
+        print("_quit", projects)
+        if not projects:
+            return True
+        
+        
+        
+        
+        #reply = QMessageBox.question(self, 'Quit',
+        #    "Are you sure to quit?", QMessageBox.Yes |
+        #    QMessageBox.No, QMessageBox.No)
+
+        #if reply == QMessageBox.Yes:
+        #    self._quit()
+        #    event.accept()
+        #else:
+        #    event.ignore()
+        #    return
+        
+        #self.projectPanel.closeAllProjects()
+        #self.signalQuitApplication.emit()
+        
+        return True
 
 
     def _showStartUpPage(self, enableProjectPanel):
@@ -233,21 +254,17 @@ class MainWindow(QMainWindow):
 
 ### virtual functions ###
     def closeEvent(self, event):
-        reply = QMessageBox.question(self, 'Quit',
-            "Are you sure to quit?", QMessageBox.Yes |
-            QMessageBox.No, QMessageBox.No)
-
-        if reply == QMessageBox.Yes:
-            self._quit()
-            event.accept()
-        else:
+        if not self._quit():
             event.ignore()
             return
+        
+        event.accept()
         QMainWindow.closeEvent(self, event)
 
 
     def onExit(self):
-        self._quit()
+        if not self._quit():
+            return
         qApp.quit()
 
     
