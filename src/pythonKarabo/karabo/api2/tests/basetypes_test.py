@@ -102,6 +102,9 @@ class Tests(TestCase):
         self.assertEqual(l.descriptor, 3)
         self.assertEqual(l.timestamp, self.t2)
 
+        for s in l:
+            self.assertEqual(s.timestamp, self.t2)
+
         self.assertEqual((3 * l).timestamp, self.t2)
 
         c = VectorStringValue(l)

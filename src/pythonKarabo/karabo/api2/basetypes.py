@@ -83,6 +83,12 @@ class KaraboValue(Registry):
             if inspect.isfunction(attr) or inspect.ismethoddescriptor(attr):
                 setattr(cls, name, wrap_function(attr))
 
+    def __iter__(self):
+        for a in super().__iter__():
+            y = wrap(a)
+            y.timestamp = self.timestamp
+            yield y
+
 
 class SimpleValue(KaraboValue):
     """Base class for values which need no special treatment"""
