@@ -1262,11 +1262,17 @@ KARABO_SLOT0(__VA_ARGS__) \
             void registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&) >& handler);
 
             void connectInputChannel(const InputChannel::Pointer& channel, int trails = 8, int sleep = 1);
+            
+            void connectInputToOutputChannel(const InputChannel::Pointer& channel, const std::string& outputChannelString, int trails = 8, int sleep = 1);
 
             void connectInputChannelAsync(const InputChannel::Pointer& channel, const boost::function<void()>& handler);
 
             void connectInputChannels();
-
+            
+            void reconnectInputChannels(const std::string& instanceId);
+            
+            void disconnectInputChannels(const std::string& instanceId);
+            
             std::pair<bool, std::string> exists(const std::string& instanceId);
 
             int getAccessLevel(const std::string& instanceId) const;

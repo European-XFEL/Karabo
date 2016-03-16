@@ -506,14 +506,13 @@ namespace karabo {
         void GuiServerDevice::onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema";
-                string deviceId = info.get<string > ("deviceId");
+                const string& deviceId = info.get<string > ("deviceId");
                 
                 Schema schema = remote().getDeviceSchemaNoWait(deviceId);
                 
                 if (!schema.empty()) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";
-                    Hash h("type", "deviceSchema", "deviceId", deviceId,
-                           "schema", schema, "configuration", Hash());
+                    Hash h("type", "deviceSchema", "deviceId", deviceId, "schema", schema);
                     safeClientWrite(channel, h);
                 }
             } catch (const Exception& e) {
