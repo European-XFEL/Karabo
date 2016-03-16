@@ -205,7 +205,7 @@ class VectorStringValue(KaraboValue, list):
         self.timestamp = timestamp
 
     def __repr__(self):
-        return "VectorString" + super().__repr__(self)
+        return "VectorString" + super().__repr__()
 
 
 # Pint is based on the concept of a unit registry. For each unit registry,
