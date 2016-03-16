@@ -349,7 +349,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                         ocs << "=NEW ";
 
                     ocs << epochISO8601 << " " << epochDoubleStr << " " << " " << trainIdStr
-                        << " " << position << " " << user << " " << number << "\n";
+                        << " " << position << " " << (user.empty()? "." : user) << " " << number << "\n";
 
                     ocs.close();
                 }
