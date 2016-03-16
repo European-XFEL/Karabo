@@ -197,16 +197,16 @@ class VectorStringValue(KaraboValue, list):
     def __init__(self, value=None, *, descriptor=None, timestamp=None):
         if timestamp is None and isinstance(value, KaraboValue):
             timestamp = value.timestamp
+        self.descriptor = descriptor
+        self.timestamp = timestamp
         if value is None:
             super().__init__()
         else:
             super().__init__(value)
-            for s in value:
+            for s in self:
                 if not isinstance(s, str):
                     raise TypeError(
                         "Vector of strings can only contain strings")
-        self.descriptor = descriptor
-        self.timestamp = timestamp
 
     def __repr__(self):
         return "VectorString" + super().__repr__()
