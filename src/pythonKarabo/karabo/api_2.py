@@ -12,6 +12,10 @@ from .api2.enums import (
     AccessLevel, AccessMode, Assignment, ChannelSpaceType, EncodingType,
     MetricPrefix, NodeType, Unit
 )
+from .api2.basetypes import (
+    BoolValue, EnumValue, KaraboValue, QuantityValue, StringValue,
+    unit, VectorStringValue, VectorCharValue
+)
 from .api2.exceptions import KaraboError
 from .api2.hash import (
     Attribute, Bool, Byte, Char, ComplexDouble, ComplexFloat, Descriptor,

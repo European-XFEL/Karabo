@@ -202,8 +202,8 @@ class VectorStringValue(KaraboValue, list):
 # a new class (!) is created, and quantities are only compatible if we
 # use the same class. Here we define the Karabo quantity class.
 
-unit_registry = pint.UnitRegistry()
-Quantity = unit_registry.Quantity
+unit = pint.UnitRegistry()
+Quantity = unit.Quantity
 
 
 class QuantityValue(KaraboValue, Quantity):
@@ -278,15 +278,15 @@ class QuantityValue(KaraboValue, Quantity):
 # Whenever Pint does calculations, it returns the results as an objecti
 # of the registries' Quantity class. We set that to our own class so
 # that we keep our data.
-unit_registry.Quantity = QuantityValue
+unit.Quantity = QuantityValue
 
 # define the Karabo units that Pint doen't know about
-unit_registry.define("number = count = #")
-unit_registry.define("electronvolt = eV")
-unit_registry.define("degree_celsius = degC")
-unit_registry.define("katal = mol / s = kat")
-unit_registry.define("pixel = count = px")
-unit_registry.define("meter_per_second = m / s")
-unit_registry.define("volt_per_second = V / s")
-unit_registry.define("ampere_per_second = A / s")
-unit_registry.define("percent = count / 100 = %")
+unit.define("number = count = #")
+unit.define("electronvolt = eV")
+unit.define("degree_celsius = degC")
+unit.define("katal = mol / s = kat")
+unit.define("pixel = count = px")
+unit.define("meter_per_second = m / s")
+unit.define("volt_per_second = V / s")
+unit.define("ampere_per_second = A / s")
+unit.define("percent = count / 100 = %")
