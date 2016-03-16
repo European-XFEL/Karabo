@@ -827,12 +827,7 @@ class ProjectModel(QStandardItemModel):
         """
         A list of modified projects is returned.
         """
-        modifiedProjects = []
-        for p in self.projects:
-            if p.isModified:
-                modifiedProjects.append(p) 
-        
-        return modifiedProjects
+        return [p for p in self.projects if p.isModified]
 
 
     def closeExistentProject(self, filename):
