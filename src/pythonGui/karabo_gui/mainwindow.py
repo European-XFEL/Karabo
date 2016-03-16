@@ -205,34 +205,28 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(mainSplitter)
 
 
-    def _aboutToQuit(self):
-        self.projectPanel.closeAllProjects()
-        self.signalQuitApplication.emit()
-
-
     def _quit(self):
         # Check for project changes
         projects = self.projectPanel.modifiedProjects()
-        if not projects:
-            self._aboutToQuit()
-            return True
-        
-        msgBox = QMessageBox(self)
-        msgBox.setWindowTitle("Save changes before closing")
-        msgBox.setText("Do you want to save your modified projects before closing?")
-        msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
-                                  QMessageBox.Cancel)
-        msgBox.setDefaultButton(QMessageBox.Save)
+        if projects:
+            msgBox = QMessageBox(self)
+            msgBox.setWindowTitle("Save changes before closing")
+            msgBox.setText("Do you want to save your modified projects before closing?")
+            msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
+                                      QMessageBox.Cancel)
+            msgBox.setDefaultButton(QMessageBox.Save)
 
-        reply = msgBox.exec_()
-        if reply == QMessageBox.Cancel:
-            return False
+            reply = msgBox.exec_()
+            if reply == QMessageBox.Cancel:
+                return False
 
-        if reply == QMessageBox.Discard:
-            for p in projects:
-                p.setModified(False)
+            if reply == QMessageBox.Discard:
+                for p in projects:
+                    p.setModified(False)
         
-        self._aboutToQuit()
+        self.projectPanel.closeAllProjects()
+        self.signalQuitApplication.emit()
+        
         return True
 
 
