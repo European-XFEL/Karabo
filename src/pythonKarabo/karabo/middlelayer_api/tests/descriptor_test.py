@@ -108,7 +108,9 @@ class Tests(TestCase):
 
         d = hashmod.VectorInt8(unitSymbol=Unit.METER,
                                metricPrefixSymbol=MetricPrefix.MILLI)
-        v = d.toKaraboValue([2, 3, 4])
+        with self.assertRaises(DimensionalityError):
+            v = d.toKaraboValue([2, 3, 4])
+        v = d.toKaraboValue([2, 3, 4], strict=False)
         self.assertEqual(v[1], QuantityValue("3 mm"))
         self.assertNotEqual(v[2], 4)
         self.check_general(d, v)
@@ -165,7 +167,9 @@ class Tests(TestCase):
 
         d = hashmod.VectorFloat(unitSymbol=Unit.METER,
                                 metricPrefixSymbol=MetricPrefix.MILLI)
-        v = d.toKaraboValue([2, 3, 4])
+        with self.assertRaises(DimensionalityError):
+            v = d.toKaraboValue([2, 3, 4])
+        v = d.toKaraboValue([2, 3, 4], strict=False)
         self.assertEqual(v[1], QuantityValue("3 mm"))
         self.assertNotEqual(v[2], 4)
         self.check_general(d, v)
@@ -202,7 +206,9 @@ class Tests(TestCase):
 
         d = hashmod.VectorComplexFloat(unitSymbol=Unit.METER,
                                 metricPrefixSymbol=MetricPrefix.MILLI)
-        v = d.toKaraboValue([2+3j, 3+4j, 4])
+        with self.assertRaises(DimensionalityError):
+            v = d.toKaraboValue([2+3j, 3+4j, 4])
+        v = d.toKaraboValue([2+3j, 3+4j, 4], strict=False)
         self.assertEqual(v[1].real, QuantityValue("3 mm"))
         self.assertEqual(v[1].imag, QuantityValue("4 mm"))
         self.assertNotEqual(v[2], 4)
