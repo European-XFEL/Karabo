@@ -90,6 +90,10 @@ class ProjectTreeView(QTreeView):
         return self.onCloseProject()
 
 
+    def modifiedProjects(self):
+        return self.model().modifiedProjects()
+
+
     def getProjectSaveName(self, saveTo=ProjectAccess.CLOUD, title="Save project", action="Save"):
         """
         Returns a tuple containing the filepath, project name and the location
@@ -536,7 +540,7 @@ class ProjectTreeView(QTreeView):
 
             if project.isModified:
                 reply = QMessageBox.question(None, "Save changes before closing",
-                    "Do you want to save your project<br><b>\"{}\"</b><br>before closing?"
+                    "Do you want to save your project<br><b>\"{}\"</b> before closing?"
                     .format(project.name),
                     QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
                 if reply == QMessageBox.Save:

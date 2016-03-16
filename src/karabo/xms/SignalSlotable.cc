@@ -885,6 +885,7 @@ namespace karabo {
                     m_connectionStrings[instanceId] = remoteConnectionString;
                 }
             }
+            reconnectInputChannels(instanceId);
         }
 
 
@@ -2066,16 +2067,65 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, int trials, int sleep) {
+        void SignalSlotable::reconnectInputChannels(const std::string& instanceId) {
+            
+            KARABO_LOG_FRAMEWORK_DEBUG << "reconnectInputChannels of \"" << m_instanceId << "\"  to output channels of \"" << instanceId << "\"";
+            
+            // Loop channels
+            for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
+                const InputChannel::Pointer& channel = it->second;
+                const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
+                for (std::map<std::string, karabo::util::Hash>::const_iterator ii = outputChannels.begin(); ii != outputChannels.end(); ++ii) {
+                    const string& outputChannelString = ii->first;
+                    if (instanceId != outputChannelString.substr(0, instanceId.size())) continue;   // instanceId ~ instanceId@output
+                    channel->disconnect(outputChannelString);
+                    connectInputToOutputChannel(channel, outputChannelString);
+                }
+            }
+        }
+
+        
+        void SignalSlotable::disconnectInputChannels(const std::string& instanceId) {
+            
+        }
+        
+        
+        void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, int trails, int sleep) {
             // Loop connected outputs
-            std::vector<karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
-            for (size_t j = 0; j < outputChannels.size(); ++j) {
-                const std::string& instanceId = outputChannels[j].get<string > ("instanceId");
-                const std::string& channelId = outputChannels[j].get<string > ("channelId");
-                bool channelExists = false;
+            const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
+            for (std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
+                const string& outputChannelString = it->first;
+                connectInputToOutputChannel(channel, outputChannelString, trails, sleep);
+            }
+        }
+
+
+        void SignalSlotable::connectInputToOutputChannel(const InputChannel::Pointer& channel, const std::string& outputChannelString, int trials, int sleep) {
+
+            KARABO_LOG_FRAMEWORK_DEBUG << "connectInputToOutputChannel  on \"" << m_instanceId << "\"  : outputChannelString is \"" << outputChannelString << "\"";
+
+            std::map<std::string, karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
+            std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.find(outputChannelString);
+            if (it == outputChannels.end()) return;
+            
+            // it->first => outputChannelString (STRING)
+            // it->second => outputChannelInfo  (HASH)  with connection parameters
+            
+            bool channelExists = !it->second.empty();
+            if (!channelExists) {
                 karabo::util::Hash reply;
+
+                std::vector<std::string> v;
+                boost::split(v, outputChannelString, boost::is_any_of("@:"));
+
+                const std::string& instanceId = v[0];
+                const std::string& channelId = v[1];
+
                 while ((trials--) > 0) {
                     try {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "connectInputToOutputChannel  on \"" << m_instanceId << "\"  :  "
+                                << "request \"" << instanceId << "\", slotGetOutputChannelInformation, channelId=" << channelId;
+                        
                         this->request(instanceId, "slotGetOutputChannelInformation", channelId,
                                       static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
                     } catch (karabo::util::TimeoutException&) {
@@ -2091,26 +2141,39 @@ namespace karabo {
                         boost::this_thread::sleep(boost::posix_time::seconds(sleep));
                         sleep += 2;
                         continue;
+                    } else {
+                        ostringstream oss;
+                        oss << reply.get<string>("connectionType") << "://" << reply.get<string>("hostname")
+                                << ":" << reply.get<unsigned int>("port");
+                        reply.set("connectionString", oss.str());
+                        reply.set("outputChannelString", outputChannelString);
+                        channel->updateOutputChannelConfiguration(outputChannelString, reply);
+                        outputChannels = channel->getConnectedOutputChannels(); // update outputChannels with new copy
                     }
                     break;
                 }
-                if (channelExists) {
-                    channel->connect(reply); // Synchronous
-                } else {
-                    KARABO_LOG_FRAMEWORK_WARN << "Could not find outputChannel \""
-                            << channelId << "\" on instanceId \"" << instanceId
-                            << "\". Perhaps device with output channel is not online yet.";
-                }
+            }
+            if (channelExists) {
+                channel->connect(outputChannels[outputChannelString]);  // Synchronous
+            } else {
+                KARABO_LOG_FRAMEWORK_WARN << "Could not find outputChannel \"" << outputChannelString
+                        << "\". Perhaps device with output channel is not online yet.";
             }
         }
 
 
         void SignalSlotable::connectInputChannelAsync(const InputChannel::Pointer& channel, const boost::function<void() >& handler) {
             // Loop connected outputs
-            std::vector<karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
-            for (size_t j = 0; j < outputChannels.size(); ++j) {
-                const std::string& instanceId = outputChannels[j].get<string > ("instanceId");
-                const std::string& channelId = outputChannels[j].get<string > ("channelId");
+            const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
+            for (std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
+                const std::string& outputChannelString = it->first;
+
+                std::vector<std::string> v;
+                boost::split(v, outputChannelString, boost::is_any_of("@:"));
+
+                const std::string& instanceId = v[0];
+                const std::string& channelId = v[1];
+
                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
                         .receiveAsync<bool, karabo::util::Hash > (boost::bind(&SignalSlotable::onInputChannelConnectInfo,
                                                                               this, channel, handler,
