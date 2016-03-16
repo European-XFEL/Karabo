@@ -43,7 +43,7 @@
           </incDir>
         </ccTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/idxbuild</output>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-idxbuild</output>
           <linkerAddLib>
             <pElem>${KARABO}/lib</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
@@ -101,7 +101,7 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/idxbuild</output>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-idxbuild</output>
           <linkerAddLib>
             <pElem>${KARABO}/lib</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
