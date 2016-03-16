@@ -27,7 +27,7 @@ elif [ "$OS" = "Darwin" ]; then
 fi
 
 EXTRACT_SCRIPT=$KARABO/bin/.extract-pythondependency.sh
-INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+INSTALLSCRIPT=$DISTDIR/${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
 if [ "$OS" == "Darwin" ]; then
   PYTHON=python3.4
