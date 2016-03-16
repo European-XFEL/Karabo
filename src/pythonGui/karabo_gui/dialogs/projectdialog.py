@@ -54,7 +54,7 @@ class ProjectDialog(QDialog):
         self.laWait.setAutoFillBackground(True)
         self.laWait.setBackgroundRole(QPalette.Base)
         
-        movie = QMovie(os.path.join("icons", "wait"))
+        movie = QMovie(os.path.join("karabo_gui", "icons", "wait"))
         self.laWait.setMovie(movie)
         movie.start()
         
