@@ -100,6 +100,10 @@ class ProjectPanel(Dockable, QWidget):
         self.acProjectOpen.setEnabled(enabled)
 
 
+    def modifiedProjects(self):
+        return self.twProject.modifiedProjects()
+
+
     def onSelectionChanged(self, selectedIndexes):
         self.acProjectSave.setEnabled(len(selectedIndexes) > 0)
         self.acProjectSaveAs.setEnabled(len(selectedIndexes) > 0)
