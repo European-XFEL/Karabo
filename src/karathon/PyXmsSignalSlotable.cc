@@ -24,13 +24,6 @@ namespace bp = boost::python;
 
 
 void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable 
-    bp::enum_< SignalSlotable::ConnectionType > ("ConnectionType")
-            .value("NO_TRACK", SignalSlotable::NO_TRACK)
-            .value("TRACK", SignalSlotable::TRACK)
-            .value("RECONNECT", SignalSlotable::RECONNECT)
-            .export_values()
-            ;
-
     bp::class_<Slot, boost::shared_ptr<Slot>, boost::noncopyable> ("Slot", bp::no_init)
             .def("getInstanceIdOfSender"
                  , (const std::string & (Slot::*)() const) &Slot::getInstanceIdOfSender
@@ -157,24 +150,20 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (bp::arg("handler")))
 
             .def("connect",
-                 (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
+                 (bool (SignalSlotable::*)(const string&, const string&, const string&, const string&))(&SignalSlotable::connect),
                  (bp::arg("signalInstanceId"),
                  bp::arg("signalFunction"),
                  bp::arg("slotInstanceId"),
-                 bp::arg("slotFunction"),
-                 bp::arg("connectionType") = SignalSlotable::TRACK,
-                 bp::arg("isVerbose") = true),
-                 "\nUse this method to connect \"signalFunction\" issued by \"signalInstanceId\" with \"slotFunction\" belong to \"slotInstanceId\" using \"connectionType\"\n"
-                 "and \"isVerbose\" flag controlling verbosity level.\n\nExample:\n\nIf we have to communicate with remote client registered as instance \"b\" and slot \"onMoin\" ...\n\n\t"
+                 bp::arg("slotFunction")),
+                 "\nUse this method to connect \"signalFunction\" issued by \"signalInstanceId\" with \"slotFunction\" belonging to \"slotInstanceId\""
+                 "\n\nExample:\n\nIf we have to communicate with remote client registered as instance \"b\" and slot \"onMoin\" ...\n\n\t"
                  "ss = SignalSlotable(\"a\")\n\tss.connect(\"\", \"moin\", \"b\", \"onMoin\")\n\tss.emit(\"moin\", 12)\n"
                  )
 
             .def("connect",
-                 (bool (SignalSlotable::*)(const string&, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
+                 (bool (SignalSlotable::*)(const string&, const string&))(&SignalSlotable::connect),
                  (bp::arg("signalFunction"),
-                 bp::arg("slotFunction"),
-                 bp::arg("connectionType") = SignalSlotable::TRACK,
-                 bp::arg("isVerbose") = true))
+                 bp::arg("slotFunction")))
 
             .def("updateInstanceInfo",
                  (void (SignalSlotable::*)(const Hash&))(&SignalSlotable::updateInstanceInfo),

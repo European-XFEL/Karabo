@@ -535,12 +535,6 @@ namespace karabo {
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
 
-            enum ConnectionType {
-                NO_TRACK,
-                TRACK,
-                RECONNECT
-            };
-
 #define SIGNAL0(signalName) this->registerSignal(signalName);
 #define SIGNAL1(signalName, a1) this->registerSignal<a1>(signalName);
 #define SIGNAL2(signalName, a1, a2) this->registerSignal<a1,a2>(signalName);
@@ -738,92 +732,15 @@ KARABO_SLOT0(__VA_ARGS__) \
              * @param slotInstanceId
              * @param slotSignature
              */
-            bool connect(std::string signalInstanceId, const std::string& signalSignature, std::string slotInstanceId, const std::string& slotSignature, ConnectionType connectionType = TRACK, const bool isVerbose = false);
+            bool connect(const std::string& signalInstanceId, const std::string& signalSignature,
+                    const std::string& slotInstanceId, const std::string& slotSignature);
 
             /**
              * This function establishes a connection between a signal and a slot.
              * If the instanceId is not given, the signal/slot is interpreted as local and automatically
              * assigned a "self" instanceId
              */
-            bool connect(const std::string& signal, const std::string& slot, ConnectionType connectionType = TRACK, const bool isVerbose = false);
-
-            /**
-             * This function establishes a connection between a signal and a slot.
-             * The real functionality of the connection is NEITHER checked initially, NOR tracked during its lifetime.
-             * Thus, an emitted signal may never reach the connected slot, still not triggering any error.
-             *
-             * @param signalInstanceId
-             * @param signalSignature
-             * @param slotInstanceId
-             * @param slotSignature
-             */
-            KARABO_DEPRECATED void connectN(const std::string& signalInstanceId, const std::string& signalSignature, const std::string& slotInstanceId, const std::string& slotSignature);
-
-            /**
-             * This function establishes a connection between a signal and a slot.
-             * The real functionality of the connection will be checked initially and be tracked throughout its lifetime.
-             * The virtual function connectionNotAvailable(const string& instanceId, const Hash& affectedSignals, const Hash& affectedSlots) will be called
-             * in case the connection is/gets unavaible. NOTE: This notification is delayed by at least the heartbeat-rate of the connected component.
-             *
-             * @param signalInstanceId
-             * @param signalSignature
-             * @param slotInstanceId
-             * @param slotSignature
-             */
-            KARABO_DEPRECATED void connectT(const std::string& signalInstanceId, const std::string& signalSignature, const std::string& slotInstanceId, const std::string& slotSignature);
-
-            /**
-             * This function establishes a connection between a signal and a slot.
-             * The real functionality of the connection will be checked initially and be tracked throughout its lifetime.
-             * The virtual function connectionNotAvailable(const string& instanceId, const Hash& affectedSignals, const Hash& affectedSlots) will be called
-             * in case the connection is/gets unavaible. NOTE: This notification is delayed by at least the heartbeat-rate of the connected component.
-             * Furthermore will the lost connection automatically be tried to be re-established once the lost component(s) get(s) available again.
-             * The re-connection requests will fade out with the power of 4 and last maximum 17 hours. After that and at any other time all dangling connections 
-             * can actively tried to be re-connected by calling the function "slotTryReconnectNow()".
-             *
-             * @param signalInstanceId
-             * @param signalSignature
-             * @param slotInstanceId
-             * @param slotSignature
-             */
-            KARABO_DEPRECATED void connectR(const std::string& signalInstanceId, const std::string& signalSignature, const std::string& slotInstanceId, const std::string& slotSignature);
-
-            /**
-             * This function establishes a connection between a signal and a slot.
-             * The real functionality of the connection is NEITHER checked initially, NOR tracked during its lifetime.
-             * Thus, an emitted signal may never reach the connected slot, still not triggering any error.
-             *
-             * @param signalId
-             * @param slotId
-             */
-            KARABO_DEPRECATED void connectN(const std::string& signalId, const std::string& slotId);
-
-            /**
-             * This function establishes a connection between a signal and a slot.
-             * The real functionality of the connection will be checked initially and be tracked throughout its lifetime.
-             * The virtual function "connectionNotAvailable(const string& instanceId, const Hash& affectedSignals, const Hash& affectedSlots)" will be called
-             * in case the connection is/gets unavaible. NOTE: This notification is delayed by at least the heartbeat-rate of the connected component.
-             *
-             * @param signalId
-             * @param slotId
-             */
-            KARABO_DEPRECATED void connectT(const std::string& signalId, const std::string& slotId);
-
-            /**
-             * This function establishes a connection between a signal and a slot.
-             * The real functionality of the connection will be checked initially and be tracked throughout its lifetime.
-             * The virtual function connectionNotAvailable(const string& instanceId, const Hash& affectedSignals, const Hash& affectedSlots) will be called
-             * in case the connection is/gets unavailable. NOTE: This notification is delayed by at least the heartbeat-rate of the connected component.
-             * Furthermore will the lost connection automatically be tried to be re-established once the lost component(s) get(s) available again.
-             * The re-connection requests will fade out with the power of 4 and last maximum 17 hours. After that and at any other time all dangling connections
-             * can actively tried to be re-connected by calling the function "slotTryReconnectNow()".
-             *
-             * @param signalId
-             * @param slotId
-             */
-            KARABO_DEPRECATED void connectR(const std::string& signalId, const std::string& slotId);
-
-
+            bool connect(const std::string& signal, const std::string& slot);
 
             bool disconnect(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose = false);
 
@@ -1413,7 +1330,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void stopTrackingSystem();
 
-            bool tryToConnectToSignal(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const int& connectionType, const bool isVerbose);
+            bool tryToConnectToSignal(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
             SlotInstancePointer findSlot(const std::string &funcName);
 
@@ -1423,11 +1340,11 @@ KARABO_SLOT0(__VA_ARGS__) \
              */
             void registerNewSlot(const std::string &funcName, SlotInstancePointer instance);
 
-            void slotConnectToSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
+            void slotConnectToSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
-            bool tryToConnectToSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType, const bool isVerbose);
+            bool doesSlotExist(const std::string& slotInstanceId, const std::string& slotFunction);
 
-            void slotConnectToSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotFunction, const int& connectionType);
+            void slotHasSlot(const std::string& slotFunction);
 
             bool tryToDisconnectFromSignal(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose);
 
@@ -1446,15 +1363,9 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval, const karabo::util::Hash& instanceInfo);
 
-            //void refreshTimeToLiveForConnectedSlot(const std::string& networkId, int heartbeatInterval, const karabo::util::Hash& instanceInfo);
-
             void letInstanceSlowlyDieWithoutHeartbeat();
 
-            //void registerConnectionForTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
-
-            //void unregisterConnectionFromTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
-
-            bool isConnectionTracked(const std::string& connectionId);
+            //GF            bool isConnectionTracked(const std::string& connectionId);
 
             void decreaseCountdown(std::vector<std::pair<std::string, karabo::util::Hash> >& deadOnes);
 
