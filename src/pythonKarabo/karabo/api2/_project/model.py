@@ -123,10 +123,20 @@ class ProjectData(object):
     def addResource(self, category, data):
         """ Add the data into the resources of given category
 
-        This returns a name under which the resource can be opened again"""
+        This returns a name under which the resource can be opened again
+        """
+        def _hasPath(zf, path):
+            try:
+                zf.getinfo(path)
+                return True
+            except KeyError:
+                return False
+
         with ZipFile(self.filename, mode="a", compression=ZIP_DEFLATED) as zf:
             digest = hashlib.sha1(data).hexdigest()
-            zf.writestr(self._resourcePath(category, digest), data)
+            respath = self._resourcePath(category, digest)
+            if not _hasPath(zf, respath):
+                zf.writestr(respath, data)
 
         self.resources.setdefault(category, set()).add(digest)
         return digest
