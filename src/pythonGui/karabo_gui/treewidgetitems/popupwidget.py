@@ -32,6 +32,8 @@ class PopupWidget(QWidget):
 
 
     def setInfo(self, info):
+        scrollBar = self.__teInfo.verticalScrollBar()
+        pos = scrollBar.sliderPosition()
         
         htmlString = ("<table>" +
                       "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
@@ -39,6 +41,9 @@ class PopupWidget(QWidget):
         self.__teInfo.setHtml(htmlString)
         
         self.__teInfo.fitHeightToContent(len(info))
+        # Restore scrolling position to prevent irritating scrolling up while
+        # updating the popup dialog with further information on an expected parameter
+        scrollBar.setValue(pos)
 
 
 class TextEdit(QTextEdit):
