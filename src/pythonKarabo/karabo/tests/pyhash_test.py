@@ -7,6 +7,7 @@ from numpy.testing import assert_equal
 from karabo.api_1 import BinarySerializerHash, TextSerializerHash
 from karabo.api_2 import (Hash, Schema, XMLWriter, XMLParser,
                           BinaryParser, NodeType)
+from karabo.api2.hash import Byte
 
 
 class Hash_TestCase(unittest.TestCase):
@@ -143,6 +144,7 @@ class Hash_TestCase(unittest.TestCase):
         h["hashlist"] = [Hash("a", 3), Hash()]
         h["emptystringlist"] = []
         h["vectorbool"] = numpy.array([True, False, True])
+        h["char"] = Byte("c")
 
         h["bool", "bool"] = False
         h["int", "float"] = 7.3
@@ -164,7 +166,7 @@ class Hash_TestCase(unittest.TestCase):
         Python-only hashes."""
         keys = ["bool", "int", "string", "complex", "stringlist", "chars",
                 "vector", "emptyvector", "hash", "hashlist", "emptystringlist",
-                "vectorbool", "schema"]
+                "vectorbool", "char", "schema"]
         self.assertEqual(list(h.keys()), keys)
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
@@ -182,6 +184,7 @@ class Hash_TestCase(unittest.TestCase):
         assert_equal(h["emptyvector"], numpy.array([]))
         assert_equal(h["vectorbool"], numpy.array([True, False, True]))
         self.assertEqual(h["emptystringlist"], [])
+        self.assertEqual(h["char"], "c")
 
     def check_hash(self, h):
         """check that the hash *h* is the same as created by `create_hash`
@@ -218,7 +221,7 @@ class Hash_TestCase(unittest.TestCase):
     def test_binary(self):
         s = self.create_hash().encode("Bin")
         self.check_hash(Hash.decode(s, "Bin"))
-        self.assertEqual(adler32(s), 292704922)
+        self.assertEqual(adler32(s), 2927580322)
 
 
     def test_cpp_bin(self):

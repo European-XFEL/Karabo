@@ -421,27 +421,27 @@ class Char(Simple, Type):
     @staticmethod
     def read(file):
         file.pos += 1
-        return Byte(file.data[file.pos - 1:file.pos])
+        return Byte(file.data[file.pos - 1:file.pos].decode("ascii"))
 
     @classmethod
     def toString(cls, data):
-        return base64.b64encode(data).decode("ascii")
+        return data
 
     @classmethod
     def fromstring(self, s):
-        return base64.b64decode(s)
+        return s
 
     @classmethod
     def write(cls, file, data):
         assert len(data) == 1
-        file.file.write(data)
+        file.file.write(data.encode("ascii"))
 
     def cast(self, other):
         if len(bytes(other)) == 1:
             return Byte(other)
 
 
-class Byte(Special, bytes):
+class Byte(Special, str):
     """This represents just one byte, so that we can distinguish
     CHAR and VECTOR_CHAR."""
     hashtype = Char
