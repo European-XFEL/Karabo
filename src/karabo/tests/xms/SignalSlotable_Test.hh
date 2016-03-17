@@ -44,7 +44,7 @@ public:
             m_messageCount += 1000; // Invalidate message count will let the test fail!
         }
         SIGNAL2("signalB", int, karabo::util::Hash);
-        connectN("signalB", "slotB");
+        connect("signalB", "slotB");
         emit("signalB", 42, karabo::util::Hash("Was.soll.das.bedeuten", "nix"));
         //std::cout << "\nslotA END" << ", m_messageCount=" << m_messageCount << std::endl;
     }

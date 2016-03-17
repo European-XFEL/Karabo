@@ -123,9 +123,9 @@ namespace karabo {
             SLOT2(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
             SLOT2(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
 
-            connect(m_deviceToBeLogged, "signalChanged", "", "slotChanged", NO_TRACK);
-            connect(m_deviceToBeLogged, "signalStateChanged", "", "slotChanged", NO_TRACK);
-            connect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated", NO_TRACK);
+            connect(m_deviceToBeLogged, "signalChanged", "", "slotChanged");
+            connect(m_deviceToBeLogged, "signalStateChanged", "", "slotChanged");
+            connect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated");
 
             refreshDeviceInformation();
 

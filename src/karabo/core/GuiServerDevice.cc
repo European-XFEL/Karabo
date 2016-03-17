@@ -144,7 +144,7 @@ namespace karabo {
                 remote().registerSchemaUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::schemaUpdatedHandler, this, _1, _2));
                 remote().registerClassSchemaMonitor(boost::bind(&karabo::core::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
-                connect("Karabo_DataLoggerManager_0", "signalLoggerMap", "", "slotLoggerMap", RECONNECT, true);
+                connect("Karabo_DataLoggerManager_0", "signalLoggerMap", "", "slotLoggerMap");
                 requestNoWait("Karabo_DataLoggerManager_0", "slotGetLoggerMap", "", "slotLoggerMap");
 
                 m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
