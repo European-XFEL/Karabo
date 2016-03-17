@@ -185,6 +185,7 @@ class Configuration(Box):
         Box.fillWidget(self, parameterEditor,
                        self.type in ("class", "projectClass", "deviceGroupClass"))
         parameterEditor.globalAccessLevelChanged()
+        parameterEditor.ensureMiddleColumnWidth()
 
 
     def addVisible(self):
