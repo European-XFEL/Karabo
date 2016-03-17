@@ -55,7 +55,7 @@ class ListEdit(QDialog):
         self.editButton.clicked.connect(self.onEditClicked)
         vbox.addWidget(self.editButton)
 
-        self.removeButton = QPushButton("&Remove", self)
+        self.removeButton = QPushButton("&Delete", self)
         self.removeButton.clicked.connect(self.onRemoveClicked)
         vbox.addWidget(self.removeButton)
 
@@ -213,7 +213,7 @@ class ListEdit(QDialog):
     def onRemoveClicked(self):
         original = self.__listWidget.currentItem().text()
         if self.ask and QMessageBox.question(
-                self, "Remove", "Remove '{}'?".format(original),
+                self, "Delete", "Delete '{}'?".format(original),
                 QMessageBox.Yes | QMessageBox.Default,
                 QMessageBox.No | QMessageBox.Escape
             ) == QMessageBox.No:

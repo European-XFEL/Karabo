@@ -310,7 +310,7 @@ class ProjectTreeView(QTreeView):
                 acKillDevices.setToolTip(text)
                 acKillDevices.triggered.connect(self.model().onKillDevices)
 
-                text = "Remove all"
+                text = "Delete all"
                 acRemoveDevices = QAction(text, self)
                 acRemoveDevices.setStatusTip(text)
                 acRemoveDevices.setToolTip(text)
@@ -409,7 +409,7 @@ class ProjectTreeView(QTreeView):
         elif selectedType in (Device, DeviceGroup, Scene, Macro, Monitor):
             # Device or Scene menu
             if nbSelected > 1:
-                text = "Remove selected"
+                text = "Delete selected"
             else:
                 text = "Edit"
                 acEdit = QAction(text, self)
@@ -424,7 +424,7 @@ class ProjectTreeView(QTreeView):
                 menu.addAction(acEdit)
                 menu.addAction(acDuplicate)
                 
-                text = "Remove"
+                text = "Delete"
             
             acRemove = QAction(text, self)
             acRemove.setStatusTip(text)
@@ -480,7 +480,7 @@ class ProjectTreeView(QTreeView):
         
         elif selectedType is ProjectConfiguration:
             if nbSelected > 1:
-                text = "Remove selected"
+                text = "Delete selected"
             else:
                 # TODO
                 #text = "Edit"
@@ -489,7 +489,7 @@ class ProjectTreeView(QTreeView):
                 #acEdit.setToolTip(text)
                 #acEdit.triggered.connect(self.model().onEditConfiguration)
                 #menu.addAction(acEdit)
-                text = "Remove"
+                text = "Delete"
             acRemove = QAction(text, self)
             acRemove.setStatusTip(text)
             acRemove.setToolTip(text)

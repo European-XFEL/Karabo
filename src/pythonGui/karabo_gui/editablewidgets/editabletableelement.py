@@ -750,7 +750,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         if idx != None:
             addAction = menu.addAction("Add Row below")
             duplicateAction = menu.addAction("Duplicate Row below")
-            removeAction = menu.addAction("Remove Row")
+            removeAction = menu.addAction("Delete Row")
             action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
             if action == addAction:
                 self.tableModel.insertRows(idx.row()+1, 1, QModelIndex())

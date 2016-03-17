@@ -1016,7 +1016,7 @@ class PasteReplace(Paste):
 
 
 class Delete(SimpleAction):
-    text = "Remove"
+    text = "Delete"
     icon = icons.delete
     shortcut = QKeySequence.Delete
 
@@ -1027,8 +1027,8 @@ class Delete(SimpleAction):
         if not selected and not selectedShapes:
             return
         
-        if QMessageBox.question(self.parent, "Really remove?",
-                            "Do you really want to remove the items?",
+        if QMessageBox.question(self.parent, "Really delete?",
+                            "Do you really want to delete the items?",
                             QMessageBox.Yes | QMessageBox.No) == QMessageBox.No:
             return
             

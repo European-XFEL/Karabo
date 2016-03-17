@@ -48,7 +48,7 @@ class StringListEdit(QDialog):
         self.editButton.clicked.connect(self.onEditString)
         vbox.addWidget(self.editButton)
 
-        self.removeButton = QPushButton("&Remove", self)
+        self.removeButton = QPushButton("&Delete", self)
         self.removeButton.clicked.connect(self.onRemoveString)
         vbox.addWidget(self.removeButton)
 
@@ -193,8 +193,8 @@ class StringListEdit(QDialog):
 
     def onRemoveString(self):
         original = self.listWidget.currentItem().text()
-        if (len(original) < 1) or (self.ask and QMessageBox.question(self, "Remove",
-                                                                    "Remove '{}'?".format(original),
+        if (len(original) < 1) or (self.ask and QMessageBox.question(self, "Delete",
+                                                                    "Delete '{}'?".format(original),
                                                                     QMessageBox.Yes | QMessageBox.Default,
                                                                     QMessageBox.No | QMessageBox.Escape) ==
                                                                     QMessageBox.No):
