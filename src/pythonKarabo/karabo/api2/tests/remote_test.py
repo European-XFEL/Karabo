@@ -3,11 +3,13 @@ from asyncio import (async, coroutine, get_event_loop, sleep, wait_for,
 from datetime import datetime
 import gc
 from unittest import TestCase, main, expectedFailure
+import weakref
 
 from karabo.api import Slot, Int
 from karabo.api2.device import Device
 from karabo.api2.device_client import (
-    waitUntilNew, getDevice, waitUntil, setWait, setNoWait, Queue)
+    waitUntilNew, getDevice, waitUntil, setWait, setNoWait, Queue,
+    connectDevice)
 from karabo.api2.hash import Hash, VectorChar
 from karabo.api2 import openmq
 from karabo.api2.schema import Configurable, Node
@@ -430,6 +432,22 @@ class Tests(TestCase):
         del local.exc_slot
         del local.exception
         del local.traceback
+
+    @async_tst
+    def test_connectDevice(self):
+        try:
+            d = yield from connectDevice("remote")
+            self.assertNotEqual(d.value, 123)
+            remote.value = 123
+            yield from sleep(0.02)
+            self.assertEqual(d.value, 123)
+        finally:
+            # the garbage collector is currently the only way to get rid
+            # of connectDevices. At least we check that that works.
+            weak = weakref.ref(d)
+            del d
+            gc.collect()
+            self.assertIsNone(weak())
 
 
 def setUpModule():
