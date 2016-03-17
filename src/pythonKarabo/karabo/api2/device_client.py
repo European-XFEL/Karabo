@@ -468,6 +468,7 @@ def getDevice(deviceId, *, sync=None, timeout=5):
     return _getDevice(deviceId, sync=sync, timeout=timeout)
 
 
+@synchronize
 def connectDevice(device, *, autodisconnect=None, timeout=5):
     """get and connect a device proxy for the device *deviceId*
 
@@ -487,13 +488,15 @@ def connectDevice(device, *, autodisconnect=None, timeout=5):
             P = Proxy
         else:
             P = AutoDisconnectProxy
-        device = _getDevice(device, sync=get_event_loop().sync_set,
-                            timeout=timeout, Proxy=P)
+        device = yield from _getDevice(device, sync=get_event_loop().sync_set,
+                                       timeout=timeout, Proxy=P)
     if autodisconnect is None:
-        return device.__enter__()
+        ret = device.__enter__()
     else:
         device._interval = autodisconnect
-        return device
+        ret = device
+    yield from ret
+    return ret
 
 
 @synchronize
