@@ -823,6 +823,13 @@ class ProjectModel(QStandardItemModel):
         return object
 
 
+    def modifiedProjects(self):
+        """
+        A list of modified projects is returned.
+        """
+        return [p for p in self.projects if p.isModified]
+
+
     def closeExistentProject(self, filename):
         """
         If a project with the \filename already exists, it is removed from the
