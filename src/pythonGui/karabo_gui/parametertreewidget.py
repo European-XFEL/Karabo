@@ -55,7 +55,7 @@ class ParameterTreeWidget(QTreeWidget):
 
     def ensureMiddleColumnWidth(self):
         """ Set the minimum column width for the whole table to the current
-        with of the middle column.
+        width of the middle column.
         """
         header = self.header()
         header.setMinimumSectionSize(header.sectionSize(1))
