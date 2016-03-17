@@ -117,7 +117,7 @@ class ProjectDialog(QDialog):
             item.setText(5, creationDate)
             self.twProjects.addTopLevelItem(item)
         
-        if self.swSaveTo.currentIndex() == 2:
+        if self.swSaveTo.currentIndex() == self.swSaveTo.indexOf(self.wWait):
             self.swSaveTo.setCurrentIndex(ProjectAccess.CLOUD.value)
         
         self.setFilenameEnabled(True)
@@ -146,9 +146,9 @@ class ProjectDialog(QDialog):
 
 
     def onSaveToChanged(self, index):
-        if not self.hasCloudProjects and index == 0:
+        if not self.hasCloudProjects and index == ProjectAccess.CLOUD.value:
                 # Show waiting page
-                self.swSaveTo.setCurrentIndex(2)
+                self.swSaveTo.setCurrentIndex(self.swSaveTo.indexOf(self.wWait))
                 self.setFilenameEnabled(False)
                 return
         
