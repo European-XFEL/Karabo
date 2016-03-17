@@ -142,6 +142,7 @@ class Hash_TestCase(unittest.TestCase):
         h["hash"] = Hash("a", 3, "b", 7.1)
         h["hashlist"] = [Hash("a", 3), Hash()]
         h["emptystringlist"] = []
+        h["vectorbool"] = numpy.array([True, False, True])
 
         h["bool", "bool"] = False
         h["int", "float"] = 7.3
@@ -163,7 +164,7 @@ class Hash_TestCase(unittest.TestCase):
         Python-only hashes."""
         keys = ["bool", "int", "string", "complex", "stringlist", "chars",
                 "vector", "emptyvector", "hash", "hashlist", "emptystringlist",
-                "schema"]
+                "vectorbool", "schema"]
         self.assertEqual(list(h.keys()), keys)
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
@@ -179,6 +180,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(len(h["hashlist"][1]), 0)
         assert_equal(h["vector"], numpy.arange(7))
         assert_equal(h["emptyvector"], numpy.array([]))
+        assert_equal(h["vectorbool"], numpy.array([True, False, True]))
         self.assertEqual(h["emptystringlist"], [])
 
     def check_hash(self, h):
@@ -216,7 +218,7 @@ class Hash_TestCase(unittest.TestCase):
     def test_binary(self):
         s = self.create_hash().encode("Bin")
         self.check_hash(Hash.decode(s, "Bin"))
-        self.assertEqual(adler32(s), 2640989770)
+        self.assertEqual(adler32(s), 292704922)
 
 
     def test_cpp_bin(self):

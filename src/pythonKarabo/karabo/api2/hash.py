@@ -363,7 +363,7 @@ class NumpyVector(Vector):
     @classmethod
     def fromstring(cls, s):
         if s:
-            return np.array([cls.basetype.numpy(x) for x in s.split(',')])
+            return np.fromstring(s, sep=",", dtype=cls.basetype.numpy)
         else:
             return np.array([], dtype=cls.basetype.numpy)
 
@@ -408,6 +408,10 @@ class Bool(Type):
 class VectorBool(NumpyVector):
     basetype = Bool
     number = 1
+
+    @classmethod
+    def toString(cls, data):
+        return ",".join(str(int(i)) for i in data)
 
 
 class Char(Simple, Type):
