@@ -162,7 +162,8 @@ namespace karabo {
 
 
         void OutputChannel::onTcpConnectionError(const karabo::net::Connection::Pointer& connection, const karabo::net::ErrorCode& error) {
-            KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
+            KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error on \"" << m_instanceId << "\", code: "
+                    << error.value() << " -- " << error.message();
             connection->stop();
         }
 
@@ -171,7 +172,8 @@ namespace karabo {
             using namespace karabo::net;
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
             KARABO_LOG_FRAMEWORK_INFO << "Tcp channel (socket " << tch->socket().native()
-                    << ") error, code #" << error.value() << " -- \"" << error.message() << "\".  Channel closed.";
+                    << ") error on \"" << m_instanceId << "\", code #" << error.value() << " -- \""
+                    << error.message() << "\".  Channel closed.";
             // Unregister channel
             onInputGone(channel);
             m_dataChannels.erase(channel);
