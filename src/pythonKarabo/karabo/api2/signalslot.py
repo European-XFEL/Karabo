@@ -117,7 +117,7 @@ class SignalSlotable(Configurable):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
         super().__init__(configuration)
         self.deviceId = self._deviceId_
-        self._devices = {}
+        self._devices = weakref.WeakValueDictionary()
         self.__randPing = random.randint(2, 0x7fffffff)
 
     def startInstance(self, server=None, *, loop=None):
