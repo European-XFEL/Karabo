@@ -742,7 +742,7 @@ KARABO_SLOT0(__VA_ARGS__) \
              */
             bool connect(const std::string& signal, const std::string& slot);
 
-            bool disconnect(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose = false);
+            bool disconnect(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
             /**
              * Emits a void signal.
@@ -1346,13 +1346,9 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void slotHasSlot(const std::string& slotFunction);
 
-            bool tryToDisconnectFromSignal(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose);
+            bool tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
             void slotDisconnectFromSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
-
-            bool tryToDisconnectFromSlot(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose);
-
-            void slotDisconnectFromSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotFunction);
 
             static std::string prepareFunctionSignature(const std::string& funcName) {
                 std::string f(boost::trim_copy(funcName));
