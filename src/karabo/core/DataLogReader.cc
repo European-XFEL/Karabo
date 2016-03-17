@@ -56,7 +56,7 @@ namespace karabo {
         void IndexBuilderService::build(const std::string& commandLineArguments) {
             try {
                 const std::string karabo(Version::getPathToKaraboInstallation());
-                const std::string command = karabo + "/bin/idxbuild " + commandLineArguments;
+                const std::string command = karabo + "/bin/karabo-idxbuild " + commandLineArguments;
                 KARABO_LOG_FRAMEWORK_INFO << "********* Index File Building *********\n"
                         << "*** Execute :\n \"" << command << "\"\n***";
                 const int ret = system(command.c_str());
