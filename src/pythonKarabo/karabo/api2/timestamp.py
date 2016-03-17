@@ -60,3 +60,10 @@ class Timestamp(object):
         if not isinstance(other, Timestamp):
             return NotImplemented
         return self.time < other.time
+
+    def __str__(self):
+        return self.toLocal()
+
+    def __repr__(self):
+        return datetime.utcfromtimestamp(self.toTimestamp()
+                                         ).isoformat() + " UTC"
