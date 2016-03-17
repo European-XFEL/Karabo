@@ -993,9 +993,9 @@ class ProjectModel(QStandardItemModel):
         if project is None:
             project = self.currentProject()
 
-        project.filename = filename
         project.access = access
-        project.zip()
+        project.zip(filename=filename)
+        project.filename = filename
         self.onProjectModified(project)
         
         return project
