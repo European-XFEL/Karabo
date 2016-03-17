@@ -199,8 +199,8 @@ namespace karabo {
                 Types::ReferenceType type = Types::from<T>();
                 switch (type) {
                     case Types::UINT8:
-                    case Types::CHAR:
                         return ChannelSpace::u_8_1;
+                    case Types::CHAR: // gcc default for char is signed
                     case Types::INT8:
                         return ChannelSpace::s_8_1;
                     case Types::UINT16:
