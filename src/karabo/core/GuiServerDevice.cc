@@ -455,7 +455,7 @@ namespace karabo {
 
             try {
                 bool unregisterFlag = false;
-                string deviceId = info.get<string > ("deviceId");
+                const string& deviceId = info.get<string > ("deviceId");
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice : \"" << deviceId << "\"";
                 
@@ -467,8 +467,7 @@ namespace karabo {
 
                 {
                     boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                    m_monitoredDevices[deviceId]--;
-                    if (m_monitoredDevices[deviceId] == 0) unregisterFlag = true;
+                    if (--m_monitoredDevices[deviceId] <= 0) unregisterFlag = true; // prefix decrement!
                     KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice " << deviceId << " (" << m_monitoredDevices[deviceId] << ")";
                 }
 
