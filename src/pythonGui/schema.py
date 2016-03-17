@@ -8,7 +8,7 @@
 .. autoclass:: Box
 """
 
-from karabo.api_2 import AccessMode, AccessLevel, Hash, Timestamp
+from karabo.api_2 import AccessMode, AccessLevel, NodeType, Hash, Timestamp
 import karabo.api2.hash as hashmod
 from karabo_gui.registry import Monkey
 from karabo_gui.network import Network
@@ -399,15 +399,19 @@ class Schema(hashmod.Descriptor):
 
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
-        nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
-                 ListOfNodes.parse)
+        nodes = {
+            NodeType.Leaf: Schema.parseLeaf,
+            NodeType.Node: Schema.parse,
+            NodeType.ChoiceOfNodes: ChoiceOfNodes.parse,
+            NodeType.ListOfNodes: ListOfNodes.parse
+        }
         #print(attrs.get('displayType'))
         self = dict(NDArray=ImageNode, ImageData=ImageNode, Image=ImageNode, Slot=SlotNode, OutputChannel=OutputNode, Table=TableNode).get(
                 attrs.get('displayType', None), cls)(key)
         self.displayedName = key
         self.parseAttrs(self, attrs, parent)
         for k, h, a in hash.iterall():
-            self.dict[k] = nodes[a['nodeType']](k, h, a, self)
+            self.dict[k] = nodes[NodeType(a['nodeType'])](k, h, a, self)
         self.key = key
         return self
 
