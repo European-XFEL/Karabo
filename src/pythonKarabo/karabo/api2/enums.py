@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum
 from functools import total_ordering
 
 ChannelSpaceType = (
@@ -32,6 +32,17 @@ class Assignment(Enum):
     OPTIONAL = 0
     MANDATORY = 1
     INTERNAL = 2
+
+
+class NodeType(IntEnum):
+    Leaf = 0
+    Node = 1
+    ChoiceOfNodes = 2
+    ListOfNodes = 3
+
+    def __str__(self):
+        return str(self.value)
+
 
 class MetricPrefix(Enum):
     """ This are all the defined prefixes in the SI system """

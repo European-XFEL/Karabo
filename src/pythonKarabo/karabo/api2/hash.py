@@ -18,7 +18,8 @@ from xml.etree import ElementTree
 import numpy as np
 
 from . import basetypes
-from .enums import AccessLevel, AccessMode, Assignment, Unit, MetricPrefix
+from .enums import (AccessLevel, AccessMode, Assignment, MetricPrefix,
+                    NodeType, Unit)
 from .exceptions import KaraboError
 from .registry import Registry
 
@@ -206,7 +207,7 @@ class Slot(Descriptor):
 
     def parameters(self):
         ret = super(Slot, self).parameters()
-        ret["nodeType"] = 1
+        ret["nodeType"] = NodeType.Node
         ret["displayType"] = "Slot"
         return ret
 
@@ -314,7 +315,7 @@ class Type(Descriptor, Registry):
 
     def parameters(self):
         ret = super(Type, self).parameters()
-        ret["nodeType"] = 0
+        ret["nodeType"] = NodeType.Leaf
         ret["valueType"] = self.hashname()
         return ret
 
@@ -770,7 +771,8 @@ class SchemaHashType(HashType):
     @classmethod
     def write(cls, file, data):
         for p in data.hash.paths():
-            if data.hash[p, "nodeType"] == 0:
+            nodeType = NodeType(data.hash[p, "nodeType"])
+            if nodeType is NodeType.Leaf:
                 assert not data.hash[p], "no proper leaf: {}".format(p)
             else:
                 assert isinstance(data.hash[p], Hash), \
@@ -866,6 +868,8 @@ def _gettype(data):
             return data.hashtype
         elif isinstance(data, bool):
             return Bool
+        elif isinstance(data, Enum):
+            return Int32
         elif isinstance(data, numbers.Integral):
             return Int32
         elif isinstance(data, numbers.Real):
