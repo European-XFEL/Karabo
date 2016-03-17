@@ -65,7 +65,7 @@ void SignalSlotable_Test::testMethod() {
             return;
         }
         
-        ssDemo.connectN("signalA", "slotA");
+        ssDemo.connect("signalA", "slotA");
 
         ssDemo.emit("signalA", "Hello World!");
 

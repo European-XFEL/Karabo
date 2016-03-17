@@ -883,8 +883,7 @@ namespace karabo {
                 return false;
             } else if (toggle) {
                 // connect and request a first time
-                if (p->connect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap",
-                               SignalSlotable::RECONNECT, false)) {
+                if (p->connect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap")) {
                     // If we cannot connect, request makes no sense
                     Hash loggerMap;
                     try {
