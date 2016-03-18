@@ -467,8 +467,9 @@ namespace karabo {
 
                 {
                     boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                    if (--m_monitoredDevices[deviceId] <= 0) unregisterFlag = true; // prefix decrement!
-                    KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice " << deviceId << " (" << m_monitoredDevices[deviceId] << ")";
+                    const int newCount = --m_monitoredDevices[deviceId]; // prefix decrement!
+                    if (newCount <= 0) unregisterFlag = true;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice " << deviceId << " (" << newCount << ")";
                 }
 
                 if (unregisterFlag) {
