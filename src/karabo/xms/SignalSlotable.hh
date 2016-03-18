@@ -435,7 +435,10 @@ namespace karabo {
                 SignalSlotConnection(const std::string& signalInstanceId, const std::string& signal,
                                      const std::string& slotInstanceId, const std::string& slot) :
                 m_signalInstanceId(signalInstanceId), m_signal(signal),
-                m_slotInstanceId(slotInstanceId), m_slot(slot) {}
+                m_slotInstanceId(slotInstanceId), m_slot(slot) { }
+
+                // needed to put into std::set:
+                bool operator<(const SignalSlotConnection& other) const;
 
                 std::string m_signalInstanceId;
                 std::string m_signal;
@@ -1326,6 +1329,9 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void registerDefaultSignalsAndSlots();
 
+            /// Calls connect for all signals of 'signalInstanceId' that have been connected before.
+            void reconnectSignals(const std::string& signalInstanceId);
+
             /// Register myself for short-cut messaging (i.e. bypass broker if in same process).
             /// Must not be called before instance ID is checked to be unique in overall system.
             void registerForShortcutMessaging();
@@ -1341,7 +1347,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             SlotInstancePointer findSlot(const std::string &funcName);
 
-            /*
+            /**
              * Register a new slot *instance* under name *funcName*.
              * This will raise an error if the slot already exists.
              */
