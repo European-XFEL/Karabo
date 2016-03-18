@@ -1223,23 +1223,25 @@ namespace karabo {
             const std::string& signalInstanceId_ = (signalInstanceId.empty() ? m_instanceId : signalInstanceId);
             const std::string& slotInstanceId_ = (slotInstanceId.empty() ? m_instanceId : slotInstanceId);
 
-            bool connected = false;
             const bool slotExists = this->doesSlotExist(slotInstanceId_, slotFunction);
-            if (!slotExists) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Slot '" << slotInstanceId_ << "." << slotFunction << "' does not exist, so "
-                        << " could not connect to signal '" << signalInstanceId_ << "." << signalFunction << "'.";
+            const bool attachedSlotToSignal = this->tryToConnectToSignal(signalInstanceId_, signalFunction, slotInstanceId_, slotFunction);
+
+            if (attachedSlotToSignal && slotExists) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Successfully connected slot '" << slotInstanceId_ << "." << slotFunction
+                        << "' to signal '" << signalInstanceId_ << "." << signalFunction << "'.";
+            } else if (attachedSlotToSignal) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Connected non-existing slot '" << slotInstanceId_ << "." << slotFunction
+                        << "' to signal '" << signalInstanceId_ << "." << signalFunction << "'.";
+            } else if (slotExists) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Could not connect slot '" << slotInstanceId_ << "." << slotFunction
+                        << "' to (non-existing?) signal '" << signalInstanceId_ << "." << signalFunction << "'.";
             } else {
-                connected = this->tryToConnectToSignal(signalInstanceId_, signalFunction, slotInstanceId_, slotFunction);
-                if (connected) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Successfully connected slot '" << slotInstanceId_ << "." << slotFunction
-                            << "' to signal '" << signalInstanceId_ << "." << signalFunction << "'.";
-                } else {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Failed to connected slot '" << slotInstanceId_ << "." << slotFunction
-                            << "' to signal '" << signalInstanceId_ << "." << signalFunction << "'.";
-                }
+                KARABO_LOG_FRAMEWORK_DEBUG << "Could not connect slot '" << slotInstanceId_ << "." << slotFunction
+                        << "' to signal '" << signalInstanceId_ << "." << signalFunction
+                        << "'. Neither signal nor slot seem to exist.";
             }
 
-            return connected;
+            return (attachedSlotToSignal && slotExists);
         }
 
         bool SignalSlotable::tryToConnectToSignal(const std::string& signalInstanceId, const std::string& signalFunction,
