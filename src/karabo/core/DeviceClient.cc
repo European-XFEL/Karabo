@@ -31,7 +31,7 @@ namespace karabo {
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
-        , m_getOlder(true)
+        , m_getOlder(false) // Sic! To start aging in setAgeing below.
         , m_runSignalsChangedThread(false)
         , m_signalsChangedInterval(-1)
         , m_loggerMapCached(false) {
@@ -68,7 +68,7 @@ namespace karabo {
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
-        , m_getOlder(true)
+        , m_getOlder(false) // Sic! To start aging in setAgeing below.
         , m_runSignalsChangedThread(false)
         , m_signalsChangedInterval(-1)
         , m_loggerMapCached(false) {
@@ -112,27 +112,6 @@ namespace karabo {
             p->connect("", "signalInstanceNew", "", "_slotInstanceNew");
             p->connect("", "signalInstanceGone", "", "_slotInstanceGone");
         }
-
-        //
-        //        void DeviceClient::checkMaster() {
-        //            try {
-        //                m_signalSlotable.lock()->request("*", "slotMasterPing").timeout(100).receive(m_masterDeviceId);
-        //            } catch (karabo::util::TimeoutException&) {
-        //                karabo::util::Exception::clearTrace();
-        //                // Allow for any Karabo_Master to become master
-        //                if (m_signalSlotable.lock()->getInstanceId().substr(0, 13) == "Karabo_Master") {
-        //                    KARABO_LOG_FRAMEWORK_INFO << "Instance \"" << m_signalSlotable.lock()->getInstanceId() << "\" is becoming master";
-        //                    m_signalSlotable.lock()->registerSlot<string > (boost::bind(&karabo::core::DeviceClient::slotMasterPing, this), "slotMasterPing", SignalSlotable::GLOBAL);
-        //                    m_masterMode = IS_MASTER;
-        //                } else { // stand-alone mode
-        //                    KARABO_LOG_FRAMEWORK_DEBUG << "No master instance found. Running in stand-alone mode";
-        //                    m_masterMode = NO_MASTER;
-        //                }
-        //                return;
-        //            }
-        //            KARABO_LOG_FRAMEWORK_DEBUG << "Master instance found (\"" << m_masterDeviceId << "\")";
-        //            m_masterMode = HAS_MASTER;
-        //        }
 
 
         void DeviceClient::cacheAvailableInstances() {
@@ -1371,12 +1350,13 @@ if (nodeData) {\
                             }
                         }
                     }
-                    
-                    {
+
+                    if (forDisconnect.size()) {
                         karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
                         if (p) {
                             for (size_t i = 0; i < forDisconnect.size(); ++i) {
                                 const string& instanceId = forDisconnect[i];
+                                KARABO_LOG_FRAMEWORK_DEBUG << "Disconnect '" << instanceId << "'.";
 
                                 p->disconnect(instanceId, "signalChanged", "", "_slotChanged", false);
                                 p->disconnect(instanceId, "signalStateChanged", "", "_slotChanged", false);
