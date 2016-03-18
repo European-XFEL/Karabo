@@ -444,13 +444,6 @@ namespace karabo {
 
             typedef std::pair<karabo::util::Hash::Pointer /*header*/, karabo::util::Hash::Pointer /*body*/> Event;
 
-            struct CompareEventPriority {
-
-                bool operator()(const Event& lhs, const Event& rhs) const {
-                    return lhs.first->get<signed char>("MQPriority") < rhs.first->get<signed char>("MQPriority");
-                }
-            };
-            //std::priority_queue< Event, std::vector<Event>, CompareEventPriority > m_eventQueue;
             std::deque<Event> m_eventQueue;
             boost::mutex m_eventQueueMutex;
             bool m_runEventLoop;
@@ -491,8 +484,6 @@ namespace karabo {
             karabo::util::Hash m_trackedInstances;
             bool m_trackAllInstances;
             int m_heartbeatInterval;
-            static std::set<int> m_reconnectIntervals;
-
 
             mutable boost::mutex m_trackedInstancesMutex;
 
@@ -726,7 +717,7 @@ KARABO_SLOT0(__VA_ARGS__) \
             const SlotInstancePointer& getSenderInfo(const std::string& slotFunction);
 
             /**
-             * Connects a signal and slot by explicitely seperating instanceId from the slotId/signalId.
+             * Connects a signal and slot by explicitely separating instanceId from the slotId/signalId.
              * @param signalInstanceId
              * @param signalSignature
              * @param slotInstanceId
@@ -1360,8 +1351,6 @@ KARABO_SLOT0(__VA_ARGS__) \
             void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval, const karabo::util::Hash& instanceInfo);
 
             void letInstanceSlowlyDieWithoutHeartbeat();
-
-            //GF            bool isConnectionTracked(const std::string& connectionId);
 
             void decreaseCountdown(std::vector<std::pair<std::string, karabo::util::Hash> >& deadOnes);
 
