@@ -226,6 +226,8 @@ namespace karabo {
                                 // => just re-establish the connections.
                                 connect(deviceId, "signalChanged", loggerId, "slotChanged");
                                 connect(deviceId, "signalStateChanged", loggerId, "slotChanged");
+                                // If the above is really needed (should be obsolete with automatic reconnects), we need also
+                                // connect(deviceId,  "signalSchemaUpdated", loggerId, "slotSchemaUpdated");
                             } else {
                                 string serverId;
                                 if (m_loggerMap.has(loggerId)) {
@@ -321,7 +323,6 @@ namespace karabo {
                 // Safety check
                 if (!deviceExists) {
                     try {
-                        string loggerId = DATALOGGER_PREFIX + instanceId;
                         if (loggerExists) {
                             this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
                             remote().killDeviceNoWait(loggerId);
