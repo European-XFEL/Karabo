@@ -29,13 +29,19 @@ class ProjectDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
         uic.loadUi(os.path.join(os.path.dirname(__file__), 'projectdialog.ui'), self)
-        
-        self.saveWidgets = {
+
+        self.stackedWidgets = {
             'cloud': self.wCloud,
             'local': self.wLocal,
             'wait': self.wWait,
         }
-        
+        self.saveToComboItems = {
+            ProjectAccess.LOCAL.value: 'local',
+            ProjectAccess.CLOUD.value: 'cloud',
+        }
+        # A little sentinel to check for changes in the UI file
+        assert len(self.saveToComboItems) == self.cbSaveTo.count()
+
         self.cbSaveTo.currentIndexChanged.connect(self.onSaveToChanged)
         # States whether the project server has already sent information about the CLOUD projects
         self.hasCloudProjects = False
@@ -68,7 +74,7 @@ class ProjectDialog(QDialog):
         self.laWait.setMovie(movie)
         movie.start()
         
-        self.swSaveTo.setCurrentWidget(self.saveWidgets['wait'])
+        self.swSaveTo.setCurrentWidget(self.stackedWidgets['wait'])
 
         self.leFilename.textChanged.connect(self.onChanged)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -123,8 +129,8 @@ class ProjectDialog(QDialog):
             item.setText(5, creationDate)
             self.twProjects.addTopLevelItem(item)
         
-        if self.swSaveTo.currentWidget() == self.wWait:
-            self.swSaveTo.setCurrentWidget(self.saveWidgets['cloud'])
+        if self.swSaveTo.currentWidget() == self.stackedWidgets['wait']:
+            self.swSaveTo.setCurrentWidget(self.stackedWidgets['cloud'])
         
         self.setFilenameEnabled(True)
         self.hasCloudProjects = True
@@ -154,11 +160,14 @@ class ProjectDialog(QDialog):
     def onSaveToChanged(self, index):
         if not self.hasCloudProjects and index == ProjectAccess.CLOUD.value:
                 # Show waiting page
-                self.swSaveTo.setCurrentWidget(self.wWait)
+                self.swSaveTo.setCurrentWidget(self.stackedWidgets['wait'])
                 self.setFilenameEnabled(False)
                 return
-        
-        self.swSaveTo.setCurrentIndex(index)
+
+        # Show the correct stacked widget for the combo box selection
+        stackedWidgetKey = self.saveToComboItems[index]
+        self.swSaveTo.setCurrentIndex(self.stackedWidgets[stackedWidgetKey])
+
         self.setFilenameEnabled(True)
 
 
