@@ -31,7 +31,7 @@ namespace karabo {
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
-        , m_getOlder(true) // Sic! To start aging in setAgeing below.
+        , m_getOlder(false) // Sic! To start aging in setAgeing below.
         , m_runSignalsChangedThread(false)
         , m_signalsChangedInterval(-1)
         , m_loggerMapCached(false) {
