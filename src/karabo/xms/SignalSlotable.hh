@@ -431,6 +431,22 @@ namespace karabo {
             // TODO Split into two mutexes
             mutable boost::mutex m_signalSlotInstancesMutex;
 
+            struct SignalSlotConnection {
+                SignalSlotConnection(const std::string& signalInstanceId, const std::string& signal,
+                                     const std::string& slotInstanceId, const std::string& slot) :
+                m_signalInstanceId(signalInstanceId), m_signal(signal),
+                m_slotInstanceId(slotInstanceId), m_slot(slot) {}
+
+                std::string m_signalInstanceId;
+                std::string m_signal;
+                std::string m_slotInstanceId;
+                std::string m_slot;
+            };
+            // key is instanceId of signal or slot
+            typedef std::map<std::string, std::set<SignalSlotConnection> > SignalSlotConnections;
+            SignalSlotConnections m_signalSlotConnections; /// keep track of established connections
+            boost::mutex m_signalSlotConnectionsMutex;
+
             karabo::net::BrokerIOService::Pointer m_ioService;
             karabo::net::BrokerConnection::Pointer m_connection;
             bool m_connectionInjected;
