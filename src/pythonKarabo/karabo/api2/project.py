@@ -276,7 +276,7 @@ class Project(object):
         # FIXME: in the projectio module.
         from .projectio import write_project
 
-        write_project(self, path=self.filename)
+        write_project(self, path=filename)
 
     def instantiate(self, deviceIds):
         """
