@@ -290,7 +290,7 @@
   <customwidget>
    <class>Label</class>
    <extends>QLabel</extends>
-   <header>displaywidgets/icons</header>
+   <header>karabo_gui/displaywidgets/icons</header>
   </customwidget>
  </customwidgets>
  <resources/>
