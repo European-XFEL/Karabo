@@ -30,6 +30,12 @@ class ProjectDialog(QDialog):
         QDialog.__init__(self)
         uic.loadUi(os.path.join(os.path.dirname(__file__), 'projectdialog.ui'), self)
         
+        self.saveWidgets = {
+            'cloud': self.wCloud,
+            'local': self.wLocal,
+            'wait': self.wWait,
+        }
+        
         self.cbSaveTo.currentIndexChanged.connect(self.onSaveToChanged)
         # States whether the project server has already sent information about the CLOUD projects
         self.hasCloudProjects = False
@@ -62,7 +68,7 @@ class ProjectDialog(QDialog):
         self.laWait.setMovie(movie)
         movie.start()
         
-        self.swSaveTo.setCurrentIndex(2)
+        self.swSaveTo.setCurrentWidget(self.saveWidgets['wait'])
 
         self.leFilename.textChanged.connect(self.onChanged)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -117,8 +123,8 @@ class ProjectDialog(QDialog):
             item.setText(5, creationDate)
             self.twProjects.addTopLevelItem(item)
         
-        if self.swSaveTo.currentIndex() == self.swSaveTo.indexOf(self.wWait):
-            self.swSaveTo.setCurrentIndex(ProjectAccess.CLOUD.value)
+        if self.swSaveTo.currentWidget() == self.wWait:
+            self.swSaveTo.setCurrentWidget(self.saveWidgets['cloud'])
         
         self.setFilenameEnabled(True)
         self.hasCloudProjects = True
@@ -148,7 +154,7 @@ class ProjectDialog(QDialog):
     def onSaveToChanged(self, index):
         if not self.hasCloudProjects and index == ProjectAccess.CLOUD.value:
                 # Show waiting page
-                self.swSaveTo.setCurrentIndex(self.swSaveTo.indexOf(self.wWait))
+                self.swSaveTo.setCurrentWidget(self.wWait)
                 self.setFilenameEnabled(False)
                 return
         
