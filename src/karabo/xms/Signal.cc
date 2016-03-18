@@ -54,10 +54,10 @@ namespace karabo {
             std::map<std::string, std::set<std::string> >::iterator it = m_registeredSlots.find(slotInstanceId);           
             if (it != m_registeredSlots.end()) {
                 if (slotFunction.empty()) {
-                    m_registeredSlots.erase(slotInstanceId);
+                    m_registeredSlots.erase(it);
                 } else {
                     it->second.erase(slotFunction);
-                    if (it->second.empty()) m_registeredSlots.erase(slotInstanceId);
+                    if (it->second.empty()) m_registeredSlots.erase(it);
                 }
                 updateConnectedSlotsString();
             }
