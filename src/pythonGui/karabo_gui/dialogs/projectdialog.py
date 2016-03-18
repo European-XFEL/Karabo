@@ -29,6 +29,22 @@ class ProjectDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
         uic.loadUi(os.path.join(os.path.dirname(__file__), 'projectdialog.ui'), self)
+
+        self.stackedWidgets = {
+            'cloud': self.wCloud,
+            'local': self.wLocal,
+            'wait': self.wWait,
+        }
+        self.saveToComboItems = {
+            ProjectAccess.LOCAL.value: 'local',
+            ProjectAccess.CLOUD.value: 'cloud',
+        }
+        # A little sentinel to check for changes in the UI file
+        assert len(self.saveToComboItems) == self.cbSaveTo.count()
+
+        self.cbSaveTo.currentIndexChanged.connect(self.onSaveToChanged)
+        # States whether the project server has already sent information about the CLOUD projects
+        self.hasCloudProjects = False
         
         # Request all available projects in cloud
         network.Network().onGetAvailableProjects()
@@ -58,7 +74,7 @@ class ProjectDialog(QDialog):
         self.laWait.setMovie(movie)
         movie.start()
         
-        self.swSaveTo.setCurrentIndex(2)
+        self.swSaveTo.setCurrentWidget(self.stackedWidgets['wait'])
 
         self.leFilename.textChanged.connect(self.onChanged)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -113,12 +129,16 @@ class ProjectDialog(QDialog):
             item.setText(5, creationDate)
             self.twProjects.addTopLevelItem(item)
         
-        if self.swSaveTo.currentIndex() == 2:
-            self.swSaveTo.setCurrentIndex(ProjectAccess.CLOUD.value)
+        if self.swSaveTo.currentWidget() == self.stackedWidgets['wait']:
+            self.swSaveTo.setCurrentWidget(self.stackedWidgets['cloud'])
         
-        if not self.leFilename.isEnabled():
-            self.leFilename.setEnabled(True)
-            self.leFilename.setFocus(Qt.OtherFocusReason)
+        self.setFilenameEnabled(True)
+        self.hasCloudProjects = True
+
+
+    def setFilenameEnabled(self, enable):
+        self.leFilename.setEnabled(enable)
+        self.leFilename.setFocus(Qt.OtherFocusReason)
 
 
     def onChanged(self, text):
@@ -135,6 +155,20 @@ class ProjectDialog(QDialog):
             return
         
         self.leFilename.setText(current.data())
+
+
+    def onSaveToChanged(self, index):
+        if not self.hasCloudProjects and index == ProjectAccess.CLOUD.value:
+                # Show waiting page
+                self.swSaveTo.setCurrentWidget(self.stackedWidgets['wait'])
+                self.setFilenameEnabled(False)
+                return
+
+        # Show the correct stacked widget for the combo box selection
+        stackedWidgetKey = self.saveToComboItems[index]
+        self.swSaveTo.setCurrentIndex(self.stackedWidgets[stackedWidgetKey])
+
+        self.setFilenameEnabled(True)
 
 
 class ProjectSaveDialog(ProjectDialog):
