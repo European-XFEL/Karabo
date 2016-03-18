@@ -20,7 +20,7 @@ from karathon import (
     CHOICE_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
     PATH_ELEMENT, STRING_ELEMENT,
     AccessLevel, AppenderConfigurator, BrokerConnection, CategoryConfigurator,
-    ConnectionType, Hash, Logger, Priority, Schema, SignalSlotable,
+    Hash, Logger, Priority, Schema, SignalSlotable,
     loadFromFile, saveToFile
 )
 from .configurator import Configurator

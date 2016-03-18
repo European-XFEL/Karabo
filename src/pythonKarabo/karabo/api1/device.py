@@ -18,7 +18,7 @@ from karathon import (
     BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, INT64_ELEMENT,
     UINT32_ELEMENT, NODE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
-    AccessLevel, AccessType, AssemblyRules, BrokerConnection, ConnectionType,
+    AccessLevel, AccessType, AssemblyRules, BrokerConnection,
     Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
     ImageData, Logger, NDArray, Priority, RawImageData, Schema, SignalSlotable,
     Timestamp, Trainstamp, Validator, ValidatorValidationRules,
@@ -323,7 +323,7 @@ class PythonDevice(NoFsm):
         
         if self.parameters.get("useTimeserver"):
             self.log.DEBUG("Connecting to time server")
-            self._ss.connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick", ConnectionType.TRACK, False)
+            self._ss.connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick")
 
         t.join()
             
