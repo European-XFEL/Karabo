@@ -36,7 +36,6 @@ namespace karabo {
         const int msPingTimeoutInIsValidInstanceId = 1000;
 
         // Static initializations
-        std::set<int> SignalSlotable::m_reconnectIntervals = std::set<int>();
         boost::uuids::random_generator SignalSlotable::Requestor::m_uuidGenerator;
         std::map<std::string, SignalSlotable*> SignalSlotable::m_instanceMap;
         boost::mutex SignalSlotable::m_instanceMapMutex;
@@ -1361,20 +1360,6 @@ namespace karabo {
             std::pair<std::string, std::string> slotPair = splitIntoInstanceIdAndFunctionName(slot);
             return connect(signalPair.first, signalPair.second, slotPair.first, slotPair.second);
         }
-
-
-        //GF        bool SignalSlotable::isConnectionTracked(const std::string & connectionId) {
-        //            // FIXME: What is this? Remove it?
-        //            boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
-        //            for (Hash::iterator it = m_trackedInstances.begin(); it != m_trackedInstances.end(); ++it) {
-        //                const vector<Hash>& connections = it->getValue<Hash>().get<vector<Hash> >("connections");
-        //                for (size_t j = 0; j < connections.size(); ++j) {
-        //                    const Hash& connection = connections[j];
-        //                    if (connection.get<string > ("connectionId") == connectionId) return true;
-        //                }
-        //            }
-        //            return false;
-        //        }
 
 
         void SignalSlotable::addTrackedInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
