@@ -134,7 +134,7 @@ class EnumValue(SimpleValue):
                 descriptor = value.descriptor
             value = value.enum
         if not isinstance(value, Enum):
-            raise TypeError("value must be and Enum")
+            raise TypeError("value must be an Enum")
         if descriptor is not None and not isinstance(value, descriptor.enum):
             raise TypeError("value is not element of enum in descriptor")
         super().__init__(value.value, descriptor=descriptor,
