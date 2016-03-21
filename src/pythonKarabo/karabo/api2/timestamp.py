@@ -40,10 +40,10 @@ class Timestamp(object):
         ret.tid = attrs['tid']
         return ret
 
-    def toHashAttributes(self, h, key):
-        h[key, "frac"] = numpy.uint64(self.time % RESOLUTION)
-        h[key, "sec"] = numpy.uint64(self.time // RESOLUTION)
-        h[key, "tid"] = self.tid
+    def toHashAttributes(self):
+        return {"frac": numpy.uint64(self.time % RESOLUTION),
+                "sec": numpy.uint64(self.time // RESOLUTION),
+                "tid": self.tid}
 
     def toTimestamp(self):
         return self.time / 10 ** 18
