@@ -163,7 +163,7 @@ namespace karabo {
 
         void OutputChannel::onTcpConnectionError(const karabo::net::Connection::Pointer& connection, const karabo::net::ErrorCode& error) {
             KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
-            connection->stop();
+            if (connection) connection->stop();
         }
 
 
@@ -175,7 +175,7 @@ namespace karabo {
             // Unregister channel
             onInputGone(channel);
             m_dataChannels.erase(channel);
-            channel->close();
+            if (channel) channel->close();
         }
 
 
