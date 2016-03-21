@@ -14,7 +14,6 @@ import pint
 
 from .enums import MetricPrefix, Unit
 from .registry import Registry
-from .timestamp import Timestamp
 
 
 def wrap(data):
@@ -175,12 +174,14 @@ class StringlikeValue(KaraboValue):
         else:
             return super().__eq__(other)
 
-    def __hash__(self):
-        return super().__hash__()
-
     @property
     def value(self):
         return self
+
+
+# if you override __eq__, __hash__ gets set to None to avoid incorrect
+# accidental inheritance. This fixes that.
+del StringlikeValue.__hash__
 
 
 class VectorCharValue(StringlikeValue, bytes):
