@@ -92,72 +92,72 @@ SignalSlotable_Test::~SignalSlotable_Test() {
 
 
 void SignalSlotable_Test::setUp() {
+
+    BrokerConnection::Pointer connection;
+
+    try {
+
+        connection = BrokerConnection::create("Jms", Hash("serializationType", "text"));
+
+    } catch (const Exception& e) {
+        clog << "Could not establish connection to broker, skipping SignalSlotable_Test" << endl;
+        return;
+    }
+
+    m_demo = SignalSlotDemo::Pointer(new SignalSlotDemo("SignalSlotDemo", connection));
+    m_demo->setNumberOfThreads(2);
+    m_demoThread = boost::thread(boost::bind(&SignalSlotable::runEventLoop, m_demo, 10, Hash()));
+
+    // Give thread some time to come up
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+
+    bool ok = m_demo->ensureOwnInstanceIdUnique();
+    if (!ok) {
+        m_demoThread.join(); // Blocks
+        m_demo.reset();
+        return;
+    }
 }
 
-
 void SignalSlotable_Test::tearDown() {
+    m_demo.reset();
 }
 
 
 void SignalSlotable_Test::testMethod() {
+    CPPUNIT_ASSERT(m_demo);
 
     try {
-        
-        //karabo::log::Logger::configure(Hash("priority", "DEBUG"));
-        
-        BrokerConnection::Pointer connection;
 
-        try {
 
-            //connection = BrokerConnection::create("Jms", Hash("serializationType", "text", "hostname", "localhost"));
-            connection = BrokerConnection::create("Jms", Hash("serializationType", "text"));
+        m_demo->connect("signalA", "slotA");
 
-        } catch (const Exception& e) {
-            clog << "Could not establish connection to broker, skipping SignalSlotable_Test" << endl;
-            return;
-        }
-
-        SignalSlotDemo ssDemo("SignalSlotDemo", connection);
-        ssDemo.setNumberOfThreads(2);
-        boost::thread t(boost::bind(&SignalSlotable::runEventLoop, &ssDemo, 10, Hash()));                
-
-        // Give thread some time to come up
-        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-
-        bool ok = ssDemo.ensureOwnInstanceIdUnique();
-        if (!ok) {
-            t.join(); // Blocks
-            return;
-        }
-
-        ssDemo.connect("signalA", "slotA");
-
-        ssDemo.emit("signalA", "Hello World!");
+        m_demo->emit("signalA", "Hello World!");
 
         bool timeout = false;
 
         int reply;
         try {
-            ssDemo.request("SignalSlotDemo", "slotC", 1).timeout(500).receive(reply);
+            m_demo->request("SignalSlotDemo", "slotC", 1).timeout(500).receive(reply);
         } catch (karabo::util::TimeoutException&) {
             timeout = true;
         }
 
         string someData("myPrivateStuff");
-        ssDemo.request("SignalSlotDemo", "slotC", 1).receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, &ssDemo, someData, _1));
+        m_demo->request("SignalSlotDemo", "slotC", 1).receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, m_demo, someData, _1));
 
-        ssDemo.call("SignalSlotDemo", "slotC", 1);
+        m_demo->call("SignalSlotDemo", "slotC", 1);
 
         boost::this_thread::sleep(boost::posix_time::seconds(1));
-        ssDemo.stopEventLoop();
-        t.join();
+        m_demo->stopEventLoop();
+        m_demoThread.join();
 
         // Looks to be better to do this after joining the thread...
         CPPUNIT_ASSERT(timeout == false);
         CPPUNIT_ASSERT(reply == 2);
         // Give thread some time to receiveAsync from above
         boost::this_thread::sleep(boost::posix_time::milliseconds(250));
-        CPPUNIT_ASSERT(ssDemo.wasOk() == true);
+        CPPUNIT_ASSERT(m_demo->wasOk() == true);
     } catch (const karabo::util::Exception& e) {
         cout << e;
     }        
