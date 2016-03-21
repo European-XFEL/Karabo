@@ -20,6 +20,8 @@ class Tests(TestCase):
                          datetime.fromtimestamp(1240223542).isoformat())
         self.assertEqual(str(t3), t3.toLocal())
         self.assertEqual(repr(t3), "2009-04-20T10:32:22 UTC")
+        self.assertEqual(Timestamp(repr(t3)), t3)
+        self.assertEqual(Timestamp(str(t3)), t3)
 
         t4 = Timestamp(t2)
         self.assertEqual(t3.toTimestamp(), 1240223542)

@@ -65,5 +65,5 @@ class Timestamp(object):
         return self.toLocal()
 
     def __repr__(self):
-        return datetime.utcfromtimestamp(self.toTimestamp()
-                                         ).isoformat() + " UTC"
+        ts = datetime.utcfromtimestamp(self.toTimestamp())
+        return ts.isoformat() + " UTC"
