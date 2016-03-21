@@ -127,38 +127,32 @@ void SignalSlotable_Test::tearDown() {
 void SignalSlotable_Test::testMethod() {
     CPPUNIT_ASSERT(m_demo);
 
+    m_demo->connect("signalA", "slotA");
+
+    m_demo->emit("signalA", "Hello World!");
+
+    bool timeout = false;
+
+    int reply;
     try {
+        m_demo->request("SignalSlotDemo", "slotC", 1).timeout(500).receive(reply);
+    } catch (karabo::util::TimeoutException&) {
+        timeout = true;
+    }
 
+    string someData("myPrivateStuff");
+    m_demo->request("SignalSlotDemo", "slotC", 1).receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, m_demo, someData, _1));
 
-        m_demo->connect("signalA", "slotA");
+    m_demo->call("SignalSlotDemo", "slotC", 1);
 
-        m_demo->emit("signalA", "Hello World!");
+    boost::this_thread::sleep(boost::posix_time::seconds(1));
+    m_demo->stopEventLoop();
+    m_demoThread.join();
 
-        bool timeout = false;
-
-        int reply;
-        try {
-            m_demo->request("SignalSlotDemo", "slotC", 1).timeout(500).receive(reply);
-        } catch (karabo::util::TimeoutException&) {
-            timeout = true;
-        }
-
-        string someData("myPrivateStuff");
-        m_demo->request("SignalSlotDemo", "slotC", 1).receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, m_demo, someData, _1));
-
-        m_demo->call("SignalSlotDemo", "slotC", 1);
-
-        boost::this_thread::sleep(boost::posix_time::seconds(1));
-        m_demo->stopEventLoop();
-        m_demoThread.join();
-
-        // Looks to be better to do this after joining the thread...
-        CPPUNIT_ASSERT(timeout == false);
-        CPPUNIT_ASSERT(reply == 2);
-        // Give thread some time to receiveAsync from above
-        boost::this_thread::sleep(boost::posix_time::milliseconds(250));
-        CPPUNIT_ASSERT(m_demo->wasOk() == true);
-    } catch (const karabo::util::Exception& e) {
-        cout << e;
-    }        
+    // Looks to be better to do this after joining the thread...
+    CPPUNIT_ASSERT(timeout == false);
+    CPPUNIT_ASSERT(reply == 2);
+    // Give thread some time to receiveAsync from above
+    boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+    CPPUNIT_ASSERT(m_demo->wasOk() == true);
 }
