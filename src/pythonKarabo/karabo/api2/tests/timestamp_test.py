@@ -32,10 +32,10 @@ class Tests(TestCase):
 
     def test_hash_write(self):
         h = Hash("a", 3)
-        t = Timestamp("2009-09-01")
+        t = Timestamp("2009-09-01 14:23 UTC")
         t.toHashAttributes(h, "a")
-        self.assertEqual(h["a", "sec"], 1251755999)
-        self.assertEqual(h["a", "frac"], 999999934711463936)
+        self.assertEqual(h["a", "sec"], 1251814980)
+        self.assertEqual(h["a", "frac"], 135584022528)
         self.assertEqual(h["a", "tid"], 0)
 
     def test_compare(self):
