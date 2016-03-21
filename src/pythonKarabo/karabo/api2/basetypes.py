@@ -168,6 +168,16 @@ class StringlikeValue(KaraboValue):
         self.timestamp = timestamp
         return self
 
+    def __eq__(self, other):
+        if isinstance(other, StringlikeValue):
+            return (super().__getitem__(slice(None)) ==
+                    super(StringlikeValue, other).__getitem__(slice(None)))
+        else:
+            return super().__eq__(other)
+
+    def __hash__(self):
+        return super().__hash__()
+
     @property
     def value(self):
         return self
