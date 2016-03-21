@@ -11,6 +11,8 @@
 #include <karabo/xms.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
+class SignalSlotDemo;
+
 class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(SignalSlotable_Test);
@@ -28,6 +30,9 @@ public:
 private:
 
     void testMethod();
+
+    boost::shared_ptr<SignalSlotDemo> m_demo;
+    boost::thread m_demoThread;
 };
 
 #endif	/* SIGNALSLOTABLE_TEST_HH */
