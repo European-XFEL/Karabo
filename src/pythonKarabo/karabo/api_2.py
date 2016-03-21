@@ -14,7 +14,7 @@ from .api2.enums import (
 )
 from .api2.basetypes import (
     BoolValue, EnumValue, KaraboValue, QuantityValue, StringValue,
-    unit, VectorStringValue, VectorCharValue
+    unit_registry as unit, VectorStringValue, VectorCharValue
 )
 from .api2.exceptions import KaraboError
 from .api2.hash import (
