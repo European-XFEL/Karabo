@@ -39,10 +39,14 @@ public:
 
     void slotA(const std::string& msg) {
         boost::mutex::scoped_lock lock(m_mutex);
-        // Assertions
         m_messageCount++;
-        if (msg != "Hello World!") m_allOk = false;
-        if (getSenderInfo("slotA")->getInstanceIdOfSender() != "SignalSlotDemo") {
+        const std::string sender = getSenderInfo("slotA")->getInstanceIdOfSender();
+        // Assertions
+        if (sender == "SignalSlotDemo") {
+            if (msg != "Hello World!") m_allOk = false;
+        } else if (sender == "SignalSlotDemo2") {
+            if (msg != "Hello World - now from 2!") m_allOk = false;
+        } else {
             m_messageCount += 1000; // Invalidate message count will let the test fail!
         }
         SIGNAL2("signalB", int, karabo::util::Hash);
@@ -66,14 +70,15 @@ public:
         reply(number + number);
     }
 
-    bool wasOk() {
+    bool wasOk(int messageCalls) {
         std::cout << "\nwasOk : m_messageCount=" << m_messageCount << ", m_allOk=" << m_allOk << std::endl;
-        return ((m_messageCount == 6) && m_allOk);
+        return ((m_messageCount == messageCalls) && m_allOk);
     }
 
     void myCallBack(const std::string& someData, int number) {
+        boost::mutex::scoped_lock lock(m_mutex);
         m_messageCount++;
-        std::clog << "Got called with: " << someData << " and " << number << std::endl;
+        std::cout << "Got called with: " << someData << " and " << number << std::endl;
     }
 
 
@@ -82,45 +87,52 @@ public:
 
 CPPUNIT_TEST_SUITE_REGISTRATION(SignalSlotable_Test);
 
-
 SignalSlotable_Test::SignalSlotable_Test() {
 }
 
 
-SignalSlotable_Test::~SignalSlotable_Test() {
+SignalSlotable_Test::~SignalSlotable_Test() { }
+
+void SignalSlotable_Test::setUp() {
+    std::pair<SignalSlotDemo::Pointer, boost::shared_ptr<boost::thread> > demo = this->createDemo("SignalSlotDemo");
+    m_demo = demo.first;
+    m_demoThread = demo.second;
 }
 
 
-void SignalSlotable_Test::setUp() {
+std::pair<SignalSlotDemo::Pointer, boost::shared_ptr<boost::thread> >
+SignalSlotable_Test::createDemo(const std::string& instanceId) const {
+
+    std::pair<SignalSlotDemo::Pointer, boost::shared_ptr<boost::thread> > result;
 
     BrokerConnection::Pointer connection;
-
     try {
-
         connection = BrokerConnection::create("Jms", Hash("serializationType", "text"));
-
     } catch (const Exception& e) {
-        clog << "Could not establish connection to broker, skipping SignalSlotable_Test" << endl;
-        return;
+        return result;
     }
 
-    m_demo = SignalSlotDemo::Pointer(new SignalSlotDemo("SignalSlotDemo", connection));
-    m_demo->setNumberOfThreads(2);
-    m_demoThread = boost::thread(boost::bind(&SignalSlotable::runEventLoop, m_demo, 10, Hash()));
+    SignalSlotDemo::Pointer demo(new SignalSlotDemo(instanceId, connection));
+    demo->setNumberOfThreads(2);
+    boost::shared_ptr<boost::thread> demoThread(new boost::thread(boost::bind(&SignalSlotable::runEventLoop, demo, 10, Hash())));
 
     // Give thread some time to come up
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 
-    bool ok = m_demo->ensureOwnInstanceIdUnique();
+    bool ok = demo->ensureOwnInstanceIdUnique();
     if (!ok) {
-        m_demoThread.join(); // Blocks
-        m_demo.reset();
-        return;
+        demoThread->join(); // Blocks
+    } else {
+        result.first = demo;
+        result.second = demoThread;
     }
+
+    return result;
 }
 
 void SignalSlotable_Test::tearDown() {
     m_demo.reset();
+    m_demoThread.reset();
 }
 
 
@@ -147,12 +159,45 @@ void SignalSlotable_Test::testMethod() {
 
     boost::this_thread::sleep(boost::posix_time::seconds(1));
     m_demo->stopEventLoop();
-    m_demoThread.join();
+    m_demoThread->join();
 
-    // Looks to be better to do this after joining the thread...
+    // Assert after joining the thread - otherwise dangling threads in case of failures...
     CPPUNIT_ASSERT(timeout == false);
     CPPUNIT_ASSERT(reply == 2);
-    // Give thread some time to receiveAsync from above
-    boost::this_thread::sleep(boost::posix_time::milliseconds(250));
-    CPPUNIT_ASSERT(m_demo->wasOk() == true);
+    CPPUNIT_ASSERT(m_demo->wasOk(6) == true);
+}
+
+void SignalSlotable_Test::testAutoConnect() {
+    CPPUNIT_ASSERT(m_demo);
+
+    // Connect the other's signal to my slot - although the other is not yet there!
+    m_demo->connect("SignalSlotDemo2", "signalA", "", "slotA");
+    m_demo->emit("signalA", "Hello World!");
+    // Allow for some travel time - although nothing should travel...
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    const bool ok1 = m_demo->wasOk(0); // m_demo is not interested in its own signals
+
+    std::pair<SignalSlotDemo::Pointer, boost::shared_ptr<boost::thread> > demo2Pair = this->createDemo("SignalSlotDemo2");
+    SignalSlotDemo::Pointer demo2 = demo2Pair.first;
+    boost::shared_ptr<boost::thread> demo2Thread = demo2Pair.second;
+    const bool demo2Fine = demo2;
+
+    // Give m_demo some time to auto-connect now that SignalSlotDemo2 is there:
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+
+    demo2->emit("signalA", "Hello World - now from 2!");
+    // More time for all signaling (although it is all short-cutting the broker):
+    // -> slotA (of other instance) -> connect slotB to signalB -> signalB -> slotB
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    const bool ok2 = m_demo->wasOk(2);
+
+    demo2->stopEventLoop();
+    m_demo->stopEventLoop();
+    demo2Thread->join();
+    m_demoThread->join();
+
+    // Asserts after all threads are joined:
+    CPPUNIT_ASSERT(ok1);
+    CPPUNIT_ASSERT(demo2Fine);
+    CPPUNIT_ASSERT(ok2);
 }

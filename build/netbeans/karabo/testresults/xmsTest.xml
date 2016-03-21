@@ -26,9 +26,12 @@
     <Test id="8">
       <Name>SignalSlotable_Test::testMethod</Name>
     </Test>
+    <Test id="9">
+      <Name>SignalSlotable_Test::testAutoConnect</Name>
+    </Test>
   </SuccessfulTests>
   <Statistics>
-    <Tests>8</Tests>
+    <Tests>9</Tests>
     <FailuresTotal>0</FailuresTotal>
     <Errors>0</Errors>
     <Failures>0</Failures>
