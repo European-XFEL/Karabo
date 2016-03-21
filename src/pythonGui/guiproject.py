@@ -79,7 +79,7 @@ class BaseConfiguration(Configuration):
         This function returns the configurations' XML file as a string.
         """
         if self.descriptor is not None:
-            config = self.toHash()
+            config, _ = self.toHash()  # Ignore returned attributes
         else:
             config = self._initConfig
 
@@ -213,7 +213,8 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         if self.descriptor is None:
             device.initConfig = self.initConfig
         else:
-            device.initConfig = self.toHash()
+            hsh, _ = self.toHash()  # Ignore returned attributes
+            device.initConfig = hsh
 
 
     def checkDeviceSchema(self):
@@ -554,7 +555,8 @@ class GuiProject(Project, QObject):
         if device.descriptor is None:
             config = device.initConfig
         else:
-            config = device.toHash()
+            hsh, _ = device.toHash()  # Ignore returned attributes
+            config = hsh
 
         manager.Manager().initDevice(device.serverId, device.classId, device.id,
                                      config)
@@ -574,7 +576,8 @@ class GuiProject(Project, QObject):
                 if device.descriptor is None:
                     gd.initConfig = device.initConfig
                 else:
-                    gd.initConfig = device.toHash()
+                    hsh, _ = device.toHash()  # Ignore returned attributes
+                    gd.initConfig = hsh
                 self._instantiateDevice(gd)
 
 

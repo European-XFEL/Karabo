@@ -31,6 +31,11 @@ from collections import OrderedDict
 import weakref
 from functools import partial
 
+# Descriptor attribute names which should be sent during instantiation
+EDITABLE_ATTRIBUTE_NAMES = {
+'minExc', 'maxExc', 'minInc', 'maxInc', 'absoluteError', 'relativeError'
+}
+
 
 class Box(QObject):
     """This class represents one value of a device or a device class.
@@ -284,7 +289,11 @@ class Type(hashmod.Type, metaclass=Monkey):
 
 
     def toHash(self, box):
-        return box.value
+        descriptor = box.descriptor
+        attributes = {key: getattr(descriptor, key)
+                      for key in EDITABLE_ATTRIBUTE_NAMES
+                      if getattr(descriptor, key) is not None}
+        return box.value, attributes
 
 
     def fromHash(self, box, data, timestamp=None):
@@ -507,8 +516,10 @@ class Schema(hashmod.Descriptor):
             if v is None:
                 continue
             if v.hasValue():
-                ret[k] = v.toHash()
-        return ret
+                value, attrs = v.toHash()
+                ret[k] = value
+                ret[k, ...] = attrs
+        return ret, {}
 
 
     def fromHash(self, box, value, timestamp=None):
@@ -702,11 +713,14 @@ class ChoiceOfNodes(Schema):
 
 
     def toHash(self, box):
-        ret = Schema.toHash(self, box)
+        ret, attrs = super(ChoiceOfNodes, self).toHash(box)
         if box.current is None:
             return Hash()
         else:
-            return Hash(box.current, ret[box.current])
+            key = box.current
+            h = Hash(key, ret[key])
+            h[key, ...] = attrs
+            return h, {}
 
 
     def set(self, box, value, timestamp=None):
@@ -762,7 +776,7 @@ class ListOfNodes(hashmod.Descriptor):
 
 
     def toHash(self, box):
-        return [ ]
+        return [], {}
 
 
     def item(self, treeWidget, parentItem, box, isClass):
