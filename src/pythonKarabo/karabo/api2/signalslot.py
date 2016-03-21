@@ -46,10 +46,6 @@ def coslot(f):
     return f
 
 
-class ConnectionType(object):
-    NO_TRACK = 0
-
-
 class BoundSignal(object):
     def __init__(self, device, name, signal):
         self.device = device
