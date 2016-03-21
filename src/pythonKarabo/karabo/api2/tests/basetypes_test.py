@@ -23,6 +23,19 @@ class Tests(TestCase):
         self.assertEqual(s.descriptor, 5)
         self.assertEqual(s.timestamp, 3)
 
+        b = VectorCharValue(b"ase", descriptor=7, timestamp=2)
+        self.assertEqual(b, b"ase")
+        self.assertEqual(b.descriptor, 7)
+        self.assertEqual(b.timestamp, 2)
+
+
+        a = {s: 3, b: 4}
+        self.assertEqual(a["abc"], 3)
+        self.assertEqual(a[b"ase"], 4)
+        a = {"abc": 5, b"ase": 6}
+        self.assertEqual(a[s], 5)
+        self.assertEqual(a[b], 6)
+
         q = QuantityValue("3 m", timestamp=self.t1)
         s = StringValue("bla {}", timestamp=self.t2)
         self.assertEqual(s.format(q).timestamp, self.t1)
@@ -32,13 +45,6 @@ class Tests(TestCase):
         q = QuantityValue("3 m", timestamp=self.t2)
         s = StringValue("bla {}", timestamp=self.t1)
         self.assertEqual(s.format(q).timestamp, self.t1)
-
-        b = VectorCharValue(b"ase", descriptor=7, timestamp=2)
-        self.assertEqual(b, b"ase")
-        self.assertEqual(b.descriptor, 7)
-        self.assertEqual(b.timestamp, 2)
-
-        a = {s: 3, b: 4}
 
     def test_bool(self):
         t = BoolValue(True, descriptor=7, timestamp=22)
@@ -60,6 +66,11 @@ class Tests(TestCase):
         self.assertEqual(c.timestamp, 33)
 
         a = {f: 2, t: 3}
+        self.assertEqual(a[False], 2)
+        self.assertEqual(a[True], 3)
+        a = {False: 2, True: 3}
+        self.assertEqual(a[f], 2)
+        self.assertEqual(a[t], 3)
 
     def test_enum(self):
         class E(Enum):
@@ -93,6 +104,9 @@ class Tests(TestCase):
         self.assertEqual(c.timestamp, self.t1)
 
         a = {e: 3}
+        self.assertEqual(a[E.a], 3)
+        a = {E.a: 4}
+        self.assertEqual(a[e], 4)
 
     def test_stringlist(self):
         l = VectorStringValue(["a", "b", "c"], descriptor=3, timestamp=self.t2)
