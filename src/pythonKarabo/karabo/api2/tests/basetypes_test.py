@@ -20,14 +20,25 @@ class Tests(TestCase):
     def test_str(self):
         s = StringValue("abc", descriptor=5, timestamp=3)
         self.assertEqual(s, "abc")
+        self.assertEqual(("abc" == s).timestamp, 3)
         self.assertEqual(s.descriptor, 5)
         self.assertEqual(s.timestamp, 3)
 
+        s2 = StringValue(s)
+        self.assertTrue(s == s2)
+        self.assertEqual(s, s2)
+
         b = VectorCharValue(b"ase", descriptor=7, timestamp=2)
         self.assertEqual(b, b"ase")
+        self.assertTrue(b == b"ase")
+        self.assertTrue(b"ase" == b)
+        self.assertFalse(b == "ase")
+        self.assertFalse("ase" == b)
         self.assertEqual(b.descriptor, 7)
         self.assertEqual(b.timestamp, 2)
 
+        b2 = VectorCharValue(b)
+        self.assertEqual(b, b2)
 
         a = {s: 3, b: 4}
         self.assertEqual(a["abc"], 3)
