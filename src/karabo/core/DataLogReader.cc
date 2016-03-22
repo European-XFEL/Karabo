@@ -14,8 +14,6 @@
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
 
-extern char **environ;
-
 namespace karabo {
     namespace core {
 
