@@ -105,6 +105,8 @@ class Tests(TestCase):
         self.assertEqual((e == f).timestamp, self.t1)
         self.assertEqual(str(e), str(E.a))
         self.assertEqual(repr(e), repr(E.a))
+        self.assertEqual(e.value, 3)
+        self.assertEqual(f.value, 5)
 
         with self.assertRaises(TypeError):
             e = EnumValue(F.a, d)

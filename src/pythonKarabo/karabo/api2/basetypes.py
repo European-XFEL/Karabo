@@ -151,6 +151,10 @@ class EnumValue(KaraboValue):
     def __hash__(self):
         return hash(self.enum)
 
+    @property
+    def value(self):
+        return self.enum.value
+
 
 class StringlikeValue(KaraboValue):
     """This mixin class extends existing Python classes"""
