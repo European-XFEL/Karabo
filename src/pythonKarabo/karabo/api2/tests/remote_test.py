@@ -1,7 +1,6 @@
 from asyncio import (async, coroutine, get_event_loop, sleep, wait_for,
                      TimeoutError)
 from datetime import datetime
-import gc
 from unittest import TestCase, main, expectedFailure
 import weakref
 
@@ -423,7 +422,6 @@ class Tests(TestCase):
         with self.assertLogs(logger="local", level="ERROR"):
             with (yield from getDevice("local")) as d:
                 yield from d.task_error()
-                gc.collect()
                 yield from sleep(0.1)
         self.assertTrue(remote.done)
         remote.done = False
@@ -446,7 +444,6 @@ class Tests(TestCase):
             # of connectDevices. At least we check that that works.
             weak = weakref.ref(d)
             del d
-            gc.collect()
             self.assertIsNone(weak())
 
 
