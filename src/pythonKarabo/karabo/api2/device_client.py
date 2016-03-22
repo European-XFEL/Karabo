@@ -24,6 +24,7 @@ from .enums import NodeType
 from .exceptions import KaraboError
 from .hash import Hash, Slot, Type, Descriptor
 from .signalslot import slot
+from .weak import Weak
 
 
 class DeviceClientBase(Device):
@@ -254,6 +255,8 @@ class ProxyNode(Descriptor):
 
 
 class SubProxy(object):
+    _parent = Weak()
+
     def setValue(self, desc, value):
         self.__dict__[desc.key] = value
         self._parent.setValue(desc, value)

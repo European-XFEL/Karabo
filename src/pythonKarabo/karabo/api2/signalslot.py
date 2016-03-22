@@ -285,7 +285,7 @@ class SignalSlotable(Configurable):
     def onException(self, slot, exception, traceback):
         pass
 
-    def _onException(self, slot, exc, tb):
+    def _onException(self, slot, exc, tb, instance):
         logger = logging.getLogger(self.deviceId)
 
         if isinstance(exc, CancelledError):
@@ -309,7 +309,9 @@ class SignalSlotable(Configurable):
             except:
                 logger.exception("error in error handler")
 
+        loop = get_event_loop()
         if iscoroutinefunction(m):
-            async(logException(m(*args)))
+            coro = logException(m(*args))
         else:
-            async(logException(get_event_loop().start_thread(m, *args)))
+            coro = logException(loop.start_thread(m, *args))
+        loop.create_task(coro, instance=instance)
