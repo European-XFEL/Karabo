@@ -205,6 +205,8 @@
           <itemPath>../../../src/karabo/net/AsioIOService.cc</itemPath>
           <itemPath>../../../src/karabo/net/AsioIOService.hh</itemPath>
         </logicalFolder>
+        <itemPath>../../../src/karabo/net/PointToPoint.cc</itemPath>
+        <itemPath>../../../src/karabo/net/PointToPoint.hh</itemPath>
       </logicalFolder>
       <itemPath>../../../src/karabo/net/AbstractIOService.hh</itemPath>
       <itemPath>../../../src/karabo/net/IOService.hh</itemPath>
@@ -1260,6 +1262,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/NetworkAppenderConfigurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/PointToPoint.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/PointToPoint.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3200,6 +3212,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/NetworkAppenderConfigurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/PointToPoint.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/PointToPoint.hh"
             ex="false"
             tool="3"
             flavor2="0">

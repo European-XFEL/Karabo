@@ -40,7 +40,10 @@ namespace karabo {
         boost::uuids::random_generator SignalSlotable::Requestor::m_uuidGenerator;
         std::map<std::string, SignalSlotable*> SignalSlotable::m_instanceMap;
         boost::mutex SignalSlotable::m_instanceMapMutex;
-
+        std::map<std::string, std::string> SignalSlotable::m_connectionStrings;
+        boost::mutex SignalSlotable::m_connectionStringsMutex;
+        PointToPoint::Pointer SignalSlotable::m_pointToPoint;
+        
 
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                                const karabo::util::Hash::Pointer& body) const {
@@ -64,11 +67,18 @@ namespace karabo {
             }
         }
 
-
+        
+        bool SignalSlotable::tryToCallP2P(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio) const {
+            if (slotInstanceId == "*" || slotInstanceId.empty() || !m_pointToPoint) return false;
+            return m_pointToPoint->publish(slotInstanceId, header, body, prio);
+        }
+        
+        
         void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
-                                           const karabo::util::Hash::Pointer& body, int prio, int timeToLive) const {
-            if (tryToCallDirectly(instanceId, header, body)) return;
-            m_producerChannel->write(*header, *body, prio, timeToLive);
+                                       const karabo::util::Hash::Pointer& body, int prio, int timeToLive) const {
+                if (tryToCallDirectly(instanceId, header, body)) return;
+                if (tryToCallP2P(instanceId, header, body, prio)) return;
+                m_producerChannel->write(*header, *body, prio, timeToLive);
         }
 
 
@@ -199,12 +209,12 @@ namespace karabo {
 
 
         SignalSlotable::SignalSlotable()
-        : m_connectionInjected(false), m_randPing(rand() + 2) {
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_watchdog(false) {
         }
 
 
         SignalSlotable::SignalSlotable(const string& instanceId, const BrokerConnection::Pointer& connection)
-        : m_connectionInjected(false), m_randPing(rand() + 2) {
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_watchdog(false) {
             init(instanceId, connection);
         }
 
@@ -212,7 +222,7 @@ namespace karabo {
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                                        const std::string& brokerType,
                                        const karabo::util::Hash& brokerConfiguration)
-        : m_connectionInjected(false), m_randPing(rand() + 2) {
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_watchdog(false) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
@@ -441,6 +451,14 @@ namespace karabo {
                 // We are unique - so now we can register ourself for short-cut messaging.
                 this->registerForShortcutMessaging();
             }
+
+            // Put the P2P producer local port number into instanceInfo for distributing around
+            if (!m_pointToPoint) {
+                m_pointToPoint = PointToPoint::Pointer(new PointToPoint);
+                m_watchdog = true;
+                KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint producer connection string is \"" << m_pointToPoint->getConnectionString() << "\"";
+            }
+            m_instanceInfo.set("p2p_connection", m_pointToPoint->getConnectionString());
 
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id '" << m_instanceId
                     << "' and uses " << m_nThreads << " threads.";
@@ -857,6 +875,17 @@ namespace karabo {
 
             emit("signalInstanceNew", instanceId, instanceInfo);
 
+            if (m_watchdog && instanceInfo.has("p2p_connection") && m_instanceInfo.has("p2p_connection")) {
+                string localConnectionString, remoteConnectionString;
+                m_instanceInfo.get("p2p_connection", localConnectionString);
+                instanceInfo.get("p2p_connection", remoteConnectionString);
+
+                // Store only remote connection strings
+                if (localConnectionString != remoteConnectionString) {
+                    boost::mutex::scoped_lock lock(m_connectionStringsMutex);
+                    m_connectionStrings[instanceId] = remoteConnectionString;
+                }
+            }
             reconnectInputChannels(instanceId);
         }
 
@@ -872,6 +901,11 @@ namespace karabo {
             }
 
             emit("signalInstanceGone", instanceId, instanceInfo);
+            if (m_watchdog && instanceInfo.has("p2p_connection")) {
+                boost::mutex::scoped_lock lock(m_connectionStringsMutex);
+                map<string, string>::iterator it = m_connectionStrings.find(instanceId);
+                if (it != m_connectionStrings.end()) m_connectionStrings.erase(it);
+            }
         }
 
 
@@ -1708,7 +1742,6 @@ namespace karabo {
             return std::make_pair(instanceId, functionName);
         }
 
-
         SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction, int priority, int messageTimeToLive) {
             {
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
@@ -1721,7 +1754,6 @@ namespace karabo {
             storeSignal(signalFunction, s);
             return s;
         }
-
 
         void SignalSlotable::storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance) {
             m_signalInstances[signalFunction] = signalInstance;
@@ -2270,5 +2302,50 @@ namespace karabo {
         }
 
 
+        bool SignalSlotable::connectP2P(const std::string& signalInstanceId) {
+            if (signalInstanceId == m_instanceId) return false;
+            string signalConnectionString;
+            int attempt = 0;
+            int millis = 200;   // milliseconds
+            while (attempt++ < 4) {
+                // Try to find connection string (URI) locally in global table: m_connectionStrings
+                {
+                    boost::mutex::scoped_lock lock(m_connectionStringsMutex);
+                    map<string,string>::iterator it = m_connectionStrings.find(signalInstanceId);
+                    if (it != m_connectionStrings.end()) {
+                        signalConnectionString = it->second;
+                        break;
+                    }
+                }
+                
+                // ... failed :( ... try to request instanceInfo remotely via broker ...
+                Hash instanceInfo;
+                try {
+                    this->request(signalInstanceId, "slotPing", signalInstanceId, 1, false).timeout(millis).receive(instanceInfo);
+                    if (instanceInfo.has("p2p_connection")) {
+                        instanceInfo.get("p2p_connection", signalConnectionString);
+                        boost::mutex::scoped_lock lock(m_connectionStringsMutex);
+                        m_connectionStrings[signalInstanceId] = signalConnectionString;
+                        break;
+                    }
+                } catch (const TimeoutException&) {
+                    Exception::clearTrace();
+                    millis *= 5;
+                }
+            }
+            
+            // connection string should not be empty
+            if (signalConnectionString.empty()) return false;
+            
+            m_pointToPoint->connect(signalInstanceId, m_instanceId, signalConnectionString,
+                                    boost::bind(&SignalSlotable::tryToCallDirectly, this, _1, _2, _3));
+            return true;
+        }
+        
+        
+        void SignalSlotable::disconnectP2P(const std::string& signalInstanceId) {
+            if (signalInstanceId == m_instanceId) return;
+            m_pointToPoint->disconnect(signalInstanceId, m_instanceId);
+        }
     }
 }

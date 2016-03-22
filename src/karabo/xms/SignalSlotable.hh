@@ -19,6 +19,7 @@
 #include <karabo/util/Configurator.hh>
 #include <karabo/log/Logger.hh>
 #include <karabo/net/BrokerConnection.hh>
+#include <karabo/net/PointToPoint.hh>
 
 #include "OutputChannel.hh"
 #include "InputChannel.hh"
@@ -523,6 +524,12 @@ namespace karabo {
 
             static std::map<std::string, SignalSlotable*> m_instanceMap;
             static boost::mutex m_instanceMapMutex;
+            
+            bool m_watchdog;
+            static std::map<std::string, std::string> m_connectionStrings;
+            static boost::mutex m_connectionStringsMutex;
+            
+            static karabo::net::PointToPoint::Pointer m_pointToPoint;
             
         public:
 
@@ -1294,6 +1301,10 @@ KARABO_SLOT0(__VA_ARGS__) \
             void endOfStreamHandlerWrap(const boost::function<void (const boost::shared_ptr<InputChannel>&) >& handler,
                                         const boost::shared_ptr<InputChannel>& input);
 
+            bool connectP2P(const std::string& instanceId);
+            
+            void disconnectP2P(const std::string& instanceId);
+            
         protected: // Functions
 
             void startEmittingHeartbeats(const int heartbeatInterval);
@@ -1502,7 +1513,9 @@ KARABO_SLOT0(__VA_ARGS__) \
                     const std::string& instanceId, const std::string& channelId,
                     bool channelExists, const karabo::util::Hash& info);
 
-            bool tryToCallDirectly(const std::string& instanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) const;
+            bool tryToCallDirectly(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) const;
+            
+            bool tryToCallP2P(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio) const;
             
             void doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio, int timeTpLive) const;
         };

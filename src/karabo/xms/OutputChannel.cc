@@ -171,7 +171,8 @@ namespace karabo {
             using namespace karabo::net;
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
             KARABO_LOG_FRAMEWORK_INFO << "Tcp channel (socket " << tch->socket().native()
-                    << ") error, code #" << error.value() << " -- \"" << error.message() << "\".  Channel closed.";
+                    << ") error on \"" << m_instanceId << "\", code #" << error.value() << " -- \""
+                    << error.message() << "\".  Channel closed.";
             // Unregister channel
             onInputGone(channel);
             m_dataChannels.erase(channel);

@@ -129,6 +129,8 @@ namespace karabo {
 
             refreshDeviceInformation();
 
+            connectP2P(m_deviceToBeLogged);
+
         }
 
 
@@ -165,6 +167,7 @@ namespace karabo {
                     }
                     m_idxMap.clear();
                     //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued idxMap is cleaned";
+                    disconnectP2P(m_deviceToBeLogged);
                 }
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Problems tagging " + m_deviceToBeLogged + " to be discontinued"));
