@@ -9,7 +9,7 @@ from karabo.api2.enums import Unit, MetricPrefix
 from karabo.api2.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
     VectorStringValue, wrap)
-from karabo.api2.hash import Int32
+from karabo.api2.hash import Int32, Float
 from karabo.api2.timestamp import Timestamp
 
 
@@ -156,12 +156,32 @@ class Tests(TestCase):
         self.assertEqual(a.descriptor, d1)
         self.assertEqual(a.timestamp, 9)
 
+        s = StringValue("1 m", timestamp=22)
+        b = QuantityValue(s)
+        self.assertEqual(a, b)
+        self.assertEqual(b.timestamp, 22)
+
         c = QuantityValue(a)
         self.assertEqual(c.magnitude, 1)
         self.assertEqual(c.timestamp, 9)
 
         with self.assertRaises(pint.DimensionalityError):
             QuantityValue("1 s", descriptor=d1)
+
+    def test_nounit(self):
+        d = Float()
+
+        a = QuantityValue(3.5, descriptor=d, timestamp=10)
+        self.assertEqual(a.magnitude, 3.5)
+        self.assertFalse(a.dimensionality)
+        self.assertEqual(a.descriptor, d)
+        self.assertEqual(a.timestamp, 10)
+
+        b = QuantityValue(a, descriptor=d)
+        self.assertNotIsInstance(b.magnitude, QuantityValue)
+        self.assertEqual(b.magnitude, 3.5)
+        self.assertFalse(b.dimensionality)
+        self.assertEqual(b.timestamp, 10)
 
     def test_special(self):
         vps = QuantityValue(1, Unit.VOLT_PER_SECOND)
