@@ -1,6 +1,5 @@
 from asyncio import (async, coroutine, gather, set_event_loop,
                      TimeoutError)
-import gc
 import sys
 import time
 from unittest import TestCase, main
@@ -346,7 +345,6 @@ class Tests(TestCase):
             # connectDevices. Let's at least check that works.
             weak = weakref.ref(d)
             del d
-            gc.collect()
             self.assertIsNone(weak())
 
 

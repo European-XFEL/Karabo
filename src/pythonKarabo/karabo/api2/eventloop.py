@@ -309,7 +309,7 @@ class EventLoop(SelectorEventLoop):
         try:
             instance = context["future"].instance()
             instance._onException(None, context["exception"],
-                                  context.get("source_traceback"))
+                                  context.get("source_traceback"), instance)
         except:
             self.default_exception_handler(context)
 
@@ -352,7 +352,7 @@ class EventLoop(SelectorEventLoop):
                 instance = get_event_loop().instance()
             instance._ss.tasks.add(task)
             task.add_done_callback(instance._ss.tasks.remove)
-            task.instance = weakref.ref(instance, lambda _: task.cancel())
+            task.instance = weakref.ref(instance)
         except (AttributeError, TypeError):
             # create_task has been called from outside a Karabo context
             # this happens in tests and while bootstrapping.
