@@ -4,6 +4,7 @@ from functools import total_ordering
 
 import dateutil.parser
 import dateutil.tz
+import numpy
 
 import time
 
@@ -39,6 +40,11 @@ class Timestamp(object):
         ret.tid = attrs['tid']
         return ret
 
+    def toDict(self):
+        return {"frac": numpy.uint64(self.time % RESOLUTION),
+                "sec": numpy.uint64(self.time // RESOLUTION),
+                "tid": self.tid}
+
     def toTimestamp(self):
         return self.time / 10 ** 18
 
@@ -54,3 +60,10 @@ class Timestamp(object):
         if not isinstance(other, Timestamp):
             return NotImplemented
         return self.time < other.time
+
+    def __str__(self):
+        return self.toLocal()
+
+    def __repr__(self):
+        ts = datetime.utcfromtimestamp(self.toTimestamp())
+        return ts.isoformat() + " UTC"
