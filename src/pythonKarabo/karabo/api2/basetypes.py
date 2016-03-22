@@ -3,12 +3,18 @@
 Karabo keeps some metadata with its values. This module contains the
 classes which have the metadata attached."""
 from enum import Enum
+from functools import wraps
+import inspect
+from itertools import chain
 import numbers
+import re
 
 import numpy
 import pint
 
 from .enums import MetricPrefix, Unit
+from .registry import Registry
+from .timestamp import Timestamp
 
 
 def wrap(data):
@@ -28,9 +34,54 @@ def wrap(data):
         raise TypeError('cannot wrap "{}" into Karabo type'.format(type(data)))
 
 
-class KaraboValue:
+def newest_timestamp(objs, newest=None):
+    for a in objs:
+        if (isinstance(a, KaraboValue) and a.timestamp is not None and
+                (newest is None or a.timestamp > newest)):
+            newest = a.timestamp
+    return newest
+
+
+def wrap_function(func, timestamp=None):
+    """wrap the function func to return a KaraboValue with the newest
+    timestamp of its parameters"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        ret = func(*args, **kwargs)
+        newest = newest_timestamp(chain(args, kwargs.values()), timestamp)
+        if newest is not None:
+            try:
+                if isinstance(ret, tuple):
+                    ret = tuple(wrap(r) for r in ret)
+                    for r in ret:
+                        r.timestamp = newest
+                else:
+                    ret = wrap(ret)
+                    ret.timestamp = newest
+            except TypeError:
+                pass  # the wrapper didn't manage to wrap, just skip it
+        return ret
+    return wrapper
+
+
+class KaraboValue(Registry):
     """This is the baseclass for all Karabo values"""
-    pass
+    __re = re.compile(r"__\w*__|[^_]\w*")
+    __blacklist = {"__len__", "__contains__", "__complex__", "__int__",
+                   "__float__", "__index__", "__bool__", "__getattribute__",
+                   "__getattr__", "__init__", "__new__", "__setattr__",
+                   "__array_prepare__", "__hash__", "__str__", "__repr__",
+                   "__array_wrap__", "register"}
+
+    @classmethod
+    def register(cls, name, d):
+        attrs = [a for a in dir(cls)
+                 if cls.__re.fullmatch(a) and a not in cls.__blacklist]
+
+        for name in attrs:
+            attr = getattr(cls, name)
+            if inspect.isfunction(attr) or inspect.ismethoddescriptor(attr):
+                setattr(cls, name, wrap_function(attr))
 
 
 class SimpleValue(KaraboValue):
@@ -48,6 +99,9 @@ class BoolValue(SimpleValue):
     def __init__(self, value, *, descriptor=None, timestamp=None):
         super().__init__(bool(value), descriptor=descriptor,
                          timestamp=timestamp)
+
+    def __eq__(self, other):
+        return self.value == bool(other)
 
     def __bool__(self):
         return self.value
@@ -73,7 +127,7 @@ class EnumValue(SimpleValue):
             return self.value is other
 
 
-class OverloadValue(KaraboValue):
+class StringlikeValue(KaraboValue):
     """This mixin class extends existing Python classes"""
     def __new__(cls, value, *, descriptor=None, timestamp=None):
         self = super().__new__(cls, value)
@@ -81,15 +135,19 @@ class OverloadValue(KaraboValue):
         self.timestamp = timestamp
         return self
 
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return str(self) == str(other)
+        else:
+            return super().__eq__(other)
 
-class VectorCharValue(OverloadValue, bytes):
+
+class VectorCharValue(StringlikeValue, bytes):
     """A Karabo VectorChar is a Python bytes object"""
-    pass
 
 
-class StringValue(OverloadValue, str):
+class StringValue(StringlikeValue, str):
     """A Karabo String is a Python str"""
-    pass
 
 
 class VectorStringValue(KaraboValue, list):
@@ -144,6 +202,39 @@ class QuantityValue(KaraboValue, Quantity):
         self.descriptor = descriptor
         self.timestamp = timestamp
         return self
+
+    @property
+    def T(self):
+        ret = super().T
+        ret.timestamp = self.timestamp
+        return ret
+
+    @property
+    def real(self):
+        ret = super().real
+        ret.timestamp = self.timestamp
+        return ret
+
+    @property
+    def imag(self):
+        ret = super().imag
+        ret.timestamp = self.timestamp
+        return ret
+
+    def __getattr__(self, attr):
+        ret = super().__getattr__(attr)
+        if callable(ret):
+            return wrap_function(ret, self.timestamp)
+        return ret
+
+    def __array_wrap__(self, obj, context=None):
+        ret = super().__array_wrap__(obj, context)
+        if not isinstance(ret, QuantityValue):
+            return ret
+        _, objs, _ = context
+        ret.timestamp = newest_timestamp(objs)
+        return ret
+
 
 # Whenever Pint does calculations, it returns the results as an objecti
 # of the registries' Quantity class. We set that to our own class so

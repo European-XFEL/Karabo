@@ -8,7 +8,7 @@
 .. autoclass:: Box
 """
 
-from karabo.api_2 import AccessMode, AccessLevel, Hash, Timestamp
+from karabo.api_2 import AccessMode, AccessLevel, NodeType, Hash, Timestamp
 import karabo.api2.hash as hashmod
 from karabo_gui.registry import Monkey
 from karabo_gui.network import Network
@@ -259,8 +259,8 @@ class Type(hashmod.Type, metaclass=Monkey):
             self.set(box, self.defaultValue)
 
 
-    def item(self, treeWidget, parent, box, isClass):
-        item = PropertyTreeWidgetItem(box, treeWidget, parent)
+    def item(self, treeWidget, parentItem, box, isClass):
+        item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
 
         item.setIcon(0, self.icon if self.options is None else icons.enum)
         item.enumeration = self.options
@@ -318,10 +318,10 @@ class String(hashmod.String, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     icon = icons.string
 
-    def item(self, treeWidget, parent, box, isClass):
+    def item(self, treeWidget, parentItem, box, isClass):
         if self.displayType in ("directory", "fileIn", "fileOut"):
             self.icon = icons.path
-        item = super(String, self).item(treeWidget, parent, box, isClass)
+        item = super(String, self).item(treeWidget, parentItem, box, isClass)
         self.completeItem(treeWidget, item, box, isClass)
         return item
 
@@ -399,15 +399,19 @@ class Schema(hashmod.Descriptor):
 
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
-        nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
-                 ListOfNodes.parse)
+        nodes = {
+            NodeType.Leaf: Schema.parseLeaf,
+            NodeType.Node: Schema.parse,
+            NodeType.ChoiceOfNodes: ChoiceOfNodes.parse,
+            NodeType.ListOfNodes: ListOfNodes.parse
+        }
         #print(attrs.get('displayType'))
         self = dict(NDArray=ImageNode, ImageData=ImageNode, Image=ImageNode, Slot=SlotNode, OutputChannel=OutputNode, Table=TableNode).get(
                 attrs.get('displayType', None), cls)(key)
         self.displayedName = key
         self.parseAttrs(self, attrs, parent)
         for k, h, a in hash.iterall():
-            self.dict[k] = nodes[a['nodeType']](k, h, a, self)
+            self.dict[k] = nodes[NodeType(a['nodeType'])](k, h, a, self)
         self.key = key
         return self
 
@@ -448,8 +452,8 @@ class Schema(hashmod.Descriptor):
         return ret
 
 
-    def item(self, treeWidget, parent, box, isClass):
-        item = PropertyTreeWidgetItem(box, treeWidget, parent)
+    def item(self, treeWidget, parentItem, box, isClass):
+        item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
         self.completeItem(treeWidget, item, box, isClass)
         return item
 
@@ -459,7 +463,7 @@ class Schema(hashmod.Descriptor):
         super(Schema, self).completeItem(treeWidget, item, box, isClass)
 
 
-    def _item(self, treeWidget, parent, box, isClass):
+    def _item(self, treeWidget, parentItem, box, isClass):
         for k, v in self.dict.items():
             if isinstance(v, hashmod.Descriptor):
                 try:
@@ -467,7 +471,7 @@ class Schema(hashmod.Descriptor):
                 except AttributeError:
                     print('missing {} in {}'.format(k, box.value))
                 else:
-                    item = v.item(treeWidget, parent, c, isClass)
+                    item = v.item(treeWidget, parentItem, c, isClass)
 
 
     def fillWidget(self, treeWidget, configuration, isClass):
@@ -580,14 +584,14 @@ class Schema(hashmod.Descriptor):
 
 
 class ImageNode(Schema):
-    def item(self, treeWidget, parent, box, isClass):
-        item = ImageTreeWidgetItem(box, treeWidget, parent)
+    def item(self, treeWidget, parentItem, box, isClass):
+        item = ImageTreeWidgetItem(box, treeWidget, parentItem)
         item.enabled = not isClass
         self.completeItem(treeWidget, item, box, isClass)
 
 class TableNode(Schema):
-    def item(self, treeWidget, parent, box, isClass):
-        item = TableTreeWidgetItem(box, treeWidget, parent)
+    def item(self, treeWidget, parentItem, box, isClass):
+        item = TableTreeWidgetItem(box, treeWidget, parentItem)
         #item.enabled = not isClass
         self.completeItem(treeWidget, item, box, isClass)
 
@@ -613,8 +617,8 @@ class SlotNode(Schema):
         Network().onExecute(box)
 
 
-    def item(self, treeWidget, parent, box, isClass):
-        item = CommandTreeWidgetItem(self.key, box, treeWidget, parent)
+    def item(self, treeWidget, parentItem, box, isClass):
+        item = CommandTreeWidgetItem(self.key, box, treeWidget, parentItem)
         item.enabled = not isClass
         self.completeItem(treeWidget, item, box, isClass)
 
@@ -635,8 +639,8 @@ class ChoiceOfNodes(Schema):
         return self
 
 
-    def item(self, treeWidget, parent, box, isClass):
-        item = PropertyTreeWidgetItem(box, treeWidget, parent)
+    def item(self, treeWidget, parentItem, box, isClass):
+        item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
         item.defaultValue = self.defaultValue
 
         item.isChoiceElement = True
@@ -761,8 +765,8 @@ class ListOfNodes(hashmod.Descriptor):
         return [ ]
 
 
-    def item(self, treeWidget, parent, box, isClass):
-        item = PropertyTreeWidgetItem(box, treeWidget, parent)
+    def item(self, treeWidget, parentItem, box, isClass):
+        item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
         item.displayText = box.path[-1]
         item.requiredAccessLevel = AccessLevel.GOD
 
@@ -781,8 +785,8 @@ class VectorHash(hashmod.VectorHash, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     #icon = icons.string
  
-    def item(self, treeWidget, parent, box, isClass):
-        item = TableTreeWidgetItem(box, treeWidget, parent)
+    def item(self, treeWidget, parentItem, box, isClass):
+        item = TableTreeWidgetItem(box, treeWidget, parentItem)
         item.setIcon(0, self.icon if self.options is None else icons.enum)
         item.enumeration = self.options
         component = None

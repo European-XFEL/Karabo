@@ -993,9 +993,9 @@ class ProjectModel(QStandardItemModel):
         if project is None:
             project = self.currentProject()
 
-        project.filename = filename
         project.access = access
-        project.zip()
+        project.zip(filename=filename)
+        project.filename = filename
         self.onProjectModified(project)
         
         return project
@@ -1555,8 +1555,8 @@ class ProjectModel(QStandardItemModel):
         selectedIndexes = self.selectionModel.selectedIndexes()
         nbSelected = len(selectedIndexes)
         if nbSelected > 1:
-            reply = QMessageBox.question(None, 'Remove items',
-                "Do you really want to remove selected items?",
+            reply = QMessageBox.question(None, 'Delete items',
+                "Do you really want to delete selected items?",
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.No:
@@ -1574,8 +1574,8 @@ class ProjectModel(QStandardItemModel):
         selectedIndexes = self.selectionModel.selectedIndexes()
         nbSelected = len(selectedIndexes)
         if nbSelected > 1:
-            reply = QMessageBox.question(None, 'Remove items',
-                "Do you really want to remove selected items?",
+            reply = QMessageBox.question(None, 'Delete items',
+                "Do you really want to delete selected items?",
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.No:
@@ -1596,8 +1596,8 @@ class ProjectModel(QStandardItemModel):
 
 
     def onRemoveDevices(self):
-        reply = QMessageBox.question(None, 'Remove devices',
-            "Do you really want to remove all devices?",
+        reply = QMessageBox.question(None, 'Delete devices',
+            "Do you really want to delete all devices?",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.No:
@@ -1614,8 +1614,8 @@ class ProjectModel(QStandardItemModel):
         The \object is removed from the \project.
         """
         if showConfirm:
-            reply = QMessageBox.question(None, 'Remove object',
-                "Do you really want to remove the object?",
+            reply = QMessageBox.question(None, 'Delete object',
+                "Do you really want to delete the object?",
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.No:

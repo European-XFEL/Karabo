@@ -113,7 +113,9 @@ namespace karabo {
 
             DataLoggerIndex findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);
 
-            DataLoggerIndex findNearestLoggerIndex(const std::string& deviceId, const karabo::util::Epochstamp& timepoint);
+            /// Find logger closest index from archive_index.txt file that is before/after (according to 'before')
+            /// 'timepoint'. If there is none before (after) but that is asked for, take the one just after (before).
+            DataLoggerIndex findNearestLoggerIndex(const std::string& deviceId, const karabo::util::Epochstamp& timepoint, const bool before);
 
             int getFileIndex(const std::string& deviceId);
 
