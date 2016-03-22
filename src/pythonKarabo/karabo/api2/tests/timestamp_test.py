@@ -35,7 +35,7 @@ class Tests(TestCase):
     def test_hash_write(self):
         h = Hash("a", 3)
         t = Timestamp("2009-09-01 14:23 UTC")
-        d = t.toHashAttributes()
+        d = t.toDict()
         self.assertEqual(d["sec"], 1251814980)
         self.assertEqual(d["frac"], 135584022528)
         self.assertEqual(d["tid"], 0)
