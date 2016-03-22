@@ -238,7 +238,8 @@ class QuantityValue(KaraboValue, Quantity):
         else:
             self = super().__new__(cls, value, unit)
             if (unit is None and descriptor is not None and
-                    not self.dimensionality):
+                    not self.dimensionality and
+                    not isinstance(value, QuantityValue)):
                 self = QuantityValue(
                     value, unit=descriptor.unitSymbol,
                     metricPrefix=descriptor.metricPrefixSymbol)
