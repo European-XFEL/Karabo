@@ -14,7 +14,6 @@ import pint
 
 from .enums import MetricPrefix, Unit
 from .registry import Registry
-from .timestamp import Timestamp
 
 
 def wrap(data):
@@ -73,6 +72,14 @@ class KaraboValue(Registry):
                    "__array_prepare__", "__hash__", "__str__", "__repr__",
                    "__array_wrap__", "register"}
 
+    def __init__(self, value, *args, timestamp=None, descriptor=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if isinstance(value, KaraboValue) and timestamp is None:
+            self.timestamp = value.timestamp
+        else:
+            self.timestamp = timestamp
+        self.descriptor = descriptor
+
     @classmethod
     def register(cls, name, d):
         attrs = [a for a in dir(cls)
@@ -83,22 +90,20 @@ class KaraboValue(Registry):
             if inspect.isfunction(attr) or inspect.ismethoddescriptor(attr):
                 setattr(cls, name, wrap_function(attr))
 
-
-class SimpleValue(KaraboValue):
-    """Base class for values which need no special treatment"""
-    def __init__(self, value, *, descriptor=None, timestamp=None):
-        self.value = value
-        self.descriptor = descriptor
-        self.timestamp = timestamp
+    def __iter__(self):
+        for a in super().__iter__():
+            y = wrap(a)
+            y.timestamp = self.timestamp
+            yield y
 
 
-class BoolValue(SimpleValue):
-    """This conains bools.
+class BoolValue(KaraboValue):
+    """This contains bools.
 
     We cannot inherit from bool, so we need a brand-new class"""
-    def __init__(self, value, *, descriptor=None, timestamp=None):
-        super().__init__(bool(value), descriptor=descriptor,
-                         timestamp=timestamp)
+    def __init__(self, value, **kwargs):
+        super().__init__(value, **kwargs)
+        self.value = bool(value)
 
     def __eq__(self, other):
         return self.value == bool(other)
@@ -106,40 +111,72 @@ class BoolValue(SimpleValue):
     def __bool__(self):
         return self.value
 
+    def __repr__(self):
+        return repr(self.value)
 
-class EnumValue(SimpleValue):
+    def __hash__(self):
+        return hash(self.value)
+
+
+class EnumValue(KaraboValue):
     """This contains an enum.
 
     We can define enums in the expected parameters. This contains a value of
     them. Unfortunately, it is impossible to use the "is" operator as with
     bare enums, one has to use == instead. """
-    def __init__(self, value, *, descriptor=None, timestamp=None):
+    def __init__(self, value, *, descriptor=None, **kwargs):
+        super().__init__(value, descriptor=descriptor, **kwargs)
+        if isinstance(value, EnumValue):
+            if descriptor is None:
+                descriptor = value.descriptor
+            value = value.enum
         if not isinstance(value, Enum):
             raise TypeError("value must be an Enum")
         if descriptor is not None and not isinstance(value, descriptor.enum):
             raise TypeError("value is not element of enum in descriptor")
-        super().__init__(value, descriptor=descriptor, timestamp=timestamp)
+        self.enum = value
 
     def __eq__(self, other):
         if isinstance(other, EnumValue):
-            return self.value is other.value
+            return self.enum is other.enum
         else:
-            return self.value is other
+            return self.enum is other
+
+    def __str__(self):
+        return str(self.enum)
+
+    def __repr__(self):
+        return repr(self.enum)
+
+    def __hash__(self):
+        return hash(self.enum)
+
+    @property
+    def value(self):
+        return self.enum.value
 
 
 class StringlikeValue(KaraboValue):
     """This mixin class extends existing Python classes"""
-    def __new__(cls, value, *, descriptor=None, timestamp=None):
-        self = super().__new__(cls, value)
-        self.descriptor = descriptor
-        self.timestamp = timestamp
-        return self
+
+    def __new__(cls, value, **kwargs):
+        return super().__new__(cls, value)
 
     def __eq__(self, other):
-        if isinstance(other, type(self)):
-            return str(self) == str(other)
+        if isinstance(other, StringlikeValue):
+            return (super().__getitem__(slice(None)) ==
+                    super(StringlikeValue, other).__getitem__(slice(None)))
         else:
             return super().__eq__(other)
+
+    @property
+    def value(self):
+        return self
+
+
+# if you override __eq__, __hash__ gets set to None to avoid incorrect
+# accidental inheritance. This fixes that.
+del StringlikeValue.__hash__
 
 
 class VectorCharValue(StringlikeValue, bytes):
@@ -154,16 +191,21 @@ class VectorStringValue(KaraboValue, list):
     """A Karabo VectorStringValue corresponds to a Python list.
 
     We should check that only strings are entered"""
-    def __init__(self, value=None, *, descriptor=None, timestamp=None):
-        if value is None:
-            super().__init__()
-        else:
-            super().__init__(value)
-        self.descriptor = descriptor
-        self.timestamp = timestamp
+    def __init__(self, value=None, **kwargs):
+        super().__init__(value, **kwargs)
+        if value is not None:
+            self.extend(value)
+            for s in self:
+                if not isinstance(s, str):
+                    raise TypeError(
+                        "Vector of strings can only contain strings")
 
     def __repr__(self):
-        return "VectorString" + super().__repr__(self)
+        return "VectorString" + super().__repr__()
+
+    @property
+    def value(self):
+        return self
 
 
 # Pint is based on the concept of a unit registry. For each unit registry,
@@ -195,13 +237,22 @@ class QuantityValue(KaraboValue, Quantity):
             self = super().__new__(cls, value, (prefix + unit).lower())
         else:
             self = super().__new__(cls, value, unit)
-        if (descriptor is not None and
-                descriptor.dimensionality != self.dimensionality):
-            raise pint.DimensionalityError(descriptor.dimensionality,
-                                           self.dimensionality)
-        self.descriptor = descriptor
-        self.timestamp = timestamp
+            if (unit is None and descriptor is not None and
+                    not self.dimensionality and
+                    not isinstance(value, QuantityValue)):
+                # if pint didn't find a dimension in value,
+                # get it from the descriptor
+                self = cls(
+                    value, unit=descriptor.unitSymbol,
+                    metricPrefix=descriptor.metricPrefixSymbol)
         return self
+
+    def __init__(self, value, unit=None, metricPrefix=None, **kwargs):
+        super().__init__(value, **kwargs)
+        if (self.descriptor is not None and
+                self.descriptor.dimensionality != self.dimensionality):
+            raise pint.DimensionalityError(self.descriptor.dimensionality,
+                                           self.dimensionality)
 
     @property
     def T(self):
@@ -220,6 +271,10 @@ class QuantityValue(KaraboValue, Quantity):
         ret = super().imag
         ret.timestamp = self.timestamp
         return ret
+
+    @property
+    def value(self):
+        return self.magnitude
 
     def __getattr__(self, attr):
         ret = super().__getattr__(attr)
