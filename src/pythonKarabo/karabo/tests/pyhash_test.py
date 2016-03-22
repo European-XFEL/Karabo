@@ -4,9 +4,10 @@ from zlib import adler32
 import numpy
 from numpy.testing import assert_equal
 
-from karabo.api_1 import BinarySerializerHash
-from karabo.api_2 import (Hash, Schema, XMLWriter, XMLParser, BinaryWriter,
+from karabo.api_1 import BinarySerializerHash, TextSerializerHash
+from karabo.api_2 import (Hash, Schema, XMLWriter, XMLParser,
                           BinaryParser, NodeType)
+from karabo.api2.hash import _Byte
 
 
 class Hash_TestCase(unittest.TestCase):
@@ -142,6 +143,8 @@ class Hash_TestCase(unittest.TestCase):
         h["hash"] = Hash("a", 3, "b", 7.1)
         h["hashlist"] = [Hash("a", 3), Hash()]
         h["emptystringlist"] = []
+        h["vectorbool"] = numpy.array([True, False, True])
+        h["char"] = _Byte("c")
 
         h["bool", "bool"] = False
         h["int", "float"] = 7.3
@@ -163,7 +166,7 @@ class Hash_TestCase(unittest.TestCase):
         Python-only hashes."""
         keys = ["bool", "int", "string", "complex", "stringlist", "chars",
                 "vector", "emptyvector", "hash", "hashlist", "emptystringlist",
-                "schema"]
+                "vectorbool", "char", "schema"]
         self.assertEqual(list(h.keys()), keys)
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
@@ -179,7 +182,9 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(len(h["hashlist"][1]), 0)
         assert_equal(h["vector"], numpy.arange(7))
         assert_equal(h["emptyvector"], numpy.array([]))
+        assert_equal(h["vectorbool"], numpy.array([True, False, True]))
         self.assertEqual(h["emptystringlist"], [])
+        self.assertEqual(h["char"], "c")
 
     def check_hash(self, h):
         """check that the hash *h* is the same as created by `create_hash`
@@ -203,32 +208,37 @@ class Hash_TestCase(unittest.TestCase):
 
 
     def test_xml(self):
-        w = XMLWriter()
-        r = XMLParser()
-        s = w.write(self.create_hash())
-        self.check_hash(r.read(s))
+        s = self.create_hash().encode("XML")
+        self.check_hash(Hash.decode(s, "XML"))
 
+        # hash XML encoding is pretty different if there is only
+        # one key on the first level
         h = Hash("bla", self.create_hash())
-        s = w.write(h)
-        self.check_hash(r.read(s)["bla"])
+        s = h.encode("XML")
+        self.check_hash(Hash.decode(s, "XML")["bla"])
 
 
     def test_binary(self):
-        w = BinaryWriter()
-        r = BinaryParser()
-        s = w.write(self.create_hash())
-        self.check_hash(r.read(s))
-        self.assertEqual(adler32(s), 2640989770)
+        s = self.create_hash().encode("Bin")
+        self.check_hash(Hash.decode(s, "Bin"))
+        self.assertEqual(adler32(s), 2927580322)
 
 
-    def test_cpp(self):
-        w = BinaryWriter()
-        r = BinaryParser()
-        s = w.write(self.create_hash())
+    def test_cpp_bin(self):
+        s = self.create_hash().encode("Bin")
         ser = BinarySerializerHash.create("Bin")
         h = ser.load(s)
         self.check_hash_simple(h)
         ret = Hash.decode(ser.save(h), "Bin")
+        self.check_hash(ret)
+
+
+    def test_cpp_xml(self):
+        s = self.create_hash().encode("XML")
+        ser = TextSerializerHash.create("Xml")
+        h = ser.load(s)
+        self.check_hash_simple(h)
+        ret = Hash.decode(ser.save(h), "XML")
         self.check_hash(ret)
 
 
