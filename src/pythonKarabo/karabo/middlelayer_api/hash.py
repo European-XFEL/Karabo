@@ -201,7 +201,7 @@ class Number(Simple):
 
 
 class Descriptor(object):
-    """This is the base class for all descriptors.
+    """This is the base class for all descriptors in Karabo
 
     Descriptors describe the content of a device property. The description
     is done in their attributes, which come from a fixed defined set,
@@ -346,7 +346,11 @@ class Special(object):
 
 
 class Type(Descriptor, Registry):
-    """This is the base class for all types in the Karabo type hierarchy. """
+    """A Type is a descriptor that does not contain other descriptors.
+
+    All basic Karabo types are described by a Type.
+    """
+
     unitSymbol = Attribute(Unit.NOT_ASSIGNED)
     metricPrefixSymbol = Attribute(MetricPrefix.NONE)
     enum = None
@@ -363,6 +367,17 @@ class Type(Descriptor, Registry):
             self.options = [self.cast(o) for o in self.options]
         self.dimensionality = basetypes.QuantityValue(
             1, unit=self.unitSymbol).dimensionality
+
+    def toKaraboValue(self, data, strict=True):
+        """Convert data into a KaraboValue
+
+        in strict mode, the default, we only allow values which have the
+        correct unit set or are of the correct enum. In non-strict mode,
+        we simply add the unit if none is given, or convert to the enum.
+        This is important for data coming from the network, as that has no
+        notion about units or enums.
+        """
+        raise NotImplementedError
 
     @classmethod
     def hashname(cls):
