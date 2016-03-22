@@ -145,21 +145,5 @@
     </hint>
    </hints>
   </connection>
-  <connection>
-   <sender>cbSaveTo</sender>
-   <signal>currentIndexChanged(int)</signal>
-   <receiver>swSaveTo</receiver>
-   <slot>setCurrentIndex(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>468</x>
-     <y>22</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>314</x>
-     <y>209</y>
-    </hint>
-   </hints>
-  </connection>
  </connections>
 </ui>

@@ -189,12 +189,23 @@ class Project(object):
     def addResource(self, category, data):
         """add the data into the resources of given category
 
-        this returns a URL under which the resource can be opened again"""
+        this returns a URL under which the resource can be opened again
+        """
+        def _hasPath(zf, path):
+            try:
+                zf.getinfo(path)
+                return True
+            except KeyError:
+                return False
+
         with ZipFile(self.filename, mode="a", compression=ZIP_DEFLATED) as zf:
             digest = hashlib.sha1(data).hexdigest()
-            zf.writestr("resources/{}/{}".format(category, digest), data)
+            respath = "resources/{}/{}".format(category, digest)
+            # Duplicate items compute the same hash. Don't write them twice.
+            if not _hasPath(zf, respath):
+                zf.writestr(respath, data)
         self.resources.setdefault(category, set()).add(digest)
-        return "project:resources/{}/{}".format(category, digest)
+        return "project:{}".format(respath)
 
     def addScene(self, scene):
         self.scenes.append(scene)
@@ -276,7 +287,7 @@ class Project(object):
         # FIXME: in the projectio module.
         from .projectio import write_project
 
-        write_project(self, path=self.filename)
+        write_project(self, path=filename)
 
     def instantiate(self, deviceIds):
         """
