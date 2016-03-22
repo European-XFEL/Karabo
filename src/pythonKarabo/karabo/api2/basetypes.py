@@ -240,7 +240,9 @@ class QuantityValue(KaraboValue, Quantity):
             if (unit is None and descriptor is not None and
                     not self.dimensionality and
                     not isinstance(value, QuantityValue)):
-                self = QuantityValue(
+                # if pint didn't find a dimension in value,
+                # get it from the descriptor
+                self = cls(
                     value, unit=descriptor.unitSymbol,
                     metricPrefix=descriptor.metricPrefixSymbol)
         return self
