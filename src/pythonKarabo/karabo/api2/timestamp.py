@@ -40,7 +40,7 @@ class Timestamp(object):
         ret.tid = attrs['tid']
         return ret
 
-    def toHashAttributes(self):
+    def toDict(self):
         return {"frac": numpy.uint64(self.time % RESOLUTION),
                 "sec": numpy.uint64(self.time // RESOLUTION),
                 "tid": self.tid}
