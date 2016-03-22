@@ -91,7 +91,7 @@ namespace karabo {
                 // copy registered slots
                 std::map<std::string, std::set<std::string> > registeredSlots = m_registeredSlots;
                 // publish if P2P connected slots and filter them out. After call, registeredSlots and header are updated
-                m_signalSlotable->m_pointToPoint->publishIfConnected(registeredSlots, header, message, m_priority);
+                SignalSlotable::m_pointToPoint->publishIfConnected(registeredSlots, header, message, m_priority);
                 // publish leftovers via broker
                 if (registeredSlots.size() > 0) {
                     // header contains updated slot leftovers
