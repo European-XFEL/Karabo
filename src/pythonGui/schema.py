@@ -31,10 +31,23 @@ from collections import OrderedDict
 import weakref
 from functools import partial
 
-# Descriptor attribute names which should be sent during instantiation
-EDITABLE_ATTRIBUTE_NAMES = {
-'minExc', 'maxExc', 'minInc', 'maxInc', 'absoluteError', 'relativeError'
-}
+# MOST of the attribute names from Schemas that we care about.
+# Schema.parseAttrs() contains a few others as well.
+# This MUST correspond to the C++ class util::Schema, where they are defined.
+SCHEMA_ATTRIBUTE_NAMES = (
+    'description', 'defaultValue', 'displayType', 'assignment',
+    'alias', 'allowedStates', 'tags', 'options', 'minInc', 'maxInc',
+    'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
+    'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy',
+    'relativeError', 'absoluteError'
+)
+
+# Attribute names which should be sent during instantiation, because they
+# can be edited.
+EDITABLE_ATTRIBUTE_NAMES = (
+'minExc', 'maxExc', 'minInc', 'maxInc', 'absoluteError', 'relativeError',
+'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh'
+)
 
 
 class Box(QObject):
@@ -289,10 +302,10 @@ class Type(hashmod.Type, metaclass=Monkey):
 
 
     def toHash(self, box):
-        descriptor = box.descriptor
-        attributes = {key: getattr(descriptor, key)
+        desc = box.descriptor
+        attributes = {key: getattr(desc, key)
                       for key in EDITABLE_ATTRIBUTE_NAMES
-                      if getattr(descriptor, key) is not None}
+                      if hasattr(desc, key) and getattr(desc, key) is not None}
         return box.value, attributes
 
 
@@ -427,14 +440,9 @@ class Schema(hashmod.Descriptor):
 
     @staticmethod
     def parseAttrs(self, attrs, parent):
-        """parse the attributes from attrs. This should correspond to
-        the C++ class util::Schema, where they are defined."""
-        copy = ['description', 'defaultValue', 'displayType', 'assignment',
-                'alias', 'allowedStates', 'tags', 'options', 'minInc', 'maxInc',
-                'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
-                'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy',
-                'relativeError', 'absoluteError']
-        for a in copy:
+        """parse the attributes from attrs."""
+
+        for a in SCHEMA_ATTRIBUTE_NAMES:
             setattr(self, a, attrs.get(a))
         self.displayedName = attrs.get('displayedName', self.displayedName)
         self.accessMode = AccessMode(attrs.get('accessMode',
