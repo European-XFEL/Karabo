@@ -7,7 +7,7 @@ from numpy.testing import assert_equal
 from karabo.api_1 import BinarySerializerHash, TextSerializerHash
 from karabo.api_2 import (Hash, Schema, XMLWriter, XMLParser,
                           BinaryParser, NodeType)
-from karabo.api2.hash import Byte
+from karabo.api2.hash import _Byte
 
 
 class Hash_TestCase(unittest.TestCase):
@@ -144,7 +144,7 @@ class Hash_TestCase(unittest.TestCase):
         h["hashlist"] = [Hash("a", 3), Hash()]
         h["emptystringlist"] = []
         h["vectorbool"] = numpy.array([True, False, True])
-        h["char"] = Byte("c")
+        h["char"] = _Byte("c")
 
         h["bool", "bool"] = False
         h["int", "float"] = 7.3
