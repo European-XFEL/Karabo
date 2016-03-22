@@ -18,7 +18,7 @@ from .api2.basetypes import (
 )
 from .api2.exceptions import KaraboError
 from .api2.hash import (
-    Attribute, Bool, ComplexDouble, ComplexFloat, Descriptor,
+    Attribute, Bool, Char, ComplexDouble, ComplexFloat, Descriptor,
     Double, Element, Enumable, Float, Hash, HashElement, HashMergePolicy,
     HashType, Int16, Int32, Int64, Int8, Integer, ListElement, Number,
     NumpyVector, Schema, SchemaHashType, Simple, SimpleElement, Slot, Special,

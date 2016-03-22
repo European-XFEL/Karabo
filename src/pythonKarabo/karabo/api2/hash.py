@@ -421,7 +421,7 @@ class Char(Simple, Type):
     @staticmethod
     def read(file):
         file.pos += 1
-        return Byte(file.data[file.pos - 1:file.pos].decode("ascii"))
+        return _Byte(file.data[file.pos - 1:file.pos].decode("ascii"))
 
     @classmethod
     def toString(cls, data):
@@ -438,10 +438,10 @@ class Char(Simple, Type):
 
     def cast(self, other):
         if len(bytes(other)) == 1:
-            return Byte(other)
+            return _Byte(other)
 
 
-class Byte(Special, str):
+class _Byte(Special, str):
     """This represents just one byte, so that we can distinguish
     CHAR and VECTOR_CHAR."""
     hashtype = Char
