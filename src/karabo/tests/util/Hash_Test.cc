@@ -453,12 +453,11 @@ void Hash_Test::testFind() {
     {
         Hash h("a.b.c1.d", 1);
         boost::optional<Hash::Node&> node = h.find("a.b.c1.d");
-        if (node) CPPUNIT_ASSERT(node->getValue<int>() == 1);
-        else CPPUNIT_ASSERT(false);
+        CPPUNIT_ASSERT(!node == false);
+        CPPUNIT_ASSERT(node->getValue<int>() == 1);
 
         node = h.find("a.b.c1.f");
-        if (node) CPPUNIT_ASSERT(false);
-        else CPPUNIT_ASSERT(true);
+        CPPUNIT_ASSERT(!node == true);
     }
 
     {
@@ -466,8 +465,9 @@ void Hash_Test::testFind() {
         boost::optional<Hash::Node&> node = h.find("a.b.c");
         if (node) node->setValue(2);
         CPPUNIT_ASSERT(h.get<int>("a.b.c") == 2);
+
         node = h.find("a.b.c", '/');
-        if (node) CPPUNIT_ASSERT(false);
+        CPPUNIT_ASSERT(!node == true);
     }
 }
 
