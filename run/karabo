@@ -1036,8 +1036,12 @@ function updateInstalled() {
 	    echo $hasConflicts
 	fi       
     else
-	cd $scriptDir/packages
-	
+	cd $scriptDir/packages 2>/dev/null 1>&2 
+	if [ $? -ne 0 ]; then
+            echo "Cannot do 'cd $scriptDir/packages', stop updating."
+            return 1
+	fi
+
 	for cat in *; do
 	    
 	    # Skip every non-folder
@@ -1109,7 +1113,12 @@ function rebuildInstalled() {
 
     local -i returnStatus=0
 
-    cd $scriptDir/packages
+    cd $scriptDir/packages 2>/dev/null 1>&2
+    if [ $? -ne 0 ]; then
+        echo "Cannot do 'cd $scriptDir/packages', stop rebuilding."
+        return 1
+    fi
+
     
     for cat in *; do
 	

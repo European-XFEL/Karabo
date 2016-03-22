@@ -73,7 +73,7 @@ class LogWidget(QWidget):
         twLogTable.setSelectionMode(QAbstractItemView.SingleSelection)
 
         twLogTable.setSortingEnabled(True)
-        twLogTable.sortByColumn(0, Qt.AscendingOrder)
+        twLogTable.sortByColumn(0, Qt.DescendingOrder)
 
         twLogTable.doubleClicked.connect(self.onItemDoubleClicked)
 

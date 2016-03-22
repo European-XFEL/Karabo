@@ -17,7 +17,7 @@ from karabo_gui.network import Network
 from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
 from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt
-from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
+from PyQt4.QtGui import QAbstractItemView, QCursor, QHeaderView, QMenu, QTreeWidget
 
 
 class ParameterTreeWidget(QTreeWidget):
@@ -53,6 +53,12 @@ class ParameterTreeWidget(QTreeWidget):
             if isinstance(c, BaseComponent):
                 c.setParent(None)
 
+    def ensureMiddleColumnWidth(self):
+        """ Set the minimum column width for the whole table to the current
+        width of the middle column.
+        """
+        header = self.header()
+        header.setMinimumSectionSize(header.sectionSize(1))
 
 ### protected ###
     def mousePressEvent(self, event):
