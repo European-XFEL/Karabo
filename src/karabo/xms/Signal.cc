@@ -66,10 +66,6 @@ namespace karabo {
         void Signal::send(const karabo::util::Hash::Pointer& message) {
             using namespace karabo::util;
             try {
-                // Do not send if no slots are connected except heartbeats.
-                // Heartbeats always have slotInstanceId == __none__ 
-                if (m_signalFunction != "signalHeartbeat" && m_registeredSlotInstanceIdsString == "__none__") return;
-                
                 karabo::util::Hash::Pointer header = prepareHeader();
                 // In case we are connected to a single local instance we shortcut the broker
                 if (m_registeredSlots.size() == 1) {
@@ -82,7 +78,25 @@ namespace karabo {
                     m_signalSlotable->doSendMessage(slotInstanceId, header, message, m_priority, m_messageTimeToLive);
                     return;
                 }
-                m_channel->write(*header, *message, m_priority, m_messageTimeToLive);
+
+                // Do not send if no slots are connected except heartbeats.
+                // Heartbeats always have slotInstanceId == __none__ 
+                // Send heartbeat signal via broker
+                if (m_registeredSlotInstanceIdsString == "__none__") {
+                    if (m_signalFunction == "signalHeartbeat")
+                        m_channel->write(*header, *message, m_priority, m_messageTimeToLive);
+                    return;
+                }
+                
+                // copy registered slots
+                std::map<std::string, std::set<std::string> > registeredSlots = m_registeredSlots;
+                // publish if P2P connected slots and filter them out. After call, registeredSlots and header are updated
+                SignalSlotable::m_pointToPoint->publishIfConnected(registeredSlots, header, message, m_priority);
+                // publish leftovers via broker
+                if (registeredSlots.size() > 0) {
+                    // header contains updated slot leftovers
+                    m_channel->write(*header, *message, m_priority, m_messageTimeToLive);
+                }
                 
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))
