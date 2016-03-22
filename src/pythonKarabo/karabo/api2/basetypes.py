@@ -101,11 +101,8 @@ class BoolValue(KaraboValue):
     """This contains bools.
 
     We cannot inherit from bool, so we need a brand-new class"""
-    def __init__(self, value, *, descriptor=None, timestamp=None):
-        if timestamp is None and isinstance(value, KaraboValue):
-            timestamp = value.timestamp
-        super().__init__(value, descriptor=descriptor,
-                         timestamp=timestamp)
+    def __init__(self, value, **kwargs):
+        super().__init__(value, **kwargs)
         self.value = bool(value)
 
     def __eq__(self, other):
