@@ -363,7 +363,7 @@ class NumpyVector(Vector):
     @classmethod
     def fromstring(cls, s):
         if s:
-            return np.array([cls.basetype.numpy(x) for x in s.split(',')])
+            return np.fromstring(s, sep=",", dtype=cls.basetype.numpy)
         else:
             return np.array([], dtype=cls.basetype.numpy)
 
@@ -409,6 +409,10 @@ class VectorBool(NumpyVector):
     basetype = Bool
     number = 1
 
+    @classmethod
+    def toString(cls, data):
+        return ",".join(str(int(i)) for i in data)
+
 
 class Char(Simple, Type):
     number = 2
@@ -417,27 +421,27 @@ class Char(Simple, Type):
     @staticmethod
     def read(file):
         file.pos += 1
-        return Byte(file.data[file.pos - 1:file.pos])
+        return _Byte(file.data[file.pos - 1:file.pos].decode("ascii"))
 
     @classmethod
     def toString(cls, data):
-        return base64.b64encode(data).decode("ascii")
+        return data
 
     @classmethod
     def fromstring(self, s):
-        return base64.b64decode(s)
+        return s
 
     @classmethod
     def write(cls, file, data):
         assert len(data) == 1
-        file.file.write(data)
+        file.file.write(data.encode("ascii"))
 
     def cast(self, other):
         if len(bytes(other)) == 1:
-            return Byte(other)
+            return _Byte(other)
 
 
-class Byte(Special, bytes):
+class _Byte(Special, str):
     """This represents just one byte, so that we can distinguish
     CHAR and VECTOR_CHAR."""
     hashtype = Char
