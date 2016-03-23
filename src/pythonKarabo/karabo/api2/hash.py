@@ -151,6 +151,8 @@ class Descriptor(object):
     requiredAccessLevel = Attribute(AccessLevel.OBSERVER)
     displayType = Attribute()
 
+    key = "(unknown key)"
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             if isinstance(getattr(self.__class__, k, None), Attribute):
