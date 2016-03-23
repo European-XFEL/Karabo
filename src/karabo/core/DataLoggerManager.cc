@@ -51,7 +51,7 @@ namespace karabo {
             PATH_ELEMENT(expected).key("directory")
                     .displayedName("Directory")
                     .description("The directory where the log files should be placed")
-                    .assignmentOptional().defaultValue("karaboHistory")
+                    .assignmentOptional().defaultValue("../karaboHistory")
                     .commit();
 
             std::vector<std::string> emptyVec;

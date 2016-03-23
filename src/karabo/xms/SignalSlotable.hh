@@ -525,7 +525,7 @@ namespace karabo {
             static std::map<std::string, SignalSlotable*> m_instanceMap;
             static boost::mutex m_instanceMapMutex;
             
-            bool m_watchdog;
+            bool m_discoverConnectionResourcesMode;
             static std::map<std::string, std::string> m_connectionStrings;
             static boost::mutex m_connectionStringsMutex;
             
