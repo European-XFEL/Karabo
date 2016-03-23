@@ -437,8 +437,12 @@ class Char(Simple, Type):
         file.file.write(data.encode("ascii"))
 
     def cast(self, other):
-        if len(bytes(other)) == 1:
-            return _Byte(other)
+        try:
+            return _Byte(chr(other))
+        except TypeError:
+            if len(str(other)) == 1:
+                return _Byte(other)
+            raise
 
 
 class _Byte(Special, str):
