@@ -12,9 +12,13 @@ from .api2.enums import (
     AccessLevel, AccessMode, Assignment, ChannelSpaceType, EncodingType,
     MetricPrefix, NodeType, Unit
 )
+from .api2.basetypes import (
+    BoolValue, EnumValue, KaraboValue, QuantityValue, StringValue,
+    unit_registry as unit, VectorStringValue, VectorCharValue
+)
 from .api2.exceptions import KaraboError
 from .api2.hash import (
-    Attribute, Bool, Byte, Char, ComplexDouble, ComplexFloat, Descriptor,
+    Attribute, Bool, Char, ComplexDouble, ComplexFloat, Descriptor,
     Double, Element, Enumable, Float, Hash, HashElement, HashMergePolicy,
     HashType, Int16, Int32, Int64, Int8, Integer, ListElement, Number,
     NumpyVector, Schema, SchemaHashType, Simple, SimpleElement, Slot, Special,

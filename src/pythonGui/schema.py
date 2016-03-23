@@ -31,6 +31,25 @@ from collections import OrderedDict
 import weakref
 from functools import partial
 
+# MOST of the attribute names from Schemas that we care about.
+# Schema.parseAttrs() contains a few others as well.
+# This MUST correspond to the C++ class util::Schema, where they are defined.
+SCHEMA_ATTRIBUTE_NAMES = (
+    'description', 'defaultValue', 'displayType', 'assignment',
+    'alias', 'allowedStates', 'tags', 'options', 'minInc', 'maxInc',
+    'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
+    'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy',
+    'relativeError', 'absoluteError'
+)
+
+# Attribute names which should be sent during instantiation, because they
+# can be edited.
+EDITABLE_ATTRIBUTE_NAMES = (
+    'minExc', 'maxExc', 'minInc', 'maxInc', 'absoluteError', 'relativeError',
+    'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh', 'metricPrefixSymbol',
+    'unitSymbol'
+)
+
 
 class Box(QObject):
     """This class represents one value of a device or a device class.
@@ -284,7 +303,11 @@ class Type(hashmod.Type, metaclass=Monkey):
 
 
     def toHash(self, box):
-        return box.value
+        desc = box.descriptor
+        attributes = {key: getattr(desc, key)
+                      for key in EDITABLE_ATTRIBUTE_NAMES
+                      if hasattr(desc, key) and getattr(desc, key) is not None}
+        return box.value, attributes
 
 
     def fromHash(self, box, data, timestamp=None):
@@ -418,14 +441,9 @@ class Schema(hashmod.Descriptor):
 
     @staticmethod
     def parseAttrs(self, attrs, parent):
-        """parse the attributes from attrs. This should correspond to
-        the C++ class util::Schema, where they are defined."""
-        copy = ['description', 'defaultValue', 'displayType', 'assignment',
-                'alias', 'allowedStates', 'tags', 'options', 'minInc', 'maxInc',
-                'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
-                'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy',
-                'relativeError', 'absoluteError']
-        for a in copy:
+        """parse the attributes from attrs."""
+
+        for a in SCHEMA_ATTRIBUTE_NAMES:
             setattr(self, a, attrs.get(a))
         self.displayedName = attrs.get('displayedName', self.displayedName)
         self.accessMode = AccessMode(attrs.get('accessMode',
@@ -507,8 +525,10 @@ class Schema(hashmod.Descriptor):
             if v is None:
                 continue
             if v.hasValue():
-                ret[k] = v.toHash()
-        return ret
+                value, attrs = v.toHash()
+                ret[k] = value
+                ret[k, ...] = attrs
+        return ret, {}
 
 
     def fromHash(self, box, value, timestamp=None):
@@ -702,11 +722,14 @@ class ChoiceOfNodes(Schema):
 
 
     def toHash(self, box):
-        ret = Schema.toHash(self, box)
+        ret, attrs = super(ChoiceOfNodes, self).toHash(box)
         if box.current is None:
             return Hash()
         else:
-            return Hash(box.current, ret[box.current])
+            key = box.current
+            h = Hash(key, ret[key])
+            h[key, ...] = attrs
+            return h, {}
 
 
     def set(self, box, value, timestamp=None):
@@ -762,7 +785,7 @@ class ListOfNodes(hashmod.Descriptor):
 
 
     def toHash(self, box):
-        return [ ]
+        return [], {}
 
 
     def item(self, treeWidget, parentItem, box, isClass):

@@ -167,11 +167,11 @@ class ProjectModel(QStandardItemModel):
         
         if object.isOnline():
             conf = manager.getDevice(object.id)
-            config = conf.toHash()
+            config, _ = conf.toHash()  # Ignore returned attributes
         else:
             conf = object
             if conf.descriptor is not None:
-                config = conf.toHash()
+                config, _ = conf.toHash()  # Ignore returned attributes
             else:
                 config = conf.initConfig
 
@@ -664,7 +664,8 @@ class ProjectModel(QStandardItemModel):
                         # Put current configuration to future config so that it
                         # does not get lost
                         if device.descriptor is not None:
-                            device.initConfig = device.toHash()
+                            hsh, _ = device.toHash()  # Ignore attributes
+                            device.initConfig = hsh
                         device.parameterEditor.clear()
 
 
@@ -1028,7 +1029,7 @@ class ProjectModel(QStandardItemModel):
                 if device.descriptor is None:
                     config = device.initConfig
                 else:
-                    config = device.toHash()
+                    config, _ = device.toHash()  # Ignore returned attributes
             else:
                 config = None
             
@@ -1167,7 +1168,7 @@ class ProjectModel(QStandardItemModel):
                                        device.classId, deviceId, device.ifexists)
             
             if device.descriptor is not None:
-                config = device.toHash()
+                config, _ = device.toHash()  # Ignore returned attributes
             else:
                 config = device.initConfig
             
