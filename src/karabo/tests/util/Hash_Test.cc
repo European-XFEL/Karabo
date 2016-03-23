@@ -450,24 +450,126 @@ void Hash_Test::testGetAs() {
 
 void Hash_Test::testFind() {
 
+    // First test non-const version of Hash::find(..).
     {
-        Hash h("a.b.c1.d", 1);
+        Hash h("a.b.c1.d", 1, "b[2].c.d", "some");
+        // Check existing node and its value.
         boost::optional<Hash::Node&> node = h.find("a.b.c1.d");
         CPPUNIT_ASSERT(!node == false);
         CPPUNIT_ASSERT(node->getValue<int>() == 1);
 
+        // Test that other separator fails
+        node = h.find("a.b.c1.d", '/');
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check existence of first level node.
+        node = h.find("a");
+        CPPUNIT_ASSERT(!node == false);
+
+        // Check non-existence of first level node.
+        node = h.find("nee");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check non-existence of last level node.
         node = h.find("a.b.c1.f");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check non-existence of middle level node.
+        node = h.find("a.b.c2.d");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check existence with index as last but two.
+        node = h.find("b[2].c.d");
+        CPPUNIT_ASSERT(!node == false);
+
+        // Check existence with index as last but one.
+        node = h.find("b[2].c");
+        CPPUNIT_ASSERT(!node == false);
+
+        // Index at end is not allowed - would be Hash, not Node.
+        node = h.find("b[2]");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Same check, but with invalid index.
+        node = h.find("b[3]");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check non-existence with invalid index as last but one.
+        node = h.find("b[3].c");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check non-existence with invalid index as last but two.
+        node = h.find("b[3].c.d");
         CPPUNIT_ASSERT(!node == true);
     }
 
+    // Now test Hash::find(..) const.
+    // (Same code as above except adding twice 'const'.)
     {
+        const Hash h("a.b.c1.d", 1, "b[2].c.d", "some");
+        // Check existing node and its value.
+        boost::optional<const Hash::Node&> node = h.find("a.b.c1.d");
+        CPPUNIT_ASSERT(!node == false);
+        CPPUNIT_ASSERT(node->getValue<int>() == 1);
+
+        // Test that other separator fails
+        node = h.find("a.b.c1.d", '/');
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check existence of first level node.
+        node = h.find("a");
+        CPPUNIT_ASSERT(!node == false);
+
+        // Check non-existence of first level node.
+        node = h.find("nee");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check non-existence of last level node.
+        node = h.find("a.b.c1.f");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check non-existence of middle level node.
+        node = h.find("a.b.c2.d");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check existence with index as last but two.
+        node = h.find("b[2].c.d");
+        CPPUNIT_ASSERT(!node == false);
+
+        // Check existence with index as last but one.
+        node = h.find("b[2].c");
+        CPPUNIT_ASSERT(!node == false);
+
+        // Index at end is not allowed - would be Hash, not Node.
+        node = h.find("b[2]");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Same check, but with invalid index.
+        node = h.find("b[3]");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check non-existence with invalid index as last but one.
+        node = h.find("b[3].c");
+        CPPUNIT_ASSERT(!node == true);
+
+        // Check non-existence with invalid index as last but two.
+        node = h.find("b[3].c.d");
+        CPPUNIT_ASSERT(!node == true);
+
+    }
+
+    {
+        // This does not really test Hash::find, but Hash::Node::set and
+        // the possible type change introduced by that.
+        // But since there are no direct unit tests for that, keep it here...
         Hash h("a.b.c", "1");
+        CPPUNIT_ASSERT(h.get<std::string>("a.b.c") == "1");
+        CPPUNIT_ASSERT(h.getAs<int>("a.b.c") == 1);
         boost::optional<Hash::Node&> node = h.find("a.b.c");
         if (node) node->setValue(2);
         CPPUNIT_ASSERT(h.get<int>("a.b.c") == 2);
+        CPPUNIT_ASSERT(h.getAs<std::string>("a.b.c") == "2");
 
-        node = h.find("a.b.c", '/');
-        CPPUNIT_ASSERT(!node == true);
     }
 }
 
@@ -1469,7 +1571,7 @@ void Hash_Test::testTableValidation(){
 
     rows.push_back(aRow2);
     Hash newPhoneyTable("tab",rows);
-    
+
     allOk = true;
     try{
         phonyTable.merge(newPhoneyTable, Hash::MERGE_ATTRIBUTES);
@@ -1498,7 +1600,7 @@ void Hash_Test::testTableValidation(){
         allOk = false;
     }
     CPPUNIT_ASSERT(allOk == false);
-    
+
     //provoke failure due to additional colum
     Hash aRow4;
     aRow4.set<int>("a", 1);
@@ -1518,8 +1620,7 @@ void Hash_Test::testTableValidation(){
         allOk = false;
     }
     CPPUNIT_ASSERT(allOk == false);
-    
-    
+
     //check if defaults are set
     Hash aRow5;
     aRow5.set<float>("c", 1.0);
