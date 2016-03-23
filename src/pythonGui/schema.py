@@ -14,9 +14,9 @@ from karabo_gui.registry import Monkey
 from karabo_gui.network import Network
 import karabo_gui.icons as icons
 
-from components import (ChoiceComponent, EditableApplyLaterComponent,
-                        EditableNoApplyComponent)
-import karabo_gui.globals as globals
+from karabo_gui.components import (ChoiceComponent, EditableApplyLaterComponent,
+                                   EditableNoApplyComponent)
+from karabo_gui import globals
 
 from karabo_gui.treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
 from karabo_gui.treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem

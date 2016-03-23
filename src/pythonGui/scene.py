@@ -8,8 +8,7 @@
 
 
 
-from components import (DisplayComponent, EditableApplyLaterComponent)
-
+from karabo_gui.components import (DisplayComponent, EditableApplyLaterComponent)
 from karabo_gui.dialogs.dialogs import PenDialog, TextDialog, SceneLinkDialog
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.enums import NavigationItemTypes
