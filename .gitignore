@@ -25,6 +25,7 @@ package/
 run/bin/allInfo
 run/etc/*.log
 run/packages/
+run/servers/karaboHistory/*
 run/servers/*/serverId.xml
 run/servers/*/device-server.log*
 run/servers/*/lastConfiguration.xml
