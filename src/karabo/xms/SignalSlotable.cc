@@ -209,12 +209,12 @@ namespace karabo {
 
 
         SignalSlotable::SignalSlotable()
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_watchdog(false) {
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_discoverConnectionResourcesMode(false) {
         }
 
 
         SignalSlotable::SignalSlotable(const string& instanceId, const BrokerConnection::Pointer& connection)
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_watchdog(false) {
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_discoverConnectionResourcesMode(false) {
             init(instanceId, connection);
         }
 
@@ -222,7 +222,7 @@ namespace karabo {
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                                        const std::string& brokerType,
                                        const karabo::util::Hash& brokerConfiguration)
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_watchdog(false) {
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_discoverConnectionResourcesMode(false) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
@@ -455,7 +455,7 @@ namespace karabo {
             // Put the P2P producer local port number into instanceInfo for distributing around
             if (!m_pointToPoint) {
                 m_pointToPoint = PointToPoint::Pointer(new PointToPoint);
-                m_watchdog = true;
+                m_discoverConnectionResourcesMode = true;
                 KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint producer connection string is \"" << m_pointToPoint->getConnectionString() << "\"";
             }
             m_instanceInfo.set("p2p_connection", m_pointToPoint->getConnectionString());
@@ -875,7 +875,7 @@ namespace karabo {
 
             emit("signalInstanceNew", instanceId, instanceInfo);
 
-            if (m_watchdog && instanceInfo.has("p2p_connection") && m_instanceInfo.has("p2p_connection")) {
+            if (m_discoverConnectionResourcesMode && instanceInfo.has("p2p_connection") && m_instanceInfo.has("p2p_connection")) {
                 string localConnectionString, remoteConnectionString;
                 m_instanceInfo.get("p2p_connection", localConnectionString);
                 instanceInfo.get("p2p_connection", remoteConnectionString);
@@ -901,7 +901,7 @@ namespace karabo {
             }
 
             emit("signalInstanceGone", instanceId, instanceInfo);
-            if (m_watchdog && instanceInfo.has("p2p_connection")) {
+            if (m_discoverConnectionResourcesMode && instanceInfo.has("p2p_connection")) {
                 boost::mutex::scoped_lock lock(m_connectionStringsMutex);
                 map<string, string>::iterator it = m_connectionStrings.find(instanceId);
                 if (it != m_connectionStrings.end()) m_connectionStrings.erase(it);
