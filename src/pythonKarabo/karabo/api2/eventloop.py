@@ -309,7 +309,7 @@ class EventLoop(SelectorEventLoop):
         try:
             instance = context["future"].instance()
             instance._onException(None, context["exception"],
-                                  context.get("source_traceback"), instance)
+                                  context.get("source_traceback"))
         except:
             self.default_exception_handler(context)
 

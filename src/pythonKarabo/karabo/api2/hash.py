@@ -242,7 +242,7 @@ class Slot(Descriptor):
                 device._ss.reply(message, (yield from coro))
             except Exception as e:
                 _, exc, tb = sys.exc_info()
-                device._onException(self, exc, tb, device)
+                device._onException(self, exc, tb)
                 device._ss.reply(message, str(e))
         return async(inner())
 
