@@ -158,7 +158,7 @@ class _Manager(QObject):
             # Use standard configuration for server/classId
             conf = self.serverClassData.get((serverId, classId))
             if conf is not None:
-                config = conf.toHash()
+                config, _ = conf.toHash()  # Ignore returned attributes
             else:
                 config = Hash()
 
@@ -331,7 +331,10 @@ class _Manager(QObject):
         if conf is None:
             MessageBox.showError("Configuration save failed")
             return
-        config = Hash(classId, conf.toHash())
+
+        hsh, attrs = conf.toHash()
+        config = Hash(classId, hsh)
+        config[classId, ...] = attrs
 
         # Save configuration to file
         w = XMLWriter()
@@ -375,13 +378,19 @@ class _Manager(QObject):
             if overwrite:
                 # Overwrite existing device
                 index = project.removeConfiguration(deviceId, c)
+                hsh, attrs = conf.toHash()
+                confHash = Hash(classId, hsh)
+                confHash[classId, ...] = attrs
                 project.insertConfiguration(index, conf.id,
                                             ProjectConfiguration(project, name,
-                                            Hash(classId, conf.toHash())))
+                                            confHash))
                 return
 
+        hsh, attrs = conf.toHash()
+        confHash = Hash(classId, hsh)
+        confHash[classId, ...] = attrs
         project.addConfiguration(conf.id, ProjectConfiguration(project, name,
-                                          Hash(classId, conf.toHash())))
+                                          confHash))
 
 
     def handle_log(self, messages):

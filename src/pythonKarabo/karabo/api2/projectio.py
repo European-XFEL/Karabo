@@ -267,7 +267,8 @@ def _write_devices(zf, objects):
                 if deviceObj.descriptor is None:
                     device.initConfig = deviceObj.initConfig
                 else:
-                    device.initConfig = deviceObj.toHash()
+                    hsh, _ = deviceObj.toHash()  # Ignore returned attributes
+                    device.initConfig = hsh
                 # Save configuration to XML file
                 zf.writestr("{}/{}".format(Project.DEVICES_KEY, device.filename),
                             device.toXml())
