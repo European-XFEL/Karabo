@@ -47,6 +47,19 @@ namespace karabo {
 
             struct ValidationRules {
 
+                ValidationRules()
+                :
+                injectDefaults(true), allowUnrootedConfiguration(true),
+                allowAdditionalKeys(true), allowMissingKeys(true),
+                injectTimestamps(true) { }
+
+                ValidationRules(bool injectDefaults_, bool allowUnrootedConfiguration_,
+                                bool allowAdditionalKeys_, bool allowMissingKeys_, bool injectTimestamps_)
+                :
+                injectDefaults(injectDefaults_), allowUnrootedConfiguration(allowUnrootedConfiguration_),
+                allowAdditionalKeys(allowAdditionalKeys_), allowMissingKeys(allowMissingKeys_),
+                injectTimestamps(injectTimestamps_) { }
+
                 bool injectDefaults;
                 bool allowUnrootedConfiguration;
                 bool allowAdditionalKeys;
