@@ -253,24 +253,33 @@ namespace karabo {
         }
 
         boost::optional<const Hash::Node&> Hash::find(const std::string& path, const char separator) const {
+            // Note: identical code as non-const Hash::find(..), except some const.
             std::string key;
-            const Hash& hash = getLastHash(path, key, separator);
-            if (karabo::util::getAndCropIndex(key) == -1) {
-                const_map_iterator it = hash.m_container.find(key);
-                if (it != this->mend()) return it->second;
-                else return boost::optional<const Hash::Node&>();
-            } else {
-                throw KARABO_LOGIC_EXCEPTION("Array syntax on a leaf is not possible (would be a Hash and not a Node)");
+            const Hash* hash = getLastHashPtr(path, key, separator);
+            if (hash) {
+                if (karabo::util::getAndCropIndex(key) == -1) {
+                    const_map_iterator it = hash->m_container.find(key);
+                    if (it != hash->mend()) {
+                        return it->second;
+                    } // else ...
+                    // ... we have array syntax that would get a Hash (within an std::vector) and not a Node
+                }
             }
+            return boost::optional<const Hash::Node&>();
         }
 
         boost::optional<Hash::Node&> Hash::find(const std::string& path, const char separator) {
-            try {
-                return getNode(path, separator);
-            } catch (...) {
-                // Exception must be ignored here!
-                // TODO Construction and catching of an exception is expensive here.
-                Exception::clearTrace();
+            // Note: identical code as const Hash::find(..) const, except some const there.
+            std::string key;
+            Hash* hash = getLastHashPtr(path, key, separator);
+            if (hash) {
+                if (karabo::util::getAndCropIndex(key) == -1) {
+                    map_iterator it = hash->m_container.find(key);
+                    if (it != hash->mend()) {
+                            return it->second;
+                    } // else ...
+                    // ... we have array syntax that would get a Hash (within an std::vector) and not a Node
+                }
             }
             return boost::optional<Hash::Node&>();
         }
@@ -417,6 +426,8 @@ namespace karabo {
                             rules.allowAdditionalKeys = false;
                             rules.allowMissingKeys = false;
                             rules.allowUnrootedConfiguration = true;
+                            //                            rules.injectDefaults = true;
+                            //                            rules.injectTimestamps = true; // really?
                             validator.setValidationRules(rules);
                             for(vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it){
                                 Hash validatedHash;
@@ -479,6 +490,8 @@ namespace karabo {
                             rules.allowAdditionalKeys = false;
                             rules.allowMissingKeys = false;
                             rules.allowUnrootedConfiguration = true;
+                            //                            rules.injectDefaults = true;
+                            //                            rules.injectTimestamps = true; // really?
                             validator.setValidationRules(rules);
                             for(vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it){
                                 Hash validatedHash;
