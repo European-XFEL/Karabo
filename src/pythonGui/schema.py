@@ -45,8 +45,9 @@ SCHEMA_ATTRIBUTE_NAMES = (
 # Attribute names which should be sent during instantiation, because they
 # can be edited.
 EDITABLE_ATTRIBUTE_NAMES = (
-'minExc', 'maxExc', 'minInc', 'maxInc', 'absoluteError', 'relativeError',
-'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh'
+    'minExc', 'maxExc', 'minInc', 'maxInc', 'absoluteError', 'relativeError',
+    'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh', 'metricPrefixSymbol',
+    'unitSymbol'
 )
 
 
