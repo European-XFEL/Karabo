@@ -129,7 +129,8 @@ namespace karabo {
 
             KARABO_FSM_TABLE_BEGIN(StateMachineTransitionTable)
             Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
-            Row< Error, ResetEvent, Ok, none, none >
+            Row< Error, ResetEvent, Ok, none, none >,
+            Row< Error, ErrorFoundEvent, Error, ErrorFoundAction, none >
             KARABO_FSM_TABLE_END
 
 
