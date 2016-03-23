@@ -3,7 +3,6 @@
   <autoStart>
     <KRB_Item>
       <DataLoggerManager>
-      <directory KRB_Type="STRING">../karaboHistory</directory>
       <serverList KRB_Type="VECTOR_STRING">Karabo_DataLoggerServer</serverList>
       </DataLoggerManager>
     </KRB_Item>
