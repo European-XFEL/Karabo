@@ -124,6 +124,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Schema.o \
 	${OBJECTDIR}/_ext/163016059/SignalHandler.o \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
+	${OBJECTDIR}/_ext/163016059/TableElement.o \
 	${OBJECTDIR}/_ext/163016059/TimeDuration.o \
 	${OBJECTDIR}/_ext/163016059/TimePeriod.o \
 	${OBJECTDIR}/_ext/163016059/TimeProfiler.o \
@@ -639,6 +640,11 @@ ${OBJECTDIR}/_ext/163016059/StringTools.o: ../../../src/karabo/util/StringTools.
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/StringTools.o ../../../src/karabo/util/StringTools.cc
+
+${OBJECTDIR}/_ext/163016059/TableElement.o: ../../../src/karabo/util/TableElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/TableElement.o ../../../src/karabo/util/TableElement.cc
 
 ${OBJECTDIR}/_ext/163016059/TimeDuration.o: ../../../src/karabo/util/TimeDuration.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -2234,6 +2240,19 @@ ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o: ${OBJECTDIR}/_ext/163016059/St
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o ../../../src/karabo/util/StringTools.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/StringTools.o ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/TableElement_nomain.o: ${OBJECTDIR}/_ext/163016059/TableElement.o ../../../src/karabo/util/TableElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/TableElement.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/TableElement_nomain.o ../../../src/karabo/util/TableElement.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/TableElement.o ${OBJECTDIR}/_ext/163016059/TableElement_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/TimeDuration_nomain.o: ${OBJECTDIR}/_ext/163016059/TimeDuration.o ../../../src/karabo/util/TimeDuration.cc 

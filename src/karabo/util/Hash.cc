@@ -10,6 +10,8 @@
 #include "Schema.hh"
 #include "ToLiteral.hh"
 #include "Validator.hh"
+#include "TableElement.hh"
+
 namespace karabo {
 
     namespace util {
@@ -419,16 +421,9 @@ namespace karabo {
                             //nodeSchema.setParameterHash(this_vec[0]); //first element contains the schema
                             
                             vector<Hash> validatedOtherVec;
-                           
-                            
-                            Validator validator;
-                            Validator::ValidationRules rules;
-                            rules.allowAdditionalKeys = false;
-                            rules.allowMissingKeys = false;
-                            rules.allowUnrootedConfiguration = true;
-                            //                            rules.injectDefaults = true;
-                            //                            rules.injectTimestamps = true; // really?
-                            validator.setValidationRules(rules);
+
+
+                            Validator validator(karabo::util::tableValidationRules);
                             for(vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it){
                                 Hash validatedHash;
                                 std::pair<bool, std::string> validationResult = validator.validate(nodeSchema, *it, validatedHash);
@@ -483,16 +478,9 @@ namespace karabo {
                             //nodeSchema.setParameterHash(this_vec[0]);
                             
                             vector<Hash> validatedOtherVec;
-                            
-                            
-                            Validator validator;
-                            Validator::ValidationRules rules;
-                            rules.allowAdditionalKeys = false;
-                            rules.allowMissingKeys = false;
-                            rules.allowUnrootedConfiguration = true;
-                            //                            rules.injectDefaults = true;
-                            //                            rules.injectTimestamps = true; // really?
-                            validator.setValidationRules(rules);
+
+
+                            Validator validator(karabo::util::tableValidationRules);
                             for(vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it){
                                 Hash validatedHash;
                                 std::pair<bool, std::string> validationResult = validator.validate(nodeSchema, *it, validatedHash);

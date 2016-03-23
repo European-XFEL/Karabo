@@ -21,8 +21,10 @@
 
 namespace karabo {
     namespace util {
-        
-        
+
+        /// Validation rules to be used when table elements in Hash are merged.
+        extern const Validator::ValidationRules tableValidationRules;
+
         /**
          * The DefaultValue class defines a default value for element.
          */
@@ -54,29 +56,19 @@ namespace karabo {
                 }
                 
                 std::vector<Hash> validated;
-                
-                Validator validator;
-                Validator::ValidationRules rules;
-                rules.allowAdditionalKeys = false;
-                rules.allowMissingKeys = false;
-                rules.allowUnrootedConfiguration = true;
-                validator.setValidationRules(rules);
-                
-                //validated.push_back(m_genericElement->m_nodeSchema.getParameterHash());
+                Validator validator(karabo::util::tableValidationRules);
+
                 for(std::vector<Hash>::const_iterator it = defaultValue.begin(); it != defaultValue.end(); ++it){
                     Hash validatedHash;
                     std::pair<bool, std::string> validationResult = validator.validate(m_genericElement->m_nodeSchema, *it, validatedHash);
-                    if(!validationResult.first){
-                        throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against preset node schema");
+                    if(!validationResult.first) {
+                        throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against present node schema");
                     }
                     validated.push_back(validatedHash);
                 }
-                
-                
+
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, validated);
-                //for(std::vector<Hash>::const_iterator it = defaultValue.begin(); it != defaultValue.end(); ++it){
-                //    m_genericElement->addRow(*it);
-                //}
+
                 return *m_genericElement;
             }
 
@@ -88,7 +80,8 @@ namespace karabo {
              */
             Element& noDefaultValue() {
                 return *m_genericElement;
-            }     
+            }
+
         };
         
         class TableElement : public GenericElement<TableElement> {
