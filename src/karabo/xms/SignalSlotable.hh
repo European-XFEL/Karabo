@@ -524,13 +524,13 @@ namespace karabo {
 
             static std::map<std::string, SignalSlotable*> m_instanceMap;
             static boost::mutex m_instanceMapMutex;
-            
-            bool m_watchdog;
+
+            bool m_discoverConnectionResourcesMode;
             static std::map<std::string, std::string> m_connectionStrings;
             static boost::mutex m_connectionStringsMutex;
-            
+
             static karabo::net::PointToPoint::Pointer m_pointToPoint;
-            
+
         public:
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
@@ -1263,17 +1263,17 @@ KARABO_SLOT0(__VA_ARGS__) \
             void registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&) >& handler);
 
             void connectInputChannel(const InputChannel::Pointer& channel, int trails = 8, int sleep = 1);
-            
+
             void connectInputToOutputChannel(const InputChannel::Pointer& channel, const std::string& outputChannelString, int trails = 8, int sleep = 1);
 
             void connectInputChannelAsync(const InputChannel::Pointer& channel, const boost::function<void()>& handler);
 
             void connectInputChannels();
-            
+
             void reconnectInputChannels(const std::string& instanceId);
-            
+
             void disconnectInputChannels(const std::string& instanceId);
-            
+
             std::pair<bool, std::string> exists(const std::string& instanceId);
 
             int getAccessLevel(const std::string& instanceId) const;
@@ -1287,24 +1287,24 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             bool ensureOwnInstanceIdUnique();
-            
+
             void injectConnection(const std::string& instanceId, const karabo::net::BrokerConnection::Pointer& connection);
 
             void setDeviceServerPointer(boost::any serverPtr);
-            
+
             void inputHandlerWrap(const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler,
-                                  const karabo::xms::InputChannel::Pointer& input);
-            
+                    const karabo::xms::InputChannel::Pointer& input);
+
             void dataHandlerWrap(const boost::function<void (const Data&) >& handler,
-                                 const Data& data);
-            
+                    const Data& data);
+
             void endOfStreamHandlerWrap(const boost::function<void (const boost::shared_ptr<InputChannel>&) >& handler,
-                                        const boost::shared_ptr<InputChannel>& input);
+                    const boost::shared_ptr<InputChannel>& input);
 
             bool connectP2P(const std::string& instanceId);
-            
+
             void disconnectP2P(const std::string& instanceId);
-            
+
         protected: // Functions
 
             void startEmittingHeartbeats(const int heartbeatInterval);
@@ -1514,10 +1514,12 @@ KARABO_SLOT0(__VA_ARGS__) \
                     bool channelExists, const karabo::util::Hash& info);
 
             bool tryToCallDirectly(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) const;
-            
+
             bool tryToCallP2P(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio) const;
-            
+
             void doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio, int timeTpLive) const;
+
+            void transferDiscoverConnectionResourcesMode();
         };
 
     }
