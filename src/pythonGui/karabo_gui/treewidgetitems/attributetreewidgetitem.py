@@ -13,7 +13,7 @@ __all__ = ["AttributeTreeWidgetItem"]
 
 
 from .basetreewidgetitem import BaseTreeWidgetItem
-from components import DisplayComponent
+from karabo_gui.components import DisplayComponent
 import karabo_gui.icons as icons
 
 

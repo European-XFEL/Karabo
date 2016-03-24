@@ -11,7 +11,7 @@
 
 __all__ = ["ParameterTreeWidget"]
 
-from components import BaseComponent, EditableApplyLaterComponent
+from karabo_gui.components import BaseComponent, EditableApplyLaterComponent
 import karabo_gui.globals as globals
 from karabo_gui.network import Network
 from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem

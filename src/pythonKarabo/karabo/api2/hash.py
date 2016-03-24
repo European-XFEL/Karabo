@@ -151,6 +151,8 @@ class Descriptor(object):
     requiredAccessLevel = Attribute(AccessLevel.OBSERVER)
     displayType = Attribute()
 
+    key = "(unknown key)"
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             if isinstance(getattr(self.__class__, k, None), Attribute):
@@ -437,8 +439,16 @@ class Char(Simple, Type):
         file.file.write(data.encode("ascii"))
 
     def cast(self, other):
-        if len(bytes(other)) == 1:
-            return _Byte(other)
+        try:
+            return _Byte(chr(other))
+        except TypeError:
+            if len(str(other)) == 1:
+                return _Byte(other)
+            elif isinstance(other, bytes):
+                o = other.decode("ascii")
+                if len(o) == 1:
+                    return _Byte(o)
+            raise
 
 
 class _Byte(Special, str):
@@ -691,7 +701,11 @@ class VectorString(Vector):
         if isinstance(other, StringList):
             return other
         else:
-            return StringList(str(s) for s in other)
+            def check(s):
+                if not isinstance(s, str):
+                    raise TypeError
+                return s
+            return StringList(check(s) for s in other)
 
 
 class StringList(Special, list):
