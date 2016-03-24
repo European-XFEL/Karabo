@@ -43,7 +43,7 @@ namespace karabo {
         std::map<std::string, std::string> SignalSlotable::m_connectionStrings;
         boost::mutex SignalSlotable::m_connectionStringsMutex;
         PointToPoint::Pointer SignalSlotable::m_pointToPoint;
-        
+
 
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                                const karabo::util::Hash::Pointer& body) const {
@@ -67,18 +67,18 @@ namespace karabo {
             }
         }
 
-        
+
         bool SignalSlotable::tryToCallP2P(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio) const {
             if (slotInstanceId == "*" || slotInstanceId.empty() || !m_pointToPoint) return false;
             return m_pointToPoint->publish(slotInstanceId, header, body, prio);
         }
-        
-        
+
+
         void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
-                                       const karabo::util::Hash::Pointer& body, int prio, int timeToLive) const {
-                if (tryToCallDirectly(instanceId, header, body)) return;
-                if (tryToCallP2P(instanceId, header, body, prio)) return;
-                m_producerChannel->write(*header, *body, prio, timeToLive);
+                                           const karabo::util::Hash::Pointer& body, int prio, int timeToLive) const {
+            if (tryToCallDirectly(instanceId, header, body)) return;
+            if (tryToCallP2P(instanceId, header, body, prio)) return;
+            m_producerChannel->write(*header, *body, prio, timeToLive);
         }
 
 
@@ -209,12 +209,12 @@ namespace karabo {
 
 
         SignalSlotable::SignalSlotable()
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_watchdog(false) {
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_discoverConnectionResourcesMode(false) {
         }
 
 
         SignalSlotable::SignalSlotable(const string& instanceId, const BrokerConnection::Pointer& connection)
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_watchdog(false) {
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_discoverConnectionResourcesMode(false) {
             init(instanceId, connection);
         }
 
@@ -222,7 +222,7 @@ namespace karabo {
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                                        const std::string& brokerType,
                                        const karabo::util::Hash& brokerConfiguration)
-        : m_connectionInjected(false), m_randPing(rand() + 2), m_watchdog(false) {
+        : m_connectionInjected(false), m_randPing(rand() + 2), m_discoverConnectionResourcesMode(false) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
@@ -231,6 +231,19 @@ namespace karabo {
         SignalSlotable::~SignalSlotable() {
             // Last chance to deregister from static map, but should already be done...
             this->deregisterFromShortcutMessaging();
+            // Transfer the connection resources discovering duty to another SignalSlotable if any
+            if (m_discoverConnectionResourcesMode) {
+                transferDiscoverConnectionResourcesMode();
+                m_discoverConnectionResourcesMode = false;
+            }
+        }
+
+
+        void SignalSlotable::transferDiscoverConnectionResourcesMode() {
+            boost::mutex::scoped_lock lock(m_instanceMapMutex);
+            std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.begin();
+            if (it == m_instanceMap.end()) return; // no SignalSlotable left ... exit
+            it->second->m_discoverConnectionResourcesMode = true;
         }
 
 
@@ -455,7 +468,7 @@ namespace karabo {
             // Put the P2P producer local port number into instanceInfo for distributing around
             if (!m_pointToPoint) {
                 m_pointToPoint = PointToPoint::Pointer(new PointToPoint);
-                m_watchdog = true;
+                m_discoverConnectionResourcesMode = true;
                 KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint producer connection string is \"" << m_pointToPoint->getConnectionString() << "\"";
             }
             m_instanceInfo.set("p2p_connection", m_pointToPoint->getConnectionString());
@@ -875,7 +888,7 @@ namespace karabo {
 
             emit("signalInstanceNew", instanceId, instanceInfo);
 
-            if (m_watchdog && instanceInfo.has("p2p_connection") && m_instanceInfo.has("p2p_connection")) {
+            if (m_discoverConnectionResourcesMode && instanceInfo.has("p2p_connection") && m_instanceInfo.has("p2p_connection")) {
                 string localConnectionString, remoteConnectionString;
                 m_instanceInfo.get("p2p_connection", localConnectionString);
                 instanceInfo.get("p2p_connection", remoteConnectionString);
@@ -901,7 +914,7 @@ namespace karabo {
             }
 
             emit("signalInstanceGone", instanceId, instanceInfo);
-            if (m_watchdog && instanceInfo.has("p2p_connection")) {
+            if (m_discoverConnectionResourcesMode && instanceInfo.has("p2p_connection")) {
                 boost::mutex::scoped_lock lock(m_connectionStringsMutex);
                 map<string, string>::iterator it = m_connectionStrings.find(instanceId);
                 if (it != m_connectionStrings.end()) m_connectionStrings.erase(it);
@@ -1742,6 +1755,7 @@ namespace karabo {
             return std::make_pair(instanceId, functionName);
         }
 
+
         SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction, int priority, int messageTimeToLive) {
             {
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
@@ -1754,6 +1768,7 @@ namespace karabo {
             storeSignal(signalFunction, s);
             return s;
         }
+
 
         void SignalSlotable::storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance) {
             m_signalInstances[signalFunction] = signalInstance;
@@ -2069,28 +2084,28 @@ namespace karabo {
 
 
         void SignalSlotable::reconnectInputChannels(const std::string& instanceId) {
-            
+
             KARABO_LOG_FRAMEWORK_DEBUG << "reconnectInputChannels of \"" << m_instanceId << "\"  to output channels of \"" << instanceId << "\"";
-            
+
             // Loop channels
             for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
                 const InputChannel::Pointer& channel = it->second;
                 const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
                 for (std::map<std::string, karabo::util::Hash>::const_iterator ii = outputChannels.begin(); ii != outputChannels.end(); ++ii) {
                     const string& outputChannelString = ii->first;
-                    if (instanceId != outputChannelString.substr(0, instanceId.size())) continue;   // instanceId ~ instanceId@output
+                    if (instanceId != outputChannelString.substr(0, instanceId.size())) continue; // instanceId ~ instanceId@output
                     channel->disconnect(outputChannelString);
                     connectInputToOutputChannel(channel, outputChannelString);
                 }
             }
         }
 
-        
+
         void SignalSlotable::disconnectInputChannels(const std::string& instanceId) {
-            
+
         }
-        
-        
+
+
         void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, int trails, int sleep) {
             // Loop connected outputs
             const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
@@ -2108,10 +2123,10 @@ namespace karabo {
             std::map<std::string, karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
             std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.find(outputChannelString);
             if (it == outputChannels.end()) return;
-            
+
             // it->first => outputChannelString (STRING)
             // it->second => outputChannelInfo  (HASH)  with connection parameters
-            
+
             bool channelExists = !it->second.empty();
             if (!channelExists) {
                 karabo::util::Hash reply;
@@ -2126,7 +2141,7 @@ namespace karabo {
                     try {
                         KARABO_LOG_FRAMEWORK_DEBUG << "connectInputToOutputChannel  on \"" << m_instanceId << "\"  :  "
                                 << "request \"" << instanceId << "\", slotGetOutputChannelInformation, channelId=" << channelId;
-                        
+
                         this->request(instanceId, "slotGetOutputChannelInformation", channelId,
                                       static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
                     } catch (karabo::util::TimeoutException&) {
@@ -2155,7 +2170,7 @@ namespace karabo {
                 }
             }
             if (channelExists) {
-                channel->connect(outputChannels[outputChannelString]);  // Synchronous
+                channel->connect(outputChannels[outputChannelString]); // Synchronous
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "Could not find outputChannel \"" << outputChannelString
                         << "\". Perhaps device with output channel is not online yet.";
@@ -2306,18 +2321,18 @@ namespace karabo {
             if (signalInstanceId == m_instanceId) return false;
             string signalConnectionString;
             int attempt = 0;
-            int millis = 200;   // milliseconds
+            int millis = 200; // milliseconds
             while (attempt++ < 4) {
                 // Try to find connection string (URI) locally in global table: m_connectionStrings
                 {
                     boost::mutex::scoped_lock lock(m_connectionStringsMutex);
-                    map<string,string>::iterator it = m_connectionStrings.find(signalInstanceId);
+                    map<string, string>::iterator it = m_connectionStrings.find(signalInstanceId);
                     if (it != m_connectionStrings.end()) {
                         signalConnectionString = it->second;
                         break;
                     }
                 }
-                
+
                 // ... failed :( ... try to request instanceInfo remotely via broker ...
                 Hash instanceInfo;
                 try {
@@ -2333,16 +2348,16 @@ namespace karabo {
                     millis *= 5;
                 }
             }
-            
+
             // connection string should not be empty
             if (signalConnectionString.empty()) return false;
-            
+
             m_pointToPoint->connect(signalInstanceId, m_instanceId, signalConnectionString,
                                     boost::bind(&SignalSlotable::tryToCallDirectly, this, _1, _2, _3));
             return true;
         }
-        
-        
+
+
         void SignalSlotable::disconnectP2P(const std::string& signalInstanceId) {
             if (signalInstanceId == m_instanceId) return;
             m_pointToPoint->disconnect(signalInstanceId, m_instanceId);
