@@ -169,11 +169,12 @@ class ListEdit(QDialog):
         if self.__listWidget.currentItem() is not None:
             currentText = self.__listWidget.currentItem().text()
 
-        value = self.allowedChoices.get(currentText)
-        value = 0 if value is None else value
-        text, ok = QInputDialog.getItem(self, title, label,
-                                        list(self.allowedChoices.keys()),
-                                        value, False)
+        keys = list(self.allowedChoices.keys())
+        if currentText in keys:
+            index = keys.index(currentText)
+        else:
+            index = 0
+        text, ok = QInputDialog.getItem(self, title, label, keys, index, False)
         
         if ok:
             return self.allowedChoices[text]
