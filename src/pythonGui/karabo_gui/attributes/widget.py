@@ -21,12 +21,6 @@ class AttributeWidget(Widget):
     def onEditingFinished(self, value):
         self.signalEditingFinished.emit(self.boxes[0], value)
 
-    def save(self, element):
-        raise ValueError("AttributeWidget cannot be saved!")
-
-    def load(self, element):
-        raise ValueError("AttributeWidget cannot be loaded!")
-
     def attributeValueChanged(self, value):
         """ Called when the attribute gets assigned a value.
 
