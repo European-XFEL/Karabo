@@ -166,7 +166,7 @@ class ProjectDialog(QDialog):
 
         # Show the correct stacked widget for the combo box selection
         stackedWidgetKey = self.saveToComboItems[index]
-        self.swSaveTo.setCurrentIndex(self.stackedWidgets[stackedWidgetKey])
+        self.swSaveTo.setCurrentWidget(self.stackedWidgets[stackedWidgetKey])
 
         self.setFilenameEnabled(True)
 
