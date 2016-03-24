@@ -701,7 +701,11 @@ class VectorString(Vector):
         if isinstance(other, StringList):
             return other
         else:
-            return StringList(str(s) for s in other)
+            def check(s):
+                if not isinstance(s, str):
+                    raise TypeError
+                return s
+            return StringList(check(s) for s in other)
 
 
 class StringList(Special, list):
