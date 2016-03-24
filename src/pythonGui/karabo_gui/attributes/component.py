@@ -25,12 +25,12 @@ class EditAttributeComponent(BaseComponent):
         self.widgetFactory.setParent(self)
 
         if box.hasValue():
-            value = getattr(box, self._attributeName)
+            value = getattr(box.descriptor, self._attributeName)
             self.widgetFactory.attributeValueChanged(value)
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
 
     def onEditingFinished(self, box, value):
-        setattr(box, self._attributeName, value)
+        setattr(box.descriptor, self._attributeName, value)
 
         # Configuration changed - so project needs to be informed to show it
         if box.configuration.type in ('projectClass', 'deviceGroupClass'):
