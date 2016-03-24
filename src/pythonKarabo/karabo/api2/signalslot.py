@@ -117,7 +117,7 @@ class SignalSlotable(Configurable):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
         super().__init__(configuration)
         self.deviceId = self._deviceId_
-        self._devices = {}
+        self._devices = weakref.WeakValueDictionary()
         self.__randPing = random.randint(2, 0x7fffffff)
 
     def startInstance(self, server=None, *, loop=None):
@@ -309,7 +309,9 @@ class SignalSlotable(Configurable):
             except:
                 logger.exception("error in error handler")
 
+        loop = get_event_loop()
         if iscoroutinefunction(m):
-            async(logException(m(*args)))
+            coro = logException(m(*args))
         else:
-            async(logException(get_event_loop().start_thread(m, *args)))
+            coro = logException(loop.start_thread(m, *args))
+        loop.create_task(coro, instance=self)
