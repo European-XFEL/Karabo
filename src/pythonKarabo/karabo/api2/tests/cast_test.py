@@ -173,7 +173,9 @@ class Tests(TestCase):
     def test_vector_string(self):
         d = hashmod.VectorString()
         self.assertEqual(d.cast(["a", "b", ""]), ["a", "b", ""])
-        self.assertEqual(d.cast([1, 2, 3]), ["1", "2", "3"])
+        with self.assertRaises(TypeError):
+            d.cast([1, 2, 3])
+        self.assertEqual(d.cast([]), [])
 
 
 if __name__ == "__main__":
