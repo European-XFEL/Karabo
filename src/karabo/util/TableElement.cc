@@ -14,5 +14,5 @@ karabo::util::tableValidationRules(
         /* allowUnrootedConfiguration */ true,
         /* allowAdditionalKeys */ false,
         /* allowMissingKeys */ false,
-        /* injectTimestamps */ true
+        /* injectTimestamps */ false
         );
