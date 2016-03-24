@@ -1,13 +1,14 @@
 from asyncio import (async, coroutine, get_event_loop, sleep, wait_for,
                      TimeoutError)
 from datetime import datetime
-import gc
 from unittest import TestCase, main, expectedFailure
+import weakref
 
 from karabo.api import Slot, Int
 from karabo.api2.device import Device
 from karabo.api2.device_client import (
-    waitUntilNew, getDevice, waitUntil, setWait, setNoWait, Queue)
+    waitUntilNew, getDevice, waitUntil, setWait, setNoWait, Queue,
+    connectDevice)
 from karabo.api2.hash import Hash, VectorChar
 from karabo.api2 import openmq
 from karabo.api2.schema import Configurable, Node
@@ -421,7 +422,6 @@ class Tests(TestCase):
         with self.assertLogs(logger="local", level="ERROR"):
             with (yield from getDevice("local")) as d:
                 yield from d.task_error()
-                gc.collect()
                 yield from sleep(0.1)
         self.assertTrue(remote.done)
         remote.done = False
@@ -430,6 +430,20 @@ class Tests(TestCase):
         del local.exc_slot
         del local.exception
         del local.traceback
+
+    @async_tst
+    def test_connectDevice(self):
+        try:
+            d = yield from connectDevice("remote")
+            self.assertNotEqual(d.value, 123)
+            remote.value = 123
+            yield from sleep(0.02)
+            self.assertEqual(d.value, 123)
+        finally:
+            # check the proxy gets collected when not used anymore
+            weak = weakref.ref(d)
+            del d
+            self.assertIsNone(weak())
 
 
 def setUpModule():

@@ -3,12 +3,13 @@ from asyncio import (async, coroutine, gather, set_event_loop,
 import sys
 import time
 from unittest import TestCase, main
+import weakref
 
 from karabo.api import Slot, Int, sleep
 from karabo.api2.device import Device
 from karabo.api2.device_client import (
     waitUntilNew, waitUntil, setWait, setNoWait, getDevice, executeNoWait,
-    updateDevice, Queue)
+    updateDevice, Queue, connectDevice)
 from karabo.api2.device_server import KaraboStream
 from karabo.api2.macro import Macro
 
@@ -329,6 +330,21 @@ class Tests(TestCase):
             self.assertEqual(local.slept_count, 2)
             self.assertEqual(local.cancelled_slot, Local.sleepalot)
             assert task.done()
+
+    @sync_tst
+    def test_connectdevice(self):
+        remote.value = 123
+        d = connectDevice("remote")
+        try:
+            self.assertEqual(d.value, 123)
+            remote.value = 456
+            sleep(0.02)
+            self.assertEqual(d.value, 456)
+        finally:
+            # check that the proxy gets collected when not used anymore
+            weak = weakref.ref(d)
+            del d
+            self.assertIsNone(weak())
 
 
 def setUpModule():
