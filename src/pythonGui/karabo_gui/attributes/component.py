@@ -46,5 +46,3 @@ class EditAttributeComponent(BaseComponent):
     @property
     def widget(self):
         return self.__compositeWidget
-
-
