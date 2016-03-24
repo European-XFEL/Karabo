@@ -440,8 +440,7 @@ class Tests(TestCase):
             yield from sleep(0.02)
             self.assertEqual(d.value, 123)
         finally:
-            # the garbage collector is currently the only way to get rid
-            # of connectDevices. At least we check that that works.
+            # check the proxy gets collected when not used anymore
             weak = weakref.ref(d)
             del d
             self.assertIsNone(weak())
