@@ -18,7 +18,6 @@ class EditAttributeComponent(BaseComponent):
 
         self._attributeName = attributeName
         self.connectWidget(box)
-        self.widgetFactory.setReadOnly(False)
         hLayout.addWidget(self.widgetFactory.widget)
 
     def connectWidget(self, box):
@@ -27,6 +26,7 @@ class EditAttributeComponent(BaseComponent):
         if box.hasValue():
             value = getattr(box.descriptor, self._attributeName)
             self.widgetFactory.attributeValueChanged(value)
+
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
 
     def onEditingFinished(self, box, value):
