@@ -16,10 +16,12 @@ from karabo.api_2 import (VectorBool, VectorDouble, VectorFloat, VectorInt8,
                           VectorUInt8, VectorInt16, VectorUInt16, VectorInt32,
                           VectorUInt32, VectorInt64, VectorUInt64)
 
-from PyQt4.QtCore import QCoreApplication
+from PyQt4.QtCore import QCoreApplication, Qt
 from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
                          QInputDialog, QMessageBox, QHBoxLayout, QVBoxLayout,
                          QFontMetrics)
+
+from collections import OrderedDict
 
 class ListEdit(QDialog):
 
@@ -31,11 +33,11 @@ class ListEdit(QDialog):
         self.ask = False
         self.duplicatesOk = duplicatesOk
 
-        self.allowedChoices = {}
+        self.allowedChoices = OrderedDict()
         if isinstance(self.descriptor, VectorBool):
-            # Map bools
+            # List of tuples
             self.allowedChoices = {'True': True, 'False': False}
-        
+            
         self.setWindowTitle("Edit list")
 
         self.addCaption = "Add String"
@@ -160,17 +162,18 @@ class ListEdit(QDialog):
             return None
 
 
-    def retrieveChoice(self, caption, label):
+    def retrieveChoice(self, title, label):
         ok = False
         currentText = ""
         if self.__listWidget.currentItem() is not None:
-            currentText = str(self.__listWidget.currentItem().text())
+            currentText = self.__listWidget.currentItem().text()
 
-        index = self.allowedChoices.get(currentText)
-        index = 0 if index is None else index
-        text, ok = QInputDialog.getItem(self, caption, label,
-                                        list(self.allowedChoices.keys()), 
-                                        index, False)
+        value = self.allowedChoices.get(currentText)
+        value = 0 if value is None else value
+        text, ok = QInputDialog.getItem(self, title, label,
+                                        list(self.allowedChoices.keys()),
+                                        value, False)
+        
         if ok:
             return self.allowedChoices[text]
 
