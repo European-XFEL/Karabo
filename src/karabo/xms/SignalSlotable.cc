@@ -231,19 +231,6 @@ namespace karabo {
         SignalSlotable::~SignalSlotable() {
             // Last chance to deregister from static map, but should already be done...
             this->deregisterFromShortcutMessaging();
-            // Transfer the connection resources discovering duty to another SignalSlotable if any
-            if (m_discoverConnectionResourcesMode) {
-                transferDiscoverConnectionResourcesMode();
-                m_discoverConnectionResourcesMode = false;
-            }
-        }
-
-
-        void SignalSlotable::transferDiscoverConnectionResourcesMode() {
-            boost::mutex::scoped_lock lock(m_instanceMapMutex);
-            std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.begin();
-            if (it == m_instanceMap.end()) return; // no SignalSlotable left ... exit
-            it->second->m_discoverConnectionResourcesMode = true;
         }
 
 
@@ -253,6 +240,12 @@ namespace karabo {
             // Let's be sure that we remove ourself:
             if (it != m_instanceMap.end() && it->second == this) {
                 m_instanceMap.erase(it);
+            }
+            // Transfer the connection resources discovering duty to another SignalSlotable if any
+            if (m_discoverConnectionResourcesMode) {
+                it = m_instanceMap.begin();
+                if (it != m_instanceMap.end()) it->second->m_discoverConnectionResourcesMode = true;
+                m_discoverConnectionResourcesMode = false;
             }
         }
 
