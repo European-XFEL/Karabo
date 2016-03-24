@@ -1424,8 +1424,7 @@ if (nodeData) {\
                 const std::set<std::string>& properties = mapIt->second;
                 // Get path of instance in runtime system description and then its configuration
                 const std::string path(this->findInstanceSafe(instanceId));
-                // FIXME: get const back once Hash::find(..) const is fixed!
-                /*const*/ util::Hash config(this->getSectionFromRuntimeDescription(path + ".configuration"));
+                const util::Hash config(this->getSectionFromRuntimeDescription(path + ".configuration"));
                 if (config.empty()) { // might have failed if instance not monitored anymore
                     KARABO_LOG_FRAMEWORK_WARN << "Instance '" << instanceId << "' gone, cannot forward its signalChanged";
                     continue;
@@ -1434,8 +1433,7 @@ if (nodeData) {\
                 util::Hash toSend;
                 for (std::set<std::string>::const_iterator it = properties.begin(), iEnd = properties.end();
                         it != iEnd; ++it) {
-                    //FIXME: get last const back once Hash::find(..) const is fixed!
-                    const boost::optional</*const*/ util::Hash::Node&> propertyNode = config.find(*it);
+                    const boost::optional<const util::Hash::Node&> propertyNode = config.find(*it);
                     if (!propertyNode) {
                         KARABO_LOG_FRAMEWORK_INFO << "sendSignalsChanged: no '" << *it << "' for " << instanceId;
                         continue;
