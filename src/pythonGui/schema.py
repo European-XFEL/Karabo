@@ -15,8 +15,9 @@ from karabo_gui.network import Network
 import karabo_gui.icons as icons
 
 from karabo_gui.attributes.component import EditAttributeComponent
-from karabo_gui.attributes.numbereditwidget import (IntegerAttributeEditor,
-                                                    RealAttributeEditor)
+from karabo_gui.attributes.enumeditwidget import (MetricPrefixAttributeEditor,
+                                                  UnitAttributeEditor)
+from karabo_gui.attributes.numbereditwidget import RealAttributeEditor
 from karabo_gui.components import (ChoiceComponent, EditableApplyLaterComponent,
                                    EditableNoApplyComponent)
 from karabo_gui import globals
@@ -49,7 +50,8 @@ SCHEMA_ATTRIBUTE_NAMES = (
 # can be edited.
 EDITABLE_ATTRIBUTE_NAMES = (
     'minExc', 'maxExc', 'minInc', 'maxInc', 'absoluteError', 'relativeError',
-    'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh'
+    'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh', 'metricPrefixSymbol',
+    'unitSymbol'
 )
 
 
@@ -317,6 +319,10 @@ class Type(hashmod.Type, metaclass=Monkey):
         desc = box.descriptor
         for name in EDITABLE_ATTRIBUTE_NAMES:
             if hasattr(desc, name) and getattr(desc, name) is not None:
+                if name in ('metricPrefixSymbol', 'unitSymbol'):
+                    value = getattr(desc, name)
+                    if value == '':
+                        continue
                 self._attributeItem(treeWidget, item, box, name)
 
     def _attributeItem(self, treeWidget, parentItem, box, attributeName):
@@ -326,7 +332,12 @@ class Type(hashmod.Type, metaclass=Monkey):
 
         item.setIcon(0, self.icon if self.options is None else icons.enum)
         item.enumeration = self.options
-        factory = RealAttributeEditor  # TODO: Don't hardcode this
+        if attributeName == 'metricPrefixSymbol':
+            factory = MetricPrefixAttributeEditor
+        elif attributeName == 'unitSymbol':
+            factory = UnitAttributeEditor
+        else:
+            factory = RealAttributeEditor
         item.editableComponent = EditAttributeComponent(
             factory, box, attributeName, treeWidget)
 
