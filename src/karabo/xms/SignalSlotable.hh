@@ -1518,8 +1518,6 @@ KARABO_SLOT0(__VA_ARGS__) \
             bool tryToCallP2P(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio) const;
 
             void doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio, int timeTpLive) const;
-
-            void transferDiscoverConnectionResourcesMode();
         };
 
     }
