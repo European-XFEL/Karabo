@@ -12,16 +12,16 @@
 __all__ = ["ListEdit"]
 
 
-from karabo.api_2 import (VectorBool, VectorDouble, VectorFloat, VectorInt8,
-                          VectorUInt8, VectorInt16, VectorUInt16, VectorInt32,
-                          VectorUInt32, VectorInt64, VectorUInt64)
+from collections import OrderedDict
 
 from PyQt4.QtCore import QCoreApplication, Qt
 from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
                          QInputDialog, QMessageBox, QHBoxLayout, QVBoxLayout,
                          QFontMetrics)
 
-from collections import OrderedDict
+from karabo.api_2 import (VectorBool, VectorDouble, VectorFloat, VectorInt8,
+                          VectorUInt8, VectorInt16, VectorUInt16, VectorInt32,
+                          VectorUInt32, VectorInt64, VectorUInt64)
 
 class ListEdit(QDialog):
 
@@ -36,7 +36,8 @@ class ListEdit(QDialog):
         self.allowedChoices = OrderedDict()
         if isinstance(self.descriptor, VectorBool):
             # List of tuples
-            self.allowedChoices = {'True': True, 'False': False}
+            self.allowedChoices['True'] = True
+            self.allowedChoices['False'] = False
             
         self.setWindowTitle("Edit list")
 
