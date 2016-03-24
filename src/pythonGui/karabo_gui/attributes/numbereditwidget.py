@@ -6,10 +6,8 @@ from .widget import AttributeWidget
 
 
 class IntValidator(QValidator):
-    def __init__(self, min=None, max=None, parent=None):
+    def __init__(self, parent=None):
         super(IntValidator, self).__init__(parent)
-        self.min = min
-        self.max = max
 
     def validate(self, input, pos):
         if input in ('+', '-', ''):
@@ -18,23 +16,7 @@ class IntValidator(QValidator):
         if not (input.isdigit() or input[0] in '+-' and input[1:].isdigit()):
             return self.Invalid, input, pos
 
-        if self.min is not None and self.min >= 0 and input.startswith('-'):
-            return self.Invalid, input, pos
-
-        if self.max is not None and self.max < 0 and input.startswith('+'):
-            return self.Invalid, input, pos
-
-        if ((self.min is None or self.min <= int(input)) and
-                (self.max is None or int(input) <= self.max)):
-            return self.Acceptable, input, pos
-        else:
-            return self.Intermediate, input, pos
-
-    def setBottom(self, min):
-        self.min = min
-
-    def setTop(self, max):
-        self.max = max
+        return self.Acceptable, input, pos
 
 
 class NumberAttributeEditor(AttributeWidget):
@@ -42,15 +24,11 @@ class NumberAttributeEditor(AttributeWidget):
         super(NumberAttributeEditor, self).__init__(box, attributeName)
         self.widget = QLineEdit(parent)
         self.widget.setValidator(self.validator)
+        self.widget.textChanged.connect(self.onTextChanged)
 
         self.normalPalette = self.widget.palette()
         self.errorPalette = QPalette(self.normalPalette)
         self.errorPalette.setColor(QPalette.Text, Qt.red)
-
-    def setReadOnly(self, ro):
-        self.widget.setReadOnly(ro)
-        if not ro:
-            self.widget.textChanged.connect(self.onTextChanged)
 
     @pyqtSlot(str)
     def onTextChanged(self, text):
@@ -59,11 +37,6 @@ class NumberAttributeEditor(AttributeWidget):
                                else self.errorPalette)
         if self.widget.hasAcceptableInput():
             self.signalEditingFinished.emit(self.boxes[0], self.value)
-
-    def typeChanged(self, box):
-        min, max = box.descriptor.getMinMax()
-        self.validator.setBottom(min)
-        self.validator.setTop(max)
 
     def attributeValueChanged(self, value):
         if value is None:
