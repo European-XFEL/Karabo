@@ -147,6 +147,13 @@ class Tests(TestCase):
         self.assertEqual(d.cast(";"), ";")
         with self.assertRaises(TypeError):
             d.cast("bla")
+        with self.assertRaises(TypeError):
+            d.cast("")
+        self.assertEqual(d.cast(b"a"), "a")
+        with self.assertRaises(TypeError):
+            d.cast(b"asd")
+        with self.assertRaises(TypeError):
+            d.cast(b"")
 
     def test_vector_char(self):
         d = hash.VectorChar()

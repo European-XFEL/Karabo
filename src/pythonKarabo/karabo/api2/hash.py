@@ -444,6 +444,10 @@ class Char(Simple, Type):
         except TypeError:
             if len(str(other)) == 1:
                 return _Byte(other)
+            elif isinstance(other, bytes):
+                o = other.decode("ascii")
+                if len(o) == 1:
+                    return _Byte(o)
             raise
 
 
