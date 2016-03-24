@@ -36,5 +36,5 @@ class AttributeWidget(Widget):
 
     def valueChanged(self, box, value, timestamp=None):
         # `value` is the box's value, replace it with the attribute value.
-        value = getattr(box, self._attributeName)
+        value = getattr(box.descriptor, self._attributeName)
         self.attributeValueChanged(value)

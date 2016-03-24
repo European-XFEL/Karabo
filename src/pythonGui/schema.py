@@ -14,6 +14,9 @@ from karabo_gui.registry import Monkey
 from karabo_gui.network import Network
 import karabo_gui.icons as icons
 
+from karabo_gui.attributes.component import EditAttributeComponent
+from karabo_gui.attributes.numbereditwidget import (IntegerAttributeEditor,
+                                                    RealAttributeEditor)
 from karabo_gui.components import (ChoiceComponent, EditableApplyLaterComponent,
                                    EditableNoApplyComponent)
 from karabo_gui import globals
@@ -46,8 +49,7 @@ SCHEMA_ATTRIBUTE_NAMES = (
 # can be edited.
 EDITABLE_ATTRIBUTE_NAMES = (
     'minExc', 'maxExc', 'minInc', 'maxInc', 'absoluteError', 'relativeError',
-    'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh', 'metricPrefixSymbol',
-    'unitSymbol'
+    'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh'
 )
 
 
@@ -301,6 +303,36 @@ class Type(hashmod.Type, metaclass=Monkey):
         self.completeItem(treeWidget, item, box, isClass)
         return item
 
+    def completeItem(self, treeWidget, item, box, isClass):
+        """ Add tree widget items for editable attributes.
+
+        Editable attributes only show up BEFORE a class is instantiated.
+        """
+        super(Type, self).completeItem(treeWidget, item, box, isClass)
+
+        # We're not interested unless this is an uninstantiated class.
+        if not isClass:
+            return
+
+        desc = box.descriptor
+        for name in EDITABLE_ATTRIBUTE_NAMES:
+            if hasattr(desc, name) and getattr(desc, name) is not None:
+                self._attributeItem(treeWidget, item, box, name)
+
+    def _attributeItem(self, treeWidget, parentItem, box, attributeName):
+        """ Build a single tree widget item for an attribute.
+        """
+        item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
+
+        item.setIcon(0, self.icon if self.options is None else icons.enum)
+        item.enumeration = self.options
+        factory = RealAttributeEditor  # TODO: Don't hardcode this
+        item.editableComponent = EditAttributeComponent(
+            factory, box, attributeName, treeWidget)
+
+        item.requiredAccessLevel = self.requiredAccessLevel
+        item.displayText = attributeName
+        item.allowedStates = self.allowedStates
 
     def toHash(self, box):
         desc = box.descriptor
