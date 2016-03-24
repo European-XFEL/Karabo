@@ -251,6 +251,7 @@
         <itemPath>../../../src/karabo/util/Schema.cc</itemPath>
         <itemPath>../../../src/karabo/util/Schema.hh</itemPath>
         <itemPath>../../../src/karabo/util/SimpleElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/TableElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/TableElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/Validator.cc</itemPath>
         <itemPath>../../../src/karabo/util/Validator.hh</itemPath>
@@ -1912,6 +1913,11 @@
       <item path="../../../src/karabo/util/StringTools.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TableElement.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/TableElement.hh"
@@ -3859,6 +3865,11 @@
       <item path="../../../src/karabo/util/StringTools.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TableElement.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/TableElement.hh"

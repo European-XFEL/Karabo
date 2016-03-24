@@ -10,6 +10,8 @@
 #include "Schema.hh"
 #include "ToLiteral.hh"
 #include "Validator.hh"
+#include "TableElement.hh"
+
 namespace karabo {
 
     namespace util {
@@ -254,25 +256,27 @@ namespace karabo {
 
         boost::optional<const Hash::Node&> Hash::find(const std::string& path, const char separator) const {
             std::string key;
-            const Hash& hash = getLastHash(path, key, separator);
-            if (karabo::util::getAndCropIndex(key) == -1) {
-                const_map_iterator it = hash.m_container.find(key);
-                if (it != this->mend()) return it->second;
-                else return boost::optional<const Hash::Node&>();
-            } else {
-                throw KARABO_LOGIC_EXCEPTION("Array syntax on a leaf is not possible (would be a Hash and not a Node)");
+            const Hash* hash = getLastHashPtr(path, key, separator);
+            if (hash) {
+                if (karabo::util::getAndCropIndex(key) == -1) {
+                    const_map_iterator it = hash->m_container.find(key);
+                    if (it != hash->m_container.mend()) {
+                        return it->second;
+                    } // else ...
+                    // ... we have array syntax that would get a Hash (within an std::vector) and not a Node
+                }
             }
+            return boost::optional<const Hash::Node&>();
         }
 
         boost::optional<Hash::Node&> Hash::find(const std::string& path, const char separator) {
-            try {
-                return getNode(path, separator);
-            } catch (...) {
-                // Exception must be ignored here!
-                // TODO Construction and catching of an exception is expensive here.
-                Exception::clearTrace();
+            // Use const version and just cast const away from result if successful.
+            boost::optional<const Hash::Node&> constResult = thisAsConst().find(path, separator);
+            if (constResult) {
+                return boost::optional<Hash::Node&>(const_cast<Hash::Node&>(*constResult));
+            } else {
+                return boost::optional<Hash::Node&>();
             }
-            return boost::optional<Hash::Node&>();
         }
 
         Types::ReferenceType Hash::getType(const std::string& path, const char separator) const {
@@ -410,14 +414,9 @@ namespace karabo {
                             //nodeSchema.setParameterHash(this_vec[0]); //first element contains the schema
                             
                             vector<Hash> validatedOtherVec;
-                           
-                            
-                            Validator validator;
-                            Validator::ValidationRules rules;
-                            rules.allowAdditionalKeys = false;
-                            rules.allowMissingKeys = false;
-                            rules.allowUnrootedConfiguration = true;
-                            validator.setValidationRules(rules);
+
+
+                            Validator validator(karabo::util::tableValidationRules);
                             for(vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it){
                                 Hash validatedHash;
                                 std::pair<bool, std::string> validationResult = validator.validate(nodeSchema, *it, validatedHash);
@@ -472,14 +471,9 @@ namespace karabo {
                             //nodeSchema.setParameterHash(this_vec[0]);
                             
                             vector<Hash> validatedOtherVec;
-                            
-                            
-                            Validator validator;
-                            Validator::ValidationRules rules;
-                            rules.allowAdditionalKeys = false;
-                            rules.allowMissingKeys = false;
-                            rules.allowUnrootedConfiguration = true;
-                            validator.setValidationRules(rules);
+
+
+                            Validator validator(karabo::util::tableValidationRules);
                             for(vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it){
                                 Hash validatedHash;
                                 std::pair<bool, std::string> validationResult = validator.validate(nodeSchema, *it, validatedHash);
