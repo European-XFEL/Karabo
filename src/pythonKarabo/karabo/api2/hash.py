@@ -416,8 +416,6 @@ class VectorBool(NumpyVector):
         return ",".join(str(int(i)) for i in data)
 
     def cast(self, other):
-        if isinstance(other, StringList):
-            return [o.lower() == 'true' for o in other]
         return other
 
 class Char(Simple, Type):
