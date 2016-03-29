@@ -15,6 +15,28 @@ environment so that Karabo can run. A more in-depth description is available at
 :ref:`run-scripts`.
 
 
+Data Logging
+============
+
+The raw files that log all configuration changes of a device have slightly
+changed their format. The timestamp is now only given twice: Once in a human
+readable format (20160322T132225.584706Z) and once as a double variable
+counting the seconds of the Unix epoch (1458652945.584706). Before, the Unix
+epoch was also given as two integer number, one for the seconds, one counting
+the fractions of a second in attoseconds.
+But old files can still be read by the reading mechanism.
+
+More important, the default location of the ``karaboHistory`` directory has
+changed. In 1.4 and before this directory was placed inside the directory of
+the data logger server, usually resulting in
+``karaboRun/servers/dataLoggerServer/karaboHistory``.
+The new default is one directory up i.e. ``../karaboHistory``.
+This will usually result in ``karaboRun/servers/karaboHistory``
+This change will make it much easier to change the number of data logger
+servers in an existing system.
+
+
+
 API Backward Incompatibilities
 ==============================
 
