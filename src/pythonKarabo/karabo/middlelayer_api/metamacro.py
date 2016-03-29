@@ -45,3 +45,8 @@ class MetaMacro(Device):
             p["_deviceId_"] = "{}-{}".format(self.deviceId, c.__name__)
             objs.append(c(p))
         return gather(*(o.startInstance(server) for o in objs))
+
+    def __del__(self):
+        # overwrite inherited __del__, as it supposes super().startInstance
+        # has been run
+        pass
