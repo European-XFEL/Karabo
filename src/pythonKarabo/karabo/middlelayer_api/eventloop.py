@@ -209,7 +209,7 @@ class Broker:
         as it is published with the message that the device died."""
         self.info.merge(info)
         if self.alive:
-            self.emit("call", {"*", ["slotInstanceUpdated"]},
+            self.emit("call", {"*": ["slotInstanceUpdated"]},
                       self.deviceId, self.info)
 
     def decodeMessage(self, message):
