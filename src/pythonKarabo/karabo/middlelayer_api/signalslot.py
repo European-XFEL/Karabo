@@ -120,6 +120,7 @@ class SignalSlotable(Configurable):
         self.deviceId = self._deviceId_
         self._devices = weakref.WeakValueDictionary()
         self.__randPing = random.randint(2, 0x7fffffff)
+        self.__initialized = False
 
     def startInstance(self, server=None, *, loop=None):
         """Start this (device) instance
@@ -209,10 +210,23 @@ class SignalSlotable(Configurable):
         self.run()
         self.__randPing = 0  # Start answering on slotPing with argument rand=0
         async(self._ss.notify_network(self.heartbeatInterval))
+        yield from get_event_loop().run_coroutine_or_thread(
+            self.onInitialization)
+        self.__initialized = True
 
     @coslot
     def slotKillDevice(self):
+        if self.__initialized:
+            yield from get_event_loop().run_coroutine_or_thread(
+                self.onDestruction)
+        self.__initialized = False
         yield from self._ss.stop_tasks()
+
+    def __del__(self):
+        if self.__initialized:
+            self._ss.loop.create_task(
+                self._ss.loop.run_coroutine_or_thread(self.onDestruction),
+                instance=self)
 
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
@@ -287,6 +301,14 @@ class SignalSlotable(Configurable):
         loop = get_event_loop()
         for f in loop.changedFutures:
             f.set_result(None)
+
+    @coroutine
+    def onInitialization(self):
+        """This method is called just after everything is initialized"""
+
+    @coroutine
+    def onDestruction(self):
+        """This method is called just before the device ceases existence"""
 
     @coroutine
     def onCancelled(self, slot):
