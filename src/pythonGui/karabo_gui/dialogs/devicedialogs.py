@@ -352,11 +352,8 @@ class DeviceDefinitionWidget(QWidget):
         
         # Remember previous setting
         prevServer = self.cbServer.currentText()
-        prevPlugin = self.cbPlugin.currentText()
-        
         self.cbServer.clear()
-        self.cbPlugin.clear()
-
+        
         for serverId in serverTopology:
             visibility = AccessLevel(serverTopology[serverId, "visibility"])
             if visibility > globals.GLOBAL_ACCESS_LEVEL:
@@ -379,8 +376,11 @@ class DeviceDefinitionWidget(QWidget):
         if self.cbServer.count() < 1:
             return False
 
-        self.cbPlugin.adjustSize()
         self.cbServer.adjustSize()
+
+        index = self.cbServer.findText(prevServer)
+        if index > 0 and index != self.cbServer.currentIndex():
+            self.cbServer.setCurrentIndex(index)
 
         if device is not None:
             self.leDeviceId.setText(device.id)
@@ -443,8 +443,12 @@ class DeviceDefinitionWidget(QWidget):
     def onServerChanged(self, index):
         if index < 0:
             return
+        
         # Get plugins which exist on server
         data = self.cbServer.itemData(index)
+        if not data:
+            return
+        
         prevPlugin = self.cbPlugin.currentText()
         self.cbPlugin.clear()
         for d in data:
@@ -458,3 +462,4 @@ class DeviceDefinitionWidget(QWidget):
             self.cbPlugin.setCurrentIndex(index)
             self.cbPlugin.blockSignals(False)
 
+        self.cbPlugin.adjustSize()
