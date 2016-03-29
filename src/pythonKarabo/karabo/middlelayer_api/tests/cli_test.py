@@ -10,7 +10,8 @@ import weakref
 from karabo.middlelayer_api.cli import connectDevice, DeviceClient
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
-    getDevice, instantiate, shutdown, DeviceClientBase, getDevices, getServers)
+    getDevice, instantiate, shutdown, DeviceClientBase, getDevices, getServers,
+    shutdownNoWait)
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.middlelayer_api.exceptions import KaraboError
@@ -196,6 +197,7 @@ class Tests(TestCase):
         gc.collect()
         self.assertIsNone(r())
         async(server.slotKillServer())
+        async(dc.slotKillDevice())
         loop.run_forever()
         loop.close()
 
@@ -258,12 +260,17 @@ class Tests(TestCase):
         self.assertIn("other", getDevices("tserver"))
         self.assertNotIn("other", getDevices("bserver"))
 
+        shutdownNoWait("other")
+        yield from sleep(0.1)
+        self.assertNotIn("other", getDevices())
+
     def test_topology(self):
         loop = setEventLoop()
         dc = DeviceClient(dict(_deviceId_="dc"))
         dc.startInstance()
         task = loop.create_task(self.init_topo(dc), dc)
         loop.run_until_complete(task)
+        loop.run_until_complete(dc.slotKillDevice())
         loop.close()
 
 if __name__ == "__main__":
