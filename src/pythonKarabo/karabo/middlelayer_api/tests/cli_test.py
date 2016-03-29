@@ -57,6 +57,17 @@ class Other(Device):
     def count(self):
         async(self.do_count())
 
+    @coroutine
+    def onInitialization(self):
+        self.myself = yield from getDevice("other")
+        self.myself.something = 222
+
+    @coroutine
+    def onDestruction(self):
+        with self.myself:
+            self.myself.something = 111
+            yield from sleep(0.02)
+
 
 class Tests(TestCase):
 
@@ -185,18 +196,21 @@ class Tests(TestCase):
         server.startInstance()
         proxy = loop.run_until_complete(
             loop.create_task(self.init_server(server), server))
-        self.assertEqual(proxy.something, 333)
+        # test that onInitialization was run properly
+        self.assertEqual(proxy.something, 222)
         loop.run_until_complete(
             loop.create_task(self.check_server_topology(), dc))
         self.assertIn("other", server.deviceInstanceMap)
         r = weakref.ref(server.deviceInstanceMap["other"])
-        loop.run_until_complete(
-            loop.create_task(self.shutdown_server(), server))
-        self.assertNotIn("other", server.deviceInstanceMap)
-        gc.collect()
-        self.assertIsNone(r())
-        async(server.slotKillServer())
-        async(dc.slotKillDevice())
+        with proxy:
+            loop.run_until_complete(
+                loop.create_task(self.shutdown_server(), server))
+            self.assertNotIn("other", server.deviceInstanceMap)
+            gc.collect()
+            self.assertIsNone(r())
+            async(dc.slotKillDevice())
+            loop.run_until_complete(server.slotKillServer())
+            self.assertEqual(proxy.something, 111)
         loop.run_forever()
         loop.close()
 
@@ -217,7 +231,7 @@ class Tests(TestCase):
         time.sleep(0.1)
         thread = EventThread.instance().thread
         thread.loop.call_soon_threadsafe(async, self.init_other())
-        time.sleep(4)
+        time.sleep(1.1)
 
         # test whether proxy stays alive while used
         other = connectDevice("other")
