@@ -318,11 +318,18 @@ class Type(hashmod.Type, metaclass=Monkey):
 
         desc = box.descriptor
         for name in EDITABLE_ATTRIBUTE_NAMES:
-            if hasattr(desc, name) and getattr(desc, name) is not None:
-                if name in ('metricPrefixSymbol', 'unitSymbol'):
-                    value = getattr(desc, name)
-                    if value == '':
-                        continue
+            if hasattr(desc, name):
+                value = getattr(desc, name)
+                # Skip empty values
+                if value is None:
+                    continue
+                # Skip blank units
+                if name == 'unitSymbol' and value == '':
+                    continue
+                # Skip metric prefixes with no associated units
+                if (name == 'metricPrefixSymbol' and value == ''
+                        and getattr(desc, 'unitSymbol') == ''):
+                    continue
                 self._attributeItem(treeWidget, item, box, name)
 
     def _attributeItem(self, treeWidget, parentItem, box, attributeName):
