@@ -9,7 +9,9 @@ from .widget import AttributeWidget
 
 
 def _get_item_text(enum_val):
-    return "{} ({})".format(enum_val.value, enum_val.name)
+    # Normalize the ENUM_VALUE_NAME -> Enum value name
+    name = enum_val.name.replace('_', ' ').lower().capitalize()
+    return "{} ({})".format(enum_val.value, name)
 
 
 class _DummyEnum(Enum):
@@ -54,8 +56,7 @@ class EnumAttributeEditor(AttributeWidget):
         except ValueError:
             return
 
-        text = _get_item_text(enum_value)
-        index = self.widget.findText(text)
+        index = self.widget.findData(enum_value.value)
         if index < 0:
             return
 
