@@ -415,6 +415,9 @@ class VectorBool(NumpyVector):
     def toString(cls, data):
         return ",".join(str(int(i)) for i in data)
 
+    def cast(self, other):
+        # Use this method instead of NumpyVector.cast
+        return other
 
 class Char(Simple, Type):
     number = 2

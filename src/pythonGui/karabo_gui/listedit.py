@@ -12,12 +12,16 @@
 __all__ = ["ListEdit"]
 
 
-from karabo.api_2 import Simple
-import numpy
-from PyQt4.QtCore import QCoreApplication
+from collections import OrderedDict
+
+from PyQt4.QtCore import QCoreApplication, Qt
 from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
                          QInputDialog, QMessageBox, QHBoxLayout, QVBoxLayout,
                          QFontMetrics)
+
+from karabo.api_2 import (VectorBool, VectorDouble, VectorFloat, VectorInt8,
+                          VectorUInt8, VectorInt16, VectorUInt16, VectorInt32,
+                          VectorUInt32, VectorInt64, VectorUInt64)
 
 class ListEdit(QDialog):
 
@@ -29,10 +33,11 @@ class ListEdit(QDialog):
         self.ask = False
         self.duplicatesOk = duplicatesOk
 
-        self.parentItem = None
-        self.allowedChoices = []
-        self.choiceItemList = []
-
+        self.allowedChoices = OrderedDict()
+        if isinstance(self.descriptor, VectorBool):
+            self.allowedChoices['0'] = 0
+            self.allowedChoices['1'] = 1
+            
         self.setWindowTitle("Edit list")
 
         self.addCaption = "Add String"
@@ -127,12 +132,6 @@ class ListEdit(QDialog):
         return self.__listWidget.item(index).editableValue
 
 
-    def setAllowedChoices(self, allowedChoices, parentItem=None, choiceItemList=[]):
-        self.parentItem = parentItem
-        self.allowedChoices = allowedChoices
-        self.choiceItemList = choiceItemList
-
-
     def retrieveAnyString(self, caption, label):
         currentItem = self.__listWidget.currentItem()
         if currentItem is None:
@@ -142,11 +141,13 @@ class ListEdit(QDialog):
 
 
         dialog = QInputDialog.getText
-        if isinstance(self.descriptor, Simple):
-            if issubclass(self.descriptor.numpy, numpy.inexact):
-                dialog = QInputDialog.getDouble
-            elif issubclass(self.descriptor.numpy, numpy.integer):
-                dialog = QInputDialog.getInt
+        if isinstance(self.descriptor, (VectorDouble, VectorFloat)):
+            dialog = QInputDialog.getDouble
+        elif isinstance(self.descriptor, (VectorInt8, VectorUInt8,
+                                          VectorInt16, VectorUInt16,
+                                          VectorInt32, VectorUInt32,
+                                          VectorInt64, VectorUInt64)):
+            dialog = QInputDialog.getInt
 
         if currentValue is None:
             currentValue, ok = dialog(self, caption, label)
@@ -161,22 +162,21 @@ class ListEdit(QDialog):
             return None
 
 
-    def retrieveChoice(self, caption, label):
+    def retrieveChoice(self, title, label):
         ok = False
         currentText = ""
         if self.__listWidget.currentItem() is not None:
-            currentText = str(self.__listWidget.currentItem().text())
+            currentText = self.__listWidget.currentItem().text()
 
-        index = 0
-        for i in range(len(self.allowedChoices)) :
-            if currentText == self.allowedChoices[i] :
-                index = i
-                break
-
-        text, ok = QInputDialog.getItem(self, caption, label,
-                                        self.allowedChoices, index, False)
+        keys = list(self.allowedChoices.keys())
+        if currentText in keys:
+            index = keys.index(currentText)
+        else:
+            index = 0
+        text, ok = QInputDialog.getItem(self, title, label, keys, index, False)
+        
         if ok:
-            return text
+            return self.allowedChoices[text]
 
 
     def onAddClicked(self):
