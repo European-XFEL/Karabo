@@ -35,9 +35,8 @@ class ListEdit(QDialog):
 
         self.allowedChoices = OrderedDict()
         if isinstance(self.descriptor, VectorBool):
-            # List of tuples
-            self.allowedChoices['True'] = True
-            self.allowedChoices['False'] = False
+            self.allowedChoices['0'] = 0
+            self.allowedChoices['1'] = 1
             
         self.setWindowTitle("Edit list")
 
