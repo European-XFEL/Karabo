@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from asyncio import (async, CancelledError, coroutine, Future, get_event_loop,
-                     iscoroutinefunction, sleep, TimeoutError, wait, wait_for)
+                     sleep, TimeoutError, wait, wait_for)
 import logging
 import random
 import time
@@ -290,11 +290,11 @@ class SignalSlotable(Configurable):
 
     @coroutine
     def onCancelled(self, slot):
-        pass
+        """This method is called if a slot gets cancelled"""
 
     @coroutine
     def onException(self, slot, exception, traceback):
-        pass
+        """This method is called if an exception in a slot is not caught"""
 
     def _onException(self, slot, exc, tb):
         logger = logging.getLogger(self.deviceId)
@@ -321,8 +321,5 @@ class SignalSlotable(Configurable):
                 logger.exception("error in error handler")
 
         loop = get_event_loop()
-        if iscoroutinefunction(m):
-            coro = logException(m(*args))
-        else:
-            coro = logException(loop.start_thread(m, *args))
+        coro = logException(loop.run_coroutine_or_thread(m, *args))
         loop.create_task(coro, instance=self)

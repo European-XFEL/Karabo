@@ -1,8 +1,9 @@
 from __future__ import absolute_import, unicode_literals
 
 from asyncio import (AbstractEventLoop, CancelledError, coroutine, gather,
-                     Future, get_event_loop, Queue, set_event_loop,
-                     SelectorEventLoop, sleep, Task, TimeoutError)
+                     Future, get_event_loop, iscoroutinefunction, Queue,
+                     set_event_loop, SelectorEventLoop, sleep, Task,
+                     TimeoutError)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 import getpass
@@ -375,6 +376,18 @@ class EventLoop(SelectorEventLoop):
                 set_event_loop(None)
         loop = NoEventLoop(self.instance())
         return (yield from self.run_in_executor(None, inner))
+
+    @coroutine
+    def run_coroutine_or_thread(self, f, *args, **kwargs):
+        """run the function *f* correctly, as a coroutine or thread
+
+        if *f* is a normal function, it is started in a thread and returns
+        a future, if it is a coroutine function, it returns the coroutine
+        object."""
+        if iscoroutinefunction(f):
+            return f(*args, **kwargs)
+        else:
+            return self.start_thread(f, *args, **kwargs)
 
     def instance(self):
         try:
