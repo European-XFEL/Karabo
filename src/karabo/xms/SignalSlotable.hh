@@ -1388,8 +1388,12 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void slotConnectToSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
-            bool doesSlotExist(const std::string& slotInstanceId, const std::string& slotFunction);
+            /// True if instance with ID 'slotInstanceId' has slot 'slotFunction'.
+            /// Internally uses "slotHasSlot" for remote instances, but shortcuts if ID is the own one.
+            /// Always true if 'slotInstanceId == "*"' (i.e. global slot).
+            bool instanceHasSlot(const std::string& slotInstanceId, const std::string& slotFunction);
 
+            /// Slot to tell whether instance has a slot of given name.
             void slotHasSlot(const std::string& slotFunction);
 
             bool tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
