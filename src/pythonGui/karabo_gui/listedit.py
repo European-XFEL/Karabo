@@ -13,6 +13,7 @@ __all__ = ["ListEdit"]
 
 
 from collections import OrderedDict
+import numpy as np
 
 from PyQt4.QtCore import QCoreApplication, Qt
 from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
@@ -21,11 +22,11 @@ from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
 
 from karabo.api_2 import (VectorBool, VectorDouble, VectorFloat, VectorInt8,
                           VectorUInt8, VectorInt16, VectorUInt16, VectorInt32,
-                          VectorUInt32, VectorInt64, VectorUInt64)
+                          VectorUInt32, VectorInt64, VectorUInt64, Bool)
 
 class ListEdit(QDialog):
 
-    def __init__(self, descriptor, duplicatesOk=True, list=[], parent=None):
+    def __init__(self, descriptor, duplicatesOk=True, valueList=[], parent=None):
         super(ListEdit, self).__init__(parent)
 
         self.descriptor = descriptor
@@ -82,7 +83,7 @@ class ListEdit(QDialog):
         vbox.addWidget(button)
 
         hbox.addLayout(vbox)
-        self.setList(list)
+        self.setList(valueList)
 
 
     def setTexts(self, addCaption, addLabel, editCaption, editLabel=""):
@@ -95,13 +96,15 @@ class ListEdit(QDialog):
             self.editLabel = editLabel
 
 
-    def setList(self, list):
+    def setList(self, valueList):
         self.__listWidget.clear()
 
         fm = QFontMetrics(self.__listWidget.font())
         width = 0
-        for index in list:
-            # insert item
+        for index in valueList:
+            # Insert item
+            if isinstance(index, np.bool_):
+                index = int(index)
             self._addItem(index)
 
             w = fm.width(str(index))
