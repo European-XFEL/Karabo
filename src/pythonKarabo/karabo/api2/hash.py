@@ -416,7 +416,7 @@ class VectorBool(NumpyVector):
         return ",".join(str(int(i)) for i in data)
 
     def cast(self, other):
-        if isinstance(other, list) and isinstance(other[0], str):
+        if isinstance(other, list) and other and isinstance(other[0], str):
             other = [o in ('true', 'True', '1') for o in other]
         return super(VectorBool, self).cast(other)
 
