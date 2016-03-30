@@ -9,7 +9,8 @@ from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QRegExp, Qt, QSize
 from PyQt4.QtGui import (QDialogButtonBox, QColorDialog, QComboBox, QDialog,
                          QFontDialog, QFormLayout, QIcon, QPainter, QPalette,
-                         QPen, QPixmap, QRegExpValidator, QValidator)
+                         QPen, QPixmap, QRegExpValidator, QTableWidgetItem,
+                         QValidator)
 from os import path
 
 class Validator(QValidator):
@@ -309,3 +310,38 @@ class SceneLinkDialog(QDialog):
     @pyqtSlot(int)
     def on_sceneSelectCombo_currentIndexChanged(self, index):
         self._selectedScene = index
+
+class ReplaceDialog(QDialog):
+
+    def __init__(self, devices):
+        QDialog.__init__(self)
+        uic.loadUi(path.join(path.dirname(__file__), 'replacedialog.ui'), self)
+
+        self.twTable.setRowCount(len(devices))
+        for i, d in enumerate(devices):
+            item = QTableWidgetItem(d)
+            item.setFlags(item.flags() ^ Qt.ItemIsEditable)
+            self.twTable.setItem(i, 0, item)
+            
+            item = QTableWidgetItem(d)
+            item.setFlags(item.flags() | Qt.ItemIsEditable)
+            self.twTable.setItem(i, 1, item)
+
+        self.twTable.itemChanged.connect(self.onItemChanged)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+    def mappedDevices(self):
+        """
+        A dict with the mapped devices is returned.
+        """
+        map = {}
+        for i in range(self.twTable.rowCount()):
+            map[self.twTable.item(i, 0).text()] = self.twTable.item(i, 1).text()
+        return map
+
+    @pyqtSlot(object)
+    def onItemChanged(self, item):
+        if item is None:
+            return
+        
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(item.text()) > 0)
