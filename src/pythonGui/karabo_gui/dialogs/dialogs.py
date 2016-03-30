@@ -195,7 +195,7 @@ class TextDialog(QDialog):
     def exec_(self):
         result = QDialog.exec_(self)
         if result == QDialog.Accepted:
-            ss = [ ]
+            ss = []
             ss.append('qproperty-font: "{}";'.format(self.textFont.toString()))
             ss.append("color: {};".format(self.textColor.name()))
             if self.cbBackground.isChecked():
@@ -214,8 +214,6 @@ class TextDialog(QDialog):
 
 
 class MacroDialog(QDialog):
-
-
     def __init__(self, name=""):
         QDialog.__init__(self)
 
@@ -301,15 +299,18 @@ class SceneLinkDialog(QDialog):
 
         sceneCombo.setCurrentIndex(self._selectedScene)
 
+
     @property
     def selectedScene(self):
         if self._selectedScene == 0:
             return ""
         return self._sceneNames[self._selectedScene - 1]
 
+
     @pyqtSlot(int)
     def on_sceneSelectCombo_currentIndexChanged(self, index):
         self._selectedScene = index
+
 
 class ReplaceDialog(QDialog):
 
@@ -320,14 +321,16 @@ class ReplaceDialog(QDialog):
         self.twTable.setRowCount(len(devices))
         for i, d in enumerate(devices):
             item = QTableWidgetItem(d)
-            item.setFlags(item.flags() ^ Qt.ItemIsEditable)
+            #item.setFlags(item.flags() ^ Qt.ItemIsEditable)
             self.twTable.setItem(i, 0, item)
             
             item = QTableWidgetItem(d)
-            item.setFlags(item.flags() | Qt.ItemIsEditable)
+            #item.setFlags(item.flags() | Qt.ItemIsEditable)
             self.twTable.setItem(i, 1, item)
-
-        self.twTable.itemChanged.connect(self.onItemChanged)
+            self.twTable.editItem(item)
+            itemWidget = self.twTable.cellWidget(i, 1)
+            itemWidget.textChanged.connect(self.onItemChanged)
+        
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
     def mappedDevices(self):
@@ -339,9 +342,6 @@ class ReplaceDialog(QDialog):
             map[self.twTable.item(i, 0).text()] = self.twTable.item(i, 1).text()
         return map
 
-    @pyqtSlot(object)
-    def onItemChanged(self, item):
-        if item is None:
-            return
-        
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(item.text()) > 0)
+    @pyqtSlot(str)
+    def onItemChanged(self, text):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)

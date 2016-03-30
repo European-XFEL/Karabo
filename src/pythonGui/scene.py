@@ -975,7 +975,7 @@ class PasteReplace(Paste):
         if dialog.exec_() != QDialog.Accepted:
             return False
 
-        map = dialog.getMappedDevices()
+        map = dialog.mappedDevices()
         for e in root.iter(tag=ns_svg + "rect"):
             keys = e.get(ns_karabo + "keys")
             if not keys:
