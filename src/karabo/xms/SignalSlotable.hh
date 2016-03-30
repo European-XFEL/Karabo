@@ -736,22 +736,51 @@ KARABO_SLOT0(__VA_ARGS__) \
             const SlotInstancePointer& getSenderInfo(const std::string& slotFunction);
 
             /**
-             * Connects a signal and slot by explicitely separating instanceId from the slotId/signalId.
-             * @param signalInstanceId
-             * @param signalSignature
-             * @param slotInstanceId
-             * @param slotSignature
+             * This function tries to establish a connection between a signal
+             * and a slot, identified both by their respective instance IDs and
+             * signatures.
+             * Moreover, this SignalSlotable obeys (throughout its full lifetime
+             * or until "disconnect" is called with the same arguments) the
+             * responsibility  to keep this connection alive, i.e. to reconnect
+             * if either signal or slot instance come back after they have
+             * shutdown or if they come up the first time.
+             *
+             * @param signalInstanceId is the instance ID of the signal (if empty use this instance)
+             * @param signalSignature is the signature of the signal
+             * @param slotInstanceId is the instance ID of the slot (if empty use this instance)
+             * @param slotSignature is the signature of the slot
+             * @return whether connection is already succesfully established
              */
             bool connect(const std::string& signalInstanceId, const std::string& signalSignature,
                     const std::string& slotInstanceId, const std::string& slotSignature);
 
             /**
-             * This function establishes a connection between a signal and a slot.
-             * If the instanceId is not given, the signal/slot is interpreted as local and automatically
-             * assigned a "self" instanceId
+             * This function tries to establish a connection between a signal
+             * and a slot as "connect" with four arguments does, so see there
+             * for more details.
+             * If signal or slot instance IDs are not specified, they are
+             * interpreted as local and automatically assigned a "self"
+             * instanceId
+             *
+             * @param signal <signalInstanceId>:<signalSignature>
+             * @param slot <slotInstanceId>:<slotSignature>
+             * @return whether connection is already succesfully established
              */
             bool connect(const std::string& signal, const std::string& slot);
 
+            /**
+             * Disconnects a slot from a signal, identified both by their
+             * respective instance IDs and signatures.
+             * In case the connection was established by this instance, also
+             * erase it from the list of connections that have to re-established
+             * in case signal or slot instances come back after a shutdown.
+             *
+             * @param signalInstanceId is the instance ID of the signal (if empty use this instance)
+             * @param signalSignature is the signature of the signal
+             * @param slotInstanceId is the instance ID of the slot (if empty use this instance)
+             * @param slotSignature is the signature of the slot
+             * @return whether connection is succesfully stopped, e.g. false if there was no such connection or if remote signal instance ID did not confirm in time
+             */
             bool disconnect(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
             /**
@@ -1329,8 +1358,12 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void registerDefaultSignalsAndSlots();
 
-            /// Calls connect for all signals of 'signalInstanceId' that have been connected before.
-            void reconnectSignals(const std::string& signalInstanceId);
+            /// Calls connect for all signal-slot connections that involve
+            /// 'newInstanceId' (be it on signal or slot side) and for which
+            /// this instance is responsible, i.e. its "connect" has been called
+            /// for this connection before (with or without immediate success).
+            /// Calling "disconnect" stops this responsibility.
+            void reconnectSignals(const std::string& newInstanceId);
 
             /// Register myself for short-cut messaging (i.e. bypass broker if in same process).
             /// Must not be called before instance ID is checked to be unique in overall system.

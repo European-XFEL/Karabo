@@ -1230,28 +1230,28 @@ namespace karabo {
                 // Keep track of what we connect - or at least try to:
                 const SignalSlotConnection connection(signalInstanceId_, signalFunction, slotInstanceId_, slotFunction);
                 boost::mutex::scoped_lock lock(m_signalSlotConnectionsMutex);
+                // Register twice as we have to re-connect if either signal or slot instance comes back.
+                // (We might skip to register for s*InstanceId == m_instanceId, but then "reconnectSignals"
+                //  looses its genericity.)
                 m_signalSlotConnections[signalInstanceId_].insert(connection);
+                m_signalSlotConnections[slotInstanceId_].insert(connection);
             }
 
-            const bool slotExists = this->doesSlotExist(slotInstanceId_, slotFunction);
-            const bool attachedSlotToSignal = this->tryToConnectToSignal(signalInstanceId_, signalFunction, slotInstanceId_, slotFunction);
-
-            if (attachedSlotToSignal && slotExists) {
+            if (this->doesSlotExist(slotInstanceId_, slotFunction)) {
+	      if (this->tryToConnectToSignal(signalInstanceId_, signalFunction, slotInstanceId_, slotFunction)) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Successfully connected slot '" << slotInstanceId_ << "." << slotFunction
-                        << "' to signal '" << signalInstanceId_ << "." << signalFunction << "'.";
-            } else if (attachedSlotToSignal) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Connected non-existing slot '" << slotInstanceId_ << "." << slotFunction
-                        << "' to signal '" << signalInstanceId_ << "." << signalFunction << "'.";
-            } else if (slotExists) {
+                    << "' to signal '" << signalInstanceId_ << "." << signalFunction << "'.";
+		return true;
+	      } else {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Could not connect slot '" << slotInstanceId_ << "." << slotFunction
-                        << "' to (non-existing?) signal '" << signalInstanceId_ << "." << signalFunction << "'.";
-            } else {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Could not connect slot '" << slotInstanceId_ << "." << slotFunction
-                        << "' to signal '" << signalInstanceId_ << "." << signalFunction
-                        << "'. Neither signal nor slot seem to exist.";
-            }
+                    << "' to (non-existing?) signal '" << signalInstanceId_ << "." << signalFunction << "'.";
+	      }
+	    } else {
+              KARABO_LOG_FRAMEWORK_DEBUG << "Did not try to connect non-existing slot '" << slotInstanceId_ << "." << slotFunction
+                  << "' to signal '" << signalInstanceId_ << "." << signalFunction << "'.";
+	    }
 
-            return (attachedSlotToSignal && slotExists);
+	    return false;
         }
 
         bool SignalSlotable::tryToConnectToSignal(const std::string& signalInstanceId, const std::string& signalFunction,
@@ -1374,12 +1374,12 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::reconnectSignals(const std::string& signalInstanceId) {
+        void SignalSlotable::reconnectSignals(const std::string& newInstanceId) {
 
             std::set<SignalSlotConnection> connections;
             {
                 boost::mutex::scoped_lock lock(m_signalSlotConnectionsMutex);
-                SignalSlotConnections::iterator it = m_signalSlotConnections.find(signalInstanceId);
+                SignalSlotConnections::iterator it = m_signalSlotConnections.find(newInstanceId);
 
                 if (it != m_signalSlotConnections.end()) {
                     connections = it->second;
@@ -1445,12 +1445,15 @@ namespace karabo {
             bool connectionWasKnown = false;
             {
                 boost::mutex::scoped_lock lock(m_signalSlotConnectionsMutex);
+                const SignalSlotConnection connection(signalInstanceId_, signalFunction, slotInstanceId_, slotFunction);
+                // Might be in there twice: once for signal, once for slot.
                 SignalSlotConnections::iterator it = m_signalSlotConnections.find(signalInstanceId_);
                 if (it != m_signalSlotConnections.end()) {
-                    const SignalSlotConnection connection(signalInstanceId_, signalFunction, slotInstanceId_, slotFunction);
-                    if (it->second.erase(connection) >= 1) {
-                        connectionWasKnown = true;
-                    }
+                    connectionWasKnown = (it->second.erase(connection) >= 1);
+                }
+                it = m_signalSlotConnections.find(slotInstanceId_);
+                if (it != m_signalSlotConnections.end()) {
+                    connectionWasKnown = (it->second.erase(connection) >= 1 ? true : connectionWasKnown);
                 }
             }
 
@@ -1467,7 +1470,8 @@ namespace karabo {
             if (result && !connectionWasKnown) {
                 KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << "Disconnected slot '" << slotInstanceId_ << "." << slotFunction
                         << "' from signal '" << signalInstanceId_ << "." << signalFunction << "', but did not connect them "
-                        << "before. Whoever connected them will re-connect once '" << signalInstanceId_ << "' comes back.";
+                        << "before. Whoever connected them will probably re-connect once '" << signalInstanceId_
+                        << "' or '" << slotInstanceId_ << "' come back.";
             }
 
             return result;
