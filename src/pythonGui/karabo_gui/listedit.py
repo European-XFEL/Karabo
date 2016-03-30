@@ -26,9 +26,10 @@ from karabo.api_2 import (VectorBool, VectorDouble, VectorFloat, VectorInt8,
 
 class ListEdit(QDialog):
 
-    def __init__(self, descriptor, duplicatesOk=True, valueList=[], parent=None):
+    def __init__(self, descriptor, duplicatesOk=True, valueList=None, parent=None):
         super(ListEdit, self).__init__(parent)
 
+        valueList = valueList if valueList is not None else []
         self.descriptor = descriptor
 
         self.ask = False
