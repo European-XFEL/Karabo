@@ -944,8 +944,10 @@ class Paste(SimpleAction):
 
 
     def run(self):
-        root = ElementTree.fromstring(QApplication.clipboard().mimeData().
-                                      data("image/svg+xml"))
+        mimeData = QApplication.clipboard().mimeData()
+        if not mimeData.hasFormat("image/svg+xml"):
+            return
+        root = ElementTree.fromstring(mimeData.data("image/svg+xml"))
         if not self.modify(root):
             return
         self.parent.ilayout.load_element(root)
@@ -969,8 +971,11 @@ class PasteReplace(Paste):
     def modify(self, root):
         keys = sum((e.get(ns_karabo + "keys", "").split(",")
                    for e in root.iter(tag=ns_svg + "rect")), [])
+        if not keys:
+            # Nothing was copied
+            return
+        
         devices = sorted({k.split(".", 1)[0] for k in keys if k})
-
         dialog = ReplaceDialog(devices)
         if dialog.exec_() != QDialog.Accepted:
             return False
