@@ -9,7 +9,8 @@
 
 
 from karabo_gui.components import (DisplayComponent, EditableApplyLaterComponent)
-from karabo_gui.dialogs.dialogs import PenDialog, TextDialog, SceneLinkDialog
+from karabo_gui.dialogs.dialogs import (PenDialog, TextDialog, SceneLinkDialog,
+                                        ReplaceDialog)
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
@@ -970,37 +971,11 @@ class PasteReplace(Paste):
                    for e in root.iter(tag=ns_svg + "rect")), [])
         devices = sorted({k.split(".", 1)[0] for k in keys if k})
 
-        dialog = QDialog()
-        layout = QVBoxLayout(dialog)
-        tree = QTreeView(dialog)
-        layout.addWidget(tree)
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
-            Qt.Horizontal, dialog)
-        buttons.accepted.connect(dialog.accept)
-        buttons.rejected.connect(dialog.reject)
-        layout.addWidget(buttons)
-
-        model = QStandardItemModel(len(devices), 2, tree)
-        model.setHorizontalHeaderLabels(["Current Device", "New Device"])
-        for i, d in enumerate(devices):
-            item = QStandardItem(d)
-            item.setEditable(False)
-            model.setItem(i, 0, item)
-            item = QStandardItem("")
-            item.setEditable(True)
-            model.setItem(i, 1, item)
-        tree.setModel(model)
-
+        dialog = ReplaceDialog(devices)
         if dialog.exec_() != QDialog.Accepted:
             return False
 
-        map = {}
-        for i in range(len(devices)):
-            t = model.item(i, 1).text()
-            if t:
-                map[model.item(i, 0).text()] = t
-
+        map = dialog.getMappedDevices()
         for e in root.iter(tag=ns_svg + "rect"):
             keys = e.get(ns_karabo + "keys")
             if not keys:
