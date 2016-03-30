@@ -14,10 +14,9 @@ from karabo_gui.registry import Monkey
 from karabo_gui.network import Network
 import karabo_gui.icons as icons
 
-from karabo_gui.attributes.component import EditAttributeComponent
-from karabo_gui.attributes.enumeditwidget import (MetricPrefixAttributeEditor,
-                                                  UnitAttributeEditor)
-from karabo_gui.attributes.numbereditwidget import RealAttributeEditor
+from karabo_gui.attributeediting.api import (EDITABLE_ATTRIBUTE_NAMES,
+                                             ATTRIBUTE_EDITOR_FACTORIES,
+                                             EditAttributeComponent)
 from karabo_gui.components import (ChoiceComponent, EditableApplyLaterComponent,
                                    EditableNoApplyComponent)
 from karabo_gui import globals
@@ -44,14 +43,6 @@ SCHEMA_ATTRIBUTE_NAMES = (
     'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
     'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy',
     'relativeError', 'absoluteError'
-)
-
-# Attribute names which should be sent during instantiation, because they
-# can be edited.
-EDITABLE_ATTRIBUTE_NAMES = (
-    'minExc', 'maxExc', 'minInc', 'maxInc', 'absoluteError', 'relativeError',
-    'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh', 'metricPrefixSymbol',
-    'unitSymbol'
 )
 
 
@@ -339,12 +330,7 @@ class Type(hashmod.Type, metaclass=Monkey):
 
         item.setIcon(0, self.icon if self.options is None else icons.enum)
         item.enumeration = self.options
-        if attributeName == 'metricPrefixSymbol':
-            factory = MetricPrefixAttributeEditor
-        elif attributeName == 'unitSymbol':
-            factory = UnitAttributeEditor
-        else:
-            factory = RealAttributeEditor
+        factory = ATTRIBUTE_EDITOR_FACTORIES[attributeName]
         item.editableComponent = EditAttributeComponent(
             factory, box, attributeName, treeWidget)
 
