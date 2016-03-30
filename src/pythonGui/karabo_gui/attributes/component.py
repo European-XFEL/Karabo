@@ -23,9 +23,8 @@ class EditAttributeComponent(BaseComponent):
     def connectWidget(self, box):
         self.widgetFactory.setParent(self)
 
-        if box.hasValue():
-            value = getattr(box.descriptor, self._attributeName)
-            self.widgetFactory.attributeValueChanged(value)
+        value = getattr(box.descriptor, self._attributeName)
+        self.widgetFactory.attributeValueChanged(value)
 
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
 
