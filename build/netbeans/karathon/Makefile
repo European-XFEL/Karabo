@@ -49,6 +49,7 @@ MKDIR=mkdir
 CP=cp
 CCADMIN=CCadmin
 CURRENT_PLATFORM=$(shell uname -s)
+# Set configuration if not defined from outside (i.e. via 'make CONF=Release`):
 CONF ?= Debug
 
 # Custom environment variables
@@ -58,7 +59,7 @@ PYTHONPATH = $(KARABO)/lib
 export PYTHONPATH
 
 KARATHON = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
-	
+
 export PKG_CONFIG_PATH=.
 
 # build
@@ -69,7 +70,7 @@ build: .build-post
 # Take care that Karabo is built (not bundled - that would be circular):
 	@echo "### Take care that Karabo is built before Karathon. ###"
 	cd ../karabo; $(MAKE) CONF=$(CONF)
-	
+
 # Make sure the KARATHON folder always exists
 	@if test ! -d $(KARATHON)/include; then $(MKDIR) -p $(KARATHON)/include; fi
 	@if test ! -d $(KARATHON)/lib;     then $(MKDIR) -p $(KARATHON)/lib; fi
@@ -133,7 +134,7 @@ test: .test-post
 
 .test-pre: nbproject/Makefile-$(CONF).mk
 # Add your pre 'test' code here...
-	
+
 .test-post: .test-impl
 # Add your post 'test' code here...
 
@@ -182,6 +183,6 @@ include nbproject/Makefile-variables.mk
 # the *-pre targets appear as prerequisites in parallel with .validate.impl,
 # i.e. we cannot simply make the .*-pre targets depend on Makefile-$(CONF).mk
 # here. That is because then the check might still be executed before the
-# .*-pre target lead to the creation of Makefile-$(CONF).mk.
+# .*-pre target that leads to the creation of Makefile-$(CONF).mk.
 # Hope that people reading this could follow...
 .validate-impl: nbproject/Makefile-$(CONF).mk
