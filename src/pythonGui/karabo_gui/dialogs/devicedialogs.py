@@ -14,6 +14,7 @@ __all__ = ["DeviceDialog", "DeviceGroupDialog", "DeviceDefinitionWidget"]
 import karabo_gui.globals as globals
 
 from karabo.api_2 import AccessLevel
+from karabo_gui.util import SignalBlocker
 from .duplicatedialog import DuplicateWidget
 
 from PyQt4.QtCore import pyqtSignal
@@ -350,33 +351,34 @@ class DeviceDefinitionWidget(QWidget):
         
         serverTopology = systemTopology.get(serverKey)
         
-        # Remember previous setting
+        # Remember previous server
         prevServer = self.cbServer.currentText()
-        self.cbServer.clear()
+        with SignalBlocker(self.cbServer):
+            self.cbServer.clear()
         
-        for serverId in serverTopology:
-            visibility = AccessLevel(serverTopology[serverId, "visibility"])
-            if visibility > globals.GLOBAL_ACCESS_LEVEL:
-                continue
+            for serverId in serverTopology:
+                visibility = AccessLevel(serverTopology[serverId, "visibility"])
+                if visibility > globals.GLOBAL_ACCESS_LEVEL:
+                    continue
 
-            deviceClasses = None
-            if serverTopology.hasAttribute(serverId, "deviceClasses"):
-                deviceClasses = serverTopology.getAttribute(serverId, "deviceClasses")
+                deviceClasses = []
+                if serverTopology.hasAttribute(serverId, "deviceClasses"):
+                    deviceClasses = serverTopology.getAttribute(serverId, "deviceClasses")
 
-            if not deviceClasses:
-                continue
+                if not deviceClasses:
+                    continue
 
-            visi = serverTopology.getAttribute(serverId, "visibilities")
-            self.cbServer.addItem(serverId,
-                                  [c for c, v in zip(deviceClasses, visi)
-                                   if AccessLevel(v) <=
-                                       globals.GLOBAL_ACCESS_LEVEL])
+                visi = serverTopology.getAttribute(serverId, "visibilities")
+                self.cbServer.addItem(serverId,
+                                      [c for c, v in zip(deviceClasses, visi)
+                                       if AccessLevel(v) <=
+                                           globals.GLOBAL_ACCESS_LEVEL])
+
+                self.cbServer.adjustSize()
 
         # No servers and therefore no plugins available?
         if self.cbServer.count() < 1:
             return False
-
-        self.cbServer.adjustSize()
 
         index = self.cbServer.findText(prevServer)
         if index > 0 and index != self.cbServer.currentIndex():
@@ -444,22 +446,18 @@ class DeviceDefinitionWidget(QWidget):
         if index < 0:
             return
         
-        # Get plugins which exist on server
-        data = self.cbServer.itemData(index)
-        if not data:
-            return
-        
-        prevPlugin = self.cbPlugin.currentText()
-        self.cbPlugin.clear()
-        for d in data:
-            self.cbPlugin.blockSignals(True)
-            self.cbPlugin.addItem(d)
-            self.cbPlugin.blockSignals(False)
-        
-        index = self.cbPlugin.findText(prevPlugin)
-        if index > 0:
-            self.cbPlugin.blockSignals(True)
-            self.cbPlugin.setCurrentIndex(index)
-            self.cbPlugin.blockSignals(False)
+        with SignalBlocker(self.cbPlugin):
+            prevPlugin = self.cbPlugin.currentText()
+            
+            self.cbPlugin.clear()
+            # Get plugins which exist on server
+            data = self.cbServer.itemData(index)
+            for d in data:
+                self.cbPlugin.addItem(d)
 
-        self.cbPlugin.adjustSize()
+            self.cbPlugin.adjustSize()
+        
+            index = self.cbPlugin.findText(prevPlugin)
+            if index > 0:
+                self.cbPlugin.setCurrentIndex(index)
+
