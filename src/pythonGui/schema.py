@@ -264,8 +264,11 @@ class Type(hashmod.Type, metaclass=Monkey):
         box.signalUpdateComponent.connect(other.slotSet)
 
 
-    def dispatchUserChanges(self, box, hash):
-        box.signalUserChanged.emit(box, box.descriptor.cast(hash), None)
+    def dispatchUserChanges(self, box, hash, attrs=None):
+        desc = box.descriptor
+        for name, value in attrs.items():
+            setattr(desc, name, value)
+        box.signalUserChanged.emit(box, desc.cast(hash), None)
 
 
     def setDefault(self, box):
@@ -587,9 +590,9 @@ class Schema(hashmod.Descriptor):
         box._set(box._value, timestamp)
 
 
-    def dispatchUserChanges(self, box, hash):
-        for k, v in hash.items():
-            getattr(box.boxvalue, k).dispatchUserChanges(v)
+    def dispatchUserChanges(self, box, hash, attrs=None):
+        for k, v, a in hash.iterall():
+            getattr(box.boxvalue, k).dispatchUserChanges(v, attrs=a)
 
 
     def setDefault(self, box):
@@ -744,11 +747,11 @@ class ChoiceOfNodes(Schema):
         Schema.fromHash(self, box, value, timestamp)
 
 
-    def dispatchUserChanges(self, box, hash):
+    def dispatchUserChanges(self, box, hash, attrs=None):
         for k in hash:
             box.signalUserChanged.emit(box, k, None)
             break
-        Schema.dispatchUserChanges(self, box, hash)
+        Schema.dispatchUserChanges(self, box, hash, attrs=attrs)
 
 
     def setDefault(self, box):
