@@ -46,7 +46,7 @@ class NumberAttributeEditor(AttributeWidget):
                                if self.widget.hasAcceptableInput()
                                else self.errorPalette)
         if self.widget.hasAcceptableInput():
-            self.signalEditingFinished.emit(self.boxes[0], self.value)
+            super(NumberAttributeEditor, self).onEditingFinished(self.value)
 
     def attributeValueChanged(self, value):
         if value is None:
