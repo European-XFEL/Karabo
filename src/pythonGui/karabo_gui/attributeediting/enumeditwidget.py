@@ -1,6 +1,6 @@
 from enum import Enum
 
-from PyQt4.QtCore import QEvent
+from PyQt4.QtCore import QEvent, pyqtSlot
 from PyQt4.QtGui import QComboBox
 
 from karabo.api_2 import MetricPrefix, Unit
@@ -36,16 +36,16 @@ class EnumAttributeEditor(AttributeWidget):
         self._populateWidget()
 
         self.widget.installEventFilter(self)
-        self.widget.currentIndexChanged[str].connect(self.onEditingFinished)
+        self.widget.currentIndexChanged[int].connect(self.onIndexChanged)
 
     def eventFilter(self, object, event):
         # Block wheel event on QComboBox
         return event.type() == QEvent.Wheel and object is self.widget
 
-    @property
-    def value(self):
-        data = self.widget.itemData(self.widget.currentIndex())
-        return data.value()
+    @pyqtSlot(int)
+    def onIndexChanged(self, index):
+        value = self.widget.itemData(index)
+        super(EnumAttributeEditor, self).onEditingFinished(value)
 
     def attributeValueChanged(self, value):
         if value is None:
