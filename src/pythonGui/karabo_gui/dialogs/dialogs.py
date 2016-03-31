@@ -9,7 +9,8 @@ from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QRegExp, Qt, QSize
 from PyQt4.QtGui import (QDialogButtonBox, QColorDialog, QComboBox, QDialog,
                          QFontDialog, QFormLayout, QIcon, QPainter, QPalette,
-                         QPen, QPixmap, QRegExpValidator, QValidator)
+                         QPen, QPixmap, QRegExpValidator, QTableWidgetItem,
+                         QValidator)
 from os import path
 
 class Validator(QValidator):
@@ -22,13 +23,11 @@ class Validator(QValidator):
         except:
             return QValidator.Invalid, input, pos
 
-
 class PenDialog(QDialog):
     linecaps = {Qt.FlatCap: "butt", Qt.SquareCap: "square",
                 Qt.RoundCap: "round"}
     linejoins = {Qt.SvgMiterJoin: "miter", Qt.MiterJoin: "miter",
                  Qt.BevelJoin: "bevel", Qt.RoundJoin: "round"}
-
 
     def __init__(self, pen, brush=None):
         QDialog.__init__(self)
@@ -58,18 +57,15 @@ class PenDialog(QDialog):
         
         self.setBrushWidgets()
 
-
     @pyqtSlot()
     def on_pbStrokeColor_clicked(self):
         self.pen.setColor(QColorDialog.getColor(self.pen.color()))
         self.set_color()
 
-
     @pyqtSlot()
     def on_pbFillColor_clicked(self):
         self.brush.setColor(QColorDialog.getColor(self.brush.color()))
         self.set_color()
-
 
     def set_color(self):
         p = QPixmap(32, 16)
@@ -79,7 +75,6 @@ class PenDialog(QDialog):
         if self.brush is not None:
             p.fill(self.brush.color())
             self.pbFillColor.setIcon(QIcon(p))
-
 
     def setBrushWidgets(self):
         if self.brush is None:
@@ -92,7 +87,6 @@ class PenDialog(QDialog):
             else:
                 self.gbFill.setChecked(False)
             self.slFillOpacity.setValue(self.brush.color().alpha())
-
 
     def exec_(self):
         result = QDialog.exec_(self)
@@ -126,12 +120,10 @@ class PenDialog(QDialog):
                     fillColor = self.brush.color()
                     fillColor.setAlpha(self.slFillOpacity.value())
                     self.brush.setColor(fillColor)
-        
+
         return result
 
-
 class TextDialog(QDialog):
-
 
     def __init__(self, label):
         QDialog.__init__(self)
@@ -155,18 +147,15 @@ class TextDialog(QDialog):
         
         self.set_color()
 
-
     @pyqtSlot()
     def on_pbTextColor_clicked(self):
         self.textColor = QColorDialog.getColor(self.textColor)
         self.set_color()
 
-
     @pyqtSlot()
     def on_pbBackground_clicked(self):
         self.backgroundColor = QColorDialog.getColor(self.backgroundColor)
         self.set_color()
-
 
     @pyqtSlot()
     def on_pbFont_clicked(self):
@@ -174,14 +163,11 @@ class TextDialog(QDialog):
         if ok:
             self.textFont = font
 
-
     def onFrameWidthToggled(self, checked):
         self.sbFrameWidth.setEnabled(checked)
 
-
     def onBackgroundToggled(self, checked):
         self.pbBackground.setEnabled(checked)
-
 
     def set_color(self):
         p = QPixmap(24, 16)
@@ -190,11 +176,10 @@ class TextDialog(QDialog):
         p.fill(self.backgroundColor)
         self.pbBackground.setIcon(QIcon(p))
 
-
     def exec_(self):
         result = QDialog.exec_(self)
         if result == QDialog.Accepted:
-            ss = [ ]
+            ss = []
             ss.append('qproperty-font: "{}";'.format(self.textFont.toString()))
             ss.append("color: {};".format(self.textColor.name()))
             if self.cbBackground.isChecked():
@@ -211,10 +196,7 @@ class TextDialog(QDialog):
         
         return result
 
-
 class MacroDialog(QDialog):
-
-
     def __init__(self, name=""):
         QDialog.__init__(self)
 
@@ -228,15 +210,12 @@ class MacroDialog(QDialog):
         self.leName.setText(name)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
-
     @property
     def name(self):
         return self.leName.text()
 
-
     def onChanged(self, text):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)
-
 
 class PenStyleComboBox(QComboBox):
     styles = [(Qt.SolidLine, "Solid line"),
@@ -254,17 +233,14 @@ class PenStyleComboBox(QComboBox):
             name = s[1]
             self.addItem(self.iconForPen(style), name, style)
 
-
     def penStyle(self):
         return self.styles[self.currentIndex()][0]
-
 
     def setPenStyle(self, style):
         id = self.findData(style)
         if id == -1:
             id = 0
         self.setCurrentIndex(id)
-
 
     def iconForPen(self, style):
         pix = QPixmap(self.iconSize())
@@ -281,7 +257,6 @@ class PenStyleComboBox(QComboBox):
         p.end()
 
         return QIcon(pix)
-
 
 class SceneLinkDialog(QDialog):
     def __init__(self, sceneNames, target, parent=None):
@@ -309,3 +284,35 @@ class SceneLinkDialog(QDialog):
     @pyqtSlot(int)
     def on_sceneSelectCombo_currentIndexChanged(self, index):
         self._selectedScene = index
+
+class ReplaceDialog(QDialog):
+
+    def __init__(self, devices):
+        QDialog.__init__(self)
+        uic.loadUi(path.join(path.dirname(__file__), 'replacedialog.ui'), self)
+
+        self.twTable.setRowCount(len(devices))
+        for i, d in enumerate(devices):
+            item = QTableWidgetItem(d)
+            self.twTable.setItem(i, 0, item)
+            
+            item = QTableWidgetItem(d)
+            self.twTable.setItem(i, 1, item)
+            self.twTable.editItem(item)
+            itemWidget = self.twTable.cellWidget(i, 1)
+            itemWidget.textChanged.connect(self.onItemChanged)
+        
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+    def mappedDevices(self):
+        """
+        A dict with the mapped devices is returned.
+        """
+        map = {}
+        for i in range(self.twTable.rowCount()):
+            map[self.twTable.item(i, 0).text()] = self.twTable.item(i, 1).text()
+        return map
+
+    @pyqtSlot(str)
+    def onItemChanged(self, text):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)

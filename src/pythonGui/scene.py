@@ -9,7 +9,8 @@
 
 
 from karabo_gui.components import (DisplayComponent, EditableApplyLaterComponent)
-from karabo_gui.dialogs.dialogs import PenDialog, TextDialog, SceneLinkDialog
+from karabo_gui.dialogs.dialogs import (PenDialog, TextDialog, SceneLinkDialog,
+                                        ReplaceDialog)
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
@@ -47,7 +48,7 @@ __all__ = ["Scene"]
 
 
 class Action(Registry):
-    actions = [ ]
+    actions = []
 
 
     @classmethod
@@ -72,7 +73,6 @@ class Separator(Action):
     def __init__(self):
         Action.actions.append(self)
 
-
     @classmethod
     def add_action(cls, source, parent):
         action = QAction(source)
@@ -94,8 +94,7 @@ class SimpleAction(Action):
 
 
 class ActionGroup(Action):
-    actions = [ ]
-
+    actions = []
 
     @classmethod
     def register(cls, name, dict):
@@ -421,7 +420,7 @@ class Label(QLabel, Loadable):
         label = Label(elem.get(ns_karabo + "text"), proxy)
         proxy.setWidget(label)
         layout.loadPosition(elem, proxy)
-        ss = [ ]
+        ss = []
         ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
         ss.append("color: {};".format(
                     elem.get(ns_karabo + "foreground", "black")))
@@ -755,7 +754,7 @@ class GroupAction(SimpleAction):
     def gather_widgets(self):
         i = 0
         rect = QRect()
-        l = [ ]
+        l = []
         while i < len(self.parent.ilayout):
             c = self.parent.ilayout[i]
             if c.selected:
@@ -943,8 +942,10 @@ class Paste(SimpleAction):
 
 
     def run(self):
-        root = ElementTree.fromstring(QApplication.clipboard().mimeData().
-                                      data("image/svg+xml"))
+        mimeData = QApplication.clipboard().mimeData()
+        if not mimeData.hasFormat("image/svg+xml"):
+            return
+        root = ElementTree.fromstring(mimeData.data("image/svg+xml"))
         if not self.modify(root):
             return
         self.parent.ilayout.load_element(root)
@@ -968,39 +969,16 @@ class PasteReplace(Paste):
     def modify(self, root):
         keys = sum((e.get(ns_karabo + "keys", "").split(",")
                    for e in root.iter(tag=ns_svg + "rect")), [])
+        if not keys:
+            # Nothing was copied
+            return
+        
         devices = sorted({k.split(".", 1)[0] for k in keys if k})
-
-        dialog = QDialog()
-        layout = QVBoxLayout(dialog)
-        tree = QTreeView(dialog)
-        layout.addWidget(tree)
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
-            Qt.Horizontal, dialog)
-        buttons.accepted.connect(dialog.accept)
-        buttons.rejected.connect(dialog.reject)
-        layout.addWidget(buttons)
-
-        model = QStandardItemModel(len(devices), 2, tree)
-        model.setHorizontalHeaderLabels(["Current Device", "New Device"])
-        for i, d in enumerate(devices):
-            item = QStandardItem(d)
-            item.setEditable(False)
-            model.setItem(i, 0, item)
-            item = QStandardItem("")
-            item.setEditable(True)
-            model.setItem(i, 1, item)
-        tree.setModel(model)
-
+        dialog = ReplaceDialog(devices)
         if dialog.exec_() != QDialog.Accepted:
             return False
 
-        map = {}
-        for i in range(len(devices)):
-            t = model.item(i, 1).text()
-            if t:
-                map[model.item(i, 0).text()] = t
-
+        map = dialog.mappedDevices()
         for e in root.iter(tag=ns_svg + "rect"):
             keys = e.get(ns_karabo + "keys")
             if not keys:
@@ -1111,7 +1089,7 @@ class Scene(QSvgWidget):
         
         self.current_action = self.default_action = Select()
         self.current_action.action = QAction(self) # never displayed
-        self.simple_actions = [ ]
+        self.simple_actions = []
 
         self.tree = ElementTree.ElementTree(ElementTree.Element(ns_svg + "svg"))
 
