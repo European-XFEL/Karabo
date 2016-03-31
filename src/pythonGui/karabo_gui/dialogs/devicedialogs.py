@@ -373,16 +373,18 @@ class DeviceDefinitionWidget(QWidget):
                                       [c for c, v in zip(deviceClasses, visi)
                                        if AccessLevel(v) <=
                                            globals.GLOBAL_ACCESS_LEVEL])
-
                 self.cbServer.adjustSize()
+                # Set index to make later setting of server index possible
+                self.cbServer.setCurrentIndex(-1)
 
         # No servers and therefore no plugins available?
         if self.cbServer.count() < 1:
             return False
 
         index = self.cbServer.findText(prevServer)
-        if index > 0 and index != self.cbServer.currentIndex():
-            self.cbServer.setCurrentIndex(index)
+        index = 0 if not prevServer else index
+        # Set index only triggers signal currentIndexChanged, if index has changed
+        self.cbServer.setCurrentIndex(index)
 
         if device is not None:
             self.leDeviceId.setText(device.id)
@@ -441,7 +443,6 @@ class DeviceDefinitionWidget(QWidget):
     def onDeviceIdChanged(self, text):
         self.signalValidDeviceId.emit(text)
 
-
     def onServerChanged(self, index):
         if index < 0:
             return
@@ -454,10 +455,7 @@ class DeviceDefinitionWidget(QWidget):
             data = self.cbServer.itemData(index)
             for d in data:
                 self.cbPlugin.addItem(d)
-
-            self.cbPlugin.adjustSize()
         
             index = self.cbPlugin.findText(prevPlugin)
             if index > 0:
                 self.cbPlugin.setCurrentIndex(index)
-
