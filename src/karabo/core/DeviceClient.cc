@@ -10,6 +10,7 @@
 #include <karabo/io/FileTools.hh>
 #include <karabo/webAuth/Authenticator.hh>
 #include <karabo/core/DataLogUtils.hh>
+#include <karabo/util/Schema.hh>
 
 #include "DeviceClient.hh"
 #include "karabo/net/utils.hh"
@@ -1092,8 +1093,19 @@ namespace karabo {
             std::string errorText = "";
 
             try {
+                // Validate locally with custom validator
+                Hash validated;
+                Schema schema = cacheAndGetActiveSchema(instanceId);
+                Validator::ValidationRules rules(/*injectDefaults=*/false,
+                                                 /*allowUnrootedConfiguration=*/true,
+                                                 /*allowAdditionalKeys=*/false,
+                                                 /*allowMissingKeys=*/true,
+                                                 /*injectTimestamps*/false);
+                Validator validator(rules);
+                std::pair<bool, std::string> result = validator.validate(schema, values, validated);
+                if (!result.first) return result;
                 // TODO Add error text to response
-                m_signalSlotable.lock()->request(instanceId, "slotReconfigure", values).timeout(timeoutInSeconds * 1000).receive(ok, errorText);
+                m_signalSlotable.lock()->request(instanceId, "slotReconfigure", validated).timeout(timeoutInSeconds * 1000).receive(ok, errorText);
             } catch (const karabo::util::Exception& e) {
                 errorText = e.userFriendlyMsg();
                 ok = false;
