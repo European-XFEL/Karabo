@@ -48,7 +48,7 @@ __all__ = ["Scene"]
 
 
 class Action(Registry):
-    actions = [ ]
+    actions = []
 
 
     @classmethod
@@ -73,7 +73,6 @@ class Separator(Action):
     def __init__(self):
         Action.actions.append(self)
 
-
     @classmethod
     def add_action(cls, source, parent):
         action = QAction(source)
@@ -95,8 +94,7 @@ class SimpleAction(Action):
 
 
 class ActionGroup(Action):
-    actions = [ ]
-
+    actions = []
 
     @classmethod
     def register(cls, name, dict):
@@ -422,7 +420,7 @@ class Label(QLabel, Loadable):
         label = Label(elem.get(ns_karabo + "text"), proxy)
         proxy.setWidget(label)
         layout.loadPosition(elem, proxy)
-        ss = [ ]
+        ss = []
         ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
         ss.append("color: {};".format(
                     elem.get(ns_karabo + "foreground", "black")))
@@ -756,7 +754,7 @@ class GroupAction(SimpleAction):
     def gather_widgets(self):
         i = 0
         rect = QRect()
-        l = [ ]
+        l = []
         while i < len(self.parent.ilayout):
             c = self.parent.ilayout[i]
             if c.selected:
@@ -1091,7 +1089,7 @@ class Scene(QSvgWidget):
         
         self.current_action = self.default_action = Select()
         self.current_action.action = QAction(self) # never displayed
-        self.simple_actions = [ ]
+        self.simple_actions = []
 
         self.tree = ElementTree.ElementTree(ElementTree.Element(ns_svg + "svg"))
 
