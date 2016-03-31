@@ -418,9 +418,10 @@ class _Manager(QObject):
         pass
 
     def handle_replyInit(self, deviceId, ok, error):
-        device = self.deviceData.get(deviceId)
-        if device is not None:
-            device.signalInitReply.emit(ok, error)
+        """ NOTE: This is an old handler kept around for compatibility with old
+        GUI servers.
+        """
+        self.handle_initReply(deviceId, ok, error)
 
     def handle_instanceNew(self, topologyEntry):
         """ This function gets the configuration for a new instance.
@@ -593,7 +594,9 @@ class _Manager(QObject):
             property.split(".")).boxvalue.schema.fromHash(data)
 
     def handle_initReply(self, deviceId, success, message):
-        self.deviceData[deviceId].signalInitReply.emit(success, message)
+        device = self.deviceData.get(deviceId)
+        if device is not None:
+            device.signalInitReply.emit(success, message)
 
 
 def getDevice(deviceId):
