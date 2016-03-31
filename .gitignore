@@ -15,6 +15,7 @@ build/python/build/
 dist/
 /private/*
 GNU-Linux-x86
+GNU_MacPorts-MacOSX
 *.pyc
 *.egg-info
 .*
