@@ -1,6 +1,7 @@
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import QLineEdit, QDoubleValidator, QPalette, QValidator
 
+from karabo.api_2 import Integer
 from karabo_gui.util import SignalBlocker
 from .widget import AttributeWidget
 
@@ -23,12 +24,21 @@ class NumberAttributeEditor(AttributeWidget):
     def __init__(self, box, attributeName, parent=None):
         super(NumberAttributeEditor, self).__init__(box, attributeName)
         self.widget = QLineEdit(parent)
+
+        if isinstance(box.descriptor, Integer):
+            self.validator = IntValidator(parent=self.widget)
+            self._value_cast = int
+        else:
+            self.validator = QDoubleValidator(parent=self.widget)
+            self._value_cast = float
+
         self.widget.setValidator(self.validator)
         self.widget.textChanged.connect(self.onTextChanged)
 
         self.normalPalette = self.widget.palette()
         self.errorPalette = QPalette(self.normalPalette)
         self.errorPalette.setColor(QPalette.Text, Qt.red)
+
 
     @pyqtSlot(str)
     def onTextChanged(self, text):
@@ -48,7 +58,7 @@ class NumberAttributeEditor(AttributeWidget):
 
     def validate_value(self):
         """ This function validates the current value of the widget and returns
-        on sucess the value or in failure 0.
+        on success the value or in failure 0.
         """
         if not self.widget.text():
             return 0
@@ -59,24 +69,6 @@ class NumberAttributeEditor(AttributeWidget):
             value = 0
         return value
 
-
-class RealAttributeEditor(NumberAttributeEditor):
-    def __init__(self, box, attributeName, parent):
-        self.validator = QDoubleValidator(None)
-        super(RealAttributeEditor, self).__init__(box, attributeName,
-                                                  parent=parent)
-
     @property
     def value(self):
-        return float(self.validate_value())
-
-
-class IntegerAttributeEditor(NumberAttributeEditor):
-    def __init__(self, box, attributeName, parent=None):
-        self.validator = IntValidator()
-        super(IntegerAttributeEditor, self).__init__(box, attributeName,
-                                                     parent=parent)
-
-    @property
-    def value(self):
-        return int(self.validate_value())
+        return self._value_cast(self.validate_value())
