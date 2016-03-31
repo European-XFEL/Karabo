@@ -1096,9 +1096,14 @@ namespace karabo {
                 // Validate locally with custom validator
                 Hash validated;
                 Schema schema = cacheAndGetActiveSchema(instanceId);
-                Validator::ValidationRules rules(false, true, false, true, false);
+                Validator::ValidationRules rules(/*injectDefaults=*/false,
+                                                 /*allowUnrootedConfiguration=*/true,
+                                                 /*allowAdditionalKeys=*/false,
+                                                 /*allowMissingKeys=*/true,
+                                                 /*injectTimestamps*/false);
                 Validator validator(rules);
-                validator.validate(schema, values, validated);
+                std::pair<bool, std::string> result = validator.validate(schema, values, validated);
+                if (!result.first) return result;
                 // TODO Add error text to response
                 m_signalSlotable.lock()->request(instanceId, "slotReconfigure", validated).timeout(timeoutInSeconds * 1000).receive(ok, errorText);
             } catch (const karabo::util::Exception& e) {
