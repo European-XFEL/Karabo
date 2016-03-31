@@ -25,8 +25,7 @@ class NumberAttributeEditor(AttributeWidget):
         super(NumberAttributeEditor, self).__init__(box, attributeName)
         self.widget = QLineEdit(parent)
 
-        valueType = type(box.descriptor)
-        if issubclass(valueType, Integer):
+        if isinstance(box.descriptor, Integer):
             self.validator = IntValidator(parent=self.widget)
             self._value_cast = int
         else:
