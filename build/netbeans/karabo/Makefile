@@ -249,6 +249,6 @@ include nbproject/Makefile-variables.mk
 # the *-pre targets appear as prerequisites in parallel with .validate.impl,
 # i.e. we cannot simply make the .*-pre targets depend on Makefile-$(CONF).mk
 # here. That is because then the check might still be executed before the
-# .*-pre target lead to the creation of Makefile-$(CONF).mk.
+# .*-pre target that leads to the creation of Makefile-$(CONF).mk.
 # Hope that people reading this could follow...
 .validate-impl: nbproject/Makefile-$(CONF).mk
