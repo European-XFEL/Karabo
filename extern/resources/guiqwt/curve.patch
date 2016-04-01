@@ -1,0 +1,18 @@
+--- guiqwt-2.3.1/guiqwt/curve.py	2016-04-01 16:33:21.412095612 +0200
++++ guiqwt-2.3.1/guiqwt/curve.py	2016-04-01 16:42:17.261298936 +0200
+@@ -1379,9 +1379,12 @@
+         # Sometimes, an obscure exception happens when we quit an application
+         # because if we don't remove the eventFilter it can still be called
+         # after the filter object has been destroyed by Python.
+-        canvas = self.canvas()
+-        if canvas:
+-            canvas.removeEventFilter(self.filter)
++        try:
++            canvas = self.canvas()
++            if canvas:
++                canvas.removeEventFilter(self.filter)
++        except RuntimeError:
++            pass
+ 
+     # generic helper methods        
+     def canvas2plotitem(self, plot_item, x_canvas, y_canvas):
