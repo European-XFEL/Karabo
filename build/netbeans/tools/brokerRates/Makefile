@@ -141,6 +141,11 @@ nbproject/Makefile-variables.mk: nbproject/Karabo-variables-$(CURRENT_PLATFORM).
 nbproject/Makefile-$(CONF).mk: nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk
 	$(CP) -fp nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk nbproject/Makefile-$(CONF).mk
 
+# The following two includes lead to warnings from make ("No such file or
+# directory") when compiling the first time after a fresh checkout
+# (see https://www.gnu.org/software/make/manual/html_node/Include.html).
+# But then it will create the files according to the above rules. In fact, even
+# if the files were not missing, they might need to be recreated before used!
 
 # include project implementation makefile
 include nbproject/Makefile-impl.mk
@@ -157,6 +162,6 @@ include nbproject/Makefile-variables.mk
 # the *-pre targets appear as prerequisites in parallel with .validate.impl,
 # i.e. we cannot simply make the .*-pre targets depend on Makefile-$(CONF).mk
 # here. That is because then the check might still be executed before the
-# .*-pre target lead to the creation of Makefile-$(CONF).mk.
+# .*-pre target that leads to the creation of Makefile-$(CONF).mk.
 # Hope that people reading this could follow...
 .validate-impl: nbproject/Makefile-$(CONF).mk
