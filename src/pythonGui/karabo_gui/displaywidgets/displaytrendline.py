@@ -123,6 +123,9 @@ class Curve(QObject):
         self.fill = pos
 
     def getPropertyHistory(self, t0, t1):
+        # Avoid if not currently visible
+        if self.box.visible < 1:
+            return
         t0 = str(datetime.datetime.utcfromtimestamp(t0).isoformat())
         t1 = str(datetime.datetime.utcfromtimestamp(t1).isoformat())
         self.box.getPropertyHistory(t0, t1, self.maxHistory)
@@ -296,7 +299,6 @@ class DisplayTrendline(DisplayWidget):
     def addBox(self, box):
         curve = make.curve([], [], box.key(), "r")
         self.curves[box] = Curve(box, curve, self.dialog)
-        box.addVisible()
         self.plot.add_item(curve)
         return True
 
