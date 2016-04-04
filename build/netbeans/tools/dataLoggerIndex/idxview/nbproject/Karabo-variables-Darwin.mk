@@ -9,16 +9,16 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU_MacPorts-MacOSX
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU_MacPorts-MacOSX/bin
-CND_ARTIFACT_NAME_Debug=idxview
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU_MacPorts-MacOSX/bin/idxview
+CND_ARTIFACT_NAME_Debug=karabo-idxview
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU_MacPorts-MacOSX/bin/karabo-idxview
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU_MacPorts-MacOSX/package
 CND_PACKAGE_NAME_Debug=idxview.tar
 CND_PACKAGE_PATH_Debug=dist/Debug/GNU_MacPorts-MacOSX/package/idxview.tar
 # Release configuration
 CND_PLATFORM_Release=GNU_MacPorts-MacOSX
 CND_ARTIFACT_DIR_Release=dist/Release/GNU_MacPorts-MacOSX/bin
-CND_ARTIFACT_NAME_Release=idxview
-CND_ARTIFACT_PATH_Release=dist/Release/GNU_MacPorts-MacOSX/bin/idxview
+CND_ARTIFACT_NAME_Release=karabo-idxview
+CND_ARTIFACT_PATH_Release=dist/Release/GNU_MacPorts-MacOSX/bin/karabo-idxview
 CND_PACKAGE_DIR_Release=dist/Release/GNU_MacPorts-MacOSX/package
 CND_PACKAGE_NAME_Release=idxview.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU_MacPorts-MacOSX/package/idxview.tar
