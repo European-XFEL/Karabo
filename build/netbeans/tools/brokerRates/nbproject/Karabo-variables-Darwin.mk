@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU_MacPorts-MacOSX
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU_MacPorts-MacOSX/bin
-CND_ARTIFACT_NAME_Debug=karabo-idxbuild
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU_MacPorts-MacOSX/bin/karabo-idxbuild
+CND_ARTIFACT_NAME_Debug=karabo-brokerrates
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU_MacPorts-MacOSX/bin/karabo-brokerrates
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU_MacPorts-MacOSX/package
-CND_PACKAGE_NAME_Debug=idxbuild.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU_MacPorts-MacOSX/package/idxbuild.tar
+CND_PACKAGE_NAME_Debug=brokerrates.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU_MacPorts-MacOSX/package/brokerrates.tar
 # Release configuration
 CND_PLATFORM_Release=GNU_MacPorts-MacOSX
 CND_ARTIFACT_DIR_Release=dist/Release/GNU_MacPorts-MacOSX/bin
-CND_ARTIFACT_NAME_Release=karabo-idxbuild
-CND_ARTIFACT_PATH_Release=dist/Release/GNU_MacPorts-MacOSX/bin/karabo-idxbuild
+CND_ARTIFACT_NAME_Release=karabo-brokerrates
+CND_ARTIFACT_PATH_Release=dist/Release/GNU_MacPorts-MacOSX/bin/karabo-brokerrates
 CND_PACKAGE_DIR_Release=dist/Release/GNU_MacPorts-MacOSX/package
-CND_PACKAGE_NAME_Release=idxbuild.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU_MacPorts-MacOSX/package/idxbuild.tar
+CND_PACKAGE_NAME_Release=brokerrates.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU_MacPorts-MacOSX/package/brokerrates.tar
 #
 # include compiler specific variables
 #
