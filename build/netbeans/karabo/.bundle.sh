@@ -50,7 +50,13 @@ BUNDLE_ACTION=$4
 BUNDLE_OPTION=$5
 OS=$(uname -s)
 MACHINE=$(uname -m)
-VERSION=$(git rev-parse --short HEAD)
+
+# Get the version as a tag name, if one exists
+VERSION=$(git describe --exact-match HEAD 2>/dev/null)
+if [ $? -ne 0 ]; then
+    # Otherwise use the short hash
+    VERSION=$(git rev-parse --short HEAD)
+fi
 
 if [ "$BUNDLE_ACTION" = "package" ]; then
     if [ $BUNDLE_OPTION = "NoGui" ]; then
