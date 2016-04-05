@@ -417,12 +417,6 @@ class _Manager(QObject):
         """
         pass
 
-    def handle_replyInit(self, deviceId, ok, error):
-        """ NOTE: This is an old handler kept around for compatibility with old
-        GUI servers.
-        """
-        self.handle_initReply(deviceId, ok, error)
-
     def handle_instanceNew(self, topologyEntry):
         """ This function gets the configuration for a new instance.
 
