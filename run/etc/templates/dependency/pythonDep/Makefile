@@ -2,9 +2,7 @@
 source_folder = src
 
 # Keep default target as make all
-all:
-	make clean
-	make install
+all: clean install
 
 clean:
 	rm -rf ./$(source_folder)/build
