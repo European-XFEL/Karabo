@@ -116,17 +116,14 @@ class Simple(object):
         if self.enum is not None:
             return Enumable.toKaraboValue(self, data, strict)
         if not strict or not self.dimensionality or isinstance(data, str):
-            if isinstance(data, basetypes.KaraboValue):
-                ts = data.timestamp
-            else:
-                ts = None
-            data = basetypes.QuantityValue(data, descriptor=self, timestamp=ts)
+            data = basetypes.QuantityValue(data, descriptor=self)
         elif not isinstance(data, basetypes.QuantityValue):
             raise pint.DimensionalityError("no dimension", self.dimensionality)
-        ret = data.to(basetypes.QuantityValue(1, descriptor=self))
-        ret.descriptor = self
-        self.check(ret.magnitude)
-        return ret
+        if data.units != self.units:
+            data = data.to(self.units)
+        data.descriptor = self
+        self.check(data.magnitude)
+        return data
 
     def getMinMax(self):
         """Return a tuple (minimum, maximum) for this value
@@ -365,8 +362,10 @@ class Type(Descriptor, Registry):
         super().__init__(**kwargs)
         if self.options is not None:
             self.options = [self.cast(o) for o in self.options]
-        self.dimensionality = basetypes.QuantityValue(
-            1, unit=self.unitSymbol).dimensionality
+        self.units = basetypes.QuantityValue(
+                1, unit=self.unitSymbol, metricPrefix=self.metricPrefixSymbol
+            ).units
+        self.dimensionality = self.units.dimensionality
 
     def toKaraboValue(self, data, strict=True):
         """Convert data into a KaraboValue
@@ -479,16 +478,12 @@ class NumpyVector(Vector):
         if not isinstance(data, basetypes.KaraboValue):
             data = self.cast(data)
         if not strict or not self.dimensionality or isinstance(data, str):
-            if isinstance(data, basetypes.KaraboValue):
-                ts = data.timestamp
-            else:
-                ts = None
-            data = basetypes.QuantityValue(data, descriptor=self, timestamp=ts)
+            data = basetypes.QuantityValue(data, descriptor=self)
         elif not isinstance(data, basetypes.QuantityValue):
             raise pint.DimensionalityError("no dimension", self.dimensionality)
-        ret = data.to(basetypes.QuantityValue(1, descriptor=self))
-        ret.descriptor = self
-        return ret
+        data = data.to(basetypes.QuantityValue(1, descriptor=self))
+        data.descriptor = self
+        return data
 
 
 class Bool(Type):
