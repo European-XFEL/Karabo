@@ -536,8 +536,7 @@ def getClasses(serverId):
 
 
 @synchronize
-def instantiate(serverId, classId, deviceId="", configuration=Hash(),
-                **kwargs):
+def instantiate(serverId, classId, deviceId="", configuration=None, **kwargs):
     """Instantiate and configure a device on a running server
 
     Arguments:
@@ -550,6 +549,8 @@ def instantiate(serverId, classId, deviceId="", configuration=Hash(),
       * *configuration*: the configuration of the device (optional)
 
     The keyword arguments are used to further configure the device. """
+    if configuration is None:
+        configuration = Hash()
     configuration.update(kwargs)
     h = Hash("classId", classId, "deviceId", deviceId,
              "configuration", configuration)
@@ -560,11 +561,13 @@ def instantiate(serverId, classId, deviceId="", configuration=Hash(),
 
 
 @synchronize
-def instantiateNoWait(serverId, classId, deviceId="", configuration=Hash(),
+def instantiateNoWait(serverId, classId, deviceId="", configuration=None,
                       **kwargs):
     """Instantiate and configure a device on a running server
 
     Non-waiting version of :func:`instantiate`"""
+    if configuration is None:
+        configuration = Hash()
     configuration.update(kwargs)
     h = Hash("classId", classId, "deviceId", deviceId,
              "configuration", configuration)
