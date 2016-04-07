@@ -560,7 +560,6 @@ def instantiate(serverId, classId, deviceId="", configuration=None, **kwargs):
     return msg
 
 
-@synchronize
 def instantiateNoWait(serverId, classId, deviceId="", configuration=None,
                       **kwargs):
     """Instantiate and configure a device on a running server
@@ -585,7 +584,6 @@ def shutdown(device):
     return ok
 
 
-@synchronize
 def shutdownNoWait(device):
     """shut down the given device
 
