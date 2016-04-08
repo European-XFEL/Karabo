@@ -153,7 +153,7 @@ class _Manager(QObject):
                 conf.redummy()
 
 
-    def initDevice(self, serverId, classId, deviceId, config=None):
+    def initDevice(self, serverId, classId, deviceId, config=None, schema=None):
         if config is None:
             # Use standard configuration for server/classId
             conf = self.serverClassData.get((serverId, classId))
@@ -163,7 +163,7 @@ class _Manager(QObject):
                 config = Hash()
 
         # Send signal to network
-        Network().onInitDevice(serverId, classId, deviceId, config)
+        Network().onInitDevice(serverId, classId, deviceId, config, schema=schema)
         self.__isInitDeviceCurrentlyProcessed = True
 
 
