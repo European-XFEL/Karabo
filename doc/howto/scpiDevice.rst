@@ -301,7 +301,7 @@ parameters (none). The fourth field (ie {resolutionMode:d}) is the
 expected reply to the query; it is parsed and resolutionMode is
 extracted as integer (d). The parsing is done by using the python
 parse package (see `documentation
-<https://pypi.python.org/pypi/parse>`_.), therefore all types defined
+<https://pypi.python.org/pypi/parse>`_), therefore all types defined
 there can be used:
 
 +------+---------------------------------------------------------+----------+
