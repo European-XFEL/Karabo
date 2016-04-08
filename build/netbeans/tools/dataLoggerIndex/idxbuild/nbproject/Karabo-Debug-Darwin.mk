@@ -56,11 +56,11 @@ LDLIBSOPTIONS=-L${KARABO}/lib -L${KARABO}/extern/lib -lkarabo `pkg-config --libs
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/idxbuild
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-idxbuild
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/idxbuild: ${OBJECTFILES}
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-idxbuild: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/idxbuild ${OBJECTFILES} ${LDLIBSOPTIONS}
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-idxbuild ${OBJECTFILES} ${LDLIBSOPTIONS}
 
 ${OBJECTDIR}/_ext/1310162774/idxBuild.o: ../../../../../src/tools/dataLoggerIndex/idxBuild.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1310162774
@@ -73,7 +73,7 @@ ${OBJECTDIR}/_ext/1310162774/idxBuild.o: ../../../../../src/tools/dataLoggerInde
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/idxbuild
+	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-idxbuild
 
 # Subprojects
 .clean-subprojects:
