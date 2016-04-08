@@ -34,7 +34,7 @@ Add there a DEPENDS file like this:
 .. code-block:: bash
 
     # type        category        package    tag
-    dependency    dependencies    scpi       branches/1.1-1.3
+    dependency    dependencies    scpi       branches/1.1-1.5
 
 Do not forget to add the DEPENDS file to the repository:
 
@@ -82,12 +82,12 @@ simple and should look like:
     __author__="john.smith@xfel.eu"
     __date__ ="June  8, 2015, 01:53 PM"
     __copyright__="Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved."
-    
+
     from karabo.api_1 import KARABO_CLASSINFO, launchPythonDevice
     from scpi.scpi_device_2 import ScpiDevice2, ScpiOkErrorFsm
-    
-    
-    @KARABO_CLASSINFO("MyScpiDevice", "1.2 1.3")
+
+
+    @KARABO_CLASSINFO("MyScpiDevice", "1.5")
     class MyScpiDevice(ScpiDevice2, ScpiOkErrorFsm):
     
         def __init__(self, configuration):
@@ -127,9 +127,9 @@ force the Karabo device to follow the hardware state.
     
     from karabo.api_1 import KARABO_CLASSINFO, launchPythonDevice
     from scpi.scpi_device_2 import ScpiDevice2, ScpiOnOffFsm
-    
-    
-    @KARABO_CLASSINFO("MyScpiDevice", "1.2 1.3")
+
+
+    @KARABO_CLASSINFO("MyScpiDevice", "1.5")
     class MyScpiDevice(ScpiDevice2, ScpiOnOffFsm):
     
         def __init__(self, configuration):
@@ -177,10 +177,10 @@ like
     
     from karabo.api_1 import KARABO_CLASSINFO, launchPythonDevice
     from scpi.scpi_device_2 import ScpiDevice2, ScpiStartStopFsm
-    
-    
-    @KARABO_CLASSINFO("MyScpiDevice", "1.2 1.3")
-    class MyScpiDevice(ScpiDevice2, ScpiStartStopFsm):
+
+
+    @KARABO_CLASSINFO("MyScpiDevice", "1.5")
+    class MyScpiDevice(ScpiDevice, ScpiStartStopFsm):
     
         def __init__(self, configuration):
             # always call superclass constructor first!
@@ -270,7 +270,11 @@ These commands will be sent before the expected parameters with
 Aliases
 -------
 
-The SCPI commands and queries corresponding to writing and reading any parameter must be written in the parameter alias. Different fields in the alias have to be separated by semicolons (;) or a different separator (as explained in :ref:`scpi-alias-separator` Section). For example
+The SCPI commands and queries corresponding to writing and reading any
+parameter must be written in the parameter alias. Different fields in
+the alias have to be separated by semicolons (;) or a different
+separator (as explained in :ref:`scpi-alias-separator` Section). For
+example
 
 .. code-block:: python
 
@@ -285,9 +289,86 @@ The SCPI commands and queries corresponding to writing and reading any parameter
             .reconfigurable()
             .commit(),
 
-The first field in the alias contains the set command (ie >S1H) and its parameters (ie {resolutionMode}) for the resolutionMode. This string will be parsed, and {resolutionMode} will be replaced by the configuration value corresponding to the key. The second field (ie E0) is the expected reply to the set command; it is also parsed to extract parameters (none in this example).
+The first field in the alias contains the set command (ie >S1H) and
+its parameters (ie {resolutionMode}) for the resolutionMode. This
+string will be parsed, and {resolutionMode} will be replaced by the
+configuration value corresponding to the key. The second field (ie E0)
+is the expected reply to the set command; it is also parsed to extract
+parameters (none in this example).
 
-The third field contains the query command (ie >S1H?) and its parameters (none). The fourth field (ie {resolutionMode:d}) is the expected reply to the query; it is parsed and resolutionMode is extracted as integer (d). Other allowed types are "w" (letters and underscores), "g" (integer, fixed point or floating point numbers). The python parse package is used for parsing: the complete list of types can be found in the `documentation <https://pypi.python.org/pypi/parse>`_.
+The third field contains the query command (ie >S1H?) and its
+parameters (none). The fourth field (ie {resolutionMode:d}) is the
+expected reply to the query; it is parsed and resolutionMode is
+extracted as integer (d). The parsing is done by using the python
+parse package (see `documentation
+<https://pypi.python.org/pypi/parse>`_), therefore all types defined
+there can be used:
+
++------+---------------------------------------------------------+----------+
+| Type | Characters Matched                                      | Output   |
++======+=========================================================+==========+
+| w    | Letters and underscore                                  | str      |
++------+---------------------------------------------------------+----------+
+| W    | Non-letter and underscore                               | str      |
++------+---------------------------------------------------------+----------+
+| s    |  Whitespace                                             | str      |
++------+---------------------------------------------------------+----------+
+| S    | Non-whitespace                                          | str      |
++------+---------------------------------------------------------+----------+
+| d    | Digits (effectively integer numbers)                    | int      |
++------+---------------------------------------------------------+----------+
+| D    | Non-digit                                               | str      |
++------+---------------------------------------------------------+----------+
+| n    | Numbers with thousands separators (, or .)              | int      |
++------+---------------------------------------------------------+----------+
+| %    | Percentage (converted to value/100.0)                   | float    |
++------+---------------------------------------------------------+----------+
+| f    | Fixed-point numbers                                     | float    |
++------+---------------------------------------------------------+----------+
+| e    | Floating-point numbers with exponent e.g. 1.1e-10,      | float    |
+|      | NAN (all case insensitive)                              |          |
++------+---------------------------------------------------------+----------+
+| g    | General number format (either d, f or e)                | float    |
++------+---------------------------------------------------------+----------+
+| b    | Binary numbers                                          | int      |
++------+---------------------------------------------------------+----------+
+| o    | Octal numbers                                           | int      |
++------+---------------------------------------------------------+----------+
+| x    | Hexadecimal numbers (lower and upper case)              | int      |
++------+---------------------------------------------------------+----------+
+| ti   | ISO 8601 format date/time                               | datetime |
+|      | e.g. 1972-01-20T10:21:36Z (“T” and “Z” optional)        |          |
++------+---------------------------------------------------------+----------+
+| te   | RFC2822 e-mail format date/time                         | datetime |
+|      | e.g. Mon, 20 Jan 1972 10:21:36 +1000                    |          |
++------+---------------------------------------------------------+----------+
+| tg   | Global (day/month) format date/time                     | datetime |
+|      | e.g. 20/1/1972 10:21:36 AM +1:00                        |          |
++------+---------------------------------------------------------+----------+
+| ta   | US (month/day) format date/time                         | datetime |
+|      | e.g. 1/20/1972 10:21:36 PM +10:30                       |          |
++------+---------------------------------------------------------+----------+
+| tc   | ctime() format date/time                                | datetime |
+|      | e.g. Sun Sep 16 01:03:52 1973                           |          |
++------+---------------------------------------------------------+----------+
+| th   | HTTP log format date/time                               | datetime |
+|      | e.g. 21/Nov/2011:00:07:11 +0000                         |          |
++------+---------------------------------------------------------+----------+
+| ts   | Linux system log format date/time                       | datetime |
+|      | e.g. Nov 9 03:37:44                                     |          |
++------+---------------------------------------------------------+----------+
+| tt   | Time e.g. 10:21:36 PM -5:30                             | time     |
++------+---------------------------------------------------------+----------+
+
+In addition, two extra types can be used for the SCPI devices:
+
++------+---------------------------------------------------------+----------+
+| Type | Characters Matched                                      | Output   |
++======+=========================================================+==========+
+| p    | All printable characters                                | str      |
++------+---------------------------------------------------------+----------+
+| P    | All non-printable characters                            | str      |
++------+---------------------------------------------------------+----------+
 
 
 .. _scpi-alias-separator:
@@ -514,7 +595,7 @@ Here is a complete example of expected parameters for a Start/Stop device:
 
       STRING_ELEMENT(expected).key("serialNumber")
                 .tags("scpi readOnConnect") # Read from h/w at initialization
-                .alias(";;SYST:INF:SNUM?;\"{serialNumber}\";") # Only query available
+                .alias(";;SYST:INF:SNUM?;\"{serialNumber:p}\";") # Only query available
                 .displayedName("Serial Number")
                 .description("The serial number.")
                 .readOnly()
