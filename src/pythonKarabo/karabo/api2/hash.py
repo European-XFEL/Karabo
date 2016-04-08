@@ -835,6 +835,8 @@ class Schema(Special):
     def copy(self, other):
         self.hash = Hash()
         self.hash.merge(other.hash)
+        self.name = other.name
+        self.rules = other.rules
 
     def keyHasAlias(self, key):
         return "alias" in self.hash[key, ...]
