@@ -264,7 +264,8 @@ class Type(hashmod.Type, metaclass=Monkey):
         box.signalUpdateComponent.connect(other.slotSet)
 
 
-    def dispatchUserChanges(self, box, hash):
+    def dispatchUserChanges(self, box, hash, attrs=None):
+        self._copyAttrs(box, attrs)
         box.signalUserChanged.emit(box, box.descriptor.cast(hash), None)
 
 
@@ -346,7 +347,8 @@ class Type(hashmod.Type, metaclass=Monkey):
         return box.value, attributes
 
 
-    def fromHash(self, box, data, timestamp=None):
+    def fromHash(self, box, data, attrs=None, timestamp=None):
+        self._copyAttrs(box, attrs)
         box._set(data, timestamp)
 
 
@@ -366,6 +368,12 @@ class Type(hashmod.Type, metaclass=Monkey):
             return self.cast(box.value)
         else:
             return box.value
+
+    def _copyAttrs(self, box, attrs):
+        attrs = attrs if attrs is not None else {}
+        desc = box.descriptor
+        for name, value in attrs.items():
+            setattr(desc, name, value)
 
 
 class Char(hashmod.Char, metaclass=Monkey):
@@ -567,7 +575,7 @@ class Schema(hashmod.Descriptor):
         return ret, {}
 
 
-    def fromHash(self, box, value, timestamp=None):
+    def fromHash(self, box, value, attrs=None, timestamp=None):
         for k, v, a in value.iterall():
             try:
                 vv = getattr(box.boxvalue, k)
@@ -583,13 +591,13 @@ class Schema(hashmod.Descriptor):
                 pass
                 #print 'bullshit in', k, vv, vv.descriptor
             else:
-                s(v, ts)
+                s(v, attrs=a, timestamp=ts)
         box._set(box._value, timestamp)
 
 
-    def dispatchUserChanges(self, box, hash):
-        for k, v in hash.items():
-            getattr(box.boxvalue, k).dispatchUserChanges(v)
+    def dispatchUserChanges(self, box, hash, attrs=None):
+        for k, v, a in hash.iterall():
+            getattr(box.boxvalue, k).dispatchUserChanges(v, attrs=a)
 
 
     def setDefault(self, box):
@@ -737,18 +745,18 @@ class ChoiceOfNodes(Schema):
         return item
 
 
-    def fromHash(self, box, value, timestamp=None):
+    def fromHash(self, box, value, attrs=None, timestamp=None):
         for k in value:
             box.current = k
             break # there should be only one entry in the hash
-        Schema.fromHash(self, box, value, timestamp)
+        Schema.fromHash(self, box, value, attrs=attrs, timestamp=timestamp)
 
 
-    def dispatchUserChanges(self, box, hash):
+    def dispatchUserChanges(self, box, hash, attrs=None):
         for k in hash:
             box.signalUserChanged.emit(box, k, None)
             break
-        Schema.dispatchUserChanges(self, box, hash)
+        Schema.dispatchUserChanges(self, box, hash, attrs=attrs)
 
 
     def setDefault(self, box):

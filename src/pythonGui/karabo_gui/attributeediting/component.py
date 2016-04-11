@@ -27,6 +27,7 @@ class EditAttributeComponent(BaseComponent):
         self.widgetFactory.attributeValueChanged(value)
 
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
+        box.signalUserChanged.connect(self.widgetFactory.valueChanged)
 
     def onEditingFinished(self, box, value):
         setattr(box.descriptor, self._attributeName, value)
