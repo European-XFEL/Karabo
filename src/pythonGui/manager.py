@@ -26,7 +26,7 @@ from karabo_gui.messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
 from karabo_gui.network import Network
 from projectmodel import ProjectModel
-from karabo_gui.util import getSaveFileName
+from karabo_gui.util import getSaveFileName, getSchemaModifications
 
 from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
@@ -155,7 +155,7 @@ class _Manager(QObject):
                 conf.redummy()
 
 
-    def initDevice(self, serverId, classId, deviceId, config=None, schema=None):
+    def initDevice(self, serverId, classId, deviceId, config=None):
         if config is None:
             # Use standard configuration for server/classId
             conf = self.serverClassData.get((serverId, classId))
@@ -163,6 +163,11 @@ class _Manager(QObject):
                 config, _ = conf.toHash()  # Ignore returned attributes
             else:
                 config = Hash()
+
+        # Compute a runtime schema from the configuration and an unmodified
+        # copy of the device class schema.
+        baseSchema = self._immutableServerClassData[serverId, classId]
+        schema = getSchemaModifications(baseSchema, config)
 
         # Send signal to network
         Network().onInitDevice(serverId, classId, deviceId, config, schema=schema)
