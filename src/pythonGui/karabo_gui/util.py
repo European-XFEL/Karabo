@@ -55,7 +55,7 @@ def getSchemaModifications(schema, config):
         return {k: v for k, v in d.items() if k not in special_attrs or v}
 
     def dictdiff(d0, d1):
-        return {k: v for k, v in d0.items() if v and d1.get(k) != v}
+        return {k: v for k, v in d0.items() if d1.get(k) != v}
 
     def addattrs(hsh, path, attrs, schema_attrs):
         hsh[path] = None
