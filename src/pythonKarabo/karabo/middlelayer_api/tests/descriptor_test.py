@@ -29,8 +29,6 @@ class Tests(TestCase):
     def test_int_enum(self):
         class E(Enum):
             a = 3
-        class F(Enum):
-            a = 3
         d = hashmod.Int8(enum=E)
         v = d.toKaraboValue(E.a)
         self.assertIs(v.enum, E.a)
@@ -38,6 +36,11 @@ class Tests(TestCase):
         self.check_general(d, v)
         with self.assertRaises(TypeError):
             v = d.toKaraboValue(3)
+
+        class F(Enum):
+            a = 3
+        with self.assertRaises(TypeError):
+            v = d.toKaraboValue(F.a)
 
     def test_bool(self):
         d = hashmod.Bool()
@@ -146,19 +149,6 @@ class Tests(TestCase):
         with self.assertRaises(ValueError):
             v = d.toKaraboValue("7 m")
 
-    def test_float_enum(self):
-        class E(Enum):
-            a = 3.3
-        class F(Enum):
-            a = 3.3
-        d = hashmod.Int8(enum=E)
-        v = d.toKaraboValue(E.a)
-        self.assertIs(v.enum, E.a)
-        self.assertEqual(v.value, 3.3)
-        self.check_general(d, v)
-        with self.assertRaises(TypeError):
-            v = d.toKaraboValue(3.3)
-
     def test_vector_floats(self):
         d = hashmod.VectorFloat()
         v = d.toKaraboValue([1, 2, 3])
@@ -229,8 +219,6 @@ class Tests(TestCase):
     def test_string_enum(self):
         class E(Enum):
             a = "bla"
-        class F(Enum):
-            a = "bla"
         d = hashmod.String(enum=E)
         v = d.toKaraboValue(E.a)
         self.assertIs(v.enum, E.a)
@@ -238,6 +226,11 @@ class Tests(TestCase):
         self.check_general(d, v)
         with self.assertRaises(TypeError):
             v = d.toKaraboValue("bla")
+
+        class F(Enum):
+            a = "bla"
+        with self.assertRaises(TypeError):
+            v = d.toKaraboValue(F.a)
 
     def test_vector_string(self):
         d = hashmod.VectorString()
