@@ -646,7 +646,7 @@ namespace karabo {
                     int nodeType;
                     try {
                         nodeType = getNodeType(key);
-                    } catch (const Exception& e) {
+                    } catch (...) {
                         nodeType = -1;
                     }
                     if (nodeType == Schema::LEAF) {
@@ -662,10 +662,11 @@ namespace karabo {
             } else {
                 stream << "Schema: " << getRootName() << ", key: " << classId << endl;
                 
-                int nodeTypeClassId = -1;
+                int nodeTypeClassId;
                 try {
                     nodeTypeClassId = getNodeType(classId);
-                } catch (const Exception& e) {
+                } catch (...) {
+                    nodeTypeClassId = -1;
                 }
                 
                 if (nodeTypeClassId == Schema::LEAF) {
@@ -686,7 +687,8 @@ namespace karabo {
                             int nodeType = -1;
                             try {
                                 nodeType = getNodeType(path);
-                            } catch (const Exception& e) {
+                            } catch (...) {
+                                nodeType = -1;
                             }
                             
                             if (nodeType == Schema::LEAF) {
@@ -829,7 +831,7 @@ namespace karabo {
                 
                 try {
                     nodeType = getNodeType(newPath);
-                } catch (const Exception& e) {
+                } catch (...) {
                     nodeType = -1;
                 }
                     
