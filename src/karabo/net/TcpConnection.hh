@@ -105,6 +105,7 @@ namespace karabo {
             BoostIOServicePointer m_boostIoServicePointer;
             BoostTcpResolver m_resolver;
             BoostTcpAcceptor m_acceptor;
+            boost::mutex m_boostTcpMutex;
             std::string m_connectionType;
             std::string m_hostname;
             unsigned int m_port;
