@@ -643,25 +643,37 @@ namespace karabo {
                 vector<string> keys = getKeys();
 
                 BOOST_FOREACH(string key, keys) {
-                    if (getNodeType(key) == Schema::LEAF) {
+                    int nodeType;
+                    try {
+                        nodeType = getNodeType(key);
+                    } catch (const Exception& e) {
+                        nodeType = -1;
+                    }
+                    if (nodeType == Schema::LEAF) {
                         processingLeaf(key, stream);
-                    } else if (getNodeType(key) == Schema::NODE) {
+                    } else if (nodeType == Schema::NODE) {
                         processingNode(key, stream);
-                    } else if (getNodeType(key) == Schema::CHOICE_OF_NODES) {
+                    } else if (nodeType == Schema::CHOICE_OF_NODES) {
                         processingChoiceOfNodes(key, stream);
-                    } else if (getNodeType(key) == Schema::LIST_OF_NODES) {
+                    } else if (nodeType == Schema::LIST_OF_NODES) {
                         processingListOfNodes(key, stream);
                     }
                 }
             } else {
                 stream << "Schema: " << getRootName() << ", key: " << classId << endl;
-
-                if (getNodeType(classId) == Schema::LEAF) {
+                
+                int nodeTypeClassId = -1;
+                try {
+                    nodeTypeClassId = getNodeType(classId);
+                } catch (const Exception& e) {
+                }
+                
+                if (nodeTypeClassId == Schema::LEAF) {
                     stream << "LEAF element" << endl;
                     processingLeaf(classId, stream);
                 }
 
-                if (getNodeType(classId) == Schema::NODE) {
+                if (nodeTypeClassId == Schema::NODE) {
 
                     vector<string> keys = getKeys(classId);
                     if (!keys.empty()) {
@@ -671,13 +683,19 @@ namespace karabo {
 
                         BOOST_FOREACH(string key, keys) {
                             string path = classId + "." + key;
-                            if (getNodeType(path) == Schema::LEAF) {
+                            int nodeType = -1;
+                            try {
+                                nodeType = getNodeType(path);
+                            } catch (const Exception& e) {
+                            }
+                            
+                            if (nodeType == Schema::LEAF) {
                                 processingLeaf(path, stream);
-                            } else if (getNodeType(path) == Schema::NODE) {
+                            } else if (nodeType == Schema::NODE) {
                                 processingNode(path, stream);
-                            } else if (getNodeType(path) == Schema::CHOICE_OF_NODES) {
+                            } else if (nodeType == Schema::CHOICE_OF_NODES) {
                                 processingChoiceOfNodes(path, stream);
-                            } else if (getNodeType(path) == Schema::LIST_OF_NODES) {
+                            } else if (nodeType == Schema::LIST_OF_NODES) {
                                 processingListOfNodes(path, stream);
                             }
                         }
@@ -687,7 +705,7 @@ namespace karabo {
                     }
                 }
 
-                if (getNodeType(classId) == Schema::CHOICE_OF_NODES) {
+                if (nodeTypeClassId == Schema::CHOICE_OF_NODES) {
 
 
                     stream << "CHOICE element" << endl;
@@ -699,7 +717,7 @@ namespace karabo {
                     }
                 }
 
-                if (getNodeType(classId) == Schema::LIST_OF_NODES) {
+                if (nodeTypeClassId == Schema::LIST_OF_NODES) {
 
 
                     stream << "LIST element" << endl;
@@ -806,14 +824,22 @@ namespace karabo {
                 string newPath = key;
                 if (!oldPath.empty()) newPath = oldPath + "." + key;
                 if (keyHasAlias(newPath)) m_aliasToKey[getAliasAsString(newPath)] = newPath;
-                if (getNodeType(newPath) == Schema::NODE) {
+                // getNodeType(...)  may throw exception: Key 'nodeType' is not found
+                int nodeType;
+                
+                try {
+                    nodeType = getNodeType(newPath);
+                } catch (const Exception& e) {
+                    nodeType = -1;
+                }
+                    
+                if (nodeType == Schema::NODE) {
                     r_updateAliasMap(getKeys(newPath), newPath);
-                } else if (getNodeType(newPath) == Schema::CHOICE_OF_NODES) {
+                } else if (nodeType == Schema::CHOICE_OF_NODES) {
                     r_updateAliasMap(getKeys(newPath), newPath);
-                } else if (getNodeType(newPath) == Schema::LIST_OF_NODES) {
+                } else if (nodeType == Schema::LIST_OF_NODES) {
                     r_updateAliasMap(getKeys(newPath), newPath);
                 }
-
             }
         }
 
