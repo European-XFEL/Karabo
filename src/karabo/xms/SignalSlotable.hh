@@ -1446,13 +1446,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval, const karabo::util::Hash& instanceInfo);
 
-            //void refreshTimeToLiveForConnectedSlot(const std::string& networkId, int heartbeatInterval, const karabo::util::Hash& instanceInfo);
-
             void letInstanceSlowlyDieWithoutHeartbeat();
-
-            //void registerConnectionForTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
-
-            //void unregisterConnectionFromTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
             bool isConnectionTracked(const std::string& connectionId);
 
