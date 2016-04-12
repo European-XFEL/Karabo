@@ -55,6 +55,7 @@ namespace karabo {
             std::vector<std::string> m_serverList;
             size_t m_serverIndex;
             karabo::util::Hash m_loggerMap;
+            const std::string m_loggerMapFile;
             bool m_saved;
             boost::mutex m_handlerMutex;
         };
