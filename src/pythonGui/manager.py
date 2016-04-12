@@ -20,13 +20,13 @@ __all__ = ["Manager"]
 from configuration import Configuration, BulkNotifications
 from karabo_gui.dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
-from karabo.api_2 import Hash, XMLWriter, XMLParser, ProjectConfiguration
+from karabo.api_2 import Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration
 import karabo_gui.globals as globals
 from karabo_gui.messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
 from karabo_gui.network import Network
 from projectmodel import ProjectModel
-from karabo_gui.util import getSaveFileName
+from karabo_gui.util import getSaveFileName, getSchemaModifications
 
 from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
@@ -119,9 +119,11 @@ class _Manager(QObject):
         self.systemHash = None
         
         # Map stores { (serverId, class), Configuration }
-        self.serverClassData = dict()
+        self.serverClassData = {}
+        # Map stores { (serverId, class), Schema }
+        self._immutableServerClassData = {}
         # Map stores { deviceId, Configuration }
-        self.deviceData = dict()
+        self.deviceData = {}
         
         # State, if instantiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
@@ -162,8 +164,13 @@ class _Manager(QObject):
             else:
                 config = Hash()
 
+        # Compute a runtime schema from the configuration and an unmodified
+        # copy of the device class schema.
+        baseSchema = self._immutableServerClassData[serverId, classId]
+        schema = getSchemaModifications(baseSchema, config)
+
         # Send signal to network
-        Network().onInitDevice(serverId, classId, deviceId, config)
+        Network().onInitDevice(serverId, classId, deviceId, config, schema=schema)
         self.__isInitDeviceCurrentlyProcessed = True
 
 
@@ -500,11 +507,16 @@ class _Manager(QObject):
         if (serverId, classId) not in self.serverClassData:
             print('not requested schema for classId {} arrived'.format(classId))
             return
-        
+
+        # Save a clean copy
+        schemaCopy = Schema()
+        schemaCopy.copy(schema)
+        self._immutableServerClassData[serverId, classId] = schemaCopy
+
         conf = self.serverClassData[serverId, classId]
         if conf.descriptor is not None:
             return
-        
+
         if len(schema.hash) > 0:
             # Set schema only, if data is available
             conf.setSchema(schema)
