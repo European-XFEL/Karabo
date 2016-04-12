@@ -1309,6 +1309,7 @@ namespace karabo {
         }
 
 
+
         void SignalSlotable::slotConnectToSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction) {
             bool result = false;
             {
@@ -1322,6 +1323,7 @@ namespace karabo {
 
             reply(result);
         }
+
 
         bool SignalSlotable::instanceHasSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
 
@@ -1353,6 +1355,7 @@ namespace karabo {
             }
             return slotExists;
         }
+
 
         void SignalSlotable::slotHasSlot(const std::string& slotFunction) {
             bool result = false;
