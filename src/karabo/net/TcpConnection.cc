@@ -308,16 +308,19 @@ namespace karabo {
 
         void TcpConnection::stop() {
             boost::system::error_code ec;
-            if (m_connectionType == "server" && m_acceptor) {
-                m_acceptor->cancel(ec);
-                if (ec) cout << "WARN  :  Acceptor cancellation failed: #" << ec.value() << " -- " << ec.message() << endl;
-                ec.clear();
-                m_acceptor->close(ec);
-                if (ec) cout << "WARN  :  Acceptor closing failed: #" << ec.value() << " -- " << ec.message() << endl;
-                m_acceptor.reset();
-            } else if (m_resolver) {
-                m_resolver->cancel();
-                m_resolver.reset();
+            {
+                boost::mutex::scoped_lock lock(m_boostTcpMutex);
+                if (m_connectionType == "server" && m_acceptor) {
+                    m_acceptor->cancel(ec);
+                    if (ec) cout << "WARN  :  Acceptor cancellation failed: #" << ec.value() << " -- " << ec.message() << endl;
+                    ec.clear();
+                    m_acceptor->close(ec);
+                    if (ec) cout << "WARN  :  Acceptor closing failed: #" << ec.value() << " -- " << ec.message() << endl;
+                    m_acceptor.reset();
+                } else if (m_resolver) {
+                    m_resolver->cancel();
+                    m_resolver.reset();
+                }
             }
             m_boostIoServicePointer.reset();
             m_service.reset();
