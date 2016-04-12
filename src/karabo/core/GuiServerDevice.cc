@@ -1046,25 +1046,32 @@ namespace karabo {
                     std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
                     if (it != m_channels.end()) {
                         it->first->close(); // This closes socket and unregisters channel from connection
-                        deviceIds = it->second; // copy to the empty set
+                        deviceIds.swap(it->second); // copy to the empty set
                         // Remove channel as such
                         m_channels.erase(it);
                     }
                     KARABO_LOG_FRAMEWORK_INFO << m_channels.size() << " client(s) left.";
                 }
 
+                // Now check all devices that this channel had interest in and decrement counter.
+                // Keep those devices in deviceIds where no one else is interested.
                 {
                     boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                    // Remove all previously visible devices
-                    for (std::set<std::string>::const_iterator jt = deviceIds.begin(); jt != deviceIds.end(); jt++) {
+                    for (std::set<std::string>::const_iterator jt = deviceIds.begin(); jt != deviceIds.end(); ) {
                         const std::string& deviceId = *jt;
-                        m_monitoredDevices[deviceId]--;
-                        KARABO_LOG_FRAMEWORK_DEBUG << "stopMonitoringDevice (GUI gone) " << deviceId << " " << m_monitoredDevices[deviceId];
-                        if (m_monitoredDevices[deviceId] == 0) {
-                            // Disconnect signal/slot from broker
-                            remote().unregisterDeviceMonitor(deviceId);
+                        const int numLeft = --m_monitoredDevices[deviceId]; // prefix---: decrement and then assign
+                        KARABO_LOG_FRAMEWORK_DEBUG << "stopMonitoringDevice (GUI gone) " << deviceId << " " << numLeft;
+                        if (numLeft > 0) {
+                            // others still interested - remove from set of devices to be unregistered
+                            deviceIds.erase(jt++); // postfix-++: erase from map on the fly & keep valid iterator
+                        } else {
+                            ++jt;
                         }
                     }
+                }
+                // All devices left in deviceIds have to be unregistered from monitoring.
+                BOOST_FOREACH(const std::string& deviceId, deviceIds) {
+                    remote().unregisterDeviceMonitor(deviceId);
                 }
 
                 {
