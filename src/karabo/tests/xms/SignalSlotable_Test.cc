@@ -167,7 +167,7 @@ void SignalSlotable_Test::testMethod() {
     CPPUNIT_ASSERT(m_demo->wasOk(6) == true);
 }
 
-void SignalSlotable_Test::testAutoConnect() {
+void SignalSlotable_Test::testAutoConnectSignal() {
     CPPUNIT_ASSERT(m_demo);
 
     // Connect the other's signal to my slot - although the other is not yet there!
@@ -190,6 +190,43 @@ void SignalSlotable_Test::testAutoConnect() {
     // -> slotA (of other instance) -> connect slotB to signalB -> signalB -> slotB
     boost::this_thread::sleep(boost::posix_time::milliseconds(200));
     const bool ok2 = m_demo->wasOk(2);
+
+    demo2->stopEventLoop();
+    m_demo->stopEventLoop();
+    demo2Thread->join();
+    m_demoThread->join();
+
+    // Asserts after all threads are joined:
+    CPPUNIT_ASSERT(ok1);
+    CPPUNIT_ASSERT(demo2Fine);
+    CPPUNIT_ASSERT(ok2);
+}
+
+void SignalSlotable_Test::testAutoConnectSlot() {
+    // Same as testAutoConnectSignal, but the other way round:
+    // slot instance comes into game after connect was called.
+    CPPUNIT_ASSERT(m_demo);
+
+    // Connect the other's slot to my signal - although the other is not yet there!
+    m_demo->connect("", "signalA", "SignalSlotDemo2", "slotA");
+    m_demo->emit("signalA", "Hello World!");
+    // Allow for some travel time - although nothing should travel...
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    const bool ok1 = m_demo->wasOk(0); // m_demo is not interested in its own signals
+
+    std::pair<SignalSlotDemo::Pointer, boost::shared_ptr<boost::thread> > demo2Pair = this->createDemo("SignalSlotDemo2");
+    SignalSlotDemo::Pointer demo2 = demo2Pair.first;
+    boost::shared_ptr<boost::thread> demo2Thread = demo2Pair.second;
+    const bool demo2Fine = demo2;
+
+    // Give m_demo some time to auto-connect now that SignalSlotDemo2 is there:
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+
+    m_demo->emit("signalA", "Hello World!");
+    // More time for all signaling (although it is all short-cutting the broker):
+    // -> slotA (of other instance) -> connect slotB to signalB -> signalB -> slotB
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    const bool ok2 = demo2->wasOk(2);
 
     demo2->stopEventLoop();
     m_demo->stopEventLoop();
