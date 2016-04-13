@@ -86,7 +86,7 @@ namespace karabo {
         DataLoggerManager::DataLoggerManager(const Hash& input)
         : karabo::core::Device<karabo::core::OkErrorFsm>(input),
                 m_serverList(input.get<vector<string> >("serverList")),
-                m_serverIndex(0), m_loggerMapFile("loggermap.xml"), m_saved(false)
+                m_serverIndex(0), m_loggerMapFile("loggermap.xml")
         {
             m_loggerMap.clear();
             if (boost::filesystem::exists(m_loggerMapFile)) {
@@ -219,6 +219,7 @@ namespace karabo {
                         boost::mutex::scoped_lock lock(m_handlerMutex);
                         if (deviceExists && !loggerExists) {
                             string serverId;
+                            bool newMap = false;
                             if (m_loggerMap.has(loggerId)) {
                                 serverId = m_loggerMap.get<string>(loggerId);
                             } else {
@@ -230,7 +231,7 @@ namespace karabo {
                                 serverId = m_serverList[m_serverIndex++];
                                 m_loggerMap.set(loggerId, serverId);
                                 emit<Hash>("signalLoggerMap", m_loggerMap);
-                                m_saved = false;
+                                newMap = true;
                             }
 
                             Hash config;
@@ -241,6 +242,10 @@ namespace karabo {
                             config.set("DataLogger.flushInterval", get<int>("flushInterval"));
                             remote().instantiateNoWait(serverId, config);
                             KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler [device] : logger \"" << loggerId << "\" STARTED";
+                            // First instantiate the new logger - now we have time to update the logger map file.
+                            if (newMap) {
+                                karabo::io::saveToFile(m_loggerMap, m_loggerMapFile);
+                            }
                         }
                     }
                 } else if (type == "server") {
@@ -322,10 +327,6 @@ namespace karabo {
                         if (loggerExists) {
                             this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
                             remote().killDeviceNoWait(loggerId);
-                            if (!m_saved) {
-                                karabo::io::saveToFile(m_loggerMap, m_loggerMapFile);
-                                m_saved = true;
-                            }
                         }
                     } catch (const Exception& e) {
                         KARABO_LOG_ERROR << e;
