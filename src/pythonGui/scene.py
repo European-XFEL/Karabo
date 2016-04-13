@@ -13,7 +13,7 @@ from karabo_gui.dialogs.dialogs import (PenDialog, TextDialog, SceneLinkDialog,
                                         ReplaceDialog)
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
+from karabo_gui.layouts import FixedLayout, BoxLayout, ProxyWidget, Layout
 from karabo_gui.sceneitems.workflowitems import (Item, WorkflowConnection, WorkflowItem,
                                       WorkflowGroupItem)
 
