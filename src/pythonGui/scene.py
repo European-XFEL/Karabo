@@ -831,22 +831,6 @@ class HorizontalGroup(GroupActions, BoxGroup):
         self.doit(BoxLayout(BoxLayout.LeftToRight), lambda x: x.geometry().x())
 
 
-class GridGroup(GroupActions, BoxGroup):
-    text = "Group in a Grid"
-    icon = icons.groupGrid
-
-
-    def run(self):
-        rect, widgets = self.gather_widgets()
-        if rect.isNull():
-            return
-        group = GridLayout()
-        group.set_children(widgets)
-        group.shapes = self.gather_shapes()
-        group.fixed_geometry = QRect(rect.topLeft(), group.sizeHint())
-        self.parent.ilayout.add_item(group)
-
-
 class Ungroup(GroupActions, SimpleAction):
     "Ungroup items"
     text = "Ungroup"
