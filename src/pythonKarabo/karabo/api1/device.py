@@ -592,7 +592,7 @@ class PythonDevice(NoFsm):
     # In C++: the following functions are protected
     
     def errorFoundAction(self, shortMessage, detailedMessage):
-        self.log.ERROR("Error Found Action: {} -- {}".format(shortMessage, detailedMessage))
+        self.log.ERROR("{} -- {}".format(shortMessage, detailedMessage))
         self._ss.emit("signalNotification", "ERROR", shortMessage, detailedMessage, self.deviceid)
     
     def preReconfigure(self, incomingReconfiguration):
@@ -630,7 +630,7 @@ class PythonDevice(NoFsm):
         self.updateState(currentState)
 
     def exceptionFound(self, shortMessage, detailedMessage):
-        self.log.ERROR(shortMessage)
+        self.log.ERROR(shortMessage + " -- " + detailedMessage)
         self._ss.emit("signalNotification", "EXCEPTION", shortMessage,
                       detailedMessage, self.deviceid)
 

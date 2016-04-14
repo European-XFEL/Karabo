@@ -37,3 +37,5 @@ class NoFsm(object):
     
     def errorFound(self, userFriendly, detail):
         print("*** ERROR *** : {} -- {}".format(userFriendly, detail))
+
+    def exceptionFound(self, userFriendlyMessage, detailedMessage): pass
