@@ -293,6 +293,9 @@ class DisplayAlignedImage(DisplayWidget):
         if dimX < 1 or dimY < 1:
             raise RuntimeError('Image has less than two dimensions')
 
+        if not hasattr(value.geometry, "update"):
+            return
+
         if box not in self.images or self.images[box] == None or value.geometry.update:
         #if self.image is None:
             # Some dtypes (eg uint32) are not displayed -> astype('float')
