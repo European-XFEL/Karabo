@@ -175,18 +175,20 @@ namespace karabo {
             
             // Check project directory for all projects
             boost::filesystem::path directory(get<string> ("directory"));
-            boost::filesystem::directory_iterator end_iter;
-            for (boost::filesystem::directory_iterator iter(directory); iter != end_iter; ++iter) {
-                if (boost::filesystem::is_directory(iter->path())) {
-                    KARABO_LOG_DEBUG << "Skip " << iter->path() << " as it is a directory.";          
+            std::vector<boost::filesystem::path> filenames;
+            std::copy(boost::filesystem::directory_iterator(directory), boost::filesystem::directory_iterator(), back_inserter(filenames));
+            std::sort(filenames.begin(), filenames.end());
+            for (std::vector<boost::filesystem::path>::const_iterator iter = filenames.begin() ; iter != filenames.end(); ++iter) {
+                if (boost::filesystem::is_directory(*iter)) {
+                    KARABO_LOG_DEBUG << "Skip " << *iter << " as it is a directory.";          
                     continue;
                 }
 
-                std::string relativePath = iter->path().relative_path().string();
+                std::string relativePath = iter->relative_path().string();
                 // Get meta-data from project file
                 ifstream projectFile(relativePath.c_str(), ios::in | ios::binary);
                 if (projectFile.is_open()) {
-                    std::string path = iter->path().stem().string();
+                    std::string path = iter->stem().string();
                     projects.set(path, Hash());
                     
                     KARABO_LOG_DEBUG << "Opened project file " << path;
@@ -205,7 +207,7 @@ namespace karabo {
                     ts->load(p, headerString);
                     projects.set(path, p);
                     
-                    std::string projectName = iter->path().filename().string();
+                    std::string projectName = iter->filename().string();
                     // Save meta data to datastructure
                     m_projectMetaData[projectName] = p;
                     
