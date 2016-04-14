@@ -1,11 +1,10 @@
 #!/bin/bash
 
-
-tmp=$(svn info ../../ | grep URL)
-VERSION=${tmp##*/}
-if [ "$VERSION" = "trunk" ]; then
-    tmp=$(svn info ../../ | grep Revision)
-    VERSION=r${tmp##*: }
+# Get the version as a tag name, if one exists
+VERSION=$(git describe --exact-match HEAD 2>/dev/null)
+if [ $? -ne 0 ]; then
+    # Otherwise use the short hash
+    VERSION=$(git rev-parse --short HEAD)
 fi
 
 if [ -z $KARABO ]; then
