@@ -150,7 +150,7 @@ namespace karabo {
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 // Set the assignment and defaults here, as the API would look strange to assign something to a read-only
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
-                this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, Types::typeDefaultValue<ValueType>());
+                this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, ValueType());
                 return m_readOnlySpecific;
             }
         };
