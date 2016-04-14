@@ -327,8 +327,12 @@ namespace karabo {
                 }
             }
 
+            template<typename T>
+            static T typeDefaultValue(const T& var = T()) {
+                return var;
+            }
 
-
+            
         };
 
         #define _KARABO_HELPER_MACRO(RefType, CppType) \
@@ -393,6 +397,27 @@ namespace karabo {
 
         #undef _KARABO_HELPER_MACRO
 
+        #define _KARABO_HELPER_MACRO(CppType, Expr) \
+        template <> inline CppType Types::typeDefaultValue<CppType >(const CppType& var) { return Expr; }
+
+        _KARABO_HELPER_MACRO(bool, false)
+        _KARABO_HELPER_MACRO(char, '\0')
+        _KARABO_HELPER_MACRO(signed char, 0)
+        _KARABO_HELPER_MACRO(unsigned char, 0)
+        _KARABO_HELPER_MACRO(short, 0)
+        _KARABO_HELPER_MACRO(unsigned short, 0)
+        _KARABO_HELPER_MACRO(int, 0)
+        _KARABO_HELPER_MACRO(unsigned int, 0)
+        _KARABO_HELPER_MACRO(long long, 0)
+        _KARABO_HELPER_MACRO(unsigned long long, 0)
+        _KARABO_HELPER_MACRO(float, 0.0)
+        _KARABO_HELPER_MACRO(double, 0.0)
+        _KARABO_HELPER_MACRO(std::complex<float>, std::complex<float>(0.0, 0.0))
+        _KARABO_HELPER_MACRO(std::complex<double>, std::complex<double>(0.0, 0.0))
+        _KARABO_HELPER_MACRO(std::string, "")
+
+        #undef _KARABO_HELPER_MACRO
+        
     }
 }
 
