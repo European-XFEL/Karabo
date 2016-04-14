@@ -49,7 +49,8 @@ class BaseFsm(NoFsm):
                 try:
                     fsm.process_event(event)
                 except Exception as e:
-                    raise RuntimeError("processEvent: event = '{0}' -- Exception: {1}".format(event.__class__.__name__, str(e)))
+                    self.exceptionFound("Exception while processing event = '{0}'".format(event.__class__.__name__), str(e))
+                    return
                 state = fsm.get_state()
                 # this is for compatibility with GUI: strip square brackets from state name in case of state machine with regions
                 if state[0] == '[' and state[len(state)-1] == ']':
