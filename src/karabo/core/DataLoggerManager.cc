@@ -252,40 +252,31 @@ namespace karabo {
                         const Hash runtimeInfo = remote().getSystemInformation();
                         if (!runtimeInfo.has("device")) return;
                         const Hash& onlineDevices = runtimeInfo.get<Hash>("device");
+                        boost::mutex::scoped_lock lock(m_handlerMutex);
+                        for (Hash::const_map_iterator i = onlineDevices.mbegin(); i != onlineDevices.mend(); ++i) {
 
-                        // Collect (under mutex lock) deviceIds for which we have to start a logger on serverId
-                        std::vector<std::string> devicesToLog;
-                        {
-                            boost::mutex::scoped_lock lock(m_handlerMutex);
-                            for (Hash::const_map_iterator i = onlineDevices.mbegin(); i != onlineDevices.mend(); ++i) {
+                            // check if deviceId should be archived ...
+                            const Hash::Node& node = i->second;
+                            if (!node.hasAttribute("archive") || (node.getAttribute<bool>("archive") == false)) continue;
 
-                                // check if deviceId should be archived ...
-                                const Hash::Node& node = i->second;
-                                if (!node.hasAttribute("archive") || (node.getAttribute<bool>("archive") == false)) continue;
-
-                                const string& deviceId = i->first;
-                                const string loggerId = DATALOGGER_PREFIX + deviceId;
-
-                                // Check if loggerId is valid ID
-                                if (!m_loggerMap.has(loggerId)) continue;
-                                const string& srv = m_loggerMap.get<string>(loggerId);
-                                // Check if loggerId belongs to this DataLoggerServer
-                                if (srv != serverId) continue;
-                                devicesToLog.push_back(deviceId);
-                            }
-                        }
-                        // Now, without mutex lock, treat the collected deviceIds ('exists' can take long...)
-                        Hash config("DataLogger.directory", get<string>("directory"),
-                                "DataLogger.maximumFileSize", get<int>("maximumFileSize"),
-                                "DataLogger.flushInterval", get<int>("flushInterval"));
-                        BOOST_FOREACH(const std::string& deviceId, devicesToLog) {
+                            const string& deviceId = i->first;
                             const string loggerId = DATALOGGER_PREFIX + deviceId;
+
+                            // Check if loggerId is valid ID
+                            if (!m_loggerMap.has(loggerId)) continue;
+                            const string& srv = m_loggerMap.get<string>(loggerId);
+                            // Check if loggerId belongs to this DataLoggerServer
+                            if (srv != serverId) continue;
                             // Check if loggerId already started based on real-time
                             if (remote().exists(deviceId).first && !remote().exists(loggerId).first) {
+                                Hash config;
                                 config.set("DataLogger.deviceId", loggerId);
                                 config.set("DataLogger.deviceToBeLogged", deviceId);
+                                config.set("DataLogger.directory", get<string>("directory"));
+                                config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
+                                config.set("DataLogger.flushInterval", get<int>("flushInterval"));
                                 remote().instantiateNoWait(serverId, config);
-                                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler [server] : logger '" << loggerId << "' STARTED";
+                                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler [server] : logger \"" << loggerId << "\" STARTED";
                             }
                         }
                     }
