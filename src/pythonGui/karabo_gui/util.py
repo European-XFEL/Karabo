@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from PyQt4.QtGui import QDialog, QFileDialog
 
-from karabo.api_2 import Hash, Schema
+from karabo.api_2 import Hash
 
 
 class SignalBlocker(object):
@@ -36,10 +36,11 @@ def getSaveFileName(title, dir="", description="", suffix="", filter=None, selec
         return dialog.selectedFiles()[0]
 
 
-def getSchemaModifications(schema, config):
-    """ Compute the difference between schema and config.
+def getSchemaModifiedAttrs(schema, config):
+    """ Find all the attributes in a configuration which are different from the
+    schema that the configuration is based on.
 
-    Return a Schema containing the differences, or None if there are none.
+    Return a Hash containing the differences, or None if there are none.
     """
     def walk(h, path=None):
         path = path or []
@@ -57,23 +58,21 @@ def getSchemaModifications(schema, config):
     def dictdiff(d0, d1):
         return {k: v for k, v in d0.items() if d1.get(k) != v}
 
-    def addattrs(hsh, path, attrs, schema_attrs):
+    def addattrs(hsh, path, attrs):
         hsh[path] = None
         hsh[path, ...] = attrs
-        hsh[path, "nodeType"] = schema_attrs["nodeType"]
 
-    modified_schema_hash = Hash()
+    modified_attrs_hash = Hash()
     for path, attrs in walk(config):
         attrs = nonemptyattrdict(attrs)
-        schema_attrs = schema.hash[path, ...]
         if path in schema.hash:
-            diff = dictdiff(attrs, schema_attrs)
+            diff = dictdiff(attrs, schema.hash[path, ...])
             if diff:
-                addattrs(modified_schema_hash, path, diff, schema_attrs)
+                addattrs(modified_attrs_hash, path, diff)
         elif attrs:
-            addattrs(modified_schema_hash, path, attrs, schema_attrs)
+            addattrs(modified_attrs_hash, path, attrs)
 
-    if not modified_schema_hash.empty():
-        return Schema(name=schema.name, hash=modified_schema_hash)
+    if not modified_attrs_hash.empty():
+        return modified_attrs_hash
 
     return None
