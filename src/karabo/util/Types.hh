@@ -327,8 +327,7 @@ namespace karabo {
                 }
             }
 
-
-
+            
         };
 
         #define _KARABO_HELPER_MACRO(RefType, CppType) \
