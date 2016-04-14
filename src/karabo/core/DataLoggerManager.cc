@@ -191,7 +191,6 @@ namespace karabo {
         }
 
         void DataLoggerManager::slotGetLoggerMap() {
-            boost::mutex::scoped_lock lock(m_handlerMutex); // m_loggerMap must not be changed while we process it
             reply(m_loggerMap);
         }
 
