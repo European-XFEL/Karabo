@@ -1458,10 +1458,9 @@ class Scene(QSvgWidget):
         
         if sourceType == "ParameterTreeWidget":
             source = event.source()
-            currentItem = source.currentItem()
-            if (source is not None) and self.designMode \
-               and not (source.conf.type == "class") \
-               and not isinstance(currentItem.box.descriptor, ChoiceOfNodes):
+            if ((source is not None) and self.designMode
+               and not (source.conf.type == "class")
+               and not isinstance(source.currentItem().box.descriptor, ChoiceOfNodes)):
                 event.accept()
         elif sourceType == "NavigationTreeView":
             source = event.source()
