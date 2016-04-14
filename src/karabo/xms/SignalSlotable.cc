@@ -1243,12 +1243,14 @@ namespace karabo {
                     << "' to signal '" << signalInstanceId << "." << signalFunction << "'.";
 		return true;
 	      } else {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Could not connect slot '" << slotInstanceId << "." << slotFunction
-                    << "' to (non-existing?) signal '" << signalInstanceId << "." << signalFunction << "'.";
+                KARABO_LOG_FRAMEWORK_WARN << "Could not connect slot '" << slotInstanceId << "." << slotFunction
+                        << "' to (non-existing?) signal '" << signalInstanceId << "." << signalFunction << "'. Will try"
+                        << " again if '" << slotInstanceId << "' or '" << signalInstanceId << "' send signalInstanceNew.";
 	      }
 	    } else {
-              KARABO_LOG_FRAMEWORK_DEBUG << "Did not try to connect non-existing slot '" << slotInstanceId << "." << slotFunction
-                  << "' to signal '" << signalInstanceId << "." << signalFunction << "'.";
+              KARABO_LOG_FRAMEWORK_WARN << "Did not try to connect non-existing slot '" << slotInstanceId << "." << slotFunction
+                      << "' to signal '" << signalInstanceId << "." << signalFunction << "'. Will try"
+                      << " again if '" << slotInstanceId << "' or '" << signalInstanceId << "' send signalInstanceNew.";
 	    }
 
 	    return false;
@@ -1505,7 +1507,7 @@ namespace karabo {
                 } catch (const karabo::util::TimeoutException&) {
                     karabo::util::Exception::clearTrace();
                     signalExists = false;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Remote instance '" << signalInstanceId << "' did not respond in time"
+                    KARABO_LOG_FRAMEWORK_WARN << "Remote instance '" << signalInstanceId << "' did not respond in time"
                             << " the request to disconnect from its signal '" << signalFunction << "'.";
                 }
             }
