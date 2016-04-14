@@ -779,7 +779,7 @@ KARABO_SLOT0(__VA_ARGS__) \
              * @param signalSignature is the signature of the signal
              * @param slotInstanceId is the instance ID of the slot (if empty use this instance)
              * @param slotSignature is the signature of the slot
-             * @return whether connection is succesfully stopped, e.g. false if there was no such connection or if remote signal instance ID did not confirm in time
+             * @return whether connection is successfully stopped, e.g. false if there was no such connection or if remote signal instance ID did not confirm in time
              */
             bool disconnect(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
@@ -1452,7 +1452,13 @@ KARABO_SLOT0(__VA_ARGS__) \
             // Thread-safe, locks m_signalSlotInstancesMutex
             bool hasSignal(const std::string& signalFunction) const;
 
-            // Thread-safe, locks m_signalSlotInstancesMutex
+            /** Try to undo registration of a slot "slotInstanceId.slotFunction".
+             * Thread-safe, locks m_signalSlotInstancesMutex.
+             * @param signalFunction name of local signal
+             * @param slotInstanceId instance id that carries the slot
+             * @param slotFunction the slot - if empty, all registered slots of slotInstanceId
+             * @return bool true if signal existed and given slot was registered before
+             */
             bool tryToUnregisterSlot(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
             bool hasReceivedReply(const std::string& replyFromValue) const;

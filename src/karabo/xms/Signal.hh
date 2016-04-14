@@ -21,7 +21,7 @@
 namespace karabo {
 
     /**
-     * Namespace for package io
+     * Namespace for package xms
      */
     namespace xms {
 
@@ -51,7 +51,13 @@ namespace karabo {
 
             void registerSlot(const std::string& slotInstanceId, const std::string& slotFunction);
 
-            void unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction = "");
+            /**
+             * Undo registration of a slot
+             * @param slotInstanceId instance id of the slot to be removed
+             * @param slotFunction the slot - if empty string, remove all registered slots of slotInstanceId
+             * @return bool whether slot registration could be undone, i.e. false if slot was not registered
+             */
+            bool unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction = "");
 
             void emit0() {
                 send(karabo::util::Hash::Pointer(new karabo::util::Hash));
