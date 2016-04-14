@@ -29,4 +29,5 @@ __all__ = [
     "icons",
     "monitor",
     "xyplot",
+    "xyvectors",
 ]
