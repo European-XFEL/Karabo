@@ -1483,36 +1483,37 @@ namespace karabo {
 
         bool SignalSlotable::tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction) {
 
-            bool signalExists = false;
+            bool disconnected = false;
 
             if (signalInstanceId == m_instanceId) { // Local signal requested
 
                 if (signalFunction == "signalHeartbeat") {
                     // Never disconnect from heartbeats - why?
-                    signalExists = true;
-                } else if (tryToUnregisterSlot(signalFunction, slotInstanceId, slotFunction)) {
-                    signalExists = true;
+                    disconnected = true;
                 } else {
-                    signalExists = false;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Cannot disconnect from signal '" << signalFunction
-                            << "' since it does not exist on this (local) instance '" << m_instanceId << "'.";
+                    disconnected = tryToUnregisterSlot(signalFunction, slotInstanceId, slotFunction);
+                }
+                if (!disconnected) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Could not disconnect slot '" << slotInstanceId << "." << slotFunction
+                            << "' from local signal '" << m_instanceId << "." << signalFunction << "'.";
                 }
             } else { // Remote signal requested
                 try {
-                    request(signalInstanceId, "slotDisconnectFromSignal", signalFunction, slotInstanceId, slotFunction).timeout(1000).receive(signalExists);
-                    if (!signalExists) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Cannot disconnect from signal '" << signalFunction
-                                << "' on remote instance '" << signalInstanceId << "' since it does not exist.";
+                    request(signalInstanceId, "slotDisconnectFromSignal", signalFunction, slotInstanceId, slotFunction).timeout(1000).receive(disconnected);
+                    if (!disconnected) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Could not disconnect slot '" << slotInstanceId << "." << slotFunction
+                            << "' from remote signal '" << m_instanceId << "." << signalFunction << "'.";
                     }
                 } catch (const karabo::util::TimeoutException&) {
                     karabo::util::Exception::clearTrace();
-                    signalExists = false;
+                    disconnected = false;
                     KARABO_LOG_FRAMEWORK_WARN << "Remote instance '" << signalInstanceId << "' did not respond in time"
-                            << " the request to disconnect from its signal '" << signalFunction << "'.";
+                            << " the request to disconnect slot '" << slotInstanceId << "." << slotFunction << "' from"
+                            << " its signal '" << signalFunction << "'.";
                 }
             }
 
-            return signalExists;
+            return disconnected;
         }
 
 
@@ -1521,8 +1522,7 @@ namespace karabo {
             SignalInstancesConstIt it = m_signalInstances.find(signalFunction);
             if (it != m_signalInstances.end()) { // Signal found
                 // Unregister slotId from local signal
-                it->second->unregisterSlot(slotInstanceId, slotFunction);
-                return true;
+                return it->second->unregisterSlot(slotInstanceId, slotFunction);
             }
             return false;
         }

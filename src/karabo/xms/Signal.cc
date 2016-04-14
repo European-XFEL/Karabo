@@ -50,17 +50,20 @@ namespace karabo {
             updateConnectedSlotsString();
         }
 
-        void Signal::unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
+        bool Signal::unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
             std::map<std::string, std::set<std::string> >::iterator it = m_registeredSlots.find(slotInstanceId);           
+            bool didErase = false;
             if (it != m_registeredSlots.end()) {
                 if (slotFunction.empty()) {
+                    didErase = !it->second.empty();
                     m_registeredSlots.erase(it);
                 } else {
-                    it->second.erase(slotFunction);
+                    didErase = (it->second.erase(slotFunction) >= 1);
                     if (it->second.empty()) m_registeredSlots.erase(it);
                 }
                 updateConnectedSlotsString();
             }
+            return didErase;
         }
 
         void Signal::send(const karabo::util::Hash::Pointer& message) {
