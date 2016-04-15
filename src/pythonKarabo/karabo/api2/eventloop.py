@@ -131,7 +131,7 @@ class Broker:
 
     def connect(self, deviceId, signal, slot):
         self.emit("call", {deviceId: ["slotConnectToSignal"]}, signal,
-                  slot.__self__.deviceId, slot.__name__, 0)
+                  slot.__self__.deviceId, slot.__name__)
 
     def disconnect(self, deviceId, signal, slot):
         self.emit("call", {deviceId: ["slotDisconnectFromSignal"]}, signal,
