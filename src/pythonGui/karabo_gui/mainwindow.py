@@ -302,7 +302,7 @@ class MainWindow(QMainWindow):
 
     def onRemoveScene(self, scene):
         for w in self.middleTab.divWidgetList:
-            if hasattr(w.dockableWidget, "scene") and w.dockableWidget.scene == scene:
+            if hasattr(w.dockableWidget, "scene") and w.dockableWidget.scene is scene:
                     scene.clean()
                     self.middleTab.removeDockableTab(w.dockableWidget)
                     break
@@ -348,7 +348,7 @@ class MainWindow(QMainWindow):
 
     def onRemoveMacro(self, macro):
         for w in self.middleTab.divWidgetList:
-            if hasattr(w.dockableWidget, "macro") and w.dockableWidget.macro == macro:
+            if hasattr(w.dockableWidget, "macro") and w.dockableWidget.macro is macro:
                     self.middleTab.removeDockableTab(w.dockableWidget)
                     break
         
