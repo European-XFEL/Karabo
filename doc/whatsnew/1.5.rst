@@ -50,7 +50,7 @@ Instead, a return value indicates whether something has been removed or not.
 Since that was exactly the behaviour of ``eraseFound(key)`` before,
 that method has been removed.
 
-``connect`` and ``disconect`` of ``SignalSlotable``
+``connect`` and ``disconnect`` of ``SignalSlotable``
 ---------------------------------------------------
 These public methods have slightly changed their signatures, i.e. they lost
 their last two arguments (``connectionType`` and ``isVerbose``). These anyway
