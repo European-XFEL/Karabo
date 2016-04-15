@@ -305,8 +305,8 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getDefaultValue("exampleKey8"), [1.1, 2.2, 3.3 ])          
             self.assertEqual(schema.getDefaultValue("exampleKey9"), ["Hallo", "World"])
             
-            #'readOnly'-element (vector as well) that does not specify 'initialValue' has 'defaultValue' equal to string "0" :
-            self.assertEqual(schema.getDefaultValue("testPath2"), "0")
+            #'readOnly'-element (vector as well) that does not specify 'initialValue' has 'defaultValue' equal to string "" :
+            self.assertEqual(schema.getDefaultValue("testPath2"), "")
             self.assertEqual(schema.getDefaultValue("vectInt"), [])
             
             self.assertEqual(schema.getDefaultValue("exampleIntKey"), 20)
@@ -782,7 +782,7 @@ class  Schema_TestCase(unittest.TestCase):
             
             self.assertEqual(schema.getDisplayedName("myImageElement.isBigEndian"), "Is big endian")
             self.assertEqual(schema.getValueType("myImageElement.isBigEndian"), Types.BOOL)
-            self.assertEqual(schema.getDefaultValue("myImageElement.isBigEndian"), "0")
+            self.assertEqual(schema.getDefaultValue("myImageElement.isBigEndian"), False)
             
         except Exception as e:
             self.fail("test_schemaImageElement group 2: " + str(e))
