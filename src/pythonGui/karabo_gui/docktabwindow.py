@@ -64,6 +64,10 @@ class DockTabWindow(QTabWidget):
 
     def removeDockableTab(self, widget):
         divWidget = widget.parent()
+        index = self.indexOf(divWidget)
+        if index < 0:
+            # dock again to get rid of it
+            divWidget.onDock()
         self.removeTab(self.indexOf(divWidget))
         divWidget.setParent(None)
         self.divWidgetList.remove(divWidget)

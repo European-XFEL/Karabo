@@ -301,12 +301,10 @@ class MainWindow(QMainWindow):
 
 
     def onRemoveScene(self, scene):
-        for i in range(self.middleTab.count()):
-            divWidget = self.middleTab.widget(i)
-            if hasattr(divWidget.dockableWidget, "scene"):
-                if divWidget.dockableWidget.scene == scene:
+        for w in self.middleTab.divWidgetList:
+            if hasattr(w.dockableWidget, "scene") and w.dockableWidget.scene == scene:
                     scene.clean()
-                    self.middleTab.removeDockableTab(divWidget.dockableWidget)
+                    self.middleTab.removeDockableTab(w.dockableWidget)
                     break
         
         self.onCustomViewRemoved()
@@ -349,11 +347,9 @@ class MainWindow(QMainWindow):
 
 
     def onRemoveMacro(self, macro):
-        for i in range(self.middleTab.count()):
-            divWidget = self.middleTab.widget(i)
-            if hasattr(divWidget.dockableWidget, "macro"):
-                if divWidget.dockableWidget.macro == macro:
-                    self.middleTab.removeDockableTab(divWidget.dockableWidget)
+        for w in self.middleTab.divWidgetList:
+            if hasattr(w.dockableWidget, "macro") and w.dockableWidget.macro == macro:
+                    self.middleTab.removeDockableTab(w.dockableWidget)
                     break
         
         self.onCustomViewRemoved()
