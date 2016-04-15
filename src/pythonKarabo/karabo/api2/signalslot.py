@@ -5,6 +5,7 @@ import logging
 import random
 import time
 import weakref
+import inspect
 
 from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
@@ -53,15 +54,19 @@ class BoundSignal(object):
         self.connected = {}
         self.args = signal.args
 
-    def connect(self, target, slot, dunno):
+    def connect(self, target, slot):
         self.connected.setdefault(target, set()).add(slot)
 
     def disconnect(self, target, slot):
         s = self.connected.get(target, None)
-        if s is not None:
+        if s is None:
+            return False
+        else:
+            result = slot in s
             s.discard(slot)
             if not s:
                 del self.connected[target]
+            return result
 
     def __call__(self, *args):
         args = [d.cast(v) for d, v in zip(self.args, args)]
@@ -165,10 +170,6 @@ class SignalSlotable(Configurable):
         print('receivet stopTracking...', args)
 
     @slot
-    def slotDisconnectFromSlot(self, *args):
-        print("SDFS", args)
-
-    @slot
     def slotGetOutputChannelInformation(self, ioChannelId, processId):
         ch = getattr(self, ioChannelId, None)
         if isinstance(ch, NetworkOutput):
@@ -228,14 +229,29 @@ class SignalSlotable(Configurable):
         get_event_loop().stop()
 
     @slot
-    def slotConnectToSignal(self, signal, target, slot, dunno):
-        getattr(self, signal).connect(target, slot, dunno)
-        return True
+    def slotConnectToSignal(self, signal, target, slot):
+        signalObj = getattr(self, signal, None)
+        if signalObj is None:
+            return False
+        else:
+            signalObj.connect(target, slot)
+            return True
 
     @slot
     def slotDisconnectFromSignal(self, signal, target, slot):
-        getattr(self, signal).disconnect(target, slot)
-        return True
+        signalObj = getattr(self, signal, None)
+        if signalObj is None:
+            return False
+        else:
+            return signalObj.disconnect(target, slot)
+
+    @slot
+    def slotHasSlot(self, slot):
+        slotCand = getattr(self, slot, None)
+        if slotCand is not None:
+            if hasattr(slotCand, 'slot'):
+                return inspect.ismethod(slotCand)
+        return False
 
     def updateInstanceInfo(self, info):
         self._ss.updateInstanceInfo(info)
