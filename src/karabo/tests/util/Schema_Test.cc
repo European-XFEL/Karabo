@@ -298,10 +298,8 @@ void Schema_Test::testGetDefaultValue() {
     CPPUNIT_ASSERT(m_schema.getDefaultValueAs<string>("sampleKey") == "10");
     CPPUNIT_ASSERT(m_schema.getDefaultValueAs<int>("sampleKey") == 10);
 
-    //readOnly element has default value which is equal to string "0"
-    //(does not matter what is the type of the element itself)
     CPPUNIT_ASSERT(m_schema.hasDefaultValue("sampleKey2") == true);
-    CPPUNIT_ASSERT(m_schema.getDefaultValue<string>("sampleKey2") == "0");
+    CPPUNIT_ASSERT(m_schema.getDefaultValue<int>("sampleKey2") == 0);
 }
 
 
