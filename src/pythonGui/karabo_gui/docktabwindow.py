@@ -68,7 +68,7 @@ class DockTabWindow(QTabWidget):
         if index < 0:
             # dock again to get rid of it
             divWidget.onDock()
-        self.removeTab(self.indexOf(divWidget))
+        self.removeTab(index)
         divWidget.setParent(None)
         self.divWidgetList.remove(divWidget)
         self.updateTabsClosable()
