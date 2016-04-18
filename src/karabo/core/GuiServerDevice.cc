@@ -7,6 +7,7 @@
  */
 
 #include "GuiServerDevice.hh"
+#include "DataLogUtils.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -16,9 +17,6 @@ using namespace karabo::io;
 using namespace karabo::xip;
 using namespace karabo::xms;
 
-#define DATALOGGER_PREFIX "DataLogger-"
-#define DATALOGREADER_PREFIX "DataLogReader"
-#define DATALOGREADERS_PER_SERVER 2
 
 namespace karabo {
     namespace core {
@@ -144,8 +142,8 @@ namespace karabo {
                 remote().registerSchemaUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::schemaUpdatedHandler, this, _1, _2));
                 remote().registerClassSchemaMonitor(boost::bind(&karabo::core::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
-                connect("Karabo_DataLoggerManager_0", "signalLoggerMap", "", "slotLoggerMap");
-                requestNoWait("Karabo_DataLoggerManager_0", "slotGetLoggerMap", "", "slotLoggerMap");
+                connect(karabo::core::DATALOGMANAGER_ID, "signalLoggerMap", "", "slotLoggerMap");
+                requestNoWait(karabo::core::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
 
                 m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
                 // Use one thread currently (you may start this multiple time for having more threads doing the work)
@@ -852,9 +850,12 @@ namespace karabo {
 
 
         void GuiServerDevice::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
+            // topologyEntry is prepared in DeviceClient::prepareTopologyEntry:
+            // an empty Hash at path <type>.<instanceId> with all the instanceInfo as attributes
             try {
 
                 const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
+                // TODO let device client return also instanceId as first argument
                 // const ref is fine even for temporary std::string
                 const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
                                                  topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
@@ -865,13 +866,20 @@ namespace karabo {
                 Hash h("type", "instanceNew", "topologyEntry", topologyEntry);
                 safeAllClientsWrite(h);
 
-                // TODO let device client return also deviceId as first argument
-                if (topologyEntry.has("device")) {
-                    string deviceId = topologyEntry.get<Hash>("device").begin()->getKey();
-                    // Check whether someone already noted interest in this deviceId
-                    if (m_monitoredDevices.find(deviceId) != m_monitoredDevices.end()) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to device " << deviceId << " which is going to be visible in a GUI client";
-                        remote().registerDeviceMonitor(deviceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
+                if (type == "device") {
+                    // Check whether someone already noted interest in it
+                    bool registerMonitor = false;
+                    {
+                        boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
+                        registerMonitor = (m_monitoredDevices.find(instanceId) != m_monitoredDevices.end());
+                    }
+                    if (registerMonitor) {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to device " << instanceId << " which is going to be visible in a GUI client";
+                        remote().registerDeviceMonitor(instanceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
+                    }
+                    if (instanceId == karabo::core::DATALOGMANAGER_ID) {
+                        // The equivalent 'connect' is done by SignalSlotable's automatic reconnect feature.
+                        requestNoWait(karabo::core::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
                     }
                 }
             } catch (const Exception& e) {
