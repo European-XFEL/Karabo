@@ -173,12 +173,19 @@ namespace karabo {
 
 
         void DeviceClient::_slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceNew was called for: " << instanceId;
+            KARABO_LOG_FRAMEWORK_DEBUG << "_slotInstanceNew was called for: " << instanceId;
 
             Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
             mergeIntoRuntimeSystemDescription(entry);
 
             if (m_instanceNewHandler) m_instanceNewHandler(entry);
+            if (m_loggerMapCached && instanceId == core::DATALOGMANAGER_ID) {
+                karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+                if (p) {
+                    // The equivalent 'connect' is done by SignalSlotable's automatic reconnect feature.
+                    p->requestNoWait(core::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "_slotLoggerMap");
+                }
+            }
         }
 
 
