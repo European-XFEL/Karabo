@@ -134,7 +134,7 @@ namespace karabo {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "restartReadersAndLoggers: runtime system information ...\n" << runtimeInfo;
 
-            boost::mutex::scoped_lock lock(m_handlerMutex);
+            boost::mutex::scoped_lock lock(m_loggerMapMutex);
 
             if (runtimeInfo.has("server")) {
                 // Start DataLogReaders on all DataLogger device servers
@@ -190,7 +190,7 @@ namespace karabo {
         }
 
         void DataLoggerManager::slotGetLoggerMap() {
-            boost::mutex::scoped_lock lock(m_handlerMutex); // m_loggerMap must not be changed while we process it
+            boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
             reply(m_loggerMap);
         }
 
@@ -216,7 +216,7 @@ namespace karabo {
                         bool deviceExists = std::find(onlineDevices.begin(), onlineDevices.end(), deviceId) != onlineDevices.end();
                         bool loggerExists = std::find(onlineDevices.begin(), onlineDevices.end(), loggerId) != onlineDevices.end();
 
-                        boost::mutex::scoped_lock lock(m_handlerMutex);
+                        boost::mutex::scoped_lock lock(m_loggerMapMutex);
                         if (deviceExists && !loggerExists) {
                             string serverId;
                             bool newMap = false;
@@ -260,7 +260,7 @@ namespace karabo {
                         // Collect (under mutex lock) deviceIds for which we have to start a logger on serverId
                         std::vector<std::string> devicesToLog;
                         {
-                            boost::mutex::scoped_lock lock(m_handlerMutex);
+                            boost::mutex::scoped_lock lock(m_loggerMapMutex);
                             for (Hash::const_map_iterator i = onlineDevices.mbegin(); i != onlineDevices.mend(); ++i) {
 
                                 // check if deviceId should be archived ...
