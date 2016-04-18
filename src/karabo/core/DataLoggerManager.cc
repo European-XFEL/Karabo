@@ -93,6 +93,8 @@ namespace karabo {
                 karabo::io::loadFromFile(m_loggerMap, m_loggerMapFile);
             }
 
+            KARABO_SYSTEM_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
+            KARABO_SLOT(slotGetLoggerMap);
         }
 
         DataLoggerManager::~DataLoggerManager() {
@@ -110,9 +112,6 @@ namespace karabo {
 
             remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
-
-            KARABO_SYSTEM_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
-            KARABO_SLOT(slotGetLoggerMap);
 
             // Server list must not be empty. If it is configured to be empty,
             // try other sources: our logger map or, if that is empty as well,
