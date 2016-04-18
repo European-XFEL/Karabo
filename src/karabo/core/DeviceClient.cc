@@ -883,8 +883,7 @@ namespace karabo {
                 return false;
             } else if (toggle) {
                 // connect and request a first time
-                if (p->connect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap",
-                               SignalSlotable::RECONNECT, false)) {
+                if (p->connect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap")) {
                     // If we cannot connect, request makes no sense
                     Hash loggerMap;
                     try {
@@ -904,7 +903,7 @@ namespace karabo {
             } else {
                 m_loggerMapCached = false;
                 // disconnect and clear (since otherwise possibly wrong info)
-                if (!p->disconnect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap", false)) {
+                if (!p->disconnect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap")) {
                     KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect _slotLoggerMap";
                     return false;
                 }
@@ -1370,9 +1369,9 @@ if (nodeData) {\
                                 const string& instanceId = forDisconnect[i];
                                 KARABO_LOG_FRAMEWORK_DEBUG << "Disconnect '" << instanceId << "'.";
 
-                                p->disconnect(instanceId, "signalChanged", "", "_slotChanged", false);
-                                p->disconnect(instanceId, "signalStateChanged", "", "_slotChanged", false);
-                                p->disconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated", false);
+                                p->disconnect(instanceId, "signalChanged", "", "_slotChanged");
+                                p->disconnect(instanceId, "signalStateChanged", "", "_slotChanged");
+                                p->disconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
 
                                 const std::string path("device." + instanceId + ".configuration");
                                 // Since we stopped listening, remove configuration from system description.
