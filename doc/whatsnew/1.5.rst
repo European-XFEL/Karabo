@@ -50,6 +50,16 @@ Instead, a return value indicates whether something has been removed or not.
 Since that was exactly the behaviour of ``eraseFound(key)`` before,
 that method has been removed.
 
+``connect`` and ``disconnect`` of ``SignalSlotable``
+---------------------------------------------------
+These public methods have slightly changed their signatures, i.e. they lost
+their last two arguments (``connectionType`` and ``isVerbose``). These anyway
+had default values and besides some printout using ``cout`` they had no effect.
+Since there is no distinction between connections that are **T**\ racked,
+**N**\ ot tracked or even to be **R**\ econnected has gone,
+``SignalSlotable``\ 's methods ``connectT``, ``connectN`` and ``connectR`` and
+its ``enum ConnectionType`` have been removed as well.
+
 Python API 1 & 2 Modules
 ------------------------
 

@@ -47,7 +47,7 @@ public:
     void slotGreet(const std::string& msg) {
         cout << msg << endl;
         SIGNAL2("signalAnswer", int, Hash);
-        connectN("signalAnswer", "slotAnswer");
+        connect("signalAnswer", "slotAnswer");
         emit("signalAnswer", 42, Hash("Was.soll.das.bedeuten", "nix"));
     }
 
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 
         boost::thread t(boost::bind(&SignalSlotable::runEventLoop, &ssDemo, false));
 
-        ssDemo.connectN("signalHello", "slotGreet");
+        ssDemo.connect("signalHello", "slotGreet");
 
         ssDemo.emit("signalHello", (string) "Hello World!");
 

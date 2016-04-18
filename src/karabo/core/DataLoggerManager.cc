@@ -220,37 +220,30 @@ namespace karabo {
                         bool loggerExists = std::find(onlineDevices.begin(), onlineDevices.end(), loggerId) != onlineDevices.end();
 
                         boost::mutex::scoped_lock lock(m_handlerMutex);
-                        if (deviceExists) {
-                            if (loggerExists) {
-                                // Device was dead and came back so quickly that we did not notice
-                                // => just re-establish the connections.
-                                connect(deviceId, "signalChanged", loggerId, "slotChanged");
-                                connect(deviceId, "signalStateChanged", loggerId, "slotChanged");
+                        if (deviceExists && !loggerExists) {
+                            string serverId;
+                            if (m_loggerMap.has(loggerId)) {
+                                serverId = m_loggerMap.get<string>(loggerId);
                             } else {
-                                string serverId;
-                                if (m_loggerMap.has(loggerId)) {
-                                    serverId = m_loggerMap.get<string>(loggerId);
-                                } else {
-                                    if (m_serverList.empty()) {
-                                        // Cannot happen (see okStateOnEntry), but for better diagnostics in case it does:
-                                        throw KARABO_LOGIC_EXCEPTION("List of servers for data logging is empty.");
-                                    }
-                                    m_serverIndex %= m_serverList.size();
-                                    serverId = m_serverList[m_serverIndex++];
-                                    m_loggerMap.set(loggerId, serverId);
-                                    emit<Hash>("signalLoggerMap", m_loggerMap);
-                                    m_saved = false;
+                                if (m_serverList.empty()) {
+                                    // Cannot happen (see okStateOnEntry), but for better diagnostics in case it does:
+                                    throw KARABO_LOGIC_EXCEPTION("List of servers for data logging is empty.");
                                 }
-
-                                Hash config;
-                                config.set("DataLogger.deviceId", loggerId);
-                                config.set("DataLogger.deviceToBeLogged", deviceId);
-                                config.set("DataLogger.directory", get<string>("directory"));
-                                config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
-                                config.set("DataLogger.flushInterval", get<int>("flushInterval"));
-                                remote().instantiateNoWait(serverId, config);
-                                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler [device] : logger \"" << loggerId << "\" STARTED";
+                                m_serverIndex %= m_serverList.size();
+                                serverId = m_serverList[m_serverIndex++];
+                                m_loggerMap.set(loggerId, serverId);
+                                emit<Hash>("signalLoggerMap", m_loggerMap);
+                                m_saved = false;
                             }
+
+                            Hash config;
+                            config.set("DataLogger.deviceId", loggerId);
+                            config.set("DataLogger.deviceToBeLogged", deviceId);
+                            config.set("DataLogger.directory", get<string>("directory"));
+                            config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
+                            config.set("DataLogger.flushInterval", get<int>("flushInterval"));
+                            remote().instantiateNoWait(serverId, config);
+                            KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler [device] : logger \"" << loggerId << "\" STARTED";
                         }
                     }
                 } else if (type == "server") {
@@ -321,7 +314,6 @@ namespace karabo {
                 // Safety check
                 if (!deviceExists) {
                     try {
-                        string loggerId = DATALOGGER_PREFIX + instanceId;
                         if (loggerExists) {
                             this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
                             remote().killDeviceNoWait(loggerId);
