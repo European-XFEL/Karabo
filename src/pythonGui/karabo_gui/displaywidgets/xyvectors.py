@@ -4,7 +4,7 @@ from xml.etree.ElementTree import Element
 
 from PyQt4.Qwt5.Qwt import QwtPlot
 
-from guiqwt.plot import CurveDialog, PlotManager
+from guiqwt.plot import CurveDialog
 from guiqwt.builder import make
 
 from karabo.api_2 import NumpyVector
@@ -24,15 +24,9 @@ class XYVector(DisplayWidget):
                                   wintitle="XY-Plot")
         self.plot = self.widget.get_plot()
         self.plot.set_antialiasing(True)
-
-        self.manager = PlotManager(self)
-        self.manager.add_plot(self.plot)
-
-        self.manager.register_all_curve_tools()
-        self.manager.register_other_tools()
-
         self.plot.setAxisAutoScale(QwtPlot.yLeft)
         self.plot.setAxisAutoScale(QwtPlot.xBottom)
+
         self.xbox = box
         self.curves = {}
         self.active = True
