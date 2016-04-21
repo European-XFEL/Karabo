@@ -86,15 +86,15 @@ namespace karabo {
         DataLoggerManager::DataLoggerManager(const Hash& input)
         : karabo::core::Device<karabo::core::OkErrorFsm>(input),
                 m_serverList(input.get<vector<string> >("serverList")),
-                m_serverIndex(0), m_saved(false)
+                m_serverIndex(0), m_loggerMapFile("loggermap.xml")
         {
-            const string filename("loggermap.xml");
-            //set<int>("nThreads", 10);
             m_loggerMap.clear();
-            if (boost::filesystem::exists(filename)) {
-                karabo::io::loadFromFile(m_loggerMap, filename);
+            if (boost::filesystem::exists(m_loggerMapFile)) {
+                karabo::io::loadFromFile(m_loggerMap, m_loggerMapFile);
             }
 
+            KARABO_SYSTEM_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
+            KARABO_SLOT(slotGetLoggerMap);
         }
 
         DataLoggerManager::~DataLoggerManager() {
@@ -112,9 +112,6 @@ namespace karabo {
 
             remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
-
-            KARABO_SYSTEM_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
-            KARABO_SLOT(slotGetLoggerMap);
 
             // Server list must not be empty. If it is configured to be empty,
             // try other sources: our logger map or, if that is empty as well,
@@ -137,12 +134,12 @@ namespace karabo {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "restartReadersAndLoggers: runtime system information ...\n" << runtimeInfo;
 
-            boost::mutex::scoped_lock lock(m_handlerMutex);
+            boost::mutex::scoped_lock lock(m_loggerMapMutex);
 
             if (runtimeInfo.has("server")) {
                 // Start DataLogReaders on all DataLogger device servers
                 for (vector<string>::iterator ii = m_serverList.begin(); ii != m_serverList.end(); ii++) {
-                    string serverId = *ii;
+                    const string& serverId = *ii;
                     const Hash& onlineServers = runtimeInfo.get<Hash>("server");
                     if (!onlineServers.has(serverId)) continue;
                     instantiateReaders(serverId);
@@ -150,29 +147,28 @@ namespace karabo {
                     if (!runtimeInfo.has("device")) continue;
                     const Hash& onlineDevices = runtimeInfo.get<Hash>("device");
                     for (Hash::const_map_iterator i = onlineDevices.mbegin(); i != onlineDevices.mend(); ++i) {
-                        string deviceId = i->first;
+                        const string& deviceId = i->first;
 
                         // check if deviceId should be archived ...
                         const Hash::Node& node = i->second;
                         if (!node.hasAttribute("archive") || (node.getAttribute<bool>("archive") == false)) continue;
 
-                        string loggerId = DATALOGGER_PREFIX + deviceId;
+                        const string loggerId = DATALOGGER_PREFIX + deviceId;
 
                         // Check if loggerId is valid ID
                         if (!m_loggerMap.has(loggerId)) continue;
-                        string srv = m_loggerMap.get<string>(loggerId);
+                        const string& srv = m_loggerMap.get<string>(loggerId);
                         // Check if loggerId belongs to this DataLoggerServer
                         if (srv != serverId) continue;
                         // Check if loggerId already started
                         if (remote().exists(deviceId).first && !remote().exists(loggerId).first) {
-                            Hash config;
-                            config.set("DataLogger.deviceId", loggerId);
-                            config.set("DataLogger.deviceToBeLogged", deviceId);
-                            config.set("DataLogger.directory", get<string>("directory"));
-                            config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
-                            config.set("DataLogger.flushInterval", get<int>("flushInterval"));
-                            remote().instantiateNoWait(serverId, config);
-                            KARABO_LOG_FRAMEWORK_INFO << "restartReadersAndLoggers : logger \"" << loggerId << "\" STARTED";
+                            const Hash config("deviceToBeLogged", deviceId,
+                                    "directory", get<string>("directory"),
+                                    "maximumFileSize", get<int>("maximumFileSize"),
+                                    "flushInterval", get<int>("flushInterval"));
+                            const Hash hash("classId", "DataLogger", "deviceId", loggerId, "configuration", config);
+                            remote().instantiateNoWait(serverId, hash);
+                            KARABO_LOG_FRAMEWORK_INFO << "restartReadersAndLoggers : logger '" << loggerId << "' STARTED";
                         }
                     }
                 }
@@ -180,20 +176,19 @@ namespace karabo {
         }
 
         void DataLoggerManager::instantiateReaders(const std::string& serverId) {
-            std::vector<std::string> devices = remote().getDevices(serverId);
             for (int i = 0; i < DATALOGREADERS_PER_SERVER; i++) {
-                std::string readerId = DATALOGREADER_PREFIX + toString(i) + "-" + serverId;
+                const std::string readerId = DATALOGREADER_PREFIX + toString(i) + "-" + serverId;
                 if (!remote().exists(readerId).first) {
-                    Hash config;
-                    config.set("DataLogReader.deviceId", readerId);
-                    config.set("DataLogReader.directory", get<string>("directory"));
-                    remote().instantiateNoWait(serverId, config);
-                    KARABO_LOG_FRAMEWORK_INFO << "instantiateReaders: reader \"" << readerId << "\" started on server \"" << serverId << "\"";
+                    const Hash hash("classId", "DataLogReader", "deviceId", readerId,
+                            "configuration.directory", get<string>("directory"));
+                    remote().instantiateNoWait(serverId, hash);
+                    KARABO_LOG_FRAMEWORK_INFO << "instantiateReaders: reader '" << readerId << "' started on server '" << serverId << "'";
                 }
             }
         }
 
         void DataLoggerManager::slotGetLoggerMap() {
+            boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
             reply(m_loggerMap);
         }
 
@@ -212,16 +207,17 @@ namespace karabo {
 
                     // Check if the device should be archived 
                     if (entry.hasAttribute(deviceId, "archive") && (entry.getAttribute<bool>(deviceId, "archive") == true)) {
-                        string loggerId = DATALOGGER_PREFIX + deviceId;
+                        const string loggerId = DATALOGGER_PREFIX + deviceId;
 
                         vector<string> onlineDevices = remote().getDevices();
 
                         bool deviceExists = std::find(onlineDevices.begin(), onlineDevices.end(), deviceId) != onlineDevices.end();
                         bool loggerExists = std::find(onlineDevices.begin(), onlineDevices.end(), loggerId) != onlineDevices.end();
 
-                        boost::mutex::scoped_lock lock(m_handlerMutex);
+                        boost::mutex::scoped_lock lock(m_loggerMapMutex);
                         if (deviceExists && !loggerExists) {
                             string serverId;
+                            bool newMap = false;
                             if (m_loggerMap.has(loggerId)) {
                                 serverId = m_loggerMap.get<string>(loggerId);
                             } else {
@@ -233,53 +229,64 @@ namespace karabo {
                                 serverId = m_serverList[m_serverIndex++];
                                 m_loggerMap.set(loggerId, serverId);
                                 emit<Hash>("signalLoggerMap", m_loggerMap);
-                                m_saved = false;
+                                newMap = true;
                             }
-
-                            Hash config;
-                            config.set("DataLogger.deviceId", loggerId);
-                            config.set("DataLogger.deviceToBeLogged", deviceId);
-                            config.set("DataLogger.directory", get<string>("directory"));
-                            config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
-                            config.set("DataLogger.flushInterval", get<int>("flushInterval"));
-                            remote().instantiateNoWait(serverId, config);
-                            KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler [device] : logger \"" << loggerId << "\" STARTED";
+                            const Hash config("deviceToBeLogged", deviceId,
+                                    "directory", get<string>("directory"),
+                                    "maximumFileSize", get<int>("maximumFileSize"),
+                                    "flushInterval", get<int>("flushInterval"));
+                            const Hash hash("classId", "DataLogger", "deviceId", loggerId, "configuration", config);
+                            remote().instantiateNoWait(serverId, hash);
+                            KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler [device] : logger '" << loggerId << "' STARTED";
+                            // First instantiate the new logger - now we have time to update the logger map file.
+                            if (newMap) {
+                                karabo::io::saveToFile(m_loggerMap, m_loggerMapFile);
+                            }
                         }
                     }
                 } else if (type == "server") {
-                    const Hash& entry = topologyEntry.begin()->getValue<Hash>();
                     const string& serverId = instanceId;
                     if (find(m_serverList.begin(), m_serverList.end(), serverId) != m_serverList.end()) {
                         instantiateReaders(serverId);
 
-                        Hash runtimeInfo = remote().getSystemInformation();
-                        boost::mutex::scoped_lock lock(m_handlerMutex);
+                        const Hash runtimeInfo = remote().getSystemInformation();
                         if (!runtimeInfo.has("device")) return;
                         const Hash& onlineDevices = runtimeInfo.get<Hash>("device");
-                        for (Hash::const_map_iterator i = onlineDevices.mbegin(); i != onlineDevices.mend(); ++i) {
-                            string deviceId = i->first;
 
-                            // check if deviceId should be archived ...
-                            const Hash::Node& node = i->second;
-                            if (!node.hasAttribute("archive") || (node.getAttribute<bool>("archive") == false)) continue;
+                        // Collect (under mutex lock) deviceIds for which we have to start a logger on serverId
+                        std::vector<std::string> devicesToLog;
+                        {
+                            boost::mutex::scoped_lock lock(m_loggerMapMutex);
+                            for (Hash::const_map_iterator i = onlineDevices.mbegin(); i != onlineDevices.mend(); ++i) {
 
-                            string loggerId = DATALOGGER_PREFIX + deviceId;
+                                // check if deviceId should be archived ...
+                                const Hash::Node& node = i->second;
+                                if (!node.hasAttribute("archive") || (node.getAttribute<bool>("archive") == false)) continue;
 
-                            // Check if loggerId is valid ID
-                            if (!m_loggerMap.has(loggerId)) continue;
-                            string srv = m_loggerMap.get<string>(loggerId);
-                            // Check if loggerId belongs to this DataLoggerServer
-                            if (srv != serverId) continue;
+                                const string& deviceId = i->first;
+                                const string loggerId = DATALOGGER_PREFIX + deviceId;
+
+                                // Check if loggerId is valid ID
+                                if (!m_loggerMap.has(loggerId)) continue;
+                                const string& srv = m_loggerMap.get<string>(loggerId);
+                                // Check if loggerId belongs to this DataLoggerServer
+                                if (srv != serverId) continue;
+                                devicesToLog.push_back(deviceId);
+                            }
+                        }
+                        // Now, without mutex lock, treat the collected deviceIds ('exists' can take long...)
+                        const Hash config("directory", get<string>("directory"),
+                                "maximumFileSize", get<int>("maximumFileSize"),
+                                "flushInterval", get<int>("flushInterval"));
+                        Hash hash("classId", "DataLogger", "configuration", config);
+                        BOOST_FOREACH(const std::string& deviceId, devicesToLog) {
+                            const string loggerId = DATALOGGER_PREFIX + deviceId;
                             // Check if loggerId already started based on real-time
                             if (remote().exists(deviceId).first && !remote().exists(loggerId).first) {
-                                Hash config;
-                                config.set("DataLogger.deviceId", loggerId);
-                                config.set("DataLogger.deviceToBeLogged", deviceId);
-                                config.set("DataLogger.directory", get<string>("directory"));
-                                config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
-                                config.set("DataLogger.flushInterval", get<int>("flushInterval"));
-                                remote().instantiateNoWait(serverId, config);
-                                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler [server] : logger \"" << loggerId << "\" STARTED";
+                                hash.set("deviceId", loggerId);
+                                hash.set("configuration.deviceToBeLogged", deviceId);
+                                remote().instantiateNoWait(serverId, hash);
+                                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler [server] : logger '" << loggerId << "' STARTED";
                             }
                         }
                     }
@@ -301,12 +308,12 @@ namespace karabo {
             const std::string& serverId = (instanceInfo.has("serverId") && instanceInfo.is<std::string>("serverId") ?
                                            instanceInfo.get<string>("serverId") : std::string("?"));
 
-            KARABO_LOG_FRAMEWORK_INFO << "instanceGoneHandler -->  instanceId : \""
-                    << instanceId << "\", type : " << type << " on server \"" << serverId << "\"";
+            KARABO_LOG_FRAMEWORK_INFO << "instanceGoneHandler -->  instanceId : '"
+                    << instanceId << "', type : " << type << " on server '" << serverId << "'";
 
             if (type == "device") {
-                string loggerId = DATALOGGER_PREFIX + instanceId;
-                vector<string> onlineDevices = remote().getDevices();
+                const string loggerId = DATALOGGER_PREFIX + instanceId;
+                const vector<string> onlineDevices = remote().getDevices();
 
                 bool deviceExists = std::find(onlineDevices.begin(), onlineDevices.end(), instanceId) != onlineDevices.end(); //remote().exists(instanceId).first;
                 bool loggerExists = std::find(onlineDevices.begin(), onlineDevices.end(), loggerId) != onlineDevices.end(); //remote().exists(loggerId).first;
@@ -317,11 +324,6 @@ namespace karabo {
                         if (loggerExists) {
                             this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
                             remote().killDeviceNoWait(loggerId);
-                            if (!m_saved) {
-                                string filename = "loggermap.xml";
-                                karabo::io::saveToFile(m_loggerMap, filename);
-                                m_saved = true;
-                            }
                         }
                     } catch (const Exception& e) {
                         KARABO_LOG_ERROR << e;
