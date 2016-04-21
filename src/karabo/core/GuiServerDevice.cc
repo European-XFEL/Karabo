@@ -878,7 +878,9 @@ namespace karabo {
                         remote().registerDeviceMonitor(instanceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
                     }
                     if (instanceId == karabo::core::DATALOGMANAGER_ID) {
-                        // The equivalent 'connect' is done by SignalSlotable's automatic reconnect feature.
+                        // The corresponding 'connect' is done by SignalSlotable's automatic reconnect feature.
+                        // Even this request might not be needed since the logger manager emits the corresponding signal.
+                        // But we cannot be 100% sure that our 'connect' has been registered in time.
                         requestNoWait(karabo::core::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
                     }
                 }
