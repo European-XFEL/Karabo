@@ -45,9 +45,9 @@ class Tests(TestCase):
         t2 = Timestamp()
         t3 = Timestamp(t2)
 
-        self.assertLess(t1, t2)
+        self.assertLessEqual(t1, t2)
         self.assertEqual(t2, t3)
-        self.assertGreater(t2, t1)
+        self.assertGreaterEqual(t2, t1)
 
 
 if __name__ == "__main__":
