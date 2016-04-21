@@ -208,7 +208,7 @@ fi
 
 # run (Karabo's run/package development environment)
 cd $BASEDIR
-tar --exclude=run/servers/dataLoggerServer/karaboHistory -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
+tar --exclude=run/servers/karaboHistory -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
 # Activation script
 sed "s%__VENV_DIR__%$BASEDIR/karabo%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
 ln -s $PACKAGEDIR/activate $PACKAGEDIR/karaboRun/activate
