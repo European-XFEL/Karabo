@@ -182,7 +182,9 @@ namespace karabo {
             if (m_loggerMapCached && instanceId == core::DATALOGMANAGER_ID) {
                 karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
                 if (p) {
-                    // The equivalent 'connect' is done by SignalSlotable's automatic reconnect feature.
+                    // The corresponding 'connect' is done by SignalSlotable's automatic reconnect feature.
+                    // Even this request might not be needed since the logger manager emits the corresponding signal.
+                    // But we cannot be 100% sure that our 'connect' has been registered in time.
                     p->requestNoWait(core::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "_slotLoggerMap");
                 }
             }
