@@ -56,10 +56,13 @@ class XYVector(DisplayWidget):
         return [self.xbox] + list(self.curves.keys())
 
     def valueChanged(self, box, value, timestamp=None):
+        if not self.xbox.hasValue():
+            return
         if box is self.xbox:
             for b, c in self.curves.items():
-                c.set_data(value, b.value)
-        else:
+                if b.hasValue() and len(value) == len(b.value):
+                    c.set_data(value, b.value)
+        elif len(self.xbox.value) == len(value):
             self.curves[box].set_data(self.xbox.value, value)
         self.plot.replot()
 
