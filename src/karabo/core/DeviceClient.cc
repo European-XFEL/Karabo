@@ -82,7 +82,6 @@ namespace karabo {
         DeviceClient::~DeviceClient() {
             // Stop aging thread
             setAgeing(false); // Joins the thread
-            KARABO_LOG_FRAMEWORK_TRACE << "DeviceClient::~DeviceClient() : age thread is joined";
             // Stop thread sending the collected signal(State)Changed
             setDeviceMonitorInterval(-1);
 
@@ -289,10 +288,13 @@ namespace karabo {
             if (on && !m_getOlder) {
                 m_getOlder = true;
                 m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
+                KARABO_LOG_FRAMEWORK_DEBUG << "DeviceClient: age thread is started";
             } else if (!on && m_getOlder) {
                 m_getOlder = false;
-                if (m_ageingThread.joinable())
+                if (m_ageingThread.joinable()) {
                     m_ageingThread.join();
+                    KARABO_LOG_FRAMEWORK_DEBUG << "DeviceClient: age thread is joined";
+                }
             }
         }
 
@@ -387,7 +389,7 @@ namespace karabo {
             initTopology();
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             if (!m_runtimeSystemDescription.has("server." + deviceServer)) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Requested device server \"" << deviceServer << "\" does not exist.";
+                KARABO_LOG_FRAMEWORK_DEBUG << "Requested device server '" << deviceServer << "' does not exist.";
                 return vector<string>();
             } else {
                 if (m_runtimeSystemDescription.hasAttribute("server." + deviceServer, "deviceClasses")) {
@@ -916,7 +918,7 @@ namespace karabo {
 
 
         void DeviceClient::_slotLoggerMap(const karabo::util::Hash& loggerMap) {
-            KARABO_LOG_FRAMEWORK_INFO << "DeviceClient::_slotLoggerMap called";
+            KARABO_LOG_FRAMEWORK_DEBUG << "DeviceClient::_slotLoggerMap called";
             boost::mutex::scoped_lock lock(m_loggerMapMutex);
             m_loggerMap = loggerMap;
         }
@@ -1343,8 +1345,8 @@ if (nodeData) {\
 
 
         void DeviceClient::age() {
-            try {
-                while (m_getOlder) { // Loop forever
+            while (m_getOlder) { // Loop forever
+                try {
                     vector<string> forDisconnect;
                     {
                         boost::mutex::scoped_lock lock(m_instanceUsageMutex);
@@ -1379,21 +1381,18 @@ if (nodeData) {\
                             }
                         }
                     }
-                    boost::this_thread::sleep(boost::posix_time::seconds(1));
+                } catch (const Exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e;
+                    // Aging is essential, so go on. Wait a little in case of repeating error conditions.
+                    boost::this_thread::sleep(boost::posix_time::seconds(5));
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered system exception: " << e.what();
+                    boost::this_thread::sleep(boost::posix_time::seconds(5));
+                } catch (...) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in aging thread";
+                    boost::this_thread::sleep(boost::posix_time::seconds(5));
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e;
-                // Aging is essential, so go on. Wait a little in case of repeating error conditions.
-                boost::this_thread::sleep(boost::posix_time::seconds(5));
-                this->age();
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered system exception: " << e.what();
-                boost::this_thread::sleep(boost::posix_time::seconds(5));
-                this->age();
-            } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in aging thread";
-                boost::this_thread::sleep(boost::posix_time::seconds(5));
-                this->age();
+                boost::this_thread::sleep(boost::posix_time::seconds(1));
             }
         }
 
@@ -1437,7 +1436,7 @@ if (nodeData) {\
                 const std::string path(this->findInstanceSafe(instanceId));
                 const util::Hash config(this->getSectionFromRuntimeDescription(path + ".configuration"));
                 if (config.empty()) { // might have failed if instance not monitored anymore
-                    KARABO_LOG_FRAMEWORK_WARN << "Instance '" << instanceId << "' gone, cannot forward its signalChanged";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Instance '" << instanceId << "' gone, cannot forward its signalChanged";
                     continue;
                 }
                 // Now collect all changed properties (including their attributes).
