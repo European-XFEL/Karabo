@@ -781,7 +781,7 @@ class PythonDevice(NoFsm):
             self._ss.reply(self.fullSchema, self.deviceid)
    
     def slotKillDevice(self):
-        senderid = self.serverid # getSenderInfo("slotKillDevice").getInstanceIdOfSender()
+        senderid = self._ss.getSenderInfo("slotKillDevice").getInstanceIdOfSender()
         if senderid == self.serverid and self.serverid != "__none__": 
             self.log.INFO("Device is going down as instructed by server")
             self.preDestruction()
