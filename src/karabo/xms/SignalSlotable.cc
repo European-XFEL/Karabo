@@ -325,7 +325,7 @@ namespace karabo {
 
         void SignalSlotable::injectEvent(karabo::net::BrokerChannel::Pointer, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
 
-            {
+            if (m_updatePerformanceStatistics) {
                 boost::mutex::scoped_lock lock(m_latencyMutex);
                 if (header->has("MQTimestamp")) {
                     m_brokerLatency.first += (getEpochMillis() - header->get<long long>("MQTimestamp"));
@@ -360,7 +360,7 @@ namespace karabo {
 
 
         void SignalSlotable::handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
-            KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Injecting reply from: " << header->get<string>("signalInstanceId");
+            KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Injecting reply from: " << header->get<string>("signalInstanceId"); // TRACE?
             const string& replyId = header->get<string>("replyFrom");
             // Check whether a callback (temporary slot) was registered for the reply
             SlotInstancePointer slot = getSlot(replyId);
@@ -586,7 +586,7 @@ namespace karabo {
                     const Hash& body = *(event.second);
 
                     // Collect performance statistics
-                    {
+                    if (m_updatePerformanceStatistics) {
                         boost::mutex::scoped_lock lock(m_latencyMutex);
                         if (header.has("MQTimestamp")) {
                             m_processingLatency.first += (getEpochMillis() - header.get<long long>("MQTimestamp"));
@@ -609,7 +609,7 @@ namespace karabo {
                     }
 
                     std::string slotFunctions = allSlotsNode->getValue<string>(); // by value since trimmed later
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->getInstanceId() << ": Process event for slotFunctions '"
+                    KARABO_LOG_FRAMEWORK_TRACE << this->getInstanceId() << ": Process event for slotFunctions '"
                             << slotFunctions << "'"; // << "\n Header: " << header << "\n Body: " << body;
 
                     // Trim and split on the "|" string, avoid empty entries
@@ -622,7 +622,8 @@ namespace karabo {
                         //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Processing instanceSlots: " << instanceSlots;
                         const size_t pos = instanceSlots.find_first_of(":");
                         if (pos == std::string::npos) {
-                            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Encountered badly shaped message header";
+                            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Badly shaped message header, instanceSlots '"
+                                    << instanceSlots << "' lack a ':'.";
                             continue;
                         }
                         const string instanceId(instanceSlots.substr(0, pos));
@@ -634,11 +635,10 @@ namespace karabo {
 
 
                         BOOST_FOREACH(const string& slotFunction, slotFunctions) {
-                            //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call local " << slotFunction << " if registered";
-
                             if (m_slotCallGuardHandler) {
                                 if (!m_slotCallGuardHandler(slotFunction)) {
-                                    KARABO_LOG_FRAMEWORK_WARN << "Guard rejected slot '" << slotFunction << "'.";
+                                    KARABO_LOG_FRAMEWORK_INFO << this->getInstanceId()
+                                            << ": Guard rejected slot '" << slotFunction << "'.";
                                     sendPotentialReply(header, globalCall);
                                     continue;
                                 }
@@ -671,7 +671,7 @@ namespace karabo {
                                 KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a message from '"
                                         << signalInstanceId << "' to non-existing slot \"" << slotFunction << "\"";
                             } else {
-                                KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Miss slot " << slotFunction;
+                                KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Miss globally called slot " << slotFunction;
                             }
                         }
                     }
@@ -1281,7 +1281,7 @@ namespace karabo {
                 } catch (const karabo::util::TimeoutException&) {
                     karabo::util::Exception::clearTrace();
                     signalExists = false;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Remote instance '" << signalInstanceId << "' did not respond in time"
+                    KARABO_LOG_FRAMEWORK_WARN << "Remote instance '" << signalInstanceId << "' did not respond in time"
                             << " the request to connect to its signal '" << signalFunction << "'.";
                 }
             }
@@ -1351,7 +1351,7 @@ namespace karabo {
                 } catch (const karabo::util::TimeoutException&) {
                     karabo::util::Exception::clearTrace();
                     slotExists = false;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Remote instance '" << slotInstanceId << "' did not respond in time"
+                    KARABO_LOG_FRAMEWORK_WARN << "Remote instance '" << slotInstanceId << "' did not respond in time"
                             << " whether it has a slot '" << slotFunction << "'.";
                 }
             }
@@ -1617,9 +1617,9 @@ namespace karabo {
 
         void SignalSlotable::letInstanceSlowlyDieWithoutHeartbeat() {
 
-            try {
+            while (m_doTracking) {
 
-                while (m_doTracking) {
+                try { // inside loop: method used in thread that should never die
 
                     if (!m_connection->isConnected()) {
                         boost::this_thread::sleep(boost::posix_time::seconds(5));
@@ -1627,9 +1627,6 @@ namespace karabo {
                     }
 
                     if (m_trackAllInstances) {
-
-                        //cout << "COUNTDOWN" << endl;
-                        //cout << m_trackedInstances << endl;
 
                         vector<pair<string, Hash> > deadOnes;
 
@@ -1663,14 +1660,14 @@ namespace karabo {
                         m_processingLatency.first = m_processingLatency.second = 0;
                     }
 
-                    // We are sleeping thrice as long as the count-down ticks (which ticks in seconds)
-                    boost::this_thread::sleep(boost::posix_time::seconds(5));
+                } catch (const Exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "letInstanceSlowlyDieWithoutHeartbeat triggered an exception: " << e;
+                } catch (...) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "letInstanceSlowlyDieWithoutHeartbeat triggered an unknown exception";
                 }
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "letInstanceSlowlyDieWithoutHeartbeat triggered an exception: " << e;
-            } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << "letInstanceSlowlyDieWithoutHeartbeat triggered an unknown exception";
+                // We are sleeping five times as long as the count-down ticks (which ticks in seconds)
+                boost::this_thread::sleep(boost::posix_time::seconds(5));
             }
         }
 
@@ -1881,8 +1878,6 @@ namespace karabo {
 
         void SignalSlotable::reconnectInputChannels(const std::string& instanceId) {
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "reconnectInputChannels of \"" << m_instanceId << "\"  to output channels of \"" << instanceId << "\"";
-
             // Loop channels
             for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
                 const InputChannel::Pointer& channel = it->second;
@@ -1890,6 +1885,8 @@ namespace karabo {
                 for (std::map<std::string, karabo::util::Hash>::const_iterator ii = outputChannels.begin(); ii != outputChannels.end(); ++ii) {
                     const string& outputChannelString = ii->first;
                     if (instanceId != outputChannelString.substr(0, instanceId.size())) continue; // instanceId ~ instanceId@output
+                    KARABO_LOG_FRAMEWORK_DEBUG << "reconnectInputChannels for '" << m_instanceId
+                            << "' to output channel '" << outputChannelString << "'";
                     channel->disconnect(outputChannelString);
                     connectInputToOutputChannel(channel, outputChannelString);
                 }
