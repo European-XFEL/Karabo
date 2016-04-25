@@ -47,8 +47,8 @@ from karabo_gui.widget import DisplayWidget, EditableWidget
 from karabo.api_2 import Hash, Type, VectorHash, SchemaHashType
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
-
 from karabo_gui.const import ns_karabo
+from karabo_gui.topology import getDevice
 
 import schema
 import manager
@@ -56,7 +56,8 @@ import manager
 from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog, QComboBox,
                         QVBoxLayout, QWidget, QDialogButtonBox, QCheckBox,
                         QItemDelegate, QStyledItemDelegate, QSizePolicy)
-from PyQt4.QtCore import *
+from PyQt4.QtCore import (Qt, QAbstractTableModel, QModelIndex, QObject,
+                          SIGNAL, SLOT, pyqtSlot)
 
 import copy
 
@@ -124,7 +125,7 @@ class TableModel(QAbstractTableModel):
                         
                 monitoredDeviceId = (self.cdata[idx.row()]
                     .getAttribute(columnKey, "isAliasing").split(".")[0])
-                status =  manager.getDevice(monitoredDeviceId).status
+                status =  getDevice(monitoredDeviceId).status
                 if status in ["monitoring", "alive"]:
                     return icons.tableOnline.pixmap(10,10)
                 elif status in ["online", "requested", "schema"]:
@@ -187,7 +188,7 @@ class TableModel(QAbstractTableModel):
                 del self.connectedMonitors[resp]
                 deviceId = resp.split(".")[0]
                 deviceProperty = ".".join(resp.split(".")[1:])
-                box = manager.getDevice(deviceId).getBox(deviceProperty.split("."))
+                box = getDevice(deviceId).getBox(deviceProperty.split("."))
                 if role == Qt.DisplayRole:
                     box.signalUpdateComponent.disconnect(self.monitorChanged)  
                 
@@ -195,7 +196,7 @@ class TableModel(QAbstractTableModel):
         cKey = self.columnHash.getKeys()[col]
         deviceId = resp.split(".")[0]
         deviceProperty = ".".join(resp.split(".")[1:])
-        box = manager.getDevice(deviceId).getBox(deviceProperty.split("."))
+        box = getDevice(deviceId).getBox(deviceProperty.split("."))
         
         
         #set these as attributes cell
@@ -305,7 +306,7 @@ class TableModel(QAbstractTableModel):
         #for k in self.connectedMonitors:
         #    r, c = k.split(".")
         #    deviceId, deviceProperty = self.connectedMonitors[k]
-        #    val = manager.getDevice(deviceId).getBox(deviceProperty.split(".")).value
+        #    val = getDevice(deviceId).getBox(deviceProperty.split(".")).value
         #    print(val)
             
         
@@ -425,7 +426,7 @@ class FromPropertyPopUp(QDialog):
         self.selectedDeviceId = deviceId
        
         
-        descriptor = manager.getDevice(deviceId).descriptor
+        descriptor = getDevice(deviceId).descriptor
         
         if descriptor is not None:
             properties = []
