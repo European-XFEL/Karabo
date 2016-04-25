@@ -12,9 +12,9 @@ from PyQt4.QtCore import QObject, QMimeData, QPoint, Qt, pyqtSignal
 from PyQt4.QtGui import QApplication, QDropEvent, QWidget
 import karabo_gui.icons as icons
 from manager import Manager
-import manager
 import karabo_gui.network as network
 import karabo_gui.globals as globals
+from karabo_gui.topology import getClass
 import karabo_gui.widget as widget
 
 from karabo.api_2 import (
@@ -126,7 +126,7 @@ class Tests(TestCase):
 
 
     def schema(self):
-        cls = manager.getClass("testserver", "testclass")
+        cls = getClass("testserver", "testclass")
         Manager().handle_classSchema("testserver", "testclass", self.testschema)
 
         self.assertEqual(cls.type, "class")
