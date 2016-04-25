@@ -1381,6 +1381,7 @@ if (nodeData) {\
                             }
                         }
                     }
+                    boost::this_thread::sleep(boost::posix_time::seconds(1));
                 } catch (const Exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e;
                     // Aging is essential, so go on. Wait a little in case of repeating error conditions.
@@ -1392,7 +1393,6 @@ if (nodeData) {\
                     KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in aging thread";
                     boost::this_thread::sleep(boost::posix_time::seconds(5));
                 }
-                boost::this_thread::sleep(boost::posix_time::seconds(1));
             }
         }
 
