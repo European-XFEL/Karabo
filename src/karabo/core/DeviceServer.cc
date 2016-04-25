@@ -346,9 +346,9 @@ namespace karabo {
             m_log = &(karabo::log::Logger::getLogger(m_serverId));
 
             const std::string hostName = net::bareHostName();
-            KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << hostName;
-            KARABO_LOG_INFO << "ServerId: " << m_serverId;
-            KARABO_LOG_INFO << "Broker (host:port:topic): " << m_connectionConfiguration.get<string>("Jms.hostname") << ":"
+            KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << hostName
+                    << ", serverId: " << m_serverId
+                    << ", Broker (host:port:topic): " << m_connectionConfiguration.get<string>("Jms.hostname") << ":"
                     << m_connectionConfiguration.get<string>("Jms.destinationName");
 
             // Initialize SignalSlotable instance
@@ -416,7 +416,7 @@ namespace karabo {
             }
 
 
-            BOOST_FOREACH(Hash device, m_autoStart) {
+            BOOST_FOREACH(const Hash& device, m_autoStart) {
                 slotStartDevice(device);
             }
 
@@ -428,11 +428,11 @@ namespace karabo {
 
 
         void DeviceServer::updateAvailableDevices() {
-            vector<string> devices = Configurator<BaseDevice>::getRegisteredClasses();
+            const vector<string>& devices = Configurator<BaseDevice>::getRegisteredClasses();
             KARABO_LOG_INFO << "Updated list of devices available: " << karabo::util::toString(devices);
 
 
-            BOOST_FOREACH(string device, devices) {
+            BOOST_FOREACH(const string& device, devices) {
                 if (!m_availableDevices.has(device)) {
                     Schema schema = BaseDevice::getSchema(device, Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
                     m_availableDevices.set(device, Hash("mustNotify", true, "xsd", schema));
@@ -500,7 +500,7 @@ namespace karabo {
             const std::string& classId = idClassIdConfig.get<1>();
             KARABO_LOG_INFO << "Trying to start a '" << classId
                     << "' with deviceId '" << deviceId << "'...";
-            KARABO_LOG_DEBUG << "with the following configuration:\n" << configuration;
+            KARABO_LOG_FRAMEWORK_DEBUG << "...with the following configuration:\n" << configuration;
 
             this->instantiate(deviceId, classId, idClassIdConfig.get<2>());
         }
@@ -674,7 +674,8 @@ namespace karabo {
 
         void DeviceServer::slotDeviceGone(const std::string & instanceId) {
 
-            KARABO_LOG_FRAMEWORK_INFO << "Device '" << instanceId << "' notifies future death.";
+            KARABO_LOG_FRAMEWORK_INFO << "Device '" << instanceId << "' notifies '" << this->getInstanceId()
+                    << "' about its future death.";
 
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
 
@@ -696,7 +697,7 @@ namespace karabo {
 
 
         std::string DeviceServer::generateDefaultDeviceId(const std::string & classId) {
-            string index = karabo::util::toString(++m_deviceInstanceCount[classId]);
+            const string index = karabo::util::toString(++m_deviceInstanceCount[classId]);
             // Prepare shortened Device-Server name
             vector<string> tokens;
             string domain = m_serverId;
