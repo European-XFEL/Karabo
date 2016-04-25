@@ -782,7 +782,7 @@ class PythonDevice(NoFsm):
    
     def slotKillDevice(self):
         senderid = self.serverid # getSenderInfo("slotKillDevice").getInstanceIdOfSender()
-        if senderid == self.serverid: 
+        if senderid == self.serverid and self.serverid != "__none__": 
             self.log.INFO("Device is going down as instructed by server")
             self.preDestruction()
             self.stopFsm()
