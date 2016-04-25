@@ -127,6 +127,10 @@ namespace karabo {
 
             // try to restart readers and loggers if needed - it works reliably on "stopped" system
             restartReadersAndLoggers();
+
+            // Publish logger map read from disc. Do that as late as possible in the initialisation procedure
+            // to give those interested the chance to register their slots after we sent signalInstanceNew.
+            emit<Hash>("signalLoggerMap", m_loggerMap);
         }
 
         void DataLoggerManager::restartReadersAndLoggers() {
