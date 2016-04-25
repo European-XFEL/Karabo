@@ -25,6 +25,7 @@ from .layouts import ProxyWidget
 from .messagebox import MessageBox
 from .network import Network
 from .registry import Loadable
+from .topology import getDevice
 from .widget import EditableWidget, DisplayWidget, Widget
 
 
@@ -60,7 +61,7 @@ class BaseComponent(Loadable, QObject):
         boxes = []
         for k in elem.get(ns_karabo + 'keys').split(","):
             deviceId, path = k.split('.', 1)
-            conf = manager.getDevice(deviceId)
+            conf = getDevice(deviceId)
             boxes.append(conf.getBox(path.split(".")))
         parent = ProxyWidget(layout.parentWidget())
         wn = elem.get(ns_karabo + "widget")

@@ -20,6 +20,7 @@ from karabo.api2.project import (BaseDevice, BaseDeviceGroup, BaseMacro,
 from karabo.api_2 import AccessMode, Hash, XMLParser, XMLWriter
 import manager
 from karabo_gui.network import network
+from karabo_gui.topology import getClass, getDevice
 
 from PyQt4.QtCore import pyqtSignal, QObject
 
@@ -91,7 +92,7 @@ class BaseConfiguration(Configuration):
             return
         
         # Get class configuration
-        conf = manager.getClass(self.serverId, self.classId)
+        conf = getClass(self.serverId, self.classId)
 
         conf.signalNewDescriptor.connect(self.onNewDescriptor)
         if conf.descriptor is not None:
@@ -115,7 +116,7 @@ class Device(BaseDevice, BaseConfiguration):
         BaseConfiguration.__init__(self, deviceId, "projectClass", descriptor)
         BaseDevice.__init__(self, serverId, classId, deviceId, ifexists)
 
-        actual = manager.getDevice(deviceId)
+        actual = getDevice(deviceId)
         actual.signalStatusChanged.connect(self.onStatusChanged)
         self.onStatusChanged(actual, actual.status, actual.error)
 
@@ -144,7 +145,7 @@ class Device(BaseDevice, BaseConfiguration):
                 conf.classId = self.classId
                 conf.serverId = self.serverId
                 if conf.descriptor is None:
-                    cls = manager.getClass(self.serverId, self.classId)
+                    cls = getClass(self.serverId, self.classId)
                     if cls.descriptor is None:
                         cls.signalNewDescriptor.connect(conf.onClassDescriptor)
                     else:
@@ -163,12 +164,12 @@ class Device(BaseDevice, BaseConfiguration):
 
 
     def addVisible(self):
-        realDevice = manager.getDevice(self.id)
+        realDevice = getDevice(self.id)
         realDevice.addVisible()
 
 
     def removeVisible(self):
-        realDevice = manager.getDevice(self.id)
+        realDevice = getDevice(self.id)
         realDevice.removeVisible()
 
 
@@ -226,7 +227,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         
         # Get device configurations
         for device in self.devices:
-            conf = manager.getDevice(device.id)
+            conf = getDevice(device.id)
             
             conf.signalNewDescriptor.connect(self.onNewDeviceDescriptor)
             if conf.descriptor is not None:
@@ -258,7 +259,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         BaseConfiguration.onNewDescriptor(self, conf)
         # Recursively copy device boxes to device group
         for d in self.devices:
-            actual = manager.getDevice(d.id)
+            actual = getDevice(d.id)
             # Copy from online device
             self.copyFrom(actual, lambda descr: descr.accessMode == AccessMode.RECONFIGURABLE)
 
@@ -282,7 +283,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
     def addVisible(self):
         for device in self.devices:
-            realDevice = manager.getDevice(device.id)
+            realDevice = getDevice(device.id)
             realDevice.addVisible()
 
 
@@ -372,7 +373,7 @@ class GuiProject(Project, QObject):
         for device in deviceGroup.devices:
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
             # Get correct status from devices
-            actual = manager.getDevice(device.id)
+            actual = getDevice(device.id)
             actual.signalStatusChanged.connect(deviceGroup.onStatusChanged)
             deviceGroup.onStatusChanged(actual, actual.status, actual.error)
 
@@ -417,7 +418,7 @@ class GuiProject(Project, QObject):
             device = Device(serverId, classId, id, ifexists)
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
             # Get correct status from devices
-            actual = manager.getDevice(device.id)
+            actual = getDevice(device.id)
             actual.signalStatusChanged.connect(deviceGroup.onStatusChanged)
             deviceGroup.onStatusChanged(actual, actual.status, actual.error)
             
@@ -632,7 +633,7 @@ class GuiProject(Project, QObject):
             deviceId = m.config.get("deviceId")
             deviceProperty = m.config.get("deviceProperty")
             
-            conf = manager.getDevice(deviceId)
+            conf = getDevice(deviceId)
             box = conf.getBox(deviceProperty.split("."))
             self.monitorBoxes.append(box)
             box.addVisible()

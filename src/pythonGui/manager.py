@@ -26,6 +26,7 @@ from karabo_gui.messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
 from karabo_gui.network import Network
 from projectmodel import ProjectModel
+from karabo_gui.topology import getClass
 from karabo_gui.util import getSaveFileName, getSchemaModifiedAttrs
 
 from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
@@ -605,28 +606,6 @@ class _Manager(QObject):
         if device is not None:
             device.signalInitReply.emit(success, message)
 
-
-def getDevice(deviceId):
-    c = manager.deviceData.get(deviceId)
-    if c is None:
-        c = manager.deviceData[deviceId] = Configuration(deviceId, 'device')
-        c.updateStatus()
-    if c.descriptor is None and c.status not in ("offline", "requested"):
-        Network().onGetDeviceSchema(deviceId)
-        c.status = "requested"
-    return c
-
-
-def getClass(serverId, classId):
-    c = manager.serverClassData.get((serverId, classId))
-    if c is None:
-        path = "{}.{}".format(serverId, classId)
-        c = manager.serverClassData[serverId, classId] = Configuration(path, 'class')
-
-    if c.descriptor is None or c.status not in ("requested", "schema"):
-        Network().onGetClassSchema(serverId, classId)
-        c.status = "requested"
-    return c
 
 
 manager = _Manager()
