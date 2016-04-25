@@ -781,16 +781,15 @@ class PythonDevice(NoFsm):
             self._ss.reply(self.fullSchema, self.deviceid)
    
     def slotKillDevice(self):
-        senderid = self.serverid # getSenderInfo("slotKillDevice").getInstanceIdOfSender()
-        if senderid == self.serverid: 
+        senderid = self._ss.getSenderInfo("slotKillDevice").getInstanceIdOfSender()
+        if senderid == self.serverid and self.serverid != "__none__": 
             self.log.INFO("Device is going down as instructed by server")
-            self.preDestruction()
-            self.stopFsm()
-            self.stopEventLoop()
         else:
             self.log.INFO("Device is going down as instructed by \"{}\"".format(senderid))
             self._ss.call(self.serverid, "slotDeviceGone", self.deviceid)
-            self.stopEventLoop()
+        self.preDestruction()
+        self.stopFsm()
+        self.stopEventLoop()
    
     def slotTimeTick(self, id, sec, frac, period):
         with self._timeLock:
