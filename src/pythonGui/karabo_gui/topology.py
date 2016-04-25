@@ -8,16 +8,15 @@ def getDevice(deviceId):
     from .network import Network
 
     manager = Manager()
-    network = Network()
 
-    c = manager.deviceData.get(deviceId)
-    if c is None:
-        c = manager.deviceData[deviceId] = Configuration(deviceId, 'device')
-        c.updateStatus()
-    if c.descriptor is None and c.status not in ("offline", "requested"):
-        network.onGetDeviceSchema(deviceId)
-        c.status = "requested"
-    return c
+    device = manager.deviceData.get(deviceId)
+    if device is None:
+        device = manager.deviceData[deviceId] = Configuration(deviceId, 'device')
+        device.updateStatus()
+    if device.descriptor is None and device.status not in ("offline", "requested"):
+        Network().onGetDeviceSchema(deviceId)
+        device.status = "requested"
+    return device
 
 
 def getClass(serverId, classId):
@@ -29,14 +28,13 @@ def getClass(serverId, classId):
     from .network import Network
 
     manager = Manager()
-    network = Network()
 
-    c = manager.serverClassData.get((serverId, classId))
-    if c is None:
+    cls = manager.serverClassData.get((serverId, classId))
+    if cls is None:
         path = "{}.{}".format(serverId, classId)
-        c = manager.serverClassData[serverId, classId] = Configuration(path, 'class')
+        cls = manager.serverClassData[serverId, classId] = Configuration(path, 'class')
 
-    if c.descriptor is None or c.status not in ("requested", "schema"):
-        network.onGetClassSchema(serverId, classId)
-        c.status = "requested"
-    return c
+    if cls.descriptor is None or cls.status not in ("requested", "schema"):
+        Network().onGetClassSchema(serverId, classId)
+        cls.status = "requested"
+    return cls
