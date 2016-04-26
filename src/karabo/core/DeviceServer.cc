@@ -368,6 +368,8 @@ namespace karabo {
 
             bool ok = ensureOwnInstanceIdUnique();
             if (!ok) {
+                // There is already an ERROR from ensureOwnInstanceIdUnique, but that is not broadcasted.
+                KARABO_LOG_ERROR << "DeviceServer '" << m_serverId << " could not start since its id already exists.";
                 t.join(); // Blocks
                 return;
             }
@@ -496,7 +498,7 @@ namespace karabo {
 
             const std::string& deviceId = idClassIdConfig.get<0>();
             const std::string& classId = idClassIdConfig.get<1>();
-            KARABO_LOG_INFO << "Trying to start a '" << classId
+            KARABO_LOG_FRAMEWORK_INFO << "Trying to start a '" << classId
                     << "' with deviceId '" << deviceId << "'...";
             KARABO_LOG_FRAMEWORK_DEBUG << "...with the following configuration:\n" << configuration;
 
@@ -573,7 +575,7 @@ namespace karabo {
                     } else {
                         std::string message("Device of class " + classId + " could not be started: ");
                         reply(false, ((message += "deviceId '") += deviceId) += "' already exists on server.");
-                        KARABO_LOG_WARN << message;
+                        KARABO_LOG_ERROR << message;
                         return;
                     }
                 }
@@ -588,7 +590,7 @@ namespace karabo {
                 // Create the thread for the device and place it (indirectly) into the device instance map):
                 deviceThread = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
 
-                // Answer initiation of device
+                // Answer initiation of device (KARABO_LOG_* is done by device)
                 reply(true, deviceId); // TODO think about
 
             } catch (const Exception& e) {
