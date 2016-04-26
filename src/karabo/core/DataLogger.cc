@@ -90,7 +90,7 @@ namespace karabo {
                 m_flushThread.join();
             }
             slotTagDeviceToBeDiscontinued(true, 'L');
-            KARABO_LOG_INFO << "dead.";
+            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": dead.";
         }
 
 
