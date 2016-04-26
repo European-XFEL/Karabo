@@ -605,10 +605,3 @@ class _Manager(QObject):
         device = self.deviceData.get(deviceId)
         if device is not None:
             device.signalInitReply.emit(success, message)
-
-
-
-manager = _Manager()
-
-def Manager():
-    return manager

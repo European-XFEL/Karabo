@@ -13,8 +13,8 @@ __all__ = ["NotificationPanel"]
 
 
 from karabo_gui.docktabwindow import Dockable
-from manager import Manager
 from karabo_gui.logwidget import LogWidget
+from karabo_gui.topology import Manager
 
 from PyQt4.QtGui import QVBoxLayout, QWidget
 
