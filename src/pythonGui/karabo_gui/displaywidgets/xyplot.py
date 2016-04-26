@@ -2,7 +2,7 @@
 __all__ = ["XYPlot"]
 
 
-from karabo_gui.widget import DisplayWidget
+from karabo_gui.widget import PlotWidget
 
 from karabo.api_2 import Simple
 
@@ -28,12 +28,12 @@ class Activate(ToggleTool):
         plot.replot()
 
 
-class XYPlot(DisplayWidget):
+class XYPlot(PlotWidget):
     category = Simple
     alias = "XY-Plot"
 
     def __init__(self, box, parent):
-        super().__init__(None)
+        super(XYPlot, self).__init__(box, parent)
         self.widget = CurveDialog(edit=False, toolbar=True,
                                   wintitle="XY-Plot")
         self.plot = self.widget.get_plot()
@@ -61,7 +61,7 @@ class XYPlot(DisplayWidget):
 
     def typeChanged(self, box):
         pos = QwtPlot.xBottom if box is self.xbox else QwtPlot.yLeft
-        self.plot.setAxisTitle(pos, box.descriptor.displayedName)
+        self.plot.setAxisTitle(pos, self.axisLabel(box))
 
     def addBox(self, box):
         if self.ybox is None:

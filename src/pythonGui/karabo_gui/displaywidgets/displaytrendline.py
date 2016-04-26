@@ -11,7 +11,7 @@ from xml.etree.ElementTree import Element
 from karabo_gui.const import ns_karabo
 from karabo_gui.topology import getDevice
 from karabo_gui.util import SignalBlocker
-from karabo_gui.widget import DisplayWidget
+from karabo_gui.widget import PlotWidget
 
 from PyQt4.QtCore import Qt, QObject, QTimer, pyqtSlot
 
@@ -245,13 +245,13 @@ class ScaleEngine(QwtLinearScaleEngine):
         self.drawer.setFormat(start, v)
         return QwtScaleDiv(x1, x2, [], [], list(range(start, int(x2), v)))
 
-class DisplayTrendline(DisplayWidget):
+class DisplayTrendline(PlotWidget):
     category = Simple
     alias = "Trendline"
 
  
     def __init__(self, box, parent):
-        super(DisplayTrendline, self).__init__(None)
+        super(DisplayTrendline, self).__init__(box, parent)
         self.dialog = CurveDialog(edit=False, toolbar=True,
                                   wintitle="Trendline")
         self.plot = self.dialog.get_plot()
@@ -292,7 +292,7 @@ class DisplayTrendline(DisplayWidget):
 
 
     def typeChanged(self, box):
-        self.plot.setAxisTitle(QwtPlot.yLeft, box.descriptor.displayedName)
+        self.plot.setAxisTitle(QwtPlot.yLeft, self.axisLabel(box))
 
 
     def addBox(self, box):
