@@ -6,7 +6,7 @@ _manager = None
 def getDevice(deviceId):
     """ Find the Device instance in the system topology with the ID `deviceId`.
     """
-    from configuration import Configuration
+    from .configuration import Configuration
     from .network import Network
 
     manager = Manager()
@@ -25,7 +25,7 @@ def getClass(serverId, classId):
     """ Find the class in the system topology from the server `serverId` with
     the ID `classId`.
     """
-    from configuration import Configuration
+    from .configuration import Configuration
     from .network import Network
 
     manager = Manager()

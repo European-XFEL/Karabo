@@ -24,7 +24,7 @@ from karabo_gui.const import ns_karabo
 from karabo_gui.displaywidgets.icons import Item, SelectionDialog
 from karabo_gui.widget import DisplayWidget
 
-from schema import SlotNode
+from karabo_gui.schema import SlotNode
 
 from PyQt4.QtCore import QSize, pyqtSlot
 from PyQt4.QtGui import QToolButton, QWidget, QAction, QStackedLayout, QIcon

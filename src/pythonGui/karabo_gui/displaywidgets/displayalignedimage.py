@@ -7,7 +7,7 @@
 __all__ = ["DisplayAlignedImage"]
 
 
-from schema import ImageNode
+from karabo_gui.schema import ImageNode
 from karabo_gui.widget import DisplayWidget
 
 import numpy as np
@@ -17,7 +17,7 @@ from karabo.api_2 import Type
 
 from PyQt4.QtGui import (QSlider, QWidget, QHBoxLayout, QVBoxLayout,
                             QComboBox, QSpinBox, QLabel)
-from PyQt4.QtCore import Qt
+
 import re
 
 class DisplayAlignedImage(DisplayWidget):

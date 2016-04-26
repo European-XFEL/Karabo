@@ -14,15 +14,15 @@
    All relevant configuration data is stored in a member hash variable.
 """
 
-from configuration import Configuration, BulkNotifications
+from karabo_gui.configuration import BulkNotifications
 from karabo_gui.dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
 from karabo.api_2 import Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration
 import karabo_gui.globals as globals
 from karabo_gui.messagebox import MessageBox
-from navigationtreemodel import NavigationTreeModel
+from karabo_gui.navigationtreemodel import NavigationTreeModel
 from karabo_gui.network import Network
-from projectmodel import ProjectModel
+from karabo_gui.projectmodel import ProjectModel
 from karabo_gui.topology import getClass
 from karabo_gui.util import getSaveFileName, getSchemaModifiedAttrs
 

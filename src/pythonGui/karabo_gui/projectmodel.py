@@ -13,8 +13,9 @@ a treeview.
 
 __all__ = ["ProjectModel"]
 
-
-from configuration import Configuration
+from karabo.api2.project import Monitor, Project, ProjectAccess
+from karabo.api_2 import Hash
+from karabo_gui.configuration import Configuration
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
 from karabo_gui.dialogs.configurationdialog import SelectMultipleProjectConfigurationDialog
@@ -23,19 +24,17 @@ from karabo_gui.dialogs.dialogs import MacroDialog
 from karabo_gui.dialogs.duplicatedialog import DuplicateDialog
 from karabo_gui.dialogs.monitordialog import MonitorDialog
 from karabo_gui.dialogs.scenedialog import SceneDialog
-from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
-from scene import Scene
+from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject, Macro
+from karabo_gui.scene import Scene
 import karabo_gui.network as network
 from karabo_gui.topology import getDevice, Manager
 from karabo_gui.util import getSaveFileName
-
-from karabo.api2.project import Monitor, Project, ProjectAccess
-from karabo.api_2 import Hash
 
 from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QFileInfo, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
                          QItemSelectionModel, QMessageBox, QStandardItem,
                          QStandardItemModel)
+
 import os
 import os.path
 from zipfile import ZipFile
