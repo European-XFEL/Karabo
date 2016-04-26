@@ -40,6 +40,8 @@ src/pythonKarabo/build/
 src/pythonKarabo/dist/
 src/pythonKarabo/pythonTest.xml
 src/pythonKarabo/karabo/_version.py
+src/pythonGui/build/
+src/pythonGui/dist/
 src/pythonGui/karabo_gui/_version.py
 src/pythonGui/krbgui/_version.py
 build/netbeans/*/*.log
