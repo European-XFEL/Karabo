@@ -365,6 +365,8 @@ class DisplayTrendline(DisplayWidget):
         for ee in e:
             box = getDevice(ee.get("device")).getBox(ee.get("path").split("."))
             curve = self.curves.get(box)
+            if curve is None:
+                break
             self.plot.del_item(curve.curve)
             curve.curve = pickle.loads(base64.b64decode(ee.text))
             self.plot.add_item(curve.curve)
