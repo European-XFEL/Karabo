@@ -21,8 +21,9 @@ from IPython.kernel.inprocess import channels
 
 from karabo.api_2 import Hash
 
-import manager
 from karabo_gui.network import network
+from karabo_gui.topology import getDevice
+
 
 class IPythonWidget(RichIPythonWidget):
     def __init__(self, banner=None, *args, **kwargs):
@@ -85,7 +86,7 @@ class Client(inprocess.QtInProcessKernelClient):
         self.alive = False
         self.started = False
         self.name = name
-        self.device = manager.getDevice(self.name)
+        self.device = getDevice(self.name)
         self.device.addVisible()
         self.device.boxvalue.state.signalUpdateComponent.connect(
             self.onStateChanged)
