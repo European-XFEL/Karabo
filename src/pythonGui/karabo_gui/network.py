@@ -18,17 +18,16 @@ from functools import partial
 import socket
 from struct import calcsize, pack, unpack
 
-from karabo_gui.dialogs.logindialog import LoginDialog
-
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt4.QtCore import (pyqtSignal, pyqtSlot, QByteArray, QCoreApplication,
                           QCryptographicHash, QObject, QTimer)
 from PyQt4.QtGui import QDialog, QMessageBox
+
 from karabo.authenticator import Authenticator
 from karabo.api_2 import Hash, BinaryWriter, AccessLevel
-
 from karabo_gui import background
-import karabo_gui.globals as globals
+from karabo_gui.dialogs.logindialog import LoginDialog
+from karabo_gui import globals
 
 
 class _Network(QObject):

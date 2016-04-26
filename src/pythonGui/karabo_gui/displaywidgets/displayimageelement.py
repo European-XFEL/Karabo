@@ -24,8 +24,8 @@ import numpy as np
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
 
-from schema import ImageNode
 from karabo.api_2 import Type
+from karabo_gui.schema import ImageNode
 from karabo_gui.const import OK_COLOR, ERROR_COLOR
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
