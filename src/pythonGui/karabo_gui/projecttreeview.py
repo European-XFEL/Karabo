@@ -230,16 +230,8 @@ class ProjectTreeView(QTreeView):
             # Send save project to cloud request to network
             Network().onNewProject(projectName, data)
 
-
-    def writeProjectData(self, projectName, data):
-        # Write cloud project to local file system
-        filename = os.path.join(globals.KARABO_PROJECT_FOLDER, Network().username, projectName)
-        with open(filename, "wb") as out:
-            out.write(data)
-        out.close()
-        
-        return filename
-
+    def writeCloudProjectData(self, projectName, data):
+        return self.model().writeCloudProjectData(projectName, data)
 
     def mouseDoubleClickEvent(self, event):
         index = self.currentIndex()
@@ -561,7 +553,7 @@ class ProjectTreeView(QTreeView):
 
     def onProjectLoaded(self, name, metaData, data):
         # Write cloud project to local file system (WARN: overwrites existing file)
-        filename = self.writeProjectData(name, data)
+        filename = self.writeCloudProjectData(name, data)
         
         checkedOut = metaData.get("checkedOut")
         self.model().projectOpen(filename, ProjectAccess.CLOUD_READONLY \
@@ -572,6 +564,6 @@ class ProjectTreeView(QTreeView):
         if success:
             text = "Project {} saved successfully.".format(name)
             # Write cloud project to local file system
-            self.writeProjectData(name, data)
+            self.writeCloudProjectData(name, data)
         else:
             text = "Project {} could not be saved properly.".format(name)
