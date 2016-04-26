@@ -27,6 +27,7 @@ from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from scene import Scene
 import manager
 import karabo_gui.network as network
+from karabo_gui.topology import getDevice
 from karabo_gui.util import getSaveFileName
 
 from karabo.api2.project import Monitor, Project, ProjectAccess
@@ -166,7 +167,7 @@ class ProjectModel(QStandardItemModel):
             return { }
         
         if object.isOnline():
-            conf = manager.getDevice(object.id)
+            conf = getDevice(object.id)
             config, _ = conf.toHash()  # Ignore returned attributes
         else:
             conf = object
@@ -441,7 +442,7 @@ class ProjectModel(QStandardItemModel):
                 module.data(ProjectModel.ITEM_OBJECT).instances = ml
                 for k in ml:
                     childItem = QStandardItem(hash[k, "classId"])
-                    childItem.setData(manager.getDevice(k),
+                    childItem.setData(getDevice(k),
                                       ProjectModel.ITEM_OBJECT)
                     childItem.setEditable(False)
                     module.appendRow(childItem)
@@ -1338,7 +1339,7 @@ class ProjectModel(QStandardItemModel):
             # Check whether device is already online
             if object.isOnline():
                 if object.type in ("device", "projectClass"):
-                    conf = manager.getDevice(object.id)
+                    conf = getDevice(object.id)
                 elif object.type == 'deviceGroupClass':
                     instance = object.createInstance()
 

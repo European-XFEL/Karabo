@@ -9,10 +9,10 @@ __all__ = ["WorkflowItem", "WorkflowGroupItem", "WorkflowChannel", "WorkflowConn
 
 from karabo_gui.const import ns_karabo
 from karabo_gui.layouts import ProxyWidget
-import manager
 from karabo_gui.registry import Loadable
 from schema import Dummy, Schema
 import scene
+from karabo_gui import topology
 
 from PyQt4.QtCore import (pyqtSignal, QPoint, QPointF, QRect, QSize, Qt)
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetricsF,
@@ -276,7 +276,7 @@ class WorkflowItem(Item):
         The object to the related device (online/offline) is returned.
         """
         if self.device.isOnline():
-            return manager.getDevice(self.device.id)
+            return topology.getDevice(self.device.id)
         
         return self.device
 

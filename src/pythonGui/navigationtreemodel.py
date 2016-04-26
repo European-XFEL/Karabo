@@ -15,9 +15,9 @@ __all__ = ["NavigationTreeModel"]
 from karabo_gui.enums import NavigationItemTypes
 import karabo_gui.globals as globals
 from karabo.api_2 import Hash, AccessLevel
-import manager
-from karabo_gui.treenode import TreeNode
 import karabo_gui.icons as icons
+from karabo_gui.topology import getClass, getDevice
+from karabo_gui.treenode import TreeNode
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
                           QModelIndex, Qt, pyqtSignal)
@@ -524,11 +524,11 @@ class NavigationTreeModel(QAbstractItemModel):
             parentIndex = index.parent()
             serverId = parentIndex.data()
             classId = index.data()
-            conf = manager.getClass(serverId, classId)
+            conf = getClass(serverId, classId)
             type = conf.type
         elif level == 3:
             deviceId = index.data()
-            conf = manager.getDevice(deviceId)
+            conf = getDevice(deviceId)
             type = conf.type
 
         self.signalItemChanged.emit(type, conf)
