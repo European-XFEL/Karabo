@@ -139,7 +139,7 @@ namespace karabo {
             static void decrementChunkUsage(const size_t& channelIdx, const size_t& chunkIdx) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 if (--m_chunkStatus[channelIdx][chunkIdx] == 0) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Freeing memory for [" << channelIdx << "][" << chunkIdx << "]";
+                    KARABO_LOG_FRAMEWORK_TRACE << "Freeing memory for [" << channelIdx << "][" << chunkIdx << "]";
                     m_cache[channelIdx][chunkIdx].clear();
                 }
             }

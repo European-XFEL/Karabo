@@ -406,7 +406,9 @@ namespace karabo {
 
 
         void InputChannel::onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "INPUT ENTRY onTcpChannelRead";
+            // Debug helper (m_channelId is unique per process...):
+            const std::string debugId((("INPUT " + util::toString(m_channelId) += " of '") += this->getInstanceId()) += "' ");
+            KARABO_LOG_FRAMEWORK_DEBUG << debugId << "ENTRY onTcpChannelRead";
             try {
                 // set the guard: it is guaranteed that InputChannel object is alive
                 // ... or exception brings us out here
@@ -421,16 +423,16 @@ namespace karabo {
                         // Track the channels that sent eos
                         m_eosChannels.insert(channel);
 
-                        KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Received EOS #" << m_eosChannels.size();
+                        KARABO_LOG_FRAMEWORK_DEBUG << debugId << "Received EOS #" << m_eosChannels.size();
                         if (m_respondToEndOfStream) m_isEndOfStream = true;
                         if (this->getMinimumNumberOfData() <= 0) {
-                            KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering another compute";
+                            KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering another compute";
                             this->swapBuffers();
                             m_tcpIoService->post(boost::bind(&InputChannel::triggerIOEvent, this));
                         }
                         if (m_eosChannels.size() == m_openConnections.size()) {
                             if (m_respondToEndOfStream) {
-                                KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering EOS function after reception of " << m_eosChannels.size() << " EOS tokens";
+                                KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering EOS function after reception of " << m_eosChannels.size() << " EOS tokens";
                                 m_tcpIoService->post(boost::bind(&InputChannel::triggerEndOfStreamEvent, this));
                             }
                             // Reset eos tracker
@@ -445,14 +447,14 @@ namespace karabo {
                         unsigned int channelId = header.get<unsigned int>("channelId");
                         unsigned int chunkId = header.get<unsigned int>("chunkId");
 
-                        KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Reading from local memory [" << channelId << "][" << chunkId << "]";
+                        KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from local memory [" << channelId << "][" << chunkId << "]";
 
                         MemoryType::writeChunk(MemoryType::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk);
                         MemoryType::decrementChunkUsage(channelId, chunkId);
 
                     } else { // TCP data
 
-                        KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Reading from remote memory (over tcp)";
+                        KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from remote memory (over tcp)";
                         MemoryType::writeAsContiguosBlock(data, header, m_channelId, m_inactiveChunk);
 
                     }
@@ -461,7 +463,7 @@ namespace karabo {
                     size_t nActiveData = MemoryType::size(m_channelId, m_activeChunk);
 
                     if ((this->getMinimumNumberOfData()) <= 0 || (nInactiveData < this->getMinimumNumberOfData())) { // Not enough data, yet
-                        KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Can read more data";
+                        KARABO_LOG_FRAMEWORK_TRACE << debugId << "Can read more data";
                         notifyOutputChannelForPossibleRead(channel);
                     } else if (nActiveData == 0) { // Data complete, second pot still empty
 
@@ -469,12 +471,12 @@ namespace karabo {
                         notifyOutputChannelForPossibleRead(channel);
 
                         // No mutex under callback
-                        KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering IOEvent";
+                        KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering IOEvent";
                         m_tcpIoService->post(boost::bind(&InputChannel::triggerIOEvent, this));
                     } else { // Data complete on both pots now
                         if (m_keepDataUntilNew) { // Is false per default
                             m_keepDataUntilNew = false;
-                            KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Updating";
+                            KARABO_LOG_FRAMEWORK_TRACE << debugId << "Updating";
                             m_tcpIoService->post(boost::bind(&InputChannel::update, this));
                             m_keepDataUntilNew = true;
                         }
@@ -608,7 +610,7 @@ namespace karabo {
 
         void InputChannel::deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
             if (channel->isOpen()) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Notifying output channel that " << this->getInstanceId() << " is ready for next read.";
+                KARABO_LOG_FRAMEWORK_TRACE << "INPUT Notifying output channel that " << this->getInstanceId() << " is ready for next read.";
                 channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
             }
         }
