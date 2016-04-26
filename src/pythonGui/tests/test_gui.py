@@ -11,10 +11,9 @@ import karabo_gui.gui as gui
 from PyQt4.QtCore import QObject, QMimeData, QPoint, Qt, pyqtSignal
 from PyQt4.QtGui import QApplication, QDropEvent, QWidget
 import karabo_gui.icons as icons
-from manager import Manager
 import karabo_gui.network as network
 import karabo_gui.globals as globals
-from karabo_gui.topology import getClass
+from karabo_gui.topology import getClass, Manager
 import karabo_gui.widget as widget
 
 from karabo.api_2 import (
@@ -110,11 +109,12 @@ class Tests(TestCase):
         d["incompatible", "serverId"] = "testserver"
         d["incompatible", "classId"] = "testclass"
         h = Hash("device", d, "server", s)
-        Manager().handle_systemTopology(h)
-        self.assertTrue(Manager().systemTopology.has("testserver"))
-        self.assertTrue(Manager().systemTopology.has("testdevice"))
-        self.assertTrue(Manager().systemTopology.has("incompatible"))
-        self.assertFalse(Manager().systemTopology.has("something"))
+        manager = Manager()
+        manager.handle_systemTopology(h)
+        self.assertTrue(manager.systemTopology.has("testserver"))
+        self.assertTrue(manager.systemTopology.has("testdevice"))
+        self.assertTrue(manager.systemTopology.has("incompatible"))
+        self.assertFalse(manager.systemTopology.has("something"))
 
 
     def findNode(self, cls, name):
@@ -127,7 +127,8 @@ class Tests(TestCase):
 
     def schema(self):
         cls = getClass("testserver", "testclass")
-        Manager().handle_classSchema("testserver", "testclass", self.testschema)
+        manager = Manager()
+        manager.handle_classSchema("testserver", "testclass", self.testschema)
 
         self.assertEqual(cls.type, "class")
         self.assertEqual(cls.value.int32, 1234)
@@ -187,11 +188,12 @@ class Tests(TestCase):
 
     def project(self):
         net.called = [ ]
-        Manager().projectTopology.projectOpen(
+        manager = Manager()
+        manager.projectTopology.projectOpen(
             path.join(self.directory, "project.krb"), ProjectAccess.LOCAL)
         self.assertCalled("onGetDeviceSchema")
 
-        root = Manager().projectTopology.invisibleRootItem()
+        root = manager.projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
         self.assertEqual(devices.text(), "Devices")
         self.assertEqual(devices.child(0).text(), "testdevice")
@@ -205,26 +207,27 @@ class Tests(TestCase):
         self.assertEqual(devices.child(4).text(), "offline")
         self.assertIcon(devices.child(4).icon(), icons.deviceOffline)
 
-        self.assertEqual(Manager().deviceData["testdevice"].visible, 4)
+        self.assertEqual(manager.deviceData["testdevice"].visible, 4)
 
-        Manager().projectTopology.projectSaveAs("/tmp/test.krb",
+        manager.projectTopology.projectSaveAs("/tmp/test.krb",
                                                 ProjectAccess.LOCAL)
-        Manager().projectTopology.onCloseProject()
-        Manager().projectTopology.projectOpen("/tmp/test.krb",
+        manager.projectTopology.onCloseProject()
+        manager.projectTopology.projectOpen("/tmp/test.krb",
                                               ProjectAccess.LOCAL)
 
 
     def stop(self):
-        Manager().handle_instanceGone("testdevice", "device")
-        root = Manager().projectTopology.invisibleRootItem()
+        manager = Manager()
+        manager.handle_instanceGone("testdevice", "device")
+        root = manager.projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
         self.assertIcon(devices.child(0).icon(), icons.deviceOffline)
-        Manager().handle_instanceGone("testdevice", "device")
-        Manager().handle_instanceGone("incompatible", "device")
-        Manager().handle_instanceGone("testserver", "server")
-        root = Manager().projectTopology.invisibleRootItem()
+        manager.handle_instanceGone("testdevice", "device")
+        manager.handle_instanceGone("incompatible", "device")
+        manager.handle_instanceGone("testserver", "server")
+        root = manager.projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
-        self.assertFalse(Manager().systemTopology.has("testserver"))
+        self.assertFalse(manager.systemTopology.has("testserver"))
 
         self.assertIcon(devices.child(0).icon(), icons.deviceOfflineNoServer)
         self.assertIcon(devices.child(1).icon(), icons.deviceOfflineNoServer)
@@ -238,13 +241,14 @@ class Tests(TestCase):
 
 
     def scene(self):
-        scene = Manager().projectTopology.projects[0].scenes[0]
+        manager = Manager()
+        scene = manager.projectTopology.projects[0].scenes[0]
         self.assertTrue(scene.tabVisible)
-        Manager().handle_deviceSchema("testdevice", self.testschema)
-        testdevice = Manager().deviceData["testdevice"]
-        Manager().handle_deviceConfiguration("testdevice", self.testconfiguration)
+        manager.handle_deviceSchema("testdevice", self.testschema)
+        testdevice = manager.deviceData["testdevice"]
+        manager.handle_deviceConfiguration("testdevice", self.testconfiguration)
         self.assertEqual(testdevice.value.targetSpeed, 0.5)
-        Manager().signalSelectNewNavigationItem.emit("testdevice")
+        manager.signalSelectNewNavigationItem.emit("testdevice")
 
         self.getItem("Target Conveyor Speed").setSelected(True)
         self.assertEqual(len(testdevice.parameterEditor.selectedItems()), 1)
@@ -269,7 +273,7 @@ class Tests(TestCase):
         TestWidget.instance.onEditingFinished(2.5)
         self.assertIcon(component.acApply.icon(), icons.apply)
         self.assertTrue(panel.pbApplyAll.isEnabled())
-        Manager().handle_deviceConfiguration("testdevice", Hash("targetSpeed", 1.5))
+        manager.handle_deviceConfiguration("testdevice", Hash("targetSpeed", 1.5))
         self.assertIcon(component.acApply.icon(), icons.applyConflict)
         self.assertTrue(panel.pbApplyAll.isEnabled())
         self.assertEqual(testdevice.value.targetSpeed, 1.5)
@@ -289,7 +293,7 @@ class Tests(TestCase):
         self.assertTrue(scene.tabVisible)
         self.assertEqual(len(net.called), 1)
         self.assertEqual(testdevice.visible, 6)
-        self.assertEqual(Manager().deviceData["incompatible"].visible, 2)
+        self.assertEqual(manager.deviceData["incompatible"].visible, 2)
 
 
     def test_gui(self):

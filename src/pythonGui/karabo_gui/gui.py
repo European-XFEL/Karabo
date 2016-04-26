@@ -19,7 +19,7 @@ def init(app):
     """
     from karabo_gui.mainwindow import MainWindow
     from karabo_gui.network import Network
-    from manager import Manager
+    from karabo_gui.topology import Manager
     import karabo # XXX: I think this could be for side effects?
     import karabo_gui.gui_registry_loader # XXX: Only imported for side-effects
     import karabo_gui.icons as icons
