@@ -9,8 +9,7 @@ import base64
 from xml.etree.ElementTree import Element
 
 from karabo_gui.const import ns_karabo
-from manager import getDevice
-from karabo_gui.network import Network
+from karabo_gui.topology import getDevice
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 

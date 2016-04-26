@@ -22,6 +22,7 @@ from karabo_gui.const import ns_karabo, ns_svg, SCENE_MIN_WIDTH, SCENE_MIN_HEIGH
 import karabo_gui.pathparser as pathparser
 import karabo_gui.icons as icons
 import manager
+from karabo_gui.topology import getDevice
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import (pyqtSignal, pyqtSlot, Qt, QByteArray, QEvent, QSize,
@@ -1476,8 +1477,7 @@ class Scene(QSvgWidget):
                 # one on the device. They are the same if not from a project
                 box = item.box
                 if box.configuration.type == "projectClass":
-                    realbox = manager.getDevice(box.configuration.id
-                                                ).getBox(box.path)
+                    realbox = getDevice(box.configuration.id).getBox(box.path)
                     if realbox.descriptor is not None:
                         box = realbox
                 else:
