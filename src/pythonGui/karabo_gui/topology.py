@@ -44,7 +44,7 @@ def getClass(serverId, classId):
 def Manager():
     """ Return the manager singleton.
     """
-    from manager import _Manager
+    from .manager import _Manager
 
     global _manager
     if _manager is None:
