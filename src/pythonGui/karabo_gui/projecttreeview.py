@@ -15,11 +15,11 @@ __all__ = ["ProjectTreeView"]
 import karabo_gui.globals as globals
 
 from karabo_gui.dialogs.projectdialog import ProjectDialog, ProjectSaveDialog, ProjectLoadDialog
-from scene import Scene
+from karabo_gui.scene import Scene
 from karabo_gui.network import Network
 from karabo_gui.topology import Manager
-from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
-from projectmodel import ProjectModel
+from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject, Macro
+from karabo_gui.projectmodel import ProjectModel
 
 from karabo.api2.project import (Monitor, Project, ProjectAccess,
                                  ProjectConfiguration)

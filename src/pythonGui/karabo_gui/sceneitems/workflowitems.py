@@ -10,8 +10,7 @@ __all__ = ["WorkflowItem", "WorkflowGroupItem", "WorkflowChannel", "WorkflowConn
 from karabo_gui.const import ns_karabo
 from karabo_gui.layouts import ProxyWidget
 from karabo_gui.registry import Loadable
-from schema import Dummy, Schema
-import scene
+from karabo_gui.schema import Dummy, Schema
 from karabo_gui import topology
 
 from PyQt4.QtCore import (pyqtSignal, QPoint, QPointF, QRect, QSize, Qt)
@@ -322,9 +321,11 @@ class WorkflowItem(Item):
 
     @staticmethod
     def load(elem, layout):
+        from karabo_gui.scene import Scene
+
         # Get scene this item belongs to
         parent = layout.parent()
-        while not isinstance(parent, scene.Scene):
+        while not isinstance(parent, Scene):
             parent = parent.parent()
         
         project = parent.project
@@ -422,9 +423,11 @@ class WorkflowGroupItem(Item):
 
     @staticmethod
     def load(elem, layout):
+        from karabo_gui.scene import Scene
+
         # Get scene this item belongs to
         parent = layout.parent()
-        while not isinstance(parent, scene.Scene):
+        while not isinstance(parent, Scene):
             parent = parent.parent()
 
         project = parent.project
