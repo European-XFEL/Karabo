@@ -1232,8 +1232,8 @@ class Scene(QSvgWidget):
         self.clean()
         FixedLayout.load(root, widget=self.inner)
         self.setTabVisible(visible)
-        self.resize(max(int(root.get('width', 0)), SCENE_MIN_WIDTH),
-                    max(int(root.get('height', 0)), SCENE_MIN_HEIGHT))
+        self.resize(max(float(root.get('width', 0)), SCENE_MIN_WIDTH),
+                    max(float(root.get('height', 0)), SCENE_MIN_HEIGHT))
         self.layout().setGeometry(self.geometry())
         self.ilayout.setGeometry(self.inner.geometry())
 
