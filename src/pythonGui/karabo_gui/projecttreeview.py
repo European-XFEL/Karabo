@@ -16,8 +16,8 @@ import karabo_gui.globals as globals
 
 from karabo_gui.dialogs.projectdialog import ProjectDialog, ProjectSaveDialog, ProjectLoadDialog
 from scene import Scene
-from manager import Manager
 from karabo_gui.network import Network
+from karabo_gui.topology import Manager
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from projectmodel import ProjectModel
 

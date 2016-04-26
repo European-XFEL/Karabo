@@ -18,14 +18,13 @@ from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMessageBox,
                          QToolButton, QWidget)
 
-import manager
 from .const import ns_karabo
 from . import icons
 from .layouts import ProxyWidget
 from .messagebox import MessageBox
 from .network import Network
 from .registry import Loadable
-from .topology import getDevice
+from .topology import getDevice, Manager
 from .widget import EditableWidget, DisplayWidget, Widget
 
 
@@ -302,8 +301,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.connectWidget(box)
         self.widgetFactory.setReadOnly(False)
         # In case of attributes (Hash-V2) connect another function here
-        self.signalConflictStateChanged.connect(
-            manager.Manager().onConflictStateChanged)
+        self.signalConflictStateChanged.connect(Manager().onConflictStateChanged)
 
 
     def connectWidget(self, box):

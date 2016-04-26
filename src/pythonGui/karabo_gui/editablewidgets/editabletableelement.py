@@ -48,10 +48,9 @@ from karabo.api_2 import Hash, Type, VectorHash, SchemaHashType
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.const import ns_karabo
-from karabo_gui.topology import getDevice
+from karabo_gui.topology import getDevice, Manager
 
 import schema
-import manager
 
 from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog, QComboBox,
                         QVBoxLayout, QWidget, QDialogButtonBox, QCheckBox,
@@ -74,7 +73,7 @@ class TableModel(QAbstractTableModel):
         self.editingFinished = editingFinished
         self.role = Qt.EditRole
         #connect so that monitors recieve updates:
-        #manager.Manager().signalUpdateScenes.connect(self.monitorChanged)
+        #Manager().signalUpdateScenes.connect(self.monitorChanged)
         
     def setRole(self, role):
         self.role = role
@@ -392,7 +391,7 @@ class FromPropertyPopUp(QDialog):
         self.deviceCombo.currentIndexChanged['QString'].connect(self.deviceIdSelectionChanged)
         
         #connect signal if device schema not yet available
-        manager.Manager().signalUpdateScenes.connect(self.delayedSchema)
+        Manager().signalUpdateScenes.connect(self.delayedSchema)
         
         self.actAsMonitorCheck = QCheckBox("Act as monitor")
         self.actAsMonitorCheck.setChecked(True)
@@ -413,7 +412,7 @@ class FromPropertyPopUp(QDialog):
         
         
     def getCurrentDeviceInstances(self):
-        devicesHash = manager.Manager().systemHash["device"]
+        devicesHash = Manager().systemHash["device"]
         devices = []
         for k, v, a in devicesHash.iterall():
             if 'type' in a:

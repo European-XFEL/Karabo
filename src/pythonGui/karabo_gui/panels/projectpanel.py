@@ -14,7 +14,7 @@ __all__ = ["ProjectPanel"]
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.projecttreeview import ProjectTreeView
 import karabo_gui.icons as icons
-import manager
+from karabo_gui.topology import Manager
 
 from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import (QAction, QVBoxLayout, QWidget)
@@ -42,10 +42,11 @@ class ProjectPanel(Dockable, QWidget):
         self.twProject.model().signalRemoveMacro.connect(self.signalRemoveMacro)
         self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)
         # Connect signal to get project available
-        manager.Manager().signalAvailableProjects.connect(self.twProject.onAvailableProjects)
-        manager.Manager().signalProjectLoaded.connect(self.twProject.onProjectLoaded)
-        manager.Manager().signalProjectSaved.connect(self.twProject.onProjectSaved)
-        manager.Manager().signalReset.connect(self.onResetPanel)
+        manager = Manager()
+        manager.signalAvailableProjects.connect(self.twProject.onAvailableProjects)
+        manager.signalProjectLoaded.connect(self.twProject.onProjectLoaded)
+        manager.signalProjectSaved.connect(self.twProject.onProjectSaved)
+        manager.signalReset.connect(self.onResetPanel)
 
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)

@@ -1,10 +1,12 @@
 
+# This is the global singleton for the Manager() function.
+_manager = None
+
 
 def getDevice(deviceId):
     """ Find the Device instance in the system topology with the ID `deviceId`.
     """
     from configuration import Configuration
-    from manager import Manager
     from .network import Network
 
     manager = Manager()
@@ -24,7 +26,6 @@ def getClass(serverId, classId):
     the ID `classId`.
     """
     from configuration import Configuration
-    from manager import Manager
     from .network import Network
 
     manager = Manager()
@@ -38,3 +39,15 @@ def getClass(serverId, classId):
         Network().onGetClassSchema(serverId, classId)
         cls.status = "requested"
     return cls
+
+
+def Manager():
+    """ Return the manager singleton.
+    """
+    from .manager import _Manager
+
+    global _manager
+    if _manager is None:
+        _manager = _Manager()
+
+    return _manager

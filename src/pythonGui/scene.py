@@ -21,8 +21,7 @@ from karabo_gui.registry import Loadable, Registry
 from karabo_gui.const import ns_karabo, ns_svg, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
 import karabo_gui.pathparser as pathparser
 import karabo_gui.icons as icons
-import manager
-from karabo_gui.topology import getDevice
+from karabo_gui.topology import getDevice, Manager
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import (pyqtSignal, pyqtSlot, Qt, QByteArray, QEvent, QSize,
@@ -1532,7 +1531,7 @@ class Scene(QSvgWidget):
             # Restore cursor for dialog input
             QApplication.restoreOverrideCursor()
             # Open dialog to set up new device (group)
-            dialog = DeviceGroupDialog(manager.Manager().systemHash)
+            dialog = DeviceGroupDialog(Manager().systemHash)
             # Set server and class id
             dialog.serverId = serverId
             dialog.classId = classId
