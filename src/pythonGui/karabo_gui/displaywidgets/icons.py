@@ -2,19 +2,22 @@
 from karabo_gui.const import ns_karabo
 import karabo_gui.icons as icons
 from karabo_gui.widget import DisplayWidget
+from karabo_gui.messagebox import MessageBox
 
 from karabo.api_2 import Integer, Number, String
 
 from PyQt4 import uic
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer, QDir
 from PyQt4.QtGui import (QAction, QApplication, QDialog, QFileDialog, QLabel,
-                         QMessageBox, QPixmap)
+                         QPixmap)
 
 from os import path
 import urllib.request
 import re
 from xml.etree.ElementTree import Element
 
+class IconError(Exception):
+    pass
 
 class Label(QLabel):
     newMime = pyqtSignal(str)
@@ -50,41 +53,50 @@ class Item:
         if element is None:
             return
         url = element.get("image")
-        if url is not None:
-            self.url = url
-            self.getPixmap(project)
+        if url is None:
+            return
+        if not self.getPixmap(project, url):
+            return
+        self.url = url
 
-    def getPixmap(self, project):
+    def getPixmap(self, project, url):
+        """This function tries to load an image from the given url
+        """
+        if project is None:
+            return False
+        
         pixmap = QPixmap()
         try:
-            if not pixmap.loadFromData(project.getURL(self.url)):
-                raise RuntimeError("could not read image from url {}".
-                                   format(self.url))
-        except KeyError:
-            QMessageBox.warning(None, "Icon not found",
-                                'could not find an icon')
-            self.pixmap = None
+            if not pixmap.loadFromData(project.getURL(url)):
+                raise IconError
+        except (KeyError, IconError):
+            MessageBox.showError("Could not read image from URL {}".format(url))
+            return False
+        
         self.pixmap = pixmap
+        return True
 
 
 class Dialog(QDialog):
     def __init__(self, project, items):
-        super().__init__()
+        super(Dialog, self).__init__()
         self.project = project
         self.items = items
         uic.loadUi(path.join(path.dirname(__file__), 'icons.ui'), self)
-        self.list.addItems([self.textFromItem(item) for item in items])
+        self.valueList.addItems([self.textFromItem(item) for item in items])
+        self.valueList.setCurrentRow(0)
 
     @pyqtSlot(int)
-    def on_list_currentRowChanged(self, row):
+    def on_valueList_currentRowChanged(self, row):
         self.image.setPixmap(self.items[row].pixmap)
 
     def setURL(self, url):
         if url.startswith("file:"):
             url = self.project.addResource("icon", self.project.getURL(url))
-        item = self.items[self.list.currentRow()]
+        item = self.items[self.valueList.currentRow()]
+        if not item.getPixmap(self.project, url):
+            return
         item.url = url
-        item.getPixmap(self.project)
         self.image.setPixmap(item.pixmap)
         self.copy.setEnabled(not url.startswith("project:"))
 
@@ -108,7 +120,8 @@ class Dialog(QDialog):
 
     @pyqtSlot()
     def on_open_clicked(self):
-        name = QFileDialog.getOpenFileName(self, "Open Icon")
+        name = QFileDialog.getOpenFileName(self, "Open Icon", QDir.homePath(), 
+                "Images (*.png *.xpm *.jpg *.jpeg *.svg *.gif *.ico *.tif *.tiff *.bmp)")
         if name:
             url = "file://" + urllib.request.pathname2url(name)
             self.setURL(url)
@@ -119,38 +132,37 @@ class Dialog(QDialog):
 
     @pyqtSlot()
     def on_copy_clicked(self):
-        cr = self.list.currentRow()
+        cr = self.valueList.currentRow()
         url = self.project.addResource("icon",
                                        self.project.getURL(self.items[cr].url))
         self.setURL(url)
 
     @pyqtSlot()
     def on_deleteValue_clicked(self):
-        cr = self.list.currentRow()
+        cr = self.valueList.currentRow()
         if self.items[cr].value is not None:
-            self.list.takeItem(cr)
+            self.valueList.takeItem(cr)
             del self.items[cr]
 
     @pyqtSlot()
     def on_up_clicked(self):
-        cr = self.list.currentRow()
+        cr = self.valueList.currentRow()
         if not 0 < cr < len(self.items) - 1:
             return
-        self.list.insertItem(cr - 1, self.list.takeItem(cr))
+        self.valueList.insertItem(cr - 1, self.valueList.takeItem(cr))
         self.items[cr - 1], self.items[cr] = self.items[cr], self.items[cr - 1]
 
     @pyqtSlot()
     def on_down_clicked(self):
-        cr = self.list.currentRow()
+        cr = self.valueList.currentRow()
         if cr >= len(self.items) - 2:
             return
-        self.list.insertItem(cr + 1, self.list.takeItem(cr))
+        self.valueList.insertItem(cr + 1, self.valueList.takeItem(cr))
         self.items[cr + 1], self.items[cr] = self.items[cr], self.items[cr + 1]
 
-    def exec(self):
-        super().exec()
+    def exec_(self):
+        super(Dialog, self).exec_()
         return self.items
-
 
 class Icons(DisplayWidget):
     def __init__(self, box, parent):
@@ -169,7 +181,7 @@ class Icons(DisplayWidget):
     def showDialog(self):
         box = self.boxes[0]
         dialog = self.Dialog(self.project, self.items, box.descriptor)
-        self.items = dialog.exec()
+        self.items = dialog.exec_()
         if box.hasValue():
             self.valueChanged(box, box.value)
 
@@ -191,7 +203,7 @@ class TextDialog(Dialog):
         item.value = self.textValue.text()
         item.re = re.compile(item.value)
         self.items.insert(0, item)
-        self.list.insertItem(0, self.textValue.text())
+        self.valueList.insertItem(0, self.textValue.text())
 
     def textFromItem(self, item):
         if item.value is None:
@@ -255,7 +267,7 @@ class DigitDialog(Dialog):
         item.value = self.value.value()
         item.equal = self.lessEqual.isChecked()
         self.items.insert(i, item)
-        self.list.insertItem(i, self.textFromItem(item))
+        self.valueList.insertItem(i, self.textFromItem(item))
 
     def textFromItem(self, item):
         if item.value is None:
@@ -320,15 +332,12 @@ class SelectionIcons(Icons):
     def typeChanged(self, box):
         items = []
         for o in box.descriptor.options:
-            for item in self.items:
-                if item.value == o:
-                    items.append(item)
-            else:
+            if not any(o == item.value for item in self.items):
                 item = Item()
                 item.value = o
-                print('added item', o)
                 items.append(item)
-        self.items = items
+
+        self.items.extend(items)
 
     def valueChanged(self, box, value, timestamp=None):
         for item in self.items:
