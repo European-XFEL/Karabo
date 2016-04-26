@@ -14,8 +14,8 @@ __all__ = ["Configuration"]
 
 
 from schema import Schema, Box
-import manager
 from karabo_gui.network import Network
+from karabo_gui.topology import Manager
 
 from PyQt4.QtCore import pyqtSignal
 
@@ -71,12 +71,13 @@ class Configuration(Box):
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
         if self.status == "requested":
             if self.visible > 0:
+                manager = Manager()
                 Network().onStartMonitoringDevice(self.id)
-                index = manager.Manager().systemTopology.findIndex(self.id)
+                index = manager.systemTopology.findIndex(self.id)
                 if index is not None and index.isValid():
                     assert not index.internalPointer().monitoring
                     index.internalPointer().monitoring = True
-                    manager.Manager().systemTopology.dataChanged.emit(
+                    manager.systemTopology.dataChanged.emit(
                         index, index)
             self.status = "schema"
 
@@ -122,13 +123,14 @@ class Configuration(Box):
 
     def updateStatus(self):
         """ determine the status from the system topology """
-        if manager.Manager().systemHash is None:
+        manager = Manager()
+        if manager.systemHash is None:
             self.status = "offline"
             return
         
         for k in ("device", "macro", "server"):
             try:
-                attrs = manager.Manager().systemHash[k][self.id, ...]
+                attrs = manager.systemHash[k][self.id, ...]
             except KeyError:
                 continue
             if len(attrs) < 1:
@@ -195,12 +197,13 @@ class Configuration(Box):
                 Network().onGetDeviceSchema(self.id)
                 self.status = "requested"
             else:
+                manager = Manager()
                 Network().onStartMonitoringDevice(self.id)
-                idx = manager.Manager().systemTopology.findIndex(self.id)
+                idx = manager.systemTopology.findIndex(self.id)
                 if idx is not None and idx.isValid():
                     assert not idx.internalPointer().monitoring
                     idx.internalPointer().monitoring = True
-                    manager.Manager().systemTopology.dataChanged.emit(idx, idx)
+                    manager.systemTopology.dataChanged.emit(idx, idx)
 
 
     __enter__ = addVisible
@@ -208,12 +211,13 @@ class Configuration(Box):
     def removeVisible(self):
         self.visible -= 1
         if self.visible == 0 and self.status not in ("offline", "requested"):
+            manager = Manager()
             Network().onStopMonitoringDevice(self.id)
-            index = manager.Manager().systemTopology.findIndex(self.id)
+            index = manager.systemTopology.findIndex(self.id)
             if index is not None and index.isValid():
                 assert index.internalPointer().monitoring
                 index.internalPointer().monitoring = False
-                manager.Manager().systemTopology.dataChanged.emit(index, index)
+                manager.systemTopology.dataChanged.emit(index, index)
             if self.status == "monitoring":
                 self.status = "alive"
 
@@ -227,4 +231,4 @@ class Configuration(Box):
 
 
     def shutdown(self):
-        manager.Manager().shutdownDevice(self.id)
+        Manager().shutdownDevice(self.id)

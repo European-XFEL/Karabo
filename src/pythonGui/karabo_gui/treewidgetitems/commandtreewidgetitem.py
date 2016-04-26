@@ -14,7 +14,6 @@ __all__ = ["CommandTreeWidgetItem"]
 from .basetreewidgetitem import BaseTreeWidgetItem
 from karabo_gui.components import DisplayComponent
 import karabo_gui.icons as icons
-import manager
 
 from PyQt4.QtGui import QPushButton
 
