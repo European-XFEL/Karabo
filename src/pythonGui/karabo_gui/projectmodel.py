@@ -829,6 +829,12 @@ class ProjectModel(QStandardItemModel):
         """
         return [p for p in self.projects if p.isModified]
 
+    def _localCloudProjectPath(self, projectName):
+        """
+        The local file system of the given CLOUD \projectName is returned.
+        """
+        return os.path.join(globals.KARABO_PROJECT_FOLDER, network.Network().username,
+                            projectName)
 
     def closeExistentProject(self, filename):
         """
@@ -888,10 +894,7 @@ class ProjectModel(QStandardItemModel):
         
         if project.access == ProjectAccess.CLOUD:
             network.Network().onCloseProject(project.basename)
-            filename = os.path.join(globals.KARABO_PROJECT_FOLDER,
-                                    network.Network().username,
-                                    project.basename)
-            os.remove(filename)
+            os.remove(self._localCloudProjectPath(project.basename))
 
 
     def appendProject(self, project):
@@ -1000,6 +1003,13 @@ class ProjectModel(QStandardItemModel):
         
         return project
 
+    def writeCloudProjectData(self, projectName, data):
+        # Write cloud project to local file system
+        filename = self._localCloudProjectPath(projectName)
+        with open(filename, "wb") as out:
+            out.write(data)
+        
+        return filename
 
     def editDevice(self, device=None):
         """
