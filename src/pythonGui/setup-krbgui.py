@@ -8,7 +8,7 @@ MINOR = 5
 MICRO = 0
 IS_RELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-VERSION_FILE_PATH = 'karabo_gui/_version.py'
+VERSION_FILE_PATH = 'krbgui/_version.py'
 
 
 def _get_src_dist_version():
@@ -17,8 +17,8 @@ def _get_src_dist_version():
 
     # must be a source distribution, use existing version file
     try:
-        from karabo_gui._version import vcs_revision as vcs_rev
-        from karabo_gui._version import vcs_revision_count as dev_num
+        from krbgui._version import vcs_revision as vcs_rev
+        from krbgui._version import vcs_revision_count as dev_num
     except ImportError:
         raise ImportError("Unable to import vcs_revision. Try removing "
                           + VERSION_FILE_PATH + " and the build directory "
@@ -67,19 +67,15 @@ is_released = {is_released}
 if __name__ == '__main__':
     version = _write_version_py()
 
-    PKG = 'karabo_gui'
-    setup(name=PKG,
-          version=version,
-          author="Karabo Team",
-          author_email="karabo@xfel.eu",
-          description="This is the Karabo GUI",
-          url="http://karabo.eu",
-          packages=[PKG] + [PKG + '.' + pkg for pkg in find_packages(PKG)],
-          package_data = {"karabo_gui.icons": ["*.*"],
-                          "karabo_gui.displaywidgets": ["*.ui"],
-                          "karabo_gui.dialogs": ["*.ui"]
-                          },
-          entry_points={'console_scripts': [
-                        'karabo-gui=karabo_gui.main:main',
-                        ]},
+    PKG = 'krbgui'
+    setup(
+        name=PKG,
+        version=version,
+        author="Karabo Team",
+        author_email="karabo@xfel.eu",
+        description="This is the Karabo GUI",
+        url="http://karabo.eu",
+        packages=[PKG] + [PKG + '.' + pkg for pkg in find_packages(PKG)],
+        package_data={
+        },
     )
