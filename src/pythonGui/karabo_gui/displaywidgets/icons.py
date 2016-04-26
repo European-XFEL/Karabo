@@ -172,7 +172,7 @@ class Icons(DisplayWidget):
         action = QAction("Change Icons...", self.widget)
         self.widget.addAction(action)
         action.triggered.connect(self.showDialog)
-        self.items = [Item()]
+        self.items = []
 
     @classmethod
     def isCompatible(self, box, ro):
