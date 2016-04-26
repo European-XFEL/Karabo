@@ -383,7 +383,7 @@ namespace configurationTest {
                     .description("Example key 7 description")
                     .bin("0:isError,1:isMoving,2:isBusy,15:isOn")
                     .readOnly()
-                    .initialValue(0)
+                    .expertAccess()
                     .commit();
                     
             INT32_ELEMENT(expected).key("sampleKey")

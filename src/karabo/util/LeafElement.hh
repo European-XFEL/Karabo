@@ -267,6 +267,26 @@ namespace karabo {
             void commit() {
                 m_genericElement->commit();
             }
+            
+            Element& observerAccess() {
+                return m_genericElement->observerAccess();
+            }
+            
+            Element& userAccess() {
+                return m_genericElement->userAccess();
+            }
+            
+            Element& operatorAccess() {
+                return m_genericElement->operatorAccess();
+            }
+            
+            Element& expertAccess() {
+                return m_genericElement->expertAccess();
+            }
+            
+            Element& adminAccess() {
+                return m_genericElement->adminAccess();
+            }
 
         private:
 
