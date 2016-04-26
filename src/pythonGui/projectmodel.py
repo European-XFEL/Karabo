@@ -25,9 +25,8 @@ from karabo_gui.dialogs.monitordialog import MonitorDialog
 from karabo_gui.dialogs.scenedialog import SceneDialog
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from scene import Scene
-import manager
 import karabo_gui.network as network
-from karabo_gui.topology import getDevice
+from karabo_gui.topology import getDevice, Manager
 from karabo_gui.util import getSaveFileName
 
 from karabo.api2.project import Monitor, Project, ProjectAccess
@@ -427,7 +426,7 @@ class ProjectModel(QStandardItemModel):
         """ put the running macros from the systemHash into the project model
         """
         macros = {}
-        hash = manager.Manager().systemHash.get("macro", Hash())
+        hash = Manager().systemHash.get("macro", Hash())
         for k, v, a in hash.iterall():
             macros.setdefault((a["project"], a["module"]), []).append(k)
 
@@ -677,7 +676,7 @@ class ProjectModel(QStandardItemModel):
         self.selectIndex(self.currentIndex())
         # Update deviceDialog data
         if self.deviceDialog is not None:
-            self.deviceDialog.updateServerTopology(manager.Manager().systemHash)
+            self.deviceDialog.updateServerTopology(Manager().systemHash)
         self.updateMacros()
 
 
@@ -1015,7 +1014,7 @@ class ProjectModel(QStandardItemModel):
         
         # Show dialog to select plugin
         self.deviceDialog = DeviceGroupDialog()
-        if not self.deviceDialog.updateServerTopology(manager.Manager().systemHash, device):
+        if not self.deviceDialog.updateServerTopology(Manager().systemHash, device):
             QMessageBox.warning(None, "No servers available",
             "There are no servers available.<br>Please check, if all servers "
             "are <br>started correctly!")

@@ -8,7 +8,6 @@
 __all__ = ["MonitorDialog", "DevicePropertyDialog"]
 
 import karabo_gui.icons as icons
-import manager
 from schema import Schema, SlotNode
 
 from PyQt4 import uic
