@@ -12,12 +12,11 @@ devices.
 
 __all__ = ["Configuration"]
 
-
-from schema import Schema, Box
-from karabo_gui.network import Network
-from karabo_gui.topology import Manager
-
 from PyQt4.QtCore import pyqtSignal
+
+from karabo_gui.network import Network
+from karabo_gui.schema import Schema, Box
+from karabo_gui.topology import Manager
 
 
 class BulkNotifications(object):
