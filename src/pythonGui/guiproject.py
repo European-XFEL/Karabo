@@ -18,9 +18,8 @@ from scene import Scene
 from karabo.api2.project import (BaseDevice, BaseDeviceGroup, BaseMacro,
                                  Monitor, Project, ProjectConfiguration)
 from karabo.api_2 import AccessMode, Hash, XMLParser, XMLWriter
-import manager
 from karabo_gui.network import network
-from karabo_gui.topology import getClass, getDevice
+from karabo_gui.topology import getClass, getDevice, Manager
 
 from PyQt4.QtCore import pyqtSignal, QObject
 
@@ -106,7 +105,7 @@ class BaseConfiguration(Configuration):
             self.redummy()
         self.descriptor = conf.descriptor
         self.mergeInitConfig()
-        manager.Manager().onShowConfiguration(self)
+        Manager().onShowConfiguration(self)
 
 
 class Device(BaseDevice, BaseConfiguration):
@@ -126,13 +125,14 @@ class Device(BaseDevice, BaseConfiguration):
         and finds out the gory details for this project device """
         self.error = error
 
-        if manager.Manager().systemHash is None:
+        manager = Manager()
+        if manager.systemHash is None:
             self.status = "offline"
             return
 
         if status == "offline":
             try:
-                attrs = manager.Manager().systemHash[
+                attrs = manager.systemHash[
                     "server.{}".format(self.serverId), ...]
             except KeyError:
                 self.status = "noserver"
@@ -546,12 +546,13 @@ class GuiProject(Project, QObject):
         self.setModified(False)
 
     def _instantiateDevice(self, device):
+        manager = Manager()
         if device.isOnline():
             if device.ifexists == "ignore":
                 return
             elif device.ifexists == "restart":
                 # This might take a while...
-                manager.Manager().shutdownDevice(device.id, False)
+                manager.shutdownDevice(device.id, False)
 
         if device.descriptor is None:
             config = device.initConfig
@@ -559,8 +560,7 @@ class GuiProject(Project, QObject):
             hsh, _ = device.toHash()  # Ignore returned attributes
             config = hsh
 
-        manager.Manager().initDevice(device.serverId, device.classId, device.id,
-                                     config)
+        manager.initDevice(device.serverId, device.classId, device.id, config)
 
 
     def instantiate(self, device):
@@ -591,7 +591,7 @@ class GuiProject(Project, QObject):
 
 
     def _shutdownDevice(self, device, showConfirm):
-        manager.Manager().shutdownDevice(device.id, showConfirm)
+        Manager().shutdownDevice(device.id, showConfirm)
 
 
     def shutdown(self, device, showConfirm=True):

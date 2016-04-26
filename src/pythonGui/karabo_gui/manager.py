@@ -14,9 +14,6 @@
    All relevant configuration data is stored in a member hash variable.
 """
 
-__all__ = ["Manager"]
-
-
 from configuration import Configuration, BulkNotifications
 from karabo_gui.dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
@@ -605,10 +602,3 @@ class _Manager(QObject):
         device = self.deviceData.get(deviceId)
         if device is not None:
             device.signalInitReply.emit(success, message)
-
-
-
-manager = _Manager()
-
-def Manager():
-    return manager

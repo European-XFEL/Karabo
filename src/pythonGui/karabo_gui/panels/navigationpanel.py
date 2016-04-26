@@ -13,8 +13,8 @@ __all__ = ["NavigationPanel"]
 
 
 from karabo_gui.docktabwindow import Dockable
-from manager import Manager
 from karabo_gui.navigationtreeview import NavigationTreeView
+from karabo_gui.topology import Manager
 
 from PyQt4.QtGui import QVBoxLayout, QWidget
 

@@ -15,10 +15,10 @@ __all__ = ["ConfigurationPanel"]
 from karabo_gui.docktabwindow import DockTabWindow, Dockable
 from .documentationpanel import DocumentationPanel
 import karabo_gui.icons as icons
-from manager import Manager
 from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.parametertreewidget import ParameterTreeWidget
 from karabo_gui.projecttreeview import ProjectTreeView
+from karabo_gui.topology import Manager
 
 from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
@@ -95,15 +95,16 @@ class ConfigurationPanel(Dockable, QWidget):
         vLayout = QVBoxLayout(topWidget)
         vLayout.setContentsMargins(0,0,0,0)
         vLayout.addWidget(splitTopPanes)
+
+        manager = Manager()
+        manager.signalNewNavigationItem.connect(self.onNewNavigationItem)
+        manager.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
+        manager.signalShowConfiguration.connect(self.onShowConfiguration)
         
-        Manager().signalNewNavigationItem.connect(self.onNewNavigationItem)
-        Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
-        Manager().signalShowConfiguration.connect(self.onShowConfiguration)
-        
-        Manager().signalConflictStateChanged.connect(self.onConflictStateChanged)
-        Manager().signalChangingState.connect(self.onChangingState)
-        Manager().signalErrorState.connect(self.onErrorState)
-        Manager().signalReset.connect(self.onResetPanel)
+        manager.signalConflictStateChanged.connect(self.onConflictStateChanged)
+        manager.signalChangingState.connect(self.onChangingState)
+        manager.signalErrorState.connect(self.onErrorState)
+        manager.signalReset.connect(self.onResetPanel)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
@@ -217,17 +218,19 @@ class ConfigurationPanel(Dockable, QWidget):
 
 
     def setupActions(self):
+        manager = Manager()
+
         text = "Open configuration from file (*.xml)"
         self.acOpenFromFile = QAction(icons.open, text, self)
         self.acOpenFromFile.setStatusTip(text)
         self.acOpenFromFile.setToolTip(text)
-        self.acOpenFromFile.triggered.connect(Manager().onOpenFromFile)
+        self.acOpenFromFile.triggered.connect(manager.onOpenFromFile)
 
         text = "Open configuration from project"
         self.acOpenFromProject = QAction(icons.open, text, self)
         self.acOpenFromProject.setStatusTip(text)
         self.acOpenFromProject.setToolTip(text)
-        self.acOpenFromProject.triggered.connect(Manager().onOpenFromProject)
+        self.acOpenFromProject.triggered.connect(manager.onOpenFromProject)
         
         self.openMenu = QMenu()
         self.openMenu.addAction(self.acOpenFromFile)
@@ -245,13 +248,13 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acSaveToFile = QAction(icons.saveAs, text, self)
         self.acSaveToFile.setStatusTip(text)
         self.acSaveToFile.setToolTip(text)
-        self.acSaveToFile.triggered.connect(Manager().onSaveToFile)
+        self.acSaveToFile.triggered.connect(manager.onSaveToFile)
 
         text = "Save configuration to project"
         self.acSaveToProject = QAction(icons.saveAs, text, self)
         self.acSaveToProject.setStatusTip(text)
         self.acSaveToProject.setToolTip(text)
-        self.acSaveToProject.triggered.connect(Manager().onSaveToProject)
+        self.acSaveToProject.triggered.connect(manager.onSaveToProject)
         
         self.saveMenu = QMenu()
         self.saveMenu.addAction(self.acSaveToFile)
