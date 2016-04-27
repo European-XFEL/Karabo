@@ -1,17 +1,9 @@
 #!/bin/bash
 
-# Make sure the script runs in this directory
-scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
-cd ${scriptDir}
-if [ $? -ne 0 ]; then
-    echo "ERROR Could not change directory to ${scriptDir}"
-    exit 1;
-fi
-
 # Make sure Karabo is installed
 if [ -z $KARABO ]; then
   echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
   exit 1
 fi
 
-$KARABO/bin/karabo-gui
+karabo-gui
