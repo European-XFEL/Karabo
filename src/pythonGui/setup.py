@@ -75,8 +75,9 @@ if __name__ == '__main__':
           description="This is the Karabo GUI",
           url="http://karabo.eu",
           packages=[PKG] + [PKG + '.' + pkg for pkg in find_packages(PKG)],
-          package_data = {"karabo_gui.icons": ["*.*"],
-                          "karabo_gui.displaywidgets": ["*.ui"],
+          package_data = {"karabo_gui.icons": ["*.*", "vacuum/*.*",
+                                               "vacuum/bigger/*.*"],
+                          "karabo_gui.displaywidgets": ["*.ui", "*.svg"],
                           "karabo_gui.dialogs": ["*.ui"]
                           },
           entry_points={'console_scripts': [
