@@ -7,6 +7,10 @@
 
 __all__ = ["ProjectSaveDialog", "ProjectLoadDialog"]
 
+import datetime
+import os
+from os.path import abspath, dirname, exists, join
+
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
 from karabo.api_2 import ProjectAccess
@@ -19,16 +23,13 @@ from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFileSystemModel,
                          QItemSelectionModel, QMessageBox, QMovie, QPalette,
                          QTreeWidgetItem)
 
-import os.path
-import datetime
-
 
 class ProjectDialog(QDialog):
 
 
     def __init__(self):
         QDialog.__init__(self)
-        uic.loadUi(os.path.join(os.path.dirname(__file__), 'projectdialog.ui'), self)
+        uic.loadUi(join(abspath(dirname(__file__)), 'projectdialog.ui'), self)
 
         self.stackedWidgets = {
             'cloud': self.wCloud,
@@ -60,7 +61,7 @@ class ProjectDialog(QDialog):
         self.selectionModel.currentChanged.connect(self.onLocalProjectChanged)
         self.twLocal.setSelectionModel(self.selectionModel)
         
-        rootDir = os.path.join(QDir.homePath(), globals.HIDDEN_KARABO_FOLDER)
+        rootDir = join(QDir.homePath(), globals.HIDDEN_KARABO_FOLDER)
         index = self.fileSystemModel.index(rootDir)
         self.twLocal.setCurrentIndex(index)
         self.twLocal.header().resizeSection(0, 300)
@@ -70,7 +71,7 @@ class ProjectDialog(QDialog):
         self.laWait.setAutoFillBackground(True)
         self.laWait.setBackgroundRole(QPalette.Base)
         
-        movie = QMovie(os.path.join("karabo_gui", "icons", "wait"))
+        movie = QMovie(join(abspath(dirname(icons.__file__)), "wait"))
         self.laWait.setMovie(movie)
         movie.start()
         
@@ -194,8 +195,8 @@ class ProjectSaveDialog(ProjectDialog):
         This property describes the filepath including the project suffix.
         """
         if self.location == ProjectAccess.CLOUD:
-            path = os.path.join(globals.KARABO_PROJECT_FOLDER, network.Network().username)
-            if not os.path.exists(path):
+            path = join(globals.KARABO_PROJECT_FOLDER, network.Network().username)
+            if not exists(path):
                 os.mkdir(path)
             return path
         elif self.location == ProjectAccess.LOCAL:
@@ -274,8 +275,8 @@ class ProjectLoadDialog(ProjectDialog):
         This property describes the filepath including the project suffix.
         """
         if self.location == ProjectAccess.CLOUD:
-            path = os.path.join(globals.KARABO_PROJECT_FOLDER, network.Network().username)
-            if not os.path.exists(path):
+            path = join(globals.KARABO_PROJECT_FOLDER, network.Network().username)
+            if not exists(path):
                 os.mkdir(path)
             return path
         elif self.location == ProjectAccess.LOCAL:
