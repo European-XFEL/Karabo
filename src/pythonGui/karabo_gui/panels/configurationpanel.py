@@ -12,6 +12,8 @@
 __all__ = ["ConfigurationPanel"]
 
 
+from os.path import abspath, dirname, join
+
 from karabo_gui.docktabwindow import DockTabWindow, Dockable
 from .documentationpanel import DocumentationPanel
 import karabo_gui.icons as icons
@@ -26,7 +28,6 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
 
-import os.path
 
 class ConfigurationPanel(Dockable, QWidget):
     def __init__(self):
@@ -76,7 +77,7 @@ class ConfigurationPanel(Dockable, QWidget):
         waitWidget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         waitWidget.setAutoFillBackground(True)
         waitWidget.setBackgroundRole(QPalette.Base)
-        movie = QMovie(os.path.join("karabo_gui", "icons", "wait"))
+        movie = QMovie(join(abspath(dirname(icons.__file__)), "wait"))
         waitWidget.setMovie(movie)
         movie.start()
         self.__swParameterEditor.addWidget(waitWidget)
