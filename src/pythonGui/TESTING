@@ -1,0 +1,2 @@
+To start the GUI test, you need to do the following:
+python -m karabo_gui.tests.test_gui
