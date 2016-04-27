@@ -102,6 +102,11 @@ class ProjectDialog(QDialog):
                if self.cbSaveTo.currentIndex() == ProjectAccess.LOCAL.value \
                else ProjectAccess.CLOUD
 
+    def _cloudPath(self):
+        path = join(globals.KARABO_PROJECT_FOLDER, network.Network().username)
+        if not exists(path):
+            os.mkdir(path)
+        return path
 
     def fillCloudProjects(self, projects):
         if self.twProjects.topLevelItemCount() > 0:
@@ -195,10 +200,7 @@ class ProjectSaveDialog(ProjectDialog):
         This property describes the filepath including the project suffix.
         """
         if self.location == ProjectAccess.CLOUD:
-            path = join(globals.KARABO_PROJECT_FOLDER, network.Network().username)
-            if not exists(path):
-                os.mkdir(path)
-            return path
+            return self._cloudPath()
         elif self.location == ProjectAccess.LOCAL:
             currentIndex = self.twLocal.currentIndex()
             if self.fileSystemModel.isDir(currentIndex):
@@ -275,10 +277,7 @@ class ProjectLoadDialog(ProjectDialog):
         This property describes the filepath including the project suffix.
         """
         if self.location == ProjectAccess.CLOUD:
-            path = join(globals.KARABO_PROJECT_FOLDER, network.Network().username)
-            if not exists(path):
-                os.mkdir(path)
-            return path
+            return self._cloudPath()
         elif self.location == ProjectAccess.LOCAL:
             return self.fileSystemModel.filePath(self.twLocal.currentIndex())
 
