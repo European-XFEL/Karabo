@@ -22,8 +22,7 @@ def install():
         os.mkdir(mv_dir)
         directory_created(mv_dir)
 
-    karaboGuiPath = os.path.join(get_python_lib(), 'karaboGui')
-    guiScript = os.path.join(karaboGuiPath, 'karabo-gui.py')
+    guiScript = os.path.join(get_python_lib(), 'karabo_gui', 'main.py')
     workDir=get_special_folder_path('CSIDL_DESKTOPDIRECTORY')
 
     # Create program shortcuts ...

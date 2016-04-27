@@ -183,7 +183,7 @@ if [ $BUNDLE_OPTION = "NoGui" ]; then
    echo
 elif [ $BUNDLE_OPTION = "Gui" ]; then
    cd ../pythonGui
-   safeRunCommand "./build.sh"
+   safeRunCommand "./build.sh" $PACKAGEDIR
    cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
    cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 fi

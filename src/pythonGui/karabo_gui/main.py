@@ -16,7 +16,7 @@ from PyQt4.QtGui import QApplication, QSplashScreen, QPixmap
 
 def run_gui(args):
     app = QApplication(args)
-    splash_path = op.join(op.dirname(__file__), "karabo_gui", "icons", "xfel_logo.png")
+    splash_path = op.join(op.dirname(__file__), "icons", "xfel_logo.png")
     splash_img = QPixmap(splash_path)
     splash = QSplashScreen(splash_img, Qt.WindowStaysOnTopHint)
     splash.show()
@@ -31,6 +31,10 @@ def run_gui(args):
     splash.finish(gui.window)
     sys.exit(app.exec_())
 
-if __name__ == '__main__':
+
+def main():
     sys.excepthook = gui.excepthook
     run_gui(sys.argv)
+
+if __name__ == '__main__':
+    main()
