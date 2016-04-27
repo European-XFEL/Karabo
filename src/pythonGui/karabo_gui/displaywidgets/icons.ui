@@ -72,7 +72,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QListWidget" name="list"/>
+        <widget class="QListWidget" name="valueList"/>
        </item>
        <item>
         <widget class="QWidget" name="editable" native="true">
