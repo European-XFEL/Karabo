@@ -268,24 +268,29 @@ namespace karabo {
                 m_genericElement->commit();
             }
             
-            Element& observerAccess() {
-                return m_genericElement->observerAccess();
+            ReadOnlySpecific& observerAccess() {
+                m_genericElement->observerAccess();
+                return *this;
             }
             
-            Element& userAccess() {
-                return m_genericElement->userAccess();
+            ReadOnlySpecific& userAccess() {
+                m_genericElement->userAccess();
+                return *this;
             }
             
-            Element& operatorAccess() {
-                return m_genericElement->operatorAccess();
+            ReadOnlySpecific& operatorAccess() {
+                m_genericElement->operatorAccess();
+                return *this;
             }
             
-            Element& expertAccess() {
-                return m_genericElement->expertAccess();
+            ReadOnlySpecific& expertAccess() {
+                m_genericElement->expertAccess();
+                return *this;
             }
             
-            Element& adminAccess() {
-                return m_genericElement->adminAccess();
+            ReadOnlySpecific& adminAccess() {
+                m_genericElement->adminAccess();
+                return *this;
             }
 
         private:
