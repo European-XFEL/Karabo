@@ -322,3 +322,6 @@ class Tests(unittest.TestCase):
         self.scene()
         self.schema()
         self.assertException()
+
+if __name__ == '__main__':
+    unittest.main()
