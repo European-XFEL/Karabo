@@ -434,7 +434,13 @@ namespace karabo {
 
             BOOST_FOREACH(const string& device, devices) {
                 if (!m_availableDevices.has(device)) {
-                    Schema schema = BaseDevice::getSchema(device, Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
+                    Schema schema;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Plugin contains device \"" << device << "\".  Try to get schema ...";
+                    try {
+                        schema = BaseDevice::getSchema(device, Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
+                    } catch (...) {
+                        KARABO_RETHROW_AS(KARABO_SCHEMA_EXCEPTION("Getting (building) schema for \"" + device + "\" failed."));
+                    }
                     m_availableDevices.set(device, Hash("mustNotify", true, "xsd", schema));
                 }
             }
@@ -442,36 +448,27 @@ namespace karabo {
 
 
         void DeviceServer::scanPlugins() {
-            try {
-                bool inError = false;
-                m_doScanPlugins = true;
-                while (m_doScanPlugins) {
-                    try {
-                        bool hasNewPlugins = m_pluginLoader->update();
-                        if (hasNewPlugins) {
-                            // Update the list of available devices
-                            updateAvailableDevices();
-                            newPluginAvailable();
-                        }
-                        boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
-                        if (inError) {
-                            reset();
-                            inError = false;
-                        }
-                    } catch (const Exception& e) {
-                        errorFound(e.userFriendlyMsg(), e.detailedMsg());
-                        inError = true;
-                        boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
+            m_doScanPlugins = true;
+            while (m_doScanPlugins) {
+                int delay = 3000;
+                try {
+                    bool hasNewPlugins = m_pluginLoader->update();
+                    if (hasNewPlugins) {
+                        // Update the list of available devices
+                        updateAvailableDevices();
+                        newPluginAvailable();
                     }
+                } catch (const Exception& e) {
+                    KARABO_LOG_ERROR << "Exception raised in scanPlugins: " << e.what();
+                    delay = 10000;
+                } catch (const std::exception& se) {
+                    KARABO_LOG_ERROR << "Standard exception raised in scanPlugins: " << se.what();
+                    delay = 10000;
+                } catch (...) {
+                    KARABO_LOG_ERROR << "Unknown exception raised in scanPlugins: ";
+                    delay = 10000;
                 }
-                //stopEventLoop();
-
-            } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Exception raised in scanPlugins: " << e;
-            } catch (const std::exception& se) {
-                KARABO_LOG_ERROR << "Standard exception raised in scanPlugins: " << se.what();
-            } catch (...) {
-                KARABO_LOG_ERROR << "Unknown exception raised in scanPlugins: ";
+                boost::this_thread::sleep(boost::posix_time::milliseconds(delay));
             }
         }
 
