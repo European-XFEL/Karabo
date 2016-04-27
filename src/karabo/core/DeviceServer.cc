@@ -438,8 +438,9 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Plugin contains device \"" << device << "\".  Try to get schema ...";
                     try {
                         schema = BaseDevice::getSchema(device, Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
-                    } catch (...) {
-                        KARABO_RETHROW_AS(KARABO_SCHEMA_EXCEPTION("Getting (building) schema for \"" + device + "\" failed."));
+                    } catch (const std::exception& e) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Device \"" << device << "\" is ignored because of Schema building failure : " << e.what();
+                        continue;
                     }
                     m_availableDevices.set(device, Hash("mustNotify", true, "xsd", schema));
                 }
