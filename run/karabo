@@ -246,6 +246,7 @@ templateName=""      #for new
 #category=""     #for checkout
 tag=""          #for checkout
 revision="HEAD"     # for checkout
+tagBranchFromRev="" # revision for tag/branch
 svnTagName=""
 svnBranchName=""
 svnBranchFrom="trunk" # for branching
@@ -1871,6 +1872,7 @@ function createSvnTag() {
     local packageCategory=$2
     local svnTagFrom=$3
     local svnTagName=$4
+    local svnRevFrom=${5:+ -r $5} # might not be given
     
     echo
     echo "  Creating svn tag, please wait..."
@@ -1888,7 +1890,8 @@ function createSvnTag() {
         # TODO: Validate proper tag format \d\.\d\.d\-\d\.\d (e.g. 1.0.0-1.3) where
         #       the digits before '-' are the package tag and the digits after it
         #       are the karabo (branch) version.
-        svn copy --parents $svnPath/$packageCategory/$packageName/$svnTagFrom $target -m "Package $packageName got tagged from \"$svnTagFrom\" to \"tags/$svnTagName\" via karabo script"
+        # '$svnTagFrom${svnRevFrom:+ $svnRevFrom}' means: if svnRevFrom non empty, add it
+        svn copy --parents $svnRevFrom $svnPath/$packageCategory/$packageName/$svnTagFrom $target -m "Package $packageName got tagged from \"$svnTagFrom${svnRevFrom:+ $svnRevFrom}\" to \"tags/$svnTagName\" via karabo script"
     fi
     # restoring previous svnPath
     svnPath=$oldSvnPath
@@ -1899,6 +1902,7 @@ function createSvnBranch() {
     local packageCategory=$2
     local svnBranchName=$3
     local svnBranchFrom=$4
+    local svnRevFrom=${5:+ -r $5} # might not be given
     echo
     echo "  Creating svn branch, please wait..."
     echo
@@ -1915,7 +1919,8 @@ function createSvnBranch() {
         # TODO: Check that svnBranchName fits branch tag format \d\.\d-\d\.\d
         #       (e.g. 1.0-1.3) where the digits before '-' are the package version
         #       branch and the digits after it are the karabo (branch) version.
-        svn copy --parents $svnPath/$packageCategory/$packageName/$svnBranchFrom $target -m "Package $packageName got branched from \"$svnBranchFrom\" to \"branches/$svnBranchName\" via karabo script"
+        # '$svnTagFrom${svnRevFrom:+ $svnRevFrom}' means: if svnRevFrom non empty, add it
+        svn copy --parents $svnRevFrom $svnPath/$packageCategory/$packageName/$svnBranchFrom $target -m "Package $packageName got branched from \"$svnBranchFrom${svnRevFrom:+ $svnRevFrom}\" to \"branches/$svnBranchName\" via karabo script"
     fi
     # restoring previous svnPath
     svnPath=$oldSvnPath
@@ -2145,7 +2150,7 @@ End-of-help
         cat <<End-of-help
 tag: Create an svn tag of a package
 
-usage: tag PACKAGE_NAME PACKAGE_CATEGORY TAG_FROM TAG_NAME
+usage: tag PACKAGE_NAME PACKAGE_CATEGORY TAG_FROM TAG_NAME [REVISION_FROM]
 
 Examples:
 
@@ -2155,8 +2160,8 @@ Examples:
 (2) Tag from an existing tag indicating validity for a new Karabo version
   $0 tag beckhoffCom controlDevices tags/0.1.0-1.2 0.1.0-1.3
 
-(3) Tag from a branch for bug fixes or backports
-  $0 tag beckhoffCom controlDevices branches/0.1-1.2 0.1.1-1.2
+(3) Tag from an svn revision of a branch for bug fixes or backports
+  $0 tag beckhoffCom controlDevices branches/0.1-1.2 0.1.1-1.2 4567
 
 End-of-help
 
@@ -2164,16 +2169,20 @@ End-of-help
         cat <<End-of-help
 branch: Create an svn branch of a package
 
-usage: branch PACKAGE_NAME PACKAGE_CATEGORY BRANCH_NAME [FROM]
+usage: branch PACKAGE_NAME PACKAGE_CATEGORY BRANCH_NAME [FROM [REVISION_FROM]]
 
-If the optional FROM is not given, trunk is used.
+If the optional FROM is not given, trunk is used. If REVISION_FROM is not given,
+use HEAD.
 
 Examples:
 
 (1) Branch from current trunk:
   $0 branch conveyor testDevices 1.0-1.3
 
-(2) Branch from an existing tag:
+(2) Branch from specific version of trunk:
+  $0 branch conveyor testDevices 1.0-1.3 trunk 5432
+
+(3) Branch from an existing tag:
   $0 branch conveyor testDevices 1.0-1.3 tags/1.0.0-1.3
 
 End-of-help
@@ -2510,6 +2519,10 @@ until [ -z "$1" ]; do
             packageCategory=$3
             svnTagFrom=$4
             svnTagName=$5
+            if [ $# -ge 6 ]; then
+		tagBranchFromRev=$6
+		shift
+	    fi
             shift; shift; shift; shift; shift
         fi
 
@@ -2524,6 +2537,10 @@ until [ -z "$1" ]; do
             svnBranchName=$4
             if [ $# -ge 5 ]; then
 		svnBranchFrom=$5
+                if [ $# -ge 6 ]; then
+		    tagBranchFromRev=$6
+		    shift
+	        fi
 		shift
 	    fi
             shift; shift; shift; shift
@@ -2590,10 +2607,10 @@ elif [[ "$rebuild" == "1" ]]; then
     rebuildInstalled $buildType $forceRebuild $packageName $packageCategory
 
 elif [[ "$createTag" == "1" ]]; then
-    createSvnTag $packageName $packageCategory $svnTagFrom $svnTagName
+    createSvnTag $packageName $packageCategory $svnTagFrom $svnTagName $tagBranchFromRev
 
 elif [[ "$createBranch" == "1" ]]; then
-    createSvnBranch $packageName $packageCategory $svnBranchName $svnBranchFrom
+    createSvnBranch $packageName $packageCategory $svnBranchName $svnBranchFrom $tagBranchFromRev
 elif [[ "$setSvn" == "1" ]]; then
     setSvnPath
 elif [[ "$setRepo" == "1" ]]; then
