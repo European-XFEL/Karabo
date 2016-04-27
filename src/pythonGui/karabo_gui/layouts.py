@@ -45,7 +45,7 @@ class Layout(Loadable):
 
     def __getitem__(self, i):
         if isinstance(i, slice):
-            r = (self.itemAt(j) for j in range(i.start, i.stop, i.step))
+            r = (self.itemAt(j) for j in range(*i.indices(len(self))))
             return [rr.widget() if rr.widget() else rr for rr in r
                     if rr is not None]
         r = self.itemAt(i)
@@ -68,13 +68,18 @@ class Layout(Loadable):
 
     def __delitem__(self, i):
         if isinstance(i, slice):
-            for j in range(i.start, i.stop, i.step):
+            for j in range(*i.indices(len(self))):
                 self.takeAt(j)
         else:
             self.takeAt(i)
 
 
     def load_element(self, element):
+        """try to load all sub-elements from *element*
+
+        Sub-Elements that we were able to load are deleted from *element*,
+        those that we couldn't load are kept for others to show
+        them (Qt that is). """
         i = 0
         while i < len(element):
             elem = element[i]
@@ -224,16 +229,17 @@ class FixedLayout(Layout, QLayout):
 
 
     def loadPosition(self, element, item):
-        self.add_item(item)
         if element.get(ns_karabo + 'entire') is not None:
             self.entire = item
         try:
             item.fixed_geometry = _parse_rect(element)
         except TypeError:
             pass
+        self.add_item(item)
 
 
     def add_children(self, e, selected=False):
+        """save the children of this layout into the element *e*"""
         for c in self:
             if not selected or c.selected:
                 ee = c.element()
@@ -341,6 +347,7 @@ class FixedLayout(Layout, QLayout):
 
     def setGeometry(self, geometry):
         "only to be used by Qt, don't use directly!"
+        super().setGeometry(geometry)
         if self.entire is not None:
             self.entire.fixed_geometry = geometry
         for item in self._children:
