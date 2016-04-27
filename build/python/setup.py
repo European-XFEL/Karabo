@@ -40,8 +40,9 @@ setup(name="KaraboGUI",
     package_dir=dict(karabo="../../src/pythonKarabo/karabo",
                      karabo_gui="../../src/pythonGui/karabo_gui"),
     scripts=['scripts/win_post_install.py'],
-    package_data = {"karabo_gui.icons": ["*.*"],
-                    "karabo_gui.displaywidgets": ["*.ui"],
+    package_data = {"karabo_gui.icons": ["*.*", "vacuum/*.*",
+                                         "vacuum/bigger/*.*"],
+                    "karabo_gui.displaywidgets": ["*.ui", "*.svg"],
                     "karabo_gui.dialogs": ["*.ui"]},
 )
 
