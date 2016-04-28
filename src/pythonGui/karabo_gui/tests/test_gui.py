@@ -1,4 +1,9 @@
-from unittest import TestCase, main
+from itertools import count
+import os
+import sys
+import traceback
+import unittest
+import zipfile
 
 # assure sip api is set first
 import sip
@@ -6,24 +11,56 @@ sip.setapi("QString", 2)
 sip.setapi("QVariant", 2)
 sip.setapi("QUrl", 2)
 
-from karabo_gui.docktabwindow import Dockable
-import karabo_gui.gui as gui
 from PyQt4.QtCore import QObject, QMimeData, QPoint, Qt, pyqtSignal
 from PyQt4.QtGui import QApplication, QDropEvent, QWidget
+
+from karabo.api_2 import (
+    AccessLevel, Hash, Integer, ProjectAccess, Schema, XMLParser
+)
+from karabo_gui.docktabwindow import Dockable
+import karabo_gui.gui as gui
 import karabo_gui.icons as icons
 import karabo_gui.network as network
 import karabo_gui.globals as globals
 from karabo_gui.topology import getClass, Manager
 import karabo_gui.widget as widget
 
-from karabo.api_2 import (
-    AccessLevel, Hash, Integer, ProjectAccess, Schema, XMLParser
-)
-from itertools import count
+net = None
+TEST_DIR = os.path.dirname(__file__)
+PROJ_DIR = os.path.join(TEST_DIR, 'project')
+PROJECT_PATH = os.path.join(TEST_DIR, "project.krb")
 
-from os import path
-import sys
-import traceback
+
+def setUp():
+    global net
+    network.network = Network()
+    net = network.network
+    _create_project_file()
+
+
+def tearDown():
+    if os.path.exists(PROJECT_PATH):
+        os.unlink(PROJECT_PATH)
+
+
+def _create_project_file():
+    def strip_leading(path):
+        path = path[len(PROJ_DIR):]
+        if path[0] == '/':
+            path = path[1:]
+        return path
+
+    with zipfile.ZipFile(PROJECT_PATH, 'w') as zfp:
+        for root, dirs, files in os.walk(PROJ_DIR):
+            for dir in dirs:
+                dirpath = os.path.join(root, dir)
+                zippath = strip_leading(dirpath) + '/'
+                zfp.write(dirpath, arcname=zippath,
+                          compress_type=zipfile.ZIP_STORED)
+            for filename in files:
+                filepath = os.path.join(root, filename)
+                zippath = strip_leading(filepath)
+                zfp.write(filepath, arcname=zippath)
 
 
 class DockableWidget(Dockable, QWidget):
@@ -59,21 +96,14 @@ class TestWidget(widget.EditableWidget, widget.DisplayWidget):
         self.proxy = parent
         TestWidget.instance = self
 
-
     def setReadOnly(self, ro):
         assert not ro, "The example TestWidget is read only"
-
 
     def valueChanged(self, box, value, timestamp=None):
         self.value = value
 
 
-network.network = Network()
-net = network.network
-
-
-class Tests(TestCase):
-    directory = path.dirname(__file__)
+class Tests(unittest.TestCase):
     def setUp(self):
         sys.excepthook = self.excepthook
         self.app = QApplication([])
@@ -81,9 +111,9 @@ class Tests(TestCase):
         self.excepttype = None
 
         r = XMLParser()
-        with open(path.join(self.directory, "schema.xml"), "r") as fin:
+        with open(os.path.join(TEST_DIR, "schema.xml"), "r") as fin:
             self.testschema = Schema("testschema", hash=r.read(fin.read()))
-        with open(path.join(self.directory, "configuration.xml"), "r") as fin:
+        with open(os.path.join(TEST_DIR, "configuration.xml"), "r") as fin:
             self.testconfiguration = r.read(fin.read())["ParameterTest"]
         globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
 
@@ -93,11 +123,9 @@ class Tests(TestCase):
         self.exceptvalue = value
         self.traceback = tb
 
-
     def assertException(self):
         if self.excepttype is not None:
             raise self.exceptvalue
-
 
     def systemTopology(self):
         s = Hash("testserver", None)
@@ -116,14 +144,12 @@ class Tests(TestCase):
         self.assertTrue(manager.systemTopology.has("incompatible"))
         self.assertFalse(manager.systemTopology.has("something"))
 
-
     def findNode(self, cls, name):
         root = cls.parameterEditor.invisibleRootItem()
         for i in count():
             node = root.child(i)
             if node.box.path[0] == name:
                 return node
-
 
     def schema(self):
         cls = getClass("testserver", "testclass")
@@ -161,7 +187,6 @@ class Tests(TestCase):
         gui.window.configurationPanel.onInitDevice()
         widget.setCurrentIndex(0)
 
-
     def findIcon(self, a):
         for k in dir(icons):
             try:
@@ -173,11 +198,9 @@ class Tests(TestCase):
                 pass
         return a
 
-
     def assertIcon(self, a, b):
         assert a.cacheKey() == b.cacheKey(), "{} is not {}".format(
                                         self.findIcon(a), self.findIcon(b))
-
 
     def assertCalled(self, function):
         for f, arg in net.called:
@@ -185,12 +208,10 @@ class Tests(TestCase):
                 return arg
         self.fail("network method {} not called".format(function))
 
-
     def project(self):
         net.called = [ ]
         manager = Manager()
-        manager.projectTopology.projectOpen(
-            path.join(self.directory, "project.krb"), ProjectAccess.LOCAL)
+        manager.projectTopology.projectOpen(PROJECT_PATH, ProjectAccess.LOCAL)
         self.assertCalled("onGetDeviceSchema")
 
         root = manager.projectTopology.invisibleRootItem()
@@ -215,7 +236,6 @@ class Tests(TestCase):
         manager.projectTopology.projectOpen("/tmp/test.krb",
                                               ProjectAccess.LOCAL)
 
-
     def stop(self):
         manager = Manager()
         manager.handle_instanceGone("testdevice", "device")
@@ -234,11 +254,9 @@ class Tests(TestCase):
         self.assertIcon(devices.child(2).icon(), icons.deviceOfflineNoServer)
         self.assertIcon(devices.child(3).icon(), icons.deviceOfflineNoServer)
 
-
     def getItem(self, name):
         pe = Manager().deviceData["testdevice"].parameterEditor
         return pe.findItems(name, Qt.MatchExactly)[0]
-
 
     def scene(self):
         manager = Manager()
@@ -295,7 +313,6 @@ class Tests(TestCase):
         self.assertEqual(testdevice.visible, 6)
         self.assertEqual(manager.deviceData["incompatible"].visible, 2)
 
-
     def test_gui(self):
         self.systemTopology()
         self.schema()
@@ -306,6 +323,5 @@ class Tests(TestCase):
         self.schema()
         self.assertException()
 
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    unittest.main()
