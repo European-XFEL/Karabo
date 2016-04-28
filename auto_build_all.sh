@@ -93,24 +93,21 @@ while [ -n "$1" ]; do
         --auto)
             # Don't skip building system dependencies
             SKIP="n"
-            shift
             ;;
         --noBundle)
             # Don't skip bundling
             BUNDLE="n"
-            shift
             ;;
         --pyDevelop)
             # Build Python packages in development mode
             PYOPT="develop"
-            shift
             ;;
         *)
             # Make a little noise
             echo "Unrecognized commandline flag: $1"
-            shift
             ;;
     esac
+    shift
 done
 
 # Get some information about our system
