@@ -48,8 +48,10 @@ CONF=$2
 PLATFORM=$3
 BUNDLE_ACTION=$4
 BUNDLE_OPTION=$5
+PYOPT=$6
 OS=$(uname -s)
 MACHINE=$(uname -m)
+
 
 # Get the version as a tag name, if one exists
 VERSION=$(git describe --exact-match HEAD 2>/dev/null)
@@ -175,7 +177,7 @@ export PATH=$PACKAGEDIR/extern/bin:$PATH
 
 # pythonKarabo
 cd ../pythonKarabo
-safeRunCommand "./build.sh" $PACKAGEDIR
+safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 
 # pythonGui
@@ -183,7 +185,7 @@ if [ $BUNDLE_OPTION = "NoGui" ]; then
    echo
 elif [ $BUNDLE_OPTION = "Gui" ]; then
    cd ../pythonGui
-   safeRunCommand "./build.sh" $PACKAGEDIR
+   safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
    cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
    cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 fi
