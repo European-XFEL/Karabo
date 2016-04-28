@@ -1,4 +1,5 @@
 #!/bin/bash
+BUILD_OPTION=$2
 OS=$(uname -s)
 CWD=$(pwd)
 DIST=dist/$OS
@@ -65,6 +66,10 @@ chmod a+x karabo-pythondeviceserver
 
 cd ../../../../../../src/pythonKarabo
 rm -rf dist/ build/
-$PYTHON setup.py bdist_wheel
-$PIP install -U $PIP_EXTRA_ARGS dist/*.whl
+if [ "$BUILD_OPTION" == "wheel" ]; then
+    $PYTHON setup.py bdist_wheel
+    $PIP install --disable-pip-version-check -U $PIP_EXTRA_ARGS dist/*.whl
+else
+    $PYTHON setup.py develop
+fi
 cd $CWD
