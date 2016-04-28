@@ -50,6 +50,7 @@ CCADMIN=CCadmin
 CURRENT_PLATFORM=$(shell uname -s)
 GUIOPT?=Gui
 CONF ?= Debug
+PYOPT ?= wheel
 
 # Custom Karabo variables
 KARABO = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
@@ -135,17 +136,17 @@ bundle: build
 
 # DEPRECATE!
 package: bundle-package
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(GUIOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(GUIOPT) $(PYOPT)
 
 # DEPRECATE!
 install: bundle-install
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT) $(PYOPT)
 
 bundle-package: bundle
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(GUIOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(GUIOPT) $(PYOPT)
 
 bundle-install: bundle
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT) $(PYOPT)
 
 bundle-clean: clean
 	cd ../karathon; $(MAKE) clean CONF=$(CONF)
