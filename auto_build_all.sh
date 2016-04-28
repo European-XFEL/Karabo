@@ -35,8 +35,9 @@ if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]];
 Usage: $0 Debug|Release|Dependencies|Clean|Clean-All [flags]
 
 Available flags:
-  --auto      - Tries to automatically install needed system packages (sudo rights required!)
-  --noBundle  - Only installs Karabo, does not create the software bundle
+  --auto       - Tries to automatically install needed system packages (sudo rights required!)
+  --noBundle   - Only installs Karabo, does not create the software bundle
+  --pyDevelop  - Install Python packages in development mode rather than from wheels
 
 Note: "Dependencies" builds only the external dependencies
       "Clean" cleans all Karabo code (src folder)
@@ -80,20 +81,37 @@ else
     exit 1
 fi
 
-# Check whether to build system dependencies
-if [[ $2 = "--auto" || $3 = "--auto" ]]; then
-    SKIP="n"
-else 
-    SKIP="y"
-fi
+# Get rid of the first argument
+shift
 
-# Check whether to skip bundling
-if [[ $2 = "--noBundle" || $3 = "--noBundle" ]]; then
-    BUNDLE="n"
-else 
-    BUNDLE="y"
-fi
-
+# Parse the commandline flags
+SKIP="y"
+BUNDLE="y"
+PYOPT="wheel"
+while [ -n "$1" ]; do
+    case "$1" in
+        --auto)
+            # Don't skip building system dependencies
+            SKIP="n"
+            shift
+            ;;
+        --noBundle)
+            # Don't skip bundling
+            BUNDLE="n"
+            shift
+            ;;
+        --pyDevelop)
+            # Build Python packages in development mode
+            PYOPT="develop"
+            shift
+            ;;
+        *)
+            # Make a little noise
+            echo "Unrecognized commandline flag: $1"
+            shift
+            ;;
+    esac
+done
 
 # Get some information about our system
 OS=$(uname -s)
@@ -184,9 +202,9 @@ if [ $EXTERN_ONLY = "y" ]; then
         safeRunCommand "make -j$NUM_CORES package-extern"
     fi
 elif [ "$BUNDLE" = "y" ]; then
-    safeRunCommand "make CONF=$CONF -j$NUM_CORES bundle-package"
+    safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_CORES bundle-package"
 else
-    safeRunCommand "make CONF=$CONF -j$NUM_CORES bundle-install"
+    safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_CORES bundle-install"
 fi
 
 echo "### Successfully finished building and packaging of karaboFramework ###"
