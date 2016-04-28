@@ -10,16 +10,16 @@ from guiqwt.builder import make
 from karabo.api_2 import NumpyVector
 
 from karabo_gui.const import ns_karabo
-from karabo_gui.widget import DisplayWidget
-from manager import getDevice
+from karabo_gui.widget import PlotWidget
+from karabo_gui.topology import getDevice
 
 
-class XYVector(DisplayWidget):
+class XYVector(PlotWidget):
     category = NumpyVector
     alias = "XY-Plot"
 
     def __init__(self, box, parent):
-        super().__init__(None)
+        super().__init__(box, parent)
         self.widget = CurveDialog(edit=False, toolbar=True,
                                   wintitle="XY-Plot")
         self.plot = self.widget.get_plot()
@@ -33,14 +33,10 @@ class XYVector(DisplayWidget):
 
     def typeChanged(self, box):
         pos = QwtPlot.xBottom if box is self.xbox else QwtPlot.yLeft
-        self.plot.setAxisTitle(pos, box.descriptor.displayedName)
+        self.plot.setAxisTitle(pos, self.axisLabel(box))
 
     def addBox(self, box):
-        if box.descriptor is not None:
-            name = box.descriptor.displayedName
-        else:
-            name = box.path[-1]
-        curve = make.curve([], [], name, "r")
+        curve = make.curve([], [], self.axisLabel(box), "r")
         self.curves[box] = curve
         self.plot.add_item(curve)
         return True
