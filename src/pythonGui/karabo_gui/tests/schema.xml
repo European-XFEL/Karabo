@@ -287,7 +287,7 @@
   requiredAccessLevel="KRB_INT32:1" valueType="KRB_STRING:UINT64">
   0</uint64>
   <charDefault KRB_Type="INT32" accessMode="KRB_INT32:4"
-  assignment="KRB_INT32:0" defaultValue="KRB_CHAR:AA=="
+  assignment="KRB_INT32:0" defaultValue="KRB_CHAR:A"
   displayedName="KRB_STRING:Character element with default"
   leafType="KRB_INT32:0" nodeType="KRB_INT32:0"
   requiredAccessLevel="KRB_INT32:1" valueType="KRB_STRING:CHAR">
