@@ -435,11 +435,11 @@ namespace karabo {
             BOOST_FOREACH(const string& device, devices) {
                 if (!m_availableDevices.has(device)) {
                     Schema schema;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Plugin contains device \"" << device << "\".  Try to get schema ...";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Plugin contains device class \"" << device << "\".  Try to get schema ...";
                     try {
                         schema = BaseDevice::getSchema(device, Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
                     } catch (const std::exception& e) {
-                        KARABO_LOG_FRAMEWORK_ERROR << "Device \"" << device << "\" is ignored because of Schema building failure : " << e.what();
+                        KARABO_LOG_ERROR << "Device \"" << device << "\" is ignored because of Schema building failure : " << e.what();
                         continue;
                     }
                     m_availableDevices.set(device, Hash("mustNotify", true, "xsd", schema));
@@ -460,7 +460,7 @@ namespace karabo {
                         newPluginAvailable();
                     }
                 } catch (const Exception& e) {
-                    KARABO_LOG_ERROR << "Exception raised in scanPlugins: " << e.what();
+                    KARABO_LOG_ERROR << "Exception raised in scanPlugins: " << e;
                     delay = 10000;
                 } catch (const std::exception& se) {
                     KARABO_LOG_ERROR << "Standard exception raised in scanPlugins: " << se.what();
