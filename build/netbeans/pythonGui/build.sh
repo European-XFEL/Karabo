@@ -1,4 +1,5 @@
 #!/bin/bash
+BUILD_OPTION=$2
 CWD=$(pwd)
 OS=$(uname -s)
 DIST=dist/$OS
@@ -23,6 +24,10 @@ mkdir -p $DIST/bin
 
 cd ../../../src/pythonGui
 rm -rf dist/ build/
-$PYTHON setup.py bdist_wheel
-$PIP install -U $PIP_EXTRA_ARGS dist/*.whl
+if [ "$BUILD_OPTION" == "wheel" ]; then
+    $PYTHON setup.py bdist_wheel
+    $PIP install --disable-pip-version-check -U $PIP_EXTRA_ARGS dist/*.whl
+else
+    $PYTHON setup.py develop
+fi
 cd $CWD
