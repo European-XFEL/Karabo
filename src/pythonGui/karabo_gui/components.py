@@ -115,33 +115,30 @@ class DisplayComponent(BaseComponent):
         return False
 
 
-    def _getWidgetCategory(self):
+    @property
+    def widgetCategory(self):
         return self.widgetFactory.category
-    widgetCategory = property(fget=_getWidgetCategory)
-
 
     # Returns the actual widget which is part of the composition
+    @property
     def _getWidget(self):
         return self.widgetFactory.widget
-    widget = property(fget=_getWidget)
 
-
-    def _getDisplayWidget(self):
+    @property
+    def displayWidget(self):
         return self.widgetFactory
-    displayWidget = property(fget=_getDisplayWidget)
 
-
-    def _getKeys(self):
+    @property
+    def keys(self):
         return self.widgetFactory.keys
-    keys = property(fget=_getKeys)
 
-
-    def _getValue(self):
+    @property
+    def value(self):
         return self.widgetFactory.value
-    def _setValue(self, value):
+    
+    @value.setter
+    def value(self, value):
         self.widgetFactory.value = value
-    value = property(fget=_getValue, fset=_setValue)
-
 
     def setErrorState(self, isError):
         self.widgetFactory.setErrorState(isError)
@@ -197,27 +194,22 @@ class EditableNoApplyComponent(BaseComponent):
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
         box.signalUserChanged.connect(self.widgetFactory.valueChangedSlot)
 
-
-    def _getWidgetCategory(self):
+    @property
+    def widgetCategory(self):
         return self.widgetFactory.category
-    widgetCategory = property(fget=_getWidgetCategory)
-
 
     # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__compositeWidget
-    widget = property(fget=_getWidget)
 
-
-    def _getKeys(self):
+    @property
+    def keys(self):
         return self.widgetFactory.keys
-    keys = property(fget=_getKeys)
 
-
-    def _getValue(self):
+    @property
+    def value(self):
         return self.widgetFactory.value
-    value = property(fget=_getValue)
-
 
     def setEnabled(self, enable):
         self.widget.setEnabled(enable)
@@ -312,22 +304,18 @@ class EditableApplyLaterComponent(BaseComponent):
         box.configuration.boxvalue.state.signalUpdateComponent.connect(
             self.updateButtons)
 
-
-    def _getWidgetCategory(self):
+    @property
+    def widgetCategory(self):
         return self.widgetFactory.category
-    widgetCategory = property(fget=_getWidgetCategory)
-
 
     # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__compositeWidget
-    widget = property(fget=_getWidget)
 
-
-    def _getValue(self):
+    @property
+    def value(self):
         return self.widgetFactory.value
-    value = property(fget=_getValue)
-
 
     def setEnabled(self, enable):
         self.widget.setEnabled(enable)
@@ -499,24 +487,23 @@ class ChoiceComponent(BaseComponent):
         if box.hasValue():
             self.widgetFactory.valueChanged(box, box.value, box.timestamp)
 
-
-    def _getWidgetCategory(self):
+    @property
+    def widgetCategory(self):
         return self.widgetFactory.category
-    widgetCategory = property(fget=_getWidgetCategory)
 
 
     # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.widgetFactory.widget
-    widget = property(fget=_getWidget)
 
-
-    def _getValue(self):
+    @property
+    def value(self):
         return self.widgetFactory.value
-    def _setValue(self, value):
+    
+    @value.setter
+    def value(self, value):
         self.widgetFactory.value = value
-    value = property(fget=_getValue, fset=_setValue)
-
 
     def setEnabled(self, enable):
         # Is not processed due to self.widget should always stay disabled
