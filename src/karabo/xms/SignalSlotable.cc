@@ -927,7 +927,7 @@ namespace karabo {
             boost::this_thread::interruption_requested(); // request interruption = we need both!
             while (m_sendHeartbeats) {
                 {
-                    boost::this_thread::disable_interruption di; // disable interremit("uption in this block                    
+                    boost::this_thread::disable_interruption di; // disable interruption in this block                    
                     emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, m_instanceInfo);
                 }
                 // here the interruption enabled again
@@ -941,11 +941,15 @@ namespace karabo {
 
         Hash SignalSlotable::getAvailableInstances(bool activateTracking) {
             KARABO_LOG_FRAMEWORK_DEBUG << "getAvailableInstances";
-            if (!m_trackAllInstances) m_trackedInstances.clear();
+            if (!m_trackAllInstances) {
+                boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
+                m_trackedInstances.clear();
+            }
             call("*", "slotPing", m_instanceId, 0, activateTracking);
             // The function slotPingAnswer will be called by all instances available now
             // Lets wait a fair amount of time - huaaah this is bad isn't it :-(
             boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+            boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
             KARABO_LOG_FRAMEWORK_DEBUG << "Available instances: " << m_trackedInstances;
             return m_trackedInstances;
         }
