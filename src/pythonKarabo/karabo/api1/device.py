@@ -508,7 +508,7 @@ class PythonDevice(NoFsm):
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-            #validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
+            #validated = self.validatorIntern.validate(self.fullSchema, self.parameters, self._getActualTimestamp())
             #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
             self.fullSchema.updateAliasMap()
         # notify the distributed system...
@@ -750,7 +750,7 @@ class PythonDevice(NoFsm):
         whiteList = self._getStateDependentSchema(currentState)
         self.log.DEBUG("Incoming (un-validated) reconfiguration:\n{}".format(unvalidated))
         try:
-            validated = self.validatorExtern.validate(whiteList, unvalidated)
+            validated = self.validatorExtern.validate(whiteList, unvalidated, self._getActualTimestamp())
         except RuntimeError as e:
             errorText = str(e) + " in state: \"" + currentState + "\""
             return (False, errorText, unvalidated)
