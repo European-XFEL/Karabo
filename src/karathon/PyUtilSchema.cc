@@ -64,9 +64,14 @@ class ValidatorWrap {
 public:
 
 
-    static bp::object validate(Validator& self, const Schema& schema, const Hash& configuration, const Timestamp& stamp) {
+    static bp::object validate(Validator& self, const Schema& schema, const Hash& configuration, const bp::object& stamp) {
         Hash::Pointer validated = Hash::Pointer(new Hash);
-        pair<bool, string> result = self.validate(schema, configuration, *validated, stamp);
+        Timestamp tstamp;
+        if (stamp.ptr() != Py_None && bp::extract<karabo::util::Timestamp>(stamp).check()) {
+            tstamp = bp::extract<karabo::util::Timestamp>(stamp);
+        }
+            
+        pair<bool, string> result = self.validate(schema, configuration, *validated, tstamp);
         if (result.first)
             return bp::object(validated);
         throw KARABO_PYTHON_EXCEPTION(result.second);
@@ -2081,7 +2086,7 @@ void exportPyUtilSchema() {
 
         bp::class_<Validator>("Validator", bp::init<>())
                 .def(bp::init<const Validator::ValidationRules>())
-                .def("validate", &ValidatorWrap::validate, (bp::arg("schema"), bp::arg("configuration"), bp::arg("timestamp") = Timestamp()))
+                .def("validate", &ValidatorWrap::validate, (bp::arg("schema"), bp::arg("configuration"), bp::arg("timestamp")=bp::object()))
                 .def("setValidationRules", &ValidatorWrap::setValidationRules, (bp::arg("rules")))
                 .def("getValidationRules", &ValidatorWrap::getValidationRules)
                 .def("hasParametersInWarnOrAlarm", &ValidatorWrap::hasParametersInWarnOrAlarm)
