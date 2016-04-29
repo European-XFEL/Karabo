@@ -279,7 +279,7 @@ class EditableApplyLaterComponent(BaseComponent):
         tb.setIconSize(QSize(24, 24))
         hLayout.addWidget(tb)
 
-        text = "Reset"
+        text = "Decline"
         self.acReset = QAction(icons.no, text, self)
         self.acReset.setStatusTip(text)
         self.acReset.setToolTip(text)

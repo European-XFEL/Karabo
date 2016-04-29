@@ -184,7 +184,7 @@ class ConfigurationPanel(Dockable, QWidget):
         
         hLayout.addWidget(self.pbApplyAll)
         
-        text = "Reset all"
+        text = "Decline all"
         self.pbResetAll = QPushButton(icons.no, text)
         self.pbResetAll.setToolTip(text)
         self.pbResetAll.setStatusTip(text)
@@ -324,11 +324,11 @@ class ConfigurationPanel(Dockable, QWidget):
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
         if (self.pbResetAll.isEnabled() is True) and (nbSelected > 0):
             if nbSelected == 1:
-                text = "Reset selected"
+                text = "Decline selected"
             else:
-                text = "Reset ({}) selected".format(nbSelected)
+                text = "Decline ({}) selected".format(nbSelected)
         else:
-            text = "Reset all"
+            text = "Decline all"
         
         self.pbResetAll.setText(text)
         self.pbResetAll.setStatusTip(text)
