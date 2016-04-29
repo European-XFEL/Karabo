@@ -136,9 +136,10 @@ class ConfigurationPanel(Dockable, QWidget):
         self.__hasConflicts = False
 
         text = "Apply all"
+        description = "Apply all property changes in one go"
         self.pbApplyAll = QPushButton(icons.apply, text)
-        self.pbApplyAll.setToolTip(text)
-        self.pbApplyAll.setStatusTip(text)
+        self.pbApplyAll.setToolTip(description)
+        self.pbApplyAll.setStatusTip(description)
         self.pbApplyAll.setVisible(False)
         self.pbApplyAll.setEnabled(False)
         self.pbApplyAll.setMinimumSize(140,32)
@@ -185,9 +186,10 @@ class ConfigurationPanel(Dockable, QWidget):
         hLayout.addWidget(self.pbApplyAll)
         
         text = "Decline all"
+        decription = "Decline all property changes and reset them to value on device"
         self.pbResetAll = QPushButton(icons.no, text)
-        self.pbResetAll.setToolTip(text)
-        self.pbResetAll.setStatusTip(text)
+        self.pbResetAll.setToolTip(decription)
+        self.pbResetAll.setStatusTip(decription)
         self.pbResetAll.setVisible(False)
         self.pbResetAll.setEnabled(False)
         self.pbResetAll.setMinimumSize(140,32)
@@ -285,24 +287,27 @@ class ConfigurationPanel(Dockable, QWidget):
                 text = "Apply selected"
             else:
                 text = "Apply ({}) selected".format(nbSelected)
+            
+            description = "Apply selected property changes in one go"
             self.acApplyLocalChanges.setVisible(False)
             self.acApplyRemoteChanges.setVisible(False)
             self.acApplySelectedChanges.setVisible(True)
             self.acApplySelectedRemoteChanges.setVisible(True)
         else:
             text = "Apply all"
+            description = "Apply all property changes in one go"
             self.acApplyLocalChanges.setVisible(True)
             self.acApplyRemoteChanges.setVisible(True)
             self.acApplySelectedChanges.setVisible(False)
             self.acApplySelectedRemoteChanges.setVisible(False)
 
         self.pbApplyAll.setText(text)
-        self.pbApplyAll.setStatusTip(text)
-        self.pbApplyAll.setToolTip(text)
+        self.pbApplyAll.setStatusTip(description)
+        self.pbApplyAll.setToolTip(description)
 
         self.acApplyAll.setText(text)
-        self.acApplyAll.setStatusTip(text)
-        self.acApplyAll.setToolTip(text)
+        self.acApplyAll.setStatusTip(description)
+        self.acApplyAll.setToolTip(description)
         
         if self.hasConflicts is True:
             text = "Resolve conflicts"
@@ -327,15 +332,17 @@ class ConfigurationPanel(Dockable, QWidget):
                 text = "Decline selected"
             else:
                 text = "Decline ({}) selected".format(nbSelected)
+            description = "Decline all selected property changes and reset them to value on device"
         else:
             text = "Decline all"
+            description = "Decline all property changes and reset them to value on device"
         
         self.pbResetAll.setText(text)
-        self.pbResetAll.setStatusTip(text)
-        self.pbResetAll.setToolTip(text)
+        self.pbResetAll.setStatusTip(description)
+        self.pbResetAll.setToolTip(description)
 
-        self.acResetAll.setText(text)
-        self.acResetAll.setStatusTip(text)
+        self.acResetAll.setText(description)
+        self.acResetAll.setStatusTip(description)
         self.acResetAll.setToolTip(text)
 
 
@@ -387,9 +394,10 @@ class ConfigurationPanel(Dockable, QWidget):
         else:
             icon = icons.apply
             text = "Apply all"
+            description = "Apply all property changes in one go"
             self.pbApplyAll.setIcon(icon)
-            self.pbApplyAll.setStatusTip(text)
-            self.pbApplyAll.setToolTip(text)
+            self.pbApplyAll.setStatusTip(description)
+            self.pbApplyAll.setToolTip(description)
             self.pbApplyAll.setMenu(None)
             
             self.acApplyAll.setIcon(icon)
