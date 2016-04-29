@@ -1568,17 +1568,20 @@ namespace karabo {
 
         void SignalSlotable::trackExistenceOfInstance(const std::string & instanceId) {
 
-            if (instanceId == m_instanceId) return;
-
-            connect(instanceId, "signalHeartbeat", "", "slotHeartbeat");
+            if (instanceId == "" || instanceId == m_instanceId) return;
+            Hash instanceInfo;
+            try {
+                this->request(instanceId, "slotPing", instanceId, 1, false).timeout(200).receive(instanceInfo);
+            } catch (const karabo::util::TimeoutException&) {
+                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Instance \"" + instanceId + "\" does not exist and is not tracked"));
+            }
+            addTrackedInstance(instanceId, instanceInfo);
         }
 
 
         void SignalSlotable::stopTrackingExistenceOfInstance(const std::string & instanceId) {
-            // Isn't this the wrong way round, i.e. disconnect my slot from the others signal:
-            // disconnect(instanceId, "signalHeartbeat", "", "slotHeartbeat");?
-            disconnect("", "signalHeartbeat", instanceId, "slotHeartbeat");
-
+            if (instanceId == "" || instanceId == m_instanceId) return;
+            eraseTrackedInstance(instanceId);
         }
 
 
