@@ -703,8 +703,18 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             const karabo::util::Hash& getInstanceInfo() const;
 
+            /**
+             * This function will actively start tracking of specific instance.  It will throw parameter exception
+             * if the instance doesn't exist.  No active instance tracking in this case.
+             * @param instanceId to be tracked
+             * @throw KARABO_PARAMETER_EXCEPTION if instanceId is not responding.
+             */
             void trackExistenceOfInstance(const std::string& instanceId);
 
+            /**
+             * This function stops tracking activity for the specific instance.
+             * @param instanceId to be un-tracked.
+             */
             void stopTrackingExistenceOfInstance(const std::string& instanceId);
 
             void registerInstanceNotAvailableHandler(const InstanceNotAvailableHandler& instanceNotAvailableCallback);
