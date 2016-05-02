@@ -308,9 +308,9 @@ class PythonDevice(NoFsm):
         # if our own instanceId is used on topic -- exit
         ok = self._ss.ensureOwnInstanceIdUnique()
         if not ok:
-            self.log.ERROR("Device of class '{}' could not".format(self.classid)
-                           + " start on server '{}' ".format(self.serverid)
-                           + "since id '{}' already exists.".format(self.deviceid))
+            self.log.ERROR("Device of class '{0.classid}' could not start on "
+                           "server '{0.serverid}' since id '{0.deviceid}' "
+                           "already exists.".format(self))
             t.join()
             return
 
