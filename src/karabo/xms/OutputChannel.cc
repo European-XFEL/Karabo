@@ -249,12 +249,12 @@ namespace karabo {
                 karabo::util::Hash& channelInfo = m_registeredSharedInputs[i];
                 if (channelInfo.get<std::string>("instanceId") == instanceId) {
                     if (!channelInfo.get<std::deque<int> >("queuedChunks").empty()) {
-                        KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Writing queued (shared) data to instance " << instanceId;
+                        KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Writing queued (shared) data to instance " << instanceId;
                         distributeQueue(channelInfo);
                         return;
                     }
                     pushShareNext(instanceId);
-                    KARABO_LOG_FRAMEWORK_TRACE << debugId() << " New (shared) input on instance " << instanceId << " available for writing ";
+                    KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " New (shared) input on instance " << instanceId << " available for writing ";
                     this->triggerIOEvent();
                     return;
                 }
@@ -268,12 +268,12 @@ namespace karabo {
                         return;
                     }
                     pushCopyNext(instanceId);
-                    KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " New (copied) input on instance " << instanceId << " available for writing ";
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " New (copied) input on instance " << instanceId << " available for writing ";
                     this->triggerIOEvent();
                     return;
                 }
             }
-            KARABO_LOG_FRAMEWORK_WARN << debugId() << " An input channel wants to connect (" << instanceId << ") that was not registered before.";
+            KARABO_LOG_FRAMEWORK_WARN << this->debugId() << " An input channel wants to connect (" << instanceId << ") that was not registered before.";
         }
 
 
@@ -516,32 +516,32 @@ namespace karabo {
                 if (hasSharedInput(instanceId)) { // Found
                     eraseSharedInput(instanceId);
                     if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                        KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Now distributing data (local)";
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now distributing data (local)";
                         distributeLocal(chunkId, channelInfo);
                     } else {
-                        KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Now distributing data (remote)";
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now distributing data (remote)";
                         distributeRemote(chunkId, channelInfo);
                     }
                 } else { // Not found
                     if (m_onNoSharedInputChannelAvailable == "drop") {
                         unregisterWriterFromChunk(chunkId);
-                        KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Dropping (shared) data package with chunkId: " << chunkId;
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (shared) data package with chunkId: " << chunkId;
 
                     } else if (m_onNoSharedInputChannelAvailable == "throw") {
                         unregisterWriterFromChunk(chunkId);
                         throw KARABO_IO_EXCEPTION("Can not write data because no (shared) input is available");
 
                     } else if (m_onNoSharedInputChannelAvailable == "queue") {
-                        KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Queuing (shared) data package with chunkId: " << chunkId;
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (shared) data package with chunkId: " << chunkId;
                         // TODO Mutex !!!
                         m_registeredSharedInputs[sharedInputIdx].get<std::deque<int> >("queuedChunks").push_back(chunkId);
 
                     } else if (m_onNoSharedInputChannelAvailable == "wait") {
-                        KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Waiting for available (shared) input channel...";
+                        KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Waiting for available (shared) input channel...";
                         while (!hasSharedInput(instanceId)) {
                             boost::this_thread::sleep(boost::posix_time::millisec(1));
                         }
-                        KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " found (shared) input channel after waiting, distributing now";
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " found (shared) input channel after waiting, distributing now";
                         if (channelInfo.get<std::string > ("memoryLocation") == "local") {
                             distributeLocal(chunkId, channelInfo);
                         } else {
@@ -559,10 +559,10 @@ namespace karabo {
                         const karabo::util::Hash& channelInfo = m_registeredSharedInputs[i];
                         if (instanceId == channelInfo.get<std::string>("instanceId")) {
                             if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                                KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Distributing data (local)";
+                                KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Distributing data (local)";
                                 distributeLocal(chunkId, channelInfo);
                             } else {
-                                KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Distributing data (remote)";
+                                KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Distributing data (remote)";
                                 distributeRemote(chunkId, channelInfo);
                             }
                             break;
@@ -571,29 +571,29 @@ namespace karabo {
                 } else { // Not found
                     if (m_onNoSharedInputChannelAvailable == "drop") {
                         unregisterWriterFromChunk(chunkId);
-                        KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Dropping (shared) data package with chunkId: " << chunkId;
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (shared) data package with chunkId: " << chunkId;
                     } else if (m_onNoSharedInputChannelAvailable == "throw") {
                         unregisterWriterFromChunk(chunkId);
                         throw KARABO_IO_EXCEPTION("Can not write data because no (shared) input is available");
                     } else if (m_onNoSharedInputChannelAvailable == "queue") {
-                        KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Queuing (shared) data package with chunkId: " << chunkId;
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (shared) data package with chunkId: " << chunkId;
                         // TODO Mutex !!!
                         m_registeredSharedInputs[sharedInputIdx].get<std::deque<int> >("queuedChunks").push_back(chunkId);
                     } else if (m_onNoSharedInputChannelAvailable == "wait") {
-                        KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Waiting for available (shared) input channel...";
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Waiting for available (shared) input channel...";
                         while (m_shareNext.empty()) {
                             boost::this_thread::sleep(boost::posix_time::millisec(1));
                         }
-                        KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " found (shared) input channel after waiting, distributing now";
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " found (shared) input channel after waiting, distributing now";
                         std::string instanceId = popShareNext();
                         for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
                             const karabo::util::Hash& channelInfo = m_registeredSharedInputs[i];
                             if (instanceId == channelInfo.get<std::string>("instanceId")) {
                                 if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                                    KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Now distributing data (local)";
+                                    KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now distributing data (local)";
                                     distributeLocal(chunkId, channelInfo);
                                 } else {
-                                    KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Now distributing data (remote)";
+                                    KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now distributing data (remote)";
                                     distributeRemote(chunkId, channelInfo);
                                 }
                                 break;
@@ -660,32 +660,32 @@ namespace karabo {
                 if (hasCopyInput(instanceId)) {
                     eraseCopyInput(instanceId);
                     if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                        KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Now copying data (local)";
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now copying data (local)";
                         copyLocal(chunkId, channelInfo);
                     } else {
-                        KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Now copying data (remote)";
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now copying data (remote)";
                         copyRemote(chunkId, channelInfo);
                     }
                 } else if (onSlowness == "drop") {
                     unregisterWriterFromChunk(chunkId);
-                    KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Dropping (copied) data package for " << instanceId;
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (copied) data package for " << instanceId;
                 } else if (onSlowness == "throw") {
                     unregisterWriterFromChunk(chunkId);
                     throw KARABO_IO_EXCEPTION("Can not write (copied) data because input channel of " + instanceId + " was too late");
                 } else if (onSlowness == "queue") {
-                    KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " Queuing (copied) data package for " << instanceId;
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (copied) data package for " << instanceId;
                     m_registeredCopyInputs[i].get<std::deque<int> >("queuedChunks").push_back(chunkId);
                 } else if (onSlowness == "wait") {
-                    KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Data (copied) is waiting for input channel of "
+                    KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Data (copied) is waiting for input channel of "
                             << instanceId << " to be available";
                     while (!hasCopyInput(instanceId)) boost::this_thread::sleep(boost::posix_time::millisec(1));
-                    KARABO_LOG_FRAMEWORK_DEBUG << debugId() << " found (copied) input channel after waiting, copying now";
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " found (copied) input channel after waiting, copying now";
                     eraseCopyInput(instanceId);
                     if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                        KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Now copying data (local)";
+                        KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now copying data (local)";
                         copyLocal(chunkId, channelInfo);
                     } else {
-                        KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Now copying data (remote)";
+                        KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now copying data (remote)";
                         copyRemote(chunkId, channelInfo);
                     }
                 }
