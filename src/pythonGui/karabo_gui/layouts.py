@@ -347,7 +347,7 @@ class FixedLayout(Layout, QLayout):
 
     def setGeometry(self, geometry):
         "only to be used by Qt, don't use directly!"
-        super().setGeometry(geometry)
+        super(FixedLayout, self).setGeometry(geometry)
         if self.entire is not None:
             self.entire.fixed_geometry = geometry
         for item in self._children:
