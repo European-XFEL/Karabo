@@ -314,8 +314,8 @@ class PythonDevice(NoFsm):
             t.join()
             return
 
-        self.log.INFO("'{}' with deviceId '{}' got started on server '{}'."
-                      .format(self.classid, self.deviceid, self.serverid))
+        self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
+                      "on server '{0.serverid}'.".format(self))
 
         with self._stateChangeLock:
             validated = self.validatorIntern.validate(self.fullSchema, self.parameters, self._getActualTimestamp())
