@@ -212,6 +212,9 @@ namespace karabo {
             void copyLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
             void copyRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
+
+            /// Provide a string identifying this output channel (useful in DEBUG logging)
+            std::string debugId() const;
         };
 
         class OutputChannelElement {

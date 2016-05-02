@@ -922,7 +922,8 @@ namespace karabo {
                     return;
                 }
                 
-                KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
+                KARABO_LOG_INFO << "'" << m_classId << "' with deviceId: '" << this->getInstanceId() << "' got started"
+                        << " on server '" << this->getServerId() << "'.";
 
                 // ClassId
                 m_parameters.set("classId", m_classId);
@@ -1005,18 +1006,18 @@ namespace karabo {
                     if (m_fullSchema.hasDisplayType(key)) {
                         const std::string& displayType = m_fullSchema.getDisplayType(key);
                         if (displayType == "OutputChannel") {
-                            KARABO_LOG_INFO << "Creating output channel \"" << key << "\"";
+                            KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates output channel '" << key << "'";
                             createOutputChannel(key, m_parameters);
                         } else if (displayType == "InputChannel") {
-                            KARABO_LOG_INFO << "Creating input channel \"" << key << "\"";
+                            KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates input channel '" << key << "'";
                             createInputChannel(key, m_parameters);
                         } else {
-                            KARABO_LOG_DEBUG << "Not creating in-/output channel for \""
-                                    << key << "\" since it's a \"" << displayType <<"\"";
+                            KARABO_LOG_FRAMEWORK_DEBUG << "'" << this->getInstanceId() << "' does not create in-/output "
+                                    << "channel for '" << key << "' since it's a '" << displayType <<"'";
                         }
                     } else if (m_fullSchema.isNode(key)) {
                         // Recursive call going down the tree for channels within nodes
-                        KARABO_LOG_DEBUG << "Looking for input/output channels "
+                        KARABO_LOG_FRAMEWORK_DEBUG << "'" << this->getInstanceId() << "' looks for input/output channels "
                                 << "under node \"" << key << "\"";
                         
                         this->initChannels(key);
