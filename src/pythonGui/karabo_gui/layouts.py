@@ -264,7 +264,7 @@ class FixedLayout(Layout, QLayout):
 
 
     def itemAtPosition(self, pos):
-        for item in self._children:
+        for item in self._children[::-1]:
             if item.geometry().contains(pos):
                 if item.widget() is not None:
                     return item.widget()
