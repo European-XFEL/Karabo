@@ -153,7 +153,7 @@ class FixedLayout(Layout, QLayout):
         super().__init__()
         self._children = [ ] # contains only QLayoutItems
         self.entire = None
-
+        self.__item = None
 
     def __setitem__(self, key, value):
         if not isinstance(key, slice):
@@ -163,7 +163,8 @@ class FixedLayout(Layout, QLayout):
         for v in value:
             if isinstance(v, ProxyWidget):
                 self.addWidget(v)
-                values.append(self._item)
+                values.append(self.__item)
+                self.__item = None
             elif isinstance(v, Layout):
                 self.addChildLayout(v)
                 values.append(v)
@@ -315,7 +316,8 @@ class FixedLayout(Layout, QLayout):
 
     def addItem(self, item):
         "only to be used by Qt, don't use directly!"
-        self._item = item
+        assert self.__item is None
+        self.__item = item
 
 
     def itemAt(self, index):
