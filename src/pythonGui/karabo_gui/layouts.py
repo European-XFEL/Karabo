@@ -32,7 +32,8 @@ class Layout(Loadable):
     subclasses = { }
 
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Layout, self).__init__(*args, **kwargs)
         self.shapes = [ ]
         self.shape_geometry = None
         self.fixed_geometry = None
@@ -154,11 +155,10 @@ class FixedLayout(Layout, QLayout):
     xmltag = ns_svg + "g"
 
     def __init__(self):
-        QLayout.__init__(self)
-        Layout.__init__(self)
+        super(FixedLayout, self).__init__()
         self._children = [ ] # contains only QLayoutItems
         self.entire = None
-
+        self.__item = None
 
     def __setitem__(self, key, value):
         if not isinstance(key, slice):
@@ -167,14 +167,25 @@ class FixedLayout(Layout, QLayout):
         values = [ ]
         for v in value:
             if isinstance(v, ProxyWidget):
+                # Qt creates a QLayoutItem and calls addItem.
+                # that sets self.__item
                 self.addWidget(v)
-                values.append(self._item)
+                assert self.__item is not None
+                values.append(self.__item)
+                self.__item = None
             elif isinstance(v, Layout):
                 self.addChildLayout(v)
                 values.append(v)
         self._children[key] = values
         self.update()
 
+    def addItem(self, item):
+        """only to be used by Qt, don't use directly!"""
+        # The job of addItem should be to insert the item into our list
+        # unfortunately, we don't know *where* to insert it, so we secretly
+        # store the item and let the caller (__setitem__ that is) deal with it.
+        assert self.__item is None
+        self.__item = item
 
     def add_item(self, item):
         """add ProxyWidgets or Layouts"""
@@ -318,12 +329,6 @@ class FixedLayout(Layout, QLayout):
             ret.fixed_geometry = rect
         return ret
 
-
-    def addItem(self, item):
-        "only to be used by Qt, don't use directly!"
-        self._item = item
-
-
     def itemAt(self, index):
         "only to be used by Qt, don't use directly!"
         try:
@@ -335,7 +340,11 @@ class FixedLayout(Layout, QLayout):
     def takeAt(self, index):
         "only to be used by Qt, don't use directly!"
         try:
-            return self._children.pop(index)
+            ret = self._children.pop(index)
+            l = ret.layout()
+            if l is not None and l.parent() is self:
+                l.setParent(None)
+            return ret
         except IndexError:
             return
 
@@ -362,9 +371,8 @@ class FixedLayout(Layout, QLayout):
 
 
 class BoxLayout(Layout, QBoxLayout):
-    def __init__(self, dir):
-        QBoxLayout.__init__(self, dir)
-        Layout.__init__(self)
+    def __init__(self, direction):
+        super(BoxLayout, self).__init__(direction)
         self.setContentsMargins(5, 5, 5, 5)
 
 
@@ -398,10 +406,6 @@ def _reduce(xs):
 
 
 class GridLayout(Layout, QGridLayout):
-    def __init__(self):
-        QGridLayout.__init__(self)
-        Layout.__init__(self)
-
     def set_children(self, children):
         xs = [c.geometry().x() for c in children]
         ys = [c.geometry().y() for c in children]
