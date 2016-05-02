@@ -932,15 +932,26 @@ class Paste(SimpleAction):
         root = ElementTree.fromstring(mimeData.data("image/svg+xml"))
         if not self.modify(root):
             return
+        layout_len = len(self.parent.ilayout)
+        shape_len = len(self.parent.ilayout.shapes)
+        # Unselect all
+        for e in self.parent.ilayout:
+            e.selected = False
+        for s in self.parent.ilayout.shapes:
+            s.selected = False
         self.parent.ilayout.load_element(root)
         self.parent.tree.getroot().extend(root)
+        # select all pasted
+        for e in self.parent.ilayout[layout_len:]:
+            e.selected = True
+        for s in self.parent.ilayout.shapes[shape_len:]:
+            s.selected = True
         ar = QByteArray()
         buf = QBuffer(ar)
         buf.open(QIODevice.WriteOnly)
         self.parent.tree.write(buf)
         buf.close()
         self.parent.load(ar)
-        self.parent.update()
         self.parent.setModified()
 
 
@@ -1619,6 +1630,9 @@ class Scene(QSvgWidget):
             painter.save()
             if self.designMode:
                 painter.setPen(Qt.DashLine)
+                # weridly, Qt doesn't bother to assure layouts are up-to-date
+                # before calling paintEvent.
+                self.ilayout.activate()
                 for item in self.ilayout:
                     if item.selected:
                         painter.drawRect(item.geometry())
