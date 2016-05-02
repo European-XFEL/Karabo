@@ -162,6 +162,8 @@ class FixedLayout(Layout, QLayout):
         values = [ ]
         for v in value:
             if isinstance(v, ProxyWidget):
+                # Qt creates a QLayoutItem and calls addItem.
+                # that sets self.__item
                 self.addWidget(v)
                 values.append(self.__item)
                 self.__item = None
@@ -171,6 +173,13 @@ class FixedLayout(Layout, QLayout):
         self._children[key] = values
         self.update()
 
+    def addItem(self, item):
+        "only to be used by Qt, don't use directly!"
+        # The job of addItem should be to insert the item into our list
+        # unfortunately, we don't know *where* to insert it, so we secretly
+        # store the item and let the caller (__setitem__ that is) deal with it.
+        assert self.__item is None
+        self.__item = item
 
     def add_item(self, item):
         """add ProxyWidgets or Layouts"""
@@ -312,13 +321,6 @@ class FixedLayout(Layout, QLayout):
                 rect = rect.united(s.geometry())
             ret.fixed_geometry = rect
         return ret
-
-
-    def addItem(self, item):
-        "only to be used by Qt, don't use directly!"
-        assert self.__item is None
-        self.__item = item
-
 
     def itemAt(self, index):
         "only to be used by Qt, don't use directly!"
