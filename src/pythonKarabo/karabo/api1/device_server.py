@@ -352,11 +352,12 @@ class DeviceServer(object):
         self.log = Logger.getLogger(self.serverid)
         self.ss = SignalSlotable.create(self.serverid, self.connectionType, self.connectionParameters)        
         self._registerAndConnectSignalsAndSlots()
-                
-        self.log.INFO("Starting Karabo DeviceServer on host: {}".format(self.hostname))
-        self.log.INFO("ServerId: {}".format(self.serverid))
-        self.log.INFO("Broker (host/topic): {}/{}".format(self.ss.getBrokerHost(), self.ss.getBrokerTopic()))
-        
+
+        self.log.INFO("Starting Karabo DeviceServer on host: {0.hostname}, "
+                      "serverId: {0.serverid}, Broker (host:port:topic): {1}:"
+                      "{2}".format(self, self.ss.getBrokerHost(),
+                                   self.ss.getBrokerTopic()))
+
         info = Hash("type", "server")
         info["serverId"] = self.serverid
         info["version"] = self.__class__.__version__
@@ -370,6 +371,8 @@ class DeviceServer(object):
         # if our own instanceId is used on topic -- exit
         ok = self.ss.ensureOwnInstanceIdUnique()
         if not ok:
+            self.log.ERROR("DeviceServer '{0.serverid}' could not start since "
+                           "its id already exists.".format(self))
             self.signalSlotableThread.join()
             return
                 
@@ -388,13 +391,12 @@ class DeviceServer(object):
         pass
         
     def okStateOnEntry(self):
-        self.log.INFO("DeviceServer starts up with id: {}".format(self.serverid))
+        self.log.INFO("DeviceServer with id '{0.serverid}' starts up on host "
+                      "'{0.hostname}'".format(self))
         if self.needScanPlugins:
-            msg = ('Keep watching path: "{}" '
-                   'and namespace: "{}" for Device plugins').format(
-                self.pluginLoader.pluginDirectory,
-                self.pluginLoader.pluginNamespace)
-            self.log.INFO(msg)
+            self.log.INFO("Keep watching path: '{0.pluginDirectory}' and "
+                          "namespace: '{0.pluginNamespace}' for Device "
+                          "plugins".format(self.pluginLoader))
             self.pluginThread = threading.Thread(target = self.scanPlugins)
             self.scanning = True
             self.pluginThread.start()
@@ -445,9 +447,6 @@ class DeviceServer(object):
 
     def instantiateDevice(self, input_config):
         classid = input_config['classId']
-        
-        self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n{}".format(input_config))
 
         # Get configuration
         config = copy.copy(input_config['configuration'])
@@ -460,6 +459,10 @@ class DeviceServer(object):
             config['_deviceId_'] = self._generateDefaultDeviceInstanceId(classid)
         else:
             config['_deviceId_'] = input_config['deviceId']
+
+        self.log.INFO("Trying to start a '{}' with device id '{}'"
+                      "...".format(classid, config['_deviceId_']))
+        self.log.DEBUG("with the following configuration:\n{}".format(input_config))
 
         # Add connection type and parameters used by device server for connecting to broker
         config['_connection_.' + self.connectionType] = self.connectionParameters
@@ -519,15 +522,17 @@ class DeviceServer(object):
             if t: t.join()
         self.deviceInstanceMap = {}
         self.stopDeviceServer()
+        self.log.DEBUG("slotKillServer DONE")
         
-    def slotDeviceGone(self, id):
-        self.log.WARN("Device \"{}\" notifies fulture death".format(id))
-        if id in self.deviceInstanceMap:
-            self.ss.call(id, "slotKillDeviceInstance")
-            t = self.deviceInstanceMap[id]
+    def slotDeviceGone(self, instanceId):
+        # Would prefer a self.log.FRAMEWORK_INFO as in C++ instead of self.log.DEBUG:
+        self.log.DEBUG("Device '{0}' notifies '{1.serverid}' about its future "
+                       "death.".format(instanceId, self))
+        if instanceId in self.deviceInstanceMap:
+            t = self.deviceInstanceMap[instanceId]
             if t: t.join()
-            del self.deviceInstanceMap[id]
-            self.log.INFO("Device \"{}\" removed from server.".format(id))
+            del self.deviceInstanceMap[instanceId]
+            self.log.INFO("Device '{}' removed from server.".format(instanceId))
 
     def slotGetClassSchema(self, classid):
         try:

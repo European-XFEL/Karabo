@@ -327,13 +327,11 @@ namespace karabo {
         void GuiServerDevice::onInitDevice(Channel::Pointer channel, const karabo::util::Hash& hash) {
             try {
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice";
-                //cout << hash << endl;
-                string serverId = hash.get<string > ("serverId");
-                string deviceId = hash.get<string > ("deviceId");
-                KARABO_LOG_INFO << "Incoming request to start device instance \"" <<  deviceId << "\" on server \"" << serverId << "\"";
+                const string& serverId = hash.get<string > ("serverId");
+                const string& deviceId = hash.get<string > ("deviceId");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: request to start device instance \"" <<  deviceId << "\" on server \"" << serverId << "\"";
                 request(serverId, "slotStartDevice", hash)
-                        .receiveAsync<bool, string > (boost::bind(&karabo::core::GuiServerDevice::initReply, this, channel, hash.get<string>("deviceId"), _1, _2));
+                        .receiveAsync<bool, string > (boost::bind(&karabo::core::GuiServerDevice::initReply, this, channel, deviceId, _1, _2));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInitDevice(): " << e.userFriendlyMsg();
             }

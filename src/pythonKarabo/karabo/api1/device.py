@@ -308,9 +308,15 @@ class PythonDevice(NoFsm):
         # if our own instanceId is used on topic -- exit
         ok = self._ss.ensureOwnInstanceIdUnique()
         if not ok:
+            self.log.ERROR("Device of class '{0.classid}' could not start on "
+                           "server '{0.serverid}' since id '{0.deviceid}' "
+                           "already exists.".format(self))
             t.join()
             return
-        
+
+        self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
+                      "on server '{0.serverid}'.".format(self))
+
         with self._stateChangeLock:
             validated = self.validatorIntern.validate(self.fullSchema, self.parameters, self._getActualTimestamp())
             self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
@@ -670,10 +676,12 @@ class PythonDevice(NoFsm):
             if self.fullSchema.hasDisplayType(key):
                 displayType = self.fullSchema.getDisplayType(key)
                 if displayType == "OutputChannel":
-                    self.log.INFO("Creating output channel \"{}\"".format(key))
+                    # Would best be INFO level, but without broadcasting:
+                    self.log.DEBUG("Creating output channel \"{}\"".format(key))
                     self._ss.createOutputChannel(key, self.parameters)
                 elif displayType == "InputChannel":
-                    self.log.INFO("Creating input channel \"{}\"".format(key))
+                    # Would best be INFO level, but without broadcasting:
+                    self.log.DEBUG("Creating input channel \"{}\"".format(key))
                     self._ss.createInputChannel(key, self.parameters)
                 else:
                     self.log.DEBUG("Not creating in-/output channel for '" +
