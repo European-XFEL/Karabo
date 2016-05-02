@@ -521,7 +521,6 @@ class DeviceServer(object):
         for t  in threads:
             if t: t.join()
         self.deviceInstanceMap = {}
-        #self.ss.reply(self.serverid) ?
         self.stopDeviceServer()
         self.log.DEBUG("slotKillServer DONE")
         
