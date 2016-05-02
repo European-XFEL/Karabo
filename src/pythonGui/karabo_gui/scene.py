@@ -934,12 +934,14 @@ class Paste(SimpleAction):
             return
         layout_len = len(self.parent.ilayout)
         shape_len = len(self.parent.ilayout.shapes)
+        # Unselect all
         for e in self.parent.ilayout:
             e.selected = False
         for s in self.parent.ilayout.shapes:
             s.selected = False
         self.parent.ilayout.load_element(root)
         self.parent.tree.getroot().extend(root)
+        # select all pasted
         for e in self.parent.ilayout[layout_len:]:
             e.selected = True
         for s in self.parent.ilayout.shapes[shape_len:]:
