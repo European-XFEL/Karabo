@@ -352,11 +352,12 @@ class DeviceServer(object):
         self.log = Logger.getLogger(self.serverid)
         self.ss = SignalSlotable.create(self.serverid, self.connectionType, self.connectionParameters)        
         self._registerAndConnectSignalsAndSlots()
-                
-        self.log.INFO("Starting Karabo DeviceServer on host: {}".format(self.hostname)
-                      + ", serverId: {}, Broker (host:port:topic): ".format(self.serverid)
-                      + "{}:{}".format(self.ss.getBrokerHost(), self.ss.getBrokerTopic()))
-        
+
+        self.log.INFO("Starting Karabo DeviceServer on host: {0.hostname}, "
+                      "serverId: {0.serverid}, Broker (host:port:topic): {1}:"
+                      "{2}".format(self, self.ss.getBrokerHost(),
+                                   self.ss.getBrokerTopic()))
+
         info = Hash("type", "server")
         info["serverId"] = self.serverid
         info["version"] = self.__class__.__version__
@@ -370,8 +371,8 @@ class DeviceServer(object):
         # if our own instanceId is used on topic -- exit
         ok = self.ss.ensureOwnInstanceIdUnique()
         if not ok:
-            self.log.ERROR("DeviceServer '{}' could not ".format(self.serverid)
-                           + "start since its id already exists.")
+            self.log.ERROR("DeviceServer '{0.serverid}' could not start since "
+                           "its id already exists.".format(self))
             self.signalSlotableThread.join()
             return
                 
@@ -390,14 +391,12 @@ class DeviceServer(object):
         pass
         
     def okStateOnEntry(self):
-        self.log.INFO("DeviceServer with id '{}' starts ".format(self.serverid)
-                      + "up on host '{}'". format(self.hostname))
+        self.log.INFO("DeviceServer with id '{0.serverid}' starts up on host "
+                      "'{0.hostname}'".format(self))
         if self.needScanPlugins:
-            msg = ('Keep watching path: "{}" '
-                   'and namespace: "{}" for Device plugins').format(
-                self.pluginLoader.pluginDirectory,
-                self.pluginLoader.pluginNamespace)
-            self.log.INFO(msg)
+            self.log.INFO("Keep watching path: '{0.pluginDirectory}' and "
+                          "namespace: '{0.pluginNamespace}' for Device "
+                          "plugins".format(self.pluginLoader))
             self.pluginThread = threading.Thread(target = self.scanPlugins)
             self.scanning = True
             self.pluginThread.start()
@@ -461,8 +460,8 @@ class DeviceServer(object):
         else:
             config['_deviceId_'] = input_config['deviceId']
 
-        self.log.INFO("Trying to start a '{}' with device id ".format(classid)
-                      + "'{}'...".format(config['_deviceId_']))
+        self.log.INFO("Trying to start a '{}' with device id '{}'"
+                      "...".format(classid, config['_deviceId_']))
         self.log.DEBUG("with the following configuration:\n{}".format(input_config))
 
         # Add connection type and parameters used by device server for connecting to broker
@@ -528,7 +527,8 @@ class DeviceServer(object):
         
     def slotDeviceGone(self, instanceId):
         # Would prefer a self.log.FRAMEWORK_INFO as in C++ instead of self.log.DEBUG:
-        self.log.DEBUG("Device '{}' notifies '{}' about its future death.".format(instanceId, self.serverid))
+        self.log.DEBUG("Device '{0}' notifies '{1.serverid}' about its future "
+                       "death.".format(instanceId, self))
         if instanceId in self.deviceInstanceMap:
             t = self.deviceInstanceMap[instanceId]
             if t: t.join()
