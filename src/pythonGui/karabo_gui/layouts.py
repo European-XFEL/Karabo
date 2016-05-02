@@ -32,7 +32,8 @@ class Layout(Loadable):
     subclasses = { }
 
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.shapes = [ ]
         self.shape_geometry = None
         self.fixed_geometry = None
@@ -149,8 +150,7 @@ class FixedLayout(Layout, QLayout):
     xmltag = ns_svg + "g"
 
     def __init__(self):
-        QLayout.__init__(self)
-        Layout.__init__(self)
+        super().__init__()
         self._children = [ ] # contains only QLayoutItems
         self.entire = None
 
@@ -356,8 +356,7 @@ class FixedLayout(Layout, QLayout):
 
 class BoxLayout(Layout, QBoxLayout):
     def __init__(self, dir):
-        QBoxLayout.__init__(self, dir)
-        Layout.__init__(self)
+        super().__init__(dir)
         self.setContentsMargins(5, 5, 5, 5)
 
 
@@ -391,10 +390,6 @@ def _reduce(xs):
 
 
 class GridLayout(Layout, QGridLayout):
-    def __init__(self):
-        QGridLayout.__init__(self)
-        Layout.__init__(self)
-
     def set_children(self, children):
         xs = [c.geometry().x() for c in children]
         ys = [c.geometry().y() for c in children]
