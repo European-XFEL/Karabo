@@ -33,7 +33,7 @@ class Layout(Loadable):
 
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Layout, self).__init__(*args, **kwargs)
         self.shapes = [ ]
         self.shape_geometry = None
         self.fixed_geometry = None
@@ -150,7 +150,7 @@ class FixedLayout(Layout, QLayout):
     xmltag = ns_svg + "g"
 
     def __init__(self):
-        super().__init__()
+        super(FixedLayout, self).__init__()
         self._children = [ ] # contains only QLayoutItems
         self.entire = None
         self.__item = None
@@ -165,6 +165,7 @@ class FixedLayout(Layout, QLayout):
                 # Qt creates a QLayoutItem and calls addItem.
                 # that sets self.__item
                 self.addWidget(v)
+                assert self.__item is not None
                 values.append(self.__item)
                 self.__item = None
             elif isinstance(v, Layout):
@@ -174,7 +175,7 @@ class FixedLayout(Layout, QLayout):
         self.update()
 
     def addItem(self, item):
-        "only to be used by Qt, don't use directly!"
+        """only to be used by Qt, don't use directly!"""
         # The job of addItem should be to insert the item into our list
         # unfortunately, we don't know *where* to insert it, so we secretly
         # store the item and let the caller (__setitem__ that is) deal with it.
@@ -363,8 +364,8 @@ class FixedLayout(Layout, QLayout):
 
 
 class BoxLayout(Layout, QBoxLayout):
-    def __init__(self, dir):
-        super().__init__(dir)
+    def __init__(self, direction):
+        super(BoxLayout, self).__init__(direction)
         self.setContentsMargins(5, 5, 5, 5)
 
 
