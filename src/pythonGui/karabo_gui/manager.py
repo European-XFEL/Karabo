@@ -122,10 +122,6 @@ class _Manager(QObject):
         self._immutableServerClassData = {}
         # Map stores { deviceId, Configuration }
         self.deviceData = {}
-        
-        # State, if instantiate device is currently processed
-        self.__isInitDeviceCurrentlyProcessed = False
-
 
     def _clearDeviceParameterPage(self, deviceId):
         conf = self.deviceData.get(deviceId)
@@ -170,8 +166,6 @@ class _Manager(QObject):
         # Send signal to network
         Network().onInitDevice(serverId, classId, deviceId, config,
                                schemaAttrs=schemaAttrs)
-        self.__isInitDeviceCurrentlyProcessed = True
-
 
     def shutdownDevice(self, deviceId, showConfirm=True):
         if showConfirm:
@@ -442,15 +436,6 @@ class _Manager(QObject):
 
         # Update system topology with new configuration
         self.handle_instanceUpdated(topologyEntry)
-
-        # If device was instantiated from GUI, it should be selected after coming up
-        deviceConfig = topologyEntry.get("device")
-        if deviceConfig is not None:
-            for deviceId in deviceConfig:
-                if self.__isInitDeviceCurrentlyProcessed:
-                    self.signalSelectNewNavigationItem.emit(deviceId)
-                    self.__isInitDeviceCurrentlyProcessed = False
-
 
     def handle_instanceUpdated(self, topologyEntry):
         self.handle_systemTopology(topologyEntry)
