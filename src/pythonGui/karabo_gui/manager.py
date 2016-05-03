@@ -288,6 +288,12 @@ class _Manager(QObject):
         else:
             return None
 
+    @staticmethod
+    def _loadClassConfiguration(classConfig, configHash, classId):
+        if classId not in configHash:
+            MessageBox.showError("Configuration load failed")
+            return
+        classConfig.fromHash(configHash[classId])
 
     def onOpenFromFile(self):
         filename = QFileDialog.getOpenFileName(None, "Open configuration", \
@@ -301,13 +307,8 @@ class _Manager(QObject):
         r = XMLParser()
         with open(filename, 'rb') as file:
             config = r.read(file.read())
-        
-        if not config.has(classId):
-            MessageBox.showError("Configuration open failed")
-            return
 
-        conf.dispatchUserChanges(config[classId])
-
+        self._loadClassConfiguration(conf, config, classId)
 
     def onOpenFromProject(self):
         # Open dialog to select project and configuration
@@ -316,12 +317,9 @@ class _Manager(QObject):
             return
         
         conf, classId = self.currentConfigurationAndClassId()
-        if not dialog.projectConfiguration().hash.has(classId):
-            MessageBox.showError("Configuration open failed")
-            return
-        
-        conf.dispatchUserChanges(dialog.projectConfiguration().hash[classId])
 
+        config = dialog.projectConfiguration().hash
+        self._loadClassConfiguration(conf, config, classId)
 
     def onSaveToFile(self):
         """
