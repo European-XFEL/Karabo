@@ -306,8 +306,7 @@ class _Manager(QObject):
             MessageBox.showError("Configuration open failed")
             return
 
-        conf.dispatchUserChanges(config[classId])
-
+        conf.fromHash(config[classId])
 
     def onOpenFromProject(self):
         # Open dialog to select project and configuration
@@ -316,12 +315,13 @@ class _Manager(QObject):
             return
         
         conf, classId = self.currentConfigurationAndClassId()
-        if not dialog.projectConfiguration().hash.has(classId):
+
+        config = dialog.projectConfiguration().hash
+        if not config.has(classId):
             MessageBox.showError("Configuration open failed")
             return
-        
-        conf.dispatchUserChanges(dialog.projectConfiguration().hash[classId])
 
+        conf.fromHash(config[classId])
 
     def onSaveToFile(self):
         """
