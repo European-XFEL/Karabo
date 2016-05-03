@@ -261,7 +261,8 @@ struct NoTransitionAction { \
     template <class Fsm, class Event> \
     void operator()(Event const& e, Fsm& f, int state) { \
         std::string type_id(typeid (e).name()); \
-        KARABO_LOG_FRAMEWORK_DEBUG << #action; \
+        /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+        KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #action; \
         f.getContext()->action(type_id,state); \
     } \
 };
@@ -284,7 +285,8 @@ struct name { \
     template<class Fsm, class Evt, class SourceState, class TargetState> \
     void operator()(Evt const&, Fsm& f, SourceState&, TargetState&) { \
         try { \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             f.getContext()->func(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -311,7 +313,8 @@ struct name { \
     template<class Fsm, class Evt, class SourceState, class TargetState> \
     void operator()(Evt const& e, Fsm& f, SourceState&, TargetState&) { \
         try { \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             f.getContext()->func(e.a1); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -335,7 +338,8 @@ struct name { \
     template<class Fsm, class Evt, class SourceState, class TargetState> \
     void operator()(Evt const& e, Fsm& f, SourceState&, TargetState&) { \
         try { \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             f.getContext()->func(static_cast<t1>(e.a1), static_cast<t2>(e.a2)); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -359,7 +363,8 @@ struct name { \
     template<class Fsm, class Evt, class SourceState, class TargetState> \
     void operator()(Evt const& e, Fsm& f, SourceState&, TargetState&) { \
         try { \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             f.getContext()->func(static_cast<t1>(e.a1), static_cast<t2>(e.a2), static_cast<t3>(e.a3)); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -383,7 +388,8 @@ struct name { \
     template<class Fsm, class Evt, class SourceState, class TargetState> \
     void operator()(Evt const& e, Fsm& f, SourceState&, TargetState&) { \
         try { \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             f.getContext()->func(static_cast<t1>(e.a1), static_cast<t2>(e.a2), static_cast<t3>(e.a3), static_cast<t4>(e.a4)); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -411,7 +417,8 @@ struct name { \
     template<class Fsm, class Evt, class SourceState, class TargetState> \
     bool operator()(Evt const&, Fsm& f, SourceState&, TargetState&) { \
         try { \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             return f.getContext()->func(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -436,7 +443,8 @@ struct name { \
     template<class Fsm, class Evt, class SourceState, class TargetState> \
     bool operator()(Evt const& e, Fsm& f, SourceState&, TargetState&) { \
         try { \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             return f.getContext()->func(static_cast<t1>(e.a1)); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -461,7 +469,8 @@ struct name { \
     template<class Fsm, class Evt, class SourceState, class TargetState> \
     bool operator()(Evt const& e, Fsm& f, SourceState&, TargetState&) { \
         try { \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             return f.getContext()->func(static_cast<t1>(e.a1), static_cast<t2>(e.a2)); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -486,7 +495,8 @@ struct name { \
     template<class Fsm, class Evt, class SourceState, class TargetState> \
     bool operator()(Evt const& e, Fsm& f, SourceState&, TargetState&) { \
         try { \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             return f.getContext()->func(static_cast<t1>(e.a1), e.a2, e.a3); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -511,7 +521,8 @@ struct name { \
     template<class Fsm, class Evt, class SourceState, class TargetState> \
     bool operator()(Evt const& e, Fsm& f, SourceState&, TargetState&) { \
         try { \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             return f.getContext()->func(static_cast<t1>(e.a1), static_cast<t2>(e.a2), static_cast<t3>(e.a3), static_cast<t4>(e.a4)); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -577,7 +588,8 @@ template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
     try { \
         this->setFsmName(f.getFsmName()); \
         this->setContained(f.is_contained()); \
-        KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+        /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+        KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
     } catch(karabo::util::Exception const& e) { \
         _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
     } catch(...) { \
@@ -595,7 +607,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
         try { \
             this->setFsmName(f.getFsmName()); \
             this->setContained(f.is_contained()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
@@ -607,7 +620,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -625,7 +639,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
         try { \
              this->setFsmName(f.getFsmName()); \
              this->setContained(f.is_contained()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -653,7 +668,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
         try { \
             this->setFsmName(f.getFsmName()); \
             this->setContained(f.is_contained()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
@@ -666,7 +682,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -692,8 +709,9 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     template <class Event, class Fsm> void on_entry(const Event& e, Fsm& f) {} \
     template <class Fsm> void on_entry(event const& e, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            this->setFsmName(f.getFsmName()); \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(static_cast<t1>(e.a1)); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -718,8 +736,9 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            this->setFsmName(f.getFsmName()); \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(static_cast<t1>(e.a1), static_cast<t2>(e.a2)); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -743,8 +762,9 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            this->setFsmName(f.getFsmName()); \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(static_cast<t1>(e.a1), static_cast<t2>(e.a2), static_cast<t3>(e.a3)); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -770,8 +790,9 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            this->setFsmName(f.getFsmName()); \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(static_cast<t1>(e.a1), static_cast<t2>(e.a2), static_cast<t3>(e.a3), static_cast<t4>(e.a4)); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -798,7 +819,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -809,7 +831,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -841,7 +864,8 @@ public: \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
@@ -855,7 +879,8 @@ public: \
         try { \
             _worker->stop().join(); \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -884,7 +909,8 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -900,7 +926,8 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -926,7 +953,8 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -937,7 +965,8 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc();  \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -966,7 +995,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
              this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -984,7 +1014,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
@@ -996,7 +1027,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -1014,7 +1046,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -1042,7 +1075,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
@@ -1055,7 +1089,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -1081,8 +1116,9 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            this->setFsmName(f.getFsmName()); \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -1092,8 +1128,9 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
     } \
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
-             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+            this->setFsmName(f.getFsmName()); \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -1124,7 +1161,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
@@ -1138,7 +1176,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
         try { \
             _worker->stop().join(); \
             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -1166,13 +1205,14 @@ virtual void exitFunc()  = 0;
 name() {this->setStateName(#name);} \
 template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
     try { \
-         this->setFsmName(f.getFsmName()); \
-        KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
-        } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
-        } catch(...) { \
-            _onError<Fsm>(f); \
-        }\
+        this->setFsmName(f.getFsmName()); \
+        /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+        KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
+    } catch(karabo::util::Exception const& e) { \
+        _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+    } catch(...) { \
+        _onError<Fsm>(f); \
+    }\
 } \
 };
 
@@ -1181,8 +1221,9 @@ struct name : public boost::msm::front::exit_pseudo_state<event, karabo::core::F
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            this->setFsmName(f.getFsmName()); \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -1208,8 +1249,9 @@ struct name : public boost::msm::front::exit_pseudo_state<event, karabo::core::F
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+            this->setFsmName(f.getFsmName()); \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -1219,8 +1261,9 @@ struct name : public boost::msm::front::exit_pseudo_state<event, karabo::core::F
     } \
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
-             this->setFsmName(f.getFsmName()); \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+            this->setFsmName(f.getFsmName()); \
+            /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+            KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -1254,11 +1297,12 @@ virtual void exitFunc()  = 0;
             typedef boost::msm::active_state_switch_after_transition_action active_state_switch_policy; \
             template <class Event, class Fsm> void on_entry(Event const& e, Fsm& f) { \
                 try { \
-                KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+                    /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+                    KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
                 } catch(karabo::util::Exception const& e) { \
-                _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
-                _onError<Fsm>(f); \
+                    _onError<Fsm>(f); \
                 }\
             } \
             template <class Fsm, class Event> void no_transition(Event const& e, Fsm& f, int state) { NoTransitionAction()(e,f,state); } \
@@ -1278,19 +1322,21 @@ virtual void exitFunc()  = 0;
             typedef boost::msm::active_state_switch_after_transition_action active_state_switch_policy; \
             template <class Event, class Fsm> void on_entry(Event const& e, Fsm& f) { \
                 try { \
-                KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
-                _ta.setContext(f.getContext()); \
-                _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
+                    /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+                    KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
+                    _ta.setContext(f.getContext()); \
+                    _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
-                _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
-                _onError<Fsm>(f); \
+                    _onError<Fsm>(f); \
                 }\
             } \
             template <class Event, class Fsm> void on_exit (Event const& e, Fsm& f) { \
                 try { \
                     _worker->stop().join(); \
-                    KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+                    /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+                    KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
                 } catch(karabo::util::Exception const& e) { \
                 _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
@@ -1317,12 +1363,13 @@ virtual void exitFunc()  = 0;
             typedef boost::msm::active_state_switch_after_transition_action active_state_switch_policy; \
             template <class Event, class Fsm> void on_entry(Event const& e, Fsm& f) { \
                 try { \
-                    KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+                    /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+                    KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
                     f.getContext()->entryFunc(); \
                 } catch(karabo::util::Exception const& e) { \
-                _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
-                _onError<Fsm>(f); \
+                    _onError<Fsm>(f); \
                 }\
             } \
             template <class Fsm, class Event> void no_transition(Event const& e, Fsm& f, int state) { NoTransitionAction()(e,f,state); } \
@@ -1352,24 +1399,26 @@ virtual void entryFunc() = 0;
             typedef boost::msm::active_state_switch_after_transition_action active_state_switch_policy; \
             template <class Event, class Fsm> void on_entry(Event const& e, Fsm& f) { \
                 try { \
-                    KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+                    /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+                    KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
                     f.getContext()->entryFunc(); \
                     _ta.setContext(f.getContext()); \
                     _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
-                _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
-                _onError<Fsm>(f); \
+                    _onError<Fsm>(f); \
                 }\
             } \
             template <class Event, class Fsm> void on_exit (Event const& e, Fsm& f) { \
                 try { \
                     _worker->stop().join(); \
-                    KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+                    /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+                    KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
                 } catch(karabo::util::Exception const& e) { \
-                _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
-                _onError<Fsm>(f); \
+                    _onError<Fsm>(f); \
                 }\
             } \
             template <class Fsm, class Event> void no_transition(Event const& e, Fsm& f, int state) { NoTransitionAction()(e,f,state); } \
@@ -1402,22 +1451,24 @@ virtual void entryFunc() = 0;
             typedef boost::msm::active_state_switch_after_transition_action active_state_switch_policy; \
             template <class Event, class Fsm> void on_entry(Event const& e, Fsm& f) { \
                 try { \
-                    KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+                    /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+                    KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
                     f.getContext()->entryFunc(); \
                 } catch(karabo::util::Exception const& e) { \
-                _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
-                _onError<Fsm>(f); \
+                    _onError<Fsm>(f); \
                 }\
-                } \
+            } \
             template <class Event, class Fsm> void on_exit (Event const& e, Fsm& f) { \
                 try { \
-                    KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+                    /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+                    KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
                     f.getContext()->exitFunc(); \
                 } catch(karabo::util::Exception const& e) { \
-                _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
-                _onError<Fsm>(f); \
+                    _onError<Fsm>(f); \
                 }\
             } \
             template <class Fsm, class Event> void no_transition(Event const& e, Fsm& f, int state) { NoTransitionAction()(e,f,state); } \
@@ -1449,25 +1500,27 @@ virtual void exitFunc()  = 0;
             typedef boost::msm::active_state_switch_after_transition_action active_state_switch_policy; \
             template <class Event, class Fsm> void on_entry(Event const& e, Fsm& f) { \
                 try { \
-                    KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
+                    /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+                    KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
                     f.getContext()->entryFunc(); \
                     _ta.setContext(f.getContext()); \
                     _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
-                _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
-                _onError<Fsm>(f); \
+                    _onError<Fsm>(f); \
                 }\
-                } \
+            } \
             template <class Event, class Fsm> void on_exit (Event const& e, Fsm& f) { \
                 try { \
                     _worker->stop().join(); \
-                    KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
+                    /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
+                    KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
                     f.getContext()->exitFunc(); \
                 } catch(karabo::util::Exception const& e) { \
-                _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
-                _onError<Fsm>(f); \
+                    _onError<Fsm>(f); \
                 }\
             } \
             template <class Fsm, class Event> void no_transition(Event const& e, Fsm& f, int state) { NoTransitionAction()(e,f,state); } \
