@@ -810,7 +810,9 @@ class BoxGroup(GroupAction):
                 group.addWidget(w)
         group.shapes = self.gather_shapes()
         group.fixed_geometry = QRect(rect.topLeft(), group.sizeHint())
+        group.selected = True
         self.parent.ilayout.add_item(group)
+        self.parent.update()
 
 
 class VerticalGroup(GroupActions, BoxGroup):
