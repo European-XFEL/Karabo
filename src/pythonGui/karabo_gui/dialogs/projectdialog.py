@@ -165,10 +165,10 @@ class ProjectDialog(QDialog):
 
     def onSaveToChanged(self, index):
         if not self.hasCloudProjects and index == ProjectAccess.CLOUD.value:
-                # Show waiting page
-                self.swSaveTo.setCurrentWidget(self.stackedWidgets['wait'])
-                self.setFilenameEnabled(False)
-                return
+            # Show waiting page
+            self.swSaveTo.setCurrentWidget(self.stackedWidgets['wait'])
+            self.setFilenameEnabled(False)
+            return
 
         # Show the correct stacked widget for the combo box selection
         stackedWidgetKey = self.saveToComboItems[index]
