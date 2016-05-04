@@ -222,6 +222,12 @@ class Project(object):
             if filename == scene.filename:
                 return scene
 
+    def getSceneURL(self, filename):
+        """ Return a URL which can be passed to getURL to read the scene data
+        from the project.
+        """
+        return "project:{}/{}".format(self.SCENES_KEY, filename)
+
     def getSceneNames(self):
         """ All the scene names for this project.
         """
