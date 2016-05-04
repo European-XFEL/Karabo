@@ -9,6 +9,7 @@ import karabo_gui.icons as icons
 from karabo_gui.registry import Loadable
 from karabo_gui.const import ns_svg, ns_karabo
 import karabo_gui.sceneitems as sceneitems
+from karabo_gui.topology import getDeviceBox
 
 from PyQt4.QtCore import pyqtSlot, QRect, QSize, Qt
 from PyQt4.QtGui import (QAction, QBoxLayout, QGridLayout, QLabel,
@@ -570,7 +571,7 @@ class ProxyWidget(QWidget):
             return
         for item in source.selectedItems():
             if (self.component is not None and
-                    self.component.addBox(item.box)):
+                    self.component.addBox(getDeviceBox(item.box))):
                 if self.scene.tabVisible:
                     item.box.addVisible()
                 event.accept()
