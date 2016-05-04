@@ -222,8 +222,6 @@ class Tests(unittest.TestCase):
         self.assertEqual(devices.child(4).text(), "offline")
         self.assertIcon(devices.child(4).icon(), icons.deviceOffline)
 
-        self.assertEqual(manager.deviceData["testdevice"].visible, 4)
-
         manager.projectTopology.projectSaveAs("/tmp/test.krb",
                                                 ProjectAccess.LOCAL)
         manager.projectTopology.onCloseProject()
@@ -255,7 +253,6 @@ class Tests(unittest.TestCase):
     def scene(self):
         manager = Manager()
         scene = manager.projectTopology.projects[0].scenes[0]
-        self.assertTrue(scene.tabVisible)
         manager.handle_deviceSchema("testdevice", self.testschema)
         testdevice = manager.deviceData["testdevice"]
         manager.handle_deviceConfiguration("testdevice", self.testconfiguration)
@@ -268,9 +265,7 @@ class Tests(unittest.TestCase):
         mime.setData("sourceType", "ParameterTreeWidget")
         de = DropEvent(QPoint(100, 100), Qt.CopyAction, mime, Qt.LeftButton,
                        Qt.NoModifier, QDropEvent.Drop)
-        self.assertEqual(testdevice.visible, 4)
         scene.dropEvent(de)
-        self.assertEqual(testdevice.visible, 6)
 
         self.assertEqual(TestWidget.instance.value, 0.5)
         testdevice.dispatchUserChanges(Hash('targetSpeed', 3.5))
@@ -289,23 +284,6 @@ class Tests(unittest.TestCase):
         self.assertIcon(component.acApply.icon(), icons.applyConflict)
         self.assertTrue(panel.pbApplyAll.isEnabled())
         self.assertEqual(testdevice.value.targetSpeed, 1.5)
-
-        self.net.called = []
-        w = DockableWidget()
-        gui.window.middleTab.addDockableTab(w, "nix", gui.window)
-        gui.window.middleTab.setCurrentIndex(1)
-        self.assertFalse(scene.tabVisible)
-        self.assertEqual(len(self.net.called), 2)
-        self.assertEqual(self.net.called[0][0], "onStopMonitoringDevice")
-        self.assertEqual(self.net.called[1][0], "onStopMonitoringDevice")
-        self.assertEqual(testdevice.visible, 0)
-
-        self.net.called = []
-        gui.window.middleTab.setCurrentIndex(0)
-        self.assertTrue(scene.tabVisible)
-        self.assertEqual(len(self.net.called), 1)
-        self.assertEqual(testdevice.visible, 6)
-        self.assertEqual(manager.deviceData["incompatible"].visible, 2)
 
     def test_gui(self):
         self.systemTopology()

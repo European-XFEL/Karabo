@@ -1,5 +1,5 @@
 <ParameterTest KRB_Type="HASH">
-  <charDefault KRB_Type="CHAR">AA==</charDefault>
+  <charDefault KRB_Type="CHAR">A</charDefault>
   <reset KRB_Type="HASH" />
   <version KRB_Type="STRING">1.0</version>
   <int32 KRB_Type="INT32">1234</int32>
