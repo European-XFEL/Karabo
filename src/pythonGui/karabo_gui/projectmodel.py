@@ -1236,6 +1236,7 @@ class ProjectModel(QStandardItemModel):
             filename = "{}{}".format(dialog.displayPrefix, index)
             newScene = self.addScene(self.currentProject(), filename)
             newScene.fromXml(xml)
+            newScene.setModified()
         
         self.selectObject(newScene)
 
