@@ -21,7 +21,7 @@ from karabo_gui.registry import Loadable, Registry
 from karabo_gui.const import ns_karabo, ns_svg, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
 import karabo_gui.pathparser as pathparser
 import karabo_gui.icons as icons
-from karabo_gui.topology import getDevice, Manager
+from karabo_gui.topology import getDeviceBox, Manager
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import (pyqtSignal, pyqtSlot, Qt, QByteArray, QEvent, QSize,
@@ -1488,12 +1488,9 @@ class Scene(QSvgWidget):
                 # Get Boxes. "box" is in the project, "realbox" the
                 # one on the device. They are the same if not from a project
                 box = item.box
-                if box.configuration.type == "projectClass":
-                    realbox = getDevice(box.configuration.id).getBox(box.path)
-                    if realbox.descriptor is not None:
-                        box = realbox
-                else:
-                    realbox = box
+                realbox = getDeviceBox(box)
+                if realbox.descriptor is not None:
+                    box = realbox
 
                 # Create display component, if available
                 configDisplayComponent = item.displayComponent

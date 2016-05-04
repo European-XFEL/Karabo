@@ -21,6 +21,17 @@ def getDevice(deviceId):
     return device
 
 
+def getDeviceBox(box):
+    """return a box that belongs to an active device
+
+    if the box already is part of a running device, return it,
+    if it is from a class in a project, return the corresponding
+    instantiated device's box. """
+    if box.configuration.type == "projectClass":
+        return getDevice(box.configuration.id).getBox(box.path)
+    return box
+
+
 def getClass(serverId, classId):
     """ Find the class in the system topology from the server `serverId` with
     the ID `classId`.
