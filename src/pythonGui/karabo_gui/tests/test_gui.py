@@ -261,11 +261,6 @@ class Tests(unittest.TestCase):
 
         self.getItem("Target Conveyor Speed").setSelected(True)
         self.assertEqual(len(testdevice.parameterEditor.selectedItems()), 1)
-        mime = QMimeData()
-        mime.setData("sourceType", "ParameterTreeWidget")
-        de = DropEvent(QPoint(100, 100), Qt.CopyAction, mime, Qt.LeftButton,
-                       Qt.NoModifier, QDropEvent.Drop)
-        scene.dropEvent(de)
 
         self.assertEqual(TestWidget.instance.value, 0.5)
         testdevice.dispatchUserChanges(Hash('targetSpeed', 3.5))
