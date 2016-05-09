@@ -11,9 +11,8 @@
 __all__ = ["SceneDialog"]
 
 
-from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QGroupBox,
-                         QLineEdit, QVBoxLayout)
-
+from PyQt4.QtCore import QFileInfo
+from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QVBoxLayout)
 
 class SceneDialog(QDialog):
 
@@ -41,11 +40,15 @@ class SceneDialog(QDialog):
         if scene is not None:
             self.leSceneName.setText(scene.filename)
 
-
-    @property
     def sceneName(self):
-        return self.leSceneName.text()
-
+        """
+        The name of the scene is returned including the suffix .svg
+        """
+        text = self.leSceneName.text()
+        fi = QFileInfo(text)
+        if len(fi.suffix()) < 1:
+            text = "{}.svg".format(text)
+        return text
 
 ### Slots ###
     def onTextChanged(self, text):

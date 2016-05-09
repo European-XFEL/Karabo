@@ -427,6 +427,16 @@ class GuiProject(Project, QObject):
         return deviceGroup
 
 
+    def getScene(self, name):
+        """
+        The first occurence of the scene with the given \name is returned.
+        """
+        for scene in self.scenes:
+            if name == scene.filename:
+                return scene
+        return None
+
+
     def addScene(self, scene):
         self.scenes.append(scene)
         self.signalSceneAdded.emit(scene)
