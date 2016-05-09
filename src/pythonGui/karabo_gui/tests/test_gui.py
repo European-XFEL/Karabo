@@ -31,18 +31,6 @@ PROJ_DIR = os.path.join(TEST_DIR, 'project')
 PROJECT_PATH = os.path.join(TEST_DIR, "project.krb")
 
 
-def setUp():
-    global net
-    network.network = Network()
-    net = network.network
-    _create_project_file()
-
-
-def tearDown():
-    if os.path.exists(PROJECT_PATH):
-        os.unlink(PROJECT_PATH)
-
-
 def _create_project_file():
     def strip_leading(path):
         path = path[len(PROJ_DIR):]
@@ -73,8 +61,8 @@ class Network(QObject):
     called = [ ]
 
     def __getattr__(self, attr):
-        def f(*args):
-            self.called.append((attr, args))
+        def f(*args, **kwargs):
+            self.called.append((attr, args, kwargs))
         return f
 
 
@@ -116,6 +104,14 @@ class Tests(unittest.TestCase):
         with open(os.path.join(TEST_DIR, "configuration.xml"), "r") as fin:
             self.testconfiguration = r.read(fin.read())["ParameterTest"]
         globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
+
+        network.network = Network()
+        self.net = network.network
+        _create_project_file()
+
+    def tearDown(self):
+        if os.path.exists(PROJECT_PATH):
+            os.unlink(PROJECT_PATH)
 
     def excepthook(self, type, value, tb):
         traceback.print_exception(type, value, tb)
@@ -163,7 +159,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(node.displayComponent.widget.text(), "0x4D2")
         self.assertEqual(node.editableComponent.widgetFactory.value, 1234)
         self.assertEqual(node.text(0), "32 bit integer")
-        cls.dispatchUserChanges(dict(int32=3456))
+        cls.dispatchUserChanges(Hash('int32', 3456))
         self.assertEqual(node.editableComponent.widgetFactory.value, 3456)
 
         node = self.findNode(cls, "int8")
@@ -174,11 +170,9 @@ class Tests(unittest.TestCase):
         node = self.findNode(cls, "output")
         widget = node.editableComponent.widgetFactory.widget
         self.assertEqual(widget.currentText(), "BinaryFile")
-        cls.dispatchUserChanges(dict(output=dict(
-                        TextFile=dict(filename="abc"))))
+        cls.dispatchUserChanges(Hash('output', Hash('TextFile', Hash('filename', "abc"))))
         self.assertEqual(widget.currentText(), "TextFile")
-        cls.dispatchUserChanges(dict(output=dict(
-                        BinaryFile=dict(filename="abc"))))
+        cls.dispatchUserChanges(Hash('output', Hash('BinaryFile', Hash('filename', "abc"))))
         self.assertEqual(widget.count(), 4)
         self.assertEqual(widget.itemText(1), "Hdf5File")
         widget.setCurrentIndex(1)
@@ -203,13 +197,13 @@ class Tests(unittest.TestCase):
                                         self.findIcon(a), self.findIcon(b))
 
     def assertCalled(self, function):
-        for f, arg in net.called:
+        for f, arg, kwargs in self.net.called:
             if f == function:
                 return arg
         self.fail("network method {} not called".format(function))
 
     def project(self):
-        net.called = [ ]
+        self.net.called = [ ]
         manager = Manager()
         manager.projectTopology.projectOpen(PROJECT_PATH, ProjectAccess.LOCAL)
         self.assertCalled("onGetDeviceSchema")
@@ -227,8 +221,6 @@ class Tests(unittest.TestCase):
         self.assertIcon(devices.child(3).icon(), icons.deviceIncompatible)
         self.assertEqual(devices.child(4).text(), "offline")
         self.assertIcon(devices.child(4).icon(), icons.deviceOffline)
-
-        self.assertEqual(manager.deviceData["testdevice"].visible, 4)
 
         manager.projectTopology.projectSaveAs("/tmp/test.krb",
                                                 ProjectAccess.LOCAL)
@@ -261,7 +253,6 @@ class Tests(unittest.TestCase):
     def scene(self):
         manager = Manager()
         scene = manager.projectTopology.projects[0].scenes[0]
-        self.assertTrue(scene.tabVisible)
         manager.handle_deviceSchema("testdevice", self.testschema)
         testdevice = manager.deviceData["testdevice"]
         manager.handle_deviceConfiguration("testdevice", self.testconfiguration)
@@ -270,21 +261,14 @@ class Tests(unittest.TestCase):
 
         self.getItem("Target Conveyor Speed").setSelected(True)
         self.assertEqual(len(testdevice.parameterEditor.selectedItems()), 1)
-        mime = QMimeData()
-        mime.setData("sourceType", "ParameterTreeWidget")
-        de = DropEvent(QPoint(100, 100), Qt.CopyAction, mime, Qt.LeftButton,
-                       Qt.NoModifier, QDropEvent.Drop)
-        self.assertEqual(testdevice.visible, 4)
-        scene.dropEvent(de)
-        self.assertEqual(testdevice.visible, 6)
 
         self.assertEqual(TestWidget.instance.value, 0.5)
-        testdevice.dispatchUserChanges(dict(targetSpeed=3.5))
+        testdevice.dispatchUserChanges(Hash('targetSpeed', 3.5))
         self.assertEqual(TestWidget.instance.value, 3.5)
         self.assertEqual(testdevice.value.targetSpeed, 0.5)
         component = TestWidget.instance.proxy.parent().component
         panel = gui.window.configurationPanel
-        testdevice.dispatchUserChanges(dict(targetSpeed=0.5))
+        testdevice.dispatchUserChanges(Hash('targetSpeed', 0.5))
         self.assertIcon(component.acApply.icon(), icons.applyGrey)
         #self.assertFalse(panel.pbApplyAll.isEnabled())
         TestWidget.instance.value = 2.5
@@ -295,23 +279,6 @@ class Tests(unittest.TestCase):
         self.assertIcon(component.acApply.icon(), icons.applyConflict)
         self.assertTrue(panel.pbApplyAll.isEnabled())
         self.assertEqual(testdevice.value.targetSpeed, 1.5)
-
-        net.called = []
-        w = DockableWidget()
-        gui.window.middleTab.addDockableTab(w, "nix", gui.window)
-        gui.window.middleTab.setCurrentIndex(1)
-        self.assertFalse(scene.tabVisible)
-        self.assertEqual(len(net.called), 2)
-        self.assertEqual(net.called[0][0], "onStopMonitoringDevice")
-        self.assertEqual(net.called[1][0], "onStopMonitoringDevice")
-        self.assertEqual(testdevice.visible, 0)
-
-        net.called = []
-        gui.window.middleTab.setCurrentIndex(0)
-        self.assertTrue(scene.tabVisible)
-        self.assertEqual(len(net.called), 1)
-        self.assertEqual(testdevice.visible, 6)
-        self.assertEqual(manager.deviceData["incompatible"].visible, 2)
 
     def test_gui(self):
         self.systemTopology()
