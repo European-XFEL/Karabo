@@ -1044,7 +1044,7 @@ class ProjectModel(QStandardItemModel):
             
             # Remove device of project and get index for later insert to keep the
             # order
-            index = project.remove(device)
+            index = self.removeObject(project, device, False)
             
             if isinstance(device, Device):
                 device = self.insertDevice(index, project,
@@ -1104,7 +1104,7 @@ class ProjectModel(QStandardItemModel):
                 return None
 
             # Overwrite existing device
-            index = project.remove(device)
+            index = self.removeObject(project, device, False)
             device = self.insertDevice(index, project, serverId,
                                        classId, deviceId, ifexists)
             return device
@@ -1131,7 +1131,7 @@ class ProjectModel(QStandardItemModel):
                 return None
 
             # Overwrite existing device group
-            index = project.remove(deviceGroup)
+            index = self.removeObject(project, deviceGroup, False)
             deviceGroup = self.insertDeviceGroup(index, project, name,
                                                  serverId, classId, startupBehaviour,
                                                  displayPrefix, startIndex, endIndex)
@@ -1212,14 +1212,13 @@ class ProjectModel(QStandardItemModel):
                 return None
 
             # Overwrite existing device
-            index = project.remove(scene)
+            index = self.removeObject(project, scene, False)
             scene = self.insertScene(index, project, sceneName)
-            return scene
+        else:
+            scene = Scene(project, sceneName, designMode=True)
+            project.addScene(scene)
         
-        scene = Scene(project, sceneName, designMode=True)
-        project.addScene(scene)
         self.openScene(scene)
-
         self.selectObject(scene)
         
         return scene
@@ -1331,7 +1330,7 @@ class ProjectModel(QStandardItemModel):
                 return None
 
             # Overwrite existing device
-            index = project.remove(d)
+            index = self.removeObject(project, d, False)
             monitor = self.insertMonitor(index, project, name, config)
             return monitor
         
@@ -1645,7 +1644,7 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return
         
-        project.remove(object)
+        index = project.remove(object)
         
         if isinstance(object, Scene):
             self.closeScene(object)
@@ -1660,4 +1659,6 @@ class ProjectModel(QStandardItemModel):
         
         if showConfirm:
             self.selectObject(project)
+        
+        return index
         
