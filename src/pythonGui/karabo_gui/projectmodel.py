@@ -1555,7 +1555,6 @@ class ProjectModel(QStandardItemModel):
         with open(fn, "w") as fout:
             fout.write(s)
 
-
     def onOpenScene(self):
         project = self.currentProject()
         fn = QFileDialog.getOpenFileName(None, "Open scene",
@@ -1563,13 +1562,10 @@ class ProjectModel(QStandardItemModel):
                                          "SVG (*.svg)")
         if not fn:
             return
-        scene = Scene(project, os.path.basename(fn))
+        scene = self.addScene(project, os.path.basename(fn))
         with open(fn, "r") as fin:
             s = fin.read()
             scene.fromXml(s.encode())
-        project.addScene(scene)
-        self.selectObject(scene)
-
 
     def onRemove(self):
         """
