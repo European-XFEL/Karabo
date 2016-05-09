@@ -544,9 +544,16 @@ class DeviceServer(object):
             self.ss.reply(Schema(), classid, self.serverid)
         
     def slotLoggerPriority(self, newprio):
+        # 'device id' given here does not matter: static methods are called
         oldprio = Priority.getPriorityName(self.logger.getLogger("some_deviceId").getRootPriority())
         self.logger.getLogger("some_deviceId").setRootPriority(Priority.getPriorityValue(newprio))
         self.log.INFO("Logger Priority changed : {} ==> {}".format(oldprio, newprio))
+        # In contrast to C++, the new priority will not be "forwarded" to
+        # existing devices. The Python devices have their own slotLoggerPriority
+        # which allows priority setting device by device.
+        # But future device instantiations should inherit their priority from
+        # the current value of the server:
+        self.loggerConfiguration['priority'] = newprio
         
     def processEvent(self, event):
         with self.processEventLock:
