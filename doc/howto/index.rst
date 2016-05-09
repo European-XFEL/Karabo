@@ -10,6 +10,7 @@ Contents:
    macro
    cppDevice
    pythonDevice
+   documentingDevices
    stateMachines
    properties
    scpiDevice
