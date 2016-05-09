@@ -143,7 +143,6 @@ class ListEdit(QDialog):
         else:
             currentValue = currentItem.editableValue
 
-
         dialog = QInputDialog.getText
         if isinstance(self.descriptor, (VectorDouble, VectorFloat)):
             dialog = QInputDialog.getDouble
@@ -157,8 +156,10 @@ class ListEdit(QDialog):
             currentValue, ok = dialog(self, caption, label)
         elif dialog == QInputDialog.getText:
             currentValue, ok = dialog(self, caption, label, text=currentValue)
-        else:
-            currentValue, ok = dialog(self, caption, label, currentValue)
+        elif dialog == QInputDialog.getInt:
+            currentValue, ok = dialog(self, caption, label, int(currentValue))
+        elif dialog == QInputDialog.getDouble:
+            currentValue, ok = dialog(self, caption, label, float(currentValue))
 
         if ok:
             return currentValue
