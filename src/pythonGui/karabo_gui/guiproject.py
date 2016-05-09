@@ -427,12 +427,12 @@ class GuiProject(Project, QObject):
         return deviceGroup
 
 
-    def getScene(self, name):
+    def getScene(self, filename):
         """
-        The first occurence of the scene with the given \name is returned.
+        The first occurence of the scene with the given \filename is returned.
         """
         for scene in self.scenes:
-            if name == scene.filename:
+            if filename == scene.filename:
                 return scene
         return None
 
