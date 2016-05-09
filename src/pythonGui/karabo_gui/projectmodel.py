@@ -30,7 +30,7 @@ import karabo_gui.network as network
 from karabo_gui.topology import getDevice, Manager
 from karabo_gui.util import getSaveFileName
 
-from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QFileInfo, Qt
+from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
                          QItemSelectionModel, QMessageBox, QStandardItem,
                          QStandardItemModel)
@@ -1192,28 +1192,32 @@ class ProjectModel(QStandardItemModel):
             return
         
         if scene is None:
-            self.addScene(self.currentProject(), dialog.sceneName)
+            self.addScene(self.currentProject(), dialog.sceneName())
         else:
-            scene.filename = dialog.sceneName
-            fi = QFileInfo(scene.filename)
-            if len(fi.suffix()) < 1:
-                scene.filename = "{}.svg".format(scene.filename)
-
+            scene.filename = dialog.sceneName()
             self.renameScene(scene)
-
-
-    def _createScene(self, project, sceneName):
-        scene = Scene(project, sceneName, designMode=True)
-        project.addScene(scene)
-        
-        return scene
-
 
     def addScene(self, project, sceneName):
         """
         Create new Scene object for given \project.
         """
-        scene = self._createScene(project, sceneName)
+        scene = project.getScene(sceneName)
+        if scene is not None:
+            reply = QMessageBox.question(None, 'Scene already exists',
+                "Another scene with the same name \"<b>{}</b>\" <br> "
+                "already exists. Do you want to overwrite it?".format(sceneName),
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return None
+
+            # Overwrite existing device
+            index = project.remove(scene)
+            scene = self.insertScene(index, project, sceneName)
+            return scene
+        
+        scene = Scene(project, sceneName, designMode=True)
+        project.addScene(scene)
         self.openScene(scene)
 
         self.selectObject(scene)
@@ -1225,6 +1229,15 @@ class ProjectModel(QStandardItemModel):
             self._openedScenes.remove(scene)
             scene.signalSceneLinkTriggered.disconnect(self.openSceneLink)
         self.signalRemoveScene.emit(scene)
+
+    def insertScene(self, index, project, sceneName):
+        """
+        Insert a scene for the given \project with the given data.
+        """
+        scene = Scene(project, sceneName, designMode=True)
+        project.insertScene(index, scene)
+        
+        return scene
 
     def duplicateScene(self, scene):
         dialog = DuplicateDialog(scene.filename[:-4])
