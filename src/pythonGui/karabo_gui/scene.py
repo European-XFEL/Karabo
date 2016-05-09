@@ -1092,9 +1092,6 @@ class Scene(QSvgWidget):
         self.project.signalDeviceSelected.connect(self.onSelectionChanged)
         
         self.filename = name
-        fi = QFileInfo(self.filename)
-        if len(fi.suffix()) < 1:
-            self.filename = "{}.svg".format(self.filename)
 
         self.inner = QWidget(self)
         self.inner.setLayout(FixedLayout())
