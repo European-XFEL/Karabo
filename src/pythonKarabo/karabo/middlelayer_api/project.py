@@ -419,7 +419,7 @@ class Monitor(object):
         # Reference to the project this monitor belongs to
         self.project = None
         
-        self.filename = "{}.xml".format(name)
+        self.name = name
         
         # This hash contains all necessary data like:
         # name
@@ -433,13 +433,20 @@ class Monitor(object):
     @property
     def name(self):
         """
-        This function returns the name of the project excluding the suffix.
+        This function returns the name of the monitor excluding the suffix.
         """
         r = os.path.basename(self.filename)
         if r.endswith(".xml"):
             return r[:-4]
         else:
             return r
+
+    @name.setter
+    def name(self, name):
+        """
+        This function returns the name of the monitor excluding the suffix.
+        """
+        self.filename = "{}.xml".format(name)
 
     def fromXml(self, xmlString):
         """
