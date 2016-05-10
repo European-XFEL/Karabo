@@ -186,6 +186,10 @@ class Project(object):
                 return monitor
         return None
 
+    def insertMonitor(self, index, monitor):
+        self.monitors.insert(index, monitor)
+        monitor.project = self
+
     def addResource(self, category, data):
         """add the data into the resources of given category
 

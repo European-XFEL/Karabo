@@ -646,6 +646,16 @@ class ProjectModel(QStandardItemModel):
         parentItem.appendRow(item)
         self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
 
+    def insertMonitorItem(self, row, monitor):
+        """
+        This function inserts the given \monitor at the given \row of the model.
+        """
+        item = self.createMonitorItem(monitor)
+       
+        projectItem = self.findItem(monitor.project)
+        # Find folder for devices
+        parentItem = self.getCategoryItem(Project.MONITORS_LABEL, projectItem)
+        parentItem.insertRow(row, item)
 
     def removeObjectItem(self, object):
         """
@@ -917,6 +927,7 @@ class ProjectModel(QStandardItemModel):
         project.signalMacroAdded.connect(self.addMacroItem)
         project.signalMacroChanged.connect(self.addMacroSubItems)
         project.signalMonitorAdded.connect(self.addMonitorItem)
+        project.signalMonitorInserted.connect(self.insertMonitorItem)
         
         project.signalRemoveObject.connect(self.removeObjectItem)
         
@@ -1211,7 +1222,7 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return None
 
-            # Overwrite existing device
+            # Overwrite existing scene
             index = self.removeObject(project, scene, False)
             scene = self.insertScene(index, project, sceneName)
         else:
@@ -1329,8 +1340,8 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return None
 
-            # Overwrite existing device
-            index = self.removeObject(project, d, False)
+            # Overwrite existing monitor
+            index = self.removeObject(project, monitor, False)
             monitor = self.insertMonitor(index, project, name, config)
             return monitor
         
@@ -1339,6 +1350,14 @@ class ProjectModel(QStandardItemModel):
         
         return monitor
 
+    def insertMonitor(self, index, project, name, config):
+        """
+        Insert a monitor for the given \project with the given data.
+        """
+        monitor = Monitor(name, config)
+        project.insertMonitor(index, monitor)
+        
+        return monitor
 
 ### slots ###
 

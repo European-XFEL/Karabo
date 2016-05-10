@@ -312,6 +312,7 @@ class GuiProject(Project, QObject):
     signalMacroAdded = pyqtSignal(object)
     signalMacroChanged = pyqtSignal(object)
     signalMonitorAdded = pyqtSignal(object)
+    signalMonitorInserted = pyqtSignal(int, object)
     
     signalRemoveObject = pyqtSignal(object)
 
@@ -518,6 +519,13 @@ class GuiProject(Project, QObject):
         self.signalMonitorAdded.emit(monitor)
         self.setModified(True)
 
+    def insertMonitor(self, index, monitor):
+        """
+        Insert \monitor at given \index and update project.
+        """
+        Project.insertMonitor(self, index, monitor)
+        self.signalMonitorInserted.emit(index, monitor)
+        self.setModified(True)
 
     def addResource(self, category, data):
         #self.signalResourceAdded.emit(category, data)
