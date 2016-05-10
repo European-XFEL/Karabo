@@ -404,15 +404,21 @@ function configureTemplate() {
              -e s#__CLASS_NAME__#"${className}"#g \
              -e s#__CLASS_NAME_ALL_CAPS__#"${upperClassName}"#g ${file}
             fi
-	        #mv ${file}.new ${file}
         fi
 
         newname=`echo $file | sed s#__CLASS_NAME__#"${className}"#g`
         if [ "$file" != "$newname" ]; then
             mv $file $newname
         fi
-    
     done
+
+    # Run the template configuration script
+    if [ -e $1/.configure.sh ]; then
+        pushd $1
+        ./.configure.sh
+        rm .configure.sh
+        popd
+    fi
 }
 
 # checkout package
