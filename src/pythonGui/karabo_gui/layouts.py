@@ -304,9 +304,7 @@ class FixedLayout(Layout, QLayout):
     def translate(self, pos):
         for c in self:
             c.fixed_geometry.translate(pos)
-        for s in self.shapes:
-            s.translate(pos)
-        Layout.translate(self, pos)
+        super(FixedLayout, self).translate(pos)
 
 
     def save(self):
