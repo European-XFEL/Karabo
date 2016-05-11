@@ -11,7 +11,7 @@ from karabo_gui.const import ns_svg, ns_karabo
 import karabo_gui.sceneitems as sceneitems
 from karabo_gui.topology import getDeviceBox
 
-from PyQt4.QtCore import pyqtSlot, QRect, QSize, Qt
+from PyQt4.QtCore import pyqtSlot, QPoint, QRect, QSize, Qt
 from PyQt4.QtGui import (QAction, QBoxLayout, QGridLayout, QLabel,
                          QLayout, QMenu, QStackedLayout, QWidget)
 
@@ -304,9 +304,7 @@ class FixedLayout(Layout, QLayout):
     def translate(self, pos):
         for c in self:
             c.fixed_geometry.translate(pos)
-        for s in self.shapes:
-            s.translate(pos)
-        Layout.translate(self, pos)
+        super(FixedLayout, self).translate(pos)
 
 
     def save(self):
@@ -355,19 +353,26 @@ class FixedLayout(Layout, QLayout):
         return len(self._children)
 
 
-    def setGeometry(self, geometry):
+    def setGeometry(self, rect):
         "only to be used by Qt, don't use directly!"
-        super(FixedLayout, self).setGeometry(geometry)
+        super(FixedLayout, self).setGeometry(rect)
         if self.entire is not None:
-            self.entire.fixed_geometry = geometry
-        for item in self._children:
-            i = item.widget() if item.widget() is not None else item
-            i.setGeometry(i.fixed_geometry)
+            self.entire.fixed_geometry = rect
+        if self.fixed_geometry is None:
+            translation = QPoint(0, 0)
+        else:
+            translation = rect.topLeft() - self.fixed_geometry.topLeft()
+        for c in self:
+            c.fixed_geometry.translate(translation)
+            c.setGeometry(c.fixed_geometry)
+        self.fixed_geometry = QRect(rect)
 
 
     def sizeHint(self):
         if self.entire is not None:
             return self.entire.sizeHint()
+        elif self.fixed_geometry is not None:
+            return self.fixed_geometry.size()
         return QSize(10, 10)
 
 
