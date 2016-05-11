@@ -13,7 +13,7 @@ from karabo_gui.dialogs.dialogs import (PenDialog, TextDialog, SceneLinkDialog,
                                         ReplaceDialog)
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.layouts import FixedLayout, BoxLayout, ProxyWidget, Layout
+from karabo_gui.layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
 from karabo_gui.sceneitems.workflowitems import (Item, WorkflowConnection, WorkflowItem,
                                       WorkflowGroupItem)
 
@@ -831,6 +831,22 @@ class HorizontalGroup(GroupActions, BoxGroup):
 
     def run(self):
         self.doit(BoxLayout(BoxLayout.LeftToRight), lambda x: x.geometry().x())
+
+
+class GridGroup(GroupActions, BoxGroup):
+    text = "Group in a Grid"
+    icon = icons.groupGrid
+
+
+    def run(self):
+        rect, widgets = self.gather_widgets()
+        if rect.isNull():
+            return
+        group = GridLayout()
+        group.set_children(widgets)
+        group.shapes = self.gather_shapes()
+        group.fixed_geometry = QRect(rect.topLeft(), group.sizeHint())
+        self.parent.ilayout.add_item(group)
 
 
 class Ungroup(GroupActions, SimpleAction):
