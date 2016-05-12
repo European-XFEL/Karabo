@@ -255,12 +255,13 @@ class Timespan(QDialog):
         uic.loadUi(op.join(op.dirname(__file__), "timespan.ui"), self)
 
     def on_hour_clicked(self):
-        self.stop.setDateTime(QDateTime.currentDateTime())
-        self.start.setDateTime(QDateTime.currentDateTime().addSecs(-60 * 60))
+        self.end.setDateTime(QDateTime.currentDateTime())
+        self.beginning.setDateTime(
+            QDateTime.currentDateTime().addSecs(-60 * 60))
 
     def on_minute_clicked(self):
-        self.stop.setDateTime(QDateTime.currentDateTime())
-        self.start.setDateTime(QDateTime.currentDateTime().addSecs(-60))
+        self.end.setDateTime(QDateTime.currentDateTime())
+        self.beginning.setDateTime(QDateTime.currentDateTime().addSecs(-60))
 
 
 class DisplayTrendline(PlotWidget):
@@ -315,16 +316,16 @@ class DisplayTrendline(PlotWidget):
         else:
             dialog = Timespan(self.widget)
             sd = self.plot.axisScaleDiv(QwtPlot.xBottom)
-            dialog.start.setDateTime(
+            dialog.beginning.setDateTime(
                 QDateTime.fromMSecsSinceEpoch(sd.lowerBound() * 1000))
-            dialog.stop.setDateTime(
+            dialog.end.setDateTime(
                 QDateTime.fromMSecsSinceEpoch(sd.upperBound() * 1000))
             if dialog.exec() != dialog.Accepted:
                 return
             self.plot.setAxisScale(
                 QwtPlot.xBottom,
-                dialog.start.dateTime().toMSecsSinceEpoch() / 1000,
-                dialog.stop.dateTime().toMSecsSinceEpoch() / 1000)
+                dialog.beginning.dateTime().toMSecsSinceEpoch() / 1000,
+                dialog.end.dateTime().toMSecsSinceEpoch() / 1000)
             self.updateLater()
 
     def typeChanged(self, box):
