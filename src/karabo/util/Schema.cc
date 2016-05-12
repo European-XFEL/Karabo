@@ -18,6 +18,7 @@
 #include "Hash.hh"
 #include "FromLiteral.hh"
 #include "karabo/webAuth/Authenticator.hh"
+#include "karabo/log/Logger.hh"
 
 namespace karabo {
     namespace util {
@@ -568,10 +569,14 @@ namespace karabo {
             bool accessRoleOk = isAllowedInCurrentAccessLevel(node);
             bool stateOk = isAllowedInCurrentState(node);
 
-
             if (!(accessModeOk && accessRoleOk && stateOk)) return;
 
-            this->getParameterHash().setNode(node);
+            if (this->isOrphaned(node)) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Cannot add element with key '" << node.getKey()
+                        << "' since parent node does not exist or is not a NODE_ELEMENT.";
+            } else {
+                this->getParameterHash().setNode(node);
+            }
         }
 
         void Schema::overwriteAttributes(const Hash::Node& node) {
@@ -624,6 +629,29 @@ namespace karabo {
                 return (std::find(allowedStates.begin(), allowedStates.end(), m_currentState) != allowedStates.end());
             } else { // If no states are assigned, access/visibility is always possible
                 return true;
+            }
+        }
+
+        bool Schema::isOrphaned(const Hash::Node& node) const {
+            const std::string& key = node.getKey();
+            const size_t lastSep = key.find_last_of('.'); // can't get default separator from Hash :-(
+            if (lastSep == std::string::npos) {
+                // first level key is not an orphan
+                return false;
+            }
+            const std::string motherKey(key.substr(0, lastSep));
+            if (!this->has(motherKey)) {
+                // e.g. key is a.b.c, but a.b is not part of the schema
+                return true;
+            } else {
+                const int nodeType = this->getNodeType(motherKey);
+                if (nodeType == LEAF) {// or != NODE, i.e. what about CHOICE_OF_NODES and LIST_OF_NODES?
+                    // mother has wrong node type
+                    return true;
+                } else {
+                    // mother is there and is a decent node element
+                    return false;
+                }
             }
         }
 
