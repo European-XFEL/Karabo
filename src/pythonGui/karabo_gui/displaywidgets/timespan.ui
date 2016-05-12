@@ -17,12 +17,12 @@
    <item row="0" column="0">
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Start</string>
+      <string>Beginning</string>
      </property>
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QDateTimeEdit" name="start">
+    <widget class="QDateTimeEdit" name="beginning">
      <property name="currentSection">
       <enum>QDateTimeEdit::YearSection</enum>
      </property>
@@ -37,12 +37,12 @@
    <item row="1" column="0">
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>Stop</string>
+      <string>End</string>
      </property>
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QDateTimeEdit" name="stop">
+    <widget class="QDateTimeEdit" name="end">
      <property name="currentSection">
       <enum>QDateTimeEdit::YearSection</enum>
      </property>
