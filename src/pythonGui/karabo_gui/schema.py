@@ -198,6 +198,14 @@ class Box(QObject):
         if descr is not None:
             return descr.metricPrefixSymbol + descr.unitSymbol
 
+    def axisLabel(self):
+        """ This function returns the axis label string.
+        """
+        unit = self.unitLabel()
+        descr = self.descriptor
+        name = descr.displayedName if descr is not None else ''
+        return "{} [{}]".format(name, unit) if unit else name
+
 class _BoxValue(object):
     def __getattr__(self, attr):
         try:
