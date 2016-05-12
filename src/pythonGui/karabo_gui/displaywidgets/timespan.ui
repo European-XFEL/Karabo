@@ -59,14 +59,14 @@
      <item>
       <widget class="QPushButton" name="hour">
        <property name="text">
-        <string>last hour</string>
+        <string>Last Hour</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="minute">
        <property name="text">
-        <string>last minute</string>
+        <string>Last Minute</string>
        </property>
       </widget>
      </item>
