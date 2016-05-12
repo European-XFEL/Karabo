@@ -74,7 +74,10 @@ class XYPlot(PlotWidget):
 
     @property
     def boxes(self):
-        return [self.xbox, self.ybox]
+        if self.ybox is None:
+            return [self.xbox]
+        else:
+            return [self.xbox, self.ybox]
 
     def valueChanged(self, box, value, timestamp=None):
         if not self.active:
