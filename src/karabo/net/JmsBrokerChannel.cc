@@ -557,20 +557,8 @@ namespace karabo {
 
 
         void JmsBrokerChannel::listenForRawMessages() {
-
-            try {
-                m_consumerActive = true;
-                bool messageReceived = false;
-                do {
-                    messageReceived = signalIncomingBinaryMessage(false);
-                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
-
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "An exception during JMS broker message reception occurred: \n" << e;
-            } catch (...) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "An unknown exception during JMS broker message reception occurred";
-            }
-            m_consumerActive = false;
+            // false: no header => Raw
+            this->listenForMessages(&JmsBrokerChannel::signalIncomingBinaryMessage, false);
         }
 
 
@@ -647,21 +635,8 @@ namespace karabo {
 
 
         void JmsBrokerChannel::listenForStringMessages() {
-
-            try {
-                m_consumerActive = true;
-                bool messageReceived = false;
-                do {
-                    messageReceived = signalIncomingTextMessage(false);
-                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
-
-            } catch (const Exception& e) {
-                cout << e;
-                Exception::memorize();
-            } catch (...) {
-                Exception::memorize();
-            }
-            m_consumerActive = false;
+            // false: no header => String
+            this->listenForMessages(&JmsBrokerChannel::signalIncomingTextMessage, false);
         }
 
 
@@ -735,20 +710,8 @@ namespace karabo {
 
 
         void JmsBrokerChannel::listenForHashMessages() {
-            try {
-                m_consumerActive = true;
-                bool messageReceived = false;
-                do {
-                    messageReceived = signalIncomingHashMessage(false);
-                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
-
-            } catch (const Exception& e) {
-                cout << e;
-                Exception::memorize();
-            } catch (...) {
-                Exception::memorize();
-            }
-            m_consumerActive = false;
+            // false: no header => Hash
+            this->listenForMessages(&JmsBrokerChannel::signalIncomingHashMessage, false);
         }
 
 
@@ -845,21 +808,8 @@ namespace karabo {
 
 
         void JmsBrokerChannel::listenForHashRawMessages() {
-
-            try {
-                m_consumerActive = true;
-                bool messageReceived = false;
-                do {
-                    messageReceived = signalIncomingBinaryMessage(true);
-                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
-
-            } catch (const Exception& e) {
-                cout << e;
-                Exception::memorize();
-            } catch (...) {
-                Exception::memorize();
-            }
-            m_consumerActive = false;
+            // true: with header => HashRaw
+            this->listenForMessages(&JmsBrokerChannel::signalIncomingBinaryMessage, true);
         }
 
 
@@ -879,21 +829,8 @@ namespace karabo {
 
 
         void JmsBrokerChannel::listenForHashStringMessages() {
-
-            try {
-                m_consumerActive = true;
-                bool messageReceived = false;
-                do {
-                    messageReceived = signalIncomingTextMessage(true);
-                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
-
-            } catch (const Exception& e) {
-                cout << e;
-                Exception::memorize();
-            } catch (...) {
-                Exception::memorize();
-            }
-            m_consumerActive = false;
+            // true: with header => HashString
+            this->listenForMessages(&JmsBrokerChannel::signalIncomingTextMessage, true);
         }
 
 
@@ -912,19 +849,23 @@ namespace karabo {
 
 
         void JmsBrokerChannel::listenForHashHashMessages() {
+            // true: with header => HashHash
+            this->listenForMessages(&JmsBrokerChannel::signalIncomingHashMessage, true);
+        }
 
-            try {
+
+        void JmsBrokerChannel::listenForMessages(bool (JmsBrokerChannel::*signalIncomingMessage)(bool), bool arg) {
+        try {
                 m_consumerActive = true;
                 bool messageReceived = false;
                 do {
-                    messageReceived = signalIncomingHashMessage(true);
+                    messageReceived = (this->*signalIncomingMessage)(arg);
                 } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
 
             } catch (const Exception& e) {
-                cout << e;
-                Exception::memorize();
+                KARABO_LOG_FRAMEWORK_ERROR << "An exception during JMS broker message reception occurred: \n" << e;
             } catch (...) {
-                Exception::memorize();
+                KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception during JMS broker message reception occurred";
             }
             m_consumerActive = false;
         }
