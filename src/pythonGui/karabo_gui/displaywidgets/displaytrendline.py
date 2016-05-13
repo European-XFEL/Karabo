@@ -263,6 +263,10 @@ class Timespan(QDialog):
         self.end.setDateTime(QDateTime.currentDateTime())
         self.beginning.setDateTime(QDateTime.currentDateTime().addSecs(-60))
 
+    def on_s20_clicked(self):
+        self.end.setDateTime(QDateTime.currentDateTime())
+        self.beginning.setDateTime(QDateTime.currentDateTime().addSecs(-20))
+
 
 class DisplayTrendline(PlotWidget):
     category = Simple
