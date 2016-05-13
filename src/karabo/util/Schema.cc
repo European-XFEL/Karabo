@@ -17,6 +17,7 @@
 #include "Schema.hh"
 #include "Hash.hh"
 #include "FromLiteral.hh"
+#include "StringTools.hh"
 #include "karabo/webAuth/Authenticator.hh"
 #include "karabo/log/Logger.hh"
 
@@ -644,13 +645,17 @@ namespace karabo {
                 // e.g. key is a.b.c, but a.b is not part of the schema
                 return true;
             } else {
-                const int nodeType = this->getNodeType(motherKey);
-                if (nodeType == LEAF) {// or != NODE, i.e. what about CHOICE_OF_NODES and LIST_OF_NODES?
-                    // mother has wrong node type
-                    return true;
-                } else {
-                    // mother is there and is a decent node element
-                    return false;
+                switch(this->getNodeType(motherKey)) {
+                    case Schema::LEAF: // leaves cannot be mothers
+                        return true;
+                    case Schema::NODE:
+                    case Schema::CHOICE_OF_NODES:
+                    case Schema::LIST_OF_NODES:
+                        return false;
+                    default: // If getNodeType would return Schema::NodeType and not int, default would not be needed:
+                        throw KARABO_LOGIC_EXCEPTION("getNodeType returns unknown value '" +
+                                util::toString(this->getNodeType(motherKey)) += "' for key '" + motherKey + "'");
+                        return true;
                 }
             }
         }
