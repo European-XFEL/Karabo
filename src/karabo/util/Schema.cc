@@ -573,8 +573,8 @@ namespace karabo {
             if (!(accessModeOk && accessRoleOk && stateOk)) return;
 
             if (this->isOrphaned(node)) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Cannot add element with key '" << node.getKey()
-                        << "' since parent node does not exist or is not a NODE_ELEMENT.";
+                KARABO_LOG_FRAMEWORK_ERROR << "Cannot add element with key '" << node.getKey()
+                        << "' since parent node does not exist or is not a node element.";
             } else {
                 this->getParameterHash().setNode(node);
             }
