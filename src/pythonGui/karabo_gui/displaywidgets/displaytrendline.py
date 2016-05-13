@@ -4,6 +4,7 @@ __all__ = ["DisplayTrendline"]
 import time
 import datetime
 from bisect import bisect
+import os.path as op
 import pickle
 import base64
 from xml.etree.ElementTree import Element
@@ -13,7 +14,9 @@ from karabo_gui.topology import getDevice
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import PlotWidget
 
-from PyQt4.QtCore import Qt, QObject, QTimer, pyqtSlot
+from PyQt4 import uic
+from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSlot
+from PyQt4.QtGui import QDialog
 
 import numpy
 
@@ -245,6 +248,26 @@ class ScaleEngine(QwtLinearScaleEngine):
         self.drawer.setFormat(start, v)
         return QwtScaleDiv(x1, x2, [], [], list(range(start, int(x2), v)))
 
+
+class Timespan(QDialog):
+    def __init__(self, parent):
+        super(Timespan, self).__init__(parent)
+        uic.loadUi(op.join(op.dirname(__file__), "timespan.ui"), self)
+
+    def on_hour_clicked(self):
+        self.end.setDateTime(QDateTime.currentDateTime())
+        self.beginning.setDateTime(
+            QDateTime.currentDateTime().addSecs(-60 * 60))
+
+    def on_minute_clicked(self):
+        self.end.setDateTime(QDateTime.currentDateTime())
+        self.beginning.setDateTime(QDateTime.currentDateTime().addSecs(-60))
+
+    def on_s20_clicked(self):
+        self.end.setDateTime(QDateTime.currentDateTime())
+        self.beginning.setDateTime(QDateTime.currentDateTime().addSecs(-20))
+
+
 class DisplayTrendline(PlotWidget):
     category = Simple
     alias = "Trendline"
@@ -257,6 +280,13 @@ class DisplayTrendline(PlotWidget):
         self.plot = self.dialog.get_plot()
         self.plot.set_antialiasing(True)
         self.plot.setAxisTitle(QwtPlot.xBottom, 'Time')
+
+        # We are using CurveDialog, which internally creates a BaseCurveWidget,
+        # which internally creates a CurvePlot, which contains the method
+        # edit_axis_parameters, which creates the dialog to set the time axis.
+        # It would be a nightmare to overwrite three classes, so we just do
+        # a little monkey patching here.
+        self.plot.edit_axis_parameters = self.edit_axis_parameters
 
         # have a 1 s timeout to request data, thus avoid
         # frequent re-loading while scaling
@@ -290,6 +320,24 @@ class DisplayTrendline(PlotWidget):
         self.destroyed.connect(self.destroy)
         self.addBox(box)
 
+    def edit_axis_parameters(self, axis_id):
+        if axis_id != QwtPlot.xBottom:
+            # call the original method that we monkey-patched over
+            type(self.plot).edit_axis_parameters(self.plot, axis_id)
+        else:
+            dialog = Timespan(self.widget)
+            sd = self.plot.axisScaleDiv(QwtPlot.xBottom)
+            dialog.beginning.setDateTime(
+                QDateTime.fromMSecsSinceEpoch(sd.lowerBound() * 1000))
+            dialog.end.setDateTime(
+                QDateTime.fromMSecsSinceEpoch(sd.upperBound() * 1000))
+            if dialog.exec() != dialog.Accepted:
+                return
+            self.plot.setAxisScale(
+                QwtPlot.xBottom,
+                dialog.beginning.dateTime().toMSecsSinceEpoch() / 1000,
+                dialog.end.dateTime().toMSecsSinceEpoch() / 1000)
+            self.updateLater()
 
     def typeChanged(self, box):
         self.plot.setAxisTitle(QwtPlot.yLeft, self.axisLabel(box))
