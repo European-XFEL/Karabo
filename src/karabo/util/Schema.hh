@@ -718,7 +718,8 @@ namespace karabo {
 
             bool isAllowedInCurrentState(const Hash::Node& node) const;
 
-            /// True if node's key points to a subnode whose mother does not exist.
+            /// True if node's key points to a subnode whose parent does not
+            /// exist or is of inappropriate node type.
             bool isOrphaned(const Hash::Node& node) const;
 
             void processingLeaf(const std::string& key, ostringstream& stream);
