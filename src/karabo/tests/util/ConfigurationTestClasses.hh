@@ -536,6 +536,18 @@ namespace configurationTest {
                     .assignmentOptional().defaultValue(std::vector<Hash>(2, Hash("a", 3, "b", "foo")))
                     .commit();
 
+            INT16_ELEMENT(expected)
+                    .key("nonExistingNode.int16")
+                    .description("This element refers to a non-existing node and thus is ignored")
+                    .readOnly()
+                    .commit();
+
+            UINT16_ELEMENT(expected)
+                    .key("vecDouble.uint16")
+                    .description("This element's key refers to a mother that is not a node and thus is ignored")
+                    .readOnly()
+                    .commit();
+
         }
     };
 
