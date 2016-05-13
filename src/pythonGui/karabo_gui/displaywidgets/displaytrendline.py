@@ -280,6 +280,12 @@ class DisplayTrendline(PlotWidget):
         self.plot = self.dialog.get_plot()
         self.plot.set_antialiasing(True)
         self.plot.setAxisTitle(QwtPlot.xBottom, 'Time')
+
+        # We are using CurveDialog, which internally creates a BaseCurveWidget,
+        # which internally creates a CurvePlot, which contains the method
+        # edit_axis_parameters, which creates the dialog to set the time axis.
+        # It would be a nightmare to overwrite three classes, so we just do
+        # a little monkey patching here.
         self.plot.edit_axis_parameters = self.edit_axis_parameters
 
         # have a 1 s timeout to request data, thus avoid
@@ -316,6 +322,7 @@ class DisplayTrendline(PlotWidget):
 
     def edit_axis_parameters(self, axis_id):
         if axis_id != QwtPlot.xBottom:
+            # call the original method that we monkey-patched over
             type(self.plot).edit_axis_parameters(self.plot, axis_id)
         else:
             dialog = Timespan(self.widget)
