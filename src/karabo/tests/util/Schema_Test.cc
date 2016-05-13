@@ -42,6 +42,7 @@ void Schema_Test::testBuildUp() {
 
     } catch (karabo::util::Exception e) {
         cout << e << endl;
+        CPPUNIT_ASSERT(false);
     }
 }
 
@@ -659,4 +660,15 @@ void Schema_Test::testTable() {
     OtherSchemaElements::expectedParameters(sch);
     CPPUNIT_ASSERT(sch.isLeaf("testTable") == true);
     CPPUNIT_ASSERT(sch.getParameterHash().hasAttribute("testTable", "rowSchema") == true);
+}
+
+void Schema_Test::testInvalidNodes() {
+    Schema schema("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(schema);
+    // node should not be created automatically
+    CPPUNIT_ASSERT(schema.has("nonExistingNode") == false);
+
+    // placing an element under a leaf is ignored
+    CPPUNIT_ASSERT(schema.has("vecDouble") == true);
+    CPPUNIT_ASSERT(schema.has("vecDouble.uint16") == false);
 }
