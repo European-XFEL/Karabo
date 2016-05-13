@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>289</width>
+    <width>325</width>
     <height>150</height>
    </rect>
   </property>
@@ -67,6 +67,13 @@
       <widget class="QPushButton" name="minute">
        <property name="text">
         <string>Last Minute</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="s20">
+       <property name="text">
+        <string>Last 20 s</string>
        </property>
       </widget>
      </item>
