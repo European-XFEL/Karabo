@@ -640,13 +640,13 @@ namespace karabo {
                 // first level key is not an orphan
                 return false;
             }
-            const std::string motherKey(key.substr(0, lastSep));
-            if (!this->has(motherKey)) {
+            const std::string parentKey(key.substr(0, lastSep));
+            if (!this->has(parentKey)) {
                 // e.g. key is a.b.c, but a.b is not part of the schema
                 return true;
             } else {
-                switch(this->getNodeType(motherKey)) {
-                    case Schema::LEAF: // leaves cannot be mothers
+                switch(this->getNodeType(parentKey)) {
+                    case Schema::LEAF: // leaves cannot be parents
                         return true;
                     case Schema::NODE:
                     case Schema::CHOICE_OF_NODES:
@@ -654,7 +654,7 @@ namespace karabo {
                         return false;
                     default: // If getNodeType would return Schema::NodeType and not int, default would not be needed:
                         throw KARABO_LOGIC_EXCEPTION("getNodeType returns unknown value '" +
-                                util::toString(this->getNodeType(motherKey)) += "' for key '" + motherKey + "'");
+                                util::toString(this->getNodeType(parentKey)) += "' for key '" + parentKey + "'");
                         return true;
                 }
             }

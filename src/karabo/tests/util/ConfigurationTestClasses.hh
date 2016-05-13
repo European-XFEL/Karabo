@@ -544,7 +544,7 @@ namespace configurationTest {
 
             UINT16_ELEMENT(expected)
                     .key("vecDouble.uint16")
-                    .description("This element's key refers to a mother that is not a node and thus is ignored")
+                    .description("This element's key refers to a parent that is not a node and thus is ignored")
                     .readOnly()
                     .commit();
 
