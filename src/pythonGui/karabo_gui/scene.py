@@ -129,7 +129,7 @@ class ShapeAction(Action):
         return action
 
 
-    def mousePressEvent(self, parent, event):
+    def handleMousePressEvent(self, parent, event):
         self.start_pos = event.pos()
         self.shape = self.Shape()
         self.shape.set_points(self.start_pos, self.start_pos)
@@ -269,7 +269,7 @@ class Select(Action):
         self.resize = ''
 
 
-    def mousePressEvent(self, parent, event):
+    def handleMousePressEvent(self, parent, event):
         if self.resize:
             return
         item = parent.ilayout.itemAtPosition(event.pos())
@@ -454,7 +454,7 @@ class LabelAction(Action):
         return action
 
 
-    def mousePressEvent(self, parent, event):
+    def handleMousePressEvent(self, parent, event):
         label = Label()
         dialog = TextDialog(label)
         if dialog.exec_() == QDialog.Rejected:
@@ -1380,7 +1380,7 @@ class Scene(QSvgWidget):
                 if isinstance(workflowItem, Item):
                     # Send selection signal to connected project
                     self.signalSceneItemSelected.emit(workflowItem.getDevice())
-                    return proxy, workflowItem.mousePressEvent(proxy, event)
+                    return proxy, workflowItem.handleMousePressEvent(proxy, event)
         return None, None
 
 
@@ -1397,7 +1397,7 @@ class Scene(QSvgWidget):
                 self.workflow_connection = WorkflowConnection(proxy, channel)
                 QWidget.mousePressEvent(self, event)
                 return
-            self.current_action.mousePressEvent(self, event)
+            self.current_action.handleMousePressEvent(self, event)
         else:
             child = self.inner.childAt(event.pos())
             if child is not None:

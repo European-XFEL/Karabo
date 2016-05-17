@@ -79,7 +79,7 @@ class Item(QWidget, Loadable):
         raise NotImplementedError("Item.getDevice")
 
 
-    def mousePressEvent(self, proxy, event):
+    def handleMousePressEvent(self, proxy, event):
         self.proxyPos = proxy.pos()
         localPos = proxy.mapFromParent(event.pos())
         
