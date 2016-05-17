@@ -504,9 +504,10 @@ class ProxyWidget(QWidget):
     @pyqtSlot(object, str, bool)
     def showStatus(self, configuration, status, error):
         if status == "monitoring" and not error:
-            for b in self.component.boxes:
-                if not b.hasValue():
-                    status = "missing"
+            if self.component is not None:
+                for b in self.component.boxes:
+                    if not b.hasValue():
+                        status = "missing"
         if status == "monitoring" and not error:
             self.marker.hide()
         else:
