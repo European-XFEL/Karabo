@@ -645,7 +645,7 @@ class WorkflowConnection(QWidget):
         self.update()
 
 
-    def mouseReleaseEvent(self, parent, end_channel):
+    def handleMouseReleaseEvent(self, parent, end_channel):
         if self.curve is None or self.start_channel is end_channel:
             parent.update()
             return
