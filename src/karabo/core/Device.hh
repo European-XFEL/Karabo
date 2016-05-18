@@ -933,14 +933,15 @@ namespace karabo {
                 m_parameters.set("serverId", m_serverId);
 
                 // Validate first time to assign timestamps
-                m_objectStateChangeMutex.lock();
+                {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
-                // The following lines of code are needed to initially inject timestamps to the parameters
-                karabo::util::Hash validated;
-                std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, getActualTimestamp());
-                if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
-                m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
-                m_objectStateChangeMutex.unlock();
+                    // The following lines of code are needed to initially inject timestamps to the parameters
+                    karabo::util::Hash validated;
+                    std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, getActualTimestamp());
+                    if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
+                    m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
+                }
 
                 // Instantiate all channels
                 this->initChannels();
@@ -1096,9 +1097,10 @@ namespace karabo {
 
             void applyReconfiguration(const karabo::util::Hash& reconfiguration) {
 
-                m_objectStateChangeMutex.lock();
-                m_parameters.merge(reconfiguration);
-                m_objectStateChangeMutex.unlock();
+                {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    m_parameters.merge(reconfiguration);
+                }
 
                 KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
                 if (m_validatorExtern.hasReconfigurableParameter())
@@ -1163,12 +1165,13 @@ namespace karabo {
             }
 
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-                m_timeChangeMutex.lock();
-                m_timeId = id;
-                m_timeSec = sec;
-                m_timeFrac = frac;
-                m_timePeriod = period;
-                m_timeChangeMutex.unlock();
+                {
+                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                    m_timeId = id;
+                    m_timeSec = sec;
+                    m_timeFrac = frac;
+                    m_timePeriod = period;
+                }
 
                 onTimeUpdate(id, sec, frac, period);
             }
@@ -1176,14 +1179,15 @@ namespace karabo {
             karabo::util::Timestamp getActualTimestamp() {
                 karabo::util::Epochstamp epochNow;
                 unsigned long long id = 0;
-                m_timeChangeMutex.lock();
-                if (m_timePeriod > 0) {
-                    karabo::util::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
-                    karabo::util::TimeDuration duration = epochNow.elapsed(epochLastReceived);
-                    unsigned int nPeriods = (duration.getTotalSeconds() * 1000000 + duration.getFractions(karabo::util::MICROSEC)) / m_timePeriod;
-                    id = m_timeId + nPeriods;
+                {
+                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                    if (m_timePeriod > 0) {
+                        karabo::util::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
+                        karabo::util::TimeDuration duration = epochNow.elapsed(epochLastReceived);
+                        unsigned int nPeriods = (duration.getTotalSeconds() * 1000000 + duration.getFractions(karabo::util::MICROSEC)) / m_timePeriod;
+                        id = m_timeId + nPeriods;
+                    }
                 }
-                m_timeChangeMutex.unlock();
                 return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
             }
             
