@@ -459,16 +459,74 @@ class GridLayout(Layout, QGridLayout):
         return ret
 
 
-class ProxyWidget(QWidget):
+class SceneWidget(QWidget):
     def __init__(self, parent):
-        QWidget.__init__(self, parent)
+        super(SceneWidget, self).__init__(parent)
         QStackedLayout(self).setStackingMode(QStackedLayout.StackAll)
+        
         self.selected = False
-        self.component = None
         self.marker = QLabel("", self)
         self.marker.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.layout().addWidget(self.marker)
+        
         self.widget = None
+
+    @pyqtSlot(object, str, bool)
+    def showStatus(self, configuration, status, error):
+        if status == "monitoring" and not error:
+            self.marker.hide()
+        else:
+            if status != "offline" and error:
+                icon = icons.device_error
+            else:
+                icon = dict(requested=icons.device_requested,
+                            schema=icons.device_schema,
+                            dead=icons.device_dead,
+                            noserver=icons.deviceOfflineNoServer,
+                            noplugin=icons.deviceOfflineNoPlugin,
+                            incompatible=icons.deviceIncompatible,
+                            offline=icons.deviceOffline,
+                            alive=icons.deviceAlive,
+                            missing=icons.propertyMissing).get(status)
+            if icon is not None:
+                self.marker.setPixmap(icon.pixmap(16))
+                self.marker.setText("")
+            else:
+                self.marker.setText(status)
+            self.marker.show()
+
+    def setWidget(self, widget):
+        if self.layout().count() > 1:
+            self.layout().takeAt(0)
+        self.layout().insertWidget(0, widget)
+        self.widget = widget
+
+    def element(self):
+        g = self.geometry()
+        d = dict(x=g.x(), y=g.y(), width=g.width(), height=g.height())
+        if g.x() == 0 and g.y() == 0 and g.width() == 100 and g.height() == 30:
+            raise RuntimeError("lost geometry data")
+        ret = ElementTree.Element(ns_svg + "rect",
+                                  {k: str(v) for k, v in d.items()})
+
+        # Added by KeWe in case this element should not be saved (e.g. WorkflowConnection)
+        if not hasattr(self.widget, "save"):
+            return None
+        self.widget.save(ret)
+        
+        return ret
+
+    def translate(self, pos):
+        self.fixed_geometry.translate(pos)
+        self.parent().layout().update()
+
+    def set_geometry(self, rect):
+        self.fixed_geometry = rect
+
+class ProxyWidget(SceneWidget):
+    def __init__(self, parent):
+        super(ProxyWidget, self).__init__(parent)
+        self.component = None
 
     @property
     def scene(self):
@@ -508,35 +566,7 @@ class ProxyWidget(QWidget):
                 for b in self.component.boxes:
                     if not b.hasValue():
                         status = "missing"
-        if status == "monitoring" and not error:
-            self.marker.hide()
-        else:
-            if status != "offline" and error:
-                icon = icons.device_error
-            else:
-                icon = dict(requested=icons.device_requested,
-                            schema=icons.device_schema,
-                            dead=icons.device_dead,
-                            noserver=icons.deviceOfflineNoServer,
-                            noplugin=icons.deviceOfflineNoPlugin,
-                            incompatible=icons.deviceIncompatible,
-                            offline=icons.deviceOffline,
-                            alive=icons.deviceAlive,
-                            missing=icons.propertyMissing).get(status)
-            if icon is not None:
-                self.marker.setPixmap(icon.pixmap(16))
-                self.marker.setText("")
-            else:
-                self.marker.setText(status)
-            self.marker.show()
-
-
-    def setWidget(self, widget):
-        if self.layout().count() > 1:
-            self.layout().takeAt(0)
-        self.layout().insertWidget(0, widget)
-        self.widget = widget
-
+        super(ProxyWidget, self).showStatus(configuration, status, error)
 
     @pyqtSlot()
     def on_changeWidget(self, factory):
@@ -551,30 +581,12 @@ class ProxyWidget(QWidget):
                     event.globalPos(), None, self)
 
     def element(self):
-        g = self.geometry()
-        d = dict(x=g.x(), y=g.y(), width=g.width(), height=g.height())
-        if g.x() == 0 and g.y() == 0 and g.width() == 100 and g.height() == 30:
-            raise RuntimeError("lost geometry data")
-        ret = ElementTree.Element(ns_svg + "rect",
-                                  {k: str(v) for k, v in d.items()})
+        ret = super(ProxyWidget, self).element()
+
         if self.component is not None:
             self.component.save(ret)
-        else:
-            # Added by KeWe in case this element should not be saved (e.g. WorkflowConnection)
-            if not hasattr(self.widget, "save"):
-                return None
-            self.widget.save(ret)
+
         return ret
-
-
-    def translate(self, pos):
-        self.fixed_geometry.translate(pos)
-        self.parent().layout().update()
-
-
-    def set_geometry(self, rect):
-        self.fixed_geometry = rect
-
 
     def dropEvent(self, event):
         source = event.source()
