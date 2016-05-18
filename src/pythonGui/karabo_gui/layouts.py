@@ -167,7 +167,7 @@ class FixedLayout(Layout, QLayout):
             value = [value]
         values = [ ]
         for v in value:
-            if isinstance(v, ProxyWidget):
+            if isinstance(v, SceneWidget):
                 # Qt creates a QLayoutItem and calls addItem.
                 # that sets self.__item
                 self.addWidget(v)
@@ -395,7 +395,7 @@ class BoxLayout(Layout, QBoxLayout):
 
 
     def loadPosition(self, element, item):
-        if isinstance(item, ProxyWidget):
+        if isinstance(item, SceneWidget):
             self.addWidget(item)
         else:
             self.addLayout(item)
@@ -422,7 +422,7 @@ class GridLayout(Layout, QGridLayout):
             row = bisect(ys, c.geometry().y())
             colspan = bisect(xs, c.geometry().right()) - col + 1
             rowspan = bisect(ys, c.geometry().bottom()) - row + 1
-            if isinstance(c, ProxyWidget):
+            if isinstance(c, SceneWidget):
                 self.addWidget(c, row, col, rowspan, colspan)
             else:
                 self.addLayout(c, row, col, rowspan, colspan)
@@ -445,7 +445,7 @@ class GridLayout(Layout, QGridLayout):
     def loadPosition(self, element, item):
         p = (int(element.get(ns_karabo + s)) for s in
              ("row", "col", "rowspan", "colspan"))
-        if isinstance(item, ProxyWidget):
+        if isinstance(item, SceneWidget):
             self.addWidget(item, *p)
         else:
             self.addLayout(item, *p)
@@ -512,6 +512,7 @@ class SceneWidget(QWidget):
         # Added by KeWe in case this element should not be saved (e.g. WorkflowConnection)
         if not hasattr(self.widget, "save"):
             return None
+        print("self.widget", self.widget, type(self.widget))
         self.widget.save(ret)
         
         return ret
@@ -522,15 +523,15 @@ class SceneWidget(QWidget):
 
     def set_geometry(self, rect):
         self.fixed_geometry = rect
+        
+    @property
+    def scene(self):
+        return self.parent().parent()
 
 class ProxyWidget(SceneWidget):
     def __init__(self, parent):
         super(ProxyWidget, self).__init__(parent)
         self.component = None
-
-    @property
-    def scene(self):
-        return self.parent().parent()
 
     def setComponent(self, component):
         self.component = component
