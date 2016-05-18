@@ -79,7 +79,7 @@ class Item(QWidget, Loadable):
         raise NotImplementedError("Item.getDevice")
 
 
-    def mousePressEvent(self, proxy, event):
+    def handleMousePressEvent(self, proxy, event):
         self.proxyPos = proxy.pos()
         localPos = proxy.mapFromParent(event.pos())
         
@@ -645,7 +645,7 @@ class WorkflowConnection(QWidget):
         self.update()
 
 
-    def mouseReleaseEvent(self, parent, end_channel):
+    def handleMouseReleaseEvent(self, parent, end_channel):
         if self.curve is None or self.start_channel is end_channel:
             parent.update()
             return
