@@ -129,19 +129,19 @@ class ShapeAction(Action):
         return action
 
 
-    def mousePressEvent(self, parent, event):
+    def handleMousePressEvent(self, parent, event):
         self.start_pos = event.pos()
         self.shape = self.Shape()
         self.shape.set_points(self.start_pos, self.start_pos)
 
 
-    def mouseMoveEvent(self, parent, event):
+    def handleMouseMoveEvent(self, parent, event):
         if event.buttons() and hasattr(self, 'shape'):
             self.shape.set_points(self.start_pos, event.pos())
             parent.update()
 
 
-    def mouseReleaseEvent(self, parent, event):
+    def handleMouseReleaseEvent(self, parent, event):
         if hasattr(self, 'shape'):
             parent.set_current_action(None)
             parent.ilayout.shapes.append(self.shape)
@@ -269,7 +269,7 @@ class Select(Action):
         self.resize = ''
 
 
-    def mousePressEvent(self, parent, event):
+    def handleMousePressEvent(self, parent, event):
         if self.resize:
             return
         item = parent.ilayout.itemAtPosition(event.pos())
@@ -286,7 +286,7 @@ class Select(Action):
             event.accept()
 
 
-    def mouseMoveEvent(self, parent, event):
+    def handleMouseMoveEvent(self, parent, event):
         if not event.buttons():
             item = parent.ilayout.itemAtPosition(event.pos())
             self.resize = ""
@@ -365,7 +365,7 @@ class Select(Action):
             parent.update()
 
 
-    def mouseReleaseEvent(self, parent, event):
+    def handleMouseReleaseEvent(self, parent, event):
         self.resize = ""
         self.resize_item = None
         if self.selection_start is not None:
@@ -454,7 +454,7 @@ class LabelAction(Action):
         return action
 
 
-    def mousePressEvent(self, parent, event):
+    def handleMousePressEvent(self, parent, event):
         label = Label()
         dialog = TextDialog(label)
         if dialog.exec_() == QDialog.Rejected:
@@ -469,12 +469,14 @@ class LabelAction(Action):
         parent.setModified()
 
 
-    def mouseReleaseEvent(self, *args):
+    def handleMouseReleaseEvent(self, parent, event):
         pass
 
+    def handleMouseMoveEvent(self, parent, event):
+        pass
 
-    mouseMoveEvent = mouseReleaseEvent
-    draw = mouseReleaseEvent
+    def draw(self, painter):
+        pass
 
 
 class Line(Shape):
@@ -671,7 +673,7 @@ class SceneLinkAction(Action):
         action.triggered.connect(partial(parent.set_current_action, c))
         return action
 
-    def mousePressEvent(self, parent, event):
+    def handleMousePressEvent(self, parent, event):
         names = parent.project.getSceneNames()
         dialog = SceneLinkDialog(names, "", parent=parent)
         result = dialog.exec_()
@@ -685,10 +687,10 @@ class SceneLinkAction(Action):
             parent.set_current_action(None)
             parent.setModified()
 
-    def mouseReleaseEvent(self, parent, event):
+    def handleMouseReleaseEvent(self, parent, event):
         pass
 
-    def mouseMoveEvent(self, parent, event):
+    def handleMouseMoveEvent(self, parent, event):
         pass
 
     def draw(self, painter):
@@ -1380,7 +1382,7 @@ class Scene(QSvgWidget):
                 if isinstance(workflowItem, Item):
                     # Send selection signal to connected project
                     self.signalSceneItemSelected.emit(workflowItem.getDevice())
-                    return proxy, workflowItem.mousePressEvent(proxy, event)
+                    return proxy, workflowItem.handleMousePressEvent(proxy, event)
         return None, None
 
 
@@ -1397,7 +1399,7 @@ class Scene(QSvgWidget):
                 self.workflow_connection = WorkflowConnection(proxy, channel)
                 QWidget.mousePressEvent(self, event)
                 return
-            self.current_action.mousePressEvent(self, event)
+            self.current_action.handleMousePressEvent(self, event)
         else:
             child = self.inner.childAt(event.pos())
             if child is not None:
@@ -1421,7 +1423,7 @@ class Scene(QSvgWidget):
     def mouseMoveEvent(self, event):
         if self.workflow_connection is not None:
             self.workflow_connection.mouseMoveEvent(event)
-        self.current_action.mouseMoveEvent(self, event)
+        self.current_action.handleMouseMoveEvent(self, event)
         QWidget.mouseMoveEvent(self, event)
 
 
@@ -1430,12 +1432,12 @@ class Scene(QSvgWidget):
             _, channel = self.workflowChannelHit(event)
             if channel is not None:
                 #self.workflow_connection.proxy = None
-                self.workflow_connection.mouseReleaseEvent(self, channel)
+                self.workflow_connection.handleMouseReleaseEvent(self, channel)
             else:
                 self.update()
             self.workflow_connection = None
         
-        self.current_action.mouseReleaseEvent(self, event)
+        self.current_action.handleMouseReleaseEvent(self, event)
         QWidget.mouseReleaseEvent(self, event)
 
 
