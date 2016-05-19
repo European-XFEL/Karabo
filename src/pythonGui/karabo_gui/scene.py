@@ -1436,8 +1436,8 @@ class Scene(QSvgWidget):
             else:
                 self.update()
             self.workflow_connection = None
-        else:
-            self.current_action.handleMouseReleaseEvent(self, event)
+        
+        self.current_action.handleMouseReleaseEvent(self, event)
         QWidget.mouseReleaseEvent(self, event)
 
 

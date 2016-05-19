@@ -503,17 +503,22 @@ class SceneWidget(QWidget):
         self.layout().insertWidget(0, widget)
         self.widget = widget
 
-    def element(self):
+    def createElement(self):
         g = self.geometry()
         d = dict(x=g.x(), y=g.y(), width=g.width(), height=g.height())
         if g.x() == 0 and g.y() == 0 and g.width() == 100 and g.height() == 30:
             raise RuntimeError("lost geometry data")
         ret = ElementTree.Element(ns_svg + "rect",
                                   {k: str(v) for k, v in d.items()})
+        
+        return ret
 
-        # Added by KeWe in case this element should not be saved (e.g. WorkflowConnection)
-        if hasattr(self.widget, "save"):
-            self.widget.save(ret)
+    def element(self):
+        if not hasattr(self.widget, "save"):
+            return None
+            
+        ret = self.createElement()
+        self.widget.save(ret)
         
         return ret
 
@@ -583,10 +588,11 @@ class ProxyWidget(SceneWidget):
                     event.globalPos(), None, self)
 
     def element(self):
-        ret = super(ProxyWidget, self).element()
-
-        if self.component is not None:
-            self.component.save(ret)
+        if self.component is None:
+            return None
+        
+        ret = self.createElement()
+        self.component.save(ret)
 
         return ret
 
