@@ -28,8 +28,8 @@ class Item(QWidget, Loadable):
     OUTPUT = "OutputChannel"
     
 
-    def __init__(self, scene, parentWidget):
-        super(Item, self).__init__(parentWidget)
+    def __init__(self, scene, sceneWidget):
+        super(Item, self).__init__(sceneWidget)
         
         self.pen = QPen()
         self.font = QFont()
@@ -41,7 +41,7 @@ class Item(QWidget, Loadable):
         self.descriptor = None
         
         # Position of SceneWidget for later transformation when drawing connections
-        self.parentPos = parentWidget.pos()
+        self.parentPos = sceneWidget.pos()
         
         self.scene = scene
         self.connectionsChecked = False
@@ -79,9 +79,9 @@ class Item(QWidget, Loadable):
         raise NotImplementedError("Item.getDevice")
 
 
-    def handleMousePressEvent(self, parentWidget, event):
-        self.parentPos = parentWidget.pos()
-        localPos = parentWidget.mapFromParent(event.pos())
+    def handleMousePressEvent(self, sceneWidget, event):
+        self.parentPos = sceneWidget.pos()
+        localPos = sceneWidget.mapFromParent(event.pos())
         
         for input in self.input_channels:
             channelHit = input.hit(localPos)
@@ -256,8 +256,8 @@ class Item(QWidget, Loadable):
 
 class WorkflowItem(Item):
 
-    def __init__(self, device, scene, parentWidget):
-        super(WorkflowItem, self).__init__(scene, parentWidget)
+    def __init__(self, device, scene, sceneWidget):
+        super(WorkflowItem, self).__init__(scene, sceneWidget)
         
         self.device = device
         self.displayText = device.id
@@ -308,7 +308,7 @@ class WorkflowItem(Item):
                 
                 wc = WorkflowConnection(None, start_channel)
                 wc.updateValues(self.scene, input)
-                wc.parentWidget.set_geometry(QRect(wc.topLeft,
+                wc.sceneWidget.set_geometry(QRect(wc.topLeft,
                                       QSize(wc.curveWidth(), wc.curveHeight())))
                 
         self.connectionsChecked = True
@@ -358,8 +358,8 @@ class WorkflowItem(Item):
 
 class WorkflowGroupItem(Item):
 
-    def __init__(self, deviceGroup, scene, parentWidget):
-        super(WorkflowGroupItem, self).__init__(scene, parentWidget)
+    def __init__(self, deviceGroup, scene, sceneWidget):
+        super(WorkflowGroupItem, self).__init__(scene, sceneWidget)
         
         self.deviceGroup = deviceGroup
         self.displayText = deviceGroup.id
@@ -411,7 +411,7 @@ class WorkflowGroupItem(Item):
             
             wc = WorkflowConnection(None, start_channel)
             wc.updateValues(self.scene, input)
-            wc.parentWidget.set_geometry(QRect(wc.topLeft, QSize(wc.curveWidth(), wc.curveHeight())))
+            wc.sceneWidget.set_geometry(QRect(wc.topLeft, QSize(wc.curveWidth(), wc.curveHeight())))
                 
         self.connectionsChecked = True
 
@@ -615,8 +615,8 @@ class WorkflowConnection(QWidget):
     SHARED = "shared"
 
 
-    def __init__(self, parentWidget, start_channel):
-        super(WorkflowConnection, self).__init__(parentWidget)
+    def __init__(self, sceneWidget, start_channel):
+        super(WorkflowConnection, self).__init__(sceneWidget)
         
         # Describe the in/output channels this connection belongs to
         self.start_channel = start_channel
@@ -634,8 +634,8 @@ class WorkflowConnection(QWidget):
         self.global_start = None
         self.global_end = None
         
-        self.parentWidget = parentWidget
-        # Top left position of parentWidget in global coordinates
+        self.sceneWidget = sceneWidget
+        # Top left position of scene widget in global coordinates
         self.topLeft = QPoint()
         
         self.dataDistribution = None
@@ -693,7 +693,7 @@ class WorkflowConnection(QWidget):
         rect = self.curve.boundingRect()
         rect = QRect(self.topLeft.x(), self.topLeft.y(),
                      max(1, rect.width()), max(1, rect.height()))
-        self.parentWidget.set_geometry(rect)
+        self.sceneWidget.set_geometry(rect)
 
 
     def updateValues(self, parent, end_channel):
@@ -712,13 +712,13 @@ class WorkflowConnection(QWidget):
         self.global_end = QPoint(self.end_pos)
         self._checkStartEnd()
         
-        if self.parentWidget is None:
-            self.parentWidget = SceneWidget(parent.inner)
-            self.parentWidget.setWidget(self)
+        if self.sceneWidget is None:
+            self.sceneWidget = SceneWidget(parent.inner)
+            self.sceneWidget.setWidget(self)
             self._updateWidgetGeometry()
-            self.parentWidget.show()
-            parent.ilayout.add_item(self.parentWidget)
-            self.parentWidget.lower()
+            self.sceneWidget.show()
+            parent.ilayout.add_item(self.sceneWidget)
+            self.sceneWidget.lower()
 
             self.start_channel.signalUpdateConnections.connect(self.onStartChannelChanged)
             self.end_channel.signalUpdateConnections.connect(self.onEndChannelChanged)

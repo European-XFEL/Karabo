@@ -233,9 +233,9 @@ class FixedLayout(Layout, QLayout):
                     if p.component is not None:
                         for b in p.component.boxes:
                             b.removeVisible()
-                    elif isinstance(p, SceneWidget):
-                        if isinstance(p.widget, sceneitems.workflowitems.Item):
-                            p.widget.getDevice().removeVisible()
+                elif isinstance(p, SceneWidget):
+                    if isinstance(p.widget, sceneitems.workflowitems.Item):
+                        p.widget.getDevice().removeVisible()
             # the following line also deletes the item from
             # this layout. This is why we don't need to increase i
             p.setParent(None)
@@ -512,7 +512,8 @@ class SceneWidget(QWidget):
 
         # Added by KeWe in case this element should not be saved (e.g. WorkflowConnection)
         if not hasattr(self.widget, "save"):
-            return None
+            return ret
+        
         self.widget.save(ret)
         
         return ret
@@ -527,6 +528,7 @@ class SceneWidget(QWidget):
     @property
     def scene(self):
         return self.parent().parent()
+
 
 class ProxyWidget(SceneWidget):
     def __init__(self, parent):
