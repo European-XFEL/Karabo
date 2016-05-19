@@ -511,10 +511,8 @@ class SceneWidget(QWidget):
                                   {k: str(v) for k, v in d.items()})
 
         # Added by KeWe in case this element should not be saved (e.g. WorkflowConnection)
-        if not hasattr(self.widget, "save"):
-            return ret
-        
-        self.widget.save(ret)
+        if hasattr(self.widget, "save"):
+            self.widget.save(ret)
         
         return ret
 
