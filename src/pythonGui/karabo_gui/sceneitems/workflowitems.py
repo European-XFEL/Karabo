@@ -41,7 +41,7 @@ class Item(QWidget, Loadable):
         self.descriptor = None
         
         # Position of SceneWidget for later transformation when drawing connections
-        self.parentPos = sceneWidget.pos()
+        self.sceneWidgetPos = sceneWidget.pos()
         
         self.scene = scene
         self.connectionsChecked = False
@@ -80,7 +80,7 @@ class Item(QWidget, Loadable):
 
 
     def handleMousePressEvent(self, sceneWidget, event):
-        self.parentPos = sceneWidget.pos()
+        self.sceneWidgetPos = sceneWidget.pos()
         localPos = sceneWidget.mapFromParent(event.pos())
         
         for input in self.input_channels:
@@ -211,8 +211,8 @@ class Item(QWidget, Loadable):
             pos = self.parent().geometry().topLeft()
             self.parent().set_geometry(QRect(pos, QSize(rect.width(), rect.height())))
             
-            # Set the parentPos for later calculation (workflow connections)
-            self.parentPos = self.parent().pos()
+            # Set the sceneWidgetPos for later calculation (workflow connections)
+            self.sceneWidgetPos = self.parent().pos()
 
 
     def _addChannels(self, box):
@@ -583,7 +583,7 @@ class WorkflowChannel(QWidget):
 
     def mappedPos(self):
         point = self.transform.map(self.end_pos)
-        point += self.parent().parentPos
+        point += self.parent().sceneWidgetPos
         return point
 
 
