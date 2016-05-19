@@ -228,14 +228,15 @@ class FixedLayout(Layout, QLayout):
             p = stack.pop()
             if isinstance(p, Layout):
                 stack.extend(p)
-            elif p.scene.tabVisible:
-                if isinstance(p, ProxyWidget):
-                    if p.component is not None:
-                        for b in p.component.boxes:
-                            b.removeVisible()
-                elif isinstance(p, SceneWidget):
-                    if isinstance(p.widget, sceneitems.workflowitems.Item):
-                        p.widget.getDevice().removeVisible()
+            elif isinstance(p, SceneWidget):
+                if p.scene.tabVisible:
+                    if isinstance(p, ProxyWidget):
+                        if p.component is not None:
+                            for b in p.component.boxes:
+                                b.removeVisible()
+                    else:
+                        if isinstance(p.widget, sceneitems.workflowitems.Item):
+                            p.widget.getDevice().removeVisible()
             # the following line also deletes the item from
             # this layout. This is why we don't need to increase i
             p.setParent(None)
