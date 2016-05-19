@@ -13,7 +13,8 @@ from karabo_gui.dialogs.dialogs import (PenDialog, TextDialog, SceneLinkDialog,
                                         ReplaceDialog)
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
+from karabo_gui.layouts import (FixedLayout, GridLayout, BoxLayout, ProxyWidget,
+                                SceneWidget, Layout)
 from karabo_gui.sceneitems.workflowitems import (Item, WorkflowConnection, WorkflowItem,
                                       WorkflowGroupItem)
 
@@ -291,7 +292,7 @@ class Select(Action):
             item = parent.ilayout.itemAtPosition(event.pos())
             self.resize = ""
             # No moving nor resizing of WorkflowConnections
-            if isinstance(item, ProxyWidget) and isinstance(item.widget, WorkflowConnection):
+            if isinstance(item, SceneWidget) and isinstance(item.widget, WorkflowConnection):
                 parent.unsetCursor()
                 return
             if item is not None and item.selected:
@@ -320,7 +321,7 @@ class Select(Action):
                         c.translate(trans)
                         
                         # Update WorkflowConnections, if Item moves
-                        if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
+                        if isinstance(c, SceneWidget) and isinstance(c.widget, Item):
                             c.widget.updateConnectionsNeeded(parent, trans)
                 self.moving_pos = event.pos()
                 event.accept()
@@ -355,7 +356,7 @@ class Select(Action):
 
                 for c in chain(parent.ilayout, parent.ilayout.shapes):
                     # Update WorkflowConnections, if Item moves
-                    if (c.selected and isinstance(c, ProxyWidget)
+                    if (c.selected and isinstance(c, SceneWidget)
                             and isinstance(c.widget, Item)):
                         c.widget.updateConnectionsNeeded(parent, trans)
 
@@ -416,10 +417,10 @@ class Label(QLabel, Loadable):
 
     @staticmethod
     def load(elem, layout):
-        proxy = ProxyWidget(layout.parentWidget())
-        label = Label(elem.get(ns_karabo + "text"), proxy)
-        proxy.setWidget(label)
-        layout.loadPosition(elem, proxy)
+        sceneWidget = SceneWidget(layout.parentWidget())
+        label = Label(elem.get(ns_karabo + "text"), sceneWidget)
+        sceneWidget.setWidget(label)
+        layout.loadPosition(elem, sceneWidget)
         ss = []
         ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
         ss.append("color: {};".format(
@@ -432,7 +433,7 @@ class Label(QLabel, Loadable):
         if fw is not None:
             label.setLineWidth(int(fw))
         label.setStyleSheet("".join(ss))
-        return proxy
+        return sceneWidget
 
     def edit(self, parent):
         dialog = TextDialog(self)
@@ -460,11 +461,11 @@ class LabelAction(Action):
         if dialog.exec_() == QDialog.Rejected:
             return
         
-        p = ProxyWidget(parent.inner)
-        label.setParent(p)
-        p.setWidget(label)
-        p.fixed_geometry = QRect(event.pos(), p.sizeHint())
-        parent.ilayout.add_item(p)
+        sceneWidget = SceneWidget(parent.inner)
+        label.setParent(sceneWidget)
+        sceneWidget.setWidget(label)
+        sceneWidget.fixed_geometry = QRect(event.pos(), sceneWidget.sizeHint())
+        parent.ilayout.add_item(sceneWidget)
         parent.set_current_action(None)
         parent.setModified()
 
@@ -645,12 +646,12 @@ class SceneLink(QPushButton, Loadable):
     @staticmethod
     def load(elem, layout):
         parent = layout.parentWidget().parent()
-        proxy = ProxyWidget(parent.inner)
+        sceneWidget = SceneWidget(parent.inner)
         link = SceneLink(elem.get(ns_karabo + "target"),
-                         parent.signalSceneLinkTriggered, parent=proxy)
-        proxy.setWidget(link)
-        layout.loadPosition(elem, proxy)
-        return proxy
+                         parent.signalSceneLinkTriggered, parent=sceneWidget)
+        sceneWidget.setWidget(link)
+        layout.loadPosition(elem, sceneWidget)
+        return sceneWidget
 
     def edit(self, parent):
         names = parent.project.getSceneNames()
@@ -679,11 +680,11 @@ class SceneLinkAction(Action):
         result = dialog.exec_()
         if result == QDialog.Accepted:
             target = dialog.selectedScene
-            p = ProxyWidget(parent.inner)
-            link = SceneLink(target, parent.signalSceneLinkTriggered, parent=p)
-            p.setWidget(link)
-            p.fixed_geometry = QRect(event.pos(), p.sizeHint())
-            parent.ilayout.add_item(p)
+            sceneWidget = SceneWidget(parent.inner)
+            link = SceneLink(target, parent.signalSceneLinkTriggered, parent=sceneWidget)
+            sceneWidget.setWidget(link)
+            sceneWidget.fixed_geometry = QRect(event.pos(), sceneWidget.sizeHint())
+            parent.ilayout.add_item(sceneWidget)
             parent.set_current_action(None)
             parent.setModified()
 
@@ -1234,7 +1235,8 @@ class Scene(QSvgWidget):
                             b.addVisible()
                         else:
                             b.removeVisible()
-
+            
+            elif isinstance(c, SceneWidget):
                 if isinstance(c.widget, Item):
                     obj = c.widget.getObject()
                     if visible:
@@ -1315,20 +1317,20 @@ class Scene(QSvgWidget):
         \object from this scene.
         """
         for c in self.inner.children():
-            if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
+            if isinstance(c, SceneWidget) and isinstance(c.widget, Item):
                 if c.widget.getDevice() == object:
                     c.widget.clear()
                     self.ilayout.remove_item(c)
                     break
 
 
-    def getWorkflowProxyWidget(self, id):
+    def getWorkflowSceneWidget(self, id):
         """
         This function checks whether a workflow item with the given \id exists
-        in the scene. If that it the case the proxyWidget is returned, else None.
+        in the scene. If that it the case the sceneWidget is returned, else None.
         """
         for c in self.inner.children():
-            if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
+            if isinstance(c, SceneWidget) and isinstance(c.widget, Item):
                 item = c.widget
                 if item.displayText == id:
                     return c
@@ -1341,7 +1343,7 @@ class Scene(QSvgWidget):
         Get the channel which match the given list of \outputKeys.
         """
         for c in self.inner.children():
-            if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
+            if isinstance(c, SceneWidget) and isinstance(c.widget, Item):
                 item = c.widget
                 
                 # TODO: this is working for now but needs some better solution
@@ -1371,18 +1373,17 @@ class Scene(QSvgWidget):
 
     def workflowChannelHit(self, event):
         """
-        Returns ProxyWidget and corresponding WorkflowItem, if there are any at
+        Returns SceneWidget and corresponding WorkflowItem, if there are any at
         the given position.
         """
-        proxy = self.ilayout.itemAtPosition(event.pos())
-        if proxy is not None:
-            if isinstance(proxy, ProxyWidget):
-                workflowItem = proxy.widget
+        sceneWidget = self.ilayout.itemAtPosition(event.pos())
+        if sceneWidget is not None and isinstance(sceneWidget, SceneWidget):
+                workflowItem = sceneWidget.widget
                 # Check for WorkflowItem...
                 if isinstance(workflowItem, Item):
                     # Send selection signal to connected project
                     self.signalSceneItemSelected.emit(workflowItem.getDevice())
-                    return proxy, workflowItem.handleMousePressEvent(proxy, event)
+                    return sceneWidget, workflowItem.handleMousePressEvent(sceneWidget, event)
         return None, None
 
 
@@ -1391,19 +1392,19 @@ class Scene(QSvgWidget):
             return
             
         if event.button() == Qt.LeftButton:
-            proxy, channel = self.workflowChannelHit(event)
+            sceneWidget, channel = self.workflowChannelHit(event)
             if channel is not None:
-                proxy.selected = False
+                sceneWidget.selected = False
                 # Create workflow connection item in scene - only for allowed
                 # connection type (Network)
-                self.workflow_connection = WorkflowConnection(proxy, channel)
+                self.workflow_connection = WorkflowConnection(sceneWidget, channel)
                 QWidget.mousePressEvent(self, event)
                 return
             self.current_action.handleMousePressEvent(self, event)
         else:
             child = self.inner.childAt(event.pos())
             if child is not None:
-                while not isinstance(child, ProxyWidget):
+                while not isinstance(child, SceneWidget):
                     child = child.parent()
                 child.mousePressEvent(event)
 
@@ -1415,7 +1416,7 @@ class Scene(QSvgWidget):
             return
         child = self.inner.childAt(event.pos())
         if child is not None:
-            while not isinstance(child, ProxyWidget):
+            while not isinstance(child, SceneWidget):
                 child = child.parent()
             child.event(event)
 
@@ -1431,7 +1432,6 @@ class Scene(QSvgWidget):
         if self.workflow_connection is not None:
             _, channel = self.workflowChannelHit(event)
             if channel is not None:
-                #self.workflow_connection.proxy = None
                 self.workflow_connection.handleMouseReleaseEvent(self, channel)
             else:
                 self.update()
@@ -1446,7 +1446,7 @@ class Scene(QSvgWidget):
             return
         w = self.inner.childAt(event.pos())
         if w is not None:
-            while not isinstance(w, ProxyWidget):
+            while not isinstance(w, SceneWidget):
                 w = w.parent()
             if isinstance(w.widget, (Label, SceneLink)):
                 w.widget.edit(self)
@@ -1567,7 +1567,7 @@ class Scene(QSvgWidget):
             if dialog.exec_() == QDialog.Accepted:
                 if not dialog.deviceGroup:
                     # Check whether the item already exists
-                    widget = self.getWorkflowProxyWidget(dialog.deviceId)
+                    widget = self.getWorkflowSceneWidget(dialog.deviceId)
                     if widget is not None:
                         widget.selected = True
                         return
@@ -1583,11 +1583,11 @@ class Scene(QSvgWidget):
                                                         dialog.startupBehaviour)
 
                     # Create scene item associated with device
-                    proxy = ProxyWidget(self.inner)
-                    workflowItem = WorkflowItem(object, self, proxy)
+                    sceneWidget = SceneWidget(self.inner)
+                    workflowItem = WorkflowItem(object, self, sceneWidget)
                 else:
                     # Check whether the item already exists
-                    widget = self.getWorkflowProxyWidget(dialog.deviceGroupName)
+                    widget = self.getWorkflowSceneWidget(dialog.deviceGroupName)
                     if widget is not None:
                         widget.selected = True
                         return
@@ -1605,21 +1605,21 @@ class Scene(QSvgWidget):
                                                              dialog.endIndex)
 
                     # Create scene item associated with device group
-                    proxy = ProxyWidget(self.inner)
-                    workflowItem = WorkflowGroupItem(object, self, proxy)
+                    sceneWidget = SceneWidget(self.inner)
+                    workflowItem = WorkflowGroupItem(object, self, sceneWidget)
 
                 if self.tabVisible:
                     object.addVisible()
 
                 rect = workflowItem.boundingRect()
-                proxy.setWidget(workflowItem)
-                object.signalStatusChanged.connect(proxy.showStatus)
-                proxy.showStatus(None, object.status, object.error)
-                proxy.set_geometry(QRect(event.pos(), QSize(rect.width(), rect.height())))
-                proxy.show()
+                sceneWidget.setWidget(workflowItem)
+                object.signalStatusChanged.connect(sceneWidget.showStatus)
+                sceneWidget.showStatus(None, object.status, object.error)
+                sceneWidget.set_geometry(QRect(event.pos(), QSize(rect.width(), rect.height())))
+                sceneWidget.show()
                 
                 self.clear_selection()
-                self.ilayout.add_item(proxy)
+                self.ilayout.add_item(sceneWidget)
                 
                 self.project.setModified(True)
                 self.project.signalSelectObject.emit(object)
@@ -1632,7 +1632,7 @@ class Scene(QSvgWidget):
         if event.type() == QEvent.ToolTip:
             item = self.inner.childAt(event.pos())
             if item is not None:
-                while not isinstance(item, ProxyWidget):
+                while not isinstance(item, SceneWidget):
                     item = item.parent()
                 item.event(event)
                 return True
@@ -1670,7 +1670,7 @@ class Scene(QSvgWidget):
             return
         
         for c in self.ilayout:
-            if not isinstance(c, ProxyWidget):
+            if not isinstance(c, SceneWidget):
                 continue
             
             workflowItem = c.widget

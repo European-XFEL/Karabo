@@ -8,7 +8,7 @@
 __all__ = ["WorkflowItem", "WorkflowGroupItem", "WorkflowChannel", "WorkflowConnection"]
 
 from karabo_gui.const import ns_karabo
-from karabo_gui.layouts import ProxyWidget
+from karabo_gui.layouts import SceneWidget
 from karabo_gui.registry import Loadable
 from karabo_gui.schema import Dummy, Schema
 from karabo_gui import topology
@@ -28,8 +28,8 @@ class Item(QWidget, Loadable):
     OUTPUT = "OutputChannel"
     
 
-    def __init__(self, scene, proxy):
-        super(Item, self).__init__(proxy)
+    def __init__(self, scene, sceneWidget):
+        super(Item, self).__init__(sceneWidget)
         
         self.pen = QPen()
         self.font = QFont()
@@ -40,8 +40,8 @@ class Item(QWidget, Loadable):
         
         self.descriptor = None
         
-        # Position of ProxyWidget for later transformation when drawing connections
-        self.proxyPos = proxy.pos()
+        # Position of SceneWidget for later transformation when drawing connections
+        self.sceneWidgetPos = sceneWidget.pos()
         
         self.scene = scene
         self.connectionsChecked = False
@@ -79,9 +79,9 @@ class Item(QWidget, Loadable):
         raise NotImplementedError("Item.getDevice")
 
 
-    def handleMousePressEvent(self, proxy, event):
-        self.proxyPos = proxy.pos()
-        localPos = proxy.mapFromParent(event.pos())
+    def handleMousePressEvent(self, sceneWidget, event):
+        self.sceneWidgetPos = sceneWidget.pos()
+        localPos = sceneWidget.mapFromParent(event.pos())
         
         for input in self.input_channels:
             channelHit = input.hit(localPos)
@@ -206,13 +206,13 @@ class Item(QWidget, Loadable):
             self.descriptor = descr
             self._addChannels(device)
 
-            # Update geometry of proxy to new channels
+            # Update geometry of parent widget to new channels
             rect = self.boundingRect()
             pos = self.parent().geometry().topLeft()
             self.parent().set_geometry(QRect(pos, QSize(rect.width(), rect.height())))
             
-            # Set the proxyPos for later calculation (workflow connections)
-            self.proxyPos = self.parent().pos()
+            # Set the sceneWidgetPos for later calculation (workflow connections)
+            self.sceneWidgetPos = self.parent().pos()
 
 
     def _addChannels(self, box):
@@ -256,8 +256,8 @@ class Item(QWidget, Loadable):
 
 class WorkflowItem(Item):
 
-    def __init__(self, device, scene, proxy):
-        super(WorkflowItem, self).__init__(scene, proxy)
+    def __init__(self, device, scene, sceneWidget):
+        super(WorkflowItem, self).__init__(scene, sceneWidget)
         
         self.device = device
         self.displayText = device.id
@@ -308,7 +308,8 @@ class WorkflowItem(Item):
                 
                 wc = WorkflowConnection(None, start_channel)
                 wc.updateValues(self.scene, input)
-                wc.proxy.set_geometry(QRect(wc.topLeft, QSize(wc.curveWidth(), wc.curveHeight())))
+                wc.sceneWidget.set_geometry(QRect(wc.topLeft,
+                                      QSize(wc.curveWidth(), wc.curveHeight())))
                 
         self.connectionsChecked = True
 
@@ -342,23 +343,23 @@ class WorkflowItem(Item):
         # Trigger selection to get descriptor
         project.signalSelectObject.emit(device)
 
-        proxy = ProxyWidget(layout.parentWidget())
-        item = WorkflowItem(device, parent, proxy)
-        proxy.setWidget(item)
-        device.signalStatusChanged.connect(proxy.showStatus)
-        proxy.showStatus(None, device.status, device.error)
-        layout.loadPosition(elem, proxy)
+        sceneWidget = SceneWidget(layout.parentWidget())
+        item = WorkflowItem(device, parent, sceneWidget)
+        sceneWidget.setWidget(item)
+        device.signalStatusChanged.connect(sceneWidget.showStatus)
+        sceneWidget.showStatus(None, device.status, device.error)
+        layout.loadPosition(elem, sceneWidget)
         ss = [ ]
         ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
         item.setStyleSheet("".join(ss))
         
-        return proxy
+        return sceneWidget
 
 
 class WorkflowGroupItem(Item):
 
-    def __init__(self, deviceGroup, scene, proxy):
-        super(WorkflowGroupItem, self).__init__(scene, proxy)
+    def __init__(self, deviceGroup, scene, sceneWidget):
+        super(WorkflowGroupItem, self).__init__(scene, sceneWidget)
         
         self.deviceGroup = deviceGroup
         self.displayText = deviceGroup.id
@@ -410,7 +411,7 @@ class WorkflowGroupItem(Item):
             
             wc = WorkflowConnection(None, start_channel)
             wc.updateValues(self.scene, input)
-            wc.proxy.set_geometry(QRect(wc.topLeft, QSize(wc.curveWidth(), wc.curveHeight())))
+            wc.sceneWidget.set_geometry(QRect(wc.topLeft, QSize(wc.curveWidth(), wc.curveHeight())))
                 
         self.connectionsChecked = True
 
@@ -444,17 +445,17 @@ class WorkflowGroupItem(Item):
         # Trigger selection to get descriptor
         project.signalSelectObject.emit(deviceGroup)
         
-        proxy = ProxyWidget(layout.parentWidget())
-        item = WorkflowGroupItem(deviceGroup, parent, proxy)
-        proxy.setWidget(item)
-        deviceGroup.signalStatusChanged.connect(proxy.showStatus)
-        proxy.showStatus(None, deviceGroup.status, deviceGroup.error)
-        layout.loadPosition(elem, proxy)
+        sceneWidget = SceneWidget(layout.parentWidget())
+        item = WorkflowGroupItem(deviceGroup, parent, sceneWidget)
+        sceneWidget.setWidget(item)
+        deviceGroup.signalStatusChanged.connect(sceneWidget.showStatus)
+        sceneWidget.showStatus(None, deviceGroup.status, deviceGroup.error)
+        layout.loadPosition(elem, sceneWidget)
         ss = [ ]
         ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
         item.setStyleSheet("".join(ss))
         
-        return proxy
+        return sceneWidget
 
 
 class WorkflowChannel(QWidget):
@@ -582,7 +583,7 @@ class WorkflowChannel(QWidget):
 
     def mappedPos(self):
         point = self.transform.map(self.end_pos)
-        point += self.parent().proxyPos
+        point += self.parent().sceneWidgetPos
         return point
 
 
@@ -598,9 +599,9 @@ class WorkflowChannel(QWidget):
         """
         The given workflow connection object \wc is removed from this channels'
         workflow connection list.
-        Furthermore the associated ProxyWidget is removed from the scene as well.
+        Furthermore the associated SceneWidget is removed from the scene as well.
         """
-        self.parent().scene.ilayout.remove_item(wc.proxy)
+        self.parent().scene.ilayout.remove_item(wc.sceneWidget)
         
         if wc in self.workflow_connections:
             index = self.workflow_connections.index(wc)
@@ -614,8 +615,8 @@ class WorkflowConnection(QWidget):
     SHARED = "shared"
 
 
-    def __init__(self, proxy, start_channel):
-        super(WorkflowConnection, self).__init__(proxy)
+    def __init__(self, sceneWidget, start_channel):
+        super(WorkflowConnection, self).__init__(sceneWidget)
         
         # Describe the in/output channels this connection belongs to
         self.start_channel = start_channel
@@ -633,8 +634,8 @@ class WorkflowConnection(QWidget):
         self.global_start = None
         self.global_end = None
         
-        self.proxy = proxy
-        # Top left position of proxy in global coordinates
+        self.sceneWidget = sceneWidget
+        # Top left position of scene widget in global coordinates
         self.topLeft = QPoint()
         
         self.dataDistribution = None
@@ -688,11 +689,11 @@ class WorkflowConnection(QWidget):
             self.topLeft.setY(sy)
 
 
-    def _updateProxyGeometry(self):
+    def _updateWidgetGeometry(self):
         rect = self.curve.boundingRect()
         rect = QRect(self.topLeft.x(), self.topLeft.y(),
                      max(1, rect.width()), max(1, rect.height()))
-        self.proxy.set_geometry(rect)
+        self.sceneWidget.set_geometry(rect)
 
 
     def updateValues(self, parent, end_channel):
@@ -711,13 +712,13 @@ class WorkflowConnection(QWidget):
         self.global_end = QPoint(self.end_pos)
         self._checkStartEnd()
         
-        if self.proxy is None:
-            self.proxy = ProxyWidget(parent.inner)
-            self.proxy.setWidget(self)
-            self._updateProxyGeometry()
-            self.proxy.show()
-            parent.ilayout.add_item(self.proxy)
-            self.proxy.lower()
+        if self.sceneWidget is None:
+            self.sceneWidget = SceneWidget(parent.inner)
+            self.sceneWidget.setWidget(self)
+            self._updateWidgetGeometry()
+            self.sceneWidget.show()
+            parent.ilayout.add_item(self.sceneWidget)
+            self.sceneWidget.lower()
 
             self.start_channel.signalUpdateConnections.connect(self.onStartChannelChanged)
             self.end_channel.signalUpdateConnections.connect(self.onEndChannelChanged)
@@ -736,14 +737,14 @@ class WorkflowConnection(QWidget):
     def onStartChannelChanged(self, scene, transPos):
         self.global_start = self.global_start + transPos
         self._checkStartEnd()
-        self._updateProxyGeometry()
+        self._updateWidgetGeometry()
         scene.ilayout.update()
 
 
     def onEndChannelChanged(self, scene, transPos):
         self.global_end = self.global_end + transPos
         self._checkStartEnd()
-        self._updateProxyGeometry()
+        self._updateWidgetGeometry()
         scene.ilayout.update()
 
 
