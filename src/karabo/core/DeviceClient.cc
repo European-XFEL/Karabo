@@ -733,9 +733,8 @@ namespace karabo {
                 do {
                     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
                     nTrials++;
-                    m_runtimeSystemDescriptionMutex.lock();
+                    boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                     isThere = m_runtimeSystemDescription.has("device." + reply);
-                    m_runtimeSystemDescriptionMutex.unlock();
                 } while (!isThere && (nTrials < 20));
 
                 if (nTrials == 20) {
@@ -767,9 +766,8 @@ namespace karabo {
             do {
                 boost::this_thread::sleep(boost::posix_time::seconds(1));
                 nTrials++;
-                m_runtimeSystemDescriptionMutex.lock();
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 isThere = m_runtimeSystemDescription.has("device." + deviceId);
-                m_runtimeSystemDescriptionMutex.unlock();
             } while (isThere && (nTrials < timeoutInSeconds));
 
             if (nTrials == timeoutInSeconds) {
@@ -801,9 +799,8 @@ namespace karabo {
             do {
                 boost::this_thread::sleep(boost::posix_time::seconds(1));
                 nTrials++;
-                m_runtimeSystemDescriptionMutex.lock();
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 isThere = m_runtimeSystemDescription.has("server." + serverId);
-                m_runtimeSystemDescriptionMutex.unlock();
             } while (isThere && (nTrials < timeoutInSeconds));
 
             if (nTrials == timeoutInSeconds) {
