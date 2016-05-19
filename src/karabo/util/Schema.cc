@@ -574,7 +574,8 @@ namespace karabo {
 
             if (this->isOrphaned(node)) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Cannot add element with key '" << node.getKey()
-                        << "' since parent node does not exist or is not a node element.";
+                        << "' since parent node does not exist, is a leaf element or is a list/choice "
+                        << "of nodes, but '" << node.getKey() << "' is not a node.";
             } else {
                 this->getParameterHash().setNode(node);
             }
@@ -649,9 +650,11 @@ namespace karabo {
                     case Schema::LEAF: // leaves cannot be parents
                         return true;
                     case Schema::NODE:
+                        return false;
                     case Schema::CHOICE_OF_NODES:
                     case Schema::LIST_OF_NODES:
-                        return false;
+                        // Only nodes can be members (i.e. children) of lists and choices:
+                        return (node.getAttribute<int>(KARABO_SCHEMA_NODE_TYPE) != Schema::NODE);
                     default: // If getNodeType would return Schema::NodeType and not int, default would not be needed:
                         throw KARABO_LOGIC_EXCEPTION("getNodeType returns unknown value '" +
                                 util::toString(this->getNodeType(parentKey)) += "' for key '" + parentKey + "'");
