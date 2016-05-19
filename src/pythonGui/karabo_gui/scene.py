@@ -461,11 +461,11 @@ class LabelAction(Action):
         if dialog.exec_() == QDialog.Rejected:
             return
         
-        p = ProxyWidget(parent.inner)
-        label.setParent(p)
-        p.setWidget(label)
-        p.fixed_geometry = QRect(event.pos(), p.sizeHint())
-        parent.ilayout.add_item(p)
+        sceneWidget = SceneWidget(parent.inner)
+        label.setParent(sceneWidget)
+        sceneWidget.setWidget(label)
+        sceneWidget.fixed_geometry = QRect(event.pos(), sceneWidget.sizeHint())
+        parent.ilayout.add_item(sceneWidget)
         parent.set_current_action(None)
         parent.setModified()
 
@@ -646,12 +646,12 @@ class SceneLink(QPushButton, Loadable):
     @staticmethod
     def load(elem, layout):
         parent = layout.parentWidget().parent()
-        proxy = ProxyWidget(parent.inner)
+        sceneWidget = SceneWidget(parent.inner)
         link = SceneLink(elem.get(ns_karabo + "target"),
-                         parent.signalSceneLinkTriggered, parent=proxy)
-        proxy.setWidget(link)
-        layout.loadPosition(elem, proxy)
-        return proxy
+                         parent.signalSceneLinkTriggered, parent=sceneWidget)
+        sceneWidget.setWidget(link)
+        layout.loadPosition(elem, sceneWidget)
+        return sceneWidget
 
     def edit(self, parent):
         names = parent.project.getSceneNames()
@@ -680,10 +680,10 @@ class SceneLinkAction(Action):
         result = dialog.exec_()
         if result == QDialog.Accepted:
             target = dialog.selectedScene
-            p = ProxyWidget(parent.inner)
+            sceneWidget = SceneWidget(parent.inner)
             link = SceneLink(target, parent.signalSceneLinkTriggered, parent=p)
-            p.setWidget(link)
-            p.fixed_geometry = QRect(event.pos(), p.sizeHint())
+            sceneWidget.setWidget(link)
+            sceneWidget.fixed_geometry = QRect(event.pos(), sceneWidget.sizeHint())
             parent.ilayout.add_item(p)
             parent.set_current_action(None)
             parent.setModified()
@@ -1405,7 +1405,7 @@ class Scene(QSvgWidget):
         else:
             child = self.inner.childAt(event.pos())
             if child is not None:
-                while not isinstance(child, ProxyWidget):
+                while not isinstance(child, SceneWidget):
                     child = child.parent()
                 child.mousePressEvent(event)
 
@@ -1417,7 +1417,7 @@ class Scene(QSvgWidget):
             return
         child = self.inner.childAt(event.pos())
         if child is not None:
-            while not isinstance(child, ProxyWidget):
+            while not isinstance(child, SceneWidget):
                 child = child.parent()
             child.event(event)
 
@@ -1447,7 +1447,7 @@ class Scene(QSvgWidget):
             return
         w = self.inner.childAt(event.pos())
         if w is not None:
-            while not isinstance(w, ProxyWidget):
+            while not isinstance(w, SceneWidget):
                 w = w.parent()
             if isinstance(w.widget, (Label, SceneLink)):
                 w.widget.edit(self)
@@ -1633,7 +1633,7 @@ class Scene(QSvgWidget):
         if event.type() == QEvent.ToolTip:
             item = self.inner.childAt(event.pos())
             if item is not None:
-                while not isinstance(item, ProxyWidget):
+                while not isinstance(item, SceneWidget):
                     item = item.parent()
                 item.event(event)
                 return True
