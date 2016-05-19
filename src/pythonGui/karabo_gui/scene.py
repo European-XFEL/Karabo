@@ -681,10 +681,10 @@ class SceneLinkAction(Action):
         if result == QDialog.Accepted:
             target = dialog.selectedScene
             sceneWidget = SceneWidget(parent.inner)
-            link = SceneLink(target, parent.signalSceneLinkTriggered, parent=p)
+            link = SceneLink(target, parent.signalSceneLinkTriggered, parent=sceneWidget)
             sceneWidget.setWidget(link)
             sceneWidget.fixed_geometry = QRect(event.pos(), sceneWidget.sizeHint())
-            parent.ilayout.add_item(p)
+            parent.ilayout.add_item(sceneWidget)
             parent.set_current_action(None)
             parent.setModified()
 
