@@ -546,8 +546,13 @@ namespace karabo {
         void SignalSlotable::stopBrokerMessageConsumption() {
             this->deregisterFromShortcutMessaging(); // stop short-cut messaging as well
             if (!m_connectionInjected) {
-                m_ioService->stop();
-                m_brokerThread.join();
+                if (m_ioService) {
+                    m_ioService->stop();
+                    m_brokerThread.join();
+                } else if (m_brokerThread.joinable()) {
+                    // .... anyway try to join ... with timeout....
+                    m_brokerThread.try_join_for(boost::chrono::milliseconds(100));
+                }
             }
         }
 

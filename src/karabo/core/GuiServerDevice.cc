@@ -100,9 +100,9 @@ namespace karabo {
 
 
         GuiServerDevice::~GuiServerDevice() {
-            m_ioService->stop();
-            m_dataConnection->stop();
-            m_loggerIoService->stop();
+            if (m_ioService) m_ioService->stop();
+            if (m_dataConnection) m_dataConnection->stop();
+            if (m_loggerIoService) m_loggerIoService->stop();
         }
 
 
