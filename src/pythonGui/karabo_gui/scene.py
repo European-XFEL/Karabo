@@ -143,7 +143,6 @@ class ShapeAction(Action):
 
 
     def handleMouseReleaseEvent(self, parent, event):
-        print("Workflow.handleMouseReleaseEvent", hasattr(self, 'shape'))
         if hasattr(self, 'shape'):
             parent.set_current_action(None)
             parent.ilayout.shapes.append(self.shape)
@@ -561,7 +560,6 @@ class Rectangle(Shape):
 
 
     def element(self):
-        print("SAVE.rectangle")
         ret = ElementTree.Element(
             ns_svg + "rect", x=str(self.rect.x()),
             y=str(self.rect.y()), width=str(self.rect.width()),
@@ -594,7 +592,6 @@ class Rectangle(Shape):
         ret = Rectangle()
         ret.rect = QRect(float(e.get("x")), float(e.get("y")),
                          float(e.get("width")), float(e.get("height")))
-        print("load rectangle", ret.rect)
         ret.loadpen(e)
         layout.shapes.append(ret)
         return ret
