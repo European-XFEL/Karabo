@@ -215,7 +215,9 @@ namespace karabo {
                 
                 // Prepare connection configuration given output channel information
                 karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
-                karabo::net::Connection::Pointer tcpConnection = karabo::net::Connection::create(config); // Instantiate
+                // Instantiate connection object
+                karabo::net::Connection::Pointer tcpConnection = karabo::net::Connection::create(config);
+                // Set connection error handler
                 tcpConnection->setErrorHandler(boost::bind(&karabo::xms::InputChannel::onTcpConnectionError, this, tcpConnection, _1));
 
                 if (!m_tcpIoService) {
