@@ -601,7 +601,7 @@ class WorkflowChannel(QWidget):
         workflow connection list.
         Furthermore the associated SceneWidget is removed from the scene as well.
         """
-        self.parent().scene.ilayout.remove_item(wc.proxy)
+        self.parent().scene.ilayout.remove_item(wc.sceneWidget)
         
         if wc in self.workflow_connections:
             index = self.workflow_connections.index(wc)

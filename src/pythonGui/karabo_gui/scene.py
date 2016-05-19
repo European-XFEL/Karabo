@@ -1377,8 +1377,7 @@ class Scene(QSvgWidget):
         the given position.
         """
         sceneWidget = self.ilayout.itemAtPosition(event.pos())
-        if sceneWidget is not None:
-            if isinstance(sceneWidget, SceneWidget):
+        if sceneWidget is not None and isinstance(sceneWidget, SceneWidget):
                 workflowItem = sceneWidget.widget
                 # Check for WorkflowItem...
                 if isinstance(workflowItem, Item):
