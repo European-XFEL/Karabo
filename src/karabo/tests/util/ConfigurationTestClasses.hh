@@ -548,6 +548,31 @@ namespace configurationTest {
                     .readOnly()
                     .commit();
 
+            LIST_ELEMENT(expected)
+                    .key("shapeList")
+                    .description("A list of shapes")
+                    .appendNodesOfConfigurationBase<Shape>()
+                    .assignmentOptional().defaultValueFromString("Circle,Rectangle")
+                    .commit();
+
+            // We can also add nodes to the list by hand:
+            NODE_ELEMENT(expected)
+                    .key("shapeList.BizarreForm")
+                    .description("A funny shape added by hand")
+                    .commit();
+
+            FLOAT_ELEMENT(expected)
+                    .key("shapeList.BizarreForm.length")
+                    .description("The single length parameter characterizing the bizarre form")
+                    .assignmentOptional().defaultValue(10.f)
+                    .commit();
+
+            // ... but not leaves:
+            DOUBLE_ELEMENT(expected)
+                    .key("shapeList.orphanedLength")
+                    .description("Only nodes can be placed under a list element, so this is ignored.")
+                    .assignmentOptional().defaultValue(5.)
+                    .commit();
         }
     };
 
