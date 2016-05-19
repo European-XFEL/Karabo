@@ -278,7 +278,8 @@ namespace karabo {
             try {
                 return ValueType(karabo::util::fromString<ValueType > (this->getValueAsString()));
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)));
+                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)
+                        += " (string '" + this->getValueAsString() += "')"));
             }
             return ValueType();
         }
@@ -300,7 +301,8 @@ namespace karabo {
 
                 return karabo::util::fromString<T, Cont > (value);
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)));
+                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)
+                        += " (string '" + this->getValueAsString() += "')"));
                 return Cont<T>(); // Make the compiler happy
             }
         }
