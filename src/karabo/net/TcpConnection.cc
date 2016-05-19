@@ -73,12 +73,12 @@ namespace karabo {
                     .key("manageAsyncData")
                     .displayedName("Manage Async Data")
                     .description("If set to true, asynchronous write handlers will copy the data to be written. The user does not "
-                    "have to make sure that the to-be-written data has a long-enough life time.")
+                                 "have to make sure that the to-be-written data has a long-enough life time.")
                     .assignmentOptional().defaultValue(true)
                     .init()
                     .expertAccess()
                     .commit();
-            
+
             INT32_ELEMENT(expected)
                     .key("compressionUsageThreshold")
                     .displayedName("Compression Usage Threshold")
@@ -88,7 +88,7 @@ namespace karabo {
                     .assignmentOptional().defaultValue(-1)
                     .expertAccess()
                     .commit();
-            
+
             STRING_ELEMENT(expected)
                     .key("compression")
                     .displayedName("Compression")
@@ -117,14 +117,14 @@ namespace karabo {
             input.get("compression", m_compression);
         }
 
-        
+
         TcpConnection::~TcpConnection() {
             m_acceptor.reset();
             m_resolver.reset();
             m_boostIoServicePointer.reset();
         }
-        
-        
+
+
         Channel::Pointer TcpConnection::start() {
 
             this->setIOServiceType("Asio");
@@ -238,7 +238,7 @@ namespace karabo {
                 Channel::Pointer new_channel = this->createChannel();
                 TcpChannel::Pointer ch = boost::static_pointer_cast<TcpChannel > (new_channel);
                 m_acceptor->async_accept(ch->socket(), boost::bind(&TcpConnection::acceptHandler,
-                        this, new_channel, handler, boost::asio::placeholders::error));
+                                                                   this, new_channel, handler, boost::asio::placeholders::error));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -247,14 +247,21 @@ namespace karabo {
 
         void TcpConnection::acceptHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
-                if (!e)
+                if (!e) {
+                    {
+                        TcpChannel::Pointer tc = boost::static_pointer_cast<TcpChannel > (channel);
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Accepted new connection: " << tc->socket().remote_endpoint().address() << ":" << tc->socket().remote_endpoint().port();
+                    }
                     handler(channel);
-                else if (m_errorHandler)
-                    m_errorHandler(e);
-                else if (e.value() != 125) {   // 125 -- Operation canceled
-                    cout << "ERROR  : TCP : Accept handler got code #" << e.value() << " -- " << e.message() << endl;
+                } else {
+                    if (m_errorHandler)
+                        m_errorHandler(e);
+                    else if (e.value() != 125) {   // 125 -- Operation canceled
+                        KARABO_LOG_FRAMEWORK_WARN << "TCP : Accept handler got code #" << e.value() << " -- " << e.message();
+                    }
                 }
             } catch (...) {
+                // probably must not throw?
                 KARABO_RETHROW
             }
         }
@@ -264,7 +271,7 @@ namespace karabo {
             try {
                 ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
                 m_resolver->async_resolve(query, boost::bind(&TcpConnection::resolveHandler,
-                        this, handler, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
+                                                             this, handler, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -274,16 +281,26 @@ namespace karabo {
         void TcpConnection::resolveHandler(const ConnectionHandler& handler, const ErrorCode& e, ip::tcp::resolver::iterator it) {
             try {
                 if (!e) {
+                    // No errors... create channel first to get access to the socket
                     Channel::Pointer new_channel = createChannel();
-                    TcpChannel::Pointer ch = boost::static_pointer_cast<TcpChannel > (new_channel);
-                    ch->socket().async_connect(*it, boost::bind(&TcpConnection::connectHandler,
-                            this, new_channel, handler, boost::asio::placeholders::error));
+                    // ... cast it to the TcpChannel
+                    TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (new_channel);
+                    // ... get tcp channel socket ...
+                    boost::asio::ip::tcp::socket& tcpSocket = tcpChannel->socket();
+                    // ... and peer endpoint ...
+                    const boost::asio::ip::tcp::endpoint& peerEndpoint = *it;
+                    // ... and, finally, try to connect asynchronously ...
+                    tcpSocket.async_connect(peerEndpoint,
+                                            boost::bind(&TcpConnection::connectHandler, this,
+                                                        new_channel, handler, boost::asio::placeholders::error));
                 } else {
                     if (m_errorHandler)
                         m_errorHandler(e);
                     else
                         throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
+            } catch (const std::exception& ex) {
+                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(string("Standard exception caught by TcpConnection::resolveHandler: ") + ex.what()))
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -293,6 +310,10 @@ namespace karabo {
         void TcpConnection::connectHandler(const Channel::Pointer& channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
                 if (!e) {
+                    {
+                        TcpChannel::Pointer tc = boost::static_pointer_cast<TcpChannel > (channel);
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Connected to: " << tc->socket().remote_endpoint().address() << ":" << tc->socket().remote_endpoint().port();
+                    }
                     handler(channel);
                 } else {
                     if (m_errorHandler)
@@ -300,6 +321,8 @@ namespace karabo {
                     else
                         throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
+            } catch (const std::exception& ex) {
+                throw KARABO_NETWORK_EXCEPTION(string("Standard exception caught by TcpConnection::connectHandler: ") + ex.what());
             } catch (...) {
                 KARABO_RETHROW
             }
