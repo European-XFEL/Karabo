@@ -351,17 +351,17 @@ namespace karabo {
 
                     // No mutex under callback
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering IOEvent";
-                    m_mutex.unlock(); // TODO scoped in case of exception thrown is callback code
+                    lock.unlock();
                     this->triggerIOEvent();
-                    m_mutex.lock();
+                    lock.lock();
 
                 } else { // Data complete on both pots now
                     if (m_keepDataUntilNew) { // Is false per default
                         m_keepDataUntilNew = false;
                         KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Updating";
-                        m_mutex.unlock();
+                        lock.unlock();
                         update();
-                        m_mutex.lock();
+                        lock.lock();
                         m_keepDataUntilNew = true;
                     }
                 }

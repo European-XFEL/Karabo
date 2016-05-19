@@ -161,17 +161,18 @@ namespace exfel {
 
                 std::cout << "New input on instance " << instanceId << " available for writing " << std::endl;
 
-                m_mutex.lock();
-                TcpChannelMap::const_iterator it = m_instanceId2Channel.find(instanceId);
-                if (it != m_instanceId2Channel.end()) {
-                    // Create new chunk in memory
-                    unsigned int chunkId = Memory<T>::registerChunk(m_channelId);
-                    TcpChannelInfo channelInfo = m_instanceId2Channel[instanceId];
-                    m_writeNext.push_back(std::make_pair(chunkId, channelInfo));
-                } else {
-                    std::cout << "LOW-LEVEL-DEBUG: An input channel wants to connect, that was not registered before." << std::endl;
+                {
+                    boost::mutex::scoped_lock lock(m_mutex);
+                    TcpChannelMap::const_iterator it = m_instanceId2Channel.find(instanceId);
+                    if (it != m_instanceId2Channel.end()) {
+                        // Create new chunk in memory
+                        unsigned int chunkId = Memory<T>::registerChunk(m_channelId);
+                        TcpChannelInfo channelInfo = m_instanceId2Channel[instanceId];
+                        m_writeNext.push_back(std::make_pair(chunkId, channelInfo));
+                    } else {
+                        std::cout << "LOW-LEVEL-DEBUG: An input channel wants to connect, that was not registered before." << std::endl;
+                    }
                 }
-                m_mutex.unlock();
 
                 this->triggerIOEvent();
             }
