@@ -285,6 +285,13 @@ class MainWindow(QMainWindow):
                     self.middleTab.setCurrentIndex(i)
                     return
 
+        # The scene might be in its own window
+        parent = scene.parentWidget()
+        if parent is not None:
+            scene.activateWindow()
+            scene.raise_()
+            return
+
         customView = CustomMiddlePanel(scene, self.acServerConnect.isChecked())
         self.middleTab.addDockableTab(customView, scene.filename, self)
         customView.signalClosed.connect(self.onCustomViewRemoved)
