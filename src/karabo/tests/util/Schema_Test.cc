@@ -42,6 +42,7 @@ void Schema_Test::testBuildUp() {
 
     } catch (karabo::util::Exception e) {
         cout << e << endl;
+        CPPUNIT_ASSERT(false);
     }
 }
 
@@ -578,7 +579,6 @@ void Schema_Test::testVectorElements() {
     vector<string> allowedStates = sch.getAllowedStates("vecBool");
     CPPUNIT_ASSERT(allowedStates[0] == "AllOk.Started");
     CPPUNIT_ASSERT(allowedStates[1] == "AllOk.Stopped");
-
 }
 
 
@@ -659,4 +659,37 @@ void Schema_Test::testTable() {
     OtherSchemaElements::expectedParameters(sch);
     CPPUNIT_ASSERT(sch.isLeaf("testTable") == true);
     CPPUNIT_ASSERT(sch.getParameterHash().hasAttribute("testTable", "rowSchema") == true);
+}
+
+void Schema_Test::testList() {
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(sch);
+    CPPUNIT_ASSERT(sch.has("shapeList") == true);
+    CPPUNIT_ASSERT(sch.isListOfNodes("shapeList") == true);
+    CPPUNIT_ASSERT(sch.isNode("shapeList") == false);
+    const char* classes[] = {"Circle", "Rectangle"};
+    const std::vector<std::string> defaults(classes, classes + sizeof(classes)/sizeof(classes[0]));
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<std::string> >("shapeList") == defaults);
+
+    CPPUNIT_ASSERT(sch.has("shapeList.Circle"));
+    CPPUNIT_ASSERT(sch.isNode("shapeList.Circle"));
+    CPPUNIT_ASSERT(sch.has("shapeList.EditableCircle"));
+    CPPUNIT_ASSERT(sch.isNode("shapeList.EditableCircle"));
+    CPPUNIT_ASSERT(sch.has("shapeList.EditableCircle.radius"));
+    CPPUNIT_ASSERT(sch.has("shapeList.BizarreForm"));
+    CPPUNIT_ASSERT(sch.isNode("shapeList.BizarreForm"));
+    CPPUNIT_ASSERT(sch.has("shapeList.BizarreForm.length"));
+    // only nodes can be added as children of lists of elements
+    CPPUNIT_ASSERT(sch.has("shapeList.orphanedLength") == false);
+}
+
+void Schema_Test::testInvalidNodes() {
+    Schema schema("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(schema);
+    // node should not be created automatically
+    CPPUNIT_ASSERT(schema.has("nonExistingNode") == false);
+
+    // placing an element under a leaf is ignored
+    CPPUNIT_ASSERT(schema.has("vecDouble") == true);
+    CPPUNIT_ASSERT(schema.has("vecDouble.uint16") == false);
 }

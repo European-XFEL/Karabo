@@ -17,7 +17,9 @@
 #include "Schema.hh"
 #include "Hash.hh"
 #include "FromLiteral.hh"
+#include "StringTools.hh"
 #include "karabo/webAuth/Authenticator.hh"
+#include "karabo/log/Logger.hh"
 
 namespace karabo {
     namespace util {
@@ -568,10 +570,15 @@ namespace karabo {
             bool accessRoleOk = isAllowedInCurrentAccessLevel(node);
             bool stateOk = isAllowedInCurrentState(node);
 
-
             if (!(accessModeOk && accessRoleOk && stateOk)) return;
 
-            this->getParameterHash().setNode(node);
+            if (this->isOrphaned(node)) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Cannot add element with key '" << node.getKey()
+                        << "' since parent node does not exist, is a leaf element or is a list/choice "
+                        << "of nodes, but '" << node.getKey() << "' is not a node.";
+            } else {
+                this->getParameterHash().setNode(node);
+            }
         }
 
         void Schema::overwriteAttributes(const Hash::Node& node) {
@@ -624,6 +631,35 @@ namespace karabo {
                 return (std::find(allowedStates.begin(), allowedStates.end(), m_currentState) != allowedStates.end());
             } else { // If no states are assigned, access/visibility is always possible
                 return true;
+            }
+        }
+
+        bool Schema::isOrphaned(const Hash::Node& node) const {
+            const std::string& key = node.getKey();
+            const size_t lastSep = key.find_last_of('.'); // can't get default separator from Hash :-(
+            if (lastSep == std::string::npos) {
+                // first level key is not an orphan
+                return false;
+            }
+            const std::string parentKey(key.substr(0, lastSep));
+            if (!this->has(parentKey)) {
+                // e.g. key is a.b.c, but a.b is not part of the schema
+                return true;
+            } else {
+                switch(this->getNodeType(parentKey)) {
+                    case Schema::LEAF: // leaves cannot be parents
+                        return true;
+                    case Schema::NODE:
+                        return false;
+                    case Schema::CHOICE_OF_NODES:
+                    case Schema::LIST_OF_NODES:
+                        // Only nodes can be members (i.e. children) of lists and choices:
+                        return (node.getAttribute<int>(KARABO_SCHEMA_NODE_TYPE) != Schema::NODE);
+                    default: // If getNodeType would return Schema::NodeType and not int, default would not be needed:
+                        throw KARABO_LOGIC_EXCEPTION("getNodeType returns unknown value '" +
+                                util::toString(this->getNodeType(parentKey)) += "' for key '" + parentKey + "'");
+                        return true;
+                }
             }
         }
 
