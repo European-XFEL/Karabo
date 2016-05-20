@@ -16,7 +16,7 @@ from guiqwt.builder import make
 from karabo.api_2 import Type
 
 from PyQt4.QtGui import (QSlider, QWidget, QHBoxLayout, QVBoxLayout,
-                            QComboBox, QSpinBox, QLabel)
+                         QCheckBox, QComboBox, QSpinBox, QLabel)
 
 
 class DisplayImage(DisplayWidget):
@@ -35,10 +35,13 @@ class DisplayImage(DisplayWidget):
         self.image = None
         self.plot = self.imageWidget.get_plot()
         self.layout.addWidget(self.imageWidget)
-        
 
         self.cellWidget = QWidget()
         self.cellLayout = QVBoxLayout(self.cellWidget)
+
+        self.cbUpdateColorMap = QCheckBox("Automatic intensity scale")
+        self.cbUpdateColorMap.setChecked(False)
+        self.layout.addWidget(self.cbUpdateColorMap)
               
         self.axisLabel = QLabel()
         self.axisLabel.setText("Indexed axis:")
@@ -211,9 +214,13 @@ class DisplayImage(DisplayWidget):
         else:
             if npy.ndim == 2:  # Grayscale
                 r = self.image.get_lut_range()  # This is the current range of the Z axis
-                if r[0] == r[1]:
-                    r = None #  If it was not set, let it autoscale
+                if r[0] == r[1] or self.cbUpdateColorMap.isChecked():
+                    # Range was not set, or user selected autoscale
+                    r = None
                 self.image.set_data(npy.astype('float'), lut_range=r)  # Set new data but keep old Z range
             else:
                 self.image.set_data(npy.astype('float'))
             self.plot.replot()
+            if self.cbUpdateColorMap.isChecked():
+                # Update colormap axis for image
+                self.plot.update_colormap_axis(self.plot.items[1])
