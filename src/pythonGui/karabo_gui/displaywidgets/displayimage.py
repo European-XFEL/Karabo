@@ -39,7 +39,7 @@ class DisplayImage(DisplayWidget):
         self.cellWidget = QWidget()
         self.cellLayout = QVBoxLayout(self.cellWidget)
 
-        self.cbUpdateColorMap = QCheckBox("Automatically intensity scale")
+        self.cbUpdateColorMap = QCheckBox("Automatic intensity scale")
         self.cbUpdateColorMap.setChecked(False)
         self.layout.addWidget(self.cbUpdateColorMap)
               
