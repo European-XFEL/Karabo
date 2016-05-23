@@ -78,6 +78,9 @@ namespace karabo {
                 }
             };
 
+            std::string escapeElementName(const std::string& data) const;
+            std::string unescapeElementName(const std::string& data) const;
+
         };
     }
 }
