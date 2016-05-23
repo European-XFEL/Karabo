@@ -22,9 +22,7 @@ menus.
 
 The factory class contains a category, which states which kind of data can be 
 shown by this widget. The class also has an alias which is the string shown in 
-the context menu. To give an example:
-
-::
+the context menu. To give an example::
 
     from util import SignalBlocker
     from widget import DisplayWidget
@@ -38,9 +36,7 @@ Upon initialization, the factory gets two parameters: *box*, which is a
 :class:`~schema.Box`, containing all the details of the value to be shown, 
 including the value itself. The other parameter is *parent*. The initilization 
 is supposed to create a Qt widget by the name *widget*, with *parent* as its 
-parent:
-
-::
+parent::
 
     def __init__(self, box, parent):
         super(MyDisplayWidget, self).__init__(box)
@@ -101,9 +97,7 @@ some more methods need to be implemented for an editable widget.
 
 The factory should contain an attribute ``value`` which contains the value 
 currently set by the user. It is often common to define a property if the value 
-is actually stored in the underlying widget, as in:
-
-::
+is actually stored in the underlying widget, as in::
 
     @property
     def value(self):
