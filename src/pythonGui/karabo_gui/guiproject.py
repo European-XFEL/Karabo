@@ -25,7 +25,7 @@ from PyQt4.QtCore import pyqtSignal, QObject
 
 import csv
 from datetime import datetime
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZipFile
 
 
 class BaseConfiguration(Configuration):
