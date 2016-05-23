@@ -7,7 +7,7 @@ from PyQt4.Qwt5.Qwt import QwtPlot
 from guiqwt.plot import CurveDialog
 from guiqwt.builder import make
 
-from karabo.api_2 import NumpyVector
+from karabo.middlelayer import NumpyVector
 
 from karabo_gui.const import ns_karabo
 from karabo_gui.widget import PlotWidget

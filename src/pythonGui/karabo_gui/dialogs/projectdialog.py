@@ -13,7 +13,7 @@ from os.path import abspath, dirname, exists, join
 
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
-from karabo.api_2 import ProjectAccess
+from karabo.middlelayer import ProjectAccess
 from karabo_gui.messagebox import MessageBox
 import karabo_gui.network as network
 

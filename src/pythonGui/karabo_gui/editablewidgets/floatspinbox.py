@@ -4,7 +4,7 @@ from numpy import log10
 
 from PyQt4.QtGui import QAction, QDoubleSpinBox, QInputDialog
 
-from karabo.api_2 import Number
+from karabo.middlelayer import Number
 
 from karabo_gui.const import ns_karabo
 from karabo_gui.util import SignalBlocker

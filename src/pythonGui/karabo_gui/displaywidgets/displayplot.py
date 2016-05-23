@@ -24,7 +24,7 @@ __all__ = ["DisplayPlot", "PlotItem"]
 import sys
 from karabo_gui.widget import DisplayWidget
 
-from karabo.api_2 import NumpyVector
+from karabo.middlelayer import NumpyVector
 
 from guiqwt.plot import CurveDialog
 from guiqwt.builder import make

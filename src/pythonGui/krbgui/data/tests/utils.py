@@ -50,8 +50,8 @@ def check_hash(h):
     assert sh["a", "nodeType"] == 0
 
 
-def create_api1_hash():
-    from karabo.api_1 import Hash, Schema
+def create_bound_api_hash():
+    from karabo.bound import Hash, Schema
 
     h = Hash()
     h.set("bool", True)
@@ -83,7 +83,7 @@ def create_api1_hash():
     return h
 
 
-def __api_2_style_hash(hash_klass, schema_klass):
+def __middlelayer_api_style_hash(hash_klass, schema_klass):
     h = hash_klass()
     h["bool"] = True
     h["int"] = 4
@@ -112,13 +112,13 @@ def __api_2_style_hash(hash_klass, schema_klass):
     return h
 
 
-def create_api2_hash():
-    from karabo.api_2 import Hash, Schema
+def create_middlelayer_api_hash():
+    from karabo.middlelayer import Hash, Schema
 
-    return __api_2_style_hash(Hash, Schema)
+    return __middlelayer_api_style_hash(Hash, Schema)
 
 
 def create_refactor_hash():
     from krbgui.data.api import Hash, Schema
 
-    return __api_2_style_hash(Hash, Schema)
+    return __middlelayer_api_style_hash(Hash, Schema)
