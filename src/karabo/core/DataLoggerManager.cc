@@ -134,49 +134,31 @@ namespace karabo {
         }
 
         void DataLoggerManager::restartReadersAndLoggers() {
-            Hash runtimeInfo = remote().getSystemInformation();
+            const Hash runtimeInfo = remote().getSystemInformation();
 
             KARABO_LOG_FRAMEWORK_DEBUG << "restartReadersAndLoggers: runtime system information ...\n" << runtimeInfo;
 
-            boost::mutex::scoped_lock lock(m_loggerMapMutex);
-
             if (runtimeInfo.has("server")) {
-                // Start DataLogReaders on all DataLogger device servers
+	        const Hash& onlineServers = runtimeInfo.get<Hash>("server");
+	        // Start DataLogReaders on all DataLogger device servers
                 for (vector<string>::iterator ii = m_serverList.begin(); ii != m_serverList.end(); ii++) {
                     const string& serverId = *ii;
-                    const Hash& onlineServers = runtimeInfo.get<Hash>("server");
                     if (!onlineServers.has(serverId)) continue;
                     instantiateReaders(serverId);
+		}
 
-                    if (!runtimeInfo.has("device")) continue;
-                    const Hash& onlineDevices = runtimeInfo.get<Hash>("device");
-                    for (Hash::const_map_iterator i = onlineDevices.mbegin(); i != onlineDevices.mend(); ++i) {
-                        const string& deviceId = i->first;
-
-                        // check if deviceId should be archived ...
-                        const Hash::Node& node = i->second;
-                        if (!node.hasAttribute("archive") || (node.getAttribute<bool>("archive") == false)) continue;
-
-                        const string loggerId = DATALOGGER_PREFIX + deviceId;
-
-                        // Check if loggerId is valid ID
-                        if (!m_loggerMap.has(loggerId)) continue;
-                        const string& srv = m_loggerMap.get<string>(loggerId);
-                        // Check if loggerId belongs to this DataLoggerServer
-                        if (srv != serverId) continue;
-                        // Check if loggerId already started
-                        if (remote().exists(deviceId).first && !remote().exists(loggerId).first) {
-                            const Hash config("deviceToBeLogged", deviceId,
-                                    "directory", get<string>("directory"),
-                                    "maximumFileSize", get<int>("maximumFileSize"),
-                                    "flushInterval", get<int>("flushInterval"));
-                            const Hash hash("classId", "DataLogger", "deviceId", loggerId, "configuration", config);
-                            remote().instantiateNoWait(serverId, hash);
-                            KARABO_LOG_FRAMEWORK_INFO << "restartReadersAndLoggers : logger '" << loggerId << "' STARTED";
-                        }
-                    }
-                }
-            }
+		// Now start loggers for online devices - instanceNewHandler checks whether they exist already
+		if (!runtimeInfo.has("device")) return;
+		const Hash& onlineDevices = runtimeInfo.get<Hash>("device");
+		for (Hash::const_iterator i = onlineDevices.begin(); i != onlineDevices.end(); ++i) {
+		  const Hash::Node& deviceNode = *i;
+		  // Topology entry as understood by instanceNewHandler: Hash with path "device.<deviceId>"
+		  Hash topologyEntry("device", Hash());
+		  // Copy node with key "<deviceId>" and attributes into the single Hash in topologyEntry:
+		  topologyEntry.begin()->getValue<Hash>().setNode(deviceNode);
+		  instanceNewHandler(topologyEntry);
+		}
+	    }
         }
 
         void DataLoggerManager::instantiateReaders(const std::string& serverId) {
