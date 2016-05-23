@@ -195,6 +195,7 @@ class Curve(QObject):
         self.y = y
         self.fill_current()
         self.update()
+        self.curve.plot().replot()
 
 
 class DateTimeScaleDraw(QwtScaleDraw):
