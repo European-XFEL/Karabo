@@ -67,6 +67,8 @@ If the device is coded in Python, the same thing will happen with the difference
 
 The other subcommands are not documented here in detail, please use the script-internal help.
 
+.. _run-startup:
+
 Step 3: Starting up Karabo
 --------------------------
 
