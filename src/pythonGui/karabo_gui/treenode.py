@@ -12,7 +12,7 @@ This module contains a class which represents a node of a hierarchical model.
 __all__ = ["TreeNode"]
 
 
-from karabo.api_2 import AccessLevel
+from karabo.middlelayer import AccessLevel
 
 
 class TreeNode(object):

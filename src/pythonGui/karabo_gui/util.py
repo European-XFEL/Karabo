@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from PyQt4.QtGui import QDialog, QFileDialog
 
-from karabo.api_2 import Hash
+from karabo.middlelayer import Hash
 
 
 class SignalBlocker(object):

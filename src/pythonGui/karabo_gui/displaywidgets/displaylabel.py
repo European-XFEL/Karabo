@@ -30,8 +30,8 @@ from PyQt4.QtGui import QLabel
 from karabo_gui.const import OK_COLOR, ERROR_COLOR
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
-from karabo.api_2 import (Double, Float, String, Simple, Type, HashType,
-                          VectorDouble, VectorFloat, VectorHash)
+from karabo.middlelayer import (Double, Float, String, Simple, Type, HashType,
+                                VectorDouble, VectorFloat, VectorHash)
 
 
 class ErrorState(Enum):

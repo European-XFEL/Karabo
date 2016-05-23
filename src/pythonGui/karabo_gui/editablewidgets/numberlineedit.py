@@ -14,7 +14,7 @@ from karabo_gui.widget import DisplayWidget, EditableWidget
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import QLineEdit, QDoubleValidator, QPalette, QValidator
 
-from karabo.api_2 import Integer, Number
+from karabo.middlelayer import Integer, Number
 
 
 class NumberLineEdit(EditableWidget, DisplayWidget):

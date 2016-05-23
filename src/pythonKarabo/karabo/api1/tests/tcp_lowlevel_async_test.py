@@ -6,7 +6,7 @@ import threading
 import time
 import sys
 
-from karabo.api_1 import Connection, Hash
+from karabo.bound import Connection, Hash
 
 
 class Server(threading.Thread):

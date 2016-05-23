@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from karabo.api_1 import NDArray, BinarySerializerHash
+from karabo.bound import NDArray, BinarySerializerHash
 
 
 class  Ndarr1_TestCase(unittest.TestCase):

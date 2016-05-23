@@ -17,7 +17,7 @@
 from karabo_gui.configuration import BulkNotifications
 from karabo_gui.dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
-from karabo.api_2 import Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration
+from karabo.middlelayer import Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration
 import karabo_gui.globals as globals
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.navigationtreemodel import NavigationTreeModel

@@ -26,7 +26,7 @@ from guiqwt.plot import CurveDialog, PlotManager
 from guiqwt.tools import SelectPointTool
 from guiqwt.builder import make
 
-from karabo.api_2 import Simple, Timestamp
+from karabo.middlelayer import Simple, Timestamp
 
 
 class _Generation(object):

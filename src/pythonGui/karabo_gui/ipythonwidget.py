@@ -19,7 +19,7 @@ from IPython.qt import kernel_mixins, inprocess, util
 from IPython.kernel.inprocess.client import InProcessKernelClient
 from IPython.kernel.inprocess import channels
 
-from karabo.api_2 import Hash
+from karabo.middlelayer import Hash
 
 from karabo_gui.network import network
 from karabo_gui.topology import getDevice

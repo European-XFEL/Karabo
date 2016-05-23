@@ -4,9 +4,9 @@ from zlib import adler32
 import numpy
 from numpy.testing import assert_equal
 
-from karabo.api_1 import BinarySerializerHash, TextSerializerHash
-from karabo.api_2 import (Hash, Schema, XMLWriter, XMLParser,
-                          BinaryParser, NodeType)
+from karabo.bound import BinarySerializerHash, TextSerializerHash
+from karabo.middlelayer import (Hash, Schema, XMLWriter, XMLParser,
+                                BinaryParser, NodeType)
 from karabo.api2.hash import _Byte
 
 

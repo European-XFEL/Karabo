@@ -3,7 +3,7 @@
 
 import unittest
 
-from karabo.api_1 import (
+from karabo.bound import (
     Configurator, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
     INT32_ELEMENT,STRING_ELEMENT, Hash, Types
 )

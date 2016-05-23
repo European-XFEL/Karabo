@@ -1,7 +1,7 @@
 import unittest
 
-from karabo.api_1 import (Hash, InputSchema, OutputSchema, Schema,
-                      loadFromFile, saveToFile, similar)
+from karabo.bound import (Hash, InputSchema, OutputSchema, Schema,
+                          loadFromFile, saveToFile, similar)
 from .configuration_example_classes import TestStruct1
 
 
