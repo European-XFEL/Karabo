@@ -247,9 +247,9 @@ class Type(hashmod.Type, metaclass=Monkey):
         
    
     def copyFrom(self, box, otherbox, who):
-        """Copy data from \otherbox to \box.
+        """Copy data from ``otherbox`` to ``box``.
         
-        \who is a function called on each leaf's descriptor,
+        ``who`` is a function called on each leaf's descriptor,
         and the value is only copied if this function returns
         something true."""
         if who(self) and otherbox.hasValue():
@@ -258,8 +258,8 @@ class Type(hashmod.Type, metaclass=Monkey):
             
     def connectOtherBox(self, box, other):
         """
-        The signalUpdateComponent is connected from \box to \other to broadcast
-        value changes.
+        The signalUpdateComponent is connected from ``box`` to ``other`` to
+        broadcast value changes.
         """
         box.signalUpdateComponent.connect(other.slotSet)
 
@@ -622,10 +622,10 @@ class Schema(hashmod.Descriptor):
 
 
     def copyFrom(self, box, otherbox, who=lambda x: True):
-        """Copy data from \otherbox to \box.
+        """Copy data from ``otherbox`` to ``box``.
         
         The value of otherbox is recursively copied into box.
-        \who is a function called on each leaf's descriptor,
+        ``who`` is a function called on each leaf's descriptor,
         and the value is only copied if this function returns
         something true."""
         for k, v in self.dict.items():
@@ -636,9 +636,10 @@ class Schema(hashmod.Descriptor):
 
     
     def connectOtherBox(self, box, other):
-        """Connect value changes of \box to \other.
+        """Connect value changes of ``box`` to ``other``.
         
-        The signalUpdateComponent is recursively connected from \box to \other.
+        The signalUpdateComponent is recursively connected from ``box`` to
+        ``other``.
         """
         for k, v in self.dict.items():
             myChild = getattr(box.boxvalue, k, None)
@@ -779,7 +780,7 @@ class ChoiceOfNodes(Schema):
     def set(self, box, value, timestamp=None):
         """The value of this ChoiceElement is set.
         
-        \value is a string or a Schema with the selected choice
+        ``value`` is a string or a Schema with the selected choice
         """
         if isinstance(value, str):
             box.current = value
@@ -795,9 +796,9 @@ class ChoiceOfNodes(Schema):
 
 
     def copyFrom(self, box, otherbox, who):
-        """Copy data from \otherbox to \box.
+        """Copy data from ``otherbox`` to ``box``.
         
-        \who is a function called on each leaf's descriptor,
+        ``who`` is a function called on each leaf's descriptor,
         and the value is only copied if this function returns
         something true."""
         Schema.copyFrom(self, box, otherbox, who)
@@ -807,8 +808,8 @@ class ChoiceOfNodes(Schema):
     
     def connectOtherBox(self, box, other):
         """
-        The signalUpdateComponent is recursively connected from \box to \other
-        to broadcast value changes.
+        The signalUpdateComponent is recursively connected from ``box`` to
+        ``other`` to broadcast value changes.
         """
         Schema.connectOtherBox(self, box, other)
         box.signalUpdateComponent.connect(other.slotSet)
@@ -848,9 +849,9 @@ class ListOfNodes(hashmod.Descriptor):
         box.descriptor = None
 
     def copyFrom(self, box, otherbox, who):
-        """Copy data from \otherbox to \box.
+        """Copy data from ``otherbox`` to ``box``.
         
-        \who is a function called on each leaf's descriptor,
+        ``who`` is a function called on each leaf's descriptor,
         and the value is only copied if this function returns
         something true."""
         if who(self) and otherbox.hasValue():
@@ -858,7 +859,7 @@ class ListOfNodes(hashmod.Descriptor):
 
     def connectOtherBox(self, box, other):
         """
-        The signalUpdateComponent is connected from \box to \other to broadcast
+        The signalUpdateComponent is connected from ``box`` to ``other`` to broadcast
         value changes.
         """
         box.signalUpdateComponent.connect(other.slotSet)
