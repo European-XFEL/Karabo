@@ -41,7 +41,7 @@ first string-type column encountered is pre-filled with the deviceID.
 __all__ = ["EditableTableElement"]
 
 
-from karabo.api_2 import Hash, Type, VectorHash, SchemaHashType
+from karabo.middlelayer import Hash, Type, VectorHash, SchemaHashType
 from karabo_gui.widget import DisplayWidget, EditableWidget
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from PyQt4.QtGui import QAction, QInputDialog, QPushButton
 
-from karabo.api_2 import Simple, String
+from karabo.middlelayer import Simple, String
 
 from karabo_gui.util import getSaveFileName
 from karabo_gui.widget import DisplayWidget

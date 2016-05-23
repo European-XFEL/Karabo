@@ -3,24 +3,24 @@ import os.path as op
 from karabo.testing.import_checker import check_for_star_imports
 
 
-def test_device_api_1_import():
-    """ This is a smoke test that makes sure all of the bits available in API 1
-    are still there.
+def test_bound_api_import():
+    """ This is a smoke test that makes sure all of the bits available in the
+    bound API are still there.
     """
-    import karabo.api_1
+    import karabo.bound
 
 
-def test_device_api_1_no_star_imports():
-    """ Scream bloody murder if `import *` is ever added to the device API
+def test_bound_api_no_star_imports():
+    """ Scream bloody murder if `import *` is ever added to the bound API
     module.
 
-    If a star import is added to the device API module, its contract
+    If a star import is added to the bound API module, its contract
     is broken. We should avoid that.
     """
     try:
-        import karabo.api_1 as api_mod
+        import karabo.bound as bound_api_mod
     except ImportError:
         # We don't care about import errors here, just star imports.
         return
 
-    check_for_star_imports(op.abspath(api_mod.__file__))
+    check_for_star_imports(op.abspath(bound_api_mod.__file__))

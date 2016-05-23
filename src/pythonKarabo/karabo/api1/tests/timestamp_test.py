@@ -6,7 +6,7 @@ import unittest
 import time
 import platform
 
-from karabo.api_1 import (Epochstamp, Timestamp, Trainstamp,
+from karabo.bound import (Epochstamp, Timestamp, Trainstamp,
                           TimeDuration, Hash, Types,
                           ATTOSEC, FEMTOSEC, PICOSEC, NANOSEC,
                           MICROSEC, MILLISEC)

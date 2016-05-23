@@ -7,7 +7,7 @@ import stat
 import subprocess
 import sys
 
-from karabo.api_1 import PythonDevice
+from karabo.bound import PythonDevice
 
 BUILD_PACKAGE_FILE = """\
 #!/bin/bash
