@@ -847,6 +847,21 @@ class ListOfNodes(hashmod.Descriptor):
         box.initialized = False
         box.descriptor = None
 
+    def copyFrom(self, box, otherbox, who):
+        """Copy data from \otherbox to \box.
+        
+        \who is a function called on each leaf's descriptor,
+        and the value is only copied if this function returns
+        something true."""
+        if who(self) and otherbox.hasValue():
+            box._set(otherbox.value, None)
+
+    def connectOtherBox(self, box, other):
+        """
+        The signalUpdateComponent is connected from \box to \other to broadcast
+        value changes.
+        """
+        box.signalUpdateComponent.connect(other.slotSet)
 
 class VectorHash(hashmod.VectorHash, metaclass=Monkey):
     # Means that parent class is overwritten/updated
