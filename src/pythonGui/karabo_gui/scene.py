@@ -1188,7 +1188,7 @@ class Scene(QSvgWidget):
             return False
 
         if reply == QMessageBox.Save:
-            self.project.zip()
+            self.project.saveProject()
         
         return True
 
