@@ -93,7 +93,7 @@ class IPythonKernel(Device):
         super().run()
         self.manager = KernelManager(client_factory=Client)
         self.manager.start_kernel(
-            extra_arguments=["-c", "from karabo.api2.cli import *",
+            extra_arguments=["-c", "from karabo.middlelayer_api.cli import *",
                              "--IPCompleter.limit_to__all__=True"])
         self.client = self.manager.client()
         self.client.shell_channel.device = self

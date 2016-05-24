@@ -3,7 +3,7 @@ from unittest import TestCase, main
 
 import numpy
 
-from karabo.api2 import hash as hashmod
+from karabo.middlelayer_api import hash as hashmod
 
 class Tests(TestCase):
     def test_int_enum(self):

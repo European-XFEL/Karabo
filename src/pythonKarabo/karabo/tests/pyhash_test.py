@@ -7,7 +7,7 @@ from numpy.testing import assert_equal
 from karabo.bound import BinarySerializerHash, TextSerializerHash
 from karabo.middlelayer import (Hash, Schema, XMLWriter, XMLParser,
                                 BinaryParser, NodeType)
-from karabo.api2.hash import _Byte
+from karabo.middlelayer_api.hash import _Byte
 
 
 class Hash_TestCase(unittest.TestCase):
