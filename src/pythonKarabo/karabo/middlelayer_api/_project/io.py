@@ -4,7 +4,7 @@ from os.path import dirname, exists
 from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from karabo.api2.hash import Hash, StringList
+from karabo.middlelayer_api.hash import Hash, StringList
 from .configuration import ProjectConfigurationData
 from .constants import (DEVICES_KEY, SCENES_KEY, CONFIGURATIONS_KEY, MACROS_KEY,
                         MONITORS_KEY, PROJECT_KEY, RESOURCES_KEY)
