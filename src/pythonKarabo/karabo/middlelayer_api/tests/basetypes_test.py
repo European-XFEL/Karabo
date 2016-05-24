@@ -5,12 +5,12 @@ from unittest import TestCase, main
 import pint
 import numpy
 
-from karabo.api2.enums import Unit, MetricPrefix
-from karabo.api2.basetypes import (
+from karabo.middlelayer_api.enums import Unit, MetricPrefix
+from karabo.middlelayer_api.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
     VectorStringValue, wrap)
-from karabo.api2.hash import Int32, Float
-from karabo.api2.timestamp import Timestamp
+from karabo.middlelayer_api.hash import Int32, Float
+from karabo.middlelayer_api.timestamp import Timestamp
 
 
 class Tests(TestCase):

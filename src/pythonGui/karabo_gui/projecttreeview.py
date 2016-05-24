@@ -21,8 +21,8 @@ from karabo_gui.topology import Manager
 from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from karabo_gui.projectmodel import ProjectModel
 
-from karabo.api2.project import (Monitor, Project, ProjectAccess,
-                                 ProjectConfiguration)
+from karabo.middlelayer_api.project import (Monitor, Project, ProjectAccess,
+                                            ProjectConfiguration)
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,

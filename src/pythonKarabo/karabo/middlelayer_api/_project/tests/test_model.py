@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from zipfile import ZipFile
 
-from karabo.api2.hash import Hash
+from karabo.middlelayer_api.hash import Hash
 from karabo.testing.utils import temp_file
 
 from ..constants import PROJECT_SUFFIX

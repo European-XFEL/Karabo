@@ -76,12 +76,12 @@ if __name__ == '__main__':
         url="http://karabo.eu",
         packages=find_packages(),
         package_data={
-            'karabo.api1.tests': ['resources/*.*'],
-            'karabo.api2.tests': ['*.xml'],
+            'karabo.bound_api.tests': ['resources/*.*'],
+            'karabo.middlelayer_api.tests': ['*.xml'],
             'karabo.testing': ['resources/*.*'],
         },
         entry_points={'console_scripts': [
-                      'karabo_device_server=karabo.api1.device_server:main',
+                      'karabo_device_server=karabo.bound_api.device_server:main',
                       'ideviceclient=karabo.interactive.ideviceclient:main',
                       'ikarabo=karabo.interactive.ikarabo:main',
                       'convert-karabo-device-project=karabo.interactive.convert_device_project:main',

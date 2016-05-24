@@ -2,8 +2,8 @@ from datetime import datetime
 from unittest import TestCase, main
 import time
 
-from karabo.api2.timestamp import Timestamp
-from karabo.api2.hash import Hash
+from karabo.middlelayer_api.timestamp import Timestamp
+from karabo.middlelayer_api.hash import Hash
 
 
 class Tests(TestCase):

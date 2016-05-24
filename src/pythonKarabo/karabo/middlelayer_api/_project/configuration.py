@@ -1,13 +1,9 @@
-from karabo.api2.hash import Hash
+from karabo.middlelayer_api.hash import Hash
 
 
-class MonitorData(object):
-    """ This class represents a data structure which is needed for the later
-    run-control.
-    """
-
+class ProjectConfigurationData(object):
     def __init__(self, name, config=None):
-        super(MonitorData, self).__init__()
+        super(ProjectConfigurationData, self).__init__()
 
         self.name = name
         self.config = config

@@ -12,8 +12,9 @@ This module contains a class which represents the project related datastructure.
 
 __all__ = ["Device", "DeviceGroup", "GuiProject", "Macro", "Category"]
 
-from karabo.api2.project import (BaseDevice, BaseDeviceGroup, BaseMacro,
-                                 Monitor, Project, ProjectConfiguration)
+from karabo.middlelayer_api.project import (
+    BaseDevice, BaseDeviceGroup, BaseMacro, Monitor, Project,
+    ProjectConfiguration)
 from karabo.middlelayer import AccessMode, Hash, XMLParser, XMLWriter
 from karabo_gui.configuration import Configuration
 from karabo_gui.network import network
