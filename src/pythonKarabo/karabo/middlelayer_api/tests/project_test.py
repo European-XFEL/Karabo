@@ -2,7 +2,7 @@ from contextlib import contextmanager
 import os.path as op
 from zipfile import ZipFile
 
-from karabo.api2.project import (
+from karabo.middlelayer_api.project import (
     Project, ProjectConfiguration, BaseDeviceGroup, BaseDevice, BaseMacro,
     BaseScene
 )
