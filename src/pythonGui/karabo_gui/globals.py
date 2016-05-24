@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from karabo.api_2 import AccessLevel
+from karabo.middlelayer import AccessLevel
 from os import environ, path
 from sys import platform
 

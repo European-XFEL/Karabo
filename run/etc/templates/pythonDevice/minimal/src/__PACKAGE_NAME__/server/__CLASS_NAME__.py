@@ -5,7 +5,7 @@ Copyright (c) 2010-2015 European XFEL GmbH Hamburg.
 All rights reserved.
 """
 
-from karabo.api_1 import runSingleDeviceServer
+from karabo.bound import runSingleDeviceServer
 
 
 def main():

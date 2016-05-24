@@ -11,7 +11,7 @@ from PyQt4.QtGui import (
 from karabo_gui.const import ns_karabo, OK_COLOR, ERROR_COLOR
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
-from karabo.api_2 import String
+from karabo.middlelayer import String
 
 BUTTON_COLOR_STYLESHEET = """
 QPushButton#stateColor {{ background-color : rgba{}; border: none; }}

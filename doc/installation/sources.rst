@@ -374,17 +374,13 @@ In Netbeans you can do that:
 * Select "bundle-install" (if this option doesn't exist, please add it
   using the add button)
  
-To run the Unitary Tests using the Terminal, please go to the
-installed karaboFramework folder and execute the following scripts:
+To run the Unit Tests using the Terminal, execute the following scripts:
 
 .. code-block:: bash
 
-  cd /src/pythonKarabo/tests
-  nosetests-3.4 -sv tests_api_1
-  nosetests-3.4 -sv tests_api_2
-  nosetests-3.4 -sv tests_api_2_2
+  nosetests-3.4 -sv karabo
  
-To run the Unitary Tests using Netbeans:
+To run the Unit Tests using Netbeans:
 
 1. Go to Tools > Python Platforms
 2. Make as Default Python the Python under your current KaraboFramework

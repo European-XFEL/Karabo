@@ -4,7 +4,7 @@
 
 import unittest
 
-from karabo.api_1 import OkErrorFsm
+from karabo.bound import OkErrorFsm
 
 
 class OkErrorUser(OkErrorFsm):

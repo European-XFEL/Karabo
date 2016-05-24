@@ -1,6 +1,6 @@
 import unittest
 
-from karabo.api_1 import (
+from karabo.bound import (
     BinarySerializerHash, Hash, InputHash, OutputHash,
     TextSerializerHash, TextSerializerSchema, loadFromFile, saveToFile, similar
 )

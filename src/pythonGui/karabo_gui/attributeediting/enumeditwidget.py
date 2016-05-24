@@ -3,7 +3,7 @@ from enum import Enum
 from PyQt4.QtCore import QEvent, pyqtSlot
 from PyQt4.QtGui import QComboBox
 
-from karabo.api_2 import MetricPrefix, Unit
+from karabo.middlelayer import MetricPrefix, Unit
 from karabo_gui.util import SignalBlocker
 from .widget import AttributeWidget
 

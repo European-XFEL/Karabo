@@ -3,7 +3,7 @@ __date__ = "__DATE__"
 __copyright__ = ("Copyright (c) 2010-2015 European XFEL GmbH Hamburg. "
                  "All rights reserved.")
 
-from karabo.api_1 import PythonDevice, KARABO_CLASSINFO
+from karabo.bound import PythonDevice, KARABO_CLASSINFO
 
 
 @KARABO_CLASSINFO("__CLASS_NAME__", "1.3")

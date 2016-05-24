@@ -3,7 +3,7 @@
 
 import unittest
 
-from karabo.api_1 import Configurator, Hash, HashFilter, Validator
+from karabo.bound import Configurator, Hash, HashFilter, Validator
 from .configuration_example_classes import Base, P1, P2, P3, GraphicsRenderer2
 
 
