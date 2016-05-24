@@ -4,7 +4,7 @@ __all__ = ["XYPlot"]
 
 from karabo_gui.widget import PlotWidget
 
-from karabo.api_2 import Simple
+from karabo.middlelayer import Simple
 
 from PyQt4.Qwt5.Qwt import QwtPlot
 from guiqwt.plot import CurveDialog, PlotManager

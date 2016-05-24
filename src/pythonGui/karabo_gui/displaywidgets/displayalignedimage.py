@@ -13,7 +13,7 @@ from karabo_gui.widget import DisplayWidget
 import numpy as np
 from guiqwt.plot import ImageDialog
 from guiqwt.builder import make
-from karabo.api_2 import Type
+from karabo.middlelayer import Type
 
 from PyQt4.QtGui import (QSlider, QWidget, QHBoxLayout, QVBoxLayout,
                             QComboBox, QSpinBox, QLabel)

@@ -14,7 +14,7 @@ __all__ = ["Device", "DeviceGroup", "GuiProject", "Macro", "Category"]
 
 from karabo.api2.project import (BaseDevice, BaseDeviceGroup, BaseMacro,
                                  Monitor, Project, ProjectConfiguration)
-from karabo.api_2 import AccessMode, Hash, XMLParser, XMLWriter
+from karabo.middlelayer import AccessMode, Hash, XMLParser, XMLWriter
 from karabo_gui.configuration import Configuration
 from karabo_gui.network import network
 from karabo_gui.scene import Scene

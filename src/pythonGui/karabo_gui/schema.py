@@ -8,7 +8,7 @@
 .. autoclass:: Box
 """
 
-from karabo.api_2 import AccessMode, AccessLevel, NodeType, Hash, Timestamp
+from karabo.middlelayer import AccessMode, AccessLevel, NodeType, Hash, Timestamp
 import karabo.api2.hash as hashmod
 from karabo_gui.registry import Monkey
 from karabo_gui.network import Network

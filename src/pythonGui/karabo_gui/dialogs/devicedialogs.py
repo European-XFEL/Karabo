@@ -13,7 +13,7 @@ __all__ = ["DeviceDialog", "DeviceGroupDialog", "DeviceDefinitionWidget"]
 
 import karabo_gui.globals as globals
 
-from karabo.api_2 import AccessLevel
+from karabo.middlelayer import AccessLevel
 from karabo_gui.util import SignalBlocker
 from .duplicatedialog import DuplicateWidget
 

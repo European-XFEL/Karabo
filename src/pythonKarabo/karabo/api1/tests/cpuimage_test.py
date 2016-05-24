@@ -6,7 +6,7 @@ import unittest
 
 from PIL import Image
 
-from karabo.api_1 import CpuImageFLOAT, CpuImageUINT8
+from karabo.bound import CpuImageFLOAT, CpuImageUINT8
 
 
 class  CpuImage_TestCase(unittest.TestCase):

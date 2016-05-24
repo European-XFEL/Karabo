@@ -3,7 +3,7 @@
 
 import unittest
 
-from karabo.api_1 import Authenticator, Epochstamp, TIME_UNITS
+from karabo.bound import Authenticator, Epochstamp, TIME_UNITS
 
 
 class  Authenticator_TestCase(unittest.TestCase):

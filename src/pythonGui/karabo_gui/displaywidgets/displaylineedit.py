@@ -21,7 +21,7 @@
 __all__ = ["DisplayLineEdit"]
 
 
-from karabo.api_2 import String
+from karabo.middlelayer import String
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 

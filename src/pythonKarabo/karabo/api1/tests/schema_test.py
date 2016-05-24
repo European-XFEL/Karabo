@@ -1,7 +1,7 @@
 
 import unittest
 
-from karabo.api_1 import (
+from karabo.bound import (
     Configurator,
     METER, MICRO, MANDATORY, READ, WRITE, INIT,
     AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,

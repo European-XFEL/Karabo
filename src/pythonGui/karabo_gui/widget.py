@@ -23,7 +23,7 @@ import os.path
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QLabel, QPixmap
 
-from karabo.api_2 import String
+from karabo.middlelayer import String
 from karabo_gui import background
 from karabo_gui.const import OK_COLOR, ERROR_COLOR
 from karabo_gui.registry import Registry

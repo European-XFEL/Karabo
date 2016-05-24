@@ -5,7 +5,7 @@ __date__ ="$Jul 2, 2013$"
     @@@(corresponds to test in karabo: xip_test/Image_Test.cc )
 import os.path as op
 import unittest
-from karabo.api_1 import ImageFLOAT, ImageDOUBLE, CPU
+from karabo.bound import ImageFLOAT, ImageDOUBLE, CPU
 
 class  Image_TestCase(unittest.TestCase):
     def setUp(self):

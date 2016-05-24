@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from karabo.api_1 import ImageData, ChannelSpace, Encoding
+from karabo.bound import ImageData, ChannelSpace, Encoding
 
 
 class  ImageData_TestCase(unittest.TestCase):

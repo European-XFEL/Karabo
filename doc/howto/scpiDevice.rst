@@ -83,7 +83,7 @@ simple and should look like:
     __date__ ="June  8, 2015, 01:53 PM"
     __copyright__="Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved."
 
-    from karabo.api_1 import KARABO_CLASSINFO, launchPythonDevice
+    from karabo.bound import KARABO_CLASSINFO, launchPythonDevice
     from scpi.scpi_device_2 import ScpiDevice2, ScpiOkErrorFsm
 
 
@@ -125,7 +125,7 @@ force the Karabo device to follow the hardware state.
     __date__ ="June  8, 2015, 01:53 PM"
     __copyright__="Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved."
     
-    from karabo.api_1 import KARABO_CLASSINFO, launchPythonDevice
+    from karabo.bound import KARABO_CLASSINFO, launchPythonDevice
     from scpi.scpi_device_2 import ScpiDevice2, ScpiOnOffFsm
 
 
@@ -175,7 +175,7 @@ like
     __date__ ="June  9, 2015, 01:55 PM"
     __copyright__="Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved."
     
-    from karabo.api_1 import KARABO_CLASSINFO, launchPythonDevice
+    from karabo.bound import KARABO_CLASSINFO, launchPythonDevice
     from scpi.scpi_device_2 import ScpiDevice2, ScpiStartStopFsm
 
 

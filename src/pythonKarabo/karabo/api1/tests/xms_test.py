@@ -6,7 +6,7 @@ import threading
 import time
 import socket
 
-from karabo.api_1 import Hash, SignalSlotable
+from karabo.bound import Hash, SignalSlotable
 
 
 class RemoteClient(threading.Thread):

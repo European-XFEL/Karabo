@@ -4,7 +4,7 @@ import karabo_gui.icons as icons
 from karabo_gui.widget import DisplayWidget
 from karabo_gui.messagebox import MessageBox
 
-from karabo.api_2 import Integer, Number, String
+from karabo.middlelayer import Integer, Number, String
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer, QDir

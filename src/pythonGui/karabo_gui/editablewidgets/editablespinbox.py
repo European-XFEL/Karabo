@@ -24,7 +24,7 @@ __all__ = ["EditableSpinBox"]
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
-from karabo.api_2 import Integer
+from karabo.middlelayer import Integer
 
 from PyQt4.QtCore import QEvent
 from PyQt4.QtGui import QSpinBox

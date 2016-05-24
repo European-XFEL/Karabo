@@ -28,7 +28,7 @@ Consider the code of our device - ConveyorPy.py:
     import sys
     import time
 
-    from karabo.api_1 import (
+    from karabo.bound import (
         KARABO_CLASSINFO, PythonDevice, Worker,
         BOOL_ELEMENT, DOUBLE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, Unit
     )
@@ -189,11 +189,11 @@ Consider the code of our device - ConveyorPy.py:
 Consider the main steps of the code above, that are important to
 mention while writing devices in Python:
 
-1. Import needed pieces from the karabo.api_1 package:
+1. Import needed pieces from the karabo.bound package:
 
   .. code-block:: python
 
-      from karabo.api_1 import (
+      from karabo.bound import (
           KARABO_CLASSINFO, PythonDevice, Worker,
           BOOL_ELEMENT, DOUBLE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
           Unit
@@ -204,7 +204,7 @@ mention while writing devices in Python:
 
    .. code-block:: python
 
-     from karabo.api_1 import Worker
+     from karabo.bound import Worker
 
    The current recommendation is to use NoFsm. If you need an FSM, read
    :ref:`this <stateMachines>` section.
@@ -261,11 +261,11 @@ The "Worker" class
 ------------------
 
 The ``Worker`` class is suitable for executing periodic tasks. It is defined
-in the ``karabo.api_1`` module, from which it must be imported,
+in the ``karabo.bound`` module, from which it must be imported,
 
 .. code-block:: python
 
-    from karabo.api_1 import Worker
+    from karabo.bound import Worker
 
 It can be instantiated and started like this:
 
@@ -303,14 +303,14 @@ Pythonic API based on native Python
 
 A device is not much more than a macro that runs on a server for a longer
 time. So it is written mostly in the same way. The biggest difference
-is that it inherits from :class:`karabo.api_2.PythonDevice` instead of
-:class:`karabo.api_2.Macro`. But the main difference is actually that
+is that it inherits from :class:`karabo.middlelayer.PythonDevice` instead of
+:class:`karabo.middlelayer.Macro`. But the main difference is actually that
 a macro is something you may write quick & dirty, while a device should be
 written with more care. To give an example:
 
 .. code-block:: python
 
-    from karabo.api_2 import PythonDevice
+    from karabo.middlelayer import PythonDevice
 
     class TestDevice(PythonDevice):
         __version__ = "1.3 1.4"
@@ -504,9 +504,9 @@ a path to the device's class is given. You can think of it as something like an
     from genesisDevice.Genesis import GenesisTorpedo
 
 When the device server is running, it periodically checks its namespace
-(api_1 or api_2) for all available device entry points. It attempts to import
-each device. Every device which can be imported and which is a subclass of
-``PythonDevice`` will be made available for instantiation by the server.
+(bound or middlelayer) for all available device entry points. It attempts to
+import each device. Every device which can be imported and which is a subclass
+of ``PythonDevice`` will be made available for instantiation by the server.
 
 Some other potentially useful keyword arguments for the ``setup`` function are
 ``package_data`` and ``requires``. ``package_data`` is a dictionary of file
