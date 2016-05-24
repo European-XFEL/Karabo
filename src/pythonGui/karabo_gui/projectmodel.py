@@ -25,6 +25,7 @@ from karabo_gui.dialogs.duplicatedialog import DuplicateDialog
 from karabo_gui.dialogs.monitordialog import MonitorDialog
 from karabo_gui.dialogs.scenedialog import SceneDialog
 from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject, Macro
+from karabo_gui.messagebox import MessageBox
 from karabo_gui.scene import Scene
 import karabo_gui.network as network
 from karabo_gui.topology import getDevice, Manager
@@ -883,7 +884,7 @@ class ProjectModel(QStandardItemModel):
                     .format(project.name),
                     QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
                 if reply == QMessageBox.Save:
-                    project.zip()
+                    project.saveProject()
             
             self.projectClose(project)
 
@@ -954,7 +955,7 @@ class ProjectModel(QStandardItemModel):
         
         project = GuiProject(filename)
         project.access = access
-        project.zip()
+        project.saveProject()
         self.appendProject(project)
         self.selectObject(project)
         return project
@@ -976,8 +977,9 @@ class ProjectModel(QStandardItemModel):
         except Exception as e:
             # Remove project again, if failure
             self.removeProject(project)
-            e.message = "While reading the project a <b>critical error</b> " \
-                        "occurred."
+            msg = "Open project <b>{}</b> failed!<br>Reason: '{}'".format(
+                project.name, e)
+            MessageBox().showError(msg, "Open failed")
             raise
 
         self.selectObject(project)
@@ -994,7 +996,7 @@ class ProjectModel(QStandardItemModel):
         if project is None:
             project = self.currentProject()
         
-        project.zip()
+        project.saveProject()
         
         return project
 
@@ -1009,7 +1011,7 @@ class ProjectModel(QStandardItemModel):
             project = self.currentProject()
 
         project.access = access
-        project.zip(filename=filename)
+        project.saveProject(filename=filename)
         project.filename = filename
         self.onProjectModified(project)
         
@@ -1423,7 +1425,7 @@ class ProjectModel(QStandardItemModel):
                     continue
 
                 if reply == QMessageBox.Save:
-                    project.zip()
+                    project.saveProject()
             else:
                 reply = QMessageBox.question(None, 'Close project',
                     "Do you really want to close the project \"<b>{}</b>\"?"
