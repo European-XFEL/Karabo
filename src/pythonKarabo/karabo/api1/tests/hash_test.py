@@ -9,7 +9,7 @@ import unittest
 
 import numpy as np
 
-from karabo.api_1 import (
+from karabo.bound import (
     Hash, HashAttributes, Types, VectorHash,
     isStdVectorDefaultConversion, setStdVectorDefaultConversion, similar
 )

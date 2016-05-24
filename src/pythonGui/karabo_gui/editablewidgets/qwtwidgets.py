@@ -8,7 +8,7 @@
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import EditableWidget
 
-from karabo.api_2 import Number, Integer
+from karabo.middlelayer import Number, Integer
 
 from PyQt4.Qwt5.Qwt import QwtSlider, QwtKnob
 

@@ -14,7 +14,7 @@ sip.setapi("QUrl", 2)
 from PyQt4.QtCore import QObject, QMimeData, QPoint, Qt, pyqtSignal
 from PyQt4.QtGui import QApplication, QDropEvent, QWidget
 
-from karabo.api_2 import (
+from karabo.middlelayer import (
     AccessLevel, Hash, Integer, ProjectAccess, Schema, XMLParser
 )
 from karabo_gui.docktabwindow import Dockable

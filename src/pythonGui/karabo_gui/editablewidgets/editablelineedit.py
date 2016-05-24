@@ -24,7 +24,7 @@ __all__ = ["EditableLineEdit"]
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import EditableWidget
 
-from karabo.api_2 import String, Char
+from karabo.middlelayer import String, Char
 
 from PyQt4.QtGui import QLineEdit
 

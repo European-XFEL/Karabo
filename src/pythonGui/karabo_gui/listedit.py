@@ -20,9 +20,10 @@ from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
                          QInputDialog, QMessageBox, QHBoxLayout, QVBoxLayout,
                          QFontMetrics)
 
-from karabo.api_2 import (VectorBool, VectorDouble, VectorFloat, VectorInt8,
-                          VectorUInt8, VectorInt16, VectorUInt16, VectorInt32,
-                          VectorUInt32, VectorInt64, VectorUInt64)
+from karabo.middlelayer import (VectorBool, VectorDouble, VectorFloat,
+                                VectorInt8, VectorUInt8, VectorInt16,
+                                VectorUInt16, VectorInt32, VectorUInt32,
+                                VectorInt64, VectorUInt64)
 
 class ListEdit(QDialog):
 

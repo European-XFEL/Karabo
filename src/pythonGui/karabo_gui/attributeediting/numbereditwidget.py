@@ -1,7 +1,7 @@
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import QLineEdit, QDoubleValidator, QPalette, QValidator
 
-from karabo.api_2 import Integer
+from karabo.middlelayer import Integer
 from karabo_gui.util import SignalBlocker
 from .widget import AttributeWidget
 
