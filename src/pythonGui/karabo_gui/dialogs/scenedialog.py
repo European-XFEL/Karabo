@@ -15,6 +15,7 @@ from PyQt4.QtCore import QFileInfo
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit,
                          QVBoxLayout)
 
+
 class SceneDialog(QDialog):
 
     def __init__(self, scene):
@@ -23,16 +24,17 @@ class SceneDialog(QDialog):
         self.setWindowTitle("Add scene")
 
         vLayout = QVBoxLayout(self)
-        vLayout.setContentsMargins(5,5,5,5)
+        vLayout.setContentsMargins(5, 5, 5, 5)
 
         fLayout = QFormLayout()
-        fLayout.setContentsMargins(5,5,5,5)
+        fLayout.setContentsMargins(5, 5, 5, 5)
         self.leSceneName = QLineEdit("")
         self.leSceneName.textChanged.connect(self.onTextChanged)
         fLayout.addRow("Enter scene name:", self.leSceneName)
         vLayout.addLayout(fLayout)
 
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok |
+                                          QDialogButtonBox.Cancel)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
@@ -55,4 +57,3 @@ class SceneDialog(QDialog):
     def onTextChanged(self, text):
         enabled = len(self.leSceneName.text()) > 0
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
-
