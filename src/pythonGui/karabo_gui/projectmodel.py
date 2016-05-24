@@ -30,7 +30,7 @@ import karabo_gui.network as network
 from karabo_gui.topology import getDevice, Manager
 from karabo_gui.util import getSaveFileName
 
-from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QFileInfo, Qt
+from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
                          QItemSelectionModel, QMessageBox, QStandardItem,
                          QStandardItemModel)
@@ -646,6 +646,17 @@ class ProjectModel(QStandardItemModel):
         parentItem.appendRow(item)
         self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
 
+    def insertMonitorItem(self, row, monitor):
+        """
+        This function inserts the given ``monitor`` at the given ``row`` of the
+        model.
+        """
+        item = self.createMonitorItem(monitor)
+       
+        projectItem = self.findItem(monitor.project)
+        # Find folder for devices
+        parentItem = self.getCategoryItem(Project.MONITORS_LABEL, projectItem)
+        parentItem.insertRow(row, item)
 
     def removeObjectItem(self, object):
         """
@@ -917,6 +928,7 @@ class ProjectModel(QStandardItemModel):
         project.signalMacroAdded.connect(self.addMacroItem)
         project.signalMacroChanged.connect(self.addMacroSubItems)
         project.signalMonitorAdded.connect(self.addMonitorItem)
+        project.signalMonitorInserted.connect(self.insertMonitorItem)
         
         project.signalRemoveObject.connect(self.removeObjectItem)
         
@@ -1044,7 +1056,7 @@ class ProjectModel(QStandardItemModel):
             
             # Remove device of project and get index for later insert to keep the
             # order
-            index = project.remove(device)
+            index = self.removeObject(project, device, False)
             
             if isinstance(device, Device):
                 device = self.insertDevice(index, project,
@@ -1104,7 +1116,7 @@ class ProjectModel(QStandardItemModel):
                 return None
 
             # Overwrite existing device
-            index = project.remove(device)
+            index = self.removeObject(project, device, False)
             device = self.insertDevice(index, project, serverId,
                                        classId, deviceId, ifexists)
             return device
@@ -1131,7 +1143,7 @@ class ProjectModel(QStandardItemModel):
                 return None
 
             # Overwrite existing device group
-            index = project.remove(deviceGroup)
+            index = self.removeObject(project, deviceGroup, False)
             deviceGroup = self.insertDeviceGroup(index, project, name,
                                                  serverId, classId, startupBehaviour,
                                                  displayPrefix, startIndex, endIndex)
@@ -1192,30 +1204,33 @@ class ProjectModel(QStandardItemModel):
             return
         
         if scene is None:
-            self.addScene(self.currentProject(), dialog.sceneName)
+            self.addScene(self.currentProject(), dialog.sceneName())
         else:
-            scene.filename = dialog.sceneName
-            fi = QFileInfo(scene.filename)
-            if len(fi.suffix()) < 1:
-                scene.filename = "{}.svg".format(scene.filename)
-
+            scene.filename = dialog.sceneName()
             self.renameScene(scene)
-
-
-    def _createScene(self, project, sceneName):
-        scene = Scene(project, sceneName, designMode=True)
-        project.addScene(scene)
-        
-        return scene
-
 
     def addScene(self, project, sceneName):
         """
         Create new Scene object for given \project.
         """
-        scene = self._createScene(project, sceneName)
-        self.openScene(scene)
+        scene = project.getScene(sceneName)
+        if scene is not None:
+            reply = QMessageBox.question(None, 'Scene already exists',
+                "Another scene with the same name \"<b>{}</b>\" <br> "
+                "already exists. Do you want to overwrite it?".format(sceneName),
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
+            if reply == QMessageBox.No:
+                return None
+
+            # Overwrite existing scene
+            index = self.removeObject(project, scene, False)
+            scene = self.insertScene(index, project, sceneName)
+        else:
+            scene = Scene(project, sceneName, designMode=True)
+            project.addScene(scene)
+        
+        self.openScene(scene)
         self.selectObject(scene)
         
         return scene
@@ -1225,6 +1240,15 @@ class ProjectModel(QStandardItemModel):
             self._openedScenes.remove(scene)
             scene.signalSceneLinkTriggered.disconnect(self.openSceneLink)
         self.signalRemoveScene.emit(scene)
+
+    def insertScene(self, index, project, sceneName):
+        """
+        Insert a scene for the given \project with the given data.
+        """
+        scene = Scene(project, sceneName, designMode=True)
+        project.insertScene(index, scene)
+        
+        return scene
 
     def duplicateScene(self, scene):
         dialog = DuplicateDialog(scene.filename[:-4])
@@ -1293,6 +1317,7 @@ class ProjectModel(QStandardItemModel):
         h.set("format", monitorDialog.format)
         
         if monitor is not None:
+            monitor.name = monitorDialog.name
             monitor.config = h
             # Update view
             self.updateMonitorItem(monitor)
@@ -1317,8 +1342,8 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return None
 
-            # Overwrite existing device
-            index = project.remove(d)
+            # Overwrite existing monitor
+            index = self.removeObject(project, monitor, False)
             monitor = self.insertMonitor(index, project, name, config)
             return monitor
         
@@ -1327,6 +1352,14 @@ class ProjectModel(QStandardItemModel):
         
         return monitor
 
+    def insertMonitor(self, index, project, name, config):
+        """
+        Insert a monitor for the given \project with the given data.
+        """
+        monitor = Monitor(name, config)
+        project.insertMonitor(index, monitor)
+        
+        return monitor
 
 ### slots ###
 
@@ -1543,7 +1576,6 @@ class ProjectModel(QStandardItemModel):
         with open(fn, "w") as fout:
             fout.write(s)
 
-
     def onOpenScene(self):
         project = self.currentProject()
         fn = QFileDialog.getOpenFileName(None, "Open scene",
@@ -1551,13 +1583,10 @@ class ProjectModel(QStandardItemModel):
                                          "SVG (*.svg)")
         if not fn:
             return
-        scene = Scene(project, os.path.basename(fn))
+        scene = self.addScene(project, os.path.basename(fn))
         with open(fn, "r") as fin:
             s = fin.read()
             scene.fromXml(s.encode())
-        project.addScene(scene)
-        self.selectObject(scene)
-
 
     def onRemove(self):
         """
@@ -1632,7 +1661,7 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return
         
-        project.remove(object)
+        index = project.remove(object)
         
         if isinstance(object, Scene):
             self.closeScene(object)
@@ -1647,4 +1676,6 @@ class ProjectModel(QStandardItemModel):
         
         if showConfirm:
             self.selectObject(project)
+        
+        return index
         
