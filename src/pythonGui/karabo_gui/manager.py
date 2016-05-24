@@ -26,7 +26,7 @@ from karabo_gui.projectmodel import ProjectModel
 from karabo_gui.topology import getClass
 from karabo_gui.util import getSaveFileName, getSchemaModifiedAttrs
 
-from PyQt4.QtCore import (pyqtSignal, QObject)
+from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
 import os
