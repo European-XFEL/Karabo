@@ -16,6 +16,7 @@ from karabo.middlelayer_api.project import (
     ProjectConfiguration)
 from karabo.middlelayer import AccessMode, Hash, XMLParser, XMLWriter
 from karabo_gui.configuration import Configuration
+from karabo_gui.messagebox import MessageBox
 from karabo_gui.network import network
 from karabo_gui.scene import Scene
 from karabo_gui.topology import getClass, getDevice, Manager
@@ -505,6 +506,16 @@ class GuiProject(Project, QObject):
             index = self.monitors.index(object)
             self.monitors.pop(index)
             return index
+
+    def saveProject(self, filename=None):
+        """ Wrapped version of zip() which catches all file saving exceptions
+        """
+        try:
+             self.zip(filename=filename)
+        except Exception as e:
+            msg = "Saving project <b>{}</b> failed!<br>Reason: '{}'".format(
+                self.name, e)
+            MessageBox().showError(msg, "Saving failed")
 
     def unzip(self, factories=None):
         objFactories = {
