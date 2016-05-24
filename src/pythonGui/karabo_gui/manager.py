@@ -29,23 +29,6 @@ from karabo_gui.util import getSaveFileName, getSchemaModifiedAttrs
 from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
-import os
-from sys import platform
-
-
-def _cat_text_file(filePath):
-    """
-    Open text file and return its content after stripping any trailing
-    whitspace (i.e. also newline). Return None if an IOError occurs.
-    """
-    try:
-        with open(filePath, 'r') as file:
-            return file.readline().rstrip()
-    except IOError:
-        print("IOError in_cat_text_file: Cannot open '" + filePath + "'.")
-
-    return None
-
 
 class _Manager(QObject):
     # signals
@@ -71,9 +54,6 @@ class _Manager(QObject):
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
 
-        # Check GUI version
-        self._checkVersion()
-        
         # Model for navigation views
         self.systemTopology = NavigationTreeModel(self)
         self.systemTopology.selectionModel.selectionChanged. \
@@ -89,28 +69,6 @@ class _Manager(QObject):
 
         # Sets all parameters to start configuration
         self.reset()
-
-
-    def _checkVersion(self):
-        """
-        This function checks the current version of the GUI and save its value
-        to the global variable GUI_VERSION.
-        """
-        # TODO: hardcoded version needs to be updated
-        globals.GUI_VERSION = "1.5"
-        if platform.startswith("win"):
-            return  # Just the hardcoded version - find better solution for Windows
-
-        # Find Karabo installation directory using the KARABO env variable
-        installDir = os.environ.get("KARABO")  # i.e. None if KARABO not set
-
-        # Read out file "VERSION" from installation directory
-        if installDir is not None:
-            karaboVersionPath = os.path.join(installDir, "VERSION")
-            version = _cat_text_file(karaboVersionPath)
-            if version is not None:
-                globals.GUI_VERSION = version
-
 
     # Sets all parameters to start configuration
     def reset(self):
