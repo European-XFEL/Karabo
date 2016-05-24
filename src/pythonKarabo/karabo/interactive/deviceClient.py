@@ -8,7 +8,7 @@ from karathon import Hash
 from karathon import TextSerializerHash
 import karathon as krb
 
-from karabo.api2.deviceclientproject import DeviceClientProject
+from karabo.middlelayer_api.deviceclientproject import DeviceClientProject
 
 import IPython
 import re

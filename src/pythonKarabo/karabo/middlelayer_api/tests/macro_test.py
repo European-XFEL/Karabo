@@ -6,12 +6,12 @@ from unittest import TestCase, main
 import weakref
 
 from karabo.api import Slot, Int, sleep
-from karabo.api2.device import Device
-from karabo.api2.device_client import (
+from karabo.middlelayer_api.device import Device
+from karabo.middlelayer_api.device_client import (
     waitUntilNew, waitUntil, setWait, setNoWait, getDevice, executeNoWait,
     updateDevice, Queue, connectDevice)
-from karabo.api2.device_server import KaraboStream
-from karabo.api2.macro import Macro
+from karabo.middlelayer_api.device_server import KaraboStream
+from karabo.middlelayer_api.macro import Macro
 
 from .eventloop import startDevices, stopDevices, sync_tst, async_tst
 

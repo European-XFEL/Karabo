@@ -8,15 +8,15 @@ from unittest import TestCase, main, skip
 import weakref
 
 from karabo.api import Int, Slot
-from karabo.api2.cli import connectDevice, DeviceClient
-from karabo.api2.device import Device
-from karabo.api2.device_client import (
+from karabo.middlelayer_api.cli import connectDevice, DeviceClient
+from karabo.middlelayer_api.device import Device
+from karabo.middlelayer_api.device_client import (
     getDevice, instantiate, shutdown, DeviceClientBase, getDevices, getServers)
-from karabo.api2.device_server import DeviceServer
-from karabo.api2.eventloop import NoEventLoop
-from karabo.api2.exceptions import KaraboError
-from karabo.api2.hash import Hash
-from karabo.api2.macro import Macro, EventThread, RemoteDevice
+from karabo.middlelayer_api.device_server import DeviceServer
+from karabo.middlelayer_api.eventloop import NoEventLoop
+from karabo.middlelayer_api.exceptions import KaraboError
+from karabo.middlelayer_api.hash import Hash
+from karabo.middlelayer_api.macro import Macro, EventThread, RemoteDevice
 
 from .eventloop import setEventLoop
 

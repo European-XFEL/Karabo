@@ -1,4 +1,4 @@
-from karabo.api2.hash import Hash
+from karabo.middlelayer_api.hash import Hash
 
 
 class DeviceData(object):

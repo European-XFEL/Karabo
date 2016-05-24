@@ -1,10 +1,9 @@
 import argparse
 import csv
-from zipfile import ZipFile
 
-from karabo.api2._project.device import DeviceData
-from karabo.api2._project.io import write_project
-from karabo.api2._project.model import ProjectData
+from karabo.middlelayer_api._project.device import DeviceData
+from karabo.middlelayer_api._project.io import write_project
+from karabo.middlelayer_api._project.model import ProjectData
 
 
 def create_project(src, dest):

@@ -9,7 +9,7 @@
 """
 
 from karabo.middlelayer import AccessMode, AccessLevel, NodeType, Hash, Timestamp
-import karabo.api2.hash as hashmod
+import karabo.middlelayer_api.hash as hashmod
 from karabo_gui.registry import Monkey
 from karabo_gui.network import Network
 import karabo_gui.icons as icons
