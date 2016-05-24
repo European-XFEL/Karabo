@@ -26,14 +26,12 @@ from karabo_gui.topology import getDeviceBox, Manager
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import (pyqtSignal, pyqtSlot, Qt, QByteArray, QEvent, QSize,
-                          QRect, QLine, QFileInfo, QBuffer, QIODevice,
-                          QMimeData, QRectF, QPoint, QPointF)
+                          QRect, QLine, QBuffer, QIODevice, QMimeData, QRectF,
+                          QPoint, QPointF)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
-                         QDialog, QDialogButtonBox, QFrame, QLabel, QLayout,
-                         QKeySequence, QMenu,QMessageBox, QPalette, QPainter,
-                         QPen, QPushButton, QSizePolicy, QStackedLayout,
-                         QStandardItemModel, QStandardItem, QTreeView,
-                         QVBoxLayout, QWidget)
+                         QDialog, QFrame, QLabel, QLayout, QKeySequence,
+                         QMenu,QMessageBox, QPalette, QPainter, QPen,
+                         QPushButton, QSizePolicy, QStackedLayout, QWidget)
 
 from PyQt4.QtSvg import QSvgWidget
 
@@ -1092,9 +1090,6 @@ class Scene(QSvgWidget):
         self.project.signalDeviceSelected.connect(self.onSelectionChanged)
         
         self.filename = name
-        fi = QFileInfo(self.filename)
-        if len(fi.suffix()) < 1:
-            self.filename = "{}.svg".format(self.filename)
 
         self.inner = QWidget(self)
         self.inner.setLayout(FixedLayout())
