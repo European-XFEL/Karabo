@@ -1,4 +1,3 @@
-
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on April 7, 2014
@@ -55,7 +54,8 @@ class BaseConfiguration(Configuration):
         This function merges the \self.initConfig into the Configuration.
         This is only possible, if the descriptor has been set before.
         """
-        if self.descriptor is None: return
+        if self.descriptor is None:
+            return
 
         # Set default values for configuration
         self.setDefault()
@@ -297,14 +297,15 @@ class GuiProject(Project, QObject):
     def __init__(self, filename):
         super(GuiProject, self).__init__(filename)
 
-        self.modules = { } # the modules in the macro context
+        self.modules = {} # the modules in the macro context
         
         # States whether the project was changed or not
         self.isModified = False
 
     def setModified(self, isModified):
         """
-        The project was modified and the associated modelview needs to be updated.
+        The project was modified and the associated modelview needs to be
+        updated.
         
         isModified - states, whether modification was done
         """
@@ -360,8 +361,8 @@ class GuiProject(Project, QObject):
         self.signalDeviceGroupInserted.emit(index, deviceGroup)
         self.setupDeviceGroupToProject(deviceGroup)
 
-    def newDeviceGroup(self, groupId, serverId, classId, ifexists,
-                             prefix, start, end):
+    def newDeviceGroup(self, groupId, serverId, classId, ifexists, prefix,
+                       start, end):
         """
         This function creates a new device group with the given parameters,
         adds it to this project and returns it.
@@ -390,9 +391,7 @@ class GuiProject(Project, QObject):
             actual = getDevice(device.id)
             actual.signalStatusChanged.connect(deviceGroup.onStatusChanged)
             deviceGroup.onStatusChanged(actual, actual.status, actual.error)
-            
             deviceGroup.addDevice(device)
-        
         return deviceGroup
 
     def addScene(self, scene):
