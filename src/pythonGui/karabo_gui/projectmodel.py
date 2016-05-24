@@ -648,7 +648,8 @@ class ProjectModel(QStandardItemModel):
 
     def insertMonitorItem(self, row, monitor):
         """
-        This function inserts the given \monitor at the given \row of the model.
+        This function inserts the given ``monitor`` at the given ``row`` of the
+        model.
         """
         item = self.createMonitorItem(monitor)
        

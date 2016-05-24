@@ -12,7 +12,8 @@ __all__ = ["SceneDialog"]
 
 
 from PyQt4.QtCore import QFileInfo
-from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QVBoxLayout)
+from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit,
+                         QVBoxLayout)
 
 class SceneDialog(QDialog):
 
