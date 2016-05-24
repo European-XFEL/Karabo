@@ -31,7 +31,6 @@ from zipfile import ZipFile
 class BaseConfiguration(Configuration):
     signalConfigurationModified = pyqtSignal(bool)
 
-
     def __init__(self, deviceId, type, descriptor=None):
         Configuration.__init__(self, deviceId, type, descriptor)
 
@@ -41,18 +40,15 @@ class BaseConfiguration(Configuration):
         self.descriptorRequested = False
         self._initConfig = None
 
-
     @property
     def initConfig(self):
         return self._initConfig
-
 
     @initConfig.setter
     def initConfig(self, config):
         self._initConfig = config
         # Merge initConfig, if descriptor is not None
         self.mergeInitConfig()
-
 
     def mergeInitConfig(self):
         """
@@ -66,13 +62,11 @@ class BaseConfiguration(Configuration):
         if self._initConfig is not None:
             self.fromHash(self._initConfig)
 
-
     def fromXml(self, xmlString):
         """
         This function loads the corresponding XML file of this configuration.
         """
         self.fromHash(XMLParser().read(xmlString))
-
 
     def toXml(self):
         """
@@ -84,7 +78,6 @@ class BaseConfiguration(Configuration):
             config = self._initConfig
 
         return XMLWriter().write(Hash(self.classId, config))
-
 
     def checkClassSchema(self):
         if self.descriptorRequested is True:
@@ -98,7 +91,6 @@ class BaseConfiguration(Configuration):
             self.onNewDescriptor(conf)
 
         self.descriptorRequested = True
-
 
     def onNewDescriptor(self, conf):
         if self.descriptor is not None:
@@ -118,7 +110,6 @@ class Device(BaseDevice, BaseConfiguration):
         actual = getDevice(deviceId)
         actual.signalStatusChanged.connect(self.onStatusChanged)
         self.onStatusChanged(actual, actual.status, actual.error)
-
 
     def onStatusChanged(self, conf, status, error):
         """ this method gets the status of the corresponding real device,
@@ -157,21 +148,17 @@ class Device(BaseDevice, BaseConfiguration):
             else:
                 self.status = "incompatible"
 
-
     def onNewDescriptor(self, conf):
         BaseConfiguration.onNewDescriptor(self, conf)
         self.signalDeviceNeedsUpdate.emit(self)
-
 
     def addVisible(self):
         realDevice = getDevice(self.id)
         realDevice.addVisible()
 
-
     def removeVisible(self):
         realDevice = getDevice(self.id)
         realDevice.removeVisible()
-
 
     def shutdown(self):
         self.project.shutdown(self)
@@ -188,7 +175,6 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         # If all device are online there is another deviceGroup to represent this
         self.instance = None
 
-
     def createInstance(self):
         """
         The online instance of the deviceGroup is created once and returned.
@@ -201,7 +187,6 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         self.instance.project = self.project
 
         return self.instance
-
 
     def onUpdateDevice(self, device):
         """
@@ -216,7 +201,6 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         else:
             hsh, _ = self.toHash()  # Ignore returned attributes
             device.initConfig = hsh
-
 
     def checkDeviceSchema(self):
         """
@@ -238,7 +222,6 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         
         self.descriptorRequested = True
 
-
     def onNewDescriptor(self, conf):
         """
         This slot is called whenever a new descriptor for a requested class schema
@@ -249,7 +232,6 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         for d in self.devices:
             d.onNewDescriptor(conf)
             self.connectOtherBox(d)
-
 
     def onNewDeviceDescriptor(self, conf):
         """
@@ -263,7 +245,6 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
             # Copy from online device
             self.copyFrom(actual, lambda descr: descr.accessMode == AccessMode.RECONFIGURABLE)
 
-
     def onStatusChanged(self, conf, status, error):
         change = False
         if self.status != status:
@@ -276,16 +257,13 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         if change:
             self.signalDeviceGroupStatusChanged.emit()
 
-
     def isOnline(self):
         return all(d.isOnline() for d in self.devices)
-
 
     def addVisible(self):
         for device in self.devices:
             realDevice = getDevice(device.id)
             realDevice.addVisible()
-
 
     def removeVisible(self):
         for device in self.devices:
@@ -324,7 +302,6 @@ class GuiProject(Project, QObject):
         # States whether the project was changed or not
         self.isModified = False
 
-
     def setModified(self, isModified):
         """
         The project was modified and the associated modelview needs to be updated.
@@ -337,24 +314,20 @@ class GuiProject(Project, QObject):
         self.isModified = isModified
         self.signalProjectModified.emit(self)
 
-
     def setupDeviceToProject(self, device):
         self.setModified(True)
         # Connect device to project to get configuration changes
         device.signalConfigurationModified.connect(self.setModified)
-
 
     def addDevice(self, device):
         super(GuiProject, self).addDevice(device)
         self.signalDeviceAdded.emit(device)
         self.setupDeviceToProject(device)
 
-
     def insertDevice(self, index, device):
         super(GuiProject, self).insertDevice(index, device)
         self.signalDeviceInserted.emit(index, device)
         self.setupDeviceToProject(device)
-
 
     def newDevice(self, serverId, classId, deviceId, ifexists):
         """
@@ -365,7 +338,6 @@ class GuiProject(Project, QObject):
         self.addDevice(device)
         
         return device
-
 
     def setupDeviceGroupToProject(self, deviceGroup):
         self.setModified(True)
@@ -378,18 +350,15 @@ class GuiProject(Project, QObject):
             actual.signalStatusChanged.connect(deviceGroup.onStatusChanged)
             deviceGroup.onStatusChanged(actual, actual.status, actual.error)
 
-
     def addDeviceGroup(self, deviceGroup):
         super(GuiProject, self).addDeviceGroup(deviceGroup)
         self.signalDeviceGroupAdded.emit(deviceGroup)
         self.setupDeviceGroupToProject(deviceGroup)
 
-
     def insertDeviceGroup(self, index, deviceGroup):
         super(GuiProject, self).insertDeviceGroup(index, deviceGroup)
         self.signalDeviceGroupInserted.emit(index, deviceGroup)
         self.setupDeviceGroupToProject(deviceGroup)
-
 
     def newDeviceGroup(self, groupId, serverId, classId, ifexists,
                              prefix, start, end):
@@ -402,7 +371,6 @@ class GuiProject(Project, QObject):
         self.addDeviceGroup(deviceGroup)
         
         return deviceGroup
-
 
     def createDeviceGroup(self, groupId, serverId, classId, ifexists,
                           prefix, start, end):
@@ -427,22 +395,10 @@ class GuiProject(Project, QObject):
         
         return deviceGroup
 
-
-    def getScene(self, filename):
-        """
-        The first occurence of the scene with the given \filename is returned.
-        """
-        for scene in self.scenes:
-            if filename == scene.filename:
-                return scene
-        return None
-
-
     def addScene(self, scene):
         self.scenes.append(scene)
         self.signalSceneAdded.emit(scene)
         self.setModified(True)
-
 
     def insertScene(self, index, scene):
         """
@@ -450,7 +406,6 @@ class GuiProject(Project, QObject):
         """
         super(GuiProject, self).insertScene(index, scene)
         self.signalSceneInserted.emit(index, scene)
-
 
     def replaceScene(self, scene):
         """
@@ -488,12 +443,10 @@ class GuiProject(Project, QObject):
         self.signalConfigurationAdded.emit(deviceId, configuration)
         self.setModified(True)
 
-
     def insertConfiguration(self, index, deviceId, configuration):
         super(GuiProject, self).addConfiguration(deviceId, configuration, index)
         self.signalConfigurationInserted.emit(index, deviceId, configuration)
         self.setModified(True)
-
 
     def removeConfiguration(self, deviceId, configuration):
         """
@@ -507,12 +460,10 @@ class GuiProject(Project, QObject):
         self.setModified(True)
         return index
 
-
     def addMacro(self, macro):
         self.macros[macro.name] = macro
         self.signalMacroAdded.emit(macro)
         self.setModified(True)
-
 
     def addMonitor(self, monitor):
         super(GuiProject, self).addMonitor(monitor)
@@ -521,9 +472,9 @@ class GuiProject(Project, QObject):
 
     def insertMonitor(self, index, monitor):
         """
-        Insert \monitor at given \index and update project.
+        Insert ``monitor`` at given ``index`` and update project.
         """
-        Project.insertMonitor(self, index, monitor)
+        super(GuiProject, self).insertMonitor(self, index, monitor)
         self.signalMonitorInserted.emit(index, monitor)
         self.setModified(True)
 
@@ -531,7 +482,6 @@ class GuiProject(Project, QObject):
         #self.signalResourceAdded.emit(category, data)
         self.setModified(True)
         return super(GuiProject, self).addResource(category, data)
-
 
     def remove(self, object):
         """
@@ -595,7 +545,6 @@ class GuiProject(Project, QObject):
 
         manager.initDevice(device.serverId, device.classId, device.id, config)
 
-
     def instantiate(self, device):
         """
         This function instantiates the \device.
@@ -614,7 +563,6 @@ class GuiProject(Project, QObject):
                     gd.initConfig = hsh
                 self._instantiateDevice(gd)
 
-
     def instantiateAll(self):
         """
         This function instantiates all project devices.
@@ -622,10 +570,8 @@ class GuiProject(Project, QObject):
         for d in self.devices:
             self.instantiate(d)
 
-
     def _shutdownDevice(self, device, showConfirm):
         Manager().shutdownDevice(device.id, showConfirm)
-
 
     def shutdown(self, device, showConfirm=True):
         """
@@ -637,14 +583,12 @@ class GuiProject(Project, QObject):
             for gd in device.devices:
                 self._shutdownDevice(gd, False)
 
-
     def shutdownAll(self):
         """
         This function shuts down all project devices.
         """
         for d in self.devices:
             self.shutdown(d, False)
-
 
     def startMonitoring(self):
         """
@@ -682,7 +626,6 @@ class GuiProject(Project, QObject):
         else:
             self.monitorTimer = None
 
-
     def stopMonitoring(self):
         """
         Monitoring is stopped and all variables are reset.
@@ -702,7 +645,6 @@ class GuiProject(Project, QObject):
             self.killTimer(self.monitorTimer)
         self.monitorFile.close()
 
-
     def timerEvent(self, event=None, timestamp=None):
         """
         Write to monitor file.
@@ -716,7 +658,6 @@ class GuiProject(Project, QObject):
             timestamp = timestamp.toLocal()
         
         self.monitorWriter.writerow([timestamp] + [b.value for b in self.monitorBoxes])
-
 
     def onMonitorValueChanged(self, box, value, timestamp):
         """

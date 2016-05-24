@@ -444,7 +444,7 @@ class Monitor(object):
     @name.setter
     def name(self, name):
         """
-        This function returns the name of the monitor excluding the suffix.
+        This function sets the name of the monitor excluding the suffix.
         """
         self.filename = "{}.xml".format(name)
 
