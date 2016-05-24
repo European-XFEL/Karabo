@@ -21,6 +21,7 @@ from PyQt4.QtGui import (QSlider, QWidget, QHBoxLayout, QVBoxLayout,
 
 class DisplayImage(DisplayWidget):
     category = ImageNode
+    priority = 10
     alias = "Image View"
 
     def __init__(self, box, parent):
