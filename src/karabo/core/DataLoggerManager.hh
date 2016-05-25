@@ -41,7 +41,7 @@ namespace karabo {
 
             void okStateOnEntry();
 
-            void instanceNewHandler(const karabo::util::Hash& topologyEntry);
+            void ensureLoggerRunning(const karabo::util::Hash& topologyEntry);
             
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
