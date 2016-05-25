@@ -20,7 +20,7 @@ def _logging_func(severity, logCode, logMessage, timeOfMessage, connectionId,
                   filename, fileLineNumber, callbackData):
     logger.log([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG,
                 logging.DEBUG, logging.DEBUG, logging.DEBUG][severity],
-                logMessage.decode("ascii"))
+               logMessage.decode("ascii"))
     return 0
 
 
@@ -136,12 +136,13 @@ class Properties(MutableMapping):
             elif -(1 << 31) <= value < 1 << 31:
                 self.dll.MQSetInt32Property(self.handle, key, c_int(value))
             else:
-                self.dll.MQSetInt64Property(self.handle, key, c_longlong(value))
+                self.dll.MQSetInt64Property(self.handle, key,
+                                            c_longlong(value))
         elif isinstance(value, numbers.Real):
             self.dll.MQSetFloat64Property(self.handle, key, c_double(value))
         elif isinstance(value, str):
             self.dll.MQSetStringProperty(self.handle, key,
-                                    c_char_p(value.encode("utf8")))
+                                         c_char_p(value.encode("utf8")))
         elif isinstance(value, bytes):
             self.dll.MQSetStringProperty(self.handle, key, c_char_p(value))
         else:
@@ -255,7 +256,8 @@ class Producer(object):
         self.dll = _get_openmqc()
         self.handle = c_int()
         if destination is None:
-            self.dll.MQCreateMessageProducer(session.handle, byref(self.handle))
+            self.dll.MQCreateMessageProducer(session.handle,
+                                             byref(self.handle))
         else:
             self.dll.MQCreateMessageProducerForDestination(
                 session.handle, destination.handle, byref(self.handle))
