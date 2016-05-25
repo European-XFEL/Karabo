@@ -5,12 +5,11 @@ from functools import wraps
 import os
 from weakref import WeakValueDictionary
 
-from karabo.api import Int, Assignment
 from . import openmq
 from .device_client import DeviceClientBase
-from .enums import Unit, MetricPrefix
+from .enums import Unit, MetricPrefix, Assignment
 from .exceptions import KaraboError
-from .hash import Hash
+from .hash import Hash, Int32 as Int
 from .p2p import Channel
 from .signalslot import slot
 

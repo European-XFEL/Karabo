@@ -3,8 +3,8 @@ from asyncio import (async, coroutine, gather, set_event_loop, sleep,
 import time
 from unittest import TestCase, main
 
-from karabo.api import Slot, Int, waitUntil
 from karabo.middlelayer_api.device import Device
+from karabo.middlelayer_api.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
 
 from .eventloop import startDevices, stopDevices, sync_tst

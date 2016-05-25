@@ -4,12 +4,11 @@ from datetime import datetime
 from unittest import TestCase, main, expectedFailure
 import weakref
 
-from karabo.api import Slot, Int
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     waitUntilNew, getDevice, waitUntil, setWait, setNoWait, Queue,
     connectDevice)
-from karabo.middlelayer_api.hash import Hash, VectorChar
+from karabo.middlelayer_api.hash import Hash, VectorChar, Slot, Int32 as Int
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.schema import Configurable, Node
 
