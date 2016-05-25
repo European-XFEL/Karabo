@@ -42,7 +42,7 @@ class Error(Exception):
         s = wrapped_dll.dll.MQGetStatusString(status)
         self.status = status
         try:
-            super().__init__(self, s.value.decode("utf8"))
+            super(Error, self).__init__(s.value.decode("utf8"))
         finally:
             wrapped_dll.MQFreeString(s)
 
@@ -85,7 +85,7 @@ class Properties(MutableMapping):
         if handle is None:
             handle = c_int()
             dll.MQCreateProperties(byref(handle))
-        self = super().__new__(cls)
+        self = super(Properties, cls).__new__(cls)
         self.dll = dll
         self.handle = handle
         return self
@@ -218,7 +218,7 @@ class Session(object):
 
 class _Destination(object):
     def __new__(cls, handle):
-        self = super().__new__(cls)
+        self = super(_Destination, cls).__new__(cls)
         self.dll = _get_openmqc()
         self.handle = handle
         return self
@@ -247,7 +247,7 @@ class Destination(_Destination):
         handle = c_int()
         dll.MQCreateDestination(session.handle, c_char_p(name.encode("utf8")),
                                 c_char_p(type), byref(handle))
-        return super().__new__(cls, handle)
+        return super(Destination, cls).__new__(cls, handle)
 
 
 class Producer(object):
@@ -279,7 +279,7 @@ class _Consumer(object):
 
 class Consumer(_Consumer):
     def __init__(self, session, destination, selector, noLocal):
-        super().__init__()
+        super(Consumer, self).__init__()
         self.dll.MQCreateMessageConsumer(
             session.handle, destination.handle,
             c_char_p(selector.encode("utf8")),
@@ -299,7 +299,7 @@ class Consumer(_Consumer):
 
 class SharedConsumer(_Consumer):
     def __init__(self, session, destination, subscription, selector):
-        super().__init__(self)
+        super(SharedConsumer, self).__init__()
         self.dll.MQCreateSharedMessageConsumer(
             session.handle, destination.handle,
             c_char_p(subscription.encode("utf8")),
@@ -307,8 +307,8 @@ class SharedConsumer(_Consumer):
 
 
 class _DurableConsumer(_Consumer):
-    def __init__(self, durableName, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, durableName=None):
+        super(_DurableConsumer, self).__init__()
         self.durableName = c_char_p(durableName.encode("utf8"))
 
     def unsubscribe(self):
@@ -318,7 +318,7 @@ class _DurableConsumer(_Consumer):
 
 class DurableConsumer(_DurableConsumer):
     def __init__(self, session, destination, durableName, selector, noLocal):
-        super().__init__(self, durableName=durableName)
+        super(DurableConsumer, self).__init__(durableName=durableName)
         self.dll.MQCreateDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")), c_bool(noLocal),
@@ -327,7 +327,7 @@ class DurableConsumer(_DurableConsumer):
 
 class SharedDurableConsumer(_DurableConsumer):
     def __init__(self, session, destination, durableName, selector):
-        super().__init__(self, durableName=durableName)
+        super(SharedDurableConsumer, self).__init__(durableName=durableName)
         self.dll.MQCreateSharedDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")),
@@ -338,7 +338,7 @@ class _AsyncConsumer(_Consumer):
     Callback = CFUNCTYPE(c_int, c_int, c_int, c_int, c_void_p)
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super(_AsyncConsumer, self).__init__()
         self.callback = self.Callback(self.callback)
 
     def callback(self, session, consumer, message, data):
@@ -350,7 +350,7 @@ class _AsyncConsumer(_Consumer):
 
 class AsyncConsumer(_AsyncConsumer):
     def __init__(self, session, destination, selector, noLocal):
-        super().__init__()
+        super(AsyncConsumer, self).__init__()
         self.dll.MQCreateAsyncMessageConsumer(
             session.handle, destination.handle,
             c_char_p(selector.encode("utf8")),
@@ -359,7 +359,7 @@ class AsyncConsumer(_AsyncConsumer):
 
 class AsyncSharedConsumer(_AsyncConsumer):
     def __init__(self, session, destination, subscription, selector):
-        super().__init__()
+        super(AsyncSharedConsumer, self).__init__()
         self.dll.MQCreateAsyncSharedMessageConsumer(
             session.handle, destination.handle,
             c_char_p(subscription.encode("utf8")),
@@ -369,7 +369,7 @@ class AsyncSharedConsumer(_AsyncConsumer):
 
 class AsyncDurableConsumer(_AsyncConsumer, _DurableConsumer):
     def __init__(self, session, destination, durableName, selector, noLocal):
-        super().__init__(durableName=durableName)
+        super(AsyncDurableConsumer, self).__init__(durableName=durableName)
         self.dll.MQCreateAsyncDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")), c_bool(noLocal), self.callback,
@@ -378,7 +378,8 @@ class AsyncDurableConsumer(_AsyncConsumer, _DurableConsumer):
 
 class AsyncSharedDurableConsumer(_AsyncConsumer, _DurableConsumer):
     def __init__(self, session, destination, durableName, selector, noLocal):
-        super().__init__(durableName=durableName)
+        super(AsyncSharedDurableConsumer, self).__init__(
+            durableName=durableName)
         self.dll.MQCreateAsyncSharedDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")), self.callback, c_void_p(),
@@ -392,7 +393,7 @@ class Message(object):
         if handle is None:
             handle = c_int()
             dll.MQCreateMessage(byref(handle))
-        self = super().__new__(cls)
+        self = super(Message, cls).__new__(cls)
         self.dll = dll
         self.handle = handle
         return self
@@ -455,7 +456,7 @@ class TextMessage(Message):
         if handle is None:
             handle = c_int()
             dll.MQCreateTextMessage(byref(handle))
-        return super().__new__(cls, handle, dll=dll)
+        return super(TextMessage, cls).__new__(cls, handle, dll=dll)
 
     @property
     def data(self):
@@ -475,7 +476,7 @@ class BytesMessage(Message):
         if handle is None:
             handle = c_int()
             dll.MQCreateBytesMessage(byref(handle))
-        return super().__new__(cls, handle, dll=dll)
+        return super(BytesMessage, cls).__new__(cls, handle, dll=dll)
 
     @property
     def data(self):
