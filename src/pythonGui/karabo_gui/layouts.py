@@ -36,7 +36,7 @@ class Layout(Loadable):
     def __init__(self, *args, **kwargs):
         super(Layout, self).__init__(*args, **kwargs)
         self.shapes = [ ]
-        self.shape_geometry = None
+        self.lastTopLeft = None
         self.fixed_geometry = None
         self.selected = False
 
@@ -138,15 +138,10 @@ class Layout(Loadable):
     def setGeometry(self, rect):
         "only to be used by Qt, don't use directly!"
         super(Layout, self).setGeometry(rect)
-        if self.shape_geometry is None:
-            if self.fixed_geometry is None:
-                self.shape_geometry = QRect(rect)
-            else:
-                self.shape_geometry = QRect(self.fixed_geometry)
-        for s in self.shapes:
-            s.translate(rect.topLeft() - self.shape_geometry.topLeft())
-        self.shape_geometry = QRect(rect)
-
+        if self.lastTopLeft is not None:
+            for s in self.shapes:
+                s.translate(rect.topLeft() - self.lastTopLeft)
+        self.lastTopLeft = rect.topLeft()
 
     def edit(self):
         pass
@@ -293,22 +288,6 @@ class FixedLayout(Layout, QLayout):
             return
         c.fixed_geometry = QRect(c.fixed_geometry.topLeft(), c.sizeHint())
 
-
-    def geometry(self):
-        if self.entire is not None:
-            return self.entire.geometry()
-        if self.fixed_geometry is None:
-            return self.parentWidget().geometry()
-        else:
-            return self.fixed_geometry
-
-
-    def translate(self, pos):
-        for c in self:
-            c.fixed_geometry.translate(pos)
-        super(FixedLayout, self).translate(pos)
-
-
     def save(self):
         return { }
 
@@ -357,17 +336,16 @@ class FixedLayout(Layout, QLayout):
 
     def setGeometry(self, rect):
         "only to be used by Qt, don't use directly!"
-        super(FixedLayout, self).setGeometry(rect)
         if self.entire is not None:
-            self.entire.fixed_geometry = rect
-        if self.fixed_geometry is None:
+            self.entire.setGeometry(rect)
+        if self.lastTopLeft is None:
             translation = QPoint(0, 0)
         else:
-            translation = rect.topLeft() - self.fixed_geometry.topLeft()
+            translation = rect.topLeft() - self.lastTopLeft
         for c in self:
             c.fixed_geometry.translate(translation)
             c.setGeometry(c.fixed_geometry)
-        self.fixed_geometry = QRect(rect)
+        super(FixedLayout, self).setGeometry(rect)
 
 
     def sizeHint(self):
