@@ -300,7 +300,7 @@ class FixedLayout(Layout, QLayout):
         else:
             widget.setLayout(ret)
         ret.load_element(elem)
-        if ret.fixed_geometry is None:
+        if ret.fixed_geometry is None and widget is None:
             rect = QRect()
             for c in ret:
                 rect.united(c.geometry())
