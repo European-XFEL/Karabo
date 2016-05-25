@@ -103,7 +103,9 @@ class CustomMiddlePanel(Dockable, QScrollArea):
         osize = self.scene.size()
         screen_rect = QApplication.desktop().screenGeometry()
         if osize.width() < screen_rect.width() and osize.height() < screen_rect.height():
-            self.setWidgetResizable(True)
+             # Enlarge the scene widget to its actual size
+             self.setWidgetResizable(True)
+             # Resize parent
             self.parent().resize(osize - self.scene.size() + self.parent().size())
 
     def onDock(self):
