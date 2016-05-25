@@ -184,9 +184,7 @@ class EditableNoApplyComponent(BaseComponent):
         self.widgetFactory.setReadOnly(False)
         hLayout.addWidget(self.widgetFactory.widget)
 
-        unitLabel = (box.descriptor.metricPrefixSymbol +
-                     box.descriptor.unitSymbol)
-
+        unitLabel = box.unitLabel()
         if unitLabel:
             hLayout.addWidget(QLabel(unitLabel))
 
@@ -264,11 +262,9 @@ class EditableApplyLaterComponent(BaseComponent):
         hLayout.addWidget(self.widgetFactory.widget)
 
         self.box = box
-        d = box.descriptor
-        if d is not None:
-            unitLabel = d.metricPrefixSymbol + d.unitSymbol
-            if unitLabel:
-                hLayout.addWidget(QLabel(unitLabel))
+        unitLabel = box.unitLabel()
+        if unitLabel:
+            hLayout.addWidget(QLabel(unitLabel))
 
         self.hasConflict = False
 
