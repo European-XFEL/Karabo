@@ -12,6 +12,8 @@
 #include <karabo/log/Logger.hh>
 #include "HashXmlSerializer.hh"
 
+#include <boost/algorithm/string/replace.hpp>
+
 using namespace karabo::util;
 using namespace std;
 
@@ -105,7 +107,8 @@ namespace karabo {
             if (object.size() == 1 && object.begin()->getType() == Types::HASH) { // Is rooted
                 std::string key = object.begin()->getKey();
                 const Hash& value = object.begin()->getValue<Hash > ();
-                pugi::xml_node node = doc.append_child(key.c_str());
+                pugi::xml_node node = doc.append_child(escapeElementName(key).c_str());
+
                 // Set xml namespace
                 if (m_insertXmlNamespace) node.append_attribute("xmlns") = m_xmlns.c_str();
                 if (m_writeDataTypes) node.append_attribute(m_typeFlag.c_str()) = Types::to<ToLiteral > (Types::HASH).c_str();
@@ -141,7 +144,8 @@ namespace karabo {
         void HashXmlSerializer::createXml(const Hash& hash, pugi::xml_node& node) const {
             for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
                 Types::ReferenceType type = it->getType();
-                pugi::xml_node nextNode = node.append_child(it->getKey().c_str());
+
+                pugi::xml_node nextNode = node.append_child(escapeElementName(it->getKey()).c_str());
 
                 writeAttributes(it->getAttributes(), nextNode);
 
@@ -238,7 +242,8 @@ namespace karabo {
                 Hash::Attributes attrs;
                 readAttributes(attrs, node);
 
-                string nodeName(node.name());
+                string nodeName(unescapeElementName(node.name()));
+
                 if (node.first_child().type() == pugi::node_element) {
                     if (node.first_child().name() == m_itemFlag) { // This node describes a vector of Hashes
                         vector<Hash>& tmp = hash.bindReference<vector<Hash> >(nodeName);
@@ -332,5 +337,14 @@ namespace karabo {
                 }
             }
         }
+
+        std::string HashXmlSerializer::escapeElementName(const std::string& data) const {
+            return boost::algorithm::replace_all_copy(data, "/", ".KRB_SLASH.");
+        }
+
+        std::string HashXmlSerializer::unescapeElementName(const std::string& data) const {
+            return boost::algorithm::replace_all_copy(data, ".KRB_SLASH.", "/");
+        }
+
     }
 }
