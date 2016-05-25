@@ -15,7 +15,7 @@ import os.path
 import karabo_gui.icons as icons
 
 from karabo_gui.docktabwindow import DockTabWindow
-import karabo_gui.globals as globals
+from karabo_gui import globals
 from karabo.middlelayer import AccessLevel
 from karabo_gui.network import Network
 
@@ -52,7 +52,8 @@ class MainWindow(QMainWindow):
         
         self._setupPanels()
 
-        self.setWindowTitle("European XFEL - Karabo GUI " + globals.GUI_VERSION)
+        title = "European XFEL - Karabo GUI " + globals.GUI_VERSION_LONG
+        self.setWindowTitle(title)
         self.resize(1200, 800)
 
 
