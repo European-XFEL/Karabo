@@ -1491,7 +1491,7 @@ class Scene(QSvgWidget):
 
                 # Create label
                 displayName = item.text(0)
-                proxy = ProxyWidget(self.inner)
+                proxy = SceneWidget(self.inner)
                 label = Label(displayName, proxy)
                 label.hasBackground = False
                 proxy.setWidget(label)
@@ -1521,7 +1521,7 @@ class Scene(QSvgWidget):
                     unit = (box.descriptor.metricPrefixSymbol +
                             box.descriptor.unitSymbol)
                     if len(unit) > 0:
-                        proxy = ProxyWidget(self.inner)
+                        proxy = SceneWidget(self.inner)
                         proxy.setWidget(Label(unit, proxy))
                         layout.addWidget(proxy)
                         proxy.show()
