@@ -33,6 +33,7 @@ void HashXmlSerializer_Test::setUp() {
     rooted.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
     rooted.setAttribute("a.b.e", "myAttr", "Hallo");
     rooted.setAttribute("a.b.e", "eAttr", vector<string > (2, "abc"));
+    rooted.set("an/element/with/slashes", true);
     rooted.set("vec", std::vector<float>());
     m_rootedHash = rooted;
 
