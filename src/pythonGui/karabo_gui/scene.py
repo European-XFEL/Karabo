@@ -17,6 +17,7 @@ from karabo_gui.layouts import (FixedLayout, GridLayout, BoxLayout, ProxyWidget,
                                 SceneWidget, Layout)
 from karabo_gui.sceneitems.workflowitems import (Item, WorkflowConnection, WorkflowItem,
                                       WorkflowGroupItem)
+from karabo_gui.schema import ChoiceOfNodes
 
 from karabo_gui.registry import Loadable, Registry
 from karabo_gui.const import ns_karabo, ns_svg, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
@@ -1457,8 +1458,10 @@ class Scene(QSvgWidget):
         
         if sourceType == "ParameterTreeWidget":
             source = event.source()
-            if (source is not None) and self.designMode \
-               and not (source.conf.type == "class"):
+            if ((source is not None) and self.designMode
+                    and not (source.conf.type == "class")
+                    and not isinstance(source.currentItem().box.descriptor,
+                                       ChoiceOfNodes)):
                 event.accept()
         elif sourceType == "NavigationTreeView":
             source = event.source()
