@@ -78,11 +78,11 @@ class ProjectTreeView(QTreeView):
             # default project should always have a default_scene
             if not project.scenes:
                 self.model().addScene(project, "default_scene")
-                project.zip()
+                project.saveProject()
         else:
             project = self.model().projectNew(filename)
             self.model().addScene(project, "default_scene")
-            project.zip()
+            project.saveProject()
 
 
     def closeAllProjects(self):
