@@ -7,7 +7,6 @@ import time
 from unittest import TestCase, main, skip
 import weakref
 
-from karabo.api import Int, Slot
 from karabo.middlelayer_api.cli import connectDevice, DeviceClient
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
@@ -15,7 +14,7 @@ from karabo.middlelayer_api.device_client import (
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.middlelayer_api.exceptions import KaraboError
-from karabo.middlelayer_api.hash import Hash
+from karabo.middlelayer_api.hash import Hash, Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro, EventThread, RemoteDevice
 
 from .eventloop import setEventLoop
@@ -101,7 +100,7 @@ class Tests(TestCase):
             sys.argv = save
 
     code = """if True:
-        from karabo.api import *
+        from karabo.middlelayer import *
 
         class TestMacro(Macro):
             s = String()
