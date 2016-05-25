@@ -110,7 +110,7 @@ namespace karabo {
 
             // Register handlers here: it will switch on multi-threading!
 
-            remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
+            remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::ensureLoggerRunning, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
 
             // Server list must not be empty. If it is configured to be empty,
@@ -147,16 +147,16 @@ namespace karabo {
                     instantiateReaders(serverId);
 		}
 
-		// Now start loggers for online devices - instanceNewHandler checks whether they exist already
+		// Now start loggers for online devices - ensureLoggerRunning checks whether they exist already
 		if (!runtimeInfo.has("device")) return;
 		const Hash& onlineDevices = runtimeInfo.get<Hash>("device");
 		for (Hash::const_iterator i = onlineDevices.begin(); i != onlineDevices.end(); ++i) {
 		  const Hash::Node& deviceNode = *i;
-		  // Topology entry as understood by instanceNewHandler: Hash with path "device.<deviceId>"
+		  // Topology entry as understood by ensureLoggerRunning: Hash with path "device.<deviceId>"
 		  Hash topologyEntry("device", Hash());
 		  // Copy node with key "<deviceId>" and attributes into the single Hash in topologyEntry:
 		  topologyEntry.begin()->getValue<Hash>().setNode(deviceNode);
-		  instanceNewHandler(topologyEntry);
+		  ensureLoggerRunning(topologyEntry);
 		}
 	    }
         }
@@ -178,13 +178,13 @@ namespace karabo {
             reply(m_loggerMap);
         }
 
-        void DataLoggerManager::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
+        void DataLoggerManager::ensureLoggerRunning(const karabo::util::Hash& topologyEntry) {
             try {
                 const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
                 // const ref is fine even for temporary std::string
                 const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
                                                  topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
-                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler --> instanceId: '" << instanceId
+                KARABO_LOG_FRAMEWORK_INFO << "ensureLoggerRunning --> instanceId: '" << instanceId
                         << "', type: '" << type << "'";
 
                 if (type == "device") { // Take out only devices for the time being
@@ -223,7 +223,7 @@ namespace karabo {
                                     "flushInterval", get<int>("flushInterval"));
                             const Hash hash("classId", "DataLogger", "deviceId", loggerId, "configuration", config);
                             remote().instantiateNoWait(serverId, hash);
-                            KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler [device] : logger '" << loggerId << "' STARTED";
+                            KARABO_LOG_FRAMEWORK_INFO << "ensureLoggerRunning [device] : logger '" << loggerId << "' STARTED";
                             // First instantiate the new logger - now we have time to update the logger map file.
                             if (newMap) {
                                 karabo::io::saveToFile(m_loggerMap, m_loggerMapFile);
@@ -272,18 +272,18 @@ namespace karabo {
                                 hash.set("deviceId", loggerId);
                                 hash.set("configuration.deviceToBeLogged", deviceId);
                                 remote().instantiateNoWait(serverId, hash);
-                                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler [server] : logger '" << loggerId << "' STARTED";
+                                KARABO_LOG_FRAMEWORK_INFO << "ensureLoggerRunning [server] : logger '" << loggerId << "' STARTED";
                             }
                         }
                     }
                 }
 
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "In instanceNewHandler:\n" << e;
+                KARABO_LOG_ERROR << "In ensureLoggerRunning:\n" << e;
             } catch (const std::exception& e) {
-                KARABO_LOG_ERROR << "In instanceNewHandler: " << e.what() << ".";
+                KARABO_LOG_ERROR << "In ensureLoggerRunning: " << e.what() << ".";
             } catch (...) {
-                KARABO_LOG_ERROR << "Unknown exception in instanceNewHandler.";
+                KARABO_LOG_ERROR << "Unknown exception in ensureLoggerRunning.";
             }
         }
 
