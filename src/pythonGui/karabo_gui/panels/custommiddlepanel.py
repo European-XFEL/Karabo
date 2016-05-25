@@ -17,7 +17,8 @@ import karabo_gui.icons as icons
 from karabo_gui.toolbar import ToolBar
 
 from PyQt4.QtCore import pyqtSignal, Qt
-from PyQt4.QtGui import (QAction, QPalette, QSizePolicy, QScrollArea, QWidget)
+from PyQt4.QtGui import (QAction, QApplication, QPalette, QSizePolicy,
+                         QScrollArea, QWidget)
 
 
 class CustomMiddlePanel(Dockable, QScrollArea):
@@ -33,6 +34,8 @@ class CustomMiddlePanel(Dockable, QScrollArea):
         
         self.setupActions(isConnectedToServer)
         self.setBackgroundRole(QPalette.Dark)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
 
     def designModeText(self, isDesignMode):
@@ -98,13 +101,12 @@ class CustomMiddlePanel(Dockable, QScrollArea):
     def onUndock(self):
         self.scene.setTabVisible(True)
         osize = self.scene.size()
-        self.setWidgetResizable(True)
-        self.parent().resize(osize - self.scene.size() + self.parent().size())
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
+        screen_rect = QApplication.desktop().screenGeometry()
+        if osize.width() < screen_rect.width() and osize.height() < screen_rect.height():
+             # Enlarge the scene widget to its actual size
+             self.setWidgetResizable(True)
+             # Resize parent
+            self.parent().resize(osize - self.scene.size() + self.parent().size())
 
     def onDock(self):
         self.setWidgetResizable(False)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
