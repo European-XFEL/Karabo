@@ -33,7 +33,7 @@ import karabo_gui.gui as gui
 
 class Widget(Registry, QObject):
     """ This is the parent class for all widget factories in the GUI """
-    widgets = { }
+    widgets = {}
     displayType = None
     priority = 0
 
@@ -51,7 +51,6 @@ class Widget(Registry, QObject):
             self.boxes = [box]
         self.deferred = False
 
-
     @classmethod
     def register(cls, name, dict):
         super(Widget, cls).register(name, dict)
@@ -60,7 +59,6 @@ class Widget(Registry, QObject):
         if "menu" in dict:
             cls.factories[name] = cls
             cls.factory = cls
-
 
     @classmethod
     def isCompatible(cls, box, readonly):
@@ -80,7 +78,6 @@ class Widget(Registry, QObject):
                 p = c.priority
         return winner
 
-
     def addBox(self, box):
         """adds the *box* to the displayed or edited box.
 
@@ -88,16 +85,13 @@ class Widget(Registry, QObject):
         False, as multi-box support has to be programmed by the user."""
         return False
 
-
     def save(self, element):
         """Saves the widget into the :class:`~xml.etree.ElementTree.Element`
         element"""
 
-
     def load(self, element):
         """Loads the widgets from the :class:`~xml.etree.ElementTree.Element`
         element """
-
 
     @pyqtSlot(object, object, object)
     @pyqtSlot()
@@ -111,13 +105,11 @@ class Widget(Registry, QObject):
         how it works for your widget."""
         self.widget.setEnabled(self.boxes[0].isAccessible())
 
-
     def valueChanged(self, box, value, timestamp=None):
         """ notify the widget about a new value
 
         *value* is the value to be shown, it might be different from
         the value in the *box*."""
-
 
     def typeChanged(self, box):
         """ notify the widget that the type it's displaying has changed
@@ -125,12 +117,10 @@ class Widget(Registry, QObject):
         this is also used to inform the widget about its type initially,
         so put your type-dependent initialization code here. """
 
-
     @pyqtSlot(object, object, object)
     def valueChangedSlot(self, box, value, timestamp=None):
         # avoid having to declare valueChanged a slot in every widget
         self.valueChanged(box, value, timestamp)
-
 
     @pyqtSlot(object)
     def typeChangedSlot(self, box):
@@ -169,18 +159,15 @@ class DisplayWidget(Widget):
     """All widgets displaying a value should inherit from this subclass
     of :class:`Widget`."""
     menu = "Change display widget"
-    factories = { }
-
+    factories = {}
 
     @staticmethod
     def getClasses(box):
         return [v for v in Widget.widgets.values()
                 if v.isCompatible(box, True)]
 
-
     def setReadOnly(self, ro):
         assert ro, "combined Editable and Display widgets: set setReadOnly!"
-
 
     def updateState(self):
         pass
@@ -201,14 +188,11 @@ class VacuumWidget(DisplayWidget):
         self.widget.setObjectName(objectName)
         self.setErrorState(False)
 
-
     value = None
-
 
     @classmethod
     def isCompatible(cls, box, readonly):
         return box.path == ("state",) and super().isCompatible(box, readonly)
-
 
     def _setPixmap(self, name):
         p = QPixmap(os.path.join(os.path.dirname(__file__),
@@ -216,7 +200,6 @@ class VacuumWidget(DisplayWidget):
         self.widget.setPixmap(p)
         self.widget.setMaximumWidth(p.width())
         self.widget.setMaximumHeight(p.height())
-
 
     def setErrorState(self, isError):
         color = ERROR_COLOR if isError else OK_COLOR
@@ -228,9 +211,8 @@ class EditableWidget(Widget):
     """All widgets with which one can edit value should inherit from
     this subclass of :class:`Widget`."""
     menu = "Change widget"
-    factories = { }
+    factories = {}
     signalEditingFinished = pyqtSignal(object, object)
-
 
     def __init__(self, box):
         Widget.__init__(self, box)
@@ -238,16 +220,13 @@ class EditableWidget(Widget):
             self.updateStateSlot)
         gui.window.signalGlobalAccessLevelChanged.connect(self.updateStateSlot)
 
-
     @staticmethod
     def getClasses(box):
         return [v for v in Widget.widgets.values()
                 if v.isCompatible(box, False)]
 
-
     def setReadOnly(self, ro):
         assert not ro, "combined Editable and Display widgets: set setReadOnly!"
-
 
     def onEditingFinished(self, value):
         self.signalEditingFinished.emit(self.boxes[0], value)
