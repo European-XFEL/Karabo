@@ -12,7 +12,7 @@ from xml.etree.ElementTree import Element
 from karabo_gui.const import ns_karabo
 from karabo_gui.topology import getDevice
 from karabo_gui.util import SignalBlocker
-from karabo_gui.widget import PlotWidget
+from karabo_gui.widget import DisplayWidget
 
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSlot
@@ -249,7 +249,6 @@ class ScaleEngine(QwtLinearScaleEngine):
         self.drawer.setFormat(start, v)
         return QwtScaleDiv(x1, x2, [], [], list(range(start, int(x2), v)))
 
-
 class Timespan(QDialog):
     def __init__(self, parent):
         super(Timespan, self).__init__(parent)
@@ -269,13 +268,12 @@ class Timespan(QDialog):
         self.beginning.setDateTime(QDateTime.currentDateTime().addSecs(-20))
 
 
-class DisplayTrendline(PlotWidget):
+class DisplayTrendline(DisplayWidget):
     category = Simple
     alias = "Trendline"
-
  
     def __init__(self, box, parent):
-        super(DisplayTrendline, self).__init__(box, parent)
+        super(DisplayTrendline, self).__init__(None)
         self.dialog = CurveDialog(edit=False, toolbar=True,
                                   wintitle="Trendline")
         self.plot = self.dialog.get_plot()
@@ -341,7 +339,7 @@ class DisplayTrendline(PlotWidget):
             self.updateLater()
 
     def typeChanged(self, box):
-        self.plot.setAxisTitle(QwtPlot.yLeft, self.axisLabel(box))
+        self.plot.setAxisTitle(QwtPlot.yLeft, box.axisLabel())
 
 
     def addBox(self, box):
