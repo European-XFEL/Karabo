@@ -42,7 +42,7 @@ SCHEMA_ATTRIBUTE_NAMES = (
     'alias', 'allowedStates', 'tags', 'options', 'minInc', 'maxInc',
     'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
     'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy',
-    'relativeError', 'absoluteError'
+    'relativeError', 'absoluteError', 'rowSchema'
 )
 
 
@@ -502,8 +502,6 @@ class Schema(hashmod.Descriptor):
                                                AccessMode.INITONLY))
         self.metricPrefixSymbol = attrs.get('metricPrefixSymbol', '')
         self.unitSymbol = attrs.get('unitSymbol', '')
-        if 'rowSchema' in attrs:
-            self.rowSchema = attrs.get('rowSchema')
         
         if parent is None:
             ral = AccessLevel.OBSERVER
