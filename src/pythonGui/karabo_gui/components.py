@@ -110,7 +110,7 @@ class DisplayComponent(BaseComponent):
 
     # Returns the actual widget which is part of the composition
     @property
-    def _getWidget(self):
+    def widget(self):
         return self.widgetFactory.widget
 
     @property
