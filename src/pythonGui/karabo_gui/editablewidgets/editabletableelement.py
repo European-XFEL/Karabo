@@ -582,11 +582,9 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         self.role = role 
         self.columnSchema = None
         if hasattr(box.descriptor, "rowSchema"):
-            self.columnSchema = getattr(box.descriptor, "rowSchema")
-            self.columnHash = self.columnSchema.hash
-        else:
-            self.columnHash = Hash()
+            self.columnSchema = box.descriptor.rowSchema
         
+        self.columnHash = self.columnSchema.hash if self.columnSchema is not None else Hash()
         
         self.tableModel = TableModel(self.columnSchema, self.onEditingFinished)
         self.tableModel.setRole(self.role)
@@ -668,7 +666,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             
     @classmethod
     def isCompatible(cls, box, readonly):
-        return hasattr(box.descriptor, "rowSchema")
+        return box.descriptor.rowSchema is not None
 
     @property
     def value(self):
