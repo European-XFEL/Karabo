@@ -1521,11 +1521,10 @@ class Scene(QSvgWidget):
                     if self.tabVisible:  # just to be sure
                         realbox.addVisible()
 
-                    unit = (box.descriptor.metricPrefixSymbol +
-                            box.descriptor.unitSymbol)
-                    if len(unit) > 0:
+                    unitLabel = box.unitLabel()
+                    if unitLabel:
                         proxy = SceneWidget(self.inner)
-                        proxy.setWidget(Label(unit, proxy))
+                        proxy.setWidget(Label(unitLabel, proxy))
                         layout.addWidget(proxy)
                         proxy.show()
 

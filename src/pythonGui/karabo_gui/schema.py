@@ -189,6 +189,14 @@ class Box(QObject):
         if self.visible == 0:
             self.visibilityChanged.emit(False)
 
+    def unitLabel(self):
+        """
+        The unit strings are only available, if the descriptor is properly set,
+        otherwise nothing is returned.
+        """
+        descr = self.descriptor
+        if descr is not None:
+            return descr.metricPrefixSymbol + descr.unitSymbol
 
 class _BoxValue(object):
     def __getattr__(self, attr):
