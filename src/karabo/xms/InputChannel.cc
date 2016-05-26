@@ -525,8 +525,7 @@ namespace karabo {
 
                 if (m_inputHandler) {
                     m_inputHandler(self);
-                    // FIXME: Move call to this->update() from
-                    //        m_dataHandlerPerChannel to here!
+                    // FIXME: Move call to this->update() from m_inputHandler to here!
                 }
             } catch (const boost::bad_weak_ptr& e) {
                 KARABO_LOG_FRAMEWORK_INFO << "\"triggerIOEvent\" call is too late: InputChannel destroyed already -- " << e.what();
