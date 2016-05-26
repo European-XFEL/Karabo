@@ -1,22 +1,50 @@
-import numbers
+from collections.abc import MutableMapping
 from ctypes import (CDLL, CFUNCTYPE, POINTER, byref, c_void_p, c_char,
                     c_char_p, c_bool, c_byte, c_short, c_int, c_longlong,
                     c_float, c_double, c_uint, string_at, Structure)
-import collections.abc
 import logging
-import site
+import numbers
 
-dll = CDLL("libopenmqc.so")
+_dll = None
+logger = logging.getLogger(__name__)
+
+TYPES = [c_bool, c_byte, c_short, c_int, c_longlong,
+         c_float, c_double, c_char_p]
+TYPENAMES = ["Bool", "Int8", "Int16", "Int32", "Int64",
+             "Float32", "Float64", "String"]
+
+
+@CFUNCTYPE(c_int, c_int, c_int, c_char_p, c_longlong, c_longlong, c_char_p,
+           c_int, c_char_p)
+def _logging_func(severity, logCode, logMessage, timeOfMessage, connectionId,
+                  filename, fileLineNumber, callbackData):
+    logger.log([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG,
+                logging.DEBUG, logging.DEBUG, logging.DEBUG][severity],
+               logMessage.decode("ascii"))
+    return 0
+
+
+def _get_openmqc():
+    """ Make sure the openmqc library is loaded and return a reference to it.
+    """
+    global _dll
+    if _dll is None:
+        _dll = CDLL("libopenmqc.so")
+        _dll = Wrapper(_dll)
+        _dll.MQSetLoggingFunc(_logging_func, 0)
+        _dll.MQSetStdErrLogLevel(-1)
+
+    return _dll
 
 
 class Error(Exception):
-    def __init__(self, status):
-        s = dll.dll.MQGetStatusString(status)
+    def __init__(self, wrapped_dll, status):
+        s = wrapped_dll.dll.MQGetStatusString(status)
         self.status = status
         try:
-            super().__init__(self, s.value.decode("utf8"))
+            super(Error, self).__init__(s.value.decode("utf8"))
         finally:
-            dll.MQFreeString(s)
+            wrapped_dll.MQFreeString(s)
 
 
 class MQError(Structure):
@@ -39,7 +67,7 @@ class Wrapper(object):
         def wrapper(*args):
             status = inner(*args)
             if self.dll.MQStatusIsError(status.error):
-                raise Error(status.error)
+                raise Error(self, status.error)
             return status.error
         setattr(self, name, wrapper)
         return wrapper
@@ -51,36 +79,14 @@ class Wrapper(object):
         return bool(self.dll.MQPropertiesKeyIterationHasNext(handle))
 
 
-dll = Wrapper(dll)
-
-
-@CFUNCTYPE(c_int, c_int, c_int, c_char_p, c_longlong, c_longlong, c_char_p,
-           c_int, c_char_p)
-def loggingFunc(severity, logCode, logMessage, timeOfMessage, connectionId,
-                filename, fileLineNumber, callbackData):
-    logger.log([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG,
-                logging.DEBUG, logging.DEBUG, logging.DEBUG][severity],
-                logMessage.decode("ascii"))
-    return 0
-
-
-logger = logging.getLogger(__name__)
-dll.MQSetLoggingFunc(loggingFunc, 0)
-dll.MQSetStdErrLogLevel(-1)
-
-
-types = [c_bool, c_byte, c_short, c_int, c_longlong,
-         c_float, c_double, c_char_p]
-typenames = ["Bool", "Int8", "Int16", "Int32", "Int64",
-             "Float32", "Float64", "String"]
-
-
-class Properties(collections.abc.MutableMapping):
+class Properties(MutableMapping):
     def __new__(cls, handle=None):
+        dll = _get_openmqc()
         if handle is None:
             handle = c_int()
             dll.MQCreateProperties(byref(handle))
-        self = super().__new__(cls)
+        self = super(Properties, cls).__new__(cls)
+        self.dll = dll
         self.handle = handle
         return self
 
@@ -95,49 +101,50 @@ class Properties(collections.abc.MutableMapping):
 
     def __del__(self):
         if self.valid():
-            dll.MQFreeProperties(self.handle)
+            self.dll.MQFreeProperties(self.handle)
 
     def __iter__(self):
-        dll.MQPropertiesKeyIterationStart(self.handle)
-        while dll.MQPropertiesKeyIterationHasNext(self.handle):
+        self.dll.MQPropertiesKeyIterationStart(self.handle)
+        while self.dll.MQPropertiesKeyIterationHasNext(self.handle):
             key = c_char_p()
-            dll.MQPropertiesKeyIterationGetNext(self.handle, byref(key))
+            self.dll.MQPropertiesKeyIterationGetNext(self.handle, byref(key))
             yield key.value.decode('utf8')
 
     def __getitem__(self, key):
         key = c_char_p(key.encode('utf8'))
         type = c_int()
         try:
-            dll.MQGetPropertyType(self.handle, key, byref(type))
+            self.dll.MQGetPropertyType(self.handle, key, byref(type))
         except Error as e:
             if e.status == 1104:  # not found
                 raise KeyError(key)
             raise
-        ret = types[type.value]()
-        getattr(dll, "MQGet{}Property".format(typenames[type.value]))(
+        ret = TYPES[type.value]()
+        getattr(self.dll, "MQGet{}Property".format(TYPENAMES[type.value]))(
             self.handle, key, byref(ret))
         return ret.value
 
     def __setitem__(self, key, value):
         key = c_char_p(key.encode('utf8'))
         if isinstance(value, bool):
-            dll.MQSetBoolProperty(self.handle, key, c_bool(value))
+            self.dll.MQSetBoolProperty(self.handle, key, c_bool(value))
         elif isinstance(value, numbers.Integral):
             if -(1 << 7) <= value < 2 << 7:
-                dll.MQSetInt8Property(self.handle, key, c_byte(value))
+                self.dll.MQSetInt8Property(self.handle, key, c_byte(value))
             elif -(1 << 15) <= value < 1 << 15:
-                dll.MQSetInt16Property(self.handle, key, c_short(value))
+                self.dll.MQSetInt16Property(self.handle, key, c_short(value))
             elif -(1 << 31) <= value < 1 << 31:
-                dll.MQSetInt32Property(self.handle, key, c_int(value))
+                self.dll.MQSetInt32Property(self.handle, key, c_int(value))
             else:
-                dll.MQSetInt64Property(self.handle, key, c_longlong(value))
+                self.dll.MQSetInt64Property(self.handle, key,
+                                            c_longlong(value))
         elif isinstance(value, numbers.Real):
-            dll.MQSetFloat64Property(self.handle, key, c_double(value))
+            self.dll.MQSetFloat64Property(self.handle, key, c_double(value))
         elif isinstance(value, str):
-            dll.MQSetStringProperty(self.handle, key,
-                                    c_char_p(value.encode("utf8")))
+            self.dll.MQSetStringProperty(self.handle, key,
+                                         c_char_p(value.encode("utf8")))
         elif isinstance(value, bytes):
-            dll.MQSetStringProperty(self.handle, key, c_char_p(value))
+            self.dll.MQSetStringProperty(self.handle, key, c_char_p(value))
         else:
             raise TypeError("cannot convert '{}' to openmq type.".
                             format(type(value)))
@@ -151,8 +158,9 @@ class Properties(collections.abc.MutableMapping):
 
 class Connection(object):
     def __init__(self, properties, username, password, clientID=None):
+        self.dll = _get_openmqc()
         self.handle = c_int()
-        dll.MQCreateConnection(
+        self.dll.MQCreateConnection(
             properties.handle, c_char_p(username.encode("utf8")),
             c_char_p(password.encode("utf8")),
             c_char_p(clientID), c_char_p(0), c_char_p(0), byref(self.handle))
@@ -161,114 +169,120 @@ class Connection(object):
     @property
     def properties(self):
         handle = c_int()
-        dll.MQGetConnectionProperties(self.handle, byref(handle))
+        self.dll.MQGetConnectionProperties(self.handle, byref(handle))
         return Properties(handle)
 
     @property
     def metadata(self):
         handle = c_int()
-        dll.MQGetMetaData(self.handle, byref(handle))
+        self.dll.MQGetMetaData(self.handle, byref(handle))
         return Properties(handle)
 
     def start(self):
-        dll.MQStartConnection(self.handle)
+        self.dll.MQStartConnection(self.handle)
 
     def stop(self):
-        dll.MQStopConnection(self.handle)
+        self.dll.MQStopConnection(self.handle)
 
     def close(self):
-        dll.MQCloseConnection(self.handle)
+        self.dll.MQCloseConnection(self.handle)
 
 
 class Session(object):
     def __init__(self, connection, isTransacted, acknowledgeMode, receiveMode):
+        self.dll = _get_openmqc()
         self.handle = c_int()
-        dll.MQCreateSession(connection.handle, c_bool(isTransacted),
-                            c_int(acknowledgeMode), c_int(receiveMode),
-                            byref(self.handle))
+        self.dll.MQCreateSession(connection.handle, c_bool(isTransacted),
+                                 c_int(acknowledgeMode), c_int(receiveMode),
+                                 byref(self.handle))
 
     def commit(self):
-        dll.MQCommitSession(self.handle)
+        self.dll.MQCommitSession(self.handle)
 
     def rollback(self):
-        dll.MQRollbackSession(self.handle)
+        self.dll.MQRollbackSession(self.handle)
 
     def recover(self):
-        dll.MQRecoverSession(self.handle)
+        self.dll.MQRecoverSession(self.handle)
 
     def close(self):
-        dll.MQCloseSession(self.handle)
+        self.dll.MQCloseSession(self.handle)
 
     def getAcknowledgeMode(self):
         ret = c_int()
-        dll.MQGetAcknowledgeMode(self.handle, byref(ret))
+        self.dll.MQGetAcknowledgeMode(self.handle, byref(ret))
         return ret.value
 
     def acknowledge(self, message):
-        dll.MQAcknowledgeMessage(self.handle, message.handle)
+        self.dll.MQAcknowledgeMessage(self.handle, message.handle)
 
 
 class _Destination(object):
     def __new__(cls, handle):
-        self = super().__new__(cls)
+        self = super(_Destination, cls).__new__(cls)
+        self.dll = _get_openmqc()
         self.handle = handle
         return self
 
     def __del__(self):
-        dll.MQFreeDestination(self.handle)
+        self.dll.MQFreeDestination(self.handle)
 
     @property
     def type(self):
         ret = c_int()
-        dll.MQDestinationGetType(self.handle, byref(ret))
+        self.dll.MQDestinationGetType(self.handle, byref(ret))
         return ret.value
 
     @property
     def name(self):
         name = c_char_p()
-        dll.MQGetDestinationName(self.handle, byref(name))
+        self.dll.MQGetDestinationName(self.handle, byref(name))
         ret = name.value.decode('utf8')
-        dll.MQFreeString(name)
+        self.dll.MQFreeString(name)
         return ret
 
 
 class Destination(_Destination):
     def __new__(cls, session, name, type):
+        dll = _get_openmqc()
         handle = c_int()
         dll.MQCreateDestination(session.handle, c_char_p(name.encode("utf8")),
                                 c_char_p(type), byref(handle))
-        return super().__new__(cls, handle)
+        return super(Destination, cls).__new__(cls, handle)
 
 
 class Producer(object):
     def __init__(self, session, destination=None):
+        self.dll = _get_openmqc()
         self.handle = c_int()
         if destination is None:
-            dll.MQCreateMessageProducer(session.handle, byref(self.handle))
+            self.dll.MQCreateMessageProducer(session.handle,
+                                             byref(self.handle))
         else:
-            dll.MQCreateMessageProducerForDestination(
+            self.dll.MQCreateMessageProducerForDestination(
                 session.handle, destination.handle, byref(self.handle))
 
     def close(self):
-        dll.MQCloseMessageProducer(self.handle)
+        self.dll.MQCloseMessageProducer(self.handle)
 
     def send(self, message, mode, priority, timeToLive):
-        dll.MQSendMessageExt(self.handle, message.handle, c_int(mode),
-                             c_byte(priority), c_longlong(timeToLive))
+        self.dll.MQSendMessageExt(self.handle, message.handle, c_int(mode),
+                                  c_byte(priority), c_longlong(timeToLive))
 
 
 class _Consumer(object):
     def __init__(self):
         self.handle = c_int()
+        self.dll = _get_openmqc()
 
     def close(self):
-        dll.MQCloseMessageConsumer(self.handle)
+        self.dll.MQCloseMessageConsumer(self.handle)
 
 
 class Consumer(_Consumer):
     def __init__(self, session, destination, selector, noLocal):
-        super().__init__()
-        dll.MQCreateMessageConsumer(
+        super(Consumer, self).__init__()
+        self.dll.MQCreateMessageConsumer(
             session.handle, destination.handle,
             c_char_p(selector.encode("utf8")),
             c_bool(noLocal), byref(self.handle))
@@ -276,37 +290,38 @@ class Consumer(_Consumer):
     def receiveMessage(self, timeout=None):
         ret = c_int()
         if timeout is None:
-            dll.MQReceiveMessageWait(self.handle, byref(ret))
+            self.dll.MQReceiveMessageWait(self.handle, byref(ret))
         elif timeout == 0:
-            dll.MQReceiveMessageNoWait(self.handle, byref(ret))
+            self.dll.MQReceiveMessageNoWait(self.handle, byref(ret))
         else:
-            dll.MQReceiveMessageWithTimeout(self.handle, c_int(timeout),
-                                            byref(ret))
+            self.dll.MQReceiveMessageWithTimeout(self.handle, c_int(timeout),
+                                                 byref(ret))
         return Message._create(ret)
 
 
 class SharedConsumer(_Consumer):
     def __init__(self, session, destination, subscription, selector):
-        super().__init__(self)
-        dll.MQCreateSharedMessageConsumer(
+        super(SharedConsumer, self).__init__()
+        self.dll.MQCreateSharedMessageConsumer(
             session.handle, destination.handle,
             c_char_p(subscription.encode("utf8")),
             c_char_p(selector.encode("utf8")), byref(self.handle))
 
 
 class _DurableConsumer(_Consumer):
-    def __init__(self, durableName, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, durableName=None):
+        super(_DurableConsumer, self).__init__()
         self.durableName = c_char_p(durableName.encode("utf8"))
 
     def unsubscribe(self):
-        dll.MQUnsubscribeDurableMessageConsumer(self.handle, self.durableName)
+        self.dll.MQUnsubscribeDurableMessageConsumer(self.handle,
+                                                     self.durableName)
 
 
 class DurableConsumer(_DurableConsumer):
     def __init__(self, session, destination, durableName, selector, noLocal):
-        super().__init__(self, durableName=durableName)
-        dll.MQCreateDurableMessageConsumer(
+        super(DurableConsumer, self).__init__(durableName=durableName)
+        self.dll.MQCreateDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")), c_bool(noLocal),
             byref(self.handle))
@@ -314,8 +329,8 @@ class DurableConsumer(_DurableConsumer):
 
 class SharedDurableConsumer(_DurableConsumer):
     def __init__(self, session, destination, durableName, selector):
-        super().__init__(self, durableName=durableName)
-        dll.MQCreateSharedDurableMessageConsumer(
+        super(SharedDurableConsumer, self).__init__(durableName=durableName)
+        self.dll.MQCreateSharedDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")),
             byref(self.handle))
@@ -325,7 +340,7 @@ class _AsyncConsumer(_Consumer):
     Callback = CFUNCTYPE(c_int, c_int, c_int, c_int, c_void_p)
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super(_AsyncConsumer, self).__init__()
         self.callback = self.Callback(self.callback)
 
     def callback(self, session, consumer, message, data):
@@ -337,8 +352,8 @@ class _AsyncConsumer(_Consumer):
 
 class AsyncConsumer(_AsyncConsumer):
     def __init__(self, session, destination, selector, noLocal):
-        super().__init__()
-        dll.MQCreateAsyncMessageConsumer(
+        super(AsyncConsumer, self).__init__()
+        self.dll.MQCreateAsyncMessageConsumer(
             session.handle, destination.handle,
             c_char_p(selector.encode("utf8")),
             c_bool(noLocal), self.callback, c_void_p(), byref(self.handle))
@@ -346,8 +361,8 @@ class AsyncConsumer(_AsyncConsumer):
 
 class AsyncSharedConsumer(_AsyncConsumer):
     def __init__(self, session, destination, subscription, selector):
-        super().__init__()
-        dll.MQCreateAsyncSharedMessageConsumer(
+        super(AsyncSharedConsumer, self).__init__()
+        self.dll.MQCreateAsyncSharedMessageConsumer(
             session.handle, destination.handle,
             c_char_p(subscription.encode("utf8")),
             c_char_p(selector.encode("utf8")), self.callback, c_void_p(),
@@ -356,8 +371,8 @@ class AsyncSharedConsumer(_AsyncConsumer):
 
 class AsyncDurableConsumer(_AsyncConsumer, _DurableConsumer):
     def __init__(self, session, destination, durableName, selector, noLocal):
-        super().__init__(durableName=durableName)
-        dll.MQCreateAsyncDurableMessageConsumer(
+        super(AsyncDurableConsumer, self).__init__(durableName=durableName)
+        self.dll.MQCreateAsyncDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")), c_bool(noLocal), self.callback,
             c_void_p(), byref(self.handle))
@@ -365,25 +380,30 @@ class AsyncDurableConsumer(_AsyncConsumer, _DurableConsumer):
 
 class AsyncSharedDurableConsumer(_AsyncConsumer, _DurableConsumer):
     def __init__(self, session, destination, durableName, selector, noLocal):
-        super().__init__(durableName=durableName)
-        dll.MQCreateAsyncSharedDurableMessageConsumer(
+        super(AsyncSharedDurableConsumer, self).__init__(
+            durableName=durableName)
+        self.dll.MQCreateAsyncSharedDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")), self.callback, c_void_p(),
             byref(self.handle))
 
 
 class Message(object):
-    def __new__(cls, handle=None):
+    def __new__(cls, handle=None, dll=None):
+        if dll is None:
+            dll = _get_openmqc()
         if handle is None:
             handle = c_int()
             dll.MQCreateMessage(byref(handle))
-        self = super().__new__(cls)
+        self = super(Message, cls).__new__(cls)
+        self.dll = dll
         self.handle = handle
         return self
 
     @staticmethod
     def _create(handle):
         type = c_int()
+        dll = _get_openmqc()
         dll.MQGetMessageType(handle, byref(type))
         if type.value > 1:
             raise RuntimeError
@@ -391,82 +411,84 @@ class Message(object):
                 Message, Message)[type.value](handle)
 
     def __del__(self):
-        dll.MQFreeMessage(self.handle)
+        self.dll.MQFreeMessage(self.handle)
 
     @property
     def type(self):
         ret = c_int()
-        dll.MQGetMessageType(self.handle, byref(ret))
+        self.dll.MQGetMessageType(self.handle, byref(ret))
         return ret.value
 
     @property
     def properties(self):
         handle = c_int()
-        dll.MQGetMessageProperties(self.handle, byref(handle))
+        self.dll.MQGetMessageProperties(self.handle, byref(handle))
         return Properties(handle)
 
     @properties.setter
     def properties(self, properties):
-        dll.MQSetMessageProperties(self.handle, properties.handle)
+        self.dll.MQSetMessageProperties(self.handle, properties.handle)
         properties.invalidate()
 
     @property
     def headers(self):
         handle = c_int()
-        dll.MQGetMessageHeaders(self.handle, byref(handle))
+        self.dll.MQGetMessageHeaders(self.handle, byref(handle))
         return Properties(handle)
 
     @headers.setter
     def headers(self, properties):
-        dll.MQSetMessageHeaders(self.handle, properties.handle)
+        self.dll.MQSetMessageHeaders(self.handle, properties.handle)
         properties.invalidate()
 
     @property
     def replyTo(self):
         handle = c_int()
-        dll.MQGetMessageReplyTo(self.handle, byref(handle))
+        self.dll.MQGetMessageReplyTo(self.handle, byref(handle))
         return _Destination(handle)
 
     @replyTo.setter
     def replyTo(self, destination):
-        dll.MQSetMessageReplyTo(self.handle, destination.handle)
+        self.dll.MQSetMessageReplyTo(self.handle, destination.handle)
 
 
 class TextMessage(Message):
     def __new__(cls, handle=None):
+        dll = _get_openmqc()
         if handle is None:
             handle = c_int()
             dll.MQCreateTextMessage(byref(handle))
-        return super().__new__(cls, handle)
+        return super(TextMessage, cls).__new__(cls, handle, dll=dll)
 
     @property
     def data(self):
         ret = c_char_p()
-        dll.MQGetTextMessageText(self.handle, byref(ret))
+        self.dll.MQGetTextMessageText(self.handle, byref(ret))
         return ret.value.decode('utf8')
 
     @data.setter
     def data(self, data):
-        dll.MQSetTextMessageText(self.handle, c_char_p(
+        self.dll.MQSetTextMessageText(self.handle, c_char_p(
             str(data).encode('utf8')))
 
 
 class BytesMessage(Message):
     def __new__(cls, handle=None):
+        dll = _get_openmqc()
         if handle is None:
             handle = c_int()
             dll.MQCreateBytesMessage(byref(handle))
-        return super().__new__(cls, handle)
+        return super(BytesMessage, cls).__new__(cls, handle, dll=dll)
 
     @property
     def data(self):
         m = POINTER(c_char)()
         l = c_int()
-        dll.MQGetBytesMessageBytes(self.handle, byref(m), byref(l))
+        self.dll.MQGetBytesMessageBytes(self.handle, byref(m), byref(l))
         return string_at(m, l)
 
     @data.setter
     def data(self, data):
         data = bytes(data)
-        dll.MQSetBytesMessageBytes(self.handle, c_char_p(data),
-                                   c_int(len(data)))
+        self.dll.MQSetBytesMessageBytes(self.handle, c_char_p(data),
+                                        c_int(len(data)))
