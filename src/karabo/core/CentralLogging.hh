@@ -45,7 +45,8 @@ namespace karabo {
 
 
         private:
- 
+            void runIoService();
+
             karabo::util::Hash m_loggerInput;
             unsigned int m_lastIndex;
             std::fstream m_logstream;

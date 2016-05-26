@@ -103,7 +103,7 @@ namespace karabo {
  
                 m_timer.expires_from_now(boost::posix_time::seconds(get<int>("flushInterval")));
                 m_timer.async_wait(boost::bind(&CentralLogging::flushHandler, this, boost::asio::placeholders::error));
-                m_svcThread = boost::thread(boost::bind(&boost::asio::io_service::run, &m_svc));
+                m_svcThread = boost::thread(boost::bind(&CentralLogging::runIoService, this));
                 // Produce some information
                 KARABO_LOG_INFO << "Central Logging service started listening all log messages ...";
  
@@ -207,5 +207,23 @@ namespace karabo {
             file.close();
             return idx;
         }
+
+        void CentralLogging::runIoService() {
+            // see AsioIOService::runProtected()
+            const std::string msg("xception when running io service ");
+            while (true) {
+                try {
+                    m_svc.run();
+                    break; // run exited normally
+                } catch(karabo::util::Exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "E" << msg << ": " << e;
+                } catch(std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Standard e" << msg << ": " << e.what();
+                } catch(...) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown e" << msg;
+                }
+            }
+        }
     }
 }
+

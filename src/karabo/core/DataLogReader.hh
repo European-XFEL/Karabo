@@ -71,7 +71,7 @@ namespace karabo {
             
             boost::mutex m_mutex;
         
-            IndexBuilderService() : m_work(m_svc), m_cache(), m_thread(boost::bind(&boost::asio::io_service::run, &m_svc))
+            IndexBuilderService() : m_work(m_svc), m_cache(), m_thread(boost::bind(&IndexBuilderService::runIoService, this))
             {
             }
             
@@ -86,6 +86,8 @@ namespace karabo {
             
         private:
             
+            void runIoService();
+
             void build(const std::string& args);
             
         };
