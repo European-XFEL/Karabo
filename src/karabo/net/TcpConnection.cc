@@ -260,8 +260,11 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_WARN << "TCP : Accept handler got code #" << e.value() << " -- " << e.message();
                     }
                 }
+            } catch (const karabo::util::Exception& e) {
+                KARABO_RETHROW
+            } catch (const std::exception& ex) {
+                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(string("Standard exception caught by TcpConnection::acceptHandler: ") + ex.what()))
             } catch (...) {
-                // probably must not throw?
                 KARABO_RETHROW
             }
         }
@@ -299,6 +302,8 @@ namespace karabo {
                     else
                         throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
+            } catch (const karabo::util::Exception& e) {
+                KARABO_RETHROW
             } catch (const std::exception& ex) {
                 KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(string("Standard exception caught by TcpConnection::resolveHandler: ") + ex.what()))
             } catch (...) {
@@ -321,8 +326,10 @@ namespace karabo {
                     else
                         throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
+            } catch (const karabo::util::Exception& e) {
+                KARABO_RETHROW
             } catch (const std::exception& ex) {
-                throw KARABO_NETWORK_EXCEPTION(string("Standard exception caught by TcpConnection::connectHandler: ") + ex.what());
+                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(string("Standard exception caught by TcpConnection::connectHandler: ") + ex.what()))
             } catch (...) {
                 KARABO_RETHROW
             }
