@@ -185,18 +185,6 @@ class DisplayWidget(Widget):
     def updateState(self):
         pass
 
-class PlotWidget(DisplayWidget):
-
-    def __init__(self, box, parent):
-        super(PlotWidget, self).__init__(None)
-
-    def axisLabel(self, box):
-        """ This function returns the axis label string for the given \box.
-        """
-        descr = box.descriptor
-        unit = "{}{}".format(descr.metricPrefixSymbol, descr.unitSymbol)
-        name = descr.displayedName
-        return "{} [{}]".format(name, unit) if unit else name
 
 class VacuumWidget(DisplayWidget):
     menu = "Change vacuum widget"
