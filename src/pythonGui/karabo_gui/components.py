@@ -269,6 +269,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.hasConflict = False
 
         text = "Apply"
+        description = "Apply property changes"
         self.acApply = QAction(icons.applyGrey, text, self)
         self.acApply.setStatusTip(text)
         self.acApply.setToolTip(text)
@@ -279,10 +280,11 @@ class EditableApplyLaterComponent(BaseComponent):
         tb.setIconSize(QSize(24, 24))
         hLayout.addWidget(tb)
 
-        text = "Reset"
+        text = "Decline"
+        description = "Decline property changes and reset them to value on device"
         self.acReset = QAction(icons.no, text, self)
-        self.acReset.setStatusTip(text)
-        self.acReset.setToolTip(text)
+        self.acReset.setStatusTip(description)
+        self.acReset.setToolTip(description)
         self.acReset.triggered.connect(self.onApplyRemoteChanges)
         tb = QToolButton()
         tb.setDefaultAction(self.acReset)
@@ -452,14 +454,17 @@ class EditableApplyLaterComponent(BaseComponent):
             self.acApply.setIcon(icons.applyGrey)
             self.hasConflict = False
             text = None
+            description = None
         elif self.hasConflict:
             self.acApply.setIcon(icons.applyConflict)
             text = "Apply mine"
+            description = "Apply my property changes"
         else:
             text = "Apply"
+            description = "Apply property changes"
             self.acApply.setIcon(icons.apply)
-        self.acApply.setStatusTip(text)
-        self.acApply.setToolTip(text)
+        self.acApply.setStatusTip(description)
+        self.acApply.setToolTip(description)
         self.applyEnabled = allowed and not isEqualEditable
         self.acReset.setEnabled(self.applyEnabled)
 
