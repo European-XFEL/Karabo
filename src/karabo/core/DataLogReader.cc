@@ -52,6 +52,22 @@ namespace karabo {
             m_svc.post(boost::bind(&IndexBuilderService::build, this, commandLineArguments));
         }
         
+        void IndexBuilderService::runIoService() {
+            // see AsioIOService::runProtected()
+            const std::string msg("xception when running io service - please rerun index file building by hand");
+            while (true) {
+                try {
+                    m_svc.run();
+                    break; // run exited normally
+                } catch(karabo::util::Exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "E" << msg << ": " << e;
+                } catch(std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Standard e" << msg << ": " << e.what();
+                } catch(...) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown e" << msg;
+                }
+            }
+        }
         
         void IndexBuilderService::build(const std::string& commandLineArguments) {
             try {
@@ -66,6 +82,19 @@ namespace karabo {
             // Remove the request to allow another try even if we failed here.
             boost::mutex::scoped_lock lock(m_mutex);
             m_cache.erase(commandLineArguments);
+
+
+            static int counter = 0;
+            switch (++counter % 4) {
+                case 0:
+                    throw std::runtime_error("GF brute force");
+                case 1:
+                    throw KARABO_IO_EXCEPTION("GF brute force");
+                case 2:
+                    throw 42;
+                default:
+                    break;
+            }
         }
         
         
