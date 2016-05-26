@@ -33,8 +33,7 @@ namespace karabo {
             void run() {
                 if (!m_ioservice)
                     throw KARABO_PARAMETER_EXCEPTION("AsioIOService is not configured");
-                
-                m_ioservice->run();
+                this->runProtected();
             }
 
             void work() {
@@ -42,7 +41,7 @@ namespace karabo {
                     throw KARABO_PARAMETER_EXCEPTION("AsioIOService is not configured");
                 m_work = WorkPointer(new boost::asio::io_service::work(*m_ioservice));
                 
-                m_ioservice->run();
+                this->runProtected();
             }
 
             void stop() {
@@ -62,6 +61,9 @@ namespace karabo {
             }
 
         private:
+            /// Run m_ioservice, but catch and log exceptions and start running again.
+            void runProtected();
+
             BoostIOServicePointer m_ioservice;
             WorkPointer m_work;
         };
