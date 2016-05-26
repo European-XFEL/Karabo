@@ -14,7 +14,7 @@ if [ -z $KARABO ]; then
   exit 1
 fi
 
-until $KARABO/extern/bin/python3 -u -m karabo.api2.device_server "$@"; do
+until $KARABO/extern/bin/karabo-macro-server "$@"; do
     echo "ERROR Karabo server went down with signal $?, respawning..."
     sleep 5
 done
