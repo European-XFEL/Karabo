@@ -20,7 +20,7 @@ sed -i s/VERSION/$VERSION/ setup.cfg
 
 #( cd ../../extern/resources/suds; unzip -q suds-jurko-0.6.zip )
 
-$KARABO/extern/bin/python3 setup.py  bdist_wininst
+$KARABO/extern/bin/python3 ../../src/pythonGui/setup.py bdist_wininst
 
 sed -i s/$VERSION/VERSION/ scripts/win_post_install.py
 sed -i s/$VERSION/VERSION/ setup.cfg
