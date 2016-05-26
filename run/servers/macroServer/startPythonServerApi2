@@ -14,7 +14,7 @@ if [ -z $KARABO ]; then
   exit 1
 fi
 
-until $KARABO/extern/bin/karabo-macro-server "$@"; do
+until $KARABO/extern/bin/karabo-middlelayer-device-server "$@"; do
     echo "ERROR Karabo server went down with signal $?, respawning..."
     sleep 5
 done
