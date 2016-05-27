@@ -864,8 +864,10 @@ namespace karabo {
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "An exception during JMS broker message reception occurred: \n" << e;
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "A standard exception during JMS broker message reception occurred: " << e.what();
             } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception during JMS broker message reception occurred";
+                KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception during JMS broker message reception occurred.";
             }
             m_consumerActive = false;
         }
