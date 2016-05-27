@@ -6,9 +6,6 @@ import sys
 
 from setuptools import setup, find_packages
 
-WINDOWS_BUILDER = 'krb_windows_build'
-IS_WINDOWS_BUILD = (WINDOWS_BUILDER in sys.argv)
-
 MAJOR = 1
 MINOR = 5
 MICRO = 0
@@ -77,6 +74,10 @@ if __name__ == '__main__':
     metadata = {
         'name': 'KaraboGUI',
         'version': version,
+        'author': 'Karabo Team',
+        'author_email': 'karabo@xfel.eu',
+        'description': 'This is the Karabo GUI',
+        'url': 'http://karabo.eu',
         'packages': [PKG] + [PKG + '.' + pkg for pkg in find_packages(PKG)],
         'package_data': {
             "karabo_gui.dialogs": ["*.ui"],
@@ -90,7 +91,8 @@ if __name__ == '__main__':
         }
     }
 
-    if IS_WINDOWS_BUILD:
+    WINDOWS_BUILDER = 'krb_windows_build'
+    if WINDOWS_BUILDER in sys.argv:
         # Add a subset of the Karabo package for the Windows build
         metadata['package_dir'] = {'karabo': "../../src/pythonKarabo/karabo"}
         metadata['packages'].extend(
@@ -104,11 +106,7 @@ if __name__ == '__main__':
         with open('METADATA', 'w') as fp:
             json.dump(metadata, fp)
 
-    setup(author="Karabo Team",
-          author_email="karabo@xfel.eu",
-          description="This is the Karabo GUI",
-          url="http://karabo.eu",
-          entry_points={'console_scripts': [
+    setup(entry_points={'console_scripts': [
                         'karabo-gui=karabo_gui.main:main',
                         ]},
           # Add an alias for 'build' so we can prepare data for Windows

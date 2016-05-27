@@ -16,7 +16,4 @@ if __name__ == '__main__':
     with open('METADATA', 'r') as fp:
         metadata = json.load(fp)
 
-    setup(description="The GUI of the Karabo framework",
-          author="Kerstin Weger, Burkhard Heisen, Martin Teichmann",
-          scripts=['scripts/win_post_install.py'],
-          **metadata)
+    setup(scripts=['scripts/win_post_install.py'], **metadata)
