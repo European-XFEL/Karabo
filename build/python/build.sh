@@ -10,7 +10,7 @@ PYTHON=$KARABO/extern/bin/python3
 pushd ../../src/pythonGui
 
 # Build once with the normal build script to do the heavy lifting
-# This also creates VERSION, PACKAGES, and PKGDATA files
+# This also creates the VERSION and METADATA files
 $PYTHON setup.py krb_windows_build
 
 VERSION=$(cat VERSION)
@@ -30,3 +30,4 @@ sed -i s/$VERSION/VERSION/ setup.cfg
 rm VERSION METADATA
 
 popd
+
