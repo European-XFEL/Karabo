@@ -6,7 +6,8 @@
 
 
 """This module contains a class which represents a base class for all inherited
-   factory classes for creation of certain widgets and bundles main functionalities.
+   factory classes for creation of certain widgets and bundles main
+   functionalities.
 """
 
 __all__ = ["BaseComponent"]
@@ -30,13 +31,10 @@ from .widget import EditableWidget, DisplayWidget, Widget
 
 class BaseComponent(Loadable, QObject):
     Widget = EditableWidget
-
-    signalValueChanged = pyqtSignal(object, object) # key, value
-
+    signalValueChanged = pyqtSignal(object, object)  # key, value
 
     def __init__(self, parent):
         super(BaseComponent, self).__init__(parent)
-
 
     def connectWidget(self, box):
         box.signalNewDescriptor.connect(self.widgetFactory.typeChangedSlot)
@@ -44,16 +42,13 @@ class BaseComponent(Loadable, QObject):
         if box.descriptor is not None:
             self.widgetFactory.typeChangedSlot(box)
 
-
     def save(self, e):
         """saves this component into the ElementTree.Element e"""
-        d = { }
         e.set(ns_karabo + "class", self.__class__.__name__)
         e.set(ns_karabo + "widget", type(self.widgetFactory).__name__)
         e.set(ns_karabo + "keys", ",".join(b.key()
                                            for b in self.widgetFactory.boxes))
         self.widgetFactory.save(e)
-
 
     @classmethod
     def load(cls, elem, layout):
@@ -79,7 +74,6 @@ class BaseComponent(Loadable, QObject):
         elem.clear()
         return component
 
-
     @property
     def boxes(self):
         return self.widgetFactory.boxes
@@ -88,9 +82,7 @@ class BaseComponent(Loadable, QObject):
 class DisplayComponent(BaseComponent):
     Widget = DisplayWidget
 
-
     def __init__(self, classAlias, box, parent):
-
         W = Widget.widgets.get(classAlias)
         if W is None:
             self.widgetFactory = classAlias
@@ -100,13 +92,11 @@ class DisplayComponent(BaseComponent):
         self.widgetFactory.setReadOnly(True)
         self.connectWidget(box)
 
-
     def connectWidget(self, box):
         BaseComponent.connectWidget(self, box)
         box.signalUpdateComponent.connect(self.widgetFactory.valueChangedSlot)
         if box.hasValue():
             self.widgetFactory.valueChanged(box, box.value, box.timestamp)
-
 
     def addBox(self, box):
         if self.widgetFactory.addBox(box):
@@ -114,14 +104,13 @@ class DisplayComponent(BaseComponent):
             return True
         return False
 
-
     @property
     def widgetCategory(self):
         return self.widgetFactory.category
 
     # Returns the actual widget which is part of the composition
     @property
-    def _getWidget(self):
+    def widget(self):
         return self.widgetFactory.widget
 
     @property
@@ -135,7 +124,7 @@ class DisplayComponent(BaseComponent):
     @property
     def value(self):
         return self.widgetFactory.value
-    
+
     @value.setter
     def value(self, value):
         self.widgetFactory.value = value
@@ -143,10 +132,8 @@ class DisplayComponent(BaseComponent):
     def setErrorState(self, isError):
         self.widgetFactory.setErrorState(isError)
 
-
     def removeKey(self, key):
         self.widgetFactory.removeKey(key)
-
 
     def changeWidget(self, factory):
         oldWidget = self.widgetFactory.widget
@@ -169,7 +156,7 @@ class EditableNoApplyComponent(BaseComponent):
     def __init__(self, classAlias, box, parent):
         self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
-        hLayout.setContentsMargins(0,0,0,0)
+        hLayout.setContentsMargins(0, 0, 0, 0)
 
         W = Widget.widgets.get(classAlias)
         if W is None:
@@ -184,7 +171,6 @@ class EditableNoApplyComponent(BaseComponent):
         unitLabel = box.unitLabel()
         if unitLabel:
             hLayout.addWidget(QLabel(unitLabel))
-
 
     def connectWidget(self, box):
         BaseComponent.connectWidget(self, box)
@@ -214,14 +200,11 @@ class EditableNoApplyComponent(BaseComponent):
     def setEnabled(self, enable):
         self.widget.setEnabled(enable)
 
-
     def addKeyValue(self, key, value):
         self.widgetFactory.addKeyValue(key, value)
 
-
     def removeKey(self, key):
         pass
-
 
     def onEditingFinished(self, box, value):
         box.set(value, None)
@@ -233,16 +216,15 @@ class EditableNoApplyComponent(BaseComponent):
 
 class EditableApplyLaterComponent(BaseComponent):
     # signals
-    signalConflictStateChanged = pyqtSignal(str, bool) # key, hasConflict
-    signalApplyChanged = pyqtSignal(object, bool) # key, state of apply button
-
+    signalConflictStateChanged = pyqtSignal(str, bool)  # key, hasConflict
+    signalApplyChanged = pyqtSignal(object, bool)  # key, state of apply button
 
     def __init__(self, classAlias, box, parent):
         self.__currentDisplayValue = None
 
         self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
-        hLayout.setContentsMargins(0,0,0,0)
+        hLayout.setContentsMargins(0, 0, 0, 0)
 
         W = Widget.widgets.get(classAlias)
         if W is None:
@@ -293,7 +275,6 @@ class EditableApplyLaterComponent(BaseComponent):
         # In case of attributes (Hash-V2) connect another function here
         self.signalConflictStateChanged.connect(Manager().onConflictStateChanged)
 
-
     def connectWidget(self, box):
         BaseComponent.connectWidget(self, box)
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
@@ -320,11 +301,9 @@ class EditableApplyLaterComponent(BaseComponent):
     def setEnabled(self, enable):
         self.widget.setEnabled(enable)
 
-
     @property
     def applyEnabled(self):
         return self._applyEnabled
-
 
     @applyEnabled.setter
     def applyEnabled(self, value):
@@ -333,10 +312,8 @@ class EditableApplyLaterComponent(BaseComponent):
         if emit:
             self.signalApplyChanged.emit(self.boxes[0], value)
 
-
     def addKeyValue(self, key, value):
         self.widgetFactory.addKeyValue(key, value)
-
 
     def removeKey(self, key):
         pass
@@ -361,7 +338,7 @@ class EditableApplyLaterComponent(BaseComponent):
             b.signalUserChanged.emit(b, self.widgetFactory.value, None)
             if b.configuration.type == "macro":
                 b.set(self.widgetFactory.value)
-            elif b.configuration.type ==  "deviceGroup":
+            elif b.configuration.type == "deviceGroup":
                 b.set(self.widgetFactory.value)
                 # Broadcast changes for all devices belonging to this group
                 for d in b.configuration.devices:
@@ -376,17 +353,14 @@ class EditableApplyLaterComponent(BaseComponent):
             self.__busyTimer.start(5000)
             Network().onReconfigure(network)
 
-
     def onApplyRemoteChanges(self):
         for b in self.boxes:
             self.widgetFactory.valueChanged(b, self.__currentDisplayValue)
         self.updateButtons()
 
-
     def onTimeOut(self):
         MessageBox.showWarning(
             "The attribute couldn't be set in the current state.")
-
 
     @pyqtSlot(object, object)
     def onDisplayValueChanged(self, box, value):
@@ -397,12 +371,10 @@ class EditableApplyLaterComponent(BaseComponent):
         self.hasConflict = True
         self.updateButtons()
 
-
     @pyqtSlot(object, object, object)
     def onUserChanged(self, box, value, timestamp=None):
         self.widgetFactory.valueChangedSlot(box, value, timestamp)
         self.updateButtons()
-
 
     @pyqtSlot()
     def updateButtons(self):
@@ -441,14 +413,11 @@ class EditableApplyLaterComponent(BaseComponent):
         if isEqualEditable:
             self.acApply.setIcon(icons.applyGrey)
             self.hasConflict = False
-            text = None
             description = None
         elif self.hasConflict:
             self.acApply.setIcon(icons.applyConflict)
-            text = "Apply mine"
             description = "Apply my property changes"
         else:
-            text = "Apply"
             description = "Apply property changes"
             self.acApply.setIcon(icons.apply)
         self.acApply.setStatusTip(description)
@@ -456,12 +425,10 @@ class EditableApplyLaterComponent(BaseComponent):
         self.applyEnabled = allowed and not isEqualEditable
         self.acReset.setEnabled(self.applyEnabled)
 
-
     def onEditingFinished(self, box, value):
         if self.__currentDisplayValue is None:
             return
         self.updateButtons()
-
 
     def addBox(self, box):
         """we cannot add several boxes onto one editable thing yet"""
@@ -479,7 +446,6 @@ class ChoiceComponent(BaseComponent):
         self.widget.setEnabled(False)
         self.connectWidget(box)
 
-
     def connectWidget(self, box):
         BaseComponent.connectWidget(self, box)
         box.signalUpdateComponent.connect(self.widgetFactory.valueChangedSlot)
@@ -491,7 +457,6 @@ class ChoiceComponent(BaseComponent):
     def widgetCategory(self):
         return self.widgetFactory.category
 
-
     # Returns the actual widget which is part of the composition
     @property
     def widget(self):
@@ -500,7 +465,7 @@ class ChoiceComponent(BaseComponent):
     @property
     def value(self):
         return self.widgetFactory.value
-    
+
     @value.setter
     def value(self, value):
         self.widgetFactory.value = value
@@ -509,11 +474,9 @@ class ChoiceComponent(BaseComponent):
         # Is not processed due to self.widget should always stay disabled
         pass
 
-
     # Triggered by DataNotifier signalAddKey
     def addKeyValue(self, key, value):
         pass
-
 
     # Triggered by DataNotifier signalRemoveKey
     def removeKey(self, key):
