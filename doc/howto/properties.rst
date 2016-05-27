@@ -29,17 +29,18 @@ in the class, as in `key = String()`. The others are:
 
 `accessMode`
   defines how this property can be accessed, from the
-  :class:`~karabo.api2.enums.AccessMode` enum. One of
-  :const:`~karabo.api2.enums.AccessMode.INITONLY`, in which case it can only be
-  set upon initialization, :const:`~karabo.api2.enums.AccessMode.READONLY`, if
-  only the device can set this property, or
-  :const:`~karabo.api2.enums.AccessMode.RECONFIGURABLE`, if anyone may change
-  the value of this property.
+  :class:`~karabo.middlelayer_api.enums.AccessMode` enum. One of
+  :const:`~karabo.middlelayer_api.enums.AccessMode.INITONLY`, in which case it
+  can only be set upon initialization,
+  :const:`~karabo.middlelayer_api.enums.AccessMode.READONLY`, if only the
+  device can set this property, or
+  :const:`~karabo.middlelayer_api.enums.AccessMode.RECONFIGURABLE`, if anyone
+  may change the value of this property.
 
 `assignment`
    this defines whether this property actually needs to have a value,
-   :const:`~karabo.api2.enums.Assignment.OPTIONAL` and
-   :const:`~karabo.api2.enums.Assignment.MANDATORY` are the options.
+   :const:`~karabo.middlelayer_api.enums.Assignment.OPTIONAL` and
+   :const:`~karabo.middlelayer_api.enums.Assignment.MANDATORY` are the options.
 
 `requiredAccessLevel`
    the access level a user needs to have in order to see or modify this
@@ -51,18 +52,19 @@ Number Types
 
 Numbers are integers and float values. There are many
 integer datatypes for the bit widths 8, 16, 32 and 64, both signed and
-unsigned, as :class:`~karabo.api2.hash.UInt32`. The two floating-point types
-are :class
+unsigned, as :class:`~karabo.middlelayer_api.hash.UInt32`. The two
+floating-point types are :class:`~karabo.middlelayer_api.hash.Float` and
+:class:`~karabo.middlelayer_api.hash.Double`
 
 The numeric types have some more possible attributes:
 
 `unitSymbol`
    gives the unit this property has. It is something like
-   :const:`~karabo.api2.enums.Unit.METER`.
+   :const:`~karabo.middlelayer_api.enums.Unit.METER`.
 
 `metricPrefixSymbol`
    gives the metric prefix of the above units. Something like
-   :const:`~karabo.api2.enums.MetricPrefix.KILO`.
+   :const:`~karabo.middlelayer_api.enums.MetricPrefix.KILO`.
 
 `minExc`, `minInc`
    is the minimum value this property may have, either exclusive or inclusive.
