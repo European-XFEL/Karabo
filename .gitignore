@@ -11,7 +11,6 @@ build/netbeans/*/*/nbproject/Package-*.bash
 build/netbeans/*/*/*/nbproject/Makefile-*.mk
 build/netbeans/*/*/*/nbproject/private
 build/netbeans/*/*/*/nbproject/Package-*.bash
-build/python/build/
 dist/
 /private/*
 GNU-Linux-x86
@@ -45,4 +44,5 @@ src/pythonGui/dist/
 src/pythonGui/karabo_gui/_version.py
 src/pythonGui/krbgui/_version.py
 build/netbeans/*/*.log
+build/python/*.exe
 !.gitignore
