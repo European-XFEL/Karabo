@@ -31,3 +31,4 @@ rm VERSION METADATA
 
 popd
 
+mv ../../src/pythonGui/dist/*.exe .
