@@ -153,6 +153,7 @@ namespace karabo {
                 m_loggerConnection->start();
                 m_loggerChannel = m_loggerConnection->createChannel();
                 m_loggerChannel->setFilter("target = 'log'");
+                m_loggerChannel->setErrorHandler(boost::bind(&GuiServerDevice::logErrorHandler, this, _1, _2));
                 m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2, _3));
                 boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
 
@@ -1105,5 +1106,18 @@ namespace karabo {
         void GuiServerDevice::slotLoggerMap(const karabo::util::Hash& loggerMap) {
             m_loggerMap = loggerMap;
         }
+
+
+        void GuiServerDevice::logErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info) {
+
+            const char* source = "log messages via broker, might have missed some";
+            if (channel != m_loggerChannel) {
+                source = "unknown broker channel";
+            }
+
+            // Just log a warning to the Gui - if these still come through...
+            KARABO_LOG_WARN << "Problem listening to " << source << ":\n" << info;
+        }
+
     }
 }
