@@ -43,6 +43,7 @@ namespace karabo {
 
             void logHandler(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data);
 
+            void logErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info);
 
         private:
 
