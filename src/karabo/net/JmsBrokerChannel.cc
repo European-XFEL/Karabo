@@ -855,20 +855,25 @@ namespace karabo {
 
 
         void JmsBrokerChannel::listenForMessages(bool (JmsBrokerChannel::*signalIncomingMessage)(bool), bool arg) {
-        try {
-                m_consumerActive = true;
-                bool messageReceived = false;
-                do {
-                    messageReceived = (this->*signalIncomingMessage)(arg);
-                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
+            m_consumerActive = true;
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "An exception during JMS broker message reception occurred: \n" << e;
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "A standard exception during JMS broker message reception occurred: " << e.what();
-            } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception during JMS broker message reception occurred.";
+            while (true) {
+                const char* failureMsg = " exception during JMS broker message reception occurred (continue listening)";
+                try {
+                    bool messageReceived = false;
+                    do {
+                        messageReceived = (this->*signalIncomingMessage)(arg);
+                    } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
+                    break; // exited message receiving normally
+                } catch (const Exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "An" << failureMsg << ": \n" << e;
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "A standard" << failureMsg << ": " << e.what();
+                } catch (...) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown" << failureMsg << ".";
+                }
             }
+
             m_consumerActive = false;
         }
 
