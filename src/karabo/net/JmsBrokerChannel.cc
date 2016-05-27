@@ -522,7 +522,7 @@ namespace karabo {
                             break;
                         }
                         default:
-                            cout << "### WARNING: Ignoring header value \"" << key << "\" of unknown type" << endl;
+                            KARABO_LOG_FRAMEWORK_WARN << "Ignoring header value '" << key << "' of unknown type '" << type << "'";
                             break;
                     }
                 }
@@ -563,6 +563,7 @@ namespace karabo {
 
 
         bool JmsBrokerChannel::signalIncomingBinaryMessage(const bool withHeader) {
+            const std::string failureMsg = " exception was caught while reading binary message from JMS broker";
             try {
 
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
@@ -609,10 +610,13 @@ namespace karabo {
                     return true;
                 }
             } catch (const Exception& e) {
-                m_signalError(shared_from_this(), e.userFriendlyMsg());
+                m_signalError(shared_from_this(), "An" + failureMsg + ":\n" + e.userFriendlyMsg());
+                return true; // received a bad message (or ran a bad handler...)
+            } catch (const std::exception& e) {
+                m_signalError(shared_from_this(), "A standard" + (failureMsg + ": ") += e.what());
                 return true; // received a bad message (or ran a bad handler...)
             } catch (...) {
-                m_signalError(shared_from_this(), "Unknown exception was raised whilst reading asynchronously");
+                m_signalError(shared_from_this(), "An unknown" + failureMsg + ".");
                 return true; // received a bad message (or ran a bad handler...)
             }
             return false;
@@ -641,6 +645,7 @@ namespace karabo {
 
 
         bool JmsBrokerChannel::signalIncomingTextMessage(const bool withHeader) {
+            const std::string failureMsg = " exception was caught while reading text message from JMS broker";
             try {
 
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
@@ -684,10 +689,13 @@ namespace karabo {
                     return true;
                 }
             } catch (const Exception& e) {
-                m_signalError(shared_from_this(), e.userFriendlyMsg());
+                m_signalError(shared_from_this(), "An" + failureMsg + ":\n" + e.userFriendlyMsg());
+                return true; // received a bad message (or ran a bad handler...)
+            } catch (const std::exception& e) {
+                m_signalError(shared_from_this(), "A standard" + (failureMsg + ": " )+ e.what());
                 return true; // received a bad message (or ran a bad handler...)
             } catch (...) {
-                m_signalError(shared_from_this(), "Unknown exception was raised whilst reading asynchronously");
+                m_signalError(shared_from_this(), "An unknown" + failureMsg + ".");
                 return true; // received a bad message (or ran a bad handler...)
             }
             return false;
@@ -716,6 +724,7 @@ namespace karabo {
 
 
         bool JmsBrokerChannel::signalIncomingHashMessage(const bool withHeader) {
+            const std::string failureMsg = " exception was caught while reading hash message from JMS broker";
             try {
 
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
@@ -782,10 +791,13 @@ namespace karabo {
                     return true;
                 }
             } catch (const Exception& e) {
-                m_signalError(shared_from_this(), e.userFriendlyMsg());
+                m_signalError(shared_from_this(), "An" + failureMsg + ":\n" + e.userFriendlyMsg());
+                return true; // received a bad message (or ran a bad handler...)
+            } catch (const std::exception& e) {
+                m_signalError(shared_from_this(), "A standard" + (failureMsg + ": " )+ e.what());
                 return true; // received a bad message (or ran a bad handler...)
             } catch (...) {
-                m_signalError(shared_from_this(), "Unknown exception was raised whilst reading asynchronously");
+                m_signalError(shared_from_this(), "An unknown" + failureMsg + ".");
                 return true; // received a bad message (or ran a bad handler...)
             }
             return false;
@@ -866,7 +878,7 @@ namespace karabo {
                     } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
                     break; // exited message receiving normally
                 } catch (const Exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "An" << failureMsg << ": \n" << e;
+                    KARABO_LOG_FRAMEWORK_ERROR << "An" << failureMsg << ":\n" << e;
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "A standard" << failureMsg << ": " << e.what();
                 } catch (...) {
