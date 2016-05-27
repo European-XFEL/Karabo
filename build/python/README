@@ -1,7 +1,6 @@
 To create the windows installer, run the script ./build.sh
 
-A folder called "dist" is created which contains the executable for Windows.
-
+A file named KaraboGUI-*.exe is created which is the executable for Windows.
 
 We assume that python with all required packages, like PyQt4, guidata, guiqwt, numpy, etc., is already installed on the Windows machine.
 You can use Python(x,y) (https://code.google.com/p/pythonxy/wiki/Downloads) or WinPython (http://winpython.github.io/).
