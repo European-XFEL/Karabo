@@ -286,7 +286,8 @@ class DeviceServer(SignalSlotable):
             return "{}_{}_{}".format(self.serverId, devClassId, cnt + 1)
 
 
-def main(args):
+def main(args=None):
+    args = args or sys.argv
     loop = EventLoop()
     set_event_loop(loop)
     v = Validator()
