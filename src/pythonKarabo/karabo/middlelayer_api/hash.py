@@ -1209,7 +1209,7 @@ class Hash(OrderedDict):
         """ Iterate over key, value and attributes
 
         This behaves like the :meth:`~dict.items` method of Python
-        :class:`dict`, just that it yields not only key and value but
+        :class:`dict`, except that it yields not only key and value but
         also the attributes for it. """
         for k in self:
             yield k, self[k], self[k, ...]

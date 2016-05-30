@@ -22,10 +22,10 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     A class with Karabo attributes inherits from this class.
     The attributes are then defined as follows::
 
-        from karabo.middlelayer import Configurable, Int, String
+        from karabo.middlelayer import Configurable, Int32, String
 
         class Spam(Configurable):
-            ham = Int()
+            ham = Int32()
             eggs = String()
     """
     _subclasses = { }

@@ -621,7 +621,7 @@ def setWait(device, **kwargs):
 
 
 def setNoWait(device, **kwargs):
-    """same as :func:`setWait`, but don't wait for acknowledgement"""
+    """Same as :func:`setWait`, but don't wait for acknowledgement"""
     if isinstance(device, Proxy):
         device = device._deviceId
     h = Hash()

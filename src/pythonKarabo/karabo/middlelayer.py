@@ -1,6 +1,7 @@
 """This is the complete public API for middle layer devices. You are
 free to use everything defined here, try to avoid doing deep imports
-into the Karabo package, as the internals may change.  """
+into the Karabo package, as the internals may change.
+"""
 
 from .middlelayer_api.device_client import (
     connectDevice, DeviceClientBase, disconnectDevice, Proxy, ProxySlot,
