@@ -365,6 +365,12 @@ DisplayCommand
 DisplayFileIn
 =============
 
+Inherits from ``DisplayWidget``
+
+Alias: `File In`
+
+Does not define ``save`` or `` load`` methods.
+
 DisplayChoiceElement
 ====================
 
@@ -467,12 +473,18 @@ EditableSpinBox
 EditableFileOut
 ===============
 
+Inherits from ``EditableWidget``
+
+Alias: `File Out`
+
+Does not define ``save`` or `` load`` methods.
+
 Slider
 ======
 
 Inherits from ``QwtWidget`` which is an ``EditableWidget``
 
-Alias: ``Slider``
+Alias: `Slider`
 
 Does not define ``save`` or ``load`` methods.
 
@@ -481,8 +493,10 @@ Bitfield
 
 Inherits from ``EditableWidget`` and ``DisplayWidget``.
 
-Alias: ``Bit Field``
+Alias: `Bit Field`
 
+``self.widget`` is the self defined widget ``BitfieldWidget`` implemented in the
+same file.
 Does not define ``save`` or ``load`` methods.
 
 
@@ -500,7 +514,7 @@ DisplayLabel
 
 Inherits from ``DisplayWidget``
 
-Alias: ``Value Field``
+Alias: `Value Field`
 
 This widget is used for the current value on device.
 Does not define ``save`` or `` load`` methods.
@@ -510,7 +524,7 @@ Evaluator
 
 Inherits from ``DisplayWidget``
 
-Alias: ``Evaluate Expression``
+Alias: `Evaluate Expression`
 
 Implements ``save`` and ``load``
 
@@ -532,7 +546,7 @@ DisplayIconset
 
 Inherits from ``DisplayWidget``
 
-Alias: ``Iconset``
+Alias: `Iconset`
 
 Implements ``save`` and ``load``
 
