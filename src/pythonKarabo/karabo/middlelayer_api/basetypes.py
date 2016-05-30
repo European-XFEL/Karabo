@@ -34,6 +34,13 @@ def wrap(data):
 
 
 def newest_timestamp(objs, newest=None):
+    """Return the newest timestamp of ``objs``
+
+    This goes through all elements of the iterable ``objs`` and returns the
+    newest timestamp they might have.
+
+    :param newest: an additional timestamp to be taken into account
+    """
     for a in objs:
         if (isinstance(a, KaraboValue) and a.timestamp is not None and
                 (newest is None or a.timestamp > newest)):
@@ -64,7 +71,39 @@ def wrap_function(func, timestamp=None):
 
 
 class KaraboValue(Registry):
-    """This is the baseclass for all Karabo values"""
+    """This is the base class for all Karabo values. All attributes of
+    a Karabo device contain objects of these types, as they are the only
+    ones we know how to transport over the network.
+
+    A :class:`KaraboValue` contains attributes that describe the value
+    further:
+
+    .. attribute:: descriptor
+
+      This contains all the details of the datatype we have. It
+      is an object of :class:`~karabo.middlelayer.Descriptor`, look there for
+      what it contains.
+
+      The descriptor is only available when accessing the device attributes
+      directly. Values calulated from a :class:`KaraboValue` lose their
+      descriptor, as it does not apply to them anymore.
+
+    .. attribute:: timestamp
+
+      This is the time a value has been acquired by the underlying hardware
+      devices. It is an object of :class:`~karabo.middlelayer.Timestamp`.
+
+      When doing operations on :class:`KaraboValue`, the result takes the
+      newest timestamp of the values operated on. So for the example
+      ``2 * x + y``, the newest timestamp of ``x`` and ``y`` is taken,
+      if both have a timestamp.
+
+    .. attribute:: value
+
+      This is the bare value, without any special Karabo things or units
+      attached.
+    """
+
     __re = re.compile(r"__\w*__|[^_]\w*")
     __blacklist = {"__len__", "__contains__", "__complex__", "__int__",
                    "__float__", "__index__", "__bool__", "__getattribute__",
@@ -101,7 +140,12 @@ class KaraboValue(Registry):
 class BoolValue(KaraboValue):
     """This contains bools.
 
-    We cannot inherit from bool, so we need a brand-new class"""
+    Objects of this class behave effectively like normal bools, just
+    with a timestamp and a descriptor added.
+    """
+
+    # We cannot inherit from bool, so we need a brand-new class
+
     def __init__(self, value, **kwargs):
         super().__init__(value, **kwargs)
         self.value = bool(value)
@@ -191,7 +235,9 @@ class StringValue(StringlikeValue, str):
 class VectorStringValue(KaraboValue, list):
     """A Karabo VectorStringValue corresponds to a Python list.
 
-    We check that only strings are entered"""
+    We check that only strings are entered
+    """
+
     def __init__(self, value=None, **kwargs):
         super().__init__(value, **kwargs)
         if value is not None:
@@ -220,8 +266,12 @@ Quantity = unit_registry.Quantity
 class QuantityValue(KaraboValue, Quantity):
     """The base class for all Karabo numerical values, including vectors.
 
-    It has a unit (by virtue of inheriting a pint Quantity).
-    Vectors are represented by numpy arrays. """
+    It has a unit (by virtue of inheriting a :ref:`pint <pint:tutorial>`
+    Quantity). Vectors are represented by numpy arrays.
+
+    In addition to the timestamp processing common to any :class:`KaraboValue`,
+    a :class:`QuantityValue` also has a unit.
+    """
 
     def __new__(cls, value, unit=None, metricPrefix=MetricPrefix.NONE, *,
                 descriptor=None, timestamp=None):
