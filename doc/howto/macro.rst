@@ -91,14 +91,14 @@ commands::
    execute(device, "start")
    print(get(device, "someProperty")
 
-The command :func:`~karabo.middlelayer.setWait` has a bit weird name, it is
-not named :class:`set` because that already exists in Python.
-Most commands, like :func:`~karabo.middlelayer.execute`, wait until their
-job is done. They all have a ``NoWait`` counterpart, which does not
-wait for completion, enabling parallelism. We talk about that later.
-So, :func:`~karabo.middlelayer.setWait` is the waiting counterpart of
-:func:`~karabo.middlelayer.setNoWait`, avoiding a name clash with Python's
-:class:`set`.
+The command :func:`~karabo.middlelayer.setWait` has a bit weird name,
+it is not named :class:`set` because that already exists in Python.
+Most commands, like :func:`~karabo.middlelayer.execute`, wait until
+their job is done. They all have a ``NoWait`` counterpart, which does
+not wait for completion. Later we will see that this allows for simple
+parallelization. So, :func:`~karabo.middlelayer.setWait` is the
+waiting counterpart of :func:`~karabo.middlelayer.setNoWait`, avoiding
+a name clash with Python's :class:`set`.
 
 Getting a device into a variable takes some time. It makes a lot of sense
 if you are changing properties or calling slots on that device all the time.
@@ -214,7 +214,7 @@ Now the macro should finish after about 3 minutes. What has happened?
 Karabo issued the commands with all "operation successful" checking
 disabled.  It executed the commands in a "fire and forget" fashion,
 i.e. did *not* block at any time. Understanding this raises new
-questions: How can I finally be sure that what I did really happended?
+questions: How can I be sure that what I did really happended?
 This leads to the next section of learning how to wait on something.
 
 Waiting for things to happen
