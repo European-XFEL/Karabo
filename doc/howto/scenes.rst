@@ -238,13 +238,19 @@ Path
 Tag: `{http://www.w3.org/2000/svg}path`
 
 
-Widget Object Classes (DisplayWidget, EditableWidget, VacuumWidget
+Widget Object Classes (DisplayWidget, EditableWidget, VacuumWidget)
 ------------------------------------------------------------------
 
 These widgets are also saved to ``Scene`` files.
 
 ValveWidget
 ===========
+
+Inherits from ``VacuumWidget``
+
+Alias: ``Valve``
+
+Should be removed - use Iconsets for vacuum widgets instead.
 
 EditableFileIn
 ==============
@@ -254,6 +260,12 @@ Monitor
 
 TurboPumpWidget
 ===============
+
+Inherits from ``VacuumWidget``
+
+Alias: ``Turbo pump``
+
+Should be removed - use Iconsets for vacuum widgets instead.
 
 DisplayPlot
 ===========
@@ -267,8 +279,20 @@ DisplayFileOut
 ShutOffValveWidget
 ==================
 
+Inherits from ``VacuumWidget``
+
+Alias: ``Shut off valve``
+
+Should be removed - use Iconsets for vacuum widgets instead.
+
 MaxiGaugeWidget
 ===============
+
+Inherits from ``VacuumWidget``
+
+Alias: ``Maxi gauge``
+
+Should be removed - use Iconsets for vacuum widgets instead.
 
 DigitIcons
 ==========
@@ -300,6 +324,12 @@ DisplayDirectory
 HydraulicValveWidget
 ====================
 
+Inherits from ``VacuumWidget``
+
+Alias: ``Hydraulic valve``
+
+Should be removed - use Iconsets for vacuum widgets instead.
+
 DisplayCommand
 ==============
 
@@ -324,11 +354,23 @@ EditableLineEdit
 CryoCoolerWidget
 ================
 
+Inherits from ``VacuumWidget``
+
+Alias: ``Inherits from ``VacuumWidget``
+
+Should be removed - use Iconsets for vacuum widgets instead.
+
 DisplayComboBox
 ===============
 
 PressureGaugeWidget
 ===================
+
+Inherits from ``VacuumWidget``
+
+Alias: ``Pressure gauge``
+
+Should be removed - use Iconsets for vacuum widgets instead.
 
 EditableDirectory
 =================
@@ -357,6 +399,12 @@ IntLineEdit
 TemperatureProbeWidget
 ======================
 
+Inherits from ``VacuumWidget``
+
+Alias: ``Temperature probe``
+
+Should be removed - use Iconsets for vacuum widgets instead.
+
 Knob
 ====
 
@@ -371,6 +419,12 @@ DisplayStateColor
 
 PressureSwitchWidget
 ====================
+
+Inherits from ``VacuumWidget``
+
+Alias: ``Pressure switch``
+
+Should be removed - use Iconsets for vacuum widgets instead.
 
 EditableSpinBox
 ===============
@@ -387,6 +441,12 @@ Bitfield
 MotorWidget
 ===========
 
+Inherits from ``VacuumWidget``
+
+Alias: ``Motor``
+
+Should be removed - use Iconsets for vacuum widgets instead.
+
 DisplayLabel
 ============
 
@@ -396,14 +456,38 @@ Evaluator
 MembranePumpWidget
 ==================
 
+Inherits from ``VacuumWidget``
+
+Alias: ``Membrane Pump``
+
+Should be removed - use Iconsets for vacuum widgets instead.
+
 DisplayIconset
 ==============
 
 RightAngleValveWidget
 =====================
 
+Inherits from ``VacuumWidget``
+
+Alias: ``Right angle valve``
+
+Should be removed - use Iconsets for vacuum widgets instead.
+
 DisplayCheckBox
 ===============
 
+Inherits from ``DisplayWidget``.
+
+Alias: ``Toggle Field``
+
+Does not define ``save`` or `` load`` methods.
+
 Hexadecimal
 ===========
+
+Inherits from ``EditableWidget`` and ``DisplayWidget``.
+
+Alias: ``Hexadecimal``
+
+Does not define ``save`` or ``load`` methods.
