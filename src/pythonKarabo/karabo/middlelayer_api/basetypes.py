@@ -72,7 +72,8 @@ class KaraboValue(Registry):
                    "__array_prepare__", "__hash__", "__str__", "__repr__",
                    "__array_wrap__", "register"}
 
-    def __init__(self, value, *args, timestamp=None, descriptor=None, **kwargs):
+    def __init__(self, value, *args, timestamp=None, descriptor=None,
+                 **kwargs):
         super().__init__(*args, **kwargs)
         if isinstance(value, KaraboValue) and timestamp is None:
             self.timestamp = value.timestamp
@@ -122,8 +123,8 @@ class EnumValue(KaraboValue):
     """This contains an enum.
 
     We can define enums in the expected parameters. This contains a value of
-    them. Unfortunately, it is impossible to use the "is" operator as with
-    bare enums, one has to use == instead. """
+    them. Unfortunately, it is impossible to use the ``is`` operator as with
+    bare enums, one has to use ``==`` instead. """
     def __init__(self, value, *, descriptor=None, **kwargs):
         super().__init__(value, descriptor=descriptor, **kwargs)
         if isinstance(value, EnumValue):
@@ -180,17 +181,17 @@ del StringlikeValue.__hash__
 
 
 class VectorCharValue(StringlikeValue, bytes):
-    """A Karabo VectorChar is a Python bytes object"""
+    """A VectorChar is a Python :class:`bytes` object"""
 
 
 class StringValue(StringlikeValue, str):
-    """A Karabo String is a Python str"""
+    """A StringValue is a Python :class:`str`."""
 
 
 class VectorStringValue(KaraboValue, list):
     """A Karabo VectorStringValue corresponds to a Python list.
 
-    We should check that only strings are entered"""
+    We check that only strings are entered"""
     def __init__(self, value=None, **kwargs):
         super().__init__(value, **kwargs)
         if value is not None:
