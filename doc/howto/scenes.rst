@@ -437,6 +437,12 @@ Should be removed - use Iconsets for vacuum widgets instead.
 Knob
 ====
 
+Inherits from ``QwtWidget`` which is an ``EditableWidget``
+
+Alias: ``Knob``
+
+Does not define ``save`` or ``load`` methods.
+
 XYVector
 ========
 
@@ -464,8 +470,21 @@ EditableFileOut
 Slider
 ======
 
+Inherits from ``QwtWidget`` which is an ``EditableWidget``
+
+Alias: ``Slider``
+
+Does not define ``save`` or ``load`` methods.
+
 Bitfield
 ========
+
+Inherits from ``EditableWidget`` and ``DisplayWidget``.
+
+Alias: ``Bit Field``
+
+Does not define ``save`` or ``load`` methods.
+
 
 MotorWidget
 ===========
@@ -479,8 +498,25 @@ Should be removed - use Iconsets for vacuum widgets instead.
 DisplayLabel
 ============
 
+Inherits from ``DisplayWidget``
+
+Alias: ``Value Field``
+
+This widget is used for the current value on device.
+Does not define ``save`` or `` load`` methods.
+
 Evaluator
 =========
+
+Inherits from ``DisplayWidget``
+
+Alias: ``Evaluate Expression``
+
+Implements ``save`` and ``load``
+
+Attributes:
+
+ - `{ns_karabo}expression`; The expression which gets evaluated.
 
 MembranePumpWidget
 ==================
@@ -493,6 +529,19 @@ Should be removed - use Iconsets for vacuum widgets instead.
 
 DisplayIconset
 ==============
+
+Inherits from ``DisplayWidget``
+
+Alias: ``Iconset``
+
+Implements ``save`` and ``load``
+
+Attributes:
+
+ - `{ns_karabo}url`; Filename of the iconset
+
+ It seems strange in the ``load`` method that if `{ns_karabo}url` is not set
+ than the parser looks for ``filename``, whereever that comes in).
 
 RightAngleValveWidget
 =====================
