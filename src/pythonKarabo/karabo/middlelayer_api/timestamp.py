@@ -64,7 +64,7 @@ class Timestamp(object):
         return self.time < other.time
 
     def __str__(self):
-        """same as toLocal()"""
+        """See toLocal()"""
         return self.toLocal()
 
     def __repr__(self):
