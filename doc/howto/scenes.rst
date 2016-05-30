@@ -340,10 +340,11 @@ Inherits from ``Icons`` which inherits from ``DisplayWidget``
 
 Alias: `Icons`
 
-An element containing a ``DigitIcons`` instance contains zero or more subelements
-with the tag `{ns_karabo}value`. The format of those elements follows:
+An element containing a ``DigitIcons`` instance contains zero or more
+subelements with the tag `{ns_karabo}value`. The format of those elements
+follows:
 
-Data: The ``value`` attribute of the given item (a text label??)
+Data: The ``value`` attribute of the given ``Item`` (a text label??)
 
 Attributes:
 
@@ -494,11 +495,11 @@ No ``save`` or ``load`` methods.
 DisplayTableElement
 ===================
 
-Inherits from ``EditableTableElement`` (see ``EditableTableElement``)
+Inherits from ``EditableTableElement``
 
 Alias: `Display Table Element`
 
-No ``save`` or ``load`` methods.
+The ``save`` or ``load`` methods are inherited from ``EditableTableElement``
 
 EditableLineEdit
 ================
@@ -564,7 +565,6 @@ Alias: `Icons`
 Identical to ``DigitIcons``, except that the child element tags are
 `{ns_karabo}re` and `image` is the only valid attribute.
 
-
 DoubleLineEdit
 ==============
 
@@ -582,11 +582,9 @@ Inherits from ``EditableWidget`` and ``DisplayWidget``.
 
 Alias: 'Table Element`
 
-Implements ``save`` and ``load``
-
 Attributes:
 
- - `{ns_karabo}columnSchema`; Schema which defines the table
+ - `{ns_karabo}columnSchema`: Schema which defines the table
 
 XYPlot
 ======
@@ -597,8 +595,7 @@ Alias: `XY-Plot`
 
 Two values are plotted against each other.
 
-Does not define ``save`` or ``load`` methods.
-Which actually should be changed.
+Does not define ``save`` or ``load`` methods, which actually should be changed.
 
 DisplayTrendline
 ================
@@ -607,16 +604,15 @@ Inherits from ``DisplayWidget``
 
 Alias: `Trendline`
 
-Implements ``save`` and ``load``
+Contains a list of subelements with the tag `{ns_karabo}box`. The attributes
+for these elements are defined below:
 
 Attributes:
 
- - `{ns_karabo}box`;
+ - `device`: The device ID
+ - `path`: property name and ``curve`` data
 
- - `device`; The device ID
- - `path`; property name and ``curve`` data
-
-Same attributes are saved as in ``XYVector``, ``DisplayTrendline``.
+Same elements and attributes are saved as in ``XYVector``, ``DisplayTrendline``.
 
 A vector is plotted.
 
@@ -644,7 +640,7 @@ Knob
 
 Inherits from ``QwtWidget`` which is an ``EditableWidget``
 
-Alias: ``Knob``
+Alias: `Knob`
 
 Does not define ``save`` or ``load`` methods.
 
@@ -655,16 +651,15 @@ Inherits from ``DisplayWidget``
 
 Alias: `"XY-Plot`
 
-Implements ``save`` and ``load``
+Contains a list of subelements with the tag `{ns_karabo}box`. The attributes
+for these elements are defined below:
 
 Attributes:
 
- - `{ns_karabo}box`;
+ - `device`: The device ID
+ - `path`: property name and ``curve`` data
 
- - `device`; The device ID
- - `path`; property name and ``curve`` data
-
-Same attributes are saved as in ``XYVector``, ``DisplayTrendline``.
+Same elements and attributes are saved as in ``XYVector``, ``DisplayTrendline``.
 
 Several vectors of the same size are plotted against each other.
 
@@ -684,20 +679,16 @@ Inherits from ``DisplayWidget``
 
 Alias: `State Color Field`
 
-Implements ``save`` and ``load``
-
 Attributes:
 
  - `{ns_karabo}staticText`; The text shown on the widget
 
-Sub attributes:
+Sub Elements: Use the tag `{ns_karabo}sc` and the data is the name of the state
 
- - `{ns_karabo}sc`;
-
- - `red`; Value for red
- - `green`; Value for green
- - `blue`; Value for blue
- - `alpha`; Value for alpha channel
+ - `red`: Color component for red
+ - `green`: Color component for green
+ - `blue`: Color component for blue
+ - `alpha`: Color component for alpha channel
 
 PressureSwitchWidget
 ====================
@@ -745,9 +736,10 @@ Inherits from ``EditableWidget`` and ``DisplayWidget``.
 
 Alias: `Bit Field`
 
+Does not define ``save`` or ``load`` methods.
+
 ``self.widget`` is the self defined widget ``BitfieldWidget`` implemented in the
 same file.
-Does not define ``save`` or ``load`` methods.
 
 MotorWidget
 ===========
@@ -765,8 +757,9 @@ Inherits from ``DisplayWidget``
 
 Alias: `Value Field`
 
-This widget is used for the current value on device.
 Does not define ``save`` or ``load`` methods.
+
+This widget is used for the current value on device.
 
 Evaluator
 =========
@@ -775,11 +768,9 @@ Inherits from ``DisplayWidget``
 
 Alias: `Evaluate Expression`
 
-Implements ``save`` and ``load``
-
 Attributes:
 
- - `{ns_karabo}expression`; The expression which gets evaluated.
+ - `{ns_karabo}expression`: The expression which gets evaluated.
 
 MembranePumpWidget
 ==================
@@ -797,14 +788,11 @@ Inherits from ``DisplayWidget``
 
 Alias: `Iconset`
 
-Implements ``save`` and ``load``
-
 Attributes:
 
- - `{ns_karabo}url`; Filename of the iconset
-
- It seems strange in the ``load`` method that if `{ns_karabo}url` is not set
- than the parser looks for ``filename``, whereever that comes in).
+ - `{ns_karabo}url`: Filename of the iconset
+ - `{ns_karabo}filename`: If `{ns_karabo}url` is not set then this attribute is
+   used for the URL
 
 RightAngleValveWidget
 =====================
