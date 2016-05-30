@@ -3,52 +3,101 @@ Documentation of the Scene file format
 
 The ``Scene`` file format is based on XML(SVG).
 
+
+Scene SVG Object Classes
+------------------------
+
+These are the classes which are ``Loadable`` children and also define a
+``xmltag`` class attribute. They don't appear to be handled any differently.
+It's possible that the original meaning was lost. See below for more
+information about these classes.
+
+Rectangle
+=========
+
+Tag: `{http://www.w3.org/2000/svg}rect`
+
+Line
+====
+
+Tag: `{http://www.w3.org/2000/svg}line`
+
+FixedLayout
+===========
+
+Tag: `{http://www.w3.org/2000/svg}g`
+
+Path
+====
+
+Tag: `{http://www.w3.org/2000/svg}path`
+
+
 Scene Object Classes
 --------------------
 
 All objects write the attribute `{ns_karabo}class`, which is the name of
 the object's class (for dispatching the correct load method when reading).
 
-Note that `{ns_karabo}` is shorthand for `{http://karabo.eu/scene}`.
+Note that `{ns_karabo}` is shorthand for `{http://karabo.eu/scene}` and
+`{ns_svg}` is shorthand for `{http://www.w3.org/2000/svg}`.
 
 Layout
 ======
 
-Inherits from ``Loadable``
+Inherits from ``Loadable``.
+
+This is the base class for other layouts and should never be instantiated
+as a ``Layout``.
+
+Saving occurs in the ``element`` method. An element with the tag `{ns_svg}g`
+is created and the following attributes are added:
 
 Attributes:
 
- - `{ns_karabo}x`:
- - `{ns_karabo}y`:
- - `{ns_karabo}width`:
- - `{ns_karabo}height`:
+ - `{ns_karabo}x`: Top-left X coordinate
+ - `{ns_karabo}y`: Top-left Y coordinate
+ - `{ns_karabo}width`: The width of the layout
+ - `{ns_karabo}height`: The height of the layout
+ - `{ns_karabo}class`: The classname of the layout
+
+Then the ``save`` method (of a derived class) is called to add any additional
+attributes.
+
+Finally, the ``add_children`` method is called to add subelements for all of
+the children of this layout.
 
 BoxLayout
 =========
 
 Inherits from ``Layout`` and ``QBoxLayout``
 
+Implements the ``save`` method, as well as ``load`` and ``loadPosition``.
+
 Attributes:
 
- - `{ns_karabo}direction`:
+ - `{ns_karabo}direction`: An integer representing a ``QBoxLayout::Direction``
 
 FixedLayout
 ===========
 
 Inherits from ``Layout`` and ``QLayout``
 
-Uses ``save`` method of parent class.
+Implements the ``save`` method (but adds no attributes) and the ``add_children``
+method for saving.
 
-Implements ``add_children`` for saving and ``loadPosition`` for loading.
+Implements the ``load`` and ``loadPosition`` methods for loading.
 
 GridLayout
 ==========
 
 Inherits from ``Layout`` and ``QGridLayout``
 
-The saving of this layout is done in the parent class
-``Layout.element(self, selected=False)``. Actually, the ``save()`` method
-for this class returns ``{}``
+Implements the ``save`` method (but adds no attributes) and the ``add_children``
+method for saving. The attributes `{ns_karabo}row`, `{ns_karabo}col`,
+`{ns_karabo}rowspan`, and `{ns_karabo}colspan` are added to non-Shape children.
+
+Implements the ``load`` and ``loadPosition`` methods for loading.
 
 Label
 =====
@@ -74,7 +123,7 @@ Inherits from ``ShapeAction`` -> ``Action`` -> ``Registry`` (also ``Loadable``)
 Base class for ``Line``, ``Rectangle``, and ``Path``. Does not define ``save``
 or ``load`` methods, but *does* define ``savepen`` and ``loadpen``.
 
-Pen Attributes:
+Attributes (from ``savepen`` / ``loadpen`` ):
 
  - `stroke`: An HTML color `#hex` value, or `"none"`
  - `stroke-opacity`: A floating point number between 0 and 1. Default 1
@@ -99,42 +148,51 @@ Rectangle
 
 Inherits from ``Shape``
 
-The saving of the ``Rectangle`` is done in ``element(self)`` which calls
-``Shape.savepen()``
+The saving of the ``Rectangle`` is done in the ``element`` method which calls
+``Shape.savepen``
+
+Creates an element with the tag `{ns_svg}rect`. Adds the following
+attributes and calls ``Shape.savepen`` on the element.
 
 Attributes:
 
- - `{ns_karabo}x`; Top-left X coordinate
- - `{ns_karabo}y`; Top-left Y coordinate
- - `{ns_karabo}width`; Width
- - `{ns_karabo}height`; Height
+ - `x`: Top-left X coordinate
+ - `y`: Top-left Y coordinate
+ - `width`: Width
+ - `height`: Height
 
 Line
 ====
 
 Inherits from ``Shape``
 
-The saving of the ``Line`` is done in ``element(self)`` which calls
-``Shape.savepen()``
+The saving of the ``Line`` is done in the ``element`` method which calls
+``Shape.savepen``
+
+Creates an element with the tag `{ns_svg}line`. Adds the following
+attributes and calls ``Shape.savepen`` on the element.
 
 Attributes:
 
- - `{ns_karabo}x1`: Starting X coordinate
- - `{ns_karabo}x2`: Ending X coordinate
- - `{ns_karabo}y1`: Starting Y coordinate
- - `{ns_karabo}y2`: Ending Y coordinate
+ - `x1`: Starting X coordinate
+ - `x2`: Ending X coordinate
+ - `y1`: Starting Y coordinate
+ - `y2`: Ending Y coordinate
 
 Path
 ====
 
 Inherits from ``Shape``
 
-The saving of the ``Path`` is done in ``element(self)`` which calls
-``Shape.savepen()``
+The saving of the ``Path`` is done in the ``element`` method which calls
+``Shape.savepen``
+
+Creates an element with the tag `{ns_svg}path`. Adds the following
+attributes and calls ``Shape.savepen`` on the element.
 
 Attributes:
 
- - `{ns_karabo}d`: A string containing SVG data (handled by ``PathParser``)
+ - `d`: A string containing SVG data (handled by ``PathParser``)
 
 BaseComponent
 =============
@@ -209,40 +267,11 @@ Attributes:
 Calls ``layout.loadPosition(element, sceneWidget)``, where ``sceneWidget`` is
 the parent of the item being created.
 
-Scene SVG Object Classes
-------------------------
-
-These are the classes which are ``Loadable`` children and also define a
-``xmltag`` class attribute. They don't appear to be handled any differently.
-It's possible that the original meaning was lost.
-
-Rectangle
-=========
-
-Tag: `{http://www.w3.org/2000/svg}rect`
-
-Line
-====
-
-Tag: `{http://www.w3.org/2000/svg}line`
-
-FixedLayout
-===========
-
-Tag: `{http://www.w3.org/2000/svg}g`
-
-Path
-====
-
-Tag: `{http://www.w3.org/2000/svg}path`
-
 
 Widget Object Classes (DisplayWidget, EditableWidget, VacuumWidget)
 -------------------------------------------------------------------
 
 These widgets are also saved to ``Scene`` files.
-
-
 
 EditableCheckBox
 ================
@@ -338,8 +367,6 @@ Inherits from ``QwtWidget`` which is an ``EditableWidget``
 Alias: `Knob`
 
 Does not define ``save`` or ``load`` methods.
-
-
 
 FloatSpinBox
 ============
