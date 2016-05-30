@@ -1,8 +1,8 @@
 from PyQt4.QtGui import QDoubleSpinBox
 
-from util import SignalBlocker
-from widget import DisplayWidget
-from karabo.hashtypes import Simple
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import DisplayWidget
+from karabo.middlelayer import Simple
 
 
 class MyDisplayWidget(DisplayWidget):
