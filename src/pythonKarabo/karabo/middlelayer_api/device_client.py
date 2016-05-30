@@ -378,9 +378,9 @@ class getHistory:
 
 
 class Queue:
-    """Create a queue of property changes
+    """A queue of property changes
 
-    this allows you to track all the changes of a property on a remote device.
+    This allows you to track all the changes of a property on a remote device.
     An example of usage::
 
         q = Queue(motor.position)
@@ -405,7 +405,7 @@ def get_instance():
 def waitUntil(condition):
     """Wait until the condition is True
 
-    the condition is typically a lambda function, as in::
+    The condition is typically a lambda function, as in::
 
         waitUntil(lambda: device.speed > 3)
 

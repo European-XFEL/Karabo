@@ -34,9 +34,9 @@ def wrap(data):
 
 
 def newest_timestamp(objs, newest=None):
-    """return the newest timestamp of *objs*
+    """Return the newest timestamp of ``objs``
 
-    This goes through all elements of the iterable *objs* and returns the
+    This goes through all elements of the iterable ``objs`` and returns the
     newest timestamp they might have.
 
     :param newest: an additional timestamp to be taken into account
@@ -71,7 +71,7 @@ def wrap_function(func, timestamp=None):
 
 
 class KaraboValue(Registry):
-    """This is the baseclass for all Karabo values. All attributes of
+    """This is the base class for all Karabo values. All attributes of
     a Karabo device contain objects of these types, as they are the only
     ones we know how to transport over the network.
 
@@ -85,7 +85,7 @@ class KaraboValue(Registry):
       what it contains.
 
       The descriptor is only available when accessing the device attributes
-      directly. Values calulated from a :class:`KaraboValue` loose their
+      directly. Values calulated from a :class:`KaraboValue` lose their
       descriptor, as it does not apply to them anymore.
 
     .. attribute:: timestamp
@@ -141,7 +141,7 @@ class BoolValue(KaraboValue):
     """This contains bools.
 
     Objects of this class behave effectively like normal bools, just
-    with timestamps and a descriptor added.
+    with a timestamp and a descriptor added.
     """
 
     # We cannot inherit from bool, so we need a brand-new class
