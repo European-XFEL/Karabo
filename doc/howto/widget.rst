@@ -33,7 +33,7 @@ the context menu. To give an example::
         alias = "My cool widget" # this is shown in the context menu
 
 Upon initialization, the factory gets two parameters: *box*, which is a 
-:class:`~schema.Box`, containing all the details of the value to be shown, 
+:class:`~karabo_gui.schema.Box`, containing all the details of the value to be shown,
 including the value itself. The other parameter is *parent*. The initilization 
 is supposed to create a Qt widget by the name *widget*, with *parent* as its 
 parent::
