@@ -58,6 +58,14 @@ class Enumable(object):
 
 
 class Simple(object):
+    """This is the base for all numeric types
+
+    it features the minimum and maximum for its values given
+    in ``minExc``, ``maxExc``, ``minInc``, and ``maxInc``, where
+    ``min`` and ``max`` stand for miniumum and maximum, while ``Exc``
+    and ``Inc`` stand for exclusive and inclusive, respectively.
+    """
+
     minExc = Attribute()
     maxExc = Attribute()
     minInc = Attribute()
@@ -92,8 +100,17 @@ class Simple(object):
                              format(ret, self.key))
         return ret
 
+    def getMinMax(self):
+        """return a tuple (minimum, maximum) for the minimum and maximum
+        value this type can take. This is based both on the definition
+        of the type, as well as by the attributes ``minInc``, ``maxInc``,
+        ``minExc``, ``maxExc``."""
+        raise NotImplementedError
+
 
 class Integer(Simple, Enumable):
+    """The base class for all integers"""
+
     def getMinMax(self):
         info = np.iinfo(self.numpy)
         min = self.minExc
@@ -116,6 +133,8 @@ class Integer(Simple, Enumable):
 
 
 class Number(Simple):
+    """The base class for all floating-point types"""
+
     absoluteError = Attribute()
     relativeError = Attribute()
 
@@ -141,6 +160,23 @@ class Number(Simple):
 
 
 class Descriptor(object):
+    """This is the base class for all descriptors.
+
+    Descriptors describe the content of a device property. The description
+    is done in their attributes, which come from a fixed defined set,
+    described in :ref:`howto-properties`.
+
+    It may be useful to note that instances of this class do *not* contain
+    any data, instead they are *describing* which values a device property
+    may take, they are actually :ref:`descriptors <python:descriptors>` in the
+    Python sense. They are given as *kwargs* upon initialization, for example::
+
+        class MyDevice(Device):
+            # Int32 is a subclass of Descriptor
+            # displayedName and defaultValue are the attributes
+            count = Int32(displayedName="electron count", defaultValue=5)
+    """
+
     displayedName = Attribute()
     alias = Attribute()
     description = Attribute()
@@ -384,6 +420,7 @@ class NumpyVector(Vector):
 
 
 class Bool(Type):
+    """This describes a boolean: ``True`` or ``False``"""
     number = 0
     numpy = np.bool_
 
@@ -466,9 +503,7 @@ class _Byte(Special, str):
 
 class VectorChar(Vector):
     """A VectorChar is simply some binary data in memory. The corresponding
-    python data type is bytes. Make sure you don't use str for strings,
-    as this will result in the hash creating a VectorChar, and the C++ will
-    not be happy about this."""
+    Python data type is :class:`python:bytes`."""
     basetype = Char
     number = 3
 

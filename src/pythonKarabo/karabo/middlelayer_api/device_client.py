@@ -378,6 +378,15 @@ class getHistory:
 
 
 class Queue:
+    """Create a queue of property changes
+
+    this allows you to track all the changes of a property on a remote device.
+    An example of usage::
+
+        q = Queue(motor.position)
+        new_position = q.get()
+    """
+
     def __init__(self, proxy):
         self.proxy = proxy
 
@@ -539,14 +548,13 @@ def getClasses(serverId):
 def instantiate(serverId, classId, deviceId="", configuration=None, **kwargs):
     """Instantiate and configure a device on a running server
 
-    Arguments:
-      * *serverId*: The serverId of the server on which the device should be
+    :param serverId: The serverId of the server on which the device should be
         started.
-      * *classId*: The classId of the device (corresponding plugin must already
-        be loaded on the server)
-      * *deviceId*: The future name of the device in the Karabo installation
+    :param classId: The classId of the device (the corresponding plugin must
+        already be loaded on the server)
+    :param deviceId: The future name of the device in the Karabo installation
         (will fail if not unique)
-      * *configuration*: the configuration of the device (optional)
+    :param configuration: the configuration of the device (optional)
 
     The keyword arguments are used to further configure the device. """
     if configuration is None:

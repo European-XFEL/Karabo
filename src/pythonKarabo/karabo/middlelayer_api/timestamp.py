@@ -46,9 +46,11 @@ class Timestamp(object):
                 "tid": self.tid}
 
     def toTimestamp(self):
+        """Return the time as seconds since 1970-01-01 00:00 UTC"""
         return self.time / 10 ** 18
 
     def toLocal(self):
+        """Return the time as an ISO 8601 string in the local timezone"""
         return datetime.fromtimestamp(self.toTimestamp()).isoformat()
 
     def __eq__(self, other):
@@ -62,8 +64,10 @@ class Timestamp(object):
         return self.time < other.time
 
     def __str__(self):
+        """same as toLocal()"""
         return self.toLocal()
 
     def __repr__(self):
+        """Return the time as an ISO 8601 string in UTC"""
         ts = datetime.utcfromtimestamp(self.toTimestamp())
         return ts.isoformat() + " UTC"
