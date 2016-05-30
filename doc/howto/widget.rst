@@ -15,7 +15,7 @@ A simple display widget
 -----------------------
 
 A widget is created by a factory class, which is not the widget itself but 
-creates the necessary widgets. It inherits from :class:`~widget.DisplayWidget`, 
+creates the necessary widgets. It inherits from :class:`~karabo_gui.widget.DisplayWidget`,
 which does all the necessary registration so that the new widget will be shown 
 in the context
 menus.
@@ -24,16 +24,16 @@ The factory class contains a category, which states which kind of data can be
 shown by this widget. The class also has an alias which is the string shown in 
 the context menu. To give an example::
 
-    from util import SignalBlocker
-    from widget import DisplayWidget
-    from karabo.hashtypes import Simple # all types are defined here
+    from karabo_gui.util import SignalBlocker
+    from karabo_gui.widget import DisplayWidget
+    from karabo.middlelayer import Simple # all types are defined here
 
     class MyDisplayWidget(DisplayWidget):
         category = Simple # this widget will show numbers
         alias = "My cool widget" # this is shown in the context menu
 
 Upon initialization, the factory gets two parameters: *box*, which is a 
-:class:`~schema.Box`, containing all the details of the value to be shown, 
+:class:`~karabo_gui.schema.Box`, containing all the details of the value to be shown,
 including the value itself. The other parameter is *parent*. The initilization 
 is supposed to create a Qt widget by the name *widget*, with *parent* as its 
 parent::
@@ -92,7 +92,7 @@ here with ``mydisplaywidget``
 A simple editable widget
 ------------------------
 
-Besides that an editable widget inherits from :class:`~widget.EditableWidget`, 
+Besides that an editable widget inherits from :class:`~karabo_gui.widget.EditableWidget`,
 some more methods need to be implemented for an editable widget.
 
 The factory should contain an attribute ``value`` which contains the value 
@@ -106,10 +106,10 @@ is actually stored in the underlying widget, as in::
         return self.widget.value()
 
 
-Once the value is set, :meth:`~widget.EditableWidget.onEditingFinished` should 
+Once the value is set, :meth:`~karabo_gui.widget.EditableWidget.onEditingFinished` should
 be called with one parameter, the new value. This is even the case if the value 
 was set artificially, so a ``valueChanged`` method often ends in a call to 
-:meth:`~widget.EditableWidget.onEditingFinished`.
+:meth:`~karabo_gui.widget.EditableWidget.onEditingFinished`.
 
 One more note on ``valueChanged``: its parameters seem to be redundant, as you 
 get the *box* and a *value*. But there is a difference: the *box* contains the 

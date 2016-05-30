@@ -1,8 +1,8 @@
 from PyQt4.QtGui import QDoubleSpinBox
 
-from util import SignalBlocker
-from widget import EditableWidget
-from karabo.hashtypes import Simple
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import EditableWidget
+from karabo.middlelayer import Simple
 
 
 class MyEditWidget(EditableWidget):
