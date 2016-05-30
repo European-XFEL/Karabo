@@ -1,4 +1,6 @@
-""" This module provides all the API 2 names which a Device might need.
+"""This is the complete public API for middle layer devices. You are
+free to use everything defined here, try to avoid doing deep imports
+into the Karabo package, as the internals may change.
 """
 
 from .middlelayer_api.device_client import (

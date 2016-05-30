@@ -265,4 +265,8 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-intersphinx_mapping = {'python': ('http://docs.python.org/3.4', None)}
+intersphinx_mapping = {
+    'python': ('http://docs.python.org/3.4', None),
+    'pint': ('http://pint.readthedocs.org/en/0.7.2', None),
+    'dateutil': ('http://dateutil.readthedocs.org/en/2.3', None)
+}
