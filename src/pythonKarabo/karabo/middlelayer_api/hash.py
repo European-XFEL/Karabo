@@ -60,10 +60,13 @@ class Enumable(object):
 class Simple(object):
     """This is the base for all numeric types
 
-    it features the minimum and maximum for its values given
+    It features the minimum and maximum for its values given
     in ``minExc``, ``maxExc``, ``minInc``, and ``maxInc``, where
     ``min`` and ``max`` stand for miniumum and maximum, while ``Exc``
     and ``Inc`` stand for exclusive and inclusive, respectively.
+
+    Do not use inclusive and exclusive for the same limit at the same
+    time.
     """
 
     minExc = Attribute()
@@ -101,10 +104,15 @@ class Simple(object):
         return ret
 
     def getMinMax(self):
-        """return a tuple (minimum, maximum) for the minimum and maximum
-        value this type can take. This is based both on the definition
-        of the type, as well as by the attributes ``minInc``, ``maxInc``,
-        ``minExc``, ``maxExc``."""
+        """Return a tuple (minimum, maximum) for this value
+
+        This are the minimum and maximum value this type can take.
+        This is based both on the definition of the type, as well as
+        on the attributes ``minInc``, ``maxInc``, ``minExc``,
+        ``maxExc``. All information can be condensed in just two
+        values as it is futile to specify both inclusive and exclusive
+        values for the same limit.
+        """
         raise NotImplementedError
 
 
@@ -169,7 +177,8 @@ class Descriptor(object):
     It may be useful to note that instances of this class do *not* contain
     any data, instead they are *describing* which values a device property
     may take, they are actually :ref:`descriptors <python:descriptors>` in the
-    Python sense. They are given as *kwargs* upon initialization, for example::
+    Python sense. They are given as keyword arguments upon initialization,
+    for example::
 
         class MyDevice(Device):
             # Int32 is a subclass of Descriptor

@@ -33,7 +33,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     schema = None
 
     def __init__(self, configuration={}, parent=None, key=None):
-        """initialize this object with the configuration
+        """Initialize this object with the configuration
 
         :param configuration: a :class:`dict` or a
         :class:`~karabo.middlelayer.Hash` which contains the
