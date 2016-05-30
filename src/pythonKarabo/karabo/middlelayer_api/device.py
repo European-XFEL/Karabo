@@ -10,7 +10,11 @@ from .signalslot import SignalSlotable, Signal, slot, coslot
 
 
 class Device(SignalSlotable):
-    """This is the base class for all devices."""
+    """This is the base class for all devices.
+
+    It inherits from :class:`~karabo.middlelayer.Configurable` and thus
+    you can define expected parameters for it.
+    """
 
     __version__ = "1.3"
 
