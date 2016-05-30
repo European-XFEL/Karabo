@@ -1,3 +1,5 @@
+.. _howto-properties:
+
 Properties of macros and devices
 ================================
 

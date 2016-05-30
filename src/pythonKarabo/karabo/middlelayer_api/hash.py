@@ -1105,11 +1105,11 @@ class Hash(OrderedDict):
 
     It is mostly an extended :class:`dict`.
 
-    The bit difference to normal python containers is the dot-access method.
+    The big difference to normal Python containers is the dot-access method.
     The hash has a built-in knowledge about it containing itself. Thus,
     one can access subhashes by ``hash['key.subhash']``.
 
-    The other speciality are attributes. In python, these can be accessed
+    The other speciality are attributes. In Python, these can be accessed
     using a second parameter to the brackets, as in
     ``hash['key', 'attribute']``.
 
@@ -1208,9 +1208,9 @@ class Hash(OrderedDict):
     def iterall(self):
         """ Iterate over key, value and attributes
 
-        This behaves like the ``items()`` method of python :class:`dict`,
-        just that it yields not only key and value but also the attributes
-        for it. """
+        This behaves like the :meth:`~dict.items` method of Python
+        :class:`dict`, just that it yields not only key and value but
+        also the attributes for it. """
         for k in self:
             yield k, self[k], self[k, ...]
 

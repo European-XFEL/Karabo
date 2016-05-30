@@ -98,7 +98,7 @@ class Proxy(object):
     This proxy represents a real device somewhere in the karabo system.
     It is typically created by :func:`getDevice`, do not create it yourself.
 
-    properties and slots may be accessed as if one would access the actual
+    Properties and slots may be accessed as if one would access the actual
     device object, as in::
 
         device = getDevice("someDevice")
@@ -577,7 +577,7 @@ def instantiateNoWait(serverId, classId, deviceId="", configuration=None,
 def shutdown(device):
     """shut down the given device
 
-    *deviceId* may be a device proxy, or just the id of a device"""
+    :param deviceId: may be a device proxy, or just the id of a device"""
     if isinstance(device, Proxy):
         device = device._deviceId
     ok = yield from get_instance().call(device, "slotKillDevice")
@@ -621,7 +621,7 @@ def setWait(device, **kwargs):
 
 
 def setNoWait(device, **kwargs):
-    """same as :func:`set`, but don't wait for acknowledgement"""
+    """same as :func:`setWait`, but don't wait for acknowledgement"""
     if isinstance(device, Proxy):
         device = device._deviceId
     h = Hash()
