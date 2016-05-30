@@ -459,6 +459,9 @@ Alias: `File In`
 
 Does not define ``save`` or `` load`` methods.
 
+``EditableFileIn`` and ``DisplayFileIn`` should be combined in one class and
+which inherits from ``EditableWidget`` and ``DisplayWidget``.
+
 DisplayChoiceElement
 ====================
 
@@ -565,17 +568,67 @@ Identical to ``DigitIcons``, except that the child element tags are
 DoubleLineEdit
 ==============
 
+Inherits from ``NumberLineEdit`` which inherits from ``EditableWidget`` and
+``DisplayWidget``.
+
+Alias: `Float Field`
+
+Does not define ``save`` or ``load`` methods.
+
 EditableTableElement
 ====================
+
+Inherits from ``EditableWidget`` and ``DisplayWidget``.
+
+Alias: 'Table Element`
+
+Implements ``save`` and ``load``
+
+Attributes:
+
+ - `{ns_karabo}columnSchema`; Schema which defines the table
 
 XYPlot
 ======
 
+Inherits from ``DisplayWidget``
+
+Alias: `XY-Plot`
+
+Two values are plotted against each other.
+
+Does not define ``save`` or ``load`` methods.
+Which actually should be changed.
+
 DisplayTrendline
 ================
 
+Inherits from ``DisplayWidget``
+
+Alias: `Trendline`
+
+Implements ``save`` and ``load``
+
+Attributes:
+
+ - `{ns_karabo}box`;
+
+ - `device`; The device ID
+ - `path`; property name and ``curve`` data
+
+Same attributes are saved as in ``XYVector``, ``DisplayTrendline``.
+
+A vector is plotted.
+
 IntLineEdit
 ===========
+
+Inherits from ``NumberLineEdit`` which inherits from ``EditableWidget`` and
+``DisplayWidget``.
+
+Alias: `Integer Field`
+
+Does not define ``save`` or ``load`` methods.
 
 TemperatureProbeWidget
 ======================
@@ -598,11 +651,53 @@ Does not define ``save`` or ``load`` methods.
 XYVector
 ========
 
+Inherits from ``DisplayWidget``
+
+Alias: `"XY-Plot`
+
+Implements ``save`` and ``load``
+
+Attributes:
+
+ - `{ns_karabo}box`;
+
+ - `device`; The device ID
+ - `path`; property name and ``curve`` data
+
+Same attributes are saved as in ``XYVector``, ``DisplayTrendline``.
+
+Several vectors of the same size are plotted against each other.
+
 DisplayLineEdit
 ===============
 
+Inherits from ``DisplayWidget``
+
+Alias: `Text Field`
+
+Does not define ``save`` or ``load`` methods.
+
 DisplayStateColor
 =================
+
+Inherits from ``DisplayWidget``
+
+Alias: `State Color Field`
+
+Implements ``save`` and ``load``
+
+Attributes:
+
+ - `{ns_karabo}staticText`; The text shown on the widget
+
+Sub attributes:
+
+ - `{ns_karabo}sc`;
+
+ - `red`; Value for red
+ - `green`; Value for green
+ - `blue`; Value for blue
+ - `alpha`; Value for alpha channel
 
 PressureSwitchWidget
 ====================
@@ -616,6 +711,12 @@ Should be removed - use Iconsets for vacuum widgets instead.
 EditableSpinBox
 ===============
 
+Inherits from ``EditableWidget`` and ``DisplayWidget``.
+
+Alias: `Integer Spin Box`
+
+Does not define ``save`` or ``load`` methods.
+
 EditableFileOut
 ===============
 
@@ -623,7 +724,10 @@ Inherits from ``EditableWidget``
 
 Alias: `File Out`
 
-Does not define ``save`` or `` load`` methods.
+Does not define ``save`` or ``load`` methods.
+
+``EditableFileOut`` and ``DisplayFileOut`` should be combined in one class and
+which inherits from ``EditableWidget`` and ``DisplayWidget``.
 
 Slider
 ======
@@ -645,7 +749,6 @@ Alias: `Bit Field`
 same file.
 Does not define ``save`` or ``load`` methods.
 
-
 MotorWidget
 ===========
 
@@ -663,7 +766,7 @@ Inherits from ``DisplayWidget``
 Alias: `Value Field`
 
 This widget is used for the current value on device.
-Does not define ``save`` or `` load`` methods.
+Does not define ``save`` or ``load`` methods.
 
 Evaluator
 =========
@@ -719,7 +822,7 @@ Inherits from ``DisplayWidget``.
 
 Alias: `Toggle Field`
 
-Does not define ``save`` or `` load`` methods.
+Does not define ``save`` or ``load`` methods.
 
 Hexadecimal
 ===========
