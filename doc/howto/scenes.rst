@@ -239,7 +239,7 @@ Tag: `{http://www.w3.org/2000/svg}path`
 
 
 Widget Object Classes (DisplayWidget, EditableWidget, VacuumWidget)
-------------------------------------------------------------------
+-------------------------------------------------------------------
 
 These widgets are also saved to ``Scene`` files.
 
@@ -255,33 +255,52 @@ Should be removed - use Iconsets for vacuum widgets instead.
 EditableFileIn
 ==============
 
+No ``save`` or ``load`` methods.
+
 Monitor
 =======
+
+Attributes:
+
+ - `filename`: A string containing a file path (*can be absent*)
+ - `interval`: A floating point number of seconds
 
 TurboPumpWidget
 ===============
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Turbo pump``
+Alias: `Turbo pump`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
 DisplayPlot
 ===========
 
+No ``save`` or ``load`` methods.
+
+**Note**: Adjacent to this code is a ``PlotItem`` class which contains a large
+number of ``NameError``s. It looks like it's not used anywhere in the Karabo
+GUI code and might be a good candidate for removal.
+
 FloatSpinBox
 ============
 
+Attributes:
+
+ - `{ns_karabo}step`: A floating point number denoting the widget's step size
+
 DisplayFileOut
 ==============
+
+No ``save`` or ``load`` methods.
 
 ShutOffValveWidget
 ==================
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Shut off valve``
+Alias: `Shut off valve`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
@@ -290,12 +309,22 @@ MaxiGaugeWidget
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Maxi gauge``
+Alias: `Maxi gauge`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
 DigitIcons
 ==========
+
+An element containing a ``DigitIcons`` instance contains zero or more subelements
+with the tag `{ns_karabo}value`. The format of those elements follows:
+
+Data: The ``value`` attribute of the given item (a text label??)
+
+Attributes:
+
+ - `equal`: A string containing the value `true` or `false` (*can be absent*)
+ - `image`: A URL for an icon (*can be absent*)
 
 EditableCheckBox
 ================
@@ -326,7 +355,7 @@ HydraulicValveWidget
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Hydraulic valve``
+Alias: `Hydraulic valve`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
@@ -356,7 +385,7 @@ CryoCoolerWidget
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Inherits from ``VacuumWidget``
+Alias: `Inherits from ``VacuumWidget`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
@@ -368,7 +397,7 @@ PressureGaugeWidget
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Pressure gauge``
+Alias: `Pressure gauge`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
@@ -401,7 +430,7 @@ TemperatureProbeWidget
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Temperature probe``
+Alias: `Temperature probe`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
@@ -422,7 +451,7 @@ PressureSwitchWidget
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Pressure switch``
+Alias: `Pressure switch`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
@@ -443,7 +472,7 @@ MotorWidget
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Motor``
+Alias: `Motor`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
@@ -458,7 +487,7 @@ MembranePumpWidget
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Membrane Pump``
+Alias: `Membrane Pump`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
@@ -470,7 +499,7 @@ RightAngleValveWidget
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Right angle valve``
+Alias: `Right angle valve`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
@@ -479,7 +508,7 @@ DisplayCheckBox
 
 Inherits from ``DisplayWidget``.
 
-Alias: ``Toggle Field``
+Alias: `Toggle Field`
 
 Does not define ``save`` or `` load`` methods.
 
@@ -488,6 +517,6 @@ Hexadecimal
 
 Inherits from ``EditableWidget`` and ``DisplayWidget``.
 
-Alias: ``Hexadecimal``
+Alias: `Hexadecimal`
 
 Does not define ``save`` or ``load`` methods.
