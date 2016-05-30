@@ -518,6 +518,12 @@ Should be removed - use Iconsets for vacuum widgets instead.
 DisplayComboBox
 ===============
 
+Inherits from ``DisplayWidget``
+
+Alias: `Selection Field`
+
+No ``save`` or ``load`` methods.
+
 PressureGaugeWidget
 ===================
 
@@ -530,8 +536,20 @@ Should be removed - use Iconsets for vacuum widgets instead.
 EditableDirectory
 =================
 
+Inherits from ``EditableWidget``
+
+Alias: `Directory`
+
+No ``save`` or ``load`` methods.
+
 EditableList
 ============
+
+Inherits from ``EditableWidget`` and ``DisplayWidget``
+
+Alias: `List`
+
+No ``save`` or ``load`` methods.
 
 TextIcons
 =========
