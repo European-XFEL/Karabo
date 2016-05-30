@@ -248,17 +248,25 @@ ValveWidget
 
 Inherits from ``VacuumWidget``
 
-Alias: ``Valve``
+Alias: `Valve`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
 EditableFileIn
 ==============
 
+Inherits from ``EditableWidget``
+
+Alias: `File In`
+
 No ``save`` or ``load`` methods.
 
 Monitor
 =======
+
+Inherits from ``DisplayWidget``
+
+Alias: `Monitor`
 
 Attributes:
 
@@ -277,14 +285,22 @@ Should be removed - use Iconsets for vacuum widgets instead.
 DisplayPlot
 ===========
 
+Inherits from ``DisplayWidget``
+
+Alias: `Plot`
+
 No ``save`` or ``load`` methods.
 
 **Note**: Adjacent to this code is a ``PlotItem`` class which contains a large
-number of ``NameError``s. It looks like it's not used anywhere in the Karabo
-GUI code and might be a good candidate for removal.
+number of ``NameError`` opportunities. It looks like it's not used anywhere in
+the Karabo GUI code and might be a good candidate for removal.
 
 FloatSpinBox
 ============
+
+Inherits from ``EditableWidget`` and ``DisplayWidget``
+
+Alias: `Spin Box`
 
 Attributes:
 
@@ -292,6 +308,10 @@ Attributes:
 
 DisplayFileOut
 ==============
+
+Inherits from ``DisplayWidget``
+
+Alias: `File Out`
 
 No ``save`` or ``load`` methods.
 
@@ -316,6 +336,10 @@ Should be removed - use Iconsets for vacuum widgets instead.
 DigitIcons
 ==========
 
+Inherits from ``Icons`` which inherits from ``DisplayWidget``
+
+Alias: `Icons`
+
 An element containing a ``DigitIcons`` instance contains zero or more subelements
 with the tag `{ns_karabo}value`. The format of those elements follows:
 
@@ -329,26 +353,75 @@ Attributes:
 EditableCheckBox
 ================
 
+Inherits from ``EditableWidget``
+
+Alias: `Toggle Field`
+
+No ``save`` or ``load`` methods.
+
 EditableChoiceElement
 =====================
+
+Inherits from ``EditableWidget``
+
+Alias: `Choice Element`
+
+No ``save`` or ``load`` methods.
 
 DisplayAlignedImage
 ===================
 
+Inherits from ``DisplayWidget``
+
+Alias: `Aligned Image View`
+
+No ``save`` or ``load`` methods.
+
 EditableComboBox
 ================
+
+Inherits from ``EditableWidget``
+
+Alias: `Selection Field`
+
+No ``save`` or ``load`` methods.
 
 DisplayImage
 ============
 
+Inherits from ``DisplayWidget``
+
+Alias: `Image View`
+
+No ``save`` or ``load`` methods.
+
 SelectionIcons
 ==============
+
+Inherits from ``Icons`` which inherits from ``DisplayWidget``
+
+Alias: `Icons`
+
+Identical to ``DigitIcons``, except that the child element tags are
+`{ns_karabo}option` and `image` is the only valid attribute.
 
 DisplayImageElement
 ===================
 
+Inherits from ``DisplayWidget``
+
+Alias: `Image Element`
+
+No ``save`` or ``load`` methods.
+
 DisplayDirectory
 ================
+
+Inherits from ``DisplayWidget``
+
+Alias: `Directory`
+
+No ``save`` or ``load`` methods.
 
 HydraulicValveWidget
 ====================
@@ -362,6 +435,21 @@ Should be removed - use Iconsets for vacuum widgets instead.
 DisplayCommand
 ==============
 
+Inherits from ``DisplayWidget``
+
+Alias: `Command`
+
+An element containing a ``DisplayCommand`` instance contains zero or more
+subelements with the tag `{ns_karabo}action`. The format of those elements
+follows:
+
+Data: Empty
+
+Attributes:
+
+ - `key`: A string containing a ``Box`` path
+ - `image`: A URL for an icon
+
 DisplayFileIn
 =============
 
@@ -374,24 +462,56 @@ Does not define ``save`` or `` load`` methods.
 DisplayChoiceElement
 ====================
 
+Inherits from ``DisplayWidget``
+
+Alias: `Choice Element`
+
+No ``save`` or ``load`` methods.
+
 SingleBit
 =========
+
+Inherits from ``EditableWidget``
+
+Alias: `Single Bit`
+
+Attributes:
+
+ - `{ns_karabo}bit`: An integer denoting a bit index
 
 EditableListElement
 ===================
 
+Inherits from ``EditableWidget`` and ``DisplayWidget``
+
+Alias: `List Element Field`
+
+No ``save`` or ``load`` methods.
+
 DisplayTableElement
 ===================
 
+Inherits from ``EditableTableElement`` (see ``EditableTableElement``)
+
+Alias: `Display Table Element`
+
+No ``save`` or ``load`` methods.
+
 EditableLineEdit
 ================
+
+Inherits from ``EditableWidget``
+
+Alias: `Text Field`
+
+No ``save`` or ``load`` methods.
 
 CryoCoolerWidget
 ================
 
 Inherits from ``VacuumWidget``
 
-Alias: `Inherits from ``VacuumWidget`
+Alias: `Cryo-cooler`
 
 Should be removed - use Iconsets for vacuum widgets instead.
 
@@ -415,6 +535,14 @@ EditableList
 
 TextIcons
 =========
+
+Inherits from ``Icons`` which inherits from ``DisplayWidget``
+
+Alias: `Icons`
+
+Identical to ``DigitIcons``, except that the child element tags are
+`{ns_karabo}re` and `image` is the only valid attribute.
+
 
 DoubleLineEdit
 ==============
