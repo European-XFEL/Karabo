@@ -33,21 +33,24 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     schema = None
 
     def __init__(self, configuration={}, parent=None, key=None):
-        """initialize this object with the configuration
+        """Initialize this object with the configuration
 
-        The configuration is dict or a Hash which contains the
+        :param configuration: a :class:`dict` or a
+        :class:`~karabo.middlelayer.Hash` which contains the
         initial values to be used for the Karabo attributes.
         Default values of attributes are handled here.
 
-        parent is the Configurable object this object belongs to,
-        and key is the name of the attribute used in this object.
-        They are None for top-layer objects.
+        :param parent: the :class:`Configurable` object this object
+        belongs to
+        :param key: the name of the attribute used in this object.
 
-        Top-layer objects like Devices are always called with one
+        Top-layer objects like devices are always called with one
         parameter (configuration) only, so if you are inheriting from
         this class you only need to have ``parent`` and ``key`` as a
         parameter if your class should be usable as a component in
-        another class. """
+        another class.
+        """
+
         self.__parent = parent
         self.__key = key
         for k in self._allattrs:
