@@ -20,13 +20,12 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     """The base class for everything that has Karabo attributes.
 
     A class with Karabo attributes inherits from this class.
-    The attributes are then defined as follows:
+    The attributes are then defined as follows::
 
-    ::
-        from karabo import Configurable, Int, String
+        from karabo.middlelayer import Configurable, Int32, String
 
         class Spam(Configurable):
-            ham = Int()
+            ham = Int32()
             eggs = String()
     """
     _subclasses = { }
@@ -46,9 +45,9 @@ class Configurable(Registry, metaclass=MetaConfigurable):
 
         Top-layer objects like Devices are always called with one
         parameter (configuration) only, so if you are inheriting from
-        this class you only need to have parent and key as a parameter
-        if your class should be usable as a component in another class.
-        """
+        this class you only need to have ``parent`` and ``key`` as a
+        parameter if your class should be usable as a component in
+        another class. """
         self.__parent = parent
         self.__key = key
         for k in self._allattrs:
@@ -139,9 +138,7 @@ class Node(Descriptor):
     """Compose configurable classes into each other
 
     with a Node you can use a Configurable object in another one as an
-    attribute.
-
-    ::
+    attribute::
 
         from karabo import Configurable, Node
 

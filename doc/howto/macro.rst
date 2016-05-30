@@ -4,11 +4,11 @@
 How to write a macro
 ********************
 
-Karabo uses `Python <http://www.python.org>`_ as a macro language. So it might
-be a good idea to have a look at the `Python Documentation
-<http://docs.python.org/3/>`_ first, especially at the `Tutorial
-<http://docs.python.org/3/tutorial/index.html>`_.
-The GUI also has a built-in command line in which one can try out things.
+Karabo uses `Python <http://www.python.org>`_ as a macro language. So
+it might be a good idea to have a look at the `Python Documentation
+<http://docs.python.org/3/>`_ first, especially at
+:ref:`python:tutorial-index`.  The GUI also has a built-in
+command line in which one can try out things.
 
 Macros are organized into classes, which then contain methods, which are the
 actually executable units. They are shown in the GUI by buttons one can click
@@ -20,7 +20,7 @@ Hello World!
 
 Let's just start with the classic hello world example: Right-Click onto the
 Macros section in the project and add a macro, calling it for example
-*helloWorld* (the name must be a python literal, so no spaces are allowed).
+*helloWorld* (the name must be a Python literal, so no spaces are allowed).
 An editor opens in the central panel, where you can enter the macro::
 
     from karabo.middlelayer import Macro, Slot
@@ -47,7 +47,7 @@ Let's now add a property. Just replace the class by::
             print("Hello", self.name, "!")
 
 which, after having entered your name into the name field and clicked onto
-the hello button, will greet you.
+the *hello* button, will greet you.
 
 Sometimes the property names need some more explanation, which can be done as
 follows::
@@ -81,7 +81,7 @@ control for the real device sitting somewhere), you can get and set its values
 and execute its commands::
 
     device.someProperty = 7
-    device.start() # as if you had pushed the start button
+    device.start()  # as if you had pushed the start button
     print(device.someProperty)
 
 There is another way of setting and getting properties and executing
@@ -91,19 +91,19 @@ commands::
    execute(device, "start")
    print(get(device, "someProperty")
 
-The command *setWait* has a bit weird name, it is not named *set* because
-that is already existing in python. Most commands, like *execute*, wait
-until their job is done. They all have a *NoWait* counterpart, which does
-not wait for completion, enabling parallelism. We talk about that later.
-So, *setWait* is the waiting counterpart of *setNoWait*, avoiding a name
-clash with python's *set*.
+The command :func:`~karabo.middlelayer.setWait` has a bit weird name,
+it is not named :class:`set` because that already exists in Python.
+Most commands, like :func:`~karabo.middlelayer.execute`, wait until
+their job is done. They all have a ``NoWait`` counterpart, which does
+not wait for completion. Later we will see that this allows for simple
+parallelization. So, :func:`~karabo.middlelayer.setWait` is the
+waiting counterpart of :func:`~karabo.middlelayer.setNoWait`, avoiding
+a name clash with Python's :class:`set`.
 
 Getting a device into a variable takes some time. It makes a lot of sense
 if you are changing properties or calling slots on that device all the time.
 If you just want to set one property on one device, and that's it, or just
-call one slot, it is simpler to just write
-
-::
+call one slot, it is simpler to just write::
 
    setWait("some_device", "someProperty", 7)
    execute("some_device", "start")
@@ -188,8 +188,6 @@ Or if you are using strings for addressing::
        execute("some_device", "start", timeout=4)
        print(get("some_device", "someProperty", timeout=5))
 
-*TODO: Show some examples for possible exceptions*
-
 Non-blocking operations
 =======================
 
@@ -213,11 +211,11 @@ the 3 devices in parallel you can write::
            executeNoWait('configure')
 
 Now the macro should finish after about 3 minutes. What has happened?
-Karabo issued the commands with all "operation successful" checking disabled.
-It executed the commands in a "fire and forget" fashion, i.e. did *not* block
-at any time. Understanding this raises new questions: How can I finally be sure
-that what I did really happended? This leads to the next section of learning
-how to wait on something.
+Karabo issued the commands with all "operation successful" checking
+disabled.  It executed the commands in a "fire and forget" fashion,
+i.e. did *not* block at any time. Understanding this raises new
+questions: How can I be sure that what I did really happended?
+This leads to the next section of learning how to wait on something.
 
 Waiting for things to happen
 ============================
@@ -282,6 +280,6 @@ For this case, two methods may be defined which are called in this case::
     def onException(self, slot, exception, traceback):
         """to be called if an exception happend in the code"""
 
-The *slot* is the slot that had been executed, the *exception* and *traceback*
-are also supplied. *slot* and *traceback* may be None if they cannot be
-determined.
+The ``slot`` is the slot that had been executed, the ``exception`` and
+``traceback`` are also supplied. ``slot`` and ``traceback`` may be
+``None`` if they cannot be determined.
