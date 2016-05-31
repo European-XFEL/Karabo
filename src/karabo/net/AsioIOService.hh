@@ -11,6 +11,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
 #include "AbstractIOService.hh"
+#include "utils.hh"
 
 namespace karabo {
     namespace net {
@@ -33,7 +34,7 @@ namespace karabo {
             void run() {
                 if (!m_ioservice)
                     throw KARABO_PARAMETER_EXCEPTION("AsioIOService is not configured");
-                this->runProtected();
+                karabo::net::runProtected(m_ioservice.get(), "AsioIOService", "running");
             }
 
             void work() {
@@ -41,7 +42,7 @@ namespace karabo {
                     throw KARABO_PARAMETER_EXCEPTION("AsioIOService is not configured");
                 m_work = WorkPointer(new boost::asio::io_service::work(*m_ioservice));
                 
-                this->runProtected();
+                karabo::net::runProtected(m_ioservice.get(), "AsioIOService", "working");
             }
 
             void stop() {
@@ -61,8 +62,6 @@ namespace karabo {
             }
 
         private:
-            /// Run m_ioservice, but catch and log exceptions and start running again.
-            void runProtected();
 
             BoostIOServicePointer m_ioservice;
             WorkPointer m_work;
