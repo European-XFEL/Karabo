@@ -34,7 +34,12 @@ namespace karabo {
             return m_instance;
         }
         
-        
+        IndexBuilderService::IndexBuilderService() : m_work(m_svc), m_cache(),
+                m_thread(boost::bind(&karabo::net::runProtected, &m_svc, "IndexBuilderService",
+                "consider rerunning index file building by hand", 100))
+        {
+        }
+
         IndexBuilderService::~IndexBuilderService() {
             // Clean up in the destructor which is called when m_instance goes
             // out of scope, i.e. if the program finishes (tested!).
@@ -52,23 +57,7 @@ namespace karabo {
             m_svc.post(boost::bind(&IndexBuilderService::build, this, commandLineArguments));
         }
         
-        void IndexBuilderService::runIoService() {
-            // see AsioIOService::runProtected()
-            const std::string msg("xception when running io service - please rerun index file building by hand");
-            while (true) {
-                try {
-                    m_svc.run();
-                    break; // run exited normally
-                } catch(karabo::util::Exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "E" << msg << ": " << e;
-                } catch(std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard e" << msg << ": " << e.what();
-                } catch(...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown e" << msg;
-                }
-            }
-        }
-        
+
         void IndexBuilderService::build(const std::string& commandLineArguments) {
             try {
                 const std::string command = "karabo-idxbuild " + commandLineArguments;
