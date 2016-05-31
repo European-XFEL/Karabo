@@ -42,6 +42,10 @@ the object's class (for dispatching the correct load method when reading).
 Note that `{ns_karabo}` is shorthand for `{http://karabo.eu/scene}` and
 `{ns_svg}` is shorthand for `{http://www.w3.org/2000/svg}`.
 
+**All object position are all saved absolute - not layout relative.**
+
+
+
 Layout
 ======
 
