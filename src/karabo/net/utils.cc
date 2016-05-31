@@ -26,7 +26,7 @@ std::string karabo::net::bareHostName()
     return hostName;
 }
 
-void karabo::net::runProtected(boost::asio::io_service* service,
+void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> service,
         const std::string& category, const std::string& errorMessage,
         unsigned int delayInMilliSec)
 {

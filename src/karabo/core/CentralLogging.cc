@@ -54,7 +54,7 @@ namespace karabo {
         }
  
  
-        CentralLogging::CentralLogging(const karabo::util::Hash& input) : Device<>(input), m_svc(), m_timer(m_svc) {
+        CentralLogging::CentralLogging(const karabo::util::Hash& input) : Device<>(input), m_svc(new boost::asio::io_service()), m_timer(*m_svc) {
  
             KARABO_INITIAL_FUNCTION(initialize)
             m_loggerInput = input;
@@ -63,7 +63,7 @@ namespace karabo {
  
         CentralLogging::~CentralLogging() {
             m_loggerIoService->stop();
-            m_svc.stop();
+            m_svc->stop();
  
             if (m_logThread.get_id() != boost::this_thread::get_id())
                 m_logThread.join();
@@ -103,7 +103,7 @@ namespace karabo {
  
                 m_timer.expires_from_now(boost::posix_time::seconds(get<int>("flushInterval")));
                 m_timer.async_wait(boost::bind(&CentralLogging::flushHandler, this, boost::asio::placeholders::error));
-                m_svcThread = boost::thread(boost::bind(&karabo::net::runProtected, &m_svc, this->getInstanceId(),
+                m_svcThread = boost::thread(boost::bind(&karabo::net::runProtected, m_svc, this->getInstanceId(),
                         "for flushing to file", 100));
                 // Produce some information
                 KARABO_LOG_INFO << "Central Logging service started listening all log messages ...";
