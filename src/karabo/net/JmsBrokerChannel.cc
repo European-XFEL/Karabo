@@ -558,7 +558,7 @@ namespace karabo {
 
         void JmsBrokerChannel::listenForRawMessages() {
             // false: no header => Raw
-            this->listenForMessages(&JmsBrokerChannel::signalIncomingBinaryMessage, false);
+            this->listenForMessages(boost::bind(&Self::signalIncomingBinaryMessage, this, false));
         }
 
 
@@ -640,7 +640,7 @@ namespace karabo {
 
         void JmsBrokerChannel::listenForStringMessages() {
             // false: no header => String
-            this->listenForMessages(&JmsBrokerChannel::signalIncomingTextMessage, false);
+            this->listenForMessages(boost::bind(&Self::signalIncomingTextMessage, this, false));
         }
 
 
@@ -719,7 +719,7 @@ namespace karabo {
 
         void JmsBrokerChannel::listenForHashMessages() {
             // false: no header => Hash
-            this->listenForMessages(&JmsBrokerChannel::signalIncomingHashMessage, false);
+            this->listenForMessages(boost::bind(&Self::signalIncomingHashMessage, this, false));
         }
 
 
@@ -821,7 +821,7 @@ namespace karabo {
 
         void JmsBrokerChannel::listenForHashRawMessages() {
             // true: with header => HashRaw
-            this->listenForMessages(&JmsBrokerChannel::signalIncomingBinaryMessage, true);
+            this->listenForMessages(boost::bind(&Self::signalIncomingBinaryMessage, this, true));
         }
 
 
@@ -842,7 +842,7 @@ namespace karabo {
 
         void JmsBrokerChannel::listenForHashStringMessages() {
             // true: with header => HashString
-            this->listenForMessages(&JmsBrokerChannel::signalIncomingTextMessage, true);
+            this->listenForMessages(boost::bind(&Self::signalIncomingTextMessage, this, true));
         }
 
 
@@ -862,11 +862,11 @@ namespace karabo {
 
         void JmsBrokerChannel::listenForHashHashMessages() {
             // true: with header => HashHash
-            this->listenForMessages(&JmsBrokerChannel::signalIncomingHashMessage, true);
+            this->listenForMessages(boost::bind(&Self::signalIncomingHashMessage, this, true));
         }
 
 
-        void JmsBrokerChannel::listenForMessages(bool (JmsBrokerChannel::*signalIncomingMessage)(bool), bool arg) {
+        void JmsBrokerChannel::listenForMessages(const boost::function<bool ()>& signalIncomingMessage) {
             m_consumerActive = true;
 
             while (true) {
@@ -874,7 +874,7 @@ namespace karabo {
                 try {
                     bool messageReceived = false;
                     do {
-                        messageReceived = (this->*signalIncomingMessage)(arg);
+                        messageReceived = signalIncomingMessage();
                     } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
                     break; // exited message receiving normally
                 } catch (const Exception& e) {
