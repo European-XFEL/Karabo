@@ -164,7 +164,7 @@ class Integer(Simple, Enumable):
     def toKaraboValue(self, data, strict=True):
         if self.enum is not None:
             return Enumable.toKaraboValue(self, data, strict)
-        ret = super().toKaraboValue(data, strict)
+        ret = Simple.toKaraboValue(self, data, strict)
         return basetypes.QuantityValue(int(ret.magnitude), unit=ret.units,
                                        descriptor=self,
                                        timestamp=ret.timestamp)
@@ -481,7 +481,9 @@ class NumpyVector(Vector):
             data = basetypes.QuantityValue(data, descriptor=self)
         elif not isinstance(data, basetypes.QuantityValue):
             raise pint.DimensionalityError("no dimension", self.dimensionality)
+        # convert data to our unit. Descriptor is not copied.
         data = data.to(basetypes.QuantityValue(1, descriptor=self))
+        # add descriptor to data
         data.descriptor = self
         return data
 
@@ -562,10 +564,11 @@ class Char(Simple, Type):
             raise
 
     def toKaraboValue(self, data, strict=True):
-        if isinstance(data, bytes):
-            if len(data) != 1:
-                raise ValueError("A character cannot have length other than 1")
+        if isinstance(data, bytes) and len(data) == 1:
             data = data[0]
+        elif not (0 <= data < 256):
+            raise ValueError(
+                "Character must be bytes of length 1 or positive number < 256")
         return basetypes.QuantityValue(data, descriptor=self)
 
 
