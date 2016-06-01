@@ -372,7 +372,7 @@ class Type(Descriptor, Registry):
 
         in strict mode, the default, we only allow values which have the
         correct unit set or are of the correct enum. In non-strict mode,
-        we simply add the unit if none is given, or convert to the enum.
+        we simply add our unit if none is given, or convert to our enum.
         This is important for data coming from the network, as that has no
         notion about units or enums.
         """
