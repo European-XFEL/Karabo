@@ -4,7 +4,7 @@ from unittest import TestCase, main
 from pint import DimensionalityError
 
 from karabo.middlelayer_api import hash as hashmod
-from karabo.middlelayer_api.basetypes import EnumValue, QuantityValue
+from karabo.middlelayer_api.basetypes import QuantityValue
 from karabo.middlelayer_api.enums import Unit, MetricPrefix
 from karabo.middlelayer_api.hash import Hash
 
@@ -63,6 +63,8 @@ class Tests(TestCase):
         v = d.toKaraboValue(b"3")
         self.assertEqual(v, 51)
         self.check_general(d, v)
+        with self.assertRaises(TypeError):
+            d.toKaraboValue(b"123")
 
     def test_vector_char(self):
         d = hashmod.VectorChar()
@@ -176,7 +178,7 @@ class Tests(TestCase):
         self.check_general(d, v)
 
         d = hashmod.ComplexFloat(unitSymbol=Unit.METER,
-                          metricPrefixSymbol=MetricPrefix.MILLI)
+                                 metricPrefixSymbol=MetricPrefix.MILLI)
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue(5+3j)
         v = d.toKaraboValue(5+3j, strict=False)
@@ -195,7 +197,7 @@ class Tests(TestCase):
         self.assertEqual(v[1], 2+3j)
 
         d = hashmod.VectorComplexFloat(unitSymbol=Unit.METER,
-                                metricPrefixSymbol=MetricPrefix.MILLI)
+                                       metricPrefixSymbol=MetricPrefix.MILLI)
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue([2+3j, 3+4j, 4])
         v = d.toKaraboValue([2+3j, 3+4j, 4], strict=False)
