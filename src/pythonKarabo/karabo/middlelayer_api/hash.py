@@ -375,6 +375,9 @@ class Type(Descriptor, Registry):
         we simply add our unit if none is given, or convert to our enum.
         This is important for data coming from the network, as that has no
         notion about units or enums.
+
+        Note that for cirtical applications, it is advisable to do unit
+        conversions and timestamp handling by hand.
         """
         raise NotImplementedError
 
