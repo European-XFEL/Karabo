@@ -65,6 +65,8 @@ class Tests(TestCase):
         self.check_general(d, v)
         with self.assertRaises(TypeError):
             d.toKaraboValue(b"123")
+        with self.assertRaises(TypeError):
+            d.toKaraboValue("a")
 
     def test_vector_char(self):
         d = hashmod.VectorChar()
