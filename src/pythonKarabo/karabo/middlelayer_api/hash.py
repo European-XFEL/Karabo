@@ -121,7 +121,7 @@ class Simple(object):
             raise pint.DimensionalityError("no dimension", self.dimensionality)
         if data.units != self.units:
             data = data.to(self.units)
-        data.descriptor = self
+            data.descriptor = self
         self.check(data.magnitude)
         return data
 
@@ -481,10 +481,9 @@ class NumpyVector(Vector):
             data = basetypes.QuantityValue(data, descriptor=self)
         elif not isinstance(data, basetypes.QuantityValue):
             raise pint.DimensionalityError("no dimension", self.dimensionality)
-        # convert data to our unit. Descriptor is not copied.
-        data = data.to(basetypes.QuantityValue(1, descriptor=self))
-        # add descriptor to data
-        data.descriptor = self
+        if data.units != self.units:
+            data = data.to(self.units)
+            data.descriptor = self
         return data
 
 
