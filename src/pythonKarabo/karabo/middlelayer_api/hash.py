@@ -228,13 +228,32 @@ class Descriptor(object):
 
     key = "(unknown key)"
 
-    def __init__(self, **kwargs):
+    def __init__(self, strict=True, **kwargs):
+        """create a new descriptor with appropriate attributes
+
+        The attributes are given as keywords argument. If we define
+        those in our code, we assume that all attributes are correctly
+        given, or raise an error. If we are parsing a schema that came
+        over the network, we are more sloppy and silently discard
+        unknown attributes, and properly set the enum type for those
+        we find.
+        """
+
         for k, v in kwargs.items():
-            if isinstance(getattr(self.__class__, k, None), Attribute):
-                setattr(self, k, v)
-            else:
-                raise TypeError("__init__ got unexpected keyword argument: {}".
-                                format(k))
+            attr = getattr(self.__class__, k, None)
+            if isinstance(attr, Attribute):
+                if attr.default is None:
+                    setattr(self, k, v)
+                else:
+                    if strict and type(attr.default)(v) != v:
+                        raise TypeError(
+                            '{} got attribute {} with value "{}" of incorrect '
+                            'type {}'.format(self.__class__.__name__, k, v,
+                                             type(v)))
+                    setattr(self, k, type(attr.default)(v))
+            elif strict:
+                raise TypeError("{} got unexpected keyword argument: {}".
+                                format(self.__class__.__name__, k))
 
     def parameters(self):
         return {p: getattr(self, p) for p in dir(type(self))

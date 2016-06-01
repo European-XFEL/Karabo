@@ -423,7 +423,7 @@ def _createProxyDict(hash, prefix):
     for k, v, a in hash.iterall():
         nodeType = NodeType(a["nodeType"])
         if nodeType is NodeType.Leaf:
-            d = Type.fromname[a["valueType"]]()
+            d = Type.fromname[a["valueType"]](strict=False, **a)
             d.key = k
             d.longkey = prefix + k
             dict[k] = d
