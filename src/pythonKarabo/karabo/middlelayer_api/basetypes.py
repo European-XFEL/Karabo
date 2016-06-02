@@ -276,6 +276,8 @@ class QuantityValue(KaraboValue, Quantity):
     def __new__(cls, value, unit=None, metricPrefix=MetricPrefix.NONE, *,
                 descriptor=None, timestamp=None):
         # weirdly, Pint uses __new__. Dunno why, but we need to follow.
+        if timestamp is None and isinstance(value, KaraboValue):
+            timestamp = value.timestamp
         if isinstance(unit, Unit):
             if unit is Unit.NOT_ASSIGNED:
                 unit = ""
