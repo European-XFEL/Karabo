@@ -14,6 +14,8 @@ class TestDevice(PythonDevice):
     def expectedParameters(expected):
         (
             INT32_ELEMENT(expected).key("a")
+            .displayedName("parameter a")
+            .description("a's description")
             .unit(AMPERE)
             .metricPrefix(MILLI)
             .expertAccess()

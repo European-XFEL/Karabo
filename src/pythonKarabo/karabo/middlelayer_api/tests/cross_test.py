@@ -8,8 +8,8 @@ import sys
 from unittest import TestCase, main
 
 from karabo.middlelayer import (
-    Device, getDevice, Int32, shutdown, Slot, waitUntilNew)
-
+    AccessLevel, Assignment, Device, getDevice, Int32,
+    MetricPrefix, shutdown, Slot, Unit, waitUntilNew)
 
 from .eventloop import setEventLoop
 
@@ -32,6 +32,15 @@ class Tests(TestCase):
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 55,
                          "didn't receive initial value from bound device")
+
+        self.assertIs(type(proxy).a.unitSymbol, Unit.AMPERE)
+        self.assertIs(type(proxy).a.metricPrefixSymbol, MetricPrefix.MILLI)
+        self.assertIs(type(proxy).a.requiredAccessLevel, AccessLevel.EXPERT)
+        self.assertIs(type(proxy).a.assignment, Assignment.OPTIONAL)
+        self.assertEqual(type(proxy).a.displayedName, "parameter a")
+        self.assertEqual(type(proxy).a.description, "a's description")
+        self.assertEqual(type(proxy).a.defaultValue, 55)
+
         with proxy:
             yield from proxy.setA()
             self.assertEqual(proxy.a, 33,
