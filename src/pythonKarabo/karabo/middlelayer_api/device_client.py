@@ -24,6 +24,7 @@ from .enums import NodeType
 from .exceptions import KaraboError
 from .hash import Hash, Slot, Type, Descriptor
 from .signalslot import slot
+from .timestamp import Timestamp
 from .weak import Weak
 
 
@@ -135,10 +136,12 @@ class Proxy(object):
             if d is not None:
                 if isinstance(d, ProxyNode):
                     d.setValue(getattr(self, d.key), v, self)
-                else:
-                    self.__dict__[d.key] = v
+                elif not isinstance(d, ProxySlot):
+                    converted = d.toKaraboValue(v, strict=False)
+                    converted.timestamp = Timestamp.fromHashAttributes(a)
+                    self.__dict__[d.key] = converted
                     for q in self._queues[k]:
-                        q.put_nowait(v)
+                        q.put_nowait(converted)
         for q in self._queues[None]:
             q.put_nowait(hash)
 
@@ -235,9 +238,11 @@ class ProxyNode(Descriptor):
                 if isinstance(d, ProxyNode):
                     d.setValue(getattr(instance, d.key), v, parent)
                 else:
-                    instance.__dict__[d.key] = v
+                    converted = d.toKaraboValue(v, strict=False)
+                    converted.timestamp = Timestamp.fromHashAttributes(a)
+                    instance.__dict__[d.key] = converted
                     for q in parent._queues[self.longkey]:
-                        q.put_nowait(v)
+                        q.put_nowait(converted)
 
     def __get__(self, instance, owner):
         if instance is None:
