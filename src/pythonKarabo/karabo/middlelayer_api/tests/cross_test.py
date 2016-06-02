@@ -7,18 +7,26 @@ from subprocess import Popen
 import sys
 from unittest import TestCase, main
 
-from karabo.middlelayer import getDevice, shutdown
-from karabo.middlelayer_api.cli import DeviceClient
+from karabo.middlelayer import getDevice, Int32, shutdown, Slot
+
 
 from .eventloop import setEventLoop
 
 
+class MiddlelayerDevice(Device):
+    value = Int32()
+
+    @Slot()
+    def slot(self):
+        self.marker = True
+
+
 class Tests(TestCase):
     @coroutine
-    def connect(self):
+    def connect(self, device):
         # it takes typically 2 s for the bound device to start
         yield from sleep(3)
-        proxy = yield from getDevice("testDevice")
+        proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 55,
                          "didn't receive initial value from bound device")
         with proxy:
@@ -31,6 +39,10 @@ class Tests(TestCase):
             yield from sleep(0.1)
             self.assertEqual(proxy.a, 77,
                              "didn't receive change from bound device")
+
+        yield from proxy.backfire()
+        self.assertEqual(device.value, 99)
+        self.assertTrue(device.marker)
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
         self.bound.wait(10)
@@ -48,10 +60,10 @@ class Tests(TestCase):
 
     def test_cross(self):
         loop = setEventLoop()
-        dc = DeviceClient(dict(_deviceId_="dc"))
-        dc.startInstance()
+        md = MiddlelayerDevice(dict(_deviceId_="middlelayerDevice"))
+        md.startInstance()
         loop.run_until_complete(wait_for(
-            loop.create_task(self.connect(), dc),
+            loop.create_task(self.connect(md), md),
             15))
         loop.close()
 
