@@ -144,10 +144,9 @@ class Device(SignalSlotable):
 
     @slot
     def slotGetSchema(self, onlyCurrentState):
-        if onlyCurrentState:
-            raise RuntimeError("not implemented")
-        else:
-            return self.fullSchema, self.deviceId
+        # TODO we ignore onlyCurrentState here, instead we return
+        # the full schema.
+        return self.fullSchema, self.deviceId
 
     @slot
     def slotInstanceNew(self, instanceId, info):

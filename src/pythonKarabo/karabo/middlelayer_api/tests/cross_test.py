@@ -7,7 +7,7 @@ from subprocess import Popen
 import sys
 from unittest import TestCase, main
 
-from karabo.middlelayer import getDevice, Int32, shutdown, Slot
+from karabo.middlelayer import Device, getDevice, Int32, shutdown, Slot
 
 
 from .eventloop import setEventLoop
