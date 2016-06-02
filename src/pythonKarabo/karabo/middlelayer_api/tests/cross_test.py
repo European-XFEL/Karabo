@@ -9,7 +9,7 @@ from unittest import TestCase, main
 
 from karabo.middlelayer import (
     AccessLevel, Assignment, Device, getDevice, Int32,
-    MetricPrefix, shutdown, Slot, Unit, waitUntilNew)
+    MetricPrefix, shutdown, Slot, unit, Unit, waitUntilNew)
 
 from .eventloop import setEventLoop
 
@@ -30,7 +30,7 @@ class Tests(TestCase):
         while "got started" not in line:
             line = (yield from self.bound.stderr.readline()).decode("ascii")
         proxy = yield from getDevice("boundDevice")
-        self.assertEqual(proxy.a, 22.5,
+        self.assertEqual(proxy.a, 22.5 * unit.milliampere,
                          "didn't receive initial value from bound device")
 
         a_desc = type(proxy).a
@@ -49,13 +49,15 @@ class Tests(TestCase):
 
         with proxy:
             yield from proxy.setA()
-            self.assertEqual(proxy.a, 22.7,
+            self.assertEqual(proxy.a, 22.7 * unit.milliampere,
                              "didn't receive change from bound device")
+            with self.assertRaises(ValueError):
+                proxy.a = 77
             proxy.a = 22.8
-            self.assertEqual(proxy.a, 22.7,
+            self.assertEqual(proxy.a, 22.7 * unit.milliampere,
                              "proxy should set value on device, not own value")
             yield from waitUntilNew(proxy).a
-            self.assertEqual(proxy.a, 22.8,
+            self.assertEqual(proxy.a, 22.8 * unit.milliampere,
                              "didn't receive change from bound device")
 
         yield from proxy.backfire()
