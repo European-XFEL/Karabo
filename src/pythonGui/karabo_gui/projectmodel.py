@@ -1291,8 +1291,10 @@ class ProjectModel(QStandardItemModel):
 
             self.selectObject(macro)
         
-        self.signalAddMacro.emit(macro)
+        self.openMacro(macro)
 
+    def openMacro(self, macro):
+        self.signalAddMacro.emit(macro)
 
     def editMonitor(self, monitor=None):
         """
