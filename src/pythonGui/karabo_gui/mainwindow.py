@@ -250,8 +250,8 @@ class MainWindow(QMainWindow):
         self.placeholderPanel = PlaceholderPanel()
         self.middleTab.addDockableTab(self.placeholderPanel, "Start Page", self)
 
-    def middlePanelExists(self, object):
-        """This method checks whether a middle panel for the given ``object``
+    def middlePanelExists(self, obj):
+        """This method checks whether a middle panel for the given ``obj``
         already exists.
 
         The method returns ``True``, if panel already open else ``False``
@@ -264,31 +264,31 @@ class MainWindow(QMainWindow):
         for i in range(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
             if hasattr(divWidget.dockableWidget, "scene"):
-                if divWidget.dockableWidget.scene == object:
+                if divWidget.dockableWidget.scene is obj:
                     # Scene already open
                     self.middleTab.setCurrentIndex(i)
                     return True
             if hasattr(divWidget.dockableWidget, "macro"):
-                if divWidget.dockableWidget.macro == object:
+                if divWidget.dockableWidget.macro is obj:
                     # Macro already open
                     self.middleTab.setCurrentIndex(i)
                     return True
 
         return False
 
-    def isMiddlePanelUndocked(self, object):
+    def isMiddlePanelUndocked(self, obj):
         """This methods states whether an undocked panel for the given
-        ``object`` already exists.
+        ``obj`` already exists.
         """
         panel = None
         parent = None
-        if isinstance(object, Scene):
+        if isinstance(obj, Scene):
             # The scene might be in its own window
-            panel = object
-        elif isinstance(object, Macro):
-            if object.editor is not None:
+            panel = obj
+        elif isinstance(obj, Macro):
+            if obj.editor is not None:
                 # The macro might be in its own window
-                panel = object.editor
+                panel = obj.editor
 
         if panel is None:
             return False
@@ -300,10 +300,10 @@ class MainWindow(QMainWindow):
             return True
         return False
 
-    def removeMiddlePanel(self, object):
+    def removeMiddlePanel(self, obj):
         for w in self.middleTab.divWidgetList:
-            if ((hasattr(w.dockableWidget, "scene") and w.dockableWidget.scene is object)
-               or (hasattr(w.dockableWidget, "macro") and w.dockableWidget.macro is object)):
+            if ((hasattr(w.dockableWidget, "scene") and w.dockableWidget.scene is obj)
+               or (hasattr(w.dockableWidget, "macro") and w.dockableWidget.macro is obj)):
                 self.middleTab.removeDockableTab(w.dockableWidget)
                 break
 
@@ -312,7 +312,7 @@ class MainWindow(QMainWindow):
     def selectLastMiddlePanel(self):
         if self.middleTab.count() > 1:
             self.middleTab.updateTabsClosable()
-        self.middleTab.setCurrentIndex(self.middleTab.count()-1)
+        self.middleTab.setCurrentIndex(self.middleTab.count() - 1)
 
 ### virtual functions ###
     def closeEvent(self, event):
@@ -369,7 +369,7 @@ class MainWindow(QMainWindow):
         for i in range(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
             if hasattr(divWidget.dockableWidget, "scene"):
-                if divWidget.dockableWidget.scene == scene:
+                if divWidget.dockableWidget.scene is scene:
                     self.middleTab.setTabText(i, scene.filename)
 
     @pyqtSlot(object)
