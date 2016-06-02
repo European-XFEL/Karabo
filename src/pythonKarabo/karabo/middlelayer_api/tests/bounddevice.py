@@ -22,6 +22,9 @@ class TestDevice(PythonDevice):
             .commit(),
 
             SLOT_ELEMENT(expected).key("setA")
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("backfire")
             .commit()
         )
 
@@ -29,12 +32,18 @@ class TestDevice(PythonDevice):
         super().__init__(configuration)
         self.registerInitialFunction(self.initialize)
         self.registerSlot(self.setA)
+        self.registerSlot(self.backfire)
 
     def initialize(self):
         pass
 
     def setA(self):
         self.set("a", 33)
+
+    def backfire(self):
+        remote = self.remote()
+        remote.set("middlelayerDevice", "value", 99)
+        remote.execute("middlelayerDevice", "slot")
 
 
 if __name__ == "__main__":
@@ -44,5 +53,5 @@ if __name__ == "__main__":
     config.set("appenders[0].Ostream.layout.Pattern.format", "%p %c: %m%n")
     config.set("appenders[1].RollingFile.layout.Pattern.format", "blua")
     device = Configurator(PythonDevice).create(
-        "TestDevice", Hash("_deviceId_", "testDevice", "Logger", config))
+        "TestDevice", Hash("_deviceId_", "boundDevice", "Logger", config))
     device.run()
