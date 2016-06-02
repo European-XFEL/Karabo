@@ -16,4 +16,4 @@ Contents:
    scpiDevice
    tagAndBranchDevices
    widget
-   
+   scenes
