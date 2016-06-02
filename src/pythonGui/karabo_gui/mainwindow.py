@@ -19,10 +19,11 @@ from PyQt4.QtGui import (QAction, QActionGroup, qApp, QMainWindow, QMenu,
 
 import karabo_gui.icons as icons
 
-from karabo_gui.docktabwindow import DockTabWindow
 from karabo_gui import globals
-from karabo.middlelayer import AccessLevel
+from karabo_gui.docktabwindow import DockTabWindow
+from karabo_gui.guiproject import Macro
 from karabo_gui.network import Network
+from karabo_gui.scene import Scene
 
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.custommiddlepanel import CustomMiddlePanel
@@ -33,6 +34,8 @@ from karabo_gui.panels.notificationpanel import NotificationPanel
 from karabo_gui.panels.placeholderpanel import PlaceholderPanel
 from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
+
+from karabo.middlelayer import AccessLevel
 
 
 class MainWindow(QMainWindow):
@@ -247,6 +250,74 @@ class MainWindow(QMainWindow):
         self.placeholderPanel = PlaceholderPanel()
         self.middleTab.addDockableTab(self.placeholderPanel, "Start Page", self)
 
+    def middlePanelExists(self, object):
+        """This method checks whether a middle panel for the given ``object``
+        already exists.
+
+        The method returns ``True``, if panel already open else ``False``
+        """
+        if self.middleTab.count() == 1 and self.placeholderPanel is not None:
+            # Remove start up page
+            self._removePlaceholderMiddlePanel()
+
+        # Check whether scene is already open
+        for i in range(self.middleTab.count()):
+            divWidget = self.middleTab.widget(i)
+            if hasattr(divWidget.dockableWidget, "scene"):
+                if divWidget.dockableWidget.scene == object:
+                    # Scene already open
+                    self.middleTab.setCurrentIndex(i)
+                    return True
+            if hasattr(divWidget.dockableWidget, "macro"):
+                if divWidget.dockableWidget.macro == object:
+                    # Macro already open
+                    self.middleTab.setCurrentIndex(i)
+                    return True
+
+        return False
+
+    def isMiddlePanelUndocked(self, object):
+        """This methods states whether an undocked panel for the given
+        ``object`` already exists.
+        """
+        panel = None
+        parent = None
+        if isinstance(object, Scene):
+            # The scene might be in its own window
+            panel = object
+        elif isinstance(object, Macro):
+            if object.editor is not None:
+                # The macro might be in its own window
+                panel = object.editor
+
+        if panel is None:
+            return False
+
+        parent = panel.parentWidget()
+        if parent is not None:
+            panel.activateWindow()
+            panel.raise_()
+            return True
+        return False
+
+    def removeMiddlePanel(self, object):
+        print("")
+        print("@@@ object", object)
+        print()
+        for w in self.middleTab.divWidgetList:
+            if ((hasattr(w.dockableWidget, "scene") and w.dockableWidget.scene is object)
+               or (hasattr(w.dockableWidget, "macro") and w.dockableWidget.macro is object)):
+                print("+++ remove", object, w.dockableWidget, w)
+                self.middleTab.removeDockableTab(w.dockableWidget)
+                break
+
+        self.onMiddlePanelRemoved()
+
+    def selectLastMiddlePanel(self):
+        if self.middleTab.count() > 1:
+            self.middleTab.updateTabsClosable()
+        self.middleTab.setCurrentIndex(self.middleTab.count()-1)
+
 ### virtual functions ###
     def closeEvent(self, event):
         if not self._quit():
@@ -256,52 +327,42 @@ class MainWindow(QMainWindow):
         event.accept()
         QMainWindow.closeEvent(self, event)
 
+    @pyqtSlot()
     def onExit(self):
         if not self._quit():
             return
         qApp.quit()
 
+    @pyqtSlot()
     def onHelpAbout(self):
         # TODO: add about dialog for karabo including version etc.
         print("onHelpAbout")
 
+    @pyqtSlot()
+    def onMiddlePanelRemoved(self):
+        # If tabwidget is empty - show start page instead
+        if self.middleTab.count() < 1:
+            self._createPlaceholderMiddlePanel()
+
+    @pyqtSlot(object)
     def onAddScene(self, scene):
-        if self.middleTab.count() == 1 and self.placeholderPanel is not None:
-            # Remove start up page
-            self._removePlaceholderMiddlePanel()
+        if self.middlePanelExists(scene):
+            return
 
-        # Check whether scene is already open
-        for i in range(self.middleTab.count()):
-            divWidget = self.middleTab.widget(i)
-            if hasattr(divWidget.dockableWidget, "scene"):
-                if divWidget.dockableWidget.scene == scene:
-                    # Scene already open
-                    self.middleTab.setCurrentIndex(i)
-                    return
-
-        # The scene might be in its own window
-        parent = scene.parentWidget()
-        if parent is not None:
-            scene.activateWindow()
-            scene.raise_()
+        if self.isMiddlePanelUndocked(scene):
             return
 
         customView = CustomMiddlePanel(scene, self.acServerConnect.isChecked())
         self.middleTab.addDockableTab(customView, scene.filename, self)
         customView.signalClosed.connect(self.onMiddlePanelRemoved)
-        if self.middleTab.count() > 1:
-            self.middleTab.updateTabsClosable()
-        self.middleTab.setCurrentIndex(self.middleTab.count()-1)
 
+        self.selectLastMiddlePanel()
+
+    @pyqtSlot(object)
     def onRemoveScene(self, scene):
-        for w in self.middleTab.divWidgetList:
-            if hasattr(w.dockableWidget, "scene") and w.dockableWidget.scene is scene:
-                scene.clean()
-                self.middleTab.removeDockableTab(w.dockableWidget)
-                break
+        self.removeMiddlePanel(scene)
 
-        self.onMiddlePanelRemoved()
-
+    @pyqtSlot(object)
     def onRenameScene(self, scene):
         """
         Adapt tab text of corresponding scene.
@@ -315,49 +376,25 @@ class MainWindow(QMainWindow):
                 if divWidget.dockableWidget.scene == scene:
                     self.middleTab.setTabText(i, scene.filename)
 
-    @pyqtSlot
-    def onMiddlePanelRemoved(self):
-        # If tabwidget is empty - show start page instead
-        if self.middleTab.count() < 1:
-            self._createPlaceholderMiddlePanel()
-
+    @pyqtSlot(object)
     def onAddMacro(self, macro):
-        if self.middleTab.count() == 1 and self.placeholderPanel is not None:
-            # Remove start up page
-            self._removePlaceholderMiddlePanel()
+        if self.middlePanelExists(macro):
+            return
 
-        # Check whether macro is already open
-        for i in range(self.middleTab.count()):
-            divWidget = self.middleTab.widget(i)
-            if hasattr(divWidget.dockableWidget, "macro"):
-                if divWidget.dockableWidget.macro == macro:
-                    # Macro already open
-                    self.middleTab.setCurrentIndex(i)
-                    return
-
-        if macro.editor is not None:
-            # The macro might be in its own window
-            parent = macro.editor.parentWidget()
-            if parent is not None:
-                macro.editor.activateWindow()
-                macro.editor.raise_()
-                return
+        if self.isMiddlePanelUndocked(macro):
+            return
 
         macroView = MacroPanel(macro)
         self.middleTab.addDockableTab(macroView, macro.name, self)
         macro.editor = macroView
-        if self.middleTab.count() > 1:
-            self.middleTab.updateTabsClosable()
-        self.middleTab.setCurrentIndex(self.middleTab.count()-1)
 
+        self.selectLastMiddlePanel()
+
+    @pyqtSlot(object)
     def onRemoveMacro(self, macro):
-        for w in self.middleTab.divWidgetList:
-            if hasattr(w.dockableWidget, "macro") and w.dockableWidget.macro is macro:
-                self.middleTab.removeDockableTab(w.dockableWidget)
-                break
+        self.removeMiddlePanel(macro)
 
-        self.onMiddlePanelRemoved()
-
+    @pyqtSlot(object)
     def onChangeAccessLevel(self, action):
         if action is self.acObserver:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
@@ -372,6 +409,7 @@ class MainWindow(QMainWindow):
 
         self.signalGlobalAccessLevelChanged.emit()
 
+    @pyqtSlot(bool)
     def onServerConnectionChanged(self, isConnected):
         if isConnected:
             text = "Disconnect from server"
@@ -390,6 +428,7 @@ class MainWindow(QMainWindow):
         # Adapt middle panel
         self._addPlaceholderMiddlePanel(isConnected)
 
+    @pyqtSlot()
     def onUpdateAccessLevel(self):
         self.mAccessLevel.clear()
         if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.EXPERT:
@@ -419,6 +458,7 @@ class MainWindow(QMainWindow):
             self.acUser.setChecked(False)
             self.acObserver.setChecked(False)
 
+    @pyqtSlot()
     def onUpdateScenes(self):
         for i in range(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
@@ -427,6 +467,7 @@ class MainWindow(QMainWindow):
                 if scene.isVisible():
                     scene.update()
 
+    @pyqtSlot(object)
     def onTabMaximized(self, tabWidget):
         """
         The given /tabWidget is about to be maximized.
@@ -438,6 +479,7 @@ class MainWindow(QMainWindow):
                 if w != tabWidget:
                     w.hide()
 
+    @pyqtSlot(object)
     def onTabMinimized(self, tabWidget):
         """
         The given /tabWidget is about to be minimized.
