@@ -301,13 +301,9 @@ class MainWindow(QMainWindow):
         return False
 
     def removeMiddlePanel(self, object):
-        print("")
-        print("@@@ object", object)
-        print()
         for w in self.middleTab.divWidgetList:
             if ((hasattr(w.dockableWidget, "scene") and w.dockableWidget.scene is object)
                or (hasattr(w.dockableWidget, "macro") and w.dockableWidget.macro is object)):
-                print("+++ remove", object, w.dockableWidget, w)
                 self.middleTab.removeDockableTab(w.dockableWidget)
                 break
 
