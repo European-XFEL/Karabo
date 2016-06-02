@@ -57,6 +57,17 @@ class Tests(TestCase):
         s = StringValue("bla {}", timestamp=self.t1)
         self.assertEqual(s.format(q).timestamp, self.t1)
 
+        s = StringValue("a,b", timestamp=self.t2)
+        sep = StringValue(",", timestamp=self.t1)
+        head, sep, tail = s.partition(sep)
+        self.assertEqual(head.timestamp, self.t1)
+        self.assertEqual(sep.timestamp, self.t1)
+        self.assertEqual(tail.timestamp, self.t1)
+
+        l = s.split(sep)
+        self.assertEqual(l.timestamp, self.t1)
+        self.assertIsInstance(l, VectorStringValue)
+
     def test_bool(self):
         t = BoolValue(True, descriptor=7, timestamp=22)
         self.assertTrue(t)
@@ -247,19 +258,12 @@ class Tests(TestCase):
         self.assertEqual((a == b).timestamp, self.t1)
         self.assertEqual(numpy.sin(a / b).timestamp, self.t1)
 
-    def test_timestamp(self):
-        a = QuantityValue("1 m", timestamp=self.t1)
-        b = QuantityValue("2 m", timestamp=self.t2)
-        self.assertEqual((a + b).timestamp, self.t1)
-        self.assertEqual((a * 3).timestamp, self.t1)
-        self.assertEqual((3 * b).timestamp, self.t2)
-        self.assertEqual((a == b).timestamp, self.t1)
-        self.assertEqual(numpy.sin(a / b).timestamp, self.t1)
-
         c = a + 1j * b
         self.assertEqual(c.timestamp, self.t1)
         self.assertEqual(c.imag.timestamp, self.t1)
         self.assertEqual(c.real.timestamp, self.t1)
+
+        self.assertEqual(c.to("mm").timestamp, self.t1)
 
         a = QuantityValue(numpy.arange(10), "m", timestamp=self.t1)
         self.assertEqual(a[3].timestamp, self.t1)
