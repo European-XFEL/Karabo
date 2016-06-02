@@ -335,17 +335,30 @@ class MainWindow(QMainWindow):
         if self.middleTab.count() == 1 and self.placeholderPanel is not None:
             # Remove start up page
             self._hideStartUpPage()
-        
-        if macro.editor is None:
-            macroView = MacroPanel(macro)
-            self.middleTab.addDockableTab(macroView, macro.name, self)
-            macro.editor = macroView
-            if self.middleTab.count() > 1:
-                self.middleTab.updateTabsClosable()
-            self.middleTab.setCurrentIndex(self.middleTab.count()-1)
-        else:
-            self.middleTab.setCurrentWidget(macro.editor.parent())
 
+        # Check whether macro is already open
+        for i in range(self.middleTab.count()):
+            divWidget = self.middleTab.widget(i)
+            if hasattr(divWidget.dockableWidget, "macro"):
+                if divWidget.dockableWidget.macro == macro:
+                    # Macro already open
+                    self.middleTab.setCurrentIndex(i)
+                    return
+
+        if macro.editor is not None:
+            # The macro might be in its own window
+            parent = macro.editor.parentWidget()
+            if parent is not None:
+                macro.editor.activateWindow()
+                macro.editor.raise_()
+                return
+
+        macroView = MacroPanel(macro)
+        self.middleTab.addDockableTab(macroView, macro.name, self)
+        macro.editor = macroView
+        if self.middleTab.count() > 1:
+            self.middleTab.updateTabsClosable()
+        self.middleTab.setCurrentIndex(self.middleTab.count()-1)
 
     def onRemoveMacro(self, macro):
         for w in self.middleTab.divWidgetList:
