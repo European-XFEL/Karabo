@@ -10,7 +10,6 @@ class BaseLayoutData(HasTraits):
 class BaseSceneObjectData(HasTraits):
     """ A base class for all object which can appear in a scene.
     """
-
     # The data needed by the layout which is the parent for this object
     layout_data = Instance(BaseLayoutData)
 

@@ -46,8 +46,7 @@ class FixedLayoutChildData(BaseLayoutData):
 
 
 class GridLayoutModel(BaseLayoutModel):
-    """ A layout which lays out its children in a grid.
-    """
+    """ A layout which lays out its children in a grid."""
 
 
 class GridLayoutChildData(BaseLayoutData):
