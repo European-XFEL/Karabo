@@ -494,10 +494,19 @@ class DeviceClient(object):
                 
     
     def getDeviceHistory(self, deviceId, timepoint):
+        """
+        Get full configuration and schema of device at given time point.
+        Concerning the format of the timepoint, see getPropertyHistory.
+        """
+        return self.getConfigurationFromPast(deviceId, timepoint)
+
+
+    def getConfigurationFromPast(self, deviceId, timepoint):
+        """Same as getDeviceHistory."""
         utc_timepoint = self._fromTimeStringToUtcString(timepoint)
-        return self.__client.getDeviceHistory(deviceId, utc_timepoint)
-    
-        
+        return self.__client.getConfigurationFromPast(deviceId, utc_timepoint)
+
+
     def getSystemInformation(self):
         return self.__client.getSystemInformation()
     
