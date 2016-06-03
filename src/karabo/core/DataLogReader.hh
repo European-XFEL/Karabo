@@ -61,7 +61,7 @@ namespace karabo {
         private:
             static Pointer m_instance;
             
-            boost::asio::io_service m_svc;
+            boost::shared_ptr<boost::asio::io_service> m_svc;
             
             boost::asio::io_service::work m_work;
             
@@ -71,9 +71,7 @@ namespace karabo {
             
             boost::mutex m_mutex;
         
-            IndexBuilderService() : m_work(m_svc), m_cache(), m_thread(boost::bind(&boost::asio::io_service::run, &m_svc))
-            {
-            }
+            IndexBuilderService();
             
         public:
             

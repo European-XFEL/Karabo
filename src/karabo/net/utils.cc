@@ -9,6 +9,9 @@
  */
 
 #include "karabo/net/utils.hh"
+#include "karabo/util/Exception.hh"
+#include "karabo/util/StringTools.hh"
+#include "karabo/log/Logger.hh"
 
 #include <boost/asio.hpp>
 
@@ -21,4 +24,38 @@ std::string karabo::net::bareHostName()
     if (dotPos != std::string::npos) hostName.erase(dotPos);
 
     return hostName;
+}
+
+void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> service,
+        const std::string& category, const std::string& errorMessage,
+        unsigned int delayInMilliSec)
+{
+    // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference/io_service.html:
+    // "If an exception is thrown from a handler, the exception is allowed to propagate through the throwing
+    //  thread's invocation of run(), run_one(), poll() or poll_one(). No other threads that are calling any of
+    //  these functions are affected. It is then the responsibility of the application to catch the exception.
+    //
+    //  After the exception has been caught, the run(), run_one(), poll() or poll_one() call may be restarted
+    //  without the need for an intervening call to reset(). This allows the thread to rejoin the io_service
+    //  object's thread pool without impacting any other threads in the pool."
+
+    const std::string fullMessage(" when running asio service (" + errorMessage + "), continue in " +
+    karabo::util::toString(delayInMilliSec) += " ms");
+    while (true) {
+        bool caught = true;
+        try {
+            service->run();
+            caught = false; // run exited normally
+            break;
+        } catch(karabo::util::Exception& e) {
+            KARABO_LOG_FRAMEWORK_ERROR_C(category) << "Exception" << fullMessage << ": " << e;
+        } catch(std::exception& e) {
+            KARABO_LOG_FRAMEWORK_ERROR_C(category) << "Standard exception" << fullMessage << ": " << e.what();
+        } catch(...) {
+            KARABO_LOG_FRAMEWORK_ERROR_C(category) << "Unknown exception" << fullMessage <<".";
+        }
+        if (caught) {
+            boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMilliSec));
+        }
+    }
 }

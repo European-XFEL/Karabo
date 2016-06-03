@@ -15,7 +15,7 @@ using namespace karabo::util;
 using namespace karabo::net;
 
 
-JmsBroker_Test::JmsBroker_Test() : m_messagesRead(0) {
+JmsBroker_Test::JmsBroker_Test() : m_messagesRead(0), m_errorsLogged(0) {
     Hash tmp("a.b.c", 1, "a.b.d", vector<int>(5, 1), "a.b.e", vector<Hash > (2, Hash("a", 1)), "a.d", std::complex<double>(1.2, 4.2));
     tmp.setAttribute("a", "a1", true);
     tmp.setAttribute("a", "a2", 3.4);
@@ -53,6 +53,11 @@ void JmsBroker_Test::readHandler2(karabo::net::BrokerChannel::Pointer channel, c
     }
 }
 
+void JmsBroker_Test::errorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& message) {
+    std::cout << "JmsBroker_Test::errorHandler message is: " << message << std::endl;
+
+    ++m_errorsLogged;
+}
 
 void JmsBroker_Test::testMethod() {
 
@@ -75,18 +80,32 @@ void JmsBroker_Test::testMethod() {
 
     channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
 
-    //channel->setErrorHandler(&onError);
+    channel->setErrorHandler(boost::bind(&JmsBroker_Test::errorHandler, this, _1, _2));
     
     boost::this_thread::yield();
 
-    channel->write(Hash("randomHeaderGarbage", "indeed"), "Random message body");
+    CPPUNIT_ASSERT(m_messagesRead == 0);
+    CPPUNIT_ASSERT(m_errorsLogged == 0);
+
+    const Hash validHeader("randomHeaderGarbage", "indeed");
+    channel->write(validHeader, "Random message body");
     
     ioService->run();
 
 //    CPPUNIT_ASSERT(m_messagesRead == 2); // See above about r19057/788969b143709327c7346. :-(
     CPPUNIT_ASSERT(m_messagesRead == 1);
+    CPPUNIT_ASSERT(m_errorsLogged == 0);
 
+    // register again
+    channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
 
+    // no write a malformed message to trigger an error
+    channel->write(validHeader, Hash("Wrongly formatted message:", "message body is hash"));
+
+    ioService->run();
+
+    CPPUNIT_ASSERT(m_messagesRead == 1); // broker channel bailed out before calling our handler
+    CPPUNIT_ASSERT(m_errorsLogged == 1);
 }
 
 void JmsBroker_Test::testBinaryTransport() {

@@ -45,7 +45,7 @@ namespace karabo {
 
 
         private:
- 
+
             karabo::util::Hash m_loggerInput;
             unsigned int m_lastIndex;
             std::fstream m_logstream;
@@ -55,7 +55,7 @@ namespace karabo {
             karabo::net::BrokerChannel::Pointer m_loggerChannel;
             boost::thread m_logThread;
             boost::thread m_svcThread;
-            boost::asio::io_service m_svc;
+            boost::shared_ptr<boost::asio::io_service> m_svc;
             boost::asio::deadline_timer m_timer;
         };
     }

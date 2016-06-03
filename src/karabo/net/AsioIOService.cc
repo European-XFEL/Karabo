@@ -6,9 +6,12 @@
  */
 
 #include "AsioIOService.hh"
+#include "karabo/log/Logger.hh"
 
 namespace karabo {
     namespace net {
         KARABO_REGISTER_IN_FACTORY(AbstractIOService, AsioIOService)
+
+
     }
 }
