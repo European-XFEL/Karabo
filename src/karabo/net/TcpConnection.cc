@@ -248,10 +248,6 @@ namespace karabo {
         void TcpConnection::acceptHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
                 if (!e) {
-                    {
-                        TcpChannel::Pointer tc = boost::static_pointer_cast<TcpChannel > (channel);
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Accepted new connection: " << tc->socket().remote_endpoint().address() << ":" << tc->socket().remote_endpoint().port();
-                    }
                     handler(channel);
                 } else {
                     if (m_errorHandler)
@@ -315,10 +311,6 @@ namespace karabo {
         void TcpConnection::connectHandler(const Channel::Pointer& channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
                 if (!e) {
-                    {
-                        TcpChannel::Pointer tc = boost::static_pointer_cast<TcpChannel > (channel);
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Connected to: " << tc->socket().remote_endpoint().address() << ":" << tc->socket().remote_endpoint().port();
-                    }
                     handler(channel);
                 } else {
                     if (m_errorHandler)
