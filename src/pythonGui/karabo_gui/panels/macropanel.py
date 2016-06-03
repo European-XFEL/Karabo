@@ -39,7 +39,7 @@ class MacroPanel(Dockable, QSplitter):
         self.addWidget(self.edit)
         self.edit.setLineWrapMode(QTextEdit.NoWrap)
         self.edit.textChanged.connect(self.onMacroChanged)
-        
+
         self.console = QPlainTextEdit(self)
         self.console.setReadOnly(True)
         self.console.setStyleSheet("font-family: monospace")
@@ -61,6 +61,10 @@ class MacroPanel(Dockable, QSplitter):
                 return True
         return False
 
+    def closeEvent(self, event):
+        # Widgets get destroyed with this event
+        self.macro.editor = None
+        event.accept()
 
     def connect(self, macro):
         if macro not in self.already_connected:
