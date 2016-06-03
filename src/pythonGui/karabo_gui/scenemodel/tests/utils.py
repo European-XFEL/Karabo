@@ -26,12 +26,11 @@ def xml_is_equal(xmlstr0, xmlstr1):
     root1 = fromstring(xmlstr1)
 
     def compare_attrs(el0, el1):
-        el1_attrs = el1.attrib
-        for k, v in el0.attrib.items():
-            if k not in el1_attrs:
+        for k, v in el0.items():
+            attr = el1.get(k)
+            if attr is None or v != attr:
                 return False
-            if v != el1_attrs[k]:
-                return False
+
         return True
 
     def compare_tree(elem0, elem1):
@@ -44,4 +43,4 @@ def xml_is_equal(xmlstr0, xmlstr1):
                 return False
         return True
 
-    return compare_tree(root0, root1)
+    return compare_attrs(root0, root1) and compare_tree(root0, root1)
