@@ -5,6 +5,7 @@ from traits.api import (HasTraits, Bool, Dict, Enum, Float, Instance, Int,
 
 from .bases import BaseWidgetObjectData
 from .const import NS_KARABO, NS_SVG
+from .exceptions import SceneWriterException
 from .io_utils import get_integers, set_integers
 from .registry import register_scene_reader, register_scene_writer
 
@@ -277,7 +278,9 @@ def _read_icon_elements(parent, tag):
 def _write_base_widget_data(model, element, widget_class_name):
     """ Write out the attributes common to all "widget" elements
     """
-    assert model.parent_component != ''
+    if len(model.parent_component) == 0:
+        msg = "Widget {} has no parent component!".format(widget_class_name)
+        raise SceneWriterException(msg)
     element.set(NS_KARABO + 'class', model.parent_component)
     element.set(NS_KARABO + 'widget', widget_class_name)
     element.set(NS_KARABO + 'keys', ",".join(model.keys))
@@ -367,12 +370,12 @@ def _line_plot_reader(read_func, element):
     boxes = []
     for child_elem in element:
         assert child_elem.tag == NS_KARABO + 'box'
-        traits = {
+        box_traits = {
             'device': child_elem.get("device"),
             'path': child_elem.get("path"),
             'curve_object_data': child_elem.text,
         }
-        boxes.append(PlotCurveModel(**traits))
+        boxes.append(PlotCurveModel(**box_traits))
     traits['boxes'] = boxes
     return LinePlotModel(**traits)
 
@@ -382,9 +385,10 @@ def _line_plot_writer(write_func, model, parent):
     element = SubElement(parent, NS_SVG + 'rect')
     _write_base_widget_data(model, element, model.klass)
     for box in model.boxes:
-        elem = SubElement(element, NS_KARABO + 'box', box.curve_object_data)
+        elem = SubElement(element, NS_KARABO + 'box')
         elem.set("device", box.device)
         elem.set("path", box.path)
+        elem.text = box.curve_object_data
     return element
 
 

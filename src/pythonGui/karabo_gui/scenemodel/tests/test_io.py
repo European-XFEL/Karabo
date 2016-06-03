@@ -17,6 +17,17 @@ SCENE_SVG = (
 )
 
 
+def _get_file_data(filename):
+    with open(filename, 'r') as fp:
+        return fp.read()
+
+
+def _iter_data_files():
+    for fn in os.listdir(DATA_DIR):
+       if op.splitext(fn)[-1] == '.svg':
+           yield op.join(DATA_DIR, fn)
+
+
 def test_reading():
     with temp_file(SCENE_SVG) as fn:
         scene = read_scene(fn)
@@ -65,7 +76,7 @@ def test_writing():
     assert xml_is_equal(SCENE_SVG, xml)
 
 
-def test_round_trip():
+def test_simple_round_trip():
     with temp_file(SCENE_SVG) as fn:
         scene = read_scene(fn)
 
@@ -74,8 +85,15 @@ def test_round_trip():
 
 
 def test_real_data_reading():
-    data_file_paths = [op.join(DATA_DIR, fn) for fn in os.listdir(DATA_DIR)
-                       if op.splitext(fn)[-1] == '.svg']
-
-    for fn in data_file_paths:
+    for fn in _iter_data_files():
         read_scene(fn)
+
+
+def test_real_data_round_trip():
+    for fn in _iter_data_files():
+        scene = read_scene(fn)
+        new_xml = write_scene(scene)
+        orig_xml = _get_file_data(fn)
+
+        failmsg = "Scene {} didn't round trip!".format(op.basename(fn))
+        assert xml_is_equal(orig_xml, new_xml), failmsg
