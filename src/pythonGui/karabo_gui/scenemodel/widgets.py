@@ -502,7 +502,7 @@ def _build_empty_display_editable_readers_and_writers():
         return element
 
     names = ('CheckBoxModel', 'ChoiceElementModel', 'DirectoryModel',
-             'FileInModel', 'FileOutModel')
+             'FileInModel', 'FileOutModel', 'LineEditModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]
