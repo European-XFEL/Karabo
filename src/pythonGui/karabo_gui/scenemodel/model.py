@@ -20,8 +20,8 @@ class SceneModel(HasTraits):
 @register_scene_reader('Scene', xmltag=NS_SVG + 'svg', version=1)
 def __scene_reader(read_func, element):
 
-    width = max(int(element.get('width', 0)), SCENE_MIN_WIDTH)
-    height = max(int(element.get('height', 0)), SCENE_MIN_HEIGHT)
+    width = int(element.get('width', 0))
+    height = int(element.get('height', 0))
 
     scene = SceneModel(width=width, height=height)
     for child in element:
