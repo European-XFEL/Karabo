@@ -10,6 +10,8 @@ RegistryEntry = namedtuple("RegistryEntry", ['function', 'version'])
 def get_reader(version):
     """ Return a reader function for the appropriate version number.
     """
+    global _scene_readers
+
     readers = {}
     for name, entries in _scene_readers.items():
         filtered = [e for e in entries if e.version == version]
@@ -35,6 +37,8 @@ def get_reader(version):
 def get_writer():
     """ Return a writer function for all registered classes.
     """
+    global _scene_writers
+
     def _writer_entrypoint(obj, element):
         entry = _scene_writers.get(obj.__class__)
         return entry.function(_writer_entrypoint, obj, element)
