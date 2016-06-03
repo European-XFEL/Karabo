@@ -243,7 +243,7 @@ class ProjectTreeView(QTreeView):
         elif isinstance(object, Scene):
             self.model().openScene(object)
         elif isinstance(object, Macro):
-            self.model().editMacro(object)
+            self.model().openMacro(object)
         elif isinstance(object, Monitor):
             self.model().editMonitor(object)
 
