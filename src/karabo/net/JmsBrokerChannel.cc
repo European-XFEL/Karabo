@@ -622,8 +622,10 @@ namespace karabo {
                 }
             } catch (const Exception& e) {
                 m_signalError(shared_from_this(), e.userFriendlyMsg());
+                return true; // received a bad message (or ran a bad handler...)
             } catch (...) {
                 m_signalError(shared_from_this(), "Unknown exception was raised whilst reading asynchronously");
+                return true; // received a bad message (or ran a bad handler...)
             }
             return false;
         }
@@ -708,8 +710,10 @@ namespace karabo {
                 }
             } catch (const Exception& e) {
                 m_signalError(shared_from_this(), e.userFriendlyMsg());
+                return true; // received a bad message (or ran a bad handler...)
             } catch (...) {
                 m_signalError(shared_from_this(), "Unknown exception was raised whilst reading asynchronously");
+                return true; // received a bad message (or ran a bad handler...)
             }
             return false;
         }
@@ -816,8 +820,10 @@ namespace karabo {
                 }
             } catch (const Exception& e) {
                 m_signalError(shared_from_this(), e.userFriendlyMsg());
+                return true; // received a bad message (or ran a bad handler...)
             } catch (...) {
                 m_signalError(shared_from_this(), "Unknown exception was raised whilst reading asynchronously");
+                return true; // received a bad message (or ran a bad handler...)
             }
             return false;
         }

@@ -215,7 +215,9 @@ namespace karabo {
                 
                 // Prepare connection configuration given output channel information
                 karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
-                karabo::net::Connection::Pointer tcpConnection = karabo::net::Connection::create(config); // Instantiate
+                // Instantiate connection object
+                karabo::net::Connection::Pointer tcpConnection = karabo::net::Connection::create(config);
+                // Set connection error handler
                 tcpConnection->setErrorHandler(boost::bind(&karabo::xms::InputChannel::onTcpConnectionError, this, tcpConnection, _1));
 
                 if (!m_tcpIoService) {
@@ -523,8 +525,7 @@ namespace karabo {
 
                 if (m_inputHandler) {
                     m_inputHandler(self);
-                    // FIXME: Move call to this->update() from
-                    //        m_dataHandlerPerChannel to here!
+                    // FIXME: Move call to this->update() from m_inputHandler to here!
                 }
             } catch (const boost::bad_weak_ptr& e) {
                 KARABO_LOG_FRAMEWORK_INFO << "\"triggerIOEvent\" call is too late: InputChannel destroyed already -- " << e.what();
