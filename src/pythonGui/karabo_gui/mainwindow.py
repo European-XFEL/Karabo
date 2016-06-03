@@ -250,7 +250,7 @@ class MainWindow(QMainWindow):
         self.placeholderPanel = PlaceholderPanel()
         self.middleTab.addDockableTab(self.placeholderPanel, "Start Page", self)
 
-    def middlePanelExists(self, obj):
+    def middlePanelExists(self, child_type, obj):
         """This method checks whether a middle panel for the given ``obj``
         already exists.
 
@@ -263,16 +263,10 @@ class MainWindow(QMainWindow):
         # Check whether scene is already open
         for i in range(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
-            if hasattr(divWidget.dockableWidget, "scene"):
-                if divWidget.dockableWidget.scene is obj:
-                    # Scene already open
-                    self.middleTab.setCurrentIndex(i)
-                    return True
-            if hasattr(divWidget.dockableWidget, "macro"):
-                if divWidget.dockableWidget.macro is obj:
-                    # Macro already open
-                    self.middleTab.setCurrentIndex(i)
-                    return True
+            if getattr(divWidget.dockableWidget, child_type, None) is obj:
+                # Child already open
+                self.middleTab.setCurrentIndex(i)
+                return True
 
         return False
 
@@ -300,10 +294,9 @@ class MainWindow(QMainWindow):
             return True
         return False
 
-    def removeMiddlePanel(self, obj):
+    def removeMiddlePanel(self, child_type, obj):
         for w in self.middleTab.divWidgetList:
-            if ((hasattr(w.dockableWidget, "scene") and w.dockableWidget.scene is obj)
-               or (hasattr(w.dockableWidget, "macro") and w.dockableWidget.macro is obj)):
+            if getattr(w.dockableWidget, child_type, None) is obj:
                 self.middleTab.removeDockableTab(w.dockableWidget)
                 break
 
@@ -342,7 +335,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(object)
     def onAddScene(self, scene):
-        if self.middlePanelExists(scene):
+        if self.middlePanelExists("scene", scene):
             return
 
         if self.isMiddlePanelUndocked(scene):
@@ -356,7 +349,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(object)
     def onRemoveScene(self, scene):
-        self.removeMiddlePanel(scene)
+        self.removeMiddlePanel("scene", scene)
 
     @pyqtSlot(object)
     def onRenameScene(self, scene):
@@ -374,7 +367,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(object)
     def onAddMacro(self, macro):
-        if self.middlePanelExists(macro):
+        if self.middlePanelExists("macro", macro):
             return
 
         if self.isMiddlePanelUndocked(macro):
@@ -388,7 +381,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(object)
     def onRemoveMacro(self, macro):
-        self.removeMiddlePanel(macro)
+        self.removeMiddlePanel("macro", macro)
 
     @pyqtSlot(object)
     def onChangeAccessLevel(self, action):
