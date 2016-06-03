@@ -1,7 +1,11 @@
+import os
+import os.path as op
+
 from ..api import (SceneModel, FixedLayoutModel, LabelModel, LineModel,
                    RectangleModel, read_scene, write_scene)
 from .utils import temp_file, xml_is_equal
 
+DATA_DIR = op.join(op.abspath(op.dirname(__file__)), 'data')
 SCENE_SVG = (
 """<svg xmlns:krb="http://karabo.eu/scene" xmlns:svg="http://www.w3.org/2000/svg" height="768" version="1" width="1024">"""  # noqa
 """<svg:g krb:class="FixedLayout" krb:height="323" krb:width="384" krb:x="106" krb:y="74">"""  # noqa
@@ -67,3 +71,11 @@ def test_round_trip():
 
     xml = write_scene(scene)
     assert xml == SCENE_SVG.encode('utf-8')
+
+
+def test_real_data_reading():
+    data_file_paths = [op.join(DATA_DIR, fn) for fn in os.listdir(DATA_DIR)
+                       if op.splitext(fn)[-1] == '.svg']
+
+    for fn in data_file_paths:
+        read_scene(fn)
