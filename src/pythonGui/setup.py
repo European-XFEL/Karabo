@@ -84,6 +84,7 @@ if __name__ == '__main__':
             "karabo_gui.displaywidgets": ["*.ui", "*.svg"],
             "karabo_gui.icons": ["*.*", "vacuum/*.*",
                                  "vacuum/bigger/*.*"],
+            "karabo_gui.scenemodel.tests": ["data/*.svg"],
             "karabo_gui.tests": ["*.xml", "project/*.xml",
                                  "project/devices/*.xml",
                                  "project/resources/icon/*.png",
