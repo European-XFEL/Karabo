@@ -23,7 +23,10 @@ def get_reader(version):
             klass = element.get(NS_KARABO + kind)
             if klass is not None:
                 return klass
-        return element.tag
+        if element.tag in _scene_readers:
+            return element.tag
+        # Allow for a default reader
+        return '*'
 
     def _reader_entrypoint(element):
         klass = _get_reader_klass(element)
