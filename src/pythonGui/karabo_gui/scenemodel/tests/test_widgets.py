@@ -1,5 +1,3 @@
-from xml.etree.ElementTree import Element
-
 from nose.tools import assert_raises
 
 from ..exceptions import SceneWriterException
@@ -15,9 +13,27 @@ from ..widgets import (
     FloatSpinBoxModel, HexadecimalModel, IconData, DigitIconsModel,
     SelectionIconsModel, TextIconsModel, IntLineEditModel, KnobModel,
     LineEditModel, PlotCurveModel, LinePlotModel, MonitorModel, SingleBitModel,
-    SliderModel, TableElementModel, VacuumWidgetModel, XYPlotModel
+    SliderModel, TableElementModel, VacuumWidgetModel, XYPlotModel,
+    VACUUM_WIDGETS
 )
+
 from .utils import temp_file
+
+TABLE_SCHEMA = (
+    ":&lt;root KRB_Artificial=&quot;KRB_STRING:&quot;"
+    " KRB_Type=&quot;HASH&quot;&gt;&lt;a KRB_Type=&quot;INT32&quot;"
+    " accessMode=&quot;KRB_INT32:1&quot; assignment=&quot;KRB_INT32:0&quot;"
+    " description=&quot;KRB_STRING:First Column&quot; displayedName=&quot;"
+    "KRB_STRING:A&quot; leafType=&quot;KRB_INT32:0&quot; nodeType=&quot;"
+    "KRB_INT32:0&quot; requiredAccessLevel=&quot;KRB_INT32:1&quot;"
+    " valueType=&quot;KRB_STRING:STRING&quot;"
+    "&gt;0&lt;/a&gt;&lt;b KRB_Type=&quot;INT32&quot; accessMode=&quot;"
+    "KRB_INT32:1&quot; assignment=&quot;KRB_INT32:0&quot; description=&quot;"
+    "KRB_STRING:Second Column&quot; displayedName=&quot;KRB_STRING:B&quot;"
+    " leafType=&quot;KRB_INT32:0&quot; nodeType=&quot;KRB_INT32:0&quot;"
+    " requiredAccessLevel=&quot;KRB_INT32:1&quot; valueType=&quot;"
+    "KRB_STRING:BOOL&quot;&gt;0&lt;/b&gt;&lt;/root&gt;"
+)
 
 
 def _assert_base_traits(model):
@@ -90,9 +106,9 @@ def test_all_empty_widgets():
     model_classes = (
         BitfieldModel, DisplayAlignedImageModel, DisplayCommandModel,
         DisplayIconsetModel, DisplayImageModel, DisplayImageElementModel,
-        DisplayPlotModel, DoubleLineEditModel, EditableListModel,
-        EditableListElementModel, EditableSpinBoxModel, HexadecimalModel,
-        IntLineEditModel, KnobModel, SliderModel, XYPlotModel
+        DisplayLabelModel, DisplayPlotModel, DoubleLineEditModel,
+        EditableListModel, EditableListElementModel, EditableSpinBoxModel,
+        HexadecimalModel, IntLineEditModel, KnobModel, SliderModel, XYPlotModel
     )
     for klass in model_classes:
         yield _check_empty_widget, klass
@@ -111,8 +127,101 @@ def test_icon_widgets():
         yield _check_icon_widget, klass
 
 
-
 def test_missing_parent_component():
     traits = _base_widget_traits()
     model = BitfieldModel(**traits)
     assert_raises(SceneWriterException, _perform_data_round_trip, model)
+
+
+def test_display_state_color_widget():
+    traits = _base_widget_traits(parent='DisplayComponent')
+    traits['text'] = 'foo'
+    traits['colors'] = {'red': (255, 0, 0, 255)}
+    model = DisplayStateColorModel(**traits)
+    read_model = _perform_data_round_trip(model)
+    _assert_base_traits(read_model)
+    assert read_model.text == 'foo'
+    assert len(read_model.colors) == 1
+    assert read_model.colors['red'] == (255, 0, 0, 255)
+
+
+def test_evaluator_widget():
+    traits = _base_widget_traits(parent='DisplayComponent')
+    traits['expression'] = 'x'
+    model = EvaluatorModel(**traits)
+    read_model = _perform_data_round_trip(model)
+    _assert_base_traits(read_model)
+    assert read_model.expression == 'x'
+
+
+def test_float_spinbox_widget():
+    traits = _base_widget_traits(parent='DisplayComponent')
+    traits['step'] = 1.5
+    model = FloatSpinBoxModel(**traits)
+    read_model = _perform_data_round_trip(model)
+    _assert_base_traits(read_model)
+    assert read_model.step == 1.5
+
+
+def test_line_plot_widget():
+    curve = PlotCurveModel(device='dev1', path='prop', curve_object_data='00')
+    for name in ('DisplayTrendline', 'XYVector'):
+        traits = _base_widget_traits(parent='DisplayComponent')
+        traits['klass'] = name
+        traits['boxes'] = [curve]
+        model = LinePlotModel(**traits)
+        read_model = _perform_data_round_trip(model)
+        _assert_base_traits(read_model)
+        assert read_model.klass == name
+        assert len(read_model.boxes) == 1
+        assert read_model.boxes[0].device == 'dev1'
+        assert read_model.boxes[0].path == 'prop'
+        assert read_model.boxes[0].curve_object_data == '00'
+
+
+def test_monitor_widget():
+    traits = _base_widget_traits(parent='DisplayComponent')
+    traits['filename'] = 'foo.log'
+    traits['interval'] = 1.5
+    model = MonitorModel(**traits)
+    read_model = _perform_data_round_trip(model)
+    _assert_base_traits(read_model)
+    assert read_model.filename == 'foo.log'
+    assert read_model.interval == 1.5
+
+
+def test_single_bit_widget():
+    traits = _base_widget_traits(parent='DisplayComponent')
+    traits['bit'] = 42
+    model = SingleBitModel(**traits)
+    read_model = _perform_data_round_trip(model)
+    _assert_base_traits(read_model)
+    assert read_model.bit == 42
+
+
+def test_table_element_widget():
+    parts = (
+        ('DisplayComponent', 'DisplayTableElement'),
+        ('EditableComponent', 'EditableTableElement')
+    )
+    for parent, klass_name in parts:
+        traits = _base_widget_traits(parent=parent)
+        traits['klass'] = klass_name
+        # XXX: What does a schema look like?
+        traits['column_schema'] = TABLE_SCHEMA
+        model = TableElementModel(**traits)
+        read_model = _perform_data_round_trip(model)
+        _assert_base_traits(read_model)
+        assert read_model.klass == klass_name
+        assert read_model.column_schema == TABLE_SCHEMA
+
+
+def test_vacuum_widget():
+    model = VacuumWidgetModel()
+    for name in VACUUM_WIDGETS:
+        traits = _base_widget_traits(parent='DisplayComponent')
+        traits['klass'] = name
+        model = VacuumWidgetModel(**traits)
+        read_model = _perform_data_round_trip(model)
+        _assert_base_traits(read_model)
+        assert read_model.klass == name
