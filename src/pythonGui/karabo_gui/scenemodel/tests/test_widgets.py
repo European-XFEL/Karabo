@@ -80,7 +80,7 @@ def _check_icon_widget(klass):
     traits = _base_widget_traits(parent='DisplayComponent')
     icon = IconData(image='blah.svg')
     if klass is DigitIconsModel:
-        icon.equal = False
+        icon.equal = True
         icon.value = '14'
     traits['values'] = [icon]
     model = klass(**traits)
@@ -89,7 +89,7 @@ def _check_icon_widget(klass):
     assert len(read_model.values) == 1
     assert read_model.values[0].image == 'blah.svg'
     if klass is DigitIconsModel:
-        assert read_model.values[0].equal is False
+        assert read_model.values[0].equal is True
         assert read_model.values[0].value == '14'
 
 
