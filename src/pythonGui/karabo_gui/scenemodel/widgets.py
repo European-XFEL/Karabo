@@ -296,8 +296,7 @@ def _write_icon_elements(icons, parent, tag):
             sub.set('image', ic.image)
         if ic.value:
             sub.text = ic.value
-            if ic.equal:
-                sub.set('equal', str(ic.equal).lower())
+            sub.set('equal', str(ic.equal).lower())
 
 
 @register_scene_reader('DisplayStateColor', version=1)
@@ -501,8 +500,8 @@ def _build_empty_display_editable_readers_and_writers():
         _write_base_widget_data(model, element, model.klass)
         return element
 
-    names = ('CheckBoxModel', 'ChoiceElementModel', 'DirectoryModel',
-             'FileInModel', 'FileOutModel', 'LineEditModel')
+    names = ('CheckBoxModel', 'ChoiceElementModel', 'ComboBoxModel',
+             'DirectoryModel', 'FileInModel', 'FileOutModel', 'LineEditModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]
@@ -525,7 +524,7 @@ def _build_icon_widget_readers_and_writers():
     def _build_writer_func(name, tag):
         def writer(write_func, model, parent):
             element = SubElement(parent, NS_SVG + 'rect')
-            _write_base_widget_data(model, element, 'TextIcons')
+            _write_base_widget_data(model, element, name)
             _write_icon_elements(model.values, element, NS_KARABO + tag)
             return element
         return writer
