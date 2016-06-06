@@ -33,13 +33,13 @@ class Scan(Device):
 
     actor_command = String(
         displayedName="Actor's command",
-        description="the actor's command that is moved in this scan",
+        description="the actor's command executed at each step in the scan",
         displayType="remoteSlot",
         accessMode=AccessMode.INITONLY)
 
     sensor = String(
         displayedName="Sensor's command",
-        description="The sensor triggered at each step",
+        description="The sensor triggered at each step in the scan",
         displayType="remoteSlot",
         accessMode=AccessMode.INITONLY)
 
