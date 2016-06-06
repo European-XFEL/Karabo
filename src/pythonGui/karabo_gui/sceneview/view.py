@@ -8,10 +8,10 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QPalette, QPainter, QSizePolicy, QWidget
 
 from .layouts import BaseLayout
-from karabo_gui.scenemodel.api import (LineModel, RectangleModel,
+from karabo_gui.scenemodel.api import (LabelModel, LineModel, RectangleModel,
                                        read_scene, SCENE_MIN_WIDTH,
                                        SCENE_MIN_HEIGHT)
-from .shapes import Line, Rectangle
+from .shapes import Label, Line, Rectangle
 
 
 class SceneView(QWidget):
@@ -48,6 +48,9 @@ class SceneView(QWidget):
                 self.layout.add_shape(obj)
             if isinstance(child, RectangleModel):
                 obj = Rectangle(child)
+                self.layout.add_shape(obj)
+            if isinstance(child, LabelModel):
+                obj = Label(child)
                 self.layout.add_shape(obj)
 
     def paintEvent(self, event):

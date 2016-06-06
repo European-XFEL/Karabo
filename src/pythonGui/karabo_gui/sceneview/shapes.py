@@ -5,7 +5,7 @@
 #############################################################################
 
 from PyQt4.QtCore import QLine, QRect, Qt
-from PyQt4.QtGui import QBrush, QPen
+from PyQt4.QtGui import QBrush, QLabel, QPen
 
 
 class Shape(object):
@@ -37,6 +37,15 @@ class Shape(object):
             painter.drawRect(self.geometry())
             painter.setPen(black)
             painter.drawRect(self.geometry())
+
+
+class Label(Shape):
+    """ A label which can appear in a scene
+    """
+
+    def __init__(self, model):
+        super(Label, self).__init__(model)
+        self.shape = QLabel(model.text)
 
 
 class Line(Shape):
