@@ -296,7 +296,8 @@ def _write_icon_elements(icons, parent, tag):
             sub.set('image', ic.image)
         if ic.value:
             sub.text = ic.value
-            sub.set('equal', str(ic.equal).lower())
+            if ic.equal:
+                sub.set('equal', str(ic.equal).lower())
 
 
 @register_scene_reader('DisplayStateColor', version=1)
