@@ -24,6 +24,7 @@ from karabo_gui.docktabwindow import DockTabWindow
 from karabo_gui.guiproject import Macro
 from karabo_gui.network import Network
 from karabo_gui.scene import Scene
+from karabo_gui.sceneview.api import SceneView
 
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.custommiddlepanel import CustomMiddlePanel
@@ -33,6 +34,7 @@ from karabo_gui.panels.navigationpanel import NavigationPanel
 from karabo_gui.panels.notificationpanel import NotificationPanel
 from karabo_gui.panels.placeholderpanel import PlaceholderPanel
 from karabo_gui.panels.projectpanel import ProjectPanel
+from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
 
 from karabo.middlelayer import AccessLevel
@@ -170,6 +172,7 @@ class MainWindow(QMainWindow):
         self.projectPanel.signalAddScene.connect(self.onAddScene)
         self.projectPanel.signalRemoveScene.connect(self.onRemoveScene)
         self.projectPanel.signalRenameScene.connect(self.onRenameScene)
+        self.projectPanel.signalAddSceneView.connect(self.addSceneView)
         self.projectPanel.signalAddMacro.connect(self.onAddMacro)
         self.projectPanel.signalRemoveMacro.connect(self.onRemoveMacro)
         self.projectTab = DockTabWindow("Projects", self.leftArea)
@@ -364,6 +367,20 @@ class MainWindow(QMainWindow):
             if hasattr(divWidget.dockableWidget, "scene"):
                 if divWidget.dockableWidget.scene is scene:
                     self.middleTab.setTabText(i, scene.filename)
+
+    @pyqtSlot(object)
+    def addSceneView(self, scene_view):
+        if self.middlePanelExists("scene_view", scene_view):
+            return
+
+        if self.isMiddlePanelUndocked(scene_view):
+            return
+
+        scenePanel = ScenePanel(scene_view, self.acServerConnect.isChecked())
+        self.middleTab.addDockableTab(scenePanel, scene_view.filename, self)
+        scenePanel.signalClosed.connect(self.onMiddlePanelRemoved)
+
+        self.selectLastMiddlePanel()
 
     @pyqtSlot(object)
     def onAddMacro(self, macro):
