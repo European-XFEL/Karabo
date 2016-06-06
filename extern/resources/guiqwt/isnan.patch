@@ -1,0 +1,11 @@
+--- guiqwt-2.3.1/src/scaler.cpp	2013-05-13 10:41:40.000000000 +0200
++++ guiqwt-2.3.1/src/scaler.cpp	2016-06-06 09:37:12.408926419 +0200
+@@ -294,7 +294,7 @@
+ 		scale.set_bg( it() );
+ 	    } else {
+ 		val = interpolate(src, tr, p);
+-		if (isnan(val)) {
++		if (isnan((float)val)) {
+ 		    scale.set_bg( it() );
+ 		} else {
+ 		    it() = scale.eval(val);
