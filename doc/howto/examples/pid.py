@@ -1,6 +1,6 @@
 from karabo.middlelayer import (
     AccessMode, Assignment, background, Device, Float,
-    getDevice, Slot, State, String, Unit, waitUntilNew)
+    getDevice, locked, Slot, State, String, Unit, waitUntilNew)
 
 
 class PID(Device):
@@ -106,8 +106,8 @@ class PID(Device):
         command_name, command_slot = self.command.split(".", 2)
         assert command_name == control_name
 
-        with getDevice(control_name) as control_device, \
-                getDevice(process_name) as process_device:
+        with locked(getDevice(control_name)) as control_device, \
+                locked(getDevice(process_name)) as process_device:
             command = getattr(control_device, command_slot)
             last_error = getattr(process_device, process_name) - self.setpoint
             while True:

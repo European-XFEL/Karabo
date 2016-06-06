@@ -1,8 +1,8 @@
 from numpy import linspace
 
 from karabo.middlelayer import (
-    AccessMode, background, Device, Float, getDevice, Integer, Slot, State,
-    String, Unit, waitUntil)
+    AccessMode, background, Device, Float, getDevice, Integer, locked, Slot,
+    State, String, Unit, waitUntil)
 
 
 class Scan(Device):
@@ -66,8 +66,8 @@ class Scan(Device):
 
         self.state = State.MOVING
         try:
-            with getDevice(actor_name) as actor, \
-                    getDevice(sensor_name) as sensor:
+            with locked(getDevice(actor_name)) as actor, \
+                    locked(getDevice(sensor_name)) as sensor:
                 command = getattr(actor, command_slot)
                 sense = getattr(sensor, sensor_slot)
                 for position in linspace(self.start_pos, self.stop_pos,
