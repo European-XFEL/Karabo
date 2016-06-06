@@ -1,8 +1,6 @@
 from nose.tools import assert_raises
 
 from ..exceptions import SceneWriterException
-from ..model import SceneModel
-from ..io import read_scene, write_scene
 from ..widgets import (
     BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
     DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
@@ -16,8 +14,7 @@ from ..widgets import (
     SliderModel, TableElementModel, VacuumWidgetModel, XYPlotModel,
     VACUUM_WIDGETS
 )
-
-from .utils import temp_file
+from .utils import single_model_round_trip
 
 TABLE_SCHEMA = (
     ":&lt;root KRB_Artificial=&quot;KRB_STRING:&quot;"
@@ -57,7 +54,7 @@ def _base_widget_traits(parent=None):
 def _check_empty_widget(klass):
     traits = _base_widget_traits(parent='DisplayComponent')
     model = klass(**traits)
-    read_model = _perform_data_round_trip(model)
+    read_model = single_model_round_trip(model)
     _assert_base_traits(read_model)
 
 
@@ -71,7 +68,7 @@ def _check_display_editable_widget(klass):
         traits = _base_widget_traits(parent=parent)
         traits['klass'] = klass_name
         model = klass(**traits)
-        read_model = _perform_data_round_trip(model)
+        read_model = single_model_round_trip(model)
         _assert_base_traits(read_model)
         assert read_model.klass == klass_name
 
@@ -84,22 +81,13 @@ def _check_icon_widget(klass):
         icon.value = '14'
     traits['values'] = [icon]
     model = klass(**traits)
-    read_model = _perform_data_round_trip(model)
+    read_model = single_model_round_trip(model)
     _assert_base_traits(read_model)
     assert len(read_model.values) == 1
     assert read_model.values[0].image == 'blah.svg'
     if klass is DigitIconsModel:
         assert read_model.values[0].equal is True
         assert read_model.values[0].value == '14'
-
-
-def _perform_data_round_trip(model):
-    scene = SceneModel(children=[model])
-    xml = write_scene(scene)
-    with temp_file(xml.decode('utf-8')) as fn:
-        rt_scene = read_scene(fn)
-
-    return rt_scene.children[0]
 
 
 def test_all_empty_widgets():
@@ -130,7 +118,7 @@ def test_icon_widgets():
 def test_missing_parent_component():
     traits = _base_widget_traits()
     model = BitfieldModel(**traits)
-    assert_raises(SceneWriterException, _perform_data_round_trip, model)
+    assert_raises(SceneWriterException, single_model_round_trip, model)
 
 
 def test_display_state_color_widget():
@@ -138,7 +126,7 @@ def test_display_state_color_widget():
     traits['text'] = 'foo'
     traits['colors'] = {'red': (255, 0, 0, 255)}
     model = DisplayStateColorModel(**traits)
-    read_model = _perform_data_round_trip(model)
+    read_model = single_model_round_trip(model)
     _assert_base_traits(read_model)
     assert read_model.text == 'foo'
     assert len(read_model.colors) == 1
@@ -149,7 +137,7 @@ def test_evaluator_widget():
     traits = _base_widget_traits(parent='DisplayComponent')
     traits['expression'] = 'x'
     model = EvaluatorModel(**traits)
-    read_model = _perform_data_round_trip(model)
+    read_model = single_model_round_trip(model)
     _assert_base_traits(read_model)
     assert read_model.expression == 'x'
 
@@ -158,7 +146,7 @@ def test_float_spinbox_widget():
     traits = _base_widget_traits(parent='DisplayComponent')
     traits['step'] = 1.5
     model = FloatSpinBoxModel(**traits)
-    read_model = _perform_data_round_trip(model)
+    read_model = single_model_round_trip(model)
     _assert_base_traits(read_model)
     assert read_model.step == 1.5
 
@@ -170,7 +158,7 @@ def test_line_plot_widget():
         traits['klass'] = name
         traits['boxes'] = [curve]
         model = LinePlotModel(**traits)
-        read_model = _perform_data_round_trip(model)
+        read_model = single_model_round_trip(model)
         _assert_base_traits(read_model)
         assert read_model.klass == name
         assert len(read_model.boxes) == 1
@@ -184,7 +172,7 @@ def test_monitor_widget():
     traits['filename'] = 'foo.log'
     traits['interval'] = 1.5
     model = MonitorModel(**traits)
-    read_model = _perform_data_round_trip(model)
+    read_model = single_model_round_trip(model)
     _assert_base_traits(read_model)
     assert read_model.filename == 'foo.log'
     assert read_model.interval == 1.5
@@ -194,7 +182,7 @@ def test_single_bit_widget():
     traits = _base_widget_traits(parent='DisplayComponent')
     traits['bit'] = 42
     model = SingleBitModel(**traits)
-    read_model = _perform_data_round_trip(model)
+    read_model = single_model_round_trip(model)
     _assert_base_traits(read_model)
     assert read_model.bit == 42
 
@@ -210,7 +198,7 @@ def test_table_element_widget():
         # XXX: What does a schema look like?
         traits['column_schema'] = TABLE_SCHEMA
         model = TableElementModel(**traits)
-        read_model = _perform_data_round_trip(model)
+        read_model = single_model_round_trip(model)
         _assert_base_traits(read_model)
         assert read_model.klass == klass_name
         assert read_model.column_schema == TABLE_SCHEMA
@@ -222,6 +210,6 @@ def test_vacuum_widget():
         traits = _base_widget_traits(parent='DisplayComponent')
         traits['klass'] = name
         model = VacuumWidgetModel(**traits)
-        read_model = _perform_data_round_trip(model)
+        read_model = single_model_round_trip(model)
         _assert_base_traits(read_model)
         assert read_model.klass == name

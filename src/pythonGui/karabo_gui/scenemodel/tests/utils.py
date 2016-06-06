@@ -3,6 +3,20 @@ import os
 from tempfile import mkstemp
 from xml.etree.ElementTree import fromstring
 
+from ..model import SceneModel
+from ..io import read_scene, write_scene
+
+
+def single_model_round_trip(model):
+    """ Given a scene model object, write it to XML and read it back to examine
+    the round trip reader/writer behavior.
+    """
+    scene = SceneModel(children=[model])
+    xml = write_scene(scene)
+    with temp_file(xml.decode('utf-8')) as fn:
+        rt_scene = read_scene(fn)
+    return rt_scene.children[0]
+
 
 @contextmanager
 def temp_file(contents):
