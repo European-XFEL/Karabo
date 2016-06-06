@@ -8,7 +8,8 @@
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QPalette, QSizePolicy, QWidget
 
-from karabo_gui.scenemodel.api import SceneModel
+from karabo_gui.scenemodel.api import (read_scene, SceneModel, SCENE_MIN_WIDTH,
+                                       SCENE_MIN_HEIGHT)
 
 
 class SceneView(QWidget):
@@ -20,15 +21,16 @@ class SceneView(QWidget):
 
         self.filename = name
         self.designMode = designMode
+        self.scene_model = None
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setAcceptDrops(True)
         self.setAttribute(Qt.WA_MouseTracking)
         self.setBackgroundRole(QPalette.Window)
-        #self.resize(SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+        self.resize(SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 
     def load(self, filename):
         """ The given ``filename`` is loaded.
         """
-        pass
+        self.scene_model = read_scene(filename)

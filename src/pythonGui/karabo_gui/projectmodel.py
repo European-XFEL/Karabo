@@ -1605,7 +1605,7 @@ class ProjectModel(QStandardItemModel):
         # Create scene view
         scene_view = SceneView(os.path.basename(fn))
         # Load file into view
-        #scene_view.load()
+        scene_view.load(fn)
         # Add to tab and show
         self.signalAddSceneView.emit(scene_view)
 

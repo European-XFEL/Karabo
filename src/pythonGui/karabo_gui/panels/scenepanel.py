@@ -24,9 +24,3 @@ class ScenePanel(Dockable, QScrollArea):
         self.setBackgroundRole(QPalette.Dark)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-
-    def designModeText(self, isDesignMode):
-        if isDesignMode:
-            return "Change to control mode"
-
-        return "Change to design mode"
