@@ -73,9 +73,23 @@ class PID(Device):
         assignment=Assignment.MANDATORY,
         displayType="remoteSlot")
 
+    @Slot(displayedName="Start Controlling"
+          allowedStates=[State.NORMAL])
+    def start(self):
+        """Start controlling the process"""
+        self.state = State.RUNNING
+        self.background = background(self.runner, callback=None)
+
+    @Slot(displayedName="Stop Controlling",
+          allowedStates=[State.NORMAL])
+    def stop(self, allowedStates=[State.RUNNING]):
+        """Stop controlling the process"""
+        self.state = State.NORMAL
+        self.background.cancel()
+
     @Slot(displayedName="Go")
     def go(self):
-        """set the set point to the target set point"""
+        """Update set point"""
         self.setpoint = self.target_setpoint
 
     @Slot(displayedName="Reset Integral")
@@ -84,7 +98,6 @@ class PID(Device):
         self.current_integral = 0
 
     def onInitialization(self):
-        background(self.runner, callback=None)
         self.state = State.NORMAL
 
     def runner(self):
