@@ -7,7 +7,7 @@ from .utils import temp_file, xml_is_equal
 
 DATA_DIR = op.join(op.abspath(op.dirname(__file__)), 'data')
 SCENE_SVG = (
-"""<svg xmlns:krb="http://karabo.eu/scene" xmlns:svg="http://www.w3.org/2000/svg" height="768" version="1" width="1024">"""  # noqa
+"""<svg xmlns:krb="http://karabo.eu/scene" xmlns:svg="http://www.w3.org/2000/svg" height="768" krb:version="1" width="1024">"""  # noqa
 """<svg:g krb:class="FixedLayout" krb:height="323" krb:width="384" krb:x="106" krb:y="74">"""  # noqa
 """<svg:rect height="60" width="309" x="175" y="125" krb:class="Label" krb:font="Ubuntu,48,-1,5,63,0,0,0,0,0" krb:foreground="#4c4c4c" krb:frameWidth="0" krb:text="Some text" />"""  # noqa
 """<svg:rect fill="none" height="143" stroke="#000000" stroke-dasharray="" stroke-dashoffset="0.0" stroke-linecap="square" stroke-linejoin="bevel" stroke-miterlimit="2.0" stroke-opacity="1.0" stroke-style="1" stroke-width="1.0" width="151" x="106" y="74" />"""  # noqa
@@ -15,6 +15,17 @@ SCENE_SVG = (
 """</svg:g>"""
 """</svg>"""
 )
+
+
+def _get_file_data(filename):
+    with open(filename, 'r') as fp:
+        return fp.read()
+
+
+def _iter_data_files():
+    for fn in os.listdir(DATA_DIR):
+        if op.splitext(fn)[-1] == '.svg':
+            yield op.join(DATA_DIR, fn)
 
 
 def test_reading():
@@ -65,17 +76,27 @@ def test_writing():
     assert xml_is_equal(SCENE_SVG, xml)
 
 
-def test_round_trip():
+def test_simple_round_trip():
     with temp_file(SCENE_SVG) as fn:
         scene = read_scene(fn)
 
     xml = write_scene(scene)
-    assert xml == SCENE_SVG.encode('utf-8')
+    assert xml_is_equal(SCENE_SVG, xml)
 
 
 def test_real_data_reading():
-    data_file_paths = [op.join(DATA_DIR, fn) for fn in os.listdir(DATA_DIR)
-                       if op.splitext(fn)[-1] == '.svg']
-
-    for fn in data_file_paths:
+    for fn in _iter_data_files():
         read_scene(fn)
+
+
+def test_real_data_round_trip():
+    for fn in _iter_data_files():
+        # XXX: Explicitly SKIP the inkscape scene for now!
+        if op.basename(fn) == 'all-ink.svg':
+            continue
+        scene = read_scene(fn)
+        new_xml = write_scene(scene)
+        orig_xml = _get_file_data(fn)
+
+        failmsg = "Scene {} didn't round trip!".format(op.basename(fn))
+        assert xml_is_equal(orig_xml, new_xml), failmsg
