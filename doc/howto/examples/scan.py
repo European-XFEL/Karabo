@@ -12,11 +12,11 @@ class Scan(Device):
     each position calls a command on another device, the *sensor*, and waits
     until the latter is done."""
 
-    start = Float(
+    start_pos = Float(
         displayedName="Start Position",
         accessMode=AccessMode.RECONFIGURABLE)
 
-    stop = Float(
+    stop_pos = Float(
         displayedName="Stop Position",
         accessMode=AccessMode.RECONFIGURABLE)
 
@@ -46,12 +46,16 @@ class Scan(Device):
     def onInitialization(self):
         self.state = State.STOPPED
 
-    @Slot()
+    @Slot(displayedName="Start Scan",
+          allowedStates=[State.STOPPED])
     def start(self):
+        """Start a scan"""
         self.background = background(self.runner, callback=None)
 
-    @Slot()
+    @Slot(displayedName="Cancel Scan",
+          allowedStates=[State.MOVING])
     def cancel(self):
+        """Cancel a running scan"""
         self.background.cancel()
 
     def runner(self):
@@ -64,12 +68,15 @@ class Scan(Device):
         try:
             with getDevice(actor_name) as actor, \
                     getDevice(sensor_name) as sensor:
-                for position in linspace(self.start, self.stop, self.steps):
+                command = getattr(actor, command_slot)
+                sense = getattr(sensor, sensor_slot)
+                for position in linspace(self.start_pos, self.stop_pos,
+                                         self.steps):
                     setattr(actor, self.actor_property, position)
-                    getattr(actor, command_slot)()
-                    waitUntil(lambda: getattr(actor, self.actor_property).
-                              onTarget)
-                    getattr(sensor, sensor_slot)()
+                    command()
+                    waitUntil(lambda:
+                              getattr(actor, self.actor_property).onTarget)
+                    sense()
                     waitUntil(lambda: sensor.state == State.PASSIVE)
         finally:
             self.state = State.STOPPED
