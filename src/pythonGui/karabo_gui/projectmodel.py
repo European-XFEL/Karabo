@@ -1592,6 +1592,17 @@ class ProjectModel(QStandardItemModel):
             s = fin.read()
             scene.fromXml(s.encode())
 
+    @pyqtSlot()
+    def onOpenSceneView(self):
+        project = self.currentProject()
+        fn = QFileDialog.getOpenFileName(None, "Open scene",
+                                         globals.HIDDEN_KARABO_FOLDER,
+                                         "SVG (*.svg)")
+        if not fn:
+            return
+        #sceneView = self.addSceneView(project, os.path.basename(fn))
+        
+
     def onRemove(self):
         """
         This slot removes the currently selected index from the model.

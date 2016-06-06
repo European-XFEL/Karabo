@@ -327,9 +327,16 @@ class ProjectTreeView(QTreeView):
                 acOpenScene.setStatusTip(text)
                 acOpenScene.setToolTip(text)
                 acOpenScene.triggered.connect(self.model().onOpenScene)
+                
+                text = "Open scene view"
+                acOpenSceneView = QAction(text, self)
+                acOpenSceneView.setStatusTip(text)
+                acOpenSceneView.setToolTip(text)
+                acOpenSceneView.triggered.connect(self.model().onOpenSceneView)
 
                 menu.addAction(acAddScene)
                 menu.addAction(acOpenScene)
+                menu.addAction(acOpenSceneView)
             elif firstObj.displayName == Project.MACROS_LABEL:
                 text = "Add macro"
                 acAddMacro = QAction(text, self)
