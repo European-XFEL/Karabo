@@ -8,7 +8,7 @@
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QPalette, QSizePolicy, QWidget
 
-from karabo_gui.scenemodel.api import (read_scene, SceneModel, SCENE_MIN_WIDTH,
+from karabo_gui.scenemodel.api import (read_scene, SCENE_MIN_WIDTH,
                                        SCENE_MIN_HEIGHT)
 
 
@@ -34,3 +34,10 @@ class SceneView(QWidget):
         """ The given ``filename`` is loaded.
         """
         self.scene_model = read_scene(filename)
+        # Set width and height
+        self.resize(self.scene_model.width, self.scene_model.height)
+
+        #for child in self.scene_model.children:
+        #    if isinstance(child, RectangleModel):
+        #        self.createRectangle(child)
+            #create_func(child)
