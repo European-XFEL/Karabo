@@ -332,7 +332,7 @@ class ProjectTreeView(QTreeView):
                 acOpenSceneView = QAction(text, self)
                 acOpenSceneView.setStatusTip(text)
                 acOpenSceneView.setToolTip(text)
-                acOpenSceneView.triggered.connect(self.model().onOpenSceneView)
+                acOpenSceneView.triggered.connect(self.model().openSceneView)
 
                 menu.addAction(acAddScene)
                 menu.addAction(acOpenScene)
