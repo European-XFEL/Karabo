@@ -27,7 +27,7 @@ class Scan(Device):
 
     actor_property = String(
         displayedName="Actor's property",
-        description="the actor's property that is moved in this scan",
+        description="The actor's property that is altered as part of the scan",
         displayType="property",
         accessMode=AccessMode.INITONLY)
 
