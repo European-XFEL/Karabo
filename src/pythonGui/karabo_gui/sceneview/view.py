@@ -18,10 +18,10 @@ class SceneView(QWidget):
     """ An object representing the view for a Karabo GUI scene.
     """
 
-    def __init__(self, name, parent=None, designMode=False):
+    def __init__(self, parent=None, designMode=False):
         super(SceneView, self).__init__(parent)
 
-        self.filename = name
+        self.filename = None
         self.designMode = designMode
         self.scene_model = None
 
@@ -37,6 +37,9 @@ class SceneView(QWidget):
     def load(self, filename):
         """ The given ``filename`` is loaded.
         """
+        # Set name
+        self.filename = os.path.basename(filename)
+        # Read file into scene model
         self.scene_model = read_scene(filename)
         # Set width and height
         self.resize(self.scene_model.width, self.scene_model.height)

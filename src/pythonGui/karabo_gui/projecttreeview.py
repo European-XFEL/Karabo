@@ -328,7 +328,7 @@ class ProjectTreeView(QTreeView):
                 acOpenScene.setToolTip(text)
                 acOpenScene.triggered.connect(self.model().onOpenScene)
                 
-                text = "Open scene view"
+                text = "Open Refactored Scene"
                 acOpenSceneView = QAction(text, self)
                 acOpenSceneView.setStatusTip(text)
                 acOpenSceneView.setToolTip(text)

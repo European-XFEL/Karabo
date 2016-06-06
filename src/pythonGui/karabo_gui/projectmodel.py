@@ -1597,13 +1597,13 @@ class ProjectModel(QStandardItemModel):
     @pyqtSlot()
     def openSceneView(self):
         project = self.currentProject()
-        fn = QFileDialog.getOpenFileName(None, "Open scene",
+        fn = QFileDialog.getOpenFileName(None, "Open Refactored Scene",
                                          globals.HIDDEN_KARABO_FOLDER,
                                          "SVG (*.svg)")
         if not fn:
             return
         # Create scene view
-        scene_view = SceneView(os.path.basename(fn))
+        scene_view = SceneView()
         # Load file into view
         scene_view.load(fn)
         # Add to tab and show
