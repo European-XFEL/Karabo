@@ -18,7 +18,8 @@ def read_scene(filename):
 def write_scene(scene):
     """ Write Scene object `scene` to a string.
     """
-    root = Element('svg', version='1')
+    root = Element('svg')
+    root.set(NS_KARABO + 'version', '1')
 
     writer = get_writer()
     writer(scene, root)
