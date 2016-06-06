@@ -2,17 +2,19 @@ import os
 import os.path as op
 
 from ..api import (SceneModel, FixedLayoutModel, LabelModel, LineModel,
-                   RectangleModel, read_scene, write_scene)
+                   RectangleModel, UnknownXMLDataModel,
+                   read_scene, write_scene, NS_KARABO)
 from .utils import temp_file, xml_is_equal
 
 DATA_DIR = op.join(op.abspath(op.dirname(__file__)), 'data')
 SCENE_SVG = (
-"""<svg xmlns:krb="http://karabo.eu/scene" xmlns:svg="http://www.w3.org/2000/svg" height="768" krb:version="1" width="1024">"""  # noqa
+"""<svg xmlns:krb="http://karabo.eu/scene" xmlns:svg="http://www.w3.org/2000/svg" height="768" krb:version="1" width="1024" krb:random="golly" >"""  # noqa
 """<svg:g krb:class="FixedLayout" krb:height="323" krb:width="384" krb:x="106" krb:y="74">"""  # noqa
 """<svg:rect height="60" width="309" x="175" y="125" krb:class="Label" krb:font="Ubuntu,48,-1,5,63,0,0,0,0,0" krb:foreground="#4c4c4c" krb:frameWidth="0" krb:text="Some text" />"""  # noqa
 """<svg:rect fill="none" height="143" stroke="#000000" stroke-dasharray="" stroke-dashoffset="0.0" stroke-linecap="square" stroke-linejoin="bevel" stroke-miterlimit="2.0" stroke-opacity="1.0" stroke-style="1" stroke-width="1.0" width="151" x="106" y="74" />"""  # noqa
 """<svg:line fill="none" stroke="#000000" stroke-dasharray="" stroke-dashoffset="0.0" stroke-linecap="square" stroke-linejoin="bevel" stroke-miterlimit="2.0" stroke-opacity="1.0" stroke-style="1" stroke-width="1.0" x1="397" x2="489" y1="84" y2="396" />"""  # noqa
 """</svg:g>"""
+"""<metadata id="some-extra-data"><foo>bar</foo></metadata>"""
 """</svg>"""
 )
 
@@ -34,7 +36,7 @@ def test_reading():
 
     assert scene.width == 1024
     assert scene.height == 768
-    assert len(scene.children) == 1
+    assert len(scene.children) == 2
 
     layout = scene.children[0]
     assert len(layout.children) == 3
@@ -50,7 +52,8 @@ def test_reading():
 
 
 def test_writing():
-    scene = SceneModel()
+    extra_attributes = {NS_KARABO + 'random': 'golly'}
+    scene = SceneModel(extra_attributes=extra_attributes)
     layout = FixedLayoutModel(x=106, y=74, height=323, width=384)
     label = LabelModel(
         x=175, y=125, height=60, width=309,
@@ -71,6 +74,12 @@ def test_writing():
     )
     layout.children.extend([label, rect, line])
     scene.children.append(layout)
+
+    unknown_child = UnknownXMLDataModel(tag='foo', data='bar')
+    unknown = UnknownXMLDataModel(tag='metadata',
+                                  attributes={'id': 'some-extra-data'},
+                                  children=[unknown_child])
+    scene.children.append(unknown)
 
     xml = write_scene(scene)
     assert xml_is_equal(SCENE_SVG, xml)
