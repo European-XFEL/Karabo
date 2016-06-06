@@ -75,7 +75,7 @@ class PID(Device):
 
     @Slot(displayedName="Go")
     def go(self):
-        """set the setpoint to the target setpoint"""
+        """set the set point to the target set point"""
         self.setpoint = self.target_setpoint
 
     @Slot(displayedName="Reset Integral")
