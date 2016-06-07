@@ -14,7 +14,7 @@ from karabo_gui.scenemodel.api import (LabelModel, LineModel, RectangleModel,
                                        SCENE_MIN_HEIGHT)
 from .layouts import BaseLayout
 from .shapes import LineShape, RectangleShape
-from .widgets import LabelWidget
+from .simple_widgets import LabelWidget
 
 
 class SceneView(QWidget):
