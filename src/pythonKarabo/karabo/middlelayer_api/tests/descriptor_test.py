@@ -3,9 +3,10 @@ from unittest import TestCase, main
 
 from pint import DimensionalityError
 
+from karabo.middlelayer import (
+    AccessMode, Assignment, AccessLevel, MetricPrefix, Unit)
 from karabo.middlelayer_api import hash as hashmod
 from karabo.middlelayer_api.basetypes import QuantityValue
-from karabo.middlelayer_api.enums import Unit, MetricPrefix
 from karabo.middlelayer_api.hash import Hash
 
 
@@ -243,6 +244,82 @@ class Tests(TestCase):
         self.assertEqual(v, ["a", "b", "c"])
         self.assertEqual(v[1], "b")
         self.assertEqual(len(v), 3)
+
+    def test_attributes_default(self):
+        d = hashmod.Double()
+        self.assertIsNone(d.minExc)
+        self.assertIsNone(d.maxExc)
+        self.assertIsNone(d.minInc)
+        self.assertIsNone(d.maxInc)
+        self.assertIsNone(d.absoluteError)
+        self.assertIsNone(d.relativeError)
+        self.assertIsNone(d.displayedName)
+        self.assertIsNone(d.alias)
+        self.assertIsNone(d.description)
+        self.assertIsNone(d.allowedStates)
+        self.assertIsNone(d.defaultValue)
+        self.assertIs(d.accessMode, AccessMode.RECONFIGURABLE)
+        self.assertIs(d.assignment, Assignment.OPTIONAL)
+        self.assertIs(d.requiredAccessLevel, AccessLevel.OBSERVER)
+        self.assertIsNone(d.displayType)
+        self.assertIs(d.unitSymbol, Unit.NOT_ASSIGNED)
+        self.assertIs(d.metricPrefixSymbol, MetricPrefix.NONE)
+        self.assertIsNone(d.options)
+
+    def test_attributes_nodefault(self):
+        d = hashmod.Double(
+            minExc=22, maxExc=33, minInc=11, maxInc=23,
+            absoluteError=0.2, relativeError=0.3,
+            displayedName="hallo", alias="something",
+            description="whatever", allowedStates=["some", "thing"],
+            defaultValue=22.5, accessMode=AccessMode.READONLY,
+            assignment=Assignment.MANDATORY,
+            requiredAccessLevel=AccessLevel.EXPERT, displayType="nothing",
+            unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.MILLI,
+            options=[22.3, 22.7, 22.8])
+
+        self.assertEqual(d.minExc, 22)
+        self.assertEqual(d.maxExc, 33)
+        self.assertEqual(d.minInc, 11)
+        self.assertEqual(d.maxInc, 23)
+        self.assertEqual(d.absoluteError, 0.2)
+        self.assertEqual(d.relativeError, 0.3)
+        self.assertEqual(d.displayedName, "hallo")
+        self.assertEqual(d.alias, "something")
+        self.assertEqual(d.description, "whatever")
+        self.assertEqual(d.allowedStates, ["some", "thing"])
+        self.assertEqual(d.defaultValue, 22.5)
+        self.assertIs(d.accessMode, AccessMode.READONLY)
+        self.assertIs(d.assignment, Assignment.MANDATORY)
+        self.assertIs(d.requiredAccessLevel, AccessLevel.EXPERT)
+        self.assertEqual(d.displayType, "nothing")
+        self.assertIs(d.unitSymbol, Unit.METER)
+        self.assertIs(d.metricPrefixSymbol, MetricPrefix.MILLI)
+        self.assertEqual(d.options, [22.3, 22.7, 22.8])
+
+    def test_attributes_nonstrict(self):
+        d = hashmod.Double(
+            strict=False, whatever=4, requiredAccessLevel=3,
+            unitSymbol="m", metricPrefixSymbol="m")
+
+        self.assertFalse(hasattr(d, "whatever"))
+        self.assertIs(d.requiredAccessLevel, AccessLevel.EXPERT)
+        self.assertIs(d.unitSymbol, Unit.METER)
+        self.assertIs(d.metricPrefixSymbol, MetricPrefix.MILLI)
+
+    def test_attributes_strict_fails(self):
+        with self.assertRaises(TypeError):
+            hashmod.Double(requiredAccessLevel=3)
+        with self.assertRaises(TypeError):
+            hashmod.Double(unitSymbol="m")
+        with self.assertRaises(TypeError):
+            hashmod.Double(whatever=7)
+
+    def test_attributes_nonstrict_fails(self):
+        with self.assertRaises(ValueError):
+            hashmod.Double(strict=False, requiredAccessLevel=27)
+        with self.assertRaises(ValueError):
+            hashmod.Double(strict=False, metricPrefixSymbol="asdf")
 
 
 if __name__ == "__main__":
