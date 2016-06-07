@@ -534,7 +534,7 @@ namespace karabo {
              * @return value of the requested parameter
              */
             template <class T>
-            const T& get(const std::string& key, const T& var = T()) const {
+            T get(const std::string& key, const T& var = T()) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
                     //if (karabo::util::Types::from(var) == karabo::util::Types::VECTOR_HASH && m_parameters.hasAttribute(key, KARABO_SCHEMA_ROW_SCHEMA))
@@ -688,7 +688,7 @@ namespace karabo {
              * @return Aliased representation of the parameter
              */
             template <class AliasType>
-            const AliasType& getAliasFromKey(const std::string& key) const {
+            AliasType getAliasFromKey(const std::string& key) const {
                 try {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     return m_fullSchema.getAliasFromKey<AliasType>(key);
@@ -703,7 +703,7 @@ namespace karabo {
              * @return The original name of the parameter
              */
             template <class AliasType>
-            const std::string& getKeyFromAlias(const AliasType& alias) const {
+            std::string getKeyFromAlias(const AliasType& alias) const {
                 try {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     return m_fullSchema.getKeyFromAlias(alias);
