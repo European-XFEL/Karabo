@@ -61,7 +61,7 @@ class LineShape(BaseShape):
         """
         painter.setPen(self.pen)
         painter.drawLine(self.shape)
-        super(LineShape, self).draw(self, painter)
+        super(LineShape, self).draw(painter)
 
 
 class RectangleShape(BaseShape):
@@ -78,4 +78,4 @@ class RectangleShape(BaseShape):
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawRect(self.shape)
-        super(RectangleShape, self).draw(self, painter)
+        super(RectangleShape, self).draw(painter)
