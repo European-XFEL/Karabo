@@ -376,8 +376,8 @@ class MainWindow(QMainWindow):
         if self.isMiddlePanelUndocked(scene_view):
             return
 
-        scenePanel = ScenePanel(scene_view, self.acServerConnect.isChecked())
-        self.middleTab.addDockableTab(scenePanel, scene_view.filename, self)
+        scenePanel = ScenePanel(scene_view)
+        self.middleTab.addDockableTab(scenePanel, scene_view.title, self)
         scenePanel.signalClosed.connect(self.onMiddlePanelRemoved)
 
         self.selectLastMiddlePanel()
