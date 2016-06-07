@@ -441,14 +441,6 @@ def _table_element_writer(write_func, model, parent):
     return element
 
 
-def _vacuum_widget_reader(read_func, element):
-    traits = _read_empty_display_editable_widget(element)
-    return VacuumWidgetModel(**traits)
-
-for widget in VACUUM_WIDGETS:
-    register_scene_reader(widget, version=1)
-
-
 @register_scene_writer(VacuumWidgetModel)
 def _vacuum_widget_writer(write_func, model, parent):
     element = SubElement(parent, NS_SVG + 'rect')
@@ -474,8 +466,8 @@ def _build_empty_widget_readers_and_writers():
 
     names = ('BitfieldModel', 'DisplayAlignedImageModel',
              'DisplayCommandModel', 'DisplayIconsetModel', 'DisplayImageModel',
-             'DisplayImageElementModel', 'DisplayPlotModel',
-             'DoubleLineEditModel', 'EditableListModel',
+             'DisplayImageElementModel', 'DisplayLabelModel',
+             'DisplayPlotModel', 'DoubleLineEditModel', 'EditableListModel',
              'EditableListElementModel', 'EditableSpinBoxModel',
              'HexadecimalModel', 'IntLineEditModel', 'KnobModel',
              'SliderModel', 'XYPlotModel')
@@ -501,8 +493,8 @@ def _build_empty_display_editable_readers_and_writers():
         _write_base_widget_data(model, element, model.klass)
         return element
 
-    names = ('CheckBoxModel', 'ChoiceElementModel', 'DirectoryModel',
-             'FileInModel', 'FileOutModel', 'LineEditModel')
+    names = ('CheckBoxModel', 'ChoiceElementModel', 'ComboBoxModel',
+             'DirectoryModel', 'FileInModel', 'FileOutModel', 'LineEditModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]
@@ -525,7 +517,7 @@ def _build_icon_widget_readers_and_writers():
     def _build_writer_func(name, tag):
         def writer(write_func, model, parent):
             element = SubElement(parent, NS_SVG + 'rect')
-            _write_base_widget_data(model, element, 'TextIcons')
+            _write_base_widget_data(model, element, name)
             _write_icon_elements(model.values, element, NS_KARABO + tag)
             return element
         return writer
@@ -540,7 +532,18 @@ def _build_icon_widget_readers_and_writers():
         register_scene_writer(klass)(_build_writer_func(file_name, tag))
 
 
+def _build_vacuum_widget_readers():
+    """ Build readers for all the possible vacuum widgets.
+    """
+    def _reader(read_func, element):
+        traits = _read_empty_display_editable_widget(element)
+        return VacuumWidgetModel(**traits)
+
+    for widget in VACUUM_WIDGETS:
+        register_scene_reader(widget, version=1)(_reader)
+
 # Call the builders to register all the readers and writers
 _build_empty_widget_readers_and_writers()
 _build_empty_display_editable_readers_and_writers()
 _build_icon_widget_readers_and_writers()
+_build_vacuum_widget_readers()
