@@ -245,12 +245,13 @@ class Descriptor(object):
                 if attr.default is None:
                     setattr(self, k, v)
                 else:
-                    if strict and type(attr.default)(v) != v:
+                    converted = type(attr.default)(v)
+                    if strict and converted != v:
                         raise TypeError(
                             '{} got attribute {} with value "{}" of incorrect '
                             'type {}'.format(self.__class__.__name__, k, v,
                                              type(v)))
-                    setattr(self, k, type(attr.default)(v))
+                    setattr(self, k, converted)
             elif strict:
                 raise TypeError("{} got unexpected keyword argument: {}".
                                 format(self.__class__.__name__, k))
