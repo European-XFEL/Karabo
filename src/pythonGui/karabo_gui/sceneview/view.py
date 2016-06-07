@@ -45,7 +45,7 @@ class SceneView(QWidget):
         # Read file into scene model
         self.scene_model = read_scene(filename)
         # Set width and height
-        self.resize(self.scene_model.width, self.scene_model.height)
+        #self.resize(self.scene_model.width, self.scene_model.height)
 
         # Go through children and create corresponding GUI objects
         for child in self.scene_model.children:
