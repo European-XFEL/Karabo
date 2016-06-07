@@ -1,13 +1,14 @@
 """This tests the communication between bound API and middlelayer API"""
 
-from asyncio import coroutine, create_subprocess_exec, sleep, wait_for
+from asyncio import coroutine, create_subprocess_exec, wait_for
 import os
 import os.path
 from subprocess import PIPE
 import sys
 from unittest import TestCase, main
 
-from karabo.middlelayer import Device, getDevice, Int32, shutdown, Slot
+from karabo.middlelayer import (
+    Device, getDevice, Int32, shutdown, Slot, waitUntilNew)
 
 
 from .eventloop import setEventLoop
@@ -38,7 +39,7 @@ class Tests(TestCase):
             proxy.a = 77
             self.assertEqual(proxy.a, 33,
                              "proxy should set value on device, not own value")
-            yield from sleep(0.1)
+            yield from waitUntilNew(proxy).a
             self.assertEqual(proxy.a, 77,
                              "didn't receive change from bound device")
 
@@ -47,7 +48,7 @@ class Tests(TestCase):
         self.assertTrue(device.marker)
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
-        yield from wait_for(self.bound.wait(), 10)
+        yield from self.bound.wait()
 
     def setUp(self):
         self.__starting_dir = os.curdir
