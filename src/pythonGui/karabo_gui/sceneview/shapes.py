@@ -5,7 +5,7 @@
 #############################################################################
 
 from PyQt4.QtCore import QLine, QRect, Qt
-from PyQt4.QtGui import QBrush, QColor, QLabel, QPen
+from PyQt4.QtGui import QBrush, QColor, QPen
 
 
 class BaseShape(object):
@@ -63,16 +63,6 @@ class BaseShape(object):
             painter.drawRect(self.geometry())
             painter.setPen(black)
             painter.drawRect(self.geometry())
-
-
-class LabelShape(BaseShape):
-    """ A label which can appear in a scene
-    """
-
-    def __init__(self, model, parent):
-        super(LabelShape, self).__init__(model)
-        self.shape = QLabel(model.text, parent)
-        self.shape.setGeometry(model.x, model.y, model.width, model.height)
 
 
 class LineShape(BaseShape):
