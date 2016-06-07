@@ -4,11 +4,14 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
+from abc import ABCMeta, abstractmethod
+
 from PyQt4.QtCore import QLine, QRect, Qt
 from PyQt4.QtGui import QBrush, QColor, QPen
 
+from .const import QT_PEN_CAP_STYLE, QT_PEN_JOIN_STYLE
 
-class BaseShape(object):
+class BaseShape(object, metaclass=ABCMeta):
     """ A shape base class
     """
 
@@ -32,9 +35,7 @@ class BaseShape(object):
             c = QColor(model.stroke)
             c.setAlphaF(model.stroke_opacity)
             pen.setColor(c)
-            pen.setCapStyle(dict(
-                butt=Qt.FlatCap, square=Qt.SquareCap, round=Qt.RoundCap)
-                [model.stroke_linecap])
+            pen.setCapStyle(QT_PEN_CAP_STYLE[model.stroke_linecap])
             pen.setWidthF(model.stroke_width)
             pen.setDashOffset(model.stroke_dashoffset)
 
@@ -42,8 +43,7 @@ class BaseShape(object):
                 pen.setDashPattern(model.stroke_dasharray)
 
             pen.setStyle(model.stroke_style)
-            pen.setJoinStyle(dict(miter=Qt.SvgMiterJoin, round=Qt.RoundJoin,
-                             bevel=Qt.BevelJoin)[model.stroke_linejoin])
+            pen.setJoinStyle(QT_PEN_JOIN_STYLE[model.stroke_linejoin])
             pen.setMiterLimit(model.stroke_miterlimit)
         self.pen = pen
 
@@ -54,6 +54,7 @@ class BaseShape(object):
             color.setAlphaF(model.fill_opacity)
             self.brush = QBrush(color)
 
+    @abstractmethod
     def geometry(self):
         """ Needs to be reimplemented in the inherited classes to get the
             geometry for the bounding rectangle.
