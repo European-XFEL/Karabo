@@ -33,18 +33,19 @@ class Tests(TestCase):
         self.assertEqual(proxy.a, 22.5,
                          "didn't receive initial value from bound device")
 
-        self.assertIs(type(proxy).a.unitSymbol, Unit.AMPERE)
-        self.assertIs(type(proxy).a.metricPrefixSymbol, MetricPrefix.MILLI)
-        self.assertIs(type(proxy).a.requiredAccessLevel, AccessLevel.EXPERT)
-        self.assertIs(type(proxy).a.assignment, Assignment.OPTIONAL)
-        self.assertEqual(type(proxy).a.displayedName, "parameter a")
-        self.assertEqual(type(proxy).a.description, "a's description")
-        self.assertEqual(type(proxy).a.defaultValue, 22.5)
-        self.assertEqual(type(proxy).a.minExc, 22)
-        self.assertEqual(type(proxy).a.maxExc, 33)
-        self.assertEqual(type(proxy).a.minInc, 11)
-        self.assertEqual(type(proxy).a.maxInc, 23)
-        self.assertEqual(type(proxy).a.allowedStates, ["some", "thing"])
+        a_desc = type(proxy).a
+        self.assertIs(a_desc.unitSymbol, Unit.AMPERE)
+        self.assertIs(a_desc.metricPrefixSymbol, MetricPrefix.MILLI)
+        self.assertIs(a_desc.requiredAccessLevel, AccessLevel.EXPERT)
+        self.assertIs(a_desc.assignment, Assignment.OPTIONAL)
+        self.assertEqual(a_desc.displayedName, "parameter a")
+        self.assertEqual(a_desc.description, "a's description")
+        self.assertEqual(a_desc.defaultValue, 22.5)
+        self.assertEqual(a_desc.minExc, 22)
+        self.assertEqual(a_desc.maxExc, 33)
+        self.assertEqual(a_desc.minInc, 11)
+        self.assertEqual(a_desc.maxInc, 23)
+        self.assertEqual(a_desc.allowedStates, ["some", "thing"])
 
         with proxy:
             yield from proxy.setA()
