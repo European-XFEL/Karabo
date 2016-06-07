@@ -76,10 +76,11 @@ def _read_base_shape_data(element):
     # Convert the dash array to a proper value
     if 'stroke_dasharray' in traits:
         dashes = traits.pop('stroke_dasharray')
-        dashlist = dashes.split(',') if ',' in dashes else dashes.split()
-        penwidth = traits.get('stroke_width', 1.0)
-        traits['stroke_dasharray'] = [_convert_measurement(d) / penwidth
-                                      for d in dashlist]
+        if dashes.lower() != 'none':
+            dashlist = dashes.split(',') if ',' in dashes else dashes.split()
+            penwidth = traits.get('stroke_width', 1.0)
+            traits['stroke_dasharray'] = [_convert_measurement(d) / penwidth
+                                          for d in dashlist]
 
     return traits
 
