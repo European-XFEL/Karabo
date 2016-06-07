@@ -815,6 +815,16 @@ namespace karabo {
                 reply(currentState);
             }
 
+            virtual void updateState(const karabo::core::State::Pointer& csp) {
+                try {
+                    if (!csp)
+                        throw KARABO_PARAMETER_EXCEPTION("State pointer is not valid (initialized).");
+                    this->updateState(csp->name());
+                } catch (const karabo::util::Exception& e) {
+                    KARABO_RETHROW
+                }
+            }
+
             KARABO_DEPRECATED virtual void onStateUpdate(const std::string& currentState) {
                 this->updateState(currentState);
             }
