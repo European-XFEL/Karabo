@@ -24,7 +24,7 @@ class SceneView(QWidget):
     def __init__(self, parent=None, designMode=False):
         super(SceneView, self).__init__(parent)
 
-        self.filename = None
+        self.title = None
         self.designMode = designMode
         self.scene_model = None
 
@@ -41,11 +41,12 @@ class SceneView(QWidget):
         """ The given ``filename`` is loaded.
         """
         # Set name
-        self.filename = os.path.basename(filename)
+        self.title = os.path.basename(filename)
         # Read file into scene model
         self.scene_model = read_scene(filename)
         # Set width and height
-        #self.resize(self.scene_model.width, self.scene_model.height)
+        self.resize(max(self.scene_model.width, SCENE_MIN_WIDTH),
+                    max(self.scene_model.height, SCENE_MIN_HEIGHT))
 
         # Go through children and create corresponding GUI objects
         for child in self.scene_model.children:
