@@ -8,8 +8,8 @@ import sys
 from unittest import TestCase, main
 
 from karabo.middlelayer import (
-    Device, getDevice, Int32, shutdown, Slot, waitUntilNew)
-
+    AccessLevel, Assignment, Device, getDevice, Int32,
+    MetricPrefix, shutdown, Slot, Unit, waitUntilNew)
 
 from .eventloop import setEventLoop
 
@@ -30,17 +30,32 @@ class Tests(TestCase):
         while "got started" not in line:
             line = (yield from self.bound.stderr.readline()).decode("ascii")
         proxy = yield from getDevice("boundDevice")
-        self.assertEqual(proxy.a, 55,
+        self.assertEqual(proxy.a, 22.5,
                          "didn't receive initial value from bound device")
+
+        a_desc = type(proxy).a
+        self.assertIs(a_desc.unitSymbol, Unit.AMPERE)
+        self.assertIs(a_desc.metricPrefixSymbol, MetricPrefix.MILLI)
+        self.assertIs(a_desc.requiredAccessLevel, AccessLevel.EXPERT)
+        self.assertIs(a_desc.assignment, Assignment.OPTIONAL)
+        self.assertEqual(a_desc.displayedName, "parameter a")
+        self.assertEqual(a_desc.description, "a's description")
+        self.assertEqual(a_desc.defaultValue, 22.5)
+        self.assertEqual(a_desc.minExc, 22)
+        self.assertEqual(a_desc.maxExc, 33)
+        self.assertEqual(a_desc.minInc, 11)
+        self.assertEqual(a_desc.maxInc, 23)
+        self.assertEqual(a_desc.allowedStates, ["some", "thing"])
+
         with proxy:
             yield from proxy.setA()
-            self.assertEqual(proxy.a, 33,
+            self.assertEqual(proxy.a, 22.7,
                              "didn't receive change from bound device")
-            proxy.a = 77
-            self.assertEqual(proxy.a, 33,
+            proxy.a = 22.8
+            self.assertEqual(proxy.a, 22.7,
                              "proxy should set value on device, not own value")
             yield from waitUntilNew(proxy).a
-            self.assertEqual(proxy.a, 77,
+            self.assertEqual(proxy.a, 22.8,
                              "didn't receive change from bound device")
 
         yield from proxy.backfire()
