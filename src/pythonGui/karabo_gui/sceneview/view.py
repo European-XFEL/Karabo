@@ -4,14 +4,16 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
+import os.path
+
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QPalette, QPainter, QSizePolicy, QWidget
 
-from .layouts import BaseLayout
 from karabo_gui.scenemodel.api import (LabelModel, LineModel, RectangleModel,
                                        read_scene, SCENE_MIN_WIDTH,
                                        SCENE_MIN_HEIGHT)
-from .shapes import Label, Line, Rectangle
+from .layouts import BaseLayout
+from .shapes import Label, LineShape, RectangleShape
 
 
 class SceneView(QWidget):
@@ -47,10 +49,10 @@ class SceneView(QWidget):
         # Go through children and create corresponding GUI objects
         for child in self.scene_model.children:
             if isinstance(child, LineModel):
-                obj = Line(child)
+                obj = LineShape(child)
                 self.layout.add_shape(obj)
             if isinstance(child, RectangleModel):
-                obj = Rectangle(child)
+                obj = RectangleShape(child)
                 self.layout.add_shape(obj)
             if isinstance(child, LabelModel):
                 obj = Label(child)
@@ -59,8 +61,5 @@ class SceneView(QWidget):
     def paintEvent(self, event):
         """ Show view content.
         """
-        painter = QPainter(self)
-        try:
+        with QPainter(self) as painter:
             self.layout.draw(painter)
-        finally:
-            painter.end()
