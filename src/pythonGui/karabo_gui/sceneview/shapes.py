@@ -11,6 +11,7 @@ from PyQt4.QtGui import QBrush, QColor, QPen
 
 from .const import QT_PEN_CAP_STYLE, QT_PEN_JOIN_STYLE
 
+
 class BaseShape(object, metaclass=ABCMeta):
     """ A shape base class
     """
