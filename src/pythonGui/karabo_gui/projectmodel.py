@@ -27,11 +27,12 @@ from karabo_gui.dialogs.scenedialog import SceneDialog
 from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.scene import Scene
+from karabo_gui.sceneview.api import SceneView
 import karabo_gui.network as network
 from karabo_gui.topology import getDevice, Manager
 from karabo_gui.util import getSaveFileName
 
-from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, Qt
+from PyQt4.QtCore import QAbstractItemModel, pyqtSignal, pyqtSlot, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
                          QItemSelectionModel, QMessageBox, QStandardItem,
                          QStandardItemModel)
@@ -48,6 +49,7 @@ class ProjectModel(QStandardItemModel):
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
     signalRenameScene = pyqtSignal(object) # scene
+    signalAddSceneView = pyqtSignal(object) # scene view
     signalAddMacro = pyqtSignal(object)
     signalRemoveMacro = pyqtSignal(object) # macro
 
@@ -1591,6 +1593,21 @@ class ProjectModel(QStandardItemModel):
         with open(fn, "r") as fin:
             s = fin.read()
             scene.fromXml(s.encode())
+
+    @pyqtSlot()
+    def openSceneView(self):
+        project = self.currentProject()
+        fn = QFileDialog.getOpenFileName(None, "Open Refactored Scene",
+                                         globals.HIDDEN_KARABO_FOLDER,
+                                         "SVG (*.svg)")
+        if not fn:
+            return
+        # Create scene view
+        scene_view = SceneView()
+        # Load file into view
+        scene_view.load(fn)
+        # Add to tab and show
+        self.signalAddSceneView.emit(scene_view)
 
     def onRemove(self):
         """
