@@ -4,6 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
+from .utils import save_painter_state
+
 
 class BaseLayout(object):
 
@@ -20,6 +22,5 @@ class BaseLayout(object):
 
     def draw(self, painter):
         for shape in self.shapes:
-            painter.save()
-            shape.draw(painter)
-            painter.restore()
+            with save_painter_state(painter):
+                shape.draw(painter)
