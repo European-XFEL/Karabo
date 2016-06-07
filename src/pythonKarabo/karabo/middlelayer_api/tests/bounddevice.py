@@ -3,7 +3,7 @@ API cross test
 """
 
 from karabo.bound import (
-    AMPERE, Configurator, Hash, INT32_ELEMENT, MILLI, KARABO_CLASSINFO,
+    AMPERE, Configurator, Hash, DOUBLE_ELEMENT, MILLI, KARABO_CLASSINFO,
     PythonDevice, SLOT_ELEMENT
 )
 
@@ -13,14 +13,17 @@ class TestDevice(PythonDevice):
     @staticmethod
     def expectedParameters(expected):
         (
-            INT32_ELEMENT(expected).key("a")
+            DOUBLE_ELEMENT(expected).key("a")
+            .minExc(22).maxExc(33).minInc(11).maxInc(23)
             .displayedName("parameter a")
+            .alias("something")
             .description("a's description")
+            .allowedStates("some thing")
             .unit(AMPERE)
             .metricPrefix(MILLI)
             .expertAccess()
             .assignmentOptional()
-            .defaultValue(55)
+            .defaultValue(22.5)
             .commit(),
 
             SLOT_ELEMENT(expected).key("setA")
@@ -40,7 +43,7 @@ class TestDevice(PythonDevice):
         pass
 
     def setA(self):
-        self.set("a", 33)
+        self.set("a", 22.7)
 
     def backfire(self):
         remote = self.remote()

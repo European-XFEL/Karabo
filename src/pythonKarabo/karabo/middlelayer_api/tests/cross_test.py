@@ -30,7 +30,7 @@ class Tests(TestCase):
         while "got started" not in line:
             line = (yield from self.bound.stderr.readline()).decode("ascii")
         proxy = yield from getDevice("boundDevice")
-        self.assertEqual(proxy.a, 55,
+        self.assertEqual(proxy.a, 22.5,
                          "didn't receive initial value from bound device")
 
         self.assertIs(type(proxy).a.unitSymbol, Unit.AMPERE)
@@ -39,17 +39,22 @@ class Tests(TestCase):
         self.assertIs(type(proxy).a.assignment, Assignment.OPTIONAL)
         self.assertEqual(type(proxy).a.displayedName, "parameter a")
         self.assertEqual(type(proxy).a.description, "a's description")
-        self.assertEqual(type(proxy).a.defaultValue, 55)
+        self.assertEqual(type(proxy).a.defaultValue, 22.5)
+        self.assertEqual(type(proxy).a.minExc, 22)
+        self.assertEqual(type(proxy).a.maxExc, 33)
+        self.assertEqual(type(proxy).a.minInc, 11)
+        self.assertEqual(type(proxy).a.maxInc, 23)
+        self.assertEqual(type(proxy).a.allowedStates, ["some", "thing"])
 
         with proxy:
             yield from proxy.setA()
-            self.assertEqual(proxy.a, 33,
+            self.assertEqual(proxy.a, 22.7,
                              "didn't receive change from bound device")
-            proxy.a = 77
-            self.assertEqual(proxy.a, 33,
+            proxy.a = 22.8
+            self.assertEqual(proxy.a, 22.7,
                              "proxy should set value on device, not own value")
             yield from waitUntilNew(proxy).a
-            self.assertEqual(proxy.a, 77,
+            self.assertEqual(proxy.a, 22.8,
                              "didn't receive change from bound device")
 
         yield from proxy.backfire()
