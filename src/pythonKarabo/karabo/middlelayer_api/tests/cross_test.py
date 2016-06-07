@@ -59,11 +59,15 @@ class Tests(TestCase):
                                    stderr=PIPE))
 
     def tearDown(self):
-        os.chdir(self.__starting_dir)
         if self.bound.returncode is None:
             self.bound.kill()
             self.loop.run_until_complete(self.bound.wait())
         self.loop.close()
+        try:
+            os.remove("karabo.log")
+        except FileNotFoundError:
+            pass  # never mind
+        os.chdir(self.__starting_dir)
 
     def test_cross(self):
         md = MiddlelayerDevice(dict(_deviceId_="middlelayerDevice"))
