@@ -51,6 +51,11 @@ class Tests(TestCase):
             yield from proxy.setA()
             self.assertEqual(proxy.a, 22.7 * unit.milliampere,
                              "didn't receive change from bound device")
+            self.assertEqual(repr(proxy.a.timestamp),
+                             "2009-09-01T13:55:22 UTC")
+            self.assertEqual(proxy.node.b, 100 * unit.kilometer)
+            self.assertEqual(repr(proxy.node.b.timestamp),
+                             "2016-06-17T13:55:22 UTC")
             with self.assertRaises(ValueError):
                 proxy.a = 77
             proxy.a = 22.8
