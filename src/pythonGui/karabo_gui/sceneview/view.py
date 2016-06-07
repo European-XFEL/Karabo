@@ -13,7 +13,8 @@ from karabo_gui.scenemodel.api import (LabelModel, LineModel, RectangleModel,
                                        read_scene, SCENE_MIN_WIDTH,
                                        SCENE_MIN_HEIGHT)
 from .layouts import BaseLayout
-from .shapes import Label, LineShape, RectangleShape
+from .shapes import LineShape, RectangleShape
+from .widgets import LabelWidget
 
 
 class SceneView(QWidget):
@@ -55,8 +56,8 @@ class SceneView(QWidget):
                 obj = RectangleShape(child)
                 self.layout.add_shape(obj)
             if isinstance(child, LabelModel):
-                obj = Label(child)
-                self.layout.add_shape(obj)
+                obj = LabelWidget(child, self)
+                self.layout.add_widget(obj)
 
     def paintEvent(self, event):
         """ Show view content.

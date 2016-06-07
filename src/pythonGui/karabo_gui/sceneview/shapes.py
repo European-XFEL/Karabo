@@ -5,7 +5,7 @@
 #############################################################################
 
 from PyQt4.QtCore import QLine, QRect, Qt
-from PyQt4.QtGui import QBrush, QLabel, QPen
+from PyQt4.QtGui import QBrush, QColor, QLabel, QPen
 
 
 class BaseShape(object):
@@ -25,8 +25,34 @@ class BaseShape(object):
         self.set_pen(model)
 
     def set_pen(self, model):
-        # TODO: get pen data of model
-        pass
+        pen = QPen()
+        if model.stroke == "none" or model.stroke_width == 0:
+            pen.setStyle(Qt.NoPen)
+        else:
+            c = QColor(model.stroke)
+            c.setAlphaF(model.stroke_opacity)
+            pen.setColor(c)
+            pen.setCapStyle(dict(
+                butt=Qt.FlatCap, square=Qt.SquareCap, round=Qt.RoundCap)
+                [model.stroke_linecap])
+            pen.setWidthF(model.stroke_width)
+            pen.setDashOffset(model.stroke_dashoffset)
+
+            if model.stroke_dasharray:
+                pen.setDashPattern(model.stroke_dasharray)
+
+            pen.setStyle(model.stroke_style)
+            pen.setJoinStyle(dict(miter=Qt.SvgMiterJoin, round=Qt.RoundJoin,
+                             bevel=Qt.BevelJoin)[model.stroke_linejoin])
+            pen.setMiterLimit(model.stroke_miterlimit)
+        self.pen = pen
+
+        if model.fill == "none":
+            self.brush = QBrush()
+        else:
+            color = QColor(model.fill)
+            color.setAlphaF(model.fill_opacity)
+            self.brush = QBrush(color)
 
     def draw(self, painter):
         if self.selected:
@@ -39,13 +65,14 @@ class BaseShape(object):
             painter.drawRect(self.geometry())
 
 
-class Label(BaseShape):
+class LabelShape(BaseShape):
     """ A label which can appear in a scene
     """
 
-    def __init__(self, model):
-        super(Label, self).__init__(model)
-        self.shape = QLabel(model.text)
+    def __init__(self, model, parent):
+        super(LabelShape, self).__init__(model)
+        self.shape = QLabel(model.text, parent)
+        self.shape.setGeometry(model.x, model.y, model.width, model.height)
 
 
 class LineShape(BaseShape):
