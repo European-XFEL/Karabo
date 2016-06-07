@@ -229,9 +229,9 @@ class Descriptor(object):
     key = "(unknown key)"
 
     def __init__(self, strict=True, **kwargs):
-        """create a new descriptor with appropriate attributes
+        """Create a new descriptor with appropriate attributes
 
-        The attributes are given as keywords argument. If we define
+        The attributes are given as keyword arguments. If we define
         those in our code, we assume that all attributes are correctly
         given, or raise an error. If we are parsing a schema that came
         over the network, we are more sloppy and silently discard
