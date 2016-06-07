@@ -1,10 +1,10 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Int, String
+from traits.api import Float, String
 
 from .bases import BaseShapeObjectData
 from .const import NS_SVG
-from .io_utils import get_integers, set_integers
+from .io_utils import get_numbers, set_numbers
 from .registry import register_scene_reader, register_scene_writer
 
 
@@ -12,13 +12,13 @@ class LineModel(BaseShapeObjectData):
     """ A line which can appear in a scene
     """
     # The X-coordinate of the first point
-    x1 = Int
+    x1 = Float
     # The Y-coordinate of the first point
-    y1 = Int
+    y1 = Float
     # The X-coordinate of the second point
-    x2 = Int
+    x2 = Float
     # The Y-coordinate of the second point
-    y2 = Int
+    y2 = Float
 
 
 class PathModel(BaseShapeObjectData):
@@ -32,13 +32,13 @@ class RectangleModel(BaseShapeObjectData):
     """ A rectangle which can appear in a scene
     """
     # The X-coordinate of the rect
-    x = Int
+    x = Float
     # The Y-coordinate of the rect
-    y = Int
+    y = Float
     # The height of the rect
-    height = Int
+    height = Float
     # The width of the rect
-    width = Int
+    width = Float
 
 
 def _convert_measurement(measure):
@@ -112,7 +112,7 @@ def __line_reader(read_func, element):
     """ A reader for Line objects in Version 1 scenes
     """
     traits = _read_base_shape_data(element)
-    traits.update(get_integers(('x1', 'y1', 'x2', 'y2'), element))
+    traits.update(get_numbers(('x1', 'y1', 'x2', 'y2'), element))
     return LineModel(**traits)
 
 
@@ -122,7 +122,7 @@ def __line_writer(write_func, model, parent):
     """
     element = SubElement(parent, NS_SVG + 'line')
     _write_base_shape_data(model, element)
-    set_integers(('x1', 'y1', 'x2', 'y2'), model, element)
+    set_numbers(('x1', 'y1', 'x2', 'y2'), model, element)
     return element
 
 
@@ -150,7 +150,7 @@ def __rectangle_reader(read_func, element):
     """ A reader for Rectangle objects in Version 1 scenes
     """
     traits = _read_base_shape_data(element)
-    traits.update(get_integers(('x', 'y', 'width', 'height'), element))
+    traits.update(get_numbers(('x', 'y', 'width', 'height'), element))
     return RectangleModel(**traits)
 
 
@@ -160,5 +160,5 @@ def __rectangle_writer(write_func, model, parent):
     """
     element = SubElement(parent, NS_SVG + 'rect')
     _write_base_shape_data(model, element)
-    set_integers(('x', 'y', 'width', 'height'), model, element)
+    set_numbers(('x', 'y', 'width', 'height'), model, element)
     return element

@@ -5,17 +5,18 @@ from traits.api import Enum, Float, Instance, Int
 
 from .bases import BaseLayoutData, BaseLayoutModel, BaseSceneObjectData
 from .const import NS_KARABO, NS_SVG
+from .io_utils import set_numbers
 from .registry import register_scene_reader, register_scene_writer
 
 FIXED_LAYOUT_TAG = NS_SVG + 'g'
 FIXED_DATA_NAMES = ('x', 'y', 'height', 'width')
 GRID_DATA_NAMES = ('col', 'colspan', 'row', 'rowspan')
-LAYOUT_ATTRIBUTES = {
-    'x': NS_KARABO + 'x',
-    'y': NS_KARABO + 'y',
-    'height': NS_KARABO + 'height',
-    'width': NS_KARABO + 'width',
-}
+LAYOUT_ATTRIBUTES = (
+    ('x', NS_KARABO + 'x'),
+    ('y', NS_KARABO + 'y'),
+    ('height', NS_KARABO + 'height'),
+    ('width', NS_KARABO + 'width'),
+)
 
 
 class BoxLayoutModel(BaseLayoutModel):
@@ -61,8 +62,8 @@ class GridLayoutChildData(BaseLayoutData):
 def _read_standard_layout_attributes(element):
     """ Read standard layout attributes off of an element.
     """
-    return {objname: int(element.get(xmlname))
-            for objname, xmlname in LAYOUT_ATTRIBUTES.items()
+    return {objname: float(element.get(xmlname))
+            for objname, xmlname in LAYOUT_ATTRIBUTES
             if element.get(xmlname) is not None}
 
 
@@ -70,8 +71,8 @@ def _write_standard_layout_attributes(element, layout, layout_class_name):
     """ Write the standard layout attributes to an element.
     """
     element.set(NS_KARABO + 'class', layout_class_name)
-    for objname, xmlname in LAYOUT_ATTRIBUTES.items():
-        element.set(xmlname, str(int(getattr(layout, objname))))
+    modelnames, xmlnames = zip(*LAYOUT_ATTRIBUTES)
+    set_numbers(modelnames, layout, element, xmlnames=xmlnames)
 
 
 def _read_fixed_layout_data(element):
