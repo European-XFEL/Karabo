@@ -1,9 +1,9 @@
 """This tests the communication between bound API and middlelayer API"""
 
-from asyncio import coroutine, sleep, wait_for
+from asyncio import coroutine, create_subprocess_exec, sleep, wait_for
 import os
 import os.path
-from subprocess import Popen
+from subprocess import PIPE
 import sys
 from unittest import TestCase, main
 
@@ -25,7 +25,9 @@ class Tests(TestCase):
     @coroutine
     def connect(self, device):
         # it takes typically 2 s for the bound device to start
-        yield from sleep(3)
+        line = ""
+        while "got started" not in line:
+            line = (yield from self.bound.stderr.readline()).decode("ascii")
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 55,
                          "didn't receive initial value from bound device")
@@ -45,27 +47,29 @@ class Tests(TestCase):
         self.assertTrue(device.marker)
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
-        self.bound.wait(10)
+        yield from wait_for(self.bound.wait(), 10)
 
     def setUp(self):
         self.__starting_dir = os.curdir
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
-        self.bound = Popen([sys.executable, "bounddevice.py"])
+        self.loop = setEventLoop()
+        self.bound = self.loop.run_until_complete(
+            create_subprocess_exec(sys.executable, "bounddevice.py",
+                                   stderr=PIPE))
 
     def tearDown(self):
         os.chdir(self.__starting_dir)
         if self.bound.returncode is None:
             self.bound.kill()
-            self.bound.wait()
+            self.loop.run_until_complete(self.bound.wait())
+        self.loop.close()
 
     def test_cross(self):
-        loop = setEventLoop()
         md = MiddlelayerDevice(dict(_deviceId_="middlelayerDevice"))
         md.startInstance()
-        loop.run_until_complete(wait_for(
-            loop.create_task(self.connect(md), md),
+        self.loop.run_until_complete(wait_for(
+            self.loop.create_task(self.connect(md), md),
             15))
-        loop.close()
 
 
 if __name__ == "__main__":
