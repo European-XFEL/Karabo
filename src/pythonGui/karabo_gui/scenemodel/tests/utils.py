@@ -29,18 +29,18 @@ def xml_is_equal(xmlstr0, xmlstr1):
         for k, v in el0.items():
             attr = el1.get(k)
             if attr is None or v != attr:
-                return False
+                return False  # pragma: no cover
 
         return True
 
     def compare_tree(elem0, elem1):
         for child0, child1 in zip(list(elem0), list(elem1)):
             if child0.tag != child1.tag:
-                return False
+                return False  # pragma: no cover
             if not compare_attrs(child0, child1):
-                return False
+                return False  # pragma: no cover
             if not compare_tree(child0, child1):
-                return False
+                return False  # pragma: no cover
         return True
 
     return compare_attrs(root0, root1) and compare_tree(root0, root1)
