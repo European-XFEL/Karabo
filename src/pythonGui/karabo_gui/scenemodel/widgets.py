@@ -6,7 +6,7 @@ from traits.api import (HasTraits, Bool, Dict, Enum, Float, Instance, Int,
 from .bases import BaseWidgetObjectData
 from .const import NS_KARABO, NS_SVG
 from .exceptions import SceneWriterException
-from .io_utils import get_integers, set_integers
+from .io_utils import get_numbers, set_numbers
 from .registry import register_scene_reader, register_scene_writer
 
 VACUUM_WIDGETS = (
@@ -242,7 +242,7 @@ class XYPlotModel(BaseWidgetObjectData):
 def _read_base_widget_data(element):
     """ Read the attributes common to all "widget" elements
     """
-    traits = get_integers(('x', 'y', 'width', 'height'), element)
+    traits = get_numbers(('x', 'y', 'width', 'height'), element)
     traits['parent_component'] = element.get(NS_KARABO + 'class')
     keys = element.get(NS_KARABO + 'keys', '')
     if len(keys) > 0:
@@ -284,7 +284,7 @@ def _write_base_widget_data(model, element, widget_class_name):
     element.set(NS_KARABO + 'class', model.parent_component)
     element.set(NS_KARABO + 'widget', widget_class_name)
     element.set(NS_KARABO + 'keys', ",".join(model.keys))
-    set_integers(('x', 'y', 'width', 'height'), model, element)
+    set_numbers(('x', 'y', 'width', 'height'), model, element)
 
 
 def _write_icon_elements(icons, parent, tag):
