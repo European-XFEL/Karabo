@@ -563,61 +563,47 @@ namespace karabo {
 
 
         bool JmsBrokerChannel::signalIncomingBinaryMessage(const bool withHeader) {
-            const std::string failureMsg = " exception was caught while reading binary message from JMS broker";
-            try {
+            MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
+            MQStatus status = consumeMessage(messageHandle, 2000);
 
-                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
-                MQStatus status = consumeMessage(messageHandle, 2000);
+            if (!MQStatusIsError(status) && !m_isStopped) {
 
-                if (!MQStatusIsError(status) && !m_isStopped) {
-
-                    if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
-                        MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionConsumerHandle, messageHandle));
-                    }
-
-                    // Allow registration of another handler
-                    if (!m_ioService->isWorking()) m_hasAsyncHandler = false;
-
-                    MQMessageType messageType;
-                    MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
-                    if (messageType == MQ_BYTES_MESSAGE) {
-                        // Body
-                        int nBytes;
-                        const MQInt8* bytes;
-                        MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
-
-
-                        if (withHeader) {
-                            Hash::Pointer header(new Hash());
-                            parseHeader(messageHandle, *header);
-                            if (header->has("__compression__")) {
-                                std::vector<char> tmp;
-                                decompress(*header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes), tmp);
-                                m_readHashRawHandler(shared_from_this(), header, &tmp[0], tmp.size());
-                            } else {
-                                m_readHashRawHandler(shared_from_this(), header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
-                            }
-                        } else {
-                            m_readRawHandler(shared_from_this(), reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
-                        }
-
-                        MQ_SAFE_CALL(MQFreeMessage(messageHandle));
-
-                    } else {
-                        // Give an error if unexpected message types are going round the broker
-                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (expecting bytes)");
-                    }
-                    return true;
+                if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
+                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionConsumerHandle, messageHandle));
                 }
-            } catch (const Exception& e) {
-                m_signalError(shared_from_this(), "An" + failureMsg + ":\n" + e.userFriendlyMsg());
-                return true; // received a bad message (or ran a bad handler...)
-            } catch (const std::exception& e) {
-                m_signalError(shared_from_this(), "A standard" + (failureMsg + ": ") += e.what());
-                return true; // received a bad message (or ran a bad handler...)
-            } catch (...) {
-                m_signalError(shared_from_this(), "An unknown" + failureMsg + ".");
-                return true; // received a bad message (or ran a bad handler...)
+
+                // Allow registration of another handler
+                if (!m_ioService->isWorking()) m_hasAsyncHandler = false;
+
+                MQMessageType messageType;
+                MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
+                if (messageType == MQ_BYTES_MESSAGE) {
+                    // Body
+                    int nBytes;
+                    const MQInt8* bytes;
+                    MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
+
+                    if (withHeader) {
+                        Hash::Pointer header(new Hash());
+                        parseHeader(messageHandle, *header);
+                        if (header->has("__compression__")) {
+                            std::vector<char> tmp;
+                            decompress(*header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes), tmp);
+                            m_readHashRawHandler(shared_from_this(), header, &tmp[0], tmp.size());
+                        } else {
+                            m_readHashRawHandler(shared_from_this(), header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                        }
+                    } else {
+                        m_readRawHandler(shared_from_this(), reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                    }
+
+                    MQ_SAFE_CALL(MQFreeMessage(messageHandle));
+
+                } else {
+                    // Give an error if unexpected message types are going round the broker
+                    throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (expecting bytes)");
+                }
+                return true;
             }
             return false;
         }
@@ -645,58 +631,45 @@ namespace karabo {
 
 
         bool JmsBrokerChannel::signalIncomingTextMessage(const bool withHeader) {
-            const std::string failureMsg = " exception was caught while reading text message from JMS broker";
-            try {
+            MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
 
-                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
+            MQStatus status = consumeMessage(messageHandle, 2000);
 
-                MQStatus status = consumeMessage(messageHandle, 2000);
-
-                if (!MQStatusIsError(status) && !m_isStopped) {
-                    if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
-                        MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionConsumerHandle, messageHandle));
-                    }
-
-                    // Allow registration of another handler
-                    if (!m_ioService->isWorking()) m_hasAsyncHandler = false;
-
-                    MQMessageType messageType;
-                    MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
-
-                    if (messageType == MQ_TEXT_MESSAGE) {
-                        ConstMQString msgBody;
-                        MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody));
-                        if (withHeader) {
-                            Hash::Pointer header(new Hash());
-                            parseHeader(messageHandle, *header);
-                            if (header->has("__compression__")) {
-                                std::string tmp;
-                                decompress(*header, reinterpret_cast<const char*> (msgBody), strlen(msgBody), tmp);
-                                m_readHashStringHandler(shared_from_this(), header, tmp);
-                            } else {
-                                m_readHashStringHandler(shared_from_this(), header, string(msgBody));
-                            }
-                        } else {
-                            m_readStringHandler(shared_from_this(), string(msgBody));
-                        }
-
-                        MQ_SAFE_CALL(MQFreeMessage(messageHandle));
-                    } else {
-                        // Give an error if unexpected message types are going round the broker
-                        // TODO call back error function
-                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (expecting text)");
-                    }
-                    return true;
+            if (!MQStatusIsError(status) && !m_isStopped) {
+                if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
+                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionConsumerHandle, messageHandle));
                 }
-            } catch (const Exception& e) {
-                m_signalError(shared_from_this(), "An" + failureMsg + ":\n" + e.userFriendlyMsg());
-                return true; // received a bad message (or ran a bad handler...)
-            } catch (const std::exception& e) {
-                m_signalError(shared_from_this(), "A standard" + (failureMsg + ": " )+ e.what());
-                return true; // received a bad message (or ran a bad handler...)
-            } catch (...) {
-                m_signalError(shared_from_this(), "An unknown" + failureMsg + ".");
-                return true; // received a bad message (or ran a bad handler...)
+
+                // Allow registration of another handler
+                if (!m_ioService->isWorking()) m_hasAsyncHandler = false;
+
+                MQMessageType messageType;
+                MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
+
+                if (messageType == MQ_TEXT_MESSAGE) {
+                    ConstMQString msgBody;
+                    MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody));
+                    if (withHeader) {
+                        Hash::Pointer header(new Hash());
+                        parseHeader(messageHandle, *header);
+                        if (header->has("__compression__")) {
+                            std::string tmp;
+                            decompress(*header, reinterpret_cast<const char*> (msgBody), strlen(msgBody), tmp);
+                            m_readHashStringHandler(shared_from_this(), header, tmp);
+                        } else {
+                            m_readHashStringHandler(shared_from_this(), header, string(msgBody));
+                        }
+                    } else {
+                        m_readStringHandler(shared_from_this(), string(msgBody));
+                    }
+
+                    MQ_SAFE_CALL(MQFreeMessage(messageHandle));
+                } else {
+                    // Give an error if unexpected message types are going round the broker
+                    // TODO call back error function
+                    throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (expecting text)");
+                }
+                return true;
             }
             return false;
         }
@@ -724,81 +697,68 @@ namespace karabo {
 
 
         bool JmsBrokerChannel::signalIncomingHashMessage(const bool withHeader) {
-            const std::string failureMsg = " exception was caught while reading hash message from JMS broker";
-            try {
+            MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
+            MQStatus status = consumeMessage(messageHandle, 2000);
 
-                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
-                MQStatus status = consumeMessage(messageHandle, 2000);
+            if (!MQStatusIsError(status) && !m_isStopped) {
 
-                if (!MQStatusIsError(status) && !m_isStopped) {
+                if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
+                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionConsumerHandle, messageHandle));
+                }
 
-                    if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
-                        MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionConsumerHandle, messageHandle));
-                    }
+                // Allow registration of another handler
+                if (!m_ioService->isWorking()) m_hasAsyncHandler = false;
 
-                    // Allow registration of another handler
-                    if (!m_ioService->isWorking()) m_hasAsyncHandler = false;
+                MQMessageType messageType;
+                MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
 
-                    MQMessageType messageType;
-                    MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
+                Hash::Pointer body(new Hash());
 
-                    Hash::Pointer body(new Hash());
-
-                    if (messageType == MQ_BYTES_MESSAGE) {
-                        int nBytes;
-                        const MQInt8* bytes;
-                        MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
-                        if (withHeader) {
-                            Hash::Pointer header(new Hash());
-                            parseHeader(messageHandle, *header);
-                            if (header->has("__compression__")) {
-                                std::vector<char> tmp;
-                                decompress(*header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes), tmp);
-                                m_binarySerializer->load(*body, tmp);
-                            } else {
-                                m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
-                            }
-                            m_readHashHashHandler(shared_from_this(), header, body);
+                if (messageType == MQ_BYTES_MESSAGE) {
+                    int nBytes;
+                    const MQInt8* bytes;
+                    MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
+                    if (withHeader) {
+                        Hash::Pointer header(new Hash());
+                        parseHeader(messageHandle, *header);
+                        if (header->has("__compression__")) {
+                            std::vector<char> tmp;
+                            decompress(*header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes), tmp);
+                            m_binarySerializer->load(*body, tmp);
                         } else {
                             m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
-                            m_readHashHandler(shared_from_this(), body);
                         }
-                    } else if (messageType == MQ_TEXT_MESSAGE) {
-                        ConstMQString msgBody;
-                        MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody));
-                        if (withHeader) {
-                            Hash::Pointer header(new Hash());
-                            parseHeader(messageHandle, *header);
-                            if (header->has("__compression__")) {
-                                std::string tmp;
-                                decompress(*header, reinterpret_cast<const char*> (msgBody), strlen(msgBody), tmp);
-                                m_textSerializer->load(*body, tmp);
-                            } else {
-                                m_textSerializer->load(*body, msgBody);
-                            }
-                            m_readHashHashHandler(shared_from_this(), header, body);
+                        m_readHashHashHandler(shared_from_this(), header, body);
+                    } else {
+                        m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                        m_readHashHandler(shared_from_this(), body);
+                    }
+                } else if (messageType == MQ_TEXT_MESSAGE) {
+                    ConstMQString msgBody;
+                    MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody));
+                    if (withHeader) {
+                        Hash::Pointer header(new Hash());
+                        parseHeader(messageHandle, *header);
+                        if (header->has("__compression__")) {
+                            std::string tmp;
+                            decompress(*header, reinterpret_cast<const char*> (msgBody), strlen(msgBody), tmp);
+                            m_textSerializer->load(*body, tmp);
                         } else {
                             m_textSerializer->load(*body, msgBody);
-                            m_readHashHandler(shared_from_this(), body);
                         }
+                        m_readHashHashHandler(shared_from_this(), header, body);
                     } else {
-                        // Give an error if unexpected message types are going round the broker
-                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type");
+                        m_textSerializer->load(*body, msgBody);
+                        m_readHashHandler(shared_from_this(), body);
                     }
-
-                    MQ_SAFE_CALL(MQFreeMessage(messageHandle));
-
-                    return true;
+                } else {
+                    // Give an error if unexpected message types are going round the broker
+                    throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type");
                 }
-            } catch (const Exception& e) {
-                m_signalError(shared_from_this(), "An" + failureMsg + ":\n" + e.userFriendlyMsg());
-                return true; // received a bad message (or ran a bad handler...)
-            } catch (const std::exception& e) {
-                m_signalError(shared_from_this(), "A standard" + (failureMsg + ": " )+ e.what());
-                return true; // received a bad message (or ran a bad handler...)
-            } catch (...) {
-                m_signalError(shared_from_this(), "An unknown" + failureMsg + ".");
-                return true; // received a bad message (or ran a bad handler...)
+
+                MQ_SAFE_CALL(MQFreeMessage(messageHandle));
+
+                return true;
             }
             return false;
         }
@@ -870,7 +830,7 @@ namespace karabo {
             m_consumerActive = true;
 
             while (true) {
-                const char* failureMsg = " exception during JMS broker message reception occurred (continue listening)";
+                std::string failureMsg(" exception occurred during JMS broker message reception (continue listening)");
                 try {
                     bool messageReceived = false;
                     do {
@@ -878,11 +838,30 @@ namespace karabo {
                     } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
                     break; // exited message receiving normally
                 } catch (const Exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "An" << failureMsg << ":\n" << e;
+                    failureMsg = "An" + failureMsg + ":\n" + e.detailedMsg();
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "A standard" << failureMsg << ": " << e.what();
+                    failureMsg = "A standard" + (failureMsg + ": ") + e.what();
                 } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown" << failureMsg << ".";
+                    failureMsg = "An unknown" + failureMsg + ".";
+                }
+
+                std::string newFailureMsg(" exception occurred while calling error handler");
+                bool caught = true;
+                try {
+                    KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
+                    // Both, shared_from_this() and registered handlers, could throw. But we really, really must not
+                    // stop listening, otherwise a deaf zombie device could be created.
+                    m_signalError(shared_from_this(), failureMsg);
+                    caught = false;
+                } catch (const Exception& e) {
+                    newFailureMsg = "An" + (newFailureMsg + ":\n") += e.detailedMsg();
+                } catch (const std::exception& e) {
+                    newFailureMsg = "A standard" + (newFailureMsg + ":\n") += e.what();
+                } catch (...) {
+                    newFailureMsg = "An unknown" + newFailureMsg + ".";
+                }
+                if (caught) {
+                    KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
                 }
             }
 
