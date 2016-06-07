@@ -96,15 +96,19 @@ void JmsBroker_Test::testMethod() {
     CPPUNIT_ASSERT(m_messagesRead == 1);
     CPPUNIT_ASSERT(m_errorsLogged == 0);
 
+    // Now test that the error handler is called if a problem arises
+
     // register again
     channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
 
-    // no write a malformed message to trigger an error
+    // now write a malformed message to trigger an error
     channel->write(validHeader, Hash("Wrongly formatted message:", "message body is hash"));
+    // and immediately a valid one - otherwise the ioService in 'run' mode would continue to wait for a valid message
+    channel->write(validHeader, "Random message body");
 
     ioService->run();
 
-    CPPUNIT_ASSERT(m_messagesRead == 1); // broker channel bailed out before calling our handler
+    CPPUNIT_ASSERT(m_messagesRead == 2); // the bad message bailed out before calling readHandler1
     CPPUNIT_ASSERT(m_errorsLogged == 1);
 }
 
