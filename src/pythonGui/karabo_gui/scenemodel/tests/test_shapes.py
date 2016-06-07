@@ -59,7 +59,7 @@ def test_rectangle_model():
     assert read_model.height == 10
 
 
-def test_unitted_style_measurements():
+def test_style_attributes_with_units():
     SCENE_SVG = (
         """<svg xmlns:krb="http://karabo.eu/scene" xmlns:svg="http://www.w3.org/2000/svg" height="768" krb:version="1" width="1024">"""  # noqa
         """<svg:line stroke="#000000" stroke-dashoffset="0.1in" stroke-width="1.0cm" x1="397" x2="489" y1="84" y2="396" />"""  # noqa
