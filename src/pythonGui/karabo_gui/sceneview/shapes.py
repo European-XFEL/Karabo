@@ -54,6 +54,11 @@ class BaseShape(object):
             color.setAlphaF(model.fill_opacity)
             self.brush = QBrush(color)
 
+    def geometry(self):
+        """ Needs to be reimplemented in the inherited classes to get the
+            geometry for the bounding rectangle.
+        """
+
     def draw(self, painter):
         if self.selected:
             black = QPen(Qt.black)
@@ -73,6 +78,9 @@ class LineShape(BaseShape):
         super(LineShape, self).__init__(model)
         self.shape = QLine(model.x1, model.y1, model.x2, model.y2)
 
+    def geometry(self):
+        return QRect(self.shape.p1(), self.shape.p2())
+
     def draw(self, painter):
         """ The line gets drawn.
         """
@@ -88,6 +96,9 @@ class RectangleShape(BaseShape):
     def __init__(self, model):
         super(RectangleShape, self).__init__(model)
         self.shape = QRect(model.x, model.y, model.width, model.height)
+
+    def geometry(self):
+        return self.shape
 
     def draw(self, painter):
         """ The rectangle gets drawn.
