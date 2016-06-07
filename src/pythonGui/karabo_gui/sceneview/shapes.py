@@ -8,12 +8,12 @@ from PyQt4.QtCore import QLine, QRect, Qt
 from PyQt4.QtGui import QBrush, QLabel, QPen
 
 
-class Shape(object):
+class BaseShape(object):
     """ A shape base class
     """
 
     def __init__(self, model):
-        super(Shape, self).__init__()
+        super(BaseShape, self).__init__()
 
         self.pen = QPen()
         self.pen.setWidth(1)
@@ -39,7 +39,7 @@ class Shape(object):
             painter.drawRect(self.geometry())
 
 
-class Label(Shape):
+class Label(BaseShape):
     """ A label which can appear in a scene
     """
 
@@ -48,12 +48,12 @@ class Label(Shape):
         self.shape = QLabel(model.text)
 
 
-class Line(Shape):
+class LineShape(BaseShape):
     """ A line which can appear in a scene
     """
 
     def __init__(self, model):
-        super(Line, self).__init__(model)
+        super(LineShape, self).__init__(model)
         self.shape = QLine(model.x1, model.y1, model.x2, model.y2)
 
     def draw(self, painter):
@@ -61,21 +61,21 @@ class Line(Shape):
         """
         painter.setPen(self.pen)
         painter.drawLine(self.shape)
-        Shape.draw(self, painter)
+        super(LineShape, self).draw(self, painter)
 
 
-class Rectangle(Shape):
+class RectangleShape(BaseShape):
     """ A rectangle which can appear in a scene
     """
 
     def __init__(self, model):
-        super(Rectangle, self).__init__(model)
+        super(RectangleShape, self).__init__(model)
         self.shape = QRect(model.x, model.y, model.width, model.height)
 
     def draw(self, painter):
-        """ The line gets drawn.
+        """ The rectangle gets drawn.
         """
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawRect(self.shape)
-        Shape.draw(self, painter)
+        super(RectangleShape, self).draw(self, painter)
