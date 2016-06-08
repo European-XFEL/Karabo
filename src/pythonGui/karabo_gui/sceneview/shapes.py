@@ -111,6 +111,7 @@ class RectangleShape(BaseShape):
         painter.drawRect(self.shape)
         super(RectangleShape, self).draw(painter)
 
+
 class PathShape(BaseShape):
     """ A path which can appear in a scene
     """
