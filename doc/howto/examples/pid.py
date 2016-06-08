@@ -109,7 +109,7 @@ class PID(Device):
             command_name, command_slot = self.command.split(".", 2)
             assert command_name == control_name
         except:
-            self.log.exception("A remote device property seems to be wrong")
+            self.logger.exception("A remote device property seems to be wrong")
             raise
 
         with locked(getDevice(control_name)) as control_device, \
