@@ -73,7 +73,7 @@ class PID(Device):
         assignment=Assignment.MANDATORY,
         displayType="remoteSlot")
 
-    @Slot(displayedName="Start Controlling"
+    @Slot(displayedName="Start Controlling",
           allowedStates=[State.NORMAL])
     def start(self):
         """Start controlling the process"""
@@ -81,8 +81,8 @@ class PID(Device):
         self.background = background(self.runner, callback=None)
 
     @Slot(displayedName="Stop Controlling",
-          allowedStates=[State.NORMAL])
-    def stop(self, allowedStates=[State.RUNNING]):
+          allowedStates=[State.RUNNING])
+    def stop(self):
         """Stop controlling the process"""
         self.state = State.NORMAL
         self.background.cancel()
