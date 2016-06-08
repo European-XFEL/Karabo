@@ -71,13 +71,13 @@ class Scan(Device):
             else:
                 command_slot = None
             sensor_name, sensor_slot = self.sensor.split(".", 2)
-        except:
+        except ValueError:
             self.logger.exception("A remote device property seems to be wrong")
             raise
 
         try:
             self.start_pos, self.stop_pos, self.steps
-        except:
+        except NameError:
             self.logger.exception(
                 "start, stop and steps must be set before running")
             raise
