@@ -519,24 +519,7 @@ namespace karabo {
             }
             ifs.close();
             if (!tail.empty()) {
-                stringstream ss(tail);
-                unsigned long long dummy;
-                ss >> dummy;
-                // If seconds == dummy, we very likely have old format from 1.4.X where seconds and fractions
-                // follow as ULL after timestampAsDouble - then we have (as usual) train, position, user and index.
-                // In case by chance we have trainId == seconds, we double check that there is a space in front
-                // of each of the six words in the tail (sec, fraction, train, position, user, index):
-                if (entry.m_epoch.getSeconds() == dummy && std::count(tail.begin(), tail.end(), ' ') == 6) {
-                        ss >> dummy; // get rid of fractions
-                } else {
-                    if (entry.m_epoch.getSeconds() == dummy) {
-                        KARABO_LOG_FRAMEWORK_WARN << "findLoggerIndexTimepoint: Value after timestamp as double "
-                                << "equals full seconds (" << dummy << "), i.e. looks like 1.4.X format, but tail of line '"
-                                << tail << "' does not have six words with a space in front of each.";
-                    }
-                    entry.m_train = dummy;
-                }
-                ss >> entry.m_position >> entry.m_user >> entry.m_fileindex;
+                this->extractTailOfArchiveIndex(tail, entry);
             }
 
             KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint - entry: " << entry.m_event << " "
@@ -578,24 +561,7 @@ namespace karabo {
                     }
                     nearest.m_event = event;
                     nearest.m_epoch = epochstamp;
-                    stringstream ss(line);
-                    unsigned long long dummy;
-                    ss >> dummy;
-                    // If seconds == dummy, we very likely have old format from 1.4.X where seconds and fractions
-                    // follow as ULL after timestampAsDouble - then we have (as usual) train, position, user and index.
-                    // In case by chance we have trainId == seconds, we double check that there is a space in front
-                    // of each of the six words in the tail (sec, fraction, train, position, user, index):
-                    if (epochstamp.getSeconds() == dummy && std::count(line.begin(), line.end(), ' ') == 6) {
-                        ss >> dummy; // get rid of fractions
-                    } else {
-                        if (epochstamp.getSeconds() == dummy) {
-                            KARABO_LOG_FRAMEWORK_WARN << "findNearestLoggerIndex: Value after timestamp as double "
-                                        << "equals full seconds (" << dummy << "), i.e. looks like 1.4.X format, but tail of "
-                                        << "line '" << line << "' does not have six words with spaces in front of each.";
-                        }
-                        nearest.m_train = dummy;
-                    }
-                    ss >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
+                    this->extractTailOfArchiveIndex(line, nearest);
                 }
                 // Stop loop if greater than target time point or we search the first after the target and got it.
                 if (epochstamp > target && (before || gotAfter)) break;
@@ -795,6 +761,26 @@ namespace karabo {
 
             // No epoch in record range matches 't' or is larger than it. Return end of range.
             return right;
+        }
+
+
+        void DataLogReader::extractTailOfArchiveIndex(const std::string& tail, DataLoggerIndex& entry) const {
+            stringstream ss(tail);
+            ss >> entry.m_train;
+            if (entry.m_epoch.getSeconds() == entry.m_train) {
+                // If seconds == train, we very likely have old format from 1.4.X where seconds and fractions
+                // follow as ULL after timestampAsDouble - then we have (as usual) train, position, user and index.
+                // In case by chance we have trainId == seconds, we double check that there is a space in front
+                // of each of the six words in the tail (sec, fraction, train, position, user, index):
+                if (std::count(tail.begin(), tail.end(), ' ') == 6) {
+                    ss >> entry.m_train >> entry.m_train; // get rid of fractions and fill train with real value
+                } else {
+                    KARABO_LOG_FRAMEWORK_WARN << "extractTailOfArchiveIndex: Value after timestamp as double equals "
+                            << "full seconds (" << entry.m_epoch.getSeconds() << "), i.e. looks like 1.4.X format, "
+                            << "but tail of line '" << tail << "' does not have six words with a space in front of each.";
+                }
+            }
+            ss >> entry.m_position >> entry.m_user >> entry.m_fileindex;
         }
     }
 
