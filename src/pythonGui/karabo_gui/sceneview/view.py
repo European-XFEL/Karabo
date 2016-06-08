@@ -10,13 +10,13 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QPalette, QPainter, QSizePolicy, QWidget
 
 from karabo_gui.scenemodel.api import (
-    BoxLayoutModel, GridLayoutModel, LabelModel, LineModel,
+    BoxLayoutModel, GridLayoutModel, LabelModel, LineModel, PathModel,
     RectangleModel, FixedLayoutModel, UnknownXMLDataModel, read_scene,
     SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
 )
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layouts import BoxLayout, GridLayout, GroupLayout
-from .shapes import LineShape, RectangleShape
+from .shapes import LineShape, PathShape, RectangleShape
 from .simple_widgets import LabelWidget, UnknownSvgWidget
 
 
@@ -38,6 +38,9 @@ def fill_root_layout(layout, parent_model, scene_widget):
             layout.add_shape(obj)
         if isinstance(child, RectangleModel):
             obj = RectangleShape(child)
+            layout.add_shape(obj)
+        if isinstance(child, PathModel):
+            obj = PathShape(child)
             layout.add_shape(obj)
         if isinstance(child, LabelModel):
             obj = LabelWidget(child, scene_widget)
@@ -81,6 +84,7 @@ class SceneView(QWidget):
         self.resize(max(self.scene_model.width, SCENE_MIN_WIDTH),
                     max(self.scene_model.height, SCENE_MIN_HEIGHT))
         fill_root_layout(self.layout, self.scene_model, self)
+
 
     def paintEvent(self, event):
         """ Show view content.
