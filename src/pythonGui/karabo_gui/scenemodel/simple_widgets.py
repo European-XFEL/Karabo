@@ -4,7 +4,7 @@ from traits.api import Enum, Int, String
 
 from .bases import BaseWidgetObjectData
 from .const import NS_KARABO, NS_SVG
-from .io_utils import get_integers, set_integers
+from .io_utils import get_numbers, set_numbers
 from .registry import register_scene_reader, register_scene_writer
 
 
@@ -44,14 +44,14 @@ class WorkflowItemModel(BaseWidgetObjectData):
 def _read_base_widget_data(element):
     """ Read the attributes common to all "widget" elements
     """
-    return get_integers(('x', 'y', 'width', 'height'), element)
+    return get_numbers(('x', 'y', 'width', 'height'), element)
 
 
 def _write_base_widget_data(model, element, widget_class_name):
     """ Write out the attributes common to all "widget" elements
     """
     element.set(NS_KARABO + 'class', widget_class_name)
-    set_integers(('x', 'y', 'width', 'height'), model, element)
+    set_numbers(('x', 'y', 'width', 'height'), model, element)
 
 
 @register_scene_reader('Label', version=1)

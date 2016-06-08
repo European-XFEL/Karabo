@@ -18,13 +18,13 @@ class BaseLayoutModel(BaseSceneObjectData):
     """ A common base class for all layouts
     """
     # The X-coordinate of the layout
-    x = Int
+    x = Float
     # The Y-coordinate of the layout
-    y = Int
+    y = Float
     # The height of the layout
-    height = Int
+    height = Float
     # The width of the layout
-    width = Int
+    width = Float
     # The children of the layout
     children = List(Instance(BaseSceneObjectData))
 
@@ -64,10 +64,10 @@ class BaseWidgetObjectData(BaseSceneObjectData):
     # The possible component type for a parent of the widget (can be empty)
     parent_component = String
     # The X-coordinate of the widget
-    x = Int
+    x = Float
     # The Y-coordinate of the widget
-    y = Int
+    y = Float
     # The height of the widget
-    height = Int
+    height = Float
     # The width of the widget
-    width = Int
+    width = Float
