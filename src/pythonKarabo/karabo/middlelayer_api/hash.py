@@ -51,11 +51,12 @@ class Enumable(object):
         else:
             raise TypeError("{} required here".format(self.enum))
 
-    def asHash(self, data):
-        if self.enum is None:
-            return self.cast(data)
+    def toHash(self, data):
+        h, attrs = super().toHash(data)
+        if self.enum is not None:
+            return data.value, attrs
         else:
-            return data.value
+            return h, attrs
 
     def toKaraboValue(self, data, strict=True):
         if not strict and not isinstance(data, self.enum):
@@ -308,8 +309,8 @@ class Slot(Descriptor):
         ret["displayType"] = "Slot"
         return ret
 
-    def asHash(self, other):
-        return Hash()
+    def toHash(self, value):
+        return Hash(), {}
 
     def cast(self, other):
         return Hash()
@@ -427,8 +428,14 @@ class Type(Descriptor, Registry):
     def toString(cls, data):
         return str(data)
 
-    def asHash(self, data):
-        return self.cast(data)
+    def toHash(self, data):
+        if not isinstance(data, basetypes.KaraboValue):
+            return self.cast(data), {}
+        if data.timestamp is not None:
+            attrs = data.timestamp.toDict()
+        else:
+            attrs = {}
+        return data.value, attrs
 
     def parameters(self):
         ret = super(Type, self).parameters()
