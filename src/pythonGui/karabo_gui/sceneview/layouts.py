@@ -5,7 +5,7 @@
 #############################################################################
 
 from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QBoxLayout, QLayout
+from PyQt4.QtGui import QBoxLayout, QGridLayout, QLayout
 
 from .utils import save_painter_state
 
@@ -110,6 +110,17 @@ class GroupLayout(BaseLayout, QLayout):
 class BoxLayout(BaseLayout, QBoxLayout):
     def __init__(self, direction, parent=None):
         super(BoxLayout, self).__init__(direction, parent)
+
+    def add_layout(self, layout):
+        self.addLayout(layout)
+
+    def add_widget(self, widget):
+        self.addWidget(widget)
+
+
+class GridLayout(BaseLayout, QGridLayout):
+    def __init__(self, parent=None):
+        super(GridLayout, self).__init__(parent)
 
     def add_layout(self, layout):
         self.addLayout(layout)
