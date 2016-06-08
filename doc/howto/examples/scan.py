@@ -1,8 +1,8 @@
 from numpy import linspace
 
 from karabo.middlelayer import (
-    AccessMode, background, Device, Float, getDevice, Integer, locked, Slot,
-    State, String, Unit, waitUntil)
+    AccessMode, Assignment, background, Device, Float, getDevice, Integer,
+    locked, Slot, State, String, Unit, waitUntil)
 
 
 class Scan(Device):
@@ -29,18 +29,22 @@ class Scan(Device):
         displayedName="Actor's property",
         description="The actor's property that is altered as part of the scan",
         displayType="property",
+        assignment=Assignment.MANDATORY,
         accessMode=AccessMode.INITONLY)
 
     actor_command = String(
         displayedName="Actor's command",
-        description="the actor's command executed at each step in the scan",
+        description="the actor's command executed at each step in the scan "
+                    "(leave empty if not applicable)",
         displayType="remoteSlot",
+        defaultValue="",
         accessMode=AccessMode.INITONLY)
 
     sensor = String(
         displayedName="Sensor's command",
         description="The sensor triggered at each step in the scan",
         displayType="remoteSlot",
+        assignment=Assignment.MANDATORY,
         accessMode=AccessMode.INITONLY)
 
     def onInitialization(self):
@@ -59,16 +63,32 @@ class Scan(Device):
         self.background.cancel()
 
     def runner(self):
-        actor_name, actor_prop = self.actor_property.split(".", 2)
-        command_name, command_slot = self.actor_command.split(".", 2)
-        assert actor_name == command_name
-        sensor_name, sensor_slot = self.sensor.split(".", 2)
+        try:
+            actor_name, actor_prop = self.actor_property.split(".", 2)
+            if self.actor_command:
+                command_name, command_slot = self.actor_command.split(".", 2)
+                assert actor_name == command_name
+            else:
+                command_slot = None
+            sensor_name, sensor_slot = self.sensor.split(".", 2)
+        except:
+            self.log.exception("A remote device property seems to be wrong")
+            raise
+
+        try:
+            self.start_pos, self.stop_pos, self.steps
+        except:
+            self.log.raise("start, stop and steps must be set before running")
+            raise
 
         self.state = State.MOVING
         try:
             with locked(getDevice(actor_name)) as actor, \
                     locked(getDevice(sensor_name)) as sensor:
-                command = getattr(actor, command_slot)
+                if command_slot is None:
+                    command = lambda: None
+                else:
+                    command = getattr(actor, command_slot)
                 sense = getattr(sensor, sensor_slot)
                 for position in linspace(self.start_pos, self.stop_pos,
                                          self.steps):
