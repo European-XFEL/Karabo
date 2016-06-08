@@ -126,7 +126,7 @@ class Device(SignalSlotable):
         for k in self._allattrs:
             a = getattr(self, k, None)
             if a is not None:
-                r[k] = getattr(type(self), k).asHash(a)
+                r[k], _ = getattr(type(self), k).toHash(a)
         return r
 
     @coslot
