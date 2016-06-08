@@ -1,9 +1,10 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import HasTraits, Dict, Instance, Int, List, String
+from traits.api import HasTraits, Dict, Float, Instance, List, String
 
 from .bases import BaseSceneObjectData
 from .const import NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
+from .io_utils import set_numbers
 from .registry import register_scene_reader, register_scene_writer
 
 
@@ -13,9 +14,9 @@ class SceneModel(HasTraits):
     # Extra attributes from the SVG file that we want to preserve.
     extra_attributes = Dict
     # The width of the scene in pixels
-    width = Int(SCENE_MIN_WIDTH)
+    width = Float(SCENE_MIN_WIDTH)
     # The height of the scene in pixels
-    height = Int(SCENE_MIN_HEIGHT)
+    height = Float(SCENE_MIN_HEIGHT)
     # All the objects in the scene
     children = List(Instance(BaseSceneObjectData))
 
@@ -49,8 +50,8 @@ def _read_extra_attributes(element):
 @register_scene_reader('Scene', xmltag=NS_SVG + 'svg', version=1)
 def __scene_reader(read_func, element):
     traits = {
-        'width': int(element.get('width', 0)),
-        'height': int(element.get('height', 0)),
+        'width': float(element.get('width', 0)),
+        'height': float(element.get('height', 0)),
         'extra_attributes': _read_extra_attributes(element),
     }
     scene = SceneModel(**traits)
@@ -65,8 +66,7 @@ def __scene_writer(write_func, scene, root):
     for child in scene.children:
         write_func(child, root)
 
-    root.set('width', str(scene.width))
-    root.set('height', str(scene.height))
+    set_numbers(('height', 'width'), scene, root)
     for name, value in scene.extra_attributes.items():
         root.set(name, value)
 

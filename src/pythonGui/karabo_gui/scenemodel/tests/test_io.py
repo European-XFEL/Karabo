@@ -1,12 +1,18 @@
+from xml.etree.ElementTree import Element
 import os
 import os.path as op
 
+from nose.tools import assert_raises
+
+# Import via the API module so that all the readers/writers get registered
 from ..api import (SceneModel, FixedLayoutModel, LabelModel, LineModel,
-                   RectangleModel, UnknownXMLDataModel,
+                   RectangleModel, UnknownXMLDataModel, SceneWriterException,
                    read_scene, write_scene, NS_KARABO)
+from ..io_utils import set_numbers
 from .utils import temp_file, xml_is_equal
 
 DATA_DIR = op.join(op.abspath(op.dirname(__file__)), 'data')
+INKSCAPE_DIR = op.join(DATA_DIR, 'inkscape')
 SCENE_SVG = (
 """<svg xmlns:krb="http://karabo.eu/scene" xmlns:svg="http://www.w3.org/2000/svg" height="768" krb:version="1" width="1024" krb:random="golly" >"""  # noqa
 """<svg:g krb:class="FixedLayout" krb:height="323" krb:width="384" krb:x="106" krb:y="74">"""  # noqa
@@ -24,10 +30,34 @@ def _get_file_data(filename):
         return fp.read()
 
 
-def _iter_data_files():
-    for fn in os.listdir(DATA_DIR):
+def _iter_data_files(directory):
+    for fn in os.listdir(directory):
         if op.splitext(fn)[-1] == '.svg':
-            yield op.join(DATA_DIR, fn)
+            yield op.join(directory, fn)
+
+
+def test_set_numbers_name_mapping():
+    element = Element('rect')
+    model = RectangleModel(x=0.0, y=0, height=10, width=10)
+    names = ('x', 'y', 'height', 'width')
+    xmlnames = (NS_KARABO + n for n in names[:-1])
+
+    # Normal mapping is tested by the scene writers. Lets make sure the
+    # parameter checking works...
+    assert_raises(SceneWriterException, set_numbers, names, model, element,
+                  xmlnames=xmlnames)
+
+
+def test_set_numbers_float_conversion():
+    element = Element('rect')
+    model = RectangleModel(x=0.0, y=0.2, height=10.01, width=10.05)
+
+    # Test rounding of floating point values
+    set_numbers(('x', 'y', 'height', 'width'), model, element)
+    assert element.get('x') == '0'
+    assert element.get('y') == '0.2'
+    assert element.get('height') == '10'
+    assert element.get('width') == '10.05'
 
 
 def test_reading():
@@ -94,15 +124,17 @@ def test_simple_round_trip():
 
 
 def test_real_data_reading():
-    for fn in _iter_data_files():
+    for fn in _iter_data_files(DATA_DIR):
+        read_scene(fn)
+
+
+def test_real_data_reading_inkscape():
+    for fn in _iter_data_files(INKSCAPE_DIR):
         read_scene(fn)
 
 
 def test_real_data_round_trip():
-    for fn in _iter_data_files():
-        # XXX: Explicitly SKIP the inkscape scene for now!
-        if op.basename(fn) == 'all-ink.svg':
-            continue
+    for fn in _iter_data_files(DATA_DIR):
         scene = read_scene(fn)
         new_xml = write_scene(scene)
         orig_xml = _get_file_data(fn)
