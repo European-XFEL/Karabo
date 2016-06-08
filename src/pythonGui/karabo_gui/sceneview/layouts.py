@@ -18,12 +18,12 @@ class BaseLayout(object):
     def add_shape(self, shape):
         self.shapes.append(shape)
 
-    def add_layout(self, layout):
+    def add_layout(self, layout, model):
         """ Needs to be reimplemented in the inherited classes to add a layout.
         """
         raise NotImplementedError("BaseLayout.add_layout")
 
-    def add_widget(self, widget):
+    def add_widget(self, widget, model):
         """ Needs to be reimplemented in the inherited classes to add a widget.
         """
         raise NotImplementedError("BaseLayout.add_widget")
@@ -39,10 +39,10 @@ class GroupLayout(BaseLayout, QLayout):
         super(GroupLayout, self).__init__(parent)
         self._children = []  # contains only QLayoutItems
 
-    def add_layout(self, layout):
+    def add_layout(self, layout, model):
         self.addChildLayout(layout)
 
-    def add_widget(self, widget):
+    def add_widget(self, widget, model):
         self.addWidget(widget)
 
     def addItem(self, item):
@@ -111,10 +111,10 @@ class BoxLayout(BaseLayout, QBoxLayout):
     def __init__(self, direction, parent=None):
         super(BoxLayout, self).__init__(direction, parent)
 
-    def add_layout(self, layout):
+    def add_layout(self, layout, model):
         self.addLayout(layout)
 
-    def add_widget(self, widget):
+    def add_widget(self, widget, model):
         self.addWidget(widget)
 
 
@@ -122,8 +122,10 @@ class GridLayout(BaseLayout, QGridLayout):
     def __init__(self, parent=None):
         super(GridLayout, self).__init__(parent)
 
-    def add_layout(self, layout):
-        self.addLayout(layout)
+    def add_layout(self, layout, model):
+        self.addLayout(layout, model.layout_data.row, model.layout_data.colspan,
+                       model.layout_data.row, model.layout_data.rowspan)
 
-    def add_widget(self, widget):
-        self.addWidget(widget)
+    def add_widget(self, widget, model):
+        self.addWidget(widget, model.layout_data.row, model.layout_data.colspan,
+                       model.layout_data.row, model.layout_data.rowspan)
