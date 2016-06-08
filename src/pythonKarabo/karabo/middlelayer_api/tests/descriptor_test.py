@@ -7,16 +7,21 @@ from karabo.middlelayer import (
     AccessMode, Assignment, AccessLevel, MetricPrefix, Unit)
 from karabo.middlelayer_api import hash as hashmod
 from karabo.middlelayer_api.basetypes import QuantityValue
+from karabo.middlelayer_api.enums import (
+    AccessLevel, AccessMode, Assignment, MetricPrefix, Unit)
 from karabo.middlelayer_api.hash import Hash
+from karabo.middlelayer_api.timestamp import Timestamp
 
 
 class Tests(TestCase):
+    timestamp = Timestamp()
+
     def check_general(self, desc, value):
         """check things common to all values"""
         self.assertEqual(value.descriptor, desc)
-        value.timestamp = 7
+        value.timestamp = self.timestamp
         c = desc.toKaraboValue(value)
-        self.assertEqual(c.timestamp, 7)
+        self.assertEqual(c.timestamp, self.timestamp)
         h = Hash()
         h["a"] = c.value
         h = Hash.decode(h.encode("Bin"), "Bin")
@@ -25,7 +30,9 @@ class Tests(TestCase):
             self.assertTrue((h["a"] == value.value).all())
         else:
             self.assertTrue(c == value)
-            self.assertEqual(h["a"], value.value)
+        with self.assertRaises(TypeError):
+            type(desc)(some_unknown_attr=3)
+        type(desc)(strict=False, some_unknown_attr=3)
 
     def test_int_enum(self):
         class E(Enum):
@@ -107,6 +114,10 @@ class Tests(TestCase):
             v = d.toKaraboValue("1000 nm")
         with self.assertRaises(ValueError):
             v = d.toKaraboValue("7 m")
+
+        with self.assertRaises(TypeError):
+            hashmod.Int16(unitSymbol="m")
+        hashmod.Int16(strict=False, unitSymbol="m", metricPrefixSymbol="m")
 
     def test_vector_ints(self):
         d = hashmod.VectorInt8()
@@ -244,6 +255,21 @@ class Tests(TestCase):
         self.assertEqual(v, ["a", "b", "c"])
         self.assertEqual(v[1], "b")
         self.assertEqual(len(v), 3)
+
+    def test_general(self):
+        d = hashmod.UInt64(accessMode=AccessMode.READONLY)
+        self.assertIs(d.accessMode, AccessMode.READONLY)
+        with self.assertRaises(TypeError):
+            d = hashmod.UInt64(accessMode=4)
+        d = hashmod.UInt64(strict=False, accessMode=4)
+        self.assertIs(d.accessMode, AccessMode.RECONFIGURABLE)
+
+        d = hashmod.VectorString(assignment=Assignment.MANDATORY)
+        self.assertIs(d.assignment, Assignment.MANDATORY)
+        with self.assertRaises(TypeError):
+            d = hashmod.UInt64(assignment=0)
+        d = hashmod.UInt64(strict=False, assignment=0)
+        self.assertIs(d.assignment, Assignment.OPTIONAL)
 
     def test_attributes_default(self):
         d = hashmod.Double()
