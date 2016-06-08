@@ -25,7 +25,7 @@ def fill_root_layout(layout, parent_model, scene_widget):
     for child in parent_model.children:
         if isinstance(child, FixedLayoutModel):
             obj = GroupLayout()
-            layout.add_layout(obj)
+            layout.add_layout(obj, child)
             fill_root_layout(obj, child, scene_widget)
         if isinstance(child, BoxLayoutModel):
             obj = BoxLayout(QT_BOX_LAYOUT_DIRECTION[child.direction])
@@ -41,7 +41,7 @@ def fill_root_layout(layout, parent_model, scene_widget):
             layout.add_shape(obj)
         if isinstance(child, LabelModel):
             obj = LabelWidget(child, scene_widget)
-            layout.add_widget(obj)
+            layout.add_widget(obj, child)
 
 
 class SceneView(QWidget):
