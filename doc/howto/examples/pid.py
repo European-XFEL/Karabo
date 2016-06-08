@@ -78,13 +78,15 @@ class PID(Device):
     def start(self):
         """Start controlling the process"""
         self.state = State.RUNNING
-        self.background = background(self.runner, callback=None)
+        self.background = background(self.runner, callback=self.finished)
+
+    def finished(self, future):
+        self.state = State.NORMAL
 
     @Slot(displayedName="Stop Controlling",
           allowedStates=[State.RUNNING])
     def stop(self):
         """Stop controlling the process"""
-        self.state = State.NORMAL
         self.background.cancel()
 
     @Slot(displayedName="Go")
@@ -101,10 +103,14 @@ class PID(Device):
         self.state = State.NORMAL
 
     def runner(self):
-        process_name, process_property = self.process.split(".", 2)
-        control_name, control_property = self.control.split(".", 2)
-        command_name, command_slot = self.command.split(".", 2)
-        assert command_name == control_name
+        try:
+            process_name, process_property = self.process.split(".", 2)
+            control_name, control_property = self.control.split(".", 2)
+            command_name, command_slot = self.command.split(".", 2)
+            assert command_name == control_name
+        except:
+            self.log.exception("A remote device property seems to be wrong")
+            raise
 
         with locked(getDevice(control_name)) as control_device, \
                 locked(getDevice(process_name)) as process_device:
