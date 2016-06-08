@@ -78,7 +78,8 @@ class Scan(Device):
         try:
             self.start_pos, self.stop_pos, self.steps
         except:
-            self.log.raise("start, stop and steps must be set before running")
+            self.log.exception(
+                "start, stop and steps must be set before running")
             raise
 
         self.state = State.MOVING
