@@ -89,8 +89,8 @@ class PID(Device):
         """Stop controlling the process"""
         self.background.cancel()
 
-    @Slot(displayedName="Go")
-    def go(self):
+    @Slot(displayedName="Update")
+    def update(self):
         """Update set point"""
         self.setpoint = self.target_setpoint
 
