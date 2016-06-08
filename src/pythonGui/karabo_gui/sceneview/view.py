@@ -9,10 +9,12 @@ import os.path
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QPalette, QPainter, QSizePolicy, QWidget
 
-from karabo_gui.scenemodel.api import (LabelModel, LineModel, RectangleModel,
-                                       FixedLayoutModel, read_scene,
-                                       SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
-from .layouts import GroupLayout
+from karabo_gui.scenemodel.api import (BoxLayoutModel, LabelModel, LineModel,
+                                       RectangleModel, FixedLayoutModel,
+                                       read_scene, SCENE_MIN_WIDTH,
+                                       SCENE_MIN_HEIGHT)
+from .const import QT_BOX_LAYOUT_DIRECTION
+from .layouts import BoxLayout, GroupLayout
 from .shapes import LineShape, RectangleShape
 from .simple_widgets import LabelWidget
 
@@ -23,6 +25,9 @@ def fill_root_layout(layout, parent_model, scene_widget):
         if isinstance(child, FixedLayoutModel):
             obj = GroupLayout()
             layout.add_layout(obj)
+            fill_root_layout(obj, child, scene_widget)
+        if isinstance(child, BoxLayoutModel):
+            obj = BoxLayout(QT_BOX_LAYOUT_DIRECTION[child.direction])
             fill_root_layout(obj, child, scene_widget)
         if isinstance(child, LineModel):
             obj = LineShape(child)

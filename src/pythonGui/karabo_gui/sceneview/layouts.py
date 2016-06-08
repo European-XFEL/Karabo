@@ -5,30 +5,45 @@
 #############################################################################
 
 from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QLayout
+from PyQt4.QtGui import QBoxLayout, QLayout
 
 from .utils import save_painter_state
 
 
-class GroupLayout(QLayout):
-    def __init__(self, parent=None):
-        super(GroupLayout, self).__init__(parent)
-        self._children = []  # contains only QLayoutItems
+class BaseLayout(object):
+    def __init__(self, *args, **kwargs):
+        super(BaseLayout, self).__init__(*args, **kwargs)
         self.shapes = []
-
-    def add_layout(self, layout):
-        self.addChildLayout(layout)
 
     def add_shape(self, shape):
         self.shapes.append(shape)
 
+    def add_layout(self, layout):
+        """ Needs to be reimplemented in the inherited classes to add a layout.
+        """
+        raise NotImplementedError("BaseLayout.add_layout")
+
     def add_widget(self, widget):
-        self.addWidget(widget)
+        """ Needs to be reimplemented in the inherited classes to add a widget.
+        """
+        raise NotImplementedError("BaseLayout.add_widget")
 
     def draw(self, painter):
         for shape in self.shapes:
             with save_painter_state(painter):
                 shape.draw(painter)
+
+
+class GroupLayout(BaseLayout, QLayout):
+    def __init__(self, parent=None):
+        super(GroupLayout, self).__init__(parent)
+        self._children = []  # contains only QLayoutItems
+
+    def add_layout(self, layout):
+        self.addChildLayout(layout)
+
+    def add_widget(self, widget):
+        self.addWidget(widget)
 
     def addItem(self, item):
         """ DO NOT CALL THIS METHOD DIRECTLY!
@@ -90,3 +105,14 @@ class GroupLayout(QLayout):
             bottom = max(bottom, rect.bottom())
 
         return QSize(bottom - top, right - left)
+
+
+class BoxLayout(BaseLayout, QBoxLayout):
+    def __init__(self, direction, parent=None):
+        super(BoxLayout, self).__init__(direction, parent)
+
+    def add_layout(self, layout):
+        self.addLayout(layout)
+
+    def add_widget(self, widget):
+        self.addWidget(widget)
