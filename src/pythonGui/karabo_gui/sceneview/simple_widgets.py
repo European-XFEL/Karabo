@@ -3,8 +3,11 @@
 # Created on June 7, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from PyQt4.QtCore import QByteArray
+from PyQt4.QtGui import QLabel, QPainter, QWidget
+from PyQt4.QtSvg import QSvgRenderer
 
-from PyQt4.QtGui import QLabel
+from karabo_gui.scenemodel.api import write_single_model
 
 
 class LabelWidget(QLabel):
@@ -22,3 +25,30 @@ class LabelWidget(QLabel):
         styleSheet.append('color: "{}";'.format(model.foreground))
         styleSheet.append('background-color: "{}";'.format(model.background))
         self.setStyleSheet("".join(styleSheet))
+
+
+class UnknownSvgWidget(QWidget):
+    """ A widget which can display data from an UnknownXMLModel.
+    """
+    def __init__(self, renderer, parent=None):
+        super(UnknownSvgWidget, self).__init__(parent)
+        self.renderer = renderer
+        self.setGeometry(renderer.viewBox())
+
+    def paintEvent(self, event):
+        with QPainter(self) as painter:
+            self.renderer.render(painter)
+
+    @classmethod
+    def create(cls, model, parent=None):
+        """ Create an instance of this widget from a model object.
+
+        Return None if there is would be nothing to display.
+        """
+        xml = write_single_model(model)
+        ar = QByteArray.fromRawData(xml)
+        renderer = QSvgRenderer(ar)
+
+        if renderer.isValid() and not renderer.defaultSize().isNull():
+            return cls(renderer, parent=parent)
+        return None
