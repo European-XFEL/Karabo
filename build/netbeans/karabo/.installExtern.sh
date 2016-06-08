@@ -2,17 +2,11 @@
 
 CWD=$(pwd)
 
-<<<<<<< HEAD
-DEPENDENCIES_Linux=( python3.4 setuptools pip wheel cython lapack numpy scipy libpng freetype nose pillow qt4 sip pyqt4 backports tornado pyparsing six dateutil pytz matplotlib pyqwt5 guidata guiqwt pexpect pyzmq markupsafe jinja2 pygments docutils alabaster babel snowballstemmer sphinx_rtd_theme sphinx ipython boost hdf5 h5py log4cpp cppunit openmq openmqc pyusb parse quamash suds jsonschema ecdsa pycrypto paramiko tzlocal patchelf gmock snappy jpeg httplib2 pssh tiff traits pint )
+DEPENDENCIES_Linux=( bzip2 python3.4 setuptools pip wheel cython lapack numpy scipy libpng freetype nose pillow qt4 sip pyqt4 backports tornado pyparsing six dateutil pytz matplotlib pyqwt5 guidata guiqwt pexpect pyzmq markupsafe jinja2 pygments docutils alabaster babel snowballstemmer sphinx_rtd_theme sphinx ipython boost hdf5 h5py log4cpp cppunit openmq openmqc pyusb parse quamash suds jsonschema ecdsa pycrypto paramiko tzlocal patchelf gmock snappy jpeg httplib2 pssh tiff traits pint )
 # NoGui should be obsoleted as qt4 and pyqt4 is needed for matplotlib backed as well as pyqwt5, guiqwt and guidata are used in CLI
-DEPENDENCIES_Linux_NoGui=( python3.4 setuptools pip wheel lapack numpy scipy nose libpng freetype pillow matplotlib pexpect tornado pyzmq pygments docutils alabaster babel snowballstemmer sphinx_rtd_theme sphinx ipython boost openmqc hdf5 h5py log4cpp cppunit openmq pyusb parse snappy jpeg httplib2 pssh tiff traits pint )
+DEPENDENCIES_Linux_NoGui=( bzip2 python3.4 setuptools pip wheel lapack numpy scipy nose libpng freetype pillow matplotlib pexpect tornado pyzmq pygments docutils alabaster babel snowballstemmer sphinx_rtd_theme sphinx ipython boost openmqc hdf5 h5py log4cpp cppunit openmq pyusb parse snappy jpeg httplib2 pssh tiff traits pint )
 DEPENDENCIES_Darwin=( wheel pyqwt5 guidata guiqwt boost openmqc hdf5 h5py log4cpp cppunit parse snappy traits pint )
-=======
-DEPENDENCIES_Linux=( bzip2 python3.4 setuptools pip wheel cython lapack numpy scipy libpng freetype nose pillow qt4 sip pyqt4 backports tornado pyparsing six dateutil pytz matplotlib pyqwt5 guidata guiqwt pexpect pyzmq markupsafe jinja2 pygments docutils sphinx ipython boost hdf5 h5py log4cpp cppunit openmq openmqc pyusb parse quamash suds jsonschema ecdsa pycrypto paramiko tzlocal patchelf gmock snappy jpeg httplib2 pssh tiff )
-# NoGui should be obsoleted as qt4 and pyqt4 is needed for matplotlib backed as well as pyqwt5, guiqwt and guidata are used in CLI
-DEPENDENCIES_Linux_NoGui=( bzip2 python3.4 setuptools pip wheel lapack numpy scipy nose libpng freetype pillow matplotlib pexpect tornado pyzmq pygments docutils sphinx ipython boost openmqc hdf5 h5py log4cpp cppunit openmq pyusb parse snappy jpeg httplib2 pssh tiff )
-DEPENDENCIES_Darwin=( wheel pyqwt5 guidata guiqwt boost openmqc hdf5 h5py log4cpp cppunit parse snappy )
->>>>>>> f7ac876... Added bz2 support. It is needed for some pip-based installations and only compiled into python3 if the library is present
+
 
 #################################################################################################
 
