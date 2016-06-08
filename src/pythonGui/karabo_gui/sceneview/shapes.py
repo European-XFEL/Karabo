@@ -9,6 +9,7 @@ from abc import ABCMeta, abstractmethod
 from PyQt4.QtCore import QLine, QRect, Qt
 from PyQt4.QtGui import QBrush, QColor, QPen
 
+from karabo_gui.pathparser import Parser
 from .const import QT_PEN_CAP_STYLE, QT_PEN_JOIN_STYLE
 
 
@@ -109,3 +110,23 @@ class RectangleShape(BaseShape):
         painter.setBrush(self.brush)
         painter.drawRect(self.shape)
         super(RectangleShape, self).draw(painter)
+
+class PathShape(BaseShape):
+    """ A path which can appear in a scene
+    """
+
+    def __init__(self, model):
+        super(PathShape, self).__init__(model)
+        parser = Parser(model.svg_data)
+        self.shape = parser.parse()
+
+    def geometry(self):
+        return self.shape.boundingRect().toRect()
+
+    def draw(self, painter):
+        """ The path gets drawn.
+        """
+        painter.setPen(self.pen)
+        painter.setBrush(self.brush)
+        painter.drawPath(self.shape)
+        super(PathShape, self).draw(painter)

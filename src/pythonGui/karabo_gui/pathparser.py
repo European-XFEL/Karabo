@@ -3,6 +3,7 @@ from PyQt4.QtGui import QPainterPath
 
 
 import re
+from math import sqrt
 
 
 class Parser(object):
