@@ -10,11 +10,29 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QPalette, QPainter, QSizePolicy, QWidget
 
 from karabo_gui.scenemodel.api import (LabelModel, LineModel, RectangleModel,
-                                       read_scene, SCENE_MIN_WIDTH,
-                                       SCENE_MIN_HEIGHT)
-from .layouts import BaseLayout
+                                       FixedLayoutModel, read_scene,
+                                       SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+from .layouts import GroupLayout
 from .shapes import LineShape, RectangleShape
 from .simple_widgets import LabelWidget
+
+
+def fill_root_layout(layout, parent_model, scene_widget):
+    # Go through children and create corresponding GUI objects
+    for child in parent_model.children:
+        if isinstance(child, FixedLayoutModel):
+            obj = GroupLayout()
+            layout.add_layout(obj)
+            fill_root_layout(obj, child, scene_widget)
+        if isinstance(child, LineModel):
+            obj = LineShape(child)
+            layout.add_shape(obj)
+        if isinstance(child, RectangleModel):
+            obj = RectangleShape(child)
+            layout.add_shape(obj)
+        if isinstance(child, LabelModel):
+            obj = LabelWidget(child, scene_widget)
+            layout.add_widget(obj)
 
 
 class SceneView(QWidget):
@@ -28,7 +46,7 @@ class SceneView(QWidget):
         self.designMode = designMode
         self.scene_model = None
 
-        self.layout = BaseLayout()
+        self.layout = GroupLayout(parent=self)
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -47,18 +65,7 @@ class SceneView(QWidget):
         # Set width and height
         self.resize(max(self.scene_model.width, SCENE_MIN_WIDTH),
                     max(self.scene_model.height, SCENE_MIN_HEIGHT))
-
-        # Go through children and create corresponding GUI objects
-        for child in self.scene_model.children:
-            if isinstance(child, LineModel):
-                obj = LineShape(child)
-                self.layout.add_shape(obj)
-            if isinstance(child, RectangleModel):
-                obj = RectangleShape(child)
-                self.layout.add_shape(obj)
-            if isinstance(child, LabelModel):
-                obj = LabelWidget(child, self)
-                self.layout.add_widget(obj)
+        fill_root_layout(self.layout, self.scene_model, self)
 
     def paintEvent(self, event):
         """ Show view content.
