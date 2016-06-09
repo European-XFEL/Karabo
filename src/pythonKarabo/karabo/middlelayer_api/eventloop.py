@@ -65,13 +65,13 @@ class Broker:
         """notify the network that we are alive
 
         we send out an instance new and gone, and the heartbeats in between."""
-        self.info["heartbeatInterval"] = interval
+        self.info["heartbeatInterval"] = interval.value
         self.emit('call', {'*': ['slotInstanceNew']},
                   self.deviceId, self.info)
         self.alive = True
         try:
             while True:
-                self.heartbeat(interval)
+                self.heartbeat(interval.value)
                 yield from sleep(interval)
         finally:
             self.emit('call', {'*': ['slotInstanceGone']},

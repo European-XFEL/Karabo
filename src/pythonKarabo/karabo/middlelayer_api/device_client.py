@@ -19,6 +19,7 @@ from weakref import WeakSet
 import dateutil.parser
 import dateutil.tz
 
+from .basetypes import KaraboValue
 from .device import Device
 from .enums import NodeType
 from .exceptions import KaraboError
@@ -152,15 +153,17 @@ class Proxy(object):
     def setValue(self, attr, value):
         self._use()
         loop = get_event_loop()
+        assert isinstance(value, KaraboValue)
         if loop.sync_set:
+            h = Hash()
+            h[attr.longkey], _ = attr.toDataAndAttrs(value)
             ok, msg = loop.sync(self._device.call(
-                self.deviceId, "slotReconfigure", Hash(attr.longkey, value)),
-                -1)
+                self.deviceId, "slotReconfigure", h), -1)
             if not ok:
                 raise KaraboError(msg)
         else:
             update = not self._sethash
-            self._sethash[attr.longkey] = value
+            self._sethash[attr.longkey], _ = attr.toDataAndAttrs(value)
             if update:
                 self._device._ss.loop.call_soon_threadsafe(self._update)
 
