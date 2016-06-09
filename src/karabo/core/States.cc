@@ -7,87 +7,72 @@ using namespace std;
 namespace karabo {
     namespace core {
         namespace states {
-//            KARABO_REGISTER_IN_FACTORY(State, UNKNOWN)
-//            KARABO_REGISTER_IN_FACTORY(State, KNOWN)
-//            KARABO_REGISTER_IN_FACTORY(State, INIT)
-//            KARABO_REGISTER_IN_FACTORY(State, DISABLED)
-//            KARABO_REGISTER_IN_FACTORY(State, ERROR)
-//            KARABO_REGISTER_IN_FACTORY(State, NORMAL)
-//            KARABO_REGISTER_IN_FACTORY(State, STATIC)
-//            KARABO_REGISTER_IN_FACTORY(State, CHANGING)
-//            KARABO_REGISTER_IN_FACTORY(State, PASSIVE)
-//            KARABO_REGISTER_IN_FACTORY(State, ACTIVE)
-//            KARABO_REGISTER_IN_FACTORY(State, DECREASING)
-//            KARABO_REGISTER_IN_FACTORY(State, INCREASING)
-//            KARABO_REGISTER_IN_FACTORY(State, INTERLOCKED)
-//            KARABO_REGISTER_IN_FACTORY(State, COOLED)
-//            KARABO_REGISTER_IN_FACTORY(State, HEATED)
-//            KARABO_REGISTER_IN_FACTORY(State, EVACUATED)
-//            KARABO_REGISTER_IN_FACTORY(State, CLOSED)
-//            KARABO_REGISTER_IN_FACTORY(State, ON)
-//            KARABO_REGISTER_IN_FACTORY(State, EXTRACTED)
-//            KARABO_REGISTER_IN_FACTORY(State, STARTED)
-//            KARABO_REGISTER_IN_FACTORY(State, LOCKED)
-//            KARABO_REGISTER_IN_FACTORY(State, ENGAGED)
-//            KARABO_REGISTER_IN_FACTORY(State, WARM)
-//            KARABO_REGISTER_IN_FACTORY(State, COLD)
-//            KARABO_REGISTER_IN_FACTORY(State, PRESSURIZED)
-//            KARABO_REGISTER_IN_FACTORY(State, OPENED)
-//            KARABO_REGISTER_IN_FACTORY(State, OFF)
-//            KARABO_REGISTER_IN_FACTORY(State, INSERTED)
-//            KARABO_REGISTER_IN_FACTORY(State, STOPPED)
-//            KARABO_REGISTER_IN_FACTORY(State, UNLOCKED)
-//            KARABO_REGISTER_IN_FACTORY(State, DISENGAGED)
-//            KARABO_REGISTER_IN_FACTORY(State, ROTATING)
-//            KARABO_REGISTER_IN_FACTORY(State, MOVING)
-//            KARABO_REGISTER_IN_FACTORY(State, SWITCHING)
-//            KARABO_REGISTER_IN_FACTORY(State, HEATING)
-//            KARABO_REGISTER_IN_FACTORY(State, MOVING_RIGHT)
-//            KARABO_REGISTER_IN_FACTORY(State, MOVING_UP)
-//            KARABO_REGISTER_IN_FACTORY(State, MOVING_FORWARD)
-//            KARABO_REGISTER_IN_FACTORY(State, ROTATING_CLK)
-//            KARABO_REGISTER_IN_FACTORY(State, RAMPING_UP)
-//            KARABO_REGISTER_IN_FACTORY(State, INSERTING)
-//            KARABO_REGISTER_IN_FACTORY(State, STARTING)
-//            KARABO_REGISTER_IN_FACTORY(State, FILLING)
-//            KARABO_REGISTER_IN_FACTORY(State, ENGAGING)
-//            KARABO_REGISTER_IN_FACTORY(State, SWITCHING_ON)
-//            KARABO_REGISTER_IN_FACTORY(State, COOLING)
-//            KARABO_REGISTER_IN_FACTORY(State, MOVING_LEFT)
-//            KARABO_REGISTER_IN_FACTORY(State, MOVING_DOWN)
-//            KARABO_REGISTER_IN_FACTORY(State, MOVING_BACK)
-//            KARABO_REGISTER_IN_FACTORY(State, ROTATING_CNTCLK)
-//            KARABO_REGISTER_IN_FACTORY(State, RAMPING_DOWN)
-//            KARABO_REGISTER_IN_FACTORY(State, EXTRACTING)
-//            KARABO_REGISTER_IN_FACTORY(State, STOPPING)
-//            KARABO_REGISTER_IN_FACTORY(State, EMPTYING)
-//            KARABO_REGISTER_IN_FACTORY(State, DISENGAGING)
-//            KARABO_REGISTER_IN_FACTORY(State, SWITCHING_OFF)
             
-        }
-        
-        State::State(const std::string& stateName, const std::string& parentName) 
-        : m_stateName(stateName)
-        , m_parentState(parentName)
-        , m_id(0) {
-            const std::vector<State::Pointer>& v = states::stateSignifier.getTrumpList();
-            for (size_t i = 0; i < v.size(); i++) {
-                if (v[i]->name() == m_parentState) {
-                    m_id = i + 1;
-                    break;
-                }
-            }
-        }
-        
-        namespace states {
-            State StateSignifier::returnMostSignificant(const std::vector<State>& listOfStates) {
-                State state;
-                for (vector<State>::const_iterator ii = listOfStates.begin(); ii != listOfStates.end(); ++ii) {
+//            KARABO_REGISTER_IN_FACTORY(BaseState, UNKNOWN)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, KNOWN)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, INIT)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, DISABLED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, ERROR)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, NORMAL)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, STATIC)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, CHANGING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, PASSIVE)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, ACTIVE)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, DECREASING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, INCREASING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, INTERLOCKED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, COOLED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, HEATED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, EVACUATED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, CLOSED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, ON)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, EXTRACTED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, STARTED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, LOCKED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, ENGAGED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, WARM)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, COLD)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, PRESSURIZED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, OPENED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, OFF)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, INSERTED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, STOPPED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, UNLOCKED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, DISENGAGED)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, ROTATING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, MOVING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, SWITCHING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, HEATING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, MOVING_RIGHT)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, MOVING_UP)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, MOVING_FORWARD)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, ROTATING_CLK)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, RAMPING_UP)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, INSERTING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, STARTING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, FILLING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, ENGAGING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, SWITCHING_ON)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, COOLING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, MOVING_LEFT)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, MOVING_DOWN)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, MOVING_BACK)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, ROTATING_CNTCLK)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, RAMPING_DOWN)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, EXTRACTING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, STOPPING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, EMPTYING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, DISENGAGING)
+//            KARABO_REGISTER_IN_FACTORY(BaseState, SWITCHING_OFF)
+            
+            BaseState StateSignifier::returnMostSignificant(const std::vector<BaseState>& listOfStates) {
+                BaseState state;
+                for (vector<BaseState>::const_iterator ii = listOfStates.begin(); ii != listOfStates.end(); ++ii) {
                     if (ii->rank() > state.rank()) state = *ii;
                 }
                 return state;
             }
+            
         }
-        
     }
 }
