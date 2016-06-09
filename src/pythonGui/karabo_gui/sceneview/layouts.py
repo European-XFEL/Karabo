@@ -99,14 +99,12 @@ class GroupLayout(BaseLayout, QLayout):
 
         This is part of the virtual interface of QLayout.
         """
-        left, right, top, bottom = 0, 0, 0, 0
+        MAX_VALUE = 100000
+        left, right, top, bottom = MAX_VALUE, 0, MAX_VALUE, 0
         for item in self._children:
             rect = item.geometry()
-            MAX_VALUE = 100000
-            left = MAX_VALUE
             left = min(left, rect.left())
             right = max(right, rect.right())
-            top = MAX_VALUE
             top = min(top, rect.top())
             bottom = max(bottom, rect.bottom())
 
