@@ -125,6 +125,13 @@ namespace karabo {
             /// 'preferBefore' decides whether the index with a smaller or larger time stamp is returned.
             size_t findPositionOfEpochstamp(std::ifstream& f, double stamp, size_t left, size_t right, bool preferBefore);
             
+            /// Helper to extract DataLoggerIndex values out of the tail of a line in archive_index.txt.
+            /// The tail is everything after event, timestampAsIso8061 and timestampAsDouble.
+            /// The entry has to be partly filled (m_event and m_epoch) and partly serves as output
+            /// (m_train, m_position, m_user and m_fileindex).
+            /// Works for lines written to archive_index.txt by <= 1.4 (old format) and >= 1.5
+            void extractTailOfArchiveIndex(const std::string& tail, DataLoggerIndex& entry) const;
+
         private:
             
             static boost::mutex m_propFileInfoMutex;
