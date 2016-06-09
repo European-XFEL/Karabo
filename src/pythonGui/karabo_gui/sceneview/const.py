@@ -7,6 +7,21 @@
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QBoxLayout
 
+# For convenience association of strings to Qt cursors
+QT_CURSORS = {
+    'arrow': Qt.ArrowCursor,
+    'blank': Qt.BlankCursor,
+    'busy': Qt.BusyCursor,
+    'cross': Qt.CrossCursor,
+    'closed-hand': Qt.ClosedHandCursor,
+    'open-hand': Qt.OpenHandCursor,
+    'pointing-hand': Qt.PointingHandCursor,
+    'resize-diagonal-trbl': Qt.SizeBDiagCursor,
+    'resize-diagonal-tlbr': Qt.SizeFDiagCursor,
+    'resize-horizontal': Qt.SizeHorCursor,
+    'resize-vertical': Qt.SizeVerCursor,
+}
+
 # For convenience association of strings to Qt enums
 QT_PEN_CAP_STYLE = {
     'butt': Qt.FlatCap,
