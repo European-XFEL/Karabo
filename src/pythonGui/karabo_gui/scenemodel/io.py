@@ -20,7 +20,17 @@ def write_scene(scene):
     """
     root = Element('svg')
     root.set(NS_KARABO + 'version', '1')
+    return _writer_core(scene, root)
 
+
+def write_single_model(model):
+    """ Write a scene model object as an SVG containing only that object.
+    """
+    root = Element('svg')
+    return _writer_core(model, root)
+
+
+def _writer_core(model, root):
     writer = get_writer()
-    writer(scene, root)
+    writer(model, root)
     return tostring(root)
