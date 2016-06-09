@@ -49,6 +49,7 @@ class PID(Device):
     target_setpoint = Float(
         displayedName="Target Setpoint",
         description="The target set point",
+        defaultValue=None,
         accessMode=AccessMode.RECONFIGURABLE)
 
     process = String(
