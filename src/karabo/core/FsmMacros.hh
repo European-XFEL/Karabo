@@ -27,126 +27,14 @@
 
 #include <karabo/log/Logger.hh>
 #include "Worker.hh"
+#include "FsmBaseState.hh"
+#include "FsmStates.hh"
 
 // Allow boost msm names appear globally in karabo namespace
 namespace karabo {
     using boost::msm::front::none;
     using boost::msm::front::Row;
 }
-
-// Visitable polymorphic base state
-#ifndef KARABO_POLYMORPHIC_BASE_STATE
-#define KARABO_POLYMORPHIC_BASE_STATE
-namespace karabo {
-
-    namespace core {
-
-        struct StateVisitor {
-
-            template <class T>
-            void visitState(T* state, bool stopWorker=false) {
-                if (stopWorker) {
-                    Worker* worker = state->getWorker();
-                    if (worker && worker->is_running()) worker->abort().join();
-                } else {
-                    std::string stateName(state->getStateName());
-                    std::string fsmName(state->getFsmName());
-                    //std::cout << "visiting state:" << typeid (*state).name() << std::endl;
-                    // Technical correction: 
-                    // if state-machine and state are the same name, the state is subcomposed into the former machine
-                    if (stateName == fsmName) fsmName = m_currentFsm;
-
-                    if (m_stateName.empty()) {
-                        m_stateName = stateName;
-                        m_currentFsm = fsmName;
-                    } else {
-                        std::string sep(".");
-                        m_stateName += sep + stateName;
-                        m_currentFsm = fsmName;
-                    }
-                }
-            }
-
-            const std::string & getState() {
-                return m_stateName;
-            }
-
-        private:
-            std::string m_stateName;
-            std::string m_currentFsm;
-        };
-
-        struct FsmBaseState {
-
-            const std::string & getStateName() const {
-                return m_stateName;
-            }
-
-            virtual void setStateName(const std::string& name) {
-                m_stateName = name;
-            }
-
-            const std::string & getFsmName() const {
-                return m_fsmName;
-            }
-
-            virtual void setFsmName(const std::string& fsmName) {
-                m_fsmName = fsmName;
-            }
-
-            const bool& isContained() const {
-                return m_isContained;
-            }
-
-            void setContained(bool isContained) {
-                m_isContained = isContained;
-            }
-
-            // Signature of the accept function
-            typedef boost::msm::back::args<void, boost::shared_ptr<StateVisitor>, bool > accept_sig;
-
-            // This makes states polymorphic
-
-            virtual ~FsmBaseState() {
-            }
-
-            // Default implementation for states who need to be visited
-
-            void accept(boost::shared_ptr<StateVisitor> visitor, bool stopWorker) const {
-                visitor->visitState(this, stopWorker);
-            }
-
-            void setTimeout(int timeout) {
-                m_timeout = timeout;
-            }
-
-            int getTimeout() const {
-                return m_timeout;
-            }
-
-            void setRepetition(int cycles) {
-                m_repetition = cycles;
-            }
-
-            int getRepetition() const {
-                return m_repetition;
-            }
-
-            virtual Worker* getWorker() const {
-                return NULL;
-            }
-
-        private:
-            std::string m_stateName;
-            std::string m_fsmName;
-            bool m_isContained;
-            int m_timeout;
-            int m_repetition;
-        };
-    }
-}
-
-#endif
 
 
 /**************************************************************/
@@ -202,11 +90,11 @@ static void _onError(const Fsm& fsm, const std::string& userFriendlyMsg = "Unkno
 #define KARABO_FSM_ON_CURRENT_STATE_CHANGE(stateChangeFunction) \
 template <class Fsm> \
 static void _updateCurrentState(Fsm& fsm, bool isGoingToChange = false) { \
-    if (isGoingToChange) fsm.getContext()->stateChangeFunction("Changing..."); \
+    if (isGoingToChange) fsm.getContext()->stateChangeFunction(karabo::core::createState("CHANGING")); \
     else { \
         boost::shared_ptr<StateVisitor> v(new StateVisitor); \
         fsm.visit_current_states(v, false); \
-        fsm.getContext()->stateChangeFunction(v->getState()); \
+        fsm.getContext()->stateChangeFunction(karabo::core::createState(v->getState())); \
     } \
 }
 
@@ -582,7 +470,7 @@ virtual void func() = 0;
 /*                        States                              */
 /**************************************************************/
 
-#define KARABO_FSM_STATE(name) struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
+#define KARABO_FSM_STATE(name) struct name : public karabo::core::fsmstates::name { \
 name() {this->setStateName(#name);} \
 template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
     try { \
@@ -599,7 +487,7 @@ template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
 };
 
 #define KARABO_FSM_STATE_A(name, TargetAction) \
-struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
+struct name : public karabo::core::fsmstates::name { \
     TargetAction _ta; \
     boost::shared_ptr<Worker> _worker; \
     name() : _ta(), _worker(new Worker) {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
@@ -633,7 +521,7 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
 };
 
 #define _KARABO_FSM_STATE_IMPL_E(name, entryFunc) \
-struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
+struct name : public karabo::core::fsmstates::name { \
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
@@ -814,7 +702,7 @@ virtual void entryFunc(const t1&, const t2&, const t3& c3, const t4&) = 0;
 
 
 #define _KARABO_FSM_STATE_IMPL_EE(name, entryFunc, exitFunc) \
-struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
+struct name : public karabo::core::fsmstates::name { \
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
