@@ -127,9 +127,11 @@ class GridLayout(BaseLayout, QGridLayout):
         super(GridLayout, self).__init__(parent)
 
     def add_layout(self, layout, model):
-        self.addLayout(layout, model.layout_data.row, model.layout_data.colspan,
-                       model.layout_data.row, model.layout_data.rowspan)
+        self.addLayout(
+            layout, model.layout_data.row, model.layout_data.colspan,
+            model.layout_data.row, model.layout_data.rowspan)
 
     def add_widget(self, widget, model):
-        self.addWidget(widget, model.layout_data.row, model.layout_data.colspan,
-                       model.layout_data.row, model.layout_data.rowspan)
+        self.addWidget(
+            widget, model.layout_data.row, model.layout_data.colspan,
+            model.layout_data.row, model.layout_data.rowspan)

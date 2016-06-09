@@ -9,15 +9,15 @@ import os.path
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QPalette, QPainter, QSizePolicy, QWidget
 
-from karabo_gui.scenemodel.api import (BoxLayoutModel, GridLayoutModel,
-                                       LabelModel, LineModel,
-                                       RectangleModel, FixedLayoutModel,
-                                       read_scene, SCENE_MIN_WIDTH,
-                                       SCENE_MIN_HEIGHT)
+from karabo_gui.scenemodel.api import (
+    BoxLayoutModel, GridLayoutModel, LabelModel, LineModel,
+    RectangleModel, FixedLayoutModel, UnknownXMLDataModel, read_scene,
+    SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
+)
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layouts import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, RectangleShape
-from .simple_widgets import LabelWidget
+from .simple_widgets import LabelWidget, UnknownSvgWidget
 
 
 def fill_root_layout(layout, parent_model, scene_widget):
@@ -42,6 +42,12 @@ def fill_root_layout(layout, parent_model, scene_widget):
         if isinstance(child, LabelModel):
             obj = LabelWidget(child, scene_widget)
             layout.add_widget(obj, child)
+        if isinstance(child, UnknownXMLDataModel):
+            obj = UnknownSvgWidget.create(child, parent=scene_widget)
+            if obj is not None:
+                layout.add_widget(obj, child)
+            # XXX: UnknownXMLDataModel has a list of children, which might
+            # include regular models. We're ignoring those children for now.
 
 
 class SceneView(QWidget):
