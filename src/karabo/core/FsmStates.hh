@@ -1,30 +1,29 @@
 /* 
- * File:   States.hh
+ * File:   FsmStates.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
- * Created on May 31, 2016, 10:54 AM
+ * Created on June 8, 2016, 4:21 PM
  */
 
-#ifndef STATES_HH
-#define	STATES_HH
+#ifndef FSMSTATES_HH
+#define	FSMSTATES_HH
 
 #include <karabo/util/Factory.hh>
-#include "BaseState.hh"
+#include "FsmBaseState.hh"
 
 namespace karabo {
     namespace core {
-        namespace states {
-
-            typedef BaseState KrbState;
-            
+        namespace fsmstates {
+        
+            typedef boost::msm::front::state<FsmBaseState> MsmState;
 
 #define KARABO_FSM_DECLARE_FIXED_STATE(X, parent) \
-            struct X : public BaseState {\
+            struct X : public MsmState {\
                 KARABO_CLASSINFO(X, #X, "1.0")\
                 X() {setStateName(#X); setParentName(parent);}\
                 virtual ~X() {}\
             };
-        
+                    
 
             /**
              * Base (Meta) states.  It corresponds the pic from
@@ -152,7 +151,7 @@ namespace karabo {
             KARABO_FSM_DECLARE_FIXED_STATE(SWITCHING_OFF, "DECREASING")
 
 #undef KARABO_FSM_DECLARE_FIXED_STATE
-            
+
             struct StateSignifier {
 
                 StateSignifier(const std::vector<std::string>& trumpList = std::vector<std::string>(),
@@ -160,7 +159,8 @@ namespace karabo {
                         const std::string& changingSignificant = "DECREASING") : m_trumpList() {
                     using namespace karabo::util;
                     
-#define REGISTER_STATE(X) if (!Factory<BaseState>::has(#X)) Factory<BaseState>::registerClass<X>(#X);
+                    
+#define REGISTER_STATE(X) if (!Factory<MsmState>::has(#X)) Factory<MsmState>::registerClass<X>(#X);
                     
                     REGISTER_STATE(UNKNOWN)
                     REGISTER_STATE(KNOWN)
@@ -222,57 +222,52 @@ namespace karabo {
 #undef REGISTER_STATE
                     
                     if (trumpList.empty()) {
-                        if (!Factory<BaseState>::has("DISABLED")) Factory<BaseState>::registerClass<DISABLED>("DISABLED");
-                        m_trumpList.push_back(Factory<BaseState>::create("DISABLED"));
-                        m_trumpList.push_back(Factory<BaseState>::create("INIT"));
+                        if (!Factory<MsmState>::has("DISABLED")) Factory<MsmState>::registerClass<DISABLED>("DISABLED");
+                        m_trumpList.push_back(Factory<MsmState>::create("DISABLED"));
+                        m_trumpList.push_back(Factory<MsmState>::create("INIT"));
                         
                         if (staticSignificant == "PASSIVE") {
-                            m_trumpList.push_back(Factory<BaseState>::create("ACTIVE"));
-                            m_trumpList.push_back(Factory<BaseState>::create("PASSIVE"));
+                            m_trumpList.push_back(Factory<MsmState>::create("ACTIVE"));
+                            m_trumpList.push_back(Factory<MsmState>::create("PASSIVE"));
                         } else if (staticSignificant == "ACTIVE") {
-                            m_trumpList.push_back(Factory<BaseState>::create("PASSIVE"));
-                            m_trumpList.push_back(Factory<BaseState>::create("ACTIVE"));
+                            m_trumpList.push_back(Factory<MsmState>::create("PASSIVE"));
+                            m_trumpList.push_back(Factory<MsmState>::create("ACTIVE"));
                         }
                         
-                        m_trumpList.push_back(Factory<BaseState>::create("STATIC"));
+                        m_trumpList.push_back(Factory<MsmState>::create("STATIC"));
                         
                         if (changingSignificant == "DECREASING") {
-                            m_trumpList.push_back(Factory<BaseState>::create("INCREASING"));
-                            m_trumpList.push_back(Factory<BaseState>::create("DECREASING"));
+                            m_trumpList.push_back(Factory<MsmState>::create("INCREASING"));
+                            m_trumpList.push_back(Factory<MsmState>::create("DECREASING"));
                         } else if (changingSignificant == "INCREASING") {
-                            m_trumpList.push_back(Factory<BaseState>::create("DECREASING"));
-                            m_trumpList.push_back(Factory<BaseState>::create("INCREASING"));
+                            m_trumpList.push_back(Factory<MsmState>::create("DECREASING"));
+                            m_trumpList.push_back(Factory<MsmState>::create("INCREASING"));
                         }
                         
-                        m_trumpList.push_back(Factory<BaseState>::create("CHANGING"));
-                        m_trumpList.push_back(Factory<BaseState>::create("ERROR"));
-                        m_trumpList.push_back(Factory<BaseState>::create("UNKNOWN"));
+                        m_trumpList.push_back(Factory<MsmState>::create("CHANGING"));
+                        m_trumpList.push_back(Factory<MsmState>::create("ERROR"));
+                        m_trumpList.push_back(Factory<MsmState>::create("UNKNOWN"));
                     } else {
                         m_trumpList.clear();
-                        for (size_t i = 0; i < trumpList.size(); i++) m_trumpList.push_back(Factory<BaseState>::create(trumpList[i]));
+                        for (size_t i = 0; i < trumpList.size(); i++) m_trumpList.push_back(Factory<MsmState>::create(trumpList[i]));
                     }
                 }
 
-                BaseState returnMostSignificant(const std::vector<BaseState>& listOfStates);
+                MsmState returnMostSignificant(const std::vector<MsmState>& listOfStates);
 
-                const std::vector<BaseState::Pointer>& getTrumpList() const {
+                const std::vector<MsmState::Pointer>& getTrumpList() const {
                     return m_trumpList;
                 }
-
+                
             protected:
-                std::vector<BaseState::Pointer> m_trumpList;
+                std::vector<MsmState::Pointer> m_trumpList;
             };
 
             static StateSignifier stateSignifier;
         }
-            
-        static BaseState::Pointer createState(const std::string& stateName) {
-            return karabo::util::Factory<BaseState>::create(stateName);
-        }
     }
 }
 
-//#define KARABO_FSM_STATE(X) struct X : karabo::core::states::X {};
 
-#endif	/* STATES_HH */
+#endif	/* FSMSTATES_HH */
 

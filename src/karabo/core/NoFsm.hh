@@ -14,8 +14,6 @@
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/util/ClassInfo.hh>
 #include <karabo/util/Schema.hh>
-//#include "Device.hh"
-#include "States.hh"
 
 namespace karabo {
     namespace core {

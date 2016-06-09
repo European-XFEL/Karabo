@@ -26,6 +26,8 @@
 
 #include "NoFsm.hh"
 #include "DeviceClient.hh"
+#include "States.hh"
+#include "FsmStates.hh"
 
 
 /**
@@ -796,9 +798,8 @@ namespace karabo {
                 return m_serverId;
             }
 
-            // This function will polymorphically be called by the FSM template
-
-            virtual void updateState(const std::string& currentState) { // private
+        private:
+            void updateState(const std::string& currentState) { // private
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
                 if (get<std::string>("state") != currentState) {
                     set("state", currentState);
@@ -815,7 +816,11 @@ namespace karabo {
                 reply(currentState);
             }
 
-            virtual void updateState(const karabo::core::State::Pointer& csp) {
+        public:
+
+            // This function will polymorphically be called by the FSM template
+
+            void updateState(const karabo::core::BaseState::Pointer& csp) {
                 try {
                     if (!csp)
                         throw KARABO_PARAMETER_EXCEPTION("State pointer is not valid (initialized).");
