@@ -7,11 +7,13 @@ import time
 import weakref
 import inspect
 
+from .basetypes import KaraboValue
 from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
 from .hash import Hash, HashType, Int32, String
 from .p2p import NetworkOutput
 from .schema import Configurable
+from .timestamp import Timestamp
 
 
 class Signal(object):
@@ -257,24 +259,28 @@ class SignalSlotable(Configurable):
         self._ss.updateInstanceInfo(info)
 
     def setValue(self, attr, value):
+        if isinstance(value, KaraboValue) and value.timestamp is None:
+            value.timestamp = Timestamp()
         self.__dict__[attr.key] = value
         update = not self._sethash
-        self._sethash[attr.key] = value
+        self._sethash[attr.key] = value, attr
         if update:
             self._ss.loop.call_soon_threadsafe(self.update)
 
     def update(self):
         hash = Hash()
         while self._sethash:
-            k, v = self._sethash.popitem()
-            hash[k] = v
+            k, (v, d) = self._sethash.popitem()
+            value, attrs = d.toDataAndAttrs(v)
+            hash[k] = value
+            hash[k, ...].update(attrs)
         if hash:
             self.signalChanged(hash, self.deviceId)
 
-    def setChildValue(self, key, value):
+    def setChildValue(self, key, value, desc):
         if not self._sethash:
             self._ss.loop.call_soon_threadsafe(self.update)
-        self._sethash[key] = value
+        self._sethash[key] = value, desc
 
     @slot
     def slotSchemaUpdated(self, schema, deviceId):

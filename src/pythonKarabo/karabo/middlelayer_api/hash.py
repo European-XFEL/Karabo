@@ -276,8 +276,7 @@ class Descriptor(object):
             return instance.__dict__[self.key]
 
     def __set__(self, instance, value):
-        v = self.cast(value)
-        instance.setValue(self, v)
+        instance.setValue(self, self.toKaraboValue(value))
 
     def setter(self, instance, value):
         """this is to be called if the value is changed from the outside"""
@@ -285,7 +284,7 @@ class Descriptor(object):
 
     @coroutine
     def setter_async(self, instance, value):
-        self.setter(instance, self.cast(value))
+        self.setter(instance, self.toKaraboValue(value, strict=False))
 
     def checkedSet(self, instance, value):
         if self.accessMode is not AccessMode.RECONFIGURABLE:
