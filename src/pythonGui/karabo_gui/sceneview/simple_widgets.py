@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtCore import QByteArray
-from PyQt4.QtGui import QLabel, QPainter, QWidget
+from PyQt4.QtGui import QFrame, QLabel, QPainter, QWidget
 from PyQt4.QtSvg import QSvgRenderer
 
 from karabo_gui.scenemodel.api import write_single_model
@@ -16,14 +16,16 @@ class LabelWidget(QLabel):
 
     def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text, parent)
-
-        self.setGeometry(model.x, model.y, model.width, model.height)
+        self.setFrameShape(QFrame.Box)
         self.setLineWidth(model.frame_width)
+        self.setGeometry(model.x, model.y, model.width, model.height)
 
         styleSheet = []
         styleSheet.append('qproperty-font: "{}";'.format(model.font))
         styleSheet.append('color: "{}";'.format(model.foreground))
-        styleSheet.append('background-color: "{}";'.format(model.background))
+        if model.background:
+            styleSheet.append('background-color: "{}";'.format(
+                model.background))
         self.setStyleSheet("".join(styleSheet))
 
 
