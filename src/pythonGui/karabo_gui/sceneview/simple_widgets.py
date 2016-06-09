@@ -43,7 +43,7 @@ class UnknownSvgWidget(QWidget):
     def create(cls, model, parent=None):
         """ Create an instance of this widget from a model object.
 
-        Return None if there is would be nothing to display.
+        Returns None if there would be nothing to display.
         """
         xml = write_single_model(model)
         ar = QByteArray.fromRawData(xml)

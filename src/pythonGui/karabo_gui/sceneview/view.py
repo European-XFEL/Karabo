@@ -45,7 +45,9 @@ def fill_root_layout(layout, parent_model, scene_widget):
         if isinstance(child, UnknownXMLDataModel):
             obj = UnknownSvgWidget.create(child, parent=scene_widget)
             if obj is not None:
-                layout.add_widget(obj)
+                layout.add_widget(obj, child)
+            # XXX: UnknownXMLDataModel has a list of children, which might
+            # include regular models. We're ignoring those children for now.
 
 
 class SceneView(QWidget):
