@@ -114,6 +114,7 @@ class GroupLayout(BaseLayout, QLayout):
 class BoxLayout(BaseLayout, QBoxLayout):
     def __init__(self, direction, parent=None):
         super(BoxLayout, self).__init__(direction, parent)
+        self.setContentsMargins(5, 5, 5, 5)
 
     def add_layout(self, layout, model):
         self.addLayout(layout)
