@@ -67,15 +67,18 @@ class GroupLayout(BaseLayout, QLayout):
 
         This is part of the virtual interface of QLayout.
         """
-        try:
-            ret = self._children.pop(index)
-            # XXX: Do we actually need to un-parent items which are removed?
-            l = ret.layout()
-            if l is not None and l.parent() is self:
-                l.setParent(None)
-            return ret
-        except IndexError:
-            return
+        item = self._children.pop(index)
+        layout = item.layout()
+        if layout is not None and layout.parent() is self:
+            layout.setParent(None)
+        # The creation path of the layout items bypasses the virtual
+        # wrapper methods, this means that the ownership of the cpp
+        # pointer is never transfered to Qt. If the item is returned
+        # here it will be delete by Qt, which doesn't own the pointer.
+        # A double free occurs once the Python item falls out of scope.
+        # To avoid this, this method always returns None and the item
+        # cleanup is performed by Python, which owns the cpp pointer.
+        return None
 
     def count(self):
         """ DO NOT CALL THIS METHOD DIRECTLY!
@@ -99,8 +102,11 @@ class GroupLayout(BaseLayout, QLayout):
         left, right, top, bottom = 0, 0, 0, 0
         for item in self._children:
             rect = item.geometry()
+            MAX_VALUE = 100000
+            left = MAX_VALUE
             left = min(left, rect.left())
             right = max(right, rect.right())
+            top = MAX_VALUE
             top = min(top, rect.top())
             bottom = max(bottom, rect.bottom())
 
