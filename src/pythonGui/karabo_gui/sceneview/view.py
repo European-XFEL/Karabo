@@ -85,7 +85,6 @@ class SceneView(QWidget):
                     max(self.scene_model.height, SCENE_MIN_HEIGHT))
         fill_root_layout(self.layout, self.scene_model, self)
 
-
     def paintEvent(self, event):
         """ Show view content.
         """
