@@ -22,9 +22,9 @@ QT_PEN_JOIN_STYLE = {
 }
 
 # For convenience association of ints to Qt enums
-QT_BOX_LAYOUT_DIRECTION = {
-    0: QBoxLayout.LeftToRight,
-    1: QBoxLayout.RightToLeft,
-    2: QBoxLayout.TopToBottom,
-    3: QBoxLayout.BottomToTop,
-}
+QT_BOX_LAYOUT_DIRECTION = (
+    QBoxLayout.LeftToRight,
+    QBoxLayout.RightToLeft,
+    QBoxLayout.TopToBottom,
+    QBoxLayout.BottomToTop
+)
