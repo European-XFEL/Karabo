@@ -14,14 +14,17 @@ class Scan(Device):
 
     start_pos = Float(
         displayedName="Start Position",
+        defaultValue=None,
         accessMode=AccessMode.RECONFIGURABLE)
 
     stop_pos = Float(
         displayedName="Stop Position",
+        defaultValue=None,
         accessMode=AccessMode.RECONFIGURABLE)
 
     steps = Integer(
         displayedName="Number of steps",
+        defaultValue=None,
         accessMode=AccessMode.RECONFIGURABLE,
         unitSymbol=Unit.COUNT)
 
@@ -75,12 +78,10 @@ class Scan(Device):
             self.logger.exception("A remote device property seems to be wrong")
             raise
 
-        try:
-            self.start_pos, self.stop_pos, self.steps
-        except NameError:
-            self.logger.exception(
+        if None in (self.start_pos, self.stop_pos, self.steps):
+            self.logger.error(
                 "start, stop and steps must be set before running")
-            raise
+            return
 
         self.state = State.MOVING
         try:
