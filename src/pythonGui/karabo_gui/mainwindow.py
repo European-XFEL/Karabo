@@ -24,7 +24,6 @@ from karabo_gui.docktabwindow import DockTabWindow
 from karabo_gui.guiproject import Macro
 from karabo_gui.network import Network
 from karabo_gui.scene import Scene
-from karabo_gui.sceneview.api import SceneView
 
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.custommiddlepanel import CustomMiddlePanel
@@ -376,7 +375,7 @@ class MainWindow(QMainWindow):
         if self.isMiddlePanelUndocked(scene_view):
             return
 
-        scenePanel = ScenePanel(scene_view)
+        scenePanel = ScenePanel(scene_view, self.acServerConnect.isChecked())
         self.middleTab.addDockableTab(scenePanel, scene_view.title, self)
         scenePanel.signalClosed.connect(self.onMiddlePanelRemoved)
 
