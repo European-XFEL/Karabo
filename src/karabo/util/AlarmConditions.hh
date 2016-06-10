@@ -26,13 +26,15 @@ namespace karabo {
             class BaseAlarmCondition : public boost::enable_shared_from_this<BaseAlarmCondition>{
               
             protected:
-                std::string conditionString = "UNDEFINED";
-                unsigned int rank = 0;
+                std::string conditionString;
+                unsigned int rank;
                 
                 
+                BaseAlarmCondition() : conditionString("UNDEFINED"), rank(0) {
+                    
+                };
                 
-                
-                BaseAlarmCondition(std::string cs) : conditionString(cs){
+                BaseAlarmCondition(std::string cs) : conditionString(cs), rank(0) {
                     
                 };
                 BaseAlarmCondition(std::string cs, unsigned int r) : conditionString(cs), rank(r){
@@ -73,7 +75,7 @@ namespace karabo {
             };
             
             #define KRB_ALARM_NO_BASE(name, rank) class name ## _T: public BaseAlarmCondition{\
-                                            public: \
+                                            public:\
                                             name ## _T() : BaseAlarmCondition(std::string(#name), rank){};\
                                            };\
                                            static boost::shared_ptr<name ## _T> name(new name ## _T);
@@ -81,7 +83,7 @@ namespace karabo {
                                            
                                            
             #define KRB_ALARM_BASE(name, rank) class name ## _T: public BaseAlarmCondition{\
-                                            public: \    
+                                            public:\
                                             name ## _T() : BaseAlarmCondition(std::string(#name), rank){};\
                                             name ## _T(std::string bs): BaseAlarmCondition(bs, rank, boost::make_shared<name ## _T>()){};\
                                            };\
@@ -89,7 +91,7 @@ namespace karabo {
                                      
                                            
             #define KRB_ALARM_FROM_BASE(name, base) class name ## _T: public base ## _T {\
-                                            public: \
+                                            public:\
                                             name ## _T(): base ## _T (std::string(#name)){};\
                                            };\
                                            static boost::shared_ptr<name ## _T> name(new name ## _T);
