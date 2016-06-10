@@ -24,7 +24,7 @@ def fill_root_layout(layout, parent_model, scene_widget):
     # Go through children and create corresponding GUI objects
     for child in parent_model.children:
         if isinstance(child, FixedLayoutModel):
-            obj = GroupLayout(child, None)
+            obj = GroupLayout(child)
             layout.add_layout(obj)
             fill_root_layout(obj, child, scene_widget)
         if isinstance(child, BoxLayoutModel):
