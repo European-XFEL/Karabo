@@ -12,8 +12,8 @@ from .utils import save_painter_state
 
 class BaseLayout(object):
     def __init__(self, model, *args):
-        self.model = model
         super(BaseLayout, self).__init__(*args)
+        self.model = model
         self.shapes = []
 
     def add_shape(self, shape):
