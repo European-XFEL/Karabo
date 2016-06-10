@@ -156,6 +156,9 @@ class SceneView(QWidget):
 
     def _draw_selection(self, painter):
         """ Draw a dashed rect around the selected objects. """
+        if not self.selection_model.has_selection():
+            return
+
         black = QPen(Qt.black)
         black.setStyle(Qt.DashLine)
         white = QPen(Qt.white)
