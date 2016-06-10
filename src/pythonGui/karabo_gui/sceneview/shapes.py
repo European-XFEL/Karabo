@@ -63,7 +63,6 @@ class BaseShape(object, metaclass=ABCMeta):
         for the bounding rectangle.
         """
 
-
     @abstractmethod
     def draw(self, painter):
         """ Needs to be reimplemented in inherited classes to draw the shape.
