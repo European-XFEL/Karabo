@@ -29,6 +29,7 @@
 #include "Worker.hh"
 #include "FsmBaseState.hh"
 #include "FsmStates.hh"
+#include "States.hh"
 
 // Allow boost msm names appear globally in karabo namespace
 namespace karabo {
@@ -548,7 +549,7 @@ _KARABO_FSM_STATE_IMPL_E(name, entryFunc) \
 virtual void entryFunc() = 0;
 
 #define _KARABO_FSM_STATE_IMPL_AE(name, TargetAction, entryFunc) \
-struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
+struct name : public karabo::core::fsmstates::name /*boost::msm::front::state<karabo::core::FsmBaseState>*/ { \
     TargetAction _ta; \
     boost::shared_ptr<Worker> _worker; \
     name() : _ta(), _worker(new Worker) {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
@@ -743,7 +744,7 @@ virtual void entryFunc() = 0; \
 virtual void exitFunc()  = 0;
 
 #define _KARABO_FSM_STATE_IMPL_AEE(name, TargetAction, entryFunc, exitFunc) \
-struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
+struct name : public karabo::core::fsmstates::name /*boost::msm::front::state<karabo::core::FsmBaseState>*/ { \
 private: \
     TargetAction _ta; \
     boost::shared_ptr<Worker> _worker; \

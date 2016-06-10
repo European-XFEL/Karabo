@@ -30,25 +30,25 @@ namespace karabo {
                 SLOT_ELEMENT(expected).key("acquire")
                         .displayedName("Acquire")
                         .description("Instructs camera to go into acquisition state")
-                        .allowedStates("Ok.Ready")
+                        .allowedStates("STOPPED")
                         .commit();
 
                 SLOT_ELEMENT(expected).key("trigger")
                         .displayedName("Trigger")
                         .description("Sends a software trigger to the camera")
-                        .allowedStates("Ok.Acquisition")
+                        .allowedStates("STARTED")
                         .commit();
 
                 SLOT_ELEMENT(expected).key("stop")
                         .displayedName("Stop")
                         .description("Instructs camera to stop current acquisition")
-                        .allowedStates("Ok.Acquisition")
+                        .allowedStates("STARTED")
                         .commit();
 
                 SLOT_ELEMENT(expected).key("reset")
                         .displayedName("Reset")
                         .description("Resets the camera in case of an error")
-                        .allowedStates("Error")
+                        .allowedStates("ERROR")
                         .commit();
             }
 
