@@ -7,7 +7,7 @@
 import os.path
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QPalette, QPainter, QSizePolicy, QWidget
+from PyQt4.QtGui import QPalette, QPainter, QPen, QSizePolicy, QWidget
 
 from karabo_gui.scenemodel.api import (
     BoxLayoutModel, GridLayoutModel, LabelModel, LineModel, PathModel,
@@ -17,8 +17,10 @@ from karabo_gui.scenemodel.api import (
 from .bases import BaseSceneTool
 from .const import QT_BOX_LAYOUT_DIRECTION, QT_CURSORS
 from .layouts import BoxLayout, GridLayout, GroupLayout
+from .selection_model import SceneSelectionModel
 from .shapes import LineShape, PathShape, RectangleShape
 from .simple_widgets import LabelWidget, UnknownSvgWidget
+from .utils import save_painter_state
 
 
 def fill_root_layout(layout, parent_model, scene_widget):
@@ -64,6 +66,7 @@ class SceneView(QWidget):
         self.title = None
         self.designMode = designMode
         self.scene_model = None
+        self.selection_model = SceneSelectionModel()
         self.current_tool = None
 
         self.layout = GroupLayout(None, parent=self)
@@ -107,11 +110,12 @@ class SceneView(QWidget):
         """
         with QPainter(self) as painter:
             self.layout.draw(painter)
+            self._draw_selection(painter)
             if self.current_tool is not None and self.current_tool.visible:
                 self.current_tool.draw(painter)
 
     # ----------------------------
-    # Interface methods
+    # Public methods
 
     def load(self, filename):
         """ The given ``filename`` is loaded.
@@ -147,3 +151,22 @@ class SceneView(QWidget):
             self.set_cursor('none')
 
         self.update()
+
+    # ----------------------------
+    # Private methods (yes, I know... It's just a convention)
+
+    def _draw_selection(self, painter):
+        """ Draw a dashed rect around the selected objects. """
+        if not self.selection_model.has_selection():
+            return
+
+        black = QPen(Qt.black)
+        black.setStyle(Qt.DashLine)
+        white = QPen(Qt.white)
+
+        rect = self.selection_model.get_selection_bounds()
+        with save_painter_state(painter):
+            painter.setPen(white)
+            painter.drawRect(rect)
+            painter.setPen(black)
+            painter.drawRect(rect)

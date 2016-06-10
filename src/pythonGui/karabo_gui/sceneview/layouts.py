@@ -7,7 +7,7 @@
 from PyQt4.QtCore import QSize
 from PyQt4.QtGui import QBoxLayout, QGridLayout, QLayout
 
-from .utils import save_painter_state
+from .utils import calc_bounding_rect, save_painter_state
 
 
 class BaseLayout(object):
@@ -100,16 +100,8 @@ class GroupLayout(BaseLayout, QLayout):
 
         This is part of the virtual interface of QLayout.
         """
-        MAX_VALUE = 100000
-        left, right, top, bottom = MAX_VALUE, 0, MAX_VALUE, 0
-        for item in self._children:
-            rect = item.geometry()
-            left = min(left, rect.left())
-            right = max(right, rect.right())
-            top = min(top, rect.top())
-            bottom = max(bottom, rect.bottom())
-
-        return QSize(bottom - top, right - left)
+        x, y, w, h = calc_bounding_rect(self._children)
+        return QSize(w, h)
 
 
 class BoxLayout(BaseLayout, QBoxLayout):
