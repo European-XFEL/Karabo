@@ -8,6 +8,7 @@
 #ifndef STATES_HH
 #define	STATES_HH
 
+#include <iostream>
 #include <karabo/util/Factory.hh>
 #include "BaseState.hh"
 
@@ -266,9 +267,7 @@ namespace karabo {
             static StateSignifier stateSignifier;
         }
             
-        static BaseState::Pointer createState(const std::string& stateName) {
-            return karabo::util::Factory<BaseState>::create(stateName);
-        }
+        BaseState::Pointer createState(const std::string& stateName);
     }
 }
 

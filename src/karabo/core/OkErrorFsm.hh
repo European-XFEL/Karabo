@@ -31,7 +31,7 @@ namespace karabo {
                 SLOT_ELEMENT(expected).key("reset")
                         .displayedName("Reset")
                         .description("Resets the device in case of an error")
-                        .allowedStates("Error")
+                        .allowedStates("ERROR")
                         .commit();
             }
 

@@ -31,20 +31,20 @@ namespace karabo {
                 SLOT_ELEMENT(expected).key("start")
                         .displayedName("Start")
                         .description("Instructs device to go to started state")
-                        .allowedStates("Ok.Stopped")
+                        .allowedStates("STOPPED")
                         .commit();
 
                 SLOT_ELEMENT(expected).key("stop")
                         .displayedName("Stop")
                         .description("Instructs device to go to stopped state")
-                        .allowedStates("Ok.Started")
+                        .allowedStates("STARTED")
                         .commit();
 
 
                 SLOT_ELEMENT(expected).key("reset")
                         .displayedName("Reset")
                         .description("Resets the device in case of an error")
-                        .allowedStates("Error")
+                        .allowedStates("ERROR")
                         .commit();
 
             }
