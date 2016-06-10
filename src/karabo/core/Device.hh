@@ -40,6 +40,7 @@ namespace karabo {
         #define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR
 
         #define KARABO_NO_SERVER "__none__"
+        
 
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
         public:
@@ -206,7 +207,7 @@ namespace karabo {
                         .description("The current alarm condition of the device."
                                      "Evaluates to the highest condition on any"
                                      " property if not set manually.")
-                        .readOnly().initialValue("Ok")
+                        .readOnly().initialValue(alarmConditions::NONE->asString())
                         .commit();
 
                 NODE_ELEMENT(expected).key("performanceStatistics")
@@ -449,7 +450,7 @@ namespace karabo {
              */
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                
 
                 karabo::util::Hash validated;
                 std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
@@ -460,12 +461,19 @@ namespace karabo {
                 // Check for parameters being in a bad condition
                 if (m_validatorIntern.hasParametersInWarnOrAlarm()) {
                     const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
+                    std::vector<alarmConditions::Pointer> v;
                     for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                         const Hash& desc = it->getValue<Hash>();
-                        KARABO_LOG_WARN << desc.get<string>("message");
+                        KARABO_LOG_WARN << desc.get<string>("type")<<":"<< desc.get<string>("message");
                         emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_deviceId);
+                        v.push_back(alarmConditions::fromString(desc.get<string>("type")));
                     }
+                    this->setAlarmCondition(alarmConditions::returnMostSignificant(v));
+                } else {
+                    this->setAlarmCondition(alarmConditions::NONE);
                 }
+                
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
                 if (!validated.empty()) {
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
@@ -865,6 +873,19 @@ namespace karabo {
             void execute(const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) const {
                 call("", command, a1, a2, a3, a4);
             }
+            
+            karabo::util::alarmConditions::Pointer getAlarmCondition() const {
+                return karabo::util::alarmConditions::fromString(this->get<std::string>("alarmCondition"));
+            }
+            
+            void setAlarmCondition(const karabo::util::alarmConditions::Pointer condition){
+                this->setNoValidate("alarmCondition", condition->asString());
+            }
+            
+            karabo::util::alarmConditions::Pointer getAlarmCondition(const std::string & key, const std::string & sep = ".") const {
+                const std::string & propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep);
+                return karabo::util::alarmConditions::fromString(propertyCondition);
+            }
 
         protected: // Functions and Classes
 
@@ -1213,6 +1234,8 @@ namespace karabo {
                 }
                 return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
             }
+            
+           
             
             /*const std::vector<karabo::util::Hash>& getVectorHashRow(const std::string& key) const {
                 const std::vector<karabo::util::Hash>& value = m_parameters.get<std::vector<karabo::util::Hash> >(key);
