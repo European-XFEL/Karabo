@@ -59,19 +59,14 @@ class BaseShape(object, metaclass=ABCMeta):
 
     @abstractmethod
     def geometry(self):
-        """ Needs to be reimplemented in the inherited classes to get the
-            geometry for the bounding rectangle.
+        """ Needs to be reimplemented in inherited classes to get the geometry
+        for the bounding rectangle.
         """
 
+    @abstractmethod
     def draw(self, painter):
-        if self.selected:
-            black = QPen(Qt.black)
-            black.setStyle(Qt.DashLine)
-            white = QPen(Qt.white)
-            painter.setPen(white)
-            painter.drawRect(self.geometry())
-            painter.setPen(black)
-            painter.drawRect(self.geometry())
+        """ Needs to be reimplemented in inherited classes to draw the shape.
+        """
 
 
 class LineShape(BaseShape):
@@ -91,7 +86,6 @@ class LineShape(BaseShape):
         """
         painter.setPen(self.pen)
         painter.drawLine(self.shape)
-        super(LineShape, self).draw(painter)
 
 
 class RectangleShape(BaseShape):
@@ -112,7 +106,6 @@ class RectangleShape(BaseShape):
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawRect(self.shape)
-        super(RectangleShape, self).draw(painter)
 
 
 class PathShape(BaseShape):
@@ -133,4 +126,3 @@ class PathShape(BaseShape):
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawPath(self.shape)
-        super(PathShape, self).draw(painter)
