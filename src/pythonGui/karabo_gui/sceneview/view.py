@@ -14,7 +14,8 @@ from karabo_gui.scenemodel.api import (
     RectangleModel, FixedLayoutModel, UnknownXMLDataModel, read_scene,
     SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
 )
-from .const import QT_BOX_LAYOUT_DIRECTION
+from .bases import BaseSceneTool
+from .const import QT_BOX_LAYOUT_DIRECTION, QT_CURSORS
 from .layouts import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape
 from .simple_widgets import LabelWidget, UnknownSvgWidget
@@ -63,6 +64,7 @@ class SceneView(QWidget):
         self.title = None
         self.designMode = designMode
         self.scene_model = None
+        self.current_tool = None
 
         self.layout = GroupLayout(parent=self)
 
@@ -72,6 +74,44 @@ class SceneView(QWidget):
         self.setAttribute(Qt.WA_MouseTracking)
         self.setBackgroundRole(QPalette.Window)
         self.resize(SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+
+    # ----------------------------
+    # Qt Methods
+
+    def mouseMoveEvent(self, event):
+        if self.current_tool is not None:
+            self.current_tool.mouse_move(self, event)
+            if event.isAccepted():
+                self.update()
+            else:
+                super(SceneView, self).mouseMoveEvent(event)
+
+    def mousePressEvent(self, event):
+        if self.current_tool is not None:
+            self.current_tool.mouse_down(self, event)
+            if event.isAccepted():
+                self.update()
+            else:
+                super(SceneView, self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if self.current_tool is not None:
+            self.current_tool.mouse_up(self, event)
+            if event.isAccepted():
+                self.update()
+            else:
+                super(SceneView, self).mouseReleaseEvent(event)
+
+    def paintEvent(self, event):
+        """ Show view content.
+        """
+        with QPainter(self) as painter:
+            self.layout.draw(painter)
+            if self.current_tool is not None and self.current_tool.visible:
+                self.current_tool.draw(painter)
+
+    # ----------------------------
+    # Interface methods
 
     def load(self, filename):
         """ The given ``filename`` is loaded.
@@ -85,8 +125,25 @@ class SceneView(QWidget):
                     max(self.scene_model.height, SCENE_MIN_HEIGHT))
         fill_root_layout(self.layout, self.scene_model, self)
 
-    def paintEvent(self, event):
-        """ Show view content.
+    def item_at_position(self, pos):
+        """ Returns the topmost object whose bounds contain `pos`.
         """
-        with QPainter(self) as painter:
-            self.layout.draw(painter)
+        raise NotImplementedError
+
+    def set_cursor(self, name):
+        """ Sets the cursor for the scene view.
+        """
+        if name == 'none':
+            self.unsetCursor()
+        else:
+            self.setCursor(QT_CURSORS[name])
+
+    def set_tool(self, tool):
+        """ Sets the current tool being used by the view.
+        """
+        assert tool is None or isinstance(tool, BaseSceneTool)
+        self.current_tool = tool
+        if tool is None:
+            self.set_cursor('none')
+
+        self.update()
