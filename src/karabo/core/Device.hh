@@ -201,6 +201,14 @@ namespace karabo {
                         .description("The current state the device is in")
                         .readOnly().initialValue("Ok")
                         .commit();
+                
+                STRING_ELEMENT(expected).key("alarmCondition")
+                        .displayedName("Alarm condition")
+                        .description("The current alarm condition of the device."
+                                     "Evaluates to the highest condition on any"
+                                     " property if not set manually.")
+                        .readOnly().initialValue("Ok")
+                        .commit();
 
                 NODE_ELEMENT(expected).key("performanceStatistics")
                         .displayedName("Performance Statistics")
