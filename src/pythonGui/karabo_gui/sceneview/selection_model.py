@@ -1,11 +1,17 @@
+from PyQt4.QtCore import QRect
 from traits.api import HasTraits, List
 
 
 class SceneSelectionModel(HasTraits):
     """ A selection model for the SceneView.
     """
-    # The list of selected scene objects
+    # The list of selected scene objects (shapes, widgets, layouts)
     _selection = List
+
+    def __iter__(self):
+        """ Implement the Python iterator interface.
+        """
+        return iter(self._selection)
 
     def clear_selection(self):
         """ Remove all objects from the selection
@@ -23,7 +29,7 @@ class SceneSelectionModel(HasTraits):
             bottom = max(bottom, rect.bottom())
             right = max(right, rect.right())
 
-        return (left, top, right - left, bottom - top)
+        return QRect(left, top, right - left, bottom - top)
 
     def select_object(self, obj):
         """ Select an object.
