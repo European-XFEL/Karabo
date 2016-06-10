@@ -1004,11 +1004,23 @@ namespace karabo {
 
 
         std::pair<karabo::util::Hash, karabo::util::Schema> DeviceClient::getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint) {
-            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(make_pair<Hash, Schema>(Hash(), Schema()));
+            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+            if (!p) {
+                KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
+                return make_pair<Hash, Schema>(Hash(), Schema());
+            }
+
+            const std::string dataLogReader(this->getDataLogReader(deviceId));
             Hash hash;
             Schema schema;
-            m_signalSlotable.lock()->request(core::DATALOGMANAGER_ID, "slotGetConfigurationFromPast", deviceId, timepoint)
-                    .timeout(60000).receive(hash, schema);
+            try {
+                p->request(dataLogReader, "slotGetConfigurationFromPast", deviceId, timepoint)
+                    .timeout(10 * m_internalTimeout).receive(hash, schema);
+            } catch (const TimeoutException&) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Request to DataLogReader '" << dataLogReader
+                        << "' timed out for configuration at '" << timepoint << "'.";
+            }
+
             return make_pair(hash, schema);
         }
 
