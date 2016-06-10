@@ -1,6 +1,8 @@
 from PyQt4.QtCore import QRect
 from traits.api import HasTraits, List
 
+from .utils import calc_bounding_rect
+
 
 class SceneSelectionModel(HasTraits):
     """ A selection model for the SceneView.
@@ -21,15 +23,8 @@ class SceneSelectionModel(HasTraits):
     def get_selection_bounds(self):
         """ Return the bounding rectangle for the objects which are selected.
         """
-        left, top, right, bottom = 10000, 10000, 0, 0
-        for obj in self._selection:
-            rect = obj.geometry()
-            left = min(left, rect.left())
-            top = min(top, rect.top())
-            bottom = max(bottom, rect.bottom())
-            right = max(right, rect.right())
-
-        return QRect(left, top, right - left, bottom - top)
+        x, y, w, h = calc_bounding_rect(self._selection)
+        return QRect(x, y, w, h)
 
     def select_object(self, obj):
         """ Select an object.
