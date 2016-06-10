@@ -467,7 +467,7 @@ class DeviceClient(object):
         with this function one can get all values of a property in a given
         timespan::
 
-            getHistory(deviceId, propertyName, "2015-12-01", "2015-12-02")
+            getPropertyHistory(deviceId, propertyName, "2015-12-01", "2015-12-02")
 
         returns a list of Hashes, which contain all changes of *propertyName*
         between the two given dates. Each Hash has a node with key 'v'. Its
@@ -494,10 +494,23 @@ class DeviceClient(object):
                 
     
     def getDeviceHistory(self, deviceId, timepoint):
+        """
+        Get full configuration and schema of device at given time point,
+        similar to 'getConfigurationFromPast' of the C++ DeviceClient.
+        Concerning the format of the timepoint, see getPropertyHistory.
+        """
+        return self.getConfigurationFromPast(deviceId, timepoint)
+
+
+    def getConfigurationFromPast(self, deviceId, timepoint):
+        """
+        Same as getDeviceHistory, kept for interface similarity with the C++
+        DeviceClient.
+        """
         utc_timepoint = self._fromTimeStringToUtcString(timepoint)
-        return self.__client.getDeviceHistory(deviceId, utc_timepoint)
-    
-        
+        return self.__client.getConfigurationFromPast(deviceId, utc_timepoint)
+
+
     def getSystemInformation(self):
         return self.__client.getSystemInformation()
     

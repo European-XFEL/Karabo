@@ -75,8 +75,6 @@ namespace karabo {
             std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
             mutable boost::mutex m_stateDependendSchemaMutex;
 
-            mutable boost::mutex m_objectStateChangeMutex;
-
             // Regular expression for error detection in state word
             boost::regex m_errorRegex;
 
@@ -92,6 +90,7 @@ namespace karabo {
 
             krb_log4cpp::Category* m_log;
 
+            mutable boost::mutex m_objectStateChangeMutex;
             karabo::util::Hash m_parameters;
             karabo::util::Schema m_staticSchema;
             karabo::util::Schema m_injectedSchema;
@@ -543,7 +542,7 @@ namespace karabo {
              * @return value of the requested parameter
              */
             template <class T>
-            const T& get(const std::string& key, const T& var = T()) const {
+            T get(const std::string& key, const T& var = T()) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
                     //if (karabo::util::Types::from(var) == karabo::util::Types::VECTOR_HASH && m_parameters.hasAttribute(key, KARABO_SCHEMA_ROW_SCHEMA))
@@ -590,7 +589,8 @@ namespace karabo {
              * Retrieves all expected parameters of this device
              * @return Schema object containing all expected parameters
              */
-            const karabo::util::Schema& getFullSchema() const {
+            karabo::util::Schema getFullSchema() const {
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 return m_fullSchema;
             }
 
@@ -696,8 +696,9 @@ namespace karabo {
              * @return Aliased representation of the parameter
              */
             template <class AliasType>
-            const AliasType& getAliasFromKey(const std::string& key) const {
+            AliasType getAliasFromKey(const std::string& key) const {
                 try {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     return m_fullSchema.getAliasFromKey<AliasType>(key);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving alias from parameter (" + key + ")"));
@@ -710,8 +711,9 @@ namespace karabo {
              * @return The original name of the parameter
              */
             template <class AliasType>
-            const std::string& getKeyFromAlias(const AliasType& alias) const {
+            std::string getKeyFromAlias(const AliasType& alias) const {
                 try {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     return m_fullSchema.getKeyFromAlias(alias);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter from alias (" + karabo::util::toString(alias) + ")"));
@@ -726,6 +728,7 @@ namespace karabo {
              */
             template <class T>
             const bool aliasHasKey(const T& alias) const {
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 return m_fullSchema.aliasHasKey(alias);
             }
 
@@ -735,6 +738,7 @@ namespace karabo {
              * @return true if the alias exists
              */
             bool keyHasAlias(const std::string& key) const {
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 return m_fullSchema.keyHasAlias(key);
             }
 
@@ -744,6 +748,7 @@ namespace karabo {
              * @return The enumerated internal reference type of the value
              */
             karabo::util::Types::ReferenceType getValueType(const std::string& key) const {
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 return m_fullSchema.getValueType(key);
             }
 
@@ -764,6 +769,7 @@ namespace karabo {
 
             karabo::util::Hash filterByTags(const karabo::util::Hash& hash, const std::string& tags) const {
                 karabo::util::Hash filtered;
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 karabo::util::HashFilter::byTag(m_fullSchema, hash, filtered, tags);
                 return filtered;
             }
@@ -972,11 +978,14 @@ namespace karabo {
 
             void initSchema() {
                 using namespace karabo::util;
-                // The static schema is the regular schema as assembled by parsing the expectedParameters functions
-                m_staticSchema = getSchema(m_classId, Schema::AssemblyRules(INIT | WRITE | READ));
-
-                // At startup the static schema is identical with the runtime schema
-                m_fullSchema = m_staticSchema;
+                const Schema staticSchema = getSchema(m_classId, Schema::AssemblyRules(INIT | WRITE | READ));
+                {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    // The static schema is the regular schema as assembled by parsing the expectedParameters functions
+                    m_staticSchema = staticSchema; // Here we lack a Schema::swap(..)...
+                    // At startup the static schema is identical with the runtime schema
+                    m_fullSchema = m_staticSchema;
+                }
             }
 
             void initDeviceSlots() {
@@ -1006,6 +1015,7 @@ namespace karabo {
              *  */
             void initChannels(const std::string& topLevel = "") {
                 
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 // Keys under topLevel, without leading "topLevel.":
                 const std::vector<std::string>& subKeys = m_fullSchema.getKeys(topLevel);
 
@@ -1029,27 +1039,31 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_DEBUG << "'" << this->getInstanceId() << "' looks for input/output channels "
                                 << "under node \"" << key << "\"";
                         
+                        lock.unlock(); // release lock before recursion
                         this->initChannels(key);
+                        lock.lock();
                     }
                 }
             }
 
             bool slotCallGuard(const std::string& slotName) {
-                if (m_fullSchema.has(slotName) && m_fullSchema.hasAllowedStates(slotName)) {
-                    const std::vector<std::string>& allowedStates = m_fullSchema.getAllowedStates(slotName);
-                    if (!allowedStates.empty()) {
-                        //std::cout << "Validating slot" << std::endl;
-                        const std::string& currentState = get<std::string > ("state");
-                        if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
-                            std::ostringstream msg;
-                            msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state "
-                                    << "\"" << currentState << "\" of device " << "\"" << m_deviceId << "\".";
-                            std::string errorMessage = msg.str();
-                            reply(errorMessage);
-                            return false;
-                        }
+                std::vector<std::string> allowedStates;
+                {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    if (m_fullSchema.has(slotName) && m_fullSchema.hasAllowedStates(slotName)) {
+                        allowedStates = m_fullSchema.getAllowedStates(slotName);
                     }
-                    return true;
+                }
+                if (!allowedStates.empty()) {
+                    const std::string& currentState = get<std::string > ("state");
+                    if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
+                        std::ostringstream msg;
+                        msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state "
+                                << "\"" << currentState << "\" of device " << "\"" << m_deviceId << "\".";
+                        std::string errorMessage = msg.str();
+                        reply(errorMessage);
+                        return false;
+                    }
                 }
                 return true;
             }
@@ -1062,9 +1076,10 @@ namespace karabo {
             void slotGetSchema(bool onlyCurrentState) {           
                 if (onlyCurrentState) {
                     const std::string& currentState = get<std::string > ("state");
-                    const karabo::util::Schema& schema = getStateDependentSchema(currentState);                   
+                    const karabo::util::Schema schema(getStateDependentSchema(currentState));
                     reply(schema, m_deviceId);
-                } else {                  
+                } else {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     reply(m_fullSchema, m_deviceId);
                 }
             }
@@ -1096,7 +1111,7 @@ namespace karabo {
             std::pair<bool, std::string> validate(const karabo::util::Hash& unvalidated, karabo::util::Hash& validated) {
                 // Retrieve the current state of the device instance
                 const std::string& currentState = get<std::string > ("state");
-                karabo::util::Schema& whiteList = getStateDependentSchema(currentState);
+                const karabo::util::Schema whiteList(getStateDependentSchema(currentState));
                 KARABO_LOG_DEBUG << "Incoming (un-validated) reconfiguration:\n" << unvalidated;
                 std::pair<bool, std::string> valResult = m_validatorExtern.validate(whiteList, unvalidated, validated);
                 KARABO_LOG_DEBUG << "Validated reconfiguration:\n" << validated;
@@ -1132,7 +1147,7 @@ namespace karabo {
                 stopEventLoop();
             }
 
-            karabo::util::Schema& getStateDependentSchema(const std::string& currentState) {
+            karabo::util::Schema getStateDependentSchema(const std::string& currentState) {
                 KARABO_LOG_DEBUG << "call: getStateDependentSchema() for state: " << currentState;
                 boost::mutex::scoped_lock lock(m_stateDependendSchemaMutex);
                 // Check cache, whether a special set of state-dependent expected parameters was created before
