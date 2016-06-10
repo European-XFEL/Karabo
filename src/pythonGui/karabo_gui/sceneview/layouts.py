@@ -11,19 +11,20 @@ from .utils import save_painter_state
 
 
 class BaseLayout(object):
-    def __init__(self, *args, **kwargs):
-        super(BaseLayout, self).__init__(*args, **kwargs)
+    def __init__(self, model, *args):
+        super(BaseLayout, self).__init__(*args)
+        self.model = model
         self.shapes = []
 
     def add_shape(self, shape):
         self.shapes.append(shape)
 
-    def add_layout(self, layout, model):
+    def add_layout(self, layout):
         """ Needs to be reimplemented in the inherited classes to add a layout.
         """
         raise NotImplementedError("BaseLayout.add_layout")
 
-    def add_widget(self, widget, model):
+    def add_widget(self, widget):
         """ Needs to be reimplemented in the inherited classes to add a widget.
         """
         raise NotImplementedError("BaseLayout.add_widget")
@@ -35,14 +36,14 @@ class BaseLayout(object):
 
 
 class GroupLayout(BaseLayout, QLayout):
-    def __init__(self, parent=None):
-        super(GroupLayout, self).__init__(parent)
+    def __init__(self, model, parent=None):
+        super(GroupLayout, self).__init__(model, parent)
         self._children = []  # contains only QLayoutItems
 
-    def add_layout(self, layout, model):
+    def add_layout(self, layout):
         self.addChildLayout(layout)
 
-    def add_widget(self, widget, model):
+    def add_widget(self, widget):
         self.addWidget(widget)
 
     def addItem(self, item):
@@ -112,27 +113,29 @@ class GroupLayout(BaseLayout, QLayout):
 
 
 class BoxLayout(BaseLayout, QBoxLayout):
-    def __init__(self, direction, parent=None):
-        super(BoxLayout, self).__init__(direction, parent)
+    def __init__(self, model, direction, parent=None):
+        super(BoxLayout, self).__init__(model, direction, parent)
         self.setContentsMargins(5, 5, 5, 5)
 
-    def add_layout(self, layout, model):
+    def add_layout(self, layout):
         self.addLayout(layout)
 
-    def add_widget(self, widget, model):
+    def add_widget(self, widget):
         self.addWidget(widget)
 
 
 class GridLayout(BaseLayout, QGridLayout):
-    def __init__(self, parent=None):
-        super(GridLayout, self).__init__(parent)
+    def __init__(self, model, parent=None):
+        super(GridLayout, self).__init__(model, parent)
 
-    def add_layout(self, layout, model):
+    def add_layout(self, layout):
         self.addLayout(
-            layout, model.layout_data.row, model.layout_data.colspan,
-            model.layout_data.row, model.layout_data.rowspan)
+            layout, layout.model.layout_data.row,
+            layout.model.layout_data.colspan, layout.model.layout_data.row,
+            layout.model.layout_data.rowspan)
 
-    def add_widget(self, widget, model):
+    def add_widget(self, widget):
         self.addWidget(
-            widget, model.layout_data.row, model.layout_data.colspan,
-            model.layout_data.row, model.layout_data.rowspan)
+            widget, widget.model.layout_data.row,
+            widget.model.layout_data.colspan, widget.model.layout_data.row,
+            widget.model.layout_data.rowspan)

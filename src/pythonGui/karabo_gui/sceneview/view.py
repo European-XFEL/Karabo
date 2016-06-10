@@ -25,14 +25,14 @@ def fill_root_layout(layout, parent_model, scene_widget):
     # Go through children and create corresponding GUI objects
     for child in parent_model.children:
         if isinstance(child, FixedLayoutModel):
-            obj = GroupLayout()
-            layout.add_layout(obj, child)
+            obj = GroupLayout(child)
+            layout.add_layout(obj)
             fill_root_layout(obj, child, scene_widget)
         if isinstance(child, BoxLayoutModel):
-            obj = BoxLayout(QT_BOX_LAYOUT_DIRECTION[child.direction])
+            obj = BoxLayout(child, QT_BOX_LAYOUT_DIRECTION[child.direction])
             fill_root_layout(obj, child, scene_widget)
         if isinstance(child, GridLayoutModel):
-            obj = GridLayout()
+            obj = GridLayout(child)
             fill_root_layout(obj, child, scene_widget)
         if isinstance(child, LineModel):
             obj = LineShape(child)
@@ -45,11 +45,11 @@ def fill_root_layout(layout, parent_model, scene_widget):
             layout.add_shape(obj)
         if isinstance(child, LabelModel):
             obj = LabelWidget(child, scene_widget)
-            layout.add_widget(obj, child)
+            layout.add_widget(obj)
         if isinstance(child, UnknownXMLDataModel):
             obj = UnknownSvgWidget.create(child, parent=scene_widget)
             if obj is not None:
-                layout.add_widget(obj, child)
+                layout.add_widget(obj)
             # XXX: UnknownXMLDataModel has a list of children, which might
             # include regular models. We're ignoring those children for now.
 
@@ -66,7 +66,7 @@ class SceneView(QWidget):
         self.scene_model = None
         self.current_tool = None
 
-        self.layout = GroupLayout(parent=self)
+        self.layout = GroupLayout(None, parent=self)
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
