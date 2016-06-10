@@ -1,4 +1,3 @@
-#include <karabo/log/Logger.hh>
 #include "States.hh"
 
 
@@ -79,8 +78,6 @@ namespace karabo {
         BaseState::Pointer createState(const std::string& stateName) {
             if (karabo::util::Factory<BaseState>::has(stateName))
                 return karabo::util::Factory<BaseState>::create(stateName);
-            else
-                KARABO_LOG_FRAMEWORK_ERROR << "createState: \"" << stateName << "\" not found in registry.";
             return BaseState::Pointer();
         }
     }
