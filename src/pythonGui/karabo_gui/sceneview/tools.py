@@ -15,6 +15,7 @@ class CreateToolAction(BaseSceneAction):
         """
         tool = self.tool_factory()
         scene_view.set_tool(tool)
+        print("CreateToolAction.perform", tool)
 
 
 class TextSceneTool(BaseSceneTool):
