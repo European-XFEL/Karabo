@@ -53,8 +53,9 @@ namespace karabo {
                         m_stateName = stateName;
                         m_currentFsm = fsmName;
                     } else {
-                        std::string sep(".");
-                        m_stateName += sep + stateName;
+//                        std::string sep(".");
+//                        m_stateName += sep + stateName;
+                        m_stateName = stateName;
                         m_currentFsm = fsmName;
                     }
                 }

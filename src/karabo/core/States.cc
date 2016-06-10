@@ -74,5 +74,12 @@ namespace karabo {
             }
             
         }
+        
+        BaseState::Pointer createState(const std::string& stateName) {
+            std::cout << "**** createState  \"" << stateName << "\"" << std::endl;
+            if (karabo::util::Factory<BaseState>::has(stateName))
+                return karabo::util::Factory<BaseState>::create(stateName);
+            return BaseState::Pointer();
+        }
     }
 }
