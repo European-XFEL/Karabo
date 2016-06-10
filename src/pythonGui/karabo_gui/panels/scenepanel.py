@@ -9,7 +9,9 @@ from PyQt4.QtGui import (QAction, QPalette, QScrollArea, QSizePolicy, QWidget)
 
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
-from karabo_gui.sceneview.tools import CreateToolAction, LineSceneTool
+from karabo_gui.sceneview.tools import (CreateToolAction, LineSceneTool,
+                                        TextSceneTool, RectangleSceneTool,
+                                        SceneLinkTool)
 from karabo_gui.toolbar import ToolBar
 
 
@@ -36,23 +38,20 @@ class ScenePanel(Dockable, QScrollArea):
         return "Change to design mode"
 
     def setupActions(self, connected_to_server):
-        # Switch for design and control mode
-        text = self.design_mode_text(self.scene.design_mode)
-        self.ac_design_mode = QAction(icons.transform, text, self)
-        self.ac_design_mode.setToolTip(text)
-        self.ac_design_mode.setStatusTip(text)
-        self.ac_design_mode.setCheckable(True)
-        self.ac_design_mode.setChecked(self.scene.design_mode)
-        self.ac_design_mode.setEnabled(connected_to_server)
-        self.ac_design_mode.toggled.connect(self.design_mode_changed)
-
-        action = CreateToolAction(tool_factory=LineSceneTool,
-                                  icon=icons.line, text="Add line",
-                                  tooltip="Add line to scene")
-        self.ac_line = QAction(action.icon, action.text, self)
-        self.ac_line.setToolTip(action.text)
-        self.ac_line.setStatusTip(action.tooltip)
-        self.ac_line.triggered.connect(action.perform)
+        self.create_design_mode_action(connected_to_server)
+        self.create_text_action()
+        self.create_line_action()
+        self.create_rect_action()
+        self.create_scene_link_action()
+        self.create_group_actions()
+        self.create_select_all_action()
+        self.create_cut_action()
+        self.create_copy_action()
+        self.create_paste_action()
+        self.create_replace_action()
+        self.create_delete_action()
+        self.create_bring_to_front_action()
+        self.create_send_to_back_action()
 
     def setupToolBars(self, standardToolBar, parent):
         standardToolBar.addAction(self.ac_design_mode)
@@ -80,3 +79,81 @@ class ScenePanel(Dockable, QScrollArea):
         self.ac_design_mode.setToolTip(text)
         self.ac_design_mode.setStatusTip(text)
         self.scene.design_mode = is_checked
+
+    def create_design_mode_action(self, connected_to_server):
+        """ Switch for design and control mode """
+        text = self.design_mode_text(self.scene.design_mode)
+        self.ac_design_mode = QAction(icons.transform, text, self)
+        self.ac_design_mode.setToolTip(text)
+        self.ac_design_mode.setStatusTip(text)
+        self.ac_design_mode.setCheckable(True)
+        self.ac_design_mode.setChecked(self.scene.design_mode)
+        self.ac_design_mode.setEnabled(connected_to_server)
+        self.ac_design_mode.toggled.connect(self.design_mode_changed)
+
+    def create_text_action(self):
+        """ Add text"""
+        action = CreateToolAction(tool_factory=TextSceneTool,
+                                  icon=icons.text, text="Add text",
+                                  tooltip="Add text to scene")
+        self.ac_text = QAction(action.icon, action.text, self)
+        self.ac_text.setToolTip(action.text)
+        self.ac_text.setStatusTip(action.tooltip)
+        self.ac_text.triggered.connect(action.perform)
+
+    def create_line_action(self):
+        """ Add line"""
+        action = CreateToolAction(tool_factory=LineSceneTool,
+                                  icon=icons.line, text="Add line",
+                                  tooltip="Add line to scene")
+        self.ac_line = QAction(action.icon, action.text, self)
+        self.ac_line.setToolTip(action.text)
+        self.ac_line.setStatusTip(action.tooltip)
+        self.ac_line.triggered.connect(action.perform)
+
+    def create_rect_action(self):
+        """ Add rectangle"""
+        action = CreateToolAction(tool_factory=RectangleSceneTool,
+                                  icon=icons.rect, text="Add rectangle",
+                                  tooltip="Add rectangle to scene")
+        self.ac_rect = QAction(action.icon, action.text, self)
+        self.ac_rect.setToolTip(action.text)
+        self.ac_rect.setStatusTip(action.tooltip)
+        self.ac_rect.triggered.connect(action.perform)
+
+    def create_scene_link_action(self):
+        """ Add scene link"""
+        action = CreateToolAction(tool_factory=SceneLinkTool,
+                                  icon=icons.scenelink, text="Add scene link",
+                                  tooltip="Add scene link to scene")
+        self.ac_rect = QAction(action.icon, action.text, self)
+        self.ac_rect.setToolTip(action.text)
+        self.ac_rect.setStatusTip(action.tooltip)
+        self.ac_rect.triggered.connect(action.perform)
+
+    def create_group_actions(self):
+        """ Grouping"""
+
+    def create_select_all_action(self):
+        """ Select all"""
+
+    def create_cut_action(self):
+        """ Cut"""
+
+    def create_copy_action(self):
+        """ Copy"""
+
+    def create_paste_action(self):
+        """ Paste"""
+
+    def create_replace_action(self):
+        """ Replace"""
+
+    def create_delete_action(self):
+        """ Delete"""
+
+    def create_bring_to_front_action(self):
+        """ Bring to front"""
+
+    def create_send_to_back_action(self):
+        """ Send to back"""
