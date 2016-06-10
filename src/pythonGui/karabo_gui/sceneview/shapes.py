@@ -19,6 +19,7 @@ class BaseShape(object, metaclass=ABCMeta):
 
     def __init__(self, model):
         super(BaseShape, self).__init__()
+        self.model = model
 
         self.pen = QPen()
         self.pen.setWidth(1)
@@ -27,33 +28,33 @@ class BaseShape(object, metaclass=ABCMeta):
         self.shape = None
         self.selected = False
 
-        self.set_pen(model)
+        self.set_pen()
 
-    def set_pen(self, model):
+    def set_pen(self):
         pen = QPen()
-        if model.stroke == "none" or model.stroke_width == 0:
+        if self.model.stroke == "none" or self.model.stroke_width == 0:
             pen.setStyle(Qt.NoPen)
         else:
-            c = QColor(model.stroke)
-            c.setAlphaF(model.stroke_opacity)
+            c = QColor(self.model.stroke)
+            c.setAlphaF(self.model.stroke_opacity)
             pen.setColor(c)
-            pen.setCapStyle(QT_PEN_CAP_STYLE[model.stroke_linecap])
-            pen.setWidthF(model.stroke_width)
-            pen.setDashOffset(model.stroke_dashoffset)
+            pen.setCapStyle(QT_PEN_CAP_STYLE[self.model.stroke_linecap])
+            pen.setWidthF(self.model.stroke_width)
+            pen.setDashOffset(self.model.stroke_dashoffset)
 
-            if model.stroke_dasharray:
-                pen.setDashPattern(model.stroke_dasharray)
+            if self.model.stroke_dasharray:
+                pen.setDashPattern(self.model.stroke_dasharray)
 
-            pen.setStyle(model.stroke_style)
-            pen.setJoinStyle(QT_PEN_JOIN_STYLE[model.stroke_linejoin])
-            pen.setMiterLimit(model.stroke_miterlimit)
+            pen.setStyle(self.model.stroke_style)
+            pen.setJoinStyle(QT_PEN_JOIN_STYLE[self.model.stroke_linejoin])
+            pen.setMiterLimit(self.model.stroke_miterlimit)
         self.pen = pen
 
-        if model.fill == "none":
+        if self.model.fill == "none":
             self.brush = QBrush()
         else:
-            color = QColor(model.fill)
-            color.setAlphaF(model.fill_opacity)
+            color = QColor(self.model.fill)
+            color.setAlphaF(self.model.fill_opacity)
             self.brush = QBrush(color)
 
     @abstractmethod
@@ -79,7 +80,8 @@ class LineShape(BaseShape):
 
     def __init__(self, model):
         super(LineShape, self).__init__(model)
-        self.shape = QLine(model.x1, model.y1, model.x2, model.y2)
+        self.shape = QLine(self.model.x1, self.model.y1, self.model.x2,
+                           self.model.y2)
 
     def geometry(self):
         return QRect(self.shape.p1(), self.shape.p2())
@@ -98,7 +100,8 @@ class RectangleShape(BaseShape):
 
     def __init__(self, model):
         super(RectangleShape, self).__init__(model)
-        self.shape = QRect(model.x, model.y, model.width, model.height)
+        self.shape = QRect(self.model.x, self.model.y, self.model.width,
+                           self.model.height)
 
     def geometry(self):
         return self.shape
@@ -118,7 +121,7 @@ class PathShape(BaseShape):
 
     def __init__(self, model):
         super(PathShape, self).__init__(model)
-        parser = Parser(model.svg_data)
+        parser = Parser(self.model.svg_data)
         self.shape = parser.parse()
 
     def geometry(self):
