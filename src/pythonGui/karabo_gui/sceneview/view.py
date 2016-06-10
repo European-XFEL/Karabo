@@ -20,6 +20,7 @@ from .layouts import BoxLayout, GridLayout, GroupLayout
 from .selection_model import SceneSelectionModel
 from .shapes import LineShape, PathShape, RectangleShape
 from .simple_widgets import LabelWidget, UnknownSvgWidget
+from .utils import save_painter_state
 
 
 def fill_root_layout(layout, parent_model, scene_widget):
@@ -164,7 +165,8 @@ class SceneView(QWidget):
         white = QPen(Qt.white)
 
         rect = self.selection_model.get_selection_bounds()
-        painter.setPen(white)
-        painter.drawRect(rect)
-        painter.setPen(black)
-        painter.drawRect(rect)
+        with save_painter_state(painter):
+            painter.setPen(white)
+            painter.drawRect(rect)
+            painter.setPen(black)
+            painter.drawRect(rect)
