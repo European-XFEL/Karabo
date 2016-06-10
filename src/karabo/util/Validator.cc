@@ -9,11 +9,13 @@
 #include "Schema.hh"
 #include "FromLiteral.hh"
 #include "Epochstamp.hh"
+#include "AlarmConditions.hh"
 
 namespace karabo {
     namespace util {
 
-
+        
+        
         Validator::Validator()
         : m_injectDefaults(true)
         , m_allowUnrootedConfiguration(true)
@@ -416,14 +418,17 @@ namespace karabo {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of upper bound " << maxInc << endl;
                     }
                 }
+                
+                workNode.setAttribute(KARABO_ALARM_ATTR, alarmConditions::NONE->asString());
 
                 if (masterNode.hasAttribute(KARABO_SCHEMA_WARN_LOW)) {
                     double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_WARN_LOW);
                     double value = workNode.getValueAs<double>();
                     if (value < threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below warn level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "WARN_LOW", "message", msg), '\0');
+                        m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmConditions::WARN_LOW->asString(), "message", msg), '\0');
                         attachTimestampIfNotAlreadyThere(workNode);
+                        workNode.setAttribute(KARABO_ALARM_ATTR, alarmConditions::WARN_LOW->asString());
                     }
                 }
 
@@ -432,8 +437,9 @@ namespace karabo {
                     double value = workNode.getValueAs<double>();
                     if (value > threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above warn level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "WARN_HIGH", "message", msg), '\0');
+                        m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmConditions::WARN_HIGH->asString(), "message", msg), '\0');
                         attachTimestampIfNotAlreadyThere(workNode);
+                        workNode.setAttribute(KARABO_ALARM_ATTR, alarmConditions::WARN_HIGH->asString());
                     }
                 }
 
@@ -442,8 +448,9 @@ namespace karabo {
                     double value = workNode.getValueAs<double>();
                     if (value < threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below alarm level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "ALARM_LOW", "message", msg), '\0');
+                        m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmConditions::ALARM_LOW->asString(), "message", msg), '\0');
                         attachTimestampIfNotAlreadyThere(workNode);
+                        workNode.setAttribute(KARABO_ALARM_ATTR, alarmConditions::ALARM_LOW->asString());
                     }
                 }
 
@@ -452,10 +459,17 @@ namespace karabo {
                     double value = workNode.getValueAs<double>();
                     if (value > threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above alarm level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "ALARM_HIGH", "message", msg), '\0');
+                        m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmConditions::ALARM_HIGH->asString(), "message", msg), '\0');
                         attachTimestampIfNotAlreadyThere(workNode);
+                        workNode.setAttribute(KARABO_ALARM_ATTR, alarmConditions::ALARM_HIGH->asString());
                     }
                 }
+                
+                
+                    
+            
+                
+                
 
                 //if (masterNode.hasAttribute(""))
             } else if (referenceCategory == Types::SEQUENCE) {
