@@ -6,13 +6,14 @@
 from functools import partial
 
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt4.QtGui import (QAction, QPalette, QScrollArea, QSizePolicy, QWidget)
+from PyQt4.QtGui import QAction, QPalette, QScrollArea, QSizePolicy, QWidget
 
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
-from karabo_gui.sceneview.tools import (CreateToolAction, LineSceneTool,
-                                        TextSceneTool, RectangleSceneTool,
-                                        SceneLinkTool)
+from karabo_gui.sceneview.tools.api import (
+    CreateToolAction, LineSceneTool, TextSceneTool, RectangleSceneTool,
+    SceneLinkTool
+)
 from karabo_gui.toolbar import ToolBar
 
 
@@ -48,7 +49,7 @@ class ScenePanel(Dockable, QScrollArea):
             q_action.setToolTip(tool_action.text)
             q_action.setStatusTip(tool_action.tooltip)
             q_action.triggered.connect(partial(tool_action.perform,
-                                       self.scene_view))
+                                               self.scene_view))
             self.qactions.append(q_action)
 
     def setupToolBars(self, standardToolBar, parent):
@@ -104,6 +105,7 @@ class ScenePanel(Dockable, QScrollArea):
                                         icon=icons.rect, text="Add rectangle",
                                         tooltip="Add rectangle to scene"))
         actions.append(CreateToolAction(tool_factory=SceneLinkTool,
-                                        icon=icons.scenelink, text="Add scene link",
+                                        icon=icons.scenelink,
+                                        text="Add scene link",
                                         tooltip="Add scene link to scene"))
         return actions
