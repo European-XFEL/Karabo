@@ -3,6 +3,7 @@
 # Created on June 6, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from functools import partial
 
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt4.QtGui import (QAction, QPalette, QScrollArea, QSizePolicy, QWidget)
@@ -18,12 +19,12 @@ from karabo_gui.toolbar import ToolBar
 class ScenePanel(Dockable, QScrollArea):
     signalClosed = pyqtSignal()
 
-    def __init__(self, scene, connected_to_server):
+    def __init__(self, scene_view, connected_to_server):
         super(ScenePanel, self).__init__()
 
         # Reference to underlying scene view
-        self.scene = scene
-        self.setWidget(self.scene)
+        self.scene_view = scene_view
+        self.setWidget(self.scene_view)
 
         self.setupActions(connected_to_server)
 
@@ -57,13 +58,16 @@ class ScenePanel(Dockable, QScrollArea):
         standardToolBar.addAction(self.ac_design_mode)
 
         tool_bar = ToolBar("Drawing")
-        tool_bar.setVisible(self.scene.design_mode)
+        tool_bar.setVisible(self.scene_view.design_mode)
         parent.addToolBar(tool_bar)
-        self.scene.setFocusProxy(tool_bar)
+        self.scene_view.setFocusProxy(tool_bar)
         tool_bar.setFocusPolicy(Qt.StrongFocus)
 
         tool_bar.addSeparator()
+        tool_bar.addAction(self.ac_text)
         tool_bar.addAction(self.ac_line)
+        tool_bar.addAction(self.ac_rect)
+        tool_bar.addAction(self.ac_scene_link)
 
         self.drawing_tool_bar = tool_bar
 
@@ -78,16 +82,16 @@ class ScenePanel(Dockable, QScrollArea):
         text = self.design_mode_text(is_checked)
         self.ac_design_mode.setToolTip(text)
         self.ac_design_mode.setStatusTip(text)
-        self.scene.design_mode = is_checked
+        self.scene_view.design_mode = is_checked
 
     def create_design_mode_action(self, connected_to_server):
         """ Switch for design and control mode """
-        text = self.design_mode_text(self.scene.design_mode)
+        text = self.design_mode_text(self.scene_view.design_mode)
         self.ac_design_mode = QAction(icons.transform, text, self)
         self.ac_design_mode.setToolTip(text)
         self.ac_design_mode.setStatusTip(text)
         self.ac_design_mode.setCheckable(True)
-        self.ac_design_mode.setChecked(self.scene.design_mode)
+        self.ac_design_mode.setChecked(self.scene_view.design_mode)
         self.ac_design_mode.setEnabled(connected_to_server)
         self.ac_design_mode.toggled.connect(self.design_mode_changed)
 
@@ -99,7 +103,7 @@ class ScenePanel(Dockable, QScrollArea):
         self.ac_text = QAction(action.icon, action.text, self)
         self.ac_text.setToolTip(action.text)
         self.ac_text.setStatusTip(action.tooltip)
-        self.ac_text.triggered.connect(action.perform)
+        self.ac_text.triggered.connect(partial(action.perform, self.scene_view))
 
     def create_line_action(self):
         """ Add line"""
@@ -126,10 +130,10 @@ class ScenePanel(Dockable, QScrollArea):
         action = CreateToolAction(tool_factory=SceneLinkTool,
                                   icon=icons.scenelink, text="Add scene link",
                                   tooltip="Add scene link to scene")
-        self.ac_rect = QAction(action.icon, action.text, self)
-        self.ac_rect.setToolTip(action.text)
-        self.ac_rect.setStatusTip(action.tooltip)
-        self.ac_rect.triggered.connect(action.perform)
+        self.ac_scene_link = QAction(action.icon, action.text, self)
+        self.ac_scene_link.setToolTip(action.text)
+        self.ac_scene_link.setStatusTip(action.tooltip)
+        self.ac_scene_link.triggered.connect(action.perform)
 
     def create_group_actions(self):
         """ Grouping"""
