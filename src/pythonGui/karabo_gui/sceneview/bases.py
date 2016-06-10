@@ -1,0 +1,56 @@
+from abc import abstractmethod
+
+from PyQt4.QtGui import QIcon
+from traits.api import ABCHasTraits, Bool, Instance, String
+
+
+class BaseSceneAction(ABCHasTraits):
+    """ Base class for actions in a SceneView
+    """
+    # The icon for this action
+    icon = Instance(QIcon)
+    # The text label for the action
+    text = String
+    # The tooltip text shown when hovering over the action
+    tooltip = String
+    # A keyboard shortcut for the action
+    shortcut = String
+
+    @abstractmethod
+    def perform(self, scene_view):
+        """ Perform the action on a SceneView instance.
+        """
+
+
+class BaseSceneTool(ABCHasTraits):
+    """ Base class for tools which within a SceneView.
+    """
+    # If True, this tool will be drawn whenever the scene is drawn
+    visible = Bool(False)
+
+    def draw(self, painter):
+        """ The method which is responsible for drawing this tool.
+        The tool for a SceneView will be drawn after everything else in
+        the view has been drawn.
+
+        This method is optional.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def mouse_down(self, scene_view, event):
+        """ A callback which is fired whenever the user clicks in the
+        SceneView.
+        """
+
+    @abstractmethod
+    def mouse_move(self, scene_view, event):
+        """ A callback which is fired whenever the user moves the mouse
+        in the SceneView.
+        """
+
+    @abstractmethod
+    def mouse_up(self, scene_view, event):
+        """ A callback which is fired whenever the user ends a mouse click
+        in the SceneView.
+        """
