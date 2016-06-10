@@ -26,6 +26,9 @@ class SceneSelectionModel(HasTraits):
         x, y, w, h = calc_bounding_rect(self._selection)
         return QRect(x, y, w, h)
 
+    def has_selection(self):
+        return len(self._selection) > 0
+
     def select_object(self, obj):
         """ Select an object.
         """
