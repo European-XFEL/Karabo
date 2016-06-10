@@ -7,7 +7,7 @@ from nose.tools import assert_raises
 # Import via the API module so that all the readers/writers get registered
 from ..api import (SceneModel, FixedLayoutModel, LabelModel, LineModel,
                    RectangleModel, UnknownXMLDataModel, SceneWriterException,
-                   read_scene, write_scene, NS_KARABO)
+                   read_scene, write_scene, write_single_model, NS_KARABO)
 from ..io_utils import set_numbers
 from .utils import temp_file, xml_is_equal
 
@@ -113,6 +113,13 @@ def test_writing():
 
     xml = write_scene(scene)
     assert xml_is_equal(SCENE_SVG, xml)
+
+
+def test_single_model_writing():
+    expected_svg = """<svg><foo>bar</foo></svg>"""
+    model = UnknownXMLDataModel(tag='foo', data='bar')
+    xml = write_single_model(model)
+    assert xml_is_equal(expected_svg, xml)
 
 
 def test_simple_round_trip():
