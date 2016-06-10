@@ -16,6 +16,8 @@ class LabelWidget(QLabel):
 
     def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text, parent)
+        self.model = model
+
         self.setFrameShape(QFrame.Box)
         self.setLineWidth(model.frame_width)
         self.setGeometry(model.x, model.y, model.width, model.height)
