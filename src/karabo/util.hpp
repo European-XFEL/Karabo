@@ -41,5 +41,6 @@
 #include "util/TimeProfiler.hh"
 #include "util/karaboDll.hh"
 #include "util/Version.hh"
+#include "util/AlarmConditions.hh"
 #endif
 
