@@ -12,7 +12,7 @@ from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
 from karabo_gui.sceneview.tools.api import (
     CreateToolAction, LineSceneTool, TextSceneTool, RectangleSceneTool,
-    SceneLinkTool
+    SceneLinkTool, SceneSelectionTool
 )
 from karabo_gui.toolbar import ToolBar
 
@@ -80,6 +80,11 @@ class ScenePanel(Dockable, QScrollArea):
         self.ac_design_mode.setToolTip(text)
         self.ac_design_mode.setStatusTip(text)
         self.scene_view.design_mode = is_checked
+
+        if is_checked:
+            self.scene_view.set_tool(SceneSelectionTool())
+        else:
+            self.scene_view.set_tool(None)
 
     def create_design_mode_action(self, connected_to_server):
         """ Switch for design and control mode """
