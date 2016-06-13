@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest import TestCase, main, expectedFailure
 import weakref
 
+from karabo.middlelayer import MetricPrefix, Unit, unit
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     waitUntilNew, getDevice, waitUntil, setWait, setNoWait, Queue,
@@ -27,11 +28,11 @@ class SuperInteger(Int):
 
 
 class NestNest(Configurable):
-    value = Int()
+    value = Int(unitSymbol=Unit.METER)
 
 
 class Nested(Configurable):
-    val = Int()
+    val = Int(unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MILLI)
     nestnest = Node(NestNest)
 
 
@@ -367,18 +368,17 @@ class Tests(TestCase):
     @async_tst
     def test_nested(self):
         """test accessing nested properties"""
-        remote.nested.val = 3
-        remote.nested.nestnest.value = 7
+        remote.nested.val = 3 * unit.second
+        remote.nested.nestnest.value = 7 * unit.meter
         with (yield from getDevice("remote")) as d:
-            self.assertEqual(d.nested.val, 3)
-            self.f1 = d.nested.val
-            self.f2 = d.nested.nestnest.value
-            self.assertEqual(d.nested.nestnest.value, 7)
-            d.nested.val = 4
-            d.nested.nestnest.value = 5
+            self.assertEqual(d.nested.val.value, 3000)
+            self.assertEqual(d.nested.val, 3 * unit.second)
+            self.assertEqual(d.nested.nestnest.value, 7 * unit.meter)
+            d.nested.val = 4 * unit.second
+            d.nested.nestnest.value = 5 * unit.meter
         yield from sleep(0.1)
-        self.assertEqual(remote.nested.val, 4)
-        self.assertEqual(remote.nested.nestnest.value, 5)
+        self.assertEqual(remote.nested.val, 4 * unit.second)
+        self.assertEqual(remote.nested.nestnest.value, 5 * unit.meter)
 
     @async_tst
     def test_error(self):
