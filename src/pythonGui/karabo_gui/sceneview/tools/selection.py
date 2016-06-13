@@ -46,12 +46,14 @@ class SceneSelectionTool(BaseSceneTool):
             event.accept()
             return
 
-        item = scene_view.item_at_position(event.pos())
+        mouse_pos = event.pos()
+        item = scene_view.item_at_position(mouse_pos)
         if item is None:
-            self._selection_rect.start_drag(event.pos())
             self.state = 'draw'
+            self._selection_rect.start_drag(mouse_pos)
         else:
             self.state = 'move'
+            self._moving_pos = mouse_pos
             selection_model = scene_view.selection_model
             if event.modifiers() & Qt.ShiftModifier:
                 if item in selection_model:
@@ -104,7 +106,6 @@ class SceneSelectionTool(BaseSceneTool):
         """ Handles mouse moves when no buttons are pressed.
         """
         mouse_pos = event.pos()
-        self._moving_pos = mouse_pos
         self._hover_item = scene_view.item_at_position(mouse_pos)
         cursor = 'none'
         if self._hover_item is not None:
