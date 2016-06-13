@@ -820,7 +820,7 @@ namespace karabo {
 
             // This function will polymorphically be called by the FSM template
 
-            void updateState(const karabo::core::BaseState::Pointer& csp) {
+            void updateState(const karabo::core::State::Pointer& csp) {
                 try {
                     if (!csp)
                         throw KARABO_PARAMETER_EXCEPTION("State pointer is not valid (initialized).");
