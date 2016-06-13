@@ -1,13 +1,13 @@
-from traits.api import (HasTraits, Enum, Instance, Int, Float, List, Range,
-                        String)
+from traits.api import (HasStrictTraits, Enum, Instance, Int, Float, List,
+                        Range, String)
 
 
-class BaseLayoutData(HasTraits):
+class BaseLayoutData(HasStrictTraits):
     """ An empty base class to simplify holding layout data in other objects.
     """
 
 
-class BaseSceneObjectData(HasTraits):
+class BaseSceneObjectData(HasStrictTraits):
     """ A base class for all object which can appear in a scene.
     """
     # The data needed by the layout which is the parent for this object
