@@ -31,6 +31,7 @@ class SceneView(QWidget):
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
         self.current_tool = None
+        self._scene_obj_cache = {}
 
         self.layout = GroupLayout(None, parent=self)
 
@@ -90,7 +91,10 @@ class SceneView(QWidget):
         # Set width and height
         self.resize(max(self.scene_model.width, SCENE_MIN_WIDTH),
                     max(self.scene_model.height, SCENE_MIN_HEIGHT))
-        fill_root_layout(self.layout, self.scene_model, self)
+
+        self._scene_obj_cache = {}
+        fill_root_layout(self.layout, self.scene_model, self,
+                         self._scene_obj_cache)
 
     def item_at_position(self, pos):
         """ Returns the topmost object whose bounds contain `pos`.
