@@ -60,11 +60,11 @@ class SceneView(QWidget):
     """ An object representing the view for a Karabo GUI scene.
     """
 
-    def __init__(self, parent=None, designMode=False):
+    def __init__(self, parent=None, design_mode=False):
         super(SceneView, self).__init__(parent)
 
         self.title = None
-        self.designMode = designMode
+        self.design_mode = design_mode
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
         self.current_tool = None
