@@ -73,7 +73,7 @@ def synchronize(func):
     coro = asyncio.coroutine(func)
 
     @wraps(coro)
-    def wrapper(*args, timeout=5, **kwargs):
+    def wrapper(*args, timeout=-1, **kwargs):
         return get_event_loop().sync(coro(*args, **kwargs), timeout)
     return wrapper
 
@@ -672,11 +672,10 @@ def updateDevice(device):
     return device
 
 
-# we don't use @synchronize here, as it has a default timeout of 5 s,
-# which would make sleep time out, certainly not desired behavior.
+@synchronize
 def sleep(delay, result=None):
     """do nothing for *delay* seconds
 
     This method should be preferred over :func:`time.sleep`, as it is
     interruptable."""
-    return get_event_loop().sync(asyncio.sleep(delay, result), -1)
+    return asyncio.sleep(delay, result)
