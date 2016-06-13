@@ -1,7 +1,7 @@
 from PyQt4.QtCore import Qt, QRect, QPoint
 from traits.api import Any
 
-from .bases import BaseSceneTool
+from karabo_gui.sceneview.bases import BaseSceneTool
 from karabo_gui.sceneview.utils import save_painter_state
 
 
