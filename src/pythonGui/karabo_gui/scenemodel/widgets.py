@@ -1,7 +1,7 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import (HasTraits, Bool, Dict, Enum, Float, Instance, Int,
-                        List, String)
+from traits.api import (HasStrictTraits, Bool, Dict, Enum, Float, Instance,
+                        Int, List, String)
 
 from .bases import BaseWidgetObjectData
 from .const import NS_KARABO, NS_SVG
@@ -134,7 +134,7 @@ class HexadecimalModel(BaseWidgetObjectData):
     """ A model for Hexadecimal"""
 
 
-class IconData(HasTraits):
+class IconData(HasStrictTraits):
     """ A base class for Icon (Item) data.
     """
     # XXX: Not sure what this is...
@@ -179,7 +179,7 @@ class LineEditModel(BaseWidgetObjectData):
     klass = Enum('DisplayLineEdit', 'EditableLineEdit')
 
 
-class PlotCurveModel(HasTraits):
+class PlotCurveModel(HasStrictTraits):
     """ A model for plot curve data
     """
     # The device with the data
@@ -453,7 +453,7 @@ def _build_empty_widget_readers_and_writers():
     """
     def _build_reader_func(klass):
         def reader(read_func, element):
-            traits = _read_empty_display_editable_widget(element)
+            traits = _read_base_widget_data(element)
             return klass(**traits)
         return reader
 
