@@ -3,8 +3,9 @@ API cross test
 """
 
 from karabo.bound import (
-    AMPERE, Configurator, Hash, DOUBLE_ELEMENT, MILLI, KARABO_CLASSINFO,
-    PythonDevice, SLOT_ELEMENT
+    AMPERE, Configurator, Hash, DOUBLE_ELEMENT, Epochstamp, KARABO_CLASSINFO,
+    KILO, METER, MILLI, NODE_ELEMENT, PythonDevice, SLOT_ELEMENT, Timestamp,
+    Trainstamp
 )
 
 
@@ -26,6 +27,16 @@ class TestDevice(PythonDevice):
             .defaultValue(22.5)
             .commit(),
 
+            NODE_ELEMENT(expected).key("node")
+            .commit(),
+
+            DOUBLE_ELEMENT(expected).key("node.b")
+            .unit(METER)
+            .metricPrefix(KILO)
+            .assignmentOptional()
+            .defaultValue(33)
+            .commit(),
+
             SLOT_ELEMENT(expected).key("setA")
             .commit(),
 
@@ -43,7 +54,10 @@ class TestDevice(PythonDevice):
         pass
 
     def setA(self):
-        self.set("a", 22.7)
+        ts = Timestamp(Epochstamp("20090901T135522"), Trainstamp(0))
+        self.set("a", 22.7, ts)
+        ts = Timestamp(Epochstamp("20160617T135522"), Trainstamp(0))
+        self.set("node.b", 100, ts)
 
     def backfire(self):
         remote = self.remote()
