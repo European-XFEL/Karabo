@@ -1,10 +1,10 @@
 from PyQt4.QtCore import QRect
-from traits.api import HasTraits, List
+from traits.api import HasStrictTraits, List
 
 from .utils import calc_bounding_rect
 
 
-class SceneSelectionModel(HasTraits):
+class SceneSelectionModel(HasStrictTraits):
     """ A selection model for the SceneView.
     """
     # The list of selected scene objects (shapes, widgets, layouts)
