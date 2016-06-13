@@ -6,8 +6,8 @@ from karabo_gui.sceneview.utils import save_painter_state
 
 
 class _SelectionRect(HasStrictTraits):
-    selection_start = Instance(QPoint)
-    selection_stop = Instance(QPoint)
+    selection_start = Instance(QPoint, args=())
+    selection_stop = Instance(QPoint, args=())
 
     def start_drag(self, pos):
         self.selection_start = self.selection_stop = pos
@@ -25,12 +25,12 @@ class _SelectionRect(HasStrictTraits):
 class SceneSelectionTool(BaseSceneTool):
     """ A tool for selecting things in the SceneView
     """
-    state = Enum('normal', 'draw', 'move' 'resize')
+    state = Enum('normal', 'draw', 'move', 'resize')
 
     _hover_item = Any
-    _moving_pos = Instance(QPoint)
+    _moving_pos = Instance(QPoint, args=())
     _resize_type = String
-    _selection_rect = Instance(_SelectionRect)
+    _selection_rect = Instance(_SelectionRect, args=())
 
     def draw(self, painter):
         """ Draw the tool. """
@@ -41,7 +41,7 @@ class SceneSelectionTool(BaseSceneTool):
         """ A callback which is fired whenever the user clicks in the
         SceneView.
         """
-        if self._hover_item is not None:
+        if self._hover_item is not None and len(self._resize_type) > 0:
             self.state = 'resize'
             event.accept()
             return
@@ -51,6 +51,7 @@ class SceneSelectionTool(BaseSceneTool):
             self._selection_rect.start_drag(event.pos())
             self.state = 'draw'
         else:
+            self.state = 'move'
             selection_model = scene_view.selection_model
             if event.modifiers() & Qt.ShiftModifier:
                 if item in selection_model:
@@ -159,8 +160,8 @@ class SceneSelectionTool(BaseSceneTool):
         elif "r" in self._resize_type:
             g.setRight(posX)
 
-        min_size = self._hover_item.min_size()
-        max_size = self._hover_item.max_size()
+        min_size = self._hover_item.minimumSize()
+        max_size = self._hover_item.maximumSize()
         if (not min_size.width() <= g.size().width() <= max_size.width() or
             not min_size.height() <= g.size().height() <= max_size.height() and
             (min_size.width() <= og.size().width() <= max_size.width() and
