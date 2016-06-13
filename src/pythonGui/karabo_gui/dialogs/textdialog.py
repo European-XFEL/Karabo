@@ -20,9 +20,12 @@ class TextDialog(QDialog):
             self.label_model = label_model
 
         self.leText.setText(self.label_model.text)
-        self.label_model.font = QFont(self.label_model.font).toString()
+        # Use a member work with text font
+        self.text_font = QFont()
+        self.text_font.fromString(self.label_model.font)
+        self.label_model.font = self.text_font.toString()
 
-        self.set_colors()
+        self.set_button_colors()
 
         if self.label_model.frame_width > 0:
             self.cbFrameWidth.setChecked(True)
@@ -31,7 +34,7 @@ class TextDialog(QDialog):
         self.cbBackground.setChecked(
             True if self.label_model.background else False)
 
-    def set_colors(self):
+    def set_button_colors(self):
         pixmap = QPixmap(24, 16)
         pixmap.fill(QColor(self.label_model.foreground))
         self.pbTextColor.setIcon(QIcon(pixmap))
@@ -44,15 +47,15 @@ class TextDialog(QDialog):
 
     @pyqtSlot()
     def on_pbFont_clicked(self):
-        font, ok = QFontDialog.getFont(QFont(self.label_model.font), self)
+        self.text_font, ok = QFontDialog.getFont(self.text_font, self)
         if ok:
-            self.label_model.font = font.toString()
+            self.label_model.font = self.text_font.toString()
 
     @pyqtSlot()
     def on_pbTextColor_clicked(self):
         color = QColorDialog.getColor(QColor(self.label_model.foreground))
         self.label_model.foreground = color.name()
-        self.set_colors()
+        self.set_button_colors()
 
     @pyqtSlot(bool)
     def on_cbFrameWidth_toggled(self, checked):
@@ -70,4 +73,4 @@ class TextDialog(QDialog):
     def on_pbBackground_clicked(self):
         color = QColorDialog.getColor(QColor(self.label_model.background))
         self.label_model.background = color.name()
-        self.set_colors()
+        self.set_button_colors()

@@ -29,7 +29,9 @@ class LabelWidget(QLabel):
                 model.background))
         self.setStyleSheet("".join(styleSheet))
 
-        fm = QFontMetrics(QFont(model.font))
+        font = QFont()
+        font.fromString(model.font)
+        fm = QFontMetrics(font)
         CONTENT_MARGIN = 10
         if model.width == 0:
             model.width = fm.width(model.text) + CONTENT_MARGIN
