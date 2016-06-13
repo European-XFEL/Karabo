@@ -1,10 +1,10 @@
 from abc import abstractmethod
 
 from PyQt4.QtGui import QIcon
-from traits.api import ABCHasTraits, Bool, Instance, String
+from traits.api import ABCHasStrictTraits, Bool, Instance, String
 
 
-class BaseSceneAction(ABCHasTraits):
+class BaseSceneAction(ABCHasStrictTraits):
     """ Base class for actions in a SceneView
     """
     # The icon for this action
@@ -22,7 +22,7 @@ class BaseSceneAction(ABCHasTraits):
         """
 
 
-class BaseSceneTool(ABCHasTraits):
+class BaseSceneTool(ABCHasStrictTraits):
     """ Base class for tools which within a SceneView.
     """
     # If True, this tool will be drawn whenever the scene is drawn

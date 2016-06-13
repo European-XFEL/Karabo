@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import HasTraits, Dict, Float, Instance, List, String
+from traits.api import HasStrictTraits, Dict, Float, Instance, List, String
 
 from .bases import BaseSceneObjectData
 from .const import NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
@@ -8,7 +8,7 @@ from .io_utils import set_numbers
 from .registry import register_scene_reader, register_scene_writer
 
 
-class SceneModel(HasTraits):
+class SceneModel(HasStrictTraits):
     """ An object representing the data for a Karabo GUI scene.
     """
     # Extra attributes from the SVG file that we want to preserve.
