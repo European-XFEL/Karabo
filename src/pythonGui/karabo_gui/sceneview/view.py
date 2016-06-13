@@ -101,6 +101,11 @@ class SceneView(QWidget):
         """
         raise NotImplementedError
 
+    def items_in_rect(self, rect):
+        """ Returns the topmost objects whose bounds are contained in `rect`.
+        """
+        raise NotImplementedError
+
     def set_cursor(self, name):
         """ Sets the cursor for the scene view.
         """
