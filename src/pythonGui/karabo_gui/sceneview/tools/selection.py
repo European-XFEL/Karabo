@@ -25,6 +25,8 @@ class _SelectionRect(HasStrictTraits):
 class SceneSelectionTool(BaseSceneTool):
     """ A tool for selecting things in the SceneView
     """
+    visible = True
+
     state = Enum('normal', 'draw', 'move', 'resize')
 
     _hover_item = Any
