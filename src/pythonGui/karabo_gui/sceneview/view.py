@@ -9,51 +9,14 @@ import os.path
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QPalette, QPainter, QPen, QSizePolicy, QWidget
 
-from karabo_gui.scenemodel.api import (
-    BoxLayoutModel, GridLayoutModel, LabelModel, LineModel, PathModel,
-    RectangleModel, FixedLayoutModel, UnknownXMLDataModel, read_scene,
-    SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
-)
+from karabo_gui.scenemodel.api import (read_scene, SCENE_MIN_WIDTH,
+                                       SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
-from .const import QT_BOX_LAYOUT_DIRECTION, QT_CURSORS
-from .layouts import BoxLayout, GridLayout, GroupLayout
+from .builder import fill_root_layout
+from .const import QT_CURSORS
+from .layouts import GroupLayout
 from .selection_model import SceneSelectionModel
-from .shapes import LineShape, PathShape, RectangleShape
-from .simple_widgets import LabelWidget, UnknownSvgWidget
 from .utils import save_painter_state
-
-
-def fill_root_layout(layout, parent_model, scene_widget):
-    # Go through children and create corresponding GUI objects
-    for child in parent_model.children:
-        if isinstance(child, FixedLayoutModel):
-            obj = GroupLayout(child)
-            layout.add_layout(obj)
-            fill_root_layout(obj, child, scene_widget)
-        if isinstance(child, BoxLayoutModel):
-            obj = BoxLayout(child, QT_BOX_LAYOUT_DIRECTION[child.direction])
-            fill_root_layout(obj, child, scene_widget)
-        if isinstance(child, GridLayoutModel):
-            obj = GridLayout(child)
-            fill_root_layout(obj, child, scene_widget)
-        if isinstance(child, LineModel):
-            obj = LineShape(child)
-            layout.add_shape(obj)
-        if isinstance(child, RectangleModel):
-            obj = RectangleShape(child)
-            layout.add_shape(obj)
-        if isinstance(child, PathModel):
-            obj = PathShape(child)
-            layout.add_shape(obj)
-        if isinstance(child, LabelModel):
-            obj = LabelWidget(child, scene_widget)
-            layout.add_widget(obj)
-        if isinstance(child, UnknownXMLDataModel):
-            obj = UnknownSvgWidget.create(child, parent=scene_widget)
-            if obj is not None:
-                layout.add_widget(obj)
-            # XXX: UnknownXMLDataModel has a list of children, which might
-            # include regular models. We're ignoring those children for now.
 
 
 class SceneView(QWidget):
@@ -68,6 +31,7 @@ class SceneView(QWidget):
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
         self.current_tool = None
+        self._scene_obj_cache = {}
 
         self.layout = GroupLayout(None, parent=self)
 
@@ -127,7 +91,10 @@ class SceneView(QWidget):
         # Set width and height
         self.resize(max(self.scene_model.width, SCENE_MIN_WIDTH),
                     max(self.scene_model.height, SCENE_MIN_HEIGHT))
-        fill_root_layout(self.layout, self.scene_model, self)
+
+        self._scene_obj_cache = {}
+        fill_root_layout(self.layout, self.scene_model, self,
+                         self._scene_obj_cache)
 
     def item_at_position(self, pos):
         """ Returns the topmost object whose bounds contain `pos`.
