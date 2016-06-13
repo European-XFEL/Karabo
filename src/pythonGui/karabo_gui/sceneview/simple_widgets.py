@@ -76,4 +76,4 @@ class UnknownSvgWidget(QWidget):
         self.setGeometry(rect)
 
     def translate(self, offset):
-        self.move(offset)
+        self.move(self.pos() + offset)
