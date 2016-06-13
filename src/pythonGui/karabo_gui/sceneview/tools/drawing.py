@@ -36,8 +36,7 @@ class TextSceneTool(BaseSceneTool):
         pos = event.pos()
         model.x = pos.x()
         model.y = pos.y()
-        label_widget = LabelWidget(model)
-        scene_view.layout.add_widget(label_widget)
+        scene_view.add_model(model)
         scene_view.set_tool(None)
 
 

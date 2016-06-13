@@ -12,7 +12,7 @@ from PyQt4.QtGui import QPalette, QPainter, QPen, QSizePolicy, QWidget
 from karabo_gui.scenemodel.api import (read_scene, SCENE_MIN_WIDTH,
                                        SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
-from .builder import fill_root_layout
+from .builder import fill_root_layout, create_object_from_model
 from .const import QT_CURSORS
 from .layouts import GroupLayout
 from .selection_model import SceneSelectionModel
@@ -88,7 +88,7 @@ class SceneView(QWidget):
         # Set name
         self.title = os.path.basename(filename)
         # Read file into scene model
-        self.scene_model = read_scene(filename)
+        self._set_scene_model(read_scene(filename))
         # Set width and height
         self.resize(max(self.scene_model.width, SCENE_MIN_WIDTH),
                     max(self.scene_model.height, SCENE_MIN_HEIGHT))
@@ -133,6 +133,14 @@ class SceneView(QWidget):
 
         self.update()
 
+    def add_model(self, model):
+        """ Adds a new model to the scene model."""
+        self.scene_model.children.append(model)
+
+    def remove_model(self, model):
+        """ Removes the given ``model`` from the scene model."""
+        self.scene_model.children.remove(model)
+
     # ----------------------------
     # Private methods (yes, I know... It's just a convention)
 
@@ -151,3 +159,25 @@ class SceneView(QWidget):
             painter.drawRect(rect)
             painter.setPen(black)
             painter.drawRect(rect)
+
+    def _set_scene_model(self, scene_model):
+        """ The scene model is set and all notification handlers are defined.
+        """
+        self.scene_model = scene_model
+        self.scene_model.on_trait_change(self._model_modified,
+                                         'children_items')
+
+    def _model_modified(self, event):
+        """ The scene model got modified."""
+        for model in event.added:
+            widget = self._scene_obj_cache.get(model)
+            if widget is None:
+                create_object_from_model(self.layout, model, self,
+                                         self._scene_obj_cache)
+            else:
+                self._scene_obj_cache.pop(model)
+        for model in event.removed:
+            widget = self._scene_obj_cache.get(model)
+            if widget is not None:
+                widget.setParent(None)
+                self._scene_obj_cache.pop(model)
