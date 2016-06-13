@@ -20,6 +20,11 @@ class SceneSelectionModel(HasStrictTraits):
         """
         self._selection = []
 
+    def deselect_object(self, obj):
+        """ Deselect an object.
+        """
+        self._selection.remove(obj)
+
     def get_selection_bounds(self):
         """ Return the bounding rectangle for the objects which are selected.
         """
