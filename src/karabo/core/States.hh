@@ -10,17 +10,17 @@
 
 #include <iostream>
 #include <karabo/util/Factory.hh>
-#include "BaseState.hh"
+#include "State.hh"
 
 namespace karabo {
     namespace core {
         namespace states {
 
-            typedef BaseState KrbState;
+            typedef State KrbState;
             
 
 #define KARABO_FSM_DECLARE_FIXED_STATE(X, parent) \
-            struct X : public BaseState {\
+            struct X : public State {\
                 KARABO_CLASSINFO(X, #X, "1.0")\
                 X() {setStateName(#X); setParentName(parent);}\
                 virtual ~X() {}\
@@ -161,7 +161,7 @@ namespace karabo {
                         const std::string& changingSignificant = "DECREASING") : m_trumpList() {
                     using namespace karabo::util;
                     
-#define REGISTER_STATE(X) if (!Factory<BaseState>::has(#X)) Factory<BaseState>::registerClass<X>(#X);
+#define REGISTER_STATE(X) if (!Factory<State>::has(#X)) Factory<State>::registerClass<X>(#X);
                     
                     REGISTER_STATE(UNKNOWN)
                     REGISTER_STATE(KNOWN)
@@ -223,51 +223,51 @@ namespace karabo {
 #undef REGISTER_STATE
                     
                     if (trumpList.empty()) {
-                        if (!Factory<BaseState>::has("DISABLED")) Factory<BaseState>::registerClass<DISABLED>("DISABLED");
-                        m_trumpList.push_back(Factory<BaseState>::create("DISABLED"));
-                        m_trumpList.push_back(Factory<BaseState>::create("INIT"));
+                        if (!Factory<State>::has("DISABLED")) Factory<State>::registerClass<DISABLED>("DISABLED");
+                        m_trumpList.push_back(Factory<State>::create("DISABLED"));
+                        m_trumpList.push_back(Factory<State>::create("INIT"));
                         
                         if (staticSignificant == "PASSIVE") {
-                            m_trumpList.push_back(Factory<BaseState>::create("ACTIVE"));
-                            m_trumpList.push_back(Factory<BaseState>::create("PASSIVE"));
+                            m_trumpList.push_back(Factory<State>::create("ACTIVE"));
+                            m_trumpList.push_back(Factory<State>::create("PASSIVE"));
                         } else if (staticSignificant == "ACTIVE") {
-                            m_trumpList.push_back(Factory<BaseState>::create("PASSIVE"));
-                            m_trumpList.push_back(Factory<BaseState>::create("ACTIVE"));
+                            m_trumpList.push_back(Factory<State>::create("PASSIVE"));
+                            m_trumpList.push_back(Factory<State>::create("ACTIVE"));
                         }
                         
-                        m_trumpList.push_back(Factory<BaseState>::create("STATIC"));
+                        m_trumpList.push_back(Factory<State>::create("STATIC"));
                         
                         if (changingSignificant == "DECREASING") {
-                            m_trumpList.push_back(Factory<BaseState>::create("INCREASING"));
-                            m_trumpList.push_back(Factory<BaseState>::create("DECREASING"));
+                            m_trumpList.push_back(Factory<State>::create("INCREASING"));
+                            m_trumpList.push_back(Factory<State>::create("DECREASING"));
                         } else if (changingSignificant == "INCREASING") {
-                            m_trumpList.push_back(Factory<BaseState>::create("DECREASING"));
-                            m_trumpList.push_back(Factory<BaseState>::create("INCREASING"));
+                            m_trumpList.push_back(Factory<State>::create("DECREASING"));
+                            m_trumpList.push_back(Factory<State>::create("INCREASING"));
                         }
                         
-                        m_trumpList.push_back(Factory<BaseState>::create("CHANGING"));
-                        m_trumpList.push_back(Factory<BaseState>::create("ERROR"));
-                        m_trumpList.push_back(Factory<BaseState>::create("UNKNOWN"));
+                        m_trumpList.push_back(Factory<State>::create("CHANGING"));
+                        m_trumpList.push_back(Factory<State>::create("ERROR"));
+                        m_trumpList.push_back(Factory<State>::create("UNKNOWN"));
                     } else {
                         m_trumpList.clear();
-                        for (size_t i = 0; i < trumpList.size(); i++) m_trumpList.push_back(Factory<BaseState>::create(trumpList[i]));
+                        for (size_t i = 0; i < trumpList.size(); i++) m_trumpList.push_back(Factory<State>::create(trumpList[i]));
                     }
                 }
 
-                BaseState returnMostSignificant(const std::vector<BaseState>& listOfStates);
+                State returnMostSignificant(const std::vector<State>& listOfStates);
 
-                const std::vector<BaseState::Pointer>& getTrumpList() const {
+                const std::vector<State::Pointer>& getTrumpList() const {
                     return m_trumpList;
                 }
 
             protected:
-                std::vector<BaseState::Pointer> m_trumpList;
+                std::vector<State::Pointer> m_trumpList;
             };
 
             static StateSignifier stateSignifier;
         }
             
-        BaseState::Pointer createState(const std::string& stateName);
+        State::Pointer createState(const std::string& stateName);
     }
 }
 
