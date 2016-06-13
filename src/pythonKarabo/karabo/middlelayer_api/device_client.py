@@ -130,18 +130,22 @@ class Proxy(object):
     def _use(self):
         pass
 
-    def _onChanged(self, hash):
+    def _onChanged_r(self, hash, instance, parent):
+        """the recursive part of _onChanged"""
         for k, v, a in hash.iterall():
-            d = getattr(type(self), k, None)
+            d = getattr(type(instance), k, None)
             if d is not None:
                 if isinstance(d, ProxyNode):
-                    d.setValue(getattr(self, d.key), v, self)
+                    self._onChanged_r(v, getattr(instance, d.key), parent)
                 elif not isinstance(d, ProxySlot):
                     converted = d.toKaraboValue(v, strict=False)
                     converted.timestamp = Timestamp.fromHashAttributes(a)
-                    self.__dict__[d.key] = converted
-                    for q in self._queues[k]:
+                    instance.__dict__[d.key] = converted
+                    for q in parent._queues[d.longkey]:
                         q.put_nowait(converted)
+
+    def _onChanged(self, hash):
+        self._onChanged_r(hash, self, self)
         for q in self._queues[None]:
             q.put_nowait(hash)
 
@@ -230,19 +234,6 @@ class AutoDisconnectProxy(Proxy):
 class ProxyNode(Descriptor):
     def __init__(self, cls):
         self.cls = cls
-
-    def setValue(self, instance, hash, parent):
-        for k, v, a in hash.iterall():
-            d = getattr(self.cls, k, None)
-            if d is not None:
-                if isinstance(d, ProxyNode):
-                    d.setValue(getattr(instance, d.key), v, parent)
-                else:
-                    converted = d.toKaraboValue(v, strict=False)
-                    converted.timestamp = Timestamp.fromHashAttributes(a)
-                    instance.__dict__[d.key] = converted
-                    for q in parent._queues[self.longkey]:
-                        q.put_nowait(converted)
 
     def __get__(self, instance, owner):
         if instance is None:
