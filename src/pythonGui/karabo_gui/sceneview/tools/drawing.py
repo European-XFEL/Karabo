@@ -1,4 +1,8 @@
-from .bases import BaseSceneTool
+from PyQt4.QtGui import QDialog
+
+from karabo_gui.dialogs.textdialog import TextDialog
+from karabo_gui.sceneview.bases import BaseSceneTool
+from karabo_gui.sceneview.simple_widgets import LabelWidget
 
 
 class TextSceneTool(BaseSceneTool):
@@ -24,6 +28,17 @@ class TextSceneTool(BaseSceneTool):
         """ A callback which is fired whenever the user ends a mouse click
         in the SceneView.
         """
+        dialog = TextDialog()
+        if dialog.exec() == QDialog.Rejected:
+            return
+
+        model = dialog.label_model
+        pos = event.pos()
+        model.x = pos.x()
+        model.y = pos.y()
+        label_widget = LabelWidget(model)
+        scene_view.layout.add_widget(label_widget)
+        scene_view.set_tool(None)
 
 
 class LineSceneTool(BaseSceneTool):

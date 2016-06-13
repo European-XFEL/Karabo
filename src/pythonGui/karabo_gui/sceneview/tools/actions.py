@@ -1,6 +1,6 @@
 from traits.api import Callable
 
-from .bases import BaseSceneAction
+from karabo_gui.sceneview.bases import BaseSceneAction
 
 
 class CreateToolAction(BaseSceneAction):
