@@ -22,7 +22,7 @@
 #include <boost/msm/front/euml/state_grammar.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/arithmetic/sub.hpp>
-#include "BaseState.hh"
+#include "State.hh"
 #include "Worker.hh"
 
 // Allow boost msm names appear globally in karabo namespace
@@ -49,15 +49,8 @@ namespace karabo {
                     // if state-machine and state are the same name, the state is subcomposed into the former machine
                     if (stateName == fsmName) fsmName = m_currentFsm;
 
-                    if (m_stateName.empty()) {
-                        m_stateName = stateName;
-                        m_currentFsm = fsmName;
-                    } else {
-//                        std::string sep(".");
-//                        m_stateName += sep + stateName;
-                        m_stateName = stateName;
-                        m_currentFsm = fsmName;
-                    }
+                    m_stateName = stateName;
+                    m_currentFsm = fsmName;
                 }
             }
 
@@ -70,9 +63,9 @@ namespace karabo {
             std::string m_currentFsm;
         };
 
-        struct FsmBaseState : public BaseState {
+        struct FsmBaseState : public State {
             
-            FsmBaseState() : BaseState(), m_fsmName(""), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
+            FsmBaseState() : State(), m_fsmName(""), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
 
             const std::string & getStateName() const {
                 return m_stateName;

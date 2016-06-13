@@ -24,20 +24,20 @@ namespace karabo {
         /**
          * Base State class
          */
-        class BaseState {
+        class State {
             friend class states::StateSignifier;
 
         public:
             
-            KARABO_CLASSINFO(BaseState, "BaseState", "1.0")
+            KARABO_CLASSINFO(State, "State", "1.0")
 
-            BaseState() : m_stateName(""), m_parentName(""), m_id(0) {
+            State() : m_stateName(""), m_parentName(""), m_id(0) {
             }
 
-            BaseState(const BaseState& o) : m_stateName(o.m_stateName), m_parentName(o.m_parentName) {
+            State(const State& o) : m_stateName(o.m_stateName), m_parentName(o.m_parentName) {
             }
 
-            virtual ~BaseState() {
+            virtual ~State() {
             }
 
             virtual const std::string& operator()() const {
@@ -64,49 +64,39 @@ namespace karabo {
                 return m_id;
             }
 
-            void operator=(const BaseState& s) {
+            State& operator=(const State& s) {
                 m_stateName = s.m_stateName;
                 m_parentName = s.m_parentName;
                 m_id = s.m_id;
+                return *this;
             }
 
-            void operator=(const std::string& stateName) {
+            State& operator=(const std::string& stateName) {
                 m_stateName = stateName;
+                return *this;
             }
 
-            void operator=(const char* const stateName) {
-                m_stateName = stateName;
-            }
-
-            bool operator==(const BaseState& s) const {
+            bool isCompatible(const State& s) const {
                 return m_stateName == s.m_stateName || m_stateName == s.m_parentName || m_parentName == s.m_stateName;
             }
 
-            bool operator==(const std::string& s) const {
+            bool isCompatible(const std::string& s) const {
                 return m_stateName == s || m_parentName == s;
             }
 
-            bool operator!=(const BaseState& s) const {
-                return !(this->operator==(s));
-            }
-
-            bool operator!=(const std::string& s) const {
-                return !(this->operator==(s));
-            }
-
-            bool operator<(const BaseState& s) const {
+            bool operator<(const State& s) const {
                 return m_id < s.m_id;
             }
 
-            bool operator<=(const BaseState& s) const {
+            bool operator<=(const State& s) const {
                 return m_id <= s.m_id;
             }
 
-            bool operator>(const BaseState& s) const {
+            bool operator>(const State& s) const {
                 return m_id > s.m_id;
             }
 
-            bool operator>=(const BaseState& s) const {
+            bool operator>=(const State& s) const {
                 return m_id >= s.m_id;
             }
 

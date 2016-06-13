@@ -65,9 +65,9 @@ namespace karabo {
 //            KARABO_REGISTER_IN_FACTORY(BaseState, DISENGAGING)
 //            KARABO_REGISTER_IN_FACTORY(BaseState, SWITCHING_OFF)
             
-            BaseState StateSignifier::returnMostSignificant(const std::vector<BaseState>& listOfStates) {
-                BaseState state;
-                for (vector<BaseState>::const_iterator ii = listOfStates.begin(); ii != listOfStates.end(); ++ii) {
+            State StateSignifier::returnMostSignificant(const std::vector<State>& listOfStates) {
+                State state;
+                for (vector<State>::const_iterator ii = listOfStates.begin(); ii != listOfStates.end(); ++ii) {
                     if (ii->rank() > state.rank()) state = *ii;
                 }
                 return state;
@@ -75,10 +75,10 @@ namespace karabo {
             
         }
         
-        BaseState::Pointer createState(const std::string& stateName) {
-            if (karabo::util::Factory<BaseState>::has(stateName))
-                return karabo::util::Factory<BaseState>::create(stateName);
-            return BaseState::Pointer();
+        State::Pointer createState(const std::string& stateName) {
+            if (karabo::util::Factory<State>::has(stateName))
+                return karabo::util::Factory<State>::create(stateName);
+            return State::Pointer();
         }
     }
 }

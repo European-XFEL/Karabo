@@ -153,7 +153,7 @@ namespace karabo {
 
             void slotStartDevice(const karabo::util::Hash& configuration);
 
-            void onStateUpdate(const BaseState::Pointer& currentState);
+            void onStateUpdate(const State::Pointer& currentState);
 
             void loadLogger(const karabo::util::Hash& input);
 
