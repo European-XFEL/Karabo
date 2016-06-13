@@ -20,6 +20,15 @@ class LabelWidget(QLabel):
 
         self.setFrameShape(QFrame.Box)
         self.setLineWidth(model.frame_width)
+        # XXX This needs to be made better
+        # Sometimes the model has not yet set a width and a height
+        # This only can be fetched once the widget is drawn...
+        CONTENT_MARGIN = 10
+        if model.width == 0:
+            model.width = (self.sizeHint().width() + len(model.text) +
+                           CONTENT_MARGIN)
+        if model.height == 0:
+            model.height = self.sizeHint().height() + CONTENT_MARGIN
         self.setGeometry(model.x, model.y, model.width, model.height)
 
         styleSheet = []
