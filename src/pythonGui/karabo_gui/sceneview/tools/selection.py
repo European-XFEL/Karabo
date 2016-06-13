@@ -1,42 +1,65 @@
 from PyQt4.QtCore import Qt, QRect, QPoint
-from traits.api import Any
+from traits.api import HasStrictTraits, Any, Enum, Instance, String
 
 from karabo_gui.sceneview.bases import BaseSceneTool
 from karabo_gui.sceneview.utils import save_painter_state
 
 
-class SceneSelectionTool(BaseSceneTool):
-    """ A tool for selecting things in the SceneView
-    """
-    # Traits so we don't need an __init__ method
-    selection_start = Any
-    selection_stop = Any
-    resize = Any
-    moving_item = Any
+class _SelectionRect(HasStrictTraits):
+    selection_start = Instance(QPoint)
+    selection_stop = Instance(QPoint)
+
+    def start_drag(self, pos):
+        self.selection_start = self.selection_stop = pos
+
+    def rect(self):
+        return QRect(self.selection_start, self.selection_stop)
 
     def draw(self, painter):
         """ Draw the selection. """
-        if self.selection_start is not None:
-            rect = QRect(self.selection_start, self.selection_stop)
-            with save_painter_state(painter):
-                painter.setPen(Qt.black)
-                painter.drawRect(rect)
+        with save_painter_state(painter):
+            painter.setPen(Qt.black)
+            painter.drawRect(self.rect())
+
+
+class SceneSelectionTool(BaseSceneTool):
+    """ A tool for selecting things in the SceneView
+    """
+    state = Enum('normal', 'draw', 'move' 'resize')
+
+    _hover_item = Any
+    _moving_pos = Instance(QPoint)
+    _resize_type = String
+    _selection_rect = Instance(_SelectionRect)
+
+    def draw(self, painter):
+        """ Draw the tool. """
+        if self.state == 'draw':
+            self._selection_rect.draw(painter)
 
     def mouse_down(self, scene_view, event):
         """ A callback which is fired whenever the user clicks in the
         SceneView.
         """
-        if self.resize:
+        if self._hover_item is not None:
+            self.state = 'resize'
+            event.accept()
             return
+
         item = scene_view.item_at_position(event.pos())
         if item is None:
-            self.selection_stop = self.selection_start = event.pos()
+            self._selection_rect.start_drag(event.pos())
+            self.state = 'draw'
         else:
+            selection_model = scene_view.selection_model
             if event.modifiers() & Qt.ShiftModifier:
-                item.selected = not item.selected
+                if item in selection_model:
+                    selection_model.deselect_object(item)
+                else:
+                    selection_model.select_object(item)
             else:
-                scene_view.clear_selection()
-                item.selected = True
+                selection_model.clear_selection()
+                selection_model.select_object(item)
         event.accept()
 
     def mouse_move(self, scene_view, event):
@@ -46,76 +69,45 @@ class SceneSelectionTool(BaseSceneTool):
         if not event.buttons():
             self._hover_move(scene_view, event)
         else:
-            if self.resize == 'm':
-                if event.pos().x() < 0 or event.pos().y() < 0:
-                    return
-                for c in scene_view.selection_model:
-                    trans = event.pos() - self.moving_pos
-                    c.translate(trans)
-                self.moving_pos = event.pos()
-                event.accept()
-                scene_view.setModified()
-            elif self.selection_start is not None:
-                self.selection_stop = event.pos()
-                event.accept()
-            elif self.resize:
-                og = self.resize_item.geometry()
-                g = QRect(og)
-                posX, posY = event.pos().x(), event.pos().y()
-                trans = QPoint()
-                if "t" in self.resize:
-                    trans.setY((posY - g.top()) / 2)
-                    g.setTop(posY)
-                elif "b" in self.resize:
-                    trans.setY((posY - g.bottom()) / 2)
-                    g.setBottom(posY)
-                if "l" in self.resize:
-                    trans.setX((posX - g.left()) / 2)
-                    g.setLeft(posX)
-                elif "r" in self.resize:
-                    trans.setX((posX - g.right()) / 2)
-                    g.setRight(posX)
-                min = self.resize_item.minimumSize()
-                max = self.resize_item.maximumSize()
-                if (not min.width() <= g.size().width() <= max.width() or
-                    not min.height() <= g.size().height() <= max.height() and
-                    (min.width() <= og.size().width() <= max.width() and
-                     min.height() <= og.size().height() <= max.height())):
-                    return
-
-                self.resize_item.set_geometry(g)
-                scene_view.ilayout.update()
-                scene_view.setModified()
-            scene_view.update()
+            if self.state == 'move':
+                self._move_move(scene_view, event)
+            elif self.state == 'draw':
+                self._draw_move(scene_view, event)
+            elif self.state == 'resize':
+                self._resize_move(scene_view, event)
 
     def mouse_up(self, scene_view, event):
         """ A callback which is fired whenever the user ends a mouse click
         in the SceneView.
         """
-        self.resize = ""
-        self.resize_item = None
-        if self.selection_start is not None:
-            rect = QRect(self.selection_start, self.selection_stop)
+        if self.state == 'draw':
+            selection_model = scene_view.selection_model
             if not event.modifiers() & Qt.ShiftModifier:
-                scene_view.clear_selection()
-            for c in scene_view.ilayout:
-                if rect.contains(c.geometry()):
-                    c.selected = True
-            for s in scene_view.ilayout.shapes:
-                if rect.contains(s.geometry()):
-                    s.selected = True
-            self.selection_start = None
+                selection_model.clear_selection()
+            items = scene_view.items_in_rect(self._selection_rect.rect())
+            for item in items:
+                selection_model.select_object(item)
             event.accept()
-            scene_view.update()
+
+        self._hover_item = None
+        self._resize_type = ''
+        self.state = 'normal'
+
+    def _draw_move(self, scene_view, event):
+        """ Handle mouse moves when drawing the selection rect.
+        """
+        self._selection_rect.selection_stop = event.pos()
+        event.accept()
 
     def _hover_move(self, scene_view, event):
         """ Handles mouse moves when no buttons are pressed.
         """
         mouse_pos = event.pos()
-        item = scene_view.item_at_position(mouse_pos)
+        self._moving_pos = mouse_pos
+        self._hover_item = scene_view.item_at_position(mouse_pos)
         cursor = 'none'
-        if item is not None:
-            rect = item.geometry()
+        if self._hover_item is not None:
+            rect = self._hover_item.geometry()
             top = abs(rect.top() - mouse_pos.y()) < 5
             bottom = abs(rect.bottom() - mouse_pos.y()) < 5
             left = abs(rect.left() - mouse_pos.x()) < 5
@@ -124,12 +116,55 @@ class SceneSelectionTool(BaseSceneTool):
             on_ends = top or bottom
             if on_ends and not on_sides:
                 cursor = 'resize-vertical'
+                self._resize_type = 't' if top else 'b'
             elif on_sides and not on_ends:
                 cursor = 'resize-horizontal'
+                self._resize_type = 'l' if left else 'r'
             elif (top and left) or (bottom and right):
                 cursor = 'resize-diagonal-tlbr'
+                self._resize_type = 'tl' if top else 'br'
             elif (top and right) or (bottom and left):
                 cursor = 'resize-diagonal-trbl'
-            if cursor == 'none':
+                self._resize_type = 'tr' if top else 'bl'
+            else:
                 cursor = 'open-hand'
+                self._resize_type = ''
         scene_view.set_cursor(cursor)
+
+    def _move_move(self, scene_view, event):
+        """ Handles mouse moves when a scene object is being moved.
+        """
+        mouse_pos = event.pos()
+        if mouse_pos.x() < 0 or mouse_pos.y() < 0:
+            return
+        trans = mouse_pos - self._moving_pos
+        self._moving_pos = mouse_pos
+        for c in scene_view.selection_model:
+            c.translate(trans)
+        event.accept()
+
+    def _resize_move(self, scene_view, event):
+        """ Handles mouse moves when a scene object is being resized.
+        """
+        mouse_pos = event.pos()
+        og = self._hover_item.geometry()
+        g = QRect(og)
+        posX, posY = mouse_pos.x(), mouse_pos.y()
+        if "t" in self._resize_type:
+            g.setTop(posY)
+        elif "b" in self._resize_type:
+            g.setBottom(posY)
+        if "l" in self._resize_type:
+            g.setLeft(posX)
+        elif "r" in self._resize_type:
+            g.setRight(posX)
+
+        min_size = self._hover_item.min_size()
+        max_size = self._hover_item.max_size()
+        if (not min_size.width() <= g.size().width() <= max_size.width() or
+            not min_size.height() <= g.size().height() <= max_size.height() and
+            (min_size.width() <= og.size().width() <= max_size.width() and
+                min_size.height() <= og.size().height() <= max_size.height())):
+            return
+
+        self._hover_item.set_geometry(g)
