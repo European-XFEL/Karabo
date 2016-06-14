@@ -274,6 +274,7 @@
           <itemPath>../../../src/karabo/util/Trainstamp.cc</itemPath>
           <itemPath>../../../src/karabo/util/Trainstamp.hh</itemPath>
         </logicalFolder>
+        <itemPath>../../../src/karabo/util/AlarmConditions.hh</itemPath>
         <itemPath>../../../src/karabo/util/ArrayTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
         <itemPath>../../../src/karabo/util/Base64.hh</itemPath>
@@ -285,6 +286,8 @@
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
         <itemPath>../../../src/karabo/util/SignalHandler.cc</itemPath>
         <itemPath>../../../src/karabo/util/SignalHandler.hh</itemPath>
+        <itemPath>../../../src/karabo/util/StatisticalEvaluators.cc</itemPath>
+        <itemPath>../../../src/karabo/util/StatisticalEvaluators.hh</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.cc</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Units.hh</itemPath>
@@ -425,6 +428,8 @@
                      displayName="util_test"
                      projectFiles="true"
                      kind="TEST">
+        <itemPath>../../../src/karabo/tests/util/AlarmCondition_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/AlarmCondition_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Base64_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Base64_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/ByteSwap_Test.cc</itemPath>
@@ -1458,6 +1463,16 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/util/AlarmCondition_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/AlarmCondition_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/util/Base64_Test.cc"
             ex="false"
             tool="1"
@@ -1701,6 +1716,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/AlarmConditions.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/ArrayTools.hh"
             ex="false"
             tool="3"
@@ -1901,6 +1921,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/SimpleElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StatisticalEvaluators.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StatisticalEvaluators.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3413,6 +3443,16 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/util/AlarmCondition_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/AlarmCondition_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/util/Base64_Test.cc"
             ex="false"
             tool="1"
@@ -3653,6 +3693,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/AlarmConditions.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/ArrayTools.hh"
             ex="false"
             tool="3"
@@ -3853,6 +3898,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/SimpleElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StatisticalEvaluators.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StatisticalEvaluators.hh"
             ex="false"
             tool="3"
             flavor2="0">
