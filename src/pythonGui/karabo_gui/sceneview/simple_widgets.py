@@ -18,6 +18,8 @@ class LabelWidget(QLabel):
         super(LabelWidget, self).__init__(model.text, parent)
         self.model = model
 
+        self._hide_from_view = False
+
         self.setFrameShape(QFrame.Box)
         self.setLineWidth(model.frame_width)
 
@@ -39,6 +41,12 @@ class LabelWidget(QLabel):
             model.height = fm.height() + CONTENT_MARGIN
         self.setGeometry(model.x, model.y, model.width, model.height)
 
+    def hide_from_view(self):
+        self.hide()
+
+    def show_in_view(self):
+        self.show()
+
     def set_geometry(self, rect):
         self.setGeometry(rect)
 
@@ -53,8 +61,18 @@ class UnknownSvgWidget(QWidget):
         super(UnknownSvgWidget, self).__init__(parent)
         self.renderer = renderer
         self.setGeometry(renderer.viewBox())
+        self._hide_from_view = False
+
+    def hide_from_view(self):
+        self.hide()
+
+    def show_in_view(self):
+        self.show()
 
     def paintEvent(self, event):
+        if self._hide_from_view:
+            return
+
         with QPainter(self) as painter:
             self.renderer.render(painter)
 
