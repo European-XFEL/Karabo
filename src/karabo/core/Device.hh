@@ -17,6 +17,7 @@
 #include <karabo/net/utils.hh>
 #include <karabo/util.hpp>
 #include <karabo/util/SignalHandler.hh>
+#include <karabo/util/StatisticalEvaluators.hh>
 #include <karabo/xms.hpp>
 #include <karabo/log/Logger.hh>
 #include <karabo/xip/CpuImage.hh>
@@ -25,6 +26,7 @@
 
 #include "NoFsm.hh"
 #include "DeviceClient.hh"
+
 
 /**
  * The main European XFEL namespace
@@ -1233,6 +1235,14 @@ namespace karabo {
                     }
                 }
                 return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
+            }
+            
+            bool hasRollingStatistics(const std::string & path) const {
+                return this->getFullSchema().hasRollingStatistics(path);
+            }
+            
+            RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & path) const {
+                return m_validatorIntern.getRollingStatistics(path);         
             }
             
            
