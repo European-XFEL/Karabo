@@ -100,16 +100,18 @@ class SceneView(QWidget):
     def item_at_position(self, pos):
         """ Returns the topmost object whose bounds contain `pos`.
         """
-        for obj in self._scene_obj_cache.values():
-            if obj.geometry().contains(pos):
+        for child in self.scene_model.children:
+            obj = self._scene_obj_cache.get(child)
+            if obj is not None and obj.geometry().contains(pos):
                 return obj
 
     def items_in_rect(self, rect):
         """ Returns the topmost objects whose bounds are contained in `rect`.
         """
         items = []
-        for obj in self._scene_obj_cache.values():
-            if rect.contains(obj.geometry()):
+        for child in self.scene_model.children:
+            obj = self._scene_obj_cache.get(child)
+            if obj is not None and rect.contains(obj.geometry()):
                 items.append(obj)
         return items
 
