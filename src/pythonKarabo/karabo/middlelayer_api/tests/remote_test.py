@@ -8,17 +8,12 @@ import weakref
 import pint
 
 from karabo.middlelayer import (
-    Float, Int32, Slot, String, unit,
-    VectorInt16, String, VectorString, VectorFloat
+    Configurable, connectDevice, Device, Float, getDevice, Hash, Int32,
+    MetricPrefix, Node, setNoWait, setWait, Slot, String, unit, Unit,
+    VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil, waitUntilNew
 )
-from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.device_client import (
-    waitUntilNew, getDevice, waitUntil, setWait, setNoWait, Queue,
-    connectDevice)
-from karabo.middlelayer_api.hash import Hash, VectorChar, Slot, Int32 as Int
 from karabo.middlelayer_api import openmq
-from karabo.middlelayer_api.schema import Configurable, Node
-from karabo.middlelayer_api.enums import Unit, MetricPrefix
+from karabo.middlelayer_api.device_client import Queue
 
 from .eventloop import startDevices, stopDevices, async_tst
 
@@ -29,25 +24,25 @@ class Superslot(Slot):
         device.value = 22
 
 
-class SuperInteger(Int):
+class SuperInteger(Int32):
     def setter(self, device, value):
         device.value = 2 * value
 
 
 class NestNest(Configurable):
-    value = Int(unitSymbol=Unit.METER)
+    value = Int32(unitSymbol=Unit.METER)
 
 
 class Nested(Configurable):
-    val = Int(unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MILLI)
+    val = Int32(unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MILLI)
     nestnest = Node(NestNest)
 
 
 class Remote(Device):
-    value = Int(defaultValue=7)
-    counter = Int(defaultValue=-1)
+    value = Int32(defaultValue=7)
+    counter = Int32(defaultValue=-1)
 
-    unit_int = Int(unitSymbol=Unit.METER)
+    unit_int = Int32(unitSymbol=Unit.METER)
     unit_float = Float(unitSymbol=Unit.SECOND,
                        metricPrefixSymbol=MetricPrefix.MILLI)
     string = String()
@@ -58,16 +53,16 @@ class Remote(Device):
 
     nested = Node(Nested)
 
-    @Int()
+    @Int32()
     def other(self, value):
         self.value = value
 
-    @Int()
+    @Int32()
     def once(self, value):
         if self.once_value is None:
             self.once_value = value
 
-    @Int(allowedStates=["Other state"])
+    @Int32(allowedStates=["Other state"])
     def disallowed_int(self, value):
         self.value = value
         self.state = "uninitialized"
