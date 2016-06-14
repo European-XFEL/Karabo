@@ -11,7 +11,8 @@ from karabo.middlelayer import (
 
 
 class Tests(TestCase):
-    timestamp = Timestamp()
+    def setUp(self):
+        self.timestamp = Timestamp()
 
     def check_general(self, desc, value):
         """check things common to all values"""
