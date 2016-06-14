@@ -10,7 +10,7 @@ from PyQt4.QtCore import QLine, QRect, QSize, Qt
 from PyQt4.QtGui import QBrush, QColor, QPen
 
 from karabo_gui.pathparser import Parser
-from .const import QT_PEN_CAP_STYLE, QT_PEN_JOIN_STYLE
+from .const import QT_PEN_CAP_STYLE, QT_PEN_JOIN_STYLE, SCREEN_MAX_VALUE
 
 
 class BaseShape(object, metaclass=ABCMeta):
@@ -83,7 +83,7 @@ class BaseShape(object, metaclass=ABCMeta):
         return QSize(0, 0)
 
     def maximumSize(self):
-        return QSize(10000, 10000)
+        return QSize(SCREEN_MAX_VALUE, SCREEN_MAX_VALUE)
 
 
 class LineShape(BaseShape):
