@@ -119,6 +119,7 @@ class SceneLinkTool(BaseSceneTool):
         """ A callback which is fired whenever the user ends a mouse click
         in the SceneView.
         """
+        # XXX: We need access to the project here to get a list of scenes
         scenes = []
         dialog = SceneLinkDialog(scenes, "", parent=scene_view)
         result = dialog.exec_()

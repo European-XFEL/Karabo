@@ -1,15 +1,15 @@
 from karabo_gui.scenemodel.api import (
-    BoxLayoutModel, GridLayoutModel, LabelModel, LineModel, PathModel,
-    RectangleModel, FixedLayoutModel, UnknownXMLDataModel
+    BoxLayoutModel, FixedLayoutModel, GridLayoutModel, LabelModel, LineModel,
+    PathModel, RectangleModel, SceneLinkModel, UnknownXMLDataModel
 )
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layouts import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape
-from .simple_widgets import LabelWidget, UnknownSvgWidget
+from .simple_widgets import LabelWidget, SceneLinkWidget, UnknownSvgWidget
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
-_WIDGET_CLASSES = (LabelWidget, UnknownSvgWidget)
+_WIDGET_CLASSES = (LabelWidget, SceneLinkWidget, UnknownSvgWidget)
 _SCENE_OBJ_FACTORIES = {
     FixedLayoutModel: lambda m, p: GroupLayout(m),
     BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
@@ -18,6 +18,7 @@ _SCENE_OBJ_FACTORIES = {
     RectangleModel: lambda m, p: RectangleShape(m),
     PathModel: lambda m, p: PathShape(m),
     LabelModel: lambda m, p: LabelWidget(m, p),
+    SceneLinkModel: lambda m, p: SceneLinkWidget(m, p),
     UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(m, parent=p),
 }
 
