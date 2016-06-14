@@ -299,6 +299,14 @@ class Descriptor(object):
         else:
             return self.setter_async(instance, value)
 
+    def toHash(self, data):
+        """Convert ``data`` to a hash and the attributes that go with it
+
+        Return ``data`` in a format suitable to be put into a ``Hash``,
+        and the attributes (namely: the timestamp) that should go with it.
+        """
+        raise NotImplementedError
+
 
 class Slot(Descriptor):
     iscoroutine = None
