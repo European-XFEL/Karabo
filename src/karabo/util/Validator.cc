@@ -465,7 +465,52 @@ namespace karabo {
                     }
                 }
                 
+                if(masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    assureRollingStatsInitialized(scope, masterNode.getAttributeAs<double>(KARABO_SCHEMA_ROLLING_STATS_EVAL));
+                    RollingWindowStatistics& rollingStats = m_parameterRollingStats[scope];
+                    rollingStats.update(workNode.getValueAs<double>());
+                    double value = rollingStats.getRollingWindowVariance();
                 
+                    if (masterNode.hasAttribute(KARABO_SCHEMA_WARN_VARIANCE_LOW)) {
+                        double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_WARN_VARIANCE_LOW);
+                        if (value > threshold) {
+                            string msg("Variance " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below warn level of " + karabo::util::toString(threshold));
+                            m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmConditions::WARN_VARIANCE_LOW->asString(), "message", msg), '\0');
+                            attachTimestampIfNotAlreadyThere(workNode);
+                            workNode.setAttribute(KARABO_ALARM_ATTR, alarmConditions::WARN_VARIANCE_LOW->asString());
+                        }
+                    }
+
+                    if (masterNode.hasAttribute(KARABO_SCHEMA_WARN_VARIANCE_HIGH)) {
+                        double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_WARN_VARIANCE_HIGH);
+                        if (value > threshold) {
+                            string msg("Variance " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above warn level of " + karabo::util::toString(threshold));
+                            m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmConditions::WARN_VARIANCE_HIGH->asString(), "message", msg), '\0');
+                            attachTimestampIfNotAlreadyThere(workNode);
+                            workNode.setAttribute(KARABO_ALARM_ATTR, alarmConditions::WARN_VARIANCE_HIGH->asString());
+                        }
+                    }
+
+                    if (masterNode.hasAttribute(KARABO_SCHEMA_ALARM_VARIANCE_LOW)) {
+                        double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_ALARM_VARIANCE_LOW);
+                        if (value > threshold) {
+                            string msg("Variance " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below alarm level of " + karabo::util::toString(threshold));
+                            m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmConditions::ALARM_VARIANCE_LOW->asString(), "message", msg), '\0');
+                            attachTimestampIfNotAlreadyThere(workNode);
+                            workNode.setAttribute(KARABO_ALARM_ATTR, alarmConditions::ALARM_VARIANCE_LOW->asString());
+                        }
+                    }
+
+                    if (masterNode.hasAttribute(KARABO_SCHEMA_ALARM_VARIANCE_HIGH)) {
+                        double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
+                        if (value > threshold) {
+                            string msg("Variance " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above alarm level of " + karabo::util::toString(threshold));
+                            m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmConditions::ALARM_VARIANCE_HIGH->asString(), "message", msg), '\0');
+                            attachTimestampIfNotAlreadyThere(workNode);
+                            workNode.setAttribute(KARABO_ALARM_ATTR, alarmConditions::ALARM_VARIANCE_HIGH->asString());
+                        }
+                    }
+                }
                     
             
                 
@@ -515,6 +560,12 @@ namespace karabo {
         
         bool Validator::hasReconfigurableParameter() const {
             return m_hasReconfigurableParameter;
+        }
+        
+        void Validator::assureRollingStatsInitialized(const std::string & scope, const unsigned long long & evalInterval){
+            if (m_parameterRollingStats.find(scope) == m_parameterRollingStats.end()){
+                m_parameterRollingStats.insert(std::pair<std::string, RollingWindowStatistics>(scope, RollingWindowStatistics(evalInterval)));
+            }
         }
     }
 }
