@@ -228,8 +228,8 @@ namespace karabo {
              * @param ack: acknowledgement is needed if true.
              * @return reference to the Element for proper methods chaining
              */
-            ReadOnlySpecific<Element, ValueType>& needsAcknowledging(bool ack) {
-                m_readOnlyElement->getNode().setAttribute(KARABO_SCHEMA_ALARM_ACK, ack);
+            ReadOnlySpecific<Element, ValueType>& needsAcknowledging(const bool & ack) {
+                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ALARM_ACK, ack);
                 return *m_readOnlyElement;
             }
             
@@ -263,28 +263,28 @@ namespace karabo {
              * @param ack: acknowledgement is needed if true.
              * @return reference to the Element for proper methods chaining
              */
-            ReadOnlySpecific<Element, ValueType>& warnLow(const ValueType & value) {
-                m_readOnlyElement->getNode().setAttribute(KARABO_SCHEMA_WARN_VARIANCE_LOW, value);
+            RollingStatsSpecific<Element, ValueType>& warnVarianceLow(const ValueType & value) {
+                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_WARN_VARIANCE_LOW, value);
                 return *this;
             }
             
-            ReadOnlySpecific<Element, ValueType>& warnHigh(const ValueType & value) {
-                m_readOnlyElement->getNode().setAttribute(KARABO_SCHEMA_WARN_VARIANCE_HIGH, value);
+            RollingStatsSpecific<Element, ValueType>& warnVarianceHigh(const ValueType & value) {
+                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_WARN_VARIANCE_HIGH, value);
                 return *this;
             }
             
-            ReadOnlySpecific<Element, ValueType>& alarmLow(const ValueType & value) {
-                m_readOnlyElement->getNode().setAttribute(KARABO_SCHEMA_ALARM_VARIANCE_LOW, value);
+            RollingStatsSpecific<Element, ValueType>& alarmVarianceLow(const ValueType & value) {
+                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ALARM_VARIANCE_LOW, value);
                 return *this;
             }
             
-            ReadOnlySpecific<Element, ValueType>& alarmHigh(const ValueType & value) {
-                m_readOnlyElement->getNode().setAttribute(KARABO_SCHEMA_ALARM_VARIANCE_HIGH, value);
+            RollingStatsSpecific<Element, ValueType>& alarmVarianceHigh(const ValueType & value) {
+                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ALARM_VARIANCE_HIGH, value);
                 return *this;
             }
             
             ReadOnlySpecific<Element, ValueType>& evaluationInterval(const unsigned long long & interval) {
-                m_readOnlyElement->getNode().setAttribute(KARABO_SCHEMA_ROLLING_STATS_EVAL, interval);
+                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ROLLING_STATS_EVAL, interval);
                 return *m_readOnlyElement;
             }
             
@@ -311,6 +311,8 @@ namespace karabo {
         public:
 
             template< class U, class V> friend class LeafElement;
+            template< class U, class V> friend class RollingStatsSpecific;
+            template< class U, class V> friend class AlarmSpecific;
 
             /**
              * The <b>initialValue</b> method serves for setting up the initial value reported for this parameter.
@@ -361,7 +363,7 @@ namespace karabo {
                 return alarmSpecific;
             }
             
-            AlarmSpecific<Element, ValueType> enableRollingStats() {
+            RollingStatsSpecific<Element, ValueType> enableRollingStats() {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS, true);
                 RollingStatsSpecific<Element, ValueType> rollingStatSpecific;
                 rollingStatSpecific.setElement(this);
@@ -411,6 +413,10 @@ namespace karabo {
 
             void setElement(Element* el) {
                 m_genericElement = el;
+            }
+            
+            Element* getElement(){
+                return m_genericElement;
             }
             
             
