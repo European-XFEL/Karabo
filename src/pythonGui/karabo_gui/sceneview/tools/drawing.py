@@ -1,4 +1,4 @@
-from PyQt4.QtCore import QLine, QPoint, QRect, Qt
+from PyQt4.QtCore import QLine, QPoint, QRect
 from PyQt4.QtGui import QDialog, QPen
 from traits.api import Instance
 
@@ -39,7 +39,7 @@ class LineSceneTool(BaseSceneTool):
         """ Draw the line
         """
         if self.line is not None:
-            painter.setPen(QPen(Qt.black))
+            painter.setPen(QPen())
             painter.drawLine(self.line)
 
     def mouse_down(self, scene_view, event):
@@ -77,7 +77,7 @@ class RectangleSceneTool(BaseSceneTool):
         """ Draw the rect
         """
         if self.rect is not None:
-            painter.setPen(QPen(Qt.black))
+            painter.setPen(QPen())
             painter.drawRect(self.rect)
 
     def mouse_down(self, scene_view, event):
