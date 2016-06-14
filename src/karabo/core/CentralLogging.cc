@@ -97,6 +97,7 @@ namespace karabo {
                 // Start the logging thread
                 m_loggerConnection->start();
                 m_loggerChannel = m_loggerConnection->createChannel();
+                m_loggerChannel->setErrorHandler(boost::bind(&CentralLogging::logErrorHandler, this, _1, _2));
                 m_loggerChannel->setFilter("target = 'log'");
                 m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::core::CentralLogging::logHandler, this, _1, _2, _3));
                 m_logThread = boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
@@ -207,6 +208,18 @@ namespace karabo {
             file << idx << "\n";
             file.close();
             return idx;
+        }
+
+
+        void CentralLogging::logErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info) {
+
+            const char* source = "log messages via broker, might have missed some";
+            if (channel != m_loggerChannel) {
+                source = "unknown broker channel";
+            }
+
+            // Just log a warning to the Gui:
+            KARABO_LOG_WARN << "Problem listening to " << source << ":\n" << info;
         }
     }
 }
