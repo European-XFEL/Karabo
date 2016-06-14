@@ -888,6 +888,14 @@ namespace karabo {
                 const std::string & propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep);
                 return karabo::util::alarmConditions::fromString(propertyCondition);
             }
+            
+            bool hasRollingStatistics(const std::string & path) const {
+                return this->getFullSchema().hasRollingStatistics(path);
+            }
+            
+            karabo::util::RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & path) const {
+                return m_validatorIntern.getRollingStatistics(path);         
+            }
 
         protected: // Functions and Classes
 
@@ -1237,13 +1245,7 @@ namespace karabo {
                 return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
             }
             
-            bool hasRollingStatistics(const std::string & path) const {
-                return this->getFullSchema().hasRollingStatistics(path);
-            }
             
-            karabo::util::RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & path) const {
-                return m_validatorIntern.getRollingStatistics(path);         
-            }
             
            
             
