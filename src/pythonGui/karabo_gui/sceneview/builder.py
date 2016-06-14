@@ -22,17 +22,31 @@ _SCENE_OBJ_FACTORIES = {
 }
 
 
-def fill_root_layout(layout, parent_model, scene_view, object_dict):
-    """ Recursively build scene GUI objects for a given parent model object.
-    Whenever a layout is encountered, its children are then added recursively.
-
-    `object_dict` is a cache of already created GUI objects.
+def add_object_to_layout(obj, layout):
+    """ Add a SceneView object to a layout.
     """
-    for child_model in parent_model.children:
-        create_object_from_model(layout, child_model, scene_view, object_dict)
+    if is_shape(obj):
+        layout._add_shape(obj)
+    elif is_widget(obj):
+        layout._add_widget(obj)
+    elif is_layout(obj):
+        layout._add_layout(obj)
+
+
+def remove_object_from_layout(obj, layout):
+    """ Remove a SceneView object from a layout.
+    """
+    if is_shape(obj):
+        layout._remove_shape(obj)
+    elif is_widget(obj):
+        layout._remove_widget(obj)
+    elif is_layout(obj):
+        layout._remove_layout(obj)
 
 
 def create_object_from_model(layout, model, scene_view, object_dict):
+    """ Create a SceneView object to mirror a data model object.
+    """
     obj = object_dict.get(model)
     if obj is None:
         factory = _SCENE_OBJ_FACTORIES.get(model.__class__)
@@ -43,12 +57,20 @@ def create_object_from_model(layout, model, scene_view, object_dict):
     if obj is not None:
         if model not in object_dict:
             object_dict[model] = obj
+        add_object_to_layout(obj, layout)
         if is_layout(obj):
-            layout.add_object(obj)
             # recurse
             fill_root_layout(obj, model, scene_view, object_dict)
-        else:
-            layout.add_object(obj)
+
+
+def fill_root_layout(layout, parent_model, scene_view, object_dict):
+    """ Recursively build scene GUI objects for a given parent model object.
+    Whenever a layout is encountered, its children are then added recursively.
+
+    `object_dict` is a cache of already created GUI objects.
+    """
+    for child_model in parent_model.children:
+        create_object_from_model(layout, child_model, scene_view, object_dict)
 
 
 def is_layout(scene_obj):

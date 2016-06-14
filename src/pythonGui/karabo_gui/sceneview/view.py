@@ -12,7 +12,8 @@ from PyQt4.QtGui import QPalette, QPainter, QPen, QSizePolicy, QWidget
 from karabo_gui.scenemodel.api import (read_scene, SCENE_MIN_WIDTH,
                                        SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
-from .builder import create_object_from_model, fill_root_layout
+from .builder import (create_object_from_model, fill_root_layout,
+                      remove_object_from_layout)
 from .const import QT_CURSORS
 from .layouts import GroupLayout
 from .selection_model import SceneSelectionModel
@@ -174,7 +175,7 @@ class SceneView(QWidget):
         for model in event.removed:
             obj = self._scene_obj_cache.get(model)
             if obj is not None:
-                self.layout.remove_object(obj)
+                remove_object_from_layout(obj, self.layout)
                 # Hide object from scene until reparenting is done
                 obj.hide()
         for model in event.added:
