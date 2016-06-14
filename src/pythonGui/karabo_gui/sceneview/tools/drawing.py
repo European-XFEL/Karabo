@@ -2,7 +2,6 @@ from PyQt4.QtGui import QDialog
 
 from karabo_gui.dialogs.textdialog import TextDialog
 from karabo_gui.sceneview.bases import BaseSceneTool
-from karabo_gui.sceneview.simple_widgets import LabelWidget
 
 
 class TextSceneTool(BaseSceneTool):

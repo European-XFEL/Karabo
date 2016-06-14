@@ -16,6 +16,8 @@ class BaseLayout(object):
         self.model = model
         self.shapes = []
 
+        self._hide_from_view = False
+
     def _add_shape(self, shape):
         self.shapes.append(shape)
 
@@ -54,7 +56,30 @@ class BaseLayout(object):
         elif is_layout(obj):
             self._remove_layout(obj)
 
+    def hide_from_view(self):
+        from .builder import is_widget
+
+        self._hide_from_view = True
+
+        for i in self.count():
+            item = self.itemAt(i)
+            if is_widget(item):
+                item.hide()
+
+    def show_in_view(self):
+        from .builder import is_widget
+
+        self._hide_from_view = False
+
+        for i in self.count():
+            item = self.itemAt(i)
+            if is_widget(item):
+                item.show()
+
     def draw(self, painter):
+        if self._hide_from_view:
+            return
+
         for shape in self.shapes:
             with save_painter_state(painter):
                 shape.draw(painter)

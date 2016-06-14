@@ -175,6 +175,8 @@ class SceneView(QWidget):
                 self.layout.remove_object(obj)
                 # TODO reparent, if object is added to layout, otherwise delete
                 obj.setParent(None)
+                # Hide object from scene until reparenting
+                obj.hide_from_view()
         for model in event.added:
             create_object_from_model(self.layout, model, self,
                                      self._scene_obj_cache)
