@@ -51,8 +51,8 @@ class Enumable(object):
         else:
             raise TypeError("{} required here".format(self.enum))
 
-    def toHash(self, data):
-        h, attrs = super().toHash(data)
+    def toDataAndAttrs(self, data):
+        h, attrs = super().toDataAndAttrs(data)
         if self.enum is not None:
             return data.value, attrs
         else:
@@ -299,8 +299,8 @@ class Descriptor(object):
         else:
             return self.setter_async(instance, value)
 
-    def toHash(self, data):
-        """Convert ``data`` to a hash and the attributes that go with it
+    def toDataAndAttrs(self, value):
+        """Split value in bare data and the attributes that go with it
 
         Return ``data`` in a format suitable to be put into a ``Hash``,
         and the attributes (namely: the timestamp) that should go with it.
@@ -317,7 +317,7 @@ class Slot(Descriptor):
         ret["displayType"] = "Slot"
         return ret
 
-    def toHash(self, value):
+    def toDataAndAttrs(self, value):
         return Hash(), {}
 
     def cast(self, other):
@@ -436,7 +436,7 @@ class Type(Descriptor, Registry):
     def toString(cls, data):
         return str(data)
 
-    def toHash(self, data):
+    def toDataAndAttrs(self, data):
         if not isinstance(data, basetypes.KaraboValue):
             return self.cast(data), {}
         if data.timestamp is not None:
