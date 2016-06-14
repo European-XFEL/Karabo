@@ -16,18 +16,43 @@ class BaseLayout(object):
         self.model = model
         self.shapes = []
 
-    def add_shape(self, shape):
+    def _add_shape(self, shape):
         self.shapes.append(shape)
 
-    def add_layout(self, layout):
+    def _remove_shape(self, shape):
+        self.shapes.remove(shape)
+
+    def _add_layout(self, layout):
         """ Needs to be reimplemented in the inherited classes to add a layout.
         """
         raise NotImplementedError("BaseLayout.add_layout")
 
-    def add_widget(self, widget):
+    def _add_widget(self, widget):
         """ Needs to be reimplemented in the inherited classes to add a widget.
         """
         raise NotImplementedError("BaseLayout.add_widget")
+
+    def add_object(self, obj):
+        """ An object is added to the layout. """
+        from .builder import is_layout, is_shape, is_widget
+
+        if is_shape(obj):
+            self._add_shape(obj)
+        elif is_widget(obj):
+            self._add_widget(obj)
+        elif is_layout(obj):
+            self._add_layout(obj)
+
+    def remove_object(self, obj):
+        """ An object is remove from the layout. """
+        from .builder import is_layout, is_shape, is_widget
+
+        if is_shape(obj):
+            self._remove_shape(obj)
+        elif is_widget(obj):
+            self._remove_widget(obj)
+        elif is_layout(obj):
+            self._remove_layout(obj)
 
     def draw(self, painter):
         for shape in self.shapes:
@@ -40,11 +65,17 @@ class GroupLayout(BaseLayout, QLayout):
         super(GroupLayout, self).__init__(model, parent)
         self._children = []  # contains only QLayoutItems
 
-    def add_layout(self, layout):
+    def _add_layout(self, layout):
         self.addChildLayout(layout)
 
-    def add_widget(self, widget):
+    def _remove_layout(self, layout):
+        self.removeItem(layout)
+
+    def _add_widget(self, widget):
         self.addWidget(widget)
+
+    def _remove_widget(self, widget):
+        self.removeWidget(widget)
 
     def addItem(self, item):
         """ DO NOT CALL THIS METHOD DIRECTLY!
@@ -52,6 +83,15 @@ class GroupLayout(BaseLayout, QLayout):
         This is part of the virtual interface of QLayout.
         """
         self._children.append(item)
+
+    def removeItem(self, item):
+        """ DO NOT CALL THIS METHOD DIRECTLY!
+
+        This is part of the virtual interface of QLayout.
+        """
+        print("removeItem", item)
+        self._children.remove(item)
+        super(GroupLayout, self).removeItem(item)
 
     def itemAt(self, index):
         """ DO NOT CALL THIS METHOD DIRECTLY!
@@ -109,25 +149,37 @@ class BoxLayout(BaseLayout, QBoxLayout):
         super(BoxLayout, self).__init__(model, direction, parent)
         self.setContentsMargins(5, 5, 5, 5)
 
-    def add_layout(self, layout):
+    def _add_layout(self, layout):
         self.addLayout(layout)
 
-    def add_widget(self, widget):
+    def _remove_layout(self, layout):
+        self.removeItem(layout)
+
+    def _add_widget(self, widget):
         self.addWidget(widget)
+
+    def _remove_widget(self, widget):
+        self.removeWidget(widget)
 
 
 class GridLayout(BaseLayout, QGridLayout):
     def __init__(self, model, parent=None):
         super(GridLayout, self).__init__(model, parent)
 
-    def add_layout(self, layout):
+    def _add_layout(self, layout):
         self.addLayout(
             layout, layout.model.layout_data.row,
             layout.model.layout_data.colspan, layout.model.layout_data.row,
             layout.model.layout_data.rowspan)
 
-    def add_widget(self, widget):
+    def _remove_layout(self, layout):
+        self.removeItem(layout)
+
+    def _add_widget(self, widget):
         self.addWidget(
             widget, widget.model.layout_data.row,
             widget.model.layout_data.colspan, widget.model.layout_data.row,
             widget.model.layout_data.rowspan)
+
+    def _remove_widget(self, widget):
+        self.removeWidget(widget)

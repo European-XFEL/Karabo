@@ -38,6 +38,7 @@ class TextSceneTool(BaseSceneTool):
         model.y = pos.y()
         scene_view.add_model(model)
         scene_view.set_tool(None)
+        scene_view.remove_model(model)
 
 
 class LineSceneTool(BaseSceneTool):
