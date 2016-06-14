@@ -1241,7 +1241,7 @@ namespace karabo {
                 return this->getFullSchema().hasRollingStatistics(path);
             }
             
-            RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & path) const {
+            karabo::util::RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & path) const {
                 return m_validatorIntern.getRollingStatistics(path);         
             }
             
