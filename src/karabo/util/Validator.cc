@@ -467,9 +467,9 @@ namespace karabo {
                 
                 if(masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
                     assureRollingStatsInitialized(scope, masterNode.getAttributeAs<double>(KARABO_SCHEMA_ROLLING_STATS_EVAL));
-                    RollingWindowStatistics& rollingStats = m_parameterRollingStats[scope];
-                    rollingStats.update(workNode.getValueAs<double>());
-                    double value = rollingStats.getRollingWindowVariance();
+                    RollingWindowStatistics::Pointer rollingStats = m_parameterRollingStats.at(scope);
+                    rollingStats->update(workNode.getValueAs<double>());
+                    double value = rollingStats->getRollingWindowVariance();
                 
                     if (masterNode.hasAttribute(KARABO_SCHEMA_WARN_VARIANCE_LOW)) {
                         double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_WARN_VARIANCE_LOW);
@@ -562,10 +562,20 @@ namespace karabo {
             return m_hasReconfigurableParameter;
         }
         
-        void Validator::assureRollingStatsInitialized(const std::string & scope, const unsigned long long & evalInterval){
+        void Validator::assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval){
+            boost::unique_lock<boost::shared_mutex> lock(rollingStatMutex);
             if (m_parameterRollingStats.find(scope) == m_parameterRollingStats.end()){
-                m_parameterRollingStats.insert(std::pair<std::string, RollingWindowStatistics>(scope, RollingWindowStatistics(evalInterval)));
+                m_parameterRollingStats.insert(std::pair<std::string, RollingWindowStatistics::Pointer>(scope, RollingWindowStatistics::Pointer(new RollingWindowStatistics(evalInterval))));
             }
         }
+        
+        RollingWindowStatistics::ConstPointer Validator::getRollingStatistics(const std::string & scope) const {
+            boost::shared_lock<boost::shared_mutex> lock(rollingStatMutex);
+            if (m_parameterRollingStats.find(scope) == m_parameterRollingStats.end()){
+                KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+scope+"'!");
+            }
+            
+            return m_parameterRollingStats.at(scope);
+        };
     }
 }
