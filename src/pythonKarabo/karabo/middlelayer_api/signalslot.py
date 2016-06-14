@@ -259,9 +259,7 @@ class SignalSlotable(Configurable):
         self._ss.updateInstanceInfo(info)
 
     def setValue(self, attr, value):
-        if isinstance(value, KaraboValue) and value.timestamp is None:
-            value.timestamp = Timestamp()
-        self.__dict__[attr.key] = value
+        super(SignalSlotable, self).setValue(attr, value)
         update = not self._sethash
         self._sethash[attr.key] = value, attr
         if update:
