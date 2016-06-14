@@ -20,9 +20,12 @@
 #include "karaboDll.hh"
 #include "Timestamp.hh"
 
+#include "StatisticalEvaluators.hh"
+#include <map>
+
 namespace karabo {
     namespace util {
-
+        
         class Validator {
 
             // Validation flags
@@ -35,6 +38,8 @@ namespace karabo {
             karabo::util::Hash m_parametersInWarnOrAlarm;
             karabo::util::Timestamp m_timestamp;
             bool m_hasReconfigurableParameter;
+            
+            std::map<std::string, RollingWindowStatistics> m_parameterRollingStats;
             
         public:
             
@@ -90,6 +95,10 @@ namespace karabo {
             void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope);
             
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
+            
+            void assureRollingStatsInitialized(const std::string & scope, const unsigned long long & evalInterval);
+            
+            
 
         };
     }
