@@ -16,8 +16,6 @@ class BaseLayout(object):
         self.model = model
         self.shapes = []
 
-        self._hide_from_view = False
-
     def _add_shape(self, shape):
         self.shapes.append(shape)
 
@@ -56,33 +54,21 @@ class BaseLayout(object):
         elif is_layout(obj):
             self._remove_layout(obj)
 
-    def hide_from_view(self):
-        from .builder import is_widget
-
-        self._hide_from_view = True
-
+    def hide(self):
         for i in self.count():
             item = self.itemAt(i)
-            if is_widget(item):
-                item.hide()
+            item.hide()
 
-    def show_in_view(self):
-        from .builder import is_widget
-
-        self._hide_from_view = False
-
+    def show(self):
         for i in self.count():
             item = self.itemAt(i)
-            if is_widget(item):
-                item.show()
+            item.show()
 
     def draw(self, painter):
-        if self._hide_from_view:
-            return
-
         for shape in self.shapes:
-            with save_painter_state(painter):
-                shape.draw(painter)
+            if shape.is_visible():
+                with save_painter_state(painter):
+                    shape.draw(painter)
 
 
 class GroupLayout(BaseLayout, QLayout):
@@ -114,7 +100,6 @@ class GroupLayout(BaseLayout, QLayout):
 
         This is part of the virtual interface of QLayout.
         """
-        print("removeItem", item)
         self._children.remove(item)
         super(GroupLayout, self).removeItem(item)
 

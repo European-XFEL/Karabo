@@ -58,11 +58,14 @@ class BaseShape(object, metaclass=ABCMeta):
             color.setAlphaF(self.model.fill_opacity)
             self.brush = QBrush(color)
 
-    def hide_from_view(self):
+    def hide(self):
         self._hide_from_view = True
 
-    def show_in_view(self):
+    def show(self):
         self._hide_from_view = False
+
+    def is_visible(self):
+        return not self._hide_from_view
 
     @abstractmethod
     def draw(self, painter):
@@ -105,9 +108,6 @@ class LineShape(BaseShape):
     def draw(self, painter):
         """ The line gets drawn.
         """
-        if self._hide_from_view:
-            return
-
         painter.setPen(self.pen)
         painter.drawLine(self.shape)
 
@@ -133,9 +133,6 @@ class RectangleShape(BaseShape):
     def draw(self, painter):
         """ The rectangle gets drawn.
         """
-        if self._hide_from_view:
-            return
-
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawRect(self.shape)
@@ -162,9 +159,6 @@ class PathShape(BaseShape):
     def draw(self, painter):
         """ The path gets drawn.
         """
-        if self._hide_from_view:
-            return
-
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawPath(self.shape)
