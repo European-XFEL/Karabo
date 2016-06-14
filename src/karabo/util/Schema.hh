@@ -116,12 +116,23 @@ namespace karabo {
             #define KARABO_SCHEMA_ALARM_LOW "alarmLow"
             #define KARABO_SCHEMA_ALARM_HIGH "alarmHigh"
 
+            #define KARABO_SCHEMA_WARN_VARIANCE_LOW "warnVarianceLow"
+            #define KARABO_SCHEMA_WARN_VARIANCE_HIGH "warnVarianceHigh"
+
+            #define KARABO_SCHEMA_ALARM_VARIANCE_LOW "alarmVarianceLow"
+            #define KARABO_SCHEMA_ALARM_VARIANCE_HIGH "alarmVarianceHigh"
+
+            #define KARABO_SCHEMA_ENABLE_ROLLING_STATS "enableRollingStats"
+            #define KARABO_SCHEMA_ROLLING_STATS_EVAL "rollingStatesEvalInterval"
+
             #define KARABO_SCHEMA_ARCHIVE_POLICY "archivePolicy"
 
             #define KARABO_SCHEMA_MIN "min"
             #define KARABO_SCHEMA_MAX "max"
 
             #define KARABO_SCHEMA_OVERWRITE "overwrite"
+
+            #define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
