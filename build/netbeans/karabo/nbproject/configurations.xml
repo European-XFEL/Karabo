@@ -274,6 +274,7 @@
           <itemPath>../../../src/karabo/util/Trainstamp.cc</itemPath>
           <itemPath>../../../src/karabo/util/Trainstamp.hh</itemPath>
         </logicalFolder>
+        <itemPath>../../../src/karabo/util/AlarmConditions.cc</itemPath>
         <itemPath>../../../src/karabo/util/AlarmConditions.hh</itemPath>
         <itemPath>../../../src/karabo/util/ArrayTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
@@ -1712,6 +1713,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/xms/xmsTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/AlarmConditions.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -3689,6 +3695,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/xms/xmsTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/AlarmConditions.cc"
             ex="false"
             tool="1"
             flavor2="0">
