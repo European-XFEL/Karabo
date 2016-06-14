@@ -398,7 +398,7 @@ class Tests(TestCase):
                 yield from task
 
     @async_tst
-    def test_waituntilnew(self):
+    def test_waituntilnew_old(self):
         """test the waitUntilNew coroutine for properties"""
         with (yield from getDevice("remote")) as d:
             d.counter = 0
@@ -407,6 +407,20 @@ class Tests(TestCase):
             try:
                 for i in range(30):
                     j = yield from waitUntilNew(d).counter
+                    self.assertEqual(i, j)
+            finally:
+                yield from task
+
+    @async_tst
+    def test_waituntilnew_new(self):
+        """test the waitUntilNew coroutine for properties"""
+        with (yield from getDevice("remote")) as d:
+            d.counter = 0
+            yield from sleep(0.1)
+            task = async(d.count())
+            try:
+                for i in range(30):
+                    j = yield from waitUntilNew(d.counter)
                     self.assertEqual(i, j)
             finally:
                 yield from task
