@@ -878,7 +878,7 @@ namespace karabo {
                 return karabo::util::alarmConditions::fromString(this->get<std::string>("alarmCondition"));
             }
             
-            void setAlarmCondition(const karabo::util::alarmConditions::Pointer condition){
+            void setAlarmCondition(const karabo::util::alarmConditions::Pointer condition, bool needsAcknowledgement = false){
                 this->setNoValidate("alarmCondition", condition->asString());
             }
             
