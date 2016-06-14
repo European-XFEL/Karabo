@@ -14,6 +14,7 @@ import pint
 
 from .enums import MetricPrefix, Unit
 from .registry import Registry
+from .weak import Weak
 
 
 def wrap(data):
@@ -110,6 +111,9 @@ class KaraboValue(Registry):
                    "__getattr__", "__init__", "__new__", "__setattr__",
                    "__array_prepare__", "__hash__", "__str__", "__repr__",
                    "__array_wrap__", "register"}
+
+    # Karabo stores the device this value belongs to here to do its magic
+    _parent = Weak()
 
     def __init__(self, value, *args, timestamp=None, descriptor=None,
                  **kwargs):
