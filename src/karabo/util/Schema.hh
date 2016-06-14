@@ -123,7 +123,7 @@ namespace karabo {
             #define KARABO_SCHEMA_ALARM_VARIANCE_HIGH "alarmVarianceHigh"
 
             #define KARABO_SCHEMA_ENABLE_ROLLING_STATS "enableRollingStats"
-            #define KARABO_SCHEMA_ROLLING_STATS_EVAL "rollingStatesEvalInterval"
+            #define KARABO_SCHEMA_ROLLING_STATS_EVAL "rollingStatsEvalInterval"
 
             #define KARABO_SCHEMA_ARCHIVE_POLICY "archivePolicy"
 
@@ -670,6 +670,131 @@ namespace karabo {
             }
 
             bool hasAlarmHigh(const std::string& path) const;
+            
+            //******************************************************
+            //                   WarnVarianceLow                          *  
+            //******************************************************
+
+            template <class ValueType>
+            void setWarnVarianceLow(const std::string& path, const ValueType & value) {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                m_hash.setAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_LOW, value);
+            }
+
+            template <class ValueType>
+            const ValueType& getWarnVarianceLow(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_WARN_VARIANCE_LOW);
+            }
+
+            template <class T>
+            T getWarnVarianceLowAs(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_WARN_VARIANCE_LOW);
+            }
+
+            bool hasWarnVarianceLow(const std::string& path) const;
+            
+            //******************************************************
+            //                   WarnVarianceHigh                          *  
+            //******************************************************
+
+            template <class ValueType>
+            void setWarnVarianceHigh(const std::string& path, const ValueType & value) {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                m_hash.setAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_HIGH, value);
+            }
+
+            template <class ValueType>
+            const ValueType& getWarnVarianceHigh(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_WARN_VARIANCE_HIGH);
+            }
+
+            template <class T>
+            T getWarnVarianceHighAs(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_WARN_VARIANCE_HIGH);
+            }
+
+            bool hasWarnVarianceHigh(const std::string& path) const;
+            
+            
+            //******************************************************
+            //                   AlarmVarianceLow                          *  
+            //******************************************************
+
+            template <class ValueType>
+            void setAlarmVarianceLow(const std::string& path, const ValueType & value) {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_LOW, value);
+            }
+
+            template <class ValueType>
+            const ValueType& getAlarmVarianceLow(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_ALARM_VARIANCE_LOW);
+            }
+
+            template <class T>
+            T getAlarmVarianceLowAs(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_ALARM_VARIANCE_LOW);
+            }
+
+            bool hasAlarmVarianceLow(const std::string& path) const;
+            
+            //******************************************************
+            //                   WarnVarianceHigh                          *  
+            //******************************************************
+
+            template <class ValueType>
+            void setAlarmVarianceHigh(const std::string& path, const ValueType & value) {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH, value);
+            }
+
+            template <class ValueType>
+            const ValueType& getAlarmVarianceHigh(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
+            }
+
+            template <class T>
+            T getAlarmVarianceHighAs(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
+            }
+
+            bool hasAlarmVarianceHigh(const std::string& path) const;
+            
+            bool hasRollingStatistics(const std::string& path) const;
+        
+            unsigned int getRollingStatsEvalInterval(const std::string& path) const;
 
             //**********************************************
             //               archivePolicy                 *
