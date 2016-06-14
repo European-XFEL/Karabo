@@ -2,7 +2,6 @@ from PyQt4.QtGui import QDialog
 
 from karabo_gui.dialogs.textdialog import TextDialog
 from karabo_gui.sceneview.bases import BaseSceneTool
-from karabo_gui.sceneview.simple_widgets import LabelWidget
 
 
 class TextSceneTool(BaseSceneTool):
@@ -36,8 +35,7 @@ class TextSceneTool(BaseSceneTool):
         pos = event.pos()
         model.x = pos.x()
         model.y = pos.y()
-        label_widget = LabelWidget(model)
-        scene_view.layout.add_widget(label_widget)
+        scene_view.add_model(model)
         scene_view.set_tool(None)
 
 

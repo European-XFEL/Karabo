@@ -27,6 +27,7 @@ class BaseShape(object, metaclass=ABCMeta):
 
         self.shape = None
         self.selected = False
+        self._hide_from_view = False
 
         self.set_pen()
 
@@ -56,6 +57,15 @@ class BaseShape(object, metaclass=ABCMeta):
             color = QColor(self.model.fill)
             color.setAlphaF(self.model.fill_opacity)
             self.brush = QBrush(color)
+
+    def hide(self):
+        self._hide_from_view = True
+
+    def show(self):
+        self._hide_from_view = False
+
+    def is_visible(self):
+        return not self._hide_from_view
 
     @abstractmethod
     def draw(self, painter):
