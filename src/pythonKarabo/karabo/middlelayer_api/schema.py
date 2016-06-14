@@ -173,12 +173,12 @@ class Node(Descriptor):
         setters = [t.checkedSet(parent, v) for t, v in props]
         yield from gather(*setters)
 
-    def toHash(self, instance):
+    def toDataAndAttrs(self, instance):
         r = Hash()
         for k in self.cls._allattrs:
             a = getattr(instance, k, None)
             if a is not None:
-                value, attrs = getattr(self.cls, k).toHash(a)
+                value, attrs = getattr(self.cls, k).toDataAndAttrs(a)
                 r[k] = value
                 r[k, ...].update(attrs)
         return r, {}
@@ -204,13 +204,13 @@ class ChoiceOfNodes(Node):
             instance.setValue(self, self.cls._subclasses[k](v))
             break  # there should be only one entry
 
-    def toHash(self, instance):
+    def toDataAndAttrs(self, instance):
         r = Hash()
         t = type(instance)
         for k in t._allattrs:
             a = getattr(instance, k, None)
             if a is not None:
-                value, attrs = getattr(t, k).toHash(a)
+                value, attrs = getattr(t, k).toDataAndAttrs(a)
                 r[k] = value
                 r[k, ...].update(attrs)
         return Hash(t.__name__, r), {}
@@ -240,13 +240,13 @@ class ListOfNodes(Node):
                  for k in value]
         instance.setValue(self, l)
 
-    def toHash(self, instance):
+    def toDataAndAttrs(self, instance):
         l = []
         for v in instance:
             r = Hash()
             t = type(v)
             for k in t._allattrs:
-                value, attrs = getattr(t, k).toHash(getattr(v, k))
+                value, attrs = getattr(t, k).toDataAndAttrs(getattr(v, k))
                 r[k] = value
                 r[k, ...] = attrs
             l.append(r)
