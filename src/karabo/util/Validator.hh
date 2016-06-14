@@ -93,6 +93,8 @@ namespace karabo {
             const karabo::util::Hash& getParametersInWarnOrAlarm() const;
             
             bool hasReconfigurableParameter() const;
+            
+            RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & scope) const;
 
         private:
 
@@ -104,7 +106,7 @@ namespace karabo {
             
             void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
             
-            RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & scope) const;
+            
 
         };
     }
