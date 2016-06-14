@@ -21,8 +21,9 @@ class Tests(TestCase):
         c = desc.toKaraboValue(value)
         self.assertEqual(c.timestamp, self.timestamp)
         h = Hash()
-        h["a"] = c.value
-        h = Hash.decode(h.encode("Bin"), "Bin")
+        val, attrs = desc.toDataAndAttrs(c)
+        h["a"] = val
+        h["a", ...].update(attrs)
         if isinstance(desc, NumpyVector):
             self.assertTrue((c == value).all())
             self.assertTrue((h["a"] == value.value).all())
