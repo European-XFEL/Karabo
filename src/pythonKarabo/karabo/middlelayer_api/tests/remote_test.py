@@ -5,7 +5,7 @@ from unittest import TestCase, main
 import time
 import weakref
 
-import pint
+from pint import DimensionalityError
 
 from karabo.middlelayer import (
     Configurable, connectDevice, Device, Float, getDevice, Hash, Int32,
@@ -185,13 +185,13 @@ class Tests(TestCase):
             self.assertEqual(a, b)
 
         with (yield from getDevice("remote")) as d:
-            with self.assertRaises(pint.DimensionalityError):
+            with self.assertRaises(DimensionalityError):
                 d.unit_int = 3 * unit.second
-            with self.assertRaises(pint.DimensionalityError):
+            with self.assertRaises(DimensionalityError):
                 d.unit_float = 2 * unit.meter
-            with self.assertRaises(pint.DimensionalityError):
+            with self.assertRaises(DimensionalityError):
                 d.unit_vector_int = [1, 2] * unit.meter
-            with self.assertRaises(pint.DimensionalityError):
+            with self.assertRaises(DimensionalityError):
                 d.unit_vector_float = [1, 3] * unit.meter
             with self.assertRaises(TypeError):
                 d.string_list = [3, 4]
@@ -223,19 +223,19 @@ class Tests(TestCase):
 
     @async_tst
     def test_set_local(self):
-        with self.assertRaises(pint.DimensionalityError):
+        with self.assertRaises(DimensionalityError):
             remote.unit_int = 3
-        with self.assertRaises(pint.DimensionalityError):
+        with self.assertRaises(DimensionalityError):
             remote.unit_float = 7.5
-        with self.assertRaises(pint.DimensionalityError):
+        with self.assertRaises(DimensionalityError):
             remote.unit_vector_int = [3, 4, 5]
-        with self.assertRaises(pint.DimensionalityError):
+        with self.assertRaises(DimensionalityError):
             remote.unit_int = 3 * unit.second
-        with self.assertRaises(pint.DimensionalityError):
+        with self.assertRaises(DimensionalityError):
             remote.unit_float = 2 * unit.meter
-        with self.assertRaises(pint.DimensionalityError):
+        with self.assertRaises(DimensionalityError):
             remote.unit_vector_int = [1, 2] * unit.meter
-        with self.assertRaises(pint.DimensionalityError):
+        with self.assertRaises(DimensionalityError):
             remote.unit_vector_float = [1, 3] * unit.meter
         with self.assertRaises(TypeError):
             remote.string_list = [3, 4]
