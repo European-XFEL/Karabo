@@ -28,6 +28,11 @@ namespace karabo {
             protected:
                 std::string conditionString;
                 unsigned int rank;
+               
+                
+                
+            public:
+                
                 
                 
                 BaseAlarmCondition() : conditionString("UNDEFINED"), rank(0) {
@@ -40,12 +45,11 @@ namespace karabo {
                 BaseAlarmCondition(std::string cs, unsigned int r) : conditionString(cs), rank(r){
                    
                 };
-                BaseAlarmCondition(std::string cs, unsigned int r, Pointer b) : conditionString(cs), rank(r), basetype(b){
+                BaseAlarmCondition(std::string cs, Pointer b) : conditionString(cs), rank(b->rank), basetype(b){
                     
                 };
+            
                 
-                
-            public:
                 
                 Pointer basetype;
                 
@@ -74,7 +78,7 @@ namespace karabo {
                 
             };
             
-            #define KRB_ALARM_NO_BASE(name, rank) class name ## _T: public BaseAlarmCondition{\
+            /*#define KRB_ALARM_NO_BASE(name, rank) class name ## _T: public BaseAlarmCondition{\
                                             public:\
                                             name ## _T() : BaseAlarmCondition(std::string(#name), rank){};\
                                            };\
@@ -96,21 +100,21 @@ namespace karabo {
                                            };\
                                            static boost::shared_ptr<name ## _T> name(new name ## _T);
                                         
-
-                                            
-            KRB_ALARM_NO_BASE(NONE, 0);
-            KRB_ALARM_BASE(WARN, 1);
-            KRB_ALARM_FROM_BASE(WARN_LOW, WARN);
-            KRB_ALARM_FROM_BASE(WARN_HIGH, WARN);
-            KRB_ALARM_FROM_BASE(WARN_VARIANCE_LOW, WARN);
-            KRB_ALARM_FROM_BASE(WARN_VARIANCE_HIGH, WARN);
-            KRB_ALARM_BASE(ALARM, 2);
-            KRB_ALARM_FROM_BASE(ALARM_LOW, ALARM);
-            KRB_ALARM_FROM_BASE(ALARM_HIGH, ALARM);
-            KRB_ALARM_FROM_BASE(ALARM_VARIANCE_LOW, ALARM);
-            KRB_ALARM_FROM_BASE(ALARM_VARIANCE_HIGH, ALARM);
-            KRB_ALARM_NO_BASE(INTERLOCK, 3);
-
+            */
+            
+            extern const Pointer NONE;
+            extern const Pointer WARN;
+            extern const Pointer WARN_LOW;
+            extern const Pointer WARN_HIGH;
+            extern const Pointer WARN_VARIANCE_LOW;
+            extern const Pointer WARN_VARIANCE_HIGH;
+            extern const Pointer ALARM;
+            extern const Pointer ALARM_LOW;
+            extern const Pointer ALARM_HIGH;
+            extern const Pointer ALARM_VARIANCE_LOW;
+            extern const Pointer ALARM_VARIANCE_HIGH;
+            extern const Pointer INTERLOCK;
+                                           
             
             static Pointer returnMostSignificant(const std::vector<Pointer> & v){
                 if(v.size() == 0) return NONE;
