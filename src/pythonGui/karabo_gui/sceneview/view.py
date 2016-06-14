@@ -169,15 +169,12 @@ class SceneView(QWidget):
 
     def _model_modified(self, event):
         """ The scene model got modified."""
-        for model in event.added:
-            widget = self._scene_obj_cache.get(model)
-            if widget is None:
-                create_object_from_model(self.layout, model, self,
-                                         self._scene_obj_cache)
-            else:
-                self._scene_obj_cache.pop(model)
         for model in event.removed:
             widget = self._scene_obj_cache.get(model)
             if widget is not None:
+                self.layout.removeWidget(widget)
+                # TODO reparent, if object is added to layout, otherwise delete
                 widget.setParent(None)
-                self._scene_obj_cache.pop(model)
+        for model in event.added:
+            create_object_from_model(self.layout, model, self,
+                                     self._scene_obj_cache)
