@@ -12,7 +12,7 @@ from PyQt4.QtGui import QPalette, QPainter, QPen, QSizePolicy, QWidget
 from karabo_gui.scenemodel.api import (read_scene, SCENE_MIN_WIDTH,
                                        SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
-from .builder import fill_root_layout, create_object_from_model
+from .builder import create_object_from_model, fill_root_layout
 from .const import QT_CURSORS
 from .layouts import GroupLayout
 from .selection_model import SceneSelectionModel
@@ -170,11 +170,11 @@ class SceneView(QWidget):
     def _model_modified(self, event):
         """ The scene model got modified."""
         for model in event.removed:
-            widget = self._scene_obj_cache.get(model)
-            if widget is not None:
-                self.layout.removeWidget(widget)
+            obj = self._scene_obj_cache.get(model)
+            if obj is not None:
+                self.layout.remove_object(obj)
                 # TODO reparent, if object is added to layout, otherwise delete
-                widget.setParent(None)
+                obj.setParent(None)
         for model in event.added:
             create_object_from_model(self.layout, model, self,
                                      self._scene_obj_cache)

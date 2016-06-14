@@ -44,13 +44,11 @@ def create_object_from_model(layout, model, scene_view, object_dict):
         if model not in object_dict:
             object_dict[model] = obj
         if is_layout(obj):
-            layout.add_layout(obj)
+            layout.add_object(obj)
             # recurse
             fill_root_layout(obj, model, scene_view, object_dict)
-        elif is_shape(obj):
-            layout.add_shape(obj)
-        elif is_widget(obj):
-            layout.add_widget(obj)
+        else:
+            layout.add_object(obj)
 
 
 def is_layout(scene_obj):
