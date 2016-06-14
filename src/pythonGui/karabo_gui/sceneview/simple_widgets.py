@@ -39,6 +39,12 @@ class LabelWidget(QLabel):
             model.height = fm.height() + CONTENT_MARGIN
         self.setGeometry(model.x, model.y, model.width, model.height)
 
+    def set_geometry(self, rect):
+        self.setGeometry(rect)
+
+    def translate(self, offset):
+        self.move(self.pos() + offset)
+
 
 class UnknownSvgWidget(QWidget):
     """ A widget which can display data from an UnknownXMLModel.
@@ -65,3 +71,9 @@ class UnknownSvgWidget(QWidget):
         if renderer.isValid() and not renderer.defaultSize().isNull():
             return cls(renderer, parent=parent)
         return None
+
+    def set_geometry(self, rect):
+        self.setGeometry(rect)
+
+    def translate(self, offset):
+        self.move(self.pos() + offset)

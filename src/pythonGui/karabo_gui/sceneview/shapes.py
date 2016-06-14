@@ -6,11 +6,11 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt4.QtCore import QLine, QRect, Qt
+from PyQt4.QtCore import QLine, QRect, QSize, Qt
 from PyQt4.QtGui import QBrush, QColor, QPen
 
 from karabo_gui.pathparser import Parser
-from .const import QT_PEN_CAP_STYLE, QT_PEN_JOIN_STYLE
+from .const import QT_PEN_CAP_STYLE, QT_PEN_JOIN_STYLE, SCREEN_MAX_VALUE
 
 
 class BaseShape(object, metaclass=ABCMeta):
@@ -58,15 +58,32 @@ class BaseShape(object, metaclass=ABCMeta):
             self.brush = QBrush(color)
 
     @abstractmethod
+    def draw(self, painter):
+        """ Needs to be reimplemented in inherited classes to draw the shape.
+        """
+
+    @abstractmethod
     def geometry(self):
         """ Needs to be reimplemented in inherited classes to get the geometry
         for the bounding rectangle.
         """
 
     @abstractmethod
-    def draw(self, painter):
-        """ Needs to be reimplemented in inherited classes to draw the shape.
+    def set_geometry(self, rect):
+        """ Needs to be reimplemented in inherited classes to set the geometry
+        for the bounding rectangle.
         """
+
+    @abstractmethod
+    def translate(self, offset):
+        """ Needs to be reimplemented in inherited classes to move the shape.
+        """
+
+    def minimumSize(self):
+        return QSize(0, 0)
+
+    def maximumSize(self):
+        return QSize(SCREEN_MAX_VALUE, SCREEN_MAX_VALUE)
 
 
 class LineShape(BaseShape):
@@ -78,14 +95,20 @@ class LineShape(BaseShape):
         self.shape = QLine(self.model.x1, self.model.y1, self.model.x2,
                            self.model.y2)
 
-    def geometry(self):
-        return QRect(self.shape.p1(), self.shape.p2())
-
     def draw(self, painter):
         """ The line gets drawn.
         """
         painter.setPen(self.pen)
         painter.drawLine(self.shape)
+
+    def geometry(self):
+        return QRect(self.shape.p1(), self.shape.p2())
+
+    def set_geometry(self, rect):
+        self.shape = QLine(rect.topLeft(), rect.bottomRight())
+
+    def translate(self, offset):
+        self.shape.translate(offset)
 
 
 class RectangleShape(BaseShape):
@@ -97,15 +120,21 @@ class RectangleShape(BaseShape):
         self.shape = QRect(self.model.x, self.model.y, self.model.width,
                            self.model.height)
 
-    def geometry(self):
-        return self.shape
-
     def draw(self, painter):
         """ The rectangle gets drawn.
         """
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawRect(self.shape)
+
+    def geometry(self):
+        return self.shape
+
+    def set_geometry(self, rect):
+        self.shape = rect
+
+    def translate(self, offset):
+        self.shape.translate(offset)
 
 
 class PathShape(BaseShape):
@@ -117,12 +146,18 @@ class PathShape(BaseShape):
         parser = Parser(self.model.svg_data)
         self.shape = parser.parse()
 
-    def geometry(self):
-        return self.shape.boundingRect().toRect()
-
     def draw(self, painter):
         """ The path gets drawn.
         """
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawPath(self.shape)
+
+    def geometry(self):
+        return self.shape.boundingRect().toRect()
+
+    def set_geometry(self, rect):
+        pass
+
+    def translate(self, offset):
+        self.shape.translate(offset)

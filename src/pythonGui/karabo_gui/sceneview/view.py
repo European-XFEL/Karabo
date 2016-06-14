@@ -16,6 +16,7 @@ from .builder import fill_root_layout
 from .const import QT_CURSORS
 from .layouts import GroupLayout
 from .selection_model import SceneSelectionModel
+from .tools.api import SceneSelectionTool
 from .utils import save_painter_state
 
 
@@ -99,7 +100,18 @@ class SceneView(QWidget):
     def item_at_position(self, pos):
         """ Returns the topmost object whose bounds contain `pos`.
         """
-        raise NotImplementedError
+        for obj in self._scene_obj_cache.values():
+            if obj.geometry().contains(pos):
+                return obj
+
+    def items_in_rect(self, rect):
+        """ Returns the topmost objects whose bounds are contained in `rect`.
+        """
+        items = []
+        for obj in self._scene_obj_cache.values():
+            if rect.contains(obj.geometry()):
+                items.append(obj)
+        return items
 
     def set_cursor(self, name):
         """ Sets the cursor for the scene view.
@@ -116,6 +128,8 @@ class SceneView(QWidget):
         self.current_tool = tool
         if tool is None:
             self.set_cursor('none')
+            if self.design_mode:
+                self.current_tool = SceneSelectionTool()
 
         self.update()
 

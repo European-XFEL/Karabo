@@ -3,8 +3,9 @@
 # Created on June 7, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 from contextlib import contextmanager
+
+from .const import SCREEN_MAX_VALUE
 
 
 def calc_bounding_rect(collection):
@@ -13,8 +14,7 @@ def calc_bounding_rect(collection):
     Each object in the collection must have a geometry method which returns a
     QRect.
     """
-    MAX_VALUE = 100000
-    left, top, right, bottom = MAX_VALUE, MAX_VALUE, 0, 0
+    left, top, right, bottom = SCREEN_MAX_VALUE, SCREEN_MAX_VALUE, 0, 0
     for item in collection:
         rect = item.geometry()
         left = min(left, rect.left())
