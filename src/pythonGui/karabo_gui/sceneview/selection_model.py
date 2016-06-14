@@ -15,7 +15,7 @@ class SceneSelectionModel(HasStrictTraits):
         """
         return iter(self._selection)
 
-    def count(self):
+    def __len__(self):
         return len(self._selection)
 
     def clear_selection(self):
@@ -35,7 +35,7 @@ class SceneSelectionModel(HasStrictTraits):
         return QRect(x, y, w, h)
 
     def has_selection(self):
-        return self.count() > 0
+        return len(self._selection) > 0
 
     def select_object(self, obj):
         """ Select an object.

@@ -32,6 +32,8 @@ def add_object_to_layout(obj, layout):
         layout._add_widget(obj)
     elif is_layout(obj):
         layout._add_layout(obj)
+    # Make sure the object is showing
+    obj.show()
 
 
 def remove_object_from_layout(obj, layout):
@@ -43,6 +45,8 @@ def remove_object_from_layout(obj, layout):
         layout._remove_widget(obj)
     elif is_layout(obj):
         layout._remove_layout(obj)
+    # Hide object from scene until reparenting is done
+    obj.hide()
 
 
 def create_object_from_model(layout, model, scene_view, object_dict):
@@ -58,8 +62,6 @@ def create_object_from_model(layout, model, scene_view, object_dict):
     if obj is not None:
         if model not in object_dict:
             object_dict[model] = obj
-        else:
-            obj.show()
         add_object_to_layout(obj, layout)
         if is_layout(obj):
             # recurse

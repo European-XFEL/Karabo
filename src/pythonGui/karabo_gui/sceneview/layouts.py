@@ -43,6 +43,10 @@ class BaseLayout(object):
             item.show()
 
     def draw(self, painter):
+        for i in range(self.count()):
+            item = self.itemAt(i)
+            if isinstance(item, BaseLayout):
+                item.draw(painter)
         for shape in self.shapes:
             if shape.is_visible():
                 with save_painter_state(painter):
@@ -85,7 +89,7 @@ class GroupLayout(BaseLayout, QLayout):
         self._children = []  # contains only QLayoutItems
 
     def _add_layout(self, layout):
-        self.addChildLayout(layout)
+        self.addItem(layout)
 
     def _remove_layout(self, layout):
         self.removeItem(layout)
@@ -161,7 +165,7 @@ class BoxLayout(BaseLayout, QBoxLayout):
         self.setContentsMargins(5, 5, 5, 5)
 
     def _add_layout(self, layout):
-        self.addLayout(layout)
+        self.addItem(layout)
 
     def _remove_layout(self, layout):
         self.removeItem(layout)
