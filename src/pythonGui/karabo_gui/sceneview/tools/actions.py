@@ -1,5 +1,6 @@
 from traits.api import Callable
 
+from karabo_gui.scenemodel.layouts import BoxLayoutModel
 from karabo_gui.sceneview.bases import BaseSceneAction
 
 
@@ -21,39 +22,46 @@ class GroupSceneAction(BaseSceneAction):
     """ Group without layout action"""
     def perform(self, scene_view):
         """ Perform the grouping. """
-        print("GroupSceneAction")
 
 
 class BoxVSceneAction(BaseSceneAction):
     """ Group vertically action"""
     def perform(self, scene_view):
         """ Perform the vertical grouping. """
-        print("BoxVSceneAction")
+        selection_model = scene_view.selection_model
+        if not scene_view.selection_model.has_selection():
+            return
+        # It does not make sense to create a layout for less than 2 items
+        if selection_model.count() < 2:
+            return
+
+        model = BoxLayoutModel()
+        model.direction = 2
+        for obj in selection_model:
+            scene_view.remove_model(obj.model)
+            model.children.append(obj.model)
+        scene_view.add_model(model)
 
 
 class BoxHSceneAction(BaseSceneAction):
     """ Group horizontally action"""
     def perform(self, scene_view):
         """ Perform the horizontal grouping. """
-        print("BoxHSceneAction")
 
 
 class GridSceneAction(BaseSceneAction):
     """ Group in grid action"""
     def perform(self, scene_view):
         """ Perform the grouping in grid. """
-        print("GridSceneAction")
 
 
 class UngroupSceneAction(BaseSceneAction):
     """ Ungroup action"""
     def perform(self, scene_view):
         """ Perform the ungrouping. """
-        print("UngroupSceneAction")
 
 
 class GroupEntireSceneAction(BaseSceneAction):
     """ Group entirely"""
     def perform(self, scene_view):
         """ Perform entire window grouping. """
-        print("GroupEntireSceneAction")

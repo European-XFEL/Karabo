@@ -198,6 +198,7 @@ class SceneView(QWidget):
 
     def _model_modified(self, event):
         """ The scene model got modified."""
+        print()
         for model in event.removed:
             obj = self._scene_obj_cache.get(model)
             if obj is not None:

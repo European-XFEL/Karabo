@@ -15,6 +15,9 @@ class SceneSelectionModel(HasStrictTraits):
         """
         return iter(self._selection)
 
+    def count(self):
+        return len(self._selection)
+
     def clear_selection(self):
         """ Remove all objects from the selection
         """
@@ -32,7 +35,7 @@ class SceneSelectionModel(HasStrictTraits):
         return QRect(x, y, w, h)
 
     def has_selection(self):
-        return len(self._selection) > 0
+        return self.count() > 0
 
     def select_object(self, obj):
         """ Select an object.

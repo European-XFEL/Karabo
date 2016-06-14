@@ -58,6 +58,8 @@ def create_object_from_model(layout, model, scene_view, object_dict):
     if obj is not None:
         if model not in object_dict:
             object_dict[model] = obj
+        else:
+            obj.show()
         add_object_to_layout(obj, layout)
         if is_layout(obj):
             # recurse
