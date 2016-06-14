@@ -173,13 +173,15 @@ class Node(Descriptor):
         setters = [t.checkedSet(parent, v) for t, v in props]
         yield from gather(*setters)
 
-    def asHash(self, instance):
+    def toDataAndAttrs(self, instance):
         r = Hash()
         for k in self.cls._allattrs:
             a = getattr(instance, k, None)
             if a is not None:
-                r[k] = getattr(self.cls, k).asHash(a)
-        return r
+                value, attrs = getattr(self.cls, k).toDataAndAttrs(a)
+                r[k] = value
+                r[k, ...].update(attrs)
+        return r, {}
 
 
 class ChoiceOfNodes(Node):
@@ -202,14 +204,16 @@ class ChoiceOfNodes(Node):
             instance.setValue(self, self.cls._subclasses[k](v))
             break  # there should be only one entry
 
-    def asHash(self, instance):
+    def toDataAndAttrs(self, instance):
         r = Hash()
         t = type(instance)
         for k in t._allattrs:
             a = getattr(instance, k, None)
             if a is not None:
-                r[k] = getattr(t, k).asHash(a)
-        return Hash(t.__name__, r)
+                value, attrs = getattr(t, k).toDataAndAttrs(a)
+                r[k] = value
+                r[k, ...].update(attrs)
+        return Hash(t.__name__, r), {}
 
 
 class ListOfNodes(Node):
@@ -236,15 +240,17 @@ class ListOfNodes(Node):
                  for k in value]
         instance.setValue(self, l)
 
-    def asHash(self, instance):
+    def toDataAndAttrs(self, instance):
         l = []
         for v in instance:
             r = Hash()
             t = type(v)
             for k in t._allattrs:
-                r[k] = getattr(t, k).asHash(getattr(v, k))
+                value, attrs = getattr(t, k).toDataAndAttrs(getattr(v, k))
+                r[k] = value
+                r[k, ...] = attrs
             l.append(r)
-        return Hash(self.key, l)
+        return Hash(self.key, l), {}
 
 
 class Validator(object):

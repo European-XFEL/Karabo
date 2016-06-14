@@ -51,11 +51,12 @@ class Enumable(object):
         else:
             raise TypeError("{} required here".format(self.enum))
 
-    def asHash(self, data):
-        if self.enum is None:
-            return self.cast(data)
+    def toDataAndAttrs(self, data):
+        h, attrs = super().toDataAndAttrs(data)
+        if self.enum is not None:
+            return data.value, attrs
         else:
-            return data.value
+            return h, attrs
 
     def toKaraboValue(self, data, strict=True):
         if not strict and not isinstance(data, self.enum):
@@ -298,6 +299,14 @@ class Descriptor(object):
         else:
             return self.setter_async(instance, value)
 
+    def toDataAndAttrs(self, value):
+        """Split value in bare data and the attributes that go with it
+
+        Return ``data`` in a format suitable to be put into a ``Hash``,
+        and the attributes (namely: the timestamp) that should go with it.
+        """
+        raise NotImplementedError
+
 
 class Slot(Descriptor):
     iscoroutine = None
@@ -308,8 +317,8 @@ class Slot(Descriptor):
         ret["displayType"] = "Slot"
         return ret
 
-    def asHash(self, other):
-        return Hash()
+    def toDataAndAttrs(self, value):
+        return Hash(), {}
 
     def cast(self, other):
         return Hash()
@@ -427,8 +436,14 @@ class Type(Descriptor, Registry):
     def toString(cls, data):
         return str(data)
 
-    def asHash(self, data):
-        return self.cast(data)
+    def toDataAndAttrs(self, data):
+        if not isinstance(data, basetypes.KaraboValue):
+            return self.cast(data), {}
+        if data.timestamp is not None:
+            attrs = data.timestamp.toDict()
+        else:
+            attrs = {}
+        return data.value, attrs
 
     def parameters(self):
         ret = super(Type, self).parameters()
