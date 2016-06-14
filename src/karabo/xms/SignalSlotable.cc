@@ -287,6 +287,13 @@ namespace karabo {
             m_heartbeatProducerChannel = m_connection->createChannel("beats");
             m_heartbeatConsumerChannel = m_connection->createChannel("beats");
 
+            // Set error handler for channels. Producers do not seem to make use of them, but that might change.
+            const BrokerErrorHandler errorHandler = boost::bind(&SignalSlotable::channelErrorHandler, this, _1, _2);
+            m_consumerChannel->setErrorHandler(errorHandler);
+            m_producerChannel->setErrorHandler(errorHandler);
+            m_heartbeatConsumerChannel->setErrorHandler(errorHandler);
+            m_heartbeatProducerChannel->setErrorHandler(errorHandler);
+
             registerDefaultSignalsAndSlots();
         }
 
@@ -336,6 +343,8 @@ namespace karabo {
 
             // Check whether this message is a reply
             if (header->has("replyFrom")) {
+                // Reply should not be put in queue to avoid deadlocks if all event queue threads
+                // are synchronously waiting for replies.
                 handleReply(header, body);
             } else {
                 {
@@ -537,7 +546,7 @@ namespace karabo {
                 m_brokerThread = boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_ioService));
 
             // Prepare the slot selector
-            string selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'";
+            const string selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'";
             m_consumerChannel->setFilter(selector);
             m_consumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2, _3));
         }
@@ -2166,6 +2175,26 @@ namespace karabo {
         void SignalSlotable::disconnectP2P(const std::string& signalInstanceId) {
             if (signalInstanceId == m_instanceId) return;
             m_pointToPoint->disconnect(signalInstanceId, m_instanceId);
+        }
+
+        void SignalSlotable::channelErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info) {
+
+            // Find channel that has problems:
+            const char* channelName = "unknown";
+            if (channel == m_consumerChannel) {
+                channelName = "consumer";
+            } else if (channel == m_producerChannel) {
+                channelName = "producer";
+            } else if (channel == m_heartbeatConsumerChannel) {
+                channelName = "heartbeat consumer";
+            } else if (channel == m_heartbeatProducerChannel) {
+                channelName = "heartbeat producer";
+            }
+
+            // Just log an error. Later we might raise an alarm to make the system aware:
+            // (In contrast to 'KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ...' this seems to
+            //  go to the Gui as well which is desirable here.)
+            KARABO_LOG_FRAMEWORK_ERROR_C(m_instanceId) << "Problem in '" << channelName << "' broker channel:\n" << info;
         }
     }
 }

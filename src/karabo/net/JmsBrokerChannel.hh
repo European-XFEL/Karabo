@@ -290,6 +290,9 @@ namespace karabo {
 
             void ensureExistenceOfConsumer();
 
+            /// Listen for messages by calling 'signalIncomingMessage'
+            void listenForMessages(const boost::function<bool ()>& signalIncomingMessage);
+
             void readBinaryMessage(karabo::util::Hash& header, std::vector<char>& body, bool withHeader);
 
             void readTextMessage(karabo::util::Hash& header, std::string& body, bool withHeader);
