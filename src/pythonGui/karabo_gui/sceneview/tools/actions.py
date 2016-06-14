@@ -2,6 +2,7 @@ from traits.api import Callable
 
 from karabo_gui.scenemodel.layouts import BoxLayoutModel
 from karabo_gui.sceneview.bases import BaseSceneAction
+from karabo_gui.sceneview.utils import calc_bounding_rect
 
 
 class CreateToolAction(BaseSceneAction):
@@ -36,7 +37,9 @@ class BoxVSceneAction(BaseSceneAction):
             return
 
         model = BoxLayoutModel()
-        model.direction = 2
+        model.direction = 2 #QBoxLayout.TopToBottom
+        model.x, model.y, model.width, model.height = calc_bounding_rect(
+                                                        selection_model)
         for obj in selection_model:
             scene_view.remove_model(obj.model)
             model.children.append(obj.model)
