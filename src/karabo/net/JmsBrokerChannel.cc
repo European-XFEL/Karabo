@@ -265,9 +265,19 @@ namespace karabo {
                 status = MQReceiveMessageWithTimeout(m_consumerHandle, timeout, &messageHandle);
                 if (MQStatusIsError(status) == MQ_FALSE)
                     break; // Success
-                if (MQGetStatusCode(status) == MQ_TIMEOUT_EXPIRED)
+                const MQError error = MQGetStatusCode(status);
+                if (error == MQ_TIMEOUT_EXPIRED)
                     break; // in this particular case the timeout is not the error
-                switch (MQGetStatusCode(status)) {
+                if (error == MQ_CONSUMER_DROPPED_MESSAGES) {
+                    // We have a valid message, but some message has been dropped.
+                    MQString statusString = MQGetStatusString(status);
+                    //                    KARABO_LOG_FRAMEWORK_ERROR << statusString;
+                    m_signalError(shared_from_this(), statusString);
+                    MQFreeString(statusString);
+                    status.errorCode = MQ_SUCCESS; // Message itself is fine.
+                    break;
+                }
+                switch (error) {
                     case MQ_STATUS_INVALID_HANDLE:
                     case MQ_BROKER_CONNECTION_CLOSED:
                     case MQ_SESSION_CLOSED:
