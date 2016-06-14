@@ -14,10 +14,11 @@
 
 namespace karabo {
     namespace core {
-        namespace states {
-
-            typedef State KrbState;
             
+        State::Pointer createState(const std::string& stateName);
+
+        namespace states {
+          
 
 #define KARABO_FSM_DECLARE_FIXED_STATE(X, parent) \
             struct X : public State {\
@@ -156,105 +157,11 @@ namespace karabo {
             
             struct StateSignifier {
 
-                StateSignifier(const std::vector<std::string>& trumpList = std::vector<std::string>(),
-                        const std::string& staticSignificant = "PASSIVE",
-                        const std::string& changingSignificant = "DECREASING") : m_trumpList() {
-                    using namespace karabo::util;
-                    
-#define REGISTER_STATE(X) if (!Factory<State>::has(#X)) Factory<State>::registerClass<X>(#X);
-                    
-                    REGISTER_STATE(UNKNOWN)
-                    REGISTER_STATE(KNOWN)
-                    REGISTER_STATE(INIT)
-                    REGISTER_STATE(DISABLED)
-                    REGISTER_STATE(ERROR)
-                    REGISTER_STATE(NORMAL)
-                    REGISTER_STATE(STATIC)
-                    REGISTER_STATE(CHANGING)
-                    REGISTER_STATE(PASSIVE)
-                    REGISTER_STATE(ACTIVE)
-                    REGISTER_STATE(DECREASING)
-                    REGISTER_STATE(INCREASING)
-                    REGISTER_STATE(INTERLOCKED)
-                    REGISTER_STATE(COOLED)
-                    REGISTER_STATE(HEATED)
-                    REGISTER_STATE(EVACUATED)
-                    REGISTER_STATE(CLOSED)
-                    REGISTER_STATE(ON)
-                    REGISTER_STATE(EXTRACTED)
-                    REGISTER_STATE(STARTED)
-                    REGISTER_STATE(LOCKED)
-                    REGISTER_STATE(ENGAGED)
-                    REGISTER_STATE(WARM)
-                    REGISTER_STATE(COLD)
-                    REGISTER_STATE(PRESSURIZED)
-                    REGISTER_STATE(OPENED)
-                    REGISTER_STATE(OFF)
-                    REGISTER_STATE(INSERTED)
-                    REGISTER_STATE(STOPPED)
-                    REGISTER_STATE(UNLOCKED)
-                    REGISTER_STATE(DISENGAGED)
-                    REGISTER_STATE(ROTATING)
-                    REGISTER_STATE(MOVING)
-                    REGISTER_STATE(SWITCHING)
-                    REGISTER_STATE(HEATING)
-                    REGISTER_STATE(MOVING_RIGHT)
-                    REGISTER_STATE(MOVING_UP)
-                    REGISTER_STATE(MOVING_FORWARD)
-                    REGISTER_STATE(ROTATING_CLK)
-                    REGISTER_STATE(RAMPING_UP)
-                    REGISTER_STATE(INSERTING)
-                    REGISTER_STATE(STARTING)
-                    REGISTER_STATE(FILLING)
-                    REGISTER_STATE(ENGAGING)
-                    REGISTER_STATE(SWITCHING_ON)
-                    REGISTER_STATE(COOLING)
-                    REGISTER_STATE(MOVING_LEFT)
-                    REGISTER_STATE(MOVING_DOWN)
-                    REGISTER_STATE(MOVING_BACK)
-                    REGISTER_STATE(ROTATING_CNTCLK)
-                    REGISTER_STATE(RAMPING_DOWN)
-                    REGISTER_STATE(EXTRACTING)
-                    REGISTER_STATE(STOPPING)
-                    REGISTER_STATE(EMPTYING)
-                    REGISTER_STATE(DISENGAGING)
-                    REGISTER_STATE(SWITCHING_OFF)
+                StateSignifier(const std::vector<karabo::core::State::Pointer>& trumpList = std::vector<karabo::core::State::Pointer>(),
+                        const karabo::core::State::Pointer& staticMoreSignificant = createState("PASSIVE"),
+                        const karabo::core::State::Pointer& changingMoreSignificant = createState("DECREASING"));
 
-#undef REGISTER_STATE
-                    
-                    if (trumpList.empty()) {
-                        if (!Factory<State>::has("DISABLED")) Factory<State>::registerClass<DISABLED>("DISABLED");
-                        m_trumpList.push_back(Factory<State>::create("DISABLED"));
-                        m_trumpList.push_back(Factory<State>::create("INIT"));
-                        
-                        if (staticSignificant == "PASSIVE") {
-                            m_trumpList.push_back(Factory<State>::create("ACTIVE"));
-                            m_trumpList.push_back(Factory<State>::create("PASSIVE"));
-                        } else if (staticSignificant == "ACTIVE") {
-                            m_trumpList.push_back(Factory<State>::create("PASSIVE"));
-                            m_trumpList.push_back(Factory<State>::create("ACTIVE"));
-                        }
-                        
-                        m_trumpList.push_back(Factory<State>::create("STATIC"));
-                        
-                        if (changingSignificant == "DECREASING") {
-                            m_trumpList.push_back(Factory<State>::create("INCREASING"));
-                            m_trumpList.push_back(Factory<State>::create("DECREASING"));
-                        } else if (changingSignificant == "INCREASING") {
-                            m_trumpList.push_back(Factory<State>::create("DECREASING"));
-                            m_trumpList.push_back(Factory<State>::create("INCREASING"));
-                        }
-                        
-                        m_trumpList.push_back(Factory<State>::create("CHANGING"));
-                        m_trumpList.push_back(Factory<State>::create("ERROR"));
-                        m_trumpList.push_back(Factory<State>::create("UNKNOWN"));
-                    } else {
-                        m_trumpList.clear();
-                        for (size_t i = 0; i < trumpList.size(); i++) m_trumpList.push_back(Factory<State>::create(trumpList[i]));
-                    }
-                }
-
-                State returnMostSignificant(const std::vector<State>& listOfStates);
+                State::Pointer returnMostSignificant(const std::vector<State::Pointer>& listOfStates);
 
                 const std::vector<State::Pointer>& getTrumpList() const {
                     return m_trumpList;
@@ -263,15 +170,23 @@ namespace karabo {
             protected:
                 std::vector<State::Pointer> m_trumpList;
             };
-
-            static StateSignifier stateSignifier;
-        }
             
-        State::Pointer createState(const std::string& stateName);
+            struct StatesRegistrator {
+                
+                StatesRegistrator();
+                boost::shared_ptr<StateSignifier> stateSignifier;
+            };
+
+            static StatesRegistrator statesRegistrator;
+        }
     }
 }
 
-//#define KARABO_FSM_STATE(X) struct X : karabo::core::states::X {};
+//  Use macro CREATE_STATE to check validity of the given state at compile time
+// State::Pointer cooling;
+// CREATE_STATE(cooling, Cooling)
+
+#define CREATE_STATE(x, X) { static struct X: public karabo::core::states::X {} s_ ## X; x = karabo::core::createState(#X); }
 
 #endif	/* STATES_HH */
 

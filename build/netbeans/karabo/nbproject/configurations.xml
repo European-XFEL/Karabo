@@ -24,7 +24,6 @@
       </logicalFolder>
       <logicalFolder name="f1" displayName="State Machines" projectFiles="true">
         <itemPath>../../../src/karabo/core/BaseFsm.hh</itemPath>
-        <itemPath>../../../src/karabo/core/BaseState.hh</itemPath>
         <itemPath>../../../src/karabo/core/CameraFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/CameraInterface.hh</itemPath>
         <itemPath>../../../src/karabo/core/FsmBaseState.hh</itemPath>
@@ -36,6 +35,7 @@
         <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopInterface.hh</itemPath>
+        <itemPath>../../../src/karabo/core/State.hh</itemPath>
         <itemPath>../../../src/karabo/core/States.cc</itemPath>
         <itemPath>../../../src/karabo/core/States.hh</itemPath>
       </logicalFolder>
@@ -564,11 +564,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/BaseState.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/CameraFsm.hh"
             ex="false"
             tool="3"
@@ -714,6 +709,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/State.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/States.cc" ex="false" tool="1" flavor2="0">
       </item>
@@ -2571,11 +2568,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/BaseState.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/CameraFsm.hh"
             ex="false"
             tool="3"
@@ -2721,6 +2713,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/State.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/States.cc" ex="false" tool="1" flavor2="0">
       </item>
