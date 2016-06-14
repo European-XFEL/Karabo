@@ -11,6 +11,9 @@
 #include <vector>
 #include <algorithm>
 
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
+
 namespace karabo {
     namespace util {
  
@@ -22,12 +25,19 @@ namespace karabo {
             double m_s, m_s2;
             std::vector<double> m_vals;
             
-            public:
+            mutable boost::shared_mutex m_updateMutex;
+            
+            
+            
+        public:
+            
+                typedef boost::shared_ptr<RollingWindowStatistics> Pointer;
+                typedef boost::shared_ptr<const RollingWindowStatistics> ConstPointer;
                 
                 RollingWindowStatistics();
                 
                 RollingWindowStatistics(const unsigned int & evalInterval);
-                
+
                 virtual ~RollingWindowStatistics();
                 
                 void update(const double & v);
@@ -36,8 +46,14 @@ namespace karabo {
                 
                 double getRollingWindowMean() const;
                 
+        private:
+            
+                RollingWindowStatistics(const RollingWindowStatistics & other); //copy is protected
+                
                 
         };
+        
+       
         
     }
 

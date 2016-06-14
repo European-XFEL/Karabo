@@ -23,6 +23,9 @@
 #include "StatisticalEvaluators.hh"
 #include <map>
 
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
+
 namespace karabo {
     namespace util {
         
@@ -39,7 +42,8 @@ namespace karabo {
             karabo::util::Timestamp m_timestamp;
             bool m_hasReconfigurableParameter;
             
-            std::map<std::string, RollingWindowStatistics> m_parameterRollingStats;
+            mutable boost::shared_mutex rollingStatMutex;
+            std::map<std::string, RollingWindowStatistics::Pointer> m_parameterRollingStats;
             
         public:
             
@@ -96,9 +100,9 @@ namespace karabo {
             
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
             
-            void assureRollingStatsInitialized(const std::string & scope, const unsigned long long & evalInterval);
+            void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
             
-            
+            RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & scope) const;
 
         };
     }

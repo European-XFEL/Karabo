@@ -490,7 +490,8 @@ namespace karabo {
         }
 
         //******************************************************
-        //    has/ WarnLow, WarnHigh, AlarmLow, AlarmHigh      *                   *  
+        //    has/ WarnLow, WarnHigh, AlarmLow, AlarmHigh      *
+        //    also for Variance                                *
         //******************************************************
 
         bool Schema::hasWarnLow(const std::string& path) const {
@@ -508,6 +509,34 @@ namespace karabo {
         bool Schema::hasAlarmHigh(const std::string& path) const {
             return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_HIGH);
         }
+        
+        bool Schema::hasWarnVarianceLow(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_LOW);
+        }
+
+        bool Schema::hasWarnVarianceHigh(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_HIGH);
+        }
+
+        bool Schema::hasAlarmVarianceLow(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_LOW);
+        }
+
+        bool Schema::hasAlarmVarianceHigh(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
+        }
+        
+        bool Schema::hasRollingStatistics(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS);
+        }
+        
+        unsigned int Schema::getRollingStatsEvalInterval(const std::string& path) const {
+            if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                 KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+            }
+            return m_hash.getAttribute<unsigned int>(path, KARABO_SCHEMA_ROLLING_STATS_EVAL);
+        }
+        
 
         //**********************************************
         //               archivePolicy                 *
