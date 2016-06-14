@@ -4,13 +4,10 @@ from unittest import TestCase, main
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    AccessMode, Assignment, AccessLevel, MetricPrefix, Unit)
-from karabo.middlelayer_api import hash as hashmod
-from karabo.middlelayer_api.basetypes import QuantityValue
-from karabo.middlelayer_api.enums import (
-    AccessLevel, AccessMode, Assignment, MetricPrefix, Unit)
-from karabo.middlelayer_api.hash import Hash
-from karabo.middlelayer_api.timestamp import Timestamp
+    AccessMode, Assignment, AccessLevel, Bool, Char, ComplexFloat, Double,
+    Float, Hash, Int8, Int16, MetricPrefix, NumpyVector, QuantityValue, String,
+    Timestamp, Unit, UInt64, VectorBool, VectorChar, VectorComplexFloat,
+    VectorFloat, VectorInt8, VectorString)
 
 
 class Tests(TestCase):
@@ -25,7 +22,7 @@ class Tests(TestCase):
         h = Hash()
         h["a"] = c.value
         h = Hash.decode(h.encode("Bin"), "Bin")
-        if isinstance(desc, hashmod.NumpyVector):
+        if isinstance(desc, NumpyVector):
             self.assertTrue((c == value).all())
             self.assertTrue((h["a"] == value.value).all())
         else:
@@ -37,7 +34,7 @@ class Tests(TestCase):
     def test_int_enum(self):
         class E(Enum):
             a = 3
-        d = hashmod.Int8(enum=E)
+        d = Int8(enum=E)
         v = d.toKaraboValue(E.a)
         self.assertIs(v.enum, E.a)
         self.assertEqual(v.value, 3)
@@ -51,14 +48,14 @@ class Tests(TestCase):
             v = d.toKaraboValue(F.a)
 
     def test_bool(self):
-        d = hashmod.Bool()
+        d = Bool()
         v = d.toKaraboValue(3)
         self.assertTrue(v)
         self.assertIs(v.value, True)
         self.check_general(d, v)
 
     def test_vector_bool(self):
-        d = hashmod.VectorBool()
+        d = VectorBool()
         v = d.toKaraboValue([True, False, True])
         self.assertTrue(v[0])
         self.assertFalse(v[1])
@@ -67,7 +64,7 @@ class Tests(TestCase):
         self.check_general(d, v)
 
     def test_char(self):
-        d = hashmod.Char()
+        d = Char()
         v = d.toKaraboValue(b"3")
         self.assertEqual(v, 51)
         self.check_general(d, v)
@@ -77,14 +74,14 @@ class Tests(TestCase):
             d.toKaraboValue("a")
 
     def test_vector_char(self):
-        d = hashmod.VectorChar()
+        d = VectorChar()
         v = d.toKaraboValue(b"asdf")
         self.assertTrue(v == b"asdf")
         self.assertEqual(repr(v), "b'asdf'")
         self.check_general(d, v)
 
     def test_ints(self):
-        d = hashmod.Int8()
+        d = Int8()
         v = d.toKaraboValue(3)
         self.assertEqual(v, 3)
         self.check_general(d, v)
@@ -94,9 +91,8 @@ class Tests(TestCase):
         v = d.toKaraboValue(1.9, strict=False)
         self.assertEqual(v, 1)
 
-        d = hashmod.Int8(unitSymbol=Unit.METER,
-                         metricPrefixSymbol=MetricPrefix.MILLI,
-                         minExc=3, maxInc=6000)
+        d = Int8(unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.MILLI,
+                 minExc=3, maxInc=6000)
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue(5)
         v = d.toKaraboValue(5, strict=False)
@@ -116,17 +112,17 @@ class Tests(TestCase):
             v = d.toKaraboValue("7 m")
 
         with self.assertRaises(TypeError):
-            hashmod.Int16(unitSymbol="m")
-        hashmod.Int16(strict=False, unitSymbol="m", metricPrefixSymbol="m")
+            Int16(unitSymbol="m")
+        Int16(strict=False, unitSymbol="m", metricPrefixSymbol="m")
 
     def test_vector_ints(self):
-        d = hashmod.VectorInt8()
+        d = VectorInt8()
         v = d.toKaraboValue([1, 2, 3])
         self.check_general(d, v)
         self.assertEqual(v[1], 2)
 
-        d = hashmod.VectorInt8(unitSymbol=Unit.METER,
-                               metricPrefixSymbol=MetricPrefix.MILLI)
+        d = VectorInt8(unitSymbol=Unit.METER,
+                       metricPrefixSymbol=MetricPrefix.MILLI)
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue([2, 3, 4])
         v = d.toKaraboValue([2, 3, 4], strict=False)
@@ -134,20 +130,19 @@ class Tests(TestCase):
         self.assertNotEqual(v[2], 4)
         self.check_general(d, v)
 
-        d = hashmod.VectorInt8(unitSymbol=Unit.METER,
-                               metricPrefixSymbol=MetricPrefix.MICRO)
+        d = VectorInt8(unitSymbol=Unit.METER,
+                       metricPrefixSymbol=MetricPrefix.MICRO)
         v = d.toKaraboValue(v)
         self.assertAlmostEqual(v[1].magnitude, 3000)
 
     def test_floats(self):
-        d = hashmod.Float()
+        d = Float()
         v = d.toKaraboValue(3)
         self.assertEqual(v, 3)
         self.check_general(d, v)
 
-        d = hashmod.Float(unitSymbol=Unit.METER,
-                          metricPrefixSymbol=MetricPrefix.MILLI,
-                          minExc=3, maxInc=6000)
+        d = Float(unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.MILLI,
+                  minExc=3, maxInc=6000)
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue(5)
         v = d.toKaraboValue(5, strict=False)
@@ -166,13 +161,13 @@ class Tests(TestCase):
             v = d.toKaraboValue("7 m")
 
     def test_vector_floats(self):
-        d = hashmod.VectorFloat()
+        d = VectorFloat()
         v = d.toKaraboValue([1, 2, 3])
         self.check_general(d, v)
         self.assertEqual(v[1], 2)
 
-        d = hashmod.VectorFloat(unitSymbol=Unit.METER,
-                                metricPrefixSymbol=MetricPrefix.MILLI)
+        d = VectorFloat(unitSymbol=Unit.METER,
+                        metricPrefixSymbol=MetricPrefix.MILLI)
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue([2, 3, 4])
         v = d.toKaraboValue([2, 3, 4], strict=False)
@@ -180,19 +175,19 @@ class Tests(TestCase):
         self.assertNotEqual(v[2], 4)
         self.check_general(d, v)
 
-        d = hashmod.VectorFloat(unitSymbol=Unit.METER,
-                                metricPrefixSymbol=MetricPrefix.KILO)
+        d = VectorFloat(unitSymbol=Unit.METER,
+                        metricPrefixSymbol=MetricPrefix.KILO)
         v = d.toKaraboValue(v)
         self.assertAlmostEqual(v[1].magnitude, 3e-6)
 
     def test_complex(self):
-        d = hashmod.ComplexFloat()
+        d = ComplexFloat()
         v = d.toKaraboValue(3+4j)
         self.assertEqual(v, 3+4j)
         self.check_general(d, v)
 
-        d = hashmod.ComplexFloat(unitSymbol=Unit.METER,
-                                 metricPrefixSymbol=MetricPrefix.MILLI)
+        d = ComplexFloat(unitSymbol=Unit.METER,
+                         metricPrefixSymbol=MetricPrefix.MILLI)
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue(5+3j)
         v = d.toKaraboValue(5+3j, strict=False)
@@ -205,13 +200,13 @@ class Tests(TestCase):
         self.assertEqual(v.magnitude, 3711.11)
 
     def test_vector_complex(self):
-        d = hashmod.VectorComplexFloat()
+        d = VectorComplexFloat()
         v = d.toKaraboValue([1+2j, 2+3j, 3])
         self.check_general(d, v)
         self.assertEqual(v[1], 2+3j)
 
-        d = hashmod.VectorComplexFloat(unitSymbol=Unit.METER,
-                                       metricPrefixSymbol=MetricPrefix.MILLI)
+        d = VectorComplexFloat(unitSymbol=Unit.METER,
+                               metricPrefixSymbol=MetricPrefix.MILLI)
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue([2+3j, 3+4j, 4])
         v = d.toKaraboValue([2+3j, 3+4j, 4], strict=False)
@@ -220,13 +215,13 @@ class Tests(TestCase):
         self.assertNotEqual(v[2], 4)
         self.check_general(d, v)
 
-        d = hashmod.VectorComplexFloat(unitSymbol=Unit.METER,
-                                       metricPrefixSymbol=MetricPrefix.KILO)
+        d = VectorComplexFloat(unitSymbol=Unit.METER,
+                               metricPrefixSymbol=MetricPrefix.KILO)
         v = d.toKaraboValue(v)
         self.assertAlmostEqual(v[1].magnitude, 3e-6+4e-6j)
 
     def test_string(self):
-        d = hashmod.String()
+        d = String()
         v = d.toKaraboValue("bla")
         self.check_general(d, v)
         self.assertEqual(v, "bla")
@@ -235,7 +230,7 @@ class Tests(TestCase):
     def test_string_enum(self):
         class E(Enum):
             a = "bla"
-        d = hashmod.String(enum=E)
+        d = String(enum=E)
         v = d.toKaraboValue(E.a)
         self.assertIs(v.enum, E.a)
         self.assertEqual(v.value, "bla")
@@ -249,7 +244,7 @@ class Tests(TestCase):
             v = d.toKaraboValue(F.a)
 
     def test_vector_string(self):
-        d = hashmod.VectorString()
+        d = VectorString()
         v = d.toKaraboValue(["a", "b", "c"])
         self.check_general(d, v)
         self.assertEqual(v, ["a", "b", "c"])
@@ -257,22 +252,22 @@ class Tests(TestCase):
         self.assertEqual(len(v), 3)
 
     def test_general(self):
-        d = hashmod.UInt64(accessMode=AccessMode.READONLY)
+        d = UInt64(accessMode=AccessMode.READONLY)
         self.assertIs(d.accessMode, AccessMode.READONLY)
         with self.assertRaises(TypeError):
-            d = hashmod.UInt64(accessMode=4)
-        d = hashmod.UInt64(strict=False, accessMode=4)
+            d = UInt64(accessMode=4)
+        d = UInt64(strict=False, accessMode=4)
         self.assertIs(d.accessMode, AccessMode.RECONFIGURABLE)
 
-        d = hashmod.VectorString(assignment=Assignment.MANDATORY)
+        d = VectorString(assignment=Assignment.MANDATORY)
         self.assertIs(d.assignment, Assignment.MANDATORY)
         with self.assertRaises(TypeError):
-            d = hashmod.UInt64(assignment=0)
-        d = hashmod.UInt64(strict=False, assignment=0)
+            d = UInt64(assignment=0)
+        d = UInt64(strict=False, assignment=0)
         self.assertIs(d.assignment, Assignment.OPTIONAL)
 
     def test_attributes_default(self):
-        d = hashmod.Double()
+        d = Double()
         self.assertIsNone(d.minExc)
         self.assertIsNone(d.maxExc)
         self.assertIsNone(d.minInc)
@@ -293,7 +288,7 @@ class Tests(TestCase):
         self.assertIsNone(d.options)
 
     def test_attributes_nodefault(self):
-        d = hashmod.Double(
+        d = Double(
             minExc=22, maxExc=33, minInc=11, maxInc=23,
             absoluteError=0.2, relativeError=0.3,
             displayedName="hallo", alias="something",
@@ -324,7 +319,7 @@ class Tests(TestCase):
         self.assertEqual(d.options, [22.3, 22.7, 22.8])
 
     def test_attributes_nonstrict(self):
-        d = hashmod.Double(
+        d = Double(
             strict=False, whatever=4, requiredAccessLevel=3,
             unitSymbol="m", metricPrefixSymbol="m")
 
@@ -335,17 +330,17 @@ class Tests(TestCase):
 
     def test_attributes_strict_fails(self):
         with self.assertRaises(TypeError):
-            hashmod.Double(requiredAccessLevel=3)
+            Double(requiredAccessLevel=3)
         with self.assertRaises(TypeError):
-            hashmod.Double(unitSymbol="m")
+            Double(unitSymbol="m")
         with self.assertRaises(TypeError):
-            hashmod.Double(whatever=7)
+            Double(whatever=7)
 
     def test_attributes_nonstrict_fails(self):
         with self.assertRaises(ValueError):
-            hashmod.Double(strict=False, requiredAccessLevel=27)
+            Double(strict=False, requiredAccessLevel=27)
         with self.assertRaises(ValueError):
-            hashmod.Double(strict=False, metricPrefixSymbol="asdf")
+            Double(strict=False, metricPrefixSymbol="asdf")
 
 
 if __name__ == "__main__":
