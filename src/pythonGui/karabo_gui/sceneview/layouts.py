@@ -32,28 +32,6 @@ class BaseLayout(object):
         """
         raise NotImplementedError("BaseLayout.add_widget")
 
-    def add_object(self, obj):
-        """ An object is added to the layout. """
-        from .builder import is_layout, is_shape, is_widget
-
-        if is_shape(obj):
-            self._add_shape(obj)
-        elif is_widget(obj):
-            self._add_widget(obj)
-        elif is_layout(obj):
-            self._add_layout(obj)
-
-    def remove_object(self, obj):
-        """ An object is remove from the layout. """
-        from .builder import is_layout, is_shape, is_widget
-
-        if is_shape(obj):
-            self._remove_shape(obj)
-        elif is_widget(obj):
-            self._remove_widget(obj)
-        elif is_layout(obj):
-            self._remove_layout(obj)
-
     def hide(self):
         for i in self.count():
             item = self.itemAt(i)
