@@ -177,6 +177,7 @@ namespace karabo {
 
                 checkMinExcMaxExc();
                 checkMinIncMaxInc();
+                checkWarnAndAlarm();
 
             }
 
@@ -204,6 +205,70 @@ namespace karabo {
                         std::ostringstream msg;
                         msg << "The open range: (" << min << "," << max << ") is empty on parameter \""
                                 << this->m_node->getKey() << "\"";
+                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
+                    }
+                }
+            }
+            
+            //only makes sense for simple element, as we cannot know how to evaluated for vectors etc
+            void checkWarnAndAlarm() {
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_WARN_LOW) && this->m_node->hasAttribute(KARABO_SCHEMA_WARN_HIGH)) {
+                    const ValueType& min = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_WARN_LOW);
+                    const ValueType& max = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_WARN_HIGH);
+                    if (min > max) {
+                        std::ostringstream msg;
+                        msg << "WARN_LOW value (" << min << ") is greater than WARN_HIGH (" << max
+                                << ") on parameter \"" << this->m_node->getKey() << "\"";
+                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
+                    }
+                }
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_WARN_LOW) && this->m_node->hasAttribute(KARABO_SCHEMA_ALARM_HIGH)) {
+                    const ValueType& min = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_WARN_LOW);
+                    const ValueType& max = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_ALARM_HIGH);
+                    if (min > max) {
+                        std::ostringstream msg;
+                        msg << "WARN_LOW value (" << min << ") is greater than ALARM_HIGH (" << max
+                                << ") on parameter \"" << this->m_node->getKey() << "\"";
+                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
+                    }
+                }
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_ALARM_LOW) && this->m_node->hasAttribute(KARABO_SCHEMA_ALARM_HIGH)) {
+                    const ValueType& min = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_ALARM_LOW);
+                    const ValueType& max = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_ALARM_HIGH);
+                    if (min > max) {
+                        std::ostringstream msg;
+                        msg << "ALARM_LOW value (" << min << ") is greater than ALARM_HIGH (" << max
+                                << ") on parameter \"" << this->m_node->getKey() << "\"";
+                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
+                    }
+                }
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_ALARM_LOW) && this->m_node->hasAttribute(KARABO_SCHEMA_WARN_LOW)) {
+                    const ValueType& min = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_ALARM_LOW);
+                    const ValueType& max = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_WARN_LOW);
+                    if (min > max) {
+                        std::ostringstream msg;
+                        msg << "ALARM_LOW value (" << min << ") is greater than WARN_LOW (" << max
+                                << ") on parameter \"" << this->m_node->getKey() << "\"";
+                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
+                    }
+                }
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_ALARM_LOW) && this->m_node->hasAttribute(KARABO_SCHEMA_WARN_HIGH)) {
+                    const ValueType& min = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_ALARM_LOW);
+                    const ValueType& max = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_WARN_HIGH);
+                    if (min > max) {
+                        std::ostringstream msg;
+                        msg << "ALARM_LOW value (" << min << ") is greater than WARN_HIGH (" << max
+                                << ") on parameter \"" << this->m_node->getKey() << "\"";
+                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
+                    }
+                }
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_WARN_HIGH) && this->m_node->hasAttribute(KARABO_SCHEMA_ALARM_HIGH)) {
+                    const ValueType& min = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_WARN_HIGH);
+                    const ValueType& max = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_ALARM_HIGH);
+                    if (min > max) {
+                        std::ostringstream msg;
+                        msg << "WARN_HIGH value (" << min << ") is greater than ALARM_HIGH (" << max
+                                << ") on parameter \"" << this->m_node->getKey() << "\"";
                         throw KARABO_PARAMETER_EXCEPTION(msg.str());
                     }
                 }
