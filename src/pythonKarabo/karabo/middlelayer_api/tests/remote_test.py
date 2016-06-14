@@ -1,10 +1,16 @@
 from asyncio import (async, coroutine, get_event_loop, sleep, wait_for,
                      TimeoutError)
 from datetime import datetime
-from unittest import TestCase, main, expectedFailure
+from unittest import TestCase, main
+import time
 import weakref
 
-from karabo.middlelayer import MetricPrefix, Unit, unit
+import pint
+
+from karabo.middlelayer import (
+    Float, Int32, Slot, String, unit,
+    VectorInt16, String, VectorString, VectorFloat
+)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     waitUntilNew, getDevice, waitUntil, setWait, setNoWait, Queue,
@@ -12,6 +18,7 @@ from karabo.middlelayer_api.device_client import (
 from karabo.middlelayer_api.hash import Hash, VectorChar, Slot, Int32 as Int
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.schema import Configurable, Node
+from karabo.middlelayer_api.enums import Unit, MetricPrefix
 
 from .eventloop import startDevices, stopDevices, async_tst
 
@@ -39,6 +46,15 @@ class Nested(Configurable):
 class Remote(Device):
     value = Int(defaultValue=7)
     counter = Int(defaultValue=-1)
+
+    unit_int = Int(unitSymbol=Unit.METER)
+    unit_float = Float(unitSymbol=Unit.SECOND,
+                       metricPrefixSymbol=MetricPrefix.MILLI)
+    string = String()
+
+    unit_vector_int = VectorInt16(unitSymbol=Unit.METER_PER_SECOND)
+    unit_vector_float = VectorFloat(unitSymbol=Unit.DEGREE)
+    string_list = VectorString()
 
     nested = Node(Nested)
 
@@ -134,6 +150,147 @@ class Tests(TestCase):
             yield from d.doit()
         yield from sleep(0.1)
         self.assertTrue(remote.done)
+
+    @async_tst
+    def test_set_remote(self):
+        """test setting of values"""
+        with (yield from getDevice("remote")) as d:
+            d.string = "bla"
+            d.unit_int = 3 * unit.meter
+            d.unit_float = 7.5 * unit.millisecond
+            d.unit_vector_int = [3, 4, 5] * unit.meter / unit.second
+            d.unit_vector_float = [1, 2, 3]
+            d.string_list = ["a", "bla"]
+            yield from waitUntilNew(d).string_list
+
+            self.assertEqual(d.string, "bla")
+            self.assertLess(abs(d.string.timestamp.toTimestamp() -
+                                time.time()), 1)
+            self.assertEqual(d.unit_int, 3 * unit.meter)
+            self.assertEqual(d.unit_float, 7.5 * unit.millisecond)
+            for a, b in zip(d.unit_vector_int,
+                            [3, 4, 5] * unit.meter / unit.second):
+                self.assertEqual(a, b)
+            for a, b in zip(d.unit_vector_float, [1, 2, 3] * unit.degree):
+                self.assertEqual(a, b)
+            for a, b in zip(d.string_list, ["a", "bla"]):
+                self.assertEqual(a, b)
+
+        self.assertEqual(remote.string, "bla")
+        self.assertLess(abs(remote.string.timestamp.toTimestamp() -
+                            time.time()), 1)
+        self.assertEqual(remote.unit_int, 3 * unit.meter)
+        self.assertEqual(remote.unit_float, 7.5 * unit.millisecond)
+        for a, b in zip(remote.unit_vector_int,
+                        [3, 4, 5] * unit.meter / unit.second):
+            self.assertEqual(a, b)
+        for a, b in zip(remote.unit_vector_float, [1, 2, 3] * unit.degree):
+            self.assertEqual(a, b)
+        for a, b in zip(remote.string_list, ["a", "bla"]):
+            self.assertEqual(a, b)
+
+        with (yield from getDevice("remote")) as d:
+            with self.assertRaises(pint.DimensionalityError):
+                d.unit_int = 3 * unit.second
+            with self.assertRaises(pint.DimensionalityError):
+                d.unit_float = 2 * unit.meter
+            with self.assertRaises(pint.DimensionalityError):
+                d.unit_vector_int = [1, 2] * unit.meter
+            with self.assertRaises(pint.DimensionalityError):
+                d.unit_vector_float = [1, 3] * unit.meter
+            with self.assertRaises(TypeError):
+                d.string_list = [3, 4]
+
+            d.unit_int = 5 * unit.kilometer
+            d.unit_float = 2 * unit.millisecond
+            d.unit_vector_int = [2, 3, 4] * unit.meter / unit.second
+            d.unit_vector_float = [5, 7, 8] * unit.degree
+            d.string_list = []
+            yield from waitUntilNew(d).string_list
+
+            self.assertEqual(d.unit_int, 5000 * unit.meter)
+            self.assertEqual(d.unit_float, 2 * unit.millisecond)
+            for a, b in zip(d.unit_vector_int,
+                            [2, 3, 4] * unit.meter / unit.second):
+                self.assertEqual(a, b)
+            for a, b in zip(d.unit_vector_float, [5, 7, 8] * unit.degree):
+                self.assertEqual(a, b)
+            self.assertEqual(d.string_list, [])
+
+        self.assertEqual(remote.unit_int, 5000 * unit.meter)
+        self.assertEqual(remote.unit_float, 2 * unit.millisecond)
+        for a, b in zip(remote.unit_vector_int,
+                        [2, 3, 4] * unit.meter / unit.second):
+            self.assertEqual(a, b)
+        for a, b in zip(remote.unit_vector_float, [5, 7, 8] * unit.degree):
+            self.assertEqual(a, b)
+        self.assertEqual(remote.string_list, [])
+
+    @async_tst
+    def test_set_local(self):
+        with self.assertRaises(pint.DimensionalityError):
+            remote.unit_int = 3
+        with self.assertRaises(pint.DimensionalityError):
+            remote.unit_float = 7.5
+        with self.assertRaises(pint.DimensionalityError):
+            remote.unit_vector_int = [3, 4, 5]
+        with self.assertRaises(pint.DimensionalityError):
+            remote.unit_int = 3 * unit.second
+        with self.assertRaises(pint.DimensionalityError):
+            remote.unit_float = 2 * unit.meter
+        with self.assertRaises(pint.DimensionalityError):
+            remote.unit_vector_int = [1, 2] * unit.meter
+        with self.assertRaises(pint.DimensionalityError):
+            remote.unit_vector_float = [1, 3] * unit.meter
+        with self.assertRaises(TypeError):
+            remote.string_list = [3, 4]
+
+        remote.string = "blub"
+        remote.unit_vector_float = [1, 3, 3]
+        remote.string_list = ["z", "bla"]
+
+        with (yield from getDevice("remote")) as d:
+            self.assertEqual(d.string, "blub")
+            self.assertLess(abs(d.string.timestamp.toTimestamp() -
+                                time.time()), 1)
+            for a, b in zip(d.unit_vector_float, [1, 3, 3] * unit.degree):
+                self.assertEqual(a, b)
+            for a, b in zip(d.string_list, ["z", "bla"]):
+                self.assertEqual(a, b)
+
+        self.assertEqual(remote.string, "blub")
+        self.assertLess(abs(remote.string.timestamp.toTimestamp() -
+                            time.time()), 1)
+        for a, b in zip(remote.unit_vector_float, [1, 3, 3] * unit.degree):
+            self.assertEqual(a, b)
+        for a, b in zip(remote.string_list, ["z", "bla"]):
+            self.assertEqual(a, b)
+
+        with (yield from getDevice("remote")) as d:
+            remote.unit_int = 5 * unit.kilometer
+            remote.unit_float = 2 * unit.millisecond
+            remote.unit_vector_int = [2, 3, 4] * unit.meter / unit.second
+            remote.unit_vector_float = [5, 7, 8] * unit.degree
+            remote.string_list = []
+            yield from d
+
+            self.assertEqual(d.unit_int, 5000 * unit.meter)
+            self.assertEqual(d.unit_float, 2 * unit.millisecond)
+            for a, b in zip(d.unit_vector_int,
+                            [2, 3, 4] * unit.meter / unit.second):
+                self.assertEqual(a, b)
+            for a, b in zip(d.unit_vector_float, [5, 7, 8] * unit.degree):
+                self.assertEqual(a, b)
+            self.assertEqual(d.string_list, [])
+
+        self.assertEqual(remote.unit_int, 5000 * unit.meter)
+        self.assertEqual(remote.unit_float, 2 * unit.millisecond)
+        for a, b in zip(remote.unit_vector_int,
+                        [2, 3, 4] * unit.meter / unit.second):
+            self.assertEqual(a, b)
+        for a, b in zip(remote.unit_vector_float, [5, 7, 8] * unit.degree):
+            self.assertEqual(a, b)
+        self.assertEqual(remote.string_list, [])
 
     @async_tst
     def test_change(self):
@@ -369,14 +526,21 @@ class Tests(TestCase):
     def test_nested(self):
         """test accessing nested properties"""
         remote.nested.val = 3 * unit.second
+        self.assertLess(
+            abs(remote.nested.val.timestamp.toTimestamp() - time.time()), 1)
+        ts1 = remote.nested.val.timestamp
         remote.nested.nestnest.value = 7 * unit.meter
+        ts2 = remote.nested.nestnest.value.timestamp
         with (yield from getDevice("remote")) as d:
-            self.assertEqual(d.nested.val.value, 3000)
             self.assertEqual(d.nested.val, 3 * unit.second)
+            self.assertEqual(d.nested.val.timestamp, ts1)
             self.assertEqual(d.nested.nestnest.value, 7 * unit.meter)
             d.nested.val = 4 * unit.second
+            self.assertEqual(d.nested.nestnest.value, 7 * unit.meter)
+            self.assertEqual(d.nested.nestnest.value.timestamp, ts2)
+            d.nested.val = 4 * unit.second
             d.nested.nestnest.value = 5 * unit.meter
-        yield from sleep(0.1)
+            yield from waitUntilNew(d)
         self.assertEqual(remote.nested.val, 4 * unit.second)
         self.assertEqual(remote.nested.nestnest.value, 5 * unit.meter)
 
