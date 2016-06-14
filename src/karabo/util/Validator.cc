@@ -24,6 +24,18 @@ namespace karabo {
         , m_injectTimestamps(false)
         , m_hasReconfigurableParameter(false) {
         }
+        
+        Validator::Validator(const Validator & other)
+        : m_injectDefaults(other.m_injectDefaults)
+        , m_allowUnrootedConfiguration(other.m_allowUnrootedConfiguration)
+        , m_allowAdditionalKeys(other.m_allowAdditionalKeys)
+        , m_allowMissingKeys(other.m_allowMissingKeys)
+        , m_injectTimestamps(other.m_injectTimestamps)
+        , m_hasReconfigurableParameter(other.m_hasReconfigurableParameter)
+        {
+            boost::unique_lock<boost::shared_mutex> lock(other.m_rollingStatMutex);
+            m_parameterRollingStats = other.m_parameterRollingStats;
+        }
 
 
         Validator::Validator(const ValidationRules rules)
@@ -563,14 +575,14 @@ namespace karabo {
         }
         
         void Validator::assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval){
-            boost::unique_lock<boost::shared_mutex> lock(rollingStatMutex);
+            boost::unique_lock<boost::shared_mutex> lock(m_rollingStatMutex);
             if (m_parameterRollingStats.find(scope) == m_parameterRollingStats.end()){
                 m_parameterRollingStats.insert(std::pair<std::string, RollingWindowStatistics::Pointer>(scope, RollingWindowStatistics::Pointer(new RollingWindowStatistics(evalInterval))));
             }
         }
         
         RollingWindowStatistics::ConstPointer Validator::getRollingStatistics(const std::string & scope) const {
-            boost::shared_lock<boost::shared_mutex> lock(rollingStatMutex);
+            boost::shared_lock<boost::shared_mutex> lock(m_rollingStatMutex);
             if (m_parameterRollingStats.find(scope) == m_parameterRollingStats.end()){
                 KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+scope+"'!");
             }

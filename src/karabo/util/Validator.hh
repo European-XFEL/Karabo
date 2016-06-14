@@ -42,7 +42,7 @@ namespace karabo {
             karabo::util::Timestamp m_timestamp;
             bool m_hasReconfigurableParameter;
             
-            mutable boost::shared_mutex rollingStatMutex;
+            mutable boost::shared_mutex m_rollingStatMutex;
             std::map<std::string, RollingWindowStatistics::Pointer> m_parameterRollingStats;
             
         public:
@@ -77,6 +77,8 @@ namespace karabo {
             };
 
             Validator();
+            
+            Validator(const Validator & other);
 
             Validator(const ValidationRules rules);
 
