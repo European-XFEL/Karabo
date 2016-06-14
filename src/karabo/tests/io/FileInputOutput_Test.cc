@@ -163,10 +163,10 @@ struct MySchema {
                 .unit(Unit::METER)
                 .metricPrefix(MetricPrefix::MILLI)
                 .readOnly()
-                .alarmHigh(7)
-                .alarmLow(2)
-                .warnHigh(1)
-                .warnLow(0)
+                .alarmHigh(7).needsAcknowledging(false)
+                .alarmLow(2).needsAcknowledging(false)
+                .warnHigh(1).needsAcknowledging(false)
+                .warnLow(0).needsAcknowledging(false)
                 .commit();
 
     }

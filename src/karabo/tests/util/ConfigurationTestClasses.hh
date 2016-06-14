@@ -365,8 +365,10 @@ namespace configurationTest {
                     .description("Example key 5 description")
                     .readOnly()
                     .initialValue(1442244)
-                    .warnLow(-10).warnHigh(10)
-                    .alarmLow(-20).alarmHigh(20)
+                    .warnLow(-10).needsAcknowledging(false)
+                    .warnHigh(10).needsAcknowledging(false)
+                    .alarmLow(-20).needsAcknowledging(false)
+                    .alarmHigh(20).needsAcknowledging(false)
                     .commit();
 
             UINT32_ELEMENT(expected).key("exampleKey6").alias("key6")
@@ -448,8 +450,10 @@ namespace configurationTest {
                     .key("testfile")
                     .isInputFile()
                     .readOnly().initialValue("initFile")
-                    .alarmHigh("a").alarmLow("b")
-                    .warnHigh("c").warnLow("d")
+                    .alarmHigh("a").needsAcknowledging(false)
+                    .alarmLow("b").needsAcknowledging(false)
+                    .warnHigh("c").needsAcknowledging(false)
+                    .warnLow("d").needsAcknowledging(false)
                     .archivePolicy(Schema::EVERY_10MIN)
                     .commit();
             
@@ -469,8 +473,8 @@ namespace configurationTest {
                     .key("vecInt")
                     .readOnly()
                     .initialValue(vecInit)
-                    .warnLow(vecWarnL)
-                    .warnHigh(vecWarnH)
+                    .warnLow(vecWarnL).needsAcknowledging(false)
+                    .warnHigh(vecWarnH).needsAcknowledging(false)
                     .archivePolicy(Schema::EVERY_EVENT)
                     .commit();
 
@@ -479,8 +483,8 @@ namespace configurationTest {
             VECTOR_DOUBLE_ELEMENT(expected)
                     .key("vecDouble")
                     .readOnly()
-                    .alarmLow(vecAlarmL)
-                    .alarmHigh(vecAlarmH)
+                    .alarmLow(vecAlarmL).needsAcknowledging(false)
+                    .alarmHigh(vecAlarmH).needsAcknowledging(false)
                     .archivePolicy(Schema::NO_ARCHIVING)
                     .commit();
 
