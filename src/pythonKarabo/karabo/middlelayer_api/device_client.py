@@ -141,6 +141,7 @@ class Proxy(object):
                 elif not isinstance(d, ProxySlot):
                     converted = d.toKaraboValue(v, strict=False)
                     converted.timestamp = Timestamp.fromHashAttributes(a)
+                    converted._parent = self
                     instance.__dict__[d.key] = converted
                     for q in parent._queues[d.longkey]:
                         q.put_nowait(converted)
@@ -274,18 +275,10 @@ class OneShotQueue(asyncio.Future):
             self.set_result(value)
 
 
-class waitUntilNew:
-    # this looks like a function to the user, although it is a class
-    """wait until a new value for a property is available
-
-    this function waits until a specific property of a device changes.
-    It has an unusual syntax::
-
-        waitUntilNew(someDevice).someProperty
-
-    this function is used rather rarely. If you want to wait for something
-    to reach a certain value, use :func:`waitUntil`. If you want to get all
-    updates of a property, use :func:`iterate`."""
+class _WaitUntilNew_old:
+    # this was current before 1.5, when the syntax was
+    # waitUntilNew(someDevice).someProperty.
+    # In some future this should go
     def __init__(self, proxy):
         self.proxy = proxy
 
@@ -300,6 +293,31 @@ class waitUntilNew:
         future = OneShotQueue(loop=self.proxy._device._ss.loop)
         self.proxy._queues[None].add(future)
         return (yield from future)
+
+
+@synchronize
+def _waitUntilNew_new(prop):
+    # _new means since 1.5
+    proxy = prop._parent
+    future = OneShotQueue(loop=proxy._device._ss.loop)
+    proxy._queues[prop.descriptor.longkey].add(future)
+    return (yield from future)
+
+
+def waitUntilNew(prop):
+    """wait until a new value for a property is available
+
+    this function waits until a specific property of a device changes::
+
+        waitUntilNew(someDevice.someProperty)
+
+    If you want to wait for something to reach a certain value, use
+    :func:`waitUntil`. If you want to get all updates of a property, use
+    :class:`Queue`."""
+    if isinstance(prop, Proxy):
+        return _WaitUntilNew_old(prop)
+    else:
+        return _waitUntilNew_new(prop)
 
 
 class getHistory:
