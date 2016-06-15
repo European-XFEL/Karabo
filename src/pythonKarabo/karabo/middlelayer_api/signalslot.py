@@ -258,22 +258,22 @@ class SignalSlotable(Configurable):
     def updateInstanceInfo(self, info):
         self._ss.updateInstanceInfo(info)
 
-    def setValue(self, attr, value):
-        super(SignalSlotable, self).setValue(attr, value)
+    def setValue(self, desc, value):
+        super(SignalSlotable, self).setValue(desc, value)
         update = not self._sethash
-        self._sethash[attr.key] = value, attr
+        self._sethash[desc.key] = value, desc
         if update:
             self._ss.loop.call_soon_threadsafe(self.update)
 
     def update(self):
-        hash = Hash()
+        h = Hash()
         while self._sethash:
-            k, (v, d) = self._sethash.popitem()
-            value, attrs = d.toDataAndAttrs(v)
-            hash[k] = value
-            hash[k, ...].update(attrs)
-        if hash:
-            self.signalChanged(hash, self.deviceId)
+            k, (v, desc) = self._sethash.popitem()
+            value, attrs = desc.toDataAndAttrs(v)
+            h[k] = value
+            h[k, ...].update(attrs)
+        if h:
+            self.signalChanged(h, self.deviceId)
 
     def setChildValue(self, key, value, desc):
         if not self._sethash:
