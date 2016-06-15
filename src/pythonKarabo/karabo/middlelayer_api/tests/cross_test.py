@@ -58,7 +58,7 @@ class Tests(TestCase):
                              "2016-06-17T13:55:22 UTC")
             with self.assertRaises(ValueError):
                 proxy.a = 77
-            proxy.a = 22.8
+            proxy.a = 0.0228 * unit.ampere
             self.assertEqual(proxy.a, 22.7 * unit.milliampere,
                              "proxy should set value on device, not own value")
             yield from waitUntilNew(proxy).a
