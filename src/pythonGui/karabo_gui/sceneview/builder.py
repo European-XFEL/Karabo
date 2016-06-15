@@ -1,5 +1,3 @@
-from PyQt4.QtCore import QRect
-
 from karabo_gui.scenemodel.api import (
     BoxLayoutModel, FixedLayoutModel, GridLayoutModel, LabelModel, LineModel,
     PathModel, RectangleModel, SceneLinkModel, UnknownXMLDataModel
@@ -36,12 +34,9 @@ def add_object_to_layout(obj, layout):
         layout._add_layout(obj)
     # Make sure the object is showing
     obj.show()
-    # Manually update the Qt Layouts geometry with the models
-    model = layout.model
-    layout.set_geometry(QRect(model.x, model.y, model.width, model.height))
 
 
-def remove_object_from_layout(obj, layout):
+def remove_object_from_layout(obj, layout, object_dict):
     """ Remove a SceneView object from a layout.
     """
     if is_shape(obj):
@@ -50,6 +45,12 @@ def remove_object_from_layout(obj, layout):
         layout._remove_widget(obj)
     elif is_layout(obj):
         layout._remove_layout(obj)
+        # Recursively remove all children
+        for model in obj.model.children:
+            child_obj = object_dict.get(model)
+            if child_obj:
+                remove_object_from_layout(child_obj, obj, object_dict)
+
     # Hide object from scene until reparenting is done
     obj.hide()
 
