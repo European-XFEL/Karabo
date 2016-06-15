@@ -29,6 +29,9 @@ class ShapeLayoutItem(QLayout):
         self._item = None
         self.addItem(_ShapeLayoutItemChild(shape))
 
+    # --------------------------------------------
+    # SceneView item interface
+
     @property
     def model(self):
         return self._item.shape.model
@@ -39,53 +42,47 @@ class ShapeLayoutItem(QLayout):
             with save_painter_state(painter):
                 shape.draw(painter)
 
+    def hide(self):
+        self._item.shape.hide()
+
+    def show(self):
+        self._item.shape.show()
+
+    def set_geometry(self, rect):
+        self._item.shape.set_geometry(rect)
+
     def translate(self, offset):
         self._item.shape.translate(offset)
 
+    # --------------------------------------------
+    # QLayout Virtual Functions
+
     def addItem(self, item):
-        """ This is part of the virtual interface of QLayout.
-        """
         self._item = item
 
     def count(self):
-        """ This is part of the virtual interface of QLayout.
-        """
         return 0 if self._item is None else 1
 
     def geometry(self):
-        """ This is part of the virtual interface of QLayout.
-        """
         return self._item.shape.geometry()
 
     def itemAt(self, index):
-        """ This is part of the virtual interface of QLayout.
-        """
         if index == 0:
             return self._item
 
     def minimumSize(self):
-        """ This is part of the virtual interface of QLayout.
-        """
         return self._item.shape.minimumSize()
 
     def maximumSize(self):
-        """ This is part of the virtual interface of QLayout.
-        """
         return self._item.shape.maximumSize()
 
     def sizeHint(self):
-        """ This is part of the virtual interface of QLayout.
-        """
         return self.minimumSize()
 
     def setGeometry(self, rect):
-        """ This is part of the virtual interface of QLayout.
-        """
         self._item.shape.set_geometry(rect)
 
     def takeAt(self, index):
-        """ This is part of the virtual interface of QLayout.
-        """
         if index == 0:
             self._item = None
         return None

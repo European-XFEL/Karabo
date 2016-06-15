@@ -55,16 +55,22 @@ class BaseLayout(object):
 
     def draw(self, painter):
         for item in self:
-            if isinstance(item, (BaseLayout, ShapeLayoutItem)):
+            if not isinstance(item, QWidgetItem):
                 item.draw(painter)
 
     def hide(self):
         for item in self:
-            item.hide()
+            if isinstance(item, QWidgetItem):
+                item.widget().hide()
+            else:
+                item.hide()
 
     def show(self):
         for item in self:
-            item.show()
+            if isinstance(item, QWidgetItem):
+                item.widget().show()
+            else:
+                item.show()
 
     def set_geometry(self, rect):
         self.setGeometry(rect)
@@ -76,20 +82,19 @@ class BaseLayout(object):
 
         # Tell all the children to move
         for item in self:
-            if isinstance(item, (BaseLayout, ShapeLayoutItem)):
-                item.translate(offset)
-            elif isinstance(item, QWidgetItem):
+            if isinstance(item, QWidgetItem):
                 item.widget().translate(offset)
+            else:
+                item.translate(offset)
+
+    # --------------------------------------------
+    # QLayout Virtual Functions
 
     def geometry(self):
-        """ This is part of the virtual interface of QLayout.
-        """
         return QRect(self.model.x, self.model.y, self.model.width,
                      self.model.height)
 
     def setGeometry(self, rect):
-        """ This is part of the virtual interface of QLayout.
-        """
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
         super(BaseLayout, self).setGeometry(rect)
@@ -106,28 +111,23 @@ class GroupLayout(BaseLayout, QLayout):
     def _add_widget(self, widget):
         self.addWidget(widget)
 
+    # --------------------------------------------
+    # QLayout Virtual Functions
+
     def addItem(self, item):
-        """ This is part of the virtual interface of QLayout.
-        """
         self._children.append(item)
 
     def removeItem(self, item):
-        """ This is part of the virtual interface of QLayout.
-        """
         self._children.remove(item)
         super(GroupLayout, self).removeItem(item)
 
     def itemAt(self, index):
-        """ This is part of the virtual interface of QLayout.
-        """
         try:
             return self._children[index]
         except IndexError:
             return
 
     def takeAt(self, index):
-        """ This is part of the virtual interface of QLayout.
-        """
         item = self._children.pop(index)
         layout = item.layout()
         if layout is not None and layout.parent() is self:
@@ -142,13 +142,9 @@ class GroupLayout(BaseLayout, QLayout):
         return None
 
     def count(self):
-        """ This is part of the virtual interface of QLayout.
-        """
         return len(self._children)
 
     def sizeHint(self):
-        """ This is part of the virtual interface of QLayout.
-        """
         x, y, w, h = calc_bounding_rect(self._children)
         return QSize(w, h)
 
