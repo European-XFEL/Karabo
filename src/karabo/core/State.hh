@@ -31,7 +31,7 @@ namespace karabo {
             
             KARABO_CLASSINFO(State, "State", "1.0")
 
-            State() : m_stateName(""), m_parents(), m_id(0) {
+            State() : m_stateName(""), m_parents() {
             }
 
             State(const State& o) : m_stateName(o.m_stateName), m_parents(o.m_parents) {
@@ -63,7 +63,8 @@ namespace karabo {
             
             void setParent(const std::string& parent) {
                 if (parent == "State") return;
-                m_parents.push_back(parent);
+                std::vector<std::string>::iterator it = m_parents.begin();
+                it = m_parents.insert(it, parent);
             }
             
             void setParents(const std::vector<std::string>& parents) {
@@ -71,14 +72,9 @@ namespace karabo {
                     m_parents.push_back(parents[i]);
             }
 
-            const size_t rank() const {
-                return m_id;
-            }
-
             State& operator=(const State& s) {
                 m_stateName = s.m_stateName;
                 m_parents = s.m_parents;
-                m_id = s.m_id;
                 return *this;
             }
 
@@ -103,26 +99,9 @@ namespace karabo {
                 return false;
             }
 
-            bool operator<(const State& s) const {
-                return m_id < s.m_id;
-            }
-
-            bool operator<=(const State& s) const {
-                return m_id <= s.m_id;
-            }
-
-            bool operator>(const State& s) const {
-                return m_id > s.m_id;
-            }
-
-            bool operator>=(const State& s) const {
-                return m_id >= s.m_id;
-            }
-
         protected:
             std::string m_stateName;
             std::vector<std::string> m_parents;
-            size_t m_id;
             std::string m_fsmName;
             bool m_isContained;
             int m_timeout;
