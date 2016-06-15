@@ -7,7 +7,8 @@
 import os.path
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QPalette, QPainter, QPen, QSizePolicy, QWidget
+from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
+                         QWidget)
 
 from karabo_gui.scenemodel.api import (read_scene, SCENE_MIN_WIDTH,
                                        SCENE_MIN_HEIGHT)
@@ -28,14 +29,25 @@ class SceneView(QWidget):
     def __init__(self, parent=None, design_mode=False):
         super(SceneView, self).__init__(parent)
 
+        # XXX: This is an interesting hack.
+        # Basically, we want to put all of the scene's children into a widget
+        # which is parented to this widget and completely covers it.
+        # Then, the `design_mode` property toggles the mouse handling for this
+        # child widget. In design mode, we want the main scene view and its
+        # tools to get the mouse events. Out of design mode, we re-enable mouse
+        # handling for all of the scene's children.
+        self.layout = GroupLayout(None, parent=self)
+        self.inner = QWidget(self)
+        self.inner.setLayout(self.layout)
+        layout = QStackedLayout(self)
+        layout.addWidget(self.inner)
+
         self.title = None
-        self.design_mode = design_mode
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
         self.current_tool = None
+        self.design_mode = design_mode
         self._scene_obj_cache = {}
-
-        self.layout = GroupLayout(None, parent=self)
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -44,11 +56,24 @@ class SceneView(QWidget):
         self.setBackgroundRole(QPalette.Window)
         self.resize(SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 
+    @property
+    def design_mode(self):
+        # If the inner view is transparent to events, this view is handling
+        return self.inner.testAttribute(Qt.WA_TransparentForMouseEvents)
+
+    @design_mode.setter
+    def design_mode(self, value):
+        # Toggle mouse handling in the inner view
+        self.inner.setAttribute(Qt.WA_TransparentForMouseEvents, value)
+        if not value:
+            self.selection_model.clear_selection()
+            self.set_tool(None)
+
     # ----------------------------
     # Qt Methods
 
     def mouseMoveEvent(self, event):
-        if self.current_tool is not None:
+        if self.design_mode:
             self.current_tool.mouse_move(self, event)
             if event.isAccepted():
                 self.update()
@@ -56,7 +81,7 @@ class SceneView(QWidget):
                 super(SceneView, self).mouseMoveEvent(event)
 
     def mousePressEvent(self, event):
-        if self.current_tool is not None:
+        if self.design_mode:
             self.current_tool.mouse_down(self, event)
             if event.isAccepted():
                 self.update()
@@ -64,7 +89,7 @@ class SceneView(QWidget):
                 super(SceneView, self).mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
-        if self.current_tool is not None:
+        if self.design_mode:
             self.current_tool.mouse_up(self, event)
             if event.isAccepted():
                 self.update()
@@ -77,7 +102,7 @@ class SceneView(QWidget):
         with QPainter(self) as painter:
             self.layout.draw(painter)
             self._draw_selection(painter)
-            if self.current_tool is not None and self.current_tool.visible:
+            if self.current_tool.visible:
                 self.current_tool.draw(painter)
 
     # ----------------------------
@@ -131,8 +156,7 @@ class SceneView(QWidget):
         self.current_tool = tool
         if tool is None:
             self.set_cursor('none')
-            if self.design_mode:
-                self.current_tool = SceneSelectionTool()
+            self.current_tool = SceneSelectionTool()
 
         self.update()
 
