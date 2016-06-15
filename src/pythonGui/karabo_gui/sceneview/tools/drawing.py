@@ -2,8 +2,9 @@ from PyQt4.QtCore import QLine, QPoint, QRect
 from PyQt4.QtGui import QDialog, QPen
 from traits.api import Instance
 
+from karabo_gui.dialogs.dialogs import SceneLinkDialog
 from karabo_gui.dialogs.textdialog import TextDialog
-from karabo_gui.scenemodel.api import LineModel, RectangleModel
+from karabo_gui.scenemodel.api import LineModel, RectangleModel, SceneLinkModel
 from karabo_gui.sceneview.bases import BaseSceneTool
 
 
@@ -108,25 +109,24 @@ class RectangleSceneTool(BaseSceneTool):
 
 
 class SceneLinkTool(BaseSceneTool):
-    def draw(self, painter):
-        """ The method which is responsible for drawing this tool.
-        The tool for a SceneView will be drawn after everything else in
-        the view has been drawn.
-
-        This method is optional.
-        """
-
     def mouse_down(self, scene_view, event):
-        """ A callback which is fired whenever the user clicks in the
-        SceneView.
-        """
+        pass
 
     def mouse_move(self, scene_view, event):
-        """ A callback which is fired whenever the user moves the mouse
-        in the SceneView.
-        """
+        pass
 
     def mouse_up(self, scene_view, event):
         """ A callback which is fired whenever the user ends a mouse click
         in the SceneView.
         """
+        # XXX: We need access to the project here to get a list of scenes
+        scenes = []
+        dialog = SceneLinkDialog(scenes, "", parent=scene_view)
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            mouse_pos = event.pos()
+            model = SceneLinkModel(target=dialog.selectedScene,
+                                   x=mouse_pos.x(), y=mouse_pos.y(),
+                                   width=100, height=30)
+            scene_view.add_model(model)
+            scene_view.set_tool(None)
