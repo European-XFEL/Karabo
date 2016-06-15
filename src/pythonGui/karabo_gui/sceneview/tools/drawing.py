@@ -127,6 +127,6 @@ class SceneLinkTool(BaseSceneTool):
             mouse_pos = event.pos()
             model = SceneLinkModel(target=dialog.selectedScene,
                                    x=mouse_pos.x(), y=mouse_pos.y(),
-                                   height=100, width=100)
+                                   width=100, height=30)
             scene_view.add_model(model)
             scene_view.set_tool(None)
