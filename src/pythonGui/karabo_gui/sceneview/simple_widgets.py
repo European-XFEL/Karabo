@@ -68,9 +68,6 @@ class SceneLinkWidget(QPushButton):
                      QRect(pt + QPoint(11, 0), QSize(7, 7))]
 
             pen = QPen(Qt.black)
-            pen.setCapStyle(Qt.FlatCap)
-            pen.setStyle(Qt.SolidLine)
-            pen.setJoinStyle(Qt.SvgMiterJoin)
             painter.drawRect(boundary)
             pen.setColor(Qt.darkGray)
             pen.setWidth(3)
