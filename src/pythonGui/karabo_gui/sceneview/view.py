@@ -10,8 +10,8 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
-from karabo_gui.scenemodel.api import (read_scene, SCENE_MIN_WIDTH,
-                                       SCENE_MIN_HEIGHT)
+from karabo_gui.scenemodel.api import (read_scene, FixedLayoutModel,
+                                       SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
 from .builder import (create_object_from_model, fill_root_layout,
                       remove_object_from_layout)
@@ -29,6 +29,8 @@ class SceneView(QWidget):
     def __init__(self, parent=None, design_mode=False):
         super(SceneView, self).__init__(parent)
 
+        layout_model = FixedLayoutModel(x=0, y=0, width=SCENE_MIN_WIDTH,
+                                        height=SCENE_MIN_HEIGHT)
         # XXX: This is an interesting hack.
         # Basically, we want to put all of the scene's children into a widget
         # which is parented to this widget and completely covers it.
@@ -36,7 +38,7 @@ class SceneView(QWidget):
         # child widget. In design mode, we want the main scene view and its
         # tools to get the mouse events. Out of design mode, we re-enable mouse
         # handling for all of the scene's children.
-        self.layout = GroupLayout(None, parent=self)
+        self.layout = GroupLayout(layout_model, parent=self)
         self.inner = QWidget(self)
         self.inner.setLayout(self.layout)
         layout = QStackedLayout(self)
