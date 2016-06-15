@@ -6,14 +6,15 @@
 from functools import partial
 
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt4.QtGui import QAction, QPalette, QScrollArea, QSizePolicy, QWidget
+from PyQt4.QtGui import (QAction, QMenu, QPalette, QScrollArea, QSizePolicy,
+                         QWidget)
 
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
 from karabo_gui.sceneview.tools.api import (
-    CreateToolAction, LineSceneTool, TextSceneTool, RectangleSceneTool,
-    SceneLinkTool
-)
+    BoxVSceneAction, BoxHSceneAction, CreateToolAction, GroupEntireSceneAction,
+    GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
+    TextSceneTool, RectangleSceneTool, SceneLinkTool, SceneSelectionTool)
 from karabo_gui.toolbar import ToolBar
 
 
@@ -52,6 +53,18 @@ class ScenePanel(Dockable, QScrollArea):
                                                self.scene_view))
             self.qactions.append(q_action)
 
+        self.group_action = QAction(icons.group, "Group", self)
+        menu = QMenu()
+        group_actions = self.create_group_tool_actions()
+        for action in group_actions:
+            q_action = QAction(action.icon, action.text, self)
+            q_action.setToolTip(action.text)
+            q_action.setStatusTip(action.tooltip)
+            q_action.triggered.connect(partial(action.perform,
+                                               self.scene_view))
+            menu.addAction(q_action)
+        self.group_action.setMenu(menu)
+
     def setupToolBars(self, standardToolBar, parent):
         standardToolBar.addAction(self.ac_design_mode)
 
@@ -65,6 +78,8 @@ class ScenePanel(Dockable, QScrollArea):
 
         for action in self.qactions:
             tool_bar.addAction(action)
+
+        tool_bar.addAction(self.group_action)
 
         self.drawing_tool_bar = tool_bar
 
@@ -108,4 +123,26 @@ class ScenePanel(Dockable, QScrollArea):
                                         icon=icons.scenelink,
                                         text="Add scene link",
                                         tooltip="Add scene link to scene"))
+        return actions
+
+    def create_group_tool_actions(self):
+        actions = []
+        actions.append(GroupSceneAction(icon=icons.group,
+                                        text="Group without layout",
+                                        tooltip="Group without layout"))
+        actions.append(BoxVSceneAction(icon=icons.groupVertical,
+                                       text="Group Vertically",
+                                       tooltip="Group Vertically"))
+        actions.append(BoxHSceneAction(icon=icons.groupHorizontal,
+                                       text="Group Horizontally",
+                                       tooltip="Group Horizontally"))
+        actions.append(GridSceneAction(icon=icons.groupGrid,
+                                       text="Group in a Grid",
+                                       tooltip="Group in a Grid"))
+        actions.append(UngroupSceneAction(icon=icons.ungroup,
+                                          text="Ungroup",
+                                          tooltip="Ungroup"))
+        actions.append(GroupEntireSceneAction(icon=icons.entireWindow,
+                                              text="Group Entire Window",
+                                              tooltip="Group Entire Window"))
         return actions

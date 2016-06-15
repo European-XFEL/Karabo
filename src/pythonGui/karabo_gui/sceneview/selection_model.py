@@ -15,6 +15,9 @@ class SceneSelectionModel(HasStrictTraits):
         """
         return iter(self._selection)
 
+    def __len__(self):
+        return len(self._selection)
+
     def clear_selection(self):
         """ Remove all objects from the selection
         """

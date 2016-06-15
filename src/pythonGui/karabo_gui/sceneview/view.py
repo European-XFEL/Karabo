@@ -202,8 +202,6 @@ class SceneView(QWidget):
             obj = self._scene_obj_cache.get(model)
             if obj is not None:
                 remove_object_from_layout(obj, self.layout)
-                # Hide object from scene until reparenting is done
-                obj.hide()
         for model in event.added:
             create_object_from_model(self.layout, model, self,
                                      self._scene_obj_cache)
