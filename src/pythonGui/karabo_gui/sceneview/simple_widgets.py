@@ -3,8 +3,9 @@
 # Created on June 7, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import QByteArray
-from PyQt4.QtGui import QFont, QFontMetrics, QFrame, QLabel, QPainter, QWidget
+from PyQt4.QtCore import QByteArray, QPoint, QRect, QSize, Qt
+from PyQt4.QtGui import (QFont, QFontMetrics, QFrame, QLabel, QPainter, QPen,
+                         QPushButton, QWidget)
 from PyQt4.QtSvg import QSvgRenderer
 
 from karabo_gui.scenemodel.api import write_single_model
@@ -38,6 +39,43 @@ class LabelWidget(QLabel):
         if model.height == 0:
             model.height = fm.height() + CONTENT_MARGIN
         self.setGeometry(model.x, model.y, model.width, model.height)
+
+    def set_geometry(self, rect):
+        self.setGeometry(rect)
+
+    def translate(self, offset):
+        self.move(self.pos() + offset)
+
+
+class SceneLinkWidget(QPushButton):
+    def __init__(self, model, parent=None):
+        super(SceneLinkWidget, self).__init__(parent)
+        self.model = model
+
+        self.setCursor(Qt.PointingHandCursor)
+        self.clicked.connect(self._handle_click)
+        self.setGeometry(QRect(model.x, model.y, model.width, model.height))
+
+    def _handle_click(self):
+        if len(self.model.target) > 0:
+            print("Open scene:", self.model.target)
+
+    def paintEvent(self, event):
+        with QPainter(self) as painter:
+            boundary = self.rect().adjusted(2, 2, -2, -2)
+            pt = boundary.topLeft()
+            rects = [QRect(pt, QSize(7, 7)),
+                     QRect(pt + QPoint(11, 0), QSize(7, 7))]
+
+            pen = QPen(Qt.black)
+            painter.drawRect(boundary)
+            pen.setColor(Qt.darkGray)
+            pen.setWidth(3)
+            painter.setPen(pen)
+            painter.drawRects(rects)
+            pen.setColor(Qt.lightGray)
+            painter.setPen(pen)
+            painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
 
     def set_geometry(self, rect):
         self.setGeometry(rect)
