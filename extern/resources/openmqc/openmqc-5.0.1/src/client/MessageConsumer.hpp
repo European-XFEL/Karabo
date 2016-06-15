@@ -133,6 +133,11 @@ private:
   MQError beforeMessageListener(const Message * message, MQError mqerror);
   void afterMessageListener(const Message * message, MQError mqerror);
 
+  PRInt32 prtcnt;
+  PRInt32 ovrcnt;
+  PRInt32 expcnt;
+  PRInt32 threshold;
+
 public:
   /**
    * Constructor.
