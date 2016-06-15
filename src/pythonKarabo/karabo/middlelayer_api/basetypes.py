@@ -134,6 +134,9 @@ class KaraboValue(Registry):
             if inspect.isfunction(attr) or inspect.ismethoddescriptor(attr):
                 setattr(cls, name, wrap_function(attr))
 
+    def getdoc(self):
+        return self.descriptor.description
+
     def __iter__(self):
         for a in super().__iter__():
             y = wrap(a)
