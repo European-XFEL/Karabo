@@ -276,7 +276,9 @@ class OneShotQueue(asyncio.Future):
 
 
 class _WaitUntilNew_old:
-    # this looks like a function to the user, although it is a class
+    # this was current before 1.5, when the syntax was
+    # waitUntilNew(someDevice).someProperty.
+    # In some future this should go
     def __init__(self, proxy):
         self.proxy = proxy
 
@@ -295,6 +297,7 @@ class _WaitUntilNew_old:
 
 @synchronize
 def _waitUntilNew_new(prop):
+    # _new means since 1.5
     proxy = prop._parent
     future = OneShotQueue(loop=proxy._device._ss.loop)
     proxy._queues[prop.descriptor.longkey].add(future)
