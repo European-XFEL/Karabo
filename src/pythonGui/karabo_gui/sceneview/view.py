@@ -201,7 +201,8 @@ class SceneView(QWidget):
         for model in event.removed:
             obj = self._scene_obj_cache.get(model)
             if obj is not None:
-                remove_object_from_layout(obj, self.layout)
+                remove_object_from_layout(obj, self.layout,
+                                          self._scene_obj_cache)
         for model in event.added:
             create_object_from_model(self.layout, model, self,
                                      self._scene_obj_cache)
