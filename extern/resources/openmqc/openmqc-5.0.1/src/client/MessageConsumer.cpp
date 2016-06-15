@@ -68,7 +68,7 @@ MessageConsumer::MessageConsumer(Session * const sessionArg,
                                  const UTF8String * const messageSelectorArg,
                                  const PRBool noLocalArg,
                                  MQMessageListenerFunc messageListenerArg,
-                                 void * messageListenerCallbackDataArg)
+                                 void * messageListenerCallbackDataArg) : prtcnt(0), ovrcnt(0), expcnt(0)
 {
   CHECK_OBJECT_VALIDITY();
 
@@ -587,19 +587,19 @@ MessageConsumer::receive(Message ** const message,
   PRUint8 prio;
   ERRCHK( (*message)->getJMSPriority(&prio) );
 
+  if (receiveQueue->size() > 200) threshold = 100;
+  if (receiveQueue->size() < 100) threshold = 200;
+
   bool expired = ((*message)->isExpired()) == PR_TRUE;
-  bool overflowed = receiveQueue?  receiveQueue->size() > 100 && prio < 4 : false;
+  bool overflowed = receiveQueue?  receiveQueue->size() > threshold && prio < 4 : false;
 
   if (this->isDMQConsumer == PR_FALSE && (expired || overflowed)) {
-    static int expcnt = 0;
-    static int ovrcnt = 0;
-    static int prtcnt = 0;
 
     if (expired) expcnt++;
     if (overflowed) ovrcnt++;
 
-    if ( ++prtcnt % 100 == 0 ) {
-       //LOG_INFO(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS, "MessageConsumer::receive : killed %3d%% PRIORITY and %3d%% EXPIRATION", ovrcnt, expcnt ));
+    if ( ++prtcnt % 1000 == 0 ) {
+       //LOG_INFO(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS, "MessageConsumer::receive : killed %3d%% PRIO and %3d%% EXP, WM %d", ovrcnt/10, expcnt/10, threshold ));
        expcnt = 0;
        ovrcnt = 0;
     }
