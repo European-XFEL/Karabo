@@ -21,9 +21,9 @@ namespace karabo {
           
 
 #define KARABO_FSM_DECLARE_FIXED_STATE(X, Parent) \
-            struct X : public State {\
+            struct X : public Parent {\
                 KARABO_CLASSINFO(X, #X, "1.0")\
-                X() {setStateName(#X); setParent(#Parent); setParents(Parent().parents());}\
+                X() {setStateName(#X); setParent(#Parent);}\
                 virtual ~X() {}\
             };
         
@@ -166,7 +166,11 @@ namespace karabo {
                 const std::vector<State::Pointer>& getTrumpList() const {
                     return m_trumpList;
                 }
-
+                
+            private:
+                
+                size_t ranking(const State::Pointer& sp, const std::vector<State::Pointer>& tl);
+                
             protected:
                 std::vector<State::Pointer> m_trumpList;
             };
@@ -178,6 +182,10 @@ namespace karabo {
             };
 
             static StatesRegistrator statesRegistrator;
+            
+            State::Pointer returnMostSignificant(const std::vector<State::Pointer>& listOfStates) {
+                return statesRegistrator.stateSignifier->returnMostSignificant(listOfStates);
+            }
         }
     }
 }

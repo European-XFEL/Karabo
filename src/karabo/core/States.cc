@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <karabo/util/StringTools.hh>
 #include "States.hh"
 
 
@@ -11,22 +12,37 @@ namespace karabo {
 
 
             State::Pointer StateSignifier::returnMostSignificant(const std::vector<State::Pointer>& listOfStates) {
-                State::Pointer state(new State);
+                const vector<State::Pointer>& trumplist = statesRegistrator.stateSignifier->getTrumpList();
+                State::Pointer statePtr(new State);
+                size_t stateRank = 0;
                 for (vector<State::Pointer>::const_iterator ii = listOfStates.begin(); ii != listOfStates.end(); ++ii) {
                     State::Pointer sp = *ii;
-                    if (sp->rank() > state->rank()) state = sp;
+                    size_t rank = ranking(sp, trumplist);
+                    if (rank > stateRank) {
+                        statePtr = sp;
+                        stateRank = rank;
+                    }
                 }
-                return state;
+                return statePtr;
             }
 
-
+            size_t StateSignifier::ranking(const State::Pointer& sp, const std::vector<State::Pointer>& tl) {
+                vector<string> allnames = sp->parents();        // copy parents list
+                allnames.insert(allnames.begin(), sp->name());  // insert stateName at the beginning....
+                for (vector<string>::const_iterator ii = allnames.begin(); ii != allnames.end(); ii++) {
+                    for (size_t i = 0; i < tl.size(); i++) {
+                        if (*ii == tl[i]->name()) return i+1;
+                    }
+                }
+                std::cout << "Failed to find " << toString(allnames) << " in trump list" << std::endl;
+            }
+            
             StateSignifier::StateSignifier(const std::vector<karabo::core::State::Pointer>& trumpList,
                                            const karabo::core::State::Pointer& staticMoreSignificant,
                                            const karabo::core::State::Pointer& changingMoreSignificant)
             : m_trumpList() {
 
                 if (trumpList.empty()) {
-                    if (!Factory<State>::has("DISABLED")) Factory<State>::registerClass<DISABLED>("DISABLED");
                     m_trumpList.push_back(createState("DISABLED"));
                     m_trumpList.push_back(createState("INIT"));
 
