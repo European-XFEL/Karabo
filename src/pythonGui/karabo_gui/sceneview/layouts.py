@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QBoxLayout, QGridLayout, QLayout
+from PyQt4.QtCore import QRect, QSize
+from PyQt4.QtGui import QBoxLayout, QGridLayout, QLayout, QWidgetItem
 
 from .utils import calc_bounding_rect, save_painter_state
 
@@ -33,12 +33,12 @@ class BaseLayout(object):
         raise NotImplementedError("BaseLayout.add_widget")
 
     def hide(self):
-        for i in self.count():
+        for i in range(self.count()):
             item = self.itemAt(i)
             item.hide()
 
     def show(self):
-        for i in self.count():
+        for i in range(self.count()):
             item = self.itemAt(i)
             item.show()
 
@@ -47,6 +47,36 @@ class BaseLayout(object):
             if shape.is_visible():
                 with save_painter_state(painter):
                     shape.draw(painter)
+
+    def set_geometry(self, rect):
+        self.setGeometry(rect)
+
+    def translate(self, offset):
+        rect = QRect(self.model.x + offset.x(), self.model.y + offset.y(),
+                     self.model.width, self.model.height)
+        self.setGeometry(rect)
+
+        for shape in self.shapes:
+            shape.translate(offset)
+        for i in range(self.count()):
+            item = self.itemAt(i)
+            if isinstance(item, BaseLayout):
+                item.translate(offset)
+            elif isinstance(item, QWidgetItem):
+                item.widget().translate(offset)
+
+    def geometry(self):
+        """ This is part of the virtual interface of QLayout.
+        """
+        return QRect(self.model.x, self.model.y, self.model.width,
+                     self.model.height)
+
+    def setGeometry(self, rect):
+        """ This is part of the virtual interface of QLayout.
+        """
+        self.model.set(x=rect.x(), y=rect.y(),
+                       width=rect.width(), height=rect.height())
+        super(BaseLayout, self).setGeometry(rect)
 
 
 class GroupLayout(BaseLayout, QLayout):
@@ -115,13 +145,6 @@ class GroupLayout(BaseLayout, QLayout):
         This is part of the virtual interface of QLayout.
         """
         return len(self._children)
-
-    def setGeometry(self, rect):
-        """ DO NOT CALL THIS METHOD DIRECTLY!
-
-        This is part of the virtual interface of QLayout.
-        """
-        super(GroupLayout, self).setGeometry(rect)
 
     def sizeHint(self):
         """ DO NOT CALL THIS METHOD DIRECTLY!
