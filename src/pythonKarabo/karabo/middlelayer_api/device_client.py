@@ -150,20 +150,20 @@ class Proxy(object):
         for q in self._queues[None]:
             q.put_nowait(hash)
 
-    def setValue(self, attr, value):
+    def setValue(self, desc, value):
         self._use()
         loop = get_event_loop()
         assert isinstance(value, KaraboValue)
         if loop.sync_set:
             h = Hash()
-            h[attr.longkey], _ = attr.toDataAndAttrs(value)
+            h[desc.longkey], _ = desc.toDataAndAttrs(value)
             ok, msg = loop.sync(self._device.call(
                 self.deviceId, "slotReconfigure", h), -1)
             if not ok:
                 raise KaraboError(msg)
         else:
             update = not self._sethash
-            self._sethash[attr.longkey], _ = attr.toDataAndAttrs(value)
+            self._sethash[desc.longkey], _ = desc.toDataAndAttrs(value)
             if update:
                 self._device._ss.loop.call_soon_threadsafe(self._update)
 
