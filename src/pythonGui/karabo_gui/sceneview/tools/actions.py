@@ -1,5 +1,5 @@
 from PyQt4.QtGui import QBoxLayout
-from traits.api import Callable
+from traits.api import Callable, Int
 
 from karabo_gui.scenemodel.layouts import BoxLayoutModel
 from karabo_gui.sceneview.bases import BaseSceneAction
@@ -26,17 +26,18 @@ class GroupSceneAction(BaseSceneAction):
         """ Perform the grouping. """
 
 
-class BoxVSceneAction(BaseSceneAction):
-    """ Group vertically action"""
+class BoxSceneAction(BaseSceneAction):
+    direction = Int
+
     def perform(self, scene_view):
-        """ Perform the vertical grouping. """
+        """ Perform the box grouping. """
         selection_model = scene_view.selection_model
         # It does not make sense to create a layout for less than 2 items
         if len(selection_model) < 2:
             return
 
         model = BoxLayoutModel()
-        model.direction = QBoxLayout.TopToBottom
+        model.direction = self.direction
         selection_rect = calc_bounding_rect(selection_model)
         model.x, model.y, model.width, model.height = selection_rect
         for obj in selection_model:
@@ -46,10 +47,22 @@ class BoxVSceneAction(BaseSceneAction):
         selection_model.clear_selection()
 
 
-class BoxHSceneAction(BaseSceneAction):
+class BoxVSceneAction(BoxSceneAction):
+    direction = QBoxLayout.TopToBottom
+
+    """ Group vertically action"""
+    def perform(self, scene_view):
+        """ Perform the vertical grouping. """
+        super(BoxVSceneAction, self).perform(scene_view)
+
+
+class BoxHSceneAction(BoxSceneAction):
+    direction = QBoxLayout.LeftToRight
+
     """ Group horizontally action"""
     def perform(self, scene_view):
         """ Perform the horizontal grouping. """
+        super(BoxHSceneAction, self).perform(scene_view)
 
 
 class GridSceneAction(BaseSceneAction):
