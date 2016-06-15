@@ -264,20 +264,21 @@ namespace karabo {
                 //boost::mutex::scoped_lock lock(m_openMQMutex);
                 status = MQReceiveMessageWithTimeout(m_consumerHandle, timeout, &messageHandle);
                 if (MQStatusIsError(status) == MQ_FALSE)
-                    break; // Success
-                const MQError error = MQGetStatusCode(status);
-                if (error == MQ_TIMEOUT_EXPIRED)
-                    break; // in this particular case the timeout is not the error
-                if (error == MQ_CONSUMER_DROPPED_MESSAGES) {
-                    // We have a valid message, but some message has been dropped.
-                    MQString statusString = MQGetStatusString(status);
-                    //                    KARABO_LOG_FRAMEWORK_ERROR << statusString;
-                    m_signalError(shared_from_this(), statusString);
-                    MQFreeString(statusString);
-                    status.errorCode = MQ_SUCCESS; // Message itself is fine.
-                    break;
-                }
-                switch (error) {
+                    return status;
+
+                switch (MQGetStatusCode(status)) {
+                    case MQ_TIMEOUT_EXPIRED:
+                        // in this particular case the timeout is not an error
+                        break;
+                    case MQ_CONSUMER_DROPPED_MESSAGES:
+                    {
+                        // We have a valid message, but some message has been dropped.
+                        MQString statusString = MQGetStatusString(status);
+                        m_signalError(shared_from_this(), statusString);
+                        MQFreeString(statusString);
+                        status.errorCode = MQ_SUCCESS; // Message itself is fine.
+                        break;
+                    }
                     case MQ_STATUS_INVALID_HANDLE:
                     case MQ_BROKER_CONNECTION_CLOSED:
                     case MQ_SESSION_CLOSED:
@@ -293,8 +294,8 @@ namespace karabo {
                         throw KARABO_OPENMQ_EXCEPTION(errorString);
                     }
                 }
+                return status;
             }
-            return status;
         }
 
 
