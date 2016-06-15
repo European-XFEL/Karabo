@@ -83,13 +83,11 @@ class BaseLayout(object):
             yield self.itemAt(i)
 
     def _add_shape(self, shape):
-        item = ShapeLayoutItem(shape)
         # Call QLayout::addItem()
-        self.addItem(item)
+        self.addItem(ShapeLayoutItem(shape))
 
     def _remove_shape(self, shape):
-        for i in range(self.count()):
-            item = self.itemAt(i)
+        for i, item in enumerate(self):
             if isinstance(item, ShapeLayoutItem) and item.shape is shape:
                 self.takeAt(i)
                 return
