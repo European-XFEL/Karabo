@@ -4,9 +4,11 @@ from enum import Enum
 from functools import partial
 import weakref
 
+from .basetypes import KaraboValue
 from .enums import AccessLevel, AccessMode, Assignment, NodeType
 from .hash import Attribute, Descriptor, Hash, Schema
 from .registry import Registry
+from .timestamp import Timestamp
 from .weak import Weak
 
 
@@ -120,14 +122,16 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         return ListOfNodes(cls, **kwargs)
 
     def setValue(self, descriptor, value):
+        if isinstance(value, KaraboValue) and value.timestamp is None:
+            value.timestamp = Timestamp()
         if self.__parent is not None:
             self.__parent.setChildValue(
-                self.__key + "." + descriptor.key, value)
+                self.__key + "." + descriptor.key, value, descriptor)
         self.__dict__[descriptor.key] = value
 
-    def setChildValue(self, key, value):
+    def setChildValue(self, key, value, desc):
         if self.__parent is not None:
-            self.__parent.setChildValue(self.__key + "." + key, value)
+            self.__parent.setChildValue(self.__key + "." + key, value, desc)
 
     def run(self):  # endpoint for multiple inheritance
         self.running = True

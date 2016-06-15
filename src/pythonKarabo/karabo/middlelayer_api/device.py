@@ -106,13 +106,13 @@ class Device(SignalSlotable):
 
         info = Hash()
         info["type"] = "device"
-        info["classId"] = self.classId
-        info["serverId"] = self.serverId
+        info["classId"] = self.classId.value
+        info["serverId"] = self.serverId.value
         info["visibility"] = self.visibility.value
         info["compatibility"] = self.__class__.__version__
         info["host"] = self.hostname
         info["status"] = "ok"
-        info["archive"] = self.archive
+        info["archive"] = self.archive.value
         self.updateInstanceInfo(info)
 
         super().run()
@@ -126,7 +126,10 @@ class Device(SignalSlotable):
         for k in self._allattrs:
             a = getattr(self, k, None)
             if a is not None:
-                r[k], _ = getattr(type(self), k).toDataAndAttrs(a)
+                v = getattr(type(self), k)
+                value, attrs = v.toDataAndAttrs(a)
+                r[k] = value
+                r[k, ...].update(attrs)
         return r
 
     @coslot
