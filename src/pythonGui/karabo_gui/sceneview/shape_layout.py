@@ -4,7 +4,7 @@ from .utils import save_painter_state
 
 
 class _ShapeLayoutItemChild(QLayoutItem):
-    """ A private QLayoutItem for the SingleShapeLayout
+    """ A private QLayoutItem for the ShapeLayoutItem
     """
     def __init__(self, shape):
         super(_ShapeLayoutItemChild, self).__init__()
