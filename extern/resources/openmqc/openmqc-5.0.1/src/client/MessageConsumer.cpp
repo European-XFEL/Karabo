@@ -583,7 +583,27 @@ MessageConsumer::receive(Message ** const message,
   LOG_FINEST(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS,
                "MessageConsumer::receive allocated new message 0x%p",
                *message ));
-  if (this->isDMQConsumer == PR_FALSE && ((*message)->isExpired()) == PR_TRUE) {
+
+  PRUint8 prio;
+  ERRCHK( (*message)->getJMSPriority(&prio) );
+
+  bool expired = ((*message)->isExpired()) == PR_TRUE;
+  bool overflowed = receiveQueue?  receiveQueue->size() > 100 && prio < 4 : false;
+
+  if (this->isDMQConsumer == PR_FALSE && (expired || overflowed)) {
+    static int expcnt = 0;
+    static int ovrcnt = 0;
+    static int prtcnt = 0;
+
+    if (expired) expcnt++;
+    if (overflowed) ovrcnt++;
+
+    if ( ++prtcnt % 100 == 0 ) {
+       //LOG_INFO(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS, "MessageConsumer::receive : killed %3d%% PRIORITY and %3d%% EXPIRATION", ovrcnt, expcnt ));
+       expcnt = 0;
+       ovrcnt = 0;
+    }
+
     ERRCHK( session->acknowledgeExpiredMessage(*message) );
     this->session->messageDelivered();
 
