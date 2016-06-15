@@ -256,12 +256,12 @@ namespace karabo {
 
         MQStatus JmsBrokerChannel::consumeMessage(MQMessageHandle& messageHandle, const int timeout) {
             MQStatus status;
+            status.errorCode = MQ_NO_MESSAGE; // In case we directly jump out since m_isStopped == true.
 
             while (!m_isStopped) {
 
                 ensureExistenceOfConsumer();
 
-                //boost::mutex::scoped_lock lock(m_openMQMutex);
                 status = MQReceiveMessageWithTimeout(m_consumerHandle, timeout, &messageHandle);
                 if (MQStatusIsError(status) == MQ_FALSE)
                     return status;
@@ -283,7 +283,6 @@ namespace karabo {
                     case MQ_BROKER_CONNECTION_CLOSED:
                     case MQ_SESSION_CLOSED:
                     case MQ_CONSUMER_CLOSED:
-                        //ensureExistenceOfConsumer();
                         continue; // repeat operation
                     default:
                     {
@@ -294,8 +293,9 @@ namespace karabo {
                         throw KARABO_OPENMQ_EXCEPTION(errorString);
                     }
                 }
-                return status;
+                break;
             }
+            return status;
         }
 
 
