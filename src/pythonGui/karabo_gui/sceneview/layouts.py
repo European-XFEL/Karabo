@@ -4,23 +4,95 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import QRect, QSize
-from PyQt4.QtGui import QBoxLayout, QGridLayout, QLayout, QWidgetItem
+from PyQt4.QtCore import QRect, QSize, Qt
+from PyQt4.QtGui import (QBoxLayout, QGridLayout, QLayout, QLayoutItem,
+                         QWidgetItem)
 
 from .utils import calc_bounding_rect, save_painter_state
 
 
+class ShapeLayoutItem(QLayoutItem):
+    """ A QLayoutItem for holding Shapes.
+    """
+    def __init__(self, shape):
+        super(ShapeLayoutItem, self).__init__()
+        self.shape = shape
+
+    @property
+    def model(self):
+        return self.shape.model
+
+    def draw(self, painter):
+        if self.shape.is_visible():
+            with save_painter_state(painter):
+                self.shape.draw(painter)
+
+    def translate(self, offset):
+        self.shape.translate(offset)
+
+    def expandingDirections(self):
+        """ This is part of the virtual interface of QLayoutItem.
+        """
+        return Qt.Vertical | Qt.Horizontal
+
+    def geometry(self):
+        """ This is part of the virtual interface of QLayoutItem.
+        """
+        return self.shape.geometry()
+
+    def isEmpty(self):
+        """ This is part of the virtual interface of QLayoutItem.
+        """
+        return False
+
+    def minimumSize(self):
+        """ This is part of the virtual interface of QLayoutItem.
+        """
+        return self.shape.minimumSize()
+
+    def maximumSize(self):
+        """ This is part of the virtual interface of QLayoutItem.
+        """
+        return self.shape.maximumSize()
+
+    def setGeometry(self, rect):
+        """ This is part of the virtual interface of QLayoutItem.
+        """
+        self.shape.set_geometry(rect)
+
+    def sizeHint(self):
+        """ This is part of the virtual interface of QLayoutItem.
+        """
+        return self.minimumSize()
+
+
 class BaseLayout(object):
+    """ This is a mix-in class intended to be inherited by all SceneView
+    layouts. It implements generic parts of the QLayout virtual interface.
+    """
     def __init__(self, model, *args):
         super(BaseLayout, self).__init__(*args)
         self.model = model
-        self.shapes = []
+
+    def __iter__(self):
+        """ Implement the Python iterator protocol for all layouts.
+
+        This uses the QLayout interface functions.
+        """
+        for i in range(self.count()):
+            yield self.itemAt(i)
 
     def _add_shape(self, shape):
-        self.shapes.append(shape)
+        item = ShapeLayoutItem(shape)
+        # Call QLayout::addItem()
+        self.addItem(item)
 
     def _remove_shape(self, shape):
-        self.shapes.remove(shape)
+        for i in range(self.count()):
+            item = self.itemAt(i)
+            if isinstance(item, ShapeLayoutItem) and item.shape is shape:
+                self.takeAt(i)
+                return
 
     def _add_layout(self, layout):
         """ Needs to be reimplemented in the inherited classes to add a layout.
@@ -33,24 +105,17 @@ class BaseLayout(object):
         raise NotImplementedError("BaseLayout.add_widget")
 
     def hide(self):
-        for i in range(self.count()):
-            item = self.itemAt(i)
+        for item in self:
             item.hide()
 
     def show(self):
-        for i in range(self.count()):
-            item = self.itemAt(i)
+        for item in self:
             item.show()
 
     def draw(self, painter):
-        for i in range(self.count()):
-            item = self.itemAt(i)
-            if isinstance(item, BaseLayout):
+        for item in self:
+            if isinstance(item, (BaseLayout, ShapeLayoutItem)):
                 item.draw(painter)
-        for shape in self.shapes:
-            if shape.is_visible():
-                with save_painter_state(painter):
-                    shape.draw(painter)
 
     def set_geometry(self, rect):
         self.setGeometry(rect)
@@ -60,11 +125,9 @@ class BaseLayout(object):
                      self.model.width, self.model.height)
         self.setGeometry(rect)
 
-        for shape in self.shapes:
-            shape.translate(offset)
-        for i in range(self.count()):
-            item = self.itemAt(i)
-            if isinstance(item, BaseLayout):
+        # Tell all the children to move
+        for item in self:
+            if isinstance(item, (BaseLayout, ShapeLayoutItem)):
                 item.translate(offset)
             elif isinstance(item, QWidgetItem):
                 item.widget().translate(offset)
