@@ -11,8 +11,8 @@ import unittest
 from PyQt4.QtGui import QApplication
 
 import karabo_gui.scenemodel.tests as sm
-from ..view import SceneView
-from ..layouts import GroupLayout
+from karabo_gui.sceneview.view import SceneView
+from karabo_gui.sceneview.layouts import GroupLayout
 
 DATA_DIR = op.join(op.abspath(op.dirname(sm.__file__)), 'data')
 
