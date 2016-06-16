@@ -125,14 +125,18 @@ MQReceiveMessageNoWait(const MQConsumerHandle consumerHandle,
   CNDCHK( consumer == NULL, MQ_STATUS_INVALID_HANDLE);
 
   CNDCHK( consumer->getReceiveMode() != SESSION_SYNC_RECEIVE, MQ_NOT_SYNC_RECEIVE_MODE );
-  ERRCHK( consumer->receive(&message, PR_INTERVAL_NO_WAIT) );
+  errorCode = consumer->receive(&message, PR_INTERVAL_NO_WAIT);
+  // Hack by XFEL:
+  if ( errorCode != MQ_CONSUMER_DROPPED_MESSAGES ) {
+      ERRCHK( errorCode );
+  }
 
   // Export the message
   message->setIsExported(PR_TRUE);
   messageHandle->handle = message->getHandle();
 
   releaseHandledObject(consumer);
-  RETURN_STATUS( MQ_SUCCESS );
+  RETURN_STATUS( errorCode );
 Cleanup:
   releaseHandledObject(consumer);
   MQ_ERROR_TRACE( FUNCNAME, errorCode );
@@ -165,9 +169,13 @@ MQReceiveMessageWithTimeout(const MQConsumerHandle consumerHandle,
   CNDCHK( consumer->getReceiveMode() != SESSION_SYNC_RECEIVE, MQ_NOT_SYNC_RECEIVE_MODE );
   // Block until an error occurs or the next message is received
   if (timeoutMilliSeconds == 0) {
-  ERRCHK( consumer->receive(&message,  PR_INTERVAL_NO_TIMEOUT) );
+      errorCode = consumer->receive(&message,  PR_INTERVAL_NO_TIMEOUT);
   } else {
-  ERRCHK( consumer->receive(&message, timeoutMilliSeconds) );
+      errorCode = consumer->receive(&message, timeoutMilliSeconds);
+  }
+  // Hack by XFEL:
+  if (errorCode != MQ_CONSUMER_DROPPED_MESSAGES) {
+      ERRCHK(errorCode);
   }
 
   // Export the message 
@@ -175,7 +183,7 @@ MQReceiveMessageWithTimeout(const MQConsumerHandle consumerHandle,
   messageHandle->handle = message->getHandle();
 
   releaseHandledObject(consumer);
-  RETURN_STATUS( MQ_SUCCESS );
+  RETURN_STATUS( errorCode );
 Cleanup:
   releaseHandledObject(consumer);
   MQ_ERROR_TRACE( FUNCNAME, errorCode );
