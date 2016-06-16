@@ -528,6 +528,10 @@ MessageConsumer::receive(Message ** const message,
   MQError errorCode = MQ_SUCCESS;
   Packet * packet = NULL;
 
+  // Hack by XFEL:
+  PRInt32 threshold = 0;
+  PRUint32 numDropped = 0;
+
   NULLCHK( message );
   *message = NULL;
 
@@ -584,6 +588,8 @@ MessageConsumer::receive(Message ** const message,
                "MessageConsumer::receive allocated new message 0x%p",
                *message ));
 
+  // Hack by XFEL:
+  // Do not only drop expired messages, but, if queue too large, also low priority ones.
   PRUint8 prio;
   ERRCHK( (*message)->getJMSPriority(&prio) );
 
@@ -607,10 +613,12 @@ MessageConsumer::receive(Message ** const message,
     ERRCHK( session->acknowledgeExpiredMessage(*message) );
     this->session->messageDelivered();
 
+    // Memory leak fix by XFEL:
     DELETE( packet );
     HANDLED_DELETE( *message );
 
     receiveQueue->receiveDone();
+    ++numDropped;
     continue;
   } 
   
@@ -631,7 +639,8 @@ MessageConsumer::receive(Message ** const message,
 
   } //while
 
-  return MQ_SUCCESS;
+  // Hack by XFEL: return info about dropped messages
+  return (numDropped == 0 ? MQ_SUCCESS : MQ_CONSUMER_DROPPED_MESSAGES);
 
 Cleanup:
   if (packet != NULL) {

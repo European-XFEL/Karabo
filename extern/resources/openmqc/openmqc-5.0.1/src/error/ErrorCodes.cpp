@@ -250,6 +250,8 @@ errorStr(const MQError errorCode)
   case MQ_NOLOCAL_DURABLE_CONSUMER_NO_CLIENTID: return "Client ID must set when noLocal is true to create durable subscription";
   case MQ_CONSUMER_NO_SUBSCRIPTION_NAME:        return "There is no subscription name specified";
 
+  // Hack by XFEL:
+  case MQ_CONSUMER_DROPPED_MESSAGES:            return "The consumer dropped messages: expired or low priority with overflow";
 
   case MQ_CONNECTION_START_ERROR:               return "Connection start failed";
   case MQ_CONNECTION_CREATE_SESSION_ERROR:      return "Connection failed to create a session";
