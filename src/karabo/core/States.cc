@@ -140,7 +140,7 @@ namespace karabo {
                 size_t stateRank = 0;
                 for (vector<State::Pointer>::const_iterator ii = listOfStates.begin(); ii != listOfStates.end(); ++ii) {
                     State::Pointer sp = *ii;
-                    size_t rank = ranking(sp, trumplist);
+                    size_t rank = rankedAt(sp, trumplist);
                     if (rank > stateRank) {
                         statePtr = sp;
                         stateRank = rank;
