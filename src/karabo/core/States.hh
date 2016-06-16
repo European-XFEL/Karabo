@@ -25,7 +25,9 @@ namespace karabo {
                 KARABO_CLASSINFO(X, #X, "1.0")\
                 X() {setStateName(#X); setParent(#Parent);}\
                 virtual ~X() {}\
-            };
+            };\
+            extern State::Pointer X ## _p;\
+            extern const State& g_ ## X;
         
 
             /**
@@ -183,9 +185,7 @@ namespace karabo {
 
             static StatesRegistrator statesRegistrator;
             
-            State::Pointer returnMostSignificant(const std::vector<State::Pointer>& listOfStates) {
-                return statesRegistrator.stateSignifier->returnMostSignificant(listOfStates);
-            }
+            extern State::Pointer returnMostSignificant(const std::vector<State::Pointer>& listOfStates);
         }
     }
 }

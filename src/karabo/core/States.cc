@@ -9,8 +9,131 @@ using namespace karabo::util;
 namespace karabo {
     namespace core {
         namespace states {
+            
+#define KARABO_FSM_INIT_FIXED_STATE(X, Y) State::Pointer X ## _p(new X); const State& g_ ## X = *X ## _p;
+
+            KARABO_FSM_INIT_FIXED_STATE(UNKNOWN, State)
+
+            KARABO_FSM_INIT_FIXED_STATE(KNOWN, State)
+
+            KARABO_FSM_INIT_FIXED_STATE(INIT, State)
+
+            KARABO_FSM_INIT_FIXED_STATE(DISABLED, KNOWN)
+
+            KARABO_FSM_INIT_FIXED_STATE(ERROR, KNOWN)
+
+            KARABO_FSM_INIT_FIXED_STATE(NORMAL, KNOWN)
+
+            KARABO_FSM_INIT_FIXED_STATE(STATIC, NORMAL)
+
+            KARABO_FSM_INIT_FIXED_STATE(CHANGING, NORMAL)
+
+            KARABO_FSM_INIT_FIXED_STATE(PASSIVE, STATIC)
+
+            KARABO_FSM_INIT_FIXED_STATE(ACTIVE, STATIC)
+
+            KARABO_FSM_INIT_FIXED_STATE(DECREASING, CHANGING)
+
+            KARABO_FSM_INIT_FIXED_STATE(INCREASING, CHANGING)
+
+            /**
+             *
+             */
+
+            KARABO_FSM_INIT_FIXED_STATE(INTERLOCKED, DISABLED)
+
+            KARABO_FSM_INIT_FIXED_STATE(COOLED, ACTIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(HEATED, ACTIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(EVACUATED, ACTIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(CLOSED, ACTIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(ON, ACTIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(EXTRACTED, ACTIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(STARTED, ACTIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(LOCKED, ACTIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(ENGAGED, ACTIVE)
 
 
+            KARABO_FSM_INIT_FIXED_STATE(WARM, PASSIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(COLD, PASSIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(PRESSURIZED, PASSIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(OPENED, PASSIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(OFF, PASSIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(INSERTED, PASSIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(STOPPED, PASSIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(UNLOCKED, PASSIVE)
+
+            KARABO_FSM_INIT_FIXED_STATE(DISENGAGED, PASSIVE)
+
+
+            KARABO_FSM_INIT_FIXED_STATE(ROTATING, CHANGING)
+
+            KARABO_FSM_INIT_FIXED_STATE(MOVING, CHANGING)
+
+            KARABO_FSM_INIT_FIXED_STATE(SWITCHING, CHANGING)
+
+
+            KARABO_FSM_INIT_FIXED_STATE(HEATING, INCREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(MOVING_RIGHT, INCREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(MOVING_UP, INCREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(MOVING_FORWARD, INCREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(ROTATING_CLK, INCREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(RAMPING_UP, INCREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(INSERTING, INCREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(STARTING, INCREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(FILLING, INCREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(ENGAGING, INCREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(SWITCHING_ON, INCREASING)
+
+
+            KARABO_FSM_INIT_FIXED_STATE(COOLING, DECREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(MOVING_LEFT, DECREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(MOVING_DOWN, DECREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(MOVING_BACK, DECREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(ROTATING_CNTCLK, DECREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(RAMPING_DOWN, DECREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(EXTRACTING, DECREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(STOPPING, DECREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(EMPTYING, DECREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(DISENGAGING, DECREASING)
+
+            KARABO_FSM_INIT_FIXED_STATE(SWITCHING_OFF, DECREASING)
+
+#undef KARABO_FSM_INIT_FIXED_STATE
+            
             State::Pointer StateSignifier::returnMostSignificant(const std::vector<State::Pointer>& listOfStates) {
                 const vector<State::Pointer>& trumplist = statesRegistrator.stateSignifier->getTrumpList();
                 State::Pointer statePtr(new State);
@@ -35,6 +158,7 @@ namespace karabo {
                     }
                 }
                 std::cout << "Failed to find " << toString(allnames) << " in trump list" << std::endl;
+                return 0;
             }
             
             StateSignifier::StateSignifier(const std::vector<karabo::core::State::Pointer>& trumpList,
@@ -135,6 +259,10 @@ namespace karabo {
 #undef REGISTER_STATE                    
                         
                 stateSignifier = boost::shared_ptr<StateSignifier>(new StateSignifier);
+            }
+        
+            State::Pointer returnMostSignificant(const std::vector<State::Pointer>& listOfStates) {
+                return statesRegistrator.stateSignifier->returnMostSignificant(listOfStates);
             }
         }
 

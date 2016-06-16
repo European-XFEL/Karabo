@@ -63,14 +63,62 @@ namespace karabo {
             std::string m_currentFsm;
         };
 
-        struct FsmBaseState : public State {
+        struct FsmBaseState {
             
-            FsmBaseState() : State(), m_fsmName(""), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
+            FsmBaseState() : m_state(new State), m_fsmName(""), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
 
+            const State::Pointer& getState() const {
+                return m_state;
+            }
+            
+            void setState(const State::Pointer& state) {
+                m_state = state;
+            }
+            
             const std::string & getStateName() const {
-                return m_stateName;
+                return m_state->name();
             }
 
+            const std::string & name() const {
+                return m_state->name();
+            }
+            
+            void setStateName(const std::string& name) {
+                m_state->setStateName(name);
+            }
+            
+            std::string parent() const {
+                return m_state->parent();
+            }
+            
+            const std::vector<std::string>& parents() const {
+                return m_state->parents();
+            }
+
+            void setParent(const std::string& parent) {
+                m_state->setParent(parent);
+            }
+            
+            void setParents(const std::vector<std::string>& parents) {
+                m_state->setParents(parents);
+            }
+
+            FsmBaseState& operator=(const State& s) {
+                m_state->setStateName(s.name());
+                m_state->setParents(s.parents());
+                return *this;
+            }
+
+            FsmBaseState& operator=(const FsmBaseState& s) {
+                setStateName(name());
+                setParents(parents());
+                return *this;
+            }
+            
+            bool isCompatible(const State& s) const {
+                return m_state->isCompatible(s);
+            }
+            
             const std::string & getFsmName() const {
                 return m_fsmName;
             }
@@ -122,6 +170,7 @@ namespace karabo {
             }
             
         protected:
+            State::Pointer m_state;
             std::string m_fsmName;
             bool m_isContained;
             int m_timeout;

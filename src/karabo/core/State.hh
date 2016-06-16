@@ -1,12 +1,12 @@
 /* 
- * File:   BaseState.hh
+ * File:   State.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
  * Created on June 8, 2016, 2:49 PM
  */
 
-#ifndef BASESTATE_HH
-#define	BASESTATE_HH
+#ifndef KARABO_CORE_STATE_HH
+#define	KARABO_CORE_STATE_HH
 
 #include <boost/shared_ptr.hpp>
 #include <vector>
@@ -68,8 +68,8 @@ namespace karabo {
             }
             
             void setParents(const std::vector<std::string>& parents) {
-                for (size_t i=0; i < parents.size(); ++i)
-                    m_parents.push_back(parents[i]);
+                if (!parents.empty())
+                    m_parents.insert(m_parents.end(), parents.begin(), parents.end());
             }
 
             State& operator=(const State& s) {
@@ -92,13 +92,6 @@ namespace karabo {
                 return false;
             }
 
-            bool isCompatible(const std::string& s) const {
-                if (m_stateName == s) return true;
-                for (size_t i = 0; i < m_parents.size(); ++i)
-                    if (m_parents[i] == s) return true;
-                return false;
-            }
-
         protected:
             std::string m_stateName;
             std::vector<std::string> m_parents;
@@ -111,5 +104,5 @@ namespace karabo {
     }
 }
 
-#endif	/* BASESTATE_HH */
+#endif	/* KARABO_CORE_STATE_HH */
 
