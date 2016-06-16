@@ -143,6 +143,16 @@ class SceneView(QWidget):
                 items.append(obj)
         return items
 
+    def select_all(self):
+        """ Add all children to the current selection
+        """
+        self.selection_model.clear_selection()
+        for child in self.scene_model.children:
+            obj = self._scene_obj_cache.get(child)
+            if obj is not None:
+                self.selection_model.select_object(obj)
+        self.update()
+
     def set_cursor(self, name):
         """ Sets the cursor for the scene view.
         """

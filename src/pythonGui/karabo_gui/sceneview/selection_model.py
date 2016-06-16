@@ -31,8 +31,9 @@ class SceneSelectionModel(HasStrictTraits):
     def get_selection_bounds(self):
         """ Return the bounding rectangle for the objects which are selected.
         """
-        x, y, w, h = calc_bounding_rect(self._selection)
-        return QRect(x, y, w, h)
+        rect = QRect(*calc_bounding_rect(self._selection))
+        rect.adjust(-2, -2, +3, +3)
+        return rect
 
     def has_selection(self):
         return len(self._selection) > 0
