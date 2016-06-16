@@ -3,7 +3,7 @@ from karabo_gui.scenemodel.api import (
     PathModel, RectangleModel, SceneLinkModel, UnknownXMLDataModel
 )
 from .const import QT_BOX_LAYOUT_DIRECTION
-from .layouts import BoxLayout, GridLayout, GroupLayout
+from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape
 from .simple_widgets import LabelWidget, SceneLinkWidget, UnknownSvgWidget
 
