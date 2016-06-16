@@ -39,7 +39,7 @@ class Nested(Configurable):
 
 
 class Remote(Device):
-    value = Int32(defaultValue=7)
+    value = Int32(description="The Value", defaultValue=7)
     counter = Int32(defaultValue=-1)
 
     unit_int = Int32(unitSymbol=Unit.METER)
@@ -616,6 +616,12 @@ class Tests(TestCase):
             weak = weakref.ref(d)
             del d
             self.assertIsNone(weak())
+
+    @async_tst
+    def test_getdoc(self):
+        # this is usually done by iPython/iKarabo
+        d = yield from getDevice("remote")
+        self.assertEqual(d.value.getdoc(), "The Value")
 
 
 def setUpModule():
