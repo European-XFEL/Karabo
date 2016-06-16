@@ -137,10 +137,6 @@ class Broker:
         self.emit("call", {deviceId: ["slotDisconnectFromSignal"]}, signal,
                   slot.__self__.deviceId, slot.__name__)
 
-    def registerSlot(self, x):
-        """ legacy code. slots don't need to be registered """
-        return
-
     @coroutine
     def consume(self, device):
         consumer = openmq.Consumer(
