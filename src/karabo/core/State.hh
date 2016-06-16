@@ -48,10 +48,6 @@ namespace karabo {
                 return m_stateName;
             }
             
-            void setStateName(const std::string& name) {
-                m_stateName = name;
-            }
-            
             std::string parent() const {
                 if (m_parents.empty()) return "";
                 return m_parents[0];
@@ -59,6 +55,12 @@ namespace karabo {
             
             const std::vector<std::string>& parents() const {
                 return m_parents;
+            }
+            
+        protected:    
+            
+            void setStateName(const std::string& name) {
+                m_stateName = name;
             }
             
             void setParent(const std::string& parent) {
@@ -71,7 +73,9 @@ namespace karabo {
                 if (!parents.empty())
                     m_parents.insert(m_parents.end(), parents.begin(), parents.end());
             }
-
+            
+        public:
+            
             State& operator=(const State& s) {
                 m_stateName = s.m_stateName;
                 m_parents = s.m_parents;
@@ -93,6 +97,7 @@ namespace karabo {
             }
 
         protected:
+            
             std::string m_stateName;
             std::vector<std::string> m_parents;
             std::string m_fsmName;

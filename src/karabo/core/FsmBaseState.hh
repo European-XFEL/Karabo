@@ -71,22 +71,22 @@ namespace karabo {
                 return m_state;
             }
             
-            void setState(const State::Pointer& state) {
-                m_state = state;
-            }
-            
             const std::string & getStateName() const {
+                if (m_state->name().empty())
+                    return m_stateMachineName;
                 return m_state->name();
             }
 
             const std::string & name() const {
+                if (m_state->name().empty())
+                    return m_stateMachineName;
                 return m_state->name();
             }
             
-            void setStateName(const std::string& name) {
-                m_state->setStateName(name);
+            void setStateMachineName(const std::string& name) {
+                m_stateMachineName = name;
             }
-            
+  
             std::string parent() const {
                 return m_state->parent();
             }
@@ -94,26 +94,26 @@ namespace karabo {
             const std::vector<std::string>& parents() const {
                 return m_state->parents();
             }
-
-            void setParent(const std::string& parent) {
-                m_state->setParent(parent);
-            }
-            
-            void setParents(const std::vector<std::string>& parents) {
-                m_state->setParents(parents);
-            }
-
-            FsmBaseState& operator=(const State& s) {
-                m_state->setStateName(s.name());
-                m_state->setParents(s.parents());
-                return *this;
-            }
-
-            FsmBaseState& operator=(const FsmBaseState& s) {
-                setStateName(name());
-                setParents(parents());
-                return *this;
-            }
+//        protected:
+//            void setParent(const std::string& parent) {
+//                m_state->setParent(parent);
+//            }
+//            
+//            void setParents(const std::vector<std::string>& parents) {
+//                m_state->setParents(parents);
+//            }
+        public:
+//            FsmBaseState& operator=(const State& s) {
+//                m_state->setStateName(s.name());
+//                m_state->setParents(s.parents());
+//                return *this;
+//            }
+//
+//            FsmBaseState& operator=(const FsmBaseState& s) {
+//                setStateName(name());
+//                setParents(parents());
+//                return *this;
+//            }
             
             bool isCompatible(const State& s) const {
                 return m_state->isCompatible(s);
@@ -168,9 +168,16 @@ namespace karabo {
             virtual Worker* getWorker() const {
                 return NULL;
             }
+
+        protected:
+            
+            void setState(const State::Pointer& state) {
+                m_state = state;
+            }
             
         protected:
             State::Pointer m_state;
+            std::string m_stateMachineName;
             std::string m_fsmName;
             bool m_isContained;
             int m_timeout;

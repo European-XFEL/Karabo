@@ -1198,7 +1198,7 @@ virtual void exitFunc()  = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : m_context(0) {this->setStateName(#name); this->setFsmName(#name);} \
+            name ## _() : m_context(0) {this->setStateMachineName(#name); this->setFsmName(#name);} \
         private: \
             CTX* m_context; \
         }; \
@@ -1236,7 +1236,7 @@ virtual void exitFunc()  = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : _ta(), _worker(new Worker), m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+            name ## _() : _ta(), _worker(new Worker), m_context(0) {this->setStateMachineName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
             Worker* getWorker() const  {return _worker.get();} \
         private: \
             TargetAction _ta; \
@@ -1265,7 +1265,7 @@ virtual void exitFunc()  = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : m_context(0) {this->setStateName(#name); this->setFsmName(#name);} \
+            name ## _() : m_context(0) {this->setStateMachineName(#name); this->setFsmName(#name);} \
         private: \
             CTX* m_context; \
         }; \
@@ -1314,7 +1314,7 @@ virtual void entryFunc() = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : _ta(), _worker(new Worker), m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+            name ## _() : _ta(), _worker(new Worker), m_context(0) {this->setStateMachineName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
             Worker* getWorker() const  {return _worker.get();} \
         private: \
             TargetAction _ta; \
@@ -1364,7 +1364,7 @@ virtual void entryFunc() = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : m_context(0) {this->setStateName(#name); this->setFsmName(#name);} \
+            name ## _() : m_context(0) {this->setStateMachineName(#name); this->setFsmName(#name);} \
         private: \
             CTX* m_context; \
         }; \
@@ -1416,7 +1416,7 @@ virtual void exitFunc()  = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : _ta(), _worker(new Worker), m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+            name ## _() : _ta(), _worker(new Worker), m_context(0) {this->setStateMachineName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
             Worker* getWorker() const  {return _worker.get();} \
         private: \
             TargetAction _ta; \
