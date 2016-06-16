@@ -21,30 +21,25 @@ DATA_DIR = op.join(op.abspath(op.dirname(sm.__file__)), 'data')
 
 
 class TestLayouts(GuiTestCase):
-    '''Test the GUI scene view'''
+    """ Test the GUI layouts"""
 
     def test_horizontal_box_layouts(self):
-        '''Test the horizontal box layout'''
+        """ Test the horizontal box layout"""
         # Horizonal layout
-        model = BoxLayoutModel()
-        model.direction = QBoxLayout.LeftToRight
+        model = BoxLayoutModel(direction=QBoxLayout.LeftToRight)
         boxLayout = BoxLayout(model, model.direction)
         self.assertEqual(boxLayout.count(), 0)
         # Add a child to layout model
-        label_model = LabelModel()
-        label_model.x = 0
-        label_model.y = 0
-        label_model.text = "foo"
+        label_model = LabelModel(x=0, y=0, text="foo")
         label_widget = LabelWidget(label_model)
         boxLayout._add_widget(label_widget)
         self.assertEqual(boxLayout.count(), 1)
         self.assertIs(boxLayout.itemAt(0).widget(), label_widget)
 
     def test_vertical_box_layout(self):
-        '''Test the vertical box layout'''
+        """ Test the vertical box layout"""
         # Vertical layout
-        model = BoxLayoutModel()
-        model.direction = QBoxLayout.TopToBottom
+        model = BoxLayoutModel(direction=QBoxLayout.TopToBottom)
         boxLayout = BoxLayout(model, model.direction)
         self.assertEqual(boxLayout.count(), 0)
 

@@ -13,14 +13,14 @@ from karabo_gui.sceneview.shapes import LineShape, RectangleShape
 
 
 class TestSelectionModel(unittest.TestCase):
+    """ Test the GUI selection model"""
 
-    '''Test the GUI scene view'''
     def setUp(self):
-        '''Create the selection model'''
+        """ Create the selection model"""
         self.selection_model = SceneSelectionModel()
 
     def test_selection_model(self):
-        '''Test the selection model'''
+        """ Test the selection model"""
         self.assertFalse(self.selection_model.has_selection())
 
         line_model = LineModel(x1=0, y1=0, x2=100, y2=100)
