@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from operator import attrgetter
 
 from PyQt4.QtGui import QBoxLayout
 from traits.api import Callable, Int
@@ -36,21 +35,35 @@ class BaseLayoutAction(BaseSceneAction):
         """ Implemented by derived classes to create and add a layout.
         """
 
+    def keyfunc(self, gui_obj):
+        """ A function to be passed as the key= argument of the sort() fuction.
+        when sorting the GUI objects before passing their models to
+        `create_layout`.
+
+        THIS METHOD IS OPTIONAL.
+        """
+        raise NotImplementedError
+
     def perform(self, scene_view):
         selection_model = scene_view.selection_model
         # It does not make sense to create a layout for less than 2 items
         if len(selection_model) < 2:
             return
 
-        child_models = []
+        child_objects = []
         for obj in selection_model:
             scene_view.remove_model(obj.model)
-            child_models.append(obj.model)
+            child_objects.append(obj)
 
+        try:
+            child_objects.sort(key=self.keyfunc)
+        except NotImplementedError:
+            pass
+
+        child_models = [obj.model for obj in child_objects]
         selection_rect = calc_bounding_rect(selection_model)
-        selection_model.clear_selection()
-
         self.create_layout(scene_view, child_models, selection_rect)
+        selection_model.clear_selection()
 
 
 class BoxSceneAction(BaseLayoutAction):
@@ -58,30 +71,31 @@ class BoxSceneAction(BaseLayoutAction):
     """
     # What's the layout direction?
     direction = Int
-    # A keyfunc for the sort() before layout
-    keyfunc = Callable
 
     def create_layout(self, scene_view, models, selection_rect):
         x, y, width, height = selection_rect
-        models.sort(key=self.keyfunc)
-        layouyt_model = BoxLayoutModel(x=x, y=y, width=width, height=height,
-                                       children=models,
-                                       direction=self.direction)
-        scene_view.add_models(layouyt_model)
+        layout_model = BoxLayoutModel(x=x, y=y, width=width, height=height,
+                                      children=models,
+                                      direction=self.direction)
+        scene_view.add_models(layout_model)
 
 
 class BoxHSceneAction(BoxSceneAction):
     """ Group horizontally action
     """
     direction = QBoxLayout.LeftToRight
-    keyfunc = attrgetter('x')
+
+    def keyfunc(self, gui_obj):
+        return gui_obj.geometry().x()
 
 
 class BoxVSceneAction(BoxSceneAction):
     """ Group vertically action
     """
     direction = QBoxLayout.TopToBottom
-    keyfunc = attrgetter('y')
+
+    def keyfunc(self, gui_obj):
+        return gui_obj.geometry().y()
 
 
 class GridSceneAction(BaseLayoutAction):
