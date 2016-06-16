@@ -5,10 +5,8 @@
 #############################################################################
 
 import os.path as op
-import sys
-import unittest
 
-from PyQt4.QtGui import QApplication, QBoxLayout
+from PyQt4.QtGui import QBoxLayout
 
 import karabo_gui.scenemodel.tests as sm
 from karabo_gui.scenemodel.layouts import BoxLayoutModel
@@ -17,16 +15,13 @@ from karabo_gui.scenemodel.simple_widgets import LabelModel
 from karabo_gui.sceneview.layout.api import BoxLayout
 from karabo_gui.sceneview.shapes import LineShape
 from karabo_gui.sceneview.simple_widgets import LabelWidget
+from karabo_gui.testing import GuiTestCase
 
 DATA_DIR = op.join(op.abspath(op.dirname(sm.__file__)), 'data')
 
 
-class TestLayouts(unittest.TestCase):
-
+class TestLayouts(GuiTestCase):
     '''Test the GUI scene view'''
-    def setUp(self):
-        '''Create the view'''
-        self.app = QApplication(sys.argv)
 
     def test_horizontal_box_layouts(self):
         '''Test the horizontal box layout'''
