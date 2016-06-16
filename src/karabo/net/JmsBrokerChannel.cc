@@ -264,7 +264,7 @@ namespace karabo {
 
                 status = MQReceiveMessageWithTimeout(m_consumerHandle, timeout, &messageHandle);
                 if (MQStatusIsError(status) == MQ_FALSE)
-                    return status;
+                    break; // Success
 
                 switch (MQGetStatusCode(status)) {
                     case MQ_TIMEOUT_EXPIRED:
