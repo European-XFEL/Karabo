@@ -7,50 +7,70 @@
 from PyQt4.QtCore import QRect, QSize
 from PyQt4.QtGui import QBoxLayout, QGridLayout, QLayout, QWidgetItem
 
-from .utils import calc_bounding_rect, save_painter_state
+from .shape_layout import ShapeLayoutItem
+from .utils import calc_bounding_rect
 
 
 class BaseLayout(object):
+    """ This is a mix-in class intended to be inherited by all SceneView
+    layouts. It implements generic parts of the QLayout virtual interface.
+    """
     def __init__(self, model, *args):
         super(BaseLayout, self).__init__(*args)
         self.model = model
-        self.shapes = []
 
-    def _add_shape(self, shape):
-        self.shapes.append(shape)
-
-    def _remove_shape(self, shape):
-        self.shapes.remove(shape)
+    def __iter__(self):
+        """ Implement the Python iterator protocol for all layouts.
+        """
+        for i in range(self.count()):
+            yield self.itemAt(i)
 
     def _add_layout(self, layout):
         """ Needs to be reimplemented in the inherited classes to add a layout.
         """
-        raise NotImplementedError("BaseLayout.add_layout")
+        raise NotImplementedError("BaseLayout._add_layout")
+
+    def _add_shape(self, shape):
+        """ Use our special hacky workaround for adding shapes to the layout.
+        """
+        self._add_layout(ShapeLayoutItem(shape))
 
     def _add_widget(self, widget):
         """ Needs to be reimplemented in the inherited classes to add a widget.
         """
-        raise NotImplementedError("BaseLayout.add_widget")
+        raise NotImplementedError("BaseLayout._add_widget")
 
-    def hide(self):
-        for i in range(self.count()):
-            item = self.itemAt(i)
-            item.hide()
+    def _remove_layout(self, layout):
+        self.removeItem(layout)
 
-    def show(self):
-        for i in range(self.count()):
-            item = self.itemAt(i)
-            item.show()
+    def _remove_shape(self, shape):
+        for item in self:
+            if isinstance(item, ShapeLayoutItem) and item.model is shape.model:
+                # Call QLayout::removeItem()
+                self.removeItem(item)
+                return
+
+    def _remove_widget(self, widget):
+        self.removeWidget(widget)
 
     def draw(self, painter):
-        for i in range(self.count()):
-            item = self.itemAt(i)
-            if isinstance(item, BaseLayout):
+        for item in self:
+            if not isinstance(item, QWidgetItem):
                 item.draw(painter)
-        for shape in self.shapes:
-            if shape.is_visible():
-                with save_painter_state(painter):
-                    shape.draw(painter)
+
+    def hide(self):
+        for item in self:
+            if isinstance(item, QWidgetItem):
+                item.widget().hide()
+            else:
+                item.hide()
+
+    def show(self):
+        for item in self:
+            if isinstance(item, QWidgetItem):
+                item.widget().show()
+            else:
+                item.show()
 
     def set_geometry(self, rect):
         self.setGeometry(rect)
@@ -60,24 +80,21 @@ class BaseLayout(object):
                      self.model.width, self.model.height)
         self.setGeometry(rect)
 
-        for shape in self.shapes:
-            shape.translate(offset)
-        for i in range(self.count()):
-            item = self.itemAt(i)
-            if isinstance(item, BaseLayout):
-                item.translate(offset)
-            elif isinstance(item, QWidgetItem):
+        # Tell all the children to move
+        for item in self:
+            if isinstance(item, QWidgetItem):
                 item.widget().translate(offset)
+            else:
+                item.translate(offset)
+
+    # --------------------------------------------
+    # QLayout Virtual Functions
 
     def geometry(self):
-        """ This is part of the virtual interface of QLayout.
-        """
         return QRect(self.model.x, self.model.y, self.model.width,
                      self.model.height)
 
     def setGeometry(self, rect):
-        """ This is part of the virtual interface of QLayout.
-        """
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
         super(BaseLayout, self).setGeometry(rect)
@@ -86,50 +103,31 @@ class BaseLayout(object):
 class GroupLayout(BaseLayout, QLayout):
     def __init__(self, model, parent=None):
         super(GroupLayout, self).__init__(model, parent)
-        self._children = []  # contains only QLayoutItems
+        self._children = []
 
     def _add_layout(self, layout):
         self.addItem(layout)
 
-    def _remove_layout(self, layout):
-        self.removeItem(layout)
-
     def _add_widget(self, widget):
         self.addWidget(widget)
 
-    def _remove_widget(self, widget):
-        self.removeWidget(widget)
+    # --------------------------------------------
+    # QLayout Virtual Functions
 
     def addItem(self, item):
-        """ DO NOT CALL THIS METHOD DIRECTLY!
-
-        This is part of the virtual interface of QLayout.
-        """
         self._children.append(item)
 
     def removeItem(self, item):
-        """ DO NOT CALL THIS METHOD DIRECTLY!
-
-        This is part of the virtual interface of QLayout.
-        """
         self._children.remove(item)
         super(GroupLayout, self).removeItem(item)
 
     def itemAt(self, index):
-        """ DO NOT CALL THIS METHOD DIRECTLY!
-
-        This is part of the virtual interface of QLayout.
-        """
         try:
             return self._children[index]
         except IndexError:
             return
 
     def takeAt(self, index):
-        """ DO NOT CALL THIS METHOD DIRECTLY!
-
-        This is part of the virtual interface of QLayout.
-        """
         item = self._children.pop(index)
         layout = item.layout()
         if layout is not None and layout.parent() is self:
@@ -144,17 +142,9 @@ class GroupLayout(BaseLayout, QLayout):
         return None
 
     def count(self):
-        """ DO NOT CALL THIS METHOD DIRECTLY!
-
-        This is part of the virtual interface of QLayout.
-        """
         return len(self._children)
 
     def sizeHint(self):
-        """ DO NOT CALL THIS METHOD DIRECTLY!
-
-        This is part of the virtual interface of QLayout.
-        """
         x, y, w, h = calc_bounding_rect(self._children)
         return QSize(w, h)
 
@@ -167,14 +157,8 @@ class BoxLayout(BaseLayout, QBoxLayout):
     def _add_layout(self, layout):
         self.addItem(layout)
 
-    def _remove_layout(self, layout):
-        self.removeItem(layout)
-
     def _add_widget(self, widget):
         self.addWidget(widget)
-
-    def _remove_widget(self, widget):
-        self.removeWidget(widget)
 
 
 class GridLayout(BaseLayout, QGridLayout):
@@ -182,19 +166,9 @@ class GridLayout(BaseLayout, QGridLayout):
         super(GridLayout, self).__init__(model, parent)
 
     def _add_layout(self, layout):
-        self.addLayout(
-            layout, layout.model.layout_data.row,
-            layout.model.layout_data.colspan, layout.model.layout_data.row,
-            layout.model.layout_data.rowspan)
-
-    def _remove_layout(self, layout):
-        self.removeItem(layout)
+        ld = layout.model.layout_data
+        self.addLayout(layout, ld.row, ld.col, ld.rowspan, ld.colspan)
 
     def _add_widget(self, widget):
-        self.addWidget(
-            widget, widget.model.layout_data.row,
-            widget.model.layout_data.colspan, widget.model.layout_data.row,
-            widget.model.layout_data.rowspan)
-
-    def _remove_widget(self, widget):
-        self.removeWidget(widget)
+        ld = widget.model.layout_data
+        self.addWidget(widget, ld.row, ld.col, ld.rowspan, ld.colspan)
