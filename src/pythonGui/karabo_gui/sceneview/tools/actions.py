@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from operator import attrgetter
 
 from PyQt4.QtGui import QBoxLayout
 from traits.api import Callable, Int
@@ -57,24 +58,30 @@ class BoxSceneAction(BaseLayoutAction):
     """
     # What's the layout direction?
     direction = Int
+    # A keyfunc for the sort() before layout
+    keyfunc = Callable
 
     def create_layout(self, scene_view, models, selection_rect):
         x, y, width, height = selection_rect
-        model = BoxLayoutModel(x=x, y=y, width=width, height=height,
-                               children=models, direction=self.direction)
-        scene_view.add_models(model)
-
-
-class BoxVSceneAction(BoxSceneAction):
-    """ Group vertically action
-    """
-    direction = QBoxLayout.TopToBottom
+        models.sort(key=self.keyfunc)
+        layouyt_model = BoxLayoutModel(x=x, y=y, width=width, height=height,
+                                       children=models,
+                                       direction=self.direction)
+        scene_view.add_models(layouyt_model)
 
 
 class BoxHSceneAction(BoxSceneAction):
     """ Group horizontally action
     """
     direction = QBoxLayout.LeftToRight
+    keyfunc = attrgetter('x')
+
+
+class BoxVSceneAction(BoxSceneAction):
+    """ Group vertically action
+    """
+    direction = QBoxLayout.TopToBottom
+    keyfunc = attrgetter('y')
 
 
 class GridSceneAction(BaseLayoutAction):
