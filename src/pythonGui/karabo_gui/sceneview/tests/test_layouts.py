@@ -12,8 +12,8 @@ from PyQt4.QtGui import QApplication, QBoxLayout, QWidget
 
 import karabo_gui.scenemodel.tests as sm
 from karabo_gui.scenemodel.shapes import LineModel
-from ..layouts import BoxLayout, GroupLayout, GridLayout 
-from ..shapes import LineShape
+from karabo_gui.sceneview.layouts import BoxLayout, GroupLayout, GridLayout 
+from karabo_gui.sceneview.shapes import LineShape
 
 DATA_DIR = op.join(op.abspath(op.dirname(sm.__file__)), 'data')
 
@@ -45,5 +45,5 @@ class TestLayouts(unittest.TestCase):
         self.assertEqual(len(boxLayout.shapes), 1)
         self.assertIs(boxLayout.shapes[0], lineShape)
         
-        gridLayout = GridLayout()
+        #gridLayout = GridLayout()
         
