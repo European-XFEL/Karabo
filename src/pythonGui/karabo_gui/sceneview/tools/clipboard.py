@@ -14,3 +14,8 @@ class SceneCutAction(BaseSceneAction):
 class ScenePasteAction(BaseSceneAction):
     def perform(self, scene_view):
         pass
+
+
+class SceneSelectAllAction(BaseSceneAction):
+    def perform(self, scene_view):
+        pass

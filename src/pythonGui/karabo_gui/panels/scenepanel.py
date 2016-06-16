@@ -6,8 +6,8 @@
 from functools import partial
 
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt4.QtGui import (QAction, QMenu, QPalette, QScrollArea, QSizePolicy,
-                         QWidget)
+from PyQt4.QtGui import (QAction, QKeySequence, QMenu, QPalette, QScrollArea,
+                         QSizePolicy, QWidget)
 
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
@@ -15,7 +15,7 @@ from karabo_gui.sceneview.tools.api import (
     BoxVSceneAction, BoxHSceneAction, CreateToolAction, GroupEntireSceneAction,
     GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
     TextSceneTool, RectangleSceneTool, SceneLinkTool,
-    SceneCopyAction, SceneCutAction, ScenePasteAction)
+    SceneCopyAction, SceneCutAction, ScenePasteAction, SceneSelectAllAction)
 from karabo_gui.toolbar import ToolBar
 
 
@@ -148,12 +148,18 @@ class ScenePanel(Dockable, QScrollArea):
 
     def create_clipboard_actions(self):
         actions = []
+        actions.append(SceneSelectAllAction(icon=icons.selectAll,
+                                            shortcut=QKeySequence.SelectAll,
+                                            text="Select All",
+                                            tooltip="Select All"))
         actions.append(SceneCutAction(icon=icons.editCut,
-                                      shortcut="",
+                                      shortcut=QKeySequence.Cut,
                                       text="Cut", tooltip="Cut"))
         actions.append(SceneCopyAction(icon=icons.editCopy,
+                                       shortcut=QKeySequence.Copy,
                                        text="Copy", tooltip="Copy"))
         actions.append(ScenePasteAction(icon=icons.editPaste,
+                                        shortcut=QKeySequence.Paste,
                                         text="Paste", tooltip="Paste"))
         return actions
 
@@ -162,6 +168,8 @@ class ScenePanel(Dockable, QScrollArea):
         q_action.setToolTip(sv_action.text)
         q_action.setStatusTip(sv_action.tooltip)
         q_action.triggered.connect(partial(sv_action.perform, self.scene_view))
+        if sv_action.shortcut != QKeySequence.UnknownKey:
+            q_action.setShortcut(QKeySequence(sv_action.shortcut))
         return q_action
 
     def _build_separator(self):
