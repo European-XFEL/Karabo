@@ -93,8 +93,7 @@ class ScenePasteAction(BaseSceneAction):
         if len(pasted_models) == 0:
             return
 
-        for model in pasted_models:
-            scene_view.add_model(model)
+        scene_view.add_models(*pasted_models)
         scene_view.update()
 
 
