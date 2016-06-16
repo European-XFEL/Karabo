@@ -17,5 +17,7 @@ class ScenePasteAction(BaseSceneAction):
 
 
 class SceneSelectAllAction(BaseSceneAction):
+    """ Select all objects in the scene view.
+    """
     def perform(self, scene_view):
-        pass
+        scene_view.select_all()
