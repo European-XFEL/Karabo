@@ -41,10 +41,14 @@ class LabelWidget(QLabel):
         self.setGeometry(model.x, model.y, model.width, model.height)
 
     def set_geometry(self, rect):
+        self.model.set(x=rect.x(), y=rect.y(),
+                       width=rect.width(), height=rect.height())
         self.setGeometry(rect)
 
     def translate(self, offset):
-        self.move(self.pos() + offset)
+        new_pos = self.pos() + offset
+        self.model.set(x=new_pos.x(), y=new_pos.y())
+        self.move(new_pos)
 
 
 class SceneLinkWidget(QPushButton):
@@ -78,10 +82,14 @@ class SceneLinkWidget(QPushButton):
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
 
     def set_geometry(self, rect):
+        self.model.set(x=rect.x(), y=rect.y(),
+                       width=rect.width(), height=rect.height())
         self.setGeometry(rect)
 
     def translate(self, offset):
-        self.move(self.pos() + offset)
+        new_pos = self.pos() + offset
+        self.model.set(x=new_pos.x(), y=new_pos.y())
+        self.move(new_pos)
 
 
 class UnknownSvgWidget(QWidget):
@@ -111,7 +119,11 @@ class UnknownSvgWidget(QWidget):
         return None
 
     def set_geometry(self, rect):
+        self.model.set(x=rect.x(), y=rect.y(),
+                       width=rect.width(), height=rect.height())
         self.setGeometry(rect)
 
     def translate(self, offset):
-        self.move(self.pos() + offset)
+        new_pos = self.pos() + offset
+        self.model.set(x=new_pos.x(), y=new_pos.y())
+        self.move(new_pos)

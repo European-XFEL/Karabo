@@ -116,9 +116,15 @@ class LineShape(BaseShape):
 
     def set_geometry(self, rect):
         self.shape = QLine(rect.topLeft(), rect.bottomRight())
+        self._update_model_values()
 
     def translate(self, offset):
         self.shape.translate(offset)
+        self._update_model_values()
+
+    def _update_model_values(self):
+        self.model.set(x1=self.shape.x1(), y1=self.shape.y1(),
+                       x2=self.shape.x2(), y2=self.shape.y2())
 
 
 class RectangleShape(BaseShape):
@@ -142,9 +148,12 @@ class RectangleShape(BaseShape):
 
     def set_geometry(self, rect):
         self.shape = rect
+        self.model.set(x=rect.x(), y=rect.y(),
+                       width=rect.width(), height=rect.height())
 
     def translate(self, offset):
         self.shape.translate(offset)
+        self.model.set(x=self.shape.x(), y=self.shape.y())
 
 
 class PathShape(BaseShape):
