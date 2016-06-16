@@ -149,7 +149,7 @@ namespace karabo {
                 return statePtr;
             }
 
-            size_t StateSignifier::ranking(const State::Pointer& sp, const std::vector<State::Pointer>& tl) {
+            size_t StateSignifier::rankedAt(const State::Pointer& sp, const std::vector<State::Pointer>& tl) {
                 vector<string> allnames = sp->parents();        // copy parents list
                 allnames.insert(allnames.begin(), sp->name());  // insert stateName at the beginning....
                 for (vector<string>::const_iterator ii = allnames.begin(); ii != allnames.end(); ii++) {

@@ -171,7 +171,7 @@ namespace karabo {
                 
             private:
                 
-                size_t ranking(const State::Pointer& sp, const std::vector<State::Pointer>& tl);
+                size_t rankedAt(const State::Pointer& sp, const std::vector<State::Pointer>& tl);
                 
             protected:
                 std::vector<State::Pointer> m_trumpList;
