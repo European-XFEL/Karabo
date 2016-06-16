@@ -1,0 +1,1275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="90">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <logicalFolder name="auth" displayName="auth" projectFiles="true">
+        <itemPath>src/auth/AuthenticationProtocolHandler.hpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="basictypes" displayName="basictypes" projectFiles="true">
+        <itemPath>src/basictypes/AllBasicTypes.hpp</itemPath>
+        <itemPath>src/basictypes/BasicType.cpp</itemPath>
+        <itemPath>src/basictypes/BasicType.hpp</itemPath>
+        <itemPath>src/basictypes/Boolean.cpp</itemPath>
+        <itemPath>src/basictypes/Boolean.hpp</itemPath>
+        <itemPath>src/basictypes/Byte.cpp</itemPath>
+        <itemPath>src/basictypes/Byte.hpp</itemPath>
+        <itemPath>src/basictypes/Double.cpp</itemPath>
+        <itemPath>src/basictypes/Double.hpp</itemPath>
+        <itemPath>src/basictypes/Float.cpp</itemPath>
+        <itemPath>src/basictypes/Float.hpp</itemPath>
+        <itemPath>src/basictypes/HandledObject.cpp</itemPath>
+        <itemPath>src/basictypes/HandledObject.hpp</itemPath>
+        <itemPath>src/basictypes/Integer.cpp</itemPath>
+        <itemPath>src/basictypes/Integer.hpp</itemPath>
+        <itemPath>src/basictypes/Long.cpp</itemPath>
+        <itemPath>src/basictypes/Long.hpp</itemPath>
+        <itemPath>src/basictypes/Monitor.cpp</itemPath>
+        <itemPath>src/basictypes/Monitor.hpp</itemPath>
+        <itemPath>src/basictypes/Object.cpp</itemPath>
+        <itemPath>src/basictypes/Object.hpp</itemPath>
+        <itemPath>src/basictypes/Runnable.hpp</itemPath>
+        <itemPath>src/basictypes/Short.cpp</itemPath>
+        <itemPath>src/basictypes/Short.hpp</itemPath>
+        <itemPath>src/basictypes/TypeEnum.hpp</itemPath>
+        <itemPath>src/basictypes/UTF8String.cpp</itemPath>
+        <itemPath>src/basictypes/UTF8String.hpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="client" displayName="client" projectFiles="true">
+        <logicalFolder name="auth" displayName="auth" projectFiles="true">
+          <itemPath>src/client/auth/JMQBasicAuthenticationHandler.cpp</itemPath>
+          <itemPath>src/client/auth/JMQBasicAuthenticationHandler.hpp</itemPath>
+          <itemPath>src/client/auth/JMQDigestAuthenticationHandler.cpp</itemPath>
+          <itemPath>src/client/auth/JMQDigestAuthenticationHandler.hpp</itemPath>
+        </logicalFolder>
+        <logicalFolder name="protocol" displayName="protocol" projectFiles="true">
+          <itemPath>src/client/protocol/SSLProtocolHandler.cpp</itemPath>
+          <itemPath>src/client/protocol/SSLProtocolHandler.hpp</itemPath>
+          <itemPath>src/client/protocol/StubProtocolHandler.cpp</itemPath>
+          <itemPath>src/client/protocol/StubProtocolHandler.hpp</itemPath>
+          <itemPath>src/client/protocol/TCPProtocolHandler.cpp</itemPath>
+          <itemPath>src/client/protocol/TCPProtocolHandler.hpp</itemPath>
+        </logicalFolder>
+        <itemPath>src/client/AckMode.h</itemPath>
+        <itemPath>src/client/BytesMessage.cpp</itemPath>
+        <itemPath>src/client/BytesMessage.hpp</itemPath>
+        <itemPath>src/client/Connection.cpp</itemPath>
+        <itemPath>src/client/Connection.hpp</itemPath>
+        <itemPath>src/client/DestType.hpp</itemPath>
+        <itemPath>src/client/Destination.cpp</itemPath>
+        <itemPath>src/client/Destination.hpp</itemPath>
+        <itemPath>src/client/FlowControl.cpp</itemPath>
+        <itemPath>src/client/FlowControl.hpp</itemPath>
+        <itemPath>src/client/Message.cpp</itemPath>
+        <itemPath>src/client/Message.hpp</itemPath>
+        <itemPath>src/client/MessageConsumer.cpp</itemPath>
+        <itemPath>src/client/MessageConsumer.hpp</itemPath>
+        <itemPath>src/client/MessageConsumerTable.cpp</itemPath>
+        <itemPath>src/client/MessageConsumerTable.hpp</itemPath>
+        <itemPath>src/client/MessageID.cpp</itemPath>
+        <itemPath>src/client/MessageID.hpp</itemPath>
+        <itemPath>src/client/MessageProducer.cpp</itemPath>
+        <itemPath>src/client/MessageProducer.hpp</itemPath>
+        <itemPath>src/client/NSSInitCall.cpp</itemPath>
+        <itemPath>src/client/NSSInitCall.h</itemPath>
+        <itemPath>src/client/PingTimer.cpp</itemPath>
+        <itemPath>src/client/PingTimer.hpp</itemPath>
+        <itemPath>src/client/PortMapperClient.cpp</itemPath>
+        <itemPath>src/client/PortMapperClient.hpp</itemPath>
+        <itemPath>src/client/ProducerFlow.cpp</itemPath>
+        <itemPath>src/client/ProducerFlow.hpp</itemPath>
+        <itemPath>src/client/ProtocolHandler.cpp</itemPath>
+        <itemPath>src/client/ProtocolHandler.hpp</itemPath>
+        <itemPath>src/client/ReadChannel.cpp</itemPath>
+        <itemPath>src/client/ReadChannel.hpp</itemPath>
+        <itemPath>src/client/ReadQTable.cpp</itemPath>
+        <itemPath>src/client/ReadQTable.hpp</itemPath>
+        <itemPath>src/client/ReceiveMode.h</itemPath>
+        <itemPath>src/client/ReceiveQueue.cpp</itemPath>
+        <itemPath>src/client/ReceiveQueue.hpp</itemPath>
+        <itemPath>src/client/Session.cpp</itemPath>
+        <itemPath>src/client/Session.hpp</itemPath>
+        <itemPath>src/client/SessionMutex.cpp</itemPath>
+        <itemPath>src/client/SessionMutex.hpp</itemPath>
+        <itemPath>src/client/SessionQueueReader.cpp</itemPath>
+        <itemPath>src/client/SessionQueueReader.hpp</itemPath>
+        <itemPath>src/client/TextMessage.cpp</itemPath>
+        <itemPath>src/client/TextMessage.hpp</itemPath>
+        <itemPath>src/client/TransportProtocolHandler.hpp</itemPath>
+        <itemPath>src/client/XASession.cpp</itemPath>
+        <itemPath>src/client/XASession.hpp</itemPath>
+        <itemPath>src/client/XIDObject.cpp</itemPath>
+        <itemPath>src/client/XIDObject.hpp</itemPath>
+        <itemPath>src/client/iMQConstants.hpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="containers" displayName="containers" projectFiles="true">
+        <itemPath>src/containers/BasicTypeHashtable.cpp</itemPath>
+        <itemPath>src/containers/BasicTypeHashtable.hpp</itemPath>
+        <itemPath>src/containers/ObjectVector.cpp</itemPath>
+        <itemPath>src/containers/ObjectVector.hpp</itemPath>
+        <itemPath>src/containers/Properties.cpp</itemPath>
+        <itemPath>src/containers/Properties.hpp</itemPath>
+        <itemPath>src/containers/StringKeyHashtable.cpp</itemPath>
+        <itemPath>src/containers/StringKeyHashtable.hpp</itemPath>
+        <itemPath>src/containers/Vector.cpp</itemPath>
+        <itemPath>src/containers/Vector.hpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="cshim" displayName="cshim" projectFiles="true">
+        <itemPath>src/cshim/iMQBytesMessageShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQCallbackUtils.hpp</itemPath>
+        <itemPath>src/cshim/iMQCallbacks.cpp</itemPath>
+        <itemPath>src/cshim/iMQConnectionShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQConsumerShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQDestinationShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQLogUtilsShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQMessageShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQProducerShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQPropertiesShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQSSLShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQSessionShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQStatusShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQTextMessageShim.cpp</itemPath>
+        <itemPath>src/cshim/iMQTypes.cpp</itemPath>
+        <itemPath>src/cshim/mqbasictypes.h</itemPath>
+        <itemPath>src/cshim/mqbytes-message.h</itemPath>
+        <itemPath>src/cshim/mqcallback-types-priv.h</itemPath>
+        <itemPath>src/cshim/mqcallback-types.h</itemPath>
+        <itemPath>src/cshim/mqcallbacks-priv.h</itemPath>
+        <itemPath>src/cshim/mqconnection-priv.h</itemPath>
+        <itemPath>src/cshim/mqconnection-props.h</itemPath>
+        <itemPath>src/cshim/mqconnection.h</itemPath>
+        <itemPath>src/cshim/mqconsumer.h</itemPath>
+        <itemPath>src/cshim/mqcrt.h</itemPath>
+        <itemPath>src/cshim/mqdestination.h</itemPath>
+        <itemPath>src/cshim/mqerrors.h</itemPath>
+        <itemPath>src/cshim/mqheader-props.h</itemPath>
+        <itemPath>src/cshim/mqlogutil-priv.h</itemPath>
+        <itemPath>src/cshim/mqmessage.h</itemPath>
+        <itemPath>src/cshim/mqproducer.h</itemPath>
+        <itemPath>src/cshim/mqproperties-priv.h</itemPath>
+        <itemPath>src/cshim/mqproperties.h</itemPath>
+        <itemPath>src/cshim/mqsession.h</itemPath>
+        <itemPath>src/cshim/mqssl.h</itemPath>
+        <itemPath>src/cshim/mqstatus.h</itemPath>
+        <itemPath>src/cshim/mqtext-message.h</itemPath>
+        <itemPath>src/cshim/mqtypes-priv.h</itemPath>
+        <itemPath>src/cshim/mqtypes.h</itemPath>
+        <itemPath>src/cshim/mqversion.h</itemPath>
+        <itemPath>src/cshim/mqxaswitch.h</itemPath>
+        <itemPath>src/cshim/shimUtils.cpp</itemPath>
+        <itemPath>src/cshim/shimUtils.hpp</itemPath>
+        <itemPath>src/cshim/xa.h</itemPath>
+        <itemPath>src/cshim/xaswitch.cpp</itemPath>
+        <itemPath>src/cshim/xaswitch.hpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="debug" displayName="debug" projectFiles="true">
+        <itemPath>src/debug/DebugUtils.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="error" displayName="error" projectFiles="true">
+        <itemPath>src/error/ErrorCodes.cpp</itemPath>
+        <itemPath>src/error/ErrorCodes.h</itemPath>
+        <itemPath>src/error/ErrorTrace.cpp</itemPath>
+        <itemPath>src/error/ErrorTrace.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="io" displayName="io" projectFiles="true">
+        <itemPath>src/io/IMQDataInputStream.cpp</itemPath>
+        <itemPath>src/io/IMQDataInputStream.hpp</itemPath>
+        <itemPath>src/io/IMQDataOutputStream.cpp</itemPath>
+        <itemPath>src/io/IMQDataOutputStream.hpp</itemPath>
+        <itemPath>src/io/Packet.cpp</itemPath>
+        <itemPath>src/io/Packet.hpp</itemPath>
+        <itemPath>src/io/PacketFlag.cpp</itemPath>
+        <itemPath>src/io/PacketFlag.hpp</itemPath>
+        <itemPath>src/io/PacketProperties.cpp</itemPath>
+        <itemPath>src/io/PacketProperties.hpp</itemPath>
+        <itemPath>src/io/PacketType.cpp</itemPath>
+        <itemPath>src/io/PacketType.hpp</itemPath>
+        <itemPath>src/io/PortMapperEntry.cpp</itemPath>
+        <itemPath>src/io/PortMapperEntry.hpp</itemPath>
+        <itemPath>src/io/PortMapperTable.cpp</itemPath>
+        <itemPath>src/io/PortMapperTable.hpp</itemPath>
+        <itemPath>src/io/SSLSocket.cpp</itemPath>
+        <itemPath>src/io/SSLSocket.hpp</itemPath>
+        <itemPath>src/io/SocketTest.cpp</itemPath>
+        <itemPath>src/io/SocketTest.hpp</itemPath>
+        <itemPath>src/io/Status.cpp</itemPath>
+        <itemPath>src/io/Status.hpp</itemPath>
+        <itemPath>src/io/SysMessageID.cpp</itemPath>
+        <itemPath>src/io/SysMessageID.hpp</itemPath>
+        <itemPath>src/io/TCPSocket.cpp</itemPath>
+        <itemPath>src/io/TCPSocket.hpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="net" displayName="net" projectFiles="true">
+        <itemPath>src/net/IPAddress.cpp</itemPath>
+        <itemPath>src/net/IPAddress.hpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="serial" displayName="serial" projectFiles="true">
+        <itemPath>src/serial/SerialDataInputStream.cpp</itemPath>
+        <itemPath>src/serial/SerialDataInputStream.hpp</itemPath>
+        <itemPath>src/serial/SerialDataOutputStream.cpp</itemPath>
+        <itemPath>src/serial/SerialDataOutputStream.hpp</itemPath>
+        <itemPath>src/serial/SerialHandleManager.cpp</itemPath>
+        <itemPath>src/serial/SerialHandleManager.hpp</itemPath>
+        <itemPath>src/serial/Serialize.cpp</itemPath>
+        <itemPath>src/serial/Serialize.hpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="util" displayName="util" projectFiles="true">
+        <itemPath>src/util/LogUtils.hpp</itemPath>
+        <itemPath>src/util/Logger.cpp</itemPath>
+        <itemPath>src/util/Logger.hpp</itemPath>
+        <itemPath>src/util/MemAllocTest.cpp</itemPath>
+        <itemPath>src/util/MemAllocTest.h</itemPath>
+        <itemPath>src/util/PRTypesUtils.c</itemPath>
+        <itemPath>src/util/PRTypesUtils.h</itemPath>
+        <itemPath>src/util/UtilityMacros.h</itemPath>
+        <itemPath>src/util/utf8.cpp</itemPath>
+        <itemPath>src/util/utf8.h</itemPath>
+      </logicalFolder>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>src</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Linux" type="2">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>src/include/nss</pElem>
+            <pElem>src/include/nspr</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>src/include/nss</pElem>
+            <pElem>src/include/nspr</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>LINUX</Elem>
+          </preprocessorList>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+        <linkerTool>
+          <output>lib/libopenmqc.${CND_DLIB_EXT}</output>
+          <linkerAddLib>
+            <pElem>${EXTERN_DISTDIR}/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>\$$ORIGIN</pElem>
+          </linkerDynSerch>
+          <commandlineTool>g++</commandlineTool>
+          <linkerLibItems>
+            <linkerLibLibItem>ssl3</linkerLibLibItem>
+            <linkerLibLibItem>smime3</linkerLibLibItem>
+            <linkerLibLibItem>nssutil3</linkerLibLibItem>
+            <linkerLibLibItem>nss3</linkerLibLibItem>
+            <linkerLibLibItem>plds4</linkerLibLibItem>
+            <linkerLibLibItem>plc4</linkerLibLibItem>
+            <linkerLibLibItem>nspr4</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <item path="src/auth/AuthenticationProtocolHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/basictypes/AllBasicTypes.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/BasicType.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/BasicType.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Boolean.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Boolean.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Byte.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Byte.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Double.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Double.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Float.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Float.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/HandledObject.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/HandledObject.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Integer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Integer.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Long.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Long.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Monitor.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Monitor.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Object.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Object.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Runnable.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Short.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Short.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/TypeEnum.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/UTF8String.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/UTF8String.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/AckMode.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/BytesMessage.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/BytesMessage.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/Connection.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/Connection.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/DestType.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/Destination.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/Destination.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/FlowControl.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/FlowControl.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/Message.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/Message.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/MessageConsumer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/MessageConsumer.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/MessageConsumerTable.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/MessageConsumerTable.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/MessageID.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/MessageID.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/MessageProducer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/MessageProducer.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/NSSInitCall.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/NSSInitCall.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/PingTimer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/PingTimer.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/PortMapperClient.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/PortMapperClient.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ProducerFlow.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/ProducerFlow.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ProtocolHandler.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/ProtocolHandler.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ReadChannel.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/ReadChannel.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ReadQTable.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/ReadQTable.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ReceiveMode.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ReceiveQueue.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/ReceiveQueue.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/Session.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/Session.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/SessionMutex.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/SessionMutex.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/SessionQueueReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/SessionQueueReader.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/TextMessage.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/TextMessage.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/TransportProtocolHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/XASession.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/XASession.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/XIDObject.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/XIDObject.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/auth/JMQBasicAuthenticationHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/auth/JMQBasicAuthenticationHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/auth/JMQDigestAuthenticationHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/auth/JMQDigestAuthenticationHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/iMQConstants.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/protocol/SSLProtocolHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/protocol/SSLProtocolHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/protocol/StubProtocolHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/protocol/StubProtocolHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/protocol/TCPProtocolHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/protocol/TCPProtocolHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/containers/BasicTypeHashtable.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/containers/BasicTypeHashtable.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/containers/ObjectVector.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/containers/ObjectVector.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/containers/Properties.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/containers/Properties.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/containers/StringKeyHashtable.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/containers/StringKeyHashtable.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/containers/Vector.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/containers/Vector.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQBytesMessageShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQCallbackUtils.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQCallbacks.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQConnectionShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQConsumerShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQDestinationShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQLogUtilsShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQMessageShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQProducerShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQPropertiesShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQSSLShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQSessionShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQStatusShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQTextMessageShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQTypes.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/mqbasictypes.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqbytes-message.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqcallback-types-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqcallback-types.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqcallbacks-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqconnection-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqconnection-props.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqconnection.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqconsumer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqcrt.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqdestination.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqerrors.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqheader-props.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqlogutil-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqmessage.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqproducer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqproperties-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqproperties.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqsession.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqssl.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqstatus.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqtext-message.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqtypes-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqtypes.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqversion.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqxaswitch.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/shimUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/shimUtils.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/xa.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/xaswitch.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/xaswitch.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/debug/DebugUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/error/ErrorCodes.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/error/ErrorCodes.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/error/ErrorTrace.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/error/ErrorTrace.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/IMQDataInputStream.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/IMQDataInputStream.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/IMQDataOutputStream.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/IMQDataOutputStream.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/Packet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/Packet.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/PacketFlag.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/PacketFlag.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/PacketProperties.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/PacketProperties.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/PacketType.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/PacketType.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/PortMapperEntry.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/PortMapperEntry.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/PortMapperTable.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/PortMapperTable.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/SSLSocket.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/SSLSocket.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/SocketTest.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/SocketTest.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/Status.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/Status.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/SysMessageID.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/SysMessageID.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/TCPSocket.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/TCPSocket.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/net/IPAddress.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/net/IPAddress.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/serial/SerialDataInputStream.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/serial/SerialDataInputStream.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/serial/SerialDataOutputStream.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/serial/SerialDataOutputStream.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/serial/SerialHandleManager.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/serial/SerialHandleManager.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/serial/Serialize.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/serial/Serialize.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/LogUtils.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/Logger.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/util/Logger.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/MemAllocTest.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/util/MemAllocTest.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/PRTypesUtils.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/util/PRTypesUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/UtilityMacros.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/utf8.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/util/utf8.h" ex="false" tool="3" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Darwin" type="2">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>/opt/local/include/nss</pElem>
+            <pElem>/opt/local/include/nspr</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>LINUX</Elem>
+          </preprocessorList>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>/opt/local/include/nss</pElem>
+            <pElem>/opt/local/include/nspr</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>LINUX</Elem>
+          </preprocessorList>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+        <linkerTool>
+          <output>lib/libopenmqc.${CND_DLIB_EXT}</output>
+          <linkerAddLib>
+            <pElem>/opt/local/lib/nss</pElem>
+            <pElem>/opt/local/lib/nspr</pElem>
+          </linkerAddLib>
+          <commandlineTool>g++</commandlineTool>
+          <linkerLibItems>
+            <linkerLibLibItem>ssl3</linkerLibLibItem>
+            <linkerLibLibItem>smime3</linkerLibLibItem>
+            <linkerLibLibItem>nssutil3</linkerLibLibItem>
+            <linkerLibLibItem>nss3</linkerLibLibItem>
+            <linkerLibLibItem>plds4</linkerLibLibItem>
+            <linkerLibLibItem>plc4</linkerLibLibItem>
+            <linkerLibLibItem>nspr4</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <item path="src/auth/AuthenticationProtocolHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/basictypes/AllBasicTypes.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/BasicType.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/BasicType.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Boolean.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Boolean.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Byte.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Byte.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Double.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Double.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Float.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Float.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/HandledObject.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/HandledObject.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Integer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Integer.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Long.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Long.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Monitor.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Monitor.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Object.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Object.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Runnable.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/Short.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/Short.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/TypeEnum.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/basictypes/UTF8String.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/basictypes/UTF8String.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/AckMode.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/BytesMessage.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/BytesMessage.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/Connection.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/Connection.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/DestType.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/Destination.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/Destination.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/FlowControl.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/FlowControl.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/Message.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/Message.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/MessageConsumer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/MessageConsumer.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/MessageConsumerTable.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/MessageConsumerTable.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/MessageID.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/MessageID.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/MessageProducer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/MessageProducer.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/NSSInitCall.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/NSSInitCall.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/PingTimer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/PingTimer.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/PortMapperClient.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/PortMapperClient.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ProducerFlow.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/ProducerFlow.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ProtocolHandler.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/ProtocolHandler.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ReadChannel.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/ReadChannel.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ReadQTable.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/ReadQTable.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ReceiveMode.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/ReceiveQueue.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/ReceiveQueue.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/Session.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/Session.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/SessionMutex.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/SessionMutex.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/SessionQueueReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/SessionQueueReader.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/TextMessage.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/TextMessage.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/TransportProtocolHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/XASession.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/XASession.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/XIDObject.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/client/XIDObject.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/auth/JMQBasicAuthenticationHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/auth/JMQBasicAuthenticationHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/auth/JMQDigestAuthenticationHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/auth/JMQDigestAuthenticationHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/iMQConstants.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/client/protocol/SSLProtocolHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/protocol/SSLProtocolHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/protocol/StubProtocolHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/protocol/StubProtocolHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/client/protocol/TCPProtocolHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/client/protocol/TCPProtocolHandler.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/containers/BasicTypeHashtable.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/containers/BasicTypeHashtable.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/containers/ObjectVector.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/containers/ObjectVector.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/containers/Properties.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/containers/Properties.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/containers/StringKeyHashtable.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/containers/StringKeyHashtable.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/containers/Vector.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/containers/Vector.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQBytesMessageShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQCallbackUtils.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQCallbacks.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQConnectionShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQConsumerShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQDestinationShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQLogUtilsShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQMessageShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQProducerShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQPropertiesShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQSSLShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQSessionShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQStatusShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQTextMessageShim.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/iMQTypes.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/mqbasictypes.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqbytes-message.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqcallback-types-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqcallback-types.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqcallbacks-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqconnection-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqconnection-props.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqconnection.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqconsumer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqcrt.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqdestination.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqerrors.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqheader-props.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqlogutil-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqmessage.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqproducer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqproperties-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqproperties.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqsession.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqssl.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqstatus.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqtext-message.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqtypes-priv.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqtypes.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqversion.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/mqxaswitch.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/shimUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/shimUtils.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/xa.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/cshim/xaswitch.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/cshim/xaswitch.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/debug/DebugUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/error/ErrorCodes.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/error/ErrorCodes.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/error/ErrorTrace.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/error/ErrorTrace.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/IMQDataInputStream.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/IMQDataInputStream.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/IMQDataOutputStream.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/IMQDataOutputStream.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/Packet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/Packet.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/PacketFlag.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/PacketFlag.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/PacketProperties.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/PacketProperties.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/PacketType.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/PacketType.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/PortMapperEntry.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/PortMapperEntry.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/PortMapperTable.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/PortMapperTable.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/SSLSocket.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/SSLSocket.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/SocketTest.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/SocketTest.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/Status.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/Status.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/SysMessageID.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/SysMessageID.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/io/TCPSocket.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/io/TCPSocket.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/net/IPAddress.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/net/IPAddress.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/serial/SerialDataInputStream.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/serial/SerialDataInputStream.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/serial/SerialDataOutputStream.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/serial/SerialDataOutputStream.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/serial/SerialHandleManager.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/serial/SerialHandleManager.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/serial/Serialize.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/serial/Serialize.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/LogUtils.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/Logger.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/util/Logger.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/MemAllocTest.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/util/MemAllocTest.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/PRTypesUtils.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/util/PRTypesUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/UtilityMacros.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/util/utf8.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/util/utf8.h" ex="false" tool="3" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
