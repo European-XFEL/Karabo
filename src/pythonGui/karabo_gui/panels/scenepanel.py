@@ -14,7 +14,7 @@ import karabo_gui.icons as icons
 from karabo_gui.sceneview.tools.api import (
     BoxVSceneAction, BoxHSceneAction, CreateToolAction, GroupEntireSceneAction,
     GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
-    TextSceneTool, RectangleSceneTool, SceneLinkTool, SceneSelectionTool)
+    TextSceneTool, RectangleSceneTool, SceneLinkTool)
 from karabo_gui.toolbar import ToolBar
 
 
