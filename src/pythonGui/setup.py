@@ -110,6 +110,7 @@ if __name__ == '__main__':
 
     setup(entry_points={'console_scripts': [
                         'karabo-gui=karabo_gui.main:main',
+                        'scene-runner=karabo_gui.sceneview.runner:main',
                         ]},
           # Add an alias for 'build' so we can prepare data for Windows
           cmdclass={WINDOWS_BUILDER: distutils.command.build.build},
