@@ -162,9 +162,9 @@ class SceneView(QWidget):
 
         self.update()
 
-    def add_model(self, model):
-        """ Adds a new model to the scene model."""
-        self.scene_model.children.append(model)
+    def add_models(self, *models):
+        """ Adds new child models to the scene model."""
+        self.scene_model.children.extend(models)
 
     def remove_model(self, model):
         """ Removes the given ``model`` from the scene model."""
