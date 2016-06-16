@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 from PyQt4.QtGui import QBoxLayout
 from traits.api import Callable, Int
 
@@ -21,8 +23,16 @@ class CreateToolAction(BaseSceneAction):
         scene_view.set_tool(tool)
 
 
-class GroupSceneAction(BaseSceneAction):
-    """ Group without layout action"""
+class BaseLayoutAction(BaseSceneAction):
+    """ Base class for layout actions.
+
+    This contains the boilerplate that all layout actions have in common.
+    """
+
+    @abstractmethod
+    def create_layout(self, scene_view, models, selection_rect):
+        """ Implemented by derived classes to create and add a layout.
+        """
 
     def perform(self, scene_view):
         selection_model = scene_view.selection_model
@@ -30,76 +40,74 @@ class GroupSceneAction(BaseSceneAction):
         if len(selection_model) < 2:
             return
 
-        x, y, width, height = calc_bounding_rect(selection_model)
-        layout_model = FixedLayoutModel(x=x, y=y, width=width, height=height)
+        child_models = []
         for obj in selection_model:
             scene_view.remove_model(obj.model)
-            layout_model.children.append(obj.model)
-        scene_view.add_model(layout_model)
+            child_models.append(obj.model)
+
+        selection_rect = calc_bounding_rect(selection_model)
         selection_model.clear_selection()
 
+        self.create_layout(scene_view, child_models, selection_rect)
 
-class BoxSceneAction(BaseSceneAction):
+
+class BoxSceneAction(BaseLayoutAction):
+    """ A base class for actions which create a box layout
+    """
+    # What's the layout direction?
     direction = Int
 
-    def perform(self, scene_view):
-        """ Perform the box grouping. """
-        selection_model = scene_view.selection_model
-        # It does not make sense to create a layout for less than 2 items
-        if len(selection_model) < 2:
-            return
-
-        model = BoxLayoutModel()
-        model.direction = self.direction
-        selection_rect = calc_bounding_rect(selection_model)
-        model.x, model.y, model.width, model.height = selection_rect
-        for obj in selection_model:
-            scene_view.remove_model(obj.model)
-            model.children.append(obj.model)
+    def create_layout(self, scene_view, models, selection_rect):
+        x, y, width, height = selection_rect
+        model = BoxLayoutModel(x=x, y=y, width=width, height=height,
+                               children=models, direction=self.direction)
         scene_view.add_model(model)
-        selection_model.clear_selection()
 
 
 class BoxVSceneAction(BoxSceneAction):
-    """ Group vertically action"""
+    """ Group vertically action
+    """
     direction = QBoxLayout.TopToBottom
 
 
 class BoxHSceneAction(BoxSceneAction):
-    """ Group horizontally action"""
+    """ Group horizontally action
+    """
     direction = QBoxLayout.LeftToRight
 
 
-class GridSceneAction(BaseSceneAction):
-    """ Group in grid action"""
+class GridSceneAction(BaseLayoutAction):
+    """ Group in grid action
+    """
 
-    def perform(self, scene_view):
-        selection_model = scene_view.selection_model
-        # It does not make sense to create a layout for less than 2 items
-        if len(selection_model) < 2:
-            return
-
-        x, y, width, height = calc_bounding_rect(selection_model)
+    def create_layout(self, scene_view, models, selection_rect):
+        x, y, width, height = selection_rect
         layout_model = GridLayoutModel(x=x, y=y, width=width, height=height)
-        for row, obj in enumerate(selection_model):
-            model = obj.model
-            scene_view.remove_model(model)
-
+        for row, model in enumerate(models):
             model.layout_data = GridLayoutChildData(
                 row=row, col=0, rowspan=1, colspan=1)
             layout_model.children.append(model)
-
         scene_view.add_model(layout_model)
-        selection_model.clear_selection()
 
 
-class UngroupSceneAction(BaseSceneAction):
-    """ Ungroup action"""
-    def perform(self, scene_view):
-        """ Perform the ungrouping. """
+class GroupSceneAction(BaseLayoutAction):
+    """ Group without layout action
+    """
+
+    def create_layout(self, scene_view, models, selection_rect):
+        x, y, width, height = selection_rect
+        model = FixedLayoutModel(x=x, y=y, width=width, height=height,
+                                 children=models)
+        scene_view.add_model(model)
 
 
 class GroupEntireSceneAction(BaseSceneAction):
     """ Group entirely"""
     def perform(self, scene_view):
         """ Perform entire window grouping. """
+
+
+class UngroupSceneAction(BaseSceneAction):
+    """ Ungroup action"""
+    def perform(self, scene_view):
+        """ Perform the ungrouping. """
