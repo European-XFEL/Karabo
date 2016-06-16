@@ -135,6 +135,10 @@ class KaraboValue(Registry):
                 setattr(cls, name, wrap_function(attr))
 
     def getdoc(self):
+        """This is called by iPython/iKarabo to get the documentation
+
+        See :func:`IPython.core.oinspect.getdoc`
+        """
         return self.descriptor.description
 
     def __iter__(self):
