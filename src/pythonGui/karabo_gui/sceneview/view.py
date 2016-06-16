@@ -16,7 +16,7 @@ from .bases import BaseSceneTool
 from .builder import (create_object_from_model, fill_root_layout,
                       remove_object_from_layout)
 from .const import QT_CURSORS
-from .layouts import GroupLayout
+from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import SceneSelectionTool
 from .utils import save_painter_state
