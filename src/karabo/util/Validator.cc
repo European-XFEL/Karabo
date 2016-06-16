@@ -26,13 +26,8 @@ namespace karabo {
         }
         
         Validator::Validator(const Validator & other)
-        : m_injectDefaults(other.m_injectDefaults)
-        , m_allowUnrootedConfiguration(other.m_allowUnrootedConfiguration)
-        , m_allowAdditionalKeys(other.m_allowAdditionalKeys)
-        , m_allowMissingKeys(other.m_allowMissingKeys)
-        , m_injectTimestamps(other.m_injectTimestamps)
-        , m_hasReconfigurableParameter(other.m_hasReconfigurableParameter)
         {
+            setValidationRules(other.getValidationRules());
             boost::unique_lock<boost::shared_mutex> lock(other.m_rollingStatMutex);
             m_parameterRollingStats = other.m_parameterRollingStats;
         }
