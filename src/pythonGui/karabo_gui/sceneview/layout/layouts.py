@@ -55,6 +55,12 @@ class GroupLayout(BaseLayout, QLayout):
     def count(self):
         return len(self._children)
 
+    def maximumSize(self):
+        return self.sizeHint()
+
+    def minimumSize(self):
+        return self.sizeHint()
+
     def sizeHint(self):
         x, y, w, h = calc_bounding_rect(self._children)
         return QSize(w, h)
