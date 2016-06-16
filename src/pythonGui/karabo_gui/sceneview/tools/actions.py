@@ -48,21 +48,13 @@ class BoxSceneAction(BaseSceneAction):
 
 
 class BoxVSceneAction(BoxSceneAction):
-    direction = QBoxLayout.TopToBottom
-
     """ Group vertically action"""
-    def perform(self, scene_view):
-        """ Perform the vertical grouping. """
-        super(BoxVSceneAction, self).perform(scene_view)
+    direction = QBoxLayout.TopToBottom
 
 
 class BoxHSceneAction(BoxSceneAction):
-    direction = QBoxLayout.LeftToRight
-
     """ Group horizontally action"""
-    def perform(self, scene_view):
-        """ Perform the horizontal grouping. """
-        super(BoxHSceneAction, self).perform(scene_view)
+    direction = QBoxLayout.LeftToRight
 
 
 class GridSceneAction(BaseSceneAction):
