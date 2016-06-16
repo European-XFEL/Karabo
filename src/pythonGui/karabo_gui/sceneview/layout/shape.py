@@ -1,6 +1,6 @@
 from PyQt4.QtGui import QLayout, QLayoutItem
 
-from .utils import save_painter_state
+from karabo_gui.sceneview.utils import save_painter_state
 
 
 class _ShapeLayoutItemChild(QLayoutItem):
