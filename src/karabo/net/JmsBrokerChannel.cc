@@ -256,23 +256,33 @@ namespace karabo {
 
         MQStatus JmsBrokerChannel::consumeMessage(MQMessageHandle& messageHandle, const int timeout) {
             MQStatus status;
+            status.errorCode = MQ_NO_MESSAGE; // In case we directly jump out since m_isStopped == true.
 
             while (!m_isStopped) {
 
                 ensureExistenceOfConsumer();
 
-                //boost::mutex::scoped_lock lock(m_openMQMutex);
                 status = MQReceiveMessageWithTimeout(m_consumerHandle, timeout, &messageHandle);
                 if (MQStatusIsError(status) == MQ_FALSE)
                     break; // Success
-                if (MQGetStatusCode(status) == MQ_TIMEOUT_EXPIRED)
-                    break; // in this particular case the timeout is not the error
+
                 switch (MQGetStatusCode(status)) {
+                    case MQ_TIMEOUT_EXPIRED:
+                        // in this particular case the timeout is not an error
+                        break;
+                    case MQ_CONSUMER_DROPPED_MESSAGES:
+                    {
+                        // We have a valid message, but some message has been dropped.
+                        MQString statusString = MQGetStatusString(status);
+                        m_signalError(shared_from_this(), statusString);
+                        MQFreeString(statusString);
+                        status.errorCode = MQ_SUCCESS; // Message itself is fine.
+                        break;
+                    }
                     case MQ_STATUS_INVALID_HANDLE:
                     case MQ_BROKER_CONNECTION_CLOSED:
                     case MQ_SESSION_CLOSED:
                     case MQ_CONSUMER_CLOSED:
-                        //ensureExistenceOfConsumer();
                         continue; // repeat operation
                     default:
                     {
@@ -283,6 +293,7 @@ namespace karabo {
                         throw KARABO_OPENMQ_EXCEPTION(errorString);
                     }
                 }
+                break;
             }
             return status;
         }
