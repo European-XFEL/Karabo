@@ -14,7 +14,7 @@ import karabo_gui.scenemodel.tests as sm
 from karabo_gui.scenemodel.layouts import BoxLayoutModel
 from karabo_gui.scenemodel.shapes import LineModel
 from karabo_gui.scenemodel.simple_widgets import LabelModel
-from karabo_gui.sceneview.layouts import BoxLayout
+from karabo_gui.sceneview.layout.api import BoxLayout
 from karabo_gui.sceneview.shapes import LineShape
 from karabo_gui.sceneview.simple_widgets import LabelWidget
 
@@ -28,8 +28,8 @@ class TestLayouts(unittest.TestCase):
         '''Create the view'''
         self.app = QApplication(sys.argv)
 
-    def test_box_layouts(self):
-        '''Test the box layouts'''
+    def test_horizontal_box_layouts(self):
+        '''Test the horizontal box layout'''
         # Horizonal layout
         model = BoxLayoutModel()
         model.direction = QBoxLayout.LeftToRight
@@ -45,6 +45,8 @@ class TestLayouts(unittest.TestCase):
         self.assertEqual(boxLayout.count(), 1)
         self.assertIs(boxLayout.itemAt(0).widget(), label_widget)
 
+    def test_vertical_box_layout(self):
+        '''Test the vertical box layout'''
         # Vertical layout
         model = BoxLayoutModel()
         model.direction = QBoxLayout.TopToBottom
