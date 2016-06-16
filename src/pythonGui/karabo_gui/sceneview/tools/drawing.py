@@ -27,7 +27,7 @@ class TextSceneTool(BaseSceneTool):
         pos = event.pos()
         model.x = pos.x()
         model.y = pos.y()
-        scene_view.add_model(model)
+        scene_view.add_models(model)
         scene_view.set_tool(None)
 
 
@@ -65,7 +65,7 @@ class LineSceneTool(BaseSceneTool):
             model = LineModel(x1=self.line.x1(), y1=self.line.y1(),
                               x2=self.line.x2(), y2=self.line.y2(),
                               stroke='#000000')
-            scene_view.add_model(model)
+            scene_view.add_models(model)
             scene_view.set_tool(None)
 
 
@@ -104,7 +104,7 @@ class RectangleSceneTool(BaseSceneTool):
                                    height=self.rect.height(),
                                    width=self.rect.width(),
                                    stroke='#000000')
-            scene_view.add_model(model)
+            scene_view.add_models(model)
             scene_view.set_tool(None)
 
 
@@ -128,5 +128,5 @@ class SceneLinkTool(BaseSceneTool):
             model = SceneLinkModel(target=dialog.selectedScene,
                                    x=mouse_pos.x(), y=mouse_pos.y(),
                                    width=100, height=30)
-            scene_view.add_model(model)
+            scene_view.add_models(model)
             scene_view.set_tool(None)

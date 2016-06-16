@@ -4,7 +4,8 @@ from PyQt4.QtGui import QBoxLayout
 from traits.api import Callable, Int
 
 from karabo_gui.scenemodel.api import (
-    BoxLayoutModel, FixedLayoutModel, GridLayoutChildData, GridLayoutModel)
+    BaseLayoutModel, BoxLayoutModel, FixedLayoutModel,
+    GridLayoutChildData, GridLayoutModel)
 from karabo_gui.sceneview.bases import BaseSceneAction
 from karabo_gui.sceneview.utils import calc_bounding_rect
 
@@ -61,7 +62,7 @@ class BoxSceneAction(BaseLayoutAction):
         x, y, width, height = selection_rect
         model = BoxLayoutModel(x=x, y=y, width=width, height=height,
                                children=models, direction=self.direction)
-        scene_view.add_model(model)
+        scene_view.add_models(model)
 
 
 class BoxVSceneAction(BoxSceneAction):
@@ -87,7 +88,7 @@ class GridSceneAction(BaseLayoutAction):
             model.layout_data = GridLayoutChildData(
                 row=row, col=0, rowspan=1, colspan=1)
             layout_model.children.append(model)
-        scene_view.add_model(layout_model)
+        scene_view.add_models(layout_model)
 
 
 class GroupSceneAction(BaseLayoutAction):
@@ -98,7 +99,7 @@ class GroupSceneAction(BaseLayoutAction):
         x, y, width, height = selection_rect
         model = FixedLayoutModel(x=x, y=y, width=width, height=height,
                                  children=models)
-        scene_view.add_model(model)
+        scene_view.add_models(model)
 
 
 class GroupEntireSceneAction(BaseSceneAction):
@@ -108,6 +109,23 @@ class GroupEntireSceneAction(BaseSceneAction):
 
 
 class UngroupSceneAction(BaseSceneAction):
-    """ Ungroup action"""
+    """ Ungroup action
+    """
     def perform(self, scene_view):
-        """ Perform the ungrouping. """
+        selection_model = scene_view.selection_model
+
+        unparented_models = []
+        for obj in selection_model:
+            model = obj.model
+            if not isinstance(model, BaseLayoutModel):
+                continue
+
+            scene_view.remove_model(model)
+            unparented_models.extend(model.children)
+
+        # Clear the layout_data for all the now unparented models
+        for child in unparented_models:
+            child.layout_data = None
+
+        scene_view.add_models(*unparented_models)
+        selection_model.clear_selection()
