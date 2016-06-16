@@ -5,7 +5,7 @@
 #############################################################################
 
 from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QBoxLayout, QGridLayout, QLayout
+from PyQt4.QtGui import QBoxLayout, QGridLayout, QLayout, QWidgetItem
 
 from karabo_gui.sceneview.utils import calc_bounding_rect
 from .base import BaseLayout
@@ -58,6 +58,17 @@ class GroupLayout(BaseLayout, QLayout):
     def sizeHint(self):
         x, y, w, h = calc_bounding_rect(self._children)
         return QSize(w, h)
+
+    def setGeometry(self, rect):
+        # Translate all children by the amount our origin moved
+        offset = rect.topLeft() - self.geometry().topLeft()
+        for item in self:
+            if isinstance(item, QWidgetItem):
+                item.widget().translate(offset)
+            else:
+                item.translate(offset)
+
+        super(GroupLayout, self).setGeometry(rect)
 
 
 class BoxLayout(BaseLayout, QBoxLayout):
