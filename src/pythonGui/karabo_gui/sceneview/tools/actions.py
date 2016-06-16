@@ -1,7 +1,8 @@
 from PyQt4.QtGui import QBoxLayout
 from traits.api import Callable, Int
 
-from karabo_gui.scenemodel.layouts import BoxLayoutModel
+from karabo_gui.scenemodel.api import (
+    BoxLayoutModel, FixedLayoutModel, GridLayoutChildData, GridLayoutModel)
 from karabo_gui.sceneview.bases import BaseSceneAction
 from karabo_gui.sceneview.utils import calc_bounding_rect
 
@@ -22,8 +23,20 @@ class CreateToolAction(BaseSceneAction):
 
 class GroupSceneAction(BaseSceneAction):
     """ Group without layout action"""
+
     def perform(self, scene_view):
-        """ Perform the grouping. """
+        selection_model = scene_view.selection_model
+        # It does not make sense to create a layout for less than 2 items
+        if len(selection_model) < 2:
+            return
+
+        x, y, width, height = calc_bounding_rect(selection_model)
+        layout_model = FixedLayoutModel(x=x, y=y, width=width, height=height)
+        for obj in selection_model:
+            scene_view.remove_model(obj.model)
+            layout_model.children.append(obj.model)
+        scene_view.add_model(layout_model)
+        selection_model.clear_selection()
 
 
 class BoxSceneAction(BaseSceneAction):
@@ -59,8 +72,25 @@ class BoxHSceneAction(BoxSceneAction):
 
 class GridSceneAction(BaseSceneAction):
     """ Group in grid action"""
+
     def perform(self, scene_view):
-        """ Perform the grouping in grid. """
+        selection_model = scene_view.selection_model
+        # It does not make sense to create a layout for less than 2 items
+        if len(selection_model) < 2:
+            return
+
+        x, y, width, height = calc_bounding_rect(selection_model)
+        layout_model = GridLayoutModel(x=x, y=y, width=width, height=height)
+        for row, obj in enumerate(selection_model):
+            model = obj.model
+            scene_view.remove_model(model)
+
+            model.layout_data = GridLayoutChildData(
+                row=row, col=0, rowspan=1, colspan=1)
+            layout_model.children.append(model)
+
+        scene_view.add_model(layout_model)
+        selection_model.clear_selection()
 
 
 class UngroupSceneAction(BaseSceneAction):
