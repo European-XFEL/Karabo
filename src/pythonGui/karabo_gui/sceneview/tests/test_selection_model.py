@@ -45,7 +45,7 @@ class TestSelectionModel(unittest.TestCase):
         exp_rect = QRect(0, 0, 199, 199)
         sel_rect = self.selection_model.get_selection_bounds()
         self.assertEqual(exp_rect, sel_rect)
-        
+
         self.selection_model.deselect_object(line_shape)
         self.assertTrue(self.selection_model.has_selection())
 
