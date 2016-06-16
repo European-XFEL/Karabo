@@ -5,27 +5,24 @@
 #############################################################################
 
 import os.path as op
-import sys
-import unittest
-
-from PyQt4.QtGui import QApplication
 
 import karabo_gui.scenemodel.tests as sm
 from karabo_gui.scenemodel.const import SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
 from karabo_gui.scenemodel.model import SceneModel
 from karabo_gui.sceneview.view import SceneView
 from karabo_gui.sceneview.layout.api import GroupLayout
+from karabo_gui.testing import GuiTestCase
 
 DATA_DIR = op.join(op.abspath(op.dirname(sm.__file__)), 'data')
 INKSCAPE_DIR = op.join(DATA_DIR, 'inkscape')
 
 
-class TestSceneView(unittest.TestCase):
-
+class TestSceneView(GuiTestCase):
     '''Test the GUI scene view'''
+
     def setUp(self):
         '''Create the view'''
-        self.app = QApplication(sys.argv)
+        super(TestSceneView, self).setUp()
         self.view = SceneView()
 
     def test_loading_karabo_svg(self):
