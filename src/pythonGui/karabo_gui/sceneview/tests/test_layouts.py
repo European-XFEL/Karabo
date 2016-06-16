@@ -8,42 +8,52 @@ import os.path as op
 import sys
 import unittest
 
-from PyQt4.QtGui import QApplication, QBoxLayout, QWidget
+from PyQt4.QtGui import QApplication, QBoxLayout
 
 import karabo_gui.scenemodel.tests as sm
+from karabo_gui.scenemodel.layouts import BoxLayoutModel
 from karabo_gui.scenemodel.shapes import LineModel
-from karabo_gui.sceneview.layouts import BoxLayout, GroupLayout, GridLayout 
+from karabo_gui.scenemodel.simple_widgets import LabelModel
+from karabo_gui.sceneview.layouts import BoxLayout
 from karabo_gui.sceneview.shapes import LineShape
+from karabo_gui.sceneview.simple_widgets import LabelWidget
 
 DATA_DIR = op.join(op.abspath(op.dirname(sm.__file__)), 'data')
 
 
 class TestLayouts(unittest.TestCase):
-    
+
     '''Test the GUI scene view'''
     def setUp(self):
         '''Create the view'''
         self.app = QApplication(sys.argv)
 
-    def test_defaults(self):
-        '''Test the layouts'''
-        #groupLayout = GroupLayout()
-        
-        boxLayout = BoxLayout(QBoxLayout.LeftToRight)
+    def test_box_layouts(self):
+        '''Test the box layouts'''
+        # Horizonal layout
+        model = BoxLayoutModel()
+        model.direction = QBoxLayout.LeftToRight
+        boxLayout = BoxLayout(model, model.direction)
         self.assertEqual(boxLayout.count(), 0)
-        # Add widget to layout
-        w = QWidget()
-        boxLayout.add_widget(w, None)
+        # Add a child to layout model
+        label_model = LabelModel()
+        label_model.x = 0
+        label_model.y = 0
+        label_model.text = "foo"
+        label_widget = LabelWidget(label_model)
+        boxLayout._add_widget(label_widget)
         self.assertEqual(boxLayout.count(), 1)
-        self.assertIs(boxLayout.itemAt(0).widget(), w)
-    
-        self.assertEqual(len(boxLayout.shapes), 0)
-        model = LineModel(x1 = 0, y1 = 0, x2 = 1, y2 = 1)
+        self.assertIs(boxLayout.itemAt(0).widget(), label_widget)
+
+        # Vertical layout
+        model = BoxLayoutModel()
+        model.direction = QBoxLayout.TopToBottom
+        boxLayout = BoxLayout(model, model.direction)
+        self.assertEqual(boxLayout.count(), 0)
+
+        model = LineModel(x1=0, y1=0, x2=1, y2=1)
         # Add shape to layout
         lineShape = LineShape(model)
-        boxLayout.add_shape(lineShape)
-        self.assertEqual(len(boxLayout.shapes), 1)
-        self.assertIs(boxLayout.shapes[0], lineShape)
-        
-        #gridLayout = GridLayout()
-        
+        boxLayout._add_shape(lineShape)
+        self.assertEqual(boxLayout.count(), 1)
+        self.assertIs(boxLayout.itemAt(0).shape, lineShape)
