@@ -453,9 +453,13 @@ namespace karabo {
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
                 
-
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 karabo::util::Hash validated;
-                std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
+                std::pair<bool, std::string> result;
+                
+                
+                result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
+                
                 if (result.first == false) {
                     KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
                 }
@@ -470,12 +474,16 @@ namespace karabo {
                         emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_deviceId);
                         v.push_back(alarmConditions::fromString(desc.get<string>("type")));
                     }
+                    lock.release();
                     this->setAlarmCondition(alarmConditions::returnMostSignificant(v));
+                    lock.lock();
                 } else {
+                    lock.release();
                     this->setAlarmCondition(alarmConditions::NONE);
+                    lock.lock();
                 }
                 
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                
 
                 if (!validated.empty()) {
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
