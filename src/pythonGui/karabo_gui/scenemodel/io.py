@@ -4,10 +4,12 @@ from .const import NS_KARABO
 from .registry import get_reader, get_writer
 
 
-def read_scene(filename):
-    """ Read a scene from the file name `filename` and return it.
+def read_scene(filename_or_fileobj):
+    """ Read a scene and return it.
+    filename_or_fileobj is either a string containing a filename, or a
+    file-like object which can be read from (eg- a TextIO instance).
     """
-    tree = parse(filename)
+    tree = parse(filename_or_fileobj)
     root = tree.getroot()
 
     version = int(root.get(NS_KARABO + 'version', '1'))

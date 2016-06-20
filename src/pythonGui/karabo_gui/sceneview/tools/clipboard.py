@@ -1,6 +1,4 @@
-from contextlib import contextmanager
-import os
-from tempfile import mkstemp
+from io import StringIO
 
 from PyQt4.QtCore import QByteArray, QMimeData
 from PyQt4.QtGui import QApplication
@@ -31,25 +29,10 @@ def _read_models_from_clipboard():
         return []
 
     byte_array = mime_data.data(MIME_TYPE)
-    with _temp_file(byte_array.data().decode('utf-8')) as fn:
-        scene = read_scene(fn)
+    file_obj = StringIO(byte_array.data().decode('utf-8'))
+    scene = read_scene(file_obj)
 
     return scene.children
-
-
-@contextmanager
-def _temp_file(contents):
-    """ Create a temporary file in a context manager. Returns the path of the
-    file.
-    """
-    fd, filename = mkstemp()
-    try:
-        with open(filename, 'w') as fp:
-            fp.write(contents)
-        yield filename
-    finally:
-        os.close(fd)
-        os.unlink(filename)
 
 
 class SceneCopyAction(BaseSceneAction):
