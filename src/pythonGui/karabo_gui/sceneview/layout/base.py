@@ -73,13 +73,6 @@ class BaseLayout(object):
                      self.model.width, self.model.height)
         self.setGeometry(rect)
 
-        # Tell all the children to move
-        for item in self:
-            if isinstance(item, QWidgetItem):
-                item.widget().translate(offset)
-            else:
-                item.translate(offset)
-
     # --------------------------------------------
     # QLayout Virtual Functions
 
@@ -90,4 +83,5 @@ class BaseLayout(object):
     def setGeometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
+        self.invalidate()  # Important! Force a full layout recalculation
         super(BaseLayout, self).setGeometry(rect)
