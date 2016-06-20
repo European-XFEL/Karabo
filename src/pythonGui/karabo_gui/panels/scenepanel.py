@@ -15,7 +15,8 @@ from karabo_gui.sceneview.tools.api import (
     BoxVSceneAction, BoxHSceneAction, CreateToolAction, GroupEntireSceneAction,
     GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
     TextSceneTool, RectangleSceneTool, SceneLinkTool,
-    SceneCopyAction, SceneCutAction, ScenePasteAction, SceneSelectAllAction)
+    SceneCopyAction, SceneCutAction, SceneDeleteAction, ScenePasteAction,
+    SceneSelectAllAction)
 from karabo_gui.toolbar import ToolBar
 
 
@@ -161,6 +162,9 @@ class ScenePanel(Dockable, QScrollArea):
         actions.append(ScenePasteAction(icon=icons.editPaste,
                                         shortcut=QKeySequence.Paste,
                                         text="Paste", tooltip="Paste"))
+        actions.append(SceneDeleteAction(icon=icons.delete,
+                                         shortcut=QKeySequence.Delete,
+                                         text="Delete", tooltip="Delete"))
         return actions
 
     def _build_qaction(self, sv_action):
