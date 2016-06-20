@@ -203,10 +203,7 @@ class SignalSlotable(Configurable):
             yield from wait_for(
                 self.call(self.deviceId, "slotPing", self.deviceId,
                           self.__randPing, False), timeout=1)
-            try:
-                yield from self.slotKillDevice()
-            except CancelledError:
-                pass
+            yield from self.slotKillDevice()
             raise KaraboError('deviceId "{}" already in use'.
                               format(self.deviceId))
         except TimeoutError:
@@ -217,7 +214,12 @@ class SignalSlotable(Configurable):
 
     @coslot
     def slotKillDevice(self):
-        self.mainloop.cancel()
+        try:
+            self.mainloop.cancel()
+            yield from self.mainloop
+        except CancelledError:
+            # we cancel ourselves, that's the point of this method
+            pass
 
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
