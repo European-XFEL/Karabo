@@ -6,7 +6,7 @@ namespace karabo {
         #define DEFAULT_EVAL_INTERVAL 100
         
         
-        RollingWindowStatistics::RollingWindowStatistics(const unsigned int & evalInterval):
+        RollingWindowStatistics::RollingWindowStatistics(unsigned int evalInterval):
                 m_evalInterval(evalInterval), m_s(0.), m_s2(0.), m_nvals(0),
                 m_vals(evalInterval, 0){};
                 
@@ -28,7 +28,7 @@ namespace karabo {
         
         // note that this is not the most numerically stable algorithms out there
         // but should suffice in the rolling window sizes allowed
-        void RollingWindowStatistics::update(const double & v){
+        void RollingWindowStatistics::update(double v){
             long double vc;
             boost::unique_lock<boost::shared_mutex> lock(m_updateMutex);
             vc = m_vals[m_nvals % m_evalInterval];
