@@ -59,6 +59,19 @@ def test_rectangle_model():
     assert read_model.height == 10
 
 
+def test_default_fill():
+    SCENE_SVG = (
+        """<svg xmlns:svg="http://www.w3.org/2000/svg">"""
+        """<svg:rect style="stroke:#000000" x="397" y="84" height="10" width="40" />"""  # noqa
+        """</svg>"""
+    )
+    with temp_file(SCENE_SVG) as fn:
+        scene = read_scene(fn)
+    rect_model = scene.children[0]
+
+    assert rect_model.fill == 'black'
+
+
 def test_style_attributes_with_units():
     SCENE_SVG = (
         """<svg xmlns:krb="http://karabo.eu/scene" xmlns:svg="http://www.w3.org/2000/svg" height="768" krb:version="1" width="1024">"""  # noqa
