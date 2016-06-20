@@ -95,9 +95,10 @@ class SceneDeleteAction(BaseSceneAction):
         if len(selection_model) == 0:
             return
 
-        if (QMessageBox.question(None, "Really delete?", "Do you really want"
-                                 "to delete the items?", QMessageBox.Yes |
-                                 QMessageBox.No) == QMessageBox.No):
+        result = QMessageBox.question(None, "Really delete?", "Do you really"
+                                      "want to delete the items?",
+                                      QMessageBox.Yes | QMessageBox.No)
+        if result == QMessageBox.No:
             return
 
         for o in selection_model:
