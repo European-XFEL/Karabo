@@ -33,6 +33,10 @@ class ShapeLayoutItem(QLayout):
     # SceneView item interface
 
     @property
+    def shape(self):
+        return self._item.shape
+
+    @property
     def model(self):
         return self._item.shape.model
 
