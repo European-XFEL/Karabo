@@ -73,6 +73,10 @@ def _read_base_shape_data(element):
     traits = {name.replace('-', '_'): converters[name](d[name])
               for name in converters if name in d}
 
+    # Replicate behavior of old (pre-1.5) scene view
+    if 'fill' not in traits:
+        traits['fill'] = 'black'
+
     # Convert the dash array to a proper value
     if 'stroke_dasharray' in traits:
         dashes = traits.pop('stroke_dasharray')
