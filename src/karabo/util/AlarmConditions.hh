@@ -78,29 +78,6 @@ namespace karabo {
                 
             };
             
-            /*#define KRB_ALARM_NO_BASE(name, rank) class name ## _T: public BaseAlarmCondition{\
-                                            public:\
-                                            name ## _T() : BaseAlarmCondition(std::string(#name), rank){};\
-                                           };\
-                                           static boost::shared_ptr<name ## _T> name(new name ## _T);
-                                           
-                                           
-                                           
-            #define KRB_ALARM_BASE(name, rank) class name ## _T: public BaseAlarmCondition{\
-                                            public:\
-                                            name ## _T() : BaseAlarmCondition(std::string(#name), rank){};\
-                                            name ## _T(std::string bs): BaseAlarmCondition(bs, rank, boost::make_shared<name ## _T>()){};\
-                                           };\
-                                           static boost::shared_ptr<name ## _T> name(new name ## _T);
-                                     
-                                           
-            #define KRB_ALARM_FROM_BASE(name, base) class name ## _T: public base ## _T {\
-                                            public:\
-                                            name ## _T(): base ## _T (std::string(#name)){};\
-                                           };\
-                                           static boost::shared_ptr<name ## _T> name(new name ## _T);
-                                        
-            */
             
             extern const Pointer NONE;
             extern const Pointer WARN;
