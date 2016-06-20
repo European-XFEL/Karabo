@@ -196,6 +196,7 @@ class Tests(TestCase):
         gc.collect()
         self.assertIsNone(r())
         async(server.slotKillServer())
+        async(dc.slotKillDevice())
         loop.run_forever()
         loop.close()
 
@@ -258,12 +259,16 @@ class Tests(TestCase):
         self.assertIn("other", getDevices("tserver"))
         self.assertNotIn("other", getDevices("bserver"))
 
+        yield from shutdown("other")
+        self.assertNotIn("other", getDevices())
+
     def test_topology(self):
         loop = setEventLoop()
         dc = DeviceClient(dict(_deviceId_="dc"))
         dc.startInstance()
         task = loop.create_task(self.init_topo(dc), dc)
         loop.run_until_complete(task)
+        loop.run_until_complete(dc.slotKillDevice())
         loop.close()
 
 if __name__ == "__main__":

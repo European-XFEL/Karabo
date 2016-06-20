@@ -185,18 +185,28 @@ class Broker:
     def main(self, device):
         """This is the main loop of a device
 
-        A device is running if this coroutine is still running. If you
-        want to stop a device, cancel this coroutine. """
+        A device is running if this coroutine is still running.
+        Use `stop_tasks` to stop this main loop."""
         with ExitStack() as self.exitStack:
+            # this method should not keep a reference to the device
+            # while yielding, otherwise the device cannot be collected
             device = weakref.ref(device)
-            try:
-                yield from self.consume(device())
-            finally:
-                me = Task.current_task()
-                tasks = [t for t in self.tasks if t is not me]
-                for t in tasks:
-                    t.cancel()
-                yield from gather(*tasks, return_exceptions=True)
+            yield from self.consume(device())
+
+    @coroutine
+    def stop_tasks(self):
+        """Stop all currently running task
+
+        This marks the end of life of a device.
+
+        Note that the task this coroutine is called from, as an exception,
+        is not cancelled. That's the chicken-egg-problem.
+        """
+        me = Task.current_task()
+        tasks = [t for t in self.tasks if t is not me]
+        for t in tasks:
+            t.cancel()
+        yield from gather(*tasks, return_exceptions=True)
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)

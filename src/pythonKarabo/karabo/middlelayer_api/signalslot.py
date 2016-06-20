@@ -35,8 +35,6 @@ def coslot(f):
     def inner(device, message, args):
         try:
             device._ss.reply(message, (yield from f(device, *args)))
-        except CancelledError:
-            raise
         except Exception:
             logger = logging.getLogger(device.deviceId)
             logger.exception('exception in slot "{}" of device "{}"'.
@@ -198,15 +196,12 @@ class SignalSlotable(Configurable):
         Return a future which represents the Karabo event dispatcher.
         Once this future is done, the entire device is considered dead, and
         all other still running tasks should be cancelled as well."""
-        self.mainloop = async(self._ss.main(self))
+        async(self._ss.main(self))
         try:
             yield from wait_for(
                 self.call(self.deviceId, "slotPing", self.deviceId,
                           self.__randPing, False), timeout=1)
-            try:
-                yield from self.slotKillDevice()
-            except CancelledError:
-                pass
+            yield from self.slotKillDevice()
             raise KaraboError('deviceId "{}" already in use'.
                               format(self.deviceId))
         except TimeoutError:
@@ -217,7 +212,7 @@ class SignalSlotable(Configurable):
 
     @coslot
     def slotKillDevice(self):
-        self.mainloop.cancel()
+        yield from self._ss.stop_tasks()
 
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
