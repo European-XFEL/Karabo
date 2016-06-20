@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
-from PyQt4.QtGui import QIcon
-from traits.api import ABCHasStrictTraits, Bool, Instance, String
+from PyQt4.QtGui import QIcon, QKeySequence
+from traits.api import ABCHasStrictTraits, Bool, Instance, Int, String
 
 
 class BaseSceneAction(ABCHasStrictTraits):
@@ -13,8 +13,8 @@ class BaseSceneAction(ABCHasStrictTraits):
     text = String
     # The tooltip text shown when hovering over the action
     tooltip = String
-    # A keyboard shortcut for the action
-    shortcut = String
+    # A keyboard shortcut for the action (QKeySequence::StandardKey value)
+    shortcut = Int(QKeySequence.UnknownKey)
 
     @abstractmethod
     def perform(self, scene_view):
