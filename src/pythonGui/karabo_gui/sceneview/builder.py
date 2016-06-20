@@ -1,3 +1,5 @@
+from PyQt4.QtCore import QRect
+
 from karabo_gui.scenemodel.api import (
     BoxLayoutModel, FixedLayoutModel, GridLayoutModel, LabelModel, LineModel,
     PathModel, RectangleModel, SceneLinkModel, UnknownXMLDataModel
@@ -72,6 +74,7 @@ def create_object_from_model(layout, model, scene_view, object_dict):
         if is_layout(obj):
             # recurse
             fill_root_layout(obj, model, scene_view, object_dict)
+            obj.setGeometry(QRect(model.x, model.y, model.width, model.height))
 
 
 def fill_root_layout(layout, parent_model, scene_view, object_dict):
