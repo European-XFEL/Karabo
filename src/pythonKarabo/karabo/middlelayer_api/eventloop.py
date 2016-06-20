@@ -188,6 +188,8 @@ class Broker:
         A device is running if this coroutine is still running.
         Use `stop_tasks` to stop this main loop."""
         with ExitStack() as self.exitStack:
+            # this method should not keep a reference to the device
+            # while yielding, otherwise the device cannot be collected
             device = weakref.ref(device)
             yield from self.consume(device())
 
