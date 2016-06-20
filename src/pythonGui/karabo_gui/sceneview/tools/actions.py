@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from bisect import bisect
 
 from PyQt4.QtGui import QBoxLayout
 from traits.api import Callable, Int
@@ -31,7 +32,7 @@ class BaseLayoutAction(BaseSceneAction):
     """
 
     @abstractmethod
-    def create_layout(self, scene_view, models, selection_rect):
+    def create_layout(self, scene_view,  gui_objects, models, selection_rect):
         """ Implemented by derived classes to create and add a layout.
         """
 
@@ -62,7 +63,8 @@ class BaseLayoutAction(BaseSceneAction):
 
         child_models = [obj.model for obj in child_objects]
         selection_rect = calc_bounding_rect(selection_model)
-        self.create_layout(scene_view, child_models, selection_rect)
+        self.create_layout(scene_view, child_objects, child_models,
+                           selection_rect)
         selection_model.clear_selection()
 
 
@@ -72,7 +74,7 @@ class BoxSceneAction(BaseLayoutAction):
     # What's the layout direction?
     direction = Int
 
-    def create_layout(self, scene_view, models, selection_rect):
+    def create_layout(self, scene_view, gui_objects, models, selection_rect):
         x, y, width, height = selection_rect
         layout_model = BoxLayoutModel(x=x, y=y, width=width, height=height,
                                       children=models,
@@ -102,21 +104,51 @@ class GridSceneAction(BaseLayoutAction):
     """ Group in grid action
     """
 
-    def create_layout(self, scene_view, models, selection_rect):
+    def create_layout(self, scene_view, gui_objects, models, selection_rect):
         x, y, width, height = selection_rect
         layout_model = GridLayoutModel(x=x, y=y, width=width, height=height)
-        for row, model in enumerate(models):
-            model.layout_data = GridLayoutChildData(
-                row=row, col=0, rowspan=1, colspan=1)
-            layout_model.children.append(model)
+        layout_model.children = self._collect_models(gui_objects)
         scene_view.add_models(layout_model)
+
+    @staticmethod
+    def _collect_models(gui_objects):
+        """ Get a list of scene object models with the correct layout data
+        attached.
+        """
+        def _reduce(positions):
+            positions.sort()
+            i = 1
+            while i < len(positions):
+                if positions[i] - positions[i - 1] > 10:
+                    i += 1
+                else:
+                    del positions[i]
+            return positions
+
+        xs = _reduce([o.geometry().x() for o in gui_objects])
+        ys = _reduce([o.geometry().y() for o in gui_objects])
+
+        models = []
+        for obj in gui_objects:
+            rect = obj.geometry()
+            col = bisect(xs, rect.x())
+            row = bisect(ys, rect.y())
+            colspan = bisect(xs, rect.right()) - col + 1
+            rowspan = bisect(ys, rect.bottom()) - row + 1
+
+            model = obj.model
+            model.layout_data = GridLayoutChildData(row=row, col=col,
+                                                    rowspan=rowspan,
+                                                    colspan=colspan)
+            models.append(model)
+        return models
 
 
 class GroupSceneAction(BaseLayoutAction):
     """ Group without layout action
     """
 
-    def create_layout(self, scene_view, models, selection_rect):
+    def create_layout(self, scene_view, gui_objects, models, selection_rect):
         x, y, width, height = selection_rect
         model = FixedLayoutModel(x=x, y=y, width=width, height=height,
                                  children=models)
