@@ -10,8 +10,7 @@ import weakref
 from karabo.middlelayer_api.cli import connectDevice, DeviceClient
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
-    getDevice, instantiate, shutdown, DeviceClientBase, getDevices, getServers,
-    shutdownNoWait)
+    getDevice, instantiate, shutdown, DeviceClientBase, getDevices, getServers)
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.middlelayer_api.exceptions import KaraboError
@@ -260,8 +259,7 @@ class Tests(TestCase):
         self.assertIn("other", getDevices("tserver"))
         self.assertNotIn("other", getDevices("bserver"))
 
-        shutdownNoWait("other")
-        yield from sleep(0.1)
+        yield from shutdown("other")
         self.assertNotIn("other", getDevices())
 
     def test_topology(self):

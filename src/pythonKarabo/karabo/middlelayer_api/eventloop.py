@@ -192,11 +192,8 @@ class Broker:
             try:
                 yield from self.consume(device())
             finally:
-                me = Task.current_task()
-                tasks = [t for t in self.tasks if t is not me]
-                for t in tasks:
+                for t in self.tasks:
                     t.cancel()
-                yield from gather(*tasks, return_exceptions=True)
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
