@@ -196,7 +196,7 @@ class SignalSlotable(Configurable):
         Return a future which represents the Karabo event dispatcher.
         Once this future is done, the entire device is considered dead, and
         all other still running tasks should be cancelled as well."""
-        self.mainloop = async(self._ss.main(self))
+        async(self._ss.main(self))
         try:
             yield from wait_for(
                 self.call(self.deviceId, "slotPing", self.deviceId,
@@ -212,12 +212,7 @@ class SignalSlotable(Configurable):
 
     @coslot
     def slotKillDevice(self):
-        try:
-            self.mainloop.cancel()
-            yield from self.mainloop
-        except CancelledError:
-            # we cancel ourselves, that's the point of this method
-            pass
+        yield from self._ss.stop_tasks()
 
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
