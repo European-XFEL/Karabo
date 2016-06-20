@@ -26,8 +26,8 @@ namespace karabo {
             class BaseAlarmCondition : public boost::enable_shared_from_this<BaseAlarmCondition>{
               
             protected:
-                std::string conditionString;
-                unsigned int rank;
+                std::string m_conditionString;
+                unsigned int m_rank;
                
                 
                 
@@ -35,18 +35,13 @@ namespace karabo {
                 
                 
                 
-                BaseAlarmCondition() : conditionString("UNDEFINED"), rank(0) {
-                    
+                BaseAlarmCondition() : m_conditionString("UNDEFINED"), m_rank(0) {
+                };
+               
+                BaseAlarmCondition(std::string cs, unsigned int r) : m_conditionString(cs), m_rank(r){
                 };
                 
-                BaseAlarmCondition(std::string cs) : conditionString(cs), rank(0) {
-                    
-                };
-                BaseAlarmCondition(std::string cs, unsigned int r) : conditionString(cs), rank(r){
-                   
-                };
-                BaseAlarmCondition(std::string cs, Pointer b) : conditionString(cs), rank(b->rank), basetype(b){
-                    
+                BaseAlarmCondition(std::string cs, Pointer b) : m_conditionString(cs), m_rank(b->m_rank), basetype(b){
                 };
             
                 
@@ -54,11 +49,11 @@ namespace karabo {
                 Pointer basetype;
                 
                 const std::string & asString() const {
-                    return conditionString;
+                    return m_conditionString;
                 }
                 
                 Pointer returnMoreSignificant(Pointer other) const {
-                    if (other->rank > this->rank) {
+                    if (other->m_rank > this->m_rank) {
                         return other;
                     } else {
                         return shared_from_this();
@@ -66,12 +61,12 @@ namespace karabo {
                 }
                 
                 operator std::string() const {
-                    return this->conditionString;
+                    return this->m_conditionString;
                 }
                 
                 
                 bool isSimilar (const Pointer test) const {
-                    return test->rank == this->rank;
+                    return test->m_rank == this->m_rank;
                 }
                 
                 
@@ -93,39 +88,9 @@ namespace karabo {
             extern const Pointer INTERLOCK;
                                            
             
-            static Pointer returnMostSignificant(const std::vector<Pointer> & v){
-                if(v.size() == 0) return NONE;
-                Pointer s = v[0];
-                for(std::vector<Pointer>::const_iterator i = v.begin(); i != v.end(); i++){
-                    s = (*i)->returnMoreSignificant(s);
-                    if (s->isSimilar(INTERLOCK)) break; // can't go higher than this
-                }
-                if (s->basetype) {
-                    return s->basetype;
-                } else {
-                    return s;
-                }
-               
-            }
+            Pointer returnMostSignificant(const std::vector<Pointer> & v);
             
-           
-            
-            static Pointer fromString(const std::string & condition){
-                static std::map<std::string, Pointer > alarmFactory;
-                if (alarmFactory.empty()){
-                    #define KRB_ALARM_INSERT(alarmType) alarmFactory.insert(std::pair<std::string, Pointer >(std::string(#alarmType), alarmType));
-                    KRB_ALARM_INSERT(NONE)
-                    KRB_ALARM_INSERT(WARN)
-                    KRB_ALARM_INSERT(WARN_HIGH)
-                    KRB_ALARM_INSERT(WARN_LOW)
-                    KRB_ALARM_INSERT(ALARM)
-                    KRB_ALARM_INSERT(ALARM_LOW)
-                    KRB_ALARM_INSERT(ALARM_HIGH)
-                    KRB_ALARM_INSERT(INTERLOCK)
-                } 
-                return alarmFactory[condition];
-            }
-                
+            Pointer fromString(const std::string & condition);
             
         }
         
