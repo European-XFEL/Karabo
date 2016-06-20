@@ -1,7 +1,7 @@
 from io import StringIO
 
 from PyQt4.QtCore import QByteArray, QMimeData
-from PyQt4.QtGui import QApplication
+from PyQt4.QtGui import QApplication, QMessageBox
 
 from karabo_gui.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo_gui.sceneview.bases import BaseSceneAction
@@ -85,3 +85,22 @@ class SceneSelectAllAction(BaseSceneAction):
     """
     def perform(self, scene_view):
         scene_view.select_all()
+
+
+class SceneDeleteAction(BaseSceneAction):
+    """ Delete selected objects from the scene view.
+    """
+    def perform(self, scene_view):
+        selection_model = scene_view.selection_model
+        if len(selection_model) == 0:
+            return
+
+        result = QMessageBox.question(None, "Really delete?", "Do you really"
+                                      "want to delete the items?",
+                                      QMessageBox.Yes | QMessageBox.No)
+        if result == QMessageBox.No:
+            return
+
+        for o in selection_model:
+            scene_view.remove_model(o.model)
+        selection_model.clear_selection()
