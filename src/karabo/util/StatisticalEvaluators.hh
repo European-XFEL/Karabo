@@ -34,11 +34,11 @@ namespace karabo {
                 typedef boost::shared_ptr<RollingWindowStatistics> Pointer;
                 typedef boost::shared_ptr<const RollingWindowStatistics> ConstPointer;
                 
-                RollingWindowStatistics(const unsigned int & evalInterval);
+                RollingWindowStatistics(unsigned int evalInterval);
 
                 virtual ~RollingWindowStatistics();
                 
-                void update(const double & v);
+                void update(double v);
                 
                 long double getRollingWindowVariance() const;
                 
@@ -46,7 +46,7 @@ namespace karabo {
                 
         private:
             
-                RollingWindowStatistics(const RollingWindowStatistics & other){}; //copy is protected
+                RollingWindowStatistics(const RollingWindowStatistics & other); //copy is protected
                 
                 
         };
