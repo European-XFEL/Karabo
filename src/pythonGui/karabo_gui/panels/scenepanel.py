@@ -6,15 +6,16 @@
 from functools import partial
 
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt4.QtGui import (QAction, QMenu, QPalette, QScrollArea, QSizePolicy,
-                         QWidget)
+from PyQt4.QtGui import (QAction, QKeySequence, QMenu, QPalette, QScrollArea,
+                         QSizePolicy, QWidget)
 
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
 from karabo_gui.sceneview.tools.api import (
     BoxVSceneAction, BoxHSceneAction, CreateToolAction, GroupEntireSceneAction,
     GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
-    TextSceneTool, RectangleSceneTool, SceneLinkTool)
+    TextSceneTool, RectangleSceneTool, SceneLinkTool,
+    SceneCopyAction, SceneCutAction, ScenePasteAction, SceneSelectAllAction)
 from karabo_gui.toolbar import ToolBar
 
 
@@ -45,25 +46,26 @@ class ScenePanel(Dockable, QScrollArea):
 
         self.qactions = []
         tool_actions = self.create_tool_actions()
-        for tool_action in tool_actions:
-            q_action = QAction(tool_action.icon, tool_action.text, self)
-            q_action.setToolTip(tool_action.text)
-            q_action.setStatusTip(tool_action.tooltip)
-            q_action.triggered.connect(partial(tool_action.perform,
-                                               self.scene_view))
-            self.qactions.append(q_action)
+        tool_qactions = [self._build_qaction(a) for a in tool_actions]
+        self.qactions.extend(tool_qactions)
 
-        self.group_action = QAction(icons.group, "Group", self)
+        self.qactions.append(self._build_separator())
+
         menu = QMenu()
         group_actions = self.create_group_tool_actions()
         for action in group_actions:
-            q_action = QAction(action.icon, action.text, self)
-            q_action.setToolTip(action.text)
-            q_action.setStatusTip(action.tooltip)
-            q_action.triggered.connect(partial(action.perform,
-                                               self.scene_view))
+            q_action = self._build_qaction(action)
             menu.addAction(q_action)
-        self.group_action.setMenu(menu)
+        group_action = QAction(icons.group, "Group", self)
+        group_action.setMenu(menu)
+        self.qactions.append(group_action)
+
+        self.qactions.append(self._build_separator())
+
+        clipboard_actions = self.create_clipboard_actions()
+        clipboard_qactions = [self._build_qaction(a)
+                              for a in clipboard_actions]
+        self.qactions.extend(clipboard_qactions)
 
     def setupToolBars(self, standardToolBar, parent):
         standardToolBar.addAction(self.ac_design_mode)
@@ -75,11 +77,8 @@ class ScenePanel(Dockable, QScrollArea):
         tool_bar.setFocusPolicy(Qt.StrongFocus)
 
         tool_bar.addSeparator()
-
         for action in self.qactions:
             tool_bar.addAction(action)
-
-        tool_bar.addAction(self.group_action)
 
         self.drawing_tool_bar = tool_bar
 
@@ -146,3 +145,34 @@ class ScenePanel(Dockable, QScrollArea):
                                               text="Group Entire Window",
                                               tooltip="Group Entire Window"))
         return actions
+
+    def create_clipboard_actions(self):
+        actions = []
+        actions.append(SceneSelectAllAction(icon=icons.selectAll,
+                                            shortcut=QKeySequence.SelectAll,
+                                            text="Select All",
+                                            tooltip="Select All"))
+        actions.append(SceneCutAction(icon=icons.editCut,
+                                      shortcut=QKeySequence.Cut,
+                                      text="Cut", tooltip="Cut"))
+        actions.append(SceneCopyAction(icon=icons.editCopy,
+                                       shortcut=QKeySequence.Copy,
+                                       text="Copy", tooltip="Copy"))
+        actions.append(ScenePasteAction(icon=icons.editPaste,
+                                        shortcut=QKeySequence.Paste,
+                                        text="Paste", tooltip="Paste"))
+        return actions
+
+    def _build_qaction(self, sv_action):
+        q_action = QAction(sv_action.icon, sv_action.text, self)
+        q_action.setToolTip(sv_action.text)
+        q_action.setStatusTip(sv_action.tooltip)
+        q_action.triggered.connect(partial(sv_action.perform, self.scene_view))
+        if sv_action.shortcut != QKeySequence.UnknownKey:
+            q_action.setShortcut(QKeySequence(sv_action.shortcut))
+        return q_action
+
+    def _build_separator(self):
+        q_action = QAction(self)
+        q_action.setSeparator(True)
+        return q_action
