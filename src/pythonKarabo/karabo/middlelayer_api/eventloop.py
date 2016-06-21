@@ -367,11 +367,11 @@ class EventLoop(SelectorEventLoop):
         return task
 
     @coroutine
-    def start_thread(self, f, *args):
+    def start_thread(self, f, *args, **kwargs):
         def inner():
             set_event_loop(loop)
             try:
-                return f(*args)
+                return f(*args, **kwargs)
             finally:
                 set_event_loop(None)
         loop = NoEventLoop(self.instance())
