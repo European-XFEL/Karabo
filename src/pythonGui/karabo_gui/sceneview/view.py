@@ -13,8 +13,9 @@ from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
 from karabo_gui.scenemodel.api import (read_scene, FixedLayoutModel,
                                        SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
-from .builder import (create_object_from_model, fill_root_layout,
-                      remove_object_from_layout)
+from .builder import (bring_object_to_front, create_object_from_model,
+                      fill_root_layout, remove_object_from_layout,
+                      send_object_to_back)
 from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
@@ -172,6 +173,13 @@ class SceneView(QWidget):
 
         self.update()
 
+    def prepend_models(self, *models):
+        """ Prepends the new child models to the scene model."""
+        self.scene_model.children[0:0] = models
+
+    def clear_models(self):
+        self.scene_model.children = []
+
     def add_models(self, *models):
         """ Adds new child models to the scene model."""
         self.scene_model.children.extend(models)
@@ -179,6 +187,33 @@ class SceneView(QWidget):
     def remove_model(self, model):
         """ Removes the given ``model`` from the scene model."""
         self.scene_model.children.remove(model)
+
+    def bringToFront(self, model):
+        """ The given ``model`` is moved to the end of the list."""
+        # Remove model
+        self.remove_model(model)
+        # Add model to end
+        self.add_models(model)
+
+        obj = self._scene_obj_cache.get(model)
+        if obj is not None:
+            bring_object_to_front(obj)
+
+    def sendToBack(self, model):
+        """ The given ``model`` is moved to the beginning of the list."""
+        children = self.scene_model.children
+        # Remove model from list
+        children.remove(model)
+        # Prepend model to list
+        self.prepend_models(model)
+        # Remove all other models from list
+        self.clear_models()
+        # Add rearranged list
+        self.add_models(*children)
+
+        obj = self._scene_obj_cache.get(model)
+        if obj is not None:
+            send_object_to_back(obj)
 
     # ----------------------------
     # Private methods (yes, I know... It's just a convention)
