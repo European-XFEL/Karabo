@@ -209,7 +209,7 @@ namespace karabo {
                         .description("The current alarm condition of the device."
                                      "Evaluates to the highest condition on any"
                                      " property if not set manually.")
-                        .readOnly().initialValue(alarmConditions::NONE->asString())
+                        .readOnly().initialValue(AlarmCondition::NONE.asString())
                         .commit();
 
                 NODE_ELEMENT(expected).key("performanceStatistics")
@@ -467,19 +467,19 @@ namespace karabo {
                 // Check for parameters being in a bad condition
                 if (m_validatorIntern.hasParametersInWarnOrAlarm()) {
                     const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
-                    std::vector<alarmConditions::Pointer> v;
+                    std::vector<AlarmCondition> v;
                     for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                         const Hash& desc = it->getValue<Hash>();
                         KARABO_LOG_WARN << desc.get<string>("type")<<":"<< desc.get<string>("message");
                         emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_deviceId);
-                        v.push_back(alarmConditions::fromString(desc.get<string>("type")));
+                        v.push_back(AlarmCondition::fromString(desc.get<string>("type")));
                     }
                     lock.release();
-                    this->setAlarmCondition(alarmConditions::returnMostSignificant(v));
+                    this->setAlarmCondition(AlarmCondition::returnMostSignificant(v));
                     lock.lock();
                 } else {
                     lock.release();
-                    this->setAlarmCondition(alarmConditions::NONE);
+                    this->setAlarmCondition(AlarmCondition::NONE);
                     lock.lock();
                 }
                 
@@ -884,17 +884,17 @@ namespace karabo {
                 call("", command, a1, a2, a3, a4);
             }
             
-            karabo::util::alarmConditions::Pointer getAlarmCondition() const {
-                return karabo::util::alarmConditions::fromString(this->get<std::string>("alarmCondition"));
+            const karabo::util::AlarmCondition & getAlarmCondition() const {
+                return karabo::util::AlarmCondition::fromString(this->get<std::string>("alarmCondition"));
             }
             
-            void setAlarmCondition(const karabo::util::alarmConditions::Pointer condition, bool needsAcknowledgement = false){
-                this->setNoValidate("alarmCondition", condition->asString());
+            void setAlarmCondition(const karabo::util::AlarmCondition & condition, bool needsAcknowledgement = false){
+                this->setNoValidate("alarmCondition", condition.asString());
             }
             
-            karabo::util::alarmConditions::Pointer getAlarmCondition(const std::string & key, const std::string & sep = ".") const {
+            const karabo::util::AlarmCondition & getAlarmCondition(const std::string & key, const std::string & sep = ".") const {
                 const std::string & propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep);
-                return karabo::util::alarmConditions::fromString(propertyCondition);
+                return karabo::util::AlarmCondition::fromString(propertyCondition);
             }
             
             bool hasRollingStatistics(const std::string & path) const {

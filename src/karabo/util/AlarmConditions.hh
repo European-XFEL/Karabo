@@ -17,82 +17,85 @@
 
 namespace karabo {
     namespace util {
-        namespace alarmConditions {
+        
             
-            class BaseAlarmCondition;
-            
-            typedef boost::shared_ptr<const BaseAlarmCondition> Pointer;
+        class AlarmCondition;
 
-            class BaseAlarmCondition : public boost::enable_shared_from_this<BaseAlarmCondition>{
-              
-            protected:
-                std::string m_conditionString;
-                unsigned int m_rank;
-               
-                
-                
-            public:
-                
-                
-                
-                BaseAlarmCondition() : m_conditionString("UNDEFINED"), m_rank(0) {
-                };
-               
-                BaseAlarmCondition(std::string cs, unsigned int r) : m_conditionString(cs), m_rank(r){
-                };
-                
-                BaseAlarmCondition(std::string cs, Pointer b) : m_conditionString(cs), m_rank(b->m_rank), basetype(b){
-                };
+        class AlarmCondition : public boost::enable_shared_from_this<AlarmCondition>{
+
+        public:
+            static const AlarmCondition & NONE;
+            static const AlarmCondition & WARN;
+            static const AlarmCondition & WARN_LOW;
+            static const AlarmCondition & WARN_HIGH;
+            static const AlarmCondition & WARN_VARIANCE_LOW;
+            static const AlarmCondition & WARN_VARIANCE_HIGH;
+            static const AlarmCondition & ALARM;
+            static const AlarmCondition & ALARM_LOW;
+            static const AlarmCondition & ALARM_HIGH;
+            static const AlarmCondition & ALARM_VARIANCE_LOW;
+            static const AlarmCondition & ALARM_VARIANCE_HIGH;
+            static const AlarmCondition & INTERLOCK;
+
+            /**
+             * Returns the most significant alarm condition out of a list of conditions
+             * @param v: the list of alarm conditions
+             * @return the most significant condition in the list
+             */
+            static AlarmCondition returnMostSignificant(const std::vector<AlarmCondition> & v);
+
+            /**
+             * Returns an alarm condition object matching to the stringified condition
+             * @param condition: a known alarm condition
+             * @return a reference to an  alarm condition object
+             */
+            static const AlarmCondition & fromString(const std::string & condition);
+
+            /**
+             * Returns a stringified version of the alarm condition
+             * @return 
+             */
+            const std::string & asString() const;
+
+            /**
+             * Allows for direct assignment of conditions to strings
+             * @return 
+             */
+            operator std::string() const;
+
+            /**
+             * Tests whether two alarm conditions are similar, e.g. are subsets of the same basic condition
+             * @param test: the condition to test similarity against
+             * @return true if the conditions are subsets of the same base; false otherwise.
+             */
+            bool isSimilar (const AlarmCondition & test) const;
+
+        private:
+
+            //constructors are all private. Users should not need
+            //to construct alarm conditions, but use the pre-constructed ones.
+
+            AlarmCondition();
+
+            AlarmCondition(std::string cs, unsigned int r);
+
+            AlarmCondition(std::string cs, const AlarmCondition & b);
+
+            boost::shared_ptr<const AlarmCondition> getBase() const;
+
+            const AlarmCondition & returnMoreSignificant(const AlarmCondition & other) const;
+
+        
+            std::string m_conditionString;
+            unsigned int m_rank;
+            boost::shared_ptr<const AlarmCondition> m_base;
+            static std::map<std::string, const AlarmCondition & > m_alarmFactory;
+
+
+        };
             
-                
-                
-                Pointer basetype;
-                
-                const std::string & asString() const {
-                    return m_conditionString;
-                }
-                
-                Pointer returnMoreSignificant(Pointer other) const {
-                    if (other->m_rank > this->m_rank) {
-                        return other;
-                    } else {
-                        return shared_from_this();
-                    }
-                }
-                
-                operator std::string() const {
-                    return this->m_conditionString;
-                }
-                
-                
-                bool isSimilar (const Pointer test) const {
-                    return test->m_rank == this->m_rank;
-                }
-                
-                
-                
-            };
             
-            
-            extern const Pointer NONE;
-            extern const Pointer WARN;
-            extern const Pointer WARN_LOW;
-            extern const Pointer WARN_HIGH;
-            extern const Pointer WARN_VARIANCE_LOW;
-            extern const Pointer WARN_VARIANCE_HIGH;
-            extern const Pointer ALARM;
-            extern const Pointer ALARM_LOW;
-            extern const Pointer ALARM_HIGH;
-            extern const Pointer ALARM_VARIANCE_LOW;
-            extern const Pointer ALARM_VARIANCE_HIGH;
-            extern const Pointer INTERLOCK;
-                                           
-            
-            Pointer returnMostSignificant(const std::vector<Pointer> & v);
-            
-            Pointer fromString(const std::string & condition);
-            
-        }
+       
         
     }
     
