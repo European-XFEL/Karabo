@@ -195,8 +195,8 @@ class SceneView(QWidget):
 
     def send_to_back(self, model):
         """ The given ``model`` is moved to the beginning of the list."""
-        # Copy list and clear current model list to only trigger traits
-        # notification when list is set at the end
+        # Copy list to trigger traits notification only once when its set at
+        # the end
         children = list(self.scene_model.children)
         # Clean list to redraw all models in correct order
         del self.scene_model.children[:]
@@ -239,7 +239,6 @@ class SceneView(QWidget):
 
     def _model_modified(self, event):
         """ The scene model got modified."""
-        print("model_modified", len(event.removed), len(event.added))
         for model in event.removed:
             obj = self._scene_obj_cache.get(model)
             if obj is not None:
