@@ -27,28 +27,28 @@ void AlarmCondition_Test::tearDown() {
 }
 
 void AlarmCondition_Test::testStringAssignmentRoundTrip() {
-    karabo::util::alarmConditions::Pointer condition = karabo::util::alarmConditions::fromString("WARN");
-    std::string conditionString = *condition;
+    karabo::util::AlarmCondition condition = karabo::util::AlarmCondition::fromString("WARN");
+    std::string conditionString = condition;
     CPPUNIT_ASSERT(conditionString == "WARN");
-    CPPUNIT_ASSERT(condition->asString() == "WARN");
+    CPPUNIT_ASSERT(condition.asString() == "WARN");
 }
 
 void AlarmCondition_Test::testSignificanceEvaluation() {
-    std::vector<karabo::util::alarmConditions::Pointer> v;
-    karabo::util::alarmConditions::Pointer ms = karabo::util::alarmConditions::returnMostSignificant(v);
-    CPPUNIT_ASSERT(ms->isSimilar(karabo::util::alarmConditions::NONE));
+    std::vector<karabo::util::AlarmCondition> v;
+    karabo::util::AlarmCondition ms = karabo::util::AlarmCondition::returnMostSignificant(v);
+    CPPUNIT_ASSERT(ms.isSimilar(karabo::util::AlarmCondition::NONE));
     
-    v.push_back(karabo::util::alarmConditions::WARN);
-    v.push_back(karabo::util::alarmConditions::ALARM_HIGH);
-    v.push_back(karabo::util::alarmConditions::INTERLOCK);
-    ms = karabo::util::alarmConditions::returnMostSignificant(v);
-    CPPUNIT_ASSERT(ms->isSimilar(karabo::util::alarmConditions::INTERLOCK));
+    v.push_back(karabo::util::AlarmCondition::WARN);
+    v.push_back(karabo::util::AlarmCondition::ALARM_HIGH);
+    v.push_back(karabo::util::AlarmCondition::INTERLOCK);
+    ms = karabo::util::AlarmCondition::returnMostSignificant(v);
+    CPPUNIT_ASSERT(ms.isSimilar(karabo::util::AlarmCondition::INTERLOCK));
     
     
     v.pop_back();
-    v.push_back(karabo::util::alarmConditions::WARN);
-    ms = karabo::util::alarmConditions::returnMostSignificant(v);
-    CPPUNIT_ASSERT(ms->isSimilar(karabo::util::alarmConditions::ALARM));
+    v.push_back(karabo::util::AlarmCondition::WARN);
+    ms = karabo::util::AlarmCondition::returnMostSignificant(v);
+    CPPUNIT_ASSERT(ms.isSimilar(karabo::util::AlarmCondition::ALARM));
     
 }
 
