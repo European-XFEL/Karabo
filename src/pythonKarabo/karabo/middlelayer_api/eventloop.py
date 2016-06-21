@@ -507,10 +507,10 @@ class EventLoop(SelectorEventLoop):
     global_loop = None
 
     def __init__(self, topic=None):
+        super().__init__()
         if EventLoop.global_loop is not None:
             raise RuntimeError("there can only be one Karabo event loop")
         EventLoop.global_loop = self
-        super().__init__()
         if topic is not None:
             self.topic = topic
         elif "KARABO_BROKER_TOPIC" in os.environ:
