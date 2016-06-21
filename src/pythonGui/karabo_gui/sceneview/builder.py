@@ -87,6 +87,16 @@ def fill_root_layout(layout, parent_model, scene_view, object_dict):
         create_object_from_model(layout, child_model, scene_view, object_dict)
 
 
+def bring_object_to_front(scene_obj):
+    if is_widget(scene_obj):
+        scene_obj.raise_()
+
+
+def send_object_to_back(scene_obj):
+    if is_widget(scene_obj):
+        scene_obj.lower()
+
+
 def is_layout(scene_obj):
     """Returns True if `scene_obj` is a layout."""
     return isinstance(scene_obj, _LAYOUT_CLASSES)

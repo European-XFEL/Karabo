@@ -14,9 +14,9 @@ import karabo_gui.icons as icons
 from karabo_gui.sceneview.tools.api import (
     BoxVSceneAction, BoxHSceneAction, CreateToolAction, GroupEntireSceneAction,
     GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
-    TextSceneTool, RectangleSceneTool, SceneLinkTool,
-    SceneCopyAction, SceneCutAction, SceneDeleteAction, ScenePasteAction,
-    SceneSelectAllAction)
+    TextSceneTool, RectangleSceneTool, SceneBringToFrontAction,
+    SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneLinkTool,
+    ScenePasteAction, SceneSelectAllAction, SceneSendToBackAction)
 from karabo_gui.toolbar import ToolBar
 
 
@@ -67,6 +67,11 @@ class ScenePanel(Dockable, QScrollArea):
         clipboard_qactions = [self._build_qaction(a)
                               for a in clipboard_actions]
         self.qactions.extend(clipboard_qactions)
+
+        self.qactions.append(self._build_separator())
+        order_actions = self.create_order_actions()
+        order_qactions = [self._build_qaction(a) for a in order_actions]
+        self.qactions.extend(order_qactions)
 
     def setupToolBars(self, standardToolBar, parent):
         standardToolBar.addAction(self.ac_design_mode)
@@ -165,6 +170,16 @@ class ScenePanel(Dockable, QScrollArea):
         actions.append(SceneDeleteAction(icon=icons.delete,
                                          shortcut=QKeySequence.Delete,
                                          text="Delete", tooltip="Delete"))
+        return actions
+
+    def create_order_actions(self):
+        actions = []
+        actions.append(SceneBringToFrontAction(icon=icons.bringToFront,
+                                               text="Bring to Front",
+                                               tooltip="Bring to Front"))
+        actions.append(SceneSendToBackAction(icon=icons.sendToBack,
+                                             text="Send to Back",
+                                             tooltip="Send to Back"))
         return actions
 
     def _build_qaction(self, sv_action):
