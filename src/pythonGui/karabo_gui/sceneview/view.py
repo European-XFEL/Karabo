@@ -173,13 +173,6 @@ class SceneView(QWidget):
 
         self.update()
 
-    def prepend_models(self, *models):
-        """ Prepends the new child models to the scene model."""
-        self.scene_model.children[0:0] = models
-
-    def clear_models(self):
-        self.scene_model.children = []
-
     def add_models(self, *models):
         """ Adds new child models to the scene model."""
         self.scene_model.children.extend(models)
@@ -188,32 +181,30 @@ class SceneView(QWidget):
         """ Removes the given ``model`` from the scene model."""
         self.scene_model.children.remove(model)
 
-    def bringToFront(self, model):
+    def bring_to_front(self, model):
         """ The given ``model`` is moved to the end of the list."""
         # Remove model
         self.remove_model(model)
         # Add model to end
         self.add_models(model)
 
-        obj = self._scene_obj_cache.get(model)
-        if obj is not None:
-            bring_object_to_front(obj)
+        scene_obj = self._scene_obj_cache.get(model)
+        if scene_obj is not None:
+            # In case of layouts or widgets
+            bring_object_to_front(scene_obj)
 
-    def sendToBack(self, model):
+    def send_to_back(self, model):
         """ The given ``model`` is moved to the beginning of the list."""
-        children = self.scene_model.children
-        # Remove model from list
+        children = list(self.scene_model.children)
+        del self.scene_model.children[:]
         children.remove(model)
-        # Prepend model to list
-        self.prepend_models(model)
-        # Remove all other models from list
-        self.clear_models()
-        # Add rearranged list
-        self.add_models(*children)
+        children.insert(0, model)
+        self.scene_model.children.extend(children)
 
-        obj = self._scene_obj_cache.get(model)
-        if obj is not None:
-            send_object_to_back(obj)
+        scene_obj = self._scene_obj_cache.get(model)
+        if scene_obj is not None:
+            # In case of layouts or widgets
+            send_object_to_back(scene_obj)
 
     # ----------------------------
     # Private methods (yes, I know... It's just a convention)
