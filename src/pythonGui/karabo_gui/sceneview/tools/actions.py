@@ -160,7 +160,7 @@ class SceneBringToFrontAction(BaseSceneAction):
             return
 
         for o in selection_model:
-            scene_view.bringToFront(o.model)
+            scene_view.bring_to_front(o.model)
         scene_view.update()
 
 
@@ -172,5 +172,5 @@ class SceneSendToBackAction(BaseSceneAction):
             return
 
         for o in selection_model:
-            scene_view.sendToBack(o.model)
+            scene_view.send_to_back(o.model)
         scene_view.update()

@@ -87,14 +87,32 @@ def fill_root_layout(layout, parent_model, scene_view, object_dict):
         create_object_from_model(layout, child_model, scene_view, object_dict)
 
 
-def bring_object_to_front(scene_obj):
-    if is_widget(scene_obj):
-        scene_obj.raise_()
+def bring_object_to_front(obj):
+    if is_widget(obj):
+        obj.raise_()
+    elif is_layout(obj):
+        for child in obj:
+            layout = child.layout()
+            if layout is not None:
+                bring_object_to_front(layout)
+                continue
+            widget = child.widget()
+            if widget is not None:
+                bring_object_to_front(widget)
 
 
-def send_object_to_back(scene_obj):
-    if is_widget(scene_obj):
-        scene_obj.lower()
+def send_object_to_back(obj):
+    if is_widget(obj):
+        obj.lower()
+    elif is_layout(obj):
+        for child in obj:
+            layout = child.layout()
+            if layout is not None:
+                send_object_to_back(layout)
+                continue
+            widget = child.widget()
+            if widget is not None:
+                send_object_to_back(widget)
 
 
 def is_layout(scene_obj):
