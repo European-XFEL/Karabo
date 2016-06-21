@@ -414,5 +414,6 @@ class EventLoop(SelectorEventLoop):
         self._scheduled.clear()
         while self._ready:
             self._run_once()
-        self.connection.close()
+        if self.connection is not None:
+            self.connection.close()
         super().close()
