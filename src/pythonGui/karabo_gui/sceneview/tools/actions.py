@@ -182,3 +182,27 @@ class UngroupSceneAction(BaseSceneAction):
 
         scene_view.add_models(*unparented_models)
         selection_model.clear_selection()
+
+
+class SceneBringToFrontAction(BaseSceneAction):
+    """ Bring to front action"""
+    def perform(self, scene_view):
+        selection_model = scene_view.selection_model
+        if len(selection_model) == 0:
+            return
+
+        for o in selection_model:
+            scene_view.bring_to_front(o.model)
+        scene_view.update()
+
+
+class SceneSendToBackAction(BaseSceneAction):
+    """ Send to back action"""
+    def perform(self, scene_view):
+        selection_model = scene_view.selection_model
+        if len(selection_model) == 0:
+            return
+
+        for o in selection_model:
+            scene_view.send_to_back(o.model)
+        scene_view.update()

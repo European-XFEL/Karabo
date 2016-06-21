@@ -13,8 +13,9 @@ from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
 from karabo_gui.scenemodel.api import (read_scene, FixedLayoutModel,
                                        SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
-from .builder import (create_object_from_model, fill_root_layout,
-                      remove_object_from_layout)
+from .builder import (bring_object_to_front, create_object_from_model,
+                      fill_root_layout, remove_object_from_layout,
+                      send_object_to_back)
 from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
@@ -122,7 +123,7 @@ class SceneView(QWidget):
                     max(self.scene_model.height, SCENE_MIN_HEIGHT))
 
         self._scene_obj_cache = {}
-        fill_root_layout(self.layout, self.scene_model, self,
+        fill_root_layout(self.layout, self.scene_model, self.inner,
                          self._scene_obj_cache)
 
     def item_at_position(self, pos):
@@ -180,6 +181,36 @@ class SceneView(QWidget):
         """ Removes the given ``model`` from the scene model."""
         self.scene_model.children.remove(model)
 
+    def bring_to_front(self, model):
+        """ The given ``model`` is moved to the end of the list."""
+        # Remove model
+        self.remove_model(model)
+        # Add model to end
+        self.add_models(model)
+
+        scene_obj = self._scene_obj_cache.get(model)
+        if scene_obj is not None:
+            # In case of layouts or widgets
+            bring_object_to_front(scene_obj)
+
+    def send_to_back(self, model):
+        """ The given ``model`` is moved to the beginning of the list."""
+        # Copy list to trigger traits notification only once when its set at
+        # the end
+        children = list(self.scene_model.children)
+        # Clean list to redraw all models in correct order
+        del self.scene_model.children[:]
+        # Remove model
+        children.remove(model)
+        # Insert model at beginning
+        children.insert(0, model)
+        self.scene_model.children.extend(children)
+
+        scene_obj = self._scene_obj_cache.get(model)
+        if scene_obj is not None:
+            # In case of layouts or widgets
+            send_object_to_back(scene_obj)
+
     # ----------------------------
     # Private methods (yes, I know... It's just a convention)
 
@@ -214,5 +245,5 @@ class SceneView(QWidget):
                 remove_object_from_layout(obj, self.layout,
                                           self._scene_obj_cache)
         for model in event.added:
-            create_object_from_model(self.layout, model, self,
+            create_object_from_model(self.layout, model, self.inner,
                                      self._scene_obj_cache)
