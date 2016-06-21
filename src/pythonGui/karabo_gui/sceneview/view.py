@@ -123,7 +123,7 @@ class SceneView(QWidget):
                     max(self.scene_model.height, SCENE_MIN_HEIGHT))
 
         self._scene_obj_cache = {}
-        fill_root_layout(self.layout, self.scene_model, self,
+        fill_root_layout(self.layout, self.scene_model, self.inner,
                          self._scene_obj_cache)
 
     def item_at_position(self, pos):
@@ -240,5 +240,5 @@ class SceneView(QWidget):
                 remove_object_from_layout(obj, self.layout,
                                           self._scene_obj_cache)
         for model in event.added:
-            create_object_from_model(self.layout, model, self,
+            create_object_from_model(self.layout, model, self.inner,
                                      self._scene_obj_cache)
