@@ -7,21 +7,14 @@ from karabo.middlelayer_api.eventloop import EventLoop
 
 
 def async_tst(f):
-    coro = coroutine(f)
-
-    @wraps(coro)
-    def wrapper(self, *args, **kwargs):
-        task = self.loop.create_task(
-            coro(self, *args, **kwargs), self.lead)
-        self.loop.run_until_complete(wait_for(task, 30))
-    return wrapper
+    return sync_tst(coroutine(f))
 
 
 def sync_tst(f):
     @wraps(f)
-    def wrapper(self, *args):
+    def wrapper(self):
         task = self.loop.create_task(
-            self.loop.start_thread(f, self, *args), self.lead)
+            self.loop.run_coroutine_or_thread(f, self), self.lead)
         self.loop.run_until_complete(wait_for(task, 30))
     return wrapper
 
