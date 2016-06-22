@@ -371,17 +371,6 @@ class EventLoop(SelectorEventLoop):
         return task
 
     @coroutine
-    def start_thread(self, f, *args, **kwargs):
-        def inner():
-            set_event_loop(loop)
-            try:
-                return f(*args, **kwargs)
-            finally:
-                set_event_loop(None)
-        loop = NoEventLoop(self.instance())
-        return (yield from self.run_in_executor(None, inner))
-
-    @coroutine
     def run_coroutine_or_thread(self, f, *args, **kwargs):
         """run the function *f* correctly, as a coroutine or thread
 
@@ -389,9 +378,16 @@ class EventLoop(SelectorEventLoop):
         a future, if it is a coroutine function, it returns the coroutine
         object."""
         if iscoroutinefunction(f):
-            return f(*args, **kwargs)
+            return (yield from f(*args, **kwargs))
         else:
-            return self.start_thread(f, *args, **kwargs)
+            def inner():
+                set_event_loop(loop)
+                try:
+                    return f(*args, **kwargs)
+                finally:
+                    set_event_loop(None)
+            loop = NoEventLoop(self.instance())
+            return (yield from self.run_in_executor(None, inner))
 
     def start_device(self, device):
         lock = threading.Lock()
