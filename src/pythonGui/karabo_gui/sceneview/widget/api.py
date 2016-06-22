@@ -3,6 +3,7 @@ from .eval import EvaluatorContainer  # noqa
 from .floatspinbox import FloatSpinBoxContainer  # noqa
 from .generic import DisplayEditableWidgetContainer, GenericWidgetContainer  # noqa
 from .icons import IconsContainer  # noqa
+from .monitor import MonitorContainer  # noqa
 from .simple import LabelWidget, SceneLinkWidget, UnknownSvgWidget  # noqa
 from .singlebit import SingleBitContainer  # noqa
 from .statecolor import DisplayStateColorContainer  # noqa
