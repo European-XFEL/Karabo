@@ -11,7 +11,7 @@ from karabo_gui.scenemodel.api import (
     CheckBoxModel, ChoiceElementModel, ComboBoxModel, DirectoryModel,
     FileInModel, FileOutModel, LineEditModel,
     DisplayStateColorModel, DigitIconsModel, SelectionIconsModel,
-    TextIconsModel
+    TextIconsModel, VacuumWidgetModel
 )
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
@@ -19,7 +19,7 @@ from .shapes import LineShape, PathShape, RectangleShape
 from .widget.api import (
     DisplayEditableWidgetContainer, DisplayStateColorContainer,
     GenericWidgetContainer, IconsContainer, LabelWidget, SceneLinkWidget,
-    UnknownSvgWidget
+    UnknownSvgWidget, VacuumWidgetContainer
 )
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
@@ -27,7 +27,7 @@ _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (
     DisplayEditableWidgetContainer, DisplayStateColorContainer,
     GenericWidgetContainer, IconsContainer, LabelWidget, SceneLinkWidget,
-    UnknownSvgWidget)
+    UnknownSvgWidget, VacuumWidgetContainer)
 _SCENE_OBJ_FACTORIES = {
     FixedLayoutModel: lambda m, p: GroupLayout(m),
     BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
@@ -66,6 +66,7 @@ _SCENE_OBJ_FACTORIES = {
     DigitIconsModel: IconsContainer,
     SelectionIconsModel: IconsContainer,
     TextIconsModel: IconsContainer,
+    VacuumWidgetModel: VacuumWidgetContainer,
 }
 
 
