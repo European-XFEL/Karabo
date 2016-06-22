@@ -27,7 +27,7 @@ class FloatSpinBox(EditableWidget, DisplayWidget):
             self.widget, "Single Step", "Enter size of a single step",
             self.widget.singleStep())
         if ok:
-            self.widget.setSingleStep(step)
+            self._setStep(step)
 
     def setReadOnly(self, ro):
         self.widget.setReadOnly(ro)
@@ -55,4 +55,8 @@ class FloatSpinBox(EditableWidget, DisplayWidget):
         element.set(ns_karabo + "step", repr(self.widget.singleStep()))
 
     def load(self, element):
-        self.widget.setSingleStep(float(element.get(ns_karabo + "step")))
+        self._setStep(float(element.get(ns_karabo + "step")))
+
+    def _setStep(self, step):
+        """ Give derived classes a place to respond to changes. """
+        self.widget.setSingleStep(step)
