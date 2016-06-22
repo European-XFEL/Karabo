@@ -8,7 +8,7 @@ class CircleMotor(Device):
     xaxis = DeviceNode(
         displayedName="X Axis",
         properties=["targetValue", "position", "hardwareState"],
-        commands=[("ramp_ch2", "ramp"), "reset"])
+        commands=[("home", "stop"), "reset"])
 
     yaxis = DeviceNode(
         displayedName="Y Axis",
