@@ -7,18 +7,21 @@ from karabo_gui.scenemodel.api import (
     DisplayIconsetModel, DisplayImageModel, DisplayImageElementModel,
     DisplayLabelModel, DisplayPlotModel, DoubleLineEditModel,
     EditableListModel, EditableListElementModel, EditableSpinBoxModel,
-    HexadecimalModel, IntLineEditModel, KnobModel, SliderModel, XYPlotModel
+    HexadecimalModel, IntLineEditModel, KnobModel, SliderModel, XYPlotModel,
+    CheckBoxModel, ChoiceElementModel, ComboBoxModel, DirectoryModel,
+    FileInModel, FileOutModel, LineEditModel
 )
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape
 from .widget.api import (
-    GenericWidgetContainer, LabelWidget, SceneLinkWidget, UnknownSvgWidget)
+    DisplayEditableWidgetContainer, GenericWidgetContainer, LabelWidget,
+    SceneLinkWidget, UnknownSvgWidget)
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
-_WIDGET_CLASSES = (GenericWidgetContainer, LabelWidget, SceneLinkWidget,
-                   UnknownSvgWidget)
+_WIDGET_CLASSES = (DisplayEditableWidgetContainer, GenericWidgetContainer,
+                   LabelWidget, SceneLinkWidget, UnknownSvgWidget)
 _SCENE_OBJ_FACTORIES = {
     FixedLayoutModel: lambda m, p: GroupLayout(m),
     BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
@@ -46,6 +49,13 @@ _SCENE_OBJ_FACTORIES = {
     KnobModel: GenericWidgetContainer,
     SliderModel: GenericWidgetContainer,
     XYPlotModel: GenericWidgetContainer,
+    CheckBoxModel: DisplayEditableWidgetContainer,
+    ChoiceElementModel: DisplayEditableWidgetContainer,
+    ComboBoxModel: DisplayEditableWidgetContainer,
+    DirectoryModel: DisplayEditableWidgetContainer,
+    FileInModel: DisplayEditableWidgetContainer,
+    FileOutModel: DisplayEditableWidgetContainer,
+    LineEditModel: DisplayEditableWidgetContainer,
 }
 
 
