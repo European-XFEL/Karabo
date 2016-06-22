@@ -22,7 +22,7 @@ namespace karabo {
             
             unsigned long long m_evalInterval;
             unsigned long long m_nvals;
-            long double m_s, m_s2;
+            double m_s, m_s2, m_meanEstimate;
             std::vector<double> m_vals;
             
             mutable boost::shared_mutex m_updateMutex;
@@ -40,15 +40,17 @@ namespace karabo {
                 
                 void update(double v);
                 
-                long double getRollingWindowVariance() const;
                 
-                long double getRollingWindowMean() const;
+                double getRollingWindowVariance() const;
+                
+                double getRollingWindowMean() const;
                 
         private:
             
                 RollingWindowStatistics(const RollingWindowStatistics & other); //copy is protected
+                RollingWindowStatistics();
                 
-                
+                void updateEstimate();
         };
         
        

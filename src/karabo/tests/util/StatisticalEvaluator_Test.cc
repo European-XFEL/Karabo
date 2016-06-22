@@ -39,60 +39,67 @@ void StatisticalEvaluator::tearDown() {
 }
 
 void StatisticalEvaluator::testMean() {
-    #define EPSILON 0.0001
+    double EPSILON = 0.0001;
     karabo::util::RollingWindowStatistics stat(5);
     stat.update(-5);
+    
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() + 5) < EPSILON);
     stat.update(0);
+    
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() + 2.5) < EPSILON);
     stat.update(5);
+    
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 0) < EPSILON);
     stat.update(5);
+    
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 1.25) < EPSILON);
     stat.update(-5);
+    
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 0.) < EPSILON);
     stat.update(-5); // should remove the first -5
+    
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 0.) < EPSILON);
 }
 
 
 void StatisticalEvaluator::testSmallNumbers() {
-    #define EPSILON_MEAN 1e-10
-    #define EPSILON_VAR 1e-13
-    #define UPDATE_W_MAG(prefix, stat) stat.update(prefix * 1e-9d );
+    double EPSILON_MEAN = 1e-10;
+    double EPSILON_VAR = 1e-13;
+    
     karabo::util::RollingWindowStatistics stat(10);
-    UPDATE_W_MAG(123,  stat)
-    UPDATE_W_MAG(23,  stat)
-    UPDATE_W_MAG(33,  stat)
-    UPDATE_W_MAG(43,  stat)
-    UPDATE_W_MAG(1,  stat)
-    UPDATE_W_MAG(134,  stat)
-    UPDATE_W_MAG(14,  stat)
-    UPDATE_W_MAG(123,  stat)
-    UPDATE_W_MAG(-123,  stat)
-    UPDATE_W_MAG(4123,  stat)
+    stat.update(123e-9);
+    stat.update(23e-9);
+    stat.update(33e-9);
+    stat.update(43e-9);
+    stat.update(1e-9);
+    stat.update(134e-9);
+    stat.update(14e-9);
+    stat.update(123e-9);
+    stat.update(-123e-9);
+    stat.update(4123e-9);
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 4.494e-7d) < EPSILON_MEAN);
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.67183e-12d) < EPSILON_VAR);
-    UPDATE_W_MAG(123,  stat)
-    UPDATE_W_MAG(23,  stat)
-    UPDATE_W_MAG(33,  stat)
-    UPDATE_W_MAG(43,  stat)
-    UPDATE_W_MAG(1,  stat)
+    stat.update(123e-9);
+    stat.update(23e-9);
+    stat.update(33e-9);
+    stat.update(43e-9);
+    stat.update(1e-9);
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 4.494e-7d) < EPSILON_MEAN);
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.67183e-12d) < EPSILON_VAR);
     
     karabo::util::RollingWindowStatistics stat100(100);
     for(size_t i = 0; i< 11; i++){
-        UPDATE_W_MAG(123,  stat100)
-        UPDATE_W_MAG(23,  stat100)
-        UPDATE_W_MAG(33,  stat100)
-        UPDATE_W_MAG(43,  stat100)
-        UPDATE_W_MAG(1,  stat100)
-        UPDATE_W_MAG(134,  stat100)
-        UPDATE_W_MAG(14,  stat100)
-        UPDATE_W_MAG(123,  stat100)
-        UPDATE_W_MAG(-123,  stat100)
-        UPDATE_W_MAG(4123,  stat100)
+        stat100.update(123e-9);
+        stat100.update(23e-9);
+        stat100.update(33e-9);
+        stat100.update(43e-9);
+        stat100.update(1e-9);
+        stat100.update(134e-9);
+        stat100.update(14e-9);
+        stat100.update(123e-9);
+        stat100.update(-123e-9);
+        stat100.update(4123e-9);
+
     }
     
     CPPUNIT_ASSERT(fabs(stat100.getRollingWindowMean() - 4.494e-07d) < EPSILON_MEAN);
@@ -100,16 +107,16 @@ void StatisticalEvaluator::testSmallNumbers() {
     
     karabo::util::RollingWindowStatistics stat1000(1000);
     for(size_t i = 0; i< 101; i++){
-        UPDATE_W_MAG(123,  stat1000)
-        UPDATE_W_MAG(23,  stat1000)
-        UPDATE_W_MAG(33,  stat1000)
-        UPDATE_W_MAG(43,  stat1000)
-        UPDATE_W_MAG(1,  stat1000)
-        UPDATE_W_MAG(134,  stat1000)
-        UPDATE_W_MAG(14,  stat1000)
-        UPDATE_W_MAG(123,  stat1000)
-        UPDATE_W_MAG(-123,  stat1000)
-        UPDATE_W_MAG(4123,  stat1000)
+        stat1000.update(123e-9);
+        stat1000.update(23e-9);
+        stat1000.update(33e-9);
+        stat1000.update(43e-9);
+        stat1000.update(1e-9);
+        stat1000.update(134e-9);
+        stat1000.update(14e-9);
+        stat1000.update(123e-9);
+        stat1000.update(-123e-9);
+        stat1000.update(4123e-9);
     }
     
     CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowMean() - 4.494e-07d) < EPSILON_MEAN);
@@ -119,70 +126,72 @@ void StatisticalEvaluator::testSmallNumbers() {
 }
 
 void StatisticalEvaluator::testLargeNumbers() {
-    #define EPSILON_MEAN 1e5
-    #define EPSILON_VAR 1e20
-    #define UPDATE_W_MAG(prefix, stat) stat.update(prefix * 1e9d );
+    double EPSILON_MEAN = 1e5;
+    double EPSILON_VAR = 1e19;
+    
     karabo::util::RollingWindowStatistics stat(10);
-    UPDATE_W_MAG(123.0d,  stat)
-    UPDATE_W_MAG(23.0d,  stat)
-    UPDATE_W_MAG(33.0d,  stat)
-    UPDATE_W_MAG(43.0d,  stat)
-    UPDATE_W_MAG(1.0d,  stat)
-    UPDATE_W_MAG(134.0d,  stat)
-    UPDATE_W_MAG(14.0d,  stat)
-    UPDATE_W_MAG(123.0d,  stat)
-    UPDATE_W_MAG(-123.0d,  stat)
-    UPDATE_W_MAG(4123.0d,  stat)
+    stat.update(123e9);
+    stat.update(23e9);
+    stat.update(33e9);
+    stat.update(43e9);
+    stat.update(1e9);
+    stat.update(134e9);
+    stat.update(14e9);
+    stat.update(123e9);
+    stat.update(-123e9);
+    stat.update(4123e9);
+    
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 449400000000.0) < EPSILON_MEAN);
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.6718369e+24d) < EPSILON_VAR);
-    UPDATE_W_MAG(123.0d,  stat)
-    UPDATE_W_MAG(23.0d,  stat)
-    UPDATE_W_MAG(33.0d,  stat)
-    UPDATE_W_MAG(43.0d,  stat)
-    UPDATE_W_MAG(1.0d,  stat)
+    stat.update(123e9);
+    stat.update(23e9);
+    stat.update(33e9);
+    stat.update(43e9);
+    stat.update(1e9);
+    
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 449400000000.0) < EPSILON_MEAN);
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.6718369e+24d) < EPSILON_VAR);
     
     karabo::util::RollingWindowStatistics stat100(100);
     for(size_t i = 0; i< 11; i++){
-        UPDATE_W_MAG(123.0d,  stat100)
-        UPDATE_W_MAG(23.0d,  stat100)
-        UPDATE_W_MAG(33.0d,  stat100)
-        UPDATE_W_MAG(43.0d,  stat100)
-        UPDATE_W_MAG(1.0d,  stat100)
-        UPDATE_W_MAG(134.0d,  stat100)
-        UPDATE_W_MAG(14.0d,  stat100)
-        UPDATE_W_MAG(123.0d,  stat100)
-        UPDATE_W_MAG(-123.0d,  stat100)
-        UPDATE_W_MAG(4123.0d,  stat100)
+        stat100.update(123e9);
+        stat100.update(23e9);
+        stat100.update(33e9);
+        stat100.update(43e9);
+        stat100.update(1e9);
+        stat100.update(134e9);
+        stat100.update(14e9);
+        stat100.update(123e9);
+        stat100.update(-123e9);
+        stat100.update(4123e9);
     }
     
     CPPUNIT_ASSERT(fabs(stat100.getRollingWindowMean() - 449400000000.0) < EPSILON_MEAN);
-  
     CPPUNIT_ASSERT(fabs(stat100.getRollingWindowVariance() - 1.51985e+24d) < EPSILON_VAR);
     
     karabo::util::RollingWindowStatistics stat1000(1000);
     for(size_t i = 0; i< 101; i++){
-        UPDATE_W_MAG(123.0d,  stat1000)
-        UPDATE_W_MAG(23.0d,  stat1000)
-        UPDATE_W_MAG(33.0d,  stat1000)
-        UPDATE_W_MAG(43.0d,  stat1000)
-        UPDATE_W_MAG(1.0d,  stat1000)
-        UPDATE_W_MAG(134.0d,  stat1000)
-        UPDATE_W_MAG(14.0d,  stat1000)
-        UPDATE_W_MAG(123.0d,  stat1000)
-        UPDATE_W_MAG(-123.0d,  stat1000)
-        UPDATE_W_MAG(4123.0d,  stat1000)
+        stat1000.update(123e9);
+        stat1000.update(23e9);
+        stat1000.update(33e9);
+        stat1000.update(43e9);
+        stat1000.update(1e9);
+        stat1000.update(134e9);
+        stat1000.update(14e9);
+        stat1000.update(123e9);
+        stat1000.update(-123e9);
+        stat1000.update(4123e9);
     }
     
     CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowMean() - 449400000000.0) < EPSILON_MEAN);
-    CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowVariance() - 1.50616e+24) < EPSILON_VAR);
+    CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowVariance() - 1.50616e+24d) < EPSILON_VAR);
     
+  
     
 }
 
 void StatisticalEvaluator::testVariance() {
-    #define EPSILON 0.0001
+    double EPSILON = 0.0001;
     karabo::util::RollingWindowStatistics stat(5);
     stat.update(5);
     CPPUNIT_ASSERT(isnan(stat.getRollingWindowVariance()));
@@ -206,21 +215,21 @@ void StatisticalEvaluator::testPerformance() {
     profiler.startPeriod("varianceSingle");
     
     double var;
-    #define UPDATE_W_MAG(prefix, stat) stat.update(prefix * 1e9d ); var = stat.getRollingWindowVariance();
+    
     
     {
        
         for(size_t i = 0; i< 10000; i++){
-            UPDATE_W_MAG(123.0d,  stat1000)
-            UPDATE_W_MAG(23.0d,  stat1000)
-            UPDATE_W_MAG(33.0d,  stat1000)
-            UPDATE_W_MAG(43.0d,  stat1000)
-            UPDATE_W_MAG(1.0d,  stat1000)
-            UPDATE_W_MAG(134.0d,  stat1000)
-            UPDATE_W_MAG(14.0d,  stat1000)
-            UPDATE_W_MAG(123.0d,  stat1000)
-            UPDATE_W_MAG(-123.0d,  stat1000)
-            UPDATE_W_MAG(4123.0d,  stat1000)
+            stat1000.update(123e9);  var = stat1000.getRollingWindowVariance();
+            stat1000.update(23e9);  var = stat1000.getRollingWindowVariance();
+            stat1000.update(33e9);  var = stat1000.getRollingWindowVariance();
+            stat1000.update(43e9);  var = stat1000.getRollingWindowVariance();
+            stat1000.update(1e9);  var = stat1000.getRollingWindowVariance();
+            stat1000.update(134e9);  var = stat1000.getRollingWindowVariance();
+            stat1000.update(14e9);  var = stat1000.getRollingWindowVariance();
+            stat1000.update(123e9);  var = stat1000.getRollingWindowVariance();
+            stat1000.update(-123e9);  var = stat1000.getRollingWindowVariance();
+            stat1000.update(4123e9); var = stat1000.getRollingWindowVariance();
         }
     }
     profiler.stopPeriod("varianceSingle");
@@ -229,8 +238,8 @@ void StatisticalEvaluator::testPerformance() {
 
     profiler.close();
 
-    std::clog << "Single var time (10000 updates and reads): " << profiler.getPeriod("varianceSingle").getDuration() << " [s]" << std::endl;
-
+    std::clog << "Single var time (100000 updates and reads): " << profiler.getPeriod("varianceSingle").getDuration() << " [s]" << std::endl;
+    
     
 }
 

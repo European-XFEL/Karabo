@@ -1,18 +1,19 @@
 #include "AlarmConditions.hh"
 #include "Exception.hh"
+#include "Schema.hh" // for attribute definitions
 
 namespace karabo {
     namespace util {
   
-        AlarmCondition::AlarmCondition() : m_conditionString("UNDEFINED"), m_rank(0) {
+        AlarmCondition::AlarmCondition() : m_conditionString("UNDEFINED"), m_rank(0), m_attr("UNDEFINED") {
             
         };
 
-        AlarmCondition::AlarmCondition(std::string cs, unsigned int r) : m_conditionString(cs), m_rank(r){
+        AlarmCondition::AlarmCondition(std::string cs, unsigned int r) : m_conditionString(cs), m_rank(r), m_attr("UNDEFINED"){
             
         };
 
-        AlarmCondition::AlarmCondition(std::string cs, const AlarmCondition & b) : m_conditionString(cs), m_rank(b.m_rank), m_base(boost::make_shared<AlarmCondition>(b)){
+        AlarmCondition::AlarmCondition(std::string cs, const AlarmCondition & b, std::string attr) : m_conditionString(cs), m_rank(b.m_rank), m_base(boost::make_shared<AlarmCondition>(b)), m_attr(attr){
             
         };
         
@@ -35,14 +36,18 @@ namespace karabo {
         
         const std::string & AlarmCondition::asString() const {
                 return m_conditionString;
-            }
+        }
+        
+        const std::string & AlarmCondition::asBaseString() const {
+                return (m_base.get() ? m_base->asString() : this->asString());
+        }
         
         AlarmCondition::operator std::string() const {
                 return this->m_conditionString;
-            }
+        }
 
 
-        bool AlarmCondition::isSimilar (const AlarmCondition & test) const {
+        bool AlarmCondition::isSameCriticality (const AlarmCondition & test) const {
             return test.m_rank == this->m_rank;
         }
            
@@ -52,10 +57,10 @@ namespace karabo {
             AlarmCondition s = v[0];
             for(std::vector<AlarmCondition>::const_iterator i = v.begin(); i != v.end(); i++){
                 s = i->returnMoreSignificant(s);
-                if (s.isSimilar(INTERLOCK)) break; // can't go higher than this
+                if (s.isSameCriticality(INTERLOCK)) break; // can't go higher than this
             }
             if (s.getBase()) {
-                return *s.getBase();
+                return *(s.getBase());
             } else {
                 return s;
             }
@@ -87,11 +92,15 @@ namespace karabo {
                 return iter->second;
             }
         }
+        
+        const std::string & AlarmCondition::getAttributeName() const {
+            return m_attr;
+        }
       
        
-        #define KRB_ALARM_BASE(name, rank) const AlarmCondition & AlarmCondition::name = AlarmCondition(std::string(#name), rank);
+        #define KRB_ALARM_BASE(name, rank) const AlarmCondition AlarmCondition::name(std::string(#name), rank);
 
-        #define KRB_ALARM_FROM_BASE(name, base) const AlarmCondition & AlarmCondition::name = AlarmCondition(std::string(#name), base);
+        #define KRB_ALARM_FROM_BASE(name, base) const AlarmCondition AlarmCondition::name(std::string(#name), base, std::string(KARABO_SCHEMA_ ## name));
 
         KRB_ALARM_BASE(NONE, 0);
         KRB_ALARM_BASE(WARN, 1);
@@ -104,7 +113,7 @@ namespace karabo {
         KRB_ALARM_FROM_BASE(ALARM_HIGH, ALARM);
         KRB_ALARM_FROM_BASE(ALARM_VARIANCE_LOW, ALARM);
         KRB_ALARM_FROM_BASE(ALARM_VARIANCE_HIGH, ALARM);
-        KRB_ALARM_BASE(INTERLOCK, 3); //interlock is assumed to always be the highest conditions
+        KRB_ALARM_BASE(INTERLOCK, 3); //interlock is assumed to always be the highest conditions and knowledge of this is used in returnMostSignificant
         
         std::map<std::string, const AlarmCondition & > AlarmCondition::m_alarmFactory = std::map<std::string, const AlarmCondition &> ();
         
