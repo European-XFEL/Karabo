@@ -222,12 +222,6 @@ class SignalSlotable(Configurable):
         self.__initialized = False
         yield from self._ss.stop_tasks()
 
-    def __del__(self):
-        if self.__initialized:
-            self._ss.loop.create_task(
-                self._ss.loop.run_coroutine_or_thread(self.onDestruction),
-                instance=self)
-
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
         self._ss.call("call", {device: [target]}, reply, args)
