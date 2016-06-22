@@ -231,7 +231,7 @@ class Tests(TestCase):
         time.sleep(0.1)
         thread = EventThread.instance().thread
         thread.loop.call_soon_threadsafe(async, self.init_other())
-        time.sleep(1.1)
+        time.sleep(4)
 
         # test whether proxy stays alive while used
         other = connectDevice("other")
