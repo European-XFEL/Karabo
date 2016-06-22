@@ -37,6 +37,9 @@ class Remote(Macro):
     def shutdown(self):
         shutdown("other")
 
+    def onDestruction(self):
+        Remote.destructed = True
+
 
 class NoRemote(Macro):
     rd = RemoteDevice("DoesNotExist")
@@ -89,9 +92,12 @@ class Tests(TestCase):
         self.assertEqual(remote.counter, 29)
         r = weakref.ref(remote)
         thread = EventThread.instance().thread
+        Remote.destructed = False
         del remote
-        time.sleep(0.1)
+        time.sleep(0.02)
         gc.collect()
+        time.sleep(0.02)
+        self.assertTrue(Remote.destructed)
         self.assertIsNone(r())
         self.assertIsNone(EventThread.instance())
         time.sleep(0.1)

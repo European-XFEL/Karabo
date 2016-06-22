@@ -217,10 +217,14 @@ class SignalSlotable(Configurable):
     @coslot
     def slotKillDevice(self):
         if self.__initialized:
+            self.__initialized = False
             yield from get_event_loop().run_coroutine_or_thread(
                 self.onDestruction)
-        self.__initialized = False
         yield from self._ss.stop_tasks()
+
+    def __del__(self):
+        if self._ss.loop.is_running():
+            self._ss.loop.create_task(self.slotKillDevice())
 
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())

@@ -157,12 +157,12 @@ class Broker:
                         raise
                 finally:
                     device = device()
-                    if device is None:
-                        return
                 try:
                     slots, params = self.decodeMessage(message)
                 except:
                     self.logger.exception("malformated message")
+                    continue
+                if device is None:
                     continue
                 try:
                     slots = [getattr(device, s)
@@ -178,7 +178,7 @@ class Broker:
                 except:
                     self.logger.exception(
                         "internal error while executing slot")
-                slot = slots = None
+                slot = slots = None  # delete reference to device
         finally:
             consumer.close()
 
