@@ -87,6 +87,11 @@ namespace karabo {
                 return *this;
             }
 
+            bool operator==(const State& state) const {
+                // Just compare state names - parents do not matter.
+                return m_stateName == state.m_stateName;
+            }
+
             bool isCompatible(const State& s) const {
                 if (m_stateName == s.m_stateName) return true;
                 for (size_t i = 0; i < m_parents.size(); i++)
