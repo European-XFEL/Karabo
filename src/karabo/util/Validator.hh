@@ -16,6 +16,7 @@
 #include "StringTools.hh"
 #include "ToLiteral.hh"
 #include "Units.hh"
+#include "AlarmConditions.hh"
 
 #include "karaboDll.hh"
 #include "Timestamp.hh"
@@ -105,6 +106,10 @@ namespace karabo {
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
             
             void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
+            
+            void checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond,  const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope, bool checkGreater);
+            
+            void checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope, bool checkGreater);
             
             
 

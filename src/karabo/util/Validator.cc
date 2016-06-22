@@ -9,7 +9,7 @@
 #include "Schema.hh"
 #include "FromLiteral.hh"
 #include "Epochstamp.hh"
-#include "AlarmConditions.hh"
+
 
 namespace karabo {
     namespace util {
@@ -61,8 +61,6 @@ namespace karabo {
 
         std::pair<bool, std::string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp) {
 
-            // Clear all previous warnings and alarms
-            m_parametersInWarnOrAlarm.clear();
             
             // Clear previous "reconfigurable" flag
             m_hasReconfigurableParameter = false;
@@ -427,100 +425,25 @@ namespace karabo {
                 }
                 
                 workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::NONE.asString());
-
-                if (masterNode.hasAttribute(KARABO_SCHEMA_WARN_LOW)) {
-                    double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_WARN_LOW);
-                    double value = workNode.getValueAs<double>();
-                    if (value < threshold) {
-                        string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below warn level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", AlarmCondition::WARN_LOW.asString(), "message", msg), '\0');
-                        attachTimestampIfNotAlreadyThere(workNode);
-                        workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::WARN_LOW.asString());
-                    }
-                }
-
-                if (masterNode.hasAttribute(KARABO_SCHEMA_WARN_HIGH)) {
-                    double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_WARN_HIGH);
-                    double value = workNode.getValueAs<double>();
-                    if (value > threshold) {
-                        string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above warn level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", AlarmCondition::WARN_HIGH.asString(), "message", msg), '\0');
-                        attachTimestampIfNotAlreadyThere(workNode);
-                        workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::WARN_HIGH.asString());
-                    }
-                }
-
-                if (masterNode.hasAttribute(KARABO_SCHEMA_ALARM_LOW)) {
-                    double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_ALARM_LOW);
-                    double value = workNode.getValueAs<double>();
-                    if (value < threshold) {
-                        string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below alarm level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", AlarmCondition::ALARM_LOW.asString(), "message", msg), '\0');
-                        attachTimestampIfNotAlreadyThere(workNode);
-                        workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::ALARM_LOW.asString());
-                    }
-                }
-
-                if (masterNode.hasAttribute(KARABO_SCHEMA_ALARM_HIGH)) {
-                    double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_ALARM_HIGH);
-                    double value = workNode.getValueAs<double>();
-                    if (value > threshold) {
-                        string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above alarm level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", AlarmCondition::ALARM_HIGH.asString(), "message", msg), '\0');
-                        attachTimestampIfNotAlreadyThere(workNode);
-                        workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::ALARM_HIGH.asString());
-                    }
-                }
+                
+                checkThresholdedAlarmCondition(AlarmCondition::WARN_LOW, masterNode, workNode, report, scope, false);
+                checkThresholdedAlarmCondition(AlarmCondition::ALARM_LOW, masterNode, workNode, report, scope, false);
+                checkThresholdedAlarmCondition(AlarmCondition::WARN_HIGH, masterNode, workNode, report, scope, true);
+                checkThresholdedAlarmCondition(AlarmCondition::ALARM_HIGH, masterNode, workNode, report, scope, true);
+                
                 
                 if(masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
                     assureRollingStatsInitialized(scope, masterNode.getAttributeAs<double>(KARABO_SCHEMA_ROLLING_STATS_EVAL));
                     RollingWindowStatistics::Pointer rollingStats = m_parameterRollingStats.at(scope);
                     rollingStats->update(workNode.getValueAs<double>());
-                    double value = rollingStats->getRollingWindowVariance();
-                
-                    if (masterNode.hasAttribute(KARABO_SCHEMA_WARN_VARIANCE_LOW)) {
-                        double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_WARN_VARIANCE_LOW);
-                        if (value > threshold) {
-                            string msg("Variance " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below warn level of " + karabo::util::toString(threshold));
-                            m_parametersInWarnOrAlarm.set(scope, Hash("type", AlarmCondition::WARN_VARIANCE_LOW.asString(), "message", msg), '\0');
-                            attachTimestampIfNotAlreadyThere(workNode);
-                            workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::WARN_VARIANCE_LOW.asString());
-                        }
-                    }
-
-                    if (masterNode.hasAttribute(KARABO_SCHEMA_WARN_VARIANCE_HIGH)) {
-                        double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_WARN_VARIANCE_HIGH);
-                        if (value > threshold) {
-                            string msg("Variance " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above warn level of " + karabo::util::toString(threshold));
-                            m_parametersInWarnOrAlarm.set(scope, Hash("type", AlarmCondition::WARN_VARIANCE_HIGH.asString(), "message", msg), '\0');
-                            attachTimestampIfNotAlreadyThere(workNode);
-                            workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::WARN_VARIANCE_HIGH.asString());
-                        }
-                    }
-
-                    if (masterNode.hasAttribute(KARABO_SCHEMA_ALARM_VARIANCE_LOW)) {
-                        double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_ALARM_VARIANCE_LOW);
-                        if (value > threshold) {
-                            string msg("Variance " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below alarm level of " + karabo::util::toString(threshold));
-                            m_parametersInWarnOrAlarm.set(scope, Hash("type", AlarmCondition::ALARM_VARIANCE_LOW.asString(), "message", msg), '\0');
-                            attachTimestampIfNotAlreadyThere(workNode);
-                            workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::ALARM_VARIANCE_LOW.asString());
-                        }
-                    }
-
-                    if (masterNode.hasAttribute(KARABO_SCHEMA_ALARM_VARIANCE_HIGH)) {
-                        double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
-                        if (value > threshold) {
-                            string msg("Variance " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above alarm level of " + karabo::util::toString(threshold));
-                            m_parametersInWarnOrAlarm.set(scope, Hash("type", AlarmCondition::ALARM_VARIANCE_HIGH.asString(), "message", msg), '\0');
-                            attachTimestampIfNotAlreadyThere(workNode);
-                            workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::ALARM_VARIANCE_HIGH.asString());
-                        }
-                    }
-                }
+                    double variance = rollingStats->getRollingWindowVariance();
                     
-            
+                    checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
+                    checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
+                    checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
+                    checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
                 
+                }
                 
 
                 //if (masterNode.hasAttribute(""))
@@ -584,5 +507,27 @@ namespace karabo {
             
             return m_parameterRollingStats.at(scope);
         };
+        
+        void Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond,  const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope, bool checkGreater){
+            checkThresholdedAlarmCondition(alarmCond, workNode.getValueAs<double>(), masterNode, workNode, report, scope, checkGreater);
+        }
+        
+        void Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope, bool checkGreater){
+            if (masterNode.hasAttribute(alarmCond.getAttributeName())) {
+                double threshold = masterNode.getAttributeAs<double>(alarmCond.getAttributeName());
+                double value = workNode.getValueAs<double>();
+                if ((checkGreater ? value > threshold : value < threshold)) {
+                    string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went " 
+                        + (checkGreater ? "above" : "below")+" "+alarmCond.asBaseString() +" level of " 
+                        + karabo::util::toString(threshold));
+                    m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmCond.asString(), "message", msg), '\0');
+                    attachTimestampIfNotAlreadyThere(workNode);
+                    workNode.setAttribute(KARABO_ALARM_ATTR, alarmCond.asString());
+                } else {
+                    // if it is no longer in alarm we clear
+                    const bool wasErased = m_parametersInWarnOrAlarm.erase(scope);
+                }
+            }
+        }
     }
 }
