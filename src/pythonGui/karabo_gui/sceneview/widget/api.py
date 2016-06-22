@@ -4,5 +4,6 @@ from .floatspinbox import FloatSpinBoxContainer  # noqa
 from .generic import DisplayEditableWidgetContainer, GenericWidgetContainer  # noqa
 from .icons import IconsContainer  # noqa
 from .simple import LabelWidget, SceneLinkWidget, UnknownSvgWidget  # noqa
+from .singlebit import SingleBitContainer  # noqa
 from .statecolor import DisplayStateColorContainer  # noqa
 from .vacuum import VacuumWidgetContainer  # noqa
