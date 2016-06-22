@@ -36,19 +36,19 @@ void AlarmCondition_Test::testStringAssignmentRoundTrip() {
 void AlarmCondition_Test::testSignificanceEvaluation() {
     std::vector<karabo::util::AlarmCondition> v;
     karabo::util::AlarmCondition ms = karabo::util::AlarmCondition::returnMostSignificant(v);
-    CPPUNIT_ASSERT(ms.isSimilar(karabo::util::AlarmCondition::NONE));
+    CPPUNIT_ASSERT(ms.isSameCriticality(karabo::util::AlarmCondition::NONE));
     
     v.push_back(karabo::util::AlarmCondition::WARN);
     v.push_back(karabo::util::AlarmCondition::ALARM_HIGH);
     v.push_back(karabo::util::AlarmCondition::INTERLOCK);
     ms = karabo::util::AlarmCondition::returnMostSignificant(v);
-    CPPUNIT_ASSERT(ms.isSimilar(karabo::util::AlarmCondition::INTERLOCK));
+    CPPUNIT_ASSERT(ms.isSameCriticality(karabo::util::AlarmCondition::INTERLOCK));
     
     
     v.pop_back();
     v.push_back(karabo::util::AlarmCondition::WARN);
     ms = karabo::util::AlarmCondition::returnMostSignificant(v);
-    CPPUNIT_ASSERT(ms.isSimilar(karabo::util::AlarmCondition::ALARM));
+    CPPUNIT_ASSERT(ms.isSameCriticality(karabo::util::AlarmCondition::ALARM));
     
 }
 
