@@ -3,3 +3,4 @@ from .generic import DisplayEditableWidgetContainer, GenericWidgetContainer  # n
 from .icons import IconsContainer  # noqa
 from .simple import LabelWidget, SceneLinkWidget, UnknownSvgWidget  # noqa
 from .statecolor import DisplayStateColorContainer  # noqa
+from .vacuum import VacuumWidgetContainer  # noqa
