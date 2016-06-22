@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <karabo/util/StringTools.hh>
+#include <karabo/util/Factory.hh>
 #include "States.hh"
 
 
@@ -10,129 +11,129 @@ namespace karabo {
     namespace core {
         namespace states {
             
-#define KARABO_FSM_INIT_FIXED_STATE(X, Y) State::Pointer X ## _p(new X); const State& g_ ## X = *X ## _p;
+#define KARABO_INIT_FIXED_STATE(X) const State::Pointer X(new X ## _class);
 
-            KARABO_FSM_INIT_FIXED_STATE(UNKNOWN, State)
+            KARABO_INIT_FIXED_STATE(UNKNOWN)
 
-            KARABO_FSM_INIT_FIXED_STATE(KNOWN, State)
+            KARABO_INIT_FIXED_STATE(KNOWN)
 
-            KARABO_FSM_INIT_FIXED_STATE(INIT, State)
+            KARABO_INIT_FIXED_STATE(INIT)
 
-            KARABO_FSM_INIT_FIXED_STATE(DISABLED, KNOWN)
+            KARABO_INIT_FIXED_STATE(DISABLED)
 
-            KARABO_FSM_INIT_FIXED_STATE(ERROR, KNOWN)
+            KARABO_INIT_FIXED_STATE(ERROR)
 
-            KARABO_FSM_INIT_FIXED_STATE(NORMAL, KNOWN)
+            KARABO_INIT_FIXED_STATE(NORMAL)
 
-            KARABO_FSM_INIT_FIXED_STATE(STATIC, NORMAL)
+            KARABO_INIT_FIXED_STATE(STATIC)
 
-            KARABO_FSM_INIT_FIXED_STATE(CHANGING, NORMAL)
+            KARABO_INIT_FIXED_STATE(CHANGING)
 
-            KARABO_FSM_INIT_FIXED_STATE(PASSIVE, STATIC)
+            KARABO_INIT_FIXED_STATE(PASSIVE)
 
-            KARABO_FSM_INIT_FIXED_STATE(ACTIVE, STATIC)
+            KARABO_INIT_FIXED_STATE(ACTIVE)
 
-            KARABO_FSM_INIT_FIXED_STATE(DECREASING, CHANGING)
+            KARABO_INIT_FIXED_STATE(DECREASING)
 
-            KARABO_FSM_INIT_FIXED_STATE(INCREASING, CHANGING)
+            KARABO_INIT_FIXED_STATE(INCREASING)
 
             /**
              *
              */
 
-            KARABO_FSM_INIT_FIXED_STATE(INTERLOCKED, DISABLED)
+            KARABO_INIT_FIXED_STATE(INTERLOCKED)
 
-            KARABO_FSM_INIT_FIXED_STATE(COOLED, ACTIVE)
+            KARABO_INIT_FIXED_STATE(COOLED)
 
-            KARABO_FSM_INIT_FIXED_STATE(HEATED, ACTIVE)
+            KARABO_INIT_FIXED_STATE(HEATED)
 
-            KARABO_FSM_INIT_FIXED_STATE(EVACUATED, ACTIVE)
+            KARABO_INIT_FIXED_STATE(EVACUATED)
 
-            KARABO_FSM_INIT_FIXED_STATE(CLOSED, ACTIVE)
+            KARABO_INIT_FIXED_STATE(CLOSED)
 
-            KARABO_FSM_INIT_FIXED_STATE(ON, ACTIVE)
+            KARABO_INIT_FIXED_STATE(ON)
 
-            KARABO_FSM_INIT_FIXED_STATE(EXTRACTED, ACTIVE)
+            KARABO_INIT_FIXED_STATE(EXTRACTED)
 
-            KARABO_FSM_INIT_FIXED_STATE(STARTED, ACTIVE)
+            KARABO_INIT_FIXED_STATE(STARTED)
 
-            KARABO_FSM_INIT_FIXED_STATE(LOCKED, ACTIVE)
+            KARABO_INIT_FIXED_STATE(LOCKED)
 
-            KARABO_FSM_INIT_FIXED_STATE(ENGAGED, ACTIVE)
-
-
-            KARABO_FSM_INIT_FIXED_STATE(WARM, PASSIVE)
-
-            KARABO_FSM_INIT_FIXED_STATE(COLD, PASSIVE)
-
-            KARABO_FSM_INIT_FIXED_STATE(PRESSURIZED, PASSIVE)
-
-            KARABO_FSM_INIT_FIXED_STATE(OPENED, PASSIVE)
-
-            KARABO_FSM_INIT_FIXED_STATE(OFF, PASSIVE)
-
-            KARABO_FSM_INIT_FIXED_STATE(INSERTED, PASSIVE)
-
-            KARABO_FSM_INIT_FIXED_STATE(STOPPED, PASSIVE)
-
-            KARABO_FSM_INIT_FIXED_STATE(UNLOCKED, PASSIVE)
-
-            KARABO_FSM_INIT_FIXED_STATE(DISENGAGED, PASSIVE)
+            KARABO_INIT_FIXED_STATE(ENGAGED)
 
 
-            KARABO_FSM_INIT_FIXED_STATE(ROTATING, CHANGING)
+            KARABO_INIT_FIXED_STATE(WARM)
 
-            KARABO_FSM_INIT_FIXED_STATE(MOVING, CHANGING)
+            KARABO_INIT_FIXED_STATE(COLD)
 
-            KARABO_FSM_INIT_FIXED_STATE(SWITCHING, CHANGING)
+            KARABO_INIT_FIXED_STATE(PRESSURIZED)
 
+            KARABO_INIT_FIXED_STATE(OPENED)
 
-            KARABO_FSM_INIT_FIXED_STATE(HEATING, INCREASING)
+            KARABO_INIT_FIXED_STATE(OFF)
 
-            KARABO_FSM_INIT_FIXED_STATE(MOVING_RIGHT, INCREASING)
+            KARABO_INIT_FIXED_STATE(INSERTED)
 
-            KARABO_FSM_INIT_FIXED_STATE(MOVING_UP, INCREASING)
+            KARABO_INIT_FIXED_STATE(STOPPED)
 
-            KARABO_FSM_INIT_FIXED_STATE(MOVING_FORWARD, INCREASING)
+            KARABO_INIT_FIXED_STATE(UNLOCKED)
 
-            KARABO_FSM_INIT_FIXED_STATE(ROTATING_CLK, INCREASING)
-
-            KARABO_FSM_INIT_FIXED_STATE(RAMPING_UP, INCREASING)
-
-            KARABO_FSM_INIT_FIXED_STATE(INSERTING, INCREASING)
-
-            KARABO_FSM_INIT_FIXED_STATE(STARTING, INCREASING)
-
-            KARABO_FSM_INIT_FIXED_STATE(FILLING, INCREASING)
-
-            KARABO_FSM_INIT_FIXED_STATE(ENGAGING, INCREASING)
-
-            KARABO_FSM_INIT_FIXED_STATE(SWITCHING_ON, INCREASING)
+            KARABO_INIT_FIXED_STATE(DISENGAGED)
 
 
-            KARABO_FSM_INIT_FIXED_STATE(COOLING, DECREASING)
+            KARABO_INIT_FIXED_STATE(ROTATING)
 
-            KARABO_FSM_INIT_FIXED_STATE(MOVING_LEFT, DECREASING)
+            KARABO_INIT_FIXED_STATE(MOVING)
 
-            KARABO_FSM_INIT_FIXED_STATE(MOVING_DOWN, DECREASING)
+            KARABO_INIT_FIXED_STATE(SWITCHING)
 
-            KARABO_FSM_INIT_FIXED_STATE(MOVING_BACK, DECREASING)
 
-            KARABO_FSM_INIT_FIXED_STATE(ROTATING_CNTCLK, DECREASING)
+            KARABO_INIT_FIXED_STATE(HEATING)
 
-            KARABO_FSM_INIT_FIXED_STATE(RAMPING_DOWN, DECREASING)
+            KARABO_INIT_FIXED_STATE(MOVING_RIGHT)
 
-            KARABO_FSM_INIT_FIXED_STATE(EXTRACTING, DECREASING)
+            KARABO_INIT_FIXED_STATE(MOVING_UP)
 
-            KARABO_FSM_INIT_FIXED_STATE(STOPPING, DECREASING)
+            KARABO_INIT_FIXED_STATE(MOVING_FORWARD)
 
-            KARABO_FSM_INIT_FIXED_STATE(EMPTYING, DECREASING)
+            KARABO_INIT_FIXED_STATE(ROTATING_CLK)
 
-            KARABO_FSM_INIT_FIXED_STATE(DISENGAGING, DECREASING)
+            KARABO_INIT_FIXED_STATE(RAMPING_UP)
 
-            KARABO_FSM_INIT_FIXED_STATE(SWITCHING_OFF, DECREASING)
+            KARABO_INIT_FIXED_STATE(INSERTING)
 
-#undef KARABO_FSM_INIT_FIXED_STATE
+            KARABO_INIT_FIXED_STATE(STARTING)
+
+            KARABO_INIT_FIXED_STATE(FILLING)
+
+            KARABO_INIT_FIXED_STATE(ENGAGING)
+
+            KARABO_INIT_FIXED_STATE(SWITCHING_ON)
+
+
+            KARABO_INIT_FIXED_STATE(COOLING)
+
+            KARABO_INIT_FIXED_STATE(MOVING_LEFT)
+
+            KARABO_INIT_FIXED_STATE(MOVING_DOWN)
+
+            KARABO_INIT_FIXED_STATE(MOVING_BACK)
+
+            KARABO_INIT_FIXED_STATE(ROTATING_CNTCLK)
+
+            KARABO_INIT_FIXED_STATE(RAMPING_DOWN)
+
+            KARABO_INIT_FIXED_STATE(EXTRACTING)
+
+            KARABO_INIT_FIXED_STATE(STOPPING)
+
+            KARABO_INIT_FIXED_STATE(EMPTYING)
+
+            KARABO_INIT_FIXED_STATE(DISENGAGING)
+
+            KARABO_INIT_FIXED_STATE(SWITCHING_OFF)
+
+#undef KARABO_INIT_FIXED_STATE
             
             State::Pointer StateSignifier::returnMostSignificant(const std::vector<State::Pointer>& listOfStates) {
                 const vector<State::Pointer>& trumplist = statesRegistrator.stateSignifier->getTrumpList();
@@ -167,39 +168,39 @@ namespace karabo {
             : m_trumpList() {
 
                 if (trumpList.empty()) {
-                    m_trumpList.push_back(createState("DISABLED"));
-                    m_trumpList.push_back(createState("INIT"));
+                    m_trumpList.push_back(DISABLED);
+                    m_trumpList.push_back(INIT);
 
-                    if (staticMoreSignificant->name() == "PASSIVE") {
-                        m_trumpList.push_back(createState("ACTIVE"));
-                        m_trumpList.push_back(createState("PASSIVE"));
-                    } else if (staticMoreSignificant->name() == "ACTIVE") {
-                        m_trumpList.push_back(createState("PASSIVE"));
-                        m_trumpList.push_back(createState("ACTIVE"));
+                    // Take care to compare the objects, not the pointers:
+                    if (*staticMoreSignificant == *states::PASSIVE) {
+                        m_trumpList.push_back(ACTIVE);
+                        m_trumpList.push_back(PASSIVE);
+                    } else if (*staticMoreSignificant == *states::ACTIVE) {
+                        m_trumpList.push_back(PASSIVE);
+                        m_trumpList.push_back(ACTIVE);
                     }
 
-                    m_trumpList.push_back(createState("STATIC"));
+                    m_trumpList.push_back(STATIC);
 
-                    if (changingMoreSignificant->name() == "DECREASING") {
-                        m_trumpList.push_back(createState("INCREASING"));
-                        m_trumpList.push_back(createState("DECREASING"));
-                    } else if (changingMoreSignificant->name() == "INCREASING") {
-                        m_trumpList.push_back(createState("DECREASING"));
-                        m_trumpList.push_back(createState("INCREASING"));
+                    if (*changingMoreSignificant == *states::DECREASING) {
+                        m_trumpList.push_back(INCREASING);
+                        m_trumpList.push_back(DECREASING);
+                    } else if (*changingMoreSignificant == *states::INCREASING) {
+                        m_trumpList.push_back(DECREASING);
+                        m_trumpList.push_back(INCREASING);
                     }
 
-                    m_trumpList.push_back(createState("CHANGING"));
-                    m_trumpList.push_back(createState("ERROR"));
-                    m_trumpList.push_back(createState("UNKNOWN"));
+                    m_trumpList.push_back(CHANGING);
+                    m_trumpList.push_back(ERROR);
+                    m_trumpList.push_back(UNKNOWN);
                 } else {
-                    m_trumpList.clear();
-                    for (size_t i = 0; i < trumpList.size(); i++) m_trumpList.push_back(trumpList[i]);
+                    m_trumpList = trumpList;
                 }
             }
 
 
             StatesRegistrator::StatesRegistrator() {
-#define REGISTER_STATE(X) if (!karabo::util::Factory<karabo::core::State>::has(#X)) karabo::util::Factory<karabo::core::State>::registerClass<X>(#X);
+#define REGISTER_STATE(X) if (!karabo::util::Factory<karabo::core::State>::has(#X)) karabo::util::Factory<karabo::core::State>::registerClass<X ## _class>(#X);
                 REGISTER_STATE(UNKNOWN)
                 REGISTER_STATE(KNOWN)
                 REGISTER_STATE(INIT)
