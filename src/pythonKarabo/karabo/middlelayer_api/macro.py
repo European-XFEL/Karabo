@@ -240,5 +240,6 @@ class Macro(Device):
         try:
             loop.run_until_complete(loop.create_task(loop.start_thread(
                 slot.method, o), o))
+            loop.run_until_complete(o.slotKillDevice())
         finally:
             loop.close()
