@@ -36,6 +36,11 @@ class ScenePanel(Dockable, QScrollArea):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
+    def closeEvent(self, event):
+        event.accept()
+        self.scene_view.destroy()
+        self.signalClosed.emit()
+
     def design_mode_text(self, is_design_mode):
         if is_design_mode:
             return "Change to control mode"

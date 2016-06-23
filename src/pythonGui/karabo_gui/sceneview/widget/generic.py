@@ -54,7 +54,7 @@ class GenericWidgetContainer(BaseWidgetContainer):
         display_widget = factory(boxes[0], self)
         for b in boxes[1:]:
             display_widget.addBox(b)
-        return display_widget.widget
+        return display_widget
 
 
 class DisplayEditableWidgetContainer(BaseWidgetContainer):
@@ -67,5 +67,4 @@ class DisplayEditableWidgetContainer(BaseWidgetContainer):
         display_widget = factory(boxes[0], self)
         for b in boxes[1:]:
             display_widget.addBox(b)
-
-        return display_widget.widget
+        return display_widget
