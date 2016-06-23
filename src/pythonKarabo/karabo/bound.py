@@ -1,4 +1,4 @@
-""" This module provides all the API 1 names which a Device might need.
+""" This module provides all the bound API names which a Device might need.
 """
 
 from .bound_api.camera_interface import CameraInterface
@@ -17,6 +17,8 @@ from .bound_api.motor_interface import MotorInterface
 from .bound_api.plugin_loader import PluginLoader
 from .bound_api.runner import Runner
 from .bound_api.server_entry_point import runSingleDeviceServer
+from .bound_api.worker import Worker, QueueWorker
+
 
 from .bound_api.fsm import (
     KARABO_FSM_EVENT0, KARABO_FSM_EVENT1, KARABO_FSM_EVENT2, KARABO_FSM_EVENT3,
