@@ -43,6 +43,7 @@ class TestSelectionModel(unittest.TestCase):
             self.assertIn(obj, (line_shape, rect_shape))
 
         exp_rect = QRect(0, 0, 199, 199)
+        exp_rect.adjust(-2, -2, +3, +3)  # Match the selection model
         sel_rect = self.selection_model.get_selection_bounds()
         self.assertEqual(exp_rect, sel_rect)
 
