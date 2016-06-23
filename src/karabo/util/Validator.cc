@@ -427,7 +427,8 @@ namespace karabo {
                 workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::NONE.asString());
                 
                 bool clearCondition = true;
-                if(karabo::util::Types::isSimple(workNode.getType())){
+                const karabo::util::Types::ReferenceType workType = workNode.getType();
+                if(karabo::util::Types::isSimple(workType) && workType != karabo::util::Types::STRING){
                     
                     clearCondition &= checkThresholdedAlarmCondition(AlarmCondition::WARN_LOW, masterNode, workNode, report, scope, false);
                     clearCondition &= checkThresholdedAlarmCondition(AlarmCondition::ALARM_LOW, masterNode, workNode, report, scope, false);
