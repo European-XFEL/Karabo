@@ -236,6 +236,7 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip(){
     h1.set("f1", 6);
     r = val.validate(schema, h2, h_out);
     alarmParms = val.getParametersInWarnOrAlarm();
+    CPPUNIT_ASSERT(!alarmParms.has("f1"));
     CPPUNIT_ASSERT(alarmParms.has("f2"));
     CPPUNIT_ASSERT(alarmParms.get<Hash>("f2").get<std::string>("type") == AlarmCondition::WARN_LOW.asString());
 }
