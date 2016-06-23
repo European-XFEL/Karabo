@@ -167,6 +167,20 @@ def test_line_plot_widget():
         assert read_model.boxes[0].curve_object_data == '00'
 
 
+def test_line_plot_duplicate_curves():
+    curve0 = PlotCurveModel(device='dev1', path='foo', curve_object_data='00')
+    curve1 = PlotCurveModel(device='dev1', path='bar', curve_object_data='11')
+    curve2 = PlotCurveModel(device='dev1', path='foo', curve_object_data='22')
+    traits = _base_widget_traits(parent='DisplayComponent')
+    model = LinePlotModel(klass='XYVector', boxes=[curve0, curve1], **traits)
+
+    model.boxes.append(curve1)
+    model.boxes.append(curve2)
+    assert len(model.boxes) == 2
+    assert model.boxes[0].curve_object_data == curve2.curve_object_data
+    assert model.boxes[1] is curve1
+
+
 def test_monitor_widget():
     traits = _base_widget_traits(parent='DisplayComponent')
     traits['filename'] = 'foo.log'
