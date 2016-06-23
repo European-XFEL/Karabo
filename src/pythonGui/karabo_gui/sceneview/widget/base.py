@@ -49,14 +49,25 @@ class BaseWidgetContainer(QWidget):
         box.signalUpdateComponent.connect(widget.valueChangedSlot)
         if box.hasValue():
             widget.valueChanged(box, box.value, box.timestamp)
+        if self.model.parent_component == 'EditableApplyLaterComponent':
+            box.signalUserChanged.connect(widget.valueChangedSlot)
 
     def destroy(self):
         """ Disconnect the box signals
         """
+        from karabo_gui import gui
+
         box = self.box
         widget = self.old_style_widget
         box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
         box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
+        if self.model.parent_component == 'EditableApplyLaterComponent':
+            box.signalUserChanged.disconnect(widget.valueChangedSlot)
+            # These are connected in `EditableWidget.__init__`
+            box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
+                widget.updateStateSlot)
+            gui.window.signalGlobalAccessLevelChanged.disconnect(
+                widget.updateStateSlot)
 
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
