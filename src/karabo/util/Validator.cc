@@ -426,10 +426,14 @@ namespace karabo {
                 
                 workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::NONE.asString());
                 
-                checkThresholdedAlarmCondition(AlarmCondition::WARN_LOW, masterNode, workNode, report, scope, false);
-                checkThresholdedAlarmCondition(AlarmCondition::ALARM_LOW, masterNode, workNode, report, scope, false);
-                checkThresholdedAlarmCondition(AlarmCondition::WARN_HIGH, masterNode, workNode, report, scope, true);
-                checkThresholdedAlarmCondition(AlarmCondition::ALARM_HIGH, masterNode, workNode, report, scope, true);
+                bool clearCondition = true;
+                if(karabo::util::Types::isSimple(workNode.getType())){
+                    
+                    clearCondition &= checkThresholdedAlarmCondition(AlarmCondition::WARN_LOW, masterNode, workNode, report, scope, false);
+                    clearCondition &= checkThresholdedAlarmCondition(AlarmCondition::ALARM_LOW, masterNode, workNode, report, scope, false);
+                    clearCondition &= checkThresholdedAlarmCondition(AlarmCondition::WARN_HIGH, masterNode, workNode, report, scope, true);
+                    clearCondition &= checkThresholdedAlarmCondition(AlarmCondition::ALARM_HIGH, masterNode, workNode, report, scope, true);
+                };
                 
                 
                 if(masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
@@ -438,11 +442,15 @@ namespace karabo {
                     rollingStats->update(workNode.getValueAs<double>());
                     double variance = rollingStats->getRollingWindowVariance();
                     
-                    checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
-                    checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
-                    checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
-                    checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
+                    clearCondition &= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
+                    clearCondition &= checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
+                    clearCondition &= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
+                    clearCondition &= checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
                 
+                }
+                
+                if(clearCondition) {
+                    const bool wasErased = m_parametersInWarnOrAlarm.erase(scope);
                 }
                 
 
@@ -508,11 +516,11 @@ namespace karabo {
             return m_parameterRollingStats.at(scope);
         };
         
-        void Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond,  const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope, bool checkGreater){
-            checkThresholdedAlarmCondition(alarmCond, workNode.getValueAs<double>(), masterNode, workNode, report, scope, checkGreater);
+        bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond,  const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope, bool checkGreater){
+            return checkThresholdedAlarmCondition(alarmCond, workNode.getValueAs<double>(), masterNode, workNode, report, scope, checkGreater);
         }
         
-        void Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope, bool checkGreater){
+        bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope, bool checkGreater){
             if (masterNode.hasAttribute(alarmCond.getAttributeName())) {
                 double threshold = masterNode.getAttributeAs<double>(alarmCond.getAttributeName());
                 double value = workNode.getValueAs<double>();
@@ -523,9 +531,9 @@ namespace karabo {
                     m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmCond.asString(), "message", msg), '\0');
                     attachTimestampIfNotAlreadyThere(workNode);
                     workNode.setAttribute(KARABO_ALARM_ATTR, alarmCond.asString());
+                    return false; //alarm condition re-raised, do not clear
                 } else {
-                    // if it is no longer in alarm we clear
-                    const bool wasErased = m_parametersInWarnOrAlarm.erase(scope);
+                    return true;  // if it is no longer in alarm we may clear
                 }
             }
         }
