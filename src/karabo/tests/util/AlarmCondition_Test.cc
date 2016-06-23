@@ -190,10 +190,52 @@ void AlarmCondition_Test::testValidation(){
     }
     profiler.stopPeriod("validator");
 
-    //clog << p << endl;
 
     profiler.close();
 
     std::clog << "Validation time 250 properties: " << profiler.getPeriod("validator").getDuration()/100 << " [s/per validation]" << std::endl;
 }
 
+void AlarmCondition_Test::testValidationConditionalRoundTrip(){
+    using namespace karabo::util;
+    Validator val;
+    Schema schema;
+    
+    
+    FLOAT_ELEMENT(schema).key("f1")
+        .readOnly().initialValue(5)
+        .warnLow(5).needsAcknowledging(true)
+        .warnHigh(50).needsAcknowledging(true)
+        .commit();
+    
+    FLOAT_ELEMENT(schema).key("f2")
+        .readOnly().initialValue(5)
+        .warnLow(5).needsAcknowledging(true)
+        .warnHigh(50).needsAcknowledging(true)
+        .commit();
+    
+    Hash h1, h2, h_out;
+    h1.set("f1", 4);
+    std::pair<bool, std::string> r = val.validate(schema, h1, h_out);
+            
+    karabo::util::Hash alarmParms = val.getParametersInWarnOrAlarm();
+    
+    CPPUNIT_ASSERT(alarmParms.has("f1"));
+    CPPUNIT_ASSERT(alarmParms.get<Hash>("f1").get<std::string>("type") == AlarmCondition::WARN_LOW.asString());
+    
+    //f1 should still be in alarm, additionally, f2
+    h2.set("f2", 4);
+    r = val.validate(schema, h2, h_out);
+    alarmParms = val.getParametersInWarnOrAlarm();
+    CPPUNIT_ASSERT(alarmParms.has("f1"));
+    CPPUNIT_ASSERT(alarmParms.get<Hash>("f1").get<std::string>("type") == AlarmCondition::WARN_LOW.asString());
+    CPPUNIT_ASSERT(alarmParms.has("f2"));
+    CPPUNIT_ASSERT(alarmParms.get<Hash>("f2").get<std::string>("type") == AlarmCondition::WARN_LOW.asString());
+   
+    //now only f2 in alarm
+    h1.set("f1", 6);
+    r = val.validate(schema, h2, h_out);
+    alarmParms = val.getParametersInWarnOrAlarm();
+    CPPUNIT_ASSERT(alarmParms.has("f2"));
+    CPPUNIT_ASSERT(alarmParms.get<Hash>("f2").get<std::string>("type") == AlarmCondition::WARN_LOW.asString());
+}
