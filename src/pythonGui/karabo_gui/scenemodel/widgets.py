@@ -189,6 +189,12 @@ class PlotCurveModel(HasStrictTraits):
     # The encoded pickle of the curve object
     curve_object_data = String
 
+    def __hash__(self):
+        """ Return a unique hash value for this object.
+            Device + Path is the uniqueness criteria.
+        """
+        return hash(self.device) ^ hash(self.path)
+
 
 class LinePlotModel(BaseWidgetObjectData):
     """ A model for line plot objects
@@ -197,6 +203,25 @@ class LinePlotModel(BaseWidgetObjectData):
     klass = Enum('DisplayTrendline', 'XYVector')
     # The plots for this object
     boxes = List(Instance(PlotCurveModel))
+
+    def _boxes_items_changed(self, event):
+        """ Watch for duplicate boxes being added. When found, remove them
+        after updating the existing box.
+        """
+        def _find_all_matching_boxes(model):
+            matches = []
+            model_hash = hash(model)
+            for box in self.boxes:
+                if hash(box) == model_hash:
+                    matches.append(box)
+            return matches
+
+        for model in event.added:
+            existing = _find_all_matching_boxes(model)
+            if existing:
+                existing[0].curve_object_data = model.curve_object_data
+                if len(existing) > 1:
+                    self.boxes.remove(model)
 
 
 class MonitorModel(BaseWidgetObjectData):
