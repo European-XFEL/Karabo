@@ -37,6 +37,9 @@ class Remote(Macro):
     def shutdown(self):
         shutdown("other")
 
+    def onDestruction(self):
+        Remote.destructed = True
+
 
 class NoRemote(Macro):
     rd = RemoteDevice("DoesNotExist")
@@ -56,6 +59,17 @@ class Other(Device):
     @coroutine
     def count(self):
         async(self.do_count())
+
+    @coroutine
+    def onInitialization(self):
+        self.myself = yield from getDevice("other")
+        self.myself.something = 222
+
+    @coroutine
+    def onDestruction(self):
+        with self.myself:
+            self.myself.something = 111
+            yield from sleep(0.02)
 
 
 class Tests(TestCase):
@@ -78,9 +92,12 @@ class Tests(TestCase):
         self.assertEqual(remote.counter, 29)
         r = weakref.ref(remote)
         thread = EventThread.instance().thread
+        Remote.destructed = False
         del remote
-        time.sleep(0.1)
+        time.sleep(0.02)
         gc.collect()
+        time.sleep(0.02)
+        self.assertTrue(Remote.destructed)
         self.assertIsNone(r())
         self.assertIsNone(EventThread.instance())
         time.sleep(0.1)
@@ -185,18 +202,21 @@ class Tests(TestCase):
         server.startInstance()
         proxy = loop.run_until_complete(
             loop.create_task(self.init_server(server), server))
-        self.assertEqual(proxy.something, 333)
+        # test that onInitialization was run properly
+        self.assertEqual(proxy.something, 222)
         loop.run_until_complete(
             loop.create_task(self.check_server_topology(), dc))
         self.assertIn("other", server.deviceInstanceMap)
         r = weakref.ref(server.deviceInstanceMap["other"])
-        loop.run_until_complete(
-            loop.create_task(self.shutdown_server(), server))
-        self.assertNotIn("other", server.deviceInstanceMap)
-        gc.collect()
-        self.assertIsNone(r())
-        async(server.slotKillServer())
-        async(dc.slotKillDevice())
+        with proxy:
+            loop.run_until_complete(
+                loop.create_task(self.shutdown_server(), server))
+            self.assertNotIn("other", server.deviceInstanceMap)
+            gc.collect()
+            self.assertIsNone(r())
+            async(dc.slotKillDevice())
+            loop.run_until_complete(server.slotKillServer())
+            self.assertEqual(proxy.something, 111)
         loop.run_forever()
         loop.close()
 
