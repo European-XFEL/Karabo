@@ -24,5 +24,4 @@ class _MonitorWrapper(Monitor):
 
 class MonitorContainer(BaseWidgetContainer):
     def _create_widget(self, boxes):
-        display_widget = _MonitorWrapper(self.model, boxes[0], self)
-        return display_widget.widget
+        return _MonitorWrapper(self.model, boxes[0], self)

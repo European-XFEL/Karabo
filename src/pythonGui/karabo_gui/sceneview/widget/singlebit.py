@@ -19,5 +19,4 @@ class _SingleBitWrapper(SingleBit):
 
 class SingleBitContainer(BaseWidgetContainer):
     def _create_widget(self, boxes):
-        display_widget = _SingleBitWrapper(self.model, boxes[0], self)
-        return display_widget.widget
+        return _SingleBitWrapper(self.model, boxes[0], self)

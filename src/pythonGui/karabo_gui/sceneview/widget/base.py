@@ -24,8 +24,11 @@ class BaseWidgetContainer(QWidget):
         self.model = model
         self.layout = QStackedLayout(self)
         self.layout.setStackingMode(QStackedLayout.StackAll)
-        widget = self._create_widget(_get_boxes(model))
-        self.layout.addWidget(widget)
+        boxes = _get_boxes(model)
+        self.old_style_widget = self._create_widget(boxes)
+        self.box = boxes[0]
+        self.layout.addWidget(self.old_style_widget.widget)
+        self._make_box_connections()
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
 
     def _create_widget(self, boxes):
@@ -34,6 +37,26 @@ class BaseWidgetContainer(QWidget):
         THIS MUST BE IMPLEMENTED BY DERIVED CLASSES
         """
         raise NotImplementedError
+
+    def _make_box_connections(self):
+        """ Hook up all the box signals to the old_style_widget instance.
+        """
+        box = self.box
+        widget = self.old_style_widget
+        box.signalNewDescriptor.connect(widget.typeChangedSlot)
+        if box.descriptor is not None:
+            widget.typeChangedSlot(box)
+        box.signalUpdateComponent.connect(widget.valueChangedSlot)
+        if box.hasValue():
+            widget.valueChanged(box, box.value, box.timestamp)
+
+    def destroy(self):
+        """ Disconnect the box signals
+        """
+        box = self.box
+        widget = self.old_style_widget
+        box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
+        box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
 
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
