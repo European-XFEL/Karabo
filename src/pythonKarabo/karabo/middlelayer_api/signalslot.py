@@ -119,6 +119,7 @@ class SignalSlotable(Configurable):
         super().__init__(configuration)
         self.deviceId = self._deviceId_
         self._devices = weakref.WeakValueDictionary()
+        self._ss = None
         self.__randPing = random.randint(2, 0x7fffffff)
         self.__initialized = False
 
@@ -223,7 +224,7 @@ class SignalSlotable(Configurable):
         yield from self._ss.stop_tasks()
 
     def __del__(self):
-        if self._ss.loop.is_running():
+        if self._ss is not None and self._ss.loop.is_running():
             self._ss.loop.create_task(self.slotKillDevice())
 
     def call(self, device, target, *args):
