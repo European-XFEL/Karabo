@@ -207,6 +207,26 @@ void StatisticalEvaluator::testVariance() {
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 12.575d) < EPSILON);
 }
 
+
+
+void StatisticalEvaluator::testUpdateMeanTriggering() {
+    double EPSILON = 0.0001;
+    TestRollingWindowStatisticsFriend stat(10);
+    stat.update(100);
+    stat.update(101);
+    stat.update(100);
+    stat.update(101);
+    double currentMeanEstimate = stat.getMeanEstimate();
+    CPPUNIT_ASSERT(std::abs(currentMeanEstimate - 100) < EPSILON);
+    stat.update(-100);
+    stat.update(-101);
+    stat.update(-100);
+    stat.update(-101);
+    currentMeanEstimate = stat.getMeanEstimate();
+    CPPUNIT_ASSERT(std::abs(currentMeanEstimate - 60.399999) < EPSILON);
+    
+}
+
 void StatisticalEvaluator::testPerformance() {
     karabo::util::TimeProfiler profiler("TestProfiler");
     profiler.open();
@@ -215,26 +235,20 @@ void StatisticalEvaluator::testPerformance() {
     profiler.startPeriod("varianceSingle");
     
     double var;
-    
-    
-    {
-       
-        for(size_t i = 0; i< 10000; i++){
-            stat1000.update(123e9);  var = stat1000.getRollingWindowVariance();
-            stat1000.update(23e9);  var = stat1000.getRollingWindowVariance();
-            stat1000.update(33e9);  var = stat1000.getRollingWindowVariance();
-            stat1000.update(43e9);  var = stat1000.getRollingWindowVariance();
-            stat1000.update(1e9);  var = stat1000.getRollingWindowVariance();
-            stat1000.update(134e9);  var = stat1000.getRollingWindowVariance();
-            stat1000.update(14e9);  var = stat1000.getRollingWindowVariance();
-            stat1000.update(123e9);  var = stat1000.getRollingWindowVariance();
-            stat1000.update(-123e9);  var = stat1000.getRollingWindowVariance();
-            stat1000.update(4123e9); var = stat1000.getRollingWindowVariance();
-        }
+    for(size_t i = 0; i< 10000; i++){
+        stat1000.update(123e9);  var = stat1000.getRollingWindowVariance();
+        stat1000.update(23e9);  var = stat1000.getRollingWindowVariance();
+        stat1000.update(33e9);  var = stat1000.getRollingWindowVariance();
+        stat1000.update(43e9);  var = stat1000.getRollingWindowVariance();
+        stat1000.update(1e9);  var = stat1000.getRollingWindowVariance();
+        stat1000.update(134e9);  var = stat1000.getRollingWindowVariance();
+        stat1000.update(14e9);  var = stat1000.getRollingWindowVariance();
+        stat1000.update(123e9);  var = stat1000.getRollingWindowVariance();
+        stat1000.update(-123e9);  var = stat1000.getRollingWindowVariance();
+        stat1000.update(4123e9); var = stat1000.getRollingWindowVariance();
     }
+  
     profiler.stopPeriod("varianceSingle");
-
-    //clog << p << endl;
 
     profiler.close();
 
@@ -250,8 +264,7 @@ void StatisticalEvaluator::testValidatorPerformance() {
 
     TimeProfiler profiler("TestProfiler");
     profiler.open();
-
-    
+ 
     Validator val;
     Schema schema;
     
@@ -280,14 +293,9 @@ void StatisticalEvaluator::testValidatorPerformance() {
                 .commit();
     }
     
-    
-    
     profiler.startPeriod("varianceValidator");
     
     Hash h_out;
-   
-    
-    
        
     for(size_t t = 0; t< 100; t++){
         for(int i = 0; i < 50; i++){
@@ -304,8 +312,6 @@ void StatisticalEvaluator::testValidatorPerformance() {
         }
     }
     profiler.stopPeriod("varianceValidator");
-
-    //clog << p << endl;
 
     profiler.close();
 
