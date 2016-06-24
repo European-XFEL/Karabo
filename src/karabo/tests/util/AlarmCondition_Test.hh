@@ -16,7 +16,7 @@ class AlarmCondition_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testStringAssignmentRoundTrip);
     CPPUNIT_TEST(testSignificanceEvaluation);
     CPPUNIT_TEST(testValidationConditionalRoundTrip);
-    //CPPUNIT_TEST(testValidation);
+    CPPUNIT_TEST(testValidation);
     
 
     CPPUNIT_TEST_SUITE_END();
