@@ -5,15 +5,15 @@
 namespace karabo {
     namespace util {
   
-        AlarmCondition::AlarmCondition() : m_conditionString("UNDEFINED"), m_rank(0), m_attr("UNDEFINED") {
+        AlarmCondition::AlarmCondition() : m_conditionString("UNDEFINED"), m_rank(0) {
             
         };
 
-        AlarmCondition::AlarmCondition(std::string cs, unsigned int r) : m_conditionString(cs), m_rank(r), m_attr("UNDEFINED"){
+        AlarmCondition::AlarmCondition(std::string cs, unsigned int r) : m_conditionString(cs), m_rank(r){
             
         };
 
-        AlarmCondition::AlarmCondition(std::string cs, const AlarmCondition & b, std::string attr) : m_conditionString(cs), m_rank(b.m_rank), m_base(boost::make_shared<AlarmCondition>(b)), m_attr(attr){
+        AlarmCondition::AlarmCondition(std::string cs, const AlarmCondition & b) : m_conditionString(cs), m_rank(b.m_rank), m_base(boost::make_shared<AlarmCondition>(b)){
             
         };
         
@@ -93,27 +93,21 @@ namespace karabo {
             }
         }
         
-        const std::string & AlarmCondition::getAttributeName() const {
-            return m_attr;
-        }
-      
+        
        
-        #define KRB_ALARM_BASE(name, rank) const AlarmCondition AlarmCondition::name(std::string(#name), rank);
-
-        #define KRB_ALARM_FROM_BASE(name, base) const AlarmCondition AlarmCondition::name(std::string(#name), base, std::string(KARABO_SCHEMA_ ## name));
-
-        KRB_ALARM_BASE(NONE, 0);
-        KRB_ALARM_BASE(WARN, 1);
-        KRB_ALARM_FROM_BASE(WARN_LOW, WARN);
-        KRB_ALARM_FROM_BASE(WARN_HIGH, WARN);
-        KRB_ALARM_FROM_BASE(WARN_VARIANCE_LOW, WARN);
-        KRB_ALARM_FROM_BASE(WARN_VARIANCE_HIGH, WARN);
-        KRB_ALARM_BASE(ALARM, 2);
-        KRB_ALARM_FROM_BASE(ALARM_LOW, ALARM);
-        KRB_ALARM_FROM_BASE(ALARM_HIGH, ALARM);
-        KRB_ALARM_FROM_BASE(ALARM_VARIANCE_LOW, ALARM);
-        KRB_ALARM_FROM_BASE(ALARM_VARIANCE_HIGH, ALARM);
-        KRB_ALARM_BASE(INTERLOCK, 3); //interlock is assumed to always be the highest conditions and knowledge of this is used in returnMostSignificant
+        const AlarmCondition AlarmCondition::NONE("NONE", 0);
+        const AlarmCondition AlarmCondition::WARN("WARN", 1);
+        const AlarmCondition AlarmCondition::WARN_LOW("WARN_LOW", WARN);
+        const AlarmCondition AlarmCondition::WARN_HIGH("WARN_HIGH", WARN);
+        const AlarmCondition AlarmCondition::WARN_VARIANCE_LOW("WARN_VARIANCE_LOW", WARN);
+        const AlarmCondition AlarmCondition::WARN_VARIANCE_HIGH("WARN_VARIANCE_HIGH", WARN);
+        const AlarmCondition AlarmCondition::ALARM("ALARM", 2);
+        const AlarmCondition AlarmCondition::ALARM_LOW("ALARM_LOW", ALARM);
+        const AlarmCondition AlarmCondition::ALARM_HIGH("ALARM_HIGH", ALARM);
+        const AlarmCondition AlarmCondition::ALARM_VARIANCE_LOW("ALARM_VARIANCE_LOW", ALARM);
+        const AlarmCondition AlarmCondition::ALARM_VARIANCE_HIGH("ALARM_VARIANCE_HIGH", ALARM);
+        const AlarmCondition AlarmCondition::INTERLOCK("INTERLOCK", 3);
+       //interlock is assumed to always be the highest conditions and knowledge of this is used in returnMostSignificant
         
         std::map<std::string, const AlarmCondition & > AlarmCondition::m_alarmFactory = std::map<std::string, const AlarmCondition &> ();
         

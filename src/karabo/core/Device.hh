@@ -17,7 +17,7 @@
 #include <karabo/net/utils.hh>
 #include <karabo/util.hpp>
 #include <karabo/util/SignalHandler.hh>
-#include <karabo/util/StatisticalEvaluators.hh>
+#include <karabo/util/RollingWindowStatistics.hh>
 #include <karabo/xms.hpp>
 #include <karabo/log/Logger.hh>
 #include <karabo/xip/CpuImage.hh>
@@ -470,15 +470,15 @@ namespace karabo {
                     std::vector<AlarmCondition> v;
                     for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                         const Hash& desc = it->getValue<Hash>();
-                        KARABO_LOG_WARN << desc.get<string>("type")<<":"<< desc.get<string>("message");
+                        KARABO_LOG_WARN << desc.get<string>("type")<<": "<< desc.get<string>("message");
                         emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_deviceId);
                         v.push_back(AlarmCondition::fromString(desc.get<string>("type")));
                     }
-                    lock.release();
+                    lock.unlock();
                     this->setAlarmCondition(AlarmCondition::returnMostSignificant(v));
                     lock.lock();
                 } else {
-                    lock.release();
+                    lock.unlock();
                     this->setAlarmCondition(AlarmCondition::NONE);
                     lock.lock();
                 }
@@ -888,7 +888,7 @@ namespace karabo {
                 return karabo::util::AlarmCondition::fromString(this->get<std::string>("alarmCondition"));
             }
             
-            void setAlarmCondition(const karabo::util::AlarmCondition & condition, bool needsAcknowledgement = false){
+            void setAlarmCondition(const karabo::util::AlarmCondition & condition){
                 this->setNoValidate("alarmCondition", condition.asString());
             }
             

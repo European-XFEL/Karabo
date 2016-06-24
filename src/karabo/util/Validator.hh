@@ -21,7 +21,7 @@
 #include "karaboDll.hh"
 #include "Timestamp.hh"
 
-#include "StatisticalEvaluators.hh"
+#include "RollingWindowStatistics.hh"
 #include <map>
 
 #include <boost/thread/mutex.hpp>
@@ -29,6 +29,7 @@
 
 namespace karabo {
     namespace util {
+        
         
         class Validator {
 
@@ -101,9 +102,9 @@ namespace karabo {
             
             void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
             
-            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond,  const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
+            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, const string & attr,  const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
             
-            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
+            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, const string & attr, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
             
             
 
