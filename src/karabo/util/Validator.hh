@@ -48,13 +48,7 @@ namespace karabo {
             
         public:
             
-            enum ProblemType {
-                WARN_LOW,
-                WARN_HIGH,
-                ALARM_LOW,
-                ALARM_HIGH
-            };
-
+            
             struct ValidationRules {
 
                 ValidationRules()
@@ -107,9 +101,9 @@ namespace karabo {
             
             void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
             
-            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond,  const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope, bool checkGreater);
+            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond,  const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
             
-            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope, bool checkGreater);
+            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
             
             
 
