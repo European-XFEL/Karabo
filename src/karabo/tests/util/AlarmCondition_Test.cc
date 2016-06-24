@@ -198,7 +198,9 @@ void AlarmCondition_Test::testValidation(){
 
 void AlarmCondition_Test::testValidationConditionalRoundTrip(){
     using namespace karabo::util;
-    Validator val;
+    Validator::ValidationRules rules (false, true, false, true, true);
+                                
+    Validator val(rules);
     Schema schema;
     
     
@@ -215,7 +217,7 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip(){
         .commit();
     
     Hash h1, h2, h_out;
-    h1.set("f1", 4);
+    h1.set("f1", 3);
     std::pair<bool, std::string> r = val.validate(schema, h1, h_out);
             
     karabo::util::Hash alarmParms = val.getParametersInWarnOrAlarm();
@@ -234,8 +236,9 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip(){
    
     //now only f2 in alarm
     h1.set("f1", 6);
-    r = val.validate(schema, h2, h_out);
+    r = val.validate(schema, h1, h_out);
     alarmParms = val.getParametersInWarnOrAlarm();
+    
     CPPUNIT_ASSERT(!alarmParms.has("f1"));
     CPPUNIT_ASSERT(alarmParms.has("f2"));
     CPPUNIT_ASSERT(alarmParms.get<Hash>("f2").get<std::string>("type") == AlarmCondition::WARN_LOW.asString());
