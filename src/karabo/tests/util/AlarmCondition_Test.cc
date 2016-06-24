@@ -198,7 +198,13 @@ void AlarmCondition_Test::testValidation(){
 
 void AlarmCondition_Test::testValidationConditionalRoundTrip(){
     using namespace karabo::util;
-    Validator::ValidationRules rules (false, true, false, true, true);
+    karabo::util::Validator::ValidationRules rules; //same rules as the internal validator of device. 
+                                                   //It will fail if defaults are injected but this is not relevant
+    rules.allowAdditionalKeys = true;
+    rules.allowMissingKeys = true;
+    rules.allowUnrootedConfiguration = true;
+    rules.injectDefaults = false;
+    rules.injectTimestamps = true;
                                 
     Validator val(rules);
     Schema schema;
@@ -218,6 +224,7 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip(){
     
     Hash h1, h2, h_out;
     h1.set("f1", 3);
+   
     std::pair<bool, std::string> r = val.validate(schema, h1, h_out);
             
     karabo::util::Hash alarmParms = val.getParametersInWarnOrAlarm();

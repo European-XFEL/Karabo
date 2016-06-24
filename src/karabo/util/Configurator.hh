@@ -53,7 +53,8 @@ namespace karabo {
         //**********************************************
         //               Configurator                  *
         //**********************************************
-
+        
+        
         template <class BaseClass>
         class Configurator {
 

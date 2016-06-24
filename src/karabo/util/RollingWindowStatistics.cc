@@ -1,4 +1,4 @@
-#include "StatisticalEvaluators.hh"
+#include "RollingWindowStatistics.hh"
 
 namespace karabo {
     namespace util {
@@ -14,17 +14,20 @@ namespace karabo {
             
         }
 
+        
         double RollingWindowStatistics::getRollingWindowVariance() const {
             boost::shared_lock<boost::shared_mutex> lock(m_updateMutex);
             unsigned long long n = std::min(m_evalInterval, m_nvals);
             return (m_s2 - m_s*m_s/n)/(n-1);
         }
                 
+        
         double RollingWindowStatistics::getRollingWindowMean() const {
             boost::shared_lock<boost::shared_mutex> lock(m_updateMutex);
             unsigned long long n = std::min(m_evalInterval, m_nvals);
             return m_s/n+m_meanEstimate;
         }
+        
         
         
         void RollingWindowStatistics::update(double v){

@@ -430,23 +430,23 @@ namespace karabo {
                 const karabo::util::Types::ReferenceType workType = workNode.getType();
                 if(karabo::util::Types::isSimple(workType) && workType != karabo::util::Types::STRING){
                     
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_LOW, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_LOW, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_HIGH, masterNode, workNode, report, scope, true);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_HIGH, masterNode, workNode, report, scope, true);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_LOW, KARABO_SCHEMA_WARN_LOW, masterNode, workNode, report, scope, false);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_LOW, KARABO_SCHEMA_ALARM_LOW, masterNode, workNode, report, scope, false);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_HIGH, KARABO_SCHEMA_WARN_HIGH, masterNode, workNode, report, scope, true);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_HIGH, KARABO_SCHEMA_ALARM_HIGH, masterNode, workNode, report, scope, true);
                 };
                 
                 
                 if(masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
                     assureRollingStatsInitialized(scope, masterNode.getAttributeAs<double>(KARABO_SCHEMA_ROLLING_STATS_EVAL));
-                    RollingWindowStatistics::Pointer rollingStats = m_parameterRollingStats.at(scope);
+                    RollingWindowStatistics::Pointer rollingStats = m_parameterRollingStats[scope];
                     rollingStats->update(workNode.getValueAs<double>());
                     double variance = rollingStats->getRollingWindowVariance();
                     
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_LOW, KARABO_SCHEMA_WARN_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_LOW, KARABO_SCHEMA_ALARM_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_HIGH, KARABO_SCHEMA_WARN_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_HIGH, KARABO_SCHEMA_ALARM_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
                 
                 }
                 
@@ -512,20 +512,21 @@ namespace karabo {
         
         RollingWindowStatistics::ConstPointer Validator::getRollingStatistics(const std::string & scope) const {
             boost::shared_lock<boost::shared_mutex> lock(m_rollingStatMutex);
-            if (m_parameterRollingStats.find(scope) == m_parameterRollingStats.end()){
+            std::map<std::string, RollingWindowStatistics::Pointer>::const_iterator stats = m_parameterRollingStats.find(scope);
+            if (stats == m_parameterRollingStats.end()){
                 KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+scope+"'!");
             }
             
-            return m_parameterRollingStats.at(scope);
+            return stats->second;
         };
         
-        bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond,  const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
-            return checkThresholdedAlarmCondition(alarmCond, workNode.getValueAs<double>(), masterNode, workNode, report, scope, checkGreater);
+        bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, const string & attr, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
+            return checkThresholdedAlarmCondition(alarmCond, attr, workNode.getValueAs<double>(), masterNode, workNode, report, scope, checkGreater);
         }
         
-        bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
-            if (masterNode.hasAttribute(alarmCond.getAttributeName())) {
-                double threshold = masterNode.getAttributeAs<double>(alarmCond.getAttributeName());
+        bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, const string & attr, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
+            if (masterNode.hasAttribute(attr)) {
+                double threshold = masterNode.getAttributeAs<double>(attr);
                 double value = workNode.getValueAs<double>();
                 if ((checkGreater ? value > threshold : value < threshold)) {
                     string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went " 

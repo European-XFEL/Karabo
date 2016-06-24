@@ -285,10 +285,10 @@
         <itemPath>../../../src/karabo/util/Dims.hh</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.cc</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
+        <itemPath>../../../src/karabo/util/RollingWindowStatistics.cc</itemPath>
+        <itemPath>../../../src/karabo/util/RollingWindowStatistics.hh</itemPath>
         <itemPath>../../../src/karabo/util/SignalHandler.cc</itemPath>
         <itemPath>../../../src/karabo/util/SignalHandler.hh</itemPath>
-        <itemPath>../../../src/karabo/util/StatisticalEvaluators.cc</itemPath>
-        <itemPath>../../../src/karabo/util/StatisticalEvaluators.hh</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.cc</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Units.hh</itemPath>
@@ -516,6 +516,9 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
         <ccTool>
           <commandlineTool>g++</commandlineTool>
           <incDir>
@@ -524,7 +527,7 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
-          <commandLine>-Wno-unused-local-typedefs</commandLine>
+          <commandLine>`cppunit-config --cflags`</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
@@ -540,6 +543,7 @@
           </linkerDynSerch>
           <linkerLibItems>
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -1924,6 +1928,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/RollingWindowStatistics.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/RollingWindowStatistics.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/Schema.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Schema.hh" ex="false" tool="3" flavor2="0">
@@ -1939,16 +1953,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/SimpleElement.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/StatisticalEvaluators.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/StatisticalEvaluators.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2464,20 +2468,6 @@
           <output>${TESTDIR}/TestFiles/f7</output>
         </linkerTool>
       </folder>
-      <folder path="TestFiles/f8">
-        <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </cTool>
-        <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </ccTool>
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f8</output>
-          <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
-          </linkerLibItems>
-        </linkerTool>
-      </folder>
       <folder path="f2/f1">
         <ccTool>
           <preprocessorList>
@@ -2509,6 +2499,7 @@
       <compileType>
         <cTool>
           <developmentMode>5</developmentMode>
+          <commandLine>`cppunit-config --cflags`</commandLine>
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
@@ -2518,7 +2509,7 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
-          <commandLine>-Wno-unused-local-typedefs</commandLine>
+          <commandLine>`cppunit-config --cflags`</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
@@ -2531,7 +2522,7 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
+          <output>${TESTDIR}/TestFiles/f8</output>
           <linkerAddLib>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
@@ -2540,6 +2531,7 @@
           </linkerDynSerch>
           <linkerLibItems>
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -3930,6 +3922,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/RollingWindowStatistics.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/RollingWindowStatistics.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/Schema.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Schema.hh" ex="false" tool="3" flavor2="0">
@@ -3945,16 +3947,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/SimpleElement.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/StatisticalEvaluators.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/StatisticalEvaluators.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4463,20 +4455,6 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f6</output>
-          <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
-          </linkerLibItems>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f8">
-        <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </cTool>
-        <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </ccTool>
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f8</output>
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
