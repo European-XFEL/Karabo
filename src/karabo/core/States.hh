@@ -182,7 +182,7 @@ namespace karabo {
                 
             private:
                 
-                size_t rankedAt(const State::Pointer& sp, const std::vector<State::Pointer>& tl);
+                size_t rankedAt(const State::Pointer& sp);
                 
             protected:
                 std::vector<State::Pointer> m_trumpList;
@@ -191,12 +191,9 @@ namespace karabo {
             struct StatesRegistrator {
                 
                 StatesRegistrator();
-                boost::shared_ptr<StateSignifier> stateSignifier;
             };
 
             static StatesRegistrator statesRegistrator;
-            
-            extern State::Pointer returnMostSignificant(const std::vector<State::Pointer>& listOfStates);
         }
     }
 }

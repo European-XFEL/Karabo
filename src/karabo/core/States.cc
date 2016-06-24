@@ -136,12 +136,11 @@ namespace karabo {
 #undef KARABO_INIT_FIXED_STATE
             
             State::Pointer StateSignifier::returnMostSignificant(const std::vector<State::Pointer>& listOfStates) {
-                const vector<State::Pointer>& trumplist = statesRegistrator.stateSignifier->getTrumpList();
                 State::Pointer statePtr(new State);
                 size_t stateRank = 0;
                 for (vector<State::Pointer>::const_iterator ii = listOfStates.begin(); ii != listOfStates.end(); ++ii) {
                     State::Pointer sp = *ii;
-                    size_t rank = rankedAt(sp, trumplist);
+                    size_t rank = rankedAt(sp);
                     if (rank > stateRank) {
                         statePtr = sp;
                         stateRank = rank;
@@ -150,12 +149,12 @@ namespace karabo {
                 return statePtr;
             }
 
-            size_t StateSignifier::rankedAt(const State::Pointer& sp, const std::vector<State::Pointer>& tl) {
+            size_t StateSignifier::rankedAt(const State::Pointer& sp) {
                 vector<string> allnames = sp->parents();        // copy parents list
                 allnames.insert(allnames.begin(), sp->name());  // insert stateName at the beginning....
                 for (vector<string>::const_iterator ii = allnames.begin(); ii != allnames.end(); ii++) {
-                    for (size_t i = 0; i < tl.size(); i++) {
-                        if (*ii == tl[i]->name()) return i+1;
+                    for (size_t i = 0; i < m_trumpList.size(); i++) {
+                        if (*ii == m_trumpList[i]->name()) return i+1;
                     }
                 }
                 std::cout << "Failed to find " << toString(allnames) << " in trump list" << std::endl;
@@ -259,12 +258,9 @@ namespace karabo {
                 REGISTER_STATE(SWITCHING_OFF)
 #undef REGISTER_STATE                    
                         
-                stateSignifier = boost::shared_ptr<StateSignifier>(new StateSignifier);
+                //stateSignifier = boost::shared_ptr<StateSignifier>(new StateSignifier);
             }
         
-            State::Pointer returnMostSignificant(const std::vector<State::Pointer>& listOfStates) {
-                return statesRegistrator.stateSignifier->returnMostSignificant(listOfStates);
-            }
         }
 
 
