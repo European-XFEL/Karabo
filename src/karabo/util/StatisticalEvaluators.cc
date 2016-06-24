@@ -29,9 +29,11 @@ namespace karabo {
         
         void RollingWindowStatistics::update(double v){
             
+            const double varBeforeUpdate = getRollingWindowVariance();
             boost::unique_lock<boost::shared_mutex> lock(m_updateMutex);
             if (m_nvals == 0) {
                 m_meanEstimate = v;
+            
             }
             const unsigned int index = m_nvals % m_evalInterval;
             const double vOldest = m_vals[index];
@@ -44,25 +46,25 @@ namespace karabo {
 
             lock.unlock();
             const double currentMean = getRollingWindowMean();
-            if((currentMean-m_meanEstimate)*(currentMean-m_meanEstimate)/getRollingWindowVariance() > 25 ) updateEstimate(); // we update if we are 5sigma off
+            if((currentMean-m_meanEstimate)*(currentMean-m_meanEstimate)/varBeforeUpdate > 25 ) updateEstimate(currentMean); // we update if we are 5sigma off
                
         }
         
         
-        void RollingWindowStatistics::updateEstimate(){
+        void RollingWindowStatistics::updateEstimate(const double currentMean){
             //we need to go through all data in current estimate
             boost::unique_lock<boost::shared_mutex> lock(m_updateMutex);
             m_s = 0;
             m_s2 = 0;
+            m_meanEstimate = currentMean;
             const unsigned int n = std::min(m_evalInterval, m_nvals);
             for(unsigned int i = 0; i < n ; i++){
                 const double v = m_vals[i];
-                const double delta = v - m_s; 
-                m_s +=  delta/(i+1);
-                m_s2 += delta*(v-m_s);
+                const double diff = v - m_meanEstimate; 
+                m_s +=  diff;
+                m_s2 += diff * diff;
             }
-            m_meanEstimate = m_s;
-            
+                       
         }
         
        
