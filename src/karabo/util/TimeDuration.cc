@@ -57,10 +57,9 @@ namespace karabo {
         TimeDuration& TimeDuration::add(const TimeValue seconds, const TimeValue fractions) {
             m_Seconds += seconds;
             m_Fractions += fractions;
-            unsigned long long onesec = 1000000000000000000ULL; // with 18 zeros
-            if (m_Fractions > onesec) {
+            if (m_Fractions > m_oneSecondInAtto) {
                 ++m_Seconds;
-                m_Fractions -= onesec;
+                m_Fractions -= m_oneSecondInAtto;
             }
             return *this;
         }
@@ -69,10 +68,9 @@ namespace karabo {
         TimeDuration & TimeDuration::add(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
             m_Seconds += days * DAY + hours * HOUR + minutes * MINUTE + seconds;
             m_Fractions += fractions;
-            unsigned long long onesec = 1000000000000000000ULL; // with 18 zeros
-            if (m_Fractions > onesec) {
+            if (m_Fractions > m_oneSecondInAtto) {
                 ++m_Seconds;
-                m_Fractions -= onesec;
+                m_Fractions -= m_oneSecondInAtto;
             }
             return *this;
         }
@@ -80,9 +78,8 @@ namespace karabo {
 
         TimeDuration& TimeDuration::sub(const TimeValue seconds, const TimeValue fractions) {
             m_Seconds -= seconds;
-            unsigned long long onesec = 1000000000000000000ULL; // with 18 zeros
             if (m_Fractions < fractions) {
-                m_Fractions = (onesec - fractions) + m_Fractions;
+                m_Fractions = (m_oneSecondInAtto - fractions) + m_Fractions;
                 --m_Seconds;
             } else {
                 m_Fractions -= fractions;
@@ -93,9 +90,8 @@ namespace karabo {
 
         TimeDuration & TimeDuration::sub(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
             m_Seconds -= days * DAY + hours * HOUR + minutes * MINUTE + seconds;
-            unsigned long long onesec = 1000000000000000000ULL; // with 18 zeros
             if (m_Fractions < fractions) {
-                m_Fractions = (onesec - fractions) + m_Fractions;
+                m_Fractions = (m_oneSecondInAtto - fractions) + m_Fractions;
                 --m_Seconds;
             } else {
                 m_Fractions -= fractions;
