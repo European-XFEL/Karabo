@@ -20,6 +20,7 @@ class Epochstamp_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Epochstamp_Test);
 
     CPPUNIT_TEST(testConstructors);
+    CPPUNIT_TEST(testOperators);
     //
     CPPUNIT_TEST(testToIso8601String);
     CPPUNIT_TEST(testToFormattedString);
@@ -34,6 +35,7 @@ public:
 
 private:
     void testConstructors();
+    void testOperators();
     //
     void testToIso8601String();
     void testToFormattedString();
