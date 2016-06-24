@@ -5,25 +5,25 @@
  * Created on June 9, 2016, 9:13 AM
  */
 
-#ifndef ALARMCONDITIONS_HH
-#define	ALARMCONDITIONS_HH
+#ifndef KARABO_UTIL_ALARMCONDITIONS_HH
+#define	KARABO_UTIL_ALARMCONDITIONS_HH
 
 #include <vector>
 #include <map>
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/make_shared.hpp>
+
+
 
 namespace karabo {
     namespace util {
         
             
-        class AlarmCondition;
-
-        class AlarmCondition : public boost::enable_shared_from_this<AlarmCondition>{
+        class AlarmCondition{
 
         public:
+            
             static const AlarmCondition NONE;
             static const AlarmCondition WARN;
             static const AlarmCondition WARN_LOW;
@@ -38,11 +38,11 @@ namespace karabo {
             static const AlarmCondition INTERLOCK;
             
             
-
             /**
              * Returns the most significant alarm condition out of a list of conditions
              * @param v: the list of alarm conditions
-             * @return the most significant condition in the list
+             * @return the most significant condition in the list (it will return the parent condition where applicable)
+             *         e.g. WARN_HIGH -> WARN
              */
             static AlarmCondition returnMostSignificant(const std::vector<AlarmCondition> & v);
 
@@ -71,6 +71,8 @@ namespace karabo {
              * @return 
              */
             operator std::string() const;
+            
+            
 
             /**
              * Tests whether two alarm conditions are similar, e.g. are subsets of the same basic condition
@@ -80,11 +82,13 @@ namespace karabo {
             bool isSameCriticality (const AlarmCondition & test) const;
             
             /**
-             
+             * Returns the more significant of the two condtions
+             * @param other
+             * @return 
              */
             const AlarmCondition & returnMoreSignificant(const AlarmCondition & other) const;
             
-            const std::string & getAttributeName() const;
+           
 
         private:
 
@@ -95,7 +99,7 @@ namespace karabo {
 
             AlarmCondition(std::string cs, unsigned int r);
 
-            AlarmCondition(std::string cs, const AlarmCondition & b, std::string attr);
+            AlarmCondition(std::string cs, const AlarmCondition & b);
 
             boost::shared_ptr<const AlarmCondition> getBase() const;
 

@@ -9,7 +9,7 @@
 #define	STATISTICALEVALUATOR_HH
 
 #include <cppunit/extensions/HelperMacros.h>
-#include <karabo/util/StatisticalEvaluators.hh>
+#include <karabo/util/RollingWindowStatistics.hh>
 
 class TestRollingWindowStatisticsFriend : public karabo::util::RollingWindowStatistics{
    
