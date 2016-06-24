@@ -5,7 +5,8 @@ from .generic import DisplayEditableWidgetContainer, GenericWidgetContainer  # n
 from .icons import IconsContainer  # noqa
 from .lineplot import LinePlotContainer  # noqa
 from .monitor import MonitorContainer  # noqa
-from .simple import LabelWidget, SceneLinkWidget, UnknownSvgWidget  # noqa
+from .simple import (LabelWidget, SceneLinkWidget, UnknownSvgWidget,  # noqa
+                     WorkflowItemWidget)  # noqa
 from .singlebit import SingleBitContainer  # noqa
 from .statecolor import DisplayStateColorContainer  # noqa
 from .tableelement import TableElementContainer  # noqa

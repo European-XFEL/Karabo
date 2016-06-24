@@ -12,7 +12,7 @@ from karabo_gui.scenemodel.api import (
     FileInModel, FileOutModel, LineEditModel,
     DisplayStateColorModel, DigitIconsModel, EvaluatorModel, FloatSpinBoxModel,
     LinePlotModel, MonitorModel, SelectionIconsModel, SingleBitModel,
-    TableElementModel, TextIconsModel, VacuumWidgetModel
+    TableElementModel, TextIconsModel, VacuumWidgetModel, WorkflowItemModel
 )
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
@@ -22,7 +22,7 @@ from .widget.api import (
     EvaluatorContainer, FloatSpinBoxContainer, GenericWidgetContainer,
     IconsContainer, LabelWidget, LinePlotContainer, MonitorContainer,
     SceneLinkWidget, SingleBitContainer, TableElementContainer,
-    UnknownSvgWidget, VacuumWidgetContainer)
+    UnknownSvgWidget, VacuumWidgetContainer, WorkflowItemWidget)
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
@@ -31,7 +31,7 @@ _WIDGET_CLASSES = (
     EvaluatorContainer, FloatSpinBoxContainer, GenericWidgetContainer,
     IconsContainer, LabelWidget, LinePlotContainer, MonitorContainer,
     SceneLinkWidget, SingleBitContainer, TableElementContainer,
-    UnknownSvgWidget, VacuumWidgetContainer)
+    UnknownSvgWidget, VacuumWidgetContainer, WorkflowItemWidget)
 _SCENE_OBJ_FACTORIES = {
     FixedLayoutModel: lambda m, p: GroupLayout(m),
     BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
@@ -77,6 +77,7 @@ _SCENE_OBJ_FACTORIES = {
     MonitorModel: MonitorContainer,
     LinePlotModel: LinePlotContainer,
     TableElementModel: TableElementContainer,
+    WorkflowItemModel: WorkflowItemWidget,
 }
 
 
