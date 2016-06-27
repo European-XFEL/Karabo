@@ -149,13 +149,13 @@ class Macro(Device):
         """ implement the RemoteDevice functionality, upon
         starting the device the devices are searched and then
         assigned to the object's properties """
-        yield from super().run_async()
-
         info = Hash()
         info["type"] = "macro"
         info["project"] = self.project
         info["module"] = self.module
         self.updateInstanceInfo(info)
+
+        yield from super().run_async()
 
         self.state = "SearchRemotes..."
         holders = []
