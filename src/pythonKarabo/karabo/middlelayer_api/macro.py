@@ -129,6 +129,14 @@ class Macro(Device):
                           if hasattr(m, "monitor")]
 
     def __init__(self, configuration=None, **kwargs):
+        """Create a new macro
+
+        If this is done outside the event loop thread (i. e., from the
+        command line), the macro is immediately started so that it responds to
+        the network.
+
+        If this is done in a server, the macro will be started like any other
+        device."""
         if configuration is None:
             configuration = {}
         configuration.update(kwargs)
