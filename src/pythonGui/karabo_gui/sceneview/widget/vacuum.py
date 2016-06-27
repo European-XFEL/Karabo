@@ -12,17 +12,18 @@ from karabo_gui.vacuumwidgets.turbopumpwidget import TurboPumpWidget
 from karabo_gui.vacuumwidgets.valvewidget import ValveWidget
 from .base import BaseWidgetContainer
 
+_VACUUM_CLASSES = (
+    CryoCoolerWidget, HydraulicValveWidget, MaxiGaugeWidget,
+    MembranePumpWidget, MotorWidget, PressureGaugeWidget, PressureSwitchWidget,
+    RightAngleValveWidget, ShutOffValveWidget, TemperatureProbeWidget,
+    TurboPumpWidget, ValveWidget)
+_VACUUM_WIDGETS = {c.__class__.__name__: c for c in _VACUUM_CLASSES}
+
 
 class VacuumWidgetContainer(BaseWidgetContainer):
     """ A container for VacuumWidgets
     """
     def _create_widget(self, boxes):
-        vacuum_classes = (
-            CryoCoolerWidget, HydraulicValveWidget, MaxiGaugeWidget,
-            MembranePumpWidget, MotorWidget, PressureGaugeWidget,
-            PressureSwitchWidget, RightAngleValveWidget, ShutOffValveWidget,
-            TemperatureProbeWidget, TurboPumpWidget, ValveWidget)
-        factories = {c.__class__.__name__: c for c in vacuum_classes}
-        factory = factories[self.model.klass]
+        factory = _VACUUM_WIDGETS[self.model.klass]
         display_widget = factory(boxes[0], self)
         return display_widget.widget
