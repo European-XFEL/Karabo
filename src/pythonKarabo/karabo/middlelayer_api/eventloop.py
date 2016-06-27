@@ -298,8 +298,12 @@ class NoEventLoop(AbstractEventLoop):
 class EventLoop(SelectorEventLoop):
     Queue = Queue
     sync_set = False
+    global_loop = None
 
     def __init__(self, topic=None):
+        if EventLoop.global_loop is not None:
+            raise RuntimeError("there can only be one Karabo event loop")
+        EventLoop.global_loop = self
         super().__init__()
         if topic is not None:
             self.topic = topic
@@ -389,6 +393,18 @@ class EventLoop(SelectorEventLoop):
         else:
             return self.start_thread(f, *args, **kwargs)
 
+    def start_device(self, device):
+        lock = threading.Lock()
+        lock.acquire()
+
+        @coroutine
+        def run_device():
+            yield from device.startInstance()
+            lock.release()
+
+        self.call_soon_threadsafe(self.create_task, run_device())
+        lock.acquire()
+
     def instance(self):
         try:
             return Task.current_task(loop=self).instance()
@@ -417,3 +433,4 @@ class EventLoop(SelectorEventLoop):
         if self.connection is not None:
             self.connection.close()
         super().close()
+        EventLoop.global_loop = None
