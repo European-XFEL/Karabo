@@ -8,7 +8,7 @@ class CircleMotor(Device):
     xaxis = DeviceNode(
         displayedName="X Axis",
         properties=["targetValue", "position", "hardwareState"],
-        commands=[{"home": "stop"}, "reset"])
+        commands=[{"home_center": "home"}, "reset"])
 
     yaxis = DeviceNode(
         displayedName="Y Axis",
@@ -21,6 +21,8 @@ class CircleMotor(Device):
 
     targetAngle = Float(
         displayedName="Angle on the circle to move to",
+        description="The target angle between the x-axis, the origin and "
+                    "the motor's position. Negative for the negative y-axis",
         unitSymbol=Unit.DEGREE)
 
     radius = Float(
@@ -30,6 +32,8 @@ class CircleMotor(Device):
 
     angle = Float(
         displayedName="Angle on the circle the motor is at",
+        description="The angle between the x-axis, the origin and "
+                    "the motor's position. Negative for the negative y-axis",
         accessMode=AccessMode.READONLY,
         unitSymbol=Unit.DEGREE)
 
