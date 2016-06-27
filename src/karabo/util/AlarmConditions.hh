@@ -104,8 +104,6 @@ namespace karabo {
             boost::shared_ptr<const AlarmCondition> getBase() const;
 
             
-            
-            std::string m_attr;
             std::string m_conditionString;
             unsigned int m_rank;
             boost::shared_ptr<const AlarmCondition> m_base;
