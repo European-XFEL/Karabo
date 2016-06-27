@@ -8,7 +8,7 @@ namespace karabo {
         
         RollingWindowStatistics::RollingWindowStatistics(unsigned int evalInterval):
                 m_evalInterval(evalInterval), m_s(0.), m_s2(0.), m_nvals(0),
-                m_meanEstimate(0), m_vals(evalInterval, 0.){};
+                m_meanEstimate(0.), m_vals(evalInterval, 0.){};
                 
         RollingWindowStatistics::~RollingWindowStatistics(){
             
@@ -27,7 +27,6 @@ namespace karabo {
             unsigned long long n = std::min(m_evalInterval, m_nvals);
             return m_s/n+m_meanEstimate;
         }
-        
         
         
         void RollingWindowStatistics::update(double v){
@@ -57,8 +56,8 @@ namespace karabo {
         void RollingWindowStatistics::updateEstimate(const double currentMean){
             //we need to go through all data in current estimate
             boost::unique_lock<boost::shared_mutex> lock(m_updateMutex);
-            m_s = 0;
-            m_s2 = 0;
+            m_s = 0.;
+            m_s2 = 0.;
             m_meanEstimate = currentMean;
             const unsigned int n = std::min(m_evalInterval, m_nvals);
             for(unsigned int i = 0; i < n ; i++){
