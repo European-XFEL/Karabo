@@ -49,6 +49,6 @@ class CircleMotor(Device):
     def watch(self, device):
         while True:
             waitUntilNew(device)
-            self.angle = arctan2(self.xaxis.position, self.yaxis.position)
+            self.angle = arctan2(self.yaxis.position, self.xaxis.position)
             self.radius = sqrt(self.xaxis.position ** 2 +
                                self.yaxis.position ** 2)
