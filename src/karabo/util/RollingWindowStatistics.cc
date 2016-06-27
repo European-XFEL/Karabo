@@ -55,7 +55,7 @@ namespace karabo {
         
         void RollingWindowStatistics::updateEstimate(const double currentMean){
             //we need to go through all data in current estimate
-            boost::mutex::scoped_lock<boost::shared_mutex> lock(m_updateMutex);
+            boost::unique_lock<boost::shared_mutex> lock(m_updateMutex);
             m_s = 0.;
             m_s2 = 0.;
             m_meanEstimate = currentMean;
