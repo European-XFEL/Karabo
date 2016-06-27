@@ -28,53 +28,40 @@ class RemoteDevice:
         self.timeout = timeout
 
 
-class Sentinel:
-    """ everyone needing the event thread to run should keep a reference
-    to a sentinel. One nobody has a reference anymore, the event thread
-    may be collected."""
-    def __init__(self, thread):
-        self.thread = thread
-
 class EventThread(threading.Thread):
-    instance = None
-
     def __init__(self):
         super().__init__(name="Karabo macro event loop", daemon=True)
 
     def run(self):
         self.loop = EventLoop()
         set_event_loop(self.loop)
-        self.lock.release()
         atexit.register(self.stop)
+        self.loop.call_soon(self.lock.release)
         try:
             self.loop.run_forever()
         finally:
             atexit.unregister(self.stop)
             self.loop.close()
 
-    @coroutine
-    def run_macro(self, macro, configuration):
-        yield from macro.startInstance()
-        self.lock.release()
+    def start(self):
+        self.lock = threading.Lock()
+        self.lock.acquire()
+        super().start()
+        self.lock.acquire()
 
     def stop(self, weakref=None):
         self.loop.call_soon_threadsafe(self.loop.stop)
 
-    @classmethod
-    def start_macro(cls, macro, conf):
-        if cls.instance is None or cls.instance() is None:
-            self = cls()
-            s = Sentinel(self)
-            cls.instance = weakref.ref(s, self.stop)
-            self.lock = threading.Lock()
-            self.lock.acquire()
-            self.start()
-            self.lock.acquire()
-        else:
-            self = cls.instance().thread
-        self.loop.call_soon_threadsafe(async, self.run_macro(macro, conf))
-        self.lock.acquire()
-        return cls.instance()
+    def start_device(self, device):
+        lock = threading.Lock()
+        lock.acquire()
+
+        @coroutine
+        def run_device():
+            yield from device.startInstance()
+            lock.release()
+        self.loop.call_soon_threadsafe(async, run_device())
+        lock.acquire()
 
 
 def _wrapslot(slot, name):
@@ -141,13 +128,13 @@ class Macro(Device):
         cls.__monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
                           if hasattr(m, "monitor")]
 
-    def __init__(self, configuration=None, may_start_thread=True, **kwargs):
+    def __init__(self, configuration=None, **kwargs):
         if configuration is None:
             configuration = {}
         configuration.update(kwargs)
         super().__init__(configuration)
-        if may_start_thread and not isinstance(get_event_loop(), EventLoop):
-            self._thread = EventThread.start_macro(self, configuration)
+        if not isinstance(get_event_loop(), EventLoop):
+            EventLoop.global_loop.start_device(self)
 
     @coroutine
     def run_async(self):

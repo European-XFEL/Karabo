@@ -87,21 +87,24 @@ class Tests(TestCase):
         os.chdir(self.__starting_dir)
 
     def test_delete(self):
-        remote = Remote()
-        remote.count()
-        self.assertEqual(remote.counter, 29)
-        r = weakref.ref(remote)
-        thread = EventThread.instance().thread
-        Remote.destructed = False
-        del remote
-        time.sleep(0.02)
-        gc.collect()
-        time.sleep(0.02)
-        self.assertTrue(Remote.destructed)
-        self.assertIsNone(r())
-        self.assertIsNone(EventThread.instance())
-        time.sleep(0.1)
-        self.assertFalse(thread.is_alive())
+        thread = EventThread()
+        thread.start()
+        try:
+            remote = Remote()
+            remote.count()
+            self.assertEqual(remote.counter, 29)
+            r = weakref.ref(remote)
+            Remote.destructed = False
+            del remote
+            time.sleep(0.02)
+            gc.collect()
+            time.sleep(0.02)
+            self.assertIsNone(r())
+            self.assertTrue(Remote.destructed)
+        finally:
+            thread.stop()
+            thread.join(0.1)
+            self.assertFalse(thread.is_alive())
 
     @skip
     def test_remote_timeout(self):
@@ -143,14 +146,16 @@ class Tests(TestCase):
 
     def test_macroserver(self):
         loop = setEventLoop()
-        server = DeviceServer(dict(serverId="Karabo_MacroServer"))
-        server.startInstance()
-        task = loop.create_task(self.init_macroserver(server), server)
-        proxy = loop.run_until_complete(task)
-        self.assertEqual(proxy.s, "done")
-        loop.create_task(server.slotKillServer(), server)
-        loop.run_forever()
-        loop.close()
+        try:
+            server = DeviceServer(dict(serverId="Karabo_MacroServer"))
+            server.startInstance()
+            task = loop.create_task(self.init_macroserver(server), server)
+            proxy = loop.run_until_complete(task)
+            self.assertEqual(proxy.s, "done")
+            loop.create_task(server.slotKillServer(), server)
+            loop.run_forever()
+        finally:
+            loop.close()
 
     @coroutine
     def init_server(self, server):
@@ -231,34 +236,38 @@ class Tests(TestCase):
         this tests that a device connected to by connectDevice automatically
         disconnects again after 15 s. Unfortunately this means the test
         needs to run very long..."""
-        devices = DeviceClient(_deviceId_="ikarabo-test")
-        oel = get_event_loop()
-        set_event_loop(NoEventLoop(devices))
-        time.sleep(0.1)
-        thread = EventThread.instance().thread
-        thread.loop.call_soon_threadsafe(async, self.init_other())
-        time.sleep(4)
+        thread = EventThread()
+        thread.start()
+        try:
+            devices = DeviceClient(_deviceId_="ikarabo-test")
+            oel = get_event_loop()
+            set_event_loop(NoEventLoop(devices))
+            time.sleep(0.1)
+            thread.loop.call_soon_threadsafe(async, self.init_other())
+            time.sleep(4)
 
-        # test whether proxy stays alive while used
-        other = connectDevice("other")
-        other.count()
-        lastcount = -2
-        for i in range(20):
-            self.assertLess(lastcount, other.counter)
-            lastcount = other.counter
-            time.sleep(1)
+            # test whether proxy stays alive while used
+            other = connectDevice("other")
+            other.count()
+            lastcount = -2
+            for i in range(20):
+                self.assertLess(lastcount, other.counter)
+                lastcount = other.counter
+                time.sleep(1)
 
-        # test proxy disconnects when not used
-        time.sleep(16)
-        lastcount = other.__dict__["counter"]
-        time.sleep(3)
-        self.assertEqual(other.__dict__["counter"], lastcount)
-        self.assertNotEqual(other.counter, lastcount)
+            # test proxy disconnects when not used
+            time.sleep(16)
+            lastcount = other.__dict__["counter"]
+            time.sleep(3)
+            self.assertEqual(other.__dict__["counter"], lastcount)
+            self.assertNotEqual(other.counter, lastcount)
 
-        set_event_loop(oel)
-        del self.other
-        thread.stop()
-        EventThread.instance = None
+            set_event_loop(oel)
+            del self.other
+        finally:
+            thread.stop()
+            thread.join(0.1)
+            self.assertFalse(thread.is_alive())
     test_autodisconnect.slow = 1
 
     @coroutine
