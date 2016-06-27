@@ -144,18 +144,30 @@ void SignalSlotable_Test::testMethod() {
     m_demo->emit("signalA", "Hello World!");
 
     bool timeout = false;
-
-    int reply;
+    int reply = 0;
     try {
         m_demo->request("SignalSlotDemo", "slotC", 1).timeout(500).receive(reply);
     } catch (karabo::util::TimeoutException&) {
         timeout = true;
     }
 
+    // The same, but request to self addressed as shortcut
+    bool timeout2 = false;
+    int reply2 = 0;
+    try {
+        m_demo->request("", "slotC", 1).timeout(500).receive(reply2);
+    } catch (karabo::util::TimeoutException&) {
+        timeout2 = true;
+    }
+
     string someData("myPrivateStuff");
     m_demo->request("SignalSlotDemo", "slotC", 1).receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, m_demo, someData, _1));
+    // shortcut address:
+    m_demo->request("", "slotC", 1).receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, m_demo, someData, _1));
 
     m_demo->call("SignalSlotDemo", "slotC", 1);
+    // shortcut address:
+    m_demo->call("", "slotC", 1);
 
     boost::this_thread::sleep(boost::posix_time::seconds(1));
     m_demo->stopEventLoop();
@@ -164,7 +176,9 @@ void SignalSlotable_Test::testMethod() {
     // Assert after joining the thread - otherwise dangling threads in case of failures...
     CPPUNIT_ASSERT(timeout == false);
     CPPUNIT_ASSERT(reply == 2);
-    CPPUNIT_ASSERT(m_demo->wasOk(6) == true);
+    CPPUNIT_ASSERT(timeout2 == false);
+    CPPUNIT_ASSERT(reply2 == 2);
+    CPPUNIT_ASSERT(m_demo->wasOk(10) == true);
 }
 
 void SignalSlotable_Test::testAutoConnectSignal() {
