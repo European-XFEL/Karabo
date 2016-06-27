@@ -516,9 +516,6 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
-        <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </cTool>
         <ccTool>
           <commandlineTool>g++</commandlineTool>
           <incDir>
@@ -527,7 +524,7 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>-Wno-unused-local-typedefs</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
@@ -543,7 +540,6 @@
           </linkerDynSerch>
           <linkerLibItems>
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -2509,7 +2505,7 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>-Wno-unused-local-typedefs</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
@@ -2522,7 +2518,7 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
-          <output>${TESTDIR}/TestFiles/f8</output>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
