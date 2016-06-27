@@ -344,8 +344,7 @@ class DisplayTrendline(DisplayWidget):
 
     def addBox(self, box):
         curve = make.curve([], [], box.key(), "r")
-        self.curves[box] = Curve(box, curve, self.dialog)
-        self.plot.add_item(curve)
+        self._addCurve(box, curve)
         return True
 
     @pyqtSlot(object)
@@ -362,6 +361,9 @@ class DisplayTrendline(DisplayWidget):
 
 
     def removeKey(self, key):
+        # XXX: This appears to be dead code!
+        # If it's not, there will be problems keeping data models synchronized
+        # with the state of this widget (specifically, the refactored scene).
         self.plot.remove_item(self.curves[key])
         del self.curves[key]
         key.removeVisible()
@@ -414,7 +416,19 @@ class DisplayTrendline(DisplayWidget):
             curve = self.curves.get(box)
             if curve is None:
                 break
+            self.curves.pop(box)
             self.plot.del_item(curve.curve)
             curve.curve = pickle.loads(base64.b64decode(ee.text))
-            self.plot.add_item(curve.curve)
-            curve.update()
+            self._addCurve(box, curve)
+
+    def _addCurve(self, box, curve):
+        """ Give derived classes a place to respond to changes. """
+        if box in self.curves:
+            old_curve = self.curves[box]
+            self.plot.del_item(old_curve.curve)
+
+        if not isinstance(curve, Curve):
+            curve = Curve(box, curve, self.dialog)
+        self.curves[box] = curve
+        self.plot.add_item(curve.curve)
+        curve.update()

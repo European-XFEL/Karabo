@@ -37,8 +37,7 @@ class XYVector(DisplayWidget):
 
     def addBox(self, box):
         curve = make.curve([], [], box.axisLabel(), "r")
-        self.curves[box] = curve
-        self.plot.add_item(curve)
+        self._addCurve(box, curve)
         return True
 
     @property
@@ -67,8 +66,14 @@ class XYVector(DisplayWidget):
     def load(self, e):
         for ee in e:
             box = getDevice(ee.get("device")).getBox(ee.get("path").split("."))
-            curve = self.curves[box]
-            self.plot.del_item(curve)
             curve = pickle.loads(base64.b64decode(ee.text))
-            self.plot.add_item(curve)
-            self.curves[box] = curve
+            self._addCurve(box, curve)
+
+    def _addCurve(self, box, curve):
+        """ Give derived classes a place to respond to changes. """
+        if box in self.curves:
+            old_curve = self.curves[box]
+            self.plot.del_item(old_curve)
+
+        self.curves[box] = curve
+        self.plot.add_item(curve)
