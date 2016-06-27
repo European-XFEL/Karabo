@@ -86,14 +86,15 @@ namespace karabo {
 
 
         void SignalSlotable::Caller::sendMessage(const std::string& slotInstanceId,
-                                                 const karabo::util::Hash::Pointer& header,
+                                                 const std::string& slotFunction,
                                                  const karabo::util::Hash::Pointer& body) const {
             try {
                 if (!m_signalSlotable)
                     throw KARABO_PARAMETER_EXCEPTION("Caller::sendMessage  : m_signalSlotable = 0 or m_signalSlotable->m_producerChannel is 0");
                 // Empty slotInstanceId means self messaging:
                 const std::string& instanceId = (slotInstanceId.empty() ? m_signalSlotable->getInstanceId() : slotInstanceId);
-                m_signalSlotable->doSendMessage(instanceId, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+                m_signalSlotable->doSendMessage(instanceId, this->prepareHeader(instanceId, slotFunction),
+                                                body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Problems sending message"));
             }

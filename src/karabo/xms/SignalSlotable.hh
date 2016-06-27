@@ -73,36 +73,36 @@ namespace karabo {
                 explicit Caller(const SignalSlotable* signalSlotable);
 
                 void call(const std::string& slotInstanceId, const std::string& slotFunction) const {
-                    sendMessage(slotInstanceId, prepareHeader(slotInstanceId, slotFunction),
+                    sendMessage(slotInstanceId, slotFunction,
                             karabo::util::Hash::Pointer(new karabo::util::Hash));
                 }
 
                 template <class A1>
                 void call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1) const {
-                    sendMessage(slotInstanceId, prepareHeader(slotInstanceId, slotFunction),
+                    sendMessage(slotInstanceId, slotFunction,
                             karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1)));
                 }
 
                 template <class A1, class A2>
                 void call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2) const {
-                    sendMessage(slotInstanceId, prepareHeader(slotInstanceId, slotFunction),
+                    sendMessage(slotInstanceId, slotFunction,
                             karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1, "a2", a2)));
                 }
 
                 template <class A1, class A2, class A3>
                 void call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3) const {
-                    sendMessage(slotInstanceId, prepareHeader(slotInstanceId, slotFunction),
+                    sendMessage(slotInstanceId, slotFunction,
                             karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3)));
 
                 }
 
                 template <class A1, class A2, class A3, class A4>
                 void call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) const {
-                    sendMessage(slotInstanceId, prepareHeader(slotInstanceId, slotFunction),
+                    sendMessage(slotInstanceId, slotFunction,
                             karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4)));
                 }
 
-                void sendMessage(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) const;
+                void sendMessage(const std::string& slotInstanceId, const std::string& slotFunction, const karabo::util::Hash::Pointer& body) const;
 
                 karabo::util::Hash::Pointer prepareHeader(const std::string& slotInstanceId, const std::string& slotFunction) const;
 
