@@ -318,9 +318,9 @@ namespace karabo {
         }
 
         inline TimeDuration Epochstamp::operator -(const Epochstamp& other) const {
-            TimeDuration td;
             if (m_fractionalSeconds < other.m_fractionalSeconds) {
-                return TimeDuration(m_seconds - other.m_seconds - 1ULL, (ONESECOND - other.m_fractionalSeconds) + m_fractionalSeconds);
+                return TimeDuration(m_seconds - other.m_seconds - 1ULL,
+                                    (TimeDuration::m_oneSecondInAtto - other.m_fractionalSeconds) + m_fractionalSeconds);
             } else {
                 return TimeDuration(m_seconds - other.m_seconds, m_fractionalSeconds - other.m_fractionalSeconds);
             }
@@ -340,21 +340,21 @@ namespace karabo {
 
         inline Epochstamp& Epochstamp::operator +=(const TimeDuration& duration) {
             this->m_seconds += duration.getTotalSeconds();
-            if ((this->m_fractionalSeconds += duration.getFractions(ATTOSEC)) > ONESECOND) {
-                this->m_fractionalSeconds -= ONESECOND;
+            if ((this->m_fractionalSeconds += duration.getFractions(ATTOSEC)) > TimeDuration::m_oneSecondInAtto) {
+                this->m_fractionalSeconds -= TimeDuration::m_oneSecondInAtto;
                 ++this->m_seconds;
             };
             return *this;
         }
 
         inline Epochstamp& Epochstamp::operator -=(const TimeDuration& duration) {
-            // TODO: Sergey--> Fix the case attosecond
             this->m_seconds -= duration.getTotalSeconds();
-            if (this->m_fractionalSeconds < duration.getFractions()) {
-                this->m_fractionalSeconds = (ONESECOND - duration.getFractions(ATTOSEC)) + this->m_fractionalSeconds;
+            const TimeValue durAttoSeconds = duration.getFractions(ATTOSEC);
+            if (this->m_fractionalSeconds < durAttoSeconds) {
+                this->m_fractionalSeconds = (TimeDuration::m_oneSecondInAtto - durAttoSeconds) + this->m_fractionalSeconds;
                 --this->m_seconds;
             } else {
-                this->m_fractionalSeconds -= duration.getFractions();
+                this->m_fractionalSeconds -= durAttoSeconds;
             }
             return *this;
         }
