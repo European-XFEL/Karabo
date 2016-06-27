@@ -263,22 +263,22 @@ namespace karabo {
              * @param ack: acknowledgement is needed if true.
              * @return reference to the Element for proper methods chaining
              */
-            RollingStatsSpecific<Element, ValueType>& warnVarianceLow(const ValueType & value) {
+            RollingStatsSpecific<Element, ValueType>& warnVarianceLow(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_WARN_VARIANCE_LOW, value);
                 return *this;
             }
             
-            RollingStatsSpecific<Element, ValueType>& warnVarianceHigh(const ValueType & value) {
+            RollingStatsSpecific<Element, ValueType>& warnVarianceHigh(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_WARN_VARIANCE_HIGH, value);
                 return *this;
             }
             
-            RollingStatsSpecific<Element, ValueType>& alarmVarianceLow(const ValueType & value) {
+            RollingStatsSpecific<Element, ValueType>& alarmVarianceLow(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ALARM_VARIANCE_LOW, value);
                 return *this;
             }
             
-            RollingStatsSpecific<Element, ValueType>& alarmVarianceHigh(const ValueType & value) {
+            RollingStatsSpecific<Element, ValueType>& alarmVarianceHigh(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ALARM_VARIANCE_HIGH, value);
                 return *this;
             }
