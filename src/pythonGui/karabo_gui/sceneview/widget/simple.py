@@ -4,10 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtCore import QByteArray, QPoint, QRect, QSize, Qt
-from PyQt4.QtGui import (QFont, QFontMetrics, QFrame, QLabel, QPainter, QPen,
-                         QPushButton, QWidget)
+from PyQt4.QtGui import (QDialog, QFont, QFontMetrics, QFrame, QLabel,
+                         QPainter, QPen, QPushButton, QWidget)
 from PyQt4.QtSvg import QSvgRenderer
 
+from karabo_gui.dialogs.textdialog import TextDialog
 from karabo_gui.scenemodel.api import write_single_model
 
 
@@ -17,9 +18,15 @@ class LabelWidget(QLabel):
 
     def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text, parent)
+        self.setFrameShape(QFrame.Box)
+        self.set_model(model)
+
+    def set_model(self, model):
+        """ Set the new ``model`` and update the widget properties.
+        """
         self.model = model
 
-        self.setFrameShape(QFrame.Box)
+        self.setText(self.model.text)
         self.setLineWidth(model.frame_width)
 
         styleSheet = []
@@ -34,10 +41,8 @@ class LabelWidget(QLabel):
         font.fromString(model.font)
         fm = QFontMetrics(font)
         CONTENT_MARGIN = 10
-        if model.width == 0:
-            model.width = fm.width(model.text) + CONTENT_MARGIN
-        if model.height == 0:
-            model.height = fm.height() + CONTENT_MARGIN
+        model.width = fm.width(model.text) + CONTENT_MARGIN
+        model.height = fm.height() + CONTENT_MARGIN
         self.setGeometry(model.x, model.y, model.width, model.height)
 
     def set_geometry(self, rect):
@@ -49,6 +54,13 @@ class LabelWidget(QLabel):
         new_pos = self.pos() + offset
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
+
+    def edit(self):
+        dialog = TextDialog(self.model)
+        if dialog.exec() == QDialog.Rejected:
+            return
+
+        self.set_model(dialog.label_model)
 
 
 class SceneLinkWidget(QPushButton):
