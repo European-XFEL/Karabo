@@ -40,7 +40,7 @@ class SingleBit(DisplayWidget):
                                           "Enter number of bit:", self.bit, 0,
                                           log2(max) + 1)
         if ok:
-            self.bit = bit
+            self._setBit(bit)
             self.valueChanged(self.boxes[0], self.boxes[0].value)
 
 
@@ -49,8 +49,12 @@ class SingleBit(DisplayWidget):
 
 
     def load(self, element):
-        self.bit = int(element.get(ns_karabo + "bit"))
+        self._setBit(int(element.get(ns_karabo + "bit")))
 
 
     def valueChanged(self, box, value, timestamp=None):
         self.widget.setChecked((value >> self.bit) & 1 != 0)
+
+    def _setBit(self, bit):
+        """ Give derived classes a place to respond to changes. """
+        self.bit = bit
