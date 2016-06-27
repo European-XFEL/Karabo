@@ -192,6 +192,8 @@ namespace karabo {
                 toHash(hash);
                 return hash;
             }
+            /// One second expressed in attoseconds
+            static const TimeValue m_oneSecondInAtto = 1000000000000000000ULL; // initialise integer type directly here
         private:
             TimeValue m_Seconds;
             TimeValue m_Fractions;
@@ -254,30 +256,22 @@ namespace karabo {
         inline TimeDuration& TimeDuration::operator +=(const TimeDuration& other) {
             m_Seconds += other.m_Seconds;
             m_Fractions += other.m_Fractions;
-            unsigned long long onesec = 1000000000000000000ULL; // one seconds in attoseconds
-            if (m_Fractions > onesec) {
+            if (m_Fractions > m_oneSecondInAtto) {
                 ++m_Seconds;
-                m_Fractions -= onesec;
+                m_Fractions -= m_oneSecondInAtto;
             }
-
-            //m_Seconds += m_Fractions / ATTOSEC;
-            //m_Fractions %= ATTOSEC;
 
             return *this;
         }
 
         inline TimeDuration& TimeDuration::operator -=(const TimeDuration& other) {
             m_Seconds -= other.m_Seconds;
-            unsigned long long onesec = 1000000000000000000ULL; // one seconds in attoseconds
             if (m_Fractions < other.m_Fractions) {
-                m_Fractions = (onesec - other.m_Fractions) + m_Fractions;
+                m_Fractions = (m_oneSecondInAtto - other.m_Fractions) + m_Fractions;
                 --m_Seconds;
             } else {
                 m_Fractions -= other.m_Fractions;
             }
-
-            //m_Seconds += m_Fractions / ATTOSEC;
-            //m_Fractions %= ATTOSEC;
 
             return *this;
         }

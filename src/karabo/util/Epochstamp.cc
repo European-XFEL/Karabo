@@ -55,12 +55,12 @@ namespace karabo {
         }
 
         timeval Epochstamp::getTimeOfDay() const {
-            timeval result = {long(m_seconds), long(m_fractionalSeconds / 1000000000000ULL)};  // std::pow(10, MICROSEC)
+            timeval result = {long(m_seconds), long(m_fractionalSeconds / 1000000000000ULL)};
             return result;
         }
 
         timespec Epochstamp::getClockTime() const {
-            timespec result = {long(m_seconds), long(m_fractionalSeconds / 1000000000ULL)};    // std::pow(10, NANOSEC)
+            timespec result = {long(m_seconds), long(m_fractionalSeconds / 1000000000ULL)};
             return result;
         }
 
@@ -93,10 +93,8 @@ namespace karabo {
 #else
 
         void Epochstamp::now() {
-            static const clockid_t whichtime = CLOCK_REALTIME; //    CLOCK_REALTIME,  CLOCK_PROCESS_CPUTIME_ID
-
-            static timespec ts;
-            clock_gettime(whichtime, &ts);
+            timespec ts;
+            clock_gettime(CLOCK_REALTIME, &ts); //    CLOCK_REALTIME,  CLOCK_PROCESS_CPUTIME_ID
             this->m_seconds = ts.tv_sec;
             this->m_fractionalSeconds = ts.tv_nsec * 1000000000ULL; // in ATTOSEC
         }
