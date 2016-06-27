@@ -11,8 +11,8 @@ from karabo_gui.scenemodel.api import (
     CheckBoxModel, ChoiceElementModel, ComboBoxModel, DirectoryModel,
     FileInModel, FileOutModel, LineEditModel,
     DisplayStateColorModel, DigitIconsModel, EvaluatorModel, FloatSpinBoxModel,
-    MonitorModel, SelectionIconsModel, SingleBitModel, TextIconsModel,
-    VacuumWidgetModel
+    LinePlotModel, MonitorModel, SelectionIconsModel, SingleBitModel,
+    TextIconsModel, VacuumWidgetModel
 )
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
@@ -20,16 +20,18 @@ from .shapes import LineShape, PathShape, RectangleShape
 from .widget.api import (
     DisplayEditableWidgetContainer, DisplayStateColorContainer,
     EvaluatorContainer, FloatSpinBoxContainer, GenericWidgetContainer,
-    IconsContainer, LabelWidget, MonitorContainer, SceneLinkWidget,
-    SingleBitContainer, UnknownSvgWidget, VacuumWidgetContainer)
+    IconsContainer, LabelWidget, LinePlotContainer, MonitorContainer,
+    SceneLinkWidget, SingleBitContainer, UnknownSvgWidget,
+    VacuumWidgetContainer)
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (
     DisplayEditableWidgetContainer, DisplayStateColorContainer,
     EvaluatorContainer, FloatSpinBoxContainer, GenericWidgetContainer,
-    IconsContainer, LabelWidget, MonitorContainer, SceneLinkWidget,
-    SingleBitContainer, UnknownSvgWidget, VacuumWidgetContainer)
+    IconsContainer, LabelWidget, LinePlotContainer, MonitorContainer,
+    SceneLinkWidget, SingleBitContainer, UnknownSvgWidget,
+    VacuumWidgetContainer)
 _SCENE_OBJ_FACTORIES = {
     FixedLayoutModel: lambda m, p: GroupLayout(m),
     BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
@@ -73,6 +75,7 @@ _SCENE_OBJ_FACTORIES = {
     FloatSpinBoxModel: FloatSpinBoxContainer,
     SingleBitModel: SingleBitContainer,
     MonitorModel: MonitorContainer,
+    LinePlotModel: LinePlotContainer,
 }
 
 
