@@ -17,25 +17,20 @@
 namespace karabo {
     namespace core {
 
-        namespace states {
-            class StateSignifier;
-        }
+        // Forward declaration
+        class StateSignifier;
 
         /**
          * Base State class
          */
         class State {
-            friend class states::StateSignifier;
+            friend class StateSignifier;
 
         public:
             
             KARABO_CLASSINFO(State, "State", "1.0")
 
-            State() : m_stateName(""), m_parents() {
-            }
-
-            State(const State& o) : m_stateName(o.m_stateName), m_parents(o.m_parents) {
-            }
+            State(const std::string& name = "UNKNOWN", const State* parent = NULL);
 
             virtual ~State() {
             }
@@ -43,48 +38,13 @@ namespace karabo {
             virtual const std::string& operator()() const {
                 return m_stateName;
             }
-
+            
             const std::string& name() const {
                 return m_stateName;
             }
             
-            std::string parent() const {
-                if (m_parents.empty()) return "";
-                return m_parents[0];
-            }
-            
-            const std::vector<std::string>& parents() const {
-                return m_parents;
-            }
-            
-        protected:    
-            
-            void setStateName(const std::string& name) {
-                m_stateName = name;
-            }
-            
-            void setParent(const std::string& parent) {
-                if (parent == "State") return;
-                std::vector<std::string>::iterator it = m_parents.begin();
-                it = m_parents.insert(it, parent);
-            }
-            
-            void setParents(const std::vector<std::string>& parents) {
-                if (!parents.empty())
-                    m_parents.insert(m_parents.end(), parents.begin(), parents.end());
-            }
-            
-        public:
-            
-            State& operator=(const State& s) {
-                m_stateName = s.m_stateName;
-                m_parents = s.m_parents;
-                return *this;
-            }
-
-            State& operator=(const std::string& stateName) {
-                m_stateName = stateName;
-                return *this;
+            const State* parent() const {
+                return m_parent;
             }
 
             bool operator==(const State& state) const {
@@ -92,23 +52,84 @@ namespace karabo {
                 return m_stateName == state.m_stateName;
             }
 
-            bool isCompatible(const State& s) const {
-                if (m_stateName == s.m_stateName) return true;
-                for (size_t i = 0; i < m_parents.size(); i++)
-                    if (m_parents[i] == s.m_stateName) return true;
-                for (size_t ii = 0; ii < s.m_parents.size(); ++ii)
-                    if (m_stateName == s.m_parents[ii]) return true;
-                return false;
-            }
+            bool isCompatible(const State& s) const;
+            
+            // The base states that have no parent:
 
-        protected:
+            static const State UNKNOWN;
+            static const State KNOWN;
+            static const State INIT;
+
+            // The derived states with their parents:
+
+            static const State DISABLED;
+            static const State ERROR;
+            static const State NORMAL;
+            static const State STATIC;
+            static const State CHANGING;
+            static const State PASSIVE;
+            static const State ACTIVE;
+            static const State DECREASING;
+            static const State INCREASING;
+
+            /**
+             *
+             */
+
+            static const State INTERLOCKED;
+            static const State COOLED;
+            static const State HEATED;
+            static const State EVACUATED;
+            static const State CLOSED;
+            static const State ON;
+            static const State EXTRACTED;
+            static const State STARTED;
+            static const State LOCKED;
+            static const State ENGAGED;
+
+            static const State WARM;
+            static const State COLD;
+            static const State PRESSURIZED;
+            static const State OPENED;
+            static const State OFF;
+            static const State INSERTED;
+            static const State STOPPED;
+            static const State UNLOCKED;
+            static const State DISENGAGED;
+
+            static const State ROTATING;
+            static const State MOVING;
+            static const State SWITCHING;
+            static const State HEATING;
+            static const State MOVING_RIGHT;
+            static const State MOVING_UP;
+            static const State MOVING_FORWARD;
+            static const State ROTATING_CLK;
+            static const State RAMPING_UP;
+
+            static const State INSERTING;
+            static const State STARTING;
+            static const State FILLING;
+            static const State ENGAGING;
+            static const State SWITCHING_ON;
+            static const State COOLING;
+            static const State MOVING_LEFT;
+
+            static const State MOVING_DOWN;
+            static const State MOVING_BACK;
+            static const State ROTATING_CNTCLK;
+            static const State RAMPING_DOWN;
+            static const State EXTRACTING;
+            static const State STOPPING;
+            static const State EMPTYING;
+            static const State DISENGAGING;
+            static const State SWITCHING_OFF;
+
+        private:
             
             std::string m_stateName;
-            std::vector<std::string> m_parents;
-            std::string m_fsmName;
-            bool m_isContained;
-            int m_timeout;
-            int m_repetition;
+            const State* m_parent;
+
         };
 
     }
