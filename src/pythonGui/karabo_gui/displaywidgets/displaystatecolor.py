@@ -137,8 +137,8 @@ class DisplayStateColor(DisplayWidget):
             blue = int(sub.get('blue'))
             alpha = int(sub.get('alpha'))
             states[key] = (red, green, blue, alpha)
-        self._stateMap = states
-        self._staticText = element.get(ns_karabo + 'staticText', '')
+        self._setStateMap(states)
+        self._setStaticText(element.get(ns_karabo + 'staticText', ''))
 
     @pyqtSlot()
     def _onChangeColors(self):
@@ -146,7 +146,7 @@ class DisplayStateColor(DisplayWidget):
         dialog = StateColorDialog(parent=self.widget, items=items)
         result = dialog.exec_()
         if result == QDialog.Accepted:
-            self._stateMap = OrderedDict(dialog.items)
+            self._setStateMap(OrderedDict(dialog.items))
 
         box = self.boxes[0]
         if box.hasValue():
@@ -157,9 +157,15 @@ class DisplayStateColor(DisplayWidget):
         text, ok = QInputDialog.getText(self.widget, "Change static text",
                                         "Static text:")
         if ok:
-            self._staticText = text
-            self.widget.setText(self._staticText)
+            self._setStaticText(text)
 
     def _setColor(self, color):
         ss = self._styleSheet.format(color)
         self.widget.setStyleSheet(ss)
+
+    def _setStateMap(self, states):
+        self._stateMap = states
+
+    def _setStaticText(self, text):
+        self._staticText = text
+        self.widget.setText(text)
