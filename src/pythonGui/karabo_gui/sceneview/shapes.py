@@ -7,8 +7,9 @@
 from abc import ABCMeta, abstractmethod
 
 from PyQt4.QtCore import QLine, QRect, QSize, Qt
-from PyQt4.QtGui import QBrush, QColor, QPen
+from PyQt4.QtGui import QBrush, QColor, QDialog, QPen
 
+from karabo_gui.dialogs.dialogs import PenDialog
 from karabo_gui.pathparser import Parser
 from .const import QT_PEN_CAP_STYLE, QT_PEN_JOIN_STYLE, SCREEN_MAX_VALUE
 
@@ -19,8 +20,6 @@ class BaseShape(object, metaclass=ABCMeta):
 
     def __init__(self, model):
         super(BaseShape, self).__init__()
-        self.model = model
-
         self.pen = QPen()
         self.pen.setWidth(1)
         self.brush = QBrush()
@@ -29,6 +28,12 @@ class BaseShape(object, metaclass=ABCMeta):
         self.selected = False
         self._hide_from_view = False
 
+        self.set_model(model)
+
+    def set_model(self, model):
+        """ Set the new ``model`` and update the shape properties.
+        """
+        self.model = model
         self.set_pen()
 
     def set_pen(self):
@@ -94,6 +99,14 @@ class BaseShape(object, metaclass=ABCMeta):
 
     def maximumSize(self):
         return QSize(SCREEN_MAX_VALUE, SCREEN_MAX_VALUE)
+
+    def edit(self):
+        """ Edits the pen of the shape."""
+        dialog = PenDialog(self.pen, self.brush)
+        if dialog.exec() == QDialog.Rejected:
+            return
+
+        # Create temporary model from dialog settings
 
 
 class LineShape(BaseShape):
