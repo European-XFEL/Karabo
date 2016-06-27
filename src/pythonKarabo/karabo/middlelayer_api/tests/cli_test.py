@@ -1,4 +1,5 @@
 from asyncio import async, coroutine, get_event_loop, set_event_loop, sleep
+from contextlib import closing
 import gc
 from itertools import count
 import os
@@ -146,7 +147,7 @@ class Tests(TestCase):
 
     def test_macroserver(self):
         loop = setEventLoop()
-        try:
+        with closing(loop):
             server = DeviceServer(dict(serverId="Karabo_MacroServer"))
             server.startInstance()
             task = loop.create_task(self.init_macroserver(server), server)
@@ -154,8 +155,6 @@ class Tests(TestCase):
             self.assertEqual(proxy.s, "done")
             loop.create_task(server.slotKillServer(), server)
             loop.run_forever()
-        finally:
-            loop.close()
 
     @coroutine
     def init_server(self, server):
@@ -200,30 +199,30 @@ class Tests(TestCase):
         """
         loop = setEventLoop()
 
-        dc = DeviceClient(dict(_deviceId_="dc"))
-        dc.startInstance()
+        with closing(loop):
+            dc = DeviceClient(dict(_deviceId_="dc"))
+            dc.startInstance()
 
-        server = DeviceServer(dict(serverId="testServer"))
-        server.startInstance()
-        proxy = loop.run_until_complete(
-            loop.create_task(self.init_server(server), server))
-        # test that onInitialization was run properly
-        self.assertEqual(proxy.something, 222)
-        loop.run_until_complete(
-            loop.create_task(self.check_server_topology(), dc))
-        self.assertIn("other", server.deviceInstanceMap)
-        r = weakref.ref(server.deviceInstanceMap["other"])
-        with proxy:
+            server = DeviceServer(dict(serverId="testServer"))
+            server.startInstance()
+            proxy = loop.run_until_complete(
+                loop.create_task(self.init_server(server), server))
+            # test that onInitialization was run properly
+            self.assertEqual(proxy.something, 222)
             loop.run_until_complete(
-                loop.create_task(self.shutdown_server(), server))
-            self.assertNotIn("other", server.deviceInstanceMap)
-            gc.collect()
-            self.assertIsNone(r())
-            async(dc.slotKillDevice())
-            loop.run_until_complete(server.slotKillServer())
-            self.assertEqual(proxy.something, 111)
-        loop.run_forever()
-        loop.close()
+                loop.create_task(self.check_server_topology(), dc))
+            self.assertIn("other", server.deviceInstanceMap)
+            r = weakref.ref(server.deviceInstanceMap["other"])
+            with proxy:
+                loop.run_until_complete(
+                    loop.create_task(self.shutdown_server(), server))
+                self.assertNotIn("other", server.deviceInstanceMap)
+                gc.collect()
+                self.assertIsNone(r())
+                async(dc.slotKillDevice())
+                loop.run_until_complete(server.slotKillServer())
+                self.assertEqual(proxy.something, 111)
+            loop.run_forever()
 
     @coroutine
     def init_other(self):
@@ -293,12 +292,12 @@ class Tests(TestCase):
 
     def test_topology(self):
         loop = setEventLoop()
-        dc = DeviceClient(dict(_deviceId_="dc"))
-        dc.startInstance()
-        task = loop.create_task(self.init_topo(dc), dc)
-        loop.run_until_complete(task)
-        loop.run_until_complete(dc.slotKillDevice())
-        loop.close()
+        with closing(loop):
+            dc = DeviceClient(dict(_deviceId_="dc"))
+            dc.startInstance()
+            task = loop.create_task(self.init_topo(dc), dc)
+            loop.run_until_complete(task)
+            loop.run_until_complete(dc.slotKillDevice())
 
 if __name__ == "__main__":
     main()
