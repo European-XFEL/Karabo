@@ -208,6 +208,18 @@ void StatisticalEvaluator::testVariance() {
 }
 
 
+class TestRollingWindowStatisticsFriend : public karabo::util::RollingWindowStatistics{
+   
+    public:
+        TestRollingWindowStatisticsFriend(unsigned int evalInterval)
+        : RollingWindowStatistics(evalInterval) {
+            
+        }
+        
+        double getMeanEstimate(){
+            return m_meanEstimate;
+        }
+};
 
 void StatisticalEvaluator::testUpdateMeanTriggering() {
     double EPSILON = 0.0001;
@@ -218,13 +230,16 @@ void StatisticalEvaluator::testUpdateMeanTriggering() {
     stat.update(101);
     double currentMeanEstimate = stat.getMeanEstimate();
     CPPUNIT_ASSERT(std::abs(currentMeanEstimate - 100) < EPSILON);
+    CPPUNIT_ASSERT(std::abs(stat.getRollingWindowMean() - 100.5) < EPSILON);
+    CPPUNIT_ASSERT(std::abs(stat.getRollingWindowVariance() - 1./3) < EPSILON);
     stat.update(-100);
     stat.update(-101);
     stat.update(-100);
     stat.update(-101);
     currentMeanEstimate = stat.getMeanEstimate();
     CPPUNIT_ASSERT(std::abs(currentMeanEstimate - 60.399999) < EPSILON);
-    
+    CPPUNIT_ASSERT(std::abs(stat.getRollingWindowMean() - 0) < EPSILON);
+    CPPUNIT_ASSERT(std::abs(stat.getRollingWindowVariance() - 80804./7) < EPSILON);
 }
 
 void StatisticalEvaluator::testPerformance() {

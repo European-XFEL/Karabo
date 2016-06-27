@@ -21,19 +21,7 @@ namespace karabo {
         
         
         class RollingWindowStatistics{
-            
-            unsigned long long m_evalInterval;
-            unsigned long long m_nvals;
-            double m_s, m_s2;
-            std::vector<double> m_vals;
-            
-            mutable boost::shared_mutex m_updateMutex;
-            
-
-        protected:
-            double m_meanEstimate; //protected mainly to allow for testing
-            
-            
+      
         public:
             
             
@@ -67,13 +55,25 @@ namespace karabo {
             * @return 
             */
             double getRollingWindowMean() const;
+            
+        protected:
+            double m_meanEstimate; //protected mainly to allow for testing
                 
         private:
             
-                RollingWindowStatistics(const RollingWindowStatistics & other); //copy is protected
-                RollingWindowStatistics();
-                
-                void updateEstimate(const double currentMean);
+            RollingWindowStatistics(const RollingWindowStatistics & other); //copy is protected
+            RollingWindowStatistics();
+
+            void updateEstimate(const double currentMean);
+
+            unsigned long long m_evalInterval;
+            unsigned long long m_nvals;
+            double m_s, m_s2;
+            std::vector<double> m_vals;
+
+            mutable boost::shared_mutex m_updateMutex;
+   
+            
         };
         
     }
