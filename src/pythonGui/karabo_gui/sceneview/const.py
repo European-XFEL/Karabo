@@ -30,13 +30,21 @@ QT_PEN_CAP_STYLE = {
     'butt': Qt.FlatCap,
     'square': Qt.SquareCap,
     'round': Qt.RoundCap,
+    Qt.FlatCap: 'butt',
+    Qt.SquareCap: 'square',
+    Qt.RoundCap: 'round',
 }
 
 # For convenience association of strings to Qt enums
 QT_PEN_JOIN_STYLE = {
+    'miter': Qt.MiterJoin,
     'miter': Qt.SvgMiterJoin,
     'round': Qt.RoundJoin,
     'bevel': Qt.BevelJoin,
+    Qt.MiterJoin: 'miter',
+    Qt.SvgMiterJoin: 'miter',
+    Qt.RoundJoin: 'round',
+    Qt.BevelJoin: 'bevel',
 }
 
 # For convenience association of ints to Qt enums

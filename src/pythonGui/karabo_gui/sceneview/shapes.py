@@ -18,11 +18,11 @@ class BaseShape(object, metaclass=ABCMeta):
     """ A shape base class
     """
 
-    def __init__(self, model):
+    def __init__(self, model, brush=None):
         super(BaseShape, self).__init__()
         self.pen = QPen()
         self.pen.setWidth(1)
-        self.brush = QBrush()
+        self.brush = brush
 
         self.shape = None
         self.selected = False
@@ -56,12 +56,11 @@ class BaseShape(object, metaclass=ABCMeta):
             pen.setMiterLimit(self.model.stroke_miterlimit)
         self.pen = pen
 
-        if self.model.fill == "none":
-            self.brush = QBrush()
-        else:
+        if self.model.fill != "none" and self.brush is not None:
             color = QColor(self.model.fill)
             color.setAlphaF(self.model.fill_opacity)
-            self.brush = QBrush(color)
+            self.brush.setColor(color)
+            self.brush.setStyle(Qt.SolidPattern)
 
     def hide(self):
         self._hide_from_view = True
@@ -103,10 +102,31 @@ class BaseShape(object, metaclass=ABCMeta):
     def edit(self):
         """ Edits the pen of the shape."""
         dialog = PenDialog(self.pen, self.brush)
-        if dialog.exec() == QDialog.Rejected:
+        if dialog.exec_() == QDialog.Rejected:
             return
 
-        # Create temporary model from dialog settings
+        pen = dialog.pen
+        brush = dialog.brush
+
+        if pen.style() == Qt.NoPen:
+            self.model.stroke = 'none'
+        else:
+            self.model.stroke = pen.color().name()
+        self.model.stroke_opacity = pen.color().alphaF()
+        self.model.stroke_linecap = QT_PEN_CAP_STYLE[pen.capStyle()]
+        self.model.stroke_dashoffset = pen.dashOffset()
+        self.model.stroke_width = pen.widthF()
+        self.model.stroke_dasharray = pen.dashPattern()
+        self.model.stroke_style = pen.style()
+        self.model.stroke_linejoin = QT_PEN_JOIN_STYLE[pen.joinStyle()]
+        self.model.stroke_miterlimit = pen.miterLimit()
+        if brush.style() == Qt.SolidPattern:
+            self.model.fill = brush.color().name()
+            self.model.fill_opacity = brush.color().alphaF()
+        else:
+            self.model.fill = 'none'
+
+        self.set_pen()
 
 
 class LineShape(BaseShape):
@@ -145,7 +165,7 @@ class RectangleShape(BaseShape):
     """
 
     def __init__(self, model):
-        super(RectangleShape, self).__init__(model)
+        super(RectangleShape, self).__init__(model, QBrush())
         self.shape = QRect(self.model.x, self.model.y, self.model.width,
                            self.model.height)
 
@@ -174,7 +194,7 @@ class PathShape(BaseShape):
     """
 
     def __init__(self, model):
-        super(PathShape, self).__init__(model)
+        super(PathShape, self).__init__(model, QBrush())
         parser = Parser(self.model.svg_data)
         self.shape = parser.parse()
 
