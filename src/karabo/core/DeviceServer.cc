@@ -403,7 +403,7 @@ namespace karabo {
         }
 
 
-        void DeviceServer::onStateUpdate(const State::Pointer& currentState) {
+        void DeviceServer::onStateUpdate(const State& currentState) {
         }
 
 

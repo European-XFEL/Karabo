@@ -33,6 +33,7 @@
         <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopInterface.hh</itemPath>
+        <itemPath>../../../src/karabo/core/State.cc</itemPath>
         <itemPath>../../../src/karabo/core/State.hh</itemPath>
         <itemPath>../../../src/karabo/core/States.cc</itemPath>
         <itemPath>../../../src/karabo/core/States.hh</itemPath>
@@ -697,6 +698,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/State.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/State.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -2691,6 +2694,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/State.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/State.hh" ex="false" tool="3" flavor2="0">
       </item>

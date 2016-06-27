@@ -90,11 +90,11 @@ static void _onError(const Fsm& fsm, const std::string& userFriendlyMsg = "Unkno
 #define KARABO_FSM_ON_CURRENT_STATE_CHANGE(stateChangeFunction) \
 template <class Fsm> \
 static void _updateCurrentState(Fsm& fsm, bool isGoingToChange = false) { \
-    if (isGoingToChange) fsm.getContext()->stateChangeFunction(karabo::core::states::CHANGING); \
+    if (isGoingToChange) fsm.getContext()->stateChangeFunction(karabo::core::State::CHANGING); \
     else { \
         boost::shared_ptr<StateVisitor> v(new StateVisitor); \
         fsm.visit_current_states(v, false); \
-        fsm.getContext()->stateChangeFunction(karabo::core::createState(v->getState())); \
+        fsm.getContext()->stateChangeFunction(v->getState()->getState()); \
     } \
 }
 
@@ -471,7 +471,7 @@ virtual void func() = 0;
 /**************************************************************/
 
 #define KARABO_FSM_STATE(name) struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
-name() {this->setState(karabo::core::states::name);} \
+name() {this->setState(karabo::core::State::name);} \
 template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
     try { \
         this->setFsmName(f.getFsmName()); \
@@ -490,7 +490,7 @@ template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     TargetAction _ta; \
     boost::shared_ptr<Worker> _worker; \
-    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::states::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -522,7 +522,7 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
 
 #define _KARABO_FSM_STATE_IMPL_E(name, entryFunc) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
              this->setFsmName(f.getFsmName()); \
@@ -551,7 +551,7 @@ virtual void entryFunc() = 0;
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     TargetAction _ta; \
     boost::shared_ptr<Worker> _worker; \
-    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::states::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -593,7 +593,7 @@ virtual void entryFunc() = 0;
 
 #define _KARABO_FSM_STATE_IMPL_E1(name, entryFunc, event, t1) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(const Event& e, Fsm& f) {} \
     template <class Fsm> void on_entry(event const& e, Fsm & f) { \
         try { \
@@ -621,7 +621,7 @@ virtual void entryFunc(const t1&) = 0;
 
 #define _KARABO_FSM_STATE_IMPL_E2(name, entryFunc, t1, t2) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -647,7 +647,7 @@ virtual void entryFunc(const t1&, const t2&) = 0;
 
 #define _KARABO_FSM_STATE_IMPL_E3(name, entryFunc, t1, t2, t3) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -675,7 +675,7 @@ virtual void entryFunc(const t1&, const t2&, const t3&) = 0;
 
 #define _KARABO_FSM_STATE_IMPL_E4(name, entryFunc, t1, t2, t3, t4) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
-    name() {this->setState(karabo::core::states::name));} \
+    name() {this->setState(karabo::core::State::name));} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -703,7 +703,7 @@ virtual void entryFunc(const t1&, const t2&, const t3& c3, const t4&) = 0;
 
 #define _KARABO_FSM_STATE_IMPL_EE(name, entryFunc, exitFunc) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -748,7 +748,7 @@ private: \
     TargetAction _ta; \
     boost::shared_ptr<Worker> _worker; \
 public: \
-    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::states::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -793,7 +793,7 @@ virtual void exitFunc()  = 0;
 
 #define KARABO_FSM_TERMINATE_STATE(name) \
 struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseState> { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -810,7 +810,7 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
 
 #define _KARABO_FSM_TERMINATE_STATE_IMPL_E(name, entryFunc) \
 struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseState> { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -837,7 +837,7 @@ virtual void entryFunc() = 0;
 
 #define _KARABO_FSM_TERMINATE_STATE_IMPL_EE(name, entryFunc, exitFunc) \
 struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseState> { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -879,7 +879,7 @@ virtual void exitFunc()  = 0;
 
 #define KARABO_FSM_INTERRUPT_STATE(name, event) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
              this->setFsmName(f.getFsmName()); \
@@ -898,7 +898,7 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
     boost::shared_ptr<Worker> _worker; \
-    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::states::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -930,7 +930,7 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
 
 #define _KARABO_FSM_INTERRUPT_STATE_IMPL_E(name, event, entryFunc) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -959,7 +959,7 @@ virtual void entryFunc() = 0;
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
     boost::shared_ptr<Worker> _worker; \
-    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::states::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -1001,7 +1001,7 @@ virtual void entryFunc() = 0;
 
 #define _KARABO_FSM_INTERRUPT_STATE_IMPL_EE(name, event, entryFunc, exitFunc) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -1045,7 +1045,7 @@ virtual void exitFunc()  = 0;
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
     boost::shared_ptr<Worker> _worker; \
-    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::states::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    name() : _ta(), _worker(new Worker) {this->setState(karabo::core::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -1090,7 +1090,7 @@ virtual void exitFunc()  = 0;
 
 
 #define KARABO_FSM_EXIT_PSEUDO_STATE(name, event) struct name : public boost::msm::front::exit_pseudo_state<event, karabo::core::FsmBaseState > { \
-name() {this->setState(karabo::core::states::name);} \
+name() {this->setState(karabo::core::State::name);} \
 template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
     try { \
         this->setFsmName(f.getFsmName()); \
@@ -1106,7 +1106,7 @@ template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
 
 #define _KARABO_FSM_EXIT_PSEUDO_STATE_IMPL_E(name, event, entryFunc) \
 struct name : public boost::msm::front::exit_pseudo_state<event, karabo::core::FsmBaseState > { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -1134,7 +1134,7 @@ virtual void entryFunc() = 0;
 
 #define _KARABO_FSM_EXIT_PSEUDO_STATE_IMPL_EE(name, event, entryFunc, exitFunc) \
 struct name : public boost::msm::front::exit_pseudo_state<event, karabo::core::FsmBaseState > { \
-    name() {this->setState(karabo::core::states::name);} \
+    name() {this->setState(karabo::core::State::name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \

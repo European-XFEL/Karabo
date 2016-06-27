@@ -34,6 +34,8 @@ namespace karabo {
 namespace karabo {
     namespace core {
         
+        class FsmBaseState;
+        
         struct StateVisitor {
 
             template <class T>
@@ -49,16 +51,19 @@ namespace karabo {
                     // if state-machine and state are the same name, the state is subcomposed into the former machine
                     if (stateName == fsmName) fsmName = m_currentFsm;
 
+                    m_state = state;
                     m_stateName = stateName;
                     m_currentFsm = fsmName;
                 }
             }
 
-            const std::string & getState() {
-                return m_stateName;
+            const FsmBaseState* getState() {
+                return static_cast<const FsmBaseState*>(m_state);
             }
 
         private:
+            
+            const void* m_state;
             std::string m_stateName;
             std::string m_currentFsm;
         };
@@ -67,9 +72,9 @@ namespace karabo {
             
             friend class StateVisitor;
             
-            FsmBaseState() : m_state(new State), m_fsmName(""), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
+            FsmBaseState() : m_state(State()), m_fsmName(""), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
 
-            const State::Pointer& getState() const {
+            const State& getState() const {
                 return m_state;
             }
             
@@ -77,18 +82,14 @@ namespace karabo {
                 m_stateMachineName = name;
             }
   
-            std::string parent() const {
-                return m_state->parent();
+            const State* parent() const {
+                return m_state.parent();
             }
             
-            const std::vector<std::string>& parents() const {
-                return m_state->parents();
-            }
-
         public:
             
             bool isCompatible(const State& s) const {
-                return m_state->isCompatible(s);
+                return m_state.isCompatible(s);
             }
             
             const std::string & getFsmName() const {
@@ -144,23 +145,24 @@ namespace karabo {
         protected:
             
             const std::string & getStateName() const {
-                if (m_state->name().empty())
+                if (m_state.name().empty())
                     return m_stateMachineName;
-                return m_state->name();
+                return m_state.name();
             }
 
             const std::string & name() const {
-                if (m_state->name().empty())
+                std::cout << "*** FsmBaseState::name() : name = \"" << m_state.name() << "\", m_stateMachineName = \"" << m_stateMachineName << "\"\n";
+                if (m_state.name().empty())
                     return m_stateMachineName;
-                return m_state->name();
+                return m_state.name();
             }
             
-            void setState(const State::Pointer& state) {
+            void setState(const State& state) {
                 m_state = state;
             }
             
         protected:
-            State::Pointer m_state;
+            State m_state;
             std::string m_stateMachineName;
             std::string m_fsmName;
             bool m_isContained;
