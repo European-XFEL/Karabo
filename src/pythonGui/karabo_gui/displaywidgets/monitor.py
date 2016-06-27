@@ -35,7 +35,7 @@ class Monitor(DisplayWidget):
         fn = getSaveFileName("Filename for Monitors", suffix="csv",
                              filter="Comma-separated value files (*.csv)")
         if fn:
-            self.filename = fn
+            self._setFilename(fn)
 
     def setInterval(self):
         interval, ok = QInputDialog.getDouble(
@@ -43,7 +43,7 @@ class Monitor(DisplayWidget):
             "Enter the interval (in seconds) the monitor should be saved\n"
             "Enter 0 if it should be triggered by first property")
         if ok:
-            self.interval = interval
+            self._setInterval(interval)
 
     def addBox(self, box):
         if self.isCompatible(box, True):
@@ -81,5 +81,13 @@ class Monitor(DisplayWidget):
         e.set("interval", str(self.interval))
 
     def load(self, e):
-        self.filename = e.get("filename", None)
-        self.interval = float(e.get("interval"))
+        self._setFilename(e.get("filename", None))
+        self._setInterval(float(e.get("interval")))
+
+    def _setFilename(self, filename):
+        """ Give derived classes a place to respond to changes. """
+        self.filename = filename
+
+    def _setInterval(self, interval):
+        """ Give derived classes a place to respond to changes. """
+        self.interval = interval
