@@ -181,7 +181,7 @@ class Icons(DisplayWidget):
     def showDialog(self):
         box = self.boxes[0]
         dialog = self.Dialog(self.project, self.items, box.descriptor)
-        self.items = dialog.exec_()
+        self._setItems(dialog.exec_())
         if box.hasValue():
             self.valueChanged(box, box.value)
 
@@ -190,6 +190,10 @@ class Icons(DisplayWidget):
             self.widget.setPixmap(icons.no.pixmap(100))
         else:
             self.widget.setPixmap(p)
+
+    def _setItems(self, items):
+        """ Give derived classes a place to respond to changes. """
+        self.items = items
 
 
 class TextDialog(Dialog):
@@ -232,13 +236,14 @@ class TextIcons(Icons):
             e.append(ee)
 
     def load(self, e):
-        self.items = []
+        items = []
         for ee in e:
             item = Item(ee, self.project)
             if ee.text:
                 item.value = ee.text
                 item.re = re.compile(item.value)
-            self.items.append(item)
+            items.append(item)
+        self._setItems(items)
 
 
 class DigitDialog(Dialog):
@@ -303,13 +308,14 @@ class DigitIcons(Icons):
             parse = int
         else:
             parse = float
-        self.items = []
+        items = []
         for ee in e:
             item = Item(ee, self.project)
             if ee.get('equal'):
                 item.value = parse(ee.text)
                 item.equal = ee.get('equal') == 'true'
-            self.items.append(item)
+            items.append(item)
+        self._setItems(items)
 
 
 class SelectionDialog(Dialog):
@@ -330,14 +336,14 @@ class SelectionIcons(Icons):
         return ro and box.descriptor.options is not None
 
     def typeChanged(self, box):
-        items = []
+        items = list(self.items)
         for o in box.descriptor.options:
             if not any(o == item.value for item in self.items):
                 item = Item()
                 item.value = o
                 items.append(item)
 
-        self.items.extend(items)
+        self._setItems(items)
 
     def valueChanged(self, box, value, timestamp=None):
         for item in self.items:
@@ -357,8 +363,9 @@ class SelectionIcons(Icons):
             e.append(ee)
 
     def load(self, e):
-        self.items = []
+        items = []
         for ee in e:
             item = Item(ee, self.project)
             item.value = ee.text
-            self.items.append(item)
+            items.append(item)
+        self._setItems(items)
