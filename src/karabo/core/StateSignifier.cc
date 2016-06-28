@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <karabo/util/StringTools.hh>
 #include <karabo/util/Factory.hh>
-#include "States.hh"
+#include "StateSignifier.hh"
 #include "karabo/log/Logger.hh"
 
 

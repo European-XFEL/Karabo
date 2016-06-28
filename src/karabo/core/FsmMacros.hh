@@ -28,7 +28,7 @@
 #include <karabo/log/Logger.hh>
 #include "Worker.hh"
 #include "FsmBaseState.hh"
-#include "States.hh"
+#include "StateSignifier.hh"
 
 // Allow boost msm names appear globally in karabo namespace
 namespace karabo {
