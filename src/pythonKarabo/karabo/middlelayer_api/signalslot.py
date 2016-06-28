@@ -225,7 +225,8 @@ class SignalSlotable(Configurable):
 
     def __del__(self):
         if self._ss is not None and self._ss.loop.is_running():
-            self._ss.loop.create_task(self.slotKillDevice())
+            self._ss.loop.call_soon_threadsafe(
+                self._ss.loop.create_task, self.slotKillDevice())
 
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())

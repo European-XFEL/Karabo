@@ -25,7 +25,7 @@ from .device_client import (
     instantiate, shutdown, shutdownNoWait, instantiateNoWait, disconnectDevice,
     getHistory)
 from .eventloop import NoEventLoop
-from .macro import Macro
+from .macro import EventThread, Macro
 
 
 # NOTE: This is the namespace for ikarabo
@@ -87,9 +87,13 @@ if ip is not None:
     Type karabo? for help
     """.format(version))
 
+    thread = EventThread()
+    thread.start()
+
     hostname = socket.gethostname().replace(".", "_")
     devices = DeviceClient(_deviceId_="ikarabo-{}-{}".format(
         hostname, os.getpid()))
+    thread.start_device(devices)
 
     set_event_loop(NoEventLoop(devices))
 
