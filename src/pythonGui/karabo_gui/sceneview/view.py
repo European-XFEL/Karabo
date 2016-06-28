@@ -102,7 +102,7 @@ class SceneView(QWidget):
     def mouseDoubleClickEvent(self, event):
         if self.design_mode:
             item = self.item_at_position(event.pos())
-            if item is not None:
+            if item is not None and hasattr(item, 'edit'):
                 item.edit()
                 self.update()
             event.accept()
