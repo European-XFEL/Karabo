@@ -8,4 +8,5 @@ from .monitor import MonitorContainer  # noqa
 from .simple import LabelWidget, SceneLinkWidget, UnknownSvgWidget  # noqa
 from .singlebit import SingleBitContainer  # noqa
 from .statecolor import DisplayStateColorContainer  # noqa
+from .tableelement import TableElementContainer  # noqa
 from .vacuum import VacuumWidgetContainer  # noqa
