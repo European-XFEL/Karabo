@@ -11,6 +11,7 @@
 #ifndef KARABO_UTIL_HPP
 #define	KARABO_UTIL_HPP
 
+#include "util/AlarmConditions.hh"
 #include "util/Hash.hh"
 #include "util/ClassInfo.hh"
 #include "util/Configurator.hh"
@@ -41,5 +42,6 @@
 #include "util/TimeProfiler.hh"
 #include "util/karaboDll.hh"
 #include "util/Version.hh"
+
 #endif
 

@@ -109,6 +109,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/TcpConnection.o \
 	${OBJECTDIR}/_ext/1103112890/utils.o \
 	${OBJECTDIR}/_ext/1080827789/pugixml.o \
+	${OBJECTDIR}/_ext/163016059/AlarmConditions.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/163016059/ByteSwap.o \
 	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
@@ -121,6 +122,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Hash.o \
 	${OBJECTDIR}/_ext/163016059/HashFilter.o \
 	${OBJECTDIR}/_ext/163016059/PluginLoader.o \
+	${OBJECTDIR}/_ext/163016059/RollingWindowStatistics.o \
 	${OBJECTDIR}/_ext/163016059/Schema.o \
 	${OBJECTDIR}/_ext/163016059/SignalHandler.o \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
@@ -566,6 +568,11 @@ ${OBJECTDIR}/_ext/1080827789/pugixml.o: ../../../src/karabo/pugiXml/pugixml.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1080827789/pugixml.o ../../../src/karabo/pugiXml/pugixml.cpp
 
+${OBJECTDIR}/_ext/163016059/AlarmConditions.o: ../../../src/karabo/util/AlarmConditions.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/AlarmConditions.o ../../../src/karabo/util/AlarmConditions.cc
+
 ${OBJECTDIR}/_ext/163016059/Base64.o: ../../../src/karabo/util/Base64.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
@@ -625,6 +632,11 @@ ${OBJECTDIR}/_ext/163016059/PluginLoader.o: ../../../src/karabo/util/PluginLoade
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/PluginLoader.o ../../../src/karabo/util/PluginLoader.cc
+
+${OBJECTDIR}/_ext/163016059/RollingWindowStatistics.o: ../../../src/karabo/util/RollingWindowStatistics.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/RollingWindowStatistics.o ../../../src/karabo/util/RollingWindowStatistics.cc
 
 ${OBJECTDIR}/_ext/163016059/Schema.o: ../../../src/karabo/util/Schema.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -828,7 +840,7 @@ ${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/JmsBroker_Test.o ${TESTDIR}/_
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/Base64_Test.o ${TESTDIR}/_ext/1033104525/ByteSwap_Test.o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/DateTimeString_Test.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/StringTools_Test.o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/Version_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/AlarmCondition_Test.o ${TESTDIR}/_ext/1033104525/Base64_Test.o ${TESTDIR}/_ext/1033104525/ByteSwap_Test.o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/DateTimeString_Test.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/StatisticalEvaluator_Test.o ${TESTDIR}/_ext/1033104525/StringTools_Test.o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/Version_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -935,6 +947,12 @@ ${TESTDIR}/_ext/936498188/netTestRunner.o: ../../../src/karabo/tests/net/netTest
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/netTestRunner.o ../../../src/karabo/tests/net/netTestRunner.cc
 
 
+${TESTDIR}/_ext/1033104525/AlarmCondition_Test.o: ../../../src/karabo/tests/util/AlarmCondition_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/AlarmCondition_Test.o ../../../src/karabo/tests/util/AlarmCondition_Test.cc
+
+
 ${TESTDIR}/_ext/1033104525/Base64_Test.o: ../../../src/karabo/tests/util/Base64_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
@@ -993,6 +1011,12 @@ ${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
+
+
+${TESTDIR}/_ext/1033104525/StatisticalEvaluator_Test.o: ../../../src/karabo/tests/util/StatisticalEvaluator_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/StatisticalEvaluator_Test.o ../../../src/karabo/tests/util/StatisticalEvaluator_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/StringTools_Test.o: ../../../src/karabo/tests/util/StringTools_Test.cc 
@@ -2047,6 +2071,19 @@ ${OBJECTDIR}/_ext/1080827789/pugixml_nomain.o: ${OBJECTDIR}/_ext/1080827789/pugi
 	    ${CP} ${OBJECTDIR}/_ext/1080827789/pugixml.o ${OBJECTDIR}/_ext/1080827789/pugixml_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/163016059/AlarmConditions_nomain.o: ${OBJECTDIR}/_ext/163016059/AlarmConditions.o ../../../src/karabo/util/AlarmConditions.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/AlarmConditions.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/AlarmConditions_nomain.o ../../../src/karabo/util/AlarmConditions.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/AlarmConditions.o ${OBJECTDIR}/_ext/163016059/AlarmConditions_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/163016059/Base64_nomain.o: ${OBJECTDIR}/_ext/163016059/Base64.o ../../../src/karabo/util/Base64.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Base64.o`; \
@@ -2201,6 +2238,19 @@ ${OBJECTDIR}/_ext/163016059/PluginLoader_nomain.o: ${OBJECTDIR}/_ext/163016059/P
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/PluginLoader_nomain.o ../../../src/karabo/util/PluginLoader.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/PluginLoader.o ${OBJECTDIR}/_ext/163016059/PluginLoader_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/RollingWindowStatistics_nomain.o: ${OBJECTDIR}/_ext/163016059/RollingWindowStatistics.o ../../../src/karabo/util/RollingWindowStatistics.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/RollingWindowStatistics.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/RollingWindowStatistics_nomain.o ../../../src/karabo/util/RollingWindowStatistics.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/RollingWindowStatistics.o ${OBJECTDIR}/_ext/163016059/RollingWindowStatistics_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Schema_nomain.o: ${OBJECTDIR}/_ext/163016059/Schema.o ../../../src/karabo/util/Schema.cc 

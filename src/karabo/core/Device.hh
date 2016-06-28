@@ -17,6 +17,7 @@
 #include <karabo/net/utils.hh>
 #include <karabo/util.hpp>
 #include <karabo/util/SignalHandler.hh>
+#include <karabo/util/RollingWindowStatistics.hh>
 #include <karabo/xms.hpp>
 #include <karabo/log/Logger.hh>
 #include <karabo/xip/CpuImage.hh>
@@ -25,6 +26,7 @@
 
 #include "NoFsm.hh"
 #include "DeviceClient.hh"
+
 
 /**
  * The main European XFEL namespace
@@ -40,6 +42,7 @@ namespace karabo {
         #define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR
 
         #define KARABO_NO_SERVER "__none__"
+        
 
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
         public:
@@ -199,6 +202,14 @@ namespace karabo {
                         .displayedName("State")
                         .description("The current state the device is in")
                         .readOnly().initialValue("Ok")
+                        .commit();
+                
+                STRING_ELEMENT(expected).key("alarmCondition")
+                        .displayedName("Alarm condition")
+                        .description("The current alarm condition of the device. "
+                                     "Evaluates to the highest condition on any"
+                                     " property if not set manually.")
+                        .readOnly().initialValue(AlarmCondition::NONE.asString())
                         .commit();
 
                 NODE_ELEMENT(expected).key("performanceStatistics")
@@ -441,10 +452,14 @@ namespace karabo {
              */
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
+                
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-
                 karabo::util::Hash validated;
-                std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
+                std::pair<bool, std::string> result;
+                
+                
+                result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
+                
                 if (result.first == false) {
                     KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
                 }
@@ -452,12 +467,23 @@ namespace karabo {
                 // Check for parameters being in a bad condition
                 if (m_validatorIntern.hasParametersInWarnOrAlarm()) {
                     const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
+                    std::vector<AlarmCondition> v;
                     for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                         const Hash& desc = it->getValue<Hash>();
-                        KARABO_LOG_WARN << desc.get<string>("message");
+                        KARABO_LOG_WARN << desc.get<string>("type")<<": "<< desc.get<string>("message");
                         emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_deviceId);
+                        v.push_back(AlarmCondition::fromString(desc.get<string>("type")));
                     }
+                    lock.unlock();
+                    this->setAlarmCondition(AlarmCondition::returnMostSignificant(v));
+                    lock.lock();
+                } else {
+                    lock.unlock();
+                    this->setAlarmCondition(AlarmCondition::NONE);
+                    lock.lock();
                 }
+                
+                
 
                 if (!validated.empty()) {
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
@@ -857,6 +883,27 @@ namespace karabo {
             void execute(const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) const {
                 call("", command, a1, a2, a3, a4);
             }
+            
+            const karabo::util::AlarmCondition & getAlarmCondition() const {
+                return karabo::util::AlarmCondition::fromString(this->get<std::string>("alarmCondition"));
+            }
+            
+            void setAlarmCondition(const karabo::util::AlarmCondition & condition){
+                this->setNoValidate("alarmCondition", condition.asString());
+            }
+            
+            const karabo::util::AlarmCondition & getAlarmCondition(const std::string & key, const std::string & sep = ".") const {
+                const std::string & propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep);
+                return karabo::util::AlarmCondition::fromString(propertyCondition);
+            }
+            
+            bool hasRollingStatistics(const std::string & path) const {
+                return this->getFullSchema().hasRollingStatistics(path);
+            }
+            
+            karabo::util::RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & path) const {
+                return m_validatorIntern.getRollingStatistics(path);         
+            }
 
         protected: // Functions and Classes
 
@@ -1205,6 +1252,10 @@ namespace karabo {
                 }
                 return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
             }
+            
+            
+            
+           
             
             /*const std::vector<karabo::util::Hash>& getVectorHashRow(const std::string& key) const {
                 const std::vector<karabo::util::Hash>& value = m_parameters.get<std::vector<karabo::util::Hash> >(key);
