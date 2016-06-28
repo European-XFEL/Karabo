@@ -26,7 +26,7 @@
 
 #include "NoFsm.hh"
 #include "DeviceClient.hh"
-#include "States.hh"
+#include "StateSignifier.hh"
 
 
 /**
