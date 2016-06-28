@@ -43,7 +43,7 @@ class BaseWidgetContainer(QWidget):
         box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
         if self.model.parent_component == 'EditableApplyLaterComponent':
             widget.signalEditingFinished.connect(self._on_editing_finished)
-            box.signalUserChanged.disconnect(widget.valueChangedSlot)
+            box.signalUserChanged.disconnect(self._on_user_edit)
             box.signalUpdateComponent.disconnect(self._on_display_value_change)
             # These are connected in `EditableWidget.__init__`
             box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
