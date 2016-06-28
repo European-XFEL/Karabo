@@ -53,6 +53,13 @@ class BaseWidgetContainer(QWidget):
         else:  # DisplayWidgets
             box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
 
+    def set_visible(self, visible):
+        """ Set whether this widget is seen by the user."""
+        if visible:
+            self.box.addVisible()
+        else:
+            self.box.removeVisible()
+
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
