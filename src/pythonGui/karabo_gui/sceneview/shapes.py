@@ -7,28 +7,35 @@
 from abc import ABCMeta, abstractmethod
 
 from PyQt4.QtCore import QLine, QRect, QSize, Qt
-from PyQt4.QtGui import QBrush, QColor, QPen
+from PyQt4.QtGui import QBrush, QColor, QDialog, QPen
 
+from karabo_gui.dialogs.dialogs import PenDialog
 from karabo_gui.pathparser import Parser
-from .const import QT_PEN_CAP_STYLE, QT_PEN_JOIN_STYLE, SCREEN_MAX_VALUE
+from .const import (QT_PEN_CAP_STYLE_FROM_STR, QT_PEN_CAP_STYLE_TO_STR,
+                    QT_PEN_JOIN_STYLE_FROM_STR, QT_PEN_JOIN_STYLE_TO_STR,
+                    SCREEN_MAX_VALUE)
 
 
 class BaseShape(object, metaclass=ABCMeta):
     """ A shape base class
     """
 
-    def __init__(self, model):
+    def __init__(self, model, brush=None):
         super(BaseShape, self).__init__()
-        self.model = model
-
         self.pen = QPen()
         self.pen.setWidth(1)
-        self.brush = QBrush()
+        self.brush = brush
 
         self.shape = None
         self.selected = False
         self._hide_from_view = False
 
+        self.set_model(model)
+
+    def set_model(self, model):
+        """ Set the new ``model`` and update the shape properties.
+        """
+        self.model = model
         self.set_pen()
 
     def set_pen(self):
@@ -39,7 +46,8 @@ class BaseShape(object, metaclass=ABCMeta):
             c = QColor(self.model.stroke)
             c.setAlphaF(self.model.stroke_opacity)
             pen.setColor(c)
-            pen.setCapStyle(QT_PEN_CAP_STYLE[self.model.stroke_linecap])
+            pen.setCapStyle(QT_PEN_CAP_STYLE_FROM_STR[
+                            self.model.stroke_linecap])
             pen.setWidthF(self.model.stroke_width)
             pen.setDashOffset(self.model.stroke_dashoffset)
 
@@ -47,16 +55,16 @@ class BaseShape(object, metaclass=ABCMeta):
                 pen.setDashPattern(self.model.stroke_dasharray)
 
             pen.setStyle(self.model.stroke_style)
-            pen.setJoinStyle(QT_PEN_JOIN_STYLE[self.model.stroke_linejoin])
+            pen.setJoinStyle(QT_PEN_JOIN_STYLE_FROM_STR[
+                             self.model.stroke_linejoin])
             pen.setMiterLimit(self.model.stroke_miterlimit)
         self.pen = pen
 
-        if self.model.fill == "none":
-            self.brush = QBrush()
-        else:
+        if self.model.fill != "none" and self.brush is not None:
             color = QColor(self.model.fill)
             color.setAlphaF(self.model.fill_opacity)
-            self.brush = QBrush(color)
+            self.brush.setColor(color)
+            self.brush.setStyle(Qt.SolidPattern)
 
     def hide(self):
         self._hide_from_view = True
@@ -95,6 +103,35 @@ class BaseShape(object, metaclass=ABCMeta):
     def maximumSize(self):
         return QSize(SCREEN_MAX_VALUE, SCREEN_MAX_VALUE)
 
+    def edit(self):
+        """ Edits the pen of the shape."""
+        dialog = PenDialog(self.pen, self.brush)
+        if dialog.exec_() == QDialog.Rejected:
+            return
+
+        pen = dialog.pen
+        brush = dialog.brush
+
+        if pen.style() == Qt.NoPen:
+            self.model.stroke = 'none'
+        else:
+            self.model.stroke = pen.color().name()
+        self.model.stroke_opacity = pen.color().alphaF()
+        self.model.stroke_linecap = QT_PEN_CAP_STYLE_TO_STR[pen.capStyle()]
+        self.model.stroke_dashoffset = pen.dashOffset()
+        self.model.stroke_width = pen.widthF()
+        self.model.stroke_dasharray = pen.dashPattern()
+        self.model.stroke_style = pen.style()
+        self.model.stroke_linejoin = QT_PEN_JOIN_STYLE_TO_STR[pen.joinStyle()]
+        self.model.stroke_miterlimit = pen.miterLimit()
+        if brush is not None and brush.style() == Qt.SolidPattern:
+            self.model.fill = brush.color().name()
+            self.model.fill_opacity = brush.color().alphaF()
+        else:
+            self.model.fill = 'none'
+
+        self.set_pen()
+
 
 class LineShape(BaseShape):
     """ A line which can appear in a scene
@@ -132,7 +169,7 @@ class RectangleShape(BaseShape):
     """
 
     def __init__(self, model):
-        super(RectangleShape, self).__init__(model)
+        super(RectangleShape, self).__init__(model, QBrush())
         self.shape = QRect(self.model.x, self.model.y, self.model.width,
                            self.model.height)
 
@@ -161,7 +198,7 @@ class PathShape(BaseShape):
     """
 
     def __init__(self, model):
-        super(PathShape, self).__init__(model)
+        super(PathShape, self).__init__(model, QBrush())
         parser = Parser(self.model.svg_data)
         self.shape = parser.parse()
 

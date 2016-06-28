@@ -99,6 +99,14 @@ class SceneView(QWidget):
             else:
                 super(SceneView, self).mouseReleaseEvent(event)
 
+    def mouseDoubleClickEvent(self, event):
+        if self.design_mode:
+            item = self.item_at_position(event.pos())
+            if item is not None and hasattr(item, 'edit'):
+                item.edit()
+                self.update()
+            event.accept()
+
     def paintEvent(self, event):
         """ Show view content.
         """
