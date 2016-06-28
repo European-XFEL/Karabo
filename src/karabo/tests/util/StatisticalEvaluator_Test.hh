@@ -11,7 +11,18 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <karabo/util/RollingWindowStatistics.hh>
 
-
+class TestRollingWindowStatisticsFriend : public karabo::util::RollingWindowStatistics{
+   
+    public:
+        TestRollingWindowStatisticsFriend(unsigned int evalInterval)
+        : RollingWindowStatistics(evalInterval) {
+            
+        }
+        
+        double getMeanEstimate(){
+            return m_meanEstimate;
+        }
+};
 
 
 class StatisticalEvaluator : public CPPUNIT_NS::TestFixture {
