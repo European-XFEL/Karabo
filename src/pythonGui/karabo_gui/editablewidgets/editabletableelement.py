@@ -683,20 +683,22 @@ class EditableTableElement(EditableWidget, DisplayWidget):
     def load(self, element):
         try:
             if self.columnSchema is None:
-                
-                self.columnSchema = SchemaHashType.fromstring(element.get(ns_karabo + "columnSchema"))
-                self.columnHash = self.columnSchema.hash
-                self.tableModel = TableModel(self.columnSchema, self.onEditingFinished)
-                self.tableModel.setRole(self.role)
-                self.widget.setModel(self.tableModel)
-                self._setComboBoxes(self.role == Qt.DisplayRole)
-                
+                schema = SchemaHashType.fromstring(element.get(ns_karabo + "columnSchema"))
+                self._setColumnSchema(schema)
         except AttributeError:
-            print("Loading column schema failed. Maybe this is an older project"+ \
-                  "file. Try saving the project and reloading.")
+            print("Loading column schema failed. Maybe this is an older "
+                  "project file. Try saving the project and reloading.")
             pass
-            
-        
+
+    def _setColumnSchema(self, schema):
+        """ Give derived classes a place to respond to changes. """
+        self.columnSchema = schema
+        self.columnHash = self.columnSchema.hash
+        self.tableModel = TableModel(self.columnSchema, self.onEditingFinished)
+        self.tableModel.setRole(self.role)
+        self.widget.setModel(self.tableModel)
+        self._setComboBoxes(self.role == Qt.DisplayRole)
+
     def valueChanged(self, box, value, timestamp=None):
       
         if value is None:
