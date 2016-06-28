@@ -60,6 +60,8 @@ class TextDialog(QDialog):
     @pyqtSlot(bool)
     def on_cbFrameWidth_toggled(self, checked):
         self.sbFrameWidth.setEnabled(checked)
+        if not checked:
+            self.label_model.frame_width = 0
 
     @pyqtSlot(int)
     def on_sbFrameWidth_valueChanged(self, value):
@@ -68,6 +70,8 @@ class TextDialog(QDialog):
     @pyqtSlot(bool)
     def on_cbBackground_toggled(self, checked):
         self.pbBackground.setEnabled(checked)
+        if not checked:
+            self.label_model.background = ''
 
     @pyqtSlot()
     def on_pbBackground_clicked(self):
