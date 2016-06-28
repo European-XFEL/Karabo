@@ -14,5 +14,4 @@ class VacuumWidgetContainer(BaseWidgetContainer):
     """
     def _create_widget(self, boxes):
         factory = _VACUUM_WIDGETS[self.model.klass]
-        display_widget = factory(boxes[0], self)
-        return display_widget.widget
+        return factory(boxes[0], self)

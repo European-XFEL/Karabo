@@ -35,5 +35,4 @@ class TableElementContainer(BaseWidgetContainer):
             'EditableTableElement': _EditableTableWrapper,
         }
         factory = factories[self.model.klass]
-        display_widget = factory(self.model, boxes[0], self)
-        return display_widget.widget
+        return factory(self.model, boxes[0], self)

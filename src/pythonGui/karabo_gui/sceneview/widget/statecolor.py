@@ -27,5 +27,4 @@ class _StateColorWrapper(DisplayStateColor):
 
 class DisplayStateColorContainer(BaseWidgetContainer):
     def _create_widget(self, boxes):
-        display_widget = _StateColorWrapper(self.model, boxes[0], self)
-        return display_widget.widget
+        return _StateColorWrapper(self.model, boxes[0], self)

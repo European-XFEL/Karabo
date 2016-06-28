@@ -18,5 +18,4 @@ class _FloatSpinBoxWrapper(FloatSpinBox):
 
 class FloatSpinBoxContainer(BaseWidgetContainer):
     def _create_widget(self, boxes):
-        display_widget = _FloatSpinBoxWrapper(self.model, boxes[0], self)
-        return display_widget.widget
+        return _FloatSpinBoxWrapper(self.model, boxes[0], self)
