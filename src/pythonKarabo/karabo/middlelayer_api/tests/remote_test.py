@@ -1,7 +1,7 @@
 from asyncio import (async, coroutine, get_event_loop, sleep, wait_for,
                      TimeoutError)
 from datetime import datetime
-from unittest import TestCase, main
+from unittest import main
 import time
 import weakref
 
@@ -385,7 +385,6 @@ class Tests(EventLoopTest):
         yield from sleep(0.1)
         self.assertEqual(self.remote.value, 200)
         self.assertEqual(self.remote.counter, 300)
-
 
     @async_tst
     def test_waituntil(self):
