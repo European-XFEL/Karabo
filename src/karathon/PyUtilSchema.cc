@@ -1730,6 +1730,35 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<std::string>, std::string, STRING)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<bool>, bool, BOOL)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(PathElement, std::string, PATH)
+    
+    ///////////////////////////////////////////////////////////////
+    //AlarmSpecific<SimpleElement< EType >, EType >, where EType:
+    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
+    // and AlarmSpecific<PathElement, std::string >
+
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<int>, int, INT32)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<long long>, long long, INT64)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, UINT64)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<float>, float, FLOAT)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<double>, double, DOUBLE)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<std::string>, std::string, STRING)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<bool>, bool, BOOL)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(PathElement, std::string, PATH)
+    
+    ///////////////////////////////////////////////////////////////
+    //RollingStatSpecific<SimpleElement< EType >, EType >, where EType:
+    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
+ 
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<int>, int, INT32)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<long long>, long long, INT64)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, UINT64)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<float>, float, FLOAT)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<double>, double, DOUBLE)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<bool>, bool, BOOL)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(PathElement, std::string, PATH)
+    
 
     //    /////////////////////////////////////////////////////////////
     //    //DefaultValue<BitsetElement< EType >, EType >, where EType:

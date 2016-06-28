@@ -274,6 +274,8 @@
           <itemPath>../../../src/karabo/util/Trainstamp.cc</itemPath>
           <itemPath>../../../src/karabo/util/Trainstamp.hh</itemPath>
         </logicalFolder>
+        <itemPath>../../../src/karabo/util/AlarmConditions.cc</itemPath>
+        <itemPath>../../../src/karabo/util/AlarmConditions.hh</itemPath>
         <itemPath>../../../src/karabo/util/ArrayTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
         <itemPath>../../../src/karabo/util/Base64.hh</itemPath>
@@ -283,6 +285,8 @@
         <itemPath>../../../src/karabo/util/Dims.hh</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.cc</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
+        <itemPath>../../../src/karabo/util/RollingWindowStatistics.cc</itemPath>
+        <itemPath>../../../src/karabo/util/RollingWindowStatistics.hh</itemPath>
         <itemPath>../../../src/karabo/util/SignalHandler.cc</itemPath>
         <itemPath>../../../src/karabo/util/SignalHandler.hh</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.cc</itemPath>
@@ -425,6 +429,8 @@
                      displayName="util_test"
                      projectFiles="true"
                      kind="TEST">
+        <itemPath>../../../src/karabo/tests/util/AlarmCondition_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/AlarmCondition_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Base64_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Base64_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/ByteSwap_Test.cc</itemPath>
@@ -445,6 +451,8 @@
         <itemPath>../../../src/karabo/tests/util/Hash_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/util/StatisticalEvaluator_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/StatisticalEvaluator_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/StringTools_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/StringTools_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/TimeClasses_Test.cc</itemPath>
@@ -1458,6 +1466,16 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/util/AlarmCondition_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/AlarmCondition_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/util/Base64_Test.cc"
             ex="false"
             tool="1"
@@ -1554,6 +1572,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/util/Schema_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/StatisticalEvaluator_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/StatisticalEvaluator_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1699,6 +1727,16 @@
       <item path="../../../src/karabo/tests/xms/xmsTestRunner.cc"
             ex="false"
             tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/AlarmConditions.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/AlarmConditions.hh"
+            ex="false"
+            tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ArrayTools.hh"
@@ -1882,6 +1920,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/PluginLoader.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/RollingWindowStatistics.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/RollingWindowStatistics.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3413,6 +3461,16 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/util/AlarmCondition_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/AlarmCondition_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/util/Base64_Test.cc"
             ex="false"
             tool="1"
@@ -3509,6 +3567,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/util/Schema_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/StatisticalEvaluator_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/StatisticalEvaluator_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3651,6 +3719,16 @@
       <item path="../../../src/karabo/tests/xms/xmsTestRunner.cc"
             ex="false"
             tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/AlarmConditions.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/AlarmConditions.hh"
+            ex="false"
+            tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ArrayTools.hh"
@@ -3834,6 +3912,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/PluginLoader.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/RollingWindowStatistics.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/RollingWindowStatistics.hh"
             ex="false"
             tool="3"
             flavor2="0">
