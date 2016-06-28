@@ -2,6 +2,7 @@
 #include <karabo/util/StringTools.hh>
 #include <karabo/util/Factory.hh>
 #include "States.hh"
+#include "karabo/log/Logger.hh"
 
 
 using namespace std;
@@ -27,20 +28,19 @@ namespace karabo {
             throw KARABO_PARAMETER_EXCEPTION("Wrong configuration: no states from input list are found in the trumplist!");
         }
 
-        void StateSignifier::fillNames_p(const State& s, std::vector<std::string>& all) {
+        void StateSignifier::fillAncestorNames_r(const State& s, std::vector<std::string>& all) {
             all.push_back(s.name());
-            if (s.parent()) fillNames_p(*(s.parent()), all);
+            if (s.parent()) fillAncestorNames_r(*(s.parent()), all);
         }
         
         size_t StateSignifier::rankedAt(const State& s) {
             vector<string> allnames;
-            fillNames_p(s, allnames);
+            fillAncestorNames_r(s, allnames);   // fill array of state name and all its parent names
             for (vector<string>::const_iterator ii = allnames.begin(); ii != allnames.end(); ii++) {
                 for (size_t i = 0; i < m_trumpList.size(); i++) {
                     if (*ii == m_trumpList[i].name()) return i+1;
                 }
             }
-            std::cout << "Failed to find " << toString(allnames) << " in trump list" << std::endl;
             return 0;
         }
 
