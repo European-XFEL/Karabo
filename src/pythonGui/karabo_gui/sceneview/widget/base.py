@@ -42,7 +42,7 @@ class BaseWidgetContainer(QWidget):
         widget = self.old_style_widget
         box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
         if self.model.parent_component == 'EditableApplyLaterComponent':
-            widget.signalEditingFinished.connect(self._on_editing_finished)
+            widget.signalEditingFinished.disconnect(self._on_editing_finished)
             box.signalUserChanged.disconnect(self._on_user_edit)
             box.signalUpdateComponent.disconnect(self._on_display_value_change)
             # These are connected in `EditableWidget.__init__`
@@ -82,9 +82,13 @@ class BaseWidgetContainer(QWidget):
         if box.hasValue():
             widget.valueChanged(box, box.value, box.timestamp)
         if self.model.parent_component == 'EditableApplyLaterComponent':
+            widget.signalEditingFinished.connect(self._on_editing_finished)
             box.signalUserChanged.connect(self._on_user_edit)
             box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
             box.signalUpdateComponent.connect(self._on_display_value_change)
+            widget.setReadOnly(False)
+        else:
+            widget.setReadOnly(True)
 
     # ---------------------------------------------------------------------
     # Edit buttons related code
