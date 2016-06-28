@@ -36,9 +36,9 @@ _SCENE_OBJ_FACTORIES = {
     FixedLayoutModel: lambda m, p: GroupLayout(m),
     BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
     GridLayoutModel: lambda m, p: GridLayout(m),
-    LineModel: lambda m, p: LineShape(m),
-    RectangleModel: lambda m, p: RectangleShape(m),
-    PathModel: lambda m, p: PathShape(m),
+    LineModel: lambda m, p: LineShape(model=m),
+    RectangleModel: lambda m, p: RectangleShape(model=m),
+    PathModel: lambda m, p: PathShape(model=m),
     LabelModel: LabelWidget,
     SceneLinkModel: SceneLinkWidget,
     UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(m, parent=p),
