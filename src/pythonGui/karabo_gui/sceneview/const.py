@@ -33,8 +33,7 @@ QT_PEN_CAP_STYLE_FROM_STR = {
 }
 
 # For convenience association reverse mapping of Qt enums to string
-QT_PEN_CAP_STYLE_TO_STR = {v: k
-                           for k, v in QT_PEN_CAP_STYLE_FROM_STR.items()}
+QT_PEN_CAP_STYLE_TO_STR = {v: k for k, v in QT_PEN_CAP_STYLE_FROM_STR.items()}
 
 # For convenience association of strings to Qt enums
 QT_PEN_JOIN_STYLE_FROM_STR = {

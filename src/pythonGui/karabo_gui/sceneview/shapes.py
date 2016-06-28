@@ -4,76 +4,109 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 
 from PyQt4.QtCore import QLine, QRect, QSize, Qt
-from PyQt4.QtGui import QBrush, QColor, QDialog, QPen
+from PyQt4.QtGui import QBrush, QColor, QDialog, QPainterPath, QPen
+from traits.api import (ABCHasStrictTraits, Bool, Instance, Property,
+                        cached_property)
 
 from karabo_gui.dialogs.dialogs import PenDialog
 from karabo_gui.pathparser import Parser
+from karabo_gui.scenemodel.api import BaseShapeObjectData
 from .const import (QT_PEN_CAP_STYLE_FROM_STR, QT_PEN_CAP_STYLE_TO_STR,
                     QT_PEN_JOIN_STYLE_FROM_STR, QT_PEN_JOIN_STYLE_TO_STR,
                     SCREEN_MAX_VALUE)
 
+_BRUSH_ATTRS = ('fill', 'fill_opacity')
+_PEN_ATTRS = ('stroke', 'stroke_opacity', 'stroke_linecap',
+              'stroke_dashoffset', 'stroke_width', 'stroke_dasharray',
+              'stroke_style', 'stroke_linejoin', 'stroke_miterlimit')
 
-class BaseShape(object, metaclass=ABCMeta):
+
+class BaseShape(ABCHasStrictTraits):
     """ A shape base class
     """
+    # The scene data model backing this shape
+    model = Instance(BaseShapeObjectData)
+    # The brush used by this shape
+    brush = Property(Instance(QBrush),
+                     depends_on=['model.' + attr for attr in _BRUSH_ATTRS])
+    # The pen used by this shape
+    pen = Property(Instance(QPen),
+                   depends_on=['model.' + attr for attr in _PEN_ATTRS])
+    # Is the shape currently shown?
+    _hidden = Bool(False)
 
-    def __init__(self, model, brush=None):
-        super(BaseShape, self).__init__()
-        self.pen = QPen()
-        self.pen.setWidth(1)
-        self.brush = brush
-
-        self.shape = None
-        self.selected = False
-        self._hide_from_view = False
-
-        self.set_model(model)
-
-    def set_model(self, model):
-        """ Set the new ``model`` and update the shape properties.
-        """
-        self.model = model
-        self.set_pen()
-
-    def set_pen(self):
-        pen = QPen()
-        if self.model.stroke == "none" or self.model.stroke_width == 0:
-            pen.setStyle(Qt.NoPen)
-        else:
-            c = QColor(self.model.stroke)
-            c.setAlphaF(self.model.stroke_opacity)
-            pen.setColor(c)
-            pen.setCapStyle(QT_PEN_CAP_STYLE_FROM_STR[
-                            self.model.stroke_linecap])
-            pen.setWidthF(self.model.stroke_width)
-            pen.setDashOffset(self.model.stroke_dashoffset)
-
-            if self.model.stroke_dasharray:
-                pen.setDashPattern(self.model.stroke_dasharray)
-
-            pen.setStyle(self.model.stroke_style)
-            pen.setJoinStyle(QT_PEN_JOIN_STYLE_FROM_STR[
-                             self.model.stroke_linejoin])
-            pen.setMiterLimit(self.model.stroke_miterlimit)
-        self.pen = pen
-
-        if self.model.fill != "none" and self.brush is not None:
+    @cached_property
+    def _get_brush(self):
+        brush = QBrush(Qt.SolidPattern)
+        if self.model.fill != "none":
             color = QColor(self.model.fill)
             color.setAlphaF(self.model.fill_opacity)
-            self.brush.setColor(color)
-            self.brush.setStyle(Qt.SolidPattern)
+            brush.setColor(color)
+        return brush
+
+    @cached_property
+    def _get_pen(self):
+        pen = QPen()
+        model = self.model
+        if model.stroke == "none" or model.stroke_width == 0:
+            pen.setStyle(Qt.NoPen)
+        else:
+            c = QColor(model.stroke)
+            c.setAlphaF(model.stroke_opacity)
+            pen.setColor(c)
+            pen.setCapStyle(QT_PEN_CAP_STYLE_FROM_STR[model.stroke_linecap])
+            pen.setWidthF(model.stroke_width)
+            pen.setDashOffset(model.stroke_dashoffset)
+
+            if model.stroke_dasharray:
+                pen.setDashPattern(model.stroke_dasharray)
+
+            pen.setStyle(model.stroke_style)
+            join_style = QT_PEN_JOIN_STYLE_FROM_STR[model.stroke_linejoin]
+            pen.setJoinStyle(join_style)
+            pen.setMiterLimit(model.stroke_miterlimit)
+        return pen
+
+    def edit(self):
+        """ Edits the pen and brush of the shape."""
+        dialog = PenDialog(self.pen, self.brush)
+        if dialog.exec_() == QDialog.Rejected:
+            return
+
+        brush = dialog.brush
+        if brush is not None and brush.style() == Qt.SolidPattern:
+            fill = brush.color().name()
+            fill_opacity = brush.color().alphaF()
+        else:
+            fill = 'none'
+            fill_opacity = 1.0
+
+        pen = dialog.pen
+        self.model.set(
+            stroke='none' if pen.style() == Qt.NoPen else pen.color().name(),
+            stroke_opacity=pen.color().alphaF(),
+            stroke_linecap=QT_PEN_CAP_STYLE_TO_STR[pen.capStyle()],
+            stroke_dashoffset=pen.dashOffset(),
+            stroke_width=pen.widthF(),
+            stroke_dasharray=pen.dashPattern(),
+            stroke_style=pen.style(),
+            stroke_linejoin=QT_PEN_JOIN_STYLE_TO_STR[pen.joinStyle()],
+            stroke_miterlimit=pen.miterLimit(),
+            fill=fill,
+            fill_opacity=fill_opacity
+        )
 
     def hide(self):
-        self._hide_from_view = True
+        self._hidden = True
 
     def show(self):
-        self._hide_from_view = False
+        self._hidden = False
 
     def is_visible(self):
-        return not self._hide_from_view
+        return not self._hidden
 
     @abstractmethod
     def draw(self, painter):
@@ -103,44 +136,22 @@ class BaseShape(object, metaclass=ABCMeta):
     def maximumSize(self):
         return QSize(SCREEN_MAX_VALUE, SCREEN_MAX_VALUE)
 
-    def edit(self):
-        """ Edits the pen of the shape."""
-        dialog = PenDialog(self.pen, self.brush)
-        if dialog.exec_() == QDialog.Rejected:
-            return
-
-        pen = dialog.pen
-        brush = dialog.brush
-
-        if pen.style() == Qt.NoPen:
-            self.model.stroke = 'none'
-        else:
-            self.model.stroke = pen.color().name()
-        self.model.stroke_opacity = pen.color().alphaF()
-        self.model.stroke_linecap = QT_PEN_CAP_STYLE_TO_STR[pen.capStyle()]
-        self.model.stroke_dashoffset = pen.dashOffset()
-        self.model.stroke_width = pen.widthF()
-        self.model.stroke_dasharray = pen.dashPattern()
-        self.model.stroke_style = pen.style()
-        self.model.stroke_linejoin = QT_PEN_JOIN_STYLE_TO_STR[pen.joinStyle()]
-        self.model.stroke_miterlimit = pen.miterLimit()
-        if brush is not None and brush.style() == Qt.SolidPattern:
-            self.model.fill = brush.color().name()
-            self.model.fill_opacity = brush.color().alphaF()
-        else:
-            self.model.fill = 'none'
-
-        self.set_pen()
-
 
 class LineShape(BaseShape):
     """ A line which can appear in a scene
     """
+    # The line that we're drawing
+    shape = Property(Instance(QLine), depends_on=['model.x1', 'model.x2',
+                                                  'model.y1', 'model.y2'])
 
-    def __init__(self, model):
-        super(LineShape, self).__init__(model)
-        self.shape = QLine(self.model.x1, self.model.y1, self.model.x2,
-                           self.model.y2)
+    def _get_brush(self):
+        """ Reimplement the base-class property getter. No brushes here! """
+        return None
+
+    @cached_property
+    def _get_shape(self):
+        model = self.model
+        return QLine(model.x1, model.y1, model.x2, model.y2)
 
     def draw(self, painter):
         """ The line gets drawn.
@@ -152,30 +163,30 @@ class LineShape(BaseShape):
         return QRect(self.shape.p1(), self.shape.p2())
 
     def set_geometry(self, rect):
-        self.shape = QLine(rect.topLeft(), rect.bottomRight())
-        self._update_model_values()
+        start, end = rect.topLeft(), rect.bottomRight()
+        self.model.set(x1=start.x(), y1=start.y(), x2=end.x(), y2=end.y())
 
     def translate(self, offset):
-        self.shape.translate(offset)
-        self._update_model_values()
-
-    def _update_model_values(self):
-        self.model.set(x1=self.shape.x1(), y1=self.shape.y1(),
-                       x2=self.shape.x2(), y2=self.shape.y2())
+        x1, y1 = self.model.x1, self.model.y1
+        x2, y2 = self.model.x2, self.model.y2
+        xoff, yoff = offset.x(), offset.y()
+        self.model.set(x1=x1 + xoff, y1=y1 + yoff, x2=x2 + xoff, y2=y2 + yoff)
 
 
 class RectangleShape(BaseShape):
     """ A rectangle which can appear in a scene
     """
+    # The rectangle that we're drawing
+    shape = Property(Instance(QRect),
+                     depends_on=['model.x', 'model.y', 'model.height',
+                                 'model.width'])
 
-    def __init__(self, model):
-        super(RectangleShape, self).__init__(model, QBrush())
-        self.shape = QRect(self.model.x, self.model.y, self.model.width,
-                           self.model.height)
+    @cached_property
+    def _get_shape(self):
+        model = self.model
+        return QRect(model.x, model.y, model.width, model.height)
 
     def draw(self, painter):
-        """ The rectangle gets drawn.
-        """
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawRect(self.shape)
@@ -184,27 +195,26 @@ class RectangleShape(BaseShape):
         return self.shape
 
     def set_geometry(self, rect):
-        self.shape = rect
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
 
     def translate(self, offset):
-        self.shape.translate(offset)
-        self.model.set(x=self.shape.x(), y=self.shape.y())
+        x, y = self.model.x, self.model.y
+        self.model.set(x=x + offset.x(), y=y + offset.y())
 
 
 class PathShape(BaseShape):
     """ A path which can appear in a scene
     """
+    # The path object
+    shape = Property(Instance(QPainterPath), depends_on=['model.svg_data'])
 
-    def __init__(self, model):
-        super(PathShape, self).__init__(model, QBrush())
+    @cached_property
+    def _get_shape(self):
         parser = Parser(self.model.svg_data)
-        self.shape = parser.parse()
+        return parser.parse()
 
     def draw(self, painter):
-        """ The path gets drawn.
-        """
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawPath(self.shape)
