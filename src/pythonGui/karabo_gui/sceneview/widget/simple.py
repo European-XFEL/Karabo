@@ -45,6 +45,12 @@ class LabelWidget(QLabel):
         model.height = fm.height() + CONTENT_MARGIN
         self.setGeometry(model.x, model.y, model.width, model.height)
 
+    def destroy(self):
+        """ Satisfy the informal widget interface. """
+
+    def set_visible(self, visible):
+        """ Satisfy the informal widget interface. """
+
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
@@ -93,6 +99,12 @@ class SceneLinkWidget(QPushButton):
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
 
+    def destroy(self):
+        """ Satisfy the informal widget interface. """
+
+    def set_visible(self, visible):
+        """ Satisfy the informal widget interface. """
+
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
@@ -129,6 +141,12 @@ class UnknownSvgWidget(QWidget):
         if renderer.isValid() and not renderer.defaultSize().isNull():
             return cls(renderer, parent=parent)
         return None
+
+    def destroy(self):
+        """ Satisfy the informal widget interface. """
+
+    def set_visible(self, visible):
+        """ Satisfy the informal widget interface. """
 
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),

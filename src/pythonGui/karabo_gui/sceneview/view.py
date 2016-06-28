@@ -14,7 +14,7 @@ from karabo_gui.scenemodel.api import (read_scene, FixedLayoutModel,
                                        SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
 from .builder import (bring_object_to_front, create_object_from_model,
-                      fill_root_layout, remove_object_from_layout,
+                      fill_root_layout, is_widget, remove_object_from_layout,
                       send_object_to_back)
 from .const import QT_CURSORS
 from .layout.api import GroupLayout
@@ -50,6 +50,7 @@ class SceneView(QWidget):
         self.selection_model = SceneSelectionModel()
         self.current_tool = None
         self.design_mode = design_mode
+        self.tab_visible = False
         self._scene_obj_cache = {}
 
         self.setFocusPolicy(Qt.StrongFocus)
@@ -118,6 +119,26 @@ class SceneView(QWidget):
 
     # ----------------------------
     # Public methods
+
+    def destroy(self):
+        """ Do some cleanup of the scene's objects before death.
+        """
+        for obj in self._scene_obj_cache.values():
+            if is_widget(obj):
+                obj.destroy()
+
+    def set_tab_visible(self, visible):
+        """ Sets whether this scene is visible
+
+        This method manages the visibilities of the boxes in this scene."""
+        if self.tab_visible == visible:
+            return
+
+        for obj in self._scene_obj_cache.values():
+            if is_widget(obj):
+                obj.set_visible(visible)
+
+        self.tab_visible = visible
 
     def load(self, filename):
         """ The given ``filename`` is loaded.

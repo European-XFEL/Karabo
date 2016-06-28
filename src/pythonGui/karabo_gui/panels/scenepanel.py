@@ -6,8 +6,8 @@
 from functools import partial
 
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt4.QtGui import (QAction, QKeySequence, QMenu, QPalette, QScrollArea,
-                         QSizePolicy, QWidget)
+from PyQt4.QtGui import (QAction, QApplication, QKeySequence, QMenu, QPalette,
+                         QScrollArea, QSizePolicy, QWidget)
 
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
@@ -35,6 +35,11 @@ class ScenePanel(Dockable, QScrollArea):
         self.setBackgroundRole(QPalette.Dark)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+    def closeEvent(self, event):
+        event.accept()
+        self.scene_view.destroy()
+        self.signalClosed.emit()
 
     def design_mode_text(self, is_design_mode):
         if is_design_mode:
@@ -195,3 +200,21 @@ class ScenePanel(Dockable, QScrollArea):
         q_action = QAction(self)
         q_action.setSeparator(True)
         return q_action
+
+    def notifyTabVisible(self, visible):
+        self.scene_view.set_tab_visible(visible)
+
+    def onUndock(self):
+        self.scene_view.set_tab_visible(True)
+        osize = self.scene_view.size()
+        screen_rect = QApplication.desktop().screenGeometry()
+        if (osize.width() < screen_rect.width() and
+                osize.height() < screen_rect.height()):
+            # Enlarge the scene widget to its actual size
+            self.setWidgetResizable(True)
+            # Resize parent
+            self.parent().resize(osize - self.scene_view.size() +
+                                 self.parent().size())
+
+    def onDock(self):
+        self.setWidgetResizable(False)

@@ -48,5 +48,4 @@ class IconsContainer(BaseWidgetContainer):
             TextIconsModel: _TextIconsWrapper,
         }
         factory = factories[self.model.__class__]
-        display_widget = factory(self.model, boxes[0], self)
-        return display_widget.widget
+        return factory(self.model, boxes[0], self)
