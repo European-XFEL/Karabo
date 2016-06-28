@@ -1,12 +1,12 @@
 /* 
- * File:   States.hh
+ * File:   StateSignifier.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
  * Created on May 31, 2016, 10:54 AM
  */
 
-#ifndef KARABO_CORE_STATES_HH
-#define	KARABO_CORE_STATES_HH
+#ifndef KARABO_CORE_STATESIGNIFIER_HH
+#define	KARABO_CORE_STATESIGNIFIER_HH
 
 #include <iostream>
 #include "State.hh"
@@ -47,5 +47,5 @@ namespace karabo {
 }
 
 
-#endif	/* KARABO_CORE_STATES_HH */
+#endif	/* KARABO_CORE_STATESIGNIFIER_HH */
 
