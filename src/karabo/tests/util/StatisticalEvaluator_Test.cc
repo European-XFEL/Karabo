@@ -208,18 +208,7 @@ void StatisticalEvaluator::testVariance() {
 }
 
 
-class TestRollingWindowStatisticsFriend : public karabo::util::RollingWindowStatistics{
-   
-    public:
-        TestRollingWindowStatisticsFriend(unsigned int evalInterval)
-        : RollingWindowStatistics(evalInterval) {
-            
-        }
-        
-        double getMeanEstimate(){
-            return m_meanEstimate;
-        }
-};
+
 
 void StatisticalEvaluator::testUpdateMeanTriggering() {
     double EPSILON = 0.0001;

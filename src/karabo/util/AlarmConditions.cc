@@ -54,16 +54,13 @@ namespace karabo {
             
         AlarmCondition AlarmCondition::returnMostSignificant(const std::vector<AlarmCondition> & v){
             if(v.empty()) return NONE;
-            AlarmCondition s = v[0];
+            const AlarmCondition* s = &(v[0]);
             for(std::vector<AlarmCondition>::const_iterator i = v.begin(); i != v.end(); i++){
-                s = i->returnMoreSignificant(s);
-                if (s.isSameCriticality(INTERLOCK)) break; // can't go higher than this
+                s = &(i->returnMoreSignificant(*s));
+                if (s->isSameCriticality(INTERLOCK)) break; // can't go higher than this
             }
-            if (s.getBase()) {
-                return *(s.getBase());
-            } else {
-                return s;
-            }
+
+           return (s->getBase() ? *(s->getBase()) : *s);
 
         }
 
