@@ -11,16 +11,20 @@ namespace karabo {
     namespace core {
             
         State StateSignifier::returnMostSignificant(const std::vector<State>& listOfStates) {
-            State state;
+            if (listOfStates.empty())
+                throw KARABO_PARAMETER_EXCEPTION("Empty list of states in StateSignifier::returnMostSignificant");
+            
+            const State* state = 0;
             size_t stateRank = 0;
             for (vector<State>::const_iterator ii = listOfStates.begin(); ii != listOfStates.end(); ++ii) {
                 size_t rank = rankedAt(*ii);
                 if (rank > stateRank) {
-                    state = *ii;
+                    state = &(*ii);
                     stateRank = rank;
                 }
             }
-            return state;
+            if (state) return *state;
+            throw KARABO_PARAMETER_EXCEPTION("Wrong configuration: no states from input list are found in the trumplist!");
         }
 
         void StateSignifier::fillNames_p(const State& s, std::vector<std::string>& all) {
