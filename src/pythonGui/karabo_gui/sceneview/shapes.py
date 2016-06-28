@@ -11,7 +11,9 @@ from PyQt4.QtGui import QBrush, QColor, QDialog, QPen
 
 from karabo_gui.dialogs.dialogs import PenDialog
 from karabo_gui.pathparser import Parser
-from .const import QT_PEN_CAP_STYLE, QT_PEN_JOIN_STYLE, SCREEN_MAX_VALUE
+from .const import (QT_PEN_CAP_STYLE_FROM_STRING, QT_PEN_CAP_STYLE_TO_STRING,
+                    QT_PEN_JOIN_STYLE_FROM_STRING, QT_PEN_JOIN_STYLE_TO_STRING,
+                    SCREEN_MAX_VALUE)
 
 
 class BaseShape(object, metaclass=ABCMeta):
@@ -44,7 +46,8 @@ class BaseShape(object, metaclass=ABCMeta):
             c = QColor(self.model.stroke)
             c.setAlphaF(self.model.stroke_opacity)
             pen.setColor(c)
-            pen.setCapStyle(QT_PEN_CAP_STYLE[self.model.stroke_linecap])
+            pen.setCapStyle(QT_PEN_CAP_STYLE_FROM_STRING[
+                            self.model.stroke_linecap])
             pen.setWidthF(self.model.stroke_width)
             pen.setDashOffset(self.model.stroke_dashoffset)
 
@@ -52,7 +55,8 @@ class BaseShape(object, metaclass=ABCMeta):
                 pen.setDashPattern(self.model.stroke_dasharray)
 
             pen.setStyle(self.model.stroke_style)
-            pen.setJoinStyle(QT_PEN_JOIN_STYLE[self.model.stroke_linejoin])
+            pen.setJoinStyle(QT_PEN_JOIN_STYLE_FROM_STRING[
+                             self.model.stroke_linejoin])
             pen.setMiterLimit(self.model.stroke_miterlimit)
         self.pen = pen
 
@@ -113,14 +117,14 @@ class BaseShape(object, metaclass=ABCMeta):
         else:
             self.model.stroke = pen.color().name()
         self.model.stroke_opacity = pen.color().alphaF()
-        self.model.stroke_linecap = QT_PEN_CAP_STYLE[pen.capStyle()]
+        self.model.stroke_linecap = QT_PEN_CAP_STYLE_TO_STRING[pen.capStyle()]
         self.model.stroke_dashoffset = pen.dashOffset()
         self.model.stroke_width = pen.widthF()
         self.model.stroke_dasharray = pen.dashPattern()
         self.model.stroke_style = pen.style()
-        self.model.stroke_linejoin = QT_PEN_JOIN_STYLE[pen.joinStyle()]
+        self.model.stroke_linejoin = QT_PEN_JOIN_STYLE_TO_STRING[pen.joinStyle()]
         self.model.stroke_miterlimit = pen.miterLimit()
-        if brush.style() == Qt.SolidPattern:
+        if brush is not None and brush.style() == Qt.SolidPattern:
             self.model.fill = brush.color().name()
             self.model.fill_opacity = brush.color().alphaF()
         else:
