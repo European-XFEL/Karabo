@@ -16,13 +16,21 @@
 #include "StringTools.hh"
 #include "ToLiteral.hh"
 #include "Units.hh"
+#include "AlarmConditions.hh"
 
 #include "karaboDll.hh"
 #include "Timestamp.hh"
 
+#include "RollingWindowStatistics.hh"
+#include <map>
+
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
+
 namespace karabo {
     namespace util {
-
+        
+        
         class Validator {
 
             // Validation flags
@@ -36,15 +44,12 @@ namespace karabo {
             karabo::util::Timestamp m_timestamp;
             bool m_hasReconfigurableParameter;
             
+            mutable boost::shared_mutex m_rollingStatMutex;
+            std::map<std::string, RollingWindowStatistics::Pointer> m_parameterRollingStats;
+            
         public:
             
-            enum ProblemType {
-                WARN_LOW,
-                WARN_HIGH,
-                ALARM_LOW,
-                ALARM_HIGH
-            };
-
+            
             struct ValidationRules {
 
                 ValidationRules()
@@ -68,6 +73,8 @@ namespace karabo {
             };
 
             Validator();
+            
+            Validator(const Validator & other);
 
             Validator(const ValidationRules rules);
 
@@ -82,6 +89,8 @@ namespace karabo {
             const karabo::util::Hash& getParametersInWarnOrAlarm() const;
             
             bool hasReconfigurableParameter() const;
+            
+            RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & scope) const;
 
         private:
 
@@ -90,6 +99,14 @@ namespace karabo {
             void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope);
             
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
+            
+            void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
+            
+            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, const string & attr,  const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
+            
+            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, const string & attr, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
+            
+            
 
         };
     }

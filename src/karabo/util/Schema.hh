@@ -116,12 +116,23 @@ namespace karabo {
             #define KARABO_SCHEMA_ALARM_LOW "alarmLow"
             #define KARABO_SCHEMA_ALARM_HIGH "alarmHigh"
 
+            #define KARABO_SCHEMA_WARN_VARIANCE_LOW "warnVarianceLow"
+            #define KARABO_SCHEMA_WARN_VARIANCE_HIGH "warnVarianceHigh"
+
+            #define KARABO_SCHEMA_ALARM_VARIANCE_LOW "alarmVarianceLow"
+            #define KARABO_SCHEMA_ALARM_VARIANCE_HIGH "alarmVarianceHigh"
+
+            #define KARABO_SCHEMA_ENABLE_ROLLING_STATS "enableRollingStats"
+            #define KARABO_SCHEMA_ROLLING_STATS_EVAL "rollingStatsEvalInterval"
+
             #define KARABO_SCHEMA_ARCHIVE_POLICY "archivePolicy"
 
             #define KARABO_SCHEMA_MIN "min"
             #define KARABO_SCHEMA_MAX "max"
 
             #define KARABO_SCHEMA_OVERWRITE "overwrite"
+
+            #define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
@@ -659,6 +670,106 @@ namespace karabo {
             }
 
             bool hasAlarmHigh(const std::string& path) const;
+            
+            //******************************************************
+            //                   WarnVarianceLow                          *  
+            //******************************************************
+
+            
+            void setWarnVarianceLow(const std::string& path, const double value) {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                m_hash.setAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_LOW, value);
+            }
+
+            
+            double getWarnVarianceLow(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttribute<double> (path, KARABO_SCHEMA_WARN_VARIANCE_LOW);
+            }
+
+           
+
+            bool hasWarnVarianceLow(const std::string& path) const;
+            
+            //******************************************************
+            //                   WarnVarianceHigh                          *  
+            //******************************************************
+
+          
+            void setWarnVarianceHigh(const std::string& path, const double value) {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                m_hash.setAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_HIGH, value);
+            }
+
+         
+            double getWarnVarianceHigh(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttribute<double > (path, KARABO_SCHEMA_WARN_VARIANCE_HIGH);
+            }
+
+          
+
+            bool hasWarnVarianceHigh(const std::string& path) const;
+            
+            
+            //******************************************************
+            //                   AlarmVarianceLow                          *  
+            //******************************************************
+
+            
+            void setAlarmVarianceLow(const std::string& path, const double value) {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_LOW, value);
+            }
+
+            
+            double getAlarmVarianceLow(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttribute<double > (path, KARABO_SCHEMA_ALARM_VARIANCE_LOW);
+            }
+
+          
+            bool hasAlarmVarianceLow(const std::string& path) const;
+            
+            //******************************************************
+            //                   WarnVarianceHigh                          *  
+            //******************************************************
+
+           
+            void setAlarmVarianceHigh(const std::string& path, const double value) {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH, value);
+            }
+
+            
+            double getAlarmVarianceHigh(const std::string& path) const {
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                }
+                return m_hash.getAttribute<double> (path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
+            }
+
+      
+
+            bool hasAlarmVarianceHigh(const std::string& path) const;
+            
+            bool hasRollingStatistics(const std::string& path) const;
+        
+            unsigned int getRollingStatsEvalInterval(const std::string& path) const;
 
             //**********************************************
             //               archivePolicy                 *
