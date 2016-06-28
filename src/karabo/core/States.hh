@@ -30,7 +30,14 @@ namespace karabo {
         private:
 
             size_t rankedAt(const State& sp);
-            void fillNames_p(const State& s, std::vector<std::string>& all);
+            
+            /**
+             * Fill full list of ancestors for state, starting from state name itself:
+             * state_name, parent_name, grand_parent_name, grand_grand_parent_name, ...
+             * @param s    input state 
+             * @param all  vector for accumulating of output list of ancestors
+             */
+            void fillAncestorNames_r(const State& s, std::vector<std::string>& all);
             
         protected:
             std::vector<State> m_trumpList;
