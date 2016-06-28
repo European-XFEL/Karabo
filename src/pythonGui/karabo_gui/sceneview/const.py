@@ -26,21 +26,18 @@ QT_CURSORS = {
 }
 
 # For convenience association of strings to Qt enums
-QT_PEN_CAP_STYLE_FROM_STRING = {
+QT_PEN_CAP_STYLE_FROM_STR = {
     'butt': Qt.FlatCap,
     'square': Qt.SquareCap,
     'round': Qt.RoundCap,
 }
 
 # For convenience association reverse mapping of Qt enums to string
-QT_PEN_CAP_STYLE_TO_STRING = {
-    Qt.FlatCap: 'butt',
-    Qt.SquareCap: 'square',
-    Qt.RoundCap: 'round',
-}
+QT_PEN_CAP_STYLE_TO_STR = {v: k
+                           for k, v in QT_PEN_CAP_STYLE_FROM_STR.items()}
 
 # For convenience association of strings to Qt enums
-QT_PEN_JOIN_STYLE_FROM_STRING = {
+QT_PEN_JOIN_STYLE_FROM_STR = {
     'miter': Qt.MiterJoin,
     'svgmiter': Qt.SvgMiterJoin,
     'round': Qt.RoundJoin,
@@ -48,12 +45,8 @@ QT_PEN_JOIN_STYLE_FROM_STRING = {
 }
 
 # For convenience association reverse mapping of Qt enums to string
-QT_PEN_JOIN_STYLE_TO_STRING = {
-    Qt.MiterJoin: 'miter',
-    Qt.SvgMiterJoin: 'svgmiter',
-    Qt.RoundJoin: 'round',
-    Qt.BevelJoin: 'bevel',
-}
+QT_PEN_JOIN_STYLE_TO_STR = {v: k
+                            for k, v in QT_PEN_JOIN_STYLE_FROM_STR.items()}
 
 # For convenience association of ints to Qt enums
 QT_BOX_LAYOUT_DIRECTION = (
