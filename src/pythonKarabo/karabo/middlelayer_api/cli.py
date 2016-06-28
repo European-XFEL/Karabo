@@ -72,6 +72,21 @@ def class_completer(self, line):
 first_param = re.compile("\"[^\"]*\"|'[^']*'")
 
 
+def start_device_client():
+    global devices
+
+    thread = EventThread()
+    thread.start()
+
+    hostname = socket.gethostname().replace(".", "_")
+    devices = DeviceClient(_deviceId_="ikarabo-{}-{}".format(
+        hostname, os.getpid()))
+    thread.start_device(devices)
+
+    set_event_loop(NoEventLoop(devices))
+
+    return thread
+
 # here starts the main part of this script. It does not use the
 # standard if __name__ == "__main__" idiom, instead it checks whether
 # this script is started from within ipython, in which case it installs
@@ -87,15 +102,7 @@ if ip is not None:
     Type karabo? for help
     """.format(version))
 
-    thread = EventThread()
-    thread.start()
-
-    hostname = socket.gethostname().replace(".", "_")
-    devices = DeviceClient(_deviceId_="ikarabo-{}-{}".format(
-        hostname, os.getpid()))
-    thread.start_device(devices)
-
-    set_event_loop(NoEventLoop(devices))
+    start_device_client()
 
     ip.set_hook("complete_command", device_completer,
                 re_key=".*((get|connect)Device|execute(NoWait)?|"

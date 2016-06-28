@@ -8,7 +8,8 @@ import time
 from unittest import TestCase, main, skip
 import weakref
 
-from karabo.middlelayer_api.cli import connectDevice, DeviceClient
+from karabo.middlelayer_api.cli import (connectDevice, DeviceClient,
+                                        start_device_client)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     getDevice, instantiate, shutdown, DeviceClientBase, getDevices, getServers)
@@ -298,6 +299,19 @@ class Tests(TestCase):
             task = loop.create_task(self.init_topo(dc), dc)
             loop.run_until_complete(task)
             loop.run_until_complete(dc.slotKillDevice())
+
+    def test_ikarabo(self):
+        try:
+            with self.assertLogs(level="WARNING"):
+                thread = start_device_client()
+        except AssertionError:
+            pass
+        else:
+            self.fail("no log should be generated!")
+        finally:
+            thread.stop()
+            thread.join(0.1)
+            self.assertFalse(thread.is_alive())
 
 if __name__ == "__main__":
     main()
