@@ -194,6 +194,9 @@ class WorkflowItemWidget(QWidget):
     def destroy(self):
         """ Satisfy the informal widget interface. """
 
+    def set_visible(self, visible):
+        """ Satisfy the informal widget interface. """
+
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
