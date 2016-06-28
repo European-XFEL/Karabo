@@ -17,14 +17,10 @@
 namespace karabo {
     namespace core {
 
-        // Forward declaration
-        class StateSignifier;
-
         /**
          * Base State class
          */
         class State {
-            friend class StateSignifier;
 
         public:
             
