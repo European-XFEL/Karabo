@@ -19,5 +19,4 @@ class _EvaluatorWrapper(Evaluator):
 
 class EvaluatorContainer(BaseWidgetContainer):
     def _create_widget(self, boxes):
-        display_widget = _EvaluatorWrapper(self.model, boxes[0], self)
-        return display_widget.widget
+        return _EvaluatorWrapper(self.model, boxes[0], self)

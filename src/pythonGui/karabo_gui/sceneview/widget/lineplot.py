@@ -4,14 +4,14 @@ import pickle
 from karabo_gui.displaywidgets.displaytrendline import DisplayTrendline, Curve
 from karabo_gui.displaywidgets.xyvectors import XYVector
 from karabo_gui.scenemodel.api import PlotCurveModel
-from karabo_gui.topology import getDevice
 from .base import BaseWidgetContainer
+from .utils import get_box
 
 
 def _decode_plot_curve_model(model):
     """ Turn a PlotCurveModel instance into a box and a curve.
     """
-    box = getDevice(model.device).getBox(model.path.split("."))
+    box = get_box(model.device, model.path)
     curve = pickle.loads(base64.b64decode(model.curve_object_data))
     return box, curve
 
@@ -63,4 +63,4 @@ class LinePlotContainer(BaseWidgetContainer):
         display_widget = factory(self.model, boxes[0], self)
         for b in boxes[1:]:
             display_widget.addBox(b)
-        return display_widget.widget
+        return display_widget
