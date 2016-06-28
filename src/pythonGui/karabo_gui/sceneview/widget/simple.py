@@ -43,6 +43,9 @@ class LabelWidget(QLabel):
     def destroy(self):
         """ Satisfy the informal widget interface. """
 
+    def set_visible(self, visible):
+        """ Satisfy the informal widget interface. """
+
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
@@ -87,6 +90,9 @@ class SceneLinkWidget(QPushButton):
     def destroy(self):
         """ Satisfy the informal widget interface. """
 
+    def set_visible(self, visible):
+        """ Satisfy the informal widget interface. """
+
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
@@ -125,6 +131,9 @@ class UnknownSvgWidget(QWidget):
         return None
 
     def destroy(self):
+        """ Satisfy the informal widget interface. """
+
+    def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
     def set_geometry(self, rect):
