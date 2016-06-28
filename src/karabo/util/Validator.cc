@@ -451,9 +451,10 @@ namespace karabo {
                 }
                 
                 if(! keepCondition) {
-                    
                     const bool wasErased = m_parametersInWarnOrAlarm.erase(scope);
-                    
+                    if(!wasErased) {
+                         KARABO_LOGIC_EXCEPTION("Parameter '"+scope+"' should have been erased from alarm parameters but wasn't!");
+                    }
                 }
                 
 
