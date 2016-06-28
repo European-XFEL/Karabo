@@ -1,7 +1,7 @@
 from asyncio import async, coroutine, TimeoutError
 import sys
 import time
-from unittest import TestCase, main
+from unittest import main
 import weakref
 
 from karabo.middlelayer_api.device import Device
