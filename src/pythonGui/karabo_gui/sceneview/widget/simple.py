@@ -4,12 +4,15 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtCore import QByteArray, QPoint, QRect, QSize, Qt
-from PyQt4.QtGui import (QDialog, QFont, QFontMetrics, QFrame, QLabel,
+from PyQt4.QtGui import (QColor, QDialog, QFont, QFontMetrics, QFrame, QLabel,
                          QPainter, QPen, QPushButton, QWidget)
 from PyQt4.QtSvg import QSvgRenderer
 
 from karabo_gui.dialogs.textdialog import TextDialog
 from karabo_gui.scenemodel.api import write_single_model
+
+LIGHT_BLUE = (224, 240, 255)
+PADDING = 10
 
 
 class LabelWidget(QLabel):
@@ -157,3 +160,57 @@ class UnknownSvgWidget(QWidget):
         new_pos = self.pos() + offset
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
+
+
+class WorkflowItemWidget(QWidget):
+    """ A workflow item which can appear in a scene
+    """
+
+    def __init__(self, model, parent=None):
+        super(WorkflowItemWidget, self).__init__(parent)
+        self.model = model
+        self.font = QFont()
+        self.font.fromString(model.font)
+        self.outline_rect = self._compute_outline(model.device_id, self.font)
+        self.pen = QPen()
+        if self.model.klass == 'WorkflowGroupItem':
+            self.pen.setWidth(3)
+
+        self.setGeometry(model.x, model.y, model.width, model.height)
+
+    def paintEvent(self, event):
+        with QPainter(self) as painter:
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setFont(self.font)
+            painter.setPen(self.pen)
+
+            width, height = self.width(), self.height()
+            painter.translate(QPoint(width / 2, height / 2))
+            painter.setBrush(QColor(*LIGHT_BLUE))
+            painter.drawRoundRect(self.outline_rect, PADDING / 2, PADDING / 2)
+            painter.drawText(self.outline_rect, Qt.AlignCenter,
+                             self.model.device_id)
+
+    def destroy(self):
+        """ Satisfy the informal widget interface. """
+
+    def set_visible(self, visible):
+        """ Satisfy the informal widget interface. """
+
+    def set_geometry(self, rect):
+        self.model.set(x=rect.x(), y=rect.y(),
+                       width=rect.width(), height=rect.height())
+        self.setGeometry(rect)
+
+    def translate(self, offset):
+        new_pos = self.pos() + offset
+        self.model.set(x=new_pos.x(), y=new_pos.y())
+        self.move(new_pos)
+
+    @ staticmethod
+    def _compute_outline(text, font):
+        fm = QFontMetrics(font)
+        rect = fm.boundingRect(text)
+        rect.adjust(-PADDING, -PADDING, PADDING, PADDING)
+        rect.translate(-rect.center())
+        return rect
