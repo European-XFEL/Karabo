@@ -48,7 +48,7 @@ class PenDialog(QDialog):
         self.wDashType = PenStyleComboBox()
         self.formLayout.setWidget(3, QFormLayout.FieldRole, self.wDashType)
         self.wDashType.setPenStyle(self.pen.style())
-        
+
         self.dsbDashOffset.setValue(self.pen.dashOffset())
         
         getattr(self, self.linecaps[self.pen.capStyle()] + 'Cap').setChecked(True)
@@ -99,10 +99,10 @@ class PenDialog(QDialog):
                 self.pen.setStyle(Qt.NoPen)
             else:
                 self.pen.setWidth(self.sbStrokeWidth.value())
-            
-            self.pen.setStyle(self.wDashType.penStyle())
+
             self.pen.setDashOffset(self.dsbDashOffset.value())
-            
+            self.pen.setStyle(self.wDashType.penStyle())
+
             for k, v in self.linecaps.items():
                 if getattr(self, v + 'Cap').isChecked():
                     self.pen.setCapStyle(k)
@@ -222,7 +222,8 @@ class PenStyleComboBox(QComboBox):
               (Qt.DashLine, "Dashed line"),
               (Qt.DotLine, "Dot line"),
               (Qt.DashDotLine, "Dash dot line"),
-              (Qt.DashDotDotLine, "Dash dot dot line")]
+              (Qt.DashDotDotLine, "Dash dot dot line"),
+              (Qt.CustomDashLine, "Custom dash line")]
 
     def __init__(self, parent=None):
         super(PenStyleComboBox, self).__init__(parent)
