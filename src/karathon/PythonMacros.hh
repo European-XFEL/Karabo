@@ -143,7 +143,6 @@ struct ReadOnlySpecificVectorWrap {
     typedef std::vector< T > VType;
     typedef karabo::util::VectorElement< T > U;
     typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecVec;
-    typedef karabo::util::AlarmSpecific< U, VType > AlarmSpecVec;
 
     static ReadOnlySpecVec & initialValue(ReadOnlySpecVec& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
@@ -160,7 +159,7 @@ struct ReadOnlySpecificVectorWrap {
         }
     }
 
-    static AlarmSpecVec warnLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
+    static ReadOnlySpecVec & warnLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             VType v = pyList2StdVector(obj);
             return self.warnLow(v);
@@ -169,7 +168,7 @@ struct ReadOnlySpecificVectorWrap {
         }
     }
 
-    static AlarmSpecVec warnHighValue(ReadOnlySpecVec& self, const bp::object& obj) {
+    static ReadOnlySpecVec & warnHighValue(ReadOnlySpecVec& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             VType v = pyList2StdVector(obj);
             return self.warnHigh(v);
@@ -178,7 +177,7 @@ struct ReadOnlySpecificVectorWrap {
         }
     }
 
-    static AlarmSpecVec  alarmLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
+    static ReadOnlySpecVec & alarmLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             VType v = pyList2StdVector(obj);
             return self.alarmLow(v);
@@ -187,7 +186,7 @@ struct ReadOnlySpecificVectorWrap {
         }
     }
 
-    static AlarmSpecVec alarmHighValue(ReadOnlySpecVec& self, const bp::object& obj) {
+    static ReadOnlySpecVec & alarmHighValue(ReadOnlySpecVec& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             VType v = pyList2StdVector(obj);
             return self.alarmHigh(v);
@@ -256,60 +255,22 @@ bp::class_< DefValueVec, boost::noncopyable > ("DefaultValueVector"#e, bp::no_in
 }
 
 /////////////////////////////////////////////////////////////
-#define KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(U, EType, e)\
-{\
-typedef ReadOnlySpecific< U, EType > ReadOnlySpec;\
-typedef AlarmSpecific< U, EType > AlarmSpec;\
-bp::class_< AlarmSpec, boost::noncopyable >( "AlarmSpecific"#e, bp::no_init)\
-.def("needsAcknowledging"\
-, (ReadOnlySpec & (AlarmSpec::*)(EType const &))( &AlarmSpec::needsAcknowledging)\
-, bp::return_internal_reference<> () )\
-;\
-}
-
-
-
-/////////////////////////////////////////////////////////////
-#define KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(U, EType, e)\
-{\
-typedef ReadOnlySpecific< U, EType > ReadOnlySpec;\
-typedef RollingStatsSpecific< U, EType > RollingStatsSpec;\
-bp::class_< RollingStatsSpec, boost::noncopyable >( "RollingStatsSpecific"#e, bp::no_init)\
-.def("warnVarianceLow"\
-, (RollingStatsSpec & (RollingStatsSpec::*)(EType const &))( &RollingStatsSpec::warnVarianceLow)\
-, bp::return_internal_reference<> () )\
-.def("warnVarianceHigh"\
-, (RollingStatsSpec & (RollingStatsSpec::*)(EType const &))( &RollingStatsSpec::warnVarianceHigh)\
-, bp::return_internal_reference<> () )\
-.def("alarmVarianceLow"\
-, (RollingStatsSpec & (RollingStatsSpec::*)(EType const &))( &RollingStatsSpec::alarmVarianceLow)\
-, bp::return_internal_reference<> () )\
-.def("alarmVarianceHigh"\
-, (RollingStatsSpec & (RollingStatsSpec::*)(EType const &))( &RollingStatsSpec::alarmVarianceHigh)\
-, bp::return_internal_reference<> () )\
-.def("evaluationInterval"\
-, (ReadOnlySpec & (RollingStatsSpec::*)(unsigned long long const &))( &RollingStatsSpec::evaluationInterval)\
-, bp::return_internal_reference<> () )\
-;\
-}
-
-/////////////////////////////////////////////////////////////
 #define KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(U, EType, e)\
 {\
 typedef ReadOnlySpecific< U, EType > ReadOnlySpec;\
-typedef AlarmSpecific< U, EType > AlarmSpec;\
-typedef RollingStatsSpecific< U, EType > RollingStatsSpec;\
 bp::class_< ReadOnlySpec, boost::noncopyable >( "ReadOnlySpecific"#e, bp::no_init)\
 .def("alarmHigh"\
-, (AlarmSpec (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::alarmHigh))\
+, (ReadOnlySpec & (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::alarmHigh)\
+, bp::return_internal_reference<> () )\
 .def("alarmLow"\
-, (AlarmSpec (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::alarmLow))\
+, (ReadOnlySpec & (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::alarmLow)\
+, bp::return_internal_reference<> () )\
 .def("warnHigh"\
-, (AlarmSpec (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::warnHigh))\
+, (ReadOnlySpec & (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::warnHigh)\
+, bp::return_internal_reference<> () )\
 .def("warnLow"\
-, (AlarmSpec (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::warnLow))\
-.def("enableRollingStats"\
-, (RollingStatsSpec (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::enableRollingStats))\
+, (ReadOnlySpec & (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::warnLow)\
+, bp::return_internal_reference<> () )\
 .def("initialValueFromString"\
 , (ReadOnlySpec & (ReadOnlySpec::*)(std::string const &))( &ReadOnlySpec::initialValueFromString)\
 , bp::return_internal_reference<> () )\
@@ -330,8 +291,6 @@ typedef t EType;\
 typedef std::vector< EType > VType;\
 typedef karabo::util::VectorElement< EType, std::vector> U;\
 typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecVec;\
-typedef karabo::util::AlarmSpecific< U, VType > AlarmSpecVec;\
-typedef RollingStatsSpecific< U, VType > RollingStatsSpecVec;\
 bp::class_< ReadOnlySpecVec, boost::noncopyable > ("ReadOnlySpecificVector"#e, bp::no_init)\
 .def("initialValue"\
 , &ReadOnlySpecificVectorWrap<EType>::initialValue\
@@ -339,18 +298,20 @@ bp::class_< ReadOnlySpecVec, boost::noncopyable > ("ReadOnlySpecificVector"#e, b
 , bp::return_internal_reference<> () )\
 .def("alarmHigh"\
 , &ReadOnlySpecificVectorWrap<EType>::alarmHighValue\
-, (bp::arg("self"), bp::arg("pyList")))\
+, (bp::arg("self"), bp::arg("pyList"))\
+, bp::return_internal_reference<> () )\
 .def("alarmLow"\
 , &ReadOnlySpecificVectorWrap<EType>::alarmLowValue\
-, (bp::arg("self"), bp::arg("pyList")))\
+, (bp::arg("self"), bp::arg("pyList"))\
+, bp::return_internal_reference<> () )\
 .def("warnHigh"\
 , &ReadOnlySpecificVectorWrap<EType>::warnHighValue\
-, (bp::arg("self"), bp::arg("pyList")))\
+, (bp::arg("self"), bp::arg("pyList"))\
+, bp::return_internal_reference<> () )\
 .def("warnLow"\
 , &ReadOnlySpecificVectorWrap<EType>::warnLowValue\
-, (bp::arg("self"), bp::arg("pyList")))\
-.def("enableRollingStats"\
-, (RollingStatsSpecVec (ReadOnlySpecVec::*)(std::string const &))( &ReadOnlySpecVec::enableRollingStats))\
+, (bp::arg("self"), bp::arg("pyList"))\
+, bp::return_internal_reference<> () )\
 .def("initialValueFromString"\
 , (ReadOnlySpecVec & (ReadOnlySpecVec::*)(std::string const &))( &ReadOnlySpecVec::initialValueFromString)\
 , bp::return_internal_reference<> () )\
