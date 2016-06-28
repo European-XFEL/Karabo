@@ -50,6 +50,7 @@ class SceneView(QWidget):
         self.selection_model = SceneSelectionModel()
         self.current_tool = None
         self.design_mode = design_mode
+        self.tab_visible = False
         self._scene_obj_cache = {}
 
         self.setFocusPolicy(Qt.StrongFocus)
@@ -117,6 +118,19 @@ class SceneView(QWidget):
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
                 obj.destroy()
+
+    def set_tab_visible(self, visible):
+        """ Sets whether this scene is visible
+
+        This method manages the visibilities of the boxes in this scene."""
+        if self.tab_visible == visible:
+            return
+
+        for obj in self._scene_obj_cache.values():
+            if is_widget(obj):
+                obj.set_visible(visible)
+
+        self.tab_visible = visible
 
     def load(self, filename):
         """ The given ``filename`` is loaded.
