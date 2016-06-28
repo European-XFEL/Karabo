@@ -2495,7 +2495,6 @@
       <compileType>
         <cTool>
           <developmentMode>5</developmentMode>
-          <commandLine>`cppunit-config --cflags`</commandLine>
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
@@ -2527,7 +2526,6 @@
           </linkerDynSerch>
           <linkerLibItems>
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

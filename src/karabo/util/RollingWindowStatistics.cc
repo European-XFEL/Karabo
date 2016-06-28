@@ -7,8 +7,9 @@ namespace karabo {
         
         
         RollingWindowStatistics::RollingWindowStatistics(unsigned int evalInterval):
-                m_evalInterval(evalInterval), m_s(0.), m_s2(0.), m_nvals(0),
-                m_meanEstimate(0.), m_vals(evalInterval, 0.){};
+                m_meanEstimate(0.), m_evalInterval(evalInterval), m_nvals(0),
+                m_s(0.), m_s2(0.),
+                m_vals(evalInterval, 0.){};
                 
         RollingWindowStatistics::~RollingWindowStatistics(){
             
