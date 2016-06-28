@@ -206,7 +206,7 @@ namespace karabo {
                 
                 STRING_ELEMENT(expected).key("alarmCondition")
                         .displayedName("Alarm condition")
-                        .description("The current alarm condition of the device."
+                        .description("The current alarm condition of the device. "
                                      "Evaluates to the highest condition on any"
                                      " property if not set manually.")
                         .readOnly().initialValue(AlarmCondition::NONE.asString())

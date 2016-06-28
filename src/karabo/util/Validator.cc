@@ -429,7 +429,7 @@ namespace karabo {
                 bool keepCondition = false;
                 const karabo::util::Types::ReferenceType workType = workNode.getType();
                 if(karabo::util::Types::isSimple(workType) && workType != karabo::util::Types::STRING){
-                    
+                    // the order of these checks is important
                     keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_LOW, KARABO_SCHEMA_WARN_LOW, masterNode, workNode, report, scope, false);
                     keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_LOW, KARABO_SCHEMA_ALARM_LOW, masterNode, workNode, report, scope, false);
                     keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_HIGH, KARABO_SCHEMA_WARN_HIGH, masterNode, workNode, report, scope, true);
@@ -442,7 +442,7 @@ namespace karabo {
                     RollingWindowStatistics::Pointer rollingStats = m_parameterRollingStats[scope];
                     rollingStats->update(workNode.getValueAs<double>());
                     double variance = rollingStats->getRollingWindowVariance();
-                    
+                    // the order of these checks is important
                     keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_LOW, KARABO_SCHEMA_WARN_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
                     keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_LOW, KARABO_SCHEMA_ALARM_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
                     keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_HIGH, KARABO_SCHEMA_WARN_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
