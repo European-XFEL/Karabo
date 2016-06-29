@@ -1,4 +1,5 @@
 from asyncio import async, coroutine, sleep
+from contextlib import contextmanager
 import time
 from unittest import main
 
@@ -51,12 +52,14 @@ class Local(Macro):
 
 class Tests(EventLoopTest):
     @classmethod
-    def setUpClass(cls):
+    @contextmanager
+    def lifetimeManager(cls):
         cls.local = Local(_deviceId_="local", project="test", module="test",
                           may_start_thread=False)
         cls.remA = Remote(dict(_deviceId_="remA"))
         cls.remB = Remote(dict(_deviceId_="remB"))
-        super(Tests, cls).setUpClass(cls.local, cls.remA, cls.remB)
+        with cls.deviceManager(cls.local, cls.remA, cls.remB):
+            yield
 
     @sync_tst
     def test_count(self):
