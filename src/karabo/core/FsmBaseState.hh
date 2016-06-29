@@ -38,41 +38,22 @@ namespace karabo {
         
         struct StateVisitor {
 
-            template <class T>
-            void visitState(T* state, bool stopWorker=false) {
-                if (stopWorker) {
-                    Worker* worker = state->getWorker();
-                    if (worker && worker->is_running()) worker->abort().join();
-                } else {
-                    std::string stateName(state->getStateName());
-                    std::string fsmName(state->getFsmName());
-                    //std::cout << "visiting state:" << typeid (*state).name() << std::endl;
-                    // Technical correction: 
-                    // if state-machine and state are the same name, the state is subcomposed into the former machine
-                    if (stateName == fsmName) fsmName = m_currentFsm;
-
-                    m_state = state;
-                    m_stateName = stateName;
-                    m_currentFsm = fsmName;
-                }
-            }
+            void visitState(const FsmBaseState* state, bool stopWorker=false);
 
             const FsmBaseState* getState() {
-                return static_cast<const FsmBaseState*>(m_state);
+                return m_state;
             }
 
         private:
             
-            const void* m_state;
+            const FsmBaseState* m_state;
             std::string m_stateName;
             std::string m_currentFsm;
         };
 
         struct FsmBaseState {
             
-            friend class StateVisitor;
-            
-            FsmBaseState() : m_state(State()), m_fsmName(""), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
+            FsmBaseState() : m_state(State::UNKNOWN), m_fsmName(), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
 
             const State& getState() const {
                 return m_state;
@@ -117,7 +98,6 @@ namespace karabo {
             }
 
             // Default implementation for states who need to be visited
-
             void accept(boost::shared_ptr<StateVisitor> visitor, bool stopWorker) const {
                 visitor->visitState(this, stopWorker);
             }
@@ -142,8 +122,6 @@ namespace karabo {
                 return NULL;
             }
 
-        protected:
-            
             const std::string & getStateName() const {
                 if (m_state.name().empty())
                     return m_stateMachineName;
@@ -151,17 +129,15 @@ namespace karabo {
             }
 
             const std::string & name() const {
-                std::cout << "*** FsmBaseState::name() : name = \"" << m_state.name() << "\", m_stateMachineName = \"" << m_stateMachineName << "\"\n";
-                if (m_state.name().empty())
-                    return m_stateMachineName;
-                return m_state.name();
+                return this->getStateName();
             }
             
+        protected:
+
             void setState(const State& state) {
                 m_state = state;
             }
             
-        protected:
             State m_state;
             std::string m_stateMachineName;
             std::string m_fsmName;
@@ -169,7 +145,7 @@ namespace karabo {
             int m_timeout;
             int m_repetition;
         };
-        
+
     }
 }
 

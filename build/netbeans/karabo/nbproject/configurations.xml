@@ -26,6 +26,7 @@
         <itemPath>../../../src/karabo/core/BaseFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/CameraFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/CameraInterface.hh</itemPath>
+        <itemPath>../../../src/karabo/core/FsmBaseState.cc</itemPath>
         <itemPath>../../../src/karabo/core/FsmBaseState.hh</itemPath>
         <itemPath>../../../src/karabo/core/FsmMacros.hh</itemPath>
         <itemPath>../../../src/karabo/core/MotorInterface.hh</itemPath>
@@ -643,6 +644,11 @@
       <item path="../../../src/karabo/core/DeviceServer.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/FsmBaseState.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/FsmBaseState.hh"
@@ -2645,6 +2651,11 @@
       <item path="../../../src/karabo/core/DeviceServer.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/FsmBaseState.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/FsmBaseState.hh"
