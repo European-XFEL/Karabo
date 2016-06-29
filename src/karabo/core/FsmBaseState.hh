@@ -53,7 +53,7 @@ namespace karabo {
 
         struct FsmBaseState {
             
-            FsmBaseState() : m_state(), m_fsmName(), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
+            FsmBaseState() : m_state(State::UNKNOWN), m_fsmName(), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
 
             const State& getState() const {
                 return m_state;
