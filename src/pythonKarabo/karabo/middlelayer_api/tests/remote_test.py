@@ -16,7 +16,7 @@ from karabo.middlelayer import (
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.device_client import Queue
 
-from .eventloop import EventLoopTest, async_tst
+from .eventloop import DeviceTest, async_tst
 
 
 class Superslot(Slot):
@@ -137,7 +137,7 @@ class Local(Device):
                 yield from d.doit()
 
 
-class Tests(EventLoopTest):
+class Tests(DeviceTest):
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
