@@ -11,22 +11,18 @@ def async_tst(f):
 
     @wraps(coro)
     def wrapper(self, *args, **kwargs):
-        self.loop.run_until_complete(
-            wait_for(
-                self.loop.create_task(
-                    coro(self, *args, **kwargs), self.instance),
-                30))
+        task = self.loop.create_task(
+            coro(self, *args, **kwargs), self.instance)
+        self.loop.run_until_complete(wait_for(task, 30))
     return wrapper
 
 
 def sync_tst(f):
     @wraps(f)
     def wrapper(self, *args):
-        self.loop.run_until_complete(
-            wait_for(
-                self.loop.create_task(
-                    self.loop.start_thread(f, self, *args), self.instance),
-                30))
+        task = self.loop.create_task(
+            self.loop.start_thread(f, self, *args), self.instance)
+        self.loop.run_until_complete(wait_for(task, 30))
     return wrapper
 
 
