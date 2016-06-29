@@ -9,12 +9,10 @@ import os.path as op
 from PyQt4.QtGui import QBoxLayout
 
 import karabo_gui.scenemodel.tests as sm
-from karabo_gui.scenemodel.layouts import BoxLayoutModel
-from karabo_gui.scenemodel.shapes import LineModel
-from karabo_gui.scenemodel.simple_widgets import LabelModel
+from karabo_gui.scenemodel.api import BoxLayoutModel, LabelModel, LineModel
 from karabo_gui.sceneview.layout.api import BoxLayout
 from karabo_gui.sceneview.shapes import LineShape
-from karabo_gui.sceneview.simple_widgets import LabelWidget
+from karabo_gui.sceneview.widget.api import LabelWidget
 from karabo_gui.testing import GuiTestCase
 
 DATA_DIR = op.join(op.abspath(op.dirname(sm.__file__)), 'data')
@@ -45,7 +43,7 @@ class TestLayouts(GuiTestCase):
 
         model = LineModel(x1=0, y1=0, x2=1, y2=1)
         # Add shape to layout
-        lineShape = LineShape(model)
+        lineShape = LineShape(model=model)
         boxLayout._add_shape(lineShape)
         self.assertEqual(boxLayout.count(), 1)
         self.assertIs(boxLayout.itemAt(0).shape, lineShape)
