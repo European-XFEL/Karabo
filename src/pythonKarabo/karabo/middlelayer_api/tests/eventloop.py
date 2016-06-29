@@ -30,7 +30,7 @@ def sync_tst(f):
     return wrapper
 
 
-class EventLoopTest(TestCase):
+class DeviceTest(TestCase):
     @classmethod
     def setUpClass(cls):
         with ExitStack() as cls.exit_stack:
