@@ -10,6 +10,7 @@ from PyQt4.QtSvg import QSvgRenderer
 
 from karabo_gui.dialogs.textdialog import TextDialog
 from karabo_gui.scenemodel.api import write_single_model
+from karabo_gui.sceneview.utils import calc_rect_from_text
 
 LIGHT_BLUE = (224, 240, 255)
 PADDING = 10
@@ -40,12 +41,8 @@ class LabelWidget(QLabel):
                 model.background))
         self.setStyleSheet("".join(styleSheet))
 
-        font = QFont()
-        font.fromString(model.font)
-        fm = QFontMetrics(font)
-        CONTENT_MARGIN = 10
-        model.width = fm.width(model.text) + CONTENT_MARGIN
-        model.height = fm.height() + CONTENT_MARGIN
+        _, _, model.width, model.height = calc_rect_from_text(model.font,
+                                                              model.text)
         self.setGeometry(model.x, model.y, model.width, model.height)
 
     def destroy(self):

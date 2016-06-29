@@ -5,6 +5,8 @@
 #############################################################################
 from contextlib import contextmanager
 
+from PyQt4.QtGui import QFont, QFontMetrics
+
 from .const import SCREEN_MAX_VALUE
 
 
@@ -24,6 +26,21 @@ def calc_bounding_rect(collection):
 
     # Return x, y, width, height
     return (left, top, right - left, bottom - top)
+
+
+def calc_rect_from_text(font, text):
+    """ Compute the rectangle to fit the given ``text``.
+
+    A tuple including x, y, width and height.
+    """
+    q_font = QFont()
+    q_font.fromString(font)
+    fm = QFontMetrics(q_font)
+    CONTENT_MARGIN = 10
+    width = fm.width(text) + CONTENT_MARGIN
+    height = fm.height() + CONTENT_MARGIN
+
+    return (0, 0, width, height)
 
 
 @contextmanager

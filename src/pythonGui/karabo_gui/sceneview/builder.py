@@ -171,6 +171,22 @@ def send_object_to_back(obj):
                 send_object_to_back(widget)
 
 
+def widget_at_position(obj, pos):
+    if is_widget(obj) and obj.geometry().contains(pos):
+        return obj
+    elif is_layout(obj):
+        for child in obj:
+            layout = child.layout()
+            if layout is not None:
+                widget_at_position(layout, pos)
+                continue
+            widget = child.widget()
+            if widget is not None:
+                widget_at_position(widget, pos)
+                continue
+    return None
+
+
 def is_layout(scene_obj):
     """Returns True if `scene_obj` is a layout."""
     return isinstance(scene_obj, _LAYOUT_CLASSES)
