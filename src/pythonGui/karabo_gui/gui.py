@@ -9,6 +9,8 @@ __author__="kerstin weger"
 
 from traceback import print_exception, format_exception
 
+window = None
+
 
 def init(app):
     """ Initialize the GUI.
