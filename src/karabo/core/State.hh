@@ -26,8 +26,6 @@ namespace karabo {
             
             KARABO_CLASSINFO(State, "State", "1.0")
 
-            State(const std::string& name = "UNKNOWN", const State* parent = NULL);
-
             virtual ~State() {
             }
 
@@ -122,6 +120,8 @@ namespace karabo {
             static const State SWITCHING_OFF;
 
         private:
+            // Private constructor to avoid states not in the predefined set (copy is OK).
+            explicit State(const std::string& name, const State* parent = NULL);
             
             std::string m_stateName;
             const State* m_parent;
