@@ -1,5 +1,6 @@
 from asyncio import (async, coroutine, get_event_loop, sleep, wait_for,
                      TimeoutError)
+from contextlib import contextmanager
 from datetime import datetime
 from unittest import main
 import time
@@ -138,10 +139,12 @@ class Local(Device):
 
 class Tests(EventLoopTest):
     @classmethod
-    def setUpClass(cls):
+    @contextmanager
+    def lifetimeManager(cls):
         cls.local = Local({"_deviceId_": "local"})
         cls.remote = Remote({"_deviceId_": "remote"})
-        super(Tests, cls).setUpClass(cls.local, cls.remote)
+        with cls.deviceManager(cls.local, cls.remote):
+            yield
 
     @async_tst
     def test_execute(self):

@@ -1,4 +1,5 @@
 from asyncio import async, coroutine, TimeoutError
+from contextlib import contextmanager
 import sys
 import time
 from unittest import main
@@ -102,11 +103,13 @@ class Local(Macro):
 
 class Tests(EventLoopTest):
     @classmethod
-    def setUpClass(cls):
+    @contextmanager
+    def lifetimeManager(cls):
         cls.local = Local(_deviceId_="local", project="test", module="test",
                           may_start_thread=False)
         cls.remote = Remote(dict(_deviceId_="remote"))
-        super(Tests, cls).setUpClass(cls.local, cls.remote)
+        with cls.deviceManager(cls.local, cls.remote):
+            yield
 
     @sync_tst
     def test_execute(self):
