@@ -28,6 +28,8 @@ class PenDialog(QDialog):
                 Qt.RoundCap: "round"}
     linejoins = {Qt.SvgMiterJoin: "miter", Qt.MiterJoin: "miter",
                  Qt.BevelJoin: "bevel", Qt.RoundJoin: "round"}
+    pen_styles = [Qt.SolidLine, Qt.DashLine, Qt.DotLine, Qt.DashDotLine,
+                  Qt.DashDotDotLine, Qt.CustomDashLine]
 
     def __init__(self, pen, brush=None):
         QDialog.__init__(self)
@@ -47,7 +49,7 @@ class PenDialog(QDialog):
         
         self.wDashType = PenStyleComboBox()
         self.formLayout.setWidget(3, QFormLayout.FieldRole, self.wDashType)
-        self.wDashType.setPenStyle(self.pen.style())
+        self.wDashType.setPenStyle(self._get_style_from_pattern(self.pen))
 
         self.dsbDashOffset.setValue(self.pen.dashOffset())
         
@@ -56,6 +58,18 @@ class PenDialog(QDialog):
         self.dsbStrokeMiterLimit.setValue(self.pen.miterLimit())
         
         self.setBrushWidgets()
+
+    def _get_style_from_pattern(self, pen):
+        """ The pen style for the given ``pen`` is returned. If it is
+            ``Qt.CustomDashLine`` the dash pattern is compared.
+        """
+        if pen.style() == Qt.CustomDashLine:
+            p = QPen()
+            for style in self.pen_styles:
+                p.setStyle(style)
+                if p.dashPattern() == pen.dashPattern():
+                    return style
+        return pen.style()
 
     @pyqtSlot()
     def on_pbStrokeColor_clicked(self):
@@ -100,8 +114,8 @@ class PenDialog(QDialog):
             else:
                 self.pen.setWidth(self.sbStrokeWidth.value())
 
-            self.pen.setDashOffset(self.dsbDashOffset.value())
             self.pen.setStyle(self.wDashType.penStyle())
+            self.pen.setDashOffset(self.dsbDashOffset.value())
 
             for k, v in self.linecaps.items():
                 if getattr(self, v + 'Cap').isChecked():
@@ -222,8 +236,7 @@ class PenStyleComboBox(QComboBox):
               (Qt.DashLine, "Dashed line"),
               (Qt.DotLine, "Dot line"),
               (Qt.DashDotLine, "Dash dot line"),
-              (Qt.DashDotDotLine, "Dash dot dot line"),
-              (Qt.CustomDashLine, "Custom dash line")]
+              (Qt.DashDotDotLine, "Dash dot dot line")]
 
     def __init__(self, parent=None):
         super(PenStyleComboBox, self).__init__(parent)
