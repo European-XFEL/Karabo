@@ -7,7 +7,7 @@ from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
 
-from .eventloop import EventLoopTest, sync_tst
+from .eventloop import DeviceTest, sync_tst
 
 
 class Remote(Device):
@@ -50,7 +50,7 @@ class Local(Macro):
         self.remoteB.counter = 0
 
 
-class Tests(EventLoopTest):
+class Tests(DeviceTest):
     @classmethod
     @contextmanager
     def lifetimeManager(cls):

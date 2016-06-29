@@ -13,7 +13,7 @@ from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro
 
-from .eventloop import EventLoopTest, sync_tst, async_tst
+from .eventloop import DeviceTest, sync_tst, async_tst
 
 
 class Superslot(Slot):
@@ -101,7 +101,7 @@ class Local(Macro):
         self.slept_count = 3
 
 
-class Tests(EventLoopTest):
+class Tests(DeviceTest):
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
