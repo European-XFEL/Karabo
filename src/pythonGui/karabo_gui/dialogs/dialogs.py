@@ -29,7 +29,7 @@ class PenDialog(QDialog):
     linejoins = {Qt.SvgMiterJoin: "miter", Qt.MiterJoin: "miter",
                  Qt.BevelJoin: "bevel", Qt.RoundJoin: "round"}
     pen_styles = [Qt.SolidLine, Qt.DashLine, Qt.DotLine, Qt.DashDotLine,
-                  Qt.DashDotDotLine, Qt.CustomDashLine]
+                  Qt.DashDotDotLine]
 
     def __init__(self, pen, brush=None):
         QDialog.__init__(self)
@@ -114,8 +114,10 @@ class PenDialog(QDialog):
             else:
                 self.pen.setWidth(self.sbStrokeWidth.value())
 
-            self.pen.setStyle(self.wDashType.penStyle())
+            # Set dash offset first, because this sets the pen style to
+            # Qt.CustomDashLine
             self.pen.setDashOffset(self.dsbDashOffset.value())
+            self.pen.setStyle(self.wDashType.penStyle())
 
             for k, v in self.linecaps.items():
                 if getattr(self, v + 'Cap').isChecked():
