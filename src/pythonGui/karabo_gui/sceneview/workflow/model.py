@@ -47,9 +47,10 @@ class WorkflowChannelModel(HasStrictTraits):
         model = self.model
         y = model.y + CHANNEL_HEIGHT * self.index
         if self.kind == CHANNEL_INPUT:
-            return QPoint(model.x, y)
+            x = model.x - CONNECTION_OFFSET
         else:
-            return QPoint(model.x + model.width, y)
+            x = model.x + model.width + CONNECTION_OFFSET
+        return QPoint(x, y)
 
 
 class WorkflowConnectionModel(HasStrictTraits):
@@ -65,10 +66,10 @@ class WorkflowConnectionModel(HasStrictTraits):
     output_pos = Property(Instance(QPoint))
 
     def _get_input_pos(self):
-        return self.input.position - QPoint(CONNECTION_OFFSET, 0)
+        return self.input.position
 
     def _get_output_pos(self):
-        return self.output.position + QPoint(CONNECTION_OFFSET, 0)
+        return self.output.position
 
 
 class SceneWorkflowModel(HasStrictTraits):
