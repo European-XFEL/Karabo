@@ -1,12 +1,21 @@
-from PyQt4.QtCore import QLine, QPoint
+from PyQt4.QtCore import QLine, QPoint, Qt
 from PyQt4.QtGui import QPen
 from traits.api import Instance
 
 from karabo_gui.sceneview.bases import BaseSceneTool
-from karabo_gui.sceneview.workflow.api import (WorkflowChannelModel,
-                                               CHANNEL_OUTPUT)
+from karabo_gui.sceneview.workflow.api import (
+    WorkflowChannelModel, CHANNEL_OUTPUT, CHANNEL_DIAMETER)
+from .actions import CreateToolAction
 
 MIN_CLICK_DIST = 10
+
+
+class CreateWorkflowConnectionToolAction(CreateToolAction):
+    """ A CreateToolAction which sets the cursor to a cross.
+    """
+    def perform(self, scene_view):
+        super(CreateWorkflowConnectionToolAction, self).perform(scene_view)
+        scene_view.set_cursor('cross')
 
 
 class WorkflowConnectionTool(BaseSceneTool):
@@ -16,6 +25,7 @@ class WorkflowConnectionTool(BaseSceneTool):
     line = Instance(QLine)
     start_pos = Instance(QPoint)
     start_channel = Instance(WorkflowChannelModel)
+    hover_channel = Instance(WorkflowChannelModel)
 
     def draw(self, painter):
         """ Draw the line
@@ -23,6 +33,12 @@ class WorkflowConnectionTool(BaseSceneTool):
         if self.line is not None:
             painter.setPen(QPen())
             painter.drawLine(self.line)
+        if self.hover_channel is not None:
+            chan_pos = self.hover_channel.position
+            pen = QPen(Qt.green)
+            pen.setWidth(MIN_CLICK_DIST)
+            painter.setPen(pen)
+            painter.drawEllipse(chan_pos, CHANNEL_DIAMETER, CHANNEL_DIAMETER)
 
     def mouse_down(self, scene_view, event):
         """ A callback which is fired whenever the user clicks in the
@@ -39,10 +55,11 @@ class WorkflowConnectionTool(BaseSceneTool):
         """ A callback which is fired whenever the user moves the mouse
         in the SceneView.
         """
-        if self._get_channel_at_pos(event.pos(), scene_view) is not None:
-            scene_view.set_cursor('cross')
+        ch = self._get_channel_at_pos(event.pos(), scene_view)
+        if ch is not None:
+            self.hover_channel = ch
         else:
-            scene_view.set_cursor('none')
+            self.hover_channel = None
 
         if event.buttons() and self.line is not None:
             self.line.setPoints(self.start_pos, event.pos())

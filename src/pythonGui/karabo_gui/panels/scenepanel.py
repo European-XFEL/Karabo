@@ -12,7 +12,8 @@ from PyQt4.QtGui import (QAction, QActionGroup, QApplication, QKeySequence,
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
 from karabo_gui.sceneview.tools.api import (
-    BoxVSceneAction, BoxHSceneAction, CreateToolAction, GroupEntireSceneAction,
+    BoxVSceneAction, BoxHSceneAction, CreateToolAction,
+    CreateWorkflowConnectionToolAction, GroupEntireSceneAction,
     GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
     TextSceneTool, RectangleSceneTool, SceneBringToFrontAction,
     SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneLinkTool,
@@ -118,20 +119,23 @@ class ScenePanel(Dockable, QScrollArea):
         self.ac_design_mode.toggled.connect(self.design_mode_changed)
 
     def create_mode_qactions(self):
-        """ Create mode actions and return list of them"""
-        actions = []
-        actions.append(CreateToolAction(tool_factory=SceneSelectionTool,
-                                        icon=icons.cursorArrow,
-                                        checkable=True,
-                                        text="Selection Mode",
-                                        tooltip="Select objects in the scene"))
-        actions.append(CreateToolAction(tool_factory=WorkflowConnectionTool,
-                                        icon=icons.link,
-                                        checkable=True,
-                                        text="Connection Mode",
-                                        tooltip="Connect workflow items"))
-        q_actions = [self._build_qaction(a) for a in actions]
-        # Save a reference to the SceneSelectionTool action
+        """ Create mode QActions and return list of them"""
+        selection = CreateToolAction(
+            tool_factory=SceneSelectionTool,
+            icon=icons.cursorArrow,
+            checkable=True,
+            text="Selection Mode",
+            tooltip="Select objects in the scene"
+        )
+        workflow = CreateWorkflowConnectionToolAction(
+            tool_factory=WorkflowConnectionTool,
+            icon=icons.link,
+            checkable=True,
+            text="Connection Mode",
+            tooltip="Connect workflow items"
+        )
+        q_actions = [self._build_qaction(a) for a in [selection, workflow]]
+        # Save a reference to the SceneSelectionTool QAction
         self.ac_selection_tool = q_actions[0]
         return q_actions
 
