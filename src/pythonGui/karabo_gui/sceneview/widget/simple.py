@@ -171,12 +171,14 @@ class WorkflowItemWidget(QWidget):
         self.model = model
         self.font = QFont()
         self.font.fromString(model.font)
-        self.outline_rect = self._compute_outline(model.device_id, self.font)
         self.pen = QPen()
         if self.model.klass == 'WorkflowGroupItem':
             self.pen.setWidth(3)
 
-        self.setGeometry(model.x, model.y, model.width, model.height)
+        rect = QRect(model.x, model.y, model.width, model.height)
+        self.setGeometry(rect)
+        self.outline_rect = self._compute_outline(rect)
+        self._minimum_rect = self._compute_minimum_rect()
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
@@ -184,12 +186,13 @@ class WorkflowItemWidget(QWidget):
             painter.setFont(self.font)
             painter.setPen(self.pen)
 
-            width, height = self.width(), self.height()
-            painter.translate(QPoint(width / 2, height / 2))
             painter.setBrush(QColor(*LIGHT_BLUE))
-            painter.drawRoundRect(self.outline_rect, PADDING / 2, PADDING / 2)
+            painter.drawRoundRect(self.outline_rect, 5, 5)
             painter.drawText(self.outline_rect, Qt.AlignCenter,
                              self.model.device_id)
+
+    def minimumSize(self):
+        return self._minimum_rect
 
     def destroy(self):
         """ Satisfy the informal widget interface. """
@@ -201,16 +204,22 @@ class WorkflowItemWidget(QWidget):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
         self.setGeometry(rect)
+        self.outline_rect = self._compute_outline(rect)
 
     def translate(self, offset):
         new_pos = self.pos() + offset
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    @ staticmethod
-    def _compute_outline(text, font):
-        fm = QFontMetrics(font)
-        rect = fm.boundingRect(text)
-        rect.adjust(-PADDING, -PADDING, PADDING, PADDING)
-        rect.translate(-rect.center())
+    def _compute_outline(self, rect):
+        padding = self.pen.width()
+        rect.moveTo(0, 0)
+        rect.adjust(padding, padding, -padding, -padding)
+        return rect
+
+    def _compute_minimum_rect(self):
+        fm = QFontMetrics(self.font)
+        rect = fm.boundingRect(self.model.device_id)
+        padding = self.pen.width() * 2
+        rect.adjust(-padding, -padding, padding, padding)
         return rect

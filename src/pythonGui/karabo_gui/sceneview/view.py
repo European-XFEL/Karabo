@@ -22,7 +22,7 @@ from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import SceneSelectionTool
 from .utils import save_painter_state
-from .workflow.api import SceneWorkflowModel
+from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 
 
 class SceneView(QWidget):
@@ -44,7 +44,12 @@ class SceneView(QWidget):
         self.layout = GroupLayout(layout_model, parent=self)
         self.inner = QWidget(self)
         self.inner.setLayout(self.layout)
+        # Also create an overlay for the workflow connections
+        self.overlay = WorkflowOverlay(self, parent=self)
+
         layout = QStackedLayout(self)
+        layout.setStackingMode(QStackedLayout.StackAll)
+        layout.addWidget(self.overlay)
         layout.addWidget(self.inner)
 
         self.title = None
@@ -55,6 +60,10 @@ class SceneView(QWidget):
         self.design_mode = design_mode
         self.tab_visible = False
         self._scene_obj_cache = {}
+
+        # Redraw when the workflow model changes
+        self.workflow_model.on_trait_change(lambda *args: self.update(),
+                                            'updated')
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
