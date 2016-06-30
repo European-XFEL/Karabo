@@ -1,14 +1,16 @@
 from itertools import chain
 
 from PyQt4.QtCore import QPoint
-from traits.api import (HasStrictTraits, Any, Dict, Enum, Instance, List,
-                        Property, String, cached_property)
+from traits.api import (HasStrictTraits, Any, Dict, Enum, Event, Instance, Int,
+                        List, Property, String,
+                        cached_property, on_trait_change)
 
 from karabo_gui.scenemodel.api import WorkflowItemModel
 from karabo_gui.schema import Dummy
 from karabo_gui.topology import getDevice
-from .const import (CHANNEL_INPUT, CHANNEL_OUTPUT, DATA_DIST_COPY,
-                    DATA_DIST_SHARED)
+from .const import (
+    CHANNEL_INPUT, CHANNEL_OUTPUT, CHANNEL_HEIGHT, CONNECTION_OFFSET,
+    DATA_DIST_COPY, DATA_DIST_SHARED)
 
 
 class WorkflowChannelModel(HasStrictTraits):
@@ -18,6 +20,8 @@ class WorkflowChannelModel(HasStrictTraits):
     box = Any
     # The device IDs for this channel
     device_ids = Property(List(String))
+    # The index of this channel within the WorkflowItem
+    index = Int(0)
     # The type of this channel
     kind = Enum(CHANNEL_INPUT, CHANNEL_OUTPUT)
     # The item associated with this channel
@@ -41,7 +45,7 @@ class WorkflowChannelModel(HasStrictTraits):
     @cached_property
     def _get_position(self):
         model = self.model
-        y = model.y + model.height / 2
+        y = model.y + CHANNEL_HEIGHT * self.index
         if self.kind == CHANNEL_INPUT:
             return QPoint(model.x, y)
         else:
@@ -52,7 +56,7 @@ class WorkflowConnectionModel(HasStrictTraits):
     """ A model for connections between channels
     """
     # The distribution type of the connection
-    data_distribution = Enum(DATA_DIST_SHARED, DATA_DIST_COPY)
+    data_distribution = Enum('', DATA_DIST_SHARED, DATA_DIST_COPY)
     # The input and output sides of the connection
     input = Instance(WorkflowChannelModel)
     output = Instance(WorkflowChannelModel)
@@ -61,10 +65,10 @@ class WorkflowConnectionModel(HasStrictTraits):
     output_pos = Property(Instance(QPoint))
 
     def _get_input_pos(self):
-        return self.input.position
+        return self.input.position - QPoint(CONNECTION_OFFSET, 0)
 
     def _get_output_pos(self):
-        return self.output.position
+        return self.output.position + QPoint(CONNECTION_OFFSET, 0)
 
 
 class SceneWorkflowModel(HasStrictTraits):
@@ -75,6 +79,8 @@ class SceneWorkflowModel(HasStrictTraits):
                         depends_on=['input_channels', 'output_channels'])
     # The connections between the channels
     connections = List(Instance(WorkflowConnectionModel))
+    # An event triggered when the connections or channels change
+    updated = Event
 
     # The list of current input channels
     input_channels = List(Instance(WorkflowChannelModel))
@@ -114,6 +120,11 @@ class SceneWorkflowModel(HasStrictTraits):
     @cached_property
     def _get_channels(self):
         return self.input_channels + self.output_channels
+
+    @on_trait_change('connections,input_channels,output_channels')
+    def _needs_update(self):
+        # Event traits don't have a value, they just generate notifications
+        self.updated = True
 
     def __workflow_items_items_changed(self, event):
         """ A trait notification handler for the `_workflow_items` list """
@@ -163,11 +174,16 @@ class SceneWorkflowModel(HasStrictTraits):
             if isinstance(connected_outputs, Dummy):
                 continue
 
+            data_dist = ''
+            if hasattr(input.box.value, "dataDistribution"):
+                data_dist = input.box.boxvalue.dataDistribution.value
+
             for output in connected_outputs:
                 output_dev_id, output_path = output.split(':')
                 output = self._lookup_output(output_dev_id, output_path)
                 if output is not None:
-                    conn = WorkflowConnectionModel(input=input, output=output)
+                    conn = WorkflowConnectionModel(input=input, output=output,
+                                                   data_distribution=data_dist)
                     connections.append(conn)
         self.connections = connections
 
@@ -235,10 +251,12 @@ def _get_channels(model, box, inputs=None, outputs=None):
                                   inputs=inputs, outputs=outputs)
             elif displayType == CHANNEL_INPUT:
                 inputs.append(WorkflowChannelModel(box=sub_box, model=model,
-                                                   kind=CHANNEL_INPUT))
+                                                   kind=CHANNEL_INPUT,
+                                                   index=len(inputs)))
             elif displayType == CHANNEL_OUTPUT:
                 outputs.append(WorkflowChannelModel(box=sub_box, model=model,
-                                                    kind=CHANNEL_OUTPUT))
+                                                    kind=CHANNEL_OUTPUT,
+                                                    index=len(outputs)))
     return inputs, outputs
 
 
