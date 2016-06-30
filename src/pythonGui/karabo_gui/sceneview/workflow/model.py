@@ -1,4 +1,5 @@
 from itertools import chain
+import math
 
 from PyQt4.QtCore import QPoint
 from traits.api import (HasStrictTraits, Any, Dict, Enum, Event, Instance, Int,
@@ -64,6 +65,25 @@ class WorkflowConnectionModel(HasStrictTraits):
     # Convenience traits for the input and output positions
     input_pos = Property(Instance(QPoint))
     output_pos = Property(Instance(QPoint))
+    # Screen points for the curve representing this connection
+    curve_points = Property(List(Instance(QPoint)),
+                            depends_on=['input.position', 'output.position'])
+
+    @cached_property
+    def _get_curve_points(self):
+        """ These points are intended to be the control points for a
+        cubic bezier curve.
+        """
+        start_pos = self.output_pos
+        end_pos = self.input_pos
+        width = abs(end_pos.x() - start_pos.x())
+        height = abs(end_pos.y() - start_pos.y())
+        length = math.sqrt(width**2 + height**2)
+        delta = length / 3
+
+        c1 = QPoint(start_pos.x() + delta, start_pos.y())
+        c2 = QPoint(end_pos.x() - delta, end_pos.y())
+        return [start_pos, c1, c2, end_pos]
 
     def _get_input_pos(self):
         return self.input.position
