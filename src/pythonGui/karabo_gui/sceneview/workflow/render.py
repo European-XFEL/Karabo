@@ -5,7 +5,7 @@ from PyQt4.QtCore import QPoint, Qt
 from PyQt4.QtGui import QBrush, QPainter, QPainterPath, QPen, QWidget
 
 from karabo_gui.sceneview.utils import save_painter_state
-from .const import (CHANNEL_DIAMETER, CHANNEL_LENGTH, CHANNEL_INPUT,
+from .const import (CHANNEL_DIAMETER, CHANNEL_WIDTH, CHANNEL_INPUT,
                     CHANNEL_OUTPUT, DATA_DIST_SHARED)
 
 
@@ -22,12 +22,12 @@ class WorkflowOverlay(QWidget):
     def paintEvent(self, event):
         workflow_model = self.scene_view.workflow_model
         with QPainter(self) as painter:
-            for channel in workflow_model.channels:
-                with save_painter_state(painter):
-                    _draw_channel(painter, channel)
             for connection in workflow_model.connections:
                 with save_painter_state(painter):
                     _draw_connection(painter, connection)
+            for channel in workflow_model.channels:
+                with save_painter_state(painter):
+                    _draw_channel(painter, channel)
 
 
 def _draw_channel(painter, channel):
@@ -36,9 +36,9 @@ def _draw_channel(painter, channel):
     start_pos = channel.position
     end_pos = QPoint(0, 0)
     if channel.kind == CHANNEL_INPUT:
-        end_pos = QPoint(start_pos.x() - CHANNEL_LENGTH, start_pos.y())
+        end_pos = QPoint(start_pos.x() - CHANNEL_WIDTH, start_pos.y())
     elif channel.kind == CHANNEL_OUTPUT:
-        end_pos = QPoint(start_pos.x() + CHANNEL_LENGTH, start_pos.y())
+        end_pos = QPoint(start_pos.x() + CHANNEL_WIDTH, start_pos.y())
 
     painter.setBrush(QBrush(Qt.white))
     painter.drawLine(start_pos, end_pos)
