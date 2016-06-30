@@ -33,12 +33,12 @@ class WorkflowOverlay(QWidget):
 def _draw_channel(painter, channel):
     """ Draw an input or output channel
     """
-    start_pos = channel.position
-    end_pos = QPoint(0, 0)
+    start_pos = QPoint(0, 0)
+    end_pos = channel.position
     if channel.kind == CHANNEL_INPUT:
-        end_pos = QPoint(start_pos.x() - CHANNEL_WIDTH, start_pos.y())
+        start_pos = QPoint(end_pos.x() + CHANNEL_WIDTH, end_pos.y())
     elif channel.kind == CHANNEL_OUTPUT:
-        end_pos = QPoint(start_pos.x() + CHANNEL_WIDTH, start_pos.y())
+        start_pos = QPoint(end_pos.x() - CHANNEL_WIDTH, end_pos.y())
 
     painter.setBrush(QBrush(Qt.white))
     painter.drawLine(start_pos, end_pos)
