@@ -55,7 +55,7 @@ class WorkflowConnectionModel(HasStrictTraits):
     """ A model for connections between channels
     """
     # The distribution type of the connection
-    data_distribution = Enum(DATA_DIST_SHARED, DATA_DIST_COPY)
+    data_distribution = Enum('', DATA_DIST_SHARED, DATA_DIST_COPY)
     # The input and output sides of the connection
     input = Instance(WorkflowChannelModel)
     output = Instance(WorkflowChannelModel)
@@ -166,11 +166,16 @@ class SceneWorkflowModel(HasStrictTraits):
             if isinstance(connected_outputs, Dummy):
                 continue
 
+            data_dist = ''
+            if hasattr(input.box.value, "dataDistribution"):
+                data_dist = input.box.boxvalue.dataDistribution.value
+
             for output in connected_outputs:
                 output_dev_id, output_path = output.split(':')
                 output = self._lookup_output(output_dev_id, output_path)
                 if output is not None:
-                    conn = WorkflowConnectionModel(input=input, output=output)
+                    conn = WorkflowConnectionModel(input=input, output=output,
+                                                   data_distribution=data_dist)
                     connections.append(conn)
         self.connections = connections
 
