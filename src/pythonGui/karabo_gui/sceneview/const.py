@@ -7,19 +7,6 @@
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QBoxLayout
 
-from karabo_gui.scenemodel.api import (
-    BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
-    DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
-    DisplayIconsetModel, DisplayImageModel, DisplayImageElementModel,
-    DisplayLabelModel, DisplayPlotModel, DisplayStateColorModel,
-    DoubleLineEditModel, EditableListModel, EditableListElementModel,
-    EditableSpinBoxModel, EvaluatorModel, FileInModel, FileOutModel,
-    FloatSpinBoxModel, HexadecimalModel, DigitIconsModel,
-    SelectionIconsModel, TextIconsModel, IntLineEditModel, KnobModel,
-    LineEditModel, LinePlotModel, MonitorModel, SingleBitModel,
-    SliderModel, TableElementModel, XYPlotModel
-)
-
 # A handy limit for things measured in pixels
 SCREEN_MAX_VALUE = 100000
 
@@ -67,49 +54,3 @@ QT_BOX_LAYOUT_DIRECTION = (
     QBoxLayout.TopToBottom,
     QBoxLayout.BottomToTop
 )
-
-_OLD_WIDGET_CLASSES = {
-    'DisplayAlignedImage': DisplayAlignedImageModel,
-    'Bitfield': BitfieldModel,
-    'DisplayCheckBox': CheckBoxModel,
-    'EditableCheckBox': CheckBoxModel,
-    'DisplayChoiceElement': ChoiceElementModel,
-    'EditableChoiceElement': ChoiceElementModel,
-    'DisplayComboBox': ComboBoxModel,
-    'EditableComboBox': ComboBoxModel,
-    'DisplayCommand': DisplayCommandModel,
-    'DisplayDirectory': DirectoryModel,
-    'EditableDirectory': DirectoryModel,
-    'DisplayFileIn': FileInModel,
-    'EditableFileIn': FileInModel,
-    'DisplayFileOut': FileOutModel,
-    'EditableFileOut': FileOutModel,
-    'DisplayIconset': DisplayIconsetModel,
-    'DisplayImage': DisplayImageModel,
-    'DisplayImageElement': DisplayImageElementModel,
-    'DisplayLabel': DisplayLabelModel,
-    'DisplayLineEdit': LineEditModel,
-    'EditableLineEdit': LineEditModel,
-    'EditableList': EditableListModel,
-    'EditableListElement': EditableListElementModel,
-    'DisplayPlot': DisplayPlotModel,
-    'EditableSpinBox': EditableSpinBoxModel,
-    'Hexadecimal': HexadecimalModel,
-    'DoubleLineEdit': DoubleLineEditModel,
-    'IntLineEdit': IntLineEditModel,
-    'Slider': SliderModel,
-    'Knob': KnobModel,
-    'XYPlot': XYPlotModel,
-    'XYVector': LinePlotModel,
-    'DisplayTrendline': LinePlotModel,
-    'FloatSpinBox': FloatSpinBoxModel,
-    'DisplayStateColor': DisplayStateColorModel,
-    'DisplayTableElement': TableElementModel,
-    'EditableTableElement': TableElementModel,
-    'Evaluator': EvaluatorModel,
-    'TextIcons': TextIconsModel,
-    'DigitIcons': DigitIconsModel,
-    'SelectionIcons': SelectionIconsModel,
-    'Monitor': MonitorModel,
-    'SingleBit': SingleBitModel,
-}
