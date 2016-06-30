@@ -16,7 +16,8 @@ from karabo_gui.sceneview.tools.api import (
     GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
     TextSceneTool, RectangleSceneTool, SceneBringToFrontAction,
     SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneLinkTool,
-    ScenePasteAction, SceneSelectAllAction, SceneSendToBackAction)
+    ScenePasteAction, SceneSelectAllAction, SceneSendToBackAction,
+    SceneSelectionTool, WorkflowConnectionTool)
 from karabo_gui.toolbar import ToolBar
 
 
@@ -51,10 +52,12 @@ class ScenePanel(Dockable, QScrollArea):
         self.create_design_mode_action(connected_to_server)
 
         self.qactions = []
-        tool_actions = self.create_tool_actions()
-        tool_qactions = [self._build_qaction(a) for a in tool_actions]
-        self.qactions.extend(tool_qactions)
+        self.qactions.extend(self._build_qaction(a)
+                             for a in self.create_mode_actions())
+        self.qactions.append(self._build_separator())
 
+        self.qactions.extend(self._build_qaction(a)
+                             for a in self.create_tool_actions())
         self.qactions.append(self._build_separator())
 
         menu = QMenu()
@@ -64,19 +67,14 @@ class ScenePanel(Dockable, QScrollArea):
             menu.addAction(q_action)
         group_action = QAction(icons.group, "Group", self)
         group_action.setMenu(menu)
-        self.qactions.append(group_action)
+        self.qactions.extend([group_action, self._build_separator()])
 
+        self.qactions.extend(self._build_qaction(a)
+                             for a in self.create_clipboard_actions())
         self.qactions.append(self._build_separator())
 
-        clipboard_actions = self.create_clipboard_actions()
-        clipboard_qactions = [self._build_qaction(a)
-                              for a in clipboard_actions]
-        self.qactions.extend(clipboard_qactions)
-
-        self.qactions.append(self._build_separator())
-        order_actions = self.create_order_actions()
-        order_qactions = [self._build_qaction(a) for a in order_actions]
-        self.qactions.extend(order_qactions)
+        self.qactions.extend(self._build_qaction(a)
+                             for a in self.create_order_actions())
 
     def setupToolBars(self, standardToolBar, parent):
         standardToolBar.addAction(self.ac_design_mode)
@@ -116,6 +114,18 @@ class ScenePanel(Dockable, QScrollArea):
         self.ac_design_mode.setChecked(self.scene_view.design_mode)
         self.ac_design_mode.setEnabled(connected_to_server)
         self.ac_design_mode.toggled.connect(self.design_mode_changed)
+
+    def create_mode_actions(self):
+        """ Create mode actions and return list of them"""
+        select = CreateToolAction(tool_factory=SceneSelectionTool,
+                                  icon=icons.cursorArrow,
+                                  text="Selection Mode",
+                                  tooltip="Select objects in the scene")
+        connect = CreateToolAction(tool_factory=WorkflowConnectionTool,
+                                   icon=icons.link,
+                                   text="Connection Mode",
+                                   tooltip="Add connections between nodes")
+        return [select, connect]
 
     def create_tool_actions(self):
         """ Create tool actions and return list of them"""
@@ -191,6 +201,7 @@ class ScenePanel(Dockable, QScrollArea):
         q_action = QAction(sv_action.icon, sv_action.text, self)
         q_action.setToolTip(sv_action.text)
         q_action.setStatusTip(sv_action.tooltip)
+        q_action.setCheckable(sv_action.checkable)
         q_action.triggered.connect(partial(sv_action.perform, self.scene_view))
         if sv_action.shortcut != QKeySequence.UnknownKey:
             q_action.setShortcut(QKeySequence(sv_action.shortcut))

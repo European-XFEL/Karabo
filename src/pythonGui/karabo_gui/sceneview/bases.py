@@ -15,6 +15,8 @@ class BaseSceneAction(ABCHasStrictTraits):
     tooltip = String
     # A keyboard shortcut for the action (QKeySequence::StandardKey value)
     shortcut = Int(QKeySequence.UnknownKey)
+    # Whether or not this action is checkable
+    checkable = Bool(False)
 
     @abstractmethod
     def perform(self, scene_view):

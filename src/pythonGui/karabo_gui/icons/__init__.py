@@ -35,6 +35,7 @@ def init():
 
 
 entireWindow = Icon("entire.svg")
+cursorArrow = Icon("cursor-arrow-32x32.png")
 selectAll = Icon("select-all.svg")
 text = Icon("text-32x32.png")
 line = Icon("line-32x32.png")
