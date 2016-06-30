@@ -12,7 +12,7 @@ def async_tst(f):
     @wraps(coro)
     def wrapper(self, *args, **kwargs):
         task = self.loop.create_task(
-            coro(self, *args, **kwargs), self.instance)
+            coro(self, *args, **kwargs), self.lead)
         self.loop.run_until_complete(wait_for(task, 30))
     return wrapper
 
@@ -21,7 +21,7 @@ def sync_tst(f):
     @wraps(f)
     def wrapper(self, *args):
         task = self.loop.create_task(
-            self.loop.start_thread(f, self, *args), self.instance)
+            self.loop.start_thread(f, self, *args), self.lead)
         self.loop.run_until_complete(wait_for(task, 30))
     return wrapper
 
@@ -48,22 +48,22 @@ class DeviceTest(TestCase):
 
     @classmethod
     @contextmanager
-    def deviceManager(cls, device, *more):
+    def deviceManager(cls, *devices, lead):
         """Manage the devices to run during the tests
 
-        `device` is the principal device in whose name the tests are run,
-        while `more` are other devices that should run.
+        `devices` are the devices that should be run during the tests,
+        and `lead` is the device under which name the tests are running.
         """
-        devices = (device,) + more
+        if lead not in devices:
+            devices += (lead,)
         cls.loop.run_until_complete(
             gather(*(d.startInstance() for d in devices)))
         cls.devices = devices
-        cls.instance = devices[0]
+        cls.lead = lead
         yield
         cls.loop.run_until_complete(
             gather(*(d.slotKillDevice() for d in cls.devices)))
-        del cls.devices
-        del cls.instance
+        del cls.devices, cls.lead
 
 
 def setEventLoop():

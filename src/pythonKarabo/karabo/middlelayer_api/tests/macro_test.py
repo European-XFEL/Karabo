@@ -108,7 +108,7 @@ class Tests(DeviceTest):
         cls.local = Local(_deviceId_="local", project="test", module="test",
                           may_start_thread=False)
         cls.remote = Remote(dict(_deviceId_="remote"))
-        with cls.deviceManager(cls.local, cls.remote):
+        with cls.deviceManager(cls.remote, lead=cls.local):
             yield
 
     @sync_tst

@@ -143,7 +143,7 @@ class Tests(DeviceTest):
     def lifetimeManager(cls):
         cls.local = Local({"_deviceId_": "local"})
         cls.remote = Remote({"_deviceId_": "remote"})
-        with cls.deviceManager(cls.local, cls.remote):
+        with cls.deviceManager(cls.remote, lead=cls.local):
             yield
 
     @async_tst

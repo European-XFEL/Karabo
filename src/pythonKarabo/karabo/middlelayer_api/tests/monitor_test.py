@@ -58,7 +58,7 @@ class Tests(DeviceTest):
                           may_start_thread=False)
         cls.remA = Remote(dict(_deviceId_="remA"))
         cls.remB = Remote(dict(_deviceId_="remB"))
-        with cls.deviceManager(cls.local, cls.remA, cls.remB):
+        with cls.deviceManager(cls.remA, cls.remB, lead=cls.local):
             yield
 
     @sync_tst
