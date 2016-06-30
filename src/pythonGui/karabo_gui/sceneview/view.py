@@ -61,6 +61,10 @@ class SceneView(QWidget):
         self.tab_visible = False
         self._scene_obj_cache = {}
 
+        # Redraw when the workflow model changes
+        self.workflow_model.on_trait_change(lambda *args: self.update(),
+                                            'updated')
+
         self.setFocusPolicy(Qt.StrongFocus)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setAcceptDrops(True)

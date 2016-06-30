@@ -1,8 +1,9 @@
 from itertools import chain
 
 from PyQt4.QtCore import QPoint
-from traits.api import (HasStrictTraits, Any, Dict, Enum, Instance, Int, List,
-                        Property, String, cached_property)
+from traits.api import (HasStrictTraits, Any, Dict, Enum, Event, Instance, Int,
+                        List, Property, String,
+                        cached_property, on_trait_change)
 
 from karabo_gui.scenemodel.api import WorkflowItemModel
 from karabo_gui.schema import Dummy
@@ -78,6 +79,8 @@ class SceneWorkflowModel(HasStrictTraits):
                         depends_on=['input_channels', 'output_channels'])
     # The connections between the channels
     connections = List(Instance(WorkflowConnectionModel))
+    # An event triggered when the connections or channels change
+    updated = Event
 
     # The list of current input channels
     input_channels = List(Instance(WorkflowChannelModel))
@@ -117,6 +120,11 @@ class SceneWorkflowModel(HasStrictTraits):
     @cached_property
     def _get_channels(self):
         return self.input_channels + self.output_channels
+
+    @on_trait_change('connections,input_channels,output_channels')
+    def _needs_update(self):
+        # Event traits don't have a value, they just generate notifications
+        self.updated = True
 
     def __workflow_items_items_changed(self, event):
         """ A trait notification handler for the `_workflow_items` list """
