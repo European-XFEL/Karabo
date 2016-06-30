@@ -1,14 +1,15 @@
 from itertools import chain
 
 from PyQt4.QtCore import QPoint
-from traits.api import (HasStrictTraits, Any, Dict, Enum, Instance, List,
+from traits.api import (HasStrictTraits, Any, Dict, Enum, Instance, Int, List,
                         Property, String, cached_property)
 
 from karabo_gui.scenemodel.api import WorkflowItemModel
 from karabo_gui.schema import Dummy
 from karabo_gui.topology import getDevice
-from .const import (CHANNEL_INPUT, CHANNEL_OUTPUT, DATA_DIST_COPY,
-                    DATA_DIST_SHARED)
+from .const import (
+    CHANNEL_INPUT, CHANNEL_OUTPUT, CHANNEL_HEIGHT, CONNECTION_OFFSET,
+    DATA_DIST_COPY, DATA_DIST_SHARED)
 
 
 class WorkflowChannelModel(HasStrictTraits):
@@ -18,6 +19,8 @@ class WorkflowChannelModel(HasStrictTraits):
     box = Any
     # The device IDs for this channel
     device_ids = Property(List(String))
+    # The index of this channel within the WorkflowItem
+    index = Int(0)
     # The type of this channel
     kind = Enum(CHANNEL_INPUT, CHANNEL_OUTPUT)
     # The item associated with this channel
@@ -41,7 +44,7 @@ class WorkflowChannelModel(HasStrictTraits):
     @cached_property
     def _get_position(self):
         model = self.model
-        y = model.y + model.height / 2
+        y = model.y + CHANNEL_HEIGHT * self.index
         if self.kind == CHANNEL_INPUT:
             return QPoint(model.x, y)
         else:
@@ -61,10 +64,10 @@ class WorkflowConnectionModel(HasStrictTraits):
     output_pos = Property(Instance(QPoint))
 
     def _get_input_pos(self):
-        return self.input.position
+        return self.input.position - QPoint(CONNECTION_OFFSET, 0)
 
     def _get_output_pos(self):
-        return self.output.position
+        return self.output.position + QPoint(CONNECTION_OFFSET, 0)
 
 
 class SceneWorkflowModel(HasStrictTraits):
@@ -235,10 +238,12 @@ def _get_channels(model, box, inputs=None, outputs=None):
                                   inputs=inputs, outputs=outputs)
             elif displayType == CHANNEL_INPUT:
                 inputs.append(WorkflowChannelModel(box=sub_box, model=model,
-                                                   kind=CHANNEL_INPUT))
+                                                   kind=CHANNEL_INPUT,
+                                                   index=len(inputs)))
             elif displayType == CHANNEL_OUTPUT:
                 outputs.append(WorkflowChannelModel(box=sub_box, model=model,
-                                                    kind=CHANNEL_OUTPUT))
+                                                    kind=CHANNEL_OUTPUT,
+                                                    index=len(outputs)))
     return inputs, outputs
 
 
