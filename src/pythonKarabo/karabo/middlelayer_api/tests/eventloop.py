@@ -58,12 +58,11 @@ class DeviceTest(TestCase):
             devices += (lead,)
         cls.loop.run_until_complete(
             gather(*(d.startInstance() for d in devices)))
-        cls.devices = devices
         cls.lead = lead
         yield
         cls.loop.run_until_complete(
-            gather(*(d.slotKillDevice() for d in cls.devices)))
-        del cls.devices, cls.lead
+            gather(*(d.slotKillDevice() for d in devices)))
+        del cls.lead
 
 
 def setEventLoop():
