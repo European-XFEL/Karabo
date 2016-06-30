@@ -12,7 +12,7 @@ from karabo.middlelayer_api.cli import (connectDevice, DeviceClient,
                                         start_device_client)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
-    getDevice, instantiate, shutdown, DeviceClientBase, getDevices, getServers)
+    getDevice, instantiate, shutdown, getDevices, getServers)
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.middlelayer_api.exceptions import KaraboError
@@ -111,7 +111,7 @@ class Tests(TestCase):
     @skip
     def test_remote_timeout(self):
         with self.assertLogs("NoRemote"):
-            remote = NoRemote(_deviceId_="NoRemote")
+            NoRemote(_deviceId_="NoRemote")
 
     def test_main(self):
         save = sys.argv
@@ -144,7 +144,6 @@ class Tests(TestCase):
         with proxy:
             yield from proxy.do()
         return proxy
-
 
     def test_macroserver(self):
         loop = setEventLoop()

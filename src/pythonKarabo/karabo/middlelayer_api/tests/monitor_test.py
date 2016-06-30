@@ -1,13 +1,13 @@
-from asyncio import (async, coroutine, gather, set_event_loop, sleep,
-                     TimeoutError)
+from asyncio import async, coroutine, sleep
+from contextlib import contextmanager
 import time
-from unittest import TestCase, main
+from unittest import main
 
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
 
-from .eventloop import startDevices, stopDevices, sync_tst
+from .eventloop import DeviceTest, sync_tst
 
 
 class Remote(Device):
@@ -50,36 +50,31 @@ class Local(Macro):
         self.remoteB.counter = 0
 
 
-class Tests(TestCase):
+class Tests(DeviceTest):
+    @classmethod
+    @contextmanager
+    def lifetimeManager(cls):
+        cls.local = Local(_deviceId_="local", project="test", module="test",
+                          may_start_thread=False)
+        cls.remA = Remote(dict(_deviceId_="remA"))
+        cls.remB = Remote(dict(_deviceId_="remB"))
+        with cls.deviceManager(cls.remA, cls.remB, lead=cls.local):
+            yield
+
     @sync_tst
     def test_count(self):
-        local.startA()
-        local.startB()
+        self.local.startA()
+        self.local.startB()
         time.sleep(0.2)
         for i in range(30):
-            self.assertEqual(local.division, remA.counter // remB.counter)
+            self.assertEqual(self.local.division,
+                             self.remA.counter // self.remB.counter)
             time.sleep(0.1)
 
     @sync_tst
     def test_error(self):
         with self.assertLogs("local", "ERROR"):
-            local.error()
-
-
-def setUpModule():
-    global loop, remA, remB, local
-    local = Local(_deviceId_="local", project="test", module="test",
-                  may_start_thread=False)
-    remA = Remote(dict(_deviceId_="remA"))
-    remB = Remote(dict(_deviceId_="remB"))
-    loop = startDevices(local, remA, remB)
-    Tests.instance = local
-
-
-def tearDownModule():
-    global remA, remB, local
-    stopDevices(local, remA, remB)
-    Tests.instance = local = remA = remB = None
+            self.local.error()
 
 
 if __name__ == "__main__":
