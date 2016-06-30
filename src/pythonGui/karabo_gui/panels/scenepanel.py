@@ -128,7 +128,6 @@ class ScenePanel(Dockable, QScrollArea):
             tooltip="Select objects in the scene"
         )
         workflow = CreateWorkflowConnectionToolAction(
-            tool_factory=WorkflowConnectionTool,
             icon=icons.link,
             checkable=True,
             text="Connection Mode",
