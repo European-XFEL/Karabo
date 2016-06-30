@@ -4,6 +4,7 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QStackedLayout, QToolButton,
 
 from karabo_gui import icons
 from karabo_gui.network import Network
+from karabo_gui.topology import getDeviceBox
 from .utils import get_box, determine_if_value_unchanged
 
 
@@ -14,10 +15,10 @@ class BaseWidgetContainer(QWidget):
     def __init__(self, model, parent):
         super(BaseWidgetContainer, self).__init__(parent)
         self.model = model
-        boxes = [get_box(*key.split('.', 1)) for key in self.model.keys]
-        self.old_style_widget = self._create_widget(boxes)
-        self.box = boxes[0]
-        self._make_box_connections()
+        self.boxes = [get_box(*key.split('.', 1)) for key in self.model.keys]
+        self.old_style_widget = self._create_widget(self.boxes)
+        for box in self.boxes:
+            self._make_box_connections(box)
         if self.model.parent_component == 'EditableApplyLaterComponent':
             self.layout = self._add_edit_widgets()
         else:
@@ -38,7 +39,7 @@ class BaseWidgetContainer(QWidget):
         """
         from karabo_gui import gui
 
-        box = self.box
+        box = self.boxes[0]
         widget = self.old_style_widget
         box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
         if self.model.parent_component == 'EditableApplyLaterComponent':
@@ -56,9 +57,11 @@ class BaseWidgetContainer(QWidget):
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""
         if visible:
-            self.box.addVisible()
+            for box in self.boxes:
+                box.addVisible()
         else:
-            self.box.removeVisible()
+            for box in self.boxes:
+                box.removeVisible()
 
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
@@ -70,10 +73,9 @@ class BaseWidgetContainer(QWidget):
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    def _make_box_connections(self):
+    def _make_box_connections(self, box):
         """ Hook up all the box signals to the old_style_widget instance.
         """
-        box = self.box
         widget = self.old_style_widget
         box.signalNewDescriptor.connect(widget.typeChangedSlot)
         if box.descriptor is not None:
@@ -89,6 +91,25 @@ class BaseWidgetContainer(QWidget):
             widget.setReadOnly(False)
         else:
             widget.setReadOnly(True)
+
+    # ---------------------------------------------------------------------
+    # Qt Methods
+
+    def dropEvent(self, event):
+        """ Add another box to a display widget which allows more than one
+            boxes. """
+        source = event.source()
+        if source is None:
+            return
+        for item in source.selectedItems():
+            if self.model.parent_component == 'DisplayComponent':
+                widget = self.old_style_widget
+                if widget.addBox(getDeviceBox(item.box)):
+                    self.model.keys.append(item.box.key())
+                    self.boxes.append(getDeviceBox(item.box))
+                    self._make_box_connections(self.boxes[-1])
+                    event.accept()
+        super(BaseWidgetContainer, self).dropEvent(event)
 
     # ---------------------------------------------------------------------
     # Edit buttons related code
@@ -183,7 +204,7 @@ class BaseWidgetContainer(QWidget):
         self._update_buttons()
 
     def _update_buttons(self):
-        box = self.box
+        box = self.boxes[0]
         widget = self.old_style_widget
         allowed = box.isAllowed()
         self.apply_button.setEnabled(allowed)

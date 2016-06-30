@@ -16,13 +16,14 @@ from karabo_gui.scenemodel.api import (
 from .bases import BaseSceneTool
 from .builder import (bring_object_to_front, create_object_from_model,
                       fill_root_layout, is_widget, remove_object_from_layout,
-                      send_object_to_back, widget_at_position)
-from .const import _OLD_WIDGET_CLASSES, QT_CURSORS
+                      send_object_to_back)
+from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import SceneSelectionTool
-from .utils import calc_rect_from_text, save_painter_state
+from .utils import save_painter_state
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
+from .tools.api import SceneDnDHandler, SceneSelectionTool
 
 
 class SceneView(QWidget):
@@ -56,6 +57,7 @@ class SceneView(QWidget):
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
         self.workflow_model = SceneWorkflowModel()
+        self.scene_handler = SceneDnDHandler()
         self.current_tool = None
         self.design_mode = design_mode
         self.tab_visible = False
@@ -188,14 +190,6 @@ class SceneView(QWidget):
             obj = self._scene_obj_cache.get(child)
             if obj is not None and obj.geometry().contains(pos):
                 return obj
-
-    def widget_at_position(self, pos):
-        """ Returns the topmost widget whose bounds contain `pos`.
-        """
-        for child in self.scene_model.children[::-1]:
-            obj = self._scene_obj_cache.get(child)
-            widget = widget_at_position(obj, pos)
-            return widget
 
     def items_in_rect(self, rect):
         """ Returns the topmost objects whose bounds are contained in `rect`.
