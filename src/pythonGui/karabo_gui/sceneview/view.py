@@ -10,8 +10,9 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
-from karabo_gui.scenemodel.api import (read_scene, FixedLayoutModel,
-                                       SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+from karabo_gui.scenemodel.api import (
+    read_scene, FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH,
+    SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
 from .builder import (bring_object_to_front, create_object_from_model,
                       fill_root_layout, is_widget, remove_object_from_layout,
@@ -21,6 +22,7 @@ from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import SceneSelectionTool
 from .utils import save_painter_state
+from .workflow.api import WorkflowModel
 
 
 class SceneView(QWidget):
@@ -48,6 +50,7 @@ class SceneView(QWidget):
         self.title = None
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
+        self.workflow_model = WorkflowModel()
         self.current_tool = None
         self.design_mode = design_mode
         self.tab_visible = False
@@ -126,6 +129,7 @@ class SceneView(QWidget):
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
                 obj.destroy()
+        self.workflow_model.destroy()
 
     def set_tab_visible(self, visible):
         """ Sets whether this scene is visible
@@ -265,6 +269,7 @@ class SceneView(QWidget):
         self.scene_model = scene_model
         self.scene_model.on_trait_change(self._model_modified,
                                          'children_items')
+        self._add_workflow_items(self.scene_model.children)
 
     def _model_modified(self, event):
         """ The scene model got modified."""
@@ -273,6 +278,23 @@ class SceneView(QWidget):
             if obj is not None:
                 remove_object_from_layout(obj, self.layout,
                                           self._scene_obj_cache)
+        self._remove_workflow_items(event.removed)
+
         for model in event.added:
             create_object_from_model(self.layout, model, self.inner,
                                      self._scene_obj_cache)
+        self._add_workflow_items(event.added)
+
+    def _add_workflow_items(self, models):
+        """ Add new WorkflowItemModel instances to the workflow model. """
+        workflow = self.workflow_model
+        for model in models:
+            if isinstance(model, WorkflowItemModel):
+                workflow.items.append(model)
+
+    def _remove_workflow_items(self, models):
+        """ Remove WorkflowItemModel instances from the workflow model. """
+        workflow = self.workflow_model
+        for model in models:
+            if isinstance(model, WorkflowItemModel):
+                workflow.items.remove(model)
