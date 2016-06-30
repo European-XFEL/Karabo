@@ -67,7 +67,7 @@ class WorkflowConnectionModel(HasStrictTraits):
         return self.output.position
 
 
-class WorkflowModel(HasStrictTraits):
+class SceneWorkflowModel(HasStrictTraits):
     """ A model for tracking workflow connections in the SceneView.
     """
     # All channels in the model
@@ -75,30 +75,48 @@ class WorkflowModel(HasStrictTraits):
                         depends_on=['input_channels', 'output_channels'])
     # The connections between the channels
     connections = List(Instance(WorkflowConnectionModel))
-    # All of the WorkflowItemModel objects in the scene.
-    items = List(Instance(WorkflowItemModel))
 
     # The list of current input channels
     input_channels = List(Instance(WorkflowChannelModel))
     # The list of current output channels
     output_channels = List(Instance(WorkflowChannelModel))
+
     # A private mapping of item model -> _DeviceEntry objects
     _devices = Dict
+    # All of the WorkflowItemModel objects in the scene.
+    _workflow_items = List(Instance(WorkflowItemModel))
+
+    # --------------------------------------------
+    # Public interface
+
+    def add_items(self, items):
+        """ Add WorkflowItemModels to be monitored. """
+        self._workflow_items.extend(items)
+        # Collect the remaining inputs and outputs
+        self._refresh_channels()
+
+    def remove_items(self, items):
+        """ Remove WorkflowItemModels from monitoring """
+        for it in items:
+            self._workflow_items.remove(it)
+        # Collect the remaining inputs and outputs
+        self._refresh_channels()
 
     def destroy(self):
-        """ Clean up any channels (causing their Boxes to disconnect).
-        """
+        """ Clean up any channels (causing their Boxes to disconnect). """
         # Cause a single items_changed notification. The handler will clean up
         # the channels.
-        self.items[:] = []
+        self._workflow_items[:] = []
+
+    # --------------------------------------------
+    # Traits handlers
 
     @cached_property
     def _get_channels(self):
         return self.input_channels + self.output_channels
 
-    def _items_items_changed(self, event):
-        """ A trait notification handler for the `items` list
-        """
+    def __workflow_items_items_changed(self, event):
+        """ A trait notification handler for the `_workflow_items` list """
         def toggle_boxes(entry, state):
             for ch in chain(entry.inputs, entry.outputs):
                 ch.toggle_box_notifications(state)
@@ -118,8 +136,8 @@ class WorkflowModel(HasStrictTraits):
                 entry = self._devices.pop(item_model)
                 toggle_boxes(entry, False)
 
-        # Collect the remaining inputs and outputs
-        self._refresh_channels()
+    # --------------------------------------------
+    # Private interface
 
     def _lookup_output(self, device_id, box_path):
         for output in self.output_channels:

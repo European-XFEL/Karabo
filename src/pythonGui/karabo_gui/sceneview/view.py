@@ -22,7 +22,7 @@ from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import SceneSelectionTool
 from .utils import save_painter_state
-from .workflow.api import WorkflowModel
+from .workflow.api import SceneWorkflowModel
 
 
 class SceneView(QWidget):
@@ -50,7 +50,7 @@ class SceneView(QWidget):
         self.title = None
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
-        self.workflow_model = WorkflowModel()
+        self.workflow_model = SceneWorkflowModel()
         self.current_tool = None
         self.design_mode = design_mode
         self.tab_visible = False
@@ -287,14 +287,10 @@ class SceneView(QWidget):
 
     def _add_workflow_items(self, models):
         """ Add new WorkflowItemModel instances to the workflow model. """
-        workflow = self.workflow_model
-        for model in models:
-            if isinstance(model, WorkflowItemModel):
-                workflow.items.append(model)
+        items = [m for m in models if isinstance(m, WorkflowItemModel)]
+        self.workflow_model.add_items(items)
 
     def _remove_workflow_items(self, models):
         """ Remove WorkflowItemModel instances from the workflow model. """
-        workflow = self.workflow_model
-        for model in models:
-            if isinstance(model, WorkflowItemModel):
-                workflow.items.remove(model)
+        items = [m for m in models if isinstance(m, WorkflowItemModel)]
+        self.workflow_model.remove_items(items)
