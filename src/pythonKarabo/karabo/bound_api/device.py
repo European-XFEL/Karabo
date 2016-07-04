@@ -28,6 +28,7 @@ from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .configurator import Configurator
 from .no_fsm import NoFsm
 from .alarm_conditions import AlarmCondition
+from ..common.states import State
 
 def isCpuImage(value):
     return isinstance(value, (CpuImageCHAR, CpuImageDOUBLE, CpuImageFLOAT,
@@ -661,17 +662,19 @@ class PythonDevice(NoFsm):
         self.fullSchema.copy(self.staticSchema)
         
     def updateState(self, currentState):
+        assert isinstance(currentState, State)
         self.log.DEBUG("updateState: {}".format(currentState))
-        if self["state"] != currentState:
+        if self["state"] is not currentState:
             self["state"] = currentState
-            if self.errorRegex.match(currentState) is not None:
+            if currentState is State.ERROR:
                 self._ss.updateInstanceInfo(Hash("status", "error"))
             else:
                 if self._ss.getInstanceInfo()["status"] == "error":
                     self._ss.updateInstanceInfo(Hash("status", "ok"))
-        self._ss.reply(currentState)  # reply new state to interested event initiators
+        self._ss.reply(currentState.name)  # reply new state to interested event initiators
 
     def onStateUpdate(self, currentState):
+        assert isinstance(currentState, State)
         print("onStateUpdate() is deprecated, use updateState() instead")
         self.updateState(currentState)
 
