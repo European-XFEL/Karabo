@@ -12,6 +12,7 @@ from .fsm import (
     KARABO_FSM_EVENT0, KARABO_FSM_EVENT2,
     KARABO_FSM_STATE_EE, KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE
 )
+from ..common.states import State
 
 
 @KARABO_CLASSINFO("StartStopFsm", "1.0")
@@ -22,17 +23,17 @@ class StartStopFsm(base.BaseFsm):
         
         e = SLOT_ELEMENT(expected).key("start")
         e.displayedName("Start").description("Instructs device to go to started state")
-        e.allowedStates("Ok.Stopped")
+        e.allowedStates(State.STOPPED)
         e.commit()
 
         e = SLOT_ELEMENT(expected).key("stop")
         e.displayedName("Stop").description("Instructs device to go to stopped state")
-        e.allowedStates("Ok.Started")
+        e.allowedStates(State.STARTED)
         e.commit()
 
         e = SLOT_ELEMENT(expected).key("reset")
         e.displayedName("Reset").description("Resets the device in case of an error")
-        e.allowedStates("Error")
+        e.allowedStates(State.ERROR)
         e.commit()
 
     def __init__(self, configuration):
@@ -49,10 +50,10 @@ class StartStopFsm(base.BaseFsm):
         #**************************************************************
         #*                        States                              *
         #**************************************************************
-        KARABO_FSM_STATE_EE('Error',   self.errorStateOnEntry,   self.errorStateOnExit)
-        KARABO_FSM_STATE_EE('Initialization', self.initializationStateOnEntry, self.initializationStateOnExit)
-        KARABO_FSM_STATE_EE('Started', self.startedStateOnEntry, self.startedStateOnExit)
-        KARABO_FSM_STATE_EE('Stopped', self.stoppedStateOnEntry, self.stoppedStateOnExit)
+        KARABO_FSM_STATE_EE(State.ERROR,   self.errorStateOnEntry,   self.errorStateOnExit)
+        KARABO_FSM_STATE_EE(State.INIT, self.initializationStateOnEntry, self.initializationStateOnExit)
+        KARABO_FSM_STATE_EE(State.STARTED, self.startedStateOnEntry, self.startedStateOnExit)
+        KARABO_FSM_STATE_EE(State.STOPPED, self.stoppedStateOnEntry, self.stoppedStateOnExit)
 
         #**************************************************************
         #*                    Transition Actions                      *
@@ -69,12 +70,12 @@ class StartStopFsm(base.BaseFsm):
 
         okStateTransitionTable = [
         # Source-State      Event    Target-State    Action     Guard
-            ('Stopped', 'StartEvent', 'Started', 'StartAction', 'none'),
-            ('Started', 'StopEvent',  'Stopped', 'StopAction',  'none')
+            (State.STOPPED, 'StartEvent', State.STARTED, 'StartAction', 'none'),
+            (State.STARTED, 'StopEvent', State.STOPPED, 'StopAction',  'none')
         ]
 
         #                        Name     Transition-Table   Initial-State
-        KARABO_FSM_STATE_MACHINE('Ok', okStateTransitionTable, 'Stopped')
+        KARABO_FSM_STATE_MACHINE(State.NORMAL, okStateTransitionTable, State.STOPPED)
 
         #**************************************************************
         #*                      Top Machine                           *
@@ -82,13 +83,13 @@ class StartStopFsm(base.BaseFsm):
 
         #  Source-State    Event     Target-State  Action          Guard
         startStopMachineTransitionTable = [
-            ('Initialization', 'none', 'Ok',   'none',             'none'),
-            ('Ok', 'ErrorFoundEvent', 'Error', 'ErrorFoundAction', 'none'),
-            ('Error', 'ResetEvent',    'Ok',   'none',             'none')
+            (State.INIT, 'none', State.NORMAL,   'none',             'none'),
+            (State.NORMAL, 'ErrorFoundEvent', State.ERROR, 'ErrorFoundAction', 'none'),
+            (State.ERROR, 'ResetEvent', State.NORMAL,   'none',             'none')
         ]
 
         #                               Name                Transition-Table           Initial-State
-        KARABO_FSM_STATE_MACHINE('StartStopMachine', startStopMachineTransitionTable, 'Initialization')
+        KARABO_FSM_STATE_MACHINE('StartStopMachine', startStopMachineTransitionTable, State.INIT)
         self.fsm = KARABO_FSM_CREATE_MACHINE('StartStopMachine')
     
     def getFsm(self):

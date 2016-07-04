@@ -34,6 +34,7 @@ from .fsm import (
 )
 from .plugin_loader import PluginLoader
 from .runner import Runner
+from ..common.states import State
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -205,8 +206,8 @@ class DeviceServer(object):
         # *                        States                              *
         # **************************************************************
 
-        KARABO_FSM_STATE_E('Ok', self.okStateOnEntry)
-        KARABO_FSM_STATE('Error')
+        KARABO_FSM_STATE_E(State.NORMAL, self.okStateOnEntry)
+        KARABO_FSM_STATE(State.ERROR)
 
         # **************************************************************
         # *                    Transition Actions                      *
@@ -216,11 +217,11 @@ class DeviceServer(object):
         KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
                     
         DeviceServerMachineSTT=[
-                                ('Ok', 'ErrorFoundEvent', 'Error', 'ErrorFoundAction', 'none'),
-                                ('Error', 'ResetEvent',   'Ok',    'none',   'none')
+                                (State.NORMAL, 'ErrorFoundEvent', State.ERROR, 'ErrorFoundAction', 'none'),
+                                (State.ERROR, 'ResetEvent', State.NORMAL,    'none',   'none')
                                ]
         
-        KARABO_FSM_STATE_MACHINE('DeviceServerMachine', DeviceServerMachineSTT, 'Ok')
+        KARABO_FSM_STATE_MACHINE('DeviceServerMachine', DeviceServerMachineSTT, State.NORMAL)
         
         return KARABO_FSM_CREATE_MACHINE('DeviceServerMachine')
         
