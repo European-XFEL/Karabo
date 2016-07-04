@@ -5,7 +5,8 @@ import unittest
 from karabo.bound import (
     KARABO_FSM_EVENT0, KARABO_FSM_EVENT2, KARABO_FSM_ACTION0, KARABO_FSM_ACTION2, KARABO_FSM_NO_TRANSITION_ACTION,
     KARABO_FSM_STATE, KARABO_FSM_STATE_E, KARABO_FSM_STATE_EE, KARABO_FSM_STATE_MACHINE_EE, KARABO_FSM_GUARD0,
-    KARABO_FSM_STATE_MACHINE, KARABO_FSM_STATE_MACHINE_E, KARABO_FSM_CREATE_MACHINE
+    KARABO_FSM_STATE_MACHINE, KARABO_FSM_STATE_MACHINE_E,
+    KARABO_FSM_CREATE_MACHINE, State
 )
 
 
@@ -47,36 +48,36 @@ class HvMachine(object):
         KARABO_FSM_NO_TRANSITION_ACTION(self.noTransition)
         
         # states
-        KARABO_FSM_STATE('ErrorState')
-        KARABO_FSM_STATE_E('OffState', self.offStateEntry)
-        KARABO_FSM_STATE_EE('ChangingState', self.changingStateEntry, self.changingStateExit)
-        KARABO_FSM_STATE('StableState')
+        KARABO_FSM_STATE(State.ERROR)
+        KARABO_FSM_STATE_E(State.OFF, self.offStateEntry)
+        KARABO_FSM_STATE_EE(State.CHANGING, self.changingStateEntry, self.changingStateExit)
+        KARABO_FSM_STATE(State.STATIC)
         # STT
         onStt = [
-                    ('StableState',   'VoltChangingEvent', 'ChangingState', 'VoltChangingAction', 'none'),
-                    ('ChangingState', 'LevelReachedEvent', 'StableState',   'LevelReachedAction', 'none')
+                    (State.STATIC,   'VoltChangingEvent', State.CHANGING, 'VoltChangingAction', 'none'),
+                    (State.CHANGING, 'LevelReachedEvent', State.STATIC,   'LevelReachedAction', 'none')
                 ]
         # state machine             State     STT    Initial          on_entry      on_exit
-        KARABO_FSM_STATE_MACHINE_EE('OnState', onStt, 'ChangingState', self.onStateEntry, self.onStateExit)
+        KARABO_FSM_STATE_MACHINE_EE(State.ON, onStt, State.CHANGING, self.onStateEntry, self.onStateExit)
         # guards
         KARABO_FSM_GUARD0('SwitchOffGuard', self.switchOffGuard)
         KARABO_FSM_GUARD0('SwitchOnGuard', self.switchOnGuard)
         # STT
         allOkStt = [
-                    ('OffState', 'VoltChangingEvent', 'OnState',  'none',  'SwitchOnGuard'),
-                    ('OffState', 'SwitchOnEvent',     'OnState',  'none',  'SwitchOnGuard'),
-                    ('OnState', 'SwitchOffEvent',     'OffState', 'none',  'SwitchOffGuard')
+                    (State.OFF, 'VoltChangingEvent', State.ON,  'none',  'SwitchOnGuard'),
+                    (State.OFF, 'SwitchOnEvent', State.ON,  'none',  'SwitchOnGuard'),
+                    (State.ON, 'SwitchOffEvent', State.OFF, 'none',  'SwitchOffGuard')
                    ]
         # state machine
-        KARABO_FSM_STATE_MACHINE('AllOkState', allOkStt, 'OffState')
+        KARABO_FSM_STATE_MACHINE(State.NORMAL, allOkStt, State.OFF)
         # STT
         hvStt = [
-                    ('AllOkState', 'ErrorFoundEvent',   'ErrorState', 'ErrorFoundAction',  'none'),
-                    ('ErrorState', 'EndErrorEvent',     'AllOkState', 'none',              'none'),
-                    ('ErrorState', 'ErrorFoundEvent',   'none',       'none',              'none'),
-                    ('ErrorState', 'VoltChangingEvent', 'none',       'none',              'none')
+                    (State.NORMAL, 'ErrorFoundEvent', State.ERROR, 'ErrorFoundAction',  'none'),
+                    (State.ERROR, 'EndErrorEvent', State.NORMAL, 'none',              'none'),
+                    (State.ERROR, 'ErrorFoundEvent', None,       'none',              'none'),
+                    (State.ERROR, 'VoltChangingEvent', None,       'none',              'none')
                 ]
-        KARABO_FSM_STATE_MACHINE_E('MpodDeviceMachine', hvStt, 'AllOkState', self.initializeHardware)
+        KARABO_FSM_STATE_MACHINE_E('MpodDeviceMachine', hvStt, State.NORMAL, self.initializeHardware)
 
         self.fsm = KARABO_FSM_CREATE_MACHINE('MpodDeviceMachine')
      
@@ -114,27 +115,27 @@ class  Hvmachine_TestCase(unittest.TestCase):
     def test_hvmachine_(self):
         fsm = self.hv.fsm
         fsm.start()
-        self.assertEqual(fsm.get_state(), "AllOkState.OffState", "failure -- not 'AllOkState.OffState'")
+        self.assertIs(fsm.get_state(), State.OFF)
         self.hv.slotSwitchOnEvent()
-        self.assertEqual(fsm.get_state(), "AllOkState.OnState.ChangingState", "failure -- not 'AllOkState.OnState.ChangingState'")
+        self.assertIs(fsm.get_state(), State.CHANGING)
         self.hv.slotLevelReachedEvent()
-        self.assertEqual(fsm.get_state(), "AllOkState.OnState.StableState", "failure -- not 'AllOkState.OnState.StableState'")
+        self.assertIs(fsm.get_state(), State.STATIC)
         self.hv.slotVoltChangingEvent()
-        self.assertEqual(fsm.get_state(), "AllOkState.OnState.ChangingState", "failure -- not 'AllOkState.OnState.ChangingState'")
+        self.assertIs(fsm.get_state(), State.CHANGING)
         self.hv.slotLevelReachedEvent()
-        self.assertEqual(fsm.get_state(), "AllOkState.OnState.StableState", "failure -- not 'AllOkState.OnState.StableState'")
+        self.assertIs(fsm.get_state(), State.STATIC)
         self.hv.slotVoltChangingEvent()
-        self.assertEqual(fsm.get_state(), "AllOkState.OnState.ChangingState", "failure -- not 'AllOkState.OnState.ChangingState'")
+        self.assertIs(fsm.get_state(), State.CHANGING)
         self.hv.errorFound('Timeout happened', 'Hardware device not responded')
-        self.assertEqual(fsm.get_state(), "ErrorState", "failure -- not 'ErrorState'")
+        self.assertIs(fsm.get_state(), State.ERROR)
         self.hv.endError()
-        self.assertEqual(fsm.get_state(), "AllOkState.OffState", "failure -- not 'AllOkState.OffState'")
+        self.assertIs(fsm.get_state(), State.OFF)
         self.hv.slotVoltChangingEvent()
-        self.assertEqual(fsm.get_state(), "AllOkState.OnState.ChangingState", "failure -- not 'AllOkState.OnState.ChangingState'")
+        self.assertIs(fsm.get_state(), State.CHANGING)
         self.hv.slotLevelReachedEvent()
-        self.assertEqual(fsm.get_state(), "AllOkState.OnState.StableState", "failure -- not 'AllOkState.OnState.StableState'")
+        self.assertIs(fsm.get_state(), State.STATIC)
         self.hv.slotSwitchOffEvent()
-        self.assertEqual(fsm.get_state(), "AllOkState.OffState", "failure -- not 'AllOkState.OffState'")
+        self.assertIs(fsm.get_state(), State.OFF)
         #print fsm.get_state()
         #self.fail("TODO: Write test")
 
