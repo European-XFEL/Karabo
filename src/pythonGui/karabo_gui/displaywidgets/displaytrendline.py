@@ -14,8 +14,8 @@ from karabo_gui.widget import DisplayWidget
 
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSlot
-from PyQt4.QtGui import (QDialog, QHBoxLayout, QPushButton, QVBoxLayout,
-                         QWidget)
+from PyQt4.QtGui import (QButtonGroup, QDialog, QHBoxLayout, QPushButton,
+                         QVBoxLayout, QWidget)
 
 import numpy
 
@@ -272,6 +272,12 @@ class DisplayTrendline(DisplayWidget):
     category = Simple
     alias = "Trendline"
 
+    ONE_WEEK = "One Week"
+    ONE_DAY = "One Day"
+    ONE_HOUR = "One Hour"
+    TEN_MINUTES = "Ten Minutes"
+    RESET = "Reset"
+
     def __init__(self, box, parent):
         super(DisplayTrendline, self).__init__(None)
         self.dialog = CurveDialog(edit=False, toolbar=True,
@@ -281,7 +287,14 @@ class DisplayTrendline(DisplayWidget):
         self.cell_layout = QHBoxLayout(self.cell_widget)
         self.cell_layout.setContentsMargins(0, 0, 0, 0)
 
+        self.time_string_btn = OrderedDict()  # Map time_string to QPushButton
+        self.time_string_btn[self.ONE_WEEK] = None
+        self.time_string_btn[self.ONE_DAY] = None
+        self.time_string_btn[self.ONE_HOUR] = None
+        self.time_string_btn[self.TEN_MINUTES] = None
+        self.time_string_btn[self.RESET] = None
         self.time_buttons = self._create_time_buttons(self.cell_layout)
+        self._selected_time_btn = None
 
         self.full_widget = QWidget()
         self.layout = QVBoxLayout(self.full_widget)
@@ -387,14 +400,25 @@ class DisplayTrendline(DisplayWidget):
 
         t = timestamp.toTimestamp()
         self.curves[box].addPoint(value, t)
+
+        # Start date time
+        start_date_time = self._get_start_date_time()
+        # End date time
+        end_date_time = QDateTime.currentDateTime().toMSecsSinceEpoch() / 1000
+
         t1 = self.plot.axisScaleDiv(QwtPlot.xBottom).upperBound()
+
         if self.lasttime < t1 < t:
             aw = self.plot.axisWidget(QwtPlot.xBottom)
             with SignalBlocker(aw):
-                self.plot.setAxisScale(
-                    QwtPlot.xBottom,
-                    self.plot.axisScaleDiv(QwtPlot.xBottom).lowerBound(),
-                    t + 10)
+                if start_date_time is not None:
+                    self.plot.setAxisScale(QwtPlot.xBottom, start_date_time,
+                                           end_date_time + 10)
+                else:
+                    self.plot.setAxisScale(
+                        QwtPlot.xBottom,
+                        self.plot.axisScaleDiv(QwtPlot.xBottom).lowerBound(),
+                        t + 10)
 
         self.lasttime = timestamp.toTimestamp()
         self.wasVisible = True
@@ -428,36 +452,11 @@ class DisplayTrendline(DisplayWidget):
             curve.curve = pickle.loads(base64.b64decode(ee.text))
             self._addCurve(box, curve)
 
-    def _update_time_buttons(self, is_checked, button):
-        for time_btn in self.time_buttons:
-            if time_btn is not button:
-                with SignalBlocker(time_btn):
-                    time_btn.setChecked(not is_checked)
-
-    @pyqtSlot(bool)
-    def _one_week_button_toggled(self, is_checked):
-        """ Show last week of values. """
-        self._update_time_buttons(is_checked, self.sender())
-
-    @pyqtSlot(bool)
-    def _one_day_button_toggled(self, is_checked):
-        """ Show last day of values. """
-        self._update_time_buttons(is_checked, self.sender())
-
-    @pyqtSlot(bool)
-    def _one_hour_button_toggled(self, is_checked):
-        """ Show last hour of values. """
-        self._update_time_buttons(is_checked, self.sender())
-
-    @pyqtSlot(bool)
-    def _ten_minutes_button_toggled(self, is_checked):
-        """ Show last ten minutes of values. """
-        self._update_time_buttons(is_checked, self.sender())
-
-    @pyqtSlot(bool)
-    def _reset_button_toggled(self, is_checked):
-        """ Show all available values. """
-        self._update_time_buttons(is_checked, None)
+    def _time_buttons_toggled(self, button):
+        """ """
+        self._selected_time_btn = button
+        # TODO: Set cursor to waiting - back to normal when historic data
+        # arrived
 
     # ----------------------------
     # Private methods
@@ -478,22 +477,40 @@ class DisplayTrendline(DisplayWidget):
         """ The buttons for time scaling are created, added to the given
             ``layout`` and return a list of them.
         """
-        buttons = []
-        time_strings = OrderedDict()
-        time_strings["One Week"] = "one_week"
-        time_strings["One Day"] = "one_day"
-        time_strings["One Hour"] = "one_hour"
-        time_strings["Ten minutes"] = "ten_minutes"
-        time_strings["Reset"] = "reset"
-        for k, v in time_strings.items():
+        button_group = QButtonGroup()
+        button_group.buttonClicked.connect(self._time_buttons_toggled)
+
+        for k in list(self.time_string_btn.keys()):
             button = QPushButton(k)
             button.setCheckable(True)
             style_sheet = ("QPushButton {text-align: center; font-size: 9px;"
                            "padding: 0}")
             button.setStyleSheet(style_sheet)
-            button.toggled.connect(getattr(self, "_{}_button_toggled"
-                                           .format(v)))
-            buttons.append(button)
+            self.time_string_btn[k] = button
+            button_group.addButton(button)
             layout.addWidget(button)
 
-        return buttons
+        return button_group
+
+    def _get_start_date_time(self):
+        """ The selected start date time is returned, if a button is
+            selected. """
+        if self._selected_time_btn is None:
+            return None
+
+        if self._selected_time_btn.text() == self.ONE_WEEK:
+            # One week
+            start_date_time = QDateTime.currentDateTime().addDays(-7)
+        elif self._selected_time_btn.text() == self.ONE_DAY:
+            # One day
+            start_date_time = QDateTime.currentDateTime().addDays(-1)
+        elif self._selected_time_btn.text() == self.ONE_HOUR:
+            # One hour
+            start_date_time = QDateTime.currentDateTime().addSecs(-3600)
+        elif self._selected_time_btn.text() == self.TEN_MINUTES:
+            # Ten minutes
+            start_date_time = QDateTime.currentDateTime().addSecs(-600)
+        else:
+            return None
+
+        return start_date_time.toMSecsSinceEpoch() / 1000
