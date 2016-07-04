@@ -59,8 +59,6 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             t = getattr(type(self), k)
             if k in configuration:
                 v = configuration[k]
-                if t.enum is not None:
-                    v = t.enum(v)
                 t.setter(self, v)
                 del configuration[k]
             else:
