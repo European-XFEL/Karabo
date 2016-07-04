@@ -380,13 +380,14 @@ class EventLoop(SelectorEventLoop):
         if iscoroutinefunction(f):
             return (yield from f(*args, **kwargs))
         else:
+            loop = NoEventLoop(self.instance())
+
             def inner():
                 set_event_loop(loop)
                 try:
                     return f(*args, **kwargs)
                 finally:
                     set_event_loop(None)
-            loop = NoEventLoop(self.instance())
             return (yield from self.run_in_executor(None, inner))
 
     def start_device(self, device):
