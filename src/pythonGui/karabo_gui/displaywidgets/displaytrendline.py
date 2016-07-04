@@ -1,9 +1,7 @@
-
-__all__ = ["DisplayTrendline"]
-
 import time
 import datetime
 from bisect import bisect
+from collections import OrderedDict
 import os.path as op
 import pickle
 import base64
@@ -16,7 +14,8 @@ from karabo_gui.widget import DisplayWidget
 
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSlot
-from PyQt4.QtGui import QDialog
+from PyQt4.QtGui import (QDialog, QHBoxLayout, QPushButton, QVBoxLayout,
+                         QWidget)
 
 import numpy
 
@@ -249,6 +248,7 @@ class ScaleEngine(QwtLinearScaleEngine):
         self.drawer.setFormat(start, v)
         return QwtScaleDiv(x1, x2, [], [], list(range(start, int(x2), v)))
 
+
 class Timespan(QDialog):
     def __init__(self, parent):
         super(Timespan, self).__init__(parent)
@@ -271,11 +271,23 @@ class Timespan(QDialog):
 class DisplayTrendline(DisplayWidget):
     category = Simple
     alias = "Trendline"
- 
+
     def __init__(self, box, parent):
         super(DisplayTrendline, self).__init__(None)
         self.dialog = CurveDialog(edit=False, toolbar=True,
                                   wintitle="Trendline")
+
+        self.cell_widget = QWidget()
+        self.cell_layout = QHBoxLayout(self.cell_widget)
+        self.cell_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.time_buttons = self._create_time_buttons(self.cell_layout)
+
+        self.full_widget = QWidget()
+        self.layout = QVBoxLayout(self.full_widget)
+        self.layout.addWidget(self.dialog)
+        self.layout.addWidget(self.cell_widget)
+
         self.plot = self.dialog.get_plot()
         self.plot.set_antialiasing(True)
         self.plot.setAxisTitle(QwtPlot.xBottom, 'Time')
@@ -296,12 +308,12 @@ class DisplayTrendline(DisplayWidget):
             self.timer.start)
         self.timer.timeout.connect(self.scaleChanged)
 
-        self.curves = { }
+        self.curves = {}
 
         self.manager = PlotManager(self)
         self.manager.add_plot(self.plot)
 
-        self.manager.register_all_curve_tools( )
+        self.manager.register_all_curve_tools()
         self.manager.register_other_tools()
         self.manager.add_tool(SelectPointTool, title='Test',
                               on_active_item=True, mode='create')
@@ -330,7 +342,7 @@ class DisplayTrendline(DisplayWidget):
                 QDateTime.fromMSecsSinceEpoch(sd.lowerBound() * 1000))
             dialog.end.setDateTime(
                 QDateTime.fromMSecsSinceEpoch(sd.upperBound() * 1000))
-            if dialog.exec() != dialog.Accepted:
+            if dialog.exec_() != dialog.Accepted:
                 return
             self.plot.setAxisScale(
                 QwtPlot.xBottom,
@@ -340,7 +352,6 @@ class DisplayTrendline(DisplayWidget):
 
     def typeChanged(self, box):
         self.plot.setAxisTitle(QwtPlot.yLeft, box.axisLabel())
-
 
     def addBox(self, box):
         curve = make.curve([], [], box.key(), "r")
@@ -354,11 +365,9 @@ class DisplayTrendline(DisplayWidget):
 
     @property
     def widget(self):
-        return self.dialog
-
+        return self.full_widget
 
     value = None
-
 
     def removeKey(self, key):
         # XXX: This appears to be dead code!
@@ -368,11 +377,9 @@ class DisplayTrendline(DisplayWidget):
         del self.curves[key]
         key.removeVisible()
 
-
     @property
     def boxes(self):
         return list(self.curves)
-
 
     def valueChanged(self, box, value, timestamp=None):
         if timestamp is None:
@@ -421,6 +428,40 @@ class DisplayTrendline(DisplayWidget):
             curve.curve = pickle.loads(base64.b64decode(ee.text))
             self._addCurve(box, curve)
 
+    def _update_time_buttons(self, is_checked, button):
+        for time_btn in self.time_buttons:
+            if time_btn is not button:
+                with SignalBlocker(time_btn):
+                    time_btn.setChecked(not is_checked)
+
+    @pyqtSlot(bool)
+    def _one_week_button_toggled(self, is_checked):
+        """ Show last week of values. """
+        self._update_time_buttons(is_checked, self.sender())
+
+    @pyqtSlot(bool)
+    def _one_day_button_toggled(self, is_checked):
+        """ Show last day of values. """
+        self._update_time_buttons(is_checked, self.sender())
+
+    @pyqtSlot(bool)
+    def _one_hour_button_toggled(self, is_checked):
+        """ Show last hour of values. """
+        self._update_time_buttons(is_checked, self.sender())
+
+    @pyqtSlot(bool)
+    def _ten_minutes_button_toggled(self, is_checked):
+        """ Show last ten minutes of values. """
+        self._update_time_buttons(is_checked, self.sender())
+
+    @pyqtSlot(bool)
+    def _reset_button_toggled(self, is_checked):
+        """ Show all available values. """
+        self._update_time_buttons(is_checked, None)
+
+    # ----------------------------
+    # Private methods
+
     def _addCurve(self, box, curve):
         """ Give derived classes a place to respond to changes. """
         if box in self.curves:
@@ -432,3 +473,27 @@ class DisplayTrendline(DisplayWidget):
         self.curves[box] = curve
         self.plot.add_item(curve.curve)
         curve.update()
+
+    def _create_time_buttons(self, layout):
+        """ The buttons for time scaling are created, added to the given
+            ``layout`` and return a list of them.
+        """
+        buttons = []
+        time_strings = OrderedDict()
+        time_strings["One Week"] = "one_week"
+        time_strings["One Day"] = "one_day"
+        time_strings["One Hour"] = "one_hour"
+        time_strings["Ten minutes"] = "ten_minutes"
+        time_strings["Reset"] = "reset"
+        for k, v in time_strings.items():
+            button = QPushButton(k)
+            button.setCheckable(True)
+            style_sheet = ("QPushButton {text-align: center; font-size: 9px;"
+                           "padding: 0}")
+            button.setStyleSheet(style_sheet)
+            button.toggled.connect(getattr(self, "_{}_button_toggled"
+                                           .format(v)))
+            buttons.append(button)
+            layout.addWidget(button)
+
+        return buttons
