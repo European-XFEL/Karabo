@@ -12,6 +12,7 @@ from .fsm import (
     KARABO_FSM_EVENT0, KARABO_FSM_EVENT2,
     KARABO_FSM_STATE_EE, KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE
 )
+from ..common.states import State
 
 
 @KARABO_CLASSINFO("OkErrorFsm", "1.0")
@@ -22,7 +23,7 @@ class OkErrorFsm(base.BaseFsm):
         
         e = SLOT_ELEMENT(expected).key("reset")
         e.displayedName("Reset").description("Resets the device in case of an error")
-        e.allowedStates("Error")
+        e.allowedStates(State.ERROR)
         e.commit()
 
     def __init__(self, configuration):
@@ -37,8 +38,8 @@ class OkErrorFsm(base.BaseFsm):
         #**************************************************************
         #*                        States                              *
         #**************************************************************
-        KARABO_FSM_STATE_EE('Error',   self.errorStateOnEntry,   self.errorStateOnExit)
-        KARABO_FSM_STATE_EE('Ok',      self.okStateOnEntry,      self.okStateOnExit)
+        KARABO_FSM_STATE_EE(State.ERROR,   self.errorStateOnEntry,   self.errorStateOnExit)
+        KARABO_FSM_STATE_EE(State.NORMAL,      self.okStateOnEntry,      self.okStateOnExit)
 
         #**************************************************************
         #*                    Transition Actions                      *
@@ -53,12 +54,12 @@ class OkErrorFsm(base.BaseFsm):
 
         #  Source-State    Event     Target-State  Action          Guard
         stateMachineTransitionTable = [
-            ('Ok', 'ErrorFoundEvent', 'Error', 'ErrorFoundAction', 'none'),
-            ('Error', 'ResetEvent',    'Ok',   'ResetAction',             'none')
+            (State.NORMAL, 'ErrorFoundEvent', State.ERROR, 'ErrorFoundAction', 'none'),
+            (State.ERROR, 'ResetEvent', State.NORMAL,   'ResetAction',             'none')
         ]
 
         #                           Name                Transition-Table  Initial-State
-        KARABO_FSM_STATE_MACHINE('StateMachine', stateMachineTransitionTable, 'Ok')
+        KARABO_FSM_STATE_MACHINE('StateMachine', stateMachineTransitionTable, State.NORMAL)
         self.fsm = KARABO_FSM_CREATE_MACHINE('StateMachine')
     
     def getFsm(self):
