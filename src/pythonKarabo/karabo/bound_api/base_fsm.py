@@ -9,6 +9,7 @@ import threading
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .fsm import KARABO_FSM_NO_TRANSITION_ACTION
 from .no_fsm import NoFsm
+from ..common.states import State
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -45,15 +46,12 @@ class BaseFsm(NoFsm):
         with self.processEventLock:
             fsm = self.getFsm()
             if fsm is not None:
-                #self.updateState("Changing...")
+                self.updateState(State.CHANGING)
                 try:
                     fsm.process_event(event)
                 except Exception as e:
                     self.exceptionFound("Exception while processing event = '{0}'".format(event.__class__.__name__), str(e))
                     return
                 state = fsm.get_state()
-                # this is for compatibility with GUI: strip square brackets from state name in case of state machine with regions
-                if state[0] == '[' and state[len(state)-1] == ']':
-                    state = state[1:len(state)-1]
                 self.updateState(state)
     

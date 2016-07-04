@@ -4,7 +4,7 @@ __date__ ="$Jul 26, 2012 16:17:33 PM$"
 import copy
 
 from .worker import Worker
-
+from ..common.states import State
 
 #======================================= Fsm Macros
 NOOP = lambda: None
@@ -24,11 +24,11 @@ def event_instance(x, a):
 
 # global dicts
 _events_ = ['none']
-_states_ = {'none':None}
+_states_ = {None: None}
 _interrupts_ = {}
 _actions_ = {'none':(NOOP, ())}
 _guards_ = {'none':(GNOOP, ())}
-_machines_ = {'none':None}
+_machines_ = {None: None}
 _state_periodic_actions_ = {'none':(-1, -1, NOOP)}
 
 # events
@@ -73,16 +73,19 @@ def KARABO_FSM_EVENT4(self, event_name, method_name):
     _events_.append(event_name)
 
 # states
-def KARABO_FSM_STATE(name, target_action='', on_entry=NOOP, on_exit=NOOP):
-    _states_[name] = (on_entry, on_exit, target_action)
+def KARABO_FSM_STATE(state, target_action='', on_entry=NOOP, on_exit=NOOP):
+    assert isinstance(state, State)
+    _states_[state] = (on_entry, on_exit, target_action)
 
 
-def KARABO_FSM_STATE_E(name, on_entry):
-    _states_[name] = (on_entry, NOOP, '')
+def KARABO_FSM_STATE_E(state, on_entry):
+    assert isinstance(state, State)
+    _states_[state] = (on_entry, NOOP, '')
 
 
-def KARABO_FSM_STATE_EE(name, on_entry, on_exit):
-    _states_[name] = (on_entry, on_exit, '')
+def KARABO_FSM_STATE_EE(state, on_entry, on_exit):
+    assert isinstance(state, State)
+    _states_[state] = (on_entry, on_exit, '')
 
 
 KARABO_FSM_STATE_AEE = KARABO_FSM_STATE_AE = KARABO_FSM_STATE_A = \
@@ -168,13 +171,14 @@ def KARABO_FSM_CREATE_MACHINE(name):
 
             
 #======================================== Base classes...    
-class State(dict):
+class _State(dict):
     ismachine = False
     interrupt = None
     
-    def __init__(self, fsm, on_entry=NOOP, on_exit=NOOP, in_state=''):
+    def __init__(self, fsm, base, on_entry=NOOP, on_exit=NOOP, in_state=''):
         dict.__init__(self)
         self.fsm = fsm
+        self.base = base
         self.on_entry = on_entry
         self.on_exit = on_exit
         self.target_action = in_state
@@ -269,25 +273,17 @@ class State(dict):
     def __setitem__(self, evt, value):
         dict.__setitem__(self, evt, value)
         
-class StateMachine(State):
+class StateMachine(_State):
     ismachine = True
     
     def __init__(self, fsm, stt, initial, on_entry=NOOP, on_exit=NOOP, in_state=''):
-        super(StateMachine, self).__init__(fsm, on_entry=on_entry, on_exit=on_exit, in_state=in_state)
+        super(StateMachine, self).__init__(fsm, None, on_entry=on_entry, on_exit=on_exit, in_state=in_state)
         self.currentStateObject=None
         self.stt = dict()
         self.initial_state = list()
-        if isinstance(initial, tuple):
-            for sname in initial:
-                self._setup(sname)
-                self.initial_state.append(self.stt[sname])
-        elif isinstance(initial, str):
-            self._setup(initial)
-            self.initial_state.append(self.stt[initial])
-        else:
-            raise TypeError(
-                "Unsupported type {} for representing initial state. "
-                "Required str or tuple of str".format(type(initial)))
+        assert isinstance(initial, State)
+        self._setup(initial)
+        self.initial_state.append(self.stt[initial])
 
         if not self.initial_state:
             raise KeyError('Initial state not set.')
@@ -303,7 +299,7 @@ class StateMachine(State):
             else:
                 self._setup(_source)
                 
-            if _target == 'none':
+            if _target is None:
                 pass
             elif _target in self.stt:
                 pass
@@ -332,7 +328,7 @@ class StateMachine(State):
     def _setup(self, sname):
         if sname in _states_:
             (_entry, _exit, _ta) = _states_[sname]
-            self.stt[sname] = type(str(sname), (State,), {})(self, on_entry=_entry, on_exit=_exit, in_state=_ta)
+            self.stt[sname] = type(sname.name, (_State,), {})(self, sname, on_entry=_entry, on_exit=_exit, in_state=_ta)
             if sname in _interrupts_:
                 self.stt[sname].interrupt = _interrupts_[sname]
         elif sname in _machines_:
@@ -386,12 +382,10 @@ class StateMachine(State):
         return False
 
     def get_state(self):
-        result = [x.__class__.__name__ + "." + x.get_state()
-                  if x.ismachine else x.__class__.__name__
-                  for x in self.current_state]
-        if len(result) == 1:
-            return str(result[0])
-        return '[' + ':'.join(result) + ']'
+        if self.current_state[0].ismachine:
+            return self.current_state[0].get_state()
+        else:
+            return self.current_state[0].base
 
     def get_state_object(self):
         return self.currentStateObject
