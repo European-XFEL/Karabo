@@ -33,7 +33,28 @@ class Remote(Macro):
 
     @Slot()
     def instantiate(self):
-        instantiate("testServer", "Other", "other")
+        conf = Hash(
+            "count", Hash(),
+            "Logger", Hash(
+                "categories", [
+                    Hash("Category", Hash(
+                        "name", "karabo", "additivity", False,
+                        "appenders", [
+                            Hash("RollingFile", Hash(
+                                "layout", Hash("Pattern", Hash(
+                                    "format", "something")),
+                                "filename", "some.log"))]))],
+                "appenders", [
+                    Hash("Ostream", Hash(
+                        "layout", Hash(
+                            "Pattern", Hash("format", "some format")))),
+                    Hash("RollingFile", Hash(
+                        "layout", Hash("Pattern", Hash(
+                            "format", "other format")),
+                        "filename", "other.log")),
+                    Hash("Network", Hash())]))
+        instantiate("testServer", "Other", "other",
+                     configuration=conf, do_count=Hash())
 
     @Slot()
     def shutdown(self):
