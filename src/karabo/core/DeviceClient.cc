@@ -120,9 +120,9 @@ namespace karabo {
         }
 
 
-        karabo::util::Hash DeviceClient::prepareTopologyEntry(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+        karabo::util::Hash DeviceClient::prepareTopologyEntry(const std::string& instanceId, const karabo::util::Hash& instanceInfo) const {
             Hash entry;
-            string path(prepareTopologyPath(instanceId, instanceInfo));
+            const string path(prepareTopologyPath(instanceId, instanceInfo));
             Hash::Node & entryNode = entry.set(path, Hash());
             for (Hash::const_iterator it = instanceInfo.begin(); it != instanceInfo.end(); ++it) {
                 entryNode.setAttribute(it->getKey(), it->getValueAsAny());
@@ -131,11 +131,11 @@ namespace karabo {
         }
 
 
-        std::string DeviceClient::prepareTopologyPath(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            boost::optional<const Hash::Node&> node = instanceInfo.find("type");
-            string type = "unknown";
-            if (node) type = node->getValue<string>();
-            return string(type + "." + instanceId);
+        std::string DeviceClient::prepareTopologyPath(const std::string& instanceId, const karabo::util::Hash& instanceInfo) const {
+            const boost::optional<const Hash::Node&> node = instanceInfo.find("type");
+            // "unknown" is converted to a temporary string whose lifetime is extended to that of the const ref 'type'.
+            const string& type = (node ? node->getValue<string>() : "unknown");
+            return (type + ".") += instanceId;
         }
 
 
