@@ -175,7 +175,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotInstanceNew was called for: " << instanceId;
 
             if (this->existsInRuntimeSystemDescription(this->prepareTopologyPath(instanceId, instanceInfo))) {
-                // The was probably killed and restarted again before we noticed that the heartbeats stopped.
+                // The instance was probably killed and restarted again before we noticed that the heartbeats stopped.
                 // We should properly treat its death first (especially for servers, see _slotInstanceGone).
                 KARABO_LOG_FRAMEWORK_DEBUG << instanceId << " still in runtime description - call _slotInstanceGone";
                 this->_slotInstanceGone(instanceId, instanceInfo);
