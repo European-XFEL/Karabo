@@ -25,7 +25,7 @@ class PluginLoader(object):
         e = STRING_ELEMENT(expected).key("pluginNamespace")
         e.displayedName("Plugin Namespace")
         e.description("Namespace to search for plugins")
-        e.assignmentOptional().defaultValue("karabo.bound_device")
+        e.assignmentOptional().defaultValue("karabo.python_device.api_1")
         e.expertAccess().commit()
 
         e = STRING_ELEMENT(expected).key("pluginNames")
