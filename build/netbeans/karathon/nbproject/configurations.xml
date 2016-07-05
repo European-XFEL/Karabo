@@ -55,6 +55,7 @@
         <itemPath>../../../src/karathon/PyUtilDetectorGeometry.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilDims.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilEpochstamp.cc</itemPath>
+        <itemPath>../../../src/karathon/PyUtilRollingWindowStatistics.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilTimeDuration.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilTimestamp.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilTrainstamp.cc</itemPath>
@@ -289,6 +290,11 @@
           </preprocessorList>
         </ccTool>
       </item>
+      <item path="../../../src/karathon/PyUtilRollingWindowStatistics.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyUtilSchema.cc"
             ex="false"
             tool="1"
@@ -493,9 +499,10 @@
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
-            <pElem>${KARATHON}/karabo/extern/lib</pElem>
             <pElem>${KARATHON}/karabo</pElem>
             <pElem>${KARATHON}</pElem>
+            <pElem>\$$ORIGIN/../../../../lib</pElem>
+            <pElem>${KARATHON}/karabo/extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibLibItem>cppunit</linkerLibLibItem>
@@ -712,6 +719,11 @@
             <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
           </preprocessorList>
         </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilRollingWindowStatistics.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilSchema.cc"
             ex="false"

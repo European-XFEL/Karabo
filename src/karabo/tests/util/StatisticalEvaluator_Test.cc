@@ -77,15 +77,15 @@ void StatisticalEvaluator::testSmallNumbers() {
     stat.update(123e-9);
     stat.update(-123e-9);
     stat.update(4123e-9);
-    CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 4.494e-7d) < EPSILON_MEAN);
-    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.67183e-12d) < EPSILON_VAR);
+    CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 4.494e-7) < EPSILON_MEAN);
+    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.67183e-12) < EPSILON_VAR);
     stat.update(123e-9);
     stat.update(23e-9);
     stat.update(33e-9);
     stat.update(43e-9);
     stat.update(1e-9);
-    CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 4.494e-7d) < EPSILON_MEAN);
-    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.67183e-12d) < EPSILON_VAR);
+    CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 4.494e-7) < EPSILON_MEAN);
+    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.67183e-12) < EPSILON_VAR);
     
     karabo::util::RollingWindowStatistics stat100(100);
     for(size_t i = 0; i< 11; i++){
@@ -102,8 +102,8 @@ void StatisticalEvaluator::testSmallNumbers() {
 
     }
     
-    CPPUNIT_ASSERT(fabs(stat100.getRollingWindowMean() - 4.494e-07d) < EPSILON_MEAN);
-    CPPUNIT_ASSERT(fabs(stat100.getRollingWindowVariance() - 1.50465324e-12d) < EPSILON_VAR);
+    CPPUNIT_ASSERT(fabs(stat100.getRollingWindowMean() - 4.494e-07) < EPSILON_MEAN);
+    CPPUNIT_ASSERT(fabs(stat100.getRollingWindowVariance() - 1.50465324e-12) < EPSILON_VAR);
     
     karabo::util::RollingWindowStatistics stat1000(1000);
     for(size_t i = 0; i< 101; i++){
@@ -119,7 +119,7 @@ void StatisticalEvaluator::testSmallNumbers() {
         stat1000.update(4123e-9);
     }
     
-    CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowMean() - 4.494e-07d) < EPSILON_MEAN);
+    CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowMean() - 4.494e-07) < EPSILON_MEAN);
     CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowVariance() - 1.50465324e-12) < EPSILON_VAR);
     
     
@@ -142,7 +142,7 @@ void StatisticalEvaluator::testLargeNumbers() {
     stat.update(4123e9);
     
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 449400000000.0) < EPSILON_MEAN);
-    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.6718369e+24d) < EPSILON_VAR);
+    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.6718369e+24) < EPSILON_VAR);
     stat.update(123e9);
     stat.update(23e9);
     stat.update(33e9);
@@ -150,7 +150,7 @@ void StatisticalEvaluator::testLargeNumbers() {
     stat.update(1e9);
     
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowMean() - 449400000000.0) < EPSILON_MEAN);
-    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.6718369e+24d) < EPSILON_VAR);
+    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 1.6718369e+24) < EPSILON_VAR);
     
     karabo::util::RollingWindowStatistics stat100(100);
     for(size_t i = 0; i< 11; i++){
@@ -167,7 +167,7 @@ void StatisticalEvaluator::testLargeNumbers() {
     }
     
     CPPUNIT_ASSERT(fabs(stat100.getRollingWindowMean() - 449400000000.0) < EPSILON_MEAN);
-    CPPUNIT_ASSERT(fabs(stat100.getRollingWindowVariance() - 1.51985e+24d) < EPSILON_VAR);
+    CPPUNIT_ASSERT(fabs(stat100.getRollingWindowVariance() - 1.51985e+24) < EPSILON_VAR);
     
     karabo::util::RollingWindowStatistics stat1000(1000);
     for(size_t i = 0; i< 101; i++){
@@ -184,7 +184,7 @@ void StatisticalEvaluator::testLargeNumbers() {
     }
     
     CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowMean() - 449400000000.0) < EPSILON_MEAN);
-    CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowVariance() - 1.50616e+24d) < EPSILON_VAR);
+    CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowVariance() - 1.50616e+24) < EPSILON_VAR);
     
   
     
@@ -200,11 +200,11 @@ void StatisticalEvaluator::testVariance() {
     stat.update(-5);
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 25)  < EPSILON);
     stat.update(2.5);
-    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 18.2292d) < EPSILON);
+    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 18.2292) < EPSILON);
     stat.update(2.5);
-    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 14.375d) < EPSILON);
+    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 14.375) < EPSILON);
     stat.update(4);
-    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 12.575d) < EPSILON);
+    CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 12.575) < EPSILON);
 }
 
 
@@ -277,23 +277,32 @@ void StatisticalEvaluator::testValidatorPerformance() {
         key_s<<i;
         INT8_ELEMENT(schema).key("i8_"+key_s.str())
                 .readOnly().initialValue(0)
-                .enableRollingStats().warnVarianceLow(0).warnVarianceHigh(255).evaluationInterval(100)
+                .enableRollingStats()
+                .warnVarianceLow(0).needsAcknowledging(true)
+                .warnVarianceHigh(255).needsAcknowledging(true)
+                .evaluationInterval(100)
                 .commit();
         UINT16_ELEMENT(schema).key("ui16_"+key_s.str())
                 .readOnly().initialValue(0)
-                .enableRollingStats().warnVarianceLow(0).warnVarianceHigh(255).evaluationInterval(1000)
+                .enableRollingStats()
+                .warnVarianceLow(0).needsAcknowledging(true)
+                .warnVarianceHigh(255).info("Test").needsAcknowledging(true)
+                .evaluationInterval(1000)
                 .commit();
         FLOAT_ELEMENT(schema).key("f_"+key_s.str())
                 .readOnly().initialValue(0)
-                .enableRollingStats().warnVarianceLow(0).warnVarianceHigh(255).evaluationInterval(10)
+                .enableRollingStats().warnVarianceLow(0).needsAcknowledging(true)
+                .warnVarianceHigh(255).needsAcknowledging(true).evaluationInterval(10)
                 .commit();
         DOUBLE_ELEMENT(schema).key("d_"+key_s.str())
                 .readOnly().initialValue(0)
-                .enableRollingStats().warnVarianceLow(0).warnVarianceHigh(255).evaluationInterval(1000)
+                .enableRollingStats().warnVarianceLow(0).needsAcknowledging(true)
+                .warnVarianceHigh(255).needsAcknowledging(true).evaluationInterval(1000)
                 .commit();
         UINT64_ELEMENT(schema).key("ui64_"+key_s.str())
                 .readOnly().initialValue(0)
-                .enableRollingStats().warnVarianceLow(0).warnVarianceHigh(255).evaluationInterval(100)
+                .enableRollingStats().warnVarianceLow(0).needsAcknowledging(true)
+                .warnVarianceHigh(255).needsAcknowledging(true).evaluationInterval(100)
                 .commit();
     }
     

@@ -20,6 +20,7 @@
 #include <karabo/util/Validator.hh>
 #include <karabo/util/HashFilter.hh>
 #include <karabo/util/TableElement.hh>
+#include <karabo/util/RollingWindowStatistics.hh>
 
 #include "PythonMacros.hh"
 #include "Wrapper.hh"
@@ -104,6 +105,12 @@ public:
     static bp::object hasReconfigurableParameter(Validator& self) {
         return bp::object(self.hasReconfigurableParameter());
     }
+    
+    static const RollingWindowStatistics & getRollingStatistics(Validator& self, const std::string & path) {
+        return *self.getRollingStatistics(path);
+    }
+    
+    
 };
 
 
@@ -1575,6 +1582,14 @@ void exportPyUtilSchema() {
         s.def("getAlarmLow", &schemawrap::getAlarmLow);
 
         s.def("getAlarmHigh", &schemawrap::getAlarmHigh);
+        
+        s.def("getWarnVarianceLow", &Schema::getWarnVarianceLow);
+
+        s.def("getWarnVarianceHigh", &Schema::getWarnVarianceHigh);
+
+        s.def("getAlarmVarianceLow", &Schema::getAlarmVarianceLow);
+
+        s.def("getAlarmVarianceHigh", &Schema::getAlarmVarianceHigh);
 
         s.def("getWarnLowAs", &schemawrap::getWarnLowAs, (bp::arg("path"), bp::arg("pytype")));
 
@@ -1583,6 +1598,7 @@ void exportPyUtilSchema() {
         s.def("getAlarmLowAs", &schemawrap::getAlarmLowAs, (bp::arg("path"), bp::arg("pytype")));
 
         s.def("getAlarmHighAs", &schemawrap::getAlarmHighAs, (bp::arg("path"), bp::arg("pytype")));
+        
 
         //********* 'has'-methods ****************
 
@@ -1625,7 +1641,15 @@ void exportPyUtilSchema() {
         s.def("hasAlarmLow", &Schema::hasAlarmLow);
 
         s.def("hasAlarmHigh", &Schema::hasAlarmHigh);
+        
+        s.def("hasWarnVarianceLow", &Schema::hasWarnVarianceLow);
 
+        s.def("hasWarnVarianceHigh", &Schema::hasWarnVarianceHigh);
+
+        s.def("hasAlarmVarianceLow", &Schema::hasAlarmVarianceLow);
+
+        s.def("hasAlarmVarianceHigh", &Schema::hasAlarmVarianceHigh);
+        
         s.def("hasArchivePolicy", &Schema::hasArchivePolicy);
 
         s.def("hasDisplayedName", &Schema::hasDisplayedName);
@@ -1692,12 +1716,18 @@ void exportPyUtilSchema() {
         s.def("setWarnHigh", &schemawrap::setWarnHigh, (bp::arg("path"), bp::arg("value")));
         s.def("setAlarmLow", &schemawrap::setAlarmLow, (bp::arg("path"), bp::arg("value")));
         s.def("setAlarmHigh", &schemawrap::setAlarmHigh, (bp::arg("path"), bp::arg("value")));
+        s.def("setWarnVarianceLow", &Schema::setWarnVarianceLow, (bp::arg("path"), bp::arg("value")));
+        s.def("setWarnVarianceHigh", &Schema::setWarnVarianceHigh, (bp::arg("path"), bp::arg("value")));
+        s.def("setAlarmVarianceLow", &Schema::setAlarmVarianceLow, (bp::arg("path"), bp::arg("value")));
+        s.def("setAlarmVarianceHigh", &Schema::setAlarmVarianceHigh, (bp::arg("path"), bp::arg("value")));
+        s.def("getRollingStatsEvalInterval", &Schema::getRollingStatsEvalInterval, (bp::arg("path"), bp::arg("value")));
         s.def("setArchivePolicy", &Schema::setArchivePolicy, (bp::arg("path"), bp::arg("value")));
         s.def("setMin", &Schema::setMin, (bp::arg("path"), bp::arg("value")));
         s.def("setMax", &Schema::setMax, (bp::arg("path"), bp::arg("value")));
         s.def("setRequiredAccessLevel", &Schema::setRequiredAccessLevel, (bp::arg("path"), bp::arg("value")));
         //s.def("", &Schema::, ());     // overwrite<>(default) not implemented
         s.def("updateAliasMap", &schemawrap::updateAliasMap);
+        s.def("hasRollingStatistics", &Schema::hasRollingStatistics);
     }// end Schema
 
     /////////////////////////////////////////////////////////////
@@ -1717,34 +1747,27 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(PathElement, string, PATH)
 
     ///////////////////////////////////////////////////////////////
-    //ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
-    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
-    // and ReadOnlySpecific<PathElement, std::string >
-
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<int>, int, INT32)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<long long>, long long, INT64)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, UINT64)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<float>, float, FLOAT)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<double>, double, DOUBLE)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<std::string>, std::string, STRING)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<bool>, bool, BOOL)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(PathElement, std::string, PATH)
-    
-    ///////////////////////////////////////////////////////////////
     //AlarmSpecific<SimpleElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
     // and AlarmSpecific<PathElement, std::string >
 
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<int>, int, INT32)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<long long>, long long, INT64)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, UINT64)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<float>, float, FLOAT)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<double>, double, DOUBLE)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<std::string>, std::string, STRING)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<bool>, bool, BOOL)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(PathElement, std::string, PATH)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<int>, int, ReadOnlySpecific, INT32)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned int>, unsigned int, ReadOnlySpecific, UINT32)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<long long>, long long, ReadOnlySpecific, INT64)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, ReadOnlySpecific, UINT64)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<float>, float, ReadOnlySpecific, FLOAT)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<double>, double, ReadOnlySpecific, DOUBLE)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<std::string>, std::string, ReadOnlySpecific, STRING)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<bool>, bool, ReadOnlySpecific, BOOL)
+    
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<int>, int, RollingStatsSpecific, INT32)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned int>, unsigned int, RollingStatsSpecific, UINT32)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<long long>, long long, RollingStatsSpecific, INT64)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, RollingStatsSpecific, UINT64)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<float>, float, RollingStatsSpecific, FLOAT)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<double>, double, RollingStatsSpecific, DOUBLE)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<std::string>, std::string, RollingStatsSpecific, STRING)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<bool>, bool, RollingStatsSpecific, BOOL)
     
     ///////////////////////////////////////////////////////////////
     //RollingStatSpecific<SimpleElement< EType >, EType >, where EType:
@@ -1757,7 +1780,24 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<float>, float, FLOAT)
     KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<double>, double, DOUBLE)
     KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<bool>, bool, BOOL)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(PathElement, std::string, PATH)
+    
+    ///////////////////////////////////////////////////////////////
+    //ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
+    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
+    // and ReadOnlySpecific<PathElement, std::string >
+    
+
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<int>, int, INT32)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<long long>, long long, INT64)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, UINT64)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<float>, float, FLOAT)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<double>, double, DOUBLE)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<std::string>, std::string, STRING)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<bool>, bool, BOOL)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(PathElement, std::string, PATH)
+    
+   
     
 
     //    /////////////////////////////////////////////////////////////
@@ -2121,7 +2161,8 @@ void exportPyUtilSchema() {
                 .def("hasParametersInWarnOrAlarm", &ValidatorWrap::hasParametersInWarnOrAlarm)
                 .def("getParametersInWarnOrAlarm", &ValidatorWrap::getParametersInWarnOrAlarm)
                 .def("hasReconfigurableParameter", &ValidatorWrap::hasReconfigurableParameter)
-                ;
+                .def("getRollingStatistics", &ValidatorWrap::getRollingStatistics, bp::arg("key"), bp::return_internal_reference<>());
+                
     }
 
     {

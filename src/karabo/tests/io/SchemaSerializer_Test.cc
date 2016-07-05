@@ -180,9 +180,9 @@ struct TestSchemaSerializer {
                 .metricPrefix(MetricPrefix::MILLI)
                 .readOnly()
                 .alarmHigh(7).needsAcknowledging(false)
-                .warnHigh(5).needsAcknowledging(false)
-                .warnLow(0).needsAcknowledging(false)
                 .alarmLow(-2).needsAcknowledging(false)
+                .warnHigh(1).needsAcknowledging(false)
+                .warnLow(0).needsAcknowledging(false)
                 .commit();
 
     }

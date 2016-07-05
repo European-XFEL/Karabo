@@ -133,6 +133,7 @@ namespace karabo {
             #define KARABO_SCHEMA_OVERWRITE "overwrite"
 
             #define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
+            #define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
