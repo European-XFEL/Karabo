@@ -11,6 +11,7 @@ from karabo_gui.topology import getDevice
 from .const import (
     CHANNEL_INPUT, CHANNEL_OUTPUT, CHANNEL_HEIGHT, CONNECTION_OFFSET,
     DATA_DIST_COPY, DATA_DIST_SHARED)
+from .utils import get_curve_points
 
 
 class WorkflowChannelModel(HasStrictTraits):
@@ -47,9 +48,10 @@ class WorkflowChannelModel(HasStrictTraits):
         model = self.model
         y = model.y + CHANNEL_HEIGHT * self.index
         if self.kind == CHANNEL_INPUT:
-            return QPoint(model.x, y)
+            x = model.x - CONNECTION_OFFSET
         else:
-            return QPoint(model.x + model.width, y)
+            x = model.x + model.width + CONNECTION_OFFSET
+        return QPoint(x, y)
 
 
 class WorkflowConnectionModel(HasStrictTraits):
@@ -63,12 +65,22 @@ class WorkflowConnectionModel(HasStrictTraits):
     # Convenience traits for the input and output positions
     input_pos = Property(Instance(QPoint))
     output_pos = Property(Instance(QPoint))
+    # Screen points for the curve representing this connection
+    curve_points = Property(List(Instance(QPoint)),
+                            depends_on=['input.position', 'output.position'])
+
+    @cached_property
+    def _get_curve_points(self):
+        """ These points are intended to be the control points for a
+        cubic bezier curve.
+        """
+        return get_curve_points(self.output_pos, self.input_pos)
 
     def _get_input_pos(self):
-        return self.input.position - QPoint(CONNECTION_OFFSET, 0)
+        return self.input.position
 
     def _get_output_pos(self):
-        return self.output.position + QPoint(CONNECTION_OFFSET, 0)
+        return self.output.position
 
 
 class SceneWorkflowModel(HasStrictTraits):

@@ -1,4 +1,3 @@
-import math
 from weakref import proxy
 
 from PyQt4.QtCore import QPoint, Qt
@@ -33,12 +32,12 @@ class WorkflowOverlay(QWidget):
 def _draw_channel(painter, channel):
     """ Draw an input or output channel
     """
-    start_pos = channel.position
-    end_pos = QPoint(0, 0)
+    start_pos = QPoint(0, 0)
+    end_pos = channel.position
     if channel.kind == CHANNEL_INPUT:
-        end_pos = QPoint(start_pos.x() - CHANNEL_WIDTH, start_pos.y())
+        start_pos = QPoint(end_pos.x() + CHANNEL_WIDTH, end_pos.y())
     elif channel.kind == CHANNEL_OUTPUT:
-        end_pos = QPoint(start_pos.x() + CHANNEL_WIDTH, start_pos.y())
+        start_pos = QPoint(end_pos.x() - CHANNEL_WIDTH, end_pos.y())
 
     painter.setBrush(QBrush(Qt.white))
     painter.drawLine(start_pos, end_pos)
@@ -48,19 +47,10 @@ def _draw_channel(painter, channel):
 def _draw_connection(painter, connection):
     """ Draw a curve connecting two workflow channels.
     """
-    start_pos = connection.output_pos
-    end_pos = connection.input_pos
-    width = abs(end_pos.x() - start_pos.x())
-    height = abs(end_pos.y() - start_pos.y())
-    length = math.sqrt(width**2 + height**2)
-    delta = length / 3
-
-    c1 = QPoint(start_pos.x() + delta, start_pos.y())
-    c2 = QPoint(end_pos.x() - delta, end_pos.y())
-
+    points = connection.curve_points
     if connection.data_distribution == DATA_DIST_SHARED:
         painter.setPen(QPen(Qt.DashLine))
 
-    curve = QPainterPath(start_pos)
-    curve.cubicTo(c1, c2, end_pos)
+    curve = QPainterPath(points[0])
+    curve.cubicTo(*points[1:4])
     painter.drawPath(curve)
