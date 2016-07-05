@@ -63,7 +63,7 @@ class DeviceServer(SignalSlotable):
         displayedName="Plugin Namespace",
         description="Namespace to search for plugins",
         assignment=Assignment.OPTIONAL,
-        defaultValue="karabo.python_device.api_2",
+        defaultValue="karabo.middlelayer_device",
         requiredAccessLevel=AccessLevel.EXPERT)
 
     log = Node(Logger,

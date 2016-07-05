@@ -894,7 +894,7 @@ def launchPythonDevice():
     config = PythonDevice.loadConfiguration(xmlfile)
     loader = PluginLoader.create(
         "PythonPluginLoader",
-        Hash("pluginNamespace", "karabo.python_device.api_1",
+        Hash("pluginNamespace", "karabo.bound_device",
              "pluginDirectory", plugindir)
     )
     loader.update()

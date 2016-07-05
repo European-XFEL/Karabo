@@ -456,7 +456,7 @@ single device:
           package_dir={'': 'src'},
           packages=find_packages('src'),
           entry_points={
-              'karabo.python_device.api_1': [
+              'karabo.bound_device': [
                   'Genesis = genesisDevice.Genesis:GenesisTorpedo',
               ],
           },
@@ -486,9 +486,9 @@ packages are just directories contained within the 'src' directory which are
 themselves Python packages (ie: They contain an ``__init__.py`` file).
 
 ``entry_points`` is a dictionary of classes which can be loaded by a device
-server. The key used here is ``'karabo.python_device.api_1'``, which specifies
+server. The key used here is ``'karabo.bound_device'``, which specifies
 devices using the C++ like API. For the Pythonic API, the key is
-``'karabo.python_device.api_2'``. The value is a list of strings which describe
+``'karabo.middlelayer_device'``. The value is a list of strings which describe
 the individual device entry points. The basic format is:
 
 .. code-block:: python

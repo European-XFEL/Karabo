@@ -98,7 +98,7 @@ class DeviceServer(object):
             STRING_ELEMENT(expected).key("pluginNamespace")
                     .displayedName("Plugin Namespace")
                     .description("Namespace to search for plugins")
-                    .assignmentOptional().defaultValue("karabo.python_device.api_1")
+                    .assignmentOptional().defaultValue("karabo.bound_device")
                     .expertAccess()
                     .commit()
                     ,
