@@ -63,8 +63,8 @@ def create_deep_hash(hash_factory):
     )
 
 
-def get_api_1_funcs():
-    from karabo.api_1 import Hash, BinarySerializerHash
+def get_bound_funcs():
+    from karabo.bound import Hash, BinarySerializerHash
 
     serializer = BinarySerializerHash.create("Bin")
 
@@ -83,8 +83,8 @@ def get_api_1_funcs():
     return (read_func, write_func, create_hash)
 
 
-def get_api_2_funcs():
-    from karabo.api_2 import BinaryParser, Hash
+def get_middlelayer_funcs():
+    from karabo.middlelayer import BinaryParser, Hash
 
     parser = BinaryParser()
 
@@ -97,7 +97,7 @@ def get_api_2_funcs():
     return (read_func, write_func, Hash)
 
 
-def get_api_refactor_funcs():
+def get_refactor_funcs():
     from krbgui.data.api import Hash, read_binary_hash, write_binary_hash
 
     return (read_binary_hash, write_binary_hash, Hash)
@@ -109,13 +109,14 @@ def get_hash_buffer(hash_create_func, write_func, hash_factory):
 
 def run_benchmark(args):
     API_FUNC_GETTERS = [
-        get_api_1_funcs, get_api_2_funcs, get_api_refactor_funcs
+        get_bound_funcs, get_middlelayer_funcs, get_refactor_funcs
     ]
     RUNS = [
         ('Array', create_array_hash),
         ('Flat', create_flat_hash),
         ('Deep', create_deep_hash),
     ]
+    API_NAMES = {1: 'Bound', 2: 'Middlelayer', 3: 'Refactor'}
     MSG = '{}: API {} took {:.6f} s/call | {:.2f} calls/s ({} iterations)'
 
     read_func, write_func, hash_factory = API_FUNC_GETTERS[args.api - 1]()
@@ -123,7 +124,8 @@ def run_benchmark(args):
         buffer = get_hash_buffer(create_func, write_func, hash_factory)
         f_args = (read_func, buffer)
         avg_time, iterations = benchmark_wrapper(benchmark_read_func, f_args)
-        print(MSG.format(name, args.api, avg_time, 1/avg_time, iterations))
+        print(MSG.format(name, API_NAMES[args.api], avg_time, 1/avg_time,
+                         iterations))
 
 
 def main():
@@ -133,7 +135,7 @@ def main():
                         help='Which API to benchmark')
 
     args = parser.parse_args()
-    if args.api <= 3:
+    if 1 <= args.api <= 3:
         run_benchmark(args)
 
 if __name__ == '__main__':
