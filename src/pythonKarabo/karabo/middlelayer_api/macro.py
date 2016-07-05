@@ -233,8 +233,8 @@ class Macro(Device):
         o = cls(args)
         o.startInstance()
         try:
-            loop.run_until_complete(loop.create_task(loop.start_thread(
-                slot.method, o), o))
+            loop.run_until_complete(loop.create_task(
+                loop.run_coroutine_or_thread(slot.method, o), o))
             loop.run_until_complete(o.slotKillDevice())
         finally:
             loop.close()

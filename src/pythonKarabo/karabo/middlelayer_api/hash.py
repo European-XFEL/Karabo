@@ -338,10 +338,12 @@ class Slot(Descriptor):
                 self.key, device.state)
             device._ss.reply(message, msg)
             raise KaraboError(msg)
-        if self.iscoroutine or iscoroutinefunction(self.method):
+        if self.iscoroutine:
             coro = self.method(device)
         else:
-            coro = get_event_loop().start_thread(self.method, device)
+            coro = get_event_loop().run_coroutine_or_thread(
+                self.method, device)
+
         def inner():
             try:
                 device._ss.reply(message, (yield from coro))
