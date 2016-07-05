@@ -281,11 +281,18 @@ def synchronize(coro):
 
 
 class Future:
+    """A handle for a result that will be available in the future
+
+    This will be returned by many Karabo methods, if a callback has been
+    set to a function or None. It is possible to add more callbacks, to
+    wait for completion, or cancel the operation in question.
+    """
     def __init__(self, future):
         self.future = future
 
     @synchronize
     def add_done_callback(self, fn):
+        """Add another callback to the future"""
         def func(future):
             loop = get_event_loop()
             loop.create_task(loop.run_coroutine_or_thread(fn, self))
@@ -293,6 +300,7 @@ class Future:
 
     @synchronize
     def wait(self):
+        """Wait for the result to be available, and return the result"""
         return (yield from self.future)
 
 for f in ["cancel", "cancelled", "done", "result", "exception"]:
