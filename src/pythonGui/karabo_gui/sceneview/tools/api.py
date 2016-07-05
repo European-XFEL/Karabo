@@ -7,3 +7,4 @@ from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,  # n
 from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,  # noqa
                       TextSceneTool)  # noqa
 from .selection import SceneSelectionTool  # noqa
+from .workflow import CreateWorkflowConnectionToolAction, WorkflowConnectionTool  # noqa
