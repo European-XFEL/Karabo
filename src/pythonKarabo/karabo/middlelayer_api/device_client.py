@@ -12,7 +12,6 @@ import asyncio
 from asyncio import get_event_loop
 from collections import defaultdict
 from decimal import Decimal
-from functools import wraps
 import time
 from weakref import WeakSet
 
@@ -22,6 +21,7 @@ import dateutil.tz
 from .basetypes import KaraboValue
 from .device import Device
 from .enums import NodeType
+from .eventloop import synchronize
 from .exceptions import KaraboError
 from .hash import Hash, Slot, Type, Descriptor
 from .signalslot import slot
@@ -68,15 +68,6 @@ class DeviceClientBase(Device):
         ret[type][instanceId, ...] = dict(info.items())
         self.systemTopology.merge(ret)
         return ret
-
-
-def synchronize(func):
-    coro = asyncio.coroutine(func)
-
-    @wraps(coro)
-    def wrapper(*args, timeout=-1, **kwargs):
-        return get_event_loop().sync(coro(*args, **kwargs), timeout)
-    return wrapper
 
 
 class ProxySlot(Slot):
