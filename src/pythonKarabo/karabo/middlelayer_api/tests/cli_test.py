@@ -12,7 +12,7 @@ from karabo.middlelayer_api.cli import (connectDevice, DeviceClient,
                                         start_device_client)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
-    getDevice, instantiate, shutdown, getDevices, getServers)
+    getDevice, instantiate, shutdown, getDevices, getServers, getClasses)
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.middlelayer_api.exceptions import KaraboError
@@ -184,6 +184,8 @@ class Tests(TestCase):
     def check_server_topology(self):
         self.assertIn("testServer", getServers())
         self.assertIn("other", getDevices("testServer"))
+        self.assertIn("Other", getClasses("testServer"))
+        self.assertNotIn("SomeBlupp", getClasses("testServer"))
 
     def test_server(self):
         """test the full lifetime of a python device server
