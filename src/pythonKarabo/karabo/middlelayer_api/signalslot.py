@@ -112,6 +112,7 @@ class SignalSlotable(Configurable):
         requiredAccessLevel=AccessLevel.ADMIN)
 
     def __init__(self, configuration):
+        self._ss = None
         self._sethash = {"ignore": "this"}
         for k in dir(type(self)):
             if isinstance(getattr(self, k, None), Signal):
@@ -119,7 +120,6 @@ class SignalSlotable(Configurable):
         super().__init__(configuration)
         self.deviceId = self._deviceId_
         self._devices = weakref.WeakValueDictionary()
-        self._ss = None
         self.__randPing = random.randint(2, 0x7fffffff)
         self.__initialized = False
 
