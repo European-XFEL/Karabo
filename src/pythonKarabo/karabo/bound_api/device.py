@@ -27,7 +27,7 @@ from karathon import (
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .configurator import Configurator
 from .no_fsm import NoFsm
-
+from .alarm_conditions import AlarmCondition
 
 def isCpuImage(value):
     return isinstance(value, (CpuImageCHAR, CpuImageDOUBLE, CpuImageFLOAT,
@@ -113,6 +113,14 @@ class PythonDevice(NoFsm):
                     .displayedName("State").description("The current state the device is in")
                     .assignmentOptional().defaultValue("uninitialized").readOnly()
                     .commit(),
+
+            STRING_ELEMENT(expected).key("alarmCondition")
+                        .displayedName("Alarm condition")
+                        .description("The current alarm condition of the device. "
+                                     "Evaluates to the highest condition on any"
+                                     " property if not set manually.")
+                        .readOnly().initialValue(AlarmCondition.NONE.asString())
+                        .commit(),
 
             NODE_ELEMENT(expected).key("performanceStatistics")
                     .displayedName("Performance Statistics")
@@ -230,6 +238,7 @@ class PythonDevice(NoFsm):
         rules.injectTimestamps = True
         self.validatorIntern.setValidationRules(rules)
         self.validatorExtern.setValidationRules(rules)
+        self.globalAlarmCondition = AlarmCondition.NONE
 
         # Instantiate SignalSlotable object without starting event loop
         try:
@@ -359,14 +368,18 @@ class PythonDevice(NoFsm):
         hash.setAttribute(key, "image", 1)
         self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
         self._ss.emit("signalChanged", hash, self.deviceid)
-        
-    def set(self, *args):
+
+
+    def set(self, *args, **kwargs):
         """
         Updates the state of the device. This function automatically notifies any observers.
         This function supports 3 args: key, value, timestamp or 2 arg: hash, timestamp
         If 1 or more than 3 arguments, it does nothing
         """
         pars = tuple(args)
+        hadPreviousParameterAlarm = self.validatorIntern.hasParametersInWarnOrAlarm()
+        validate = kwargs.get("validate", True)
+
         with self._stateChangeLock:
             if len(pars) == 0 or len(pars) > 3:
                 raise SyntaxError("Number of parameters is wrong: "
@@ -414,35 +427,57 @@ class PythonDevice(NoFsm):
                     elif isinstance(value, RawImageData):
                         self._setRawImageData(key, value)
                         hash.erasePath(key)
-        
-                try:
-                    validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
-                except RuntimeError as e:
-                    print("Validation Exception (Intern): " + str(e))
-                    raise RuntimeError("Validation Exception: " + str(e))
 
-                if self.validatorIntern.hasParametersInWarnOrAlarm():
-                    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
-                    for key in warnings:
-                        desc = warnings[key]
-                        self.log.WARN(desc["message"])
-                        self._ss.emit("signalNotification", desc["type"], desc["message"], "", self.deviceid)
+                validated = None
+                if validate:
+                    try:
+                        validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
+                    except RuntimeError as e:
+                        print("Validation Exception (Intern): " + str(e))
+                        raise RuntimeError("Validation Exception: " + str(e))
+
+                    self._evaluateAndUpdateAlarmCondition(forceUpdate=hadPreviousParameterAlarm)
+                    
+                else:
+                    validated = hash
 
                 if not validated.empty():
                     self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-                    
+
                     # Hash containing 'state' should be signalled by 'signalStateChanged'
                     if 'state' in validated:
                         self._ss.emit("signalStateChanged", validated, self.deviceid)
                         return;
-                    
-                    # if at least one key is reconfigurable -> signalStateChanged
-                    if self.validatorIntern.hasReconfigurableParameter():
+
+                    # if at least one key is reconfigurable -> signalStateChanged, also validation was performed
+                    if validate and self.validatorIntern.hasReconfigurableParameter():
                         self._ss.emit("signalStateChanged", validated, self.deviceid)
                         return
-                        
+
                     self._ss.emit("signalChanged", validated, self.deviceid)
-       
+                    
+
+    def _evaluateAndUpdateAlarmCondition(self, forceUpdate):
+
+        if self.validatorIntern.hasParametersInWarnOrAlarm():
+            warnings = self.validatorIntern.getParametersInWarnOrAlarm()
+            conditions = [self.globalAlarmCondition]
+
+            for key in warnings:
+                desc = warnings[key]
+                self.log.WARN(desc["message"])
+                self._ss.emit("signalNotification", desc["type"], desc["message"], "", self.deviceid)
+                conditions.append(AlarmCondition.fromString(desc["type"]))
+
+            mostSignificantCondition = AlarmCondition.returnMostSignificant(conditions)
+            self._stateChangeLock.release()
+            self.set("alarmCondition", mostSignificantCondition.asString(), validate=False)
+            self._stateChangeLock.acquire()
+        elif forceUpdate:
+            self._stateChangeLock.release()
+            self.set("alarmCondition", self.globalAlarmCondition.asString(), validate=False)
+            self._stateChangeLock.acquire()
+    
     def __setitem__(self, key, value):
         self.set(key, value, self._getActualTimestamp())
         
@@ -857,6 +892,27 @@ class PythonDevice(NoFsm):
                     self.log.WARN("Processing latency {} are higher than established limit : {}".format(processingLatency,latencyUpper))
             self.set(h)
 
+
+    def setAlarmCondition(self, condition):
+        if isinstance(condition, str):
+            raise AttributeError("Stringified alarmconditions are note allowed!")
+        with self._stateChangeLock:
+            self.globalAlarmCondition = condition
+            self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
+
+    def getAlarmCondition(self, key = None, seperator = "."):
+        if key is None:
+            return AlarmCondition.fromString(self.get("alarmCondition"))
+        else:
+            condition = self.parameters.getAttribute(key,"alarmCondition", sep)
+            return AlarmCondition.fromString(condition)
+
+    def hasRollingStatistics(self, key):
+        return self.getFullSchema().hasRollingStatistics(key)
+
+    def getRollingStatistics(self, key):
+        return self.validatorIntern.getRollingStatistics(key)
+
         
     '''
     def getCurrentDateTime(self):
@@ -894,7 +950,7 @@ def launchPythonDevice():
     config = PythonDevice.loadConfiguration(xmlfile)
     loader = PluginLoader.create(
         "PythonPluginLoader",
-        Hash("pluginNamespace", "karabo.bound_device",
+        Hash("pluginNamespace", "karabo.python_device.api_1",
              "pluginDirectory", plugindir)
     )
     loader.update()
