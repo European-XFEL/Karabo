@@ -167,6 +167,9 @@ class Node(Descriptor):
     def __set__(self, instance, value):
         instance.setValue(self, self.cls(value, instance, self.key))
 
+    def setter(self, instance, value):
+        self.__set__(instance, value)
+
     @coroutine
     def setter_async(self, instance, hash):
         props = ((getattr(self.cls, k), v)
