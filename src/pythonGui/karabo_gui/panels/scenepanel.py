@@ -210,7 +210,7 @@ class ScenePanel(Dockable, QScrollArea):
 
     def _build_qaction(self, sv_action):
         q_action = QAction(sv_action.icon, sv_action.text, self)
-        q_action.setToolTip(sv_action.text)
+        q_action.setToolTip(sv_action.tooltip)
         q_action.setStatusTip(sv_action.tooltip)
         q_action.setCheckable(sv_action.checkable)
         q_action.triggered.connect(partial(sv_action.perform, self.scene_view))
