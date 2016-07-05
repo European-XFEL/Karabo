@@ -63,7 +63,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                 del configuration[k]
             else:
                 if t.defaultValue is not None:
-                    t.setter(self, t.defaultValue)
+                    setattr(self, k, t.defaultValue)
 
     @classmethod
     def register(cls, name, dict):

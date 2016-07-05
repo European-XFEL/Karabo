@@ -35,6 +35,7 @@ class Remote(Macro):
     def instantiate(self):
         conf = Hash(
             "count", Hash(),
+            "visibility", 0,
             "Logger", Hash(
                 "categories", [
                     Hash("Category", Hash(

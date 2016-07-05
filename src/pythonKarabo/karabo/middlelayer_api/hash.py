@@ -280,7 +280,7 @@ class Descriptor(object):
 
     def setter(self, instance, value):
         """this is to be called if the value is changed from the outside"""
-        setattr(instance, self.key, value)
+        setattr(instance, self.key, self.toKaraboValue(value, strict=False))
 
     @coroutine
     def setter_async(self, instance, value):
