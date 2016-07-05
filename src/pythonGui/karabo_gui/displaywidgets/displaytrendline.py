@@ -277,6 +277,7 @@ class DisplayTrendline(DisplayWidget):
     ONE_HOUR = "One Hour"
     TEN_MINUTES = "Ten Minutes"
     RESET = "Reset"
+    HIDDEN = "Hidden"
 
     def __init__(self, box, parent):
         super(DisplayTrendline, self).__init__(None)
@@ -300,6 +301,9 @@ class DisplayTrendline(DisplayWidget):
         self.layout = QVBoxLayout(self.full_widget)
         self.layout.addWidget(self.dialog)
         self.layout.addWidget(self.cell_widget)
+
+        # Keep the initial start time to recover trendline for 'Reset'
+        self.initial_start_time = QDateTime.currentDateTime()
 
         self.plot = self.dialog.get_plot()
         self.plot.set_antialiasing(True)
@@ -357,6 +361,8 @@ class DisplayTrendline(DisplayWidget):
                 QDateTime.fromMSecsSinceEpoch(sd.upperBound() * 1000))
             if dialog.exec_() != dialog.Accepted:
                 return
+            # Reset time buttons
+            self._uncheck_time_buttons()
             self.plot.setAxisScale(
                 QwtPlot.xBottom,
                 dialog.beginning.dateTime().toMSecsSinceEpoch() / 1000,
@@ -451,6 +457,18 @@ class DisplayTrendline(DisplayWidget):
         self._selected_time_btn = button
         self._update_x_axis_scale()
 
+    @pyqtSlot()
+    def _reset_button_clicked(self):
+        """ Reset the x axis scale to the initial start time."""
+        self._uncheck_time_buttons()
+
+        start_date_time = self.initial_start_time.toMSecsSinceEpoch() / 1000
+        end_date_time = QDateTime.currentDateTime().toMSecsSinceEpoch() / 1000
+
+        # Rescale x axis
+        self.plot.setAxisScale(QwtPlot.xBottom, start_date_time, end_date_time)
+        self.updateLater()
+
     # ----------------------------
     # Private methods
 
@@ -466,6 +484,9 @@ class DisplayTrendline(DisplayWidget):
         self.plot.add_item(curve.curve)
         curve.update()
 
+    def _uncheck_time_buttons(self):
+        self.time_string_btn[self.HIDDEN].click()
+
     def _create_time_buttons(self, layout):
         """ The buttons for time scaling are created, added to the given
             ``layout`` and return a list of them.
@@ -475,13 +496,25 @@ class DisplayTrendline(DisplayWidget):
 
         for k in list(self.time_string_btn.keys()):
             button = QPushButton(k)
-            button.setCheckable(True)
             style_sheet = ("QPushButton {text-align: center; font-size: 9px;"
                            "padding: 0}")
             button.setStyleSheet(style_sheet)
             self.time_string_btn[k] = button
-            button_group.addButton(button)
+            if button.text() == self.RESET:
+                button.clicked.connect(self._reset_button_clicked)
+            else:
+                # Do not add reset button to button group
+                button.setCheckable(True)
+                button_group.addButton(button)
             layout.addWidget(button)
+
+        # Add invisible button to get the state that no buttons are visible
+        hidden_btn = QPushButton()
+        hidden_btn.setCheckable(True)
+        hidden_btn.setVisible(False)
+        self.time_string_btn[self.HIDDEN] = hidden_btn
+        button_group.addButton(hidden_btn, 0)
+        layout.addWidget(hidden_btn)
 
         return button_group
 
@@ -492,23 +525,24 @@ class DisplayTrendline(DisplayWidget):
         if self._selected_time_btn is None:
             return False
 
+        current_date_time = QDateTime.currentDateTime()
         if self._selected_time_btn.text() == self.ONE_WEEK:
             # One week
-            start_date_time = QDateTime.currentDateTime().addDays(-7)
+            start_date_time = current_date_time.addDays(-7)
         elif self._selected_time_btn.text() == self.ONE_DAY:
             # One day
-            start_date_time = QDateTime.currentDateTime().addDays(-1)
+            start_date_time = current_date_time.addDays(-1)
         elif self._selected_time_btn.text() == self.ONE_HOUR:
             # One hour
-            start_date_time = QDateTime.currentDateTime().addSecs(-3600)
+            start_date_time = current_date_time.addSecs(-3600)
         elif self._selected_time_btn.text() == self.TEN_MINUTES:
             # Ten minutes
-            start_date_time = QDateTime.currentDateTime().addSecs(-600)
+            start_date_time = current_date_time.addSecs(-600)
         else:
             return False
 
         start_date_time = start_date_time.toMSecsSinceEpoch() / 1000
-        end_date_time = QDateTime.currentDateTime().toMSecsSinceEpoch() / 1000
+        end_date_time = current_date_time.toMSecsSinceEpoch() / 1000
 
         # Rescale x axis
         self.plot.setAxisScale(QwtPlot.xBottom, start_date_time, end_date_time)
