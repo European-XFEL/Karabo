@@ -36,6 +36,7 @@ class Remote(Macro):
         conf = Hash(
             "count", Hash(),
             "visibility", 0,
+            "log", Hash(),
             "Logger", Hash(
                 "categories", [
                     Hash("Category", Hash(
