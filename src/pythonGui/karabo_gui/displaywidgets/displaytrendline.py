@@ -27,6 +27,13 @@ from guiqwt.builder import make
 
 from karabo.middlelayer import Simple, Timestamp
 
+ONE_WEEK = "One Week"
+ONE_DAY = "One Day"
+ONE_HOUR = "One Hour"
+TEN_MINUTES = "Ten Minutes"
+RESET = "Reset"
+HIDDEN = "Hidden"
+
 
 class _Generation(object):
     """ This holds a single generation of a Curve's data.
@@ -272,13 +279,6 @@ class DisplayTrendline(DisplayWidget):
     category = Simple
     alias = "Trendline"
 
-    ONE_WEEK = "One Week"
-    ONE_DAY = "One Day"
-    ONE_HOUR = "One Hour"
-    TEN_MINUTES = "Ten Minutes"
-    RESET = "Reset"
-    HIDDEN = "Hidden"
-
     def __init__(self, box, parent):
         super(DisplayTrendline, self).__init__(None)
         self.dialog = CurveDialog(edit=False, toolbar=True,
@@ -288,17 +288,17 @@ class DisplayTrendline(DisplayWidget):
         self.cell_layout = QHBoxLayout(self.cell_widget)
         self.cell_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.time_string_btn = OrderedDict()  # Map time_string to QPushButton
-        self.time_string_btn[self.ONE_WEEK] = None
-        self.time_string_btn[self.ONE_DAY] = None
-        self.time_string_btn[self.ONE_HOUR] = None
-        self.time_string_btn[self.TEN_MINUTES] = None
-        self.time_string_btn[self.RESET] = None
+        self.time_string_btns = OrderedDict()  # Map time_string to QPushButton
+        self.time_string_btns[ONE_WEEK] = None
+        self.time_string_btns[ONE_DAY] = None
+        self.time_string_btns[ONE_HOUR] = None
+        self.time_string_btns[TEN_MINUTES] = None
+        self.time_string_btns[RESET] = None
         self.time_buttons = self._create_time_buttons(self.cell_layout)
         self._selected_time_btn = None
 
-        self.full_widget = QWidget()
-        self.layout = QVBoxLayout(self.full_widget)
+        self.widget = QWidget()
+        self.layout = QVBoxLayout(self.widget)
         self.layout.addWidget(self.dialog)
         self.layout.addWidget(self.cell_widget)
 
@@ -381,10 +381,6 @@ class DisplayTrendline(DisplayWidget):
     def destroy(self):
         for box in self.curves:
             box.removeVisible()
-
-    @property
-    def widget(self):
-        return self.full_widget
 
     value = None
 
@@ -485,7 +481,7 @@ class DisplayTrendline(DisplayWidget):
         curve.update()
 
     def _uncheck_time_buttons(self):
-        self.time_string_btn[self.HIDDEN].click()
+        self.time_string_btns[HIDDEN].click()
 
     def _create_time_buttons(self, layout):
         """ The buttons for time scaling are created, added to the given
@@ -494,13 +490,13 @@ class DisplayTrendline(DisplayWidget):
         button_group = QButtonGroup()
         button_group.buttonClicked.connect(self._time_buttons_toggled)
 
-        for k in list(self.time_string_btn.keys()):
-            button = QPushButton(k)
+        for btn_text in self.time_string_btns.keys():
+            button = QPushButton(btn_text)
             style_sheet = ("QPushButton {text-align: center; font-size: 9px;"
                            "padding: 0}")
             button.setStyleSheet(style_sheet)
-            self.time_string_btn[k] = button
-            if button.text() == self.RESET:
+            self.time_string_btns[btn_text] = button
+            if btn_text == RESET:
                 button.clicked.connect(self._reset_button_clicked)
             else:
                 # Do not add reset button to button group
@@ -512,7 +508,7 @@ class DisplayTrendline(DisplayWidget):
         hidden_btn = QPushButton()
         hidden_btn.setCheckable(True)
         hidden_btn.setVisible(False)
-        self.time_string_btn[self.HIDDEN] = hidden_btn
+        self.time_string_btns[HIDDEN] = hidden_btn
         button_group.addButton(hidden_btn, 0)
         layout.addWidget(hidden_btn)
 
@@ -526,16 +522,16 @@ class DisplayTrendline(DisplayWidget):
             return False
 
         current_date_time = QDateTime.currentDateTime()
-        if self._selected_time_btn.text() == self.ONE_WEEK:
+        if self._selected_time_btn.text() == ONE_WEEK:
             # One week
             start_date_time = current_date_time.addDays(-7)
-        elif self._selected_time_btn.text() == self.ONE_DAY:
+        elif self._selected_time_btn.text() == ONE_DAY:
             # One day
             start_date_time = current_date_time.addDays(-1)
-        elif self._selected_time_btn.text() == self.ONE_HOUR:
+        elif self._selected_time_btn.text() == ONE_HOUR:
             # One hour
             start_date_time = current_date_time.addSecs(-3600)
-        elif self._selected_time_btn.text() == self.TEN_MINUTES:
+        elif self._selected_time_btn.text() == TEN_MINUTES:
             # Ten minutes
             start_date_time = current_date_time.addSecs(-600)
         else:
