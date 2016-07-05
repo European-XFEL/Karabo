@@ -14,8 +14,8 @@ from karabo_gui.widget import DisplayWidget
 
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSlot
-from PyQt4.QtGui import (QButtonGroup, QDialog, QHBoxLayout, QPushButton,
-                         QVBoxLayout, QWidget)
+from PyQt4.QtGui import (QButtonGroup, QDialog, QHBoxLayout,
+                         QPushButton, QVBoxLayout, QWidget)
 
 import numpy
 
@@ -319,7 +319,7 @@ class DisplayTrendline(DisplayWidget):
         self.timer.setSingleShot(True)
         self.plot.axisWidget(QwtPlot.xBottom).scaleDivChanged.connect(
             self.timer.start)
-        self.timer.timeout.connect(self.scaleChanged)
+        self.timer.timeout.connect(self._x_axis_scale_changed)
 
         self.curves = {}
 
@@ -349,7 +349,7 @@ class DisplayTrendline(DisplayWidget):
             # call the original method that we monkey-patched over
             type(self.plot).edit_axis_parameters(self.plot, axis_id)
         else:
-            dialog = Timespan(self.widget)
+            dialog = Timespan(self.dialog)
             sd = self.plot.axisScaleDiv(QwtPlot.xBottom)
             dialog.beginning.setDateTime(
                 QDateTime.fromMSecsSinceEpoch(sd.lowerBound() * 1000))
@@ -401,20 +401,11 @@ class DisplayTrendline(DisplayWidget):
         t = timestamp.toTimestamp()
         self.curves[box].addPoint(value, t)
 
-        # Start date time
-        start_date_time = self._get_start_date_time()
-        # End date time
-        end_date_time = QDateTime.currentDateTime().toMSecsSinceEpoch() / 1000
-
         t1 = self.plot.axisScaleDiv(QwtPlot.xBottom).upperBound()
-
         if self.lasttime < t1 < t:
             aw = self.plot.axisWidget(QwtPlot.xBottom)
             with SignalBlocker(aw):
-                if start_date_time is not None:
-                    self.plot.setAxisScale(QwtPlot.xBottom, start_date_time,
-                                           end_date_time + 10)
-                else:
+                if not self._update_x_axis_scale():
                     self.plot.setAxisScale(
                         QwtPlot.xBottom,
                         self.plot.axisScaleDiv(QwtPlot.xBottom).lowerBound(),
@@ -426,12 +417,6 @@ class DisplayTrendline(DisplayWidget):
 
     def deferredUpdate(self):
         self.plot.replot()
-
-    def scaleChanged(self):
-        asd = self.plot.axisScaleDiv(QwtPlot.xBottom)
-        t0, t1 = asd.lowerBound(), asd.upperBound()
-        for v in self.curves.values():
-            v.changeInterval(t0, t1)
 
     def save(self, e):
         for k, v in self.curves.items():
@@ -452,11 +437,19 @@ class DisplayTrendline(DisplayWidget):
             curve.curve = pickle.loads(base64.b64decode(ee.text))
             self._addCurve(box, curve)
 
+    @pyqtSlot()
+    def _x_axis_scale_changed(self):
+        """ This slot is called whenever the x axis scale was changed. """
+        asd = self.plot.axisScaleDiv(QwtPlot.xBottom)
+        t0, t1 = asd.lowerBound(), asd.upperBound()
+        for v in self.curves.values():
+            v.changeInterval(t0, t1)
+
+    @pyqtSlot(object)
     def _time_buttons_toggled(self, button):
-        """ """
+        """ A time button was clicked which needs to update the axis scale. """
         self._selected_time_btn = button
-        # TODO: Set cursor to waiting - back to normal when historic data
-        # arrived
+        self._update_x_axis_scale()
 
     # ----------------------------
     # Private methods
@@ -492,11 +485,12 @@ class DisplayTrendline(DisplayWidget):
 
         return button_group
 
-    def _get_start_date_time(self):
-        """ The selected start date time is returned, if a button is
-            selected. """
+    def _update_x_axis_scale(self):
+        """ The start and end time date for the x axis is updated here
+            depending on the selected time button.
+            In case of success ``True`` is returned, else ``False``."""
         if self._selected_time_btn is None:
-            return None
+            return False
 
         if self._selected_time_btn.text() == self.ONE_WEEK:
             # One week
@@ -511,6 +505,12 @@ class DisplayTrendline(DisplayWidget):
             # Ten minutes
             start_date_time = QDateTime.currentDateTime().addSecs(-600)
         else:
-            return None
+            return False
 
-        return start_date_time.toMSecsSinceEpoch() / 1000
+        start_date_time = start_date_time.toMSecsSinceEpoch() / 1000
+        end_date_time = QDateTime.currentDateTime().toMSecsSinceEpoch() / 1000
+
+        # Rescale x axis
+        self.plot.setAxisScale(QwtPlot.xBottom, start_date_time, end_date_time)
+        self.updateLater()
+        return True
