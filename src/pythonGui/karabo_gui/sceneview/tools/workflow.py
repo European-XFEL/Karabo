@@ -3,6 +3,7 @@ from PyQt4.QtCore import QPoint, Qt
 from PyQt4.QtGui import QMessageBox, QPainterPath, QPen
 from traits.api import Dict, Instance
 
+from karabo_gui.schema import Dummy
 from karabo_gui.sceneview.bases import BaseSceneTool, BaseSceneAction
 from karabo_gui.sceneview.workflow.api import (
     SceneWorkflowModel, WorkflowChannelModel, WorkflowConnectionModel,
@@ -162,6 +163,9 @@ class WorkflowConnectionTool(BaseSceneTool):
 def connect_channels(start_channel, end_channel):
     """ Establish a connection between two channels.
     """
+    if isinstance(end_channel.box.value.connectedOutputChannels, Dummy):
+        return
+
     path = ".".join(start_channel.box.path)
     if not end_channel.box.boxvalue.connectedOutputChannels.hasValue():
         end_channel.box.value.connectedOutputChannels = []
@@ -177,6 +181,8 @@ def disconnect_channels(start_channel, end_channel):
     """ Break the connection between two channels.
     """
     if start_channel is None or end_channel is None:
+        return
+    if isinstance(end_channel.box.value.connectedOutputChannels, Dummy):
         return
 
     path = ".".join(start_channel.box.path)
