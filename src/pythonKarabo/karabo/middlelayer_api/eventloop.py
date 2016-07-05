@@ -6,6 +6,7 @@ from asyncio import (AbstractEventLoop, CancelledError, coroutine, gather,
                      TimeoutError)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
+from functools import wraps
 import getpass
 from itertools import count
 import logging
@@ -246,6 +247,23 @@ class Broker:
             "utf8").split('||')
         return ({k: v.split(",") for k, v in (s.split(":") for s in slots)},
                 params)
+
+
+def synchronize(coro):
+    """Decorate coroutine to play well in threads
+
+    Most Karabo functions are coroutines that must run in the main thread.
+    This decorator assures that the decorated coroutine will be called in the
+    main thread, and returns the return value to the caller.
+
+    If we are already in the main thread, the coroutine is simply returned.
+    """
+    coro = coroutine(coro)
+
+    @wraps(coro)
+    def wrapper(*args, timeout=-1, **kwargs):
+        return get_event_loop().sync(coro(*args, **kwargs), timeout)
+    return wrapper
 
 
 class NoEventLoop(AbstractEventLoop):
