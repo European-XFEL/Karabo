@@ -3,14 +3,17 @@
 # Created on June 30, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from abc import abstractmethod
+
 from PyQt4.QtGui import QBoxLayout, QFont
+
+from traits.api import ABCHasStrictTraits
 
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.schema import ChoiceOfNodes
 from karabo_gui.topology import getDeviceBox
 from karabo_gui.widget import DisplayWidget, EditableWidget
 from karabo_gui.sceneview.utils import calc_rect_from_text
-from karabo_gui.sceneview.builder import is_widget
 
 from karabo_gui.scenemodel.api import (
     BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
@@ -72,31 +75,33 @@ _WIDGET_FACTORIES = {
 }
 
 
-class SceneDnDHandler(object):
+class SceneDnDHandler(ABCHasStrictTraits):
+
+    @abstractmethod
+    def can_handle(self, event):
+        """ Check whether the drag event can be handled. """
+
+    @abstractmethod
+    def handle(self, scene_view, event):
+        """ Handle the drop event. """
+
+
+class ConfigurationDropHandler(SceneDnDHandler):
 
     def can_handle(self, event):
-        """ """
         sourceType = event.mimeData().data("sourceType")
         if sourceType == "ParameterTreeWidget":
             source = event.source()
-            if ((source is not None) and not (source.conf.type == "class")
+            if (source is not None and not (source.conf.type == "class")
                     and not isinstance(source.currentItem().box.descriptor,
                                        ChoiceOfNodes)):
-                return True
-        elif sourceType == "NavigationTreeView":
-            source = event.source()
-            type = source.indexInfo().get("type")
-            if (source is not None and type == NavigationItemTypes.CLASS):
                 return True
         return False
 
     def handle(self, scene_view, event):
-        """ """
         pos = event.pos()
-        widget = scene_view.inner.childAt(pos)
+        widget = scene_view.widget_at_position(pos)
         if widget is not None:
-            while not is_widget(widget):
-                widget = widget.parent()
             widget.dropEvent(event)
             if event.isAccepted():
                 return
@@ -120,7 +125,6 @@ class SceneDnDHandler(object):
         layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight)
         layout_model.x = pos.x()
         layout_model.y = pos.y()
-        #label_model = LabelModel(x=pos.x(), y=pos.y(), text=item.text(0))
         label_model = LabelModel(text=item.text(0))
         label_model.font = QFont().toString()
         label_model.foreground = '#000000'
@@ -177,3 +181,20 @@ class SceneDnDHandler(object):
         layout_model.height = max(layout_model.height, model.height)
         # Add label to layout model
         layout_model.children.append(model)
+
+
+class NavigationDropHandler(SceneDnDHandler):
+
+    def can_handle(self, event):
+        """ Check whether the drag event can be handled. """
+        sourceType = event.mimeData().data("sourceType")
+        if sourceType == "NavigationTreeView":
+            source = event.source()
+            type = source.indexInfo().get("type")
+            if source is not None and type == NavigationItemTypes.CLASS:
+                return True
+        return False
+
+    def handle(self, scene_view, event):
+        """ Handle the drop event. """
+

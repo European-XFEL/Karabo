@@ -20,10 +20,10 @@ from .builder import (bring_object_to_front, create_object_from_model,
 from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
-from .tools.api import SceneSelectionTool
+from .tools.api import (ConfigurationDropHandler, NavigationDropHandler,
+                        SceneSelectionTool)
 from .utils import save_painter_state
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
-from .tools.api import SceneDnDHandler, SceneSelectionTool
 
 
 class SceneView(QWidget):
@@ -57,7 +57,12 @@ class SceneView(QWidget):
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
         self.workflow_model = SceneWorkflowModel()
-        self.scene_handler = SceneDnDHandler()
+
+        # List of scene drag n drop handlers
+        self.scene_handler_list = [ConfigurationDropHandler(),
+                                   NavigationDropHandler()]
+        self.current_scene_handler = None
+
         self.current_tool = None
         self.design_mode = design_mode
         self.tab_visible = False
@@ -126,13 +131,20 @@ class SceneView(QWidget):
         if not self.design_mode:
             return
 
-        if self.scene_handler.can_handle(event):
-            event.accept()
+        for scene_handler in self.scene_handler_list:
+            if scene_handler.can_handle(event):
+                self.current_scene_handler = scene_handler
+                event.accept()
+                break
 
         super(SceneView, self).dragEnterEvent(event)
 
     def dropEvent(self, event):
-        self.scene_handler.handle(self, event)
+        if self.current_scene_handler is None:
+            return
+
+        self.current_scene_handler.handle(self, event)
+        self.current_scene_handler = None
         super(SceneView, self).dropEvent(event)
 
     def paintEvent(self, event):
@@ -190,6 +202,15 @@ class SceneView(QWidget):
             obj = self._scene_obj_cache.get(child)
             if obj is not None and obj.geometry().contains(pos):
                 return obj
+
+    def widget_at_position(self, pos):
+        """ Returns the topmost widget whose bounds contain `pos`.
+        """
+        widget = self.inner.childAt(pos)
+        if widget is not None:
+            while not is_widget(widget):
+                widget = widget.parent()
+        return widget
 
     def items_in_rect(self, rect):
         """ Returns the topmost objects whose bounds are contained in `rect`.
