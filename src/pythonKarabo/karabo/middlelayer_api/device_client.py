@@ -557,8 +557,8 @@ def getServers():
 
 def getClasses(serverId):
     """Return a list of device classes (plugins) available on a server"""
-    instance = get_instance()
-    return instance.systemTopology["server"]["serverId"]["deviceClasses"]
+    servers = get_instance().systemTopology["server"]
+    return servers.getAttributes(serverId)["deviceClasses"]
 
 
 @synchronize
