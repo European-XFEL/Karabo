@@ -1,12 +1,12 @@
 import numpy as np
-from PyQt4.QtCore import QLine, QPoint, Qt
-from PyQt4.QtGui import QPainterPath, QPen
+from PyQt4.QtCore import QPoint, Qt
+from PyQt4.QtGui import QMessageBox, QPainterPath, QPen
 from traits.api import Dict, Instance
 
 from karabo_gui.sceneview.bases import BaseSceneTool, BaseSceneAction
 from karabo_gui.sceneview.workflow.api import (
     SceneWorkflowModel, WorkflowChannelModel, WorkflowConnectionModel,
-    CHANNEL_OUTPUT, CHANNEL_DIAMETER)
+    get_curve_points, CHANNEL_OUTPUT, CHANNEL_DIAMETER)
 
 MIN_CLICK_DIST = 10
 
@@ -30,7 +30,7 @@ class WorkflowConnectionTool(BaseSceneTool):
 
     # Some private state variables for the tool
     _connection_cache = Dict
-    _line = Instance(QLine)
+    _path = Instance(QPainterPath)
     _start_pos = Instance(QPoint)
     _start_channel = Instance(WorkflowChannelModel)
     _hover_channel = Instance(WorkflowChannelModel)
@@ -39,9 +39,9 @@ class WorkflowConnectionTool(BaseSceneTool):
     def draw(self, painter):
         """ Draw the line
         """
-        if self._line is not None:
+        if self._path is not None:
             painter.setPen(QPen())
-            painter.drawLine(self._line)
+            painter.drawPath(self._path)
         if self._hover_channel is not None:
             chan_pos = self._hover_channel.position
             pen = QPen(Qt.green)
@@ -49,8 +49,8 @@ class WorkflowConnectionTool(BaseSceneTool):
             painter.setPen(pen)
             painter.drawEllipse(chan_pos, CHANNEL_DIAMETER, CHANNEL_DIAMETER)
         if self._hover_connection is not None:
-            pen = QPen(Qt.red)
-            pen.setWidth(MIN_CLICK_DIST)
+            pen = QPen(Qt.green)
+            pen.setWidth(MIN_CLICK_DIST/2)
             painter.setPen(pen)
             path, _ = self._connection_cache[self._hover_connection]
             painter.drawPath(path)
@@ -63,15 +63,19 @@ class WorkflowConnectionTool(BaseSceneTool):
         if self._hover_channel is not None:
             self._start_channel = self._hover_channel
             self._start_pos = pos
-            self._line = QLine(pos, pos)
+            self._path = QPainterPath(pos)
             event.accept()
         elif (self._hover_connection is not None
-                and event.button() == Qt.RightButton):
-            # Disconnect!
-            start_channel = self._hover_connection.output
-            end_channel = self._hover_connection.input
-            disconnect_channels(start_channel, end_channel)
-            self._hover_connection = None
+                and event.button() == Qt.LeftButton):
+            result = QMessageBox.question(
+                scene_view, 'Remove connection?',
+                'Do you really want to remove the connection?',
+                QMessageBox.Yes | QMessageBox.No)
+            if result == QMessageBox.Yes:
+                # Disconnect!
+                connection = self._hover_connection
+                self._hover_connection = None
+                disconnect_channels(connection.output, connection.input)
             event.accept()
 
     def mouse_move(self, scene_view, event):
@@ -86,8 +90,13 @@ class WorkflowConnectionTool(BaseSceneTool):
         else:
             self._hover_channel = None
 
-        if event.buttons() and self._line is not None:
-            self._line.setPoints(self._start_pos, pos)
+        if event.buttons() and self._path is not None:
+            start_end = (self._start_pos, pos)
+            if self._start_channel.kind != CHANNEL_OUTPUT:
+                start_end = (pos, self._start_pos)
+            points = get_curve_points(*start_end)
+            self._path = QPainterPath(points[0])
+            self._path.cubicTo(*points[1:4])
         elif self._hover_channel is None:
             self._hover_connection = self._get_connection_at_pos(pos)
 
@@ -103,7 +112,7 @@ class WorkflowConnectionTool(BaseSceneTool):
 
         if self._start_channel is not None:
             self._start_channel = None
-            self._line = None
+            self._path = None
 
     def _build_cache(self, event):
         """ Build a cache of connection curves for high-speed intersection
