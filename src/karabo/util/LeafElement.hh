@@ -21,6 +21,8 @@ namespace karabo {
         // Forwards
         template<class T, class U> class DefaultValue;
         template<class T, class U> class ReadOnlySpecific;
+        template<class T, class U, class W> class AlarmSpecific;
+        template<class T, class U> class RollingStatsSpecific;
 
         /**
          * The LeafElement represents a leaf and can be of any (supported) type
@@ -30,6 +32,7 @@ namespace karabo {
 
             DefaultValue<Derived, ValueType> m_defaultValue; // the default value type depends on the type of element
             ReadOnlySpecific<Derived, ValueType> m_readOnlySpecific;
+            
 
         public:
 
@@ -212,14 +215,17 @@ namespace karabo {
          * The AlarmSpecific Class assures acknowledgements are configured for
          * alarm conditions
          */
-        template<class Element, class ValueType>
+        template<class Element, class ValueType, class ReturnType>
         class AlarmSpecific {
-
+            
+            ReturnType* m_returnElement;
             ReadOnlySpecific<Element, ValueType>* m_readOnlyElement;
+            std::string m_lastConfig;
 
         public:
             
             template< class U, class V> friend class ReadOnlySpecific;
+            template< class U, class V> friend class RollingStatsSpecific;
 
             /**
              * The <b>needsAcknowledging</b> method serves for setting up whether
@@ -228,17 +234,34 @@ namespace karabo {
              * @param ack: acknowledgement is needed if true.
              * @return reference to the Element for proper methods chaining
              */
-            ReadOnlySpecific<Element, ValueType>& needsAcknowledging(const bool & ack) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ALARM_ACK, ack);
-                return *m_readOnlyElement;
+            ReturnType& needsAcknowledging(const bool ack) {
+                m_readOnlyElement->getElement()->getNode().setAttribute(std::string(KARABO_SCHEMA_ALARM_ACK)+"_"+m_lastConfig, ack);
+                return *m_returnElement;
+            }
+              
+            
+            /**
+             * The <b>info</b> method allows for setting an optional description
+             * of the alarm
+             * @param description: optional description
+             * @return reference to the Element for proper methods chaining
+             */
+            AlarmSpecific<Element, ValueType, ReturnType>& info(const std::string desc) {
+                m_readOnlyElement->getElement()->getNode().setAttribute(std::string(KARABO_SCHEMA_ALARM_INFO)+"_"+m_lastConfig, desc);
+                return *this;
             }
             
         private:
                  AlarmSpecific() : m_readOnlyElement(0) {
             }
 
-            void setElement(ReadOnlySpecific<Element, ValueType>* el) {
+            void setElements(ReadOnlySpecific<Element, ValueType>* el, ReturnType* rel) {
                 m_readOnlyElement = el;
+                m_returnElement = rel;
+            }
+            
+            void setLastConfig(const std::string & config) {
+                m_lastConfig = config;
             }
 
             
@@ -250,11 +273,14 @@ namespace karabo {
         template<class Element, class ValueType>
         class RollingStatsSpecific {
 
+            typedef RollingStatsSpecific<Element, ValueType> SelfType;
             ReadOnlySpecific<Element, ValueType>* m_readOnlyElement;
+            AlarmSpecific<Element, ValueType, SelfType> m_alarmSpecific;
 
         public:
             
             template< class U, class V> friend class ReadOnlySpecific;
+            template< class U, class V, class W> friend class AlarmSpecific;
 
             /**
              * The <b>needsAcknowledging</b> method serves for setting up whether
@@ -263,27 +289,35 @@ namespace karabo {
              * @param ack: acknowledgement is needed if true.
              * @return reference to the Element for proper methods chaining
              */
-            RollingStatsSpecific<Element, ValueType>& warnVarianceLow(const double value) {
+            AlarmSpecific<Element, ValueType, SelfType>& warnVarianceLow(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_WARN_VARIANCE_LOW, value);
-                return *this;
+                m_alarmSpecific.setElements(m_readOnlyElement, this);
+                m_alarmSpecific.setLastConfig(KARABO_SCHEMA_WARN_VARIANCE_LOW);
+                return m_alarmSpecific;
             }
             
-            RollingStatsSpecific<Element, ValueType>& warnVarianceHigh(const double value) {
+            AlarmSpecific<Element, ValueType, SelfType>& warnVarianceHigh(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_WARN_VARIANCE_HIGH, value);
-                return *this;
+                m_alarmSpecific.setElements(m_readOnlyElement, this);
+                m_alarmSpecific.setLastConfig(KARABO_SCHEMA_WARN_VARIANCE_HIGH);
+                return m_alarmSpecific;
             }
             
-            RollingStatsSpecific<Element, ValueType>& alarmVarianceLow(const double value) {
+            AlarmSpecific<Element, ValueType, SelfType>& alarmVarianceLow(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ALARM_VARIANCE_LOW, value);
-                return *this;
+                m_alarmSpecific.setElements(m_readOnlyElement, this);
+                m_alarmSpecific.setLastConfig(KARABO_SCHEMA_ALARM_VARIANCE_LOW);
+                return m_alarmSpecific;
             }
             
-            RollingStatsSpecific<Element, ValueType>& alarmVarianceHigh(const double value) {
+            AlarmSpecific<Element, ValueType, SelfType>& alarmVarianceHigh(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ALARM_VARIANCE_HIGH, value);
-                return *this;
+                m_alarmSpecific.setElements(m_readOnlyElement, this);
+                m_alarmSpecific.setLastConfig(KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
+                return m_alarmSpecific;
             }
             
-            ReadOnlySpecific<Element, ValueType>& evaluationInterval(const unsigned long long & interval) {
+            ReadOnlySpecific<Element, ValueType>& evaluationInterval(const unsigned int interval) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ROLLING_STATS_EVAL, interval);
                 return *m_readOnlyElement;
             }
@@ -294,6 +328,7 @@ namespace karabo {
 
             void setElement(ReadOnlySpecific<Element, ValueType>* el) {
                 m_readOnlyElement = el;
+               
             }
 
             
@@ -305,14 +340,16 @@ namespace karabo {
          */
         template<class Element, class ValueType>
         class ReadOnlySpecific {
-
+            typedef ReadOnlySpecific<Element, ValueType> SelfType;
             Element* m_genericElement;
+            AlarmSpecific<Element, ValueType, SelfType> m_alarmSpecific;
+            RollingStatsSpecific<Element, ValueType> m_rollingStatsSpecific;
 
         public:
 
             template< class U, class V> friend class LeafElement;
             template< class U, class V> friend class RollingStatsSpecific;
-            template< class U, class V> friend class AlarmSpecific;
+            template< class U, class V, class W> friend class AlarmSpecific;
 
             /**
              * The <b>initialValue</b> method serves for setting up the initial value reported for this parameter.
@@ -335,39 +372,38 @@ namespace karabo {
                 return *this;
             }
 
-            AlarmSpecific<Element, ValueType> warnLow(const ValueType& value) {
+            AlarmSpecific<Element, ValueType, SelfType> & warnLow(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_WARN_LOW, value);
-                AlarmSpecific<Element, ValueType> alarmSpecific;
-                alarmSpecific.setElement(this);
-                return alarmSpecific;
+                m_alarmSpecific.setElements(this, this);
+                m_alarmSpecific.setLastConfig(KARABO_SCHEMA_WARN_LOW);
+                return m_alarmSpecific;
             }
 
-            AlarmSpecific<Element, ValueType> warnHigh(const ValueType& value) {
+            AlarmSpecific<Element, ValueType, SelfType> & warnHigh(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_WARN_HIGH, value);
-                AlarmSpecific<Element, ValueType> alarmSpecific;
-                alarmSpecific.setElement(this);
-                return alarmSpecific;
+                m_alarmSpecific.setElements(this, this);
+                m_alarmSpecific.setLastConfig(KARABO_SCHEMA_WARN_HIGH);
+                return m_alarmSpecific;
             }
 
-            AlarmSpecific<Element, ValueType> alarmLow(const ValueType& value) {
+            AlarmSpecific<Element, ValueType, SelfType> & alarmLow(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ALARM_LOW, value);
-                AlarmSpecific<Element, ValueType> alarmSpecific;
-                alarmSpecific.setElement(this);
-                return alarmSpecific;
+                m_alarmSpecific.setElements(this, this);
+                m_alarmSpecific.setLastConfig(KARABO_SCHEMA_ALARM_LOW);
+                return m_alarmSpecific;
             }
 
-            AlarmSpecific<Element, ValueType> alarmHigh(const ValueType& value) {
+            AlarmSpecific<Element, ValueType, SelfType> & alarmHigh(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ALARM_HIGH, value);
-                AlarmSpecific<Element, ValueType> alarmSpecific;
-                alarmSpecific.setElement(this);
-                return alarmSpecific;
+                m_alarmSpecific.setElements(this, this);
+                m_alarmSpecific.setLastConfig(KARABO_SCHEMA_ALARM_HIGH);
+                return m_alarmSpecific;
             }
             
-            RollingStatsSpecific<Element, ValueType> enableRollingStats() {
+            RollingStatsSpecific<Element, ValueType> & enableRollingStats() {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS, true);
-                RollingStatsSpecific<Element, ValueType> rollingStatSpecific;
-                rollingStatSpecific.setElement(this);
-                return rollingStatSpecific;
+                m_rollingStatsSpecific.setElement(this);
+                return m_rollingStatsSpecific;
             }
             
             ReadOnlySpecific& archivePolicy(const Schema::ArchivePolicy& value) {

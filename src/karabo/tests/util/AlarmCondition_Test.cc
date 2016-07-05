@@ -212,7 +212,7 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip(){
     
     FLOAT_ELEMENT(schema).key("f1")
         .readOnly().initialValue(5)
-        .warnLow(5).needsAcknowledging(true)
+        .warnLow(5).info("This is an optional description").needsAcknowledging(true)
         .warnHigh(50).needsAcknowledging(true)
         .commit();
     
