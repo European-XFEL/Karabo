@@ -14,7 +14,7 @@ from karabo_gui.widget import DisplayWidget
 
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSlot
-from PyQt4.QtGui import (QButtonGroup, QDialog, QHBoxLayout,
+from PyQt4.QtGui import (QButtonGroup, QDateTimeEdit, QDialog, QHBoxLayout,
                          QPushButton, QVBoxLayout, QWidget)
 
 import numpy
@@ -311,9 +311,26 @@ class DisplayTrendline(DisplayWidget):
         self.dialog = CurveDialog(edit=False, toolbar=True,
                                   wintitle="Trendline")
 
-        self.cell_widget = QWidget()
-        self.cell_layout = QHBoxLayout(self.cell_widget)
-        self.cell_layout.setContentsMargins(0, 0, 0, 0)
+        # Create widget for beginning and end date time
+        self.date_time_widget = QWidget()
+        self.date_time_layout = QHBoxLayout(self.date_time_widget)
+        self.date_time_layout.setContentsMargins(0, 0, 0, 0)
+
+        style_sheet = ("QDateTimeEdit {text-align: center; font-size: 9px;"
+                       "padding: 0}")
+        current_date_time = QDateTime.currentDateTime()
+        self.dt_start = QDateTimeEdit(current_date_time)
+        self.dt_start.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
+        self.dt_start.setStyleSheet(style_sheet)
+        self.dt_end = QDateTimeEdit(current_date_time)
+        self.dt_end.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
+        self.dt_end.setStyleSheet(style_sheet)
+        self.date_time_layout.addWidget(self.dt_start)
+        self.date_time_layout.addWidget(self.dt_end)
+
+        self.buttons_widget = QWidget()
+        self.buttons_layout = QHBoxLayout(self.buttons_widget)
+        self.buttons_layout.setContentsMargins(0, 0, 0, 0)
 
         self.time_string_btns = OrderedDict()  # Map time_string to QPushButton
         self.time_string_btns[ONE_WEEK] = None
@@ -321,13 +338,14 @@ class DisplayTrendline(DisplayWidget):
         self.time_string_btns[ONE_HOUR] = None
         self.time_string_btns[TEN_MINUTES] = None
         self.time_string_btns[RESET] = None
-        self.time_buttons = self._create_time_buttons(self.cell_layout)
+        self.time_buttons = self._create_time_buttons(self.buttons_layout)
         self._selected_time_btn = None
 
         self.widget = QWidget()
         self.layout = QVBoxLayout(self.widget)
         self.layout.addWidget(self.dialog)
-        self.layout.addWidget(self.cell_widget)
+        self.layout.addWidget(self.date_time_widget)
+        self.layout.addWidget(self.buttons_widget)
 
         # Keep the initial start time to recover trendline for 'Reset'
         self.initial_start_time = QDateTime.currentDateTime()
@@ -473,21 +491,28 @@ class DisplayTrendline(DisplayWidget):
         t0, t1 = asd.lowerBound(), asd.upperBound()
         for v in self.curves.values():
             v.changeInterval(t0, t1)
+        
+        t0 = QDateTime.fromMSecsSinceEpoch(t0 * 1000)
+        t1 = QDateTime.fromMSecsSinceEpoch(t1 * 1000)
+        self._update_date_time_widgets(t0, t1)
 
     @pyqtSlot(object)
     def _time_buttons_toggled(self, button):
         """ A time button was clicked which needs to update the axis scale. """
         self._selected_time_btn = button
         self._update_x_axis_scale()
+        self.updateLater()
 
     @pyqtSlot()
     def _reset_button_clicked(self):
         """ Reset the x axis scale to the initial start time."""
         self._uncheck_time_buttons()
 
-        start_date_time = self.initial_start_time.toMSecsSinceEpoch() / 1000
-        end_date_time = QDateTime.currentDateTime().toMSecsSinceEpoch() / 1000
+        start_date_time = self.initial_start_time
+        end_date_time = QDateTime.currentDateTime()
 
+        start_date_time = start_date_time.toMSecsSinceEpoch() / 1000
+        end_date_time = end_date_time.toMSecsSinceEpoch() / 1000
         # Rescale x axis
         self.plot.setAxisScale(QwtPlot.xBottom, start_date_time, end_date_time)
         self.updateLater()
@@ -541,6 +566,13 @@ class DisplayTrendline(DisplayWidget):
 
         return button_group
 
+    def _update_date_time_widgets(self, start, end):
+        """ The date time widgets get updated to the corresponding x axis
+            scale.
+        """
+        self.dt_start.setDateTime(start)
+        self.dt_end.setDateTime(end)
+
     def _update_x_axis_scale(self):
         """ The start and end time date for the x axis is updated here
             depending on the selected time button.
@@ -549,6 +581,7 @@ class DisplayTrendline(DisplayWidget):
             return False
 
         start, end = get_start_end_date_time(self._selected_time_btn.text())
+
         if start is None or end is None:
             return False
 
@@ -557,5 +590,4 @@ class DisplayTrendline(DisplayWidget):
 
         # Rescale x axis
         self.plot.setAxisScale(QwtPlot.xBottom, start, end)
-        self.updateLater()
         return True
