@@ -59,13 +59,11 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             t = getattr(type(self), k)
             if k in configuration:
                 v = configuration[k]
-                if t.enum is not None:
-                    v = t.enum(v)
                 t.setter(self, v)
                 del configuration[k]
             else:
                 if t.defaultValue is not None:
-                    t.setter(self, t.defaultValue)
+                    setattr(self, k, t.defaultValue)
 
     @classmethod
     def register(cls, name, dict):
@@ -168,6 +166,9 @@ class Node(Descriptor):
 
     def __set__(self, instance, value):
         instance.setValue(self, self.cls(value, instance, self.key))
+
+    def setter(self, instance, value):
+        self.__set__(instance, value)
 
     @coroutine
     def setter_async(self, instance, hash):
