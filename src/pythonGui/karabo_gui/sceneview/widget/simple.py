@@ -48,6 +48,9 @@ class LabelWidget(QLabel):
     def destroy(self):
         """ Satisfy the informal widget interface. """
 
+    def add_boxes(self):
+        """ Satisfy the informal widget interface. """
+
     def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
@@ -102,6 +105,9 @@ class SceneLinkWidget(QPushButton):
     def destroy(self):
         """ Satisfy the informal widget interface. """
 
+    def add_boxes(self):
+        """ Satisfy the informal widget interface. """
+
     def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
@@ -143,6 +149,9 @@ class UnknownSvgWidget(QWidget):
         return None
 
     def destroy(self):
+        """ Satisfy the informal widget interface. """
+
+    def add_boxes(self):
         """ Satisfy the informal widget interface. """
 
     def set_visible(self, visible):
@@ -192,6 +201,9 @@ class WorkflowItemWidget(QWidget):
         return self._minimum_rect
 
     def destroy(self):
+        """ Satisfy the informal widget interface. """
+
+    def add_boxes(self):
         """ Satisfy the informal widget interface. """
 
     def set_visible(self, visible):
