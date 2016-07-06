@@ -14,10 +14,10 @@ class BaseWidgetContainer(QWidget):
     def __init__(self, model, parent):
         super(BaseWidgetContainer, self).__init__(parent)
         self.model = model
-        boxes = [get_box(*key.split('.', 1)) for key in self.model.keys]
-        self.old_style_widget = self._create_widget(boxes)
-        self.box = boxes[0]
-        self._make_box_connections()
+        self.boxes = [get_box(*key.split('.', 1)) for key in self.model.keys]
+        self.old_style_widget = self._create_widget(self.boxes)
+        for box in self.boxes:
+            self._make_box_connections(box)
         if self.model.parent_component == 'EditableApplyLaterComponent':
             self.layout = self._add_edit_widgets()
         else:
@@ -38,27 +38,55 @@ class BaseWidgetContainer(QWidget):
         """
         from karabo_gui import gui
 
-        box = self.box
         widget = self.old_style_widget
-        box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
         if self.model.parent_component == 'EditableApplyLaterComponent':
+            box = self.boxes[0]
             widget.signalEditingFinished.disconnect(self._on_editing_finished)
-            box.signalUserChanged.disconnect(self._on_user_edit)
-            box.signalUpdateComponent.disconnect(self._on_display_value_change)
             # These are connected in `EditableWidget.__init__`
             box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
                 widget.updateStateSlot)
             gui.window.signalGlobalAccessLevelChanged.disconnect(
                 widget.updateStateSlot)
-        else:  # DisplayWidgets
-            box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
+
+        for box in self.boxes:
+            box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
+            if self.model.parent_component == 'EditableApplyLaterComponent':
+                box.signalUserChanged.disconnect(self._on_user_edit)
+                box.signalUpdateComponent.disconnect(
+                    self._on_display_value_change)
+            else:  # DisplayWidgets
+                box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
+
+    def add_boxes(self, boxes):
+        """ Add more boxes to a display widget which allows more than one
+            boxes. ``True`` is returned when this was possible, otherwise
+            ``False`` is returned.
+        """
+        widget = self.old_style_widget
+        widget_added = False
+        if self.model.parent_component == 'DisplayComponent':
+            for box in boxes:
+                key_list = box.key().split('.', 1)
+                device_id = key_list[0]
+                property_path = key_list[1]
+                device_box = get_box(device_id, property_path)
+                # This is only ``True`` if the display widget allows more
+                # than one box to be added to it
+                if widget.addBox(device_box):
+                    self.model.keys.append(device_box.key())
+                    self.boxes.append(device_box)
+                    self._make_box_connections(device_box)
+                    widget_added = True
+        return widget_added
 
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""
         if visible:
-            self.box.addVisible()
+            for box in self.boxes:
+                box.addVisible()
         else:
-            self.box.removeVisible()
+            for box in self.boxes:
+                box.removeVisible()
 
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
@@ -70,10 +98,9 @@ class BaseWidgetContainer(QWidget):
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    def _make_box_connections(self):
+    def _make_box_connections(self, box):
         """ Hook up all the box signals to the old_style_widget instance.
         """
-        box = self.box
         widget = self.old_style_widget
         box.signalNewDescriptor.connect(widget.typeChangedSlot)
         if box.descriptor is not None:
@@ -183,7 +210,7 @@ class BaseWidgetContainer(QWidget):
         self._update_buttons()
 
     def _update_buttons(self):
-        box = self.box
+        box = self.boxes[0]
         widget = self.old_style_widget
         allowed = box.isAllowed()
         self.apply_button.setEnabled(allowed)
