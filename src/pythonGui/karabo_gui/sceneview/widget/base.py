@@ -57,6 +57,28 @@ class BaseWidgetContainer(QWidget):
             else:  # DisplayWidgets
                 box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
 
+    def add_boxes(self, boxes):
+        """ Add more boxes to a display widget which allows more than one
+            boxes. ``True`` is returned when this was possible, otherwise
+            ``False`` is returned.
+        """
+        widget = self.old_style_widget
+        widget_added = False
+        if self.model.parent_component == 'DisplayComponent':
+            for box in boxes:
+                key_list = box.key().split('.', 1)
+                device_id = key_list[0]
+                property_path = key_list[1]
+                device_box = get_box(device_id, property_path)
+                # This is only ``True`` if the display widget allows more
+                # than one box to be added to it
+                if widget.addBox(device_box):
+                    self.model.keys.append(device_box.key())
+                    self.boxes.append(device_box)
+                    self._make_box_connections(device_box)
+                    widget_added = True
+        return widget_added
+
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""
         if visible:
@@ -94,32 +116,6 @@ class BaseWidgetContainer(QWidget):
             widget.setReadOnly(False)
         else:
             widget.setReadOnly(True)
-
-    # ---------------------------------------------------------------------
-    # Qt Methods
-
-    def dropEvent(self, event):
-        """ Add another box to a display widget which allows more than one
-            boxes. """
-        source = event.source()
-        if source is None:
-            event.ignore()
-            return
-
-        widget = self.old_style_widget
-        if self.model.parent_component == 'DisplayComponent':
-            for item in source.selectedItems():
-                key_list = item.box.key().split('.', 1)
-                device_id = key_list[0]
-                property_path = key_list[1]
-                device_box = get_box(device_id, property_path)
-                if widget.addBox(device_box):
-                    self.model.keys.append(device_box.key())
-                    self.boxes.append(device_box)
-                    self._make_box_connections(device_box)
-            event.accept()
-        else:
-            event.ignore()
 
     # ---------------------------------------------------------------------
     # Edit buttons related code
