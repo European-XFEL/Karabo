@@ -617,9 +617,9 @@ namespace karabo {
             
             void cacheAvailableInstances();
 
-            karabo::util::Hash prepareTopologyEntry(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            karabo::util::Hash prepareTopologyEntry(const std::string& instanceId, const karabo::util::Hash& instanceInfo) const;
 
-            std::string prepareTopologyPath(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            std::string prepareTopologyPath(const std::string& instanceId, const karabo::util::Hash& instanceInfo) const;
 
             void removeFromSystemTopology(const std::string& instanceId);
 
