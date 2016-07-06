@@ -55,15 +55,18 @@ class Configurable(Registry, metaclass=MetaConfigurable):
 
         self.__parent = parent
         self.__key = key
+        self._initializers = []
         for k in self._allattrs:
             t = getattr(type(self), k)
+            init = None
             if k in configuration:
                 v = configuration[k]
-                t.setter(self, v)
+                init = t.checkedInit(self, v)
                 del configuration[k]
             else:
-                if t.defaultValue is not None:
-                    setattr(self, k, t.defaultValue)
+                init = t.checkedInit(self)
+            if init:
+                self._initializers.extend(init)
 
     @classmethod
     def register(cls, name, dict):
@@ -142,7 +145,8 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         This method should only be overridden inside Karabo (thus
         the underscore). Do not forget to ``yield from super()._run()``.
         """
-        pass
+        yield from gather(*self._initializers)
+        del self._initializers
 
     def _use(self):
         """this method is called each time an attribute of this configurable
@@ -174,19 +178,17 @@ class Node(Descriptor):
     def subschema(self):
         return self.cls.getClassSchema().hash
 
-    def __set__(self, instance, value):
-        instance.setValue(self, self.cls(value, instance, self.key))
+    def _initialize(self, instance, value):
+        node = self.cls(value, instance, self.key)
+        instance.__dict__[self.key] = node
+        ret = node._initializers
+        del node._initializers
+        return ret
 
-    def setter(self, instance, value):
-        self.__set__(instance, value)
-
-    @coroutine
-    def setter_async(self, instance, hash):
-        props = ((getattr(self.cls, k), v)
-                 for k, v in hash.items())
+    def _setter(self, instance, value):
+        props = ((getattr(self.cls, k), v) for k, v in value.items())
         parent = getattr(instance, self.key)
-        setters = [t.checkedSet(parent, v) for t, v in props]
-        yield from gather(*setters)
+        return sum((t.checkedSet(parent, v) for t, v in props), [])
 
     def toDataAndAttrs(self, instance):
         r = Hash()
@@ -214,10 +216,13 @@ class ChoiceOfNodes(Node):
             h[k, "nodeType"] = NodeType.Node
         return h
 
-    def __set__(self, instance, value):
-        for k, v in value.items():
-            instance.setValue(self, self.cls._subclasses[k](v))
-            break  # there should be only one entry
+    def _initialize(self, instance, value):
+        for k, v in value.items():  # there should be only one entry
+            node = self.cls._subclasses[k](v)
+            instance.__dict__[self.key] = node
+            ret = node._initializers
+            del node._initializers
+            return ret
 
     def toDataAndAttrs(self, instance):
         r = Hash()
@@ -246,14 +251,19 @@ class ListOfNodes(Node):
             h[k, "nodeType"] = NodeType.Node
         return h
 
-    def __set__(self, instance, value):
+    def _initialize(self, instance, value):
         if isinstance(value, Hash):
             l = [self.cls._subclasses[k](v, instance, self.key)
                  for k, v in value.items()]
         else:
             l = [self.cls._subclasses[k](Hash(), instance, self.key)
                  for k in value]
-        instance.setValue(self, l)
+        instance.__dict__[self.key] = l
+        ret = []
+        for o in l:
+            ret += o._initializers
+            del o._initializers
+        return ret
 
     def toDataAndAttrs(self, instance):
         l = []
