@@ -21,6 +21,29 @@ safeRunCommand() {
     fi
 }
 
+runUnitTests() {
+    if [ -z "$KARABO" ]; then
+        source $scriptDir/karabo/activate
+    fi
+
+    echo
+    echo Running karabo tests ...
+    echo
+    cd $scriptDir/build/netbeans/karabo
+    make CONF=$CONF test
+    cd $scriptDir
+    echo
+    echo Running pythonKarabo tests
+    echo
+    cd build/netbeans/pythonKarabo
+    nosetests-3.4 -v karabo.bound_api
+    nosetests-3.4 -v karabo.middlelayer_api
+    nosetests-3.4 -v karabo.tests
+    echo
+    echo Unit tests complete
+    echo
+}
+
 # Make sure the script runs in the correct directory
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 cd ${scriptDir}
@@ -87,6 +110,7 @@ shift
 # Parse the commandline flags
 SKIP="y"
 BUNDLE="y"
+RUNTESTS="n"
 PYOPT="wheel"
 while [ -n "$1" ]; do
     case "$1" in
@@ -101,6 +125,10 @@ while [ -n "$1" ]; do
         --pyDevelop)
             # Build Python packages in development mode
             PYOPT="develop"
+            ;;
+        --runTests)
+            # Run all the unit tests too
+            RUNTESTS="y"
             ;;
         *)
             # Make a little noise
@@ -202,6 +230,9 @@ elif [ "$BUNDLE" = "y" ]; then
     safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_CORES bundle-package"
 else
     safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_CORES bundle-install"
+fi
+if [ "$RUNTESTS" = "y" ]; then
+    runUnitTests
 fi
 
 echo "### Successfully finished building and packaging of karaboFramework ###"
