@@ -129,23 +129,24 @@ class SceneView(QWidget):
 
     def dragEnterEvent(self, event):
         if not self.design_mode:
+            event.ignore()
             return
 
         for scene_handler in self.scene_handler_list:
             if scene_handler.can_handle(event):
                 self.current_scene_handler = scene_handler
                 event.accept()
-                break
-
-        super(SceneView, self).dragEnterEvent(event)
+                return
+        event.ignore()
 
     def dropEvent(self, event):
         if self.current_scene_handler is None:
+            event.ignore()
             return
 
         self.current_scene_handler.handle(self, event)
         self.current_scene_handler = None
-        super(SceneView, self).dropEvent(event)
+        event.accept()
 
     def paintEvent(self, event):
         """ Show view content.

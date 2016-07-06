@@ -39,20 +39,20 @@ class BaseWidgetContainer(QWidget):
         """
         from karabo_gui import gui
 
-        box = self.boxes[0]
         widget = self.old_style_widget
-        box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
-        if self.model.parent_component == 'EditableApplyLaterComponent':
-            widget.signalEditingFinished.disconnect(self._on_editing_finished)
-            box.signalUserChanged.disconnect(self._on_user_edit)
-            box.signalUpdateComponent.disconnect(self._on_display_value_change)
-            # These are connected in `EditableWidget.__init__`
-            box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
-                widget.updateStateSlot)
-            gui.window.signalGlobalAccessLevelChanged.disconnect(
-                widget.updateStateSlot)
-        else:  # DisplayWidgets
-            box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
+        for box in self.boxes:
+            box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
+            if self.model.parent_component == 'EditableApplyLaterComponent':
+                widget.signalEditingFinished.disconnect(self._on_editing_finished)
+                box.signalUserChanged.disconnect(self._on_user_edit)
+                box.signalUpdateComponent.disconnect(self._on_display_value_change)
+                # These are connected in `EditableWidget.__init__`
+                box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
+                    widget.updateStateSlot)
+                gui.window.signalGlobalAccessLevelChanged.disconnect(
+                    widget.updateStateSlot)
+            else:  # DisplayWidgets
+                box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
 
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""
@@ -101,12 +101,17 @@ class BaseWidgetContainer(QWidget):
         source = event.source()
         if source is None:
             return
-        for item in source.selectedItems():
-            if self.model.parent_component == 'DisplayComponent':
-                widget = self.old_style_widget
-                if widget.addBox(getDeviceBox(item.box)):
-                    self.model.keys.append(item.box.key())
-                    self.boxes.append(getDeviceBox(item.box))
+
+        widget = self.old_style_widget
+        if self.model.parent_component == 'DisplayComponent':
+            for item in source.selectedItems():
+                key_list = item.box.key().split('.', 1)
+                device_id = key_list[0]
+                property_path = key_list[1]
+                device_box = get_box(device_id, property_path)
+                if widget.addBox(device_box):
+                    self.model.keys.append(device_box.key())
+                    self.boxes.append(device_box)
                     self._make_box_connections(self.boxes[-1])
                     event.accept()
         super(BaseWidgetContainer, self).dropEvent(event)
