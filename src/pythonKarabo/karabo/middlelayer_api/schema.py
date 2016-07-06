@@ -135,6 +135,12 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             self.__parent.setChildValue(self.__key + "." + key, value, desc)
 
     @coroutine
+    def slotReconfigure(self, config):
+        props = ((getattr(self.__class__, k), v) for k, v in config.items())
+        setters = sum((t.checkedSet(self, v) for t, v in props), [])
+        yield from gather(*setters)
+
+    @coroutine
     def _run(self):
         """ post-initialization of a Configurable
 
