@@ -99,17 +99,17 @@ class ConfigurationDropHandler(SceneDnDHandler):
         return False
 
     def handle(self, scene_view, event):
+        mimeData = event.mimeData()
+        sourceType = mimeData.data("sourceType")
+        source = event.source()
+
         pos = event.pos()
         widget = scene_view.widget_at_position(pos)
         if widget is not None:
-            widget.dropEvent(event)
-            if event.isAccepted():
+            boxes = [item.box for item in source.selectedItems()]
+            if widget.add_boxes(boxes):
                 return
 
-        mimeData = event.mimeData()
-        sourceType = mimeData.data("sourceType")
-
-        source = event.source()
         if sourceType == "ParameterTreeWidget":
             selectedItems = source.selectedItems()
             for item in selectedItems:
