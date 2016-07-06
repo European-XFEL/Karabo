@@ -872,7 +872,7 @@ namespace karabo {
                     newFailureMsg = "An unknown" + newFailureMsg + ".";
                 }
                 if (caught) {
-                    KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
+                    KARABO_LOG_FRAMEWORK_ERROR << newFailureMsg;
                 }
             }
 
