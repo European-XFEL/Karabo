@@ -464,6 +464,7 @@ class Tests(DeviceTest):
     @async_tst
     def test_disallow(self):
         """test that values cannot be set if in wrong state"""
+        self.assertEqual(self.remote.state, "uninitialized")
         with (yield from getDevice("remote")) as d:
             try:
                 d.value = 7

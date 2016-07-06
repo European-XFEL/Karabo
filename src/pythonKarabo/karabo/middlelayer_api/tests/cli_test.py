@@ -325,6 +325,7 @@ class Tests(TestCase):
             loop.run_until_complete(dc.slotKillDevice())
 
     def test_ikarabo(self):
+        thread = None
         try:
             with self.assertLogs(level="WARNING"):
                 thread = start_device_client()
@@ -333,9 +334,10 @@ class Tests(TestCase):
         else:
             self.fail("no log should be generated!")
         finally:
-            thread.stop()
-            thread.join(0.1)
-            self.assertFalse(thread.is_alive())
+            if thread is not None:
+                thread.stop()
+                thread.join(0.1)
+                self.assertFalse(thread.is_alive())
 
 if __name__ == "__main__":
     main()
