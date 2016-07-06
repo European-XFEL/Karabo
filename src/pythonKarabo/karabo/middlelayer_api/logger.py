@@ -20,8 +20,7 @@ class _Filter(logging.Filter):
 class Filter(Configurable):
     def __init__(self, config, parent, key):
         super().__init__(config, parent, key)
-        self.filter = _Filter()
-        self.filter.parent = self
+        self.filter = _Filter(self)
 
 
 class Handler(Configurable):
