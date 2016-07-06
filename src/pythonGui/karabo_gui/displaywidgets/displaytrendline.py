@@ -31,8 +31,31 @@ ONE_WEEK = "One Week"
 ONE_DAY = "One Day"
 ONE_HOUR = "One Hour"
 TEN_MINUTES = "Ten Minutes"
-RESET = "Reset"
+RESET = "Uptime"
 HIDDEN = "Hidden"
+
+
+def get_start_end_date_time(selected_time_span):
+    """ Return beginning and end date time for given ``selected_time_span``.
+        If the ``selected_time_span`` is not supported ``None`` is returned.
+    """
+    current_date_time = QDateTime.currentDateTime()
+    if selected_time_span == ONE_WEEK:
+        # One week
+        start_date_time = current_date_time.addDays(-7)
+    elif selected_time_span == ONE_DAY:
+        # One day
+        start_date_time = current_date_time.addDays(-1)
+    elif selected_time_span == ONE_HOUR:
+        # One hour
+        start_date_time = current_date_time.addSecs(-3600)
+    elif selected_time_span == TEN_MINUTES:
+        # Ten minutes
+        start_date_time = current_date_time.addSecs(-600)
+    else:
+        return None, None
+
+    return start_date_time, current_date_time
 
 
 class _Generation(object):
@@ -261,18 +284,22 @@ class Timespan(QDialog):
         super(Timespan, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), "timespan.ui"), self)
 
-    def on_hour_clicked(self):
-        self.end.setDateTime(QDateTime.currentDateTime())
-        self.beginning.setDateTime(
-            QDateTime.currentDateTime().addSecs(-60 * 60))
+    def _set_beginning_end_date_time(self, selected_time_span):
+        start_dt, end_dt = get_start_end_date_time(selected_time_span)
+        self.dt_beginning.setDateTime(start_dt)
+        self.dt_end.setDateTime(end_dt)
 
-    def on_minute_clicked(self):
-        self.end.setDateTime(QDateTime.currentDateTime())
-        self.beginning.setDateTime(QDateTime.currentDateTime().addSecs(-60))
+    def on_pb_one_week_clicked(self):
+        self._set_beginning_end_date_time(ONE_WEEK)
 
-    def on_s20_clicked(self):
-        self.end.setDateTime(QDateTime.currentDateTime())
-        self.beginning.setDateTime(QDateTime.currentDateTime().addSecs(-20))
+    def on_pb_one_day_clicked(self):
+        self._set_beginning_end_date_time(ONE_DAY)
+
+    def on_pb_one_hour_clicked(self):
+        self._set_beginning_end_date_time(ONE_HOUR)
+
+    def on_pb_ten_minutes_clicked(self):
+        self._set_beginning_end_date_time(TEN_MINUTES)
 
 
 class DisplayTrendline(DisplayWidget):
@@ -355,9 +382,9 @@ class DisplayTrendline(DisplayWidget):
         else:
             dialog = Timespan(self.dialog)
             sd = self.plot.axisScaleDiv(QwtPlot.xBottom)
-            dialog.beginning.setDateTime(
+            dialog.dt_beginning.setDateTime(
                 QDateTime.fromMSecsSinceEpoch(sd.lowerBound() * 1000))
-            dialog.end.setDateTime(
+            dialog.dt_end.setDateTime(
                 QDateTime.fromMSecsSinceEpoch(sd.upperBound() * 1000))
             if dialog.exec_() != dialog.Accepted:
                 return
@@ -365,8 +392,8 @@ class DisplayTrendline(DisplayWidget):
             self._uncheck_time_buttons()
             self.plot.setAxisScale(
                 QwtPlot.xBottom,
-                dialog.beginning.dateTime().toMSecsSinceEpoch() / 1000,
-                dialog.end.dateTime().toMSecsSinceEpoch() / 1000)
+                dialog.dt_beginning.dateTime().toMSecsSinceEpoch() / 1000,
+                dialog.dt_end.dateTime().toMSecsSinceEpoch() / 1000)
             self.updateLater()
 
     def typeChanged(self, box):
@@ -521,26 +548,14 @@ class DisplayTrendline(DisplayWidget):
         if self._selected_time_btn is None:
             return False
 
-        current_date_time = QDateTime.currentDateTime()
-        if self._selected_time_btn.text() == ONE_WEEK:
-            # One week
-            start_date_time = current_date_time.addDays(-7)
-        elif self._selected_time_btn.text() == ONE_DAY:
-            # One day
-            start_date_time = current_date_time.addDays(-1)
-        elif self._selected_time_btn.text() == ONE_HOUR:
-            # One hour
-            start_date_time = current_date_time.addSecs(-3600)
-        elif self._selected_time_btn.text() == TEN_MINUTES:
-            # Ten minutes
-            start_date_time = current_date_time.addSecs(-600)
-        else:
+        start, end = get_start_end_date_time(self._selected_time_btn.text())
+        if start is None or end is None:
             return False
 
-        start_date_time = start_date_time.toMSecsSinceEpoch() / 1000
-        end_date_time = current_date_time.toMSecsSinceEpoch() / 1000
+        start = start.toMSecsSinceEpoch() / 1000
+        end = end.toMSecsSinceEpoch() / 1000
 
         # Rescale x axis
-        self.plot.setAxisScale(QwtPlot.xBottom, start_date_time, end_date_time)
+        self.plot.setAxisScale(QwtPlot.xBottom, start, end)
         self.updateLater()
         return True
