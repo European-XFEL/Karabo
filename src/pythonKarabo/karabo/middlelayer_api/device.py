@@ -139,7 +139,7 @@ class Device(SignalSlotable):
         props = ((getattr(self.__class__, k), v)
                  for k, v in reconfiguration.items())
         try:
-            setters = [t.checkedSet(self, v) for t, v in props]
+            setters = sum((t.checkedSet(self, v) for t, v in props), [])
             yield from gather(*setters)
         except KaraboError as e:
             self.logger.exception("Failed to set property")

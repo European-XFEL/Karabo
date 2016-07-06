@@ -280,11 +280,25 @@ class Descriptor(object):
 
     def setter(self, instance, value):
         """this is to be called if the value is changed from the outside"""
-        setattr(instance, self.key, self.toKaraboValue(value, strict=False))
+        setattr(instance, self.key, value)
 
-    @coroutine
-    def setter_async(self, instance, value):
-        self.setter(instance, self.toKaraboValue(value, strict=False))
+    def _setter(self, instance, value):
+        ret = self.setter(instance, self.toKaraboValue(value, strict=False))
+        if ret is None:
+            return []
+        else:
+            return [ret]
+
+    def initialize(self, instance, value):
+        return self.setter(instance, value)
+
+    def _initialize(self, instance, value):
+        ret = self.initialize(instance,
+                              self.toKaraboValue(value, strict=False))
+        if ret is None:
+            return []
+        else:
+            return [ret]
 
     def checkedSet(self, instance, value):
         if self.accessMode is not AccessMode.RECONFIGURABLE:
@@ -296,7 +310,20 @@ class Descriptor(object):
                 self.key, instance.state)
             raise KaraboError(msg)
         else:
-            return self.setter_async(instance, value)
+            return self._setter(instance, value)
+
+    def checkedInit(self, instance, value=None):
+        if value is None:
+            if self.assignment is Assignment.MANDATORY:
+                raise KaraboError(
+                    'assignment is mandatory for "{}"'.format(self.key))
+            if self.defaultValue is None:
+                return []
+            return self._initialize(instance, self.defaultValue)
+        if self.accessMode is AccessMode.READONLY:
+            return []
+        else:
+            return self._initialize(instance, value)
 
     def toDataAndAttrs(self, value):
         """Split value in bare data and the attributes that go with it
@@ -331,6 +358,9 @@ class Slot(Descriptor):
             inner.slot = self.inner
             return inner.__get__(instance, owner)
 
+    def _initialize(self, instance, value=None):
+        pass  # nothing to initialize in a Slot
+
     def inner(self, device, message, args):
         if (self.allowedStates is not None and
                 device.state not in self.allowedStates):
@@ -355,9 +385,6 @@ class Slot(Descriptor):
 
     def method(self, device):
         return self.themethod(device)
-
-    def setter(self, instance, value):
-        pass  # nothing to set in a slot
 
     def __call__(self, method):
         if self.description is None:
