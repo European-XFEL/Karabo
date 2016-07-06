@@ -108,6 +108,7 @@ class ConfigurationDropHandler(SceneDnDHandler):
         if widget is not None:
             boxes = [item.box for item in source.selectedItems()]
             if widget.add_boxes(boxes):
+                event.accept()
                 return
 
         if sourceType == "ParameterTreeWidget":
