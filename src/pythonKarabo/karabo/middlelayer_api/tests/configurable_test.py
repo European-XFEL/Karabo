@@ -1,0 +1,319 @@
+import asyncio
+from unittest import TestCase, main
+
+from karabo.middlelayer import (
+    AccessMode, Assignment, Configurable, Hash, Int32, KaraboError, Node,
+    Unit, unit)
+
+
+class MockConfigurable(Configurable):
+    mock_value = None
+    mock_child = None
+
+    def setValue(self, desc, value):
+        super().setValue(desc, value)
+        assert self.mock_value is None
+        self.mock_value = value
+
+    def assertValue(self, value):
+        assert value == self.mock_value
+        self.mock_value = None
+
+    def setChildValue(self, key, value, desc):
+        super().setChildValue(key, value, desc)
+        assert key == "node.value"
+        assert self.mock_child is None
+        self.mock_child = value
+
+    def assertChild(self, value):
+        assert value == self.mock_child
+        self.mock_child = None
+
+
+def rehash(**kwargs):
+    """assure hashes look exactly like they came over the network"""
+    h = Hash(kwargs)
+    return Hash.decode(h.encode("Bin"), "Bin")
+
+
+def run_coro(coro):
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(coro)
+
+
+class Tests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        asyncio.set_event_loop(asyncio.new_event_loop())
+
+    def test_nodefault(self):
+        class B(Configurable):
+            value = Int32(unitSymbol=Unit.METER)
+
+        class A(MockConfigurable):
+            value = Int32(unitSymbol=Unit.METER)
+            node = Node(B)
+
+        a = A()
+        self.assertFalse(hasattr(a, "value"))
+        self.assertFalse(hasattr(a.node, "value"))
+        a = A(rehash(value=7, node=Hash("value", 3)))
+        self.assertEqual(a.value, 7 * unit.meter)
+        self.assertEqual(a.node.value, 3 * unit.meter)
+        a.assertValue(7 * unit.meter)
+        a.assertChild(3 * unit.meter)
+        a.value = 9 * unit.meter
+        a.node.value = 4 * unit.meter
+        self.assertEqual(a.value, 9 * unit.meter)
+        self.assertEqual(a.node.value, 4 * unit.meter)
+        a.assertValue(9 * unit.meter)
+        a.assertChild(4 * unit.meter)
+        run_coro(a.slotReconfigure(rehash(value=10, node=Hash("value", 5))))
+        self.assertEqual(a.value, 10 * unit.meter)
+        self.assertEqual(a.node.value, 5 * unit.meter)
+
+    def test_default(self):
+        class B(Configurable):
+            value = Int32(unitSymbol=Unit.METER, defaultValue=33)
+
+        class A(MockConfigurable):
+            value = Int32(unitSymbol=Unit.METER, defaultValue=22)
+            node = Node(B)
+
+        a = A()
+        self.assertEqual(a.value, 22 * unit.meter)
+        self.assertEqual(a.node.value, 33 * unit.meter)
+        a = A(rehash(value=7, node=Hash("value", 3)))
+        self.assertEqual(a.value, 7 * unit.meter)
+        self.assertEqual(a.node.value, 3 * unit.meter)
+        a.assertValue(7 * unit.meter)
+        a.assertChild(3 * unit.meter)
+        a.value = 9 * unit.meter
+        a.node.value = 4 * unit.meter
+        self.assertEqual(a.value, 9 * unit.meter)
+        self.assertEqual(a.node.value, 4 * unit.meter)
+        a.assertValue(9 * unit.meter)
+        a.assertChild(4 * unit.meter)
+        run_coro(a.slotReconfigure(rehash(value=10, node=Hash("value", 5))))
+        self.assertEqual(a.value, 10 * unit.meter)
+        self.assertEqual(a.node.value, 5 * unit.meter)
+
+    def test_mandatory(self):
+        class B(Configurable):
+            value = Int32(assignment=Assignment.MANDATORY,
+                          unitSymbol=Unit.METER)
+
+        class A(MockConfigurable):
+            value = Int32(assignment=Assignment.MANDATORY,
+                          unitSymbol=Unit.METER)
+            node = Node(B)
+
+        with self.assertRaises(KaraboError):
+            a = A(rehash(node=Hash("value", 3)))
+        with self.assertRaises(KaraboError):
+            a = A(rehash(value=7))
+
+        a = A(rehash(value=7, node=Hash("value", 3)))
+        self.assertEqual(a.value, 7 * unit.meter)
+        self.assertEqual(a.node.value, 3 * unit.meter)
+        a.assertValue(7 * unit.meter)
+        a.assertChild(3 * unit.meter)
+        a.value = 9 * unit.meter
+        a.node.value = 4 * unit.meter
+        self.assertEqual(a.value, 9 * unit.meter)
+        self.assertEqual(a.node.value, 4 * unit.meter)
+        a.assertValue(9 * unit.meter)
+        a.assertChild(4 * unit.meter)
+        run_coro(a.slotReconfigure(rehash(value=10, node=Hash("value", 5))))
+        self.assertEqual(a.value, 10 * unit.meter)
+        self.assertEqual(a.node.value, 5 * unit.meter)
+
+    def test_readonly(self):
+        class B(Configurable):
+            value = Int32(accessMode=AccessMode.READONLY,
+                          unitSymbol=Unit.METER)
+
+        class A(MockConfigurable):
+            value = Int32(accessMode=AccessMode.READONLY,
+                          unitSymbol=Unit.METER)
+            node = Node(B)
+
+        a = A()
+        self.assertFalse(hasattr(a, "value"))
+        self.assertFalse(hasattr(a.node, "value"))
+        a = A(rehash(value=7, node=Hash("value", 3)))
+        # we ignore read only parameters in configuration
+        self.assertFalse(hasattr(a, "value"))
+        self.assertFalse(hasattr(a.node, "value"))
+        a.value = 9 * unit.meter
+        a.node.value = 4 * unit.meter
+        self.assertEqual(a.value, 9 * unit.meter)
+        self.assertEqual(a.node.value, 4 * unit.meter)
+        a.assertValue(9 * unit.meter)
+        a.assertChild(4 * unit.meter)
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(node=Hash("value", 5))))
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(value=10)))
+
+    def test_init_nodefault(self):
+        class B(Configurable):
+            value = Int32(accessMode=AccessMode.INITONLY,
+                          unitSymbol=Unit.METER)
+
+        class A(MockConfigurable):
+            value = Int32(accessMode=AccessMode.INITONLY,
+                          unitSymbol=Unit.METER)
+            node = Node(B)
+
+        a = A()
+        self.assertFalse(hasattr(a, "value"))
+        self.assertFalse(hasattr(a.node, "value"))
+        a = A(rehash(value=7, node=Hash("value", 3)))
+        self.assertEqual(a.value, 7 * unit.meter)
+        self.assertEqual(a.node.value, 3 * unit.meter)
+        a.assertValue(7 * unit.meter)
+        a.assertChild(3 * unit.meter)
+        a.value = 9 * unit.meter
+        a.node.value = 4 * unit.meter
+        self.assertEqual(a.value, 9 * unit.meter)
+        self.assertEqual(a.node.value, 4 * unit.meter)
+        a.assertValue(9 * unit.meter)
+        a.assertChild(4 * unit.meter)
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(value=10)))
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(node=Hash("value", 5))))
+
+    def test_init_default(self):
+        class B(Configurable):
+            value = Int32(accessMode=AccessMode.INITONLY,
+                          unitSymbol=Unit.METER, defaultValue=33)
+
+        class A(MockConfigurable):
+            value = Int32(accessMode=AccessMode.INITONLY,
+                          unitSymbol=Unit.METER, defaultValue=22)
+            node = Node(B)
+
+        a = A()
+        self.assertEqual(a.value, 22 * unit.meter)
+        self.assertEqual(a.node.value, 33 * unit.meter)
+        a = A(rehash(value=7, node=Hash("value", 3)))
+        self.assertEqual(a.value, 7 * unit.meter)
+        self.assertEqual(a.node.value, 3 * unit.meter)
+        a.assertValue(7 * unit.meter)
+        a.assertChild(3 * unit.meter)
+        a.value = 9 * unit.meter
+        a.node.value = 4 * unit.meter
+        self.assertEqual(a.value, 9 * unit.meter)
+        self.assertEqual(a.node.value, 4 * unit.meter)
+        a.assertValue(9 * unit.meter)
+        a.assertChild(4 * unit.meter)
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(value=10)))
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(node=Hash("value", 5))))
+
+    def test_init_mandatory(self):
+        class B(Configurable):
+            value = Int32(accessMode=AccessMode.INITONLY,
+                          assignment=Assignment.MANDATORY,
+                          unitSymbol=Unit.METER)
+
+        class A(MockConfigurable):
+            value = Int32(accessMode=AccessMode.INITONLY,
+                          assignment=Assignment.MANDATORY,
+                          unitSymbol=Unit.METER)
+            node = Node(B)
+
+        with self.assertRaises(KaraboError):
+            a = A(rehash(node=Hash("value", 3)))
+        with self.assertRaises(KaraboError):
+            a = A(rehash(value=7))
+
+        a = A(rehash(value=7, node=Hash("value", 3)))
+        self.assertEqual(a.value, 7 * unit.meter)
+        self.assertEqual(a.node.value, 3 * unit.meter)
+        a.assertValue(7 * unit.meter)
+        a.assertChild(3 * unit.meter)
+        a.value = 9 * unit.meter
+        a.node.value = 4 * unit.meter
+        self.assertEqual(a.value, 9 * unit.meter)
+        self.assertEqual(a.node.value, 4 * unit.meter)
+        a.assertValue(9 * unit.meter)
+        a.assertChild(4 * unit.meter)
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(value=10)))
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(node=Hash("value", 5))))
+
+    def test_setter(self):
+        setter_value = init_value = 0
+
+        class Setter(Int32):
+            def setter(self, instance, value):
+                nonlocal setter_value
+                setter_value += value
+                super().setter(instance, value + 1 * unit.meter)
+
+            def initialize(self, instance, value):
+                nonlocal init_value
+                init_value += value
+                super().initialize(instance, value + 2 * unit.meter)
+
+        class B(Configurable):
+            value = Setter(unitSymbol=Unit.METER)
+
+        class A(Configurable):
+            value = Setter(unitSymbol=Unit.METER)
+            node = Node(B)
+
+        a = A(rehash(value=44, node=Hash("value", 44)))
+        self.assertEqual(init_value, 88 * unit.meter)
+        self.assertEqual(setter_value, 92 * unit.meter)
+        self.assertEqual(a.value, 47 * unit.meter)
+        self.assertEqual(a.node.value, 47 * unit.meter)
+        run_coro(a.slotReconfigure(rehash(value=3, node=Hash("value", 3))))
+        self.assertEqual(setter_value, 98 * unit.meter)
+        self.assertEqual(a.value, 4 * unit.meter)
+        self.assertEqual(a.node.value, 4 * unit.meter)
+
+    def test_setter_coro(self):
+        setter_value = init_value = 0
+
+        class Setter(Int32):
+            @asyncio.coroutine
+            def setter(self, instance, value):
+                nonlocal setter_value
+                setter_value += value
+                super().setter(instance, value + 1 * unit.meter)
+
+            @asyncio.coroutine
+            def initialize(self, instance, value):
+                nonlocal init_value
+                init_value += value
+                yield from super().initialize(instance, value + 2 * unit.meter)
+
+        class B(Configurable):
+            value = Setter(unitSymbol=Unit.METER)
+
+        class A(Configurable):
+            value = Setter(unitSymbol=Unit.METER)
+            node = Node(B)
+
+        a = A(rehash(value=44, node=Hash("value", 44)))
+        self.assertEqual(init_value, 0)
+        self.assertEqual(setter_value, 0)
+        run_coro(a._run())
+        self.assertEqual(init_value, 88 * unit.meter)
+        self.assertEqual(setter_value, 92 * unit.meter)
+        self.assertEqual(a.value, 47 * unit.meter)
+        self.assertEqual(a.node.value, 47 * unit.meter)
+        run_coro(a.slotReconfigure(rehash(value=3, node=Hash("value", 3))))
+        self.assertEqual(setter_value, 98 * unit.meter)
+        self.assertEqual(a.value, 4 * unit.meter)
+        self.assertEqual(a.node.value, 4 * unit.meter)
+
+
+if __name__ == "__main__":
+    main()
