@@ -4,7 +4,6 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QStackedLayout, QToolButton,
 
 from karabo_gui import icons
 from karabo_gui.network import Network
-from karabo_gui.topology import getDeviceBox
 from .utils import get_box, determine_if_value_unchanged
 
 
@@ -40,17 +39,21 @@ class BaseWidgetContainer(QWidget):
         from karabo_gui import gui
 
         widget = self.old_style_widget
+        if self.model.parent_component == 'EditableApplyLaterComponent':
+            box = self.boxes[0]
+            widget.signalEditingFinished.disconnect(self._on_editing_finished)
+            # These are connected in `EditableWidget.__init__`
+            box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
+                widget.updateStateSlot)
+            gui.window.signalGlobalAccessLevelChanged.disconnect(
+                widget.updateStateSlot)
+
         for box in self.boxes:
             box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
             if self.model.parent_component == 'EditableApplyLaterComponent':
-                widget.signalEditingFinished.disconnect(self._on_editing_finished)
                 box.signalUserChanged.disconnect(self._on_user_edit)
-                box.signalUpdateComponent.disconnect(self._on_display_value_change)
-                # These are connected in `EditableWidget.__init__`
-                box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
-                    widget.updateStateSlot)
-                gui.window.signalGlobalAccessLevelChanged.disconnect(
-                    widget.updateStateSlot)
+                box.signalUpdateComponent.disconnect(
+                    self._on_display_value_change)
             else:  # DisplayWidgets
                 box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
 
@@ -100,6 +103,7 @@ class BaseWidgetContainer(QWidget):
             boxes. """
         source = event.source()
         if source is None:
+            event.ignore()
             return
 
         widget = self.old_style_widget
@@ -112,9 +116,10 @@ class BaseWidgetContainer(QWidget):
                 if widget.addBox(device_box):
                     self.model.keys.append(device_box.key())
                     self.boxes.append(device_box)
-                    self._make_box_connections(self.boxes[-1])
-                    event.accept()
-        super(BaseWidgetContainer, self).dropEvent(event)
+                    self._make_box_connections(device_box)
+            event.accept()
+        else:
+            event.ignore()
 
     # ---------------------------------------------------------------------
     # Edit buttons related code

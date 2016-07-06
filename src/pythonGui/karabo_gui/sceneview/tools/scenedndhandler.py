@@ -197,4 +197,3 @@ class NavigationDropHandler(SceneDnDHandler):
 
     def handle(self, scene_view, event):
         """ Handle the drop event. """
-
