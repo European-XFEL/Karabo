@@ -1,4 +1,4 @@
-from asyncio import gather
+from asyncio import coroutine, gather
 import socket
 
 from .enums import AccessLevel, AccessMode, Assignment
@@ -99,9 +99,8 @@ class Device(SignalSlotable):
         self.fullSchema = Schema(self.classId)
         self.fullSchema.copy(self.staticSchema)
 
-    def run(self):
-        self._ss.enter_context(self.log.setBroker(self._ss))
-        self.logger = self.log.logger
+    @coroutine
+    def _run(self):
         self.initSchema()
 
         info = Hash()
@@ -115,7 +114,10 @@ class Device(SignalSlotable):
         info["archive"] = self.archive.value
         self.updateInstanceInfo(info)
 
-        super().run()
+        yield from super()._run()
+
+        self._ss.enter_context(self.log.setBroker(self._ss))
+        self.logger = self.log.logger
 
     @slot
     def slotGetConfiguration(self):
