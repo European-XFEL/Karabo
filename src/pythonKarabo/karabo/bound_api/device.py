@@ -373,8 +373,16 @@ class PythonDevice(NoFsm):
     def set(self, *args, **kwargs):
         """
         Updates the state of the device. This function automatically notifies any observers.
-        This function supports 3 args: key, value, timestamp or 2 arg: hash, timestamp
-        If 1 or more than 3 arguments, it does nothing
+
+        args: can be of length
+
+            * one: expects a hash, and uses current timestamp
+            * two: expects a key, value pair and uses current timestamp or a hash, timestamp pair
+            * three: expects key, value and timestamp
+
+        kwargs: validate: specifies if validation of args should be performed before notification.
+
+
         """
         pars = tuple(args)
         hadPreviousParameterAlarm = self.validatorIntern.hasParametersInWarnOrAlarm()
@@ -433,10 +441,14 @@ class PythonDevice(NoFsm):
                     try:
                         validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
                     except RuntimeError as e:
-                        print("Validation Exception (Intern): " + str(e))
                         raise RuntimeError("Validation Exception: " + str(e))
 
-                    self._evaluateAndUpdateAlarmCondition(forceUpdate=hadPreviousParameterAlarm)
+                    resultingCondition = self._evaluateAndUpdateAlarmCondition(forceUpdate=hadPreviousParameterAlarm)
+                    if resultingCondition is not None and resultingCondition.asString() != self.parameters.get("alarmCondition"):
+                        validated.set("alarmCondition", resultingCondition.asString())
+                        node = validated.getNode("alarmCondition")
+                        attributes = node.getAttributes()
+                        stamp.toHashAttributes(attributes)
                     
                 else:
                     validated = hash
@@ -458,25 +470,22 @@ class PythonDevice(NoFsm):
                     
 
     def _evaluateAndUpdateAlarmCondition(self, forceUpdate):
-
         if self.validatorIntern.hasParametersInWarnOrAlarm():
             warnings = self.validatorIntern.getParametersInWarnOrAlarm()
             conditions = [self.globalAlarmCondition]
 
             for key in warnings:
                 desc = warnings[key]
-                self.log.WARN(desc["message"])
+                self.log.WARN("{}: {}".format(desc["type"],desc["message"]))
                 self._ss.emit("signalNotification", desc["type"], desc["message"], "", self.deviceid)
                 conditions.append(AlarmCondition.fromString(desc["type"]))
 
             mostSignificantCondition = AlarmCondition.returnMostSignificant(conditions)
-            self._stateChangeLock.release()
-            self.set("alarmCondition", mostSignificantCondition.asString(), validate=False)
-            self._stateChangeLock.acquire()
+            return mostSignificantCondition
         elif forceUpdate:
-            self._stateChangeLock.release()
-            self.set("alarmCondition", self.globalAlarmCondition.asString(), validate=False)
-            self._stateChangeLock.acquire()
+            return self.globalAlarmCondition
+        else:
+            return None
     
     def __setitem__(self, key, value):
         self.set(key, value, self._getActualTimestamp())
@@ -895,10 +904,12 @@ class PythonDevice(NoFsm):
 
     def setAlarmCondition(self, condition):
         if isinstance(condition, str):
-            raise AttributeError("Stringified alarmconditions are note allowed!")
+            raise TypeError("Stringified alarmconditions are note allowed!")
         with self._stateChangeLock:
             self.globalAlarmCondition = condition
-            self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
+            resultingCondition = self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
+            if resultingCondition is not None and resultingCondition.asString() != self.parameters.get("alarmCondition"):
+                self.set("alarmCondition", resultingCondition.asString(), validate=False)
 
     def getAlarmCondition(self, key = None, seperator = "."):
         if key is None:
@@ -950,7 +961,7 @@ def launchPythonDevice():
     config = PythonDevice.loadConfiguration(xmlfile)
     loader = PluginLoader.create(
         "PythonPluginLoader",
-        Hash("pluginNamespace", "karabo.python_device.api_1",
+        Hash("pluginNamespace", "karabo.bound_device",
              "pluginDirectory", plugindir)
     )
     loader.update()
