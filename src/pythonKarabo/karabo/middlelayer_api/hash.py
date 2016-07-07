@@ -9,6 +9,7 @@ from asyncio import async, iscoroutinefunction, coroutine, get_event_loop
 import base64
 from collections import OrderedDict
 from enum import Enum
+from functools import partial
 from io import BytesIO
 import numbers
 import pint
@@ -283,11 +284,8 @@ class Descriptor(object):
         setattr(instance, self.key, value)
 
     def _setter(self, instance, value):
-        ret = self.setter(instance, self.toKaraboValue(value, strict=False))
-        if ret is None:
-            return []
-        else:
-            return [ret]
+        return (partial(self.setter, instance,
+                        self.toKaraboValue(value, strict=False)),)
 
     def initialize(self, instance, value):
         return self.setter(instance, value)
@@ -318,10 +316,10 @@ class Descriptor(object):
                 raise KaraboError(
                     'assignment is mandatory for "{}"'.format(self.key))
             if self.defaultValue is None:
-                return []
+                return ()
             return self._initialize(instance, self.defaultValue)
         if self.accessMode is AccessMode.READONLY:
-            return []
+            return ()
         else:
             return self._initialize(instance, value)
 
