@@ -59,7 +59,7 @@ freetype hdf5 log4cpp cppunit openmq openmqc patchelf gmock )
 DEPENDENCIES_PYTHON=( setuptools pip wheel cython numpy scipy nose pillow
 sip backports tornado pyparsing six dateutil pytz pexpect pyzmq markupsafe
 jinja2 pygments docutils alabaster babel snowballstemmer sphinx_rtd_theme
-sphinx ipython h5py pyusb parse quamash suds jsonschema ecdsa pycrypto paramiko
+sphinx ipython h5py pyusb parse suds jsonschema ecdsa pycrypto paramiko
 tzlocal httplib2 pssh traits pint )
 
 DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib pyqwt5 guidata guiqwt )
@@ -165,7 +165,7 @@ if [ "$BUILD_PACKAGE" = "y" ]; then
     VERSION=$(git rev-list --count HEAD)
     INSTALL_DIR=$(basename $INSTALL_PREFIX)
     pushd $(dirname $INSTALL_PREFIX)
-    safeRunCommand "tar -zcf $INSTALL_PREFIX-$VERSION.tar.gz $INSTALL_DIR"
+    safeRunCommand "tar -zcf $INSTALL_DIR-$VERSION.tar.gz $INSTALL_DIR"
     popd
 fi
 
