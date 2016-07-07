@@ -500,7 +500,8 @@ class DisplayTrendline(DisplayWidget):
 
     @pyqtSlot()
     def _x_axis_scale_changed(self):
-        """ This slot is called whenever the x axis scale was changed. """
+        """ This slot is called whenever the timer timed out and previously the
+            x axis scale was changed. """
         asd = self.plot.axisScaleDiv(QwtPlot.xBottom)
         t0, t1 = asd.lowerBound(), asd.upperBound()
         self._update_x_axis_interval(t0, t1)
