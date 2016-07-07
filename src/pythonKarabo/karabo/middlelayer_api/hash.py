@@ -280,17 +280,38 @@ class Descriptor(object):
         instance.setValue(self, self.toKaraboValue(value))
 
     def setter(self, instance, value):
-        """this is to be called if the value is changed from the outside"""
+        """This is called when the value is changed from the outside
+
+        One may override this method if something special should happen.
+        This method must return None (e.g. by having no return statement
+        at all).
+        """
         setattr(instance, self.key, value)
 
     def _setter(self, instance, value):
+        """Return a tuple with callables to be called to set the value
+
+        `value` still is the bare Hash value, as it came from the network.
+        The actual setting is done by `setter` later.
+        """
         return (partial(self.setter, instance,
                         self.toKaraboValue(value, strict=False)),)
 
     def initialize(self, instance, value):
+        """This is called when the value is initialized
+
+        One may override this method if something special should happen,
+        otherwise `setter` is called. This method must return None
+        (e.g. by having no return statement at all).
+        """
         return self.setter(instance, value)
 
     def _initialize(self, instance, value):
+        """Initialize values and return a list of coroutines to be called
+
+        `value` still is the bare Hash value, as it came from the network.
+        `initialize` is called with corresponding `KaraboValue`.
+        """
         ret = self.initialize(instance,
                               self.toKaraboValue(value, strict=False))
         if ret is None:
@@ -299,6 +320,12 @@ class Descriptor(object):
             return [ret]
 
     def checkedSet(self, instance, value):
+        """Check whether it is allowed and return setters
+
+        This checks whether it is allowed to set the value and if so
+        returns an iterable with setter that need to be called to set the
+        value.
+        """
         if self.accessMode is not AccessMode.RECONFIGURABLE:
             msg = 'property "{}" is not reconfigurable'.format(self.key)
             raise KaraboError(msg)
@@ -311,6 +338,12 @@ class Descriptor(object):
             return self._setter(instance, value)
 
     def checkedInit(self, instance, value=None):
+        """Check whether it is allowed and initialze
+
+        This checks whether it is allowed to initialize the value and
+        returns an iterable with coroutines which may be needed for
+        delayed initialization.
+        """
         if value is None:
             if self.assignment is Assignment.MANDATORY:
                 raise KaraboError(
