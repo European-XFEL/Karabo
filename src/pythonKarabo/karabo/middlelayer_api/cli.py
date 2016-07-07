@@ -81,7 +81,6 @@ def start_device_client():
     hostname = socket.gethostname().replace(".", "_")
     devices = DeviceClient(_deviceId_="ikarabo-{}-{}".format(
         hostname, os.getpid()))
-    thread.start_device(devices)
 
     set_event_loop(NoEventLoop(devices))
 
