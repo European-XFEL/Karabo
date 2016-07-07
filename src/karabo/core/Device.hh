@@ -460,7 +460,7 @@ namespace karabo {
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
                 
-               
+
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 karabo::util::Hash validated;
                 std::pair<bool, std::string> result;
@@ -886,10 +886,15 @@ namespace karabo {
             
             void setAlarmCondition(const karabo::util::AlarmCondition & condition){
                 using namespace karabo::util;
+                const std::string& currentAlarmCondition = this->get<std::string>("alarmCondition");
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_globalAlarmCondition = condition;
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
+<<<<<<< HEAD
                 if(result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")){
+=======
+                if(result.first && result.second.asString() != currentAlarmCondition){
+>>>>>>> Unified strings used to represent alarm conditions
                     lock.unlock();
                     this->setNoValidate("alarmCondition", result.second.asString());
                 }
@@ -909,7 +914,30 @@ namespace karabo {
                 return m_validatorIntern.getRollingStatistics(path);         
             }
             
+            const karabo::util::Hash getAlarmInfo(){
+                using namespace karabo::util;
+                Hash info;
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
+                for(Hash::const_iterator it = h.begin(); it != h.end(); ++it){
+                    const Hash& desc = it->getValue<Hash>();
+                    const AlarmCondition& cond = AlarmCondition::fromString(desc.get<std::string>("type"));
+                    info.set(it->getKey(), m_fullSchema.getInfoForAlarm(it->getKey(), cond));
+                }
+                return info;
+                
+            }
             
+            void outputAlarmInfo(){
+                const karabo::util::Hash& info = this->getAlarmInfo();
+                std::ostringstream out;
+                for(karabo::util::Hash::const_iterator it = info.begin(); it != info.end(); ++it){
+                    out<<"Property: "<<it->getKey()<<std::endl;
+                    out<<"----------"<<std::endl;
+                    out<<it->getValue<std::string>()<<std::endl;
+                }
+                KARABO_LOG_INFO<<out;
+            }
 
         protected: // Functions and Classes
 
