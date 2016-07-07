@@ -913,5 +913,7 @@ namespace karabo {
         bool similar(const Schema& left, const Schema& right) {
             return similar(left.getParameterHash(), right.getParameterHash());
         }
+        
+        
     }
 }

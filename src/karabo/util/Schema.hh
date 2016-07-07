@@ -22,6 +22,7 @@
 #include "StringTools.hh"
 #include "ToLiteral.hh"
 #include "Units.hh"
+#include "AlarmConditions.hh"
 
 #include "karaboDll.hh"
 
@@ -133,6 +134,7 @@ namespace karabo {
             #define KARABO_SCHEMA_OVERWRITE "overwrite"
 
             #define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
+            #define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
@@ -770,7 +772,7 @@ namespace karabo {
             bool hasRollingStatistics(const std::string& path) const;
         
             unsigned int getRollingStatsEvalInterval(const std::string& path) const;
-
+            
             //**********************************************
             //               archivePolicy                 *
             //**********************************************

@@ -182,10 +182,10 @@ struct TestSchemaXsdSerializer {
                 .unit(Unit::METER)
                 .metricPrefix(MetricPrefix::MILLI)
                 .readOnly()
-                .alarmHigh(7).needsAcknowledging(false)
-                .warnHigh(5).needsAcknowledging(true)
-                .warnLow(0).needsAcknowledging(false) 
+                .warnLow(0).needsAcknowledging(false)
+                .warnHigh(2).needsAcknowledging(true)
                 .alarmLow(-2).needsAcknowledging(false)
+                .alarmHigh(7).needsAcknowledging(false)
                 .commit();
 
     }
