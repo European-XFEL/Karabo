@@ -344,17 +344,15 @@ class Descriptor(object):
         returns an iterable with coroutines which may be needed for
         delayed initialization.
         """
-        if value is None:
+        # initial values for READONLY attributes are ignored
+        if value is None or self.accessMode is AccessMode.READONLY:
             if self.assignment is Assignment.MANDATORY:
                 raise KaraboError(
                     'assignment is mandatory for "{}"'.format(self.key))
             if self.defaultValue is None:
                 return ()
             return self._initialize(instance, self.defaultValue)
-        if self.accessMode is AccessMode.READONLY:
-            return ()
-        else:
-            return self._initialize(instance, value)
+        return self._initialize(instance, value)
 
     def toDataAndAttrs(self, value):
         """Split value in bare data and the attributes that go with it

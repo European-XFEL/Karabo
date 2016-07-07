@@ -157,6 +157,38 @@ class Tests(TestCase):
         with self.assertRaises(KaraboError):
             run_coro(a.slotReconfigure(rehash(value=10)))
 
+    def test_readonly_default(self):
+        class B(Configurable):
+            value = Int32(defaultValue=9,
+                          accessMode=AccessMode.READONLY,
+                          unitSymbol=Unit.METER)
+
+        class A(MockConfigurable):
+            value = Int32(defaultValue=5,
+                          accessMode=AccessMode.READONLY,
+                          unitSymbol=Unit.METER)
+            node = Node(B)
+
+        a = A()
+        self.assertEqual(a.value, 5 * unit.meter)
+        self.assertEqual(a.node.value, 9 * unit.meter)
+        a = A(rehash(value=7, node=Hash("value", 3)))
+        # we ignore read only parameters in configuration
+        self.assertEqual(a.value, 5 * unit.meter)
+        self.assertEqual(a.node.value, 9 * unit.meter)
+        a.assertValue(5 * unit.meter)
+        a.assertChild("node.value", 9 * unit.meter)
+        a.value = 9 * unit.meter
+        a.node.value = 4 * unit.meter
+        self.assertEqual(a.value, 9 * unit.meter)
+        self.assertEqual(a.node.value, 4 * unit.meter)
+        a.assertValue(9 * unit.meter)
+        a.assertChild("node.value", 4 * unit.meter)
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(node=Hash("value", 5))))
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(value=10)))
+
     def test_init_nodefault(self):
         class B(Configurable):
             value = Int32(accessMode=AccessMode.INITONLY,
