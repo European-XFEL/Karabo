@@ -314,6 +314,29 @@ class Tests(TestCase):
         self.assertEqual(a.value, 4 * unit.meter)
         self.assertEqual(a.node.value, 4 * unit.meter)
 
+    def test_cross_error(self):
+        class B(Configurable):
+            allowed = Int32(defaultValue=1)
+            forbidden = Int32(accessMode=AccessMode.READONLY,
+                              defaultValue=2)
+
+        class A(Configurable):
+            allowed = Int32(defaultValue=3)
+            forbidden = Int32(accessMode=AccessMode.READONLY,
+                              defaultValue=4)
+            node = Node(B)
+
+        a = A()
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(
+                rehash(allowed=5, forbidden=6)))
+        self.assertEqual(a.allowed, 3)
+        self.assertEqual(a.node.allowed, 1)
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(
+                rehash(node=Hash("allowed", 7, "forbidden", 8))))
+        self.assertEqual(a.allowed, 3)
+        self.assertEqual(a.node.allowed, 1)
 
 if __name__ == "__main__":
     main()
