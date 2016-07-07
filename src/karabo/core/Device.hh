@@ -931,12 +931,13 @@ namespace karabo {
             void outputAlarmInfo(){
                 const karabo::util::Hash& info = this->getAlarmInfo();
                 std::ostringstream out;
+                out<<"Alarm information for device: "<<this->getInstanceId()<<std::endl;
                 for(karabo::util::Hash::const_iterator it = info.begin(); it != info.end(); ++it){
                     out<<"Property: "<<it->getKey()<<std::endl;
                     out<<"----------"<<std::endl;
                     out<<it->getValue<std::string>()<<std::endl;
                 }
-                KARABO_LOG_INFO<<out;
+                KARABO_LOG_INFO<<out.str();
             }
 
         protected: // Functions and Classes
