@@ -472,7 +472,12 @@ namespace karabo {
                 }
 
                 // Check for parameters being in a bad condition
-                this->evaluateAndUpdateAlarmCondition(lock, hadPreviousAlarm);
+                std::pair<bool, const AlarmCondition> resultingCondition = this->evaluateAndUpdateAlarmCondition(hadPreviousAlarm);
+                if(resultingCondition.first){
+                    lock.unlock();
+                    this->setNoValidate("alarmCondition", resultingCondition.second.asString());
+                    lock.lock();
+                }
                 
                 if (!validated.empty()) {
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
@@ -877,10 +882,15 @@ namespace karabo {
                 return karabo::util::AlarmCondition::fromString(this->get<std::string>("alarmCondition"));
             }
             
-            void setAlarmCondition(const karabo::util::AlarmCondition & condition, const bool manualUpdate = true){
+            void setAlarmCondition(const karabo::util::AlarmCondition & condition){
+                using namespace karabo::util;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_globalAlarmCondition = condition;
-                this->evaluateAndUpdateAlarmCondition(lock, true);
+                std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
+                if(result.first){
+                    lock.unlock();
+                    this->setNoValidate("alarmCondition", result.second.asString());
+                }
                 
             }
             
@@ -896,6 +906,8 @@ namespace karabo {
             karabo::util::RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & path) const {
                 return m_validatorIntern.getRollingStatistics(path);         
             }
+            
+            
 
         protected: // Functions and Classes
 
@@ -1246,7 +1258,7 @@ namespace karabo {
             }
             
             
-            void evaluateAndUpdateAlarmCondition(boost::mutex::scoped_lock & lock, bool forceUpate){
+            const std::pair<bool, const karabo::util::AlarmCondition> evaluateAndUpdateAlarmCondition(bool forceUpate){
                 using namespace karabo::util;
                 if (m_validatorIntern.hasParametersInWarnOrAlarm()) {
                     const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
@@ -1260,15 +1272,11 @@ namespace karabo {
                         emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_deviceId);
                         v.push_back(AlarmCondition::fromString(desc.get<string>("type")));
                     }
-                    lock.unlock();
-                    this->setNoValidate("alarmCondition", AlarmCondition::returnMostSignificant(v).asString());
-                    lock.lock();
-                   
+                    return std::make_pair<bool, const AlarmCondition>(true, AlarmCondition::returnMostSignificant(v));
                 } else if(forceUpate){
-                    lock.unlock();
-                    this->setNoValidate("alarmCondition", m_globalAlarmCondition.asString());
-                    lock.lock();
+                    return std::make_pair<bool, const AlarmCondition>(true, m_globalAlarmCondition);
                 }
+                return std::make_pair<bool, const AlarmCondition>(false, AlarmCondition::NONE);
             }
             
             
