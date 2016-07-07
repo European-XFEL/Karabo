@@ -21,12 +21,13 @@ class MockConfigurable(Configurable):
 
     def setChildValue(self, key, value, desc):
         super().setChildValue(key, value, desc)
-        assert key == "node.value"
         assert self.mock_child is None
+        self.key = key
         self.mock_child = value
 
-    def assertChild(self, value):
+    def assertChild(self, key, value):
         assert value == self.mock_child
+        assert key == self.key
         self.mock_child = None
 
 
@@ -61,13 +62,13 @@ class Tests(TestCase):
         self.assertEqual(a.value, 7 * unit.meter)
         self.assertEqual(a.node.value, 3 * unit.meter)
         a.assertValue(7 * unit.meter)
-        a.assertChild(3 * unit.meter)
+        a.assertChild("node.value", 3 * unit.meter)
         a.value = 9 * unit.meter
         a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
         self.assertEqual(a.node.value, 4 * unit.meter)
         a.assertValue(9 * unit.meter)
-        a.assertChild(4 * unit.meter)
+        a.assertChild("node.value", 4 * unit.meter)
         run_coro(a.slotReconfigure(rehash(value=10, node=Hash("value", 5))))
         self.assertEqual(a.value, 10 * unit.meter)
         self.assertEqual(a.node.value, 5 * unit.meter)
@@ -87,13 +88,13 @@ class Tests(TestCase):
         self.assertEqual(a.value, 7 * unit.meter)
         self.assertEqual(a.node.value, 3 * unit.meter)
         a.assertValue(7 * unit.meter)
-        a.assertChild(3 * unit.meter)
+        a.assertChild("node.value", 3 * unit.meter)
         a.value = 9 * unit.meter
         a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
         self.assertEqual(a.node.value, 4 * unit.meter)
         a.assertValue(9 * unit.meter)
-        a.assertChild(4 * unit.meter)
+        a.assertChild("node.value", 4 * unit.meter)
         run_coro(a.slotReconfigure(rehash(value=10, node=Hash("value", 5))))
         self.assertEqual(a.value, 10 * unit.meter)
         self.assertEqual(a.node.value, 5 * unit.meter)
@@ -117,13 +118,13 @@ class Tests(TestCase):
         self.assertEqual(a.value, 7 * unit.meter)
         self.assertEqual(a.node.value, 3 * unit.meter)
         a.assertValue(7 * unit.meter)
-        a.assertChild(3 * unit.meter)
+        a.assertChild("node.value", 3 * unit.meter)
         a.value = 9 * unit.meter
         a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
         self.assertEqual(a.node.value, 4 * unit.meter)
         a.assertValue(9 * unit.meter)
-        a.assertChild(4 * unit.meter)
+        a.assertChild("node.value", 4 * unit.meter)
         run_coro(a.slotReconfigure(rehash(value=10, node=Hash("value", 5))))
         self.assertEqual(a.value, 10 * unit.meter)
         self.assertEqual(a.node.value, 5 * unit.meter)
@@ -150,7 +151,7 @@ class Tests(TestCase):
         self.assertEqual(a.value, 9 * unit.meter)
         self.assertEqual(a.node.value, 4 * unit.meter)
         a.assertValue(9 * unit.meter)
-        a.assertChild(4 * unit.meter)
+        a.assertChild("node.value", 4 * unit.meter)
         with self.assertRaises(KaraboError):
             run_coro(a.slotReconfigure(rehash(node=Hash("value", 5))))
         with self.assertRaises(KaraboError):
@@ -173,13 +174,13 @@ class Tests(TestCase):
         self.assertEqual(a.value, 7 * unit.meter)
         self.assertEqual(a.node.value, 3 * unit.meter)
         a.assertValue(7 * unit.meter)
-        a.assertChild(3 * unit.meter)
+        a.assertChild("node.value", 3 * unit.meter)
         a.value = 9 * unit.meter
         a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
         self.assertEqual(a.node.value, 4 * unit.meter)
         a.assertValue(9 * unit.meter)
-        a.assertChild(4 * unit.meter)
+        a.assertChild("node.value", 4 * unit.meter)
         with self.assertRaises(KaraboError):
             run_coro(a.slotReconfigure(rehash(value=10)))
         with self.assertRaises(KaraboError):
@@ -202,13 +203,13 @@ class Tests(TestCase):
         self.assertEqual(a.value, 7 * unit.meter)
         self.assertEqual(a.node.value, 3 * unit.meter)
         a.assertValue(7 * unit.meter)
-        a.assertChild(3 * unit.meter)
+        a.assertChild("node.value", 3 * unit.meter)
         a.value = 9 * unit.meter
         a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
         self.assertEqual(a.node.value, 4 * unit.meter)
         a.assertValue(9 * unit.meter)
-        a.assertChild(4 * unit.meter)
+        a.assertChild("node.value", 4 * unit.meter)
         with self.assertRaises(KaraboError):
             run_coro(a.slotReconfigure(rehash(value=10)))
         with self.assertRaises(KaraboError):
@@ -235,13 +236,13 @@ class Tests(TestCase):
         self.assertEqual(a.value, 7 * unit.meter)
         self.assertEqual(a.node.value, 3 * unit.meter)
         a.assertValue(7 * unit.meter)
-        a.assertChild(3 * unit.meter)
+        a.assertChild("node.value", 3 * unit.meter)
         a.value = 9 * unit.meter
         a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
         self.assertEqual(a.node.value, 4 * unit.meter)
         a.assertValue(9 * unit.meter)
-        a.assertChild(4 * unit.meter)
+        a.assertChild("node.value", 4 * unit.meter)
         with self.assertRaises(KaraboError):
             run_coro(a.slotReconfigure(rehash(value=10)))
         with self.assertRaises(KaraboError):
@@ -337,6 +338,28 @@ class Tests(TestCase):
                 rehash(node=Hash("allowed", 7, "forbidden", 8))))
         self.assertEqual(a.allowed, 3)
         self.assertEqual(a.node.allowed, 1)
+
+    def test_nested(self):
+        class C(Configurable):
+            value = Int32(defaultValue=3)
+
+        class B(Configurable):
+            nested = Node(C)
+
+        class A(MockConfigurable):
+            nested = Node(B)
+
+        a = A()
+        a.assertChild("nested.nested.value", 3)
+        self.assertEqual(a.nested.nested.value, 3)
+        a.nested.nested.value = 5
+        a.assertChild("nested.nested.value", 5)
+        self.assertEqual(a.nested.nested.value, 5)
+        run_coro(a.slotReconfigure(rehash(
+            nested=Hash("nested", Hash("value", 7)))))
+        self.assertEqual(a.nested.nested.value, 7)
+        a.assertChild("nested.nested.value", 7)
+
 
 if __name__ == "__main__":
     main()
