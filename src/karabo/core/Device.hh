@@ -459,12 +459,13 @@ namespace karabo {
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
                 
-                
+                const std::string& currentAlarmCondition = this->get<std::string>("alarmCondition");
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 karabo::util::Hash validated;
                 std::pair<bool, std::string> result;
                 
                 const bool hadPreviousAlarm = m_validatorIntern.hasParametersInWarnOrAlarm();
+               
                 result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
                 
                 if (result.first == false) {
@@ -473,10 +474,8 @@ namespace karabo {
 
                 // Check for parameters being in a bad condition
                 std::pair<bool, const AlarmCondition> resultingCondition = this->evaluateAndUpdateAlarmCondition(hadPreviousAlarm);
-                if(resultingCondition.first){
-                    lock.unlock();
-                    this->setNoValidate("alarmCondition", resultingCondition.second.asString());
-                    lock.lock();
+                if(resultingCondition.first && resultingCondition.second.asString() != currentAlarmCondition){
+                    validated.set("alarmCondition", resultingCondition.second.asString());
                 }
                 
                 if (!validated.empty()) {
@@ -884,10 +883,11 @@ namespace karabo {
             
             void setAlarmCondition(const karabo::util::AlarmCondition & condition){
                 using namespace karabo::util;
+                const std::string& currentAlarmCondition = this->get<std::string>("alarmCondition");
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_globalAlarmCondition = condition;
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
-                if(result.first){
+                if(result.first && result.second.asString() != currentAlarmCondition){
                     lock.unlock();
                     this->setNoValidate("alarmCondition", result.second.asString());
                 }

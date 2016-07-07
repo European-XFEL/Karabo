@@ -20,11 +20,8 @@ void exportPyUtilRollingWindowStatistics() {
 
     bp::class_<RollingWindowStatistics, boost::shared_ptr<RollingWindowStatistics>, boost::noncopyable > d("RollingWindowStatistics", bp::no_init);
         d.def(bp::init<const unsigned int>(bp::args("evaluationInterval")));        
-        d.def("update", &RollingWindowStatistics::update);
+        d.def("update", &RollingWindowStatistics::update, bp::arg("value"));
         d.def("getRollingWindowVariance", &RollingWindowStatistics::getRollingWindowVariance);
         d.def("getRollingWindowMean", &RollingWindowStatistics::getRollingWindowMean);
 
 }
-
- 
-
