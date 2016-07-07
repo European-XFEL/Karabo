@@ -135,7 +135,7 @@ class SignalSlotable(Configurable):
         self._sethash = {}
         if server is not None:
             server.addChild(self.deviceId, self)
-        return loop.create_task(self.run_async(), self)
+        return loop.create_task(self._run(), self)
 
 
     # slotPing _is_ a slot, but not using the official decorator.
@@ -182,15 +182,12 @@ class SignalSlotable(Configurable):
             return False, Hash()
 
     @coroutine
-    def run_async(self):
+    def _run(self):
         """start everything needed for this device
 
         This coroutine is called once a device is started. Overwrite this
         method if you want code to be called at startup time. Don't forget
         to yield from super.
-
-        This method also calls ``self.run``, so if you don't need a coroutine,
-        it's easier to overwrite ``run``.
 
         This method is supposed to return once everything is up and running.
         If you have long-running tasks, start them with async.
@@ -208,7 +205,7 @@ class SignalSlotable(Configurable):
                               format(self.deviceId))
         except TimeoutError:
             pass
-        self.run()
+        yield from super()._run()
         self.__randPing = 0  # Start answering on slotPing with argument rand=0
         async(self._ss.notify_network(self.heartbeatInterval))
         yield from get_event_loop().run_coroutine_or_thread(

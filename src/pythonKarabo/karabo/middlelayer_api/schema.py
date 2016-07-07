@@ -131,9 +131,9 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         if self.__parent is not None:
             self.__parent.setChildValue(self.__key + "." + key, value, desc)
 
-    def run(self):  # endpoint for multiple inheritance
-        self.running = True
-
+    @coroutine
+    def _run(self):
+        pass
     def _use(self):
         """this method is called each time an attribute of this configurable
         is read"""
