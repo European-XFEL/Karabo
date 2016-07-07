@@ -22,6 +22,7 @@
 #include "StringTools.hh"
 #include "ToLiteral.hh"
 #include "Units.hh"
+#include "AlarmConditions.hh"
 
 #include "karaboDll.hh"
 
@@ -771,7 +772,7 @@ namespace karabo {
             bool hasRollingStatistics(const std::string& path) const;
         
             unsigned int getRollingStatsEvalInterval(const std::string& path) const;
-
+            
             //**********************************************
             //               archivePolicy                 *
             //**********************************************
