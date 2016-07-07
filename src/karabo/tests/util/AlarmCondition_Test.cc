@@ -212,7 +212,7 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip(){
     
     FLOAT_ELEMENT(schema).key("f1")
         .readOnly().initialValue(5)
-        .warnLow(5).needsAcknowledging(true)
+        .warnLow(5).info("This is an optional description").needsAcknowledging(true)
         .warnHigh(50).needsAcknowledging(true)
         .commit();
     
@@ -249,4 +249,6 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip(){
     CPPUNIT_ASSERT(!alarmParms.has("f1"));
     CPPUNIT_ASSERT(alarmParms.has("f2"));
     CPPUNIT_ASSERT(alarmParms.get<Hash>("f2").get<std::string>("type") == AlarmCondition::WARN_LOW.asString());
+    
+    CPPUNIT_ASSERT(schema.getParameterHash().getAttribute<std::string>("f1", "alarmInfo_warnLow") == "This is an optional description");
 }
