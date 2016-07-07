@@ -22,6 +22,7 @@
 #include <karabo/log/Logger.hh>
 #include <karabo/xip/CpuImage.hh>
 #include <karabo/xip/RawImageData.hh>
+
 #include "coredll.hh"
 
 #include "NoFsm.hh"
@@ -459,7 +460,7 @@ namespace karabo {
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
                 
-                const std::string& currentAlarmCondition = this->get<std::string>("alarmCondition");
+               
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 karabo::util::Hash validated;
                 std::pair<bool, std::string> result;
@@ -474,8 +475,11 @@ namespace karabo {
 
                 // Check for parameters being in a bad condition
                 std::pair<bool, const AlarmCondition> resultingCondition = this->evaluateAndUpdateAlarmCondition(hadPreviousAlarm);
-                if(resultingCondition.first && resultingCondition.second.asString() != currentAlarmCondition){
-                    validated.set("alarmCondition", resultingCondition.second.asString());
+                if(resultingCondition.first && resultingCondition.second.asString() != m_parameters.get<std::string>("alarmCondition")){
+                    Hash::Node& node = validated.set("alarmCondition", resultingCondition.second.asString());
+                    Hash::Attributes& attributes = node.getAttributes();
+                    timestamp.toHashAttributes(attributes);
+                    
                 }
                 
                 if (!validated.empty()) {
@@ -883,11 +887,10 @@ namespace karabo {
             
             void setAlarmCondition(const karabo::util::AlarmCondition & condition){
                 using namespace karabo::util;
-                const std::string& currentAlarmCondition = this->get<std::string>("alarmCondition");
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_globalAlarmCondition = condition;
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
-                if(result.first && result.second.asString() != currentAlarmCondition){
+                if(result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")){
                     lock.unlock();
                     this->setNoValidate("alarmCondition", result.second.asString());
                 }
