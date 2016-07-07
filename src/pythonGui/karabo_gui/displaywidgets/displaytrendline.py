@@ -164,10 +164,17 @@ class Curve(QObject):
     def changeInterval(self, t0, t1):
         p0 = self.x[:self.fill].searchsorted(t0)
         p1 = self.x[:self.fill].searchsorted(t1)
-        if (p1 - p0 < self.minHistory and self.histsize > self.sparsesize or
-                self.x[p0] > 0.9 * self.t0 + 0.1 * self.t1 or
-                p1 < self.histsize and
-                self.x[p1 - 1] < 0.1 * self.t0 + 0.9 * self.t1):
+
+        not_enough_data = (p1 - p0) < self.minHistory
+        no_data = self.histsize == 0
+        zoomed_out = self.histsize > self.sparsesize
+        nearly_left_border = 0.9 * self.t0 + 0.1 * self.t1
+        nearly_right_border = 0.1 * self.t0 + 0.9 * self.t1
+
+        # Request history only needs to be done under certain circumstances
+        if (no_data or (not_enough_data and zoomed_out) or
+                (self.x[p0] > nearly_left_border) or
+                (p1 < self.histsize and self.x[p1 - 1] < nearly_right_border)):
             self.getPropertyHistory(t0, t1)
         self.t0 = t0
         self.t1 = t1
@@ -360,7 +367,7 @@ class DisplayTrendline(DisplayWidget):
         # It would be a nightmare to overwrite three classes, so we just do
         # a little monkey patching here.
         self.plot.edit_axis_parameters = self.edit_axis_parameters
-
+        
         # have a 1 s timeout to request data, thus avoid
         # frequent re-loading while scaling
         self.timer = QTimer(self)
@@ -408,10 +415,13 @@ class DisplayTrendline(DisplayWidget):
                 return
             # Reset time buttons
             self._uncheck_time_buttons()
-            self.plot.setAxisScale(
-                QwtPlot.xBottom,
-                dialog.dt_beginning.dateTime().toMSecsSinceEpoch() / 1000,
-                dialog.dt_end.dateTime().toMSecsSinceEpoch() / 1000)
+            start_date_time = dialog.dt_beginning.dateTime()
+            end_date_time = dialog.dt_end.dateTime()
+            start_date_time = start_date_time.toMSecsSinceEpoch() / 1000
+            end_date_time = end_date_time.toMSecsSinceEpoch() / 1000
+            self.plot.setAxisScale(QwtPlot.xBottom,
+                                   start_date_time,
+                                   end_date_time)
             self.updateLater()
 
     def typeChanged(self, box):
@@ -448,15 +458,13 @@ class DisplayTrendline(DisplayWidget):
         t = timestamp.toTimestamp()
         self.curves[box].addPoint(value, t)
 
+        t0 = self.plot.axisScaleDiv(QwtPlot.xBottom).lowerBound()
         t1 = self.plot.axisScaleDiv(QwtPlot.xBottom).upperBound()
         if self.lasttime < t1 < t:
-            aw = self.plot.axisWidget(QwtPlot.xBottom)
-            with SignalBlocker(aw):
-                if not self._update_x_axis_scale():
-                    self.plot.setAxisScale(
-                        QwtPlot.xBottom,
-                        self.plot.axisScaleDiv(QwtPlot.xBottom).lowerBound(),
-                        t + 10)
+            if not self._update_x_axis_scale():
+                aw = self.plot.axisWidget(QwtPlot.xBottom)
+                with SignalBlocker(aw):
+                    self.plot.setAxisScale(QwtPlot.xBottom, t0, t + 10)
 
         self.lasttime = timestamp.toTimestamp()
         self.wasVisible = True
@@ -464,6 +472,12 @@ class DisplayTrendline(DisplayWidget):
 
     def deferredUpdate(self):
         self.plot.replot()
+        asd = self.plot.axisScaleDiv(QwtPlot.xBottom)
+        t0, t1 = asd.lowerBound(), asd.upperBound()
+        # Update date time widgets
+        start = QDateTime.fromMSecsSinceEpoch(t0 * 1000)
+        end = QDateTime.fromMSecsSinceEpoch(t1 * 1000)
+        self._update_date_time_widgets(start, end)
 
     def save(self, e):
         for k, v in self.curves.items():
@@ -489,19 +503,14 @@ class DisplayTrendline(DisplayWidget):
         """ This slot is called whenever the x axis scale was changed. """
         asd = self.plot.axisScaleDiv(QwtPlot.xBottom)
         t0, t1 = asd.lowerBound(), asd.upperBound()
-        for v in self.curves.values():
-            v.changeInterval(t0, t1)
-        
-        t0 = QDateTime.fromMSecsSinceEpoch(t0 * 1000)
-        t1 = QDateTime.fromMSecsSinceEpoch(t1 * 1000)
-        self._update_date_time_widgets(t0, t1)
+        self._update_x_axis_interval(t0, t1)
 
     @pyqtSlot(object)
     def _time_buttons_toggled(self, button):
         """ A time button was clicked which needs to update the axis scale. """
         self._selected_time_btn = button
-        self._update_x_axis_scale()
-        self.updateLater()
+        if self._update_x_axis_scale():
+            self.updateLater()
 
     @pyqtSlot()
     def _reset_button_clicked(self):
@@ -531,6 +540,11 @@ class DisplayTrendline(DisplayWidget):
         self.curves[box] = curve
         self.plot.add_item(curve.curve)
         curve.update()
+
+    def _update_x_axis_interval(self, t0, t1):
+        """ Update lower and upper bound of curve intervals. """
+        for v in self.curves.values():
+            v.changeInterval(t0, t1)
 
     def _uncheck_time_buttons(self):
         self.time_string_btns[HIDDEN].click()
@@ -589,5 +603,9 @@ class DisplayTrendline(DisplayWidget):
         end = end.toMSecsSinceEpoch() / 1000
 
         # Rescale x axis
-        self.plot.setAxisScale(QwtPlot.xBottom, start, end)
+        aw = self.plot.axisWidget(QwtPlot.xBottom)
+        with SignalBlocker(aw):
+            # Use blocker to prevent timer start
+            self.plot.setAxisScale(QwtPlot.xBottom, start, end)
+        self._update_x_axis_interval(start, end)
         return True
