@@ -495,35 +495,35 @@ namespace karabo {
         //******************************************************
 
         bool Schema::hasWarnLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_LOW);
+            return m_hash.hasAttribute(path, AlarmCondition::WARN_LOW.asString());
         }
 
         bool Schema::hasWarnHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_HIGH);
+            return m_hash.hasAttribute(path, AlarmCondition::WARN_HIGH.asString());
         }
 
         bool Schema::hasAlarmLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_LOW);
+            return m_hash.hasAttribute(path, AlarmCondition::ALARM_LOW.asString());
         }
 
         bool Schema::hasAlarmHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_HIGH);
+            return m_hash.hasAttribute(path, AlarmCondition::ALARM_HIGH.asString());
         }
         
         bool Schema::hasWarnVarianceLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_LOW);
+            return m_hash.hasAttribute(path, AlarmCondition::WARN_VARIANCE_LOW.asString());
         }
 
         bool Schema::hasWarnVarianceHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_HIGH);
+            return m_hash.hasAttribute(path, AlarmCondition::WARN_VARIANCE_HIGH.asString());
         }
 
         bool Schema::hasAlarmVarianceLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_LOW);
+            return m_hash.hasAttribute(path, AlarmCondition::ALARM_VARIANCE_LOW.asString());
         }
 
         bool Schema::hasAlarmVarianceHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
+            return m_hash.hasAttribute(path, AlarmCondition::ALARM_VARIANCE_HIGH.asString());
         }
         
         bool Schema::hasRollingStatistics(const std::string& path) const {
@@ -914,6 +914,13 @@ namespace karabo {
             return similar(left.getParameterHash(), right.getParameterHash());
         }
         
-        
+        const std::string Schema::getInfoForAlarm(const std::string& path, const AlarmCondition& condition) const {
+            const std::string attr = std::string(KARABO_SCHEMA_ALARM_INFO)+"_"+condition.asString();
+            if(m_hash.hasAttribute(path, attr)){
+                return m_hash.getAttribute<std::string>(path, attr);
+            } else {
+                return std::string();
+            }
+        }
     }
 }

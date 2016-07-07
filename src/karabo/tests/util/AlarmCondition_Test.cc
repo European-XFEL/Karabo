@@ -249,6 +249,7 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip(){
     CPPUNIT_ASSERT(!alarmParms.has("f1"));
     CPPUNIT_ASSERT(alarmParms.has("f2"));
     CPPUNIT_ASSERT(alarmParms.get<Hash>("f2").get<std::string>("type") == AlarmCondition::WARN_LOW.asString());
-    
-    CPPUNIT_ASSERT(schema.getParameterHash().getAttribute<std::string>("f1", "alarmInfo_warnLow") == "This is an optional description");
+
+    CPPUNIT_ASSERT(schema.getInfoForAlarm("f1", AlarmCondition::WARN_LOW) == "This is an optional description");
+    CPPUNIT_ASSERT(schema.getInfoForAlarm("f1", AlarmCondition::WARN_HIGH) == "");
 }
