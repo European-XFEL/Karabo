@@ -479,7 +479,6 @@ namespace karabo {
                     Hash::Node& node = validated.set("alarmCondition", resultingCondition.second.asString());
                     Hash::Attributes& attributes = node.getAttributes();
                     timestamp.toHashAttributes(attributes);
-                    
                 }
                 
                 if (!validated.empty()) {
