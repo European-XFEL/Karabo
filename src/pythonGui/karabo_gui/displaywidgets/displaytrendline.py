@@ -13,7 +13,7 @@ from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 
 from PyQt4 import uic
-from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSlot
+from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import (QButtonGroup, QDateTimeEdit, QDialog, QHBoxLayout,
                          QPushButton, QVBoxLayout, QWidget)
 
@@ -309,14 +309,39 @@ class Timespan(QDialog):
         self._set_beginning_end_date_time(TEN_MINUTES)
 
 
+class _KaraboCurveDialog(CurveDialog):
+    signal_mouse_event = pyqtSignal()
+
+    def __init__(self, **kwargs):
+        """ Possible key arguments:
+            * wintitle: window title
+            * icon: window icon
+            * edit: editable state
+            * toolbar: show/hide toolbar
+            * options: options sent to the :py:class:`guiqwt.curve.CurvePlot`
+                       object (dictionary)
+            * parent: parent widget
+            * panels (optional): additionnal panels (list, tuple)
+        """
+        super(_KaraboCurveDialog, self).__init__(**kwargs)
+
+    def mousePressEvent(self, event):
+        if event.button() in (Qt.LeftButton, Qt.MidButton, Qt.RightButton):
+            self.signal_mouse_event.emit()
+        super(_KaraboCurveDialog, self).mousePressEvent(event)
+
+
 class DisplayTrendline(DisplayWidget):
     category = Simple
     alias = "Trendline"
 
     def __init__(self, box, parent):
         super(DisplayTrendline, self).__init__(None)
-        self.dialog = CurveDialog(edit=False, toolbar=True,
-                                  wintitle="Trendline")
+        self.dialog = _KaraboCurveDialog(wintitle="Trendline", edit=False,
+                                         toolbar=True)
+        # Make connection to update time buttons when mouse event in QwtWidget
+        # happened
+        self.dialog.signal_mouse_event.connect(self._uncheck_time_buttons)
 
         # Create widget for beginning and end date time
         self.date_time_widget = QWidget()
@@ -367,7 +392,7 @@ class DisplayTrendline(DisplayWidget):
         # It would be a nightmare to overwrite three classes, so we just do
         # a little monkey patching here.
         self.plot.edit_axis_parameters = self.edit_axis_parameters
-        
+
         # have a 1 s timeout to request data, thus avoid
         # frequent re-loading while scaling
         self.timer = QTimer(self)
@@ -525,6 +550,18 @@ class DisplayTrendline(DisplayWidget):
         self.plot.setAxisScale(QwtPlot.xBottom, start_secs, end_secs)
         self.updateLater()
 
+    @pyqtSlot()
+    def _uncheck_time_buttons(self):
+        """ No time button should be selected. To realize that the ``HIDDEN``
+            button of the button group is clicked and the
+            ``self._selected_time_btn`` is set to ``None``.
+        """
+        if self._selected_time_btn is None:
+            return
+
+        self.time_string_btns[HIDDEN].click()
+        self._selected_time_btn = None
+
     # ----------------------------
     # Private methods
 
@@ -544,9 +581,6 @@ class DisplayTrendline(DisplayWidget):
         """ Update lower and upper bound of curve intervals. """
         for v in self.curves.values():
             v.changeInterval(t0, t1)
-
-    def _uncheck_time_buttons(self):
-        self.time_string_btns[HIDDEN].click()
 
     def _create_time_buttons(self, layout):
         """ The buttons for time scaling are created, added to the given
@@ -606,5 +640,5 @@ class DisplayTrendline(DisplayWidget):
         with SignalBlocker(aw):
             # Use blocker to prevent timer start
             self.plot.setAxisScale(QwtPlot.xBottom, start_secs, end_secs)
-        self._update_x_axis_interval(start, end)
+        self._update_x_axis_interval(start_secs, end_secs)
         return True
