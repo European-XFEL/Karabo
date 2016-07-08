@@ -45,10 +45,10 @@ class LabelWidget(QLabel):
                                                               model.text)
         self.setGeometry(model.x, model.y, model.width, model.height)
 
-    def destroy(self):
+    def add_boxes(self, boxes):
         """ Satisfy the informal widget interface. """
 
-    def add_boxes(self):
+    def destroy(self):
         """ Satisfy the informal widget interface. """
 
     def set_visible(self, visible):
@@ -81,10 +81,6 @@ class SceneLinkWidget(QPushButton):
         self.clicked.connect(self._handle_click)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
 
-    def _handle_click(self):
-        if len(self.model.target) > 0:
-            print("Open scene:", self.model.target)
-
     def paintEvent(self, event):
         with QPainter(self) as painter:
             boundary = self.rect().adjusted(2, 2, -2, -2)
@@ -102,10 +98,14 @@ class SceneLinkWidget(QPushButton):
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
 
-    def destroy(self):
+    def _handle_click(self):
+        if len(self.model.target) > 0:
+            print("Open scene:", self.model.target)
+
+    def add_boxes(self, boxes):
         """ Satisfy the informal widget interface. """
 
-    def add_boxes(self):
+    def destroy(self):
         """ Satisfy the informal widget interface. """
 
     def set_visible(self, visible):
@@ -130,9 +130,15 @@ class UnknownSvgWidget(QWidget):
         self.renderer = renderer
         self.setGeometry(renderer.viewBox())
 
+    def minimumSizeHint(self):
+        return self.renderer.defaultSize()
+
     def paintEvent(self, event):
         with QPainter(self) as painter:
             self.renderer.render(painter)
+
+    def sizeHint(self):
+        return self.minimumSizeHint()
 
     @classmethod
     def create(cls, model, parent=None):
@@ -148,24 +154,20 @@ class UnknownSvgWidget(QWidget):
             return cls(renderer, parent=parent)
         return None
 
-    def destroy(self):
+    def add_boxes(self, boxes):
         """ Satisfy the informal widget interface. """
 
-    def add_boxes(self):
+    def destroy(self):
         """ Satisfy the informal widget interface. """
 
     def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
     def set_geometry(self, rect):
-        self.model.set(x=rect.x(), y=rect.y(),
-                       width=rect.width(), height=rect.height())
         self.setGeometry(rect)
 
     def translate(self, offset):
-        new_pos = self.pos() + offset
-        self.model.set(x=new_pos.x(), y=new_pos.y())
-        self.move(new_pos)
+        self.move(self.pos() + offset)
 
 
 class WorkflowItemWidget(QWidget):
@@ -186,6 +188,9 @@ class WorkflowItemWidget(QWidget):
         self.outline_rect = self._compute_outline(rect)
         self._minimum_rect = self._compute_minimum_rect()
 
+    def minimumSize(self):
+        return self._minimum_rect.size()
+
     def paintEvent(self, event):
         with QPainter(self) as painter:
             painter.setRenderHint(QPainter.Antialiasing)
@@ -197,13 +202,13 @@ class WorkflowItemWidget(QWidget):
             painter.drawText(self.outline_rect, Qt.AlignCenter,
                              self.model.device_id)
 
-    def minimumSize(self):
-        return self._minimum_rect
+    def sizeHint(self):
+        return self.minimumSize()
 
-    def destroy(self):
+    def add_boxes(self, boxes):
         """ Satisfy the informal widget interface. """
 
-    def add_boxes(self):
+    def destroy(self):
         """ Satisfy the informal widget interface. """
 
     def set_visible(self, visible):

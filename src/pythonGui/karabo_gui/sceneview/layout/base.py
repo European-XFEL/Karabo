@@ -85,3 +85,8 @@ class BaseLayout(object):
                        width=rect.width(), height=rect.height())
         self.invalidate()  # Important! Force a full layout recalculation
         super(BaseLayout, self).setGeometry(rect)
+        # Handle the case of initialization with an empty rect
+        if rect.isEmpty():
+            rect.setSize(self.minimumSize())
+            if not rect.isEmpty():
+                self.setGeometry(rect)
