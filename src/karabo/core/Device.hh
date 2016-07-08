@@ -453,7 +453,7 @@ namespace karabo {
              */
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
-                
+               
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 karabo::util::Hash validated;
                 std::pair<bool, std::string> result;
@@ -562,9 +562,6 @@ namespace karabo {
              */
             template <class T>
             T get(const std::string& key, const T& var = T()) const {
-                if(key == "state" || key == "alarmCondition"){
-                    KARABO_PARAMETER_EXCEPTION("The state and alarm condition properties may only be accessed via the getState and getAlarmCondition methods");
-                }
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
                     return m_parameters.get<T>(key);
@@ -583,9 +580,6 @@ namespace karabo {
              */
             template <class T>
             T getAs(const std::string& key) const {
-                if(key == "state" || key == "alarmCondition"){
-                    KARABO_PARAMETER_EXCEPTION("The state and alarm condition properties may only be accessed via the getState and getAlarmCondition methods");
-                }
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
                     return m_parameters.getAs<T>(key);
