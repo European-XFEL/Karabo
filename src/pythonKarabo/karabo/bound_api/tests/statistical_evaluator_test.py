@@ -60,16 +60,7 @@ class  RollingWindowStatistics_TestCase(unittest.TestCase):
 
 
     def test_rolling_window_statistics_non_empty_interval(self):
-        #problem is we can't import the bp exception type, so we explicitly trigger it from
-        #somewhere else and safe it
-        bpexception = None
-        try:
-            #will result in a bp:argumentError
-            Hash(1)
-        except Exception as e:
-            bpexception = type(e)
-
-        self.assertRaises(bpexception, RollingWindowStatistics)
+        self.assertRaises(Exception, RollingWindowStatistics)
 
 
 
