@@ -562,10 +562,11 @@ namespace karabo {
              */
             template <class T>
             T get(const std::string& key, const T& var = T()) const {
+                if(key == "state" || key == "alarmCondition"){
+                    KARABO_PARAMETER_EXCEPTION("The state and alarm condition properties may only be accessed via the getState and getAlarmCondition methods");
+                }
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
-                    //if (karabo::util::Types::from(var) == karabo::util::Types::VECTOR_HASH && m_parameters.hasAttribute(key, KARABO_SCHEMA_ROW_SCHEMA))
-                    //    return reinterpret_cast<const T&> (getVectorHashRow(key)); //will only be reached if T is actually a vector<Hash>
                     return m_parameters.get<T>(key);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
@@ -582,6 +583,9 @@ namespace karabo {
              */
             template <class T>
             T getAs(const std::string& key) const {
+                if(key == "state" || key == "alarmCondition"){
+                    KARABO_PARAMETER_EXCEPTION("The state and alarm condition properties may only be accessed via the getState and getAlarmCondition methods");
+                }
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
                     return m_parameters.getAs<T>(key);
@@ -795,6 +799,10 @@ namespace karabo {
 
             const std::string& getServerId() const {
                 return m_serverId;
+            }
+            
+            const karabo::core::State & getState(){
+                return State::fromString(this->get<std::string>("state"));
             }
 
         private:
