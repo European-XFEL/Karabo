@@ -438,11 +438,7 @@ class PythonDevice(NoFsm):
 
                 validated = None
                 if validate:
-                    try:
-                        validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
-                    except RuntimeError as e:
-                        raise RuntimeError("Validation Exception: " + str(e))
-
+                    validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
                     resultingCondition = self._evaluateAndUpdateAlarmCondition(forceUpdate=hadPreviousParameterAlarm)
                     if resultingCondition is not None and resultingCondition.asString() != self.parameters.get("alarmCondition"):
                         validated.set("alarmCondition", resultingCondition.asString())
