@@ -130,7 +130,12 @@ def create_object_from_model(layout, model, scene_view, object_dict):
         if is_layout(obj):
             # recurse
             fill_root_layout(obj, model, scene_view, object_dict)
-            obj.setGeometry(QRect(model.x, model.y, model.width, model.height))
+            model_rect = QRect(model.x, model.y, model.width, model.height)
+            if model_rect.isEmpty():
+                # Ask the layout to calculate a suitable size
+                obj.invalidate()
+                model_rect.setSize(obj.sizeHint())
+            obj.setGeometry(model_rect)
 
 
 def fill_root_layout(layout, parent_model, scene_view, object_dict):
