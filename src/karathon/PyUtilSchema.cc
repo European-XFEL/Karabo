@@ -887,7 +887,7 @@ namespace schemawrap {
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::WARN_VARIANCE_LOW.asString()), false);
         }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnLow' must be a string");
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnVarianceLow' must be a string");
     }
 
 
@@ -906,7 +906,7 @@ namespace schemawrap {
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::WARN_VARIANCE_HIGH.asString()), false);
         }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnHigh' must be a string");
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnVarianceHigh' must be a string");
     }
 
 
@@ -925,7 +925,7 @@ namespace schemawrap {
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::ALARM_VARIANCE_LOW.asString()), false);
         }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmLow' must be a string");
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmVarianceLow' must be a string");
     }
 
 
@@ -944,7 +944,7 @@ namespace schemawrap {
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::ALARM_VARIANCE_HIGH.asString()), false);
         }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmHigh' must be a string");
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmVarianceHigh' must be a string");
     }
 
 
