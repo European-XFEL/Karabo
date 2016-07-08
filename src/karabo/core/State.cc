@@ -1,3 +1,5 @@
+#include <boost/smart_ptr/make_shared.hpp>
+
 #include "State.hh"
 
 namespace karabo {
@@ -9,9 +11,11 @@ namespace karabo {
         KARABO_INIT_BASE_STATE(KNOWN)
         KARABO_INIT_BASE_STATE(INIT)
 
-#undef KARABO_INIT_BASE_STATE                    
+#undef KARABO_INIT_BASE_STATE                
+        
+
                     
-#define KARABO_INIT_FIXED_STATE(X,Y) const State State::X(#X, &Y);
+#define KARABO_INIT_FIXED_STATE(X,Y) const State State::X(#X, &Y);\
                     
         KARABO_INIT_FIXED_STATE(DISABLED, KNOWN)
 
@@ -130,6 +134,7 @@ namespace karabo {
 #undef KARABO_INIT_FIXED_STATE
         
         State::State(const std::string& name, const State* parent) : m_stateName(name), m_parent(parent) {
+            
         }
         
         bool State::isCompatible(const State& s) const {
@@ -138,6 +143,91 @@ namespace karabo {
             if (s.m_parent && this->isCompatible(*(s.m_parent))) return true;
             return false;
         }
+        
+        std::map<std::string, const State & > State::m_stateFactory;
+        
+        const State & State::fromString(const std::string & state) {
+            
+            if (m_stateFactory.empty()){
+                #define KARABO_INSERT_STATE_TO_FACTORY(state) m_stateFactory.insert(std::pair<std::string, const State& >(std::string(#state), State::state));
+                
+                KARABO_INSERT_STATE_TO_FACTORY(UNKNOWN)
+                KARABO_INSERT_STATE_TO_FACTORY(KNOWN)
+                KARABO_INSERT_STATE_TO_FACTORY(INIT)
+                        
+                KARABO_INSERT_STATE_TO_FACTORY(DISABLED)
+                KARABO_INSERT_STATE_TO_FACTORY(ERROR)
+                KARABO_INSERT_STATE_TO_FACTORY(NORMAL)
+                KARABO_INSERT_STATE_TO_FACTORY(STATIC)
+                KARABO_INSERT_STATE_TO_FACTORY(CHANGING)
+                KARABO_INSERT_STATE_TO_FACTORY(PASSIVE)
+                KARABO_INSERT_STATE_TO_FACTORY(ACTIVE)
+                KARABO_INSERT_STATE_TO_FACTORY(DECREASING)
+                KARABO_INSERT_STATE_TO_FACTORY(INCREASING)
+
+                KARABO_INSERT_STATE_TO_FACTORY(INTERLOCKED)
+                KARABO_INSERT_STATE_TO_FACTORY(COOLED)
+                KARABO_INSERT_STATE_TO_FACTORY(HEATED)
+                KARABO_INSERT_STATE_TO_FACTORY(EVACUATED)
+                KARABO_INSERT_STATE_TO_FACTORY(CLOSED)
+                KARABO_INSERT_STATE_TO_FACTORY(ON)
+                KARABO_INSERT_STATE_TO_FACTORY(EXTRACTED)
+                KARABO_INSERT_STATE_TO_FACTORY(STARTED)
+                KARABO_INSERT_STATE_TO_FACTORY(LOCKED)
+                KARABO_INSERT_STATE_TO_FACTORY(ENGAGED)
+                
+                KARABO_INSERT_STATE_TO_FACTORY(WARM)
+                KARABO_INSERT_STATE_TO_FACTORY(COLD)
+                KARABO_INSERT_STATE_TO_FACTORY(PRESSURIZED)
+                KARABO_INSERT_STATE_TO_FACTORY(OPENED)
+                KARABO_INSERT_STATE_TO_FACTORY(OFF)
+                KARABO_INSERT_STATE_TO_FACTORY(INSERTED)
+                KARABO_INSERT_STATE_TO_FACTORY(STOPPED)
+                KARABO_INSERT_STATE_TO_FACTORY(UNLOCKED)
+                KARABO_INSERT_STATE_TO_FACTORY(DISENGAGED)
+                        
+                KARABO_INSERT_STATE_TO_FACTORY(ROTATING)
+                KARABO_INSERT_STATE_TO_FACTORY(MOVING)
+                KARABO_INSERT_STATE_TO_FACTORY(SWITCHING)
+                        
+                KARABO_INSERT_STATE_TO_FACTORY(HEATING)
+                KARABO_INSERT_STATE_TO_FACTORY(MOVING_RIGHT)
+                KARABO_INSERT_STATE_TO_FACTORY(MOVING_UP)
+                KARABO_INSERT_STATE_TO_FACTORY(MOVING_FORWARD)
+                KARABO_INSERT_STATE_TO_FACTORY(ROTATING_CLK)
+                KARABO_INSERT_STATE_TO_FACTORY(RAMPING_UP)    
+                KARABO_INSERT_STATE_TO_FACTORY(INSERTING)    
+                KARABO_INSERT_STATE_TO_FACTORY(STARTING)    
+                KARABO_INSERT_STATE_TO_FACTORY(FILLING)    
+                KARABO_INSERT_STATE_TO_FACTORY(ENGAGING)    
+                KARABO_INSERT_STATE_TO_FACTORY(SWITCHING_ON)
+                        
+                KARABO_INSERT_STATE_TO_FACTORY(COOLING)
+                KARABO_INSERT_STATE_TO_FACTORY(MOVING_LEFT)
+                KARABO_INSERT_STATE_TO_FACTORY(MOVING_DOWN)
+                KARABO_INSERT_STATE_TO_FACTORY(MOVING_BACK)
+                KARABO_INSERT_STATE_TO_FACTORY(ROTATING_CNTCLK)
+                KARABO_INSERT_STATE_TO_FACTORY(RAMPING_DOWN)    
+                KARABO_INSERT_STATE_TO_FACTORY(EXTRACTING)    
+                KARABO_INSERT_STATE_TO_FACTORY(STOPPING)    
+                KARABO_INSERT_STATE_TO_FACTORY(EMPTYING)    
+                KARABO_INSERT_STATE_TO_FACTORY(DISENGAGING)    
+                KARABO_INSERT_STATE_TO_FACTORY(SWITCHING_OFF)   
+                   
+
+                #undef KARABO_INSERT_STATE_TO_FACTORY
+                
+            }
+            
+            std::map<std::string, const State &>::const_iterator iter =m_stateFactory.find(state);
+            if(iter == m_stateFactory.end()){
+                throw KARABO_LOGIC_EXCEPTION("State condition  "+state+" does not exist!");
+            } else {
+                return iter->second;
+            }
+        }
+        
+        
         
     }
 }
