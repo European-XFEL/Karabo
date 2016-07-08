@@ -1,24 +1,10 @@
 <?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
 <TestRun>
-  <FailedTests>
-    <FailedTest id="1">
-      <Name>AlarmCondition_Test::testStringAssignmentRoundTrip</Name>
-      <FailureType>Error</FailureType>
-      <Message>uncaught exception of type N6karabo4util14LogicExceptionE
-- 1. Exception =====&gt;  {
-    Exception Type....:  Logic Exception
-    Message...........:  Alarm condition  WARN does not exist!
-    File..............:  /[...]/src/karabo/util/AlarmConditions.cc
-    Function..........:  static const karabo::util::AlarmCondition&amp; karabo::util::AlarmCondition::fromString(const string&amp;)
-    Line Number.......:  87
-    Timestamp.........:  2016-Jul-08 08:04:50.714856
-}
-
-
-</Message>
-    </FailedTest>
-  </FailedTests>
+  <FailedTests></FailedTests>
   <SuccessfulTests>
+    <Test id="1">
+      <Name>AlarmCondition_Test::testStringAssignmentRoundTrip</Name>
+    </Test>
     <Test id="2">
       <Name>AlarmCondition_Test::testSignificanceEvaluation</Name>
     </Test>
@@ -310,8 +296,8 @@
   </SuccessfulTests>
   <Statistics>
     <Tests>97</Tests>
-    <FailuresTotal>1</FailuresTotal>
-    <Errors>1</Errors>
+    <FailuresTotal>0</FailuresTotal>
+    <Errors>0</Errors>
     <Failures>0</Failures>
   </Statistics>
 </TestRun>

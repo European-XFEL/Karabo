@@ -33,10 +33,10 @@ void AlarmCondition_Test::tearDown() {
 }
 
 void AlarmCondition_Test::testStringAssignmentRoundTrip() {
-    karabo::util::AlarmCondition condition = karabo::util::AlarmCondition::fromString("WARN");
+    karabo::util::AlarmCondition condition = karabo::util::AlarmCondition::fromString("warn");
     std::string conditionString = condition;
-    CPPUNIT_ASSERT(conditionString == "WARN");
-    CPPUNIT_ASSERT(condition.asString() == "WARN");
+    CPPUNIT_ASSERT(conditionString == "warn");
+    CPPUNIT_ASSERT(condition.asString() == "warn");
 }
 
 void AlarmCondition_Test::testSignificanceEvaluation() {
