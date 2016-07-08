@@ -886,12 +886,11 @@ namespace karabo {
             
             void setAlarmCondition(const karabo::util::AlarmCondition & condition){
                 using namespace karabo::util;
-                const std::string& currentAlarmCondition = this->get<std::string>("alarmCondition");
+                
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_globalAlarmCondition = condition;
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
                 if(result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")){
-
                     lock.unlock();
                     this->setNoValidate("alarmCondition", result.second.asString());
                 }
