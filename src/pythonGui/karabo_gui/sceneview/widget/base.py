@@ -1,6 +1,6 @@
 from PyQt4.QtCore import QRect, QSize, QTimer, pyqtSlot
-from PyQt4.QtGui import (QAction, QHBoxLayout, QStackedLayout, QToolButton,
-                         QWidget)
+from PyQt4.QtGui import (QAction, QHBoxLayout, QSizePolicy, QStackedLayout,
+                         QToolButton, QWidget)
 
 from karabo_gui import icons
 from karabo_gui.network import Network
@@ -33,6 +33,26 @@ class BaseWidgetContainer(QWidget):
         """
         raise NotImplementedError
 
+    def add_boxes(self, boxes):
+        """ Add more boxes to a display widget which allows more than one
+            box. ``True`` is returned when this was possible, otherwise
+            ``False`` is returned.
+        """
+        widget = self.old_style_widget
+        widget_added = False
+        if self.model.parent_component == 'DisplayComponent':
+            for box in boxes:
+                device_id, property_path = box.key().split('.', 1)
+                device_box = get_box(device_id, property_path)
+                # This is only ``True`` if the display widget allows more
+                # than one box to be added to it
+                if widget.addBox(device_box):
+                    self.model.keys.append(device_box.key())
+                    self.boxes.append(device_box)
+                    self._make_box_connections(device_box)
+                    widget_added = True
+        return widget_added
+
     def destroy(self):
         """ Disconnect the box signals
         """
@@ -56,28 +76,6 @@ class BaseWidgetContainer(QWidget):
                     self._on_display_value_change)
             else:  # DisplayWidgets
                 box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
-
-    def add_boxes(self, boxes):
-        """ Add more boxes to a display widget which allows more than one
-            boxes. ``True`` is returned when this was possible, otherwise
-            ``False`` is returned.
-        """
-        widget = self.old_style_widget
-        widget_added = False
-        if self.model.parent_component == 'DisplayComponent':
-            for box in boxes:
-                key_list = box.key().split('.', 1)
-                device_id = key_list[0]
-                property_path = key_list[1]
-                device_box = get_box(device_id, property_path)
-                # This is only ``True`` if the display widget allows more
-                # than one box to be added to it
-                if widget.addBox(device_box):
-                    self.model.keys.append(device_box.key())
-                    self.boxes.append(device_box)
-                    self._make_box_connections(device_box)
-                    widget_added = True
-        return widget_added
 
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""

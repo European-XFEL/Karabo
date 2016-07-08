@@ -114,33 +114,20 @@ class ConfigurationDropHandler(SceneDnDHandler):
         if sourceType == "ParameterTreeWidget":
             selectedItems = source.selectedItems()
             for item in selectedItems:
-                layout_model = self._create_model_from_parameter_item(item,
-                                                                      pos)
-                scene_view.add_models(layout_model)
+                model = self._create_model_from_parameter_item(item, pos)
+                scene_view.add_models(model)
         event.accept()
 
     def _create_model_from_parameter_item(self, item, pos):
         """ The given ``item`` which is a TreeWidgetItem is used to create
             the model for the view."""
         # Horizonal layout
-        layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight)
-        layout_model.x = pos.x()
-        layout_model.y = pos.y()
-        label_model = LabelModel(text=item.text(0))
-        label_model.font = QFont().toString()
-        label_model.foreground = '#000000'
+        layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
+                                      x=pos.x(), y=pos.y())
 
-        # Calculate geometry for label
-        x, y, width, height = calc_rect_from_text(label_model.font,
-                                                  label_model.text)
-        label_model.x = x
-        label_model.y = y
-        label_model.width = width
-        label_model.height = height
-        # Update geometry of layout model
-        layout_model.width += label_model.width
-        layout_model.height = max(layout_model.height, label_model.height)
         # Add label to layout model
+        label_model = LabelModel(text=item.text(0), font=QFont().toString(),
+                                 foreground='#000000')
         layout_model.children.append(label_model)
 
         # Get Boxes. "box" is in the project, "realbox" the
@@ -150,38 +137,19 @@ class ConfigurationDropHandler(SceneDnDHandler):
         if realbox.descriptor is not None:
             box = realbox
 
-        MODEL_WIDTH = 150
-        MODEL_HEIGHT = 43
+        components = []
+        if item.displayComponent:
+            components.append((DisplayWidget, 'DisplayComponent'))
+        if item.editableComponent:
+            components.append((EditableWidget, 'EditableApplyLaterComponent'))
 
-        display_component = item.displayComponent
-        if display_component is not None:
-            factory = DisplayWidget.getClass(box)
-            traits = {'x': 0, 'y': 0, 'width': MODEL_WIDTH,
-                      'height': MODEL_HEIGHT, 'keys': [box.key()],
-                      'parent_component': 'DisplayComponent'}
-
+        for factory_base, parent_component in components:
+            factory = factory_base.getClass(box)
             klass = _WIDGET_FACTORIES[factory.__name__]
-            self._add_model_to_layout(klass, traits, layout_model)
-
-        edit_component = item.editableComponent
-        if edit_component is not None:
-            factory = EditableWidget.getClass(box)
-            traits = {'x': 0, 'y': 0, 'width': MODEL_WIDTH + 50,
-                      'height': MODEL_HEIGHT, 'keys': [box.key()],
-                      'parent_component': 'EditableApplyLaterComponent'}
-
-            klass = _WIDGET_FACTORIES[factory.__name__]
-            self._add_model_to_layout(klass, traits, layout_model)
+            model = klass(keys=[box.key()], parent_component=parent_component)
+            layout_model.children.append(model)
 
         return layout_model
-
-    def _add_model_to_layout(self, klass, traits, layout_model):
-        """ """
-        model = klass(**traits)
-        layout_model.width += model.width
-        layout_model.height = max(layout_model.height, model.height)
-        # Add label to layout model
-        layout_model.children.append(model)
 
 
 class NavigationDropHandler(SceneDnDHandler):
