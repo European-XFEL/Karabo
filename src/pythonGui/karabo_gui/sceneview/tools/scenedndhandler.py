@@ -5,6 +5,7 @@
 #############################################################################
 from abc import abstractmethod
 
+from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QBoxLayout, QFont
 from traits.api import ABCHasStrictTraits
 
@@ -25,7 +26,7 @@ from karabo_gui.schema import ChoiceOfNodes
 from karabo_gui.topology import getDeviceBox
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
-
+_STACKED_WIDGET_OFFSET = 30
 _WIDGET_FACTORIES = {
     'DisplayAlignedImage': DisplayAlignedImageModel,
     'Bitfield': BitfieldModel,
@@ -110,10 +111,12 @@ class ConfigurationDropHandler(SceneDnDHandler):
                 return
 
         if sourceType == "ParameterTreeWidget":
-            selectedItems = source.selectedItems()
-            for item in selectedItems:
+            models = []
+            for item in source.selectedItems():
                 model = self._create_model_from_parameter_item(item, pos)
-                scene_view.add_models(model)
+                models.append(model)
+                pos += QPoint(0, _STACKED_WIDGET_OFFSET)
+            scene_view.add_models(*models)
         event.accept()
 
     def _create_model_from_parameter_item(self, item, pos):
@@ -123,7 +126,6 @@ class ConfigurationDropHandler(SceneDnDHandler):
         # Horizonal layout
         layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
                                       x=pos.x(), y=pos.y())
-
         # Add label to layout model
         label_model = LabelModel(text=item.text(0), font=QFont().toString(),
                                  foreground='#000000')
@@ -136,16 +138,18 @@ class ConfigurationDropHandler(SceneDnDHandler):
         if realbox.descriptor is not None:
             box = realbox
 
-        components = []
+        # Add the display and editable components, as needed
         if item.displayComponent:
-            components.append((DisplayWidget, 'DisplayComponent'))
-        if item.editableComponent:
-            components.append((EditableWidget, 'EditableApplyLaterComponent'))
-
-        for factory_base, parent_component in components:
-            factory = factory_base.getClass(box)
+            factory = DisplayWidget.getClass(box)
             klass = _WIDGET_FACTORIES[factory.__name__]
-            model = klass(keys=[box.key()], parent_component=parent_component)
+            model = klass(keys=[box.key()],
+                          parent_component='DisplayComponent')
+            layout_model.children.append(model)
+        if item.editableComponent:
+            factory = EditableWidget.getClass(box)
+            klass = _WIDGET_FACTORIES[factory.__name__]
+            model = klass(keys=[box.key()],
+                          parent_component='EditableApplyLaterComponent')
             layout_model.children.append(model)
 
         return layout_model
