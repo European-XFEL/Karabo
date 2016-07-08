@@ -1,10 +1,6 @@
 __author__="Steffen Hauf <steffen.hauf at xfel.eu>"
 __date__ ="$June 30, 2016 2:17:13 PM$"
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 8bc7c061f9e49a59c10482fbc561e0b459561d19
 class AlarmCondition:
 
     NONE = None
