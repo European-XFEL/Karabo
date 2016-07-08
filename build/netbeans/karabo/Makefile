@@ -136,17 +136,17 @@ bundle: build
 
 # DEPRECATE!
 package: bundle-package
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(GUIOPT) $(PYOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(PYOPT)
 
 # DEPRECATE!
 install: bundle-install
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT) $(PYOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(PYOPT)
 
 bundle-package: bundle
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(GUIOPT) $(PYOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(PYOPT)
 
 bundle-install: bundle
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT) $(PYOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(PYOPT)
 
 bundle-clean: clean
 	cd ../karathon; $(MAKE) clean CONF=$(CONF)
