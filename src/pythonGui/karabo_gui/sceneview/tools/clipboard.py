@@ -1,10 +1,13 @@
+from abc import abstractmethod
 from io import StringIO
 
 from PyQt4.QtCore import QByteArray, QMimeData
-from PyQt4.QtGui import QApplication, QMessageBox
+from PyQt4.QtGui import QApplication, QDialog, QMessageBox
 
-from karabo_gui.scenemodel.api import SceneModel, read_scene, write_scene
+from karabo_gui.scenemodel.api import (BaseLayoutModel, BaseWidgetObjectData,
+                                       SceneModel, read_scene, write_scene)
 from karabo_gui.sceneview.bases import BaseSceneAction
+from karabo_gui.dialogs.dialogs import ReplaceDialog
 
 MIME_TYPE = 'image/svg+xml'
 
@@ -68,16 +71,89 @@ class SceneCutAction(BaseSceneAction):
         scene_view.update()
 
 
-class ScenePasteAction(BaseSceneAction):
-    """ Paste the contents of the clipboard to the scene view.
+class BaseScenePasteAction(BaseSceneAction):
+    """ Base class for paste actions.
+
+    This contains the boilerplate that all layout actions have in common.
     """
     def perform(self, scene_view):
         pasted_models = _read_models_from_clipboard()
         if len(pasted_models) == 0:
             return
 
-        scene_view.add_models(*pasted_models)
+        self.run_action(pasted_models, scene_view)
         scene_view.update()
+
+    @abstractmethod
+    def run_action(self, models, scene_view):
+        """ Implemented by derived classes to implement what should happen with
+            the copied ``models``. """
+
+
+class ScenePasteAction(BaseScenePasteAction):
+    """ Paste the contents of the clipboard to the scene view.
+    """
+    def run_action(self, models, scene_view):
+        """ Add ``models`` to scene view."""
+        scene_view.add_models(*models)
+
+
+class ScenePasteReplaceAction(BaseScenePasteAction):
+    """ Paste and replace the contents of the clipboard to the scene view.
+    """
+    def _get_widget_model_keys(self, model, keys_list):
+        """ This recursive method fills the given ``key_list`` with model keys
+            of ``BaseWidgetObjectData`` types.
+        """
+        if isinstance(model, BaseLayoutModel):
+            for child in model.children:
+                self._get_widget_model_keys(child, keys_list)
+        elif isinstance(model, BaseWidgetObjectData):
+            keys_list.append(model.keys)
+
+    def _set_widget_model_keys(self, model, mapped_device_ids):
+        if isinstance(model, BaseLayoutModel):
+            for child in model.children:
+                self._set_widget_model_keys(child, mapped_device_ids)
+        elif isinstance(model, BaseWidgetObjectData):
+            new_key_list = []
+            for key in model.keys:
+                device_property_key = key.split(".", 1)
+                device_id = device_property_key[0]
+                new_device_id = mapped_device_ids.get(device_id)
+                if new_device_id is None:
+                    continue
+                property_key = device_property_key[1]
+                new_key_list.append("{}.{}".format(new_device_id,
+                                                   property_key))
+            # Overwrite key list with new keys
+            model.keys = new_key_list
+
+    def run_action(self, models, scene_view):
+        """ Modify the device Id ``models`` and add them to the scene view. """
+
+        keys_list = []
+        for m in models:
+            self._get_widget_model_keys(m, keys_list)
+
+        device_ids = []
+        for keys in keys_list:
+            for k in keys:
+                device_id = k.split(".", 1)[0]
+                if device_id not in device_ids:
+                    device_ids.append(device_id)
+
+        # Sort list for better overview in dialog
+        device_ids = sorted(device_ids)
+
+        dialog = ReplaceDialog(device_ids)
+        if dialog.exec_() != QDialog.Accepted:
+            return False
+
+        mapped_device_ids = dialog.mappedDevices()
+        for m in models:
+            self._set_widget_model_keys(m, mapped_device_ids)
+        scene_view.add_models(*models)
 
 
 class SceneSelectAllAction(BaseSceneAction):
