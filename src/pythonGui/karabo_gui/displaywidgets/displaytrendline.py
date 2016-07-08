@@ -417,11 +417,9 @@ class DisplayTrendline(DisplayWidget):
             self._uncheck_time_buttons()
             start_date_time = dialog.dt_beginning.dateTime()
             end_date_time = dialog.dt_end.dateTime()
-            start_date_time = start_date_time.toMSecsSinceEpoch() / 1000
-            end_date_time = end_date_time.toMSecsSinceEpoch() / 1000
-            self.plot.setAxisScale(QwtPlot.xBottom,
-                                   start_date_time,
-                                   end_date_time)
+            start_secs = start_date_time.toMSecsSinceEpoch() / 1000
+            end_secs = end_date_time.toMSecsSinceEpoch() / 1000
+            self.plot.setAxisScale(QwtPlot.xBottom, start_secs, end_secs)
             self.updateLater()
 
     def typeChanged(self, box):
@@ -521,10 +519,10 @@ class DisplayTrendline(DisplayWidget):
         start_date_time = self.initial_start_time
         end_date_time = QDateTime.currentDateTime()
 
-        start_date_time = start_date_time.toMSecsSinceEpoch() / 1000
-        end_date_time = end_date_time.toMSecsSinceEpoch() / 1000
+        start_secs = start_date_time.toMSecsSinceEpoch() / 1000
+        end_secs = end_date_time.toMSecsSinceEpoch() / 1000
         # Rescale x axis
-        self.plot.setAxisScale(QwtPlot.xBottom, start_date_time, end_date_time)
+        self.plot.setAxisScale(QwtPlot.xBottom, start_secs, end_secs)
         self.updateLater()
 
     # ----------------------------
@@ -600,13 +598,13 @@ class DisplayTrendline(DisplayWidget):
         if start is None or end is None:
             return False
 
-        start = start.toMSecsSinceEpoch() / 1000
-        end = end.toMSecsSinceEpoch() / 1000
+        start_secs = start.toMSecsSinceEpoch() / 1000
+        end_secs = end.toMSecsSinceEpoch() / 1000
 
         # Rescale x axis
         aw = self.plot.axisWidget(QwtPlot.xBottom)
         with SignalBlocker(aw):
             # Use blocker to prevent timer start
-            self.plot.setAxisScale(QwtPlot.xBottom, start, end)
+            self.plot.setAxisScale(QwtPlot.xBottom, start_secs, end_secs)
         self._update_x_axis_interval(start, end)
         return True
