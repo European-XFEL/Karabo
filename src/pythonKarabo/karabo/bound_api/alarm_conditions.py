@@ -1,6 +1,7 @@
 __author__="Steffen Hauf <steffen.hauf at xfel.eu>"
 __date__ ="$June 30, 2016 2:17:13 PM$"
 
+
 class AlarmCondition:
 
     NONE = None
@@ -27,7 +28,7 @@ class AlarmCondition:
             raise AttributeError("Either a rank or a parent needs to be given for alarm condition {}!".format(name))
 
         #protect against new conditions:
-        if name not in AlarmCondition.__dict__:
+        if name not in [k for k,d in AlarmCondition.__dict__.items() if isinstance(d,AlarmCondition) or d is None]:
             raise AttributeError("Alarm condition {} may not be declared, only predeclared conditions are allowed!".format(name))
 
         self.name = name
