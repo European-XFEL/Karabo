@@ -6,15 +6,9 @@
 from abc import abstractmethod
 
 from PyQt4.QtGui import QBoxLayout, QFont
-
 from traits.api import ABCHasStrictTraits
 
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.schema import ChoiceOfNodes
-from karabo_gui.topology import getDeviceBox
-from karabo_gui.widget import DisplayWidget, EditableWidget
-from karabo_gui.sceneview.utils import calc_rect_from_text
-
 from karabo_gui.scenemodel.api import (
     BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
     DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
@@ -27,6 +21,10 @@ from karabo_gui.scenemodel.api import (
     LineEditModel, LinePlotModel, MonitorModel, SingleBitModel,
     SliderModel, TableElementModel, XYPlotModel, BoxLayoutModel, LabelModel
 )
+from karabo_gui.schema import ChoiceOfNodes
+from karabo_gui.topology import getDeviceBox
+from karabo_gui.widget import DisplayWidget, EditableWidget
+
 
 _WIDGET_FACTORIES = {
     'DisplayAlignedImage': DisplayAlignedImageModel,
@@ -120,7 +118,8 @@ class ConfigurationDropHandler(SceneDnDHandler):
 
     def _create_model_from_parameter_item(self, item, pos):
         """ The given ``item`` which is a TreeWidgetItem is used to create
-            the model for the view."""
+            the model for the view.
+        """
         # Horizonal layout
         layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
                                       x=pos.x(), y=pos.y())

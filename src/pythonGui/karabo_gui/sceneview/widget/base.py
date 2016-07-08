@@ -1,6 +1,6 @@
 from PyQt4.QtCore import QRect, QSize, QTimer, pyqtSlot
-from PyQt4.QtGui import (QAction, QHBoxLayout, QSizePolicy, QStackedLayout,
-                         QToolButton, QWidget)
+from PyQt4.QtGui import (QAction, QHBoxLayout, QStackedLayout, QToolButton,
+                         QWidget)
 
 from karabo_gui import icons
 from karabo_gui.network import Network
