@@ -890,11 +890,8 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_globalAlarmCondition = condition;
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
-<<<<<<< HEAD
                 if(result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")){
-=======
-                if(result.first && result.second.asString() != currentAlarmCondition){
->>>>>>> Unified strings used to represent alarm conditions
+
                     lock.unlock();
                     this->setNoValidate("alarmCondition", result.second.asString());
                 }
