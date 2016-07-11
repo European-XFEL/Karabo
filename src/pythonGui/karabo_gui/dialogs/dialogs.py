@@ -310,14 +310,13 @@ class ReplaceDialog(QDialog):
         self.twTable.setRowCount(len(devices))
         for i, d in enumerate(devices):
             item = QTableWidgetItem(d)
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             self.twTable.setItem(i, 0, item)
             
             item = QTableWidgetItem(d)
             self.twTable.setItem(i, 1, item)
             self.twTable.editItem(item)
-            itemWidget = self.twTable.cellWidget(i, 1)
-            itemWidget.textChanged.connect(self.onItemChanged)
-        
+        self.twTable.itemChanged.connect(self.onItemChanged)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
     def mappedDevices(self):
@@ -330,5 +329,8 @@ class ReplaceDialog(QDialog):
         return map
 
     @pyqtSlot(str)
-    def onItemChanged(self, text):
+    def onItemChanged(self, item):
+        if item.column() != 1:
+            return
+        text = item.text()
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)
