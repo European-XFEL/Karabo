@@ -24,6 +24,10 @@ def calc_bounding_rect(collection):
         top = min(top, rect.top())
         bottom = max(bottom, rect.bottom())
 
+    # Return an empty rect when nothing is there
+    if left == SCREEN_MAX_VALUE and top == SCREEN_MAX_VALUE:
+        return (0, 0, 0, 0)
+
     # Return x, y, width, height
     return (left, top, right - left, bottom - top)
 
