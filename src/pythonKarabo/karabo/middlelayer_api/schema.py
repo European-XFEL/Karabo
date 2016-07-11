@@ -131,8 +131,18 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         if self.__parent is not None:
             self.__parent.setChildValue(self.__key + "." + key, value, desc)
 
-    def run(self):  # endpoint for multiple inheritance
-        self.running = True
+    @coroutine
+    def _run(self):
+        """ post-initialization of a Configurable
+
+        As __init__ is not a coroutine, it cannot do anything that takes
+        time, and actually should not anyways. Everything needed to get
+        this configurable running is thus done in this method.
+
+        This method should only be overridden inside Karabo (thus
+        the underscore). Do not forget to ``yield from super()._run()``.
+        """
+        pass
 
     def _use(self):
         """this method is called each time an attribute of this configurable
