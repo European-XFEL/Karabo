@@ -5,16 +5,11 @@
 #############################################################################
 from abc import abstractmethod
 
+from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QBoxLayout, QFont
-
 from traits.api import ABCHasStrictTraits
 
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.schema import ChoiceOfNodes
-from karabo_gui.topology import getDeviceBox
-from karabo_gui.widget import DisplayWidget, EditableWidget
-from karabo_gui.sceneview.utils import calc_rect_from_text
-
 from karabo_gui.scenemodel.api import (
     BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
     DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
@@ -27,7 +22,11 @@ from karabo_gui.scenemodel.api import (
     LineEditModel, LinePlotModel, MonitorModel, SingleBitModel,
     SliderModel, TableElementModel, XYPlotModel, BoxLayoutModel, LabelModel
 )
+from karabo_gui.schema import ChoiceOfNodes
+from karabo_gui.topology import getDeviceBox
+from karabo_gui.widget import DisplayWidget, EditableWidget
 
+_STACKED_WIDGET_OFFSET = 30
 _WIDGET_FACTORIES = {
     'DisplayAlignedImage': DisplayAlignedImageModel,
     'Bitfield': BitfieldModel,
@@ -112,35 +111,24 @@ class ConfigurationDropHandler(SceneDnDHandler):
                 return
 
         if sourceType == "ParameterTreeWidget":
-            selectedItems = source.selectedItems()
-            for item in selectedItems:
-                layout_model = self._create_model_from_parameter_item(item,
-                                                                      pos)
-                scene_view.add_models(layout_model)
+            models = []
+            for item in source.selectedItems():
+                model = self._create_model_from_parameter_item(item, pos)
+                models.append(model)
+                pos += QPoint(0, _STACKED_WIDGET_OFFSET)
+            scene_view.add_models(*models)
         event.accept()
 
     def _create_model_from_parameter_item(self, item, pos):
         """ The given ``item`` which is a TreeWidgetItem is used to create
-            the model for the view."""
+            the model for the view.
+        """
         # Horizonal layout
-        layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight)
-        layout_model.x = pos.x()
-        layout_model.y = pos.y()
-        label_model = LabelModel(text=item.text(0))
-        label_model.font = QFont().toString()
-        label_model.foreground = '#000000'
-
-        # Calculate geometry for label
-        x, y, width, height = calc_rect_from_text(label_model.font,
-                                                  label_model.text)
-        label_model.x = x
-        label_model.y = y
-        label_model.width = width
-        label_model.height = height
-        # Update geometry of layout model
-        layout_model.width += label_model.width
-        layout_model.height = max(layout_model.height, label_model.height)
+        layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
+                                      x=pos.x(), y=pos.y())
         # Add label to layout model
+        label_model = LabelModel(text=item.text(0), font=QFont().toString(),
+                                 foreground='#000000')
         layout_model.children.append(label_model)
 
         # Get Boxes. "box" is in the project, "realbox" the
@@ -150,38 +138,21 @@ class ConfigurationDropHandler(SceneDnDHandler):
         if realbox.descriptor is not None:
             box = realbox
 
-        MODEL_WIDTH = 150
-        MODEL_HEIGHT = 43
-
-        display_component = item.displayComponent
-        if display_component is not None:
+        # Add the display and editable components, as needed
+        if item.displayComponent:
             factory = DisplayWidget.getClass(box)
-            traits = {'x': 0, 'y': 0, 'width': MODEL_WIDTH,
-                      'height': MODEL_HEIGHT, 'keys': [box.key()],
-                      'parent_component': 'DisplayComponent'}
-
             klass = _WIDGET_FACTORIES[factory.__name__]
-            self._add_model_to_layout(klass, traits, layout_model)
-
-        edit_component = item.editableComponent
-        if edit_component is not None:
+            model = klass(keys=[box.key()],
+                          parent_component='DisplayComponent')
+            layout_model.children.append(model)
+        if item.editableComponent:
             factory = EditableWidget.getClass(box)
-            traits = {'x': 0, 'y': 0, 'width': MODEL_WIDTH + 50,
-                      'height': MODEL_HEIGHT, 'keys': [box.key()],
-                      'parent_component': 'EditableApplyLaterComponent'}
-
             klass = _WIDGET_FACTORIES[factory.__name__]
-            self._add_model_to_layout(klass, traits, layout_model)
+            model = klass(keys=[box.key()],
+                          parent_component='EditableApplyLaterComponent')
+            layout_model.children.append(model)
 
         return layout_model
-
-    def _add_model_to_layout(self, klass, traits, layout_model):
-        """ """
-        model = klass(**traits)
-        layout_model.width += model.width
-        layout_model.height = max(layout_model.height, model.height)
-        # Add label to layout model
-        layout_model.children.append(model)
 
 
 class NavigationDropHandler(SceneDnDHandler):
