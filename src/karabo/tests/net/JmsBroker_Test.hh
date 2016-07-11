@@ -36,7 +36,7 @@ public:
     
     void readHandler1(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const std::string& body);
     
-    void readHandler2(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+    void readHandler2(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
     void errorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& message);
     
