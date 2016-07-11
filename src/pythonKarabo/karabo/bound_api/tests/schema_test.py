@@ -5,7 +5,8 @@ from karabo.bound import (
     Configurator,
     METER, MICRO, MANDATORY, READ, WRITE, INIT,
     AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
-    Hash, Logger, MetricPrefix, NodeType, Schema, Types, Unit, Validator
+    Hash, Logger, MetricPrefix, NodeType, Schema, Types, Unit, Validator,
+    AlarmCondition
 )
 from .configuration_example_classes import (
     Base, GraphicsRenderer, GraphicsRenderer1, Shape, SomeClass, TestStruct1
@@ -775,7 +776,10 @@ class  Schema_TestCase(unittest.TestCase):
             
         except Exception as e:
             self.fail("test_schemaImageElement group 2: " + str(e))
-            
+
+    def test_alarm_info(self):
+        schema = Configurator(TestStruct1).getSchema("TestStruct1")
+        self.assertEqual(schema.getInfoForAlarm("exampleKey6", AlarmCondition.WARN_LOW), "Some info")
 
 if __name__ == '__main__':
     unittest.main()

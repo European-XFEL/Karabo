@@ -316,7 +316,7 @@ class TestStruct1(object):
                 .readOnly().initialValue(1.11)
                 .alarmLow(-22.1).needsAcknowledging(True)
                 .alarmHigh(22.777).needsAcknowledging(True)
-                .warnLow(-5.5).needsAcknowledging(True)
+                .warnLow(-5.5).info("Some info").needsAcknowledging(True)
                 .warnHigh(5.5).needsAcknowledging(True)
                 .archivePolicy(EVERY_100MS)
                 .commit()
