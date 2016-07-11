@@ -75,7 +75,7 @@ namespace karabo {
                     const string& slotInstanceId = m_registeredSlots.begin()->first;
                     // Check if slot is on the same instance (device)
                     if (m_signalSlotable->m_instanceId == slotInstanceId) {
-                        m_signalSlotable->injectEvent(m_channel, header, message);
+                        m_signalSlotable->injectEvent(header, message);
                         return;
                     }
                     m_signalSlotable->doSendMessage(slotInstanceId, header, message, m_priority, m_messageTimeToLive);

@@ -41,7 +41,7 @@ namespace karabo {
  
             void flushHandler(const boost::system::error_code& ec);
 
-            void logHandler(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data);
+            void logHandler(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data);
 
             void logErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info);
 

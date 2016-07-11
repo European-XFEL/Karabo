@@ -1281,11 +1281,11 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void stopBrokerMessageConsumption();
 
-            void injectEvent(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+            void injectEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
-            void injectHeartbeat(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+            void injectHeartbeat(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             bool eventQueueIsEmpty();
 

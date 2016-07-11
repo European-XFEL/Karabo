@@ -13,7 +13,6 @@
 #define	KARABO_NET_BROKERCONNECTION_HH
 
 #include <string>
-#include <boost/signals2.hpp>
 #include <boost/shared_ptr.hpp>
 #include <karabo/util/Configurator.hh>
 #include <karabo/io/BinarySerializer.hh>
@@ -34,7 +33,7 @@ namespace karabo {
 
         class BrokerChannel;
         
-        typedef boost::function<void (boost::shared_ptr<BrokerChannel>, const std::string&) > BrokerErrorHandler;
+        typedef boost::function<void (const std::string&) > BrokerErrorHandler;
 
         /**
          * The BrokerConnection class.
