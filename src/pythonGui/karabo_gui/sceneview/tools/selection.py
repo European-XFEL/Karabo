@@ -43,13 +43,16 @@ class SceneSelectionTool(BaseSceneTool):
         """ A callback which is fired whenever the user clicks in the
         SceneView.
         """
+        selection_model = scene_view.selection_model
+
         if self._hover_item is not None and len(self._resize_type) > 0:
             self.state = 'resize'
+            selection_model.clear_selection()
+            selection_model.select_object(self._hover_item)
             event.accept()
             return
 
         mouse_pos = event.pos()
-        selection_model = scene_view.selection_model
         item = scene_view.item_at_position(mouse_pos)
         if item is None:
             if selection_model.get_selection_bounds().contains(mouse_pos):
