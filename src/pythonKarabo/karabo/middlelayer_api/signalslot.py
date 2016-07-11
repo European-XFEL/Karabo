@@ -183,18 +183,6 @@ class SignalSlotable(Configurable):
 
     @coroutine
     def _run(self):
-        """start everything needed for this device
-
-        This coroutine is called once a device is started. Overwrite this
-        method if you want code to be called at startup time. Don't forget
-        to yield from super.
-
-        This method is supposed to return once everything is up and running.
-        If you have long-running tasks, start them with async.
-
-        Return a future which represents the Karabo event dispatcher.
-        Once this future is done, the entire device is considered dead, and
-        all other still running tasks should be cancelled as well."""
         async(self._ss.main(self))
         try:
             yield from wait_for(
