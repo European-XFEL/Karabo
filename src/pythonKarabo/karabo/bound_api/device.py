@@ -920,6 +920,25 @@ class PythonDevice(NoFsm):
     def getRollingStatistics(self, key):
         return self.validatorIntern.getRollingStatistics(key)
 
+    def getAlarmInfo(self):
+        info = Hash()
+        with self._stateChangeLock:
+            warnings = self.validatorIntern.getParametersInWarnOrAlarm()
+            for key in warnings:
+                desc = warnings[key]
+                info.set(str(key), self.fullSchema.getInfoForAlarm(str(key), AlarmCondition.fromString(desc["type"])))
+
+        return info
+
+    def outputAlarmInfo(self):
+        info = self.getAlarmInfo()
+        out = "Alarm information for device: {}\n".format(self.getInstanceId())
+        for k in info:
+            out += "Property: {}\n".format(k)
+            out += "----------\n"
+            out += "{}\n".format(info[k])
+        self.log.INFO(out)
+
         
     '''
     def getCurrentDateTime(self):
