@@ -62,7 +62,7 @@ class SceneSelectionTool(BaseSceneTool):
                     selection_model.deselect_object(item)
                 else:
                     selection_model.select_object(item)
-            else:
+            elif item not in selection_model:
                 selection_model.clear_selection()
                 selection_model.select_object(item)
         event.accept()
