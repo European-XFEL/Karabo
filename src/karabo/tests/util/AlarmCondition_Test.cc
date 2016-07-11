@@ -106,7 +106,7 @@ void AlarmCondition_Test::testValidation(){
     
     Hash h_out;
 
-    for(size_t t = 0; t< 100; t++){
+    for(size_t t = 0; t< 10; t++){
         for(int i = 0; i < 50; i++){
             std::ostringstream  key_s;
             key_s<<i;
@@ -193,7 +193,7 @@ void AlarmCondition_Test::testValidation(){
 
     profiler.close();
 
-    std::clog << "Validation time 250 properties: " << profiler.getPeriod("validator").getDuration()/100 << " [s/per validation]" << std::endl;
+    std::clog << "Validation time 250 properties: " << profiler.getPeriod("validator").getDuration()/10 << " [s/per validation]" << std::endl;
 }
 
 void AlarmCondition_Test::testValidationConditionalRoundTrip(){

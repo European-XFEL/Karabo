@@ -310,7 +310,7 @@ void StatisticalEvaluator::testValidatorPerformance() {
     
     Hash h_out;
        
-    for(size_t t = 0; t< 100; t++){
+    for(size_t t = 0; t< 10; t++){
         for(int i = 0; i < 50; i++){
             std::ostringstream  key_s;
             key_s<<i;
@@ -328,7 +328,7 @@ void StatisticalEvaluator::testValidatorPerformance() {
 
     profiler.close();
 
-    std::clog << "Validation time 250 properties: " << profiler.getPeriod("varianceValidator").getDuration()/100 << " [s/per validation]" << std::endl;
+    std::clog << "Validation time 250 properties: " << profiler.getPeriod("varianceValidator").getDuration()/10 << " [s/per validation]" << std::endl;
 
     
 }
