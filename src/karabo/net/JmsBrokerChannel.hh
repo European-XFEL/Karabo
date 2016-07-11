@@ -63,8 +63,6 @@ namespace karabo {
               } \
             }
 
-            typedef boost::signals2::signal<void (BrokerChannel::Pointer, const std::string&) > SignalError;
-
             // Provides access to the JmsConnection object
             boost::weak_ptr<JmsBrokerConnection> m_jmsConnection;
 
@@ -75,10 +73,7 @@ namespace karabo {
 
             // Provides access to the JmsIOService object
             JmsBrokerIOService::Pointer m_ioService;
-
-            // Signals occurrence of errors
-            SignalError m_signalError;
-
+          
             // Types needed by the OpenMQ API
             boost::mutex m_sessionProducerHandleMutex;
             boost::mutex m_sessionConsumerHandleMutex;
@@ -251,9 +246,7 @@ namespace karabo {
              * This function returns the currently set JMS selection
              * @return The currently set JMS selector
              */
-            const std::string& getFilter() const;
-
-            void setTimeoutSyncRead(int milliseconds);
+            const std::string& getFilter() const;            
 
             //void waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id);
 
@@ -269,9 +262,7 @@ namespace karabo {
 
             void listenForHashStringMessages();
 
-            void listenForHashHashMessages();
-
-            void deadlineTimer(const WaitHandler& handler, int milliseconds, const std::string& id);
+            void listenForHashHashMessages();           
 
             void setSessionFalse();
 
@@ -333,7 +324,7 @@ namespace karabo {
 
             std::string prepareSelector() const;
 
-            void rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header);
+            void rawHash2HashHash(const char* data, const size_t& size, const karabo::util::Hash::Pointer& header);
 
             void sendTextMessage(const karabo::util::Hash& header, const std::string& messageBody, const int priority, const int messageTimeToLive);
 

@@ -59,7 +59,7 @@ namespace karabo {
             }
 
             if (that) {
-                that->injectEvent(that->m_consumerChannel, header, body);
+                that->injectEvent(header, body);
                 return true;
             } else {
                 return false;
@@ -289,12 +289,11 @@ namespace karabo {
             m_heartbeatProducerChannel = m_connection->createChannel("beats");
             m_heartbeatConsumerChannel = m_connection->createChannel("beats");
 
-            // Set error handler for channels. Producers do not seem to make use of them, but that might change.
-            const BrokerErrorHandler errorHandler = boost::bind(&SignalSlotable::channelErrorHandler, this, _1, _2);
-            m_consumerChannel->setErrorHandler(errorHandler);
-            m_producerChannel->setErrorHandler(errorHandler);
-            m_heartbeatConsumerChannel->setErrorHandler(errorHandler);
-            m_heartbeatProducerChannel->setErrorHandler(errorHandler);
+            // Set error handler for channels. Producers do not seem to make use of them, but that might change.           
+            m_consumerChannel->setErrorHandler(boost::bind(&SignalSlotable::channelErrorHandler, this, m_consumerChannel, _1));
+            m_producerChannel->setErrorHandler(boost::bind(&SignalSlotable::channelErrorHandler, this, m_producerChannel, _1));
+            m_heartbeatConsumerChannel->setErrorHandler(boost::bind(&SignalSlotable::channelErrorHandler, this, m_heartbeatConsumerChannel, _1));
+            m_heartbeatProducerChannel->setErrorHandler(boost::bind(&SignalSlotable::channelErrorHandler, this, m_heartbeatProducerChannel, _1));
 
             registerDefaultSignalsAndSlots();
         }
@@ -332,7 +331,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::injectEvent(karabo::net::BrokerChannel::Pointer, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
+        void SignalSlotable::injectEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
 
             if (m_updatePerformanceStatistics) {
                 boost::mutex::scoped_lock lock(m_latencyMutex);
@@ -402,7 +401,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::injectHeartbeat(karabo::net::BrokerChannel::Pointer, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
+        void SignalSlotable::injectHeartbeat(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
             SlotInstancePointer slot = getSlot("slotHeartbeat");
             // Synchronously call the slot
             if (slot) slot->callRegisteredSlotFunctions(*header, *body);
@@ -550,7 +549,7 @@ namespace karabo {
             // Prepare the slot selector
             const string selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'";
             m_consumerChannel->setFilter(selector);
-            m_consumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2, _3));
+            m_consumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2));
         }
 
 
@@ -865,7 +864,7 @@ namespace karabo {
         void SignalSlotable::trackAllInstances() {
             m_trackAllInstances = true;
             m_heartbeatConsumerChannel->setFilter("signalFunction = 'signalHeartbeat'");
-            m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2, _3));
+            m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2));
         }
 
 

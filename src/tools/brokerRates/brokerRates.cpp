@@ -48,8 +48,7 @@ public:
   // virtual ~BrokerStatistics() {} // no need for virtual...
 
   /// Register a message, i.e. increase statistics and possibly print.
-  void registerMessage(net::BrokerChannel::Pointer /*channel*/,
-                       const util::Hash::Pointer& header,
+  void registerMessage(const util::Hash::Pointer& header,
                        const char* /*body*/, const size_t& bodySize);
 
 private:
@@ -132,8 +131,7 @@ void BrokerStatistics::printId(std::ostream& out, const SlotId& id) const
 
 ////////////////////////////////////////////////////////////////////////////
 
-void BrokerStatistics::registerMessage(net::BrokerChannel::Pointer /*channel*/,
-                                       const util::Hash::Pointer& header,
+void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
                                        const char* /*body*/,
                                        const size_t& bodySize)
 {
@@ -363,7 +361,7 @@ int main(int argc, char** argv) {
     // Register our registration message as async reader:
     boost::shared_ptr<BrokerStatistics> stats(new BrokerStatistics(interval));
     channel->readAsyncHashRaw(boost::bind(&BrokerStatistics::registerMessage,
-                                          stats, _1, _2, _3, _4));
+                                          stats, _1, _2, _3));
 
     // Block forever
     ioService->work();
