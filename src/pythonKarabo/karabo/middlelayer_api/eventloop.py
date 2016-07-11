@@ -37,6 +37,7 @@ class Broker:
         self.tasks = set()
         self.logger = logging.getLogger(deviceId)
         self.info = None
+        self.slots = {}
 
     def send(self, p, args):
         hash = Hash()
@@ -180,22 +181,25 @@ class Broker:
                 if device is None:
                     continue
                 try:
-                    slots = [getattr(device, s)
+                    slots = [self.slots[s]
                              for s in slots.get(self.deviceId, [])] + \
-                            [getattr(device, s) for s in slots.get("*", [])
-                             if hasattr(device, s)]
-                except AttributeError:
+                            [self.slots[s] for s in slots.get("*", [])
+                             if s in self.slots]
+                except KeyError:
                     self.logger.exception("slot does not exist")
                     continue
                 try:
                     for slot in slots:
-                        slot.slot(device, message, params)
+                        slot(device, message, params)
                 except:
                     self.logger.exception(
                         "internal error while executing slot")
                 slot = slots = None  # delete reference to device
         finally:
             consumer.close()
+
+    def register_slot(self, name, slot):
+        self.slots[name] = slot
 
     @coroutine
     def main(self, device):

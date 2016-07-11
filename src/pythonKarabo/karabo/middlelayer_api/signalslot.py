@@ -186,6 +186,10 @@ class SignalSlotable(Configurable):
 
     @coroutine
     def _run(self):
+        for k in dir(self.__class__):
+            v = getattr(self, k, None)
+            if callable(v) and hasattr(v, "slot"):
+                self._ss.register_slot(k, v.slot)
         async(self._ss.main(self))
         try:
             yield from wait_for(
