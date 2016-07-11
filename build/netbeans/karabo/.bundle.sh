@@ -8,7 +8,7 @@
 # This script is intended to run in conjunction with the NetBeans build system.
 # It should be called from within the NetBeans Makefile and expects the following parameters:
 #
-# DISTDIR (e.g. "dist"), CONF (e.g. "Debug"), PLATFORM (e.g. "GNU-Linux-x86"), BUNDLE_ACTION(package|install), BUNDLE_OPTION(Gui|NoGui)
+# DISTDIR (e.g. "dist"), CONF (e.g. "Debug"), PLATFORM (e.g. "GNU-Linux-x86"), BUNDLE_ACTION(package|install)
 #
 
 echo "### Now building Karabo... ###";
@@ -47,8 +47,7 @@ DISTDIR=$1
 CONF=$2
 PLATFORM=$3
 BUNDLE_ACTION=$4
-BUNDLE_OPTION=$5
-PYOPT=$6
+PYOPT=$5
 OS=$(uname -s)
 MACHINE=$(uname -m)
 
@@ -59,16 +58,7 @@ if [ $? -ne 0 ]; then
     # Otherwise use the short hash
     VERSION=$(git rev-parse --short HEAD)
 fi
-
-if [ "$BUNDLE_ACTION" = "package" ]; then
-    if [ $BUNDLE_OPTION = "NoGui" ]; then
-        PACKAGENAME=karabo-nogui-$VERSION
-    else 
-        PACKAGENAME=karabo-$VERSION
-    fi
-elif [ "$BUNDLE_ACTION" = "install" ]; then
-    PACKAGENAME=karabo-$VERSION
-fi
+PACKAGENAME=karabo-$VERSION
 
 NUM_CORES=2  # default
 if [ "$OS" = "Linux" ]; then
@@ -181,14 +171,10 @@ safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 
 # pythonGui
-if [ $BUNDLE_OPTION = "NoGui" ]; then
-   echo
-elif [ $BUNDLE_OPTION = "Gui" ]; then
-   cd ../pythonGui
-   safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
-   cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-   cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
-fi
+cd ../pythonGui
+safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
+cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
+cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 
 # serverControl
 cd ../serverControl
