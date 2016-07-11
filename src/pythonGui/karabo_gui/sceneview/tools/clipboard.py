@@ -109,7 +109,7 @@ class ScenePasteReplaceAction(BaseScenePasteAction):
             for child in model.children:
                 self._get_widget_model_keys(child, keys_list)
         elif isinstance(model, BaseWidgetObjectData):
-            keys_list.append(model.keys)
+            keys_list.extend(model.keys)
 
     def _set_widget_model_keys(self, model, mapped_device_ids):
         if isinstance(model, BaseLayoutModel):
@@ -118,37 +118,28 @@ class ScenePasteReplaceAction(BaseScenePasteAction):
         elif isinstance(model, BaseWidgetObjectData):
             new_key_list = []
             for key in model.keys:
-                device_property_key = key.split(".", 1)
-                device_id = device_property_key[0]
+                device_id, property_key = key.split('.', 1)
                 new_device_id = mapped_device_ids.get(device_id)
                 if new_device_id is None:
-                    continue
-                property_key = device_property_key[1]
-                new_key_list.append("{}.{}".format(new_device_id,
-                                                   property_key))
+                    new_key = key
+                else:
+                    new_key = "{}.{}".format(new_device_id, property_key)
+                new_key_list.append(new_key)
             # Overwrite key list with new keys
             model.keys = new_key_list
 
     def run_action(self, models, scene_view):
-        """ Modify the device Id ``models`` and add them to the scene view. """
+        """ Modify the device IDs of ``models``and add them to the scene view.
+        """
 
-        keys_list = []
+        keys = []
         for m in models:
-            self._get_widget_model_keys(m, keys_list)
+            self._get_widget_model_keys(m, keys)
 
-        device_ids = []
-        for keys in keys_list:
-            for k in keys:
-                device_id = k.split(".", 1)[0]
-                if device_id not in device_ids:
-                    device_ids.append(device_id)
-
-        # Sort list for better overview in dialog
-        device_ids = sorted(device_ids)
-
+        device_ids = sorted(set(k.split('.', 1)[0] for k in keys))
         dialog = ReplaceDialog(device_ids)
         if dialog.exec_() != QDialog.Accepted:
-            return False
+            return
 
         mapped_device_ids = dialog.mappedDevices()
         for m in models:
