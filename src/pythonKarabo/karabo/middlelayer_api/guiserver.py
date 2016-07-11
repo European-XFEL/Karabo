@@ -98,9 +98,10 @@ class GuiServer(DeviceClientBase):
         self.deviceChannels = {}  # which channels is this device visbile in
         self.subscriptions = WeakValueDictionary()
 
-    def run(self):
+    @coroutine
+    def _run(self):
         async(self.log_handler())
-        super().run()
+        yield from super()._run()
         async(self.run_server())
 
     @coroutine

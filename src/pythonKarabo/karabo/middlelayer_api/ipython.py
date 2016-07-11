@@ -89,8 +89,9 @@ class IPythonKernel(Device):
     def interrupt(self):
         self.manager.interrupt_kernel()
 
-    def run(self):
-        super().run()
+    @coroutine
+    def _run(self):
+        yield from super()._run()
         self.manager = KernelManager(client_factory=Client)
         self.manager.start_kernel(
             extra_arguments=["-c", "from karabo.middlelayer_api.cli import *",
