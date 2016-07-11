@@ -32,6 +32,8 @@ class SceneSelectionModel(HasStrictTraits):
         """ Return the bounding rectangle for the objects which are selected.
         """
         rect = QRect(*calc_bounding_rect(self._selection))
+        if rect.isEmpty():
+            return rect
         rect.adjust(-2, -2, +3, +3)
         return rect
 
