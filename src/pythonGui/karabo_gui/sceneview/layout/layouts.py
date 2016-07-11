@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import QSize
+from PyQt4.QtCore import QRect, QSize
 from PyQt4.QtGui import QBoxLayout, QGridLayout, QLayout, QWidgetItem
 
 from karabo_gui.sceneview.utils import calc_bounding_rect
@@ -54,6 +54,13 @@ class GroupLayout(BaseLayout, QLayout):
 
     def count(self):
         return len(self._children)
+
+    def geometry(self):
+        model = self.model
+        rect = QRect(model.x, model.y, model.width, model.height)
+        if rect.isEmpty():
+            rect = QRect(*calc_bounding_rect(self._children))
+        return rect
 
     def maximumSize(self):
         return self.sizeHint()

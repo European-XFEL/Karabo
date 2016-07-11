@@ -134,7 +134,11 @@ def create_object_from_model(layout, model, scene_view, object_dict):
             if model_rect.isEmpty():
                 # Ask the layout to calculate a suitable size
                 obj.invalidate()
-                model_rect.setSize(obj.sizeHint())
+                rect = obj.geometry()
+                if rect.isEmpty():
+                    model_rect.setSize(obj.sizeHint())
+                else:
+                    model_rect = rect
             obj.setGeometry(model_rect)
 
 
