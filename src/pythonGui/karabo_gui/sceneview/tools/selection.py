@@ -43,20 +43,27 @@ class SceneSelectionTool(BaseSceneTool):
         """ A callback which is fired whenever the user clicks in the
         SceneView.
         """
+        selection_model = scene_view.selection_model
+
         if self._hover_item is not None and len(self._resize_type) > 0:
             self.state = 'resize'
+            selection_model.clear_selection()
+            selection_model.select_object(self._hover_item)
             event.accept()
             return
 
         mouse_pos = event.pos()
         item = scene_view.item_at_position(mouse_pos)
         if item is None:
-            self.state = 'draw'
-            self._selection_rect.start_drag(mouse_pos)
+            if selection_model.get_selection_bounds().contains(mouse_pos):
+                self.state = 'move'
+                self._moving_pos = mouse_pos
+            else:
+                self.state = 'draw'
+                self._selection_rect.start_drag(mouse_pos)
         else:
             self.state = 'move'
             self._moving_pos = mouse_pos
-            selection_model = scene_view.selection_model
             if event.modifiers() & Qt.ShiftModifier:
                 if item in selection_model:
                     selection_model.deselect_object(item)
@@ -108,6 +115,7 @@ class SceneSelectionTool(BaseSceneTool):
         """ Handles mouse moves when no buttons are pressed.
         """
         mouse_pos = event.pos()
+        selection_model = scene_view.selection_model
         self._hover_item = scene_view.item_at_position(mouse_pos)
         cursor = 'none'
         if self._hover_item is not None:
@@ -133,6 +141,9 @@ class SceneSelectionTool(BaseSceneTool):
             else:
                 cursor = 'open-hand'
                 self._resize_type = ''
+        elif selection_model.get_selection_bounds().contains(mouse_pos):
+            cursor = 'open-hand'
+            self._resize_type = ''
         scene_view.set_cursor(cursor)
 
     def _move_move(self, scene_view, event):
