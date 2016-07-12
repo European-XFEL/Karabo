@@ -302,14 +302,15 @@ class Tests(TestCase):
             node = Node(B)
 
         a = A(rehash(value=44, node=Hash("value", 44)))
-        self.assertEqual(init_value, 88 * unit.meter)
-        self.assertEqual(setter_value, 92 * unit.meter)
-        self.assertEqual(a.value, 47 * unit.meter)
-        self.assertEqual(a.node.value, 47 * unit.meter)
+        self.assertEqual(init_value, (44 + 44) * unit.meter)
+        self.assertEqual(setter_value, (44 + 2 + 44 + 2) * unit.meter)
+        self.assertEqual(a.value, (44 + 2 + 1) * unit.meter)
+        self.assertEqual(a.node.value, (44 + 2 + 1) * unit.meter)
         run_coro(a.slotReconfigure(rehash(value=3, node=Hash("value", 3))))
-        self.assertEqual(setter_value, 98 * unit.meter)
-        self.assertEqual(a.value, 4 * unit.meter)
-        self.assertEqual(a.node.value, 4 * unit.meter)
+        self.assertEqual(setter_value,
+                         (44 + 44 + (3 + 2) + (3 + 2)) * unit.meter)
+        self.assertEqual(a.value, (3 + 1) * unit.meter)
+        self.assertEqual(a.node.value, (3 + 1) * unit.meter)
 
     def test_setter_coro(self):
         setter_value = init_value = 0
