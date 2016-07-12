@@ -315,9 +315,9 @@ class Descriptor(object):
         ret = self.initialize(instance,
                               self.toKaraboValue(value, strict=False))
         if ret is None:
-            return []
+            return ()
         else:
-            return [ret]
+            return (ret,)
 
     def checkedSet(self, instance, value):
         """Check whether it is allowed and return setters
