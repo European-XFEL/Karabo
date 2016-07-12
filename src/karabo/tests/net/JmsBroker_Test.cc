@@ -37,9 +37,9 @@ void JmsBroker_Test::readHandler1(karabo::net::BrokerChannel::Pointer channel, c
             (header->get<string > ("randomHeaderGarbage") == "indeed")) {
         m_messagesRead++;
     }
-    
-// Does not work since r19057/788969b143709327c7346...
-//    channel->readAsyncHashHash(boost::bind(&JmsBroker_Test::readHandler2, this, _1, _2, _3));
+       
+    // Does not work since r19057/788969b143709327c7346...
+//    channel->readAsyncHashHash(boost::bind(&JmsBroker_Test::readHandler2, this, _1, _2));
 //
 //    boost::this_thread::sleep(boost::posix_time::millisec(1000));
 //
@@ -47,7 +47,7 @@ void JmsBroker_Test::readHandler1(karabo::net::BrokerChannel::Pointer channel, c
 }
 
 
-void JmsBroker_Test::readHandler2(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
+void JmsBroker_Test::readHandler2(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
     if (karabo::util::similar(*body, m_hash)) {
         m_messagesRead++;
     }
@@ -56,7 +56,7 @@ void JmsBroker_Test::readHandler2(karabo::net::BrokerChannel::Pointer channel, c
 void JmsBroker_Test::errorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& message) {
     std::cout << "JmsBroker_Test::errorHandler message is: " << message << std::endl;
 
-    ++m_errorsLogged;
+    ++m_errorsLogged;   
 }
 
 void JmsBroker_Test::testMethod() {
@@ -78,9 +78,9 @@ void JmsBroker_Test::testMethod() {
     
     BrokerChannel::Pointer channel = connection->createChannel();
 
-    channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
+    channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, channel, _1, _2));
 
-    channel->setErrorHandler(boost::bind(&JmsBroker_Test::errorHandler, this, _1, _2));
+    channel->setErrorHandler(boost::bind(&JmsBroker_Test::errorHandler, this, channel, _1));
     
     boost::this_thread::yield();
 
@@ -99,7 +99,7 @@ void JmsBroker_Test::testMethod() {
     // Now test that the error handler is called if a problem arises
 
     // register again
-    channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
+    channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, channel, _1, _2));
 
     // now write a malformed message to trigger an error
     channel->write(validHeader, Hash("Wrongly formatted message:", "message body is hash"));
@@ -130,7 +130,7 @@ void JmsBroker_Test::testBinaryTransport() {
     
     BrokerChannel::Pointer channel = connection->createChannel();
 
-    channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
+    channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, channel, _1, _2));
 
     //channel->setErrorHandler(&onError);
 

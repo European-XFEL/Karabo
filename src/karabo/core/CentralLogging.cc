@@ -97,9 +97,9 @@ namespace karabo {
                 // Start the logging thread
                 m_loggerConnection->start();
                 m_loggerChannel = m_loggerConnection->createChannel();
-                m_loggerChannel->setErrorHandler(boost::bind(&CentralLogging::logErrorHandler, this, _1, _2));
+                m_loggerChannel->setErrorHandler(boost::bind(&CentralLogging::logErrorHandler, this, m_loggerChannel, _1));
                 m_loggerChannel->setFilter("target = 'log'");
-                m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::core::CentralLogging::logHandler, this, _1, _2, _3));
+                m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::core::CentralLogging::logHandler, this, _1, _2));
                 m_logThread = boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
  
                 m_timer.expires_from_now(boost::posix_time::seconds(get<int>("flushInterval")));
@@ -134,8 +134,7 @@ namespace karabo {
         }
 
 
-        void CentralLogging::logHandler(karabo::net::BrokerChannel::Pointer channel,
-                                        const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data) {
+        void CentralLogging::logHandler(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "logHandler called ...";
                 boost::mutex::scoped_lock lock(m_streamMutex);
