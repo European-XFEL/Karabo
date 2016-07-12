@@ -274,7 +274,8 @@ namespace karabo {
                     {
                         // We have a valid message, but some message has been dropped.
                         MQString statusString = MQGetStatusString(status);
-                        m_errorHandler(statusString);
+                        if (m_errorHandler) m_errorHandler(statusString);
+                        else KARABO_LOG_FRAMEWORK_ERROR << "Problem during message consumption: " << statusString;
                         MQFreeString(statusString);
                         status.errorCode = MQ_SUCCESS; // Message itself is fine.
                         break;
@@ -853,11 +854,11 @@ namespace karabo {
 
                 std::string newFailureMsg(" exception occurred while calling error handler");
                 bool caught = true;
-                try {
-                    KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
+                try {                   
                     // Both, shared_from_this() and registered handlers, could throw. But we really, really must not
                     // stop listening, otherwise a deaf zombie device could be created.
-                    m_errorHandler(failureMsg);
+                    if (m_errorHandler) m_errorHandler(failureMsg);
+                    else KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
                     caught = false;
                 } catch (const Exception& e) {
                     newFailureMsg = "An" + (newFailureMsg + ":\n") += e.detailedMsg();
