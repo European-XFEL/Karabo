@@ -6,29 +6,29 @@ from karabo.middlelayer import (
     Unit, unit)
 
 
-class MockConfigurable(Configurable):
-    mock_value = None
-    mock_child = None
+class DummyConfigurable(Configurable):
+    dummy_value = None
+    dummy_child = None
 
     def setValue(self, desc, value):
         super().setValue(desc, value)
-        assert self.mock_value is None
-        self.mock_value = value
+        assert self.dummy_value is None
+        self.dummy_value = value
 
     def assertValue(self, value):
-        assert value == self.mock_value
-        self.mock_value = None
+        assert value == self.dummy_value
+        self.dummy_value = None
 
     def setChildValue(self, key, value, desc):
         super().setChildValue(key, value, desc)
-        assert self.mock_child is None
+        assert self.dummy_child is None
         self.key = key
-        self.mock_child = value
+        self.dummy_child = value
 
     def assertChild(self, key, value):
-        assert value == self.mock_child
+        assert value == self.dummy_child
         assert key == self.key
-        self.mock_child = None
+        self.dummy_child = None
 
 
 def rehash(**kwargs):
@@ -51,7 +51,7 @@ class Tests(TestCase):
         class B(Configurable):
             value = Int32(unitSymbol=Unit.METER)
 
-        class A(MockConfigurable):
+        class A(DummyConfigurable):
             value = Int32(unitSymbol=Unit.METER)
             node = Node(B)
 
@@ -77,7 +77,7 @@ class Tests(TestCase):
         class B(Configurable):
             value = Int32(unitSymbol=Unit.METER, defaultValue=33)
 
-        class A(MockConfigurable):
+        class A(DummyConfigurable):
             value = Int32(unitSymbol=Unit.METER, defaultValue=22)
             node = Node(B)
 
@@ -104,7 +104,7 @@ class Tests(TestCase):
             value = Int32(assignment=Assignment.MANDATORY,
                           unitSymbol=Unit.METER)
 
-        class A(MockConfigurable):
+        class A(DummyConfigurable):
             value = Int32(assignment=Assignment.MANDATORY,
                           unitSymbol=Unit.METER)
             node = Node(B)
@@ -134,7 +134,7 @@ class Tests(TestCase):
             value = Int32(accessMode=AccessMode.READONLY,
                           unitSymbol=Unit.METER)
 
-        class A(MockConfigurable):
+        class A(DummyConfigurable):
             value = Int32(accessMode=AccessMode.READONLY,
                           unitSymbol=Unit.METER)
             node = Node(B)
@@ -163,7 +163,7 @@ class Tests(TestCase):
                           accessMode=AccessMode.READONLY,
                           unitSymbol=Unit.METER)
 
-        class A(MockConfigurable):
+        class A(DummyConfigurable):
             value = Int32(defaultValue=5,
                           accessMode=AccessMode.READONLY,
                           unitSymbol=Unit.METER)
@@ -194,7 +194,7 @@ class Tests(TestCase):
             value = Int32(accessMode=AccessMode.INITONLY,
                           unitSymbol=Unit.METER)
 
-        class A(MockConfigurable):
+        class A(DummyConfigurable):
             value = Int32(accessMode=AccessMode.INITONLY,
                           unitSymbol=Unit.METER)
             node = Node(B)
@@ -223,7 +223,7 @@ class Tests(TestCase):
             value = Int32(accessMode=AccessMode.INITONLY,
                           unitSymbol=Unit.METER, defaultValue=33)
 
-        class A(MockConfigurable):
+        class A(DummyConfigurable):
             value = Int32(accessMode=AccessMode.INITONLY,
                           unitSymbol=Unit.METER, defaultValue=22)
             node = Node(B)
@@ -253,7 +253,7 @@ class Tests(TestCase):
                           assignment=Assignment.MANDATORY,
                           unitSymbol=Unit.METER)
 
-        class A(MockConfigurable):
+        class A(DummyConfigurable):
             value = Int32(accessMode=AccessMode.INITONLY,
                           assignment=Assignment.MANDATORY,
                           unitSymbol=Unit.METER)
@@ -378,7 +378,7 @@ class Tests(TestCase):
         class B(Configurable):
             nested = Node(C)
 
-        class A(MockConfigurable):
+        class A(DummyConfigurable):
             nested = Node(B)
 
         a = A()
