@@ -274,7 +274,8 @@ namespace karabo {
                     {
                         // We have a valid message, but some message has been dropped.
                         MQString statusString = MQGetStatusString(status);
-                        m_signalError(shared_from_this(), statusString);
+                        if (m_errorHandler) m_errorHandler(statusString);
+                        else KARABO_LOG_FRAMEWORK_ERROR << "Problem during message consumption: " << statusString;
                         MQFreeString(statusString);
                         status.errorCode = MQ_SUCCESS; // Message itself is fine.
                         break;
@@ -460,11 +461,6 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::setTimeoutSyncRead(int milliseconds) {
-            m_syncReadTimeout = milliseconds;
-        }
-
-
         void JmsBrokerChannel::getProperties(Hash& properties, const MQPropertiesHandle& propertiesHandle) const {
             try {
                 MQ_SAFE_CALL(MQPropertiesKeyIterationStart(propertiesHandle))
@@ -600,12 +596,12 @@ namespace karabo {
                         if (header->has("__compression__")) {
                             std::vector<char> tmp;
                             decompress(*header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes), tmp);
-                            m_readHashRawHandler(shared_from_this(), header, &tmp[0], tmp.size());
+                            m_readHashRawHandler(header, &tmp[0], tmp.size());
                         } else {
-                            m_readHashRawHandler(shared_from_this(), header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                            m_readHashRawHandler(header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
                         }
                     } else {
-                        m_readRawHandler(shared_from_this(), reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                        m_readRawHandler(reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
                     }
 
                     MQ_SAFE_CALL(MQFreeMessage(messageHandle));
@@ -666,12 +662,12 @@ namespace karabo {
                         if (header->has("__compression__")) {
                             std::string tmp;
                             decompress(*header, reinterpret_cast<const char*> (msgBody), strlen(msgBody), tmp);
-                            m_readHashStringHandler(shared_from_this(), header, tmp);
+                            m_readHashStringHandler(header, tmp);
                         } else {
-                            m_readHashStringHandler(shared_from_this(), header, string(msgBody));
+                            m_readHashStringHandler(header, string(msgBody));
                         }
                     } else {
-                        m_readStringHandler(shared_from_this(), string(msgBody));
+                        m_readStringHandler(string(msgBody));
                     }
 
                     MQ_SAFE_CALL(MQFreeMessage(messageHandle));
@@ -739,10 +735,10 @@ namespace karabo {
                         } else {
                             m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
                         }
-                        m_readHashHashHandler(shared_from_this(), header, body);
+                        m_readHashHashHandler(header, body);
                     } else {
                         m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
-                        m_readHashHandler(shared_from_this(), body);
+                        m_readHashHandler(body);
                     }
                 } else if (messageType == MQ_TEXT_MESSAGE) {
                     ConstMQString msgBody;
@@ -757,10 +753,10 @@ namespace karabo {
                         } else {
                             m_textSerializer->load(*body, msgBody);
                         }
-                        m_readHashHashHandler(shared_from_this(), header, body);
+                        m_readHashHashHandler(header, body);
                     } else {
                         m_textSerializer->load(*body, msgBody);
-                        m_readHashHandler(shared_from_this(), body);
+                        m_readHashHandler(body);
                     }
                 } else {
                     // Give an error if unexpected message types are going round the broker
@@ -858,11 +854,11 @@ namespace karabo {
 
                 std::string newFailureMsg(" exception occurred while calling error handler");
                 bool caught = true;
-                try {
-                    KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
+                try {                   
                     // Both, shared_from_this() and registered handlers, could throw. But we really, really must not
                     // stop listening, otherwise a deaf zombie device could be created.
-                    m_signalError(shared_from_this(), failureMsg);
+                    if (m_errorHandler) m_errorHandler(failureMsg);
+                    else KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
                     caught = false;
                 } catch (const Exception& e) {
                     newFailureMsg = "An" + (newFailureMsg + ":\n") += e.detailedMsg();
@@ -1212,13 +1208,8 @@ namespace karabo {
 
 
         void JmsBrokerChannel::setErrorHandler(const BrokerErrorHandler& handler) {
-            m_signalError.connect(handler);
-        }
-
-        void JmsBrokerChannel::deadlineTimer(const WaitHandler& handler, int milliseconds, const std::string& id) {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(milliseconds));
-            handler(shared_from_this(), id);
-        }
+            m_errorHandler = handler;
+        }       
 
 
         void JmsBrokerChannel::close() {
@@ -1256,7 +1247,7 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header) {
+        void JmsBrokerChannel::rawHash2HashHash(const char* data, const size_t& size, const karabo::util::Hash::Pointer& header) {
             Hash::Pointer body(new Hash());
             if (header->has("__format")) {
                 std::string format = header->get<string>("__format");
@@ -1278,7 +1269,7 @@ namespace karabo {
             } else {
                 throw KARABO_MESSAGE_EXCEPTION("De-serialization of message without __format tag is not possible");
             }
-            m_readHashHashHandler(channel, body, header);
+            m_readHashHashHandler(body, header);
         }
     }
 }
