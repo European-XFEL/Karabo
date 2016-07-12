@@ -59,15 +59,14 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         self._initializers = []
         for k in self._allattrs:
             t = getattr(type(self), k)
-            init = None
+            init = ()
             if k in configuration:
                 v = configuration[k]
                 init = t.checkedInit(self, v)
                 del configuration[k]
             else:
                 init = t.checkedInit(self)
-            if init:
-                self._initializers.extend(init)
+            self._initializers.extend(init)
 
     @classmethod
     def register(cls, name, dict):
