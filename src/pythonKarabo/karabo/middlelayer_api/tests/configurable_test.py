@@ -294,25 +294,76 @@ class Tests(TestCase):
                 init_value += value
                 super().initialize(instance, value + 2 * unit.meter)
 
+        class A(Configurable):
+            value = Setter(unitSymbol=Unit.METER)
+
+        a = A(rehash(value=44))
+        self.assertEqual(init_value, 44 * unit.meter)
+        self.assertEqual(setter_value, (44 + 2) * unit.meter)
+        self.assertEqual(a.value, (44 + 2 + 1) * unit.meter)
+        run_coro(a.slotReconfigure(rehash(value=3)))
+        self.assertEqual(setter_value, (44 + 3 + 2) * unit.meter)
+        self.assertEqual(a.value, (3 + 1) * unit.meter)
+
+    def test_setter_nested(self):
+        setter_value = init_value = 0
+
+        class Setter(Int32):
+            def setter(self, instance, value):
+                nonlocal setter_value
+                setter_value += value
+                super().setter(instance, value + 1 * unit.meter)
+
+            def initialize(self, instance, value):
+                nonlocal init_value
+                init_value += value
+                super().initialize(instance, value + 2 * unit.meter)
+
         class B(Configurable):
             value = Setter(unitSymbol=Unit.METER)
 
         class A(Configurable):
-            value = Setter(unitSymbol=Unit.METER)
             node = Node(B)
 
-        a = A(rehash(value=44, node=Hash("value", 44)))
-        self.assertEqual(init_value, (44 + 44) * unit.meter)
-        self.assertEqual(setter_value, (44 + 2 + 44 + 2) * unit.meter)
-        self.assertEqual(a.value, (44 + 2 + 1) * unit.meter)
+        a = A(rehash(node=Hash("value", 44)))
+        self.assertEqual(init_value, 44 * unit.meter)
+        self.assertEqual(setter_value, (44 + 2) * unit.meter)
         self.assertEqual(a.node.value, (44 + 2 + 1) * unit.meter)
-        run_coro(a.slotReconfigure(rehash(value=3, node=Hash("value", 3))))
-        self.assertEqual(setter_value,
-                         (44 + 44 + (3 + 2) + (3 + 2)) * unit.meter)
-        self.assertEqual(a.value, (3 + 1) * unit.meter)
+        run_coro(a.slotReconfigure(rehash(node=Hash("value", 3))))
+        self.assertEqual(setter_value, (44 + 3 + 2) * unit.meter)
         self.assertEqual(a.node.value, (3 + 1) * unit.meter)
 
     def test_setter_coro(self):
+        setter_value = init_value = 0
+
+        class Setter(Int32):
+            @asyncio.coroutine
+            def setter(self, instance, value):
+                nonlocal setter_value
+                setter_value += value
+                super().setter(instance, value + 1 * unit.meter)
+
+            @asyncio.coroutine
+            def initialize(self, instance, value):
+                nonlocal init_value
+                init_value += value
+                yield from super().initialize(instance, value + 2 * unit.meter)
+
+        class A(Configurable):
+            value = Setter(unitSymbol=Unit.METER)
+
+        a = A(rehash(value=44))
+        self.assertEqual(init_value, 0)
+        self.assertEqual(setter_value, 0)
+        run_coro(a._run())
+        self.assertEqual(init_value, 44 * unit.meter)
+        self.assertEqual(setter_value, (44 + 2) * unit.meter)
+        self.assertEqual(a.value, (44 + 2 + 1) * unit.meter)
+        run_coro(a.slotReconfigure(rehash(value=3)))
+        self.assertEqual(setter_value, (44 + 2 + 3) * unit.meter)
+        self.assertEqual(a.value, 4 * unit.meter)
+
+    def test_setter_coro_nested(self):
         setter_value = init_value = 0
 
         class Setter(Int32):
@@ -332,20 +383,17 @@ class Tests(TestCase):
             value = Setter(unitSymbol=Unit.METER)
 
         class A(Configurable):
-            value = Setter(unitSymbol=Unit.METER)
             node = Node(B)
 
-        a = A(rehash(value=44, node=Hash("value", 44)))
+        a = A(rehash(node=Hash("value", 44)))
         self.assertEqual(init_value, 0)
         self.assertEqual(setter_value, 0)
         run_coro(a._run())
-        self.assertEqual(init_value, 88 * unit.meter)
-        self.assertEqual(setter_value, 92 * unit.meter)
-        self.assertEqual(a.value, 47 * unit.meter)
-        self.assertEqual(a.node.value, 47 * unit.meter)
-        run_coro(a.slotReconfigure(rehash(value=3, node=Hash("value", 3))))
-        self.assertEqual(setter_value, 98 * unit.meter)
-        self.assertEqual(a.value, 4 * unit.meter)
+        self.assertEqual(init_value, 44 * unit.meter)
+        self.assertEqual(setter_value, (44 + 2) * unit.meter)
+        self.assertEqual(a.node.value, (44 + 2 + 1) * unit.meter)
+        run_coro(a.slotReconfigure(rehash(node=Hash("value", 3))))
+        self.assertEqual(setter_value, (44 + 2 + 3) * unit.meter)
         self.assertEqual(a.node.value, 4 * unit.meter)
 
     def test_cross_error(self):
