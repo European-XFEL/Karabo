@@ -171,7 +171,7 @@ namespace karabo {
             
             void schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema);
 
-            void logHandler(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data);
+            void logHandler(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             void slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string& deviceId);
 
