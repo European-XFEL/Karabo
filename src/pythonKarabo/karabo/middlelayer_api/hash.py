@@ -387,9 +387,6 @@ class Slot(Descriptor):
             inner.slot = self.inner
             return inner.__get__(instance, owner)
 
-    def _initialize(self, instance, value=None):
-        pass  # nothing to initialize in a Slot
-
     def inner(self, device, message, args):
         if (self.allowedStates is not None and
                 device.state not in self.allowedStates):
@@ -414,6 +411,9 @@ class Slot(Descriptor):
 
     def method(self, device):
         return self.themethod(device)
+
+    def _initialize(self, instance, value=None):
+        return ()  # nothing to initialize in a Slot
 
     def __call__(self, method):
         if self.description is None:
