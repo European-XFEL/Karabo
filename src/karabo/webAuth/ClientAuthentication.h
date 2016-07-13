@@ -9,7 +9,7 @@
    Copyright (C) 2000-2013 Robert van Engelen, Genivia Inc. All Rights Reserved.
    Part of this software is released under one of the following licenses:
    GPL or Genivia's license for commercial use.
-*/
+ */
 
 /** @page page_notes Usage Notes
 
@@ -75,7 +75,7 @@ A commercial-use license is available from Genivia, Inc., contact@genivia.com
 --------------------------------------------------------------------------------
 @endverbatim
 
-*/
+ */
 
 
 //gsoapopt w
@@ -114,7 +114,7 @@ modified lines to typemap.dat to rerun wsdl2h:
 ns1 = "http://server.xfelauthwebservice.xfel.eu/"
 ns2 = ""
 
-*/
+ */
 
 #define SOAP_NAMESPACE_OF_ns2	""
 //gsoap ns2   schema namespace:	
@@ -224,16 +224,19 @@ class ns1__UnsupportedEncodingException;
 /// - soap_new_set_ns1__getUserNonce(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__getUserNonce(soap*, ns1__getUserNonce*) deserialize from a stream
 /// - int soap_write_ns1__getUserNonce(soap, ns1__getUserNonce*) serialize to a stream
-class ns1__getUserNonce
-{ public:
-/// Element username of type xs:string.
-    std::string*                         username                       0;	///< Optional element.
-/// Element provider of type xs:string.
-    std::string*                         provider                       0;	///< Optional element.
-/// Element ipAddress of type xs:string.
-    std::string*                         ipAddress                      0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__getUserNonce {
+
+
+public:
+    /// Element username of type xs:string.
+    std::string* username 0; ///< Optional element.
+    /// Element provider of type xs:string.
+    std::string* provider 0; ///< Optional element.
+    /// Element ipAddress of type xs:string.
+    std::string* ipAddress 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":getUserNonceResponse is a complexType.
@@ -244,12 +247,15 @@ class ns1__getUserNonce
 /// - soap_new_set_ns1__getUserNonceResponse(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__getUserNonceResponse(soap*, ns1__getUserNonceResponse*) deserialize from a stream
 /// - int soap_write_ns1__getUserNonceResponse(soap, ns1__getUserNonceResponse*) serialize to a stream
-class ns1__getUserNonceResponse
-{ public:
-/// Element return of type "http://server.xfelauthwebservice.xfel.eu/":xfelSession.
-    ns1__xfelSession*                    return_                        0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__getUserNonceResponse {
+
+
+public:
+    /// Element return of type "http://server.xfelauthwebservice.xfel.eu/":xfelSession.
+    ns1__xfelSession* return_ 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":xfelSession is a complexType.
@@ -260,38 +266,41 @@ class ns1__getUserNonceResponse
 /// - soap_new_set_ns1__xfelSession(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__xfelSession(soap*, ns1__xfelSession*) deserialize from a stream
 /// - int soap_write_ns1__xfelSession(soap, ns1__xfelSession*) serialize to a stream
-class ns1__xfelSession
-{ public:
-/// Element accessList of type xs:string.
-    std::string*                         accessList                     0;	///< Optional element.
-/// Element defaultAccessLevelDesc of type xs:string.
-    std::string*                         defaultAccessLevelDesc         0;	///< Optional element.
-/// Element defaultAccessLevelId of type xs:int.
-    int*                                 defaultAccessLevelId           0;	///< Optional element.
-/// Element familyName of type xs:string.
-    std::string*                         familyName                     0;	///< Optional element.
-/// Element firstName of type xs:string.
-    std::string*                         firstName                      0;	///< Optional element.
-/// Element operationResultMsg of type xs:string.
-    std::string*                         operationResultMsg             0;	///< Optional element.
-/// Element operationSuccess of type xs:int.
-    int*                                 operationSuccess               0;	///< Optional element.
-/// Element provider of type xs:string.
-    std::string*                         provider                       0;	///< Optional element.
-/// Element sessionToken of type xs:string.
-    std::string*                         sessionToken                   0;	///< Optional element.
-/// Element softwareDesc of type xs:string.
-    std::string*                         softwareDesc                   0;	///< Optional element.
-/// Element softwareId of type xs:long.
-    LONG64*                              softwareId                     0;	///< Optional element.
-/// Element userId of type xs:long.
-    LONG64*                              userId                         0;	///< Optional element.
-/// Element username of type xs:string.
-    std::string*                         username                       0;	///< Optional element.
-/// Element welcomeMessage of type xs:string.
-    std::string*                         welcomeMessage                 0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__xfelSession {
+
+
+public:
+    /// Element accessList of type xs:string.
+    std::string* accessList 0; ///< Optional element.
+    /// Element defaultAccessLevelDesc of type xs:string.
+    std::string* defaultAccessLevelDesc 0; ///< Optional element.
+    /// Element defaultAccessLevelId of type xs:int.
+    int* defaultAccessLevelId 0; ///< Optional element.
+    /// Element familyName of type xs:string.
+    std::string* familyName 0; ///< Optional element.
+    /// Element firstName of type xs:string.
+    std::string* firstName 0; ///< Optional element.
+    /// Element operationResultMsg of type xs:string.
+    std::string* operationResultMsg 0; ///< Optional element.
+    /// Element operationSuccess of type xs:int.
+    int* operationSuccess 0; ///< Optional element.
+    /// Element provider of type xs:string.
+    std::string* provider 0; ///< Optional element.
+    /// Element sessionToken of type xs:string.
+    std::string* sessionToken 0; ///< Optional element.
+    /// Element softwareDesc of type xs:string.
+    std::string* softwareDesc 0; ///< Optional element.
+    /// Element softwareId of type xs:long.
+    LONG64* softwareId 0; ///< Optional element.
+    /// Element userId of type xs:long.
+    LONG64* userId 0; ///< Optional element.
+    /// Element username of type xs:string.
+    std::string* username 0; ///< Optional element.
+    /// Element welcomeMessage of type xs:string.
+    std::string* welcomeMessage 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":sessionsByIp is a complexType.
@@ -302,12 +311,15 @@ class ns1__xfelSession
 /// - soap_new_set_ns1__sessionsByIp(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__sessionsByIp(soap*, ns1__sessionsByIp*) deserialize from a stream
 /// - int soap_write_ns1__sessionsByIp(soap, ns1__sessionsByIp*) serialize to a stream
-class ns1__sessionsByIp
-{ public:
-/// Element ipAddress of type xs:string.
-    std::string*                         ipAddress                      0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__sessionsByIp {
+
+
+public:
+    /// Element ipAddress of type xs:string.
+    std::string* ipAddress 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":sessionsByIpResponse is a complexType.
@@ -318,12 +330,15 @@ class ns1__sessionsByIp
 /// - soap_new_set_ns1__sessionsByIpResponse(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__sessionsByIpResponse(soap*, ns1__sessionsByIpResponse*) deserialize from a stream
 /// - int soap_write_ns1__sessionsByIpResponse(soap, ns1__sessionsByIpResponse*) serialize to a stream
-class ns1__sessionsByIpResponse
-{ public:
-/// Element return of type xs:string.
-    std::string*                         return_                        0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__sessionsByIpResponse {
+
+
+public:
+    /// Element return of type xs:string.
+    std::string* return_ 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":logout is a complexType.
@@ -334,16 +349,19 @@ class ns1__sessionsByIpResponse
 /// - soap_new_set_ns1__logout(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__logout(soap*, ns1__logout*) deserialize from a stream
 /// - int soap_write_ns1__logout(soap, ns1__logout*) serialize to a stream
-class ns1__logout
-{ public:
-/// Element username of type xs:string.
-    std::string*                         username                       0;	///< Optional element.
-/// Element provider of type xs:string.
-    std::string*                         provider                       0;	///< Optional element.
-/// Element sessionToken of type xs:string.
-    std::string*                         sessionToken                   0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__logout {
+
+
+public:
+    /// Element username of type xs:string.
+    std::string* username 0; ///< Optional element.
+    /// Element provider of type xs:string.
+    std::string* provider 0; ///< Optional element.
+    /// Element sessionToken of type xs:string.
+    std::string* sessionToken 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":logoutResponse is a complexType.
@@ -354,12 +372,15 @@ class ns1__logout
 /// - soap_new_set_ns1__logoutResponse(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__logoutResponse(soap*, ns1__logoutResponse*) deserialize from a stream
 /// - int soap_write_ns1__logoutResponse(soap, ns1__logoutResponse*) serialize to a stream
-class ns1__logoutResponse
-{ public:
-/// Element return of type xs:boolean.
-    bool*                                return_                        0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__logoutResponse {
+
+
+public:
+    /// Element return of type xs:boolean.
+    bool* return_ 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":singleSignOn is a complexType.
@@ -370,16 +391,19 @@ class ns1__logoutResponse
 /// - soap_new_set_ns1__singleSignOn(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__singleSignOn(soap*, ns1__singleSignOn*) deserialize from a stream
 /// - int soap_write_ns1__singleSignOn(soap, ns1__singleSignOn*) serialize to a stream
-class ns1__singleSignOn
-{ public:
-/// Element username of type xs:string.
-    std::string*                         username                       0;	///< Optional element.
-/// Element provider of type xs:string.
-    std::string*                         provider                       0;	///< Optional element.
-/// Element ipAddress of type xs:string.
-    std::string*                         ipAddress                      0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__singleSignOn {
+
+
+public:
+    /// Element username of type xs:string.
+    std::string* username 0; ///< Optional element.
+    /// Element provider of type xs:string.
+    std::string* provider 0; ///< Optional element.
+    /// Element ipAddress of type xs:string.
+    std::string* ipAddress 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":singleSignOnResponse is a complexType.
@@ -390,12 +414,15 @@ class ns1__singleSignOn
 /// - soap_new_set_ns1__singleSignOnResponse(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__singleSignOnResponse(soap*, ns1__singleSignOnResponse*) deserialize from a stream
 /// - int soap_write_ns1__singleSignOnResponse(soap, ns1__singleSignOnResponse*) serialize to a stream
-class ns1__singleSignOnResponse
-{ public:
-/// Element return of type "http://server.xfelauthwebservice.xfel.eu/":xfelSession.
-    ns1__xfelSession*                    return_                        0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__singleSignOnResponse {
+
+
+public:
+    /// Element return of type "http://server.xfelauthwebservice.xfel.eu/":xfelSession.
+    ns1__xfelSession* return_ 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":hasActiveSession is a complexType.
@@ -406,24 +433,27 @@ class ns1__singleSignOnResponse
 /// - soap_new_set_ns1__hasActiveSession(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__hasActiveSession(soap*, ns1__hasActiveSession*) deserialize from a stream
 /// - int soap_write_ns1__hasActiveSession(soap, ns1__hasActiveSession*) serialize to a stream
-class ns1__hasActiveSession
-{ public:
-/// Element username of type xs:string.
-    std::string*                         username                       0;	///< Optional element.
-/// Element provider of type xs:string.
-    std::string*                         provider                       0;	///< Optional element.
-/// Element software of type xs:string.
-    std::string*                         software                       0;	///< Optional element.
-/// Element ipAddress of type xs:string.
-    std::string*                         ipAddress                      0;	///< Optional element.
-/// Element brokerHostname of type xs:string.
-    std::string*                         brokerHostname                 0;	///< Optional element.
-/// Element brokerPortNumber of type xs:string.
-    std::string*                         brokerPortNumber               0;	///< Optional element.
-/// Element brokerTopic of type xs:string.
-    std::string*                         brokerTopic                    0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__hasActiveSession {
+
+
+public:
+    /// Element username of type xs:string.
+    std::string* username 0; ///< Optional element.
+    /// Element provider of type xs:string.
+    std::string* provider 0; ///< Optional element.
+    /// Element software of type xs:string.
+    std::string* software 0; ///< Optional element.
+    /// Element ipAddress of type xs:string.
+    std::string* ipAddress 0; ///< Optional element.
+    /// Element brokerHostname of type xs:string.
+    std::string* brokerHostname 0; ///< Optional element.
+    /// Element brokerPortNumber of type xs:string.
+    std::string* brokerPortNumber 0; ///< Optional element.
+    /// Element brokerTopic of type xs:string.
+    std::string* brokerTopic 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":hasActiveSessionResponse is a complexType.
@@ -434,12 +464,15 @@ class ns1__hasActiveSession
 /// - soap_new_set_ns1__hasActiveSessionResponse(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__hasActiveSessionResponse(soap*, ns1__hasActiveSessionResponse*) deserialize from a stream
 /// - int soap_write_ns1__hasActiveSessionResponse(soap, ns1__hasActiveSessionResponse*) serialize to a stream
-class ns1__hasActiveSessionResponse
-{ public:
-/// Element return of type xs:boolean.
-    bool*                                return_                        0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__hasActiveSessionResponse {
+
+
+public:
+    /// Element return of type xs:boolean.
+    bool* return_ 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":login is a complexType.
@@ -450,28 +483,31 @@ class ns1__hasActiveSessionResponse
 /// - soap_new_set_ns1__login(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__login(soap*, ns1__login*) deserialize from a stream
 /// - int soap_write_ns1__login(soap, ns1__login*) serialize to a stream
-class ns1__login
-{ public:
-/// Element username of type xs:string.
-    std::string*                         username                       0;	///< Optional element.
-/// Element password of type xs:string.
-    std::string*                         password                       0;	///< Optional element.
-/// Element provider of type xs:string.
-    std::string*                         provider                       0;	///< Optional element.
-/// Element ipAddress of type xs:string.
-    std::string*                         ipAddress                      0;	///< Optional element.
-/// Element brokerHostname of type xs:string.
-    std::string*                         brokerHostname                 0;	///< Optional element.
-/// Element brokerPortNumber of type xs:string.
-    std::string*                         brokerPortNumber               0;	///< Optional element.
-/// Element brokerTopic of type xs:string.
-    std::string*                         brokerTopic                    0;	///< Optional element.
-/// Element nonce of type xs:string.
-    std::string*                         nonce                          0;	///< Optional element.
-/// Element software of type xs:string.
-    std::string*                         software                       0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__login {
+
+
+public:
+    /// Element username of type xs:string.
+    std::string* username 0; ///< Optional element.
+    /// Element password of type xs:string.
+    std::string* password 0; ///< Optional element.
+    /// Element provider of type xs:string.
+    std::string* provider 0; ///< Optional element.
+    /// Element ipAddress of type xs:string.
+    std::string* ipAddress 0; ///< Optional element.
+    /// Element brokerHostname of type xs:string.
+    std::string* brokerHostname 0; ///< Optional element.
+    /// Element brokerPortNumber of type xs:string.
+    std::string* brokerPortNumber 0; ///< Optional element.
+    /// Element brokerTopic of type xs:string.
+    std::string* brokerTopic 0; ///< Optional element.
+    /// Element nonce of type xs:string.
+    std::string* nonce 0; ///< Optional element.
+    /// Element software of type xs:string.
+    std::string* software 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":loginResponse is a complexType.
@@ -482,12 +518,15 @@ class ns1__login
 /// - soap_new_set_ns1__loginResponse(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__loginResponse(soap*, ns1__loginResponse*) deserialize from a stream
 /// - int soap_write_ns1__loginResponse(soap, ns1__loginResponse*) serialize to a stream
-class ns1__loginResponse
-{ public:
-/// Element return of type "http://server.xfelauthwebservice.xfel.eu/":xfelSession.
-    ns1__xfelSession*                    return_                        0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__loginResponse {
+
+
+public:
+    /// Element return of type "http://server.xfelauthwebservice.xfel.eu/":xfelSession.
+    ns1__xfelSession* return_ 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":DecoderException is a complexType.
@@ -498,12 +537,15 @@ class ns1__loginResponse
 /// - soap_new_set_ns1__DecoderException(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__DecoderException(soap*, ns1__DecoderException*) deserialize from a stream
 /// - int soap_write_ns1__DecoderException(soap, ns1__DecoderException*) serialize to a stream
-class ns1__DecoderException
-{ public:
-/// Element message of type xs:string.
-    std::string*                         message                        0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__DecoderException {
+
+
+public:
+    /// Element message of type xs:string.
+    std::string* message 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /// "http://server.xfelauthwebservice.xfel.eu/":UnsupportedEncodingException is a complexType.
@@ -514,12 +556,15 @@ class ns1__DecoderException
 /// - soap_new_set_ns1__UnsupportedEncodingException(soap*, ...) allocate, set all public members
 /// - int soap_read_ns1__UnsupportedEncodingException(soap*, ns1__UnsupportedEncodingException*) deserialize from a stream
 /// - int soap_write_ns1__UnsupportedEncodingException(soap, ns1__UnsupportedEncodingException*) serialize to a stream
-class ns1__UnsupportedEncodingException
-{ public:
-/// Element message of type xs:string.
-    std::string*                         message                        0;	///< Optional element.
-/// A handle to the soap struct that manages this instance (automatically set)
-    struct soap                         *soap                          ;
+
+class ns1__UnsupportedEncodingException {
+
+
+public:
+    /// Element message of type xs:string.
+    std::string* message 0; ///< Optional element.
+    /// A handle to the soap struct that manages this instance (automatically set)
+    struct soap *soap;
 };
 
 /******************************************************************************\
@@ -626,7 +671,7 @@ class ns1__UnsupportedEncodingException
   - @ref SOAP_ENV__Detail "SOAP Fault Detail Content" (when applicable)
 
 
-*/
+ */
 
 /**
 
@@ -653,14 +698,13 @@ class ns1__UnsupportedEncodingException
 Note: use wsdl2h option -Nname to change the service binding prefix name
 
 
-*/
+ */
 
 /******************************************************************************\
  *                                                                            *
  * SOAP Fault Detail                                                          *
  *                                                                            *
 \******************************************************************************/
-
 /**
 
 The SOAP Fault is part of the gSOAP context and its content is accessed
@@ -668,17 +712,18 @@ through the soap.fault->detail variable (SOAP 1.1) or the
 soap.fault->SOAP_ENV__Detail variable (SOAP 1.2).
 Use wsdl2h option -j to omit these declarations.
 
-*/
-struct SOAP_ENV__Detail
-{
-// xsd:anyAttribute omitted: to parse attribute content of the Detail element into DOM anyAttribute, use wsdl2h option -d.
-    _XML                                 __any                         ;	///< Catch any element content in XML string.
-    ns1__DecoderException*               ns1__DecoderException_        ;
-///< SOAP Fault element ""http://server.xfelauthwebservice.xfel.eu/":DecoderException" part "fault"
-    ns1__UnsupportedEncodingException*   ns1__UnsupportedEncodingException_;
-///< SOAP Fault element ""http://server.xfelauthwebservice.xfel.eu/":UnsupportedEncodingException" part "fault"
-    int                                  __type                        ;	///< set to SOAP_TYPE_X for a serializable type X
-    void                                *fault                         ;	///< points to serializable object X or NULL
+ */
+struct SOAP_ENV__Detail {
+
+
+    // xsd:anyAttribute omitted: to parse attribute content of the Detail element into DOM anyAttribute, use wsdl2h option -d.
+    _XML __any; ///< Catch any element content in XML string.
+    ns1__DecoderException* ns1__DecoderException_;
+    ///< SOAP Fault element ""http://server.xfelauthwebservice.xfel.eu/":DecoderException" part "fault"
+    ns1__UnsupportedEncodingException* ns1__UnsupportedEncodingException_;
+    ///< SOAP Fault element ""http://server.xfelauthwebservice.xfel.eu/":UnsupportedEncodingException" part "fault"
+    int __type; ///< set to SOAP_TYPE_X for a serializable type X
+    void *fault; ///< points to serializable object X or NULL
 };
 
 /******************************************************************************\
@@ -751,7 +796,7 @@ C++ service class (defined in soapAuthenticationPortBindingService.h):
 @endcode
 Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and easy-to-use service classes;
 
-*/
+ */
 
 //gsoap ns1  service method-protocol:	login SOAP
 //gsoap ns1  service method-style:	login document
@@ -763,9 +808,9 @@ Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and e
 //gsoap ns1  service method-fault:	login ns1__UnsupportedEncodingException_
 //gsoap ns1  service method-fault-action:	login http://server.xfelauthwebservice.xfel.eu/Authentication/login/Fault/UnsupportedEncodingException
 int __ns1__login(
-    ns1__login*                         ns1__login_,	///< Input parameter
-    ns1__loginResponse*                 ns1__loginResponse_	///< Output parameter
-);
+                 ns1__login* ns1__login_, ///< Input parameter
+                 ns1__loginResponse* ns1__loginResponse_ ///< Output parameter
+                 );
 
 /******************************************************************************\
  *                                                                            *
@@ -823,7 +868,7 @@ C++ service class (defined in soapAuthenticationPortBindingService.h):
 @endcode
 Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and easy-to-use service classes;
 
-*/
+ */
 
 //gsoap ns1  service method-protocol:	logout SOAP
 //gsoap ns1  service method-style:	logout document
@@ -831,9 +876,9 @@ Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and e
 //gsoap ns1  service method-input-action:	logout http://server.xfelauthwebservice.xfel.eu/Authentication/logoutRequest
 //gsoap ns1  service method-output-action:	logout http://server.xfelauthwebservice.xfel.eu/Authentication/logoutResponse
 int __ns1__logout(
-    ns1__logout*                        ns1__logout_,	///< Input parameter
-    ns1__logoutResponse*                ns1__logoutResponse_	///< Output parameter
-);
+                  ns1__logout* ns1__logout_, ///< Input parameter
+                  ns1__logoutResponse* ns1__logoutResponse_ ///< Output parameter
+                  );
 
 /******************************************************************************\
  *                                                                            *
@@ -891,7 +936,7 @@ C++ service class (defined in soapAuthenticationPortBindingService.h):
 @endcode
 Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and easy-to-use service classes;
 
-*/
+ */
 
 //gsoap ns1  service method-protocol:	getUserNonce SOAP
 //gsoap ns1  service method-style:	getUserNonce document
@@ -899,9 +944,9 @@ Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and e
 //gsoap ns1  service method-input-action:	getUserNonce http://server.xfelauthwebservice.xfel.eu/Authentication/getUserNonceRequest
 //gsoap ns1  service method-output-action:	getUserNonce http://server.xfelauthwebservice.xfel.eu/Authentication/getUserNonceResponse
 int __ns1__getUserNonce(
-    ns1__getUserNonce*                  ns1__getUserNonce_,	///< Input parameter
-    ns1__getUserNonceResponse*          ns1__getUserNonceResponse_	///< Output parameter
-);
+                        ns1__getUserNonce* ns1__getUserNonce_, ///< Input parameter
+                        ns1__getUserNonceResponse* ns1__getUserNonceResponse_ ///< Output parameter
+                        );
 
 /******************************************************************************\
  *                                                                            *
@@ -959,7 +1004,7 @@ C++ service class (defined in soapAuthenticationPortBindingService.h):
 @endcode
 Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and easy-to-use service classes;
 
-*/
+ */
 
 //gsoap ns1  service method-protocol:	singleSignOn SOAP
 //gsoap ns1  service method-style:	singleSignOn document
@@ -967,9 +1012,9 @@ Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and e
 //gsoap ns1  service method-input-action:	singleSignOn http://server.xfelauthwebservice.xfel.eu/Authentication/singleSignOnRequest
 //gsoap ns1  service method-output-action:	singleSignOn http://server.xfelauthwebservice.xfel.eu/Authentication/singleSignOnResponse
 int __ns1__singleSignOn(
-    ns1__singleSignOn*                  ns1__singleSignOn_,	///< Input parameter
-    ns1__singleSignOnResponse*          ns1__singleSignOnResponse_	///< Output parameter
-);
+                        ns1__singleSignOn* ns1__singleSignOn_, ///< Input parameter
+                        ns1__singleSignOnResponse* ns1__singleSignOnResponse_ ///< Output parameter
+                        );
 
 /******************************************************************************\
  *                                                                            *
@@ -1027,7 +1072,7 @@ C++ service class (defined in soapAuthenticationPortBindingService.h):
 @endcode
 Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and easy-to-use service classes;
 
-*/
+ */
 
 //gsoap ns1  service method-protocol:	sessionsByIp SOAP
 //gsoap ns1  service method-style:	sessionsByIp document
@@ -1035,9 +1080,9 @@ Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and e
 //gsoap ns1  service method-input-action:	sessionsByIp http://server.xfelauthwebservice.xfel.eu/Authentication/sessionsByIpRequest
 //gsoap ns1  service method-output-action:	sessionsByIp http://server.xfelauthwebservice.xfel.eu/Authentication/sessionsByIpResponse
 int __ns1__sessionsByIp(
-    ns1__sessionsByIp*                  ns1__sessionsByIp_,	///< Input parameter
-    ns1__sessionsByIpResponse*          ns1__sessionsByIpResponse_	///< Output parameter
-);
+                        ns1__sessionsByIp* ns1__sessionsByIp_, ///< Input parameter
+                        ns1__sessionsByIpResponse* ns1__sessionsByIpResponse_ ///< Output parameter
+                        );
 
 /******************************************************************************\
  *                                                                            *
@@ -1095,7 +1140,7 @@ C++ service class (defined in soapAuthenticationPortBindingService.h):
 @endcode
 Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and easy-to-use service classes;
 
-*/
+ */
 
 //gsoap ns1  service method-protocol:	hasActiveSession SOAP
 //gsoap ns1  service method-style:	hasActiveSession document
@@ -1103,9 +1148,9 @@ Important: use soapcpp2 option '-j' (or '-i') to generate greatly improved and e
 //gsoap ns1  service method-input-action:	hasActiveSession http://server.xfelauthwebservice.xfel.eu/Authentication/hasActiveSessionRequest
 //gsoap ns1  service method-output-action:	hasActiveSession http://server.xfelauthwebservice.xfel.eu/Authentication/hasActiveSessionResponse
 int __ns1__hasActiveSession(
-    ns1__hasActiveSession*              ns1__hasActiveSession_,	///< Input parameter
-    ns1__hasActiveSessionResponse*      ns1__hasActiveSessionResponse_	///< Output parameter
-);
+                            ns1__hasActiveSession* ns1__hasActiveSession_, ///< Input parameter
+                            ns1__hasActiveSessionResponse* ns1__hasActiveSessionResponse_ ///< Output parameter
+                            );
 
 /**
 
@@ -1117,68 +1162,68 @@ Based on policies, this service imports
 
   - WS-Policy reminders and enablers:
     - WS-Addressing 1.0 (2005/08, accepts 2004/08):
-	@code
-	#import "wsa5.h" // to be added to this header file for the soapcpp2 build step
-	@endcode
-	@code
-	#include "plugin/wsaapi.h"
-	soap_register_plugin(soap, soap_wsa); // register the wsa plugin in your code
-	// See the user guide gsoap/doc/wsa/html/index.html
-	@endcode
+        @code
+        #import "wsa5.h" // to be added to this header file for the soapcpp2 build step
+        @endcode
+        @code
+        #include "plugin/wsaapi.h"
+        soap_register_plugin(soap, soap_wsa); // register the wsa plugin in your code
+        // See the user guide gsoap/doc/wsa/html/index.html
+        @endcode
     - WS-Addressing (2004/08):
-	@code
-	#import "wsa.h" // to be added to this header file for the soapcpp2 build step
-	@endcode
-	@code
-	#include "plugin/wsaapi.h"
-	soap_register_plugin(soap, soap_wsa); // register the wsa plugin in your code
-	// See the user guide gsoap/doc/wsa/html/index.html
-	@endcode
+        @code
+        #import "wsa.h" // to be added to this header file for the soapcpp2 build step
+        @endcode
+        @code
+        #include "plugin/wsaapi.h"
+        soap_register_plugin(soap, soap_wsa); // register the wsa plugin in your code
+        // See the user guide gsoap/doc/wsa/html/index.html
+        @endcode
     - WS-ReliableMessaging 1.0:
-	@code
-	#import "wsrm5.h" // to be added to this header file for the soapcpp2 build step
-	@endcode
-	@code
-	#include "plugin/wsrmapi.h"
-	soap_register_plugin(soap, soap_wsa); // register the wsa plugin in your code
-	soap_register_plugin(soap, soap_wsrm); // register the wsrm plugin in your code
-	// See the user guide gsoap/doc/wsrm/html/index.html
-	@endcode
+        @code
+        #import "wsrm5.h" // to be added to this header file for the soapcpp2 build step
+        @endcode
+        @code
+        #include "plugin/wsrmapi.h"
+        soap_register_plugin(soap, soap_wsa); // register the wsa plugin in your code
+        soap_register_plugin(soap, soap_wsrm); // register the wsrm plugin in your code
+        // See the user guide gsoap/doc/wsrm/html/index.html
+        @endcode
     - WS-ReliableMessaging 1.1:
-	@code
-	#import "wsrm.h" // to be added to this header file for the soapcpp2 build step
-	@endcode
-	@code
-	#include "plugin/wsrmapi.h"
-	soap_register_plugin(soap, soap_wsa); // register the wsa plugin in your code
-	soap_register_plugin(soap, soap_wsrm); // register the wsrm plugin in your code
-	// See the user guide gsoap/doc/wsrm/html/index.html
-	@endcode
+        @code
+        #import "wsrm.h" // to be added to this header file for the soapcpp2 build step
+        @endcode
+        @code
+        #include "plugin/wsrmapi.h"
+        soap_register_plugin(soap, soap_wsa); // register the wsa plugin in your code
+        soap_register_plugin(soap, soap_wsrm); // register the wsrm plugin in your code
+        // See the user guide gsoap/doc/wsrm/html/index.html
+        @endcode
     - WS-Security (SOAP Message Security) 1.0 (accepts 1.1):
-	@code
-	#import "wsse.h" // to be added to this header file for the soapcpp2 build step
-	@endcode
-	@code
-	#include "plugin/wsseapi.h"
-	soap_register_plugin(soap, soap_wsse); // register the wsse plugin in your code
-	// See the user guide gsoap/doc/wsse/html/index.html
-	@endcode
+        @code
+        #import "wsse.h" // to be added to this header file for the soapcpp2 build step
+        @endcode
+        @code
+        #include "plugin/wsseapi.h"
+        soap_register_plugin(soap, soap_wsse); // register the wsse plugin in your code
+        // See the user guide gsoap/doc/wsse/html/index.html
+        @endcode
     - WS-Security (SOAP Message Security) 1.1 (accepts 1.0):
-	@code
-	#import "wsse11.h" // to be added to this header file for the soapcpp2 build step
-	@endcode
-	@code
-	#include "plugin/wsseapi.h"
-	soap_register_plugin(soap, soap_wsse); // register the wsse plugin in your code
-	// See the user guide gsoap/doc/wsse/html/index.html
-	@endcode
+        @code
+        #import "wsse11.h" // to be added to this header file for the soapcpp2 build step
+        @endcode
+        @code
+        #include "plugin/wsseapi.h"
+        soap_register_plugin(soap, soap_wsse); // register the wsse plugin in your code
+        // See the user guide gsoap/doc/wsse/html/index.html
+        @endcode
     - HTTP Digest Authentication:
-	@code
-	#include "plugin/httpda.h"
-	soap_register_plugin(soap, soap_http_da); // register the HTTP DA plugin in your code
-	// See the user guide gsoap/doc/httpda/html/index.html
-	@endcode
-*/
+        @code
+        #include "plugin/httpda.h"
+        soap_register_plugin(soap, soap_http_da); // register the HTTP DA plugin in your code
+        // See the user guide gsoap/doc/httpda/html/index.html
+        @endcode
+ */
 
 
 /******************************************************************************\
@@ -1255,6 +1300,6 @@ The following options are available for (de)serialization control:
 
   - <ns1:singleSignOnResponse> (use wsdl2h option -g to auto-generate)
 
-*/
+ */
 
 /* End of ClientAuthentication.h */

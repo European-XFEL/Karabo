@@ -17,7 +17,8 @@ namespace karabo {
         //KARABO_REGISTER_FACTORY_CC(AbstractIOService, JmsIOService)
 
         //int JmsIOService::m_threadCount = 0;
-        
+
+
         void JmsIOService::run() {
             m_status = RUNNING;
             while (activateRegisteredTextMessageHandlers() || activateRegisteredBinaryMessageHandlers() || activateRegisteredWaitHandlers()) {
@@ -25,6 +26,7 @@ namespace karabo {
             }
             m_status = IDLE;
         }
+
 
         void JmsIOService::work() {
             m_status = WORKING;
@@ -36,6 +38,7 @@ namespace karabo {
             }
         }
 
+
         bool JmsIOService::activateRegisteredTextMessageHandlers() {
             boost::mutex::scoped_lock lock(m_mutex);
             if (m_textMessageChannels.empty()) return false;
@@ -46,6 +49,7 @@ namespace karabo {
             return true;
         }
 
+
         bool JmsIOService::activateRegisteredBinaryMessageHandlers() {
             boost::mutex::scoped_lock lock(m_mutex);
             if (m_binaryMessageChannels.empty()) return false;
@@ -55,7 +59,8 @@ namespace karabo {
             m_binaryMessageChannels.clear();
             return true;
         }
-        
+
+
         bool JmsIOService::activateRegisteredWaitHandlers() {
             boost::mutex::scoped_lock lock(m_mutex);
             if (m_waitHandlers.empty()) return false;
@@ -66,23 +71,28 @@ namespace karabo {
             return true;
         }
 
+
         void JmsIOService::stop() {
             m_status = STOPPED;
             m_threadGroup.join_all();
             m_status = IDLE;
         }
 
+
         bool JmsIOService::isStopped() {
             return m_status == STOPPED;
         }
+
 
         bool JmsIOService::isRunning() {
             return m_status == RUNNING;
         }
 
+
         bool JmsIOService::isWorking() {
             return m_status == WORKING;
         }
+
 
         void JmsIOService::registerTextMessageChannel(JmsChannel* channel) {
             //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
@@ -93,8 +103,9 @@ namespace karabo {
             }
         }
 
+
         void JmsIOService::registerBinaryMessageChannel(JmsChannel* channel) {
-             //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
+            //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
             if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
                 m_binaryMessageChannels.push_back(channel);
             } else if (m_status == WORKING) {
@@ -102,8 +113,9 @@ namespace karabo {
             }
         }
 
+
         void JmsIOService::registerWaitChannel(JmsChannel* channel, const WaitHandler& handler, int milliseconds) {
-             //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
+            //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
             if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
                 m_waitHandlers.push_back(boost::tuple<JmsChannel*, WaitHandler, int>(channel, handler, milliseconds));
             } else if (m_status == WORKING) {

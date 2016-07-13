@@ -25,20 +25,21 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>, DataLogReader)
 
-        
+
         IndexBuilderService::Pointer IndexBuilderService::m_instance;
-        
-        
+
+
         IndexBuilderService::Pointer IndexBuilderService::getInstance() {
             if (!m_instance) m_instance.reset(new IndexBuilderService());
             return m_instance;
         }
-        
+
+
         IndexBuilderService::IndexBuilderService() : m_svc(new boost::asio::io_service()), m_work(*m_svc), m_cache(),
-                m_thread(boost::bind(&karabo::net::runProtected, m_svc, "IndexBuilderService",
-                "consider rerunning index file building by hand", 100))
-        {
+            m_thread(boost::bind(&karabo::net::runProtected, m_svc, "IndexBuilderService",
+                                 "consider rerunning index file building by hand", 100)) {
         }
+
 
         IndexBuilderService::~IndexBuilderService() {
             // Clean up in the destructor which is called when m_instance goes
@@ -46,17 +47,17 @@ namespace karabo {
             m_svc->stop();
             m_thread.join();
         }
-        
-        
+
+
         void IndexBuilderService::buildIndexFor(const std::string& commandLineArguments) {
             boost::mutex::scoped_lock lock(m_mutex);
             if (!m_cache.insert(commandLineArguments).second) {
                 // such a request is in the queue
-               return;
+                return;
             }
             m_svc->post(boost::bind(&IndexBuilderService::build, this, commandLineArguments));
         }
-        
+
 
         void IndexBuilderService::build(const std::string& commandLineArguments) {
             try {
@@ -72,8 +73,8 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_mutex);
             m_cache.erase(commandLineArguments);
         }
-        
-        
+
+
         void DataLogReader::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("visibility")
@@ -117,7 +118,7 @@ namespace karabo {
         void DataLogReader::slotGetPropertyHistory(const std::string& deviceId, const std::string& property, const Hash& params) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory(" << deviceId << ", " << property << ", from/to parameters)";
-                
+
                 // Safety check that the directory contains something about 'deviceId'
                 try {
                     bf::path dirPath(get<string>("directory") + "/" + deviceId + "/raw/");
@@ -139,9 +140,9 @@ namespace karabo {
 
                 p.startPeriod("reaction");
 
-                
+
                 bool rebuildIndex = false;
-                
+
                 // Register a property in prop file for indexing if it is not there
                 try {
                     boost::mutex::scoped_lock lock(m_propFileInfoMutex);
@@ -150,27 +151,27 @@ namespace karabo {
                         // create prop file 
                         m_mapPropFileInfo[deviceId] = PropFileInfo::Pointer(new PropFileInfo());
                         //boost::mutex::scoped_lock lock(m_mapPropFileInfo[deviceId]->filelock);
-                        ofstream out(propPath.c_str(), ios::out|ios::app);
+                        ofstream out(propPath.c_str(), ios::out | ios::app);
                         out << property << "\n";
                         out.close();
                         m_mapPropFileInfo[deviceId]->properties.push_back(property);
                         m_mapPropFileInfo[deviceId]->filesize = bf::file_size(propPath);
-                        m_mapPropFileInfo[deviceId]->lastwrite= bf::last_write_time(propPath);
+                        m_mapPropFileInfo[deviceId]->lastwrite = bf::last_write_time(propPath);
                         rebuildIndex = true;
                     } else {
                         // check if the prop file was changed
                         time_t lastTime = bf::last_write_time(propPath);
                         size_t propsize = bf::file_size(propPath);
-             
+
                         map<string, PropFileInfo::Pointer >::iterator mapit = m_mapPropFileInfo.find(deviceId);
                         // check if deviceId is new 
                         if (mapit == m_mapPropFileInfo.end()) {
-                            m_mapPropFileInfo[deviceId] = PropFileInfo::Pointer(new PropFileInfo());    // filesize = 0
+                            m_mapPropFileInfo[deviceId] = PropFileInfo::Pointer(new PropFileInfo()); // filesize = 0
                             mapit = m_mapPropFileInfo.find(deviceId);
-                        } 
-                        
+                        }
+
                         PropFileInfo::Pointer ptr = mapit->second;
-                        
+
                         if (ptr->filesize != propsize || ptr->lastwrite != lastTime) {
                             // prop file was changed by another thread, so re-read properties ...
                             ptr->properties.clear();
@@ -182,18 +183,18 @@ namespace karabo {
                             ptr->filesize = propsize;
                             ptr->lastwrite = lastTime;
                         }
-                        
+
                         if (find(ptr->properties.begin(), ptr->properties.end(), property) == ptr->properties.end()) {
                             // not found, then add to vector
                             ptr->properties.push_back(property);
                             {
                                 //boost::mutex::scoped_lock lock(ptr->filelock);
-                                ofstream out(propPath.c_str(), ios::out|ios::app);
+                                ofstream out(propPath.c_str(), ios::out | ios::app);
                                 out << property << "\n";
                                 out.close();
                             }
                             ptr->filesize = bf::file_size(propPath);
-                            ptr->lastwrite= bf::last_write_time(propPath);
+                            ptr->lastwrite = bf::last_write_time(propPath);
                             rebuildIndex = true;
                         }
                     }
@@ -218,7 +219,7 @@ namespace karabo {
                     reply(deviceId, property, result);
                     return;
                 }
-                
+
                 // start rebuilding index for deviceId, property and all files
                 if (rebuildIndex) {
                     rebuildIndex = false;
@@ -342,7 +343,7 @@ namespace karabo {
                                     // TODO: Here we can start index rebuilding for fnum != lastFileIndex
                                     continue;
                                 }
-                                
+
                                 Hash hash;
                                 const string& type = tokens[4 + offset];
                                 const string& value = tokens[5 + offset];
@@ -532,8 +533,9 @@ namespace karabo {
             return entry;
         }
 
+
         DataLoggerIndex DataLogReader::findNearestLoggerIndex(const std::string& deviceId,
-                const karabo::util::Epochstamp& target, const bool before) {
+                                                              const karabo::util::Epochstamp& target, const bool before) {
             string timestampAsIso8061;
             string timestampAsDouble;
             string event;
@@ -612,7 +614,7 @@ namespace karabo {
                     f.open((namePrefix + toString(fnum) + nameSuffix).c_str(), ios::in | ios::binary | ios::ate);
                     if (!f || !f.is_open()) continue;
                     filesize = f.tellg();
-                } catch(const std::exception& e) {
+                } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
                 }
                 const size_t nrecs = filesize / sizeof (MetaData::Record);
@@ -626,7 +628,7 @@ namespace karabo {
                     // read last record
                     f.seekg(filesize - sizeof (MetaData::Record), ios::beg);
                     f.read((char*) &record, sizeof (MetaData::Record));
-                } catch(const std::exception& e) {
+                } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
                 }
                 if (ROUND1MS(from) > ROUND1MS(record.epochstamp)) {
@@ -730,7 +732,7 @@ namespace karabo {
                 try {
                     f.seekg(recnum * sizeof (MetaData::Record));
                     f.read((char*) records, sizeof (MetaData::Record));
-                } catch(const std::exception& e) {
+                } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
                 }
                 const double epoch = records[0].epochstamp;
@@ -747,7 +749,7 @@ namespace karabo {
                 // Load all records from left to (including) right:
                 f.seekg(left * sizeof (MetaData::Record));
                 f.read((char*) records, (right - left + 1) * sizeof (MetaData::Record));
-            } catch(const std::exception& e) {
+            } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
             }
             // Loop and find record with best matching timestamp:

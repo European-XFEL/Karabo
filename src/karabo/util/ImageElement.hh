@@ -22,10 +22,10 @@
 
 namespace karabo {
     namespace util {
-        
+
         class ImageElement : public GenericElement<ImageElement> {
 
-        protected:
+            protected:
 
             karabo::util::Hash m_child;
 
@@ -35,14 +35,14 @@ namespace karabo {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, karabo::util::READ);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::NODE);
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Image"); // Reserved displayType for commands
-                
+
                 //default value of requiredAccessLevel for Image element: OBSERVER
                 this->observerAccess();
-                
+
                 Schema inner;
                 VECTOR_CHAR_ELEMENT(inner).key("data")
-                        .description("Pixel array")                        
-                        .readOnly()                        
+                        .description("Pixel array")
+                        .readOnly()
                         .archivePolicy(Schema::NO_ARCHIVING)
                         .commit();
                 VECTOR_UINT32_ELEMENT(inner).key("dims")
@@ -81,7 +81,7 @@ namespace karabo {
                         .readOnly()
                         .archivePolicy(Schema::NO_ARCHIVING)
                         .commit();
-                
+
                 m_child = inner.getParameterHash();
             }
 

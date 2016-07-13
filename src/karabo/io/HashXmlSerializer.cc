@@ -183,7 +183,7 @@ namespace karabo {
             pugi::xml_parse_result result = doc.load(archive);
             if (!result) {
                 KARABO_LOG_FRAMEWORK_ERROR << KARABO_IO_EXCEPTION(std::string("Error parsing XML document: ") + result.description());
-                KARABO_LOG_FRAMEWORK_INFO << "Responsible string:\n" <<  std::string (archive);
+                KARABO_LOG_FRAMEWORK_INFO << "Responsible string:\n" << std::string(archive);
             }
             object.clear();
             if (!doc) return;
@@ -338,9 +338,11 @@ namespace karabo {
             }
         }
 
+
         std::string HashXmlSerializer::escapeElementName(const std::string& data) const {
             return boost::algorithm::replace_all_copy(data, "/", ".KRB_SLASH.");
         }
+
 
         std::string HashXmlSerializer::unescapeElementName(const std::string& data) const {
             return boost::algorithm::replace_all_copy(data, ".KRB_SLASH.", "/");

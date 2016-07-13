@@ -23,10 +23,12 @@ namespace bp = boost::python;
 namespace karathon {
 
     class SignalSlotableWrap : public karabo::xms::SignalSlotable {
-    public:
+
+        public:
 
         class RequestorWrap : public karabo::xms::SignalSlotable::Requestor {
-        public:
+
+            public:
 
             explicit RequestorWrap(karabo::xms::SignalSlotable* signalSlotable);
 
@@ -158,7 +160,7 @@ namespace karathon {
             ScopedGILRelease nogil;
             karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info);
         }
-        
+
         bp::object ensureOwnInstanceIdUnique() {
             bool result = false;
             {
@@ -524,7 +526,7 @@ namespace karathon {
             ScopedGILRelease nogil;
             this->connectInputChannels();
         }
-        
+
         bp::object getOutputChannelPy(const std::string& name) {
             return bp::object(getOutputChannel(name));
         }
@@ -540,11 +542,11 @@ namespace karathon {
         void registerInputHandlerPy(const std::string& channelName, const bp::object& handler) {
             registerInputHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler, this, handler, _1));
         }
-            
+
         void registerEndOfStreamHandlerPy(const std::string& channelName, const bp::object& handler) {
             registerEndOfStreamHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnEndOfStreamEventHandler, this, handler, _1));
         }
-            
+
 
     private:
 

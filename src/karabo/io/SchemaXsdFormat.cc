@@ -25,7 +25,6 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::tinyxml;
 
-        
 
         void SchemaXsdFormat::expectedParameters(karabo::util::Schema& expected) {
 
@@ -47,6 +46,7 @@ namespace karabo {
                     .commit();
         }
 
+
         void SchemaXsdFormat::configure(const karabo::util::Hash& input) {
             if (input.has("indentation")) {
                 input.get("indentation", m_indentation);
@@ -55,6 +55,7 @@ namespace karabo {
             }
             m_defaultNamespace = input.get<string > ("xmlns");
         }
+
 
         /**
          * Reading a configuration file.
@@ -66,6 +67,7 @@ namespace karabo {
         void SchemaXsdFormat::convert(stringstream& in, Schema& out) {
             throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Reading (de-serialization) of .xsd file into Schema objects is currently not implemented");
         }
+
 
         /**
          * Writing a configuration file.
@@ -108,6 +110,7 @@ namespace karabo {
             out << printer.CStr();
 
         }
+
 
         void SchemaXsdFormat::r_writeXmlExpectedObject(const Schema& expected, TiXmlElement* pTheElement) {
             try {
@@ -182,7 +185,7 @@ namespace karabo {
                             defaultValueTag->LinkEndChild(text);
                             documentationTag->LinkEndChild(defaultValueTag);
                         }
-                        
+
                         if (desc.has("access")) {
                             TiXmlElement* accessValueTag = new TiXmlElement("a:accessType");
                             AccessType aT = desc.get<AccessType >("access");
@@ -191,21 +194,21 @@ namespace karabo {
                             accessValueTag->LinkEndChild(text);
                             documentationTag->LinkEndChild(accessValueTag);
                         }
-                        
+
                         if (desc.has("displayType")) {
                             TiXmlElement* displayTypeTag = new TiXmlElement("a:displayType");
                             TiXmlText * text = new TiXmlText(desc.getAsString("displayType").c_str());
                             displayTypeTag->LinkEndChild(text);
                             documentationTag->LinkEndChild(displayTypeTag);
-                        } 
-                        
+                        }
+
                         if (desc.has("allowedStates")) {
                             TiXmlElement* allowedStatesValueTag = new TiXmlElement("a:allowedStates");
                             TiXmlText * text = new TiXmlText(desc.getAsString("allowedStates").c_str());
                             allowedStatesValueTag->LinkEndChild(text);
                             documentationTag->LinkEndChild(allowedStatesValueTag);
-                        } 
-                        
+                        }
+
                     }
 
                     if (at != Schema::INTERNAL_PARAM) {//consider here cases MANDATORY_PARAM or OPTIONAL_PARAM
@@ -394,6 +397,7 @@ namespace karabo {
             }
         }
 
+
         void SchemaXsdFormat::setAssignmentTypeInXml(TiXmlElement* element, Schema::AssignmentType at) {
             if (at == Schema::OPTIONAL_PARAM) {
                 element->SetAttribute("minOccurs", 0);
@@ -403,6 +407,7 @@ namespace karabo {
                 element->SetAttribute("maxOccurs", 1);
             }
         }
+
 
         void SchemaXsdFormat::setAppearenceSequenceTag(const Schema& complex, TiXmlElement* complexTypeTag, int minOccurs) {
             TiXmlElement* appearenceTag = new TiXmlElement("xs:sequence");
@@ -436,6 +441,7 @@ namespace karabo {
                 r_writeXmlExpectedObject(complex.get<Schema > (it), contentAppearence);
             }
         }
+
 
         void SchemaXsdFormat::setAppearenceAllTag(const Schema& complex, TiXmlElement* complexTypeTag, int minOccurs) {
             TiXmlElement* appearenceTag = new TiXmlElement("xs:all"); //instead of xs:sequence

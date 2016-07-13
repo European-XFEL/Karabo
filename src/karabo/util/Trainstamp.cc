@@ -22,9 +22,11 @@ namespace karabo {
         Trainstamp::~Trainstamp() {
         }
 
+
         bool Trainstamp::hashAttributesContainTimeInformation(const Hash::Attributes attributes) {
             return attributes.has("tid");
         }
+
 
         Trainstamp Trainstamp::fromHashAttributes(const Hash::Attributes& attributes) {
             unsigned long long tid;
@@ -35,7 +37,8 @@ namespace karabo {
             }
             return Trainstamp(tid);
         }
-        
+
+
         void Trainstamp::toHashAttributes(Hash::Attributes& attributes) const {
             attributes.set("tid", m_trainId);
         }

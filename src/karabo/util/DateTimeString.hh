@@ -33,6 +33,7 @@ namespace karabo {
          */
         class DateTimeString {
 
+
             // Considering the following example: "2013-01-20T20:30:00.123456Z"
             // each string should contain the following values:
             std::string m_date; //"2013-01-20"

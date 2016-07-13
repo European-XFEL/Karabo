@@ -37,7 +37,7 @@ namespace karabo {
         template<class TPix>
         class AbstractImage {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(AbstractImage, AbstractImageType::classId<TPix>(), "1.0")
 
@@ -309,7 +309,7 @@ namespace karabo {
             virtual AbstractImage& operator+=(const TPix& value) {
                 KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
                 return *this;
-            }         
+            }
 
             virtual AbstractImage& operator+=(const AbstractImage& image) {
                 KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
@@ -347,7 +347,7 @@ namespace karabo {
                 KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
                 return *this;
             }
-         
+
             virtual AbstractImage& operator-(const AbstractImage& image) {
                 KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
                 return *this;

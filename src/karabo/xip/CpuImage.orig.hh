@@ -16,6 +16,7 @@ namespace exfel {
         template<class T>
         class EXFEL_API Image : public AbstractImage {
 
+
             //friend class CudaImage<T> ;
 
         public:
@@ -772,6 +773,7 @@ namespace exfel {
             inline T& operator()(const int x, const int y = 0, const int z = 0) const {
                 return m_data[offset(x, y, z)];
             }
+
             inline T& operator[](const unsigned long off) const {
                 return m_data[off];
             }
@@ -844,7 +846,7 @@ namespace exfel {
         inline T Image<T>::neighbourPix1D(const REAL ffx, const int y, const int z) const {
             const int tmp = (int) floor(ffx); // f(0)
 
-            return this->operator ()(tmp, y, z);
+            return this->operator()(tmp, y, z);
         }
 
         //! 2d neighbour interpolation
@@ -854,7 +856,7 @@ namespace exfel {
             const int tmpx = (int) floor(ffx); // f(0)
             const int tmpy = (int) floor(ffy); // f(0)
 
-            return this->operator ()(tmpx, tmpy, z);
+            return this->operator()(tmpx, tmpy, z);
         }
 
         //! 3d neighbour interpolation
@@ -865,7 +867,7 @@ namespace exfel {
             const int tmpy = (int) floor(ffy); // f(0)
             const int tmpz = (int) floor(ffz); // f(0)
 
-            return this->operator ()(tmpx, tmpy, tmpz);
+            return this->operator()(tmpx, tmpy, tmpz);
         }
 
         //! 1d neighbour interpolation
@@ -877,7 +879,7 @@ namespace exfel {
             if (tmpx >= m_width) tmpx = m_width - 1;
             if (tmpx < 0) tmpx = 0;
 
-            return this->operator ()(tmpx, y, z);
+            return this->operator()(tmpx, y, z);
         }
 
         //! 2d neighbour interpolation
@@ -913,7 +915,7 @@ namespace exfel {
             if (tmpx >= m_width) tmpx -= m_width;
             if (tmpx < 0) tmpx += m_width;
 
-            return this->operator ()(tmpx, y, z);
+            return this->operator()(tmpx, y, z);
         }
 
         //! 2d neighbour interpolation
@@ -960,7 +962,7 @@ namespace exfel {
 
             for (int i = 0; i < 2; i++) {
                 if ((x[i] >= 0) && (x[i] < m_width)) {
-                    w[i] = this->operator ()(x[i], y, z);
+                    w[i] = this->operator()(x[i], y, z);
                 }
             }
 
@@ -987,7 +989,7 @@ namespace exfel {
                     T w[2] = {(T) 0.0, (T) 0.0};
                     for (int j = 0; j < 2; j++) {
                         if ((x[j] >= 0) && (x[j] < m_width)) {
-                            w[j] = this->operator ()(x[j], y[i], z);
+                            w[j] = this->operator()(x[j], y[i], z);
                         }
                     }
                     v[i] = linear(w[0], w[1], dpx);
@@ -1023,7 +1025,7 @@ namespace exfel {
                             T p[2] = {(T) 0.0, (T) 0.0};
                             for (int k = 0; k < 2; k++) {
                                 if ((x[k] >= 0) && (x[k] < m_width)) {
-                                    p[k] = this->operator ()(x[k], y[j], z[i]);
+                                    p[k] = this->operator()(x[k], y[j], z[i]);
                                 }
                             }
                             v[j] = linear(p[0], p[1], dpx);
@@ -1058,8 +1060,8 @@ namespace exfel {
                 x[1] = m_width - 1;
             }
 
-            w[0] = this->operator ()(x[0], y, z);
-            w[1] = this->operator ()(x[1], y, z);
+            w[0] = this->operator()(x[0], y, z);
+            w[1] = this->operator()(x[1], y, z);
 
             return linear(w[0], w[1], dpx);
         }
@@ -1132,8 +1134,8 @@ namespace exfel {
                 x[1] -= m_width;
             }
 
-            w[0] = this->operator ()(x[0], y, z);
-            w[1] = this->operator ()(x[1], y, z);
+            w[0] = this->operator()(x[0], y, z);
+            w[1] = this->operator()(x[1], y, z);
 
             return linear(w[0], w[1], dpx);
         }
@@ -1226,7 +1228,7 @@ namespace exfel {
 
             for (int i = 0; i < 4; i++) {
                 if ((x[i] >= 0) && (x[i] < m_width)) {
-                    w[i] = this->operator ()(x[i], y, z);
+                    w[i] = this->operator()(x[i], y, z);
                 }
             }
 
@@ -1252,7 +1254,7 @@ namespace exfel {
                     T w[4] = {(T) 0.0, (T) 0.0, (T) 0.0, (T) 0.0};
                     for (int j = 0; j < 4; j++) {
                         if ((x[j] >= 0) && (x[j] < m_width)) {
-                            w[j] = this->operator ()(x[j], y[i], z);
+                            w[j] = this->operator()(x[j], y[i], z);
                         }
                     }
                     v[i] = cubic(w[0], w[1], w[2], w[3], dpx);
@@ -1288,7 +1290,7 @@ namespace exfel {
                             T p[4] = {(T) 0.0, (T) 0.0, (T) 0.0, (T) 0.0};
                             for (int k = 0; k < 4; k++) {
                                 if ((x[k] >= 0) && (x[k] < m_width)) {
-                                    p[k] = this->operator ()(x[k], y[j], z[i]);
+                                    p[k] = this->operator()(x[k], y[j], z[i]);
                                 }
                             }
                             v[j] = cubic(p[0], p[1], p[2], p[3], dpx);
@@ -1317,7 +1319,7 @@ namespace exfel {
                 } else if (x[i] >= m_width) {
                     x[i] = m_width - 1;
                 }
-                w[i] = this->operator ()(x[i], y, z);
+                w[i] = this->operator()(x[i], y, z);
             }
 
             return (T) cubic(w[0], w[1], w[2], w[3], dpx);
@@ -1380,7 +1382,7 @@ namespace exfel {
                 } else if (x[i] >= m_width) {
                     x[i] -= m_width;
                 }
-                w[i] = this->operator ()(x[i], y, z);
+                w[i] = this->operator()(x[i], y, z);
             }
 
             return (T) cubic(w[0], w[1], w[2], w[3], dpx);

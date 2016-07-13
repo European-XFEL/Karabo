@@ -27,10 +27,10 @@ namespace karabo {
     namespace log {
 
         KARABO_REGISTER_FOR_CONFIGURATION(Logger)
-        
+
         // Static initialization of logMutex
         boost::mutex Logger::m_logMutex;
-        
+
         // Static initialization of LogStreamRegistry
         Logger::LogStreamRegistry Logger::m_logStreams;
 
@@ -52,7 +52,7 @@ namespace karabo {
                     .options("DEBUG INFO WARN ERROR")
                     .assignmentOptional().defaultValue("INFO")
                     .commit();
-            
+
             // Setup for additional categories, optional
             LIST_ELEMENT(expected)
                     .key("categories")
@@ -78,8 +78,8 @@ namespace karabo {
 
             rootLog.setRootPriority(m_rootPriority);
 
-            
-            
+
+
             for (size_t i = 0; i < m_rootAppenderConfigs.size(); ++i) {
                 Appender* app = m_rootAppenderConfigs[i]->getConfigured();
                 rootLog.addAppender(app);
@@ -90,7 +90,8 @@ namespace karabo {
             }
 
         }
-        
+
+
         void Logger::reset() {
             Category& rootLog = Category::getRoot();
             rootLog.removeAllAppenders();

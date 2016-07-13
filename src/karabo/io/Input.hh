@@ -21,7 +21,7 @@ namespace karabo {
         template <class T>
         class Input : public AbstractInput {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(Input, "Input", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS

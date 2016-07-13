@@ -26,7 +26,7 @@ namespace karabo {
         template <class Derived>
         class GenericElement {
 
-        protected:
+            protected:
 
             Schema* m_schema;
             boost::shared_ptr<Hash::Node> m_node;
@@ -34,8 +34,8 @@ namespace karabo {
         public:
 
             GenericElement(Schema& expected) :
-            m_schema(&expected),
-            m_node(boost::shared_ptr<Hash::Node>(new Hash::Node(std::string(), 0))) {
+                m_schema(&expected),
+                m_node(boost::shared_ptr<Hash::Node>(new Hash::Node(std::string(), 0))) {
             }
 
             virtual ~GenericElement() {
@@ -122,7 +122,6 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
-            
             /**
              * The <b>observerAccess</b> method serves for setting up the <i>required access level</i> attribute to be OBSERVER.
              * @return reference to the Element (to allow method's chaining)
@@ -131,7 +130,7 @@ namespace karabo {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
                 return *(static_cast<Derived*> (this));
             }
-            
+
             /**
              * The <b>userAccess</b> method serves for setting up the <i>required access level</i> attribute to be USER.
              * @return reference to the Element (to allow method's chaining)
@@ -140,7 +139,7 @@ namespace karabo {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::USER);
                 return *(static_cast<Derived*> (this));
             }
-            
+
             /**
              * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be OPERATOR.
              * @return reference to the Element (to allow method's chaining)
@@ -149,7 +148,7 @@ namespace karabo {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OPERATOR);
                 return *(static_cast<Derived*> (this));
             }
-            
+
             /**
              * The <b>expertAccess</b> method serves for setting up the <i>required access level</i> attribute to be EXPERT.
              * @return reference to the Element (to allow method's chaining)
@@ -158,7 +157,7 @@ namespace karabo {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
                 return *(static_cast<Derived*> (this));
             }
-            
+
             /**
              * NOTE: WILL BE DEPRECATED !!!
              * The <b>advanced</b> method serves for setting up the <i>access level</i> attribute to be EXPERT.
@@ -168,7 +167,7 @@ namespace karabo {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
                 return *(static_cast<Derived*> (this));
             }
-            
+
             /**
              * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be ADMIN.
              * @return reference to the Element (to allow method's chaining)
@@ -177,7 +176,7 @@ namespace karabo {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::ADMIN);
                 return *(static_cast<Derived*> (this));
             }
-            
+
             /**
              * The <b>commit</b> method injects the element to the expected parameters list. If not called
              * the element is not usable. This must be called after the element is fully defined.

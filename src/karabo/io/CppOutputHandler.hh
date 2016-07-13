@@ -18,10 +18,10 @@ namespace karabo {
 
         class CppOutputHandler : public OutputHandler {
 
-        public:
-            
+            public:
+
             KARABO_CLASSINFO(CppOutputHandler, "CppOutputHandler", "1.0")
-            
+
             CppOutputHandler() {
             }
 
@@ -40,7 +40,7 @@ namespace karabo {
                     if (AbstractOutput::Pointer out = m_output.lock()) m_ioEventHandler(out);
                 }
             }
-            
+
         private:
             boost::weak_ptr<AbstractOutput> m_output;
             boost::function<void (const AbstractOutput::Pointer&) > m_ioEventHandler;

@@ -35,7 +35,7 @@ namespace karabo {
             template<typename T>
             class FixedLengthArrayAttribute : public Attribute {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(FixedLengthArrayAttribute, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 
@@ -101,12 +101,12 @@ namespace karabo {
             template<>
             class FixedLengthArrayAttribute<bool> : public Attribute {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(FixedLengthArrayAttribute, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (bool))), "2.0")
 
                 FixedLengthArrayAttribute(const karabo::util::Hash& input) : Attribute(input, this),
-                m_attributeData(0) {
+                    m_attributeData(0) {
                 }
 
                 virtual ~FixedLengthArrayAttribute() {
@@ -176,12 +176,12 @@ namespace karabo {
             template<>
             class FixedLengthArrayAttribute<std::string> : public Attribute {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(FixedLengthArrayAttribute, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::string))), "2.0")
 
                 FixedLengthArrayAttribute(const karabo::util::Hash& input) : Attribute(input, this),
-                m_attributeData(0) {
+                    m_attributeData(0) {
                 }
 
                 virtual ~FixedLengthArrayAttribute() {
@@ -231,7 +231,7 @@ namespace karabo {
                         hid_t space = H5Aget_space(m_attribute);
                         KARABO_CHECK_HDF5_STATUS(space);
                         hsize_t dims[1];
-                        /*int ndims = NOT USED */ H5Sget_simple_extent_dims(space, dims, NULL);                        
+                        /*int ndims = NOT USED */ H5Sget_simple_extent_dims(space, dims, NULL);
                         char** rdata = (char **) malloc(dims[0] * sizeof (char *));
 
                         hid_t tid = getNativeTypeId();
@@ -243,7 +243,7 @@ namespace karabo {
                         KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                         KARABO_CHECK_HDF5_STATUS(H5Sclose(space));
                         free(rdata);
-                    } catch (...) {                        
+                    } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " + this->m_key + " to dataset /"));
                     }
 

@@ -12,6 +12,7 @@
 
 class RawImageData_Test : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(RawImageData_Test);
     CPPUNIT_TEST(testConstructor);
     CPPUNIT_TEST(testPerformance);
@@ -22,7 +23,7 @@ public:
     virtual ~RawImageData_Test();
 
 private:
-    
+
     void testConstructor();
 
 

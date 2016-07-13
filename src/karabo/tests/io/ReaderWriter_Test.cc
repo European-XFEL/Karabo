@@ -16,11 +16,14 @@ using namespace std;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(ReaderWriter_Test);
 
+
 ReaderWriter_Test::ReaderWriter_Test() {
 }
 
+
 ReaderWriter_Test::~ReaderWriter_Test() {
 }
+
 
 void ReaderWriter_Test::setUp() {
 
@@ -43,6 +46,7 @@ void ReaderWriter_Test::setUp() {
     runDir = string(TESTPATH) + string("io/resources/");
 
 }
+
 
 void ReaderWriter_Test::testWritingReadingBinaryFormat() {
     string plcstr;
@@ -78,6 +82,7 @@ void ReaderWriter_Test::testWritingReadingBinaryFormat() {
     CPPUNIT_ASSERT(true);
 }
 
+
 void ReaderWriter_Test::testWritingReadingXmlFormat() {
 
     //TEST 3. ReadingXmlFormat >>>>>>
@@ -96,9 +101,9 @@ void ReaderWriter_Test::testWritingReadingXmlFormat() {
 
     //TEST 4. Check created configuration object 'configuration' >>>>>>
     CPPUNIT_ASSERT(configuration.has("application")); //contains element 'application'
-    CPPUNIT_ASSERT(configuration.size() == 1);   //contains one element ('application')
+    CPPUNIT_ASSERT(configuration.size() == 1); //contains one element ('application')
     CPPUNIT_ASSERT(!configuration.has("columns")); //contains no element 'columns'
-    
+
     Hash u = configuration.get<Hash>("application");
     CPPUNIT_ASSERT(u.has("window")); //'application' contains element 'windows'
     std::vector<int> vecInt = u.getFromPath<std::vector<int> >("misc.vectint");
@@ -161,25 +166,25 @@ void ReaderWriter_Test::testWritingReadingXmlFormat() {
 
 
 void ReaderWriter_Test::testWritingSchema() {
-    
+
     //This test takes as a test-schema the expected parameters of 'TextFileReader' class   
     Schema schemaForTest = Reader<Hash>::expectedParameters("TextFile");
-    
+
     //TEST 6. Writing Schema into Stream (Xsd format).   
     //Test-schema will be written into xsd-file 'expectedParamsTextFile.xsd'
-    
+
     Hash input;
     string fileName = runDir + "expectedParamsTextFile.xsd";
     input.setFromPath("TextFile.filename", fileName);
     input.setFromPath("TextFile.format.Xsd");
     input.setFromPath("TextFile.format.Xsd.indentation", 3);
-    
+
     //if needed uncomment for check:
     //cout << "Check  format: \n" << input << endl;
 
     Writer<Schema>::Pointer out = Writer<Schema>::create(input);
     out->write(schemaForTest);
-    
+
     //if needed uncomment for check:
     //cout << "Schema is now written into file " << input.getFromPath<string > ("TextFile.filename") << endl;
 
@@ -215,16 +220,16 @@ void ReaderWriter_Test::testWritingSchema() {
     } else {
         cout << "Error opening etalon file " << fnameEtalon << endl;
     }
-    
+
     //TEST 7. Writing Schema into Stream (Xsd format).
     //Test-schema will be written into xsd-file 'expectedParamsTextFile.xsd'
-    
+
     string outputString;
 
     Hash inStream;
     inStream.setFromPath("StringStream.format.Xsd.indentation", -1);
     inStream.setFromPath("StringStream.stringPointer", &outputString);
-    
+
     //if needed uncomment for check:
     //cout << "Check  format: \n" << inStream << endl;
 
