@@ -9,12 +9,13 @@ from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QBoxLayout, QFont
 from traits.api import ABCHasStrictTraits
 
-from .const import WIDGET_FACTORIES
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.scenemodel.api import BoxLayoutModel, LabelModel
 from karabo_gui.schema import ChoiceOfNodes
 from karabo_gui.topology import getDeviceBox
 from karabo_gui.widget import DisplayWidget, EditableWidget
+
+from .const import WIDGET_FACTORIES
 
 _STACKED_WIDGET_OFFSET = 30
 

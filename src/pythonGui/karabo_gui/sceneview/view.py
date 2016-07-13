@@ -11,12 +11,13 @@ from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
 from karabo_gui.scenemodel.api import (
-    BaseLayoutModel, read_scene, FixedLayoutModel, WorkflowItemModel,
+    read_scene, FixedLayoutModel, WorkflowItemModel,
     SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
 from .builder import (bring_object_to_front, create_object_from_model,
-                      fill_root_layout, is_widget, remove_object_from_layout,
-                      send_object_to_back)
+                      fill_root_layout, find_top_level_model, is_widget,
+                      remove_object_from_layout,
+                      replace_model_in_top_level_model, send_object_to_back)
 from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
@@ -292,9 +293,8 @@ class SceneView(QWidget):
         # Find top level model to which ``old_model`` belongs
         top_level_model = None
         for child in self.scene_model.children:
-            result = self._find_top_level_model(child, old_model)
-            if result:
-                top_level_model = child
+            top_level_model = find_top_level_model(child, old_model)
+            if top_level_model is not None:
                 break
 
         if top_level_model is None:
@@ -303,58 +303,11 @@ class SceneView(QWidget):
         # Remove it from list
         self.remove_model(top_level_model)
         # Do the replacing in the top level model tree
-        result = self._replace_model_in_top_level_model(self.scene_model,
-                                                        top_level_model,
-                                                        old_model,
-                                                        new_model)
-        if result:
-            # Add the modified top level model to the scene again
-            self.add_models(top_level_model)
-
-    def _find_top_level_model(self, parent_model, model):
-        """ Recursively find the top level model of the given ``model``
-            in the ``parent_model`` and return ``True`` it was found.
-            If the given ``model`` is already the top level model
-            this is returned.
-        """
-        if isinstance(parent_model, BaseLayoutModel):
-            for child in parent_model.children:
-                result = self._find_top_level_model(child, model)
-                if result:
-                    return True
-        else:
-            if parent_model is model:
-                return True
-        return False
-
-    def _replace_model_in_top_level_model(self, layout_model,
-                                          parent_model, old_model,
-                                          new_model):
-        """ Recursively find the given ``old_model`` in the model tree and
-            replace it with the given ``new_model``.
-
-            This method returns, if this was successful.
-        """
-        if isinstance(parent_model, BaseLayoutModel):
-            for child in parent_model.children:
-                result = self._replace_model_in_top_level_model(parent_model,
-                                                                child,
-                                                                old_model,
-                                                                new_model)
-                if result:
-                    return True
-        else:
-            if parent_model is old_model:
-                # Replace old model with new model
-                layout_children = layout_model.children
-                index = layout_children.index(parent_model)
-                layout_children.remove(parent_model)
-                layout_children.insert(index, new_model)
-                # Enforce recalculation of geometry
-                layout_model.width = 0
-                layout_model.height = 0
-                return True
-        return False
+        replace_model_in_top_level_model(self.scene_model,
+                                         top_level_model,
+                                         old_model, new_model)
+        # Add the modified top level model to the scene again
+        self.add_models(top_level_model)
 
     def bring_to_front(self, model):
         """ The given ``model`` is moved to the end of the list."""
