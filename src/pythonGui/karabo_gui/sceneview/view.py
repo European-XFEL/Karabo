@@ -6,7 +6,7 @@
 
 import os.path
 
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import QEvent, Qt
 from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
@@ -156,6 +156,14 @@ class SceneView(QWidget):
             self._draw_selection(painter)
             if self.current_tool.visible:
                 self.current_tool.draw(painter)
+
+    def event(self, event):
+        result = super(SceneView, self).event(event)
+        if event.type() == QEvent.ToolTip:
+            widget = self.widget_at_position(event.pos())
+            if widget is not None:
+                return widget.event(event)
+        return result
 
     # ----------------------------
     # Public methods
