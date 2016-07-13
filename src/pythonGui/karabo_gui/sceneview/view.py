@@ -11,8 +11,8 @@ from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
 from karabo_gui.scenemodel.api import (
-    read_scene, FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH,
-    SCENE_MIN_HEIGHT)
+    BaseLayoutModel, read_scene, FixedLayoutModel, WorkflowItemModel,
+    SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
 from .builder import (bring_object_to_front, create_object_from_model,
                       fill_root_layout, is_widget, remove_object_from_layout,
@@ -21,7 +21,7 @@ from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (ConfigurationDropHandler, NavigationDropHandler,
-                        SceneSelectionTool)
+                        SceneSelectionTool, WidgetSceneHandler)
 from .utils import save_painter_state
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 
@@ -172,6 +172,18 @@ class SceneView(QWidget):
                 return widget.event(event)
         return result
 
+    def contextMenuEvent(self, event):
+        """ Show scene view specific context menu. """
+        if self.design_mode:
+            widget = self.widget_at_position(event.pos())
+            if widget is not None:
+                widget_handler = WidgetSceneHandler(widget=widget)
+                # This methods blocks here until an action is selected
+                widget_handler.handle(self, event)
+                event.accept()
+                return
+        event.ignore()
+
     # ----------------------------
     # Public methods
 
@@ -274,6 +286,72 @@ class SceneView(QWidget):
     def remove_model(self, model):
         """ Removes the given ``model`` from the scene model."""
         self.scene_model.children.remove(model)
+
+    def replace_model(self, old_model, new_model):
+        """ Replace the given ``old_model`` with the given ``new_model``. """
+        # Find top level model to which ``old_model`` belongs
+        top_level_model = None
+        for child in self.scene_model.children:
+            result = self._find_top_level_model(child, old_model)
+            if result:
+                top_level_model = child
+                break
+
+        if top_level_model is None:
+            return
+
+        # Remove it from list
+        self.remove_model(top_level_model)
+        # Do the replacing in the top level model tree
+        result = self._replace_model_in_top_level_model(self.scene_model,
+                                                        top_level_model,
+                                                        old_model,
+                                                        new_model)
+        if result:
+            # Add the modified top level model to the scene again
+            self.add_models(top_level_model)
+
+    def _find_top_level_model(self, parent_model, model):
+        """ Recursively find the top level model of the given ``model``
+            in the ``parent_model`` and return ``True`` it was found.
+            If the given ``model`` is already the top level model
+            this is returned.
+        """
+        if isinstance(parent_model, BaseLayoutModel):
+            for child in parent_model.children:
+                result = self._find_top_level_model(child, model)
+                if result:
+                    return True
+        else:
+            if parent_model is model:
+                return True
+        return False
+
+    def _replace_model_in_top_level_model(self, layout_model,
+                                          parent_model, old_model,
+                                          new_model):
+        """ Recursively find the given ``old_model`` in the model tree and
+            replace it with the given ``new_model``.
+
+            This method returns, if this was successful.
+        """
+        if isinstance(parent_model, BaseLayoutModel):
+            for child in parent_model.children:
+                result = self._replace_model_in_top_level_model(parent_model,
+                                                                child,
+                                                                old_model,
+                                                                new_model)
+                if result:
+                    return True
+        else:
+            if parent_model is old_model:
+                # Replace old model with new model
+                layout_children = layout_model.children
+                index = layout_children.index(parent_model)
+                layout_children.remove(parent_model)
+                layout_children.insert(index, new_model)
+                return True
+        return False
 
     def bring_to_front(self, model):
         """ The given ``model`` is moved to the end of the list."""
