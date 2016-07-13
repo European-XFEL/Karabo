@@ -25,18 +25,18 @@ namespace karabo {
      */
     namespace xms {
 
-        #define KARABO_SYS_PRIO 4
-        #define KARABO_SYS_TTL 600000
- 
-        #define KARABO_PUB_PRIO 3
-        #define KARABO_PUB_TTL 600000
- 
+#define KARABO_SYS_PRIO 4
+#define KARABO_SYS_TTL 600000
+
+#define KARABO_PUB_PRIO 3
+#define KARABO_PUB_TTL 600000
+
         // Forward SignalSlotable
         class SignalSlotable;
 
         class Signal {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(Signal, "Signal", "1.0")
 
@@ -86,7 +86,7 @@ namespace karabo {
                 karabo::util::Hash::Pointer message(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
                 send(message);
             }
-            
+
             //private:
         protected:
 

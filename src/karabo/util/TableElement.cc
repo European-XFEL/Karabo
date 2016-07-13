@@ -10,9 +10,9 @@
 
 const karabo::util::Validator::ValidationRules
 karabo::util::tableValidationRules(
-        /* injectDefaults */ true,
-        /* allowUnrootedConfiguration */ true,
-        /* allowAdditionalKeys */ false,
-        /* allowMissingKeys */ false,
-        /* injectTimestamps */ false
-        );
+                                   /* injectDefaults */ true,
+                                   /* allowUnrootedConfiguration */ true,
+                                   /* allowAdditionalKeys */ false,
+                                   /* allowMissingKeys */ false,
+                                   /* injectTimestamps */ false
+                                   );

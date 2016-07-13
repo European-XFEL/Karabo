@@ -21,17 +21,22 @@ CPPUNIT_TEST_SUITE_REGISTRATION(Types_Test);
 using namespace std;
 using namespace karabo::util;
 
+
 Types_Test::Types_Test() {
 }
+
 
 Types_Test::~Types_Test() {
 }
 
+
 void Types_Test::setUp() {
 }
 
+
 void Types_Test::tearDown() {
 }
+
 
 void Types_Test::testCategory() {
     CPPUNIT_ASSERT(Types::category(Types::UINT32) == Types::SIMPLE);
@@ -45,9 +50,10 @@ void Types_Test::testCategory() {
     CPPUNIT_ASSERT(Types::category(Types::ANY) == Types::ANY);
 }
 
+
 void Types_Test::testIsPointer() {
 
-  
+
     CPPUNIT_ASSERT(Types::isPointer(Types::PTR_UINT16) == true);
     CPPUNIT_ASSERT(Types::isPointer(Types::PTR_BOOL) == true);
     CPPUNIT_ASSERT(Types::isPointer(Types::PTR_CHAR) == true);
@@ -100,9 +106,10 @@ void Types_Test::testIsPointer() {
     CPPUNIT_ASSERT(Types::isPointer(Types::VECTOR_STRING) == false);
 }
 
+
 void Types_Test::testIsVector() {
 
-  
+
     CPPUNIT_ASSERT(Types::isVector(Types::PTR_UINT16) == false);
     CPPUNIT_ASSERT(Types::isVector(Types::PTR_BOOL) == false);
     CPPUNIT_ASSERT(Types::isVector(Types::PTR_CHAR) == false);
@@ -160,7 +167,7 @@ void Types_Test::testIsVector() {
 
 void Types_Test::testIsSimple() {
 
-  
+
     CPPUNIT_ASSERT(Types::isSimple(Types::PTR_UINT16) == false);
     CPPUNIT_ASSERT(Types::isSimple(Types::PTR_BOOL) == false);
     CPPUNIT_ASSERT(Types::isSimple(Types::PTR_CHAR) == false);
@@ -216,7 +223,6 @@ void Types_Test::testIsSimple() {
 }
 
 
-
 void Types_Test::testFrom() {
     CPPUNIT_ASSERT(Types::from<FromTypeInfo > (typeid (int)) == Types::INT32);
     CPPUNIT_ASSERT(Types::from<double>(1.23) == Types::DOUBLE);
@@ -226,6 +232,7 @@ void Types_Test::testFrom() {
     std::vector<int> tmp(5);
     CPPUNIT_ASSERT(Types::from(std::pair<const int*, size_t>(&tmp[0], tmp.size())) == Types::ARRAY_INT32);
 }
+
 
 void Types_Test::testTo() {
     CPPUNIT_ASSERT(Types::to<ToCppString > (Types::DOUBLE) == "double");
@@ -251,6 +258,7 @@ void Types_Test::testTo() {
     CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_INT8) == "xs:string");
     CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_INT32) == "xs:string");
 }
+
 
 void Types_Test::testConvert() {
     CPPUNIT_ASSERT((Types::convert<FromTypeInfo, ToCppString > (typeid (bool)) == "bool"));

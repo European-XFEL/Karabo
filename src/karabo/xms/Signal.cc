@@ -13,20 +13,21 @@
 
 namespace karabo {
     namespace xms {
-        
+
 
         Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel,
                        const std::string& signalInstanceId, const std::string& signalFunction,
                        const int priority, const int messageTimeToLive)
-        : m_signalSlotable(const_cast<SignalSlotable*>(signalSlotable))
-        , m_channel(channel)
-        , m_signalInstanceId(signalInstanceId)
-        , m_signalFunction(signalFunction)
-        , m_priority(priority)
-        , m_messageTimeToLive(messageTimeToLive) {
+            : m_signalSlotable(const_cast<SignalSlotable*> (signalSlotable))
+            , m_channel(channel)
+            , m_signalInstanceId(signalInstanceId)
+            , m_signalFunction(signalFunction)
+            , m_priority(priority)
+            , m_messageTimeToLive(messageTimeToLive) {
             updateConnectedSlotsString();
         }
-        
+
+
         void Signal::updateConnectedSlotsString() {
             m_registeredSlotsString.clear();
             m_registeredSlotInstanceIdsString.clear();
@@ -41,17 +42,20 @@ namespace karabo {
             }
         }
 
+
         size_t Signal::nRegisteredSlots() const {
             return m_registeredSlots.size();
         }
+
 
         void Signal::registerSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
             m_registeredSlots[slotInstanceId].insert(slotFunction);
             updateConnectedSlotsString();
         }
 
+
         bool Signal::unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
-            std::map<std::string, std::set<std::string> >::iterator it = m_registeredSlots.find(slotInstanceId);           
+            std::map<std::string, std::set<std::string> >::iterator it = m_registeredSlots.find(slotInstanceId);
             bool didErase = false;
             if (it != m_registeredSlots.end()) {
                 if (slotFunction.empty()) {
@@ -65,6 +69,7 @@ namespace karabo {
             }
             return didErase;
         }
+
 
         void Signal::send(const karabo::util::Hash::Pointer& message) {
             using namespace karabo::util;
@@ -90,7 +95,7 @@ namespace karabo {
                         m_channel->write(*header, *message, m_priority, m_messageTimeToLive);
                     return;
                 }
-                
+
                 // copy registered slots
                 std::map<std::string, std::set<std::string> > registeredSlots = m_registeredSlots;
                 // publish if P2P connected slots and filter them out. After call, registeredSlots and header are updated
@@ -100,14 +105,15 @@ namespace karabo {
                     // header contains updated slot leftovers
                     m_channel->write(*header, *message, m_priority, m_messageTimeToLive);
                 }
-                
+
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))
             }
         }
 
+
         karabo::util::Hash::Pointer Signal::prepareHeader() const {
-            karabo::util::Hash::Pointer header(new karabo::util::Hash);            
+            karabo::util::Hash::Pointer header(new karabo::util::Hash);
             header->set("signalInstanceId", m_signalInstanceId);
             header->set("signalFunction", m_signalFunction);
             header->set("slotInstanceIds", m_registeredSlotInstanceIdsString);

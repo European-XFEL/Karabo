@@ -12,7 +12,7 @@ using namespace karabo::io;
 
 namespace karabo {
     namespace io {
-        namespace h5 {    
+        namespace h5 {
 
             KARABO_REGISTER_FOR_CONFIGURATION(Attribute, Int8ArrayAttribute)
             KARABO_REGISTER_FOR_CONFIGURATION(Attribute, Int16ArrayAttribute)

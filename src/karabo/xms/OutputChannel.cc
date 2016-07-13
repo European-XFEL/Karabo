@@ -57,7 +57,7 @@ namespace karabo {
                     .unit(Unit::BYTE)
                     .metricPrefix(MetricPrefix::MEGA)
                     .assignmentOptional().defaultValue(-1)
-                    .commit();           
+                    .commit();
         }
 
 
@@ -75,10 +75,10 @@ namespace karabo {
             try {
                 m_channelId = MemoryType::registerChannel();
                 m_chunkId = MemoryType::registerChunk(m_channelId);
-            } catch(...) {
+            } catch (...) {
                 KARABO_RETHROW
             }
-            
+
             KARABO_LOG_FRAMEWORK_DEBUG << "Outputting data on channel " << m_channelId << " and chunk " << m_chunkId;
 
             // Data networking
@@ -116,7 +116,7 @@ namespace karabo {
 
         OutputChannel::~OutputChannel() {
             //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::~OutputChannel() DTOR ***";
-            for (std::set<TcpChannelPointer>::iterator it =m_dataChannels.begin(); it!=m_dataChannels.end(); ++it) {
+            for (std::set<TcpChannelPointer>::iterator it = m_dataChannels.begin(); it != m_dataChannels.end(); ++it) {
                 if (*it) (*it)->close();
             }
             m_dataChannels.clear();
@@ -233,7 +233,7 @@ namespace karabo {
 
                 if (message.has("instanceId")) {
                     const std::string& instanceId = message.get<std::string > ("instanceId");
-                    KARABO_LOG_FRAMEWORK_TRACE  << "OUTPUT of '" << this->getInstanceId() << "': instanceId "
+                    KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT of '" << this->getInstanceId() << "': instanceId "
                             << instanceId << " has updated...";
                     onInputAvailable(instanceId);
                 }
@@ -334,9 +334,9 @@ namespace karabo {
             } catch (karabo::util::Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" Exception code #" << e.userFriendlyMsg() << " -- " << e.detailedMsg();
                 KARABO_RETHROW;
-            } catch(const boost::bad_weak_ptr& e) {
+            } catch (const boost::bad_weak_ptr& e) {
                 KARABO_LOG_FRAMEWORK_INFO << "\"triggerIOEvent\" call is too late: OutputChannel destroyed already -- " << e.what();
-            } catch(const std::exception& ex) {
+            } catch (const std::exception& ex) {
                 KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" exception -- " << ex.what();
                 //throw KARABO_SYSTEM_EXCEPTION(string("\"triggerIOEvent\" exception -- ") + ex.what());
             }
@@ -718,6 +718,7 @@ namespace karabo {
 
             unregisterWriterFromChunk(chunkId);
         }
+
 
         std::string OutputChannel::debugId() const {
             // m_channelId is unique per process and not per instance

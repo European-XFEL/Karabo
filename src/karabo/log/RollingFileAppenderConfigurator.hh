@@ -31,6 +31,7 @@ namespace karabo {
 
         class RollingFileAppenderConfigurator : public FileAppenderConfigurator {
 
+
             unsigned int m_maxFileSize;
             unsigned short m_maxBackupIndex;
 

@@ -17,7 +17,9 @@ namespace hashfilter {
 
     using namespace karabo::util;
 
+
     struct Base {
+
 
         KARABO_CLASSINFO(Base, "Base", "1.0");
         KARABO_CONFIGURATION_BASE_CLASS;
@@ -31,7 +33,9 @@ namespace hashfilter {
         }
     };
 
+
     struct P1 : public Base {
+
 
         KARABO_CLASSINFO(P1, "P1", "1.0");
 
@@ -104,7 +108,9 @@ namespace hashfilter {
         }
     };
 
+
     struct P2 : public Base {
+
 
         KARABO_CLASSINFO(P2, "P2", "1.0");
 
@@ -150,7 +156,9 @@ namespace hashfilter {
         }
     };
 
+
     struct P3 : public Base {
+
 
         KARABO_CLASSINFO(P3, "P3", "1.0");
 
@@ -196,7 +204,9 @@ namespace hashfilter {
         }
     };
 
+
     struct GraphicsRenderer2 {
+
 
         KARABO_CLASSINFO(GraphicsRenderer2, "GraphicsRenderer2", "1.0");
         KARABO_CONFIGURATION_BASE_CLASS;
@@ -299,15 +309,15 @@ namespace hashfilter {
                     .tags("LM")
                     .readOnly().initialValue(12)
                     .commit();
-            
+
             STRING_ELEMENT(expected).key("state")
                     .displayedName("State")
                     .description("Status of application")
                     .tags("LM")
                     .readOnly().initialValue("Initialized")
                     .commit();
-            
-            
+
+
         }
 
 
