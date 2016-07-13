@@ -291,12 +291,7 @@ class SceneView(QWidget):
     def replace_model(self, old_model, new_model):
         """ Replace the given ``old_model`` with the given ``new_model``. """
         # Find top level model to which ``old_model`` belongs
-        top_level_model = None
-        for child in self.scene_model.children:
-            top_level_model = find_top_level_model(child, old_model)
-            if top_level_model is not None:
-                break
-
+        top_level_model = find_top_level_model(self.scene_model, old_model)
         if top_level_model is None:
             return
 

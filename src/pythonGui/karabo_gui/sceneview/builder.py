@@ -3,7 +3,7 @@ from PyQt4.QtCore import QRect
 from karabo_gui.scenemodel.api import (
     BaseLayoutModel, BoxLayoutModel, FixedLayoutModel, GridLayoutModel,
     LabelModel, LineModel, PathModel, RectangleModel, SceneLinkModel,
-    UnknownXMLDataModel, BitfieldModel, DisplayAlignedImageModel,
+    SceneModel, UnknownXMLDataModel, BitfieldModel, DisplayAlignedImageModel,
     DisplayCommandModel, DisplayIconsetModel, DisplayImageModel,
     DisplayImageElementModel, DisplayLabelModel, DisplayPlotModel,
     DoubleLineEditModel, EditableListModel, EditableListElementModel,
@@ -84,7 +84,7 @@ def find_top_level_model(parent_model, model):
         If the given ``model`` is already the top level model
         this is returned.
     """
-    if isinstance(parent_model, BaseLayoutModel):
+    if isinstance(parent_model, (BaseLayoutModel, SceneModel)):
         for child in parent_model.children:
             result = find_top_level_model(child, model)
             if result:

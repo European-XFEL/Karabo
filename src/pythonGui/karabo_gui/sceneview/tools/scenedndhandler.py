@@ -14,7 +14,6 @@ from karabo_gui.scenemodel.api import BoxLayoutModel, LabelModel
 from karabo_gui.schema import ChoiceOfNodes
 from karabo_gui.topology import getDeviceBox
 from karabo_gui.widget import DisplayWidget, EditableWidget
-
 from .const import WIDGET_FACTORIES
 
 _STACKED_WIDGET_OFFSET = 30
