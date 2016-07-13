@@ -19,6 +19,8 @@ namespace karabo {
          * This class expresses a time point and holds it in form of an Epochstamp and Trainstamp
          */
         class Timestamp {
+
+
             Epochstamp m_epochstamp;
             Trainstamp m_trainstamp;
 

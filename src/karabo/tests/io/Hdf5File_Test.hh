@@ -17,6 +17,8 @@
 #include <karabo/io/ioProfiler.hh>
 
 class Hdf5File_Test : public CPPUNIT_NS::TestFixture {
+
+
     CPPUNIT_TEST_SUITE(Hdf5File_Test);
     CPPUNIT_TEST(testWrite);
 
@@ -63,7 +65,7 @@ private:
             for (size_t k = 0; k < j; ++k) {
                 ref << k;
             }
-            tracer << "arrayView<string> rva[" << j << "]: " << rva[j] << " reference: "<< ref.str() <<std::endl;
+            tracer << "arrayView<string> rva[" << j << "]: " << rva[j] << " reference: " << ref.str() << std::endl;
             CPPUNIT_ASSERT(rva[j] == ref.str());
         }
     }

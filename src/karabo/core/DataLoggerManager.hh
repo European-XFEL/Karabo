@@ -27,7 +27,8 @@ namespace karabo {
     namespace core {
 
         class DataLoggerManager : public karabo::core::Device<karabo::core::OkErrorFsm> {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(DataLoggerManager, "DataLoggerManager", "1.0")
 
@@ -42,15 +43,15 @@ namespace karabo {
             void okStateOnEntry();
 
             void ensureLoggerRunning(const karabo::util::Hash& topologyEntry);
-            
+
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             void slotGetLoggerMap();
-            
+
             void instantiateReaders(const std::string& serverId);
-            
+
             void restartReadersAndLoggers();
-            
+
         private: // Data
             std::vector<std::string> m_serverList;
             size_t m_serverIndex;

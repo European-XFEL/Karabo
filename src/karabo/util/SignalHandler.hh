@@ -36,7 +36,7 @@
 namespace karabo {
     namespace util {
 
-        #ifdef __linux__
+#ifdef __linux__
 
         extern jmp_buf context;
 
@@ -49,12 +49,12 @@ namespace karabo {
 
         class StackTrace {
 
-        public:
+            public:
             static std::string demangle(const char* symbol);
             static void print(std::ostream& os);
         };
 
-        std::ostream& operator <<(std::ostream& os, const StackTrace& trace);
+        std::ostream& operator<<(std::ostream& os, const StackTrace& trace);
 
         /*************************************************************
          * 
@@ -65,10 +65,11 @@ namespace karabo {
 
         template <class SignalExceptionClass> class SignalHandler {
 
-        private:
+            private:
+
             class Singleton {
 
-            public:
+                public:
 
                 Singleton() {
                     // TODO: save/restore previous signal handler
@@ -106,7 +107,7 @@ namespace karabo {
 
         class SegmentationViolation : public std::exception {
 
-        public:
+            public:
 
             static int GetSignalNumber() {
                 return SIGSEGV;
@@ -121,7 +122,7 @@ namespace karabo {
 
         class GenericException : public std::exception {
 
-        public:
+            public:
 
             static int GetSignalNumber() {
                 return _NSIG;
@@ -136,7 +137,7 @@ namespace karabo {
 
         class FloatingPointException : public std::exception {
 
-        public:
+            public:
 
             static int GetSignalNumber() {
                 return SIGFPE;
@@ -151,7 +152,7 @@ namespace karabo {
 
         class InterruptSignal : public std::exception {
 
-        public:
+            public:
 
             static int GetSignalNumber() {
                 return SIGINT;
@@ -166,7 +167,7 @@ namespace karabo {
 
         class QuitSignal : public std::exception {
 
-        public:
+            public:
 
             static int GetSignalNumber() {
                 return SIGQUIT;
@@ -179,7 +180,7 @@ namespace karabo {
 
         class TerminateSignal : public std::exception {
 
-        public:
+            public:
 
             static int GetSignalNumber() {
                 return SIGTERM;
@@ -194,7 +195,7 @@ namespace karabo {
 
         class HangupSignal : public std::exception {
 
-        public:
+            public:
 
             static int GetSignalNumber() {
                 return SIGHUP;
@@ -219,9 +220,10 @@ namespace karabo {
 
         class GlobalExceptionHandler {
 
-        private:
+            private:
 
             class Singleton {
+
 
                 static boost::mutex m_mutex;
             public:
@@ -241,7 +243,7 @@ namespace karabo {
             }
         };
 
-        #endif
+#endif
 
     }
 }

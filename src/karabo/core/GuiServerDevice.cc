@@ -21,7 +21,7 @@ using namespace karabo::xms;
 namespace karabo {
     namespace core {
 
-        
+
         KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, GuiServerDevice)
 
         void GuiServerDevice::expectedParameters(Schema& expected) {
@@ -94,7 +94,7 @@ namespace karabo {
             m_dataConnection = Connection::create("Tcp", h);
             m_ioService = m_dataConnection->getIOService();
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading
-            
+
             m_loggerInput = config;
         }
 
@@ -173,13 +173,13 @@ namespace karabo {
         void GuiServerDevice::onConnect(karabo::net::Channel::Pointer channel) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
-                
+
                 // Set 2 different queues for publishing (writeAsync) to the GUI client...
                 // priority 3 bound to REJECT_OLDEST dropping policy
                 channel->setAsyncChannelPolicy(REMOVE_OLDEST, "REMOVE_OLDEST");
                 // priority 4 should be LOSSLESS
                 channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
-                
+
                 channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1));
                 channel->setErrorHandler(boost::bind(&karabo::core::GuiServerDevice::onError, this, channel, _1));
 
@@ -287,7 +287,7 @@ namespace karabo {
                     unsigned int major = versionParts[0];
                     unsigned int minor = versionParts[1];
                     // Versions earlier than 1.5.0 of the GUI don't understand a systemVersion message.
-                    if ((major >= 1 && minor >= 5) || major >=2) sendSystemVersion(channel);
+                    if ((major >= 1 && minor >= 5) || major >= 2) sendSystemVersion(channel);
                 }
 
                 // if ok
@@ -330,7 +330,7 @@ namespace karabo {
 
                 const string& serverId = hash.get<string > ("serverId");
                 const string& deviceId = hash.get<string > ("deviceId");
-                KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: request to start device instance \"" <<  deviceId << "\" on server \"" << serverId << "\"";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: request to start device instance \"" << deviceId << "\" on server \"" << serverId << "\"";
                 request(serverId, "slotStartDevice", hash)
                         .receiveAsync<bool, string > (boost::bind(&karabo::core::GuiServerDevice::initReply, this, channel, deviceId, _1, _2));
             } catch (const Exception& e) {
@@ -417,7 +417,7 @@ namespace karabo {
                 string deviceId = info.get<string > ("deviceId");
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice : \"" << deviceId << "\"";
-                
+
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
@@ -455,7 +455,7 @@ namespace karabo {
                 const string& deviceId = info.get<string > ("deviceId");
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice : \"" << deviceId << "\"";
-                
+
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
@@ -504,9 +504,9 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema";
                 const string& deviceId = info.get<string > ("deviceId");
-                
+
                 Schema schema = remote().getDeviceSchemaNoWait(deviceId);
-                
+
                 if (!schema.empty()) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";
                     Hash h("type", "deviceSchema", "deviceId", deviceId, "schema", schema);
@@ -568,7 +568,7 @@ namespace karabo {
 
         void GuiServerDevice::onSubscribeNetwork(Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork : channelName = \"" << info.get<string>("channelName") << "\" " 
+                KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork : channelName = \"" << info.get<string>("channelName") << "\" "
                         << (info.get<bool>("subscribe") ? "+" : "-");
                 string channelName = info.get<string>("channelName");
                 bool subscribe = info.get<bool>("subscribe");
@@ -701,9 +701,9 @@ namespace karabo {
 
 
         void GuiServerDevice::projectNew(karabo::net::Channel::Pointer channel,
-                const std::string& projectName,
-                bool success,
-                const std::vector<char>& data) {
+                                         const std::string& projectName,
+                                         bool success,
+                                         const std::vector<char>& data) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "projectNew " << projectName;
 
@@ -735,7 +735,7 @@ namespace karabo {
 
 
         void GuiServerDevice::projectLoaded(karabo::net::Channel::Pointer channel, const std::string& projectName,
-                const karabo::util::Hash& metaData, const std::vector<char>& data) {
+                                            const karabo::util::Hash& metaData, const std::vector<char>& data) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "projectLoaded";
 
@@ -768,9 +768,9 @@ namespace karabo {
 
 
         void GuiServerDevice::projectSaved(karabo::net::Channel::Pointer channel,
-                const std::string& projectName,
-                bool success,
-                const std::vector<char>& data) {
+                                           const std::string& projectName,
+                                           bool success,
+                                           const std::vector<char>& data) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "projectSaved " << projectName;
 
@@ -801,9 +801,9 @@ namespace karabo {
 
 
         void GuiServerDevice::projectClosed(karabo::net::Channel::Pointer channel,
-                const std::string& projectName,
-                bool success,
-                const std::vector<char>& data) {
+                                            const std::string& projectName,
+                                            bool success,
+                                            const std::vector<char>& data) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "projectClosed " << projectName;
                 Hash h("type", "projectClosed");
@@ -1039,11 +1039,11 @@ namespace karabo {
 
         void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
             try {
-//                if (errorCode.value() != 2 && errorCode.value() != 32 && errorCode.value() != 104) {
-//                    // NOT End of file or Broken pipe: an unknown reason why connection to GUI client stopped.
-//                    KARABO_LOG_ERROR << "Tcp channel error, code: " << errorCode.value() << ", message: " << errorCode.message();
-//                    return;
-//                }
+                //                if (errorCode.value() != 2 && errorCode.value() != 32 && errorCode.value() != 104) {
+                //                    // NOT End of file or Broken pipe: an unknown reason why connection to GUI client stopped.
+                //                    KARABO_LOG_ERROR << "Tcp channel error, code: " << errorCode.value() << ", message: " << errorCode.message();
+                //                    return;
+                //                }
 
                 KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
 
@@ -1065,7 +1065,7 @@ namespace karabo {
                 // Keep those devices in deviceIds where no one else is interested.
                 {
                     boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                    for (std::set<std::string>::const_iterator jt = deviceIds.begin(); jt != deviceIds.end(); ) {
+                    for (std::set<std::string>::const_iterator jt = deviceIds.begin(); jt != deviceIds.end();) {
                         const std::string& deviceId = *jt;
                         const int numLeft = --m_monitoredDevices[deviceId]; // prefix---: decrement and then assign
                         KARABO_LOG_FRAMEWORK_DEBUG << "stopMonitoringDevice (GUI gone) " << deviceId << " " << numLeft;
@@ -1078,6 +1078,8 @@ namespace karabo {
                     }
                 }
                 // All devices left in deviceIds have to be unregistered from monitoring.
+
+
                 BOOST_FOREACH(const std::string& deviceId, deviceIds) {
                     remote().unregisterDeviceMonitor(deviceId);
                 }

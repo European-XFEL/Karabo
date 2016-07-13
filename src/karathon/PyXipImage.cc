@@ -33,7 +33,7 @@ void exportPyXipImage() {
     typedef karabo::xip::Image<T> ImageT;
     bp::class_< ImageT, boost::noncopyable> img(string("Image" + karabo::util::Types::convert<FromTypeInfo, ToLiteral > (typeid (T))).c_str(), bp::init<int>((bp::arg("imageType"))));
     bp::implicitly_convertible< int const, karabo::xip::Image<T> >();
-    
+
     img.def(bp::init< int, string const & >((bp::arg("imageType"), bp::arg("filename"))));
     img.def(bp::init< int, unsigned int, bp::optional< unsigned int, unsigned int > >((bp::arg("imageType"), bp::arg("dx"), bp::arg("dy") = (unsigned int const) (1), bp::arg("dz") = (unsigned int const) (1))));
     img.def(bp::init< int, unsigned int, unsigned int, unsigned int, float const & >((bp::arg("imageType"), bp::arg("dx"), bp::arg("dy"), bp::arg("dz"), bp::arg("value"))));

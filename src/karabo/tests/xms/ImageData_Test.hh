@@ -13,6 +13,7 @@
 
 class ImageData_Test : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(ImageData_Test);
     CPPUNIT_TEST(testConstructor);
     CPPUNIT_TEST(testSetAndGetMethods);
@@ -25,9 +26,9 @@ public:
     void tearDown();
 
 private:
-    
+
     void testConstructor();
-    
+
     void testSetAndGetMethods();
 };
 

@@ -145,18 +145,21 @@ namespace karabo {
                 setIsBigEndian(true);
             }
         }
-        
+
+
         karabo::util::Dims ImageData::getDimensions() const {
             Dims dims(NDArray::getDimensions());
             dims.reverse();
             return dims;
         }
-        
+
+
         void ImageData::setDimensions(const karabo::util::Dims& dims) {
             Dims tmp(dims);
             tmp.reverse();
-            NDArray::setDimensions(tmp);                    
+            NDArray::setDimensions(tmp);
         }
+
 
         const std::vector<int> ImageData::getDimensionTypes() const {
             std::vector<int> dimTypes(NDArray::getDimensionTypes());
@@ -164,11 +167,13 @@ namespace karabo {
             return dimTypes;
         }
 
+
         void ImageData::setDimensionTypes(const std::vector<int>& dimTypes) {
             std::vector<int> tmp = dimTypes;
             std::reverse(tmp.begin(), tmp.end());
             NDArray::setDimensionTypes(tmp);
         }
+
 
         const ImageData& ImageData::write(const std::string& filename, const bool enableAppendMode) const {
             karabo::util::Hash h("ImageDataFileWriter.filename", filename, "ImageDataFileWriter.enableAppendMode", enableAppendMode);
@@ -176,15 +181,17 @@ namespace karabo {
             out->write(*this);
             return *this;
         }
-        
-        void ImageData::setGeometry(const DetectorGeometry & geometry){
+
+
+        void ImageData::setGeometry(const DetectorGeometry & geometry) {
             m_hash->set("detectorGeometry", geometry.toHash());
-            
+
             //geometry.toSchema("", this->getSchema());
-            
+
         }
-                
-        DetectorGeometry ImageData::getGeometry(){
+
+
+        DetectorGeometry ImageData::getGeometry() {
             return DetectorGeometry(m_hash->get<Hash>("detectorGeometry"));
         }
 

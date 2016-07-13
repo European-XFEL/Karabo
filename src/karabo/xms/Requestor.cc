@@ -17,13 +17,13 @@ namespace karabo {
     namespace xms {
 
         boost::uuids::random_generator Requestor::m_uuidGenerator;
-        
-        
+
+
         Requestor::Requestor(SignalSlotable* signalSlotable) :
-        m_signalSlotable(signalSlotable), m_replyId(generateUUID()), m_isRequested(false), m_isReceived(false) {
+            m_signalSlotable(signalSlotable), m_replyId(generateUUID()), m_isRequested(false), m_isReceived(false) {
         }
 
-        
+
         Requestor& Requestor::timeout(const int& milliseconds) {
             m_timeout = milliseconds;
             return *this;
@@ -41,13 +41,13 @@ namespace karabo {
             header.set("userName", m_signalSlotable->getUserName());
             return header;
         }
-        
-        
-        karabo::util::Hash Requestor::prepareHeaderNoWait(const std::string& requestSlotInstanceId, 
-                const std::string& requestSlotFunction, 
-                const std::string& replySlotInstanceId, 
-                const std::string& replySlotFunction) {
-            
+
+
+        karabo::util::Hash Requestor::prepareHeaderNoWait(const std::string& requestSlotInstanceId,
+                                                          const std::string& requestSlotFunction,
+                                                          const std::string& replySlotInstanceId,
+                                                          const std::string& replySlotFunction) {
+
             karabo::util::Hash header;
             header.set("replyInstanceIds", "|" + replySlotInstanceId + "|");
             header.set("replyFunctions", "|" + replySlotInstanceId + ":" + replySlotFunction + "|");
@@ -68,9 +68,11 @@ namespace karabo {
             m_isReceived = false;
         }
 
+
         std::string Requestor::generateUUID() {
             return boost::uuids::to_string(m_uuidGenerator());
         }
+
 
         void Requestor::sendRequest(const karabo::util::Hash& header, const karabo::util::Hash& body) const {
             try {
@@ -80,14 +82,15 @@ namespace karabo {
             }
         }
 
+
         void Requestor::receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body) {
             if (!m_signalSlotable->timedWaitAndPopReceivedReply(m_replyId, header, body, m_timeout)) {
                 throw KARABO_TIMEOUT_EXCEPTION("Reply timed out");
             }
-            
+
             m_isReceived = true;
             m_isRequested = false;
-        }        
+        }
     }
 }
 

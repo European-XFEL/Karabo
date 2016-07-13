@@ -49,7 +49,7 @@ void HashXmlSerializer_Test::setUp() {
     unrooted.setAttribute("F.f.f", "attr1", true);
     unrooted.set("a1", string());
     m_unrootedHash = unrooted;
-    
+
     for (size_t i = 0; i < 10; ++i) {
         m_vectorOfHashes.push_back(m_rootedHash);
     }
@@ -82,13 +82,13 @@ void HashXmlSerializer_Test::testSerialization() {
         std::string archive2;
 
         p->save(m_rootedHash, archive1);
-        
+
         //cout << "\n\n  archive1: \n" << archive1 << endl;
-        
+
         Hash h;
         p->load(h, archive1);
         //cout << "\n\n  h: \n" << h << endl;
-        
+
         CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, h) == true);
 
         p->save(h, archive2);
@@ -133,7 +133,7 @@ void HashXmlSerializer_Test::testSerialization() {
         CPPUNIT_ASSERT(archive1 == archive2);
 
     }
-    
+
     {
         std::string archive1;
         std::string archive2;
@@ -143,7 +143,7 @@ void HashXmlSerializer_Test::testSerialization() {
         for (size_t i = 0; i < 10; ++i) {
             CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, hs[i]) == true);
         }
-        
+
         p->save(hs, archive2);
         CPPUNIT_ASSERT(archive1 == archive2);
     }

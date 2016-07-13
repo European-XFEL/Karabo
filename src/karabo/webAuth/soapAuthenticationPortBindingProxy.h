@@ -6,86 +6,106 @@ The generated code is released under one of the following licenses:
 GPL or Genivia's license for commercial use.
 This program is released under the GPL with the additional exemption that
 compiling, linking, and/or using OpenSSL is allowed.
-*/
+ */
 
 #ifndef soapAuthenticationPortBindingProxy_H
 #define soapAuthenticationPortBindingProxy_H
 #include "soapH.h"
 
-class SOAP_CMAC AuthenticationPortBindingProxy
-{ public:
-	struct soap *soap;
-	bool own;
-	/// Endpoint URL of service 'AuthenticationPortBindingProxy' (change as needed)
-	const char *soap_endpoint;
-	/// Constructor
-	AuthenticationPortBindingProxy();
-	/// Constructor to use/share an engine state
-	AuthenticationPortBindingProxy(struct soap*);
-	/// Constructor with endpoint URL
-	AuthenticationPortBindingProxy(const char *url);
-	/// Constructor with engine input+output mode control
-	AuthenticationPortBindingProxy(soap_mode iomode);
-	/// Constructor with URL and input+output mode control
-	AuthenticationPortBindingProxy(const char *url, soap_mode iomode);
-	/// Constructor with engine input and output mode control
-	AuthenticationPortBindingProxy(soap_mode imode, soap_mode omode);
-	/// Destructor frees deserialized data
-	virtual	~AuthenticationPortBindingProxy();
-	/// Initializer used by constructors
-	virtual	void AuthenticationPortBindingProxy_init(soap_mode imode, soap_mode omode);
-	/// Delete all deserialized data (with soap_destroy and soap_end)
-	virtual	void destroy();
-	/// Delete all deserialized data and reset to default
-	virtual	void reset();
-	/// Disables and removes SOAP Header from message
-	virtual	void soap_noheader();
-	/// Get SOAP Header structure (NULL when absent)
-	virtual	const SOAP_ENV__Header *soap_header();
-	/// Get SOAP Fault structure (NULL when absent)
-	virtual	const SOAP_ENV__Fault *soap_fault();
-	/// Get SOAP Fault string (NULL when absent)
-	virtual	const char *soap_fault_string();
-	/// Get SOAP Fault detail as string (NULL when absent)
-	virtual	const char *soap_fault_detail();
-	/// Close connection (normally automatic, except for send_X ops)
-	virtual	int soap_close_socket();
-	/// Force close connection (can kill a thread blocked on IO)
-	virtual	int soap_force_close_socket();
-	/// Print fault
-	virtual	void soap_print_fault(FILE*);
+class SOAP_CMAC AuthenticationPortBindingProxy {
+
+
+public:
+    struct soap *soap;
+    bool own;
+    /// Endpoint URL of service 'AuthenticationPortBindingProxy' (change as needed)
+    const char *soap_endpoint;
+    /// Constructor
+    AuthenticationPortBindingProxy();
+    /// Constructor to use/share an engine state
+    AuthenticationPortBindingProxy(struct soap*);
+    /// Constructor with endpoint URL
+    AuthenticationPortBindingProxy(const char *url);
+    /// Constructor with engine input+output mode control
+    AuthenticationPortBindingProxy(soap_mode iomode);
+    /// Constructor with URL and input+output mode control
+    AuthenticationPortBindingProxy(const char *url, soap_mode iomode);
+    /// Constructor with engine input and output mode control
+    AuthenticationPortBindingProxy(soap_mode imode, soap_mode omode);
+    /// Destructor frees deserialized data
+    virtual ~AuthenticationPortBindingProxy();
+    /// Initializer used by constructors
+    virtual void AuthenticationPortBindingProxy_init(soap_mode imode, soap_mode omode);
+    /// Delete all deserialized data (with soap_destroy and soap_end)
+    virtual void destroy();
+    /// Delete all deserialized data and reset to default
+    virtual void reset();
+    /// Disables and removes SOAP Header from message
+    virtual void soap_noheader();
+    /// Get SOAP Header structure (NULL when absent)
+    virtual const SOAP_ENV__Header *soap_header();
+    /// Get SOAP Fault structure (NULL when absent)
+    virtual const SOAP_ENV__Fault *soap_fault();
+    /// Get SOAP Fault string (NULL when absent)
+    virtual const char *soap_fault_string();
+    /// Get SOAP Fault detail as string (NULL when absent)
+    virtual const char *soap_fault_detail();
+    /// Close connection (normally automatic, except for send_X ops)
+    virtual int soap_close_socket();
+    /// Force close connection (can kill a thread blocked on IO)
+    virtual int soap_force_close_socket();
+    /// Print fault
+    virtual void soap_print_fault(FILE*);
 #ifndef WITH_LEAN
-	/// Print fault to stream
+    /// Print fault to stream
 #ifndef WITH_COMPAT
-	virtual	void soap_stream_fault(std::ostream&);
+    virtual void soap_stream_fault(std::ostream&);
 #endif
 
-	/// Put fault into buffer
-	virtual	char *soap_sprint_fault(char *buf, size_t len);
+    /// Put fault into buffer
+    virtual char *soap_sprint_fault(char *buf, size_t len);
 #endif
 
-	/// Web service operation 'login' (returns error code or SOAP_OK)
-	virtual	int login(ns1__login *ns1__login_, ns1__loginResponse *ns1__loginResponse_) { return this->login(NULL, NULL, ns1__login_, ns1__loginResponse_); }
-	virtual	int login(const char *endpoint, const char *soap_action, ns1__login *ns1__login_, ns1__loginResponse *ns1__loginResponse_);
+    /// Web service operation 'login' (returns error code or SOAP_OK)
 
-	/// Web service operation 'logout' (returns error code or SOAP_OK)
-	virtual	int logout(ns1__logout *ns1__logout_, ns1__logoutResponse *ns1__logoutResponse_) { return this->logout(NULL, NULL, ns1__logout_, ns1__logoutResponse_); }
-	virtual	int logout(const char *endpoint, const char *soap_action, ns1__logout *ns1__logout_, ns1__logoutResponse *ns1__logoutResponse_);
+    virtual int login(ns1__login *ns1__login_, ns1__loginResponse *ns1__loginResponse_) {
+        return this->login(NULL, NULL, ns1__login_, ns1__loginResponse_);
+    }
+    virtual int login(const char *endpoint, const char *soap_action, ns1__login *ns1__login_, ns1__loginResponse *ns1__loginResponse_);
 
-	/// Web service operation 'getUserNonce' (returns error code or SOAP_OK)
-	virtual	int getUserNonce(ns1__getUserNonce *ns1__getUserNonce_, ns1__getUserNonceResponse *ns1__getUserNonceResponse_) { return this->getUserNonce(NULL, NULL, ns1__getUserNonce_, ns1__getUserNonceResponse_); }
-	virtual	int getUserNonce(const char *endpoint, const char *soap_action, ns1__getUserNonce *ns1__getUserNonce_, ns1__getUserNonceResponse *ns1__getUserNonceResponse_);
+    /// Web service operation 'logout' (returns error code or SOAP_OK)
 
-	/// Web service operation 'singleSignOn' (returns error code or SOAP_OK)
-	virtual	int singleSignOn(ns1__singleSignOn *ns1__singleSignOn_, ns1__singleSignOnResponse *ns1__singleSignOnResponse_) { return this->singleSignOn(NULL, NULL, ns1__singleSignOn_, ns1__singleSignOnResponse_); }
-	virtual	int singleSignOn(const char *endpoint, const char *soap_action, ns1__singleSignOn *ns1__singleSignOn_, ns1__singleSignOnResponse *ns1__singleSignOnResponse_);
+    virtual int logout(ns1__logout *ns1__logout_, ns1__logoutResponse *ns1__logoutResponse_) {
+        return this->logout(NULL, NULL, ns1__logout_, ns1__logoutResponse_);
+    }
+    virtual int logout(const char *endpoint, const char *soap_action, ns1__logout *ns1__logout_, ns1__logoutResponse *ns1__logoutResponse_);
 
-	/// Web service operation 'sessionsByIp' (returns error code or SOAP_OK)
-	virtual	int sessionsByIp(ns1__sessionsByIp *ns1__sessionsByIp_, ns1__sessionsByIpResponse *ns1__sessionsByIpResponse_) { return this->sessionsByIp(NULL, NULL, ns1__sessionsByIp_, ns1__sessionsByIpResponse_); }
-	virtual	int sessionsByIp(const char *endpoint, const char *soap_action, ns1__sessionsByIp *ns1__sessionsByIp_, ns1__sessionsByIpResponse *ns1__sessionsByIpResponse_);
+    /// Web service operation 'getUserNonce' (returns error code or SOAP_OK)
 
-	/// Web service operation 'hasActiveSession' (returns error code or SOAP_OK)
-	virtual	int hasActiveSession(ns1__hasActiveSession *ns1__hasActiveSession_, ns1__hasActiveSessionResponse *ns1__hasActiveSessionResponse_) { return this->hasActiveSession(NULL, NULL, ns1__hasActiveSession_, ns1__hasActiveSessionResponse_); }
-	virtual	int hasActiveSession(const char *endpoint, const char *soap_action, ns1__hasActiveSession *ns1__hasActiveSession_, ns1__hasActiveSessionResponse *ns1__hasActiveSessionResponse_);
+    virtual int getUserNonce(ns1__getUserNonce *ns1__getUserNonce_, ns1__getUserNonceResponse *ns1__getUserNonceResponse_) {
+        return this->getUserNonce(NULL, NULL, ns1__getUserNonce_, ns1__getUserNonceResponse_);
+    }
+    virtual int getUserNonce(const char *endpoint, const char *soap_action, ns1__getUserNonce *ns1__getUserNonce_, ns1__getUserNonceResponse *ns1__getUserNonceResponse_);
+
+    /// Web service operation 'singleSignOn' (returns error code or SOAP_OK)
+
+    virtual int singleSignOn(ns1__singleSignOn *ns1__singleSignOn_, ns1__singleSignOnResponse *ns1__singleSignOnResponse_) {
+        return this->singleSignOn(NULL, NULL, ns1__singleSignOn_, ns1__singleSignOnResponse_);
+    }
+    virtual int singleSignOn(const char *endpoint, const char *soap_action, ns1__singleSignOn *ns1__singleSignOn_, ns1__singleSignOnResponse *ns1__singleSignOnResponse_);
+
+    /// Web service operation 'sessionsByIp' (returns error code or SOAP_OK)
+
+    virtual int sessionsByIp(ns1__sessionsByIp *ns1__sessionsByIp_, ns1__sessionsByIpResponse *ns1__sessionsByIpResponse_) {
+        return this->sessionsByIp(NULL, NULL, ns1__sessionsByIp_, ns1__sessionsByIpResponse_);
+    }
+    virtual int sessionsByIp(const char *endpoint, const char *soap_action, ns1__sessionsByIp *ns1__sessionsByIp_, ns1__sessionsByIpResponse *ns1__sessionsByIpResponse_);
+
+    /// Web service operation 'hasActiveSession' (returns error code or SOAP_OK)
+
+    virtual int hasActiveSession(ns1__hasActiveSession *ns1__hasActiveSession_, ns1__hasActiveSessionResponse *ns1__hasActiveSessionResponse_) {
+        return this->hasActiveSession(NULL, NULL, ns1__hasActiveSession_, ns1__hasActiveSessionResponse_);
+    }
+    virtual int hasActiveSession(const char *endpoint, const char *soap_action, ns1__hasActiveSession *ns1__hasActiveSession_, ns1__hasActiveSessionResponse *ns1__hasActiveSessionResponse_);
 };
 #endif

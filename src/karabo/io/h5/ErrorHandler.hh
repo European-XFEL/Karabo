@@ -21,17 +21,17 @@ namespace karabo {
 
         namespace h5 {
 
-                            //hid_t errId = H5Eget_current_stack();
-            
+            //hid_t errId = H5Eget_current_stack();
+
             herr_t karaboH5Errorhandler(unsigned n, const H5E_error2_t *err_desc, void* client_data);
 
-            #define KARABO_CHECK_HDF5_STATUS(status)\
+#define KARABO_CHECK_HDF5_STATUS(status)\
                 if(status < 0){\
                 karabo::util::HdfIOException ex("","","",0);\
                 H5Ewalk2(H5E_DEFAULT, H5E_WALK_DOWNWARD, karabo::io::h5::karaboH5Errorhandler, &ex);\
                 throw ex;\
             }
-            
+
 
 
         }

@@ -19,9 +19,10 @@ namespace karabo {
 
     namespace util {
 
-
         template<class KeyType, class MappedType>
         class OrderedMap {
+
+
             typedef std::list<MappedType*> ListType;
             typedef std::map<KeyType, MappedType> MapType;
 

@@ -73,7 +73,7 @@ namespace karathon {
                 PyTypes::ReferenceType type = bp::extract<PyTypes::ReferenceType>(o_type);
                 reftype = PyTypes::to(type);
             }
-            
+
             switch (reftype) {
                 case Types::BOOL:
                     return bp::object(self.getAs<bool>(key));

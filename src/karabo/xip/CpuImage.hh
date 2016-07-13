@@ -36,11 +36,11 @@ namespace karabo {
         template <class TPix> class ImageFileWriter;
 
         struct CpuImageType {
-            
+
             template <class T>
             static std::string classId() {
                 using namespace karabo::util;
-                return "Image-" +  Types::convert<FromTypeInfo, ToLiteral > (typeid (T));
+                return "Image-" + Types::convert<FromTypeInfo, ToLiteral > (typeid (T));
             }
         };
 
@@ -50,6 +50,7 @@ namespace karabo {
         template<class TPix>
         class CpuImage : public AbstractImage<TPix> {
 
+
             // Grant friendship in order to copy-construct from foreign pixelTypes
             template <class UPix> friend class CpuImage;
 
@@ -57,11 +58,11 @@ namespace karabo {
             template <class UPix> friend class ImageFileWriter;
 
             typedef boost::shared_ptr<ci::CImgDisplay> CImgDisplayPointer;
-            
+
             // std::vector<karabo::util::Hash> m_headerArchive;  // TODO Implement in Karabo-1.1
             karabo::util::Hash m_header;
             ci::CImg<TPix> m_cimg;
-        
+
             static std::vector<boost::shared_ptr<ci::CImgDisplay> > m_displays;
 
         public:
@@ -122,22 +123,22 @@ namespace karabo {
              ***************************************/
 
             // TODO Check whether really needed
-            
-//            /**
-//             * Copying from foreign pixelType
-//             * @param image
-//             * @param isShared
-//             */
-//            template <class U>
-//            CpuImage(const CpuImage<U>& image, bool isShared = false) {
-//                m_header = image.m_header;
-//                m_cimg.assign(image.getCImg(), isShared);
-//            }
-//
-//            CpuImage(const CpuImage& image, bool isShared = false) {
-//                m_header = image.m_header;
-//                m_cimg.assign(image.getCImg(), isShared);
-//            }
+
+            //            /**
+            //             * Copying from foreign pixelType
+            //             * @param image
+            //             * @param isShared
+            //             */
+            //            template <class U>
+            //            CpuImage(const CpuImage<U>& image, bool isShared = false) {
+            //                m_header = image.m_header;
+            //                m_cimg.assign(image.getCImg(), isShared);
+            //            }
+            //
+            //            CpuImage(const CpuImage& image, bool isShared = false) {
+            //                m_header = image.m_header;
+            //                m_cimg.assign(image.getCImg(), isShared);
+            //            }
 
             template <class TImage>
             TImage to() {
@@ -265,12 +266,12 @@ namespace karabo {
 
             inline size_t offset(const size_t x, const size_t y = 0, const size_t z = 0) {
                 return m_cimg.offset(x, y, z);
-            }            
+            }
 
             /***************************************
              *      Instance Characteristics       *
              ***************************************/
-            
+
             inline const int dimensionality() const {
                 // zero image
                 if ((width() <= 1) && (height() <= 1) && (depth() <= 1)) return 0;
@@ -280,14 +281,14 @@ namespace karabo {
                 if (((width() > 2) && (height() > 1)) || ((width() > 1) && (depth() > 1)) || ((height() > 1) && (depth() > 1))) return 2;
                 return 1;
             }
-            
+
             inline std::vector<unsigned long long> dims() const {
                 int nDims = dimensionality();
                 if (nDims == 1) {
                     std::vector<unsigned long long> v(1);
                     v[0] = width();
                     return v;
-                } 
+                }
                 if (nDims == 2) {
                     std::vector<unsigned long long> v(2);
                     v[0] = width();
@@ -319,7 +320,7 @@ namespace karabo {
             KARABO_DEPRECATED inline size_t dimZ() const {
                 return m_cimg.depth();
             }
-            
+
             inline size_t width() const {
                 return m_cimg.width();
             }
@@ -340,27 +341,27 @@ namespace karabo {
             void setHeader(const karabo::util::Hash& header) {
                 m_header = header;
             }
-            
+
             void setHeaderParam(const std::string& key, const char* const& value) {
                 m_header.set(key, value);
             }
-            
+
             void setHeaderParam(const std::string& key, const std::string& value) {
                 m_header.set(key, value);
             }
-            
+
             void setHeaderParam(const std::string& key, const bool value) {
                 m_header.set(key, value);
             }
-            
+
             void setHeaderParam(const std::string& key, const int value) {
                 m_header.set(key, value);
             }
-            
+
             void setHeaderParam(const std::string& key, const double value) {
                 m_header.set(key, value);
             }
-            
+
             inline size_t size() const {
                 return m_cimg.size();
             }
@@ -467,7 +468,7 @@ namespace karabo {
                 m_cimg.operator+=(image.getCImg());
                 return *this;
             }
-            
+
             /**
              * Operator-=();
              */
@@ -492,7 +493,7 @@ namespace karabo {
                 m_cimg.operator++();
                 return *this;
             }
-            
+
             CpuImage& operator--() {
                 m_cimg.operator--();
                 return *this;
@@ -502,7 +503,7 @@ namespace karabo {
             CpuImage< typename ci::cimg::superset<TPix, U>::type > operator+(const U& val) const {
                 return CpuImage< typename ci::cimg::superset<TPix, U>::type > (*this, false) += val;
             }
-            
+
             template <typename U>
             CpuImage< typename ci::cimg::superset<TPix, U>::type > operator-(const U& val) const {
                 return CpuImage< typename ci::cimg::superset<TPix, U>::type > (*this, false) -= val;
@@ -522,7 +523,7 @@ namespace karabo {
             template<class UPix>
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator*(const UPix value) {
                 return CpuImage<typename ci::cimg::superset<TPix, UPix>::type > (*this) *= value;
-            }          
+            }
 
             template <class UPix>
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator*(const CpuImage<UPix>& image) const {
@@ -533,7 +534,7 @@ namespace karabo {
             CpuImage& operator/=(const UPix value) {
                 m_cimg.operator/=(value);
                 return *this;
-            }           
+            }
 
             template <class UPix>
             CpuImage& operator/=(const CpuImage<UPix>& image) {
@@ -544,7 +545,7 @@ namespace karabo {
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator/(const UPix value) {
                 return CpuImage<typename ci::cimg::superset<TPix, UPix>::type > (*this) /= value;
             }
-          
+
             template <class UPix>
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator/(const CpuImage<UPix>& image) const {
                 return CpuImage<typename ci::cimg::superset<TPix, UPix>::type > (m_cimg.operator/(image.getCImg()));
@@ -1042,7 +1043,7 @@ namespace karabo {
                 float isoValue = getStatistics().getMean();
                 displayAndKeep3dVolume(title, isoValue);
             }
-        
+
         public: // functions
 
             const ci::CImg<TPix>& getCImg() const {

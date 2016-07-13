@@ -28,10 +28,10 @@ namespace karathon {
 
     class RequestorWrap : public karabo::xms::Requestor {
 
-    public:
+        public:
 
         explicit RequestorWrap(karabo::xms::SignalSlotable* signalSlotable) :
-        karabo::xms::Requestor(signalSlotable) {
+            karabo::xms::Requestor(signalSlotable) {
         }
 
         RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction) {
@@ -42,7 +42,7 @@ namespace karathon {
             return *this;
         }
 
-        RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction, const bp::object& a1) {            
+        RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction, const bp::object& a1) {
             sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1));
             //registerRequest();
             return *this;
@@ -50,7 +50,7 @@ namespace karathon {
 
         template <class A1, class A2>
         RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2) {
-            sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2));            
+            sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2));
             return *this;
         }
 
@@ -62,7 +62,7 @@ namespace karathon {
 
         template <class A1, class A2, class A3, class A4>
         RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
-            sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));          
+            sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
             return *this;
         }
 
@@ -72,7 +72,7 @@ namespace karathon {
                 karabo::util::Hash::Pointer body, header;
 
                 {
-                    ScopedGILRelease nogil;                    
+                    ScopedGILRelease nogil;
                     receiveResponse(header, body);
                 }
 

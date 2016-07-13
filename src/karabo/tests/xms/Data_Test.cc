@@ -16,25 +16,29 @@ using namespace karabo;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Data_Test);
 
-Data_Test::Data_Test() : m_vec(5) { }
 
-Data_Test::~Data_Test() { }
+Data_Test::Data_Test() : m_vec(5) {
+}
 
-void Data_Test::setUp()
-{
+
+Data_Test::~Data_Test() {
+}
+
+
+void Data_Test::setUp() {
     // C++11: std::iota(m_vec.begin(), m_vec.end(), 0);
     for (int i = 0; i < m_vec.size(); ++i) {
         m_vec[i] = i;
     }
 }
 
-void Data_Test::tearDown()
-{
-//    delete this->example;
+
+void Data_Test::tearDown() {
+    //    delete this->example;
 }
 
-void Data_Test::testSetHash()
-{
+
+void Data_Test::testSetHash() {
     // put vector into a Hash (i.e. not a Hash::Pointer)
     util::Hash hash("array", m_vec);
     // add hash via set to a Data object
@@ -43,7 +47,7 @@ void Data_Test::testSetHash()
 
     // get the hash back in different ways
     // 1. fails as reference since Hash in Data are converted to Hash::Pointer
-// FIXME: put back
+    // FIXME: put back
     bool exceptionIfByRef = false;
     try {
         // Here and everywhere one should test also the const methods...:
@@ -67,8 +71,8 @@ void Data_Test::testSetHash()
     CPPUNIT_ASSERT(vecViaNode[1] == 1);
 }
 
-void Data_Test::testSetHashPtr()
-{
+
+void Data_Test::testSetHashPtr() {
     // put vector into a Hash::Pointer
     util::Hash::Pointer hashPtr(new util::Hash("array", m_vec));
     // add hashPtr via set to a Data object
@@ -99,22 +103,22 @@ void Data_Test::testSetHashPtr()
     CPPUNIT_ASSERT(vecViaNode[1] == 1);
 }
 
-void Data_Test::testHashCtr()
-{
+
+void Data_Test::testHashCtr() {
     // create hierarchy of hashes (not of hash pointers!)
     util::Hash hash3("array", m_vec);
     util::Hash hash2("node2", hash3);
     util::Hash hash1("node1", hash2);
     xms::Data data1(hash1);
-    
+
     // The recommended way to get stuff back is via getNode:
-    xms::Data data2(data1.getNode<xms::Data>("node1"));  // construct or ...
+    xms::Data data2(data1.getNode<xms::Data>("node1")); // construct or ...
     const xms::Data &data3 = data2.getNode<xms::Data>("node2"); // ... take const ref
 
     const std::vector<int> &vec = data3.get<std::vector<int> >("array");
     CPPUNIT_ASSERT(vec == m_vec);
     CPPUNIT_ASSERT(vec[1] == 1);
-    
+
     // Now see that all Hash have been converted to Hash::Pointer:
     // first level:
     bool exceptionIfByRef = false;

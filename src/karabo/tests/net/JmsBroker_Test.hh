@@ -15,35 +15,36 @@
 #include <karabo/net/BrokerChannel.hh>
 
 class JmsBroker_Test : public CPPUNIT_NS::TestFixture {
-    
+
+
     unsigned int m_messagesRead;
     unsigned int m_errorsLogged;
-    
+
     karabo::util::Hash m_hash;
 
     CPPUNIT_TEST_SUITE(JmsBroker_Test);
 
     CPPUNIT_TEST(testMethod);
-    
+
     CPPUNIT_TEST(testBinaryTransport);
 
     CPPUNIT_TEST_SUITE_END();
 
 public:
     JmsBroker_Test();
-    
+
     virtual ~JmsBroker_Test();
-    
+
     void readHandler1(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const std::string& body);
-    
+
     void readHandler2(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
     void errorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& message);
-    
+
 private:
-    
+
     void testMethod();
-    
+
     void testBinaryTransport();
 
 };

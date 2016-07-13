@@ -23,12 +23,12 @@ namespace karabo {
 
     namespace io {
 
-        /**
+/**
          * The SchemaXmlFormat class.
          */
         class DECLSPEC_IO SchemaXmlFormat : public Format<karabo::util::Schema> {
-            
-        public:
+
+            public:
 
             KARABO_CLASSINFO(SchemaXmlFormat, "Xml", "1.0")
 
@@ -67,11 +67,11 @@ namespace karabo {
             int m_indentation;
 
             bool m_printDataType;
-            
+
             bool m_ignoreDataType;
 
             std::string m_defaultNamespace;
-            
+
         private: // functions
 
             void removeNamespaceAttribute(karabo::tinyxml::TiXmlNode*);
@@ -129,7 +129,7 @@ namespace karabo {
             void fillXmlElementINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
 
             void fillXmlElementUINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
-            
+
             void fillXmlElementCHAR(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
 
             void fillXmlElementWithItemsBool(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
@@ -137,7 +137,7 @@ namespace karabo {
             void fillXmlElementWithItemsUINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
 
             void fillXmlElementWithItemsINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
-            
+
             void fillXmlElementWithItemsCHAR(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
         };
     } // namespace io

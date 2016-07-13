@@ -25,14 +25,14 @@ namespace karabo {
 
             class Group : public karabo::io::h5::Element {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(Group, "Group", "1.0")
 
                 static void expectedParameters(karabo::util::Schema& expected);
 
                 Group(const karabo::util::Hash& input) : Element(input),
-                m_isVectorHash(false), m_vectorSize(0) {
+                    m_isVectorHash(false), m_vectorSize(0) {
 
                     if (input.has("type")) {
                         if (input.get<std::string>("type") == "VECTOR_HASH") {
@@ -63,7 +63,7 @@ namespace karabo {
                 }
 
                 void create(hid_t tableGroup);
-                
+
                 hid_t open(hid_t group);
 
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
@@ -99,7 +99,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "group m_h5obj = " << m_h5obj;
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "group m_h5PathName = " << m_h5PathName;
                     if (m_h5obj < 0) {
-                        m_h5obj = H5Gopen2(group, m_h5PathName.c_str(), H5P_DEFAULT);                        
+                        m_h5obj = H5Gopen2(group, m_h5PathName.c_str(), H5P_DEFAULT);
                         KARABO_CHECK_HDF5_STATUS(m_h5obj);
                     }
                 }

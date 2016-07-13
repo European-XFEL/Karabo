@@ -31,6 +31,7 @@ namespace karabo {
 
         class CategoryConfigurator {
 
+
             std::string m_name;
             krb_log4cpp::Priority::Value m_level;
             bool m_additivity;
@@ -39,23 +40,23 @@ namespace karabo {
         public:
             KARABO_CLASSINFO(CategoryConfigurator, "Category", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
-           
+
             virtual ~CategoryConfigurator();
 
             void setup();
 
             static void expectedParameters(karabo::util::Schema& expected);
-            
+
             CategoryConfigurator(const karabo::util::Hash& input);
 
         private:
 
             void configureName(const karabo::util::Hash& input);
-            
+
             void configurePriority(const karabo::util::Hash& input);
-            
+
             void configureAdditivity(const karabo::util::Hash& input);
-            
+
             void configureAppenders(const karabo::util::Hash& input);
         };
 

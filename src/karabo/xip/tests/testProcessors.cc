@@ -20,6 +20,7 @@ using namespace exfel::util;
 using namespace exfel::xip;
 using namespace std;
 
+
 int testProcessors(int argc, char** argv) {
 
     try {
@@ -31,7 +32,7 @@ int testProcessors(int argc, char** argv) {
         /***************************************
          *          Noise - Poisson            *
          ***************************************/
-        
+
         {
             CpuImgD img1(8, 8, 1, 1.0);
 
@@ -41,15 +42,15 @@ int testProcessors(int argc, char** argv) {
             p->processInPlace(img1);
             img1.print("After Poisson");
         }
-        
+
         /***************************************
          *          Noise - Gaussian           *
          ***************************************/
-        
+
         {
             CpuImgD img1(8, 8, 1, 1.0);
             img1.setHeader(Hash("testParameter", "testValue"));
-            
+
             Hash h("Noise.type.Gaussian.sigma", 1.0);
             SingleProcessor<CpuImgD>::Pointer p = SingleProcessor<CpuImgD>::create(h);
             img1.print("Before Gaussian");
