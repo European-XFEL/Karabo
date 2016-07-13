@@ -350,6 +350,9 @@ class SceneView(QWidget):
                 index = layout_children.index(parent_model)
                 layout_children.remove(parent_model)
                 layout_children.insert(index, new_model)
+                # Enforce recalculation of geometry
+                layout_model.width = 0
+                layout_model.height = 0
                 return True
         return False
 
