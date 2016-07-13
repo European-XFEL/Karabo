@@ -312,6 +312,7 @@ class Tests(DeviceTest):
     @async_tst
     def test_disconnect(self):
         """test values are not updating when disconnected"""
+        self.remote.counter = -1
         d = yield from getDevice("remote")
         task = async(d.count())
         yield from sleep(0.1)
@@ -637,6 +638,44 @@ class Tests(DeviceTest):
         d = yield from getDevice("remote")
         self.assertEqual(d.value.getdoc(), "The Value")
 
+    @async_tst
+    def test_device_schema(self):
+        schema, device = yield from self.local.call(
+            "remote", "slotGetSchema", False)
+        self.assertEqual(device, "remote")
+        self.assertEqual(schema.name, "Remote")
+        h = schema.hash
+        self.assertEqual(h["value", ...], {
+            'requiredAccessLevel': 0,
+            'metricPrefixSymbol': '',
+            'accessMode': 4,
+            'description': 'The Value',
+            'unitSymbol': 'N_A',
+            'assignment': 0,
+            'nodeType': 0,
+            'defaultValue': 7,
+            'valueType': 'INT32'})
+        self.assertEqual(h["nested", ...], {
+            'requiredAccessLevel': 0,
+            'assignment': 0,
+            'nodeType': 1,
+            'accessMode': 4})
+        self.assertEqual(h["doit", ...], {
+            'requiredAccessLevel': 0,
+            'assignment': 0,
+            'displayType': 'Slot',
+            'nodeType': 1,
+            'accessMode': 4})
+        self.assertIn("allow", h)
+        self.assertIn("disallowed_int", h)
+
+        schema, device = yield from self.local.call(
+            "remote", "slotGetSchema", True)
+        self.assertEqual(device, "remote")
+        self.assertEqual(schema.name, "Remote")
+        h = schema.hash
+        self.assertIn("allow", h)
+        self.assertNotIn("disallowed_int", h)
 
 if __name__ == "__main__":
     main()
