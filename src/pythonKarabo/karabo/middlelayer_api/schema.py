@@ -2,7 +2,6 @@ from asyncio import coroutine, gather
 from collections import OrderedDict
 from enum import Enum
 from functools import partial
-from itertools import chain
 import weakref
 
 from .basetypes import KaraboValue
@@ -59,7 +58,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         self._initializers = []
         for k in self._allattrs:
             t = getattr(type(self), k)
-            init = ()
+            init = []
             if k in configuration:
                 v = configuration[k]
                 init = t.checkedInit(self, v)
@@ -137,8 +136,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     @coroutine
     def slotReconfigure(self, config):
         props = ((getattr(self.__class__, k), v) for k, v in config.items())
-        setters = list(chain.from_iterable(
-            t.checkedSet(self, v) for t, v in props))
+        setters = sum((t.checkedSet(self, v) for t, v in props), [])
         setters = (s() for s in setters)
         yield from gather(*[s for s in setters if s is not None])
 
@@ -196,7 +194,7 @@ class Node(Descriptor):
     def _setter(self, instance, value):
         props = ((getattr(self.cls, k), v) for k, v in value.items())
         parent = getattr(instance, self.key)
-        return chain.from_iterable((t.checkedSet(parent, v) for t, v in props))
+        return sum((t.checkedSet(parent, v) for t, v in props), [])
 
     def toDataAndAttrs(self, instance):
         r = Hash()
