@@ -16,6 +16,7 @@ class States_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testStringRoundTrip);
     CPPUNIT_TEST(testSignifier);
     CPPUNIT_TEST(testSignifierNonDefaultList);
+    CPPUNIT_TEST(testComparisons);
     CPPUNIT_TEST_SUITE_END();
     
     
@@ -31,6 +32,7 @@ private:
     void testStringRoundTrip();
     void testSignifier();
     void testSignifierNonDefaultList();
+    void testComparisons();
     
 };
 
