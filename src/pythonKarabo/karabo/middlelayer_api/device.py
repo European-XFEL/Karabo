@@ -1,4 +1,4 @@
-from asyncio import coroutine, gather
+from asyncio import coroutine
 import socket
 
 from .enums import AccessLevel, AccessMode, Assignment
@@ -136,11 +136,8 @@ class Device(SignalSlotable):
 
     @coslot
     def slotReconfigure(self, reconfiguration):
-        props = ((getattr(self.__class__, k), v)
-                 for k, v in reconfiguration.items())
         try:
-            setters = [t.checkedSet(self, v) for t, v in props]
-            yield from gather(*setters)
+            yield from super().slotReconfigure(reconfiguration)
         except KaraboError as e:
             self.logger.exception("Failed to set property")
             return False, str(e)
