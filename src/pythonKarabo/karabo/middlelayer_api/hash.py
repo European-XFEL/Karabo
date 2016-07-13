@@ -289,13 +289,13 @@ class Descriptor(object):
         setattr(instance, self.key, value)
 
     def _setter(self, instance, value):
-        """Return a tuple with callables to be called to set the value
+        """Return a list with callables to be called to set the value
 
         `value` still is the bare Hash value, as it came from the network.
         The actual setting is done by `setter` later.
         """
-        return (partial(self.setter, instance,
-                        self.toKaraboValue(value, strict=False)),)
+        return [partial(self.setter, instance,
+                        self.toKaraboValue(value, strict=False))]
 
     def initialize(self, instance, value):
         """This is called when the value is initialized
@@ -315,9 +315,9 @@ class Descriptor(object):
         ret = self.initialize(instance,
                               self.toKaraboValue(value, strict=False))
         if ret is None:
-            return ()
+            return []
         else:
-            return (ret,)
+            return [ret]
 
     def checkedSet(self, instance, value):
         """Check whether it is allowed and return setters
@@ -350,7 +350,7 @@ class Descriptor(object):
                 raise KaraboError(
                     'assignment is mandatory for "{}"'.format(self.key))
             if self.defaultValue is None:
-                return ()
+                return []
             return self._initialize(instance, self.defaultValue)
         return self._initialize(instance, value)
 
@@ -413,7 +413,7 @@ class Slot(Descriptor):
         return self.themethod(device)
 
     def _initialize(self, instance, value=None):
-        return ()  # nothing to initialize in a Slot
+        return []  # nothing to initialize in a Slot
 
     def __call__(self, method):
         if self.description is None:
