@@ -38,24 +38,23 @@ void States_Test::testStringRoundTrip() {
     const State & s = State::CLOSED;
     const std::string & sstr = s.name();
     const State & s2 = State::fromString(sstr);
-    CPPUNIT_ASSERT(s.isCompatible(s2));
+    CPPUNIT_ASSERT(s == s2);
 }
 
 void States_Test::testSignifier() {
     
     std::vector<State> s;
     s.push_back(State::DISABLED);
-    s.push_back(State::CHANGING);
     s.push_back(State::COOLED);
     s.push_back(State::DECREASING);
-    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s).isCompatible(State::CHANGING));
+    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::DECREASING);
     s.push_back(State::RAMPING_UP);
-    CPPUNIT_ASSERT(StateSignifier(std::vector<State>(), State::ACTIVE, State::INCREASING).returnMostSignificant(s).isCompatible(State::INCREASING));
-    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s).isCompatible(State::CHANGING));
+    CPPUNIT_ASSERT(StateSignifier(State::ACTIVE, State::INCREASING).returnMostSignificant(s) == State::RAMPING_UP);
+    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::DECREASING);
     s.push_back(State::INTERLOCKED);
-    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s).isCompatible(State::INTERLOCKED));
+    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::INTERLOCKED);
     s.push_back(State::UNKNOWN);
-    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s).isCompatible(State::UNKNOWN));
+    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::UNKNOWN);
 }
 
 void States_Test::testSignifierNonDefaultList() {
@@ -72,5 +71,14 @@ void States_Test::testSignifierNonDefaultList() {
     s.push_back(State::DECREASING);
     s.push_back(State::UNKNOWN);
     s.push_back(State::INTERLOCKED);
-    CPPUNIT_ASSERT(StateSignifier(trumpList).returnMostSignificant(s).isCompatible(State::CHANGING));
+    CPPUNIT_ASSERT(StateSignifier(trumpList).returnMostSignificant(s) == State::CHANGING);
+}
+
+void States_Test::testComparisons(){
+    CPPUNIT_ASSERT(State::CHANGING.isCompatible(State::NORMAL));// direct parentage
+    CPPUNIT_ASSERT(!State::NORMAL.isCompatible(State::CHANGING)); // direct parentage the other way round should not compare
+    CPPUNIT_ASSERT(!State::CHANGING.isCompatible(State::ERROR)); // no parentage
+    CPPUNIT_ASSERT(!State::ERROR.isCompatible(State::CHANGING));  // the other way round
+    CPPUNIT_ASSERT(State::HEATED.isCompatible(State::NORMAL)); // longer list of ancestors
+    CPPUNIT_ASSERT(!State::KNOWN.isCompatible(State::INCREASING)); // longer list of ancestors the other way round should not compare
 }
