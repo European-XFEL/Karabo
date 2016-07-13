@@ -17,12 +17,12 @@
 
 namespace karabo {
     namespace util {
-        
+
         template<typename T,
         template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
         class VectorElement : public LeafElement<VectorElement<T, CONT>, CONT<T> > {
 
-        public:
+            public:
 
             VectorElement(Schema& expected) : LeafElement<VectorElement, CONT<T> >(expected) {
             }
@@ -42,7 +42,7 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, CONT<T>());
                 return _readOnlySpecific;
             }
-            
+
         protected:
 
             void beforeAddition() {
@@ -53,19 +53,19 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, Types::to<ToLiteral>(Types::from<CONT<T> >()));
 
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
-                
-                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) { 
-                    
+
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
+
                     //for init, reconfigurable elements - set default value of requiredAccessLevel to USER
-                    if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) ||                         //init element 
-                         this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||   //init element 
-                         this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE ) { //reconfigurable element
-                        
+                    if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) || //init element
+                        this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT || //init element
+                        this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE) { //reconfigurable element
+
                         this->userAccess();
-                          
+
                     } else { //else set default value of requiredAccessLevel to OBSERVER 
-                       this->observerAccess();
-                    }  
+                        this->observerAccess();
+                    }
                 }
             }
         };

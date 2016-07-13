@@ -16,7 +16,7 @@ namespace karathon {
 
     FromNumpy::FromNumpy() {
 
-        #define _KARABO_HELPER_MACRO(fromType, refType) (fromType, karabo::util::Types::refType)
+#define _KARABO_HELPER_MACRO(fromType, refType) (fromType, karabo::util::Types::refType)
 
         if (sizeof (unsigned long) == sizeof (unsigned int)) { // 32 bit CPU
             _typeInfoMap = boost::assign::map_list_of
@@ -52,7 +52,7 @@ namespace karathon {
                     ;
 
         }
-        #undef _KARABO_HELPER_MACRO
+#undef _KARABO_HELPER_MACRO
 
     }
 }

@@ -23,11 +23,12 @@ namespace bp = boost::python;
 namespace karathon {
 
     class DeviceClientWrap : public karabo::core::DeviceClient {
-    public:
+
+        public:
 
         DeviceClientWrap(const std::string& connectionType = "Jms", const karabo::util::Hash& connectionParameters = karabo::util::Hash())
-        : DeviceClient(connectionType, connectionParameters)
-        , m_isVerbose(true) {
+            : DeviceClient(connectionType, connectionParameters)
+            , m_isVerbose(true) {
             boost::shared_ptr<karabo::xms::SignalSlotable> p = m_signalSlotable.lock();
             if (!p) {
                 throw KARABO_PARAMETER_EXCEPTION("Broker connection is not valid.");
@@ -36,8 +37,8 @@ namespace karathon {
         }
 
         DeviceClientWrap(boost::shared_ptr<SignalSlotableWrap>& o)
-        : DeviceClient(boost::static_pointer_cast<karabo::xms::SignalSlotable>(o))
-        , m_isVerbose(true) {
+            : DeviceClient(boost::static_pointer_cast<karabo::xms::SignalSlotable>(o))
+            , m_isVerbose(true) {
             boost::shared_ptr<karabo::xms::SignalSlotable> p = m_signalSlotable.lock();
             if (!p) {
                 throw KARABO_PARAMETER_EXCEPTION("Broker connection is not valid.");
@@ -117,35 +118,35 @@ namespace karathon {
             return Wrapper::fromStdVectorToPyList(this->getCurrentlyExecutableCommands(instanceId));
         }
 
-//        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-//            try {
-//                ScopedGILRelease nogil;
-//                return HashWrap::get(this->DeviceClient::cacheAndGetConfiguration(instanceId), key, keySep);
-//            } catch (const karabo::util::Exception& e) {
-//                throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
-//            }
-//        }
+        //        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
+        //            try {
+        //                ScopedGILRelease nogil;
+        //                return HashWrap::get(this->DeviceClient::cacheAndGetConfiguration(instanceId), key, keySep);
+        //            } catch (const karabo::util::Exception& e) {
+        //                throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
+        //            }
+        //        }
 
-//        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-//            karabo::util::Hash hash;
-//            try {    
-//                ScopedGILRelease nogil;
-//                this->DeviceClient::get(instanceId, hash);
-//            } catch(...) {
-//                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
-//            }
-//            if (hash.has(key)) {
-//                return Wrapper::toObject(hash.getNode(key, keySep.at(0)).getValueAsAny(), HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
-//            }
-//            throw KARABO_PARAMETER_EXCEPTION("The key \"" + key + "\" is not found in device \"" + instanceId + "\" configuration:\n" + hash);
-//        }
+        //        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
+        //            karabo::util::Hash hash;
+        //            try {    
+        //                ScopedGILRelease nogil;
+        //                this->DeviceClient::get(instanceId, hash);
+        //            } catch(...) {
+        //                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
+        //            }
+        //            if (hash.has(key)) {
+        //                return Wrapper::toObject(hash.getNode(key, keySep.at(0)).getValueAsAny(), HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
+        //            }
+        //            throw KARABO_PARAMETER_EXCEPTION("The key \"" + key + "\" is not found in device \"" + instanceId + "\" configuration:\n" + hash);
+        //        }
 
         bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
             boost::any value;
-            try {    
+            try {
                 ScopedGILRelease nogil;
                 value = this->DeviceClient::getAsAny(instanceId, key, keySep.at(0));
-            } catch(...) {
+            } catch (...) {
                 KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("The key \"" + key + "\" is not found in the device \"" + instanceId + "\""));
             }
             return Wrapper::toObject(value, HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
@@ -198,12 +199,12 @@ namespace karathon {
                 schema = this->getDeviceSchema(instanceId);
             }
             if (schema.has(key)) {
-                
+
                 {
                     ScopedGILRelease nogil;
                     this->cacheAndGetConfiguration(instanceId);
                 }
-                
+
                 {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     if (Wrapper::hasattr(callbackFunction, "__self__")) {
@@ -216,7 +217,7 @@ namespace karathon {
                     }
                     if (!userData.is_none()) m_propertyChangedHandlers.set(instanceId + "." + key + "._userData", userData);
                 }
-                
+
                 immortalize(instanceId);
                 return true;
             } else {
@@ -353,22 +354,22 @@ namespace karathon {
     private:
 
         void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
-            
+
             karabo::util::Hash registeredMonitors;
             {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 boost::optional<karabo::util::Hash::Node&> node = m_deviceChangedHandlers.find(instanceId);
-                
+
                 if (node) {
                     registeredMonitors = node->getValue<karabo::util::Hash>();
                 }
             }
-            
+
             if (!registeredMonitors.empty()) {
                 boost::optional<karabo::util::Hash::Node&> nodeFunc = registeredMonitors.find("_function");
                 boost::optional<karabo::util::Hash::Node&> nodeSelfObject = registeredMonitors.find("_selfObject");
                 boost::optional<karabo::util::Hash::Node&> nodeData = registeredMonitors.find("_userData");
-                
+
                 try {
                     if (nodeSelfObject) {
                         if (nodeData) {
@@ -422,7 +423,7 @@ namespace karathon {
                     boost::optional<const karabo::util::Hash::Node&> nodeSelfObject = entry.find("_selfObject");
                     boost::optional<const karabo::util::Hash::Node&> nodeData = entry.find("_userData");
                     {
-                        
+
                         try {
                             if (nodeSelfObject) {
                                 if (nodeData) {

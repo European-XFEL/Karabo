@@ -17,6 +17,7 @@ namespace karabo {
 
         class FromInt {
 
+
             typedef std::map<int, Types::ReferenceType> TypeInfoMap;
 
             TypeInfoMap _typeInfoMap;

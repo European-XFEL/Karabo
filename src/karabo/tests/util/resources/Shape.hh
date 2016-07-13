@@ -20,68 +20,72 @@
 
 
 namespace karabo {
-  namespace util {
+    namespace util {
 
-    class Shape {
-    private:
-      std::string m_name;
+        class Shape {
 
-    public:
+            private:
+            std::string m_name;
 
-      Shape(std::string name) : m_name(name) {
-      }
+        public:
 
-      virtual ~Shape() {
-      }
+            Shape(std::string name) : m_name(name) {
+            }
 
-      std::string getName() {
-        return m_name;
-      }
+            virtual ~Shape() {
+            }
 
-      virtual std::string draw() = 0;
+            std::string getName() {
+                return m_name;
+            }
 
-    };
+            virtual std::string draw() = 0;
 
-    class DECLSPEC_UTILTEST ConfigurableShape {
-    protected:
-      boost::shared_ptr<Shape> m_shape;
-      std::string m_name;
+        };
 
-    public:
+        class DECLSPEC_UTILTEST ConfigurableShape {
 
-      KARABO_CLASSINFO(ConfigurableShape, "Shape", "1.0")
-      KARABO_FACTORY_BASE_CLASS
-          
-      ConfigurableShape() {
-      }
-      virtual ~ConfigurableShape() {}
+            protected:
+            boost::shared_ptr<Shape> m_shape;
+            std::string m_name;
 
-      static void expectedParameters(Schema& expected) {
+        public:
 
-        STRING_ELEMENT(expected)
-                .key("name")
-                .displayedName("Shape Name")
-                .description("Shape name")
-                .assignmentMandatory()
-                .init()
-                .commit();
-      }
+            KARABO_CLASSINFO(ConfigurableShape, "Shape", "1.0")
+            KARABO_FACTORY_BASE_CLASS
 
-      virtual void configure(const Hash & conf) {
-        m_name = conf.get<std::string > ("name");
-      }
+            ConfigurableShape() {
+            }
 
-      boost::shared_ptr<Shape> getShape() {
-        return m_shape;
-      }
+            virtual ~ConfigurableShape() {
+            }
 
-      virtual std::string draw() {
-        return m_shape->draw();
-      }
+            static void expectedParameters(Schema& expected) {
 
-    };
+                STRING_ELEMENT(expected)
+                        .key("name")
+                        .displayedName("Shape Name")
+                        .description("Shape name")
+                        .assignmentMandatory()
+                        .init()
+                        .commit();
+            }
 
-  }
+            virtual void configure(const Hash & conf) {
+                m_name = conf.get<std::string > ("name");
+            }
+
+            boost::shared_ptr<Shape> getShape() {
+                return m_shape;
+            }
+
+            virtual std::string draw() {
+                return m_shape->draw();
+            }
+
+        };
+
+    }
 }
 
 KARABO_REGISTER_FACTORY_BASE_HH(karabo::util::ConfigurableShape, TEMPLATE_UTILTEST, DECLSPEC_UTILTEST)

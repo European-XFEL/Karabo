@@ -34,11 +34,13 @@ namespace karabo {
 
         class JmsBrokerIOService;
 
-        /**
+/**
          * Implementation of the BrokerChannel class specifically for Oracle's implementation of JMS within the OpenMQ
          * broker.
          */
         class JmsBrokerChannel : public BrokerChannel, public boost::enable_shared_from_this<JmsBrokerChannel> {
+
+
             // JMS-Error handling convenience
 #define MQ_SAFE_CALL(mqCall) \
             { \
@@ -73,7 +75,7 @@ namespace karabo {
 
             // Provides access to the JmsIOService object
             JmsBrokerIOService::Pointer m_ioService;
-          
+
             // Types needed by the OpenMQ API
             boost::mutex m_sessionProducerHandleMutex;
             boost::mutex m_sessionConsumerHandleMutex;
@@ -114,12 +116,12 @@ namespace karabo {
             // Flag: initialization required
             bool m_hasProducerSession;
             bool m_hasConsumerSession;
-            
+
             // MQ Acknowledge Mode for session
             MQAckMode m_ackMode;
-            
+
             bool m_consumerActive;
-            
+
             std::vector<boost::thread*> m_registeredMessageReceivers;
 
         public:
@@ -129,7 +131,7 @@ namespace karabo {
             JmsBrokerChannel(BrokerConnection::Pointer connection, const std::string& subDestination);
 
             virtual ~JmsBrokerChannel();
-            
+
             BrokerConnection::Pointer getConnection() {
                 boost::shared_ptr<JmsBrokerConnection> jbc(m_jmsConnection.lock());
                 return boost::reinterpret_pointer_cast<BrokerConnection, JmsBrokerConnection>(jbc);
@@ -138,7 +140,7 @@ namespace karabo {
             /**************************************************************/
             /*              Synchronous Read - No Header                  */
             /**************************************************************/
-            
+
             /**
              * This function reads binary messages into vector of chars. 
              * The reading will block until the data record is read.
@@ -246,7 +248,7 @@ namespace karabo {
              * This function returns the currently set JMS selection
              * @return The currently set JMS selector
              */
-            const std::string& getFilter() const;            
+            const std::string& getFilter() const;
 
             //void waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id);
 
@@ -262,7 +264,7 @@ namespace karabo {
 
             void listenForHashStringMessages();
 
-            void listenForHashHashMessages();           
+            void listenForHashHashMessages();
 
             void setSessionFalse();
 

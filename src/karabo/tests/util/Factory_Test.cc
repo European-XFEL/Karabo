@@ -57,11 +57,11 @@ void Factory_Test::testObjectCreation() {
 void Factory_Test::testClassInfo() {
 
     ClassInfo ci = Interface::classInfo();
-//    clog << "i cid: " << ci.getClassId() << endl;
-//    clog << "i cna: " << ci.getClassName() << endl;
-//    clog << "i log: " << ci.getLogCategory() << endl;
-//    clog << "i ns : " << ci.getNamespace() << endl;
-//    clog << "i ver: " << ci.getVersion() << endl;
+    //    clog << "i cid: " << ci.getClassId() << endl;
+    //    clog << "i cna: " << ci.getClassName() << endl;
+    //    clog << "i log: " << ci.getLogCategory() << endl;
+    //    clog << "i ns : " << ci.getNamespace() << endl;
+    //    clog << "i ver: " << ci.getVersion() << endl;
 
     CPPUNIT_ASSERT(Interface::classInfo().getClassId() == "SimpleInterface");
     CPPUNIT_ASSERT(Interface::classInfo().getClassName() == "Interface");
@@ -70,11 +70,11 @@ void Factory_Test::testClassInfo() {
     CPPUNIT_ASSERT(Interface::classInfo().getVersion() == "1.0");
 
     ci = karabo::util::PluginLoader::classInfo();
-//    clog << "pl cid: " << ci.getClassId() << endl;
-//    clog << "pl cna: " << ci.getClassName() << endl;
-//    clog << "pl log: " << ci.getLogCategory() << endl;
-//    clog << "pl ns : " << ci.getNamespace() << endl;
-//    clog << "pl ver: " << ci.getVersion() << endl;
+    //    clog << "pl cid: " << ci.getClassId() << endl;
+    //    clog << "pl cna: " << ci.getClassName() << endl;
+    //    clog << "pl log: " << ci.getLogCategory() << endl;
+    //    clog << "pl ns : " << ci.getNamespace() << endl;
+    //    clog << "pl ver: " << ci.getVersion() << endl;
 
 
     CPPUNIT_ASSERT(karabo::util::PluginLoader::classInfo().getClassId() == "PluginLoader");
@@ -112,11 +112,11 @@ void Factory_Test::testClassInfo() {
     internal::B<int> ib;
     ci = ib.getClassInfo();
 
-//    clog << "ib cid: " << ci.getClassId() << endl;
-//    clog << "ib cna: " << ci.getClassName() << endl;
-//    clog << "ib log: " << ci.getLogCategory() << endl;
-//    clog << "ib ns : " << ci.getNamespace() << endl;
-//    clog << "ib ver: " << ci.getVersion() << endl;
+    //    clog << "ib cid: " << ci.getClassId() << endl;
+    //    clog << "ib cna: " << ci.getClassName() << endl;
+    //    clog << "ib log: " << ci.getLogCategory() << endl;
+    //    clog << "ib ns : " << ci.getNamespace() << endl;
+    //    clog << "ib ver: " << ci.getVersion() << endl;
 
     CPPUNIT_ASSERT(ci.getClassId() == "BBB");
     CPPUNIT_ASSERT(ci.getClassName() == "B");
@@ -128,11 +128,11 @@ void Factory_Test::testClassInfo() {
     internal::B<std::string> ibs;
     ci = ibs.getClassInfo();
 
-//    clog << "ibs cid: " << ci.getClassId() << endl;
-//    clog << "ibs cna: " << ci.getClassName() << endl;
-//    clog << "ibs log: " << ci.getLogCategory() << endl;
-//    clog << "ibs ns : " << ci.getNamespace() << endl;
-//    clog << "ibs ver: " << ci.getVersion() << endl;
+    //    clog << "ibs cid: " << ci.getClassId() << endl;
+    //    clog << "ibs cna: " << ci.getClassName() << endl;
+    //    clog << "ibs log: " << ci.getLogCategory() << endl;
+    //    clog << "ibs ns : " << ci.getNamespace() << endl;
+    //    clog << "ibs ver: " << ci.getVersion() << endl;
 
     CPPUNIT_ASSERT(ci.getClassId() == "BBB");
     CPPUNIT_ASSERT(ci.getClassName() == "B");
@@ -145,11 +145,11 @@ void Factory_Test::testClassInfo() {
     B<std::string> bs;
     ci = bs.getClassInfo();
 
-//    clog << "bs cid: " << ci.getClassId() << endl;
-//    clog << "bs cna: " << ci.getClassName() << endl;
-//    clog << "bs log: " << ci.getLogCategory() << endl;
-//    clog << "bs ns : " << ci.getNamespace() << endl;
-//    clog << "bs ver: " << ci.getVersion() << endl;
+    //    clog << "bs cid: " << ci.getClassId() << endl;
+    //    clog << "bs cna: " << ci.getClassName() << endl;
+    //    clog << "bs log: " << ci.getLogCategory() << endl;
+    //    clog << "bs ns : " << ci.getNamespace() << endl;
+    //    clog << "bs ver: " << ci.getVersion() << endl;
 
     CPPUNIT_ASSERT(ci.getClassId() == "BBB");
     CPPUNIT_ASSERT(ci.getClassName() == "B");

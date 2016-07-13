@@ -17,7 +17,7 @@ namespace karabo {
 
 
         NetworkAppender::NetworkAppender(const std::string& name, const karabo::net::BrokerChannel::Pointer& channel) :
-        LayoutAppender(name), m_channel(channel), m_ok(true) {
+            LayoutAppender(name), m_channel(channel), m_ok(true) {
 
             // Start thread
             m_thread = boost::thread(boost::bind(&karabo::log::NetworkAppender::checkLogCache, this));

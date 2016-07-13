@@ -19,6 +19,7 @@ namespace karabo {
     namespace io {
         namespace h5 {
 
+
             herr_t karaboH5Errorhandler(unsigned n, const H5E_error2_t *err_desc, void* client_data) {
                 karabo::util::HdfIOException* ex = static_cast<karabo::util::HdfIOException*> (client_data);
 

@@ -79,7 +79,6 @@ namespace karabo {
                         .commit();
             }
 
-            
             GaussianNoise(const karabo::util::Hash & input) {
                 input.get("sigma", m_sigma);
             }

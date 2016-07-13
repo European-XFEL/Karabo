@@ -22,7 +22,7 @@ namespace exfel {
         template <class T>
         class ImageElement {
 
-        private:
+            private:
 
             exfel::util::ComplexElement m_outerElement;
             exfel::util::SimpleElement<unsigned int> m_dimX, m_dimY, m_dimZ, m_dimC;

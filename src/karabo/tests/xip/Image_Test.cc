@@ -96,15 +96,15 @@ void ImageTest::testImageHeader() {
         //img.setHeader(Hash("p1", "Just for fun", "p2", 9.87654321));
         img.setHeaderParam("p1", "Just for fun");
         img.setHeaderParam("p2", 9.87654321);
-        
+
         Hash header = img.getHeader();
         assert(header.get<string>("p1") == "Just for fun");
-        assert(header.get<double>("p2") ==  9.87654321);
+        assert(header.get<double>("p2") == 9.87654321);
         assert(header.get<int>("__dimX") == 4);
         assert(header.get<int>("__dimY") == 4);
         assert(header.get<int>("__dimZ") == 1);
     }
-    
+
 
 
 }

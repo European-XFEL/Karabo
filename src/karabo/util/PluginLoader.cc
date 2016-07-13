@@ -60,7 +60,7 @@ namespace karabo {
 
             bool hasNewPlugins = false;
 
-            #ifndef _WIN32
+#ifndef _WIN32
 
             if (exists(m_pluginDirectory)) {
 
@@ -115,7 +115,7 @@ namespace karabo {
                 throw KARABO_INIT_EXCEPTION("Could not find plugin directory:" + m_pluginDirectory.string());
             }
 
-            #endif
+#endif
 
             return hasNewPlugins;
         }

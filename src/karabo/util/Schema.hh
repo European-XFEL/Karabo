@@ -38,6 +38,7 @@ namespace karabo {
 
         enum AccessType {
 
+
             INIT = 1 << 0,
             READ = 1 << 1,
             WRITE = 1 << 2,
@@ -72,69 +73,70 @@ namespace karabo {
          */
         class KARABO_DECLSPEC Schema {
 
-            #define KARABO_SCHEMA_NODE_TYPE "nodeType"
-            #define KARABO_SCHEMA_LEAF_TYPE "leafType"
-            #define KARABO_SCHEMA_VALUE_TYPE "valueType"
-            #define KARABO_SCHEMA_CLASS_ID "classId"
 
-            #define KARABO_SCHEMA_DISPLAYED_NAME "displayedName"
-            #define KARABO_SCHEMA_DESCRIPTION "description"
-            #define KARABO_SCHEMA_DEFAULT_VALUE "defaultValue"
-            #define KARABO_SCHEMA_DISPLAY_TYPE "displayType"
+#define KARABO_SCHEMA_NODE_TYPE "nodeType"
+#define KARABO_SCHEMA_LEAF_TYPE "leafType"
+#define KARABO_SCHEMA_VALUE_TYPE "valueType"
+#define KARABO_SCHEMA_CLASS_ID "classId"
 
-            #define KARABO_SCHEMA_ACCESS_MODE "accessMode"
-            #define KARABO_SCHEMA_ALIAS "alias"
-            #define KARABO_SCHEMA_ALLOWED_STATES "allowedStates"
-            #define KARABO_SCHEMA_ASSIGNMENT "assignment"
-            #define KARABO_SCHEMA_TAGS "tags"
-            #define KARABO_SCHEMA_ROW_SCHEMA "rowSchema"
+#define KARABO_SCHEMA_DISPLAYED_NAME "displayedName"
+#define KARABO_SCHEMA_DESCRIPTION "description"
+#define KARABO_SCHEMA_DEFAULT_VALUE "defaultValue"
+#define KARABO_SCHEMA_DISPLAY_TYPE "displayType"
 
-            #define KARABO_SCHEMA_OPTIONS "options"
-            #define KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL "requiredAccessLevel"
+#define KARABO_SCHEMA_ACCESS_MODE "accessMode"
+#define KARABO_SCHEMA_ALIAS "alias"
+#define KARABO_SCHEMA_ALLOWED_STATES "allowedStates"
+#define KARABO_SCHEMA_ASSIGNMENT "assignment"
+#define KARABO_SCHEMA_TAGS "tags"
+#define KARABO_SCHEMA_ROW_SCHEMA "rowSchema"
 
-            #define KARABO_SCHEMA_UNIT_ENUM "unitEnum"
-            #define KARABO_SCHEMA_UNIT_NAME "unitName"
-            #define KARABO_SCHEMA_UNIT_SYMBOL "unitSymbol"
+#define KARABO_SCHEMA_OPTIONS "options"
+#define KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL "requiredAccessLevel"
 
-            #define KARABO_SCHEMA_METRIC_PREFIX_ENUM "metricPrefixEnum"
-            #define KARABO_SCHEMA_METRIC_PREFIX_NAME "metricPrefixName"
-            #define KARABO_SCHEMA_METRIC_PREFIX_SYMBOL "metricPrefixSymbol"
+#define KARABO_SCHEMA_UNIT_ENUM "unitEnum"
+#define KARABO_SCHEMA_UNIT_NAME "unitName"
+#define KARABO_SCHEMA_UNIT_SYMBOL "unitSymbol"
 
-            #define KARABO_SCHEMA_MIN_INC "minInc"
-            #define KARABO_SCHEMA_MAX_INC "maxInc"
-            #define KARABO_SCHEMA_MIN_EXC "minExc"
-            #define KARABO_SCHEMA_MAX_EXC "maxExc"
+#define KARABO_SCHEMA_METRIC_PREFIX_ENUM "metricPrefixEnum"
+#define KARABO_SCHEMA_METRIC_PREFIX_NAME "metricPrefixName"
+#define KARABO_SCHEMA_METRIC_PREFIX_SYMBOL "metricPrefixSymbol"
 
-            #define KARABO_SCHEMA_RELATIVE_ERROR "relativeError"
-            #define KARABO_SCHEMA_ABSOLUTE_ERROR "absoluteError"
+#define KARABO_SCHEMA_MIN_INC "minInc"
+#define KARABO_SCHEMA_MAX_INC "maxInc"
+#define KARABO_SCHEMA_MIN_EXC "minExc"
+#define KARABO_SCHEMA_MAX_EXC "maxExc"
 
-            #define KARABO_SCHEMA_MIN_SIZE "minSize"
-            #define KARABO_SCHEMA_MAX_SIZE "maxSize"
+#define KARABO_SCHEMA_RELATIVE_ERROR "relativeError"
+#define KARABO_SCHEMA_ABSOLUTE_ERROR "absoluteError"
 
-            #define KARABO_SCHEMA_WARN_LOW "warnLow"
-            #define KARABO_SCHEMA_WARN_HIGH "warnHigh"
+#define KARABO_SCHEMA_MIN_SIZE "minSize"
+#define KARABO_SCHEMA_MAX_SIZE "maxSize"
 
-            #define KARABO_SCHEMA_ALARM_LOW "alarmLow"
-            #define KARABO_SCHEMA_ALARM_HIGH "alarmHigh"
+#define KARABO_SCHEMA_WARN_LOW "warnLow"
+#define KARABO_SCHEMA_WARN_HIGH "warnHigh"
 
-            #define KARABO_SCHEMA_WARN_VARIANCE_LOW "warnVarianceLow"
-            #define KARABO_SCHEMA_WARN_VARIANCE_HIGH "warnVarianceHigh"
+#define KARABO_SCHEMA_ALARM_LOW "alarmLow"
+#define KARABO_SCHEMA_ALARM_HIGH "alarmHigh"
 
-            #define KARABO_SCHEMA_ALARM_VARIANCE_LOW "alarmVarianceLow"
-            #define KARABO_SCHEMA_ALARM_VARIANCE_HIGH "alarmVarianceHigh"
+#define KARABO_SCHEMA_WARN_VARIANCE_LOW "warnVarianceLow"
+#define KARABO_SCHEMA_WARN_VARIANCE_HIGH "warnVarianceHigh"
 
-            #define KARABO_SCHEMA_ENABLE_ROLLING_STATS "enableRollingStats"
-            #define KARABO_SCHEMA_ROLLING_STATS_EVAL "rollingStatsEvalInterval"
+#define KARABO_SCHEMA_ALARM_VARIANCE_LOW "alarmVarianceLow"
+#define KARABO_SCHEMA_ALARM_VARIANCE_HIGH "alarmVarianceHigh"
 
-            #define KARABO_SCHEMA_ARCHIVE_POLICY "archivePolicy"
+#define KARABO_SCHEMA_ENABLE_ROLLING_STATS "enableRollingStats"
+#define KARABO_SCHEMA_ROLLING_STATS_EVAL "rollingStatsEvalInterval"
 
-            #define KARABO_SCHEMA_MIN "min"
-            #define KARABO_SCHEMA_MAX "max"
+#define KARABO_SCHEMA_ARCHIVE_POLICY "archivePolicy"
 
-            #define KARABO_SCHEMA_OVERWRITE "overwrite"
+#define KARABO_SCHEMA_MIN "min"
+#define KARABO_SCHEMA_MAX "max"
 
-            #define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
-            #define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
+#define KARABO_SCHEMA_OVERWRITE "overwrite"
+
+#define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
+#define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
@@ -161,16 +163,18 @@ namespace karabo {
 
             struct AssemblyRules {
 
+
                 AccessType m_accessMode;
                 std::string m_state;
                 int m_accessLevel;
 
                 AssemblyRules(const AccessType& accessMode = INIT | WRITE | READ, const std::string& state = "", const int accessLevel = -1) :
-                m_accessMode(accessMode), m_state(state), m_accessLevel(accessLevel) {
+                    m_accessMode(accessMode), m_state(state), m_accessLevel(accessLevel) {
                 }
             };
 
             enum NodeType {
+
 
                 LEAF,
                 NODE,
@@ -180,11 +184,13 @@ namespace karabo {
 
             enum LeafType {
 
+
                 PROPERTY,
                 COMMAND
             };
 
             enum AssignmentType {
+
 
                 OPTIONAL_PARAM,
                 MANDATORY_PARAM,
@@ -192,6 +198,7 @@ namespace karabo {
             };
 
             enum ArchivePolicy {
+
 
                 EVERY_EVENT,
                 EVERY_100MS,
@@ -204,6 +211,7 @@ namespace karabo {
             };
 
             enum AccessLevel {
+
 
                 OBSERVER = 0,
                 USER,
@@ -672,107 +680,99 @@ namespace karabo {
             }
 
             bool hasAlarmHigh(const std::string& path) const;
-            
+
             //******************************************************
             //                   WarnVarianceLow                          *  
             //******************************************************
 
-            
             void setWarnVarianceLow(const std::string& path, const double value) {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
-                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
                 m_hash.setAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_LOW, value);
             }
 
-            
             double getWarnVarianceLow(const std::string& path) const {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
-                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
                 return m_hash.getAttribute<double> (path, KARABO_SCHEMA_WARN_VARIANCE_LOW);
             }
 
-           
+
 
             bool hasWarnVarianceLow(const std::string& path) const;
-            
+
             //******************************************************
             //                   WarnVarianceHigh                          *  
             //******************************************************
 
-          
             void setWarnVarianceHigh(const std::string& path, const double value) {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
-                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
                 m_hash.setAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_HIGH, value);
             }
 
-         
             double getWarnVarianceHigh(const std::string& path) const {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
-                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
                 return m_hash.getAttribute<double > (path, KARABO_SCHEMA_WARN_VARIANCE_HIGH);
             }
 
-          
+
 
             bool hasWarnVarianceHigh(const std::string& path) const;
-            
-            
+
+
             //******************************************************
             //                   AlarmVarianceLow                          *  
             //******************************************************
 
-            
             void setAlarmVarianceLow(const std::string& path, const double value) {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
-                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
                 m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_LOW, value);
             }
 
-            
             double getAlarmVarianceLow(const std::string& path) const {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
-                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
                 return m_hash.getAttribute<double > (path, KARABO_SCHEMA_ALARM_VARIANCE_LOW);
             }
 
-          
+
             bool hasAlarmVarianceLow(const std::string& path) const;
-            
+
             //******************************************************
             //                   WarnVarianceHigh                          *  
             //******************************************************
 
-           
             void setAlarmVarianceHigh(const std::string& path, const double value) {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
-                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
                 m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH, value);
             }
 
-            
             double getAlarmVarianceHigh(const std::string& path) const {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
-                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+path+"'!");                              
+                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
+                    KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
                 return m_hash.getAttribute<double> (path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
             }
 
-      
+
 
             bool hasAlarmVarianceHigh(const std::string& path) const;
-            
+
             bool hasRollingStatistics(const std::string& path) const;
-        
+
             unsigned int getRollingStatsEvalInterval(const std::string& path) const;
-            
+
             //**********************************************
             //               archivePolicy                 *
             //**********************************************

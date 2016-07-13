@@ -29,6 +29,8 @@ namespace karabo {
     namespace core {
 
         class DataLogger : public karabo::core::Device<karabo::core::OkErrorFsm> {
+
+
             std::string m_deviceToBeLogged;
 
             karabo::util::Schema m_currentSchema;
@@ -42,7 +44,7 @@ namespace karabo {
             bool m_pendingLogin;
 
             boost::thread m_flushThread;
-            
+
             std::map<std::string, karabo::core::MetaData::Pointer> m_idxMap;
             std::vector<std::string> m_idxprops;
             size_t m_propsize;
@@ -90,7 +92,7 @@ namespace karabo {
             int determineLastIndex(const std::string& deviceId);
 
             int incrementLastIndex(const std::string& deviceId);
-            
+
             void flushThread();
         };
     }

@@ -15,6 +15,7 @@ namespace karabo {
 
         class Version {
 
+
             std::string m_versionString;
 
             int m_major;
@@ -31,7 +32,7 @@ namespace karabo {
             };
 
             static Version& getInstance();
-            
+
             static std::string getPathToVersionFile();
 
         public:

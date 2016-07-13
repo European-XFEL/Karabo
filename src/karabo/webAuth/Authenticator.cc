@@ -33,27 +33,27 @@ namespace karabo {
         Authenticator::Authenticator(const std::string& username, const std::string& password, const std::string& provider,
                                      const std::string& ipAddress, const std::string& brokerHostname, const int brokerPortNumber,
                                      const std::string& brokerTopic)
-        : m_username(username),
-        m_password(password),
-        m_provider(provider),
-        m_ipAddress(ipAddress),
-        m_brokerHostname(brokerHostname),
-        m_brokerPortNumber(karabo::util::toString(brokerPortNumber)),
-        m_brokerTopic(brokerTopic),
-        m_software(KARABO_SOFTWARE_DESC),
-        //m_service(new AuthenticationPortBindingProxy),
-        // Variables initialized with defaults (otherwise primitive types get whatever arbitrary junk happened to be at that memory location previously)
-        m_nonce(""),
-        m_firstName(""),
-        m_familyName(""),
-        m_userId(KARABO_INVALID_ID),
-        m_softwareId(KARABO_INVALID_ID),
-        m_softwareDesc(""),
-        m_defaultAccessLevelId(KARABO_INVALID_ID),
-        m_defaultAccessLevelDesc(""),
-        m_accessList(""),
-        m_sessionToken(""),
-        m_welcomeMessage("") {
+            : m_username(username),
+            m_password(password),
+            m_provider(provider),
+            m_ipAddress(ipAddress),
+            m_brokerHostname(brokerHostname),
+            m_brokerPortNumber(karabo::util::toString(brokerPortNumber)),
+            m_brokerTopic(brokerTopic),
+            m_software(KARABO_SOFTWARE_DESC),
+            //m_service(new AuthenticationPortBindingProxy),
+            // Variables initialized with defaults (otherwise primitive types get whatever arbitrary junk happened to be at that memory location previously)
+            m_nonce(""),
+            m_firstName(""),
+            m_familyName(""),
+            m_userId(KARABO_INVALID_ID),
+            m_softwareId(KARABO_INVALID_ID),
+            m_softwareDesc(""),
+            m_defaultAccessLevelId(KARABO_INVALID_ID),
+            m_defaultAccessLevelDesc(""),
+            m_accessList(""),
+            m_sessionToken(""),
+            m_welcomeMessage("") {
 
             // TODO: Transform the String List into a karabo Hash
             karabo::util::Hash a;
@@ -450,7 +450,9 @@ namespace karabo {
 #error	"See OpenSSL /threads/th-lock.c on how to implement mutex on your platform"
 #endif
 
+
 struct CRYPTO_dynlock_value {
+
 
     MUTEX_TYPE mutex;
 };

@@ -46,12 +46,13 @@ namespace karabo {
 
         class JmsIOService;
 
-        /**
+/**
          * Implementation of the Channel class specifially for Oracle's implementation of JMS within the OpenMQ
          * broker.
          */
         class JmsChannel : public Channel, public boost::enable_shared_from_this<JmsChannel> {
-            
+
+
             typedef boost::shared_ptr<JmsIOService> JmsIOServicePointer;
 
             typedef karabo::io::Format<karabo::util::Hash> HashFormat;
@@ -81,9 +82,9 @@ namespace karabo {
              * @return The currently set JMS selector
              */
             std::string getFilter() const;
-            
+
             void setTimeoutSyncRead(int milliseconds);
-            
+
             /**
              * Synchronous (blocking) low-level reading within the JMS framework
              * This method will read a JMS text or binary message
@@ -93,7 +94,7 @@ namespace karabo {
             void read(std::string& data, karabo::util::Hash& header);
 
             void read(karabo::util::Hash& body, karabo::util::Hash& header);
-            
+
             //void read(const char* data, const size_t& dataSize, const karabo::util::Hash& header);
 
 
@@ -161,7 +162,7 @@ namespace karabo {
             ReadStringHashHandler m_readStringHashHandler;
             ReadRawHashHandler m_readRawHashHandler;
             ReadHashHashHandler m_readHashHashHandler;
-            
+
             // Private hash formating for dynamic de-serialization on consumer side
             typedef std::map<std::string, HashFormat::Pointer > HashFormats;
             typedef HashFormats::const_iterator HashFormatsConstIt;
@@ -174,7 +175,7 @@ namespace karabo {
 
             // Protects agains registering multiple async handlers
             bool m_hasAsyncHandler;
-            
+
             // Time out for synchronous reads (milliseconds)
             int m_syncReadTimeout;
 

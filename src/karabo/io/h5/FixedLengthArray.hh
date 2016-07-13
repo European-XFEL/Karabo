@@ -37,7 +37,7 @@ namespace karabo {
             template<typename T>
             class FixedLengthArray : public Dataset {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 
@@ -67,7 +67,7 @@ namespace karabo {
                     return m_memoryType;
                 }
 
-                virtual ~FixedLengthArray() {                    
+                virtual ~FixedLengthArray() {
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected) {

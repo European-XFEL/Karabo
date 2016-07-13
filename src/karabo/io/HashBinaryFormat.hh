@@ -14,7 +14,8 @@ namespace karabo {
     namespace io {
 
         class HashBinaryFormat : public HashBaseFormat {
-        public:
+
+            public:
 
             HashBinaryFormat() {
             }

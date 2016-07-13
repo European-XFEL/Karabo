@@ -31,20 +31,21 @@ namespace karabo {
         typedef boost::system::error_code ErrorCode;
 
         class Channel;
-        
+
         typedef boost::function<void (const ErrorCode&) > ErrorHandler;
 
-        /**
+/**
          * The Connection class.
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
          */
         class Connection : public boost::enable_shared_from_this<Connection> {
 
+
             friend class Channel;
-            
+
         protected:
-            
+
             typedef boost::shared_ptr<Channel> ChannelPointer;
 
         public:

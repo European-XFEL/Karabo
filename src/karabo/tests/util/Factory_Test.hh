@@ -15,6 +15,7 @@
 
 struct Interface {
 
+
     KARABO_CLASSINFO(Interface, "SimpleInterface", "1.0");
 
     virtual std::string foo() = 0;
@@ -22,6 +23,7 @@ struct Interface {
 };
 
 struct A : public Interface {
+
 
     KARABO_CLASSINFO(A, "AAA", "2.0");
 
@@ -48,6 +50,7 @@ struct A : public Interface {
 template<class T>
 class B {
 
+
 public:
     KARABO_CLASSINFO(B, "BBB", "2.1");
 };
@@ -55,27 +58,30 @@ public:
 template<>
 class B<std::string> {
 
+
 public:
     KARABO_CLASSINFO(B, "BBB", "2.1");
 };
 
-namespace internal{
+namespace internal {
+
     template<class T>
-class B {
+    class B {
 
-public:
-    KARABO_CLASSINFO(B, "BBB", "2.1");
-};
+        public:
+        KARABO_CLASSINFO(B, "BBB", "2.1");
+    };
 
-template<>
-class B<std::string> {
+    template<>
+    class B<std::string> {
 
-public:
-    KARABO_CLASSINFO(B, "BBB", "2.1");
-};
+        public:
+        KARABO_CLASSINFO(B, "BBB", "2.1");
+    };
 }
 
 class Factory_Test : public CPPUNIT_NS::TestFixture {
+
 
     CPPUNIT_TEST_SUITE(Factory_Test);
 

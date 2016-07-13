@@ -5,18 +5,18 @@
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
- 
- 
+
+
 #include "FixedLengthArrayComplex.hh"
 using namespace karabo::io;
-     
-namespace karabo {  
-  namespace io {
-    namespace h5 {
-                
-    KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, FloatArrayComplexElement)
-    KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, DoubleArrayComplexElement)
-                   
+
+namespace karabo {
+    namespace io {
+        namespace h5 {
+
+            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, FloatArrayComplexElement)
+            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, DoubleArrayComplexElement)
+
+        }
     }
-  }
 }

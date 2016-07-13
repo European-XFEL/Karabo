@@ -19,7 +19,7 @@ namespace karabo {
 
         class TimeProfiler {
 
-        public:
+            public:
             /**
              * Constructor creates a profiler with a given name
              * @param name profiler's name 
@@ -38,7 +38,7 @@ namespace karabo {
              * Initialize the profiler internal structure
              */
             void open();
-            
+
             /**
              * Finalize the profiler internal structure
              */
@@ -106,7 +106,7 @@ namespace karabo {
              * @return string object holding the string representation 
              */
             std::string format(const std::string& fmt, int level = std::numeric_limits<int>::max()) const;
-            
+
             /**
              * Serialize the profiler as SQL insert query, in preparation to be inserted into database.
              * @return string object holding the SQL query string 
@@ -121,7 +121,7 @@ namespace karabo {
              * @param level deepest level
              */
             void serialize(std::ostream& os, int level = std::numeric_limits<int>::max()) const;
-            friend std::ostream& operator <<(std::ostream& os, const TimeProfiler & profiler);
+            friend std::ostream& operator<<(std::ostream& os, const TimeProfiler & profiler);
 
         private:
             std::string m_name;

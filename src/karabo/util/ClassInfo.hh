@@ -19,7 +19,7 @@ namespace karabo {
 
         class KARABO_DECLSPEC ClassInfo {
 
-        public:
+            public:
 
             ClassInfo(const std::string& classId, const std::string& signature, const std::string& classVersion);
             const std::string& getClassName() const;

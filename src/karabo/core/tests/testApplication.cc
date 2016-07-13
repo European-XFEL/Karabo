@@ -24,65 +24,66 @@ using namespace exfel::io;
 using namespace exfel::util;
 using namespace exfel::core;
 
+
 int testApplication(int argc, char** argv) {
-  // we need to know the path to run directory in the package
-  string runDir;
-  if (argc == 2) {
-    runDir = argv[1];
-    runDir += "/";
-  }
+    // we need to know the path to run directory in the package
+    string runDir;
+    if (argc == 2) {
+        runDir = argv[1];
+        runDir += "/";
+    }
 
-  try {
-    cout << " TEST 1 " << endl;
+    try {
+        cout << " TEST 1 " << endl;
 
-    Hash input;
-    input.setFromPath("TextFile.filename", runDir + "expected.xsd");
-    input.setFromPath("TextFile.format.Xsd.indentation", 1);
-    Writer<Schema>::Pointer out = Writer<Schema>::create(input);
+        Hash input;
+        input.setFromPath("TextFile.filename", runDir + "expected.xsd");
+        input.setFromPath("TextFile.format.Xsd.indentation", 1);
+        Writer<Schema>::Pointer out = Writer<Schema>::create(input);
 
-    cout << "ClassInfo ClassId:   " << out->getClassInfo().getClassId() << endl;
-    cout << "ClassInfo ClassName: " << out->getClassInfo().getClassName() << endl;
-    cout << "ClassInfo Namespace: " << out->getClassInfo().getNamespace() << endl;
-    cout << "ClassInfo LogCategory: " << out->getClassInfo().getLogCategory() << endl;
+        cout << "ClassInfo ClassId:   " << out->getClassInfo().getClassId() << endl;
+        cout << "ClassInfo ClassName: " << out->getClassInfo().getClassName() << endl;
+        cout << "ClassInfo Namespace: " << out->getClassInfo().getNamespace() << endl;
+        cout << "ClassInfo LogCategory: " << out->getClassInfo().getLogCategory() << endl;
 
-    cout << "2 ClassInfo ClassId:   " << Writer<Schema>::classInfo().getClassId()<<endl;
-    cout << "2 ClassInfo ClassName: " << Writer<Schema>::classInfo().getClassName()<<endl;
-    cout << "2 ClassInfo Namespace: " << Writer<Schema>::classInfo().getNamespace()<<endl;
-    cout << "2 ClassInfo LogCategory: " << Writer<Schema>::classInfo().getLogCategory()<<endl;
+        cout << "2 ClassInfo ClassId:   " << Writer<Schema>::classInfo().getClassId() << endl;
+        cout << "2 ClassInfo ClassName: " << Writer<Schema>::classInfo().getClassName() << endl;
+        cout << "2 ClassInfo Namespace: " << Writer<Schema>::classInfo().getNamespace() << endl;
+        cout << "2 ClassInfo LogCategory: " << Writer<Schema>::classInfo().getLogCategory() << endl;
 
-    Schema expected = Application::expectedParameters("Application");
-    cout << "see intermediate representation in: fileExpected.txt" << endl;
-    ofstream myfile;
-    myfile.open("fileExpected.txt");
-    myfile << expected;
-    myfile.close();
-    
-    out->write(expected);
-    cout << "Result: expected.xsd" << endl;
-    
-    //or just run it with all default values (without 'indentation', fileExpected.txt, ...)
-    //ConfigWriterPointer out = ConfigWriterFactory::create(Hash("TextFile.filename", runDir + "expected.xsd"));
-    //out->write(ApplicationFactory::expectedParameters("Application"));
+        Schema expected = Application::expectedParameters("Application");
+        cout << "see intermediate representation in: fileExpected.txt" << endl;
+        ofstream myfile;
+        myfile.open("fileExpected.txt");
+        myfile << expected;
+        myfile.close();
 
-    cout << ">>>>>> TESTS for function help() <<<<<<<" <<endl;
+        out->write(expected);
+        cout << "Result: expected.xsd" << endl;
 
-    Application::help();
-    Application::help("Application");
-    Application::help("Application.Logger"); //.Logger (SINGLE_ELEMENT)
-    Application::help("Application.modules"); //.modules (NON_EMPTY_LIST)
-    
-    Application::help("Application.Logger.appenders"); //.appenders (LIST)
+        //or just run it with all default values (without 'indentation', fileExpected.txt, ...)
+        //ConfigWriterPointer out = ConfigWriterFactory::create(Hash("TextFile.filename", runDir + "expected.xsd"));
+        //out->write(ApplicationFactory::expectedParameters("Application"));
 
-    Application::help("Application.Logger.appenders.Ostream"); //Ostream
-    Application::help("Application.Logger.appenders.Ostream.layout"); //Ostream  .layout (CHOICE)
-    
-    Application::help("Application.Logger.appenders.Ostream.abc"); //"No such element 'abc' exists."
-    
-    Application::help("Application.Logger.appenders.abc"); //"The following element 'abc ' is not a sub-element of 'appenders' "
+        cout << ">>>>>> TESTS for function help() <<<<<<<" << endl;
 
-  } catch (const Exception& e) {
-    cout << e;
-    return 1;
-  }
-  return 0;
+        Application::help();
+        Application::help("Application");
+        Application::help("Application.Logger"); //.Logger (SINGLE_ELEMENT)
+        Application::help("Application.modules"); //.modules (NON_EMPTY_LIST)
+
+        Application::help("Application.Logger.appenders"); //.appenders (LIST)
+
+        Application::help("Application.Logger.appenders.Ostream"); //Ostream
+        Application::help("Application.Logger.appenders.Ostream.layout"); //Ostream  .layout (CHOICE)
+
+        Application::help("Application.Logger.appenders.Ostream.abc"); //"No such element 'abc' exists."
+
+        Application::help("Application.Logger.appenders.abc"); //"The following element 'abc ' is not a sub-element of 'appenders' "
+
+    } catch (const Exception& e) {
+        cout << e;
+        return 1;
+    }
+    return 0;
 }

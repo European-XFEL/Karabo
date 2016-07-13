@@ -18,60 +18,65 @@
 using namespace std;
 
 namespace karabo {
-  namespace util {
+    namespace util {
 
-    BobbyCar::BobbyCar() {
+
+        BobbyCar::BobbyCar() {
+        }
+
+
+        void BobbyCar::start() {
+            cout << "Starting " << m_color << " " << m_name << ", turning " << m_equipment << " on" << endl;
+        }
+
+
+        void BobbyCar::stop() {
+            cout << "Stopping " << m_color << " " << m_name << ", turning " << m_equipment << " off" << endl;
+        }
+
+
+        void BobbyCar::expectedParameters(Schema& expected) {
+
+            STRING_ELEMENT(expected).key("name")
+                    .displayedName("Brand")
+                    .description("Brand of the BobbyCar")
+                    .options("Summer,Winter,Auto")
+                    .assignmentMandatory()
+                    .reconfigurable()
+                    .commit();
+
+            STRING_ELEMENT(expected).key("equipment")
+                    .displayedName("Extra equipment")
+                    .description("Define extra equipment")
+                    .options("Radio,AirCondition,Navigation")
+                    .assignmentOptional().defaultValue("Radio")
+                    .reconfigurable()
+                    .commit();
+
+            CHOICE_ELEMENT<ConfigurableShape > (expected)
+                    .key("shape")
+                    .displayedName("Car shape")
+                    .description("Describe the shape of the car (artificial param)")
+                    .assignmentOptional().defaultValue("Circle")
+                    .reconfigurable()
+                    .commit();
+
+            SINGLE_ELEMENT<ConfigurableShape, ConfigurableCircle > (expected)
+                    .key("MyCircle")
+                    .description("The circle as SINGLE_ELEMENT")
+                    .displayedName("Circle")
+                    .assignmentOptional().defaultValue("Circle")
+                    .commit();
+
+        }
+
+
+        void BobbyCar::configure(const karabo::util::Hash& conf) {
+            conf.get<std::string > ("name", m_name);
+            conf.get("equipment", m_equipment);
+        }
+
+        KARABO_REGISTER_FACTORY_CC(Vehicle, BobbyCar)
+
     }
-
-    void BobbyCar::start() {
-      cout << "Starting " << m_color << " " << m_name << ", turning " << m_equipment << " on" << endl;
-    }
-
-    void BobbyCar::stop() {
-      cout << "Stopping " << m_color << " " << m_name << ", turning " << m_equipment << " off" << endl;
-    }
-
-    void BobbyCar::expectedParameters(Schema& expected) {
-
-      STRING_ELEMENT(expected).key("name")
-              .displayedName("Brand")
-              .description("Brand of the BobbyCar")
-              .options("Summer,Winter,Auto")
-              .assignmentMandatory()
-              .reconfigurable()
-              .commit();
-
-      STRING_ELEMENT(expected).key("equipment")
-              .displayedName("Extra equipment")
-              .description("Define extra equipment")
-              .options("Radio,AirCondition,Navigation")
-              .assignmentOptional().defaultValue("Radio")
-              .reconfigurable()
-              .commit();
-      
-      CHOICE_ELEMENT<ConfigurableShape > (expected)
-              .key("shape")
-              .displayedName("Car shape")
-              .description("Describe the shape of the car (artificial param)")
-              .assignmentOptional().defaultValue("Circle")
-              .reconfigurable()
-              .commit();
-
-      SINGLE_ELEMENT<ConfigurableShape, ConfigurableCircle > (expected)
-              .key("MyCircle")
-              .description("The circle as SINGLE_ELEMENT")
-              .displayedName("Circle")
-              .assignmentOptional().defaultValue("Circle")
-              .commit();
-      
-    }
-
-    void BobbyCar::configure(const karabo::util::Hash& conf) {
-      conf.get<std::string > ("name", m_name);
-      conf.get("equipment", m_equipment);
-    }
-
-    KARABO_REGISTER_FACTORY_CC(Vehicle, BobbyCar)
-
-  } 
-} 
+}

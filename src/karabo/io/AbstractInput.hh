@@ -23,7 +23,7 @@ namespace karabo {
 
         class AbstractInput : public boost::enable_shared_from_this<AbstractInput> {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
@@ -101,7 +101,7 @@ namespace karabo {
 
             virtual void update() {
             }
-           
+
             virtual bool respondsToEndOfStream() {
                 return true;
             }

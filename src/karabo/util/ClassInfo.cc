@@ -40,7 +40,7 @@ namespace karabo {
 
 
         ClassInfo::ClassInfo(const std::string& classId, const std::string& signature, const std::string& classVersion) :
-        m_classId(classId), m_configVersion(classVersion) {
+            m_classId(classId), m_configVersion(classVersion) {
 
             initClassNameAndSpace(signature);
             initLogCategory();
@@ -74,16 +74,16 @@ namespace karabo {
 
 
         void ClassInfo::initClassNameAndSpace(const std::string& signature) {
-//            clog << "signature=|" << signature << "|" << endl;
+            //            clog << "signature=|" << signature << "|" << endl;
 
             size_t found = signature.find("<");
             if (found == std::string::npos) {
                 // no templates in the signature
-                #if defined(_WIN32)
+#if defined(_WIN32)
                 boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)::classInfo");
-                #else            
+#else            
                 boost::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)::classInfo");
-                #endif
+#endif
                 boost::smatch what;
                 bool result = boost::regex_search(signature, what, re);
                 if (result && what.size() == 3) {
@@ -102,18 +102,18 @@ namespace karabo {
             } else {
 
                 string tmp = signature.substr(0, found);
-                                                
-                #if defined(_WIN32)
+
+#if defined(_WIN32)
                 boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)");
-                #else            
+#else            
                 boost::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)");
-                #endif
+#endif
 
                 boost::smatch what;
 
                 bool result = boost::regex_search(tmp, what, re);
                 if (result && what.size() == 3) {
-                    m_className = what.str(2);                                                            
+                    m_className = what.str(2);
                     m_namespace = what.str(1);
                     if (m_namespace.length() > 1) {
                         std::string::iterator it = m_namespace.end() - 1;

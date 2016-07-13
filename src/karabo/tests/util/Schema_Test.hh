@@ -12,8 +12,9 @@
 
 #include "ConfigurationTestClasses.hh"
 
-
 class Schema_Test : public CPPUNIT_NS::TestFixture {
+
+
     CPPUNIT_TEST_SUITE(Schema_Test);
 
     CPPUNIT_TEST(testBuildUp);
@@ -53,7 +54,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testTable);
     CPPUNIT_TEST(testList);
     CPPUNIT_TEST(testInvalidNodes);
-    
+
     CPPUNIT_TEST_SUITE_END();
 
 public:

@@ -16,13 +16,13 @@ namespace karabo {
     namespace xip {
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::BinarySerializer<RawImageData>, RawImageBinarySerializer)
-                
+
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<RawImageData >, karabo::io::BinaryFileOutput<RawImageData>)
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<RawImageData >, karabo::io::BinaryFileInput<RawImageData>)
-                
+
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<RawImageData >, karabo::xms::NetworkInput<RawImageData >)
 
-        KARABO_REGISTER_IN_FACTORY_1(karabo::io::InputHandler, karabo::io::CppInputHandler<karabo::io::Input<RawImageData> > , karabo::io::AbstractInput::Pointer);
+        KARABO_REGISTER_IN_FACTORY_1(karabo::io::InputHandler, karabo::io::CppInputHandler<karabo::io::Input<RawImageData> >, karabo::io::AbstractInput::Pointer);
 
     }
 }

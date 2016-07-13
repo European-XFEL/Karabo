@@ -29,7 +29,7 @@ namespace karabo {
 
             class DatasetAttribute : public karabo::io::h5::Dataset {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(DatasetAttribute, "DatasetAttribute", "1.0")
 

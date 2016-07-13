@@ -12,9 +12,9 @@
 #include <karabo/io/ArrayView.hh>
 #include <karabo/io/ioProfiler.hh>
 
-
-
 class ArrayView_Test : public CPPUNIT_NS::TestFixture {
+
+
     CPPUNIT_TEST_SUITE(ArrayView_Test);
     CPPUNIT_TEST(testCArray);
     CPPUNIT_TEST(testIndexable);

@@ -40,7 +40,7 @@ namespace karabo {
 
     namespace xms {
 
-        /**
+/**
          * The SignalSlotable class.
          * This class implements the so-called "Signal-Slot" design pattern orginally termed
          * by the Qt-Gui framework. However, signals and slots are not restricted to a local application
@@ -56,6 +56,8 @@ namespace karabo {
          *
          */
         class SignalSlotable : public boost::enable_shared_from_this<SignalSlotable> {
+
+
             // Performance statistics
             mutable boost::mutex m_latencyMutex;
             std::pair<int, int> m_brokerLatency;
@@ -66,6 +68,8 @@ namespace karabo {
         protected:
 
             class Caller {
+
+
                 const SignalSlotable* m_signalSlotable;
 
             public:
@@ -74,32 +78,32 @@ namespace karabo {
 
                 void call(const std::string& slotInstanceId, const std::string& slotFunction) const {
                     sendMessage(slotInstanceId, slotFunction,
-                            karabo::util::Hash::Pointer(new karabo::util::Hash));
+                                karabo::util::Hash::Pointer(new karabo::util::Hash));
                 }
 
                 template <class A1>
                 void call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1) const {
                     sendMessage(slotInstanceId, slotFunction,
-                            karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1)));
+                                karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1)));
                 }
 
                 template <class A1, class A2>
                 void call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2) const {
                     sendMessage(slotInstanceId, slotFunction,
-                            karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1, "a2", a2)));
+                                karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1, "a2", a2)));
                 }
 
                 template <class A1, class A2, class A3>
                 void call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3) const {
                     sendMessage(slotInstanceId, slotFunction,
-                            karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3)));
+                                karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3)));
 
                 }
 
                 template <class A1, class A2, class A3, class A4>
                 void call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) const {
                     sendMessage(slotInstanceId, slotFunction,
-                            karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4)));
+                                karabo::util::Hash::Pointer(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4)));
                 }
 
                 void sendMessage(const std::string& slotInstanceId, const std::string& slotFunction, const karabo::util::Hash::Pointer& body) const;
@@ -110,6 +114,8 @@ namespace karabo {
             };
 
             class Requestor {
+
+
                 SignalSlotable* m_signalSlotable;
                 std::string m_replyId;
                 bool m_isRequested;
@@ -165,10 +171,10 @@ namespace karabo {
                 // TODO: Add another API layer, which is called execute and does synchronous slot execution
 
                 Requestor& requestNoWait(
-                        const std::string& requestSlotInstanceId,
-                        const std::string& requestSlotFunction,
-                        const std::string replySlotInstanceId,
-                        const std::string& replySlotFunction) {
+                                         const std::string& requestSlotInstanceId,
+                                         const std::string& requestSlotFunction,
+                                         const std::string replySlotInstanceId,
+                                         const std::string& replySlotFunction) {
                     karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
                     karabo::util::Hash::Pointer body(new karabo::util::Hash());
                     sendRequest(requestSlotInstanceId, header, body);
@@ -177,11 +183,11 @@ namespace karabo {
 
                 template <class A1>
                 Requestor& requestNoWait(
-                        const std::string& requestSlotInstanceId,
-                        const std::string& requestSlotFunction,
-                        const std::string replySlotInstanceId,
-                        const std::string& replySlotFunction,
-                        const A1& a1) {
+                                         const std::string& requestSlotInstanceId,
+                                         const std::string& requestSlotFunction,
+                                         const std::string replySlotInstanceId,
+                                         const std::string& replySlotFunction,
+                                         const A1& a1) {
                     karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
                     karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1));
                     sendRequest(requestSlotInstanceId, header, body);
@@ -190,11 +196,11 @@ namespace karabo {
 
                 template <class A1, class A2>
                 Requestor& requestNoWait(
-                        const std::string& requestSlotInstanceId,
-                        const std::string& requestSlotFunction,
-                        const std::string replySlotInstanceId,
-                        const std::string& replySlotFunction,
-                        const A1& a1, const A2& a2) {
+                                         const std::string& requestSlotInstanceId,
+                                         const std::string& requestSlotFunction,
+                                         const std::string replySlotInstanceId,
+                                         const std::string& replySlotFunction,
+                                         const A1& a1, const A2& a2) {
                     karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
                     karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1, "a2", a2));
                     sendRequest(requestSlotInstanceId, header, body);
@@ -203,10 +209,10 @@ namespace karabo {
 
                 template <class A1, class A2, class A3>
                 Requestor& requestNoWait(
-                        const std::string& requestSlotInstanceId,
-                        const std::string& requestSlotFunction,
-                        const std::string replySlotInstanceId,
-                        const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3) {
+                                         const std::string& requestSlotInstanceId,
+                                         const std::string& requestSlotFunction,
+                                         const std::string replySlotInstanceId,
+                                         const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3) {
                     karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
                     karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
                     sendRequest(requestSlotInstanceId, header, body);
@@ -215,9 +221,9 @@ namespace karabo {
 
                 template <class A1, class A2, class A3, class A4>
                 Requestor& requestNoWait(const std::string& requestSlotInstanceId,
-                        const std::string& requestSlotFunction,
-                        const std::string replySlotInstanceId,
-                        const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
+                                         const std::string& requestSlotFunction,
+                                         const std::string replySlotInstanceId,
+                                         const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
                     karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
                     karabo::util::Hash::Pointer body(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
                     sendRequest(requestSlotInstanceId, header, body);
@@ -249,14 +255,16 @@ namespace karabo {
                 }
 
                 class Receiver {
-                public:
+
+                    public:
                     void receive(Requestor *);
                 protected:
                     virtual void inner(karabo::util::Hash::Pointer) = 0;
                 };
 
                 class Receiver0 : public Receiver {
-                public:
+
+                    public:
 
                     Receiver0() {
                     }
@@ -273,6 +281,8 @@ namespace karabo {
 
                 template <class A1>
                 class Receiver1 : public Receiver {
+
+
                     A1 &m_a1;
 
                 public:
@@ -295,6 +305,8 @@ namespace karabo {
 
                 template <class A1, class A2>
                 class Receiver2 : public Receiver {
+
+
                     A1 &m_a1;
                     A2 &m_a2;
 
@@ -319,6 +331,8 @@ namespace karabo {
 
                 template <class A1, class A2, class A3>
                 class Receiver3 : public Receiver {
+
+
                     A1 &m_a1;
                     A2 &m_a2;
                     A3 &m_a3;
@@ -345,6 +359,8 @@ namespace karabo {
 
                 template <class A1, class A2, class A3, class A4>
                 class Receiver4 : public Receiver {
+
+
                     A1 &m_a1;
                     A2 &m_a2;
                     A3 &m_a3;
@@ -378,7 +394,7 @@ namespace karabo {
                 karabo::util::Hash::Pointer prepareHeader(const std::string& slotInstanceId, const std::string& slotFunction);
 
                 karabo::util::Hash::Pointer prepareHeaderNoWait(const std::string& requestSlotInstanceId, const std::string& requestSlotFunction,
-                        const std::string& replySlotInstanceId, const std::string& replySlotFunction);
+                                                                const std::string& replySlotInstanceId, const std::string& replySlotFunction);
 
                 void registerRequest();
 
@@ -432,10 +448,12 @@ namespace karabo {
             mutable boost::mutex m_signalSlotInstancesMutex;
 
             struct SignalSlotConnection {
+
                 SignalSlotConnection(const std::string& signalInstanceId, const std::string& signal,
                                      const std::string& slotInstanceId, const std::string& slot) :
-                m_signalInstanceId(signalInstanceId), m_signal(signal),
-                m_slotInstanceId(slotInstanceId), m_slot(slot) { }
+                    m_signalInstanceId(signalInstanceId), m_signal(signal),
+                    m_slotInstanceId(slotInstanceId), m_slot(slot) {
+                }
 
                 // needed to put into std::set:
                 bool operator<(const SignalSlotConnection& other) const;
@@ -482,6 +500,8 @@ namespace karabo {
             // Use (mutex, condition variable) pair for waiting simultaneously many events
 
             struct BoostMutexCond {
+
+
                 boost::mutex m_mutex;
                 boost::condition_variable m_cond;
 
@@ -549,7 +569,7 @@ namespace karabo {
 #define SIGNAL1(signalName, a1) this->registerSignal<a1>(signalName);
 #define SIGNAL2(signalName, a1, a2) this->registerSignal<a1,a2>(signalName);
 #define SIGNAL3(signalName, a1, a2, a3) this->registerSignal<a1,a2,a3>(signalName);
-#define SIGNAL4(signalName, a1, a2, a3, a4) this->registerSignal<a1,a2,a3,a4>(signalName);            
+#define SIGNAL4(signalName, a1, a2, a3, a4) this->registerSignal<a1,a2,a3,a4>(signalName);
 
 #define KARABO_SIGNAL0(signalName) this->registerSignal(signalName);
 #define KARABO_SIGNAL1(signalName, a1) this->registerSignal<a1>(signalName);
@@ -623,7 +643,7 @@ KARABO_SLOT0(__VA_ARGS__) \
              * @param connection An existing broker connection
              */
             SignalSlotable(const std::string& instanceId,
-                    const karabo::net::BrokerConnection::Pointer& connection);
+                           const karabo::net::BrokerConnection::Pointer& connection);
 
             /**
              * Creates a function SignalSlotable object allowing to configure the broker connection.
@@ -633,8 +653,8 @@ KARABO_SLOT0(__VA_ARGS__) \
              * @param brokerConfiguration The sub-configuration for the respective broker type
              */
             SignalSlotable(const std::string& instanceId,
-                    const std::string& brokerType = "Jms",
-                    const karabo::util::Hash& brokerConfiguration = karabo::util::Hash());
+                           const std::string& brokerType = "Jms",
+                           const karabo::util::Hash& brokerConfiguration = karabo::util::Hash());
 
             virtual ~SignalSlotable();
 
@@ -644,7 +664,7 @@ KARABO_SLOT0(__VA_ARGS__) \
              * @param connection An existing broker connection
              */
             void init(const std::string& instanceId,
-                    const karabo::net::BrokerConnection::Pointer& connection);
+                      const karabo::net::BrokerConnection::Pointer& connection);
 
             /**
              * Login in order to receive correct access rights
@@ -762,7 +782,7 @@ KARABO_SLOT0(__VA_ARGS__) \
              * @return whether connection is already succesfully established
              */
             bool connect(const std::string& signalInstanceId, const std::string& signalSignature,
-                    const std::string& slotInstanceId, const std::string& slotSignature);
+                         const std::string& slotInstanceId, const std::string& slotSignature);
 
             /**
              * This function tries to establish a connection between a signal
@@ -813,7 +833,7 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             SignalSlotable::Requestor requestNoWait(std::string requestInstanceId, const std::string& requestFunctionName,
-                    std::string replyInstanceId, const std::string& replyFunctionName) {
+                                                    std::string replyInstanceId, const std::string& replyFunctionName) {
                 if (requestInstanceId.empty()) requestInstanceId = m_instanceId;
                 if (replyInstanceId.empty()) replyInstanceId = m_instanceId;
                 return SignalSlotable::Requestor(this).requestNoWait(requestInstanceId, requestFunctionName, replyInstanceId, replyFunctionName);
@@ -852,7 +872,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1>
             SignalSlotable::Requestor requestNoWait(std::string requestInstanceId, const std::string& requestFunctionName,
-                    std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1) {
+                                                    std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1) {
                 if (requestInstanceId.empty()) requestInstanceId = m_instanceId;
                 if (replyInstanceId.empty()) replyInstanceId = m_instanceId;
                 return SignalSlotable::Requestor(this).requestNoWait(requestInstanceId, requestFunctionName, replyInstanceId, replyFunctionName, a1);
@@ -902,7 +922,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2>
             SignalSlotable::Requestor requestNoWait(std::string requestInstanceId, const std::string& requestFunctionName,
-                    std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1, const A2& a2) {
+                                                    std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1, const A2& a2) {
                 if (requestInstanceId.empty()) requestInstanceId = m_instanceId;
                 if (replyInstanceId.empty()) replyInstanceId = m_instanceId;
                 return SignalSlotable::Requestor(this).requestNoWait(requestInstanceId, requestFunctionName, replyInstanceId, replyFunctionName, a1, a2);
@@ -939,7 +959,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2, class A3>
             SignalSlotable::Requestor requestNoWait(std::string requestInstanceId, const std::string& requestFunctionName,
-                    std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1, const A2& a2, const A3& a3) {
+                                                    std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1, const A2& a2, const A3& a3) {
                 if (requestInstanceId.empty()) requestInstanceId = m_instanceId;
                 if (replyInstanceId.empty()) replyInstanceId = m_instanceId;
                 return SignalSlotable::Requestor(this).requestNoWait(requestInstanceId, requestFunctionName, replyInstanceId, replyFunctionName, a1, a2, a3);
@@ -977,7 +997,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2, class A3, class A4>
             SignalSlotable::Requestor requestNoWait(std::string requestInstanceId, const std::string& requestFunctionName,
-                    std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
+                                                    std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
                 if (requestInstanceId.empty()) requestInstanceId = m_instanceId;
                 if (replyInstanceId.empty()) replyInstanceId = m_instanceId;
                 return SignalSlotable::Requestor(this).requestNoWait(requestInstanceId, requestFunctionName, replyInstanceId, replyFunctionName, a1, a2, a3, a4);
@@ -1157,8 +1177,8 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class T>
             boost::shared_ptr<karabo::io::Input<T> > registerInputChannel(const std::string& name, const std::string& type, const karabo::util::Hash& config = karabo::util::Hash(),
-                    const boost::function<void (const typename karabo::io::Input<T>::Pointer&) >& onInputAvailableHandler = boost::function<void (const typename karabo::io::Input<T>::Pointer&) >(),
-                    const boost::function<void ()>& onEndOfStreamEventHandler = boost::function<void ()>()) {
+                                                                          const boost::function<void (const typename karabo::io::Input<T>::Pointer&) >& onInputAvailableHandler = boost::function<void (const typename karabo::io::Input<T>::Pointer&) >(),
+                                                                          const boost::function<void ()>& onEndOfStreamEventHandler = boost::function<void ()>()) {
                 using namespace karabo::util;
                 karabo::io::AbstractInput::Pointer channel = karabo::io::Input<T>::create(type, config);
                 channel->setInstanceId(m_instanceId);
@@ -1206,9 +1226,9 @@ KARABO_SLOT0(__VA_ARGS__) \
             //            }
 
             virtual InputChannel::Pointer createInputChannel(const std::string& channelName, const karabo::util::Hash& config,
-                    const boost::function<void (const Data&) >& onDataAvailableHandler = boost::function<void (const Data&) >(),
-                    const boost::function<void (const InputChannel::Pointer&) >& onInputAvailableHandler = boost::function<void (const InputChannel::Pointer&) >(),
-                    const boost::function<void (const InputChannel::Pointer&)>& onEndOfStreamEventHandler = boost::function<void (const InputChannel::Pointer&)>());
+                                                             const boost::function<void (const Data&) >& onDataAvailableHandler = boost::function<void (const Data&) >(),
+                                                             const boost::function<void (const InputChannel::Pointer&) >& onInputAvailableHandler = boost::function<void (const InputChannel::Pointer&) >(),
+                                                             const boost::function<void (const InputChannel::Pointer&)>& onEndOfStreamEventHandler = boost::function<void (const InputChannel::Pointer&)>());
 
             virtual OutputChannel::Pointer createOutputChannel(const std::string& channelName, const karabo::util::Hash& config, const boost::function<void (const OutputChannel::Pointer&) >& onOutputPossibleHandler = boost::function<void (const OutputChannel::Pointer&) >());
 
@@ -1259,13 +1279,13 @@ KARABO_SLOT0(__VA_ARGS__) \
             void setDeviceServerPointer(boost::any serverPtr);
 
             void inputHandlerWrap(const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler,
-                    const karabo::xms::InputChannel::Pointer& input);
+                                  const karabo::xms::InputChannel::Pointer& input);
 
             void dataHandlerWrap(const boost::function<void (const Data&) >& handler,
-                    const Data& data);
+                                 const Data& data);
 
             void endOfStreamHandlerWrap(const boost::function<void (const boost::shared_ptr<InputChannel>&) >& handler,
-                    const boost::shared_ptr<InputChannel>& input);
+                                        const boost::shared_ptr<InputChannel>& input);
 
             bool connectP2P(const std::string& instanceId);
 
@@ -1480,9 +1500,9 @@ KARABO_SLOT0(__VA_ARGS__) \
             long long getEpochMillis() const;
 
             void onInputChannelConnectInfo(const InputChannel::Pointer& channel,
-                    const boost::function<void()>& handler,
-                    const std::string& instanceId, const std::string& channelId,
-                    bool channelExists, const karabo::util::Hash& info);
+                                           const boost::function<void()>& handler,
+                                           const std::string& instanceId, const std::string& channelId,
+                                           bool channelExists, const karabo::util::Hash& info);
 
             bool tryToCallDirectly(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) const;
 

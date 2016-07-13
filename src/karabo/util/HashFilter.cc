@@ -147,7 +147,7 @@ namespace karabo {
                 // if the tag was found in the vector<HASH> (defined for LIST_ELEMENT) copy complete vector<Hash> and return
                 // otherwise process the Hash further
                 //if (processNodeForAccessMode(master, inputNode, result, path, value) == true) {
-                    //clog << "Copy entire vector<Hash> " << path << endl;
+                //clog << "Copy entire vector<Hash> " << path << endl;
                 //    return;
                 //}
                 //clog << "Further processing vector<Hash>  " << path << endl;

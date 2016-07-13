@@ -23,6 +23,7 @@ namespace karabo {
 
         class ListElement : public GenericElement<ListElement> {
 
+
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
             DefaultValue<ListElement, std::vector<std::string> > m_defaultValue;

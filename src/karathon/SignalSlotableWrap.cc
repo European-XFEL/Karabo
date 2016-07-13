@@ -7,7 +7,7 @@ namespace karathon {
 
 
     SignalSlotableWrap::RequestorWrap::RequestorWrap(karabo::xms::SignalSlotable* signalSlotable)
-    : karabo::xms::SignalSlotable::Requestor(signalSlotable) {
+        : karabo::xms::SignalSlotable::Requestor(signalSlotable) {
     }
 
 
@@ -163,7 +163,7 @@ namespace karathon {
                                                                                            const std::string replySlotInstanceId,
                                                                                            const std::string& replySlotFunction, const bp::object& a1, const bp::object& a2, const bp::object & a3) {
         try {
-            karabo::util::Hash ::Pointer payload(new karabo::util::Hash);
+            karabo::util::Hash::Pointer payload(new karabo::util::Hash);
             HashWrap::set(*payload, "a1", a1);
             HashWrap::set(*payload, "a2", a2);
             HashWrap::set(*payload, "a3", a3);
@@ -462,34 +462,33 @@ namespace karathon {
 
 
     karabo::xms::InputChannel::Pointer
-        SignalSlotableWrap::createInputChannelPy(const std::string& channelName,
-            const karabo::util::Hash& config,
-            const bp::object& onDataHandler, const bp::object& onInputHandler,
-            const bp::object& onEndOfStreamHandler)
-    {
+    SignalSlotableWrap::createInputChannelPy(const std::string& channelName,
+                                             const karabo::util::Hash& config,
+                                             const bp::object& onDataHandler, const bp::object& onInputHandler,
+                                             const bp::object& onEndOfStreamHandler) {
         // Basically just call createInputChannel from C++, but take care that
         // 'None' callbacks are really empty.
-        typedef boost::function<void (const karabo::xms::Data&)>     OnDataFunction;
-        typedef boost::function<void (const karabo::xms::InputChannel::Pointer&)> OnInputFunction;
+        typedef boost::function<void (const karabo::xms::Data&) > OnDataFunction;
+        typedef boost::function<void (const karabo::xms::InputChannel::Pointer&) > OnInputFunction;
         OnDataFunction dataHandler = OnDataFunction();
         OnInputFunction inputHandler = OnInputFunction();
         OnInputFunction endOfStreamHandler = OnInputFunction();
         if (onDataHandler != bp::object()) {
             // or: if (onDataHandler.ptr() != Py_None) {
             dataHandler = boost::bind(&SignalSlotableWrap::proxyOnDataAvailableHandler,
-                    this, onDataHandler, _1);
+                                      this, onDataHandler, _1);
         }
         if (onInputHandler != bp::object()) {
             inputHandler = boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler,
-                    this, onInputHandler, _1);
+                                       this, onInputHandler, _1);
         }
         if (onEndOfStreamHandler != bp::object()) {
             endOfStreamHandler = boost::bind(&SignalSlotableWrap::proxyOnEndOfStreamEventHandler,
-                    this, onEndOfStreamHandler, _1);
+                                             this, onEndOfStreamHandler, _1);
         }
 
         return this->createInputChannel(channelName, config,
-                dataHandler, inputHandler, endOfStreamHandler);
+                                        dataHandler, inputHandler, endOfStreamHandler);
     }
 
 

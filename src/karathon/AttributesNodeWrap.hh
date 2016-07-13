@@ -17,9 +17,7 @@ namespace bp = boost::python;
 
 namespace karathon {
 
-
     class AttributesNodeWrap {
-
 
         struct null_deleter {
 
@@ -62,7 +60,7 @@ namespace karathon {
                 PyTypes::ReferenceType type = bp::extract<PyTypes::ReferenceType>(o_type);
                 reftype = PyTypes::to(type);
             }
-            
+
             switch (reftype) {
                 case Types::BOOL:
                     return bp::object(node->getValueAs<bool>());
@@ -122,7 +120,7 @@ namespace karathon {
 
         static bp::object getType(const Pointer& node) {
             using namespace karabo::util;
-            PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType>(node->getType());
+            PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType> (node->getType());
             return bp::object(type);
         }
 

@@ -19,10 +19,11 @@ KARABO_REGISTER_FACTORY_CC(karabo::io::Format<karabo::util::Schema>, karabo::io:
 
 namespace karabo {
     namespace io {
-        
+
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::tinyxml;
+
 
         void SchemaXmlFormat::expectedParameters(karabo::util::Schema& expected) {
 
@@ -60,6 +61,7 @@ namespace karabo {
                     .commit();
         }
 
+
         void SchemaXmlFormat::configure(const karabo::util::Hash& input) {
 
             input.get("indentation", m_indentation);
@@ -67,6 +69,7 @@ namespace karabo {
             input.get("ignoreDataType", m_ignoreDataType);
             input.get<string > ("xmlns", m_defaultNamespace);
         }
+
 
         /**
          * Reading a configuration file.
@@ -87,6 +90,7 @@ namespace karabo {
             }
         }
 
+
         void SchemaXmlFormat::removeNamespaceAttribute(TiXmlNode* node) {
             // at the moment only removes the attribute if exists      
             const char* attribute = node->ToElement()->Attribute("xmlns");
@@ -94,6 +98,7 @@ namespace karabo {
                 node->ToElement()->RemoveAttribute("xmlns");
             }
         }
+
 
         /**
          * Reads an XML document recursively by nodes
@@ -194,6 +199,7 @@ namespace karabo {
             }
         }
 
+
         void SchemaXmlFormat::readArrayElement(TiXmlElement* nodeElement, const string& arrayType, Schema& data) const {
             vector<string> tmpArray;
             string elementName = nodeElement->Value();
@@ -216,6 +222,7 @@ namespace karabo {
                 data.set(elementName, tmpArray);
             }
         }
+
 
         /**
          * Writing a configuration file.
@@ -256,6 +263,7 @@ namespace karabo {
             doc.Accept(&printer);
             out << printer.CStr();
         }
+
 
         /**
          * Recursive function for creating an XML document from an object of the class karabo::util::Schema
@@ -383,6 +391,7 @@ namespace karabo {
 
         } //SchemaXmlFormat::r_createXmlFile
 
+
         void SchemaXmlFormat::fillXmlElementUINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             TiXmlElement* newElement = new TiXmlElement(nameOfElement.c_str());
@@ -396,6 +405,7 @@ namespace karabo {
 
             pTheElement->LinkEndChild(newElement);
         }
+
 
         void SchemaXmlFormat::fillXmlElementINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
@@ -411,6 +421,7 @@ namespace karabo {
             pTheElement->LinkEndChild(newElement);
         }
 
+
         void SchemaXmlFormat::fillXmlElementCHAR(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             TiXmlElement* newElement = new TiXmlElement(nameOfElement.c_str());
@@ -425,6 +436,7 @@ namespace karabo {
             pTheElement->LinkEndChild(newElement);
         }
 
+
         void SchemaXmlFormat::fillXmlElementWithItemsBool(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             try {
@@ -434,6 +446,7 @@ namespace karabo {
                 newElement->SetAttribute("dataType", typeOfElement);
 
                 const std::deque<bool>& arrayOfElements = data.get < std::deque<bool> >(nameOfElement);
+
 
                 BOOST_FOREACH(bool elem, arrayOfElements) {
                     TiXmlElement* itemElement = new TiXmlElement("item");
@@ -450,6 +463,7 @@ namespace karabo {
 
         }//SchemaXmlFormat::fillXmlBoolDeque
 
+
         void SchemaXmlFormat::fillXmlElementWithItemsUINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             try {
@@ -458,6 +472,7 @@ namespace karabo {
                 newElement->SetAttribute("dataType", typeOfElement);
 
                 const std::vector<unsigned char>& arrayOfElements = data.get<std::vector<unsigned char> >(nameOfElement);
+
 
                 BOOST_FOREACH(unsigned char elem, arrayOfElements) {
                     int x = elem;
@@ -474,6 +489,7 @@ namespace karabo {
             }
         }
 
+
         void SchemaXmlFormat::fillXmlElementWithItemsINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             try {
@@ -482,6 +498,7 @@ namespace karabo {
                 newElement->SetAttribute("dataType", typeOfElement);
 
                 const std::vector<signed char>& arrayOfElements = data.get < std::vector<signed char> >(nameOfElement);
+
 
                 BOOST_FOREACH(char elem, arrayOfElements) {
                     int x = elem;
@@ -498,6 +515,7 @@ namespace karabo {
             }
         }
 
+
         void SchemaXmlFormat::fillXmlElementWithItemsCHAR(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             try {
@@ -506,6 +524,7 @@ namespace karabo {
                 newElement->SetAttribute("dataType", typeOfElement);
 
                 const std::vector<char>& arrayOfElements = data.get < std::vector<char> >(nameOfElement);
+
 
                 BOOST_FOREACH(char elem, arrayOfElements) {
                     int x = elem;

@@ -20,7 +20,8 @@ namespace karabo {
         typedef boost::shared_ptr<std::vector<char> > VectorCharPointer;
 
         class Message {
-        public:
+
+            public:
 
             typedef boost::shared_ptr<Message> Pointer;
 
@@ -32,10 +33,10 @@ namespace karabo {
 
             Message(const VectorCharPointer& data, const VectorCharPointer& header) : m_body(data), m_header(header) {
             }
-            
+
             Message(const Message& other) : m_body(other.body()), m_header(other.header()) {
             }
-            
+
             virtual ~Message() {
             }
 
@@ -49,13 +50,14 @@ namespace karabo {
 
 
         private:
-            
+
             VectorCharPointer m_body;
             VectorCharPointer m_header;
         };
 
         class Queue {
-        public:
+
+            public:
 
             typedef boost::shared_ptr<Queue> Pointer;
 
@@ -89,7 +91,8 @@ namespace karabo {
         };
 
         class LosslessQueue : public Queue {
-            
+
+
             std::deque<Message::Pointer> m_queue;
 
         public:
@@ -146,6 +149,8 @@ namespace karabo {
         };
 
         class RejectNewestQueue : public LosslessQueue {
+
+
             size_t m_capacity;
 
         public:
@@ -176,6 +181,8 @@ namespace karabo {
         };
 
         class RemoveOldestQueue : public Queue {
+
+
             boost::circular_buffer<Message::Pointer> m_queue;
 
         public:
