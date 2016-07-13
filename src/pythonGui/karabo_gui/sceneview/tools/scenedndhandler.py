@@ -9,69 +9,14 @@ from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QBoxLayout, QFont
 from traits.api import ABCHasStrictTraits
 
+from .const import WIDGET_FACTORIES
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.scenemodel.api import (
-    BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
-    DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
-    DisplayIconsetModel, DisplayImageModel, DisplayImageElementModel,
-    DisplayLabelModel, DisplayPlotModel, DisplayStateColorModel,
-    DoubleLineEditModel, EditableListModel, EditableListElementModel,
-    EditableSpinBoxModel, EvaluatorModel, FileInModel, FileOutModel,
-    FloatSpinBoxModel, HexadecimalModel, DigitIconsModel,
-    SelectionIconsModel, TextIconsModel, IntLineEditModel, KnobModel,
-    LineEditModel, LinePlotModel, MonitorModel, SingleBitModel,
-    SliderModel, TableElementModel, XYPlotModel, BoxLayoutModel, LabelModel
-)
+from karabo_gui.scenemodel.api import BoxLayoutModel, LabelModel
 from karabo_gui.schema import ChoiceOfNodes
 from karabo_gui.topology import getDeviceBox
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
 _STACKED_WIDGET_OFFSET = 30
-_WIDGET_FACTORIES = {
-    'DisplayAlignedImage': DisplayAlignedImageModel,
-    'Bitfield': BitfieldModel,
-    'DisplayCheckBox': CheckBoxModel,
-    'EditableCheckBox': CheckBoxModel,
-    'DisplayChoiceElement': ChoiceElementModel,
-    'EditableChoiceElement': ChoiceElementModel,
-    'DisplayComboBox': ComboBoxModel,
-    'EditableComboBox': ComboBoxModel,
-    'DisplayCommand': DisplayCommandModel,
-    'DisplayDirectory': DirectoryModel,
-    'EditableDirectory': DirectoryModel,
-    'DisplayFileIn': FileInModel,
-    'EditableFileIn': FileInModel,
-    'DisplayFileOut': FileOutModel,
-    'EditableFileOut': FileOutModel,
-    'DisplayIconset': DisplayIconsetModel,
-    'DisplayImage': DisplayImageModel,
-    'DisplayImageElement': DisplayImageElementModel,
-    'DisplayLabel': DisplayLabelModel,
-    'DisplayLineEdit': LineEditModel,
-    'EditableLineEdit': LineEditModel,
-    'EditableList': EditableListModel,
-    'EditableListElement': EditableListElementModel,
-    'DisplayPlot': DisplayPlotModel,
-    'EditableSpinBox': EditableSpinBoxModel,
-    'Hexadecimal': HexadecimalModel,
-    'DoubleLineEdit': DoubleLineEditModel,
-    'IntLineEdit': IntLineEditModel,
-    'Slider': SliderModel,
-    'Knob': KnobModel,
-    'XYPlot': XYPlotModel,
-    'XYVector': LinePlotModel,
-    'DisplayTrendline': LinePlotModel,
-    'FloatSpinBox': FloatSpinBoxModel,
-    'DisplayStateColor': DisplayStateColorModel,
-    'DisplayTableElement': TableElementModel,
-    'EditableTableElement': TableElementModel,
-    'Evaluator': EvaluatorModel,
-    'TextIcons': TextIconsModel,
-    'DigitIcons': DigitIconsModel,
-    'SelectionIcons': SelectionIconsModel,
-    'Monitor': MonitorModel,
-    'SingleBit': SingleBitModel,
-}
 
 
 class SceneDnDHandler(ABCHasStrictTraits):
@@ -141,13 +86,13 @@ class ConfigurationDropHandler(SceneDnDHandler):
         # Add the display and editable components, as needed
         if item.displayComponent:
             factory = DisplayWidget.getClass(box)
-            klass = _WIDGET_FACTORIES[factory.__name__]
+            klass = WIDGET_FACTORIES[factory.__name__]
             model = klass(keys=[box.key()],
                           parent_component='DisplayComponent')
             layout_model.children.append(model)
         if item.editableComponent:
             factory = EditableWidget.getClass(box)
-            klass = _WIDGET_FACTORIES[factory.__name__]
+            klass = WIDGET_FACTORIES[factory.__name__]
             model = klass(keys=[box.key()],
                           parent_component='EditableApplyLaterComponent')
             layout_model.children.append(model)
