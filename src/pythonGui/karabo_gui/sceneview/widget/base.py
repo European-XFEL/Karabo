@@ -25,6 +25,7 @@ class BaseWidgetContainer(QWidget):
             self.layout.setStackingMode(QStackedLayout.StackAll)
             self.layout.addWidget(self.old_style_widget.widget)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
+        self.setToolTip(", ".join(self.model.keys))
 
     def _create_widget(self, boxes):
         """ A method for creating the child widget.
