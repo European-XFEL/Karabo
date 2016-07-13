@@ -15,9 +15,9 @@
 
 
 namespace karabo {
-  namespace util {
+    namespace util {
 
-    KARABO_REGISTER_FACTORY_CC(ConfigurableShape, ConfigurableCircle)
+        KARABO_REGISTER_FACTORY_CC(ConfigurableShape, ConfigurableCircle)
 
-  }
+    }
 }

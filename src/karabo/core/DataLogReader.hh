@@ -25,6 +25,8 @@ namespace karabo {
     namespace core {
 
         struct DataLoggerIndex {
+
+
             std::string m_event;
             karabo::util::Epochstamp m_epoch;
             unsigned long long m_train;
@@ -33,65 +35,67 @@ namespace karabo {
             int m_fileindex;
 
             DataLoggerIndex()
-            : m_event()
-            , m_epoch(0, 0)
-            , m_train(0)
-            , m_position(-1)
-            , m_user(".")
-            , m_fileindex(-1) {
+                : m_event()
+                , m_epoch(0, 0)
+                , m_train(0)
+                , m_position(-1)
+                , m_user(".")
+                , m_fileindex(-1) {
             }
         };
-        
-        
+
         struct PropFileInfo {
+
+
             typedef boost::shared_ptr<PropFileInfo> Pointer;
             boost::mutex filelock;
             size_t filesize;
             time_t lastwrite;
             std::vector<std::string> properties;
-            PropFileInfo() : filelock(), filesize(0), lastwrite(0), properties() {}
+
+            PropFileInfo() : filelock(), filesize(0), lastwrite(0), properties() {
+            }
         };
-        
-        
+
         class IndexBuilderService {
-        public:
+
+            public:
             // Needed for 'Pointer' and KARABO_LOG_FRAMEWORK
             KARABO_CLASSINFO(IndexBuilderService, "IndexBuilderService", "1.4")
 
         private:
             static Pointer m_instance;
-            
+
             boost::shared_ptr<boost::asio::io_service> m_svc;
-            
+
             boost::asio::io_service::work m_work;
-            
+
             std::set<std::string> m_cache;
-            
+
             boost::thread m_thread;
-            
+
             boost::mutex m_mutex;
-        
+
             IndexBuilderService();
-            
+
         public:
-            
+
             static Pointer getInstance();
-           
+
             // Virtual destructor needed since KARABO_CLASSINFO adds virtual methods:
             virtual ~IndexBuilderService();
 
             void buildIndexFor(const std::string& commandLineArguments);
-            
-        private:
-            
-            void build(const std::string& args);
-            
-        };
-        
 
-        
+        private:
+
+            void build(const std::string& args);
+
+        };
+
         class DataLogReader : public karabo::core::Device<karabo::core::OkErrorFsm> {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(DataLogReader, "DataLogReader", "1.0")
 
@@ -124,7 +128,7 @@ namespace karabo {
             /// that matches the Epochstamp 'stamp'. In case no exact match (within 1 ms) is found,
             /// 'preferBefore' decides whether the index with a smaller or larger time stamp is returned.
             size_t findPositionOfEpochstamp(std::ifstream& f, double stamp, size_t left, size_t right, bool preferBefore);
-            
+
             /// Helper to extract DataLoggerIndex values out of the tail of a line in archive_index.txt.
             /// The tail is everything after event, timestampAsIso8061 and timestampAsDouble.
             /// The entry has to be partly filled (m_event and m_epoch) and partly serves as output
@@ -133,11 +137,11 @@ namespace karabo {
             void extractTailOfArchiveIndex(const std::string& tail, DataLoggerIndex& entry) const;
 
         private:
-            
+
             static boost::mutex m_propFileInfoMutex;
             static std::map<std::string, PropFileInfo::Pointer > m_mapPropFileInfo;
             IndexBuilderService::Pointer m_ibs;
-        };  
+        };
     }
 }
 

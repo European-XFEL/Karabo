@@ -13,7 +13,7 @@
 #include <karabo/io/TextSerializer.hh>
 #include <karabo/util/Schema.hh>
 
-namespace karabo {  
+namespace karabo {
     namespace core {
 
         using namespace krb_log4cpp;
@@ -97,7 +97,7 @@ namespace karabo {
         void DataLogger::okStateOnEntry() {
 
             boost::system::error_code ec;
-            
+
             m_user = "."; //TODO:  Define proper user running a device. The dot is unknown user?
 
             if (!boost::filesystem::exists(get<string>("directory")))
@@ -108,7 +108,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_ERROR << "Failed to create directories : " << m_deviceToBeLogged
                             << ". code = " << ec.value() << " -- " << ec.message();
                     throw KARABO_INIT_EXCEPTION("Failed to create directories  \"" + get<string>("directory")
-                            + "/" + m_deviceToBeLogged + "\" : " + ec.message());
+                                                + "/" + m_deviceToBeLogged + "\" : " + ec.message());
                 }
             }
             if (!boost::filesystem::exists(get<string>("directory") + "/" + m_deviceToBeLogged + "/raw"))
@@ -157,7 +157,7 @@ namespace karabo {
                     string contentPath = get<string>("directory") + "/" + m_deviceToBeLogged + "/raw/archive_index.txt";
                     ofstream contentStream(contentPath.c_str(), ios::app);
                     contentStream << "-LOG " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp()
-                            << " " << m_lastDataTimestamp.getTrainId() << " " << position << " " << (m_user.empty()?".":m_user) << " " << m_lastIndex << "\n";
+                            << " " << m_lastDataTimestamp.getTrainId() << " " << position << " " << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
                     contentStream.close();
                     //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued index stream closed";
 
@@ -182,7 +182,7 @@ namespace karabo {
 
             if (deviceId != m_deviceToBeLogged) {
                 KARABO_LOG_ERROR << "slotChanged called from " << deviceId
-                                 << ", but logging only " << m_deviceToBeLogged;
+                        << ", but logging only " << m_deviceToBeLogged;
                 return;
             }
 
@@ -207,7 +207,7 @@ namespace karabo {
                 // file and thus won't touch this new index file (but start a new one).
                 this->ensureFileClosed(); // must be protected by m_configMutex
             }
-            
+
             for (size_t i = 0; i < paths.size(); ++i) {
                 const string& path = paths[i];
                 const Hash::Node& leafNode = configuration.getNode(path);
@@ -252,7 +252,7 @@ namespace karabo {
                     }
 
                     contentStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " "
-                            << t.getTrainId() << " " << position << " " << (m_user.empty()? "." : m_user) << " " << m_lastIndex << "\n";
+                            << t.getTrainId() << " " << position << " " << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
                     contentStream.close();
 
                     m_pendingLogin = false;
@@ -294,8 +294,8 @@ namespace karabo {
             }
         }
 
-        bool DataLogger::updatePropsToIndex()
-        {
+
+        bool DataLogger::updatePropsToIndex() {
             boost::filesystem::path propPath(get<string>("directory") + "/" + m_deviceToBeLogged + "/raw/properties_with_index.txt");
             if (boost::filesystem::exists(propPath)) {
                 const size_t propsize = boost::filesystem::file_size(propPath);
@@ -319,8 +319,8 @@ namespace karabo {
             return false;
         }
 
-        void DataLogger::ensureFileClosed()
-        {
+
+        void DataLogger::ensureFileClosed() {
             // We touch m_configStream and m_idxMap. Thus we have to rely that the
             // code calling this method is protected by the 'm_configMutex'
             // (as requested by documentation).
@@ -331,12 +331,13 @@ namespace karabo {
             }
 
             for (std::map<std::string, MetaData::Pointer>::iterator it = m_idxMap.begin(), endIt = m_idxMap.end();
-                    it != endIt; ++it) {
+                 it != endIt; ++it) {
                 MetaData::Pointer mdp = it->second;
                 if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
             }
             m_idxMap.clear();
         }
+
 
         void DataLogger::flushThread() {
             //------------------------------------------------- make this thread sensible to external interrupts
@@ -365,7 +366,7 @@ namespace karabo {
         }
 
 
-        void DataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {            
+        void DataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
             KARABO_LOG_FRAMEWORK_DEBUG << "slotSchemaUpdated: Schema for " << deviceId << " arrived...";
             m_currentSchema = schema;
             string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_schema.txt";

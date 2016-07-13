@@ -18,6 +18,7 @@ namespace karabo {
 
         class Statistics {
 
+
             template <class T>
             class CpuImage;
 
@@ -34,8 +35,8 @@ namespace karabo {
 
             Statistics(double min, double max, double mean, double sdev,
                        double xMin, double yMin, double zMin, double xMax, double yMax, double zMax)
-            : m_min(min), m_max(max), m_mean(mean), m_var(sdev),
-            m_xMin(xMin), m_yMin(yMin), m_zMin(zMin), m_xMax(xMax), m_yMax(yMax), m_zMax(zMax) {
+                : m_min(min), m_max(max), m_mean(mean), m_var(sdev),
+                m_xMin(xMin), m_yMin(yMin), m_zMin(zMin), m_xMax(xMax), m_yMax(yMax), m_zMax(zMax) {
             }
 
         public:

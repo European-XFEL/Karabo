@@ -33,7 +33,7 @@ namespace karabo {
          */
         class PluginLoader {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(PluginLoader, "PluginLoader", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS

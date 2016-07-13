@@ -16,48 +16,50 @@
 #include "utiltestdll.hh"
 
 namespace karabo {
-  namespace util {
+    namespace util {
 
-    class DECLSPEC_UTILTEST Vehicle {
-    public:
+        class DECLSPEC_UTILTEST Vehicle {
 
-      KARABO_CLASSINFO(Vehicle, "Vehicle", "1.0")
+            public:
 
-      KARABO_FACTORY_BASE_CLASS
+            KARABO_CLASSINFO(Vehicle, "Vehicle", "1.0")
 
-      virtual ~Vehicle(){}
+            KARABO_FACTORY_BASE_CLASS
 
-      virtual void start() = 0;
-      virtual void stop() = 0;
+            virtual ~Vehicle() {
+            }
 
-      static void expectedParameters(karabo::util::Schema& expected) {
+            virtual void start() = 0;
+            virtual void stop() = 0;
 
-        STRING_ELEMENT(expected)
-                .key("color")
-                .displayedName("Color")
-                .description("Per default paint a vehicle like this")
-                .options("red,blue,green,orange")
-                .assignmentOptional().defaultValue("red")
-                .alias(1)
-                .init()
-                .commit()
-                ;
-      }
+            static void expectedParameters(karabo::util::Schema& expected) {
 
-      void configure(const karabo::util::Hash& input) {
-        input.get("color", m_color);
-      }
+                STRING_ELEMENT(expected)
+                        .key("color")
+                        .displayedName("Color")
+                        .description("Per default paint a vehicle like this")
+                        .options("red,blue,green,orange")
+                        .assignmentOptional().defaultValue("red")
+                        .alias(1)
+                        .init()
+                        .commit()
+                        ;
+            }
 
-      virtual void reconfigure(const karabo::util::Hash& input) {
-      };
+            void configure(const karabo::util::Hash& input) {
+                input.get("color", m_color);
+            }
 
-    protected:
+            virtual void reconfigure(const karabo::util::Hash& input) {
+            };
 
-      std::string m_color;
+        protected:
 
-    };
+            std::string m_color;
 
-  }
+        };
+
+    }
 }
 
 KARABO_REGISTER_FACTORY_BASE_HH(karabo::util::Vehicle, TEMPLATE_UTILTEST, DECLSPEC_UTILTEST)

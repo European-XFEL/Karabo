@@ -28,11 +28,12 @@ namespace karabo {
 
         // Class forward (needed to prevent assignment of Hash to Attribute)
         class Hash;
-        
+
         template <class T> class GenericElement;
 
         template<typename KeyType, typename AttributesType = bool>
         class Element {
+
 
             // Grant friendship to container
             template<typename T, typename U>
@@ -279,7 +280,7 @@ namespace karabo {
                 return ValueType(karabo::util::fromString<ValueType > (this->getValueAsString()));
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)
-                        += " (string '" + this->getValueAsString() += "')"));
+                                                        += " (string '" + this->getValueAsString() += "')"));
             }
             return ValueType();
         }
@@ -302,7 +303,7 @@ namespace karabo {
                 return karabo::util::fromString<T, Cont > (value);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)
-                        += " (string '" + this->getValueAsString() += "')"));
+                                                        += " (string '" + this->getValueAsString() += "')"));
                 return Cont<T>(); // Make the compiler happy
             }
         }
@@ -419,10 +420,10 @@ namespace karabo {
         template<typename KeyType, typename AttributeType>
         void Element<KeyType, AttributeType>::setType(const Types::ReferenceType & tgtType) {
 
-            #define _KARABO_HELPER_MACRO(RefType, T)\
+#define _KARABO_HELPER_MACRO(RefType, T)\
                    case Types::RefType: m_value = this->getValueAs<T>(); break;\
                    case Types::VECTOR_##RefType: m_value = this->getValueAs<T, std::vector>(); break;
-            
+
             Types::ReferenceType srcType = this->getType();
             if (tgtType == srcType) return;
             try {
@@ -449,18 +450,18 @@ namespace karabo {
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Problems with casting"));
             }
-            #undef _KARABO_HELPER_MACRO
+#undef _KARABO_HELPER_MACRO
         }
 
         template<typename KeyType, typename AttributeType>
         inline std::string Element<KeyType, AttributeType>::getValueAsString() const {
 
-            #define _KARABO_HELPER_MACRO(RefType, CppType)\
+#define _KARABO_HELPER_MACRO(RefType, CppType)\
                     case Types::RefType: return karabo::util::toString(getValue<CppType>());\
                     case Types::VECTOR_##RefType: return karabo::util::toString(getValue<std::vector<CppType> >());
 
             // this needs to be separate macro until not all pair types are supported (i.e. complex and string)
-            #define _KARABO_HELPER_MACRO_1(RefType, CppType)\
+#define _KARABO_HELPER_MACRO_1(RefType, CppType)\
                     case Types::ARRAY_##RefType: return karabo::util::toString(getValue<std::pair<const CppType*, size_t> >());
 
             Types::ReferenceType type = this->getType();
@@ -499,8 +500,8 @@ namespace karabo {
                 default:
                     throw KARABO_CAST_EXCEPTION("Could not convert value of key \"" + m_key + "\" to string");
             }
-            #undef _KARABO_HELPER_MACRO
-            #undef _KARABO_HELPER_MACRO_1
+#undef _KARABO_HELPER_MACRO
+#undef _KARABO_HELPER_MACRO_1
         }
     }
 }

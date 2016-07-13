@@ -19,8 +19,9 @@ namespace karabo {
             this->fromHash(hash);
         }
 
+
         TimePeriod::TimePeriod(const Epochstamp& start, const Epochstamp& stop) :
-        m_Open(false), m_Start(start), m_Stop(stop) {
+            m_Open(false), m_Start(start), m_Stop(stop) {
         }
 
 

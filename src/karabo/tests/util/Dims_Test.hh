@@ -11,9 +11,11 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 class Dims_Test : public CPPUNIT_NS::TestFixture {
+
+
     CPPUNIT_TEST_SUITE(Dims_Test);
-    CPPUNIT_TEST(testDims);   
-    CPPUNIT_TEST(testArrayTools);   
+    CPPUNIT_TEST(testDims);
+    CPPUNIT_TEST(testArrayTools);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -23,10 +25,10 @@ public:
     void tearDown();
 
 private:
-    
+
     void testDims();
     void testArrayTools();
-   
+
 };
 
 #endif	/* DIMS_TEST_HH */

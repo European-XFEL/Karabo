@@ -16,21 +16,23 @@ namespace karabo {
     namespace net {
 
         class AbstractIOService {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(AbstractIOService, "AbstractIOService", "1.0")
-            
+
             virtual void run() = 0;
-            
+
             virtual void work() = 0;
-            
+
             virtual void stop() = 0;
-            
+
             virtual void post(const boost::function<void()>& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
-            
+
         protected:
+
             virtual ~AbstractIOService() {
             }
         };

@@ -22,8 +22,9 @@ using namespace boost::signals2;
 namespace karabo {
     namespace net {
 
+
         JmsChannel::JmsChannel(AJmsConnection& connection) : Channel(connection), m_jmsConnection(connection), m_filterCondition(""),
-        m_isStopped(false), m_hasAsyncHandler(false), m_syncReadTimeout(100000) {
+            m_isStopped(false), m_hasAsyncHandler(false), m_syncReadTimeout(100000) {
             m_ioService = m_jmsConnection.getIOService()->castTo<JmsIOService > ();
             m_isTransacted = MQ_FALSE;
             if (m_jmsConnection.m_acknowledgeMode == MQ_SESSION_TRANSACTED) {
@@ -34,23 +35,28 @@ namespace karabo {
             MQ_SAFE_CALL(MQCreateDestination(m_sessionHandle, m_jmsConnection.m_destinationName.c_str(), m_jmsConnection.m_destinationType, &m_destinationHandle))
         }
 
+
         JmsChannel::~JmsChannel() {
             // Close everything
             MQFreeDestination(m_destinationHandle);
             MQCloseSession(m_sessionHandle);
         }
 
+
         void JmsChannel::setFilter(const std::string& filterCondition) {
             m_filterCondition = filterCondition;
         }
 
+
         string JmsChannel::getFilter() const {
             return m_filterCondition;
         }
-        
+
+
         void JmsChannel::setTimeoutSyncRead(int milliseconds) {
             m_syncReadTimeout = milliseconds;
         }
+
 
         void JmsChannel::read(string& data, Hash& header) {
             try {
@@ -100,6 +106,7 @@ namespace karabo {
             }
         }
 
+
         void JmsChannel::read(karabo::util::Hash& body, karabo::util::Hash& header) {
             std::string s;
             try {
@@ -124,6 +131,7 @@ namespace karabo {
                 stringToHash(s, body);
             }
         }
+
 
         void JmsChannel::getProperties(Hash& properties, const MQPropertiesHandle& propertiesHandle) const {
             try {
@@ -202,11 +210,12 @@ namespace karabo {
             }
         }
 
+
         void JmsChannel::readAsyncStringHash(const ReadStringHashHandler& readHandler) {
 
             if (m_hasAsyncHandler) {
                 throw NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
-                        "if you need more handlers create a new channel on the connection and register there");
+                                              "if you need more handlers create a new channel on the connection and register there");
             }
             m_hasAsyncHandler = true;
 
@@ -219,6 +228,7 @@ namespace karabo {
             // Start listening for messages by starting an individual thread
             m_ioService->registerTextMessageChannel(this);
         }
+
 
         void JmsChannel::listenForTextMessages() {
 
@@ -237,8 +247,9 @@ namespace karabo {
             }
         }
 
+
         bool JmsChannel::signalIncomingTextMessage() {
-            
+
             cout << "GOT MESSAGE" << endl;
             try {
 
@@ -283,10 +294,11 @@ namespace karabo {
             return false;
         }
 
+
         void JmsChannel::readAsyncRawHash(const ReadRawHashHandler& readHandler) {
             if (m_hasAsyncHandler) {
                 throw NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
-                        "if you need more handlers create a new channel on the connection and register there");
+                                              "if you need more handlers create a new channel on the connection and register there");
             }
             m_hasAsyncHandler = true;
 
@@ -300,10 +312,12 @@ namespace karabo {
             m_ioService->registerBinaryMessageChannel(this);
         }
 
+
         void JmsChannel::readAsyncHashHash(const ReadHashHashHandler& handler) {
             m_readHashHashHandler = handler;
             readAsyncRawHash(boost::bind(&karabo::net::JmsChannel::rawHash2HashHash, this, _1, _2, _3, _4));
         }
+
 
         void JmsChannel::listenForBinaryMessages() {
 
@@ -322,9 +336,10 @@ namespace karabo {
             }
         }
 
+
         bool JmsChannel::signalIncomingBinaryMessage() {
-             cout << "GOT MESSAGE" << endl;
-            
+            cout << "GOT MESSAGE" << endl;
+
             try {
 
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
@@ -390,6 +405,7 @@ namespace karabo {
             return false;
         }
 
+
         void JmsChannel::write(const std::string& messageBody, const Hash& header) {
 
             try {
@@ -427,6 +443,7 @@ namespace karabo {
             }
         }
 
+
         void JmsChannel::write(const char* messageBody, const size_t& size, const Hash& header) {
 
             try {
@@ -463,6 +480,7 @@ namespace karabo {
             }
         }
 
+
         void JmsChannel::write(const karabo::util::Hash& data, const karabo::util::Hash& header) {
             string s;
             string format = getHashFormat();
@@ -476,6 +494,7 @@ namespace karabo {
                 write(&v[0], v.size(), modifiedHeader);
             }
         }
+
 
         void JmsChannel::setProperties(const Hash& properties, const MQPropertiesHandle& propertiesHandle) {
             try {
@@ -519,27 +538,33 @@ namespace karabo {
             }
         }
 
+
         void JmsChannel::setErrorHandler(const ErrorHandler& handler) {
             m_signalError.connect(handler);
         }
 
+
         void JmsChannel::waitAsync(int milliseconds, const WaitHandler& handler) {
             m_ioService->registerWaitChannel(this, handler, milliseconds);
         }
+
 
         void JmsChannel::deadlineTimer(const WaitHandler& handler, int milliseconds) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(milliseconds));
             handler(shared_from_this());
         }
 
+
         void JmsChannel::stop() {
             m_isStopped = true;
         }
+
 
         void JmsChannel::close() {
             stop();
             unregisterChannel(shared_from_this());
         }
+
 
         void JmsChannel::rawHash2HashHash(Channel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
             Hash h;

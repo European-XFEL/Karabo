@@ -17,7 +17,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(MQTcpNetworking);
 MQTcpNetworking::MQTcpNetworking() : m_numberOfMessages(10000), m_serverCount(0), m_serverPort(0) {
     using namespace std;
     using namespace karabo::util;
-    
+
     Hash tmp("a.b.c", 1, "a.b.d", vector<int>(5, 1), "a.b.e", vector<Hash > (2, Hash("a", 1)), "a.d", std::complex<double>(1.2, 4.2));
     tmp.setAttribute("a", "a1", true);
     tmp.setAttribute("a", "a2", 3.4);
@@ -25,7 +25,7 @@ MQTcpNetworking::MQTcpNetworking() : m_numberOfMessages(10000), m_serverCount(0)
     tmp.setAttribute("a.b.c", "c1", 2);
     tmp.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
     m_data = tmp;
-    
+
     Hash tmp2("policy", "LOSSLESS");
     m_header = tmp2;
 }
@@ -79,7 +79,7 @@ void MQTcpNetworking::serverReadHashHashHandler(const karabo::net::Channel::Poin
         m_serverCount++;
         channel->getConnection()->getIOService()->post(boost::bind(&MQTcpNetworking::serverPublish, this, channel));
     } else if (body.has("STOP")) {
-        std::clog << "\nSERVER:  CLIENT requests exiting together!\n" << std::endl; 
+        std::clog << "\nSERVER:  CLIENT requests exiting together!\n" << std::endl;
     }
 }
 
@@ -160,8 +160,8 @@ void MQTcpNetworking::clientChannelErrorHandler(const karabo::net::Channel::Poin
 void MQTcpNetworking::clientReadHashHashHandler(const karabo::net::Channel::Pointer& channel, karabo::util::Hash& header, karabo::util::Hash& body) {
     // inspect here the server reply.... just count
     m_clientCount++;
-    if (m_clientCount < m_numberOfMessages) { 
-        
+    if (m_clientCount < m_numberOfMessages) {
+
         channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::clientReadHashHashHandler, this, channel, _1, _2));
     } else {
         karabo::util::Hash header("headline", "*** CLIENT ***");
@@ -178,5 +178,5 @@ void MQTcpNetworking::onClientEnd(const karabo::net::Channel::Pointer& channel) 
     boost::posix_time::time_duration diff = t - m_clientTimestamp;
     double rate = double(m_clientCount) / diff.total_milliseconds();
     std::clog << "CLIENT Summary : " << diff.total_milliseconds() << " ms, rate = " << rate << " 1/ms" << std::endl;
-    channel->close();    
+    channel->close();
 }

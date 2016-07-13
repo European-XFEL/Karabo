@@ -13,6 +13,8 @@ namespace karabo {
 
 
         class PointToPoint::Producer {
+
+
             typedef std::map<Channel::Pointer, std::set<std::string> > ChannelToSlotInstanceIds;
 
         public:
@@ -66,6 +68,8 @@ namespace karabo {
 
 
         class PointToPoint::Consumer {
+
+
             typedef std::map<std::string, ConsumeHandler> SlotInstanceIds;
             // Mapping signalInstanceId into signalConnectionString like "tcp://host:port" and set of pairs of slotInstanceId and ConsumeHandler
             typedef std::map<std::string, std::pair<std::string, SlotInstanceIds> > ConnectedInstances;
@@ -135,9 +139,9 @@ namespace karabo {
 
 
         PointToPoint::Producer::Producer()
-        : m_port(0)
-        , m_connection()
-        , m_registeredChannels() {
+            : m_port(0)
+            , m_connection()
+            , m_registeredChannels() {
             m_connection = Connection::create(Hash("Tcp.port", 0, "Tcp.type", "server"));
             m_port = m_connection->startAsync(boost::bind(&PointToPoint::Producer::connectHandler, this, _1));
         }
@@ -227,7 +231,7 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
 
             for (Producer::ChannelToSlotInstanceIds::const_iterator ii = m_registeredChannels.begin();
-                    ii != m_registeredChannels.end(); ++ii) {
+                 ii != m_registeredChannels.end(); ++ii) {
 
                 const Channel::Pointer& channel = ii->first;
                 const std::set<string>& slotInstanceIds = ii->second;

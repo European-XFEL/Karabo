@@ -25,7 +25,7 @@ namespace karabo {
                     .description("The directory where the project files should be placed")
                     .assignmentOptional().defaultValue("projects")
                     .commit();
-            
+
             OVERWRITE_ELEMENT(expected).key("deviceId")
                     .setNewDefaultValue("Karabo_ProjectManager")
                     .commit();
@@ -71,6 +71,7 @@ namespace karabo {
 
         }
 
+
         /**
          The project file with the given \projectName is updated.
 
@@ -79,12 +80,12 @@ namespace karabo {
         \param[in,out] newData Vector of char is filled with concated data.
          
         \return \true, if updating successful, otherwise \false.
-        */
+         */
         bool ProjectManager::updateProjectFile(const std::string& projectName,
                                                karabo::util::Hash& metaData,
                                                std::vector<char>& newData) {
             KARABO_LOG_DEBUG << "updateProjectFile " << projectName;
-            
+
             string filename = get<string>("directory") + "/" + projectName;
             ifstream projectFile(filename.c_str(), ios::in | ios::binary);
             if (projectFile.is_open()) {
@@ -94,7 +95,7 @@ namespace karabo {
                 projectFile.seekg(0, projectFile.end);
                 int fileLength = projectFile.tellg();
                 projectFile.seekg(0, projectFile.beg);
-                
+
                 // Get meta data length
                 std::string line;
                 int metaDataLength = 0;
@@ -104,17 +105,17 @@ namespace karabo {
                         break;
                     }
                 }
-                
+
                 projectFile.seekg(metaDataLength, projectFile.beg);
                 int dataLength = fileLength - metaDataLength;
-                
+
                 // Read only data bytes
                 vector<char> data;
                 data.resize(dataLength);
                 projectFile.read(&data[0], dataLength);
-                
+
                 projectFile.close();
-                
+
                 return saveProject(projectName, metaData, data, newData);
             }
             return false;
@@ -130,7 +131,7 @@ namespace karabo {
         \param[in,out] newData Vector of char is filled with concated data.
         
         \return \true, if saving successful, otherwise \false.
-        */
+         */
         bool ProjectManager::saveProject(const std::string& projectName,
                                          const karabo::util::Hash& metaData,
                                          const std::vector<char>& data,
@@ -138,7 +139,7 @@ namespace karabo {
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer ts = karabo::io::TextSerializer<Hash>::create("Xml");
             string hashXml;
             ts->save(metaData, hashXml);
-            
+
             // Write data into project file
             string filename = get<string>("directory") + "/" + projectName;
             std::fstream file(filename.c_str(), ios::out | ios::binary);
@@ -148,7 +149,7 @@ namespace karabo {
             file << "\n";
             std::ostream& result2 = file.write(const_cast<const char*> (&data[0]), data.size());
             file.close();
-            
+
             // Read data into newData
             file.open(filename.c_str(), ios::in | ios::binary);
             std::stringstream os;
@@ -157,30 +158,31 @@ namespace karabo {
             newData.resize(os.rdbuf()->in_avail());
             os.read(&newData[0], newData.size());
             file.close();
-            
+
             return result1.good() && result2.good();
         }
+
 
         /**
          This registered slot parses the project directory and answers back to
          the registered callback function (availableProjects) in the
          GuiServerDevice sending a Hash with all project (meta) data.
-        */
+         */
         void ProjectManager::slotGetAvailableProjects() {
             KARABO_LOG_DEBUG << "slotGetAvailableProjects";
-            
+
             // Hash to store all project names and meta data as attributes
             karabo::util::Hash projects;
             TextSerializer<Hash>::Pointer ts = TextSerializer<Hash>::create("Xml");
-            
+
             // Check project directory for all projects
             boost::filesystem::path directory(get<string> ("directory"));
             std::vector<boost::filesystem::path> filenames;
             std::copy(boost::filesystem::directory_iterator(directory), boost::filesystem::directory_iterator(), back_inserter(filenames));
             std::sort(filenames.begin(), filenames.end());
-            for (std::vector<boost::filesystem::path>::const_iterator iter = filenames.begin() ; iter != filenames.end(); ++iter) {
+            for (std::vector<boost::filesystem::path>::const_iterator iter = filenames.begin(); iter != filenames.end(); ++iter) {
                 if (boost::filesystem::is_directory(*iter)) {
-                    KARABO_LOG_DEBUG << "Skip " << *iter << " as it is a directory.";          
+                    KARABO_LOG_DEBUG << "Skip " << *iter << " as it is a directory.";
                     continue;
                 }
 
@@ -190,37 +192,37 @@ namespace karabo {
                 if (projectFile.is_open()) {
                     std::string path = iter->stem().string();
                     projects.set(path, Hash());
-                    
+
                     KARABO_LOG_DEBUG << "Opened project file " << path;
-                    
+
                     std::string headerString;
                     std::string line;
                     while (std::getline(projectFile, line)) {
                         if (*line.c_str() == char(26)) break;
                         headerString.append(line);
                     }
-                    
+
                     KARABO_LOG_DEBUG << "Project meta data\n";
                     KARABO_LOG_DEBUG << headerString;
-                    
+
                     Hash p;
                     ts->load(p, headerString);
                     projects.set(path, p);
-                    
+
                     std::string projectName = iter->filename().string();
                     // Save meta data to datastructure
                     m_projectMetaData[projectName] = p;
-                    
+
                     projectFile.close();
                 } else {
                     // e.g. a file where we do not have read permissions
                     KARABO_LOG_DEBUG << "Not able to open project file " << relativePath;
                 }
             }
-            
+
             reply(projects);
         }
-        
+
 
         /**
          This registered slot creates the meta data for the new project and
@@ -232,16 +234,16 @@ namespace karabo {
          \param[in] author      Author of the project.
          \param[in] projectName Name of the project.
          \param[in] data        Binary data of the project.
-        */
+         */
         void ProjectManager::slotNewProject(const std::string& author,
                                             const std::string& projectName,
                                             const std::vector<char>& data) {
             KARABO_LOG_DEBUG << "slotNewProject " << projectName;
-            
+
             Hash metaData;
             metaData.set("version", "1.3.0");
             metaData.set("author", author);
-            
+
             karabo::util::Epochstamp epoch;
             double timestamp = epoch.toTimestamp();
             metaData.set("creationDate", timestamp);
@@ -249,17 +251,17 @@ namespace karabo {
             // checkedOut needs to be false to be send back to the author
             metaData.set("checkedOut", false);
             metaData.set("checkedOutBy", "");
-            
+
             // Store and send back to author
             vector<char> newData;
             bool success = saveProject(projectName, metaData, data, newData);
             reply(projectName, success, newData);
-            
+
             // Set true to finally store the project for others
             metaData.set("checkedOut", true);
             metaData.set("checkedOutBy", author);
             m_projectMetaData[projectName] = metaData;
-            
+
             saveProject(projectName, metaData, data, newData);
         }
 
@@ -271,27 +273,28 @@ namespace karabo {
          
          \param[in] userName    User who loads the project.
          \param[in] projectName Name of the project.
-        */
+         */
         void ProjectManager::slotLoadProject(const std::string& userName,
                                              const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotLoadProject " << projectName;
-            
+
             std::vector<char> data;
             karabo::io::loadFromFile(data, get<string>("directory") + "/" + projectName);
-            
+
             Hash &metaData = m_projectMetaData[projectName];
             reply(projectName, metaData, data);
-            
+
             // Update meta data, if this is the first time this project is loaded
             if (!metaData.get<bool >("checkedOut")) {
                 metaData.set("checkedOut", true);
                 metaData.set("checkedOutBy", userName);
-                
+
                 // Update project file with new meta data
                 vector<char> newData;
                 updateProjectFile(projectName, metaData, newData);
             }
         }
+
 
         /**
          This registered slot saves the requested project to the project directory
@@ -301,27 +304,27 @@ namespace karabo {
          \param[in] userName    User who loads the project.
          \param[in] projectName Name of the project.
          \param[in] data        Binary data of the project.
-        */
+         */
         void ProjectManager::slotSaveProject(const std::string& userName,
                                              const std::string& projectName,
                                              const std::vector<char>& data) {
             KARABO_LOG_DEBUG << "slotSaveProject " << userName << " " << projectName;
-            
+
             // Update meta data and save project
             Hash &metaData = m_projectMetaData[projectName];
-            
+
             if (userName == metaData.get<string >("checkedOutBy") && metaData.get<bool >("checkedOut")) {
                 metaData.set("checkedOut", false);
             }
-            
+
             karabo::util::Epochstamp epoch;
             double timestamp = epoch.toTimestamp();
             metaData.set("lastModified", timestamp);
-            
+
             vector<char> newData;
             bool success = saveProject(projectName, metaData, data, newData);
             reply(projectName, success, newData);
-            
+
             metaData.set("checkedOut", true);
             // Update project file with new meta data
             saveProject(projectName, metaData, data, newData);
@@ -335,16 +338,16 @@ namespace karabo {
          
          \param[in] userName    User who loads the project.
          \param[in] projectName Name of the project.
-        */
+         */
         void ProjectManager::slotCloseProject(const std::string& userName,
                                               const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotCloseProject " << userName << " " << projectName;
-            
+
             Hash &metaData = m_projectMetaData[projectName];
             KARABO_LOG_DEBUG << metaData;
-            
+
             if (userName != metaData.get<string >("checkedOutBy")) return;
-            
+
             metaData.set("checkedOut", false);
             metaData.set("checkedOutBy", "");
 

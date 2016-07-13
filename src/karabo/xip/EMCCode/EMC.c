@@ -27,7 +27,7 @@ detector.dat, quaternion.dat, photons.dat, [start_intensity.dat]
 makes:
 finish_intensity.dat, EMC.log
 
-*/
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,658 +37,597 @@ finish_intensity.dat, EMC.log
 #define EULER 0.57721566490153286
 #define P_MIN .001
 
-double rot[3][3] ;
-double (*quat)[5] ;
-double (*pix)[3] ;
-int (*stop)[3] ;
-int *ones, *multi, **place_ones, **place_multi, **count ;
-double ***intens1, ***intens2, ***inter_weight, *s, *u, *p ;
-float **w_in, **w_out ;
-int q_max, size, num_pix, num_stop, num_rot, num_data ;
-double mean_count, rescale, intens_norm ;
+double rot[3][3];
+double (*quat)[5];
+double (*pix)[3];
+int (*stop)[3];
+int *ones, *multi, **place_ones, **place_multi, **count;
+double ***intens1, ***intens2, ***inter_weight, *s, *u, *p;
+float **w_in, **w_out;
+int q_max, size, num_pix, num_stop, num_rot, num_data;
+double mean_count, rescale, intens_norm;
 
-int setup() ;
-void initialize() ;
-double emc() ;
-void expand() ;
-double maximize() ;
-void compress() ;
-void sym_intens() ;
-void print_intens() ;
-void free_mem() ;
-void make_rot( int ) ;
+int setup();
+void initialize();
+double emc();
+void expand();
+double maximize();
+void compress();
+void sym_intens();
+void print_intens();
+void free_mem();
+void make_rot(int);
+
+int main(int argc, char* argv[]) {
+    int iter, i;
+    double rms_change;
+    FILE *fp;
+
+    if (argc == 2)
+        iter = atoi(argv[1]);
+    else {
+        printf("expected one argument: iter\n");
+        return 0;
+    }
+
+    if (!setup())
+        return 0;
+
+    initialize();
+
+    fp = fopen("EMC.log", "w");
+    fprintf(fp, "num_rot = %d    num_data = %d    num_pix = %d    num_stop = %d\n", num_rot, num_data, num_pix, num_stop);
+    fprintf(fp, "mean_count = %f    oriented_info_rate = %f\n\n", mean_count, (1. - EULER) * mean_count);
+    fclose(fp);
+
+    for (i = 1; i <= iter; ++i) {
+        rms_change = emc();
+
+        fp = fopen("EMC.log", "a");
+        fprintf(fp, "iter = %d    rms_change = %f\n\n", i, rms_change);
+        fclose(fp);
+
+        print_intens();
+    }
+
+    free_mem();
+
+    return 0;
+}
+
+double emc() {
+    double info, change = 0., d;
+    int x, y, z;
+    time_t t1, t2;
+    FILE *fp;
+
+    time(&t1);
+
+    expand();
+
+    info = maximize();
+
+    compress();
+
+    sym_intens();
+
+    time(&t2);
+
+    fp = fopen("EMC.log", "a");
+    fprintf(fp, "    info_rate_ratio = %f   iter_time = %.0f sec\n", 1. - info / ((1. - EULER) * mean_count), difftime(t2, t1));
+    fclose(fp);
+
+    for (x = 0; x < size; ++x)
+        for (y = 0; y < size; ++y)
+            for (z = 0; z < size; ++z) {
+                d = intens1[x][y][z] - intens2[x][y][z];
+                change += d*d;
+                intens1[x][y][z] = intens2[x][y][z];
+            }
+
+    return (num_pix / intens_norm) * sqrt(change / (size * size * size));
+}
+
+double maximize() {
+    int d, r, t;
+    double max_exp, p_sum;
+    double mutual_info = 0.;
+    double rot_intens, total_intens = 0.;
+    double weight;
+    double w;
+    int *place_ones_d, *place_multi_d, *count_d;
+    float *w_in_r, *w_out_r;
+
+    for (r = 0; r < num_rot; ++r) {
+        rot_intens = 0.;
+        for (t = 0; t < num_pix; ++t)
+            rot_intens += w_in[r][t];
+
+        total_intens += quat[r][4] * rot_intens;
+    }
+
+    rescale = mean_count / total_intens;
+
+    for (r = 0; r < num_rot; ++r) {
+        s[r] = 0.;
+
+        weight = quat[r][4];
+
+        u[r] = log(weight);
+        for (t = 0; t < num_pix; ++t) {
+            w = w_in[r][t] * rescale;
+            u[r] -= w;
+            w_in[r][t] = log(w);
+
+            w_out[r][t] = 0.;
+        }
+    }
+
+    for (d = 0; d < num_data; ++d) {
+        place_ones_d = place_ones[d];
+        place_multi_d = place_multi[d];
+        count_d = count[d];
+
+        max_exp = -100. * num_pix;
+        for (r = 0; r < num_rot; ++r) {
+            p[r] = u[r];
+
+            w_in_r = w_in[r];
+
+            for (t = 0; t < ones[d]; ++t)
+                p[r] += w_in_r[place_ones_d[t]];
+
+            for (t = 0; t < multi[d]; ++t)
+                p[r] += count_d[t] * w_in_r[place_multi_d[t]];
+
+            if (p[r] > max_exp)
+                max_exp = p[r];
+        }
+
+        p_sum = 0.;
+        for (r = 0; r < num_rot; ++r) {
+            p[r] = exp(p[r] - max_exp);
+            p_sum += p[r];
+        }
+
+        for (r = 0; r < num_rot; ++r) {
+            p[r] /= p_sum;
+
+            if (p[r] > 0.)
+                mutual_info += p[r] * log(p[r] / quat[r][4]);
+
+            if (p[r] < P_MIN)
+                continue;
+
+            s[r] += p[r];
+
+            w_out_r = w_out[r];
+
+            for (t = 0; t < ones[d]; ++t)
+                w_out_r[place_ones_d[t]] += p[r];
+
+            for (t = 0; t < multi[d]; ++t)
+                w_out_r[place_multi_d[t]] += p[r] * count_d[t];
+        }
+    }
+
+    for (r = 0; r < num_rot; ++r) {
+        if (s[r] == 0.)
+            continue;
+
+        for (t = 0; t < num_pix; ++t)
+            w_out[r][t] /= s[r];
+    }
+
+    return mutual_info / num_data;
+}
+
+void initialize() {
+    int d, t, r;
+    double photon_count, total_count = 0.;
+    double total_weight = 0.;
+
+    for (d = 0; d < num_data; ++d) {
+        photon_count = ones[d];
+        for (t = 0; t < multi[d]; ++t)
+            photon_count += count[d][t];
+
+        total_count += photon_count;
+    }
+
+    mean_count = total_count / num_data;
+
+    for (r = 0; r < num_rot; ++r)
+        total_weight += quat[r][4];
+
+    for (r = 0; r < num_rot; ++r)
+        quat[r][4] /= total_weight;
+}
+
+void expand() {
+    int r, t, i, j;
+    double rot_pix[3];
+    int x, y, z;
+    double tx, ty, tz, fx, fy, fz, cx, cy, cz;
+
+    for (r = 0; r < num_rot; ++r) {
+        make_rot(r);
+
+        for (t = 0; t < num_pix; ++t) {
+            for (i = 0; i < 3; ++i) {
+                rot_pix[i] = 0.;
+                for (j = 0; j < 3; ++j)
+                    rot_pix[i] += rot[i][j] * pix[t][j];
+            }
+
+            tx = rot_pix[0] + q_max;
+            ty = rot_pix[1] + q_max;
+            tz = rot_pix[2] + q_max;
+
+            x = tx;
+            y = ty;
+            z = tz;
+
+            fx = tx - x;
+            fy = ty - y;
+            fz = tz - z;
+
+            cx = 1. - fx;
+            cy = 1. - fy;
+            cz = 1. - fz;
+
+            w_in[r][t] = cx * (cy * (cz * intens1[x][y][z] + fz * intens1[x][y][z + 1]) + fy * (cz * intens1[x][y + 1][z] + fz * intens1[x][y + 1][z + 1])) + fx * (cy * (cz * intens1[x + 1][y][z] + fz * intens1[x + 1][y][z + 1]) + fy * (cz * intens1[x + 1][y + 1][z] + fz * intens1[x + 1][y + 1][z + 1]));
+        }
+    }
+}
+
+void compress() {
+    int r, t, i, j;
+    double rot_pix[3];
+    int x, y, z;
+    double tx, ty, tz, fx, fy, fz, cx, cy, cz;
+    double w, f;
+    double norm;
+
+    for (x = 0; x < size; ++x)
+        for (y = 0; y < size; ++y)
+            for (z = 0; z < size; ++z) {
+                inter_weight[x][y][z] = 0.;
+                intens2[x][y][z] = 0.;
+            }
+
+    for (r = 0; r < num_rot; ++r) {
+        if (s[r] == 0.)
+            continue;
+
+        make_rot(r);
+
+        for (t = 0; t < num_pix; ++t) {
+            for (i = 0; i < 3; ++i) {
+                rot_pix[i] = 0.;
+                for (j = 0; j < 3; ++j)
+                    rot_pix[i] += rot[i][j] * pix[t][j];
+            }
+
+            tx = rot_pix[0] + q_max;
+            ty = rot_pix[1] + q_max;
+            tz = rot_pix[2] + q_max;
+
+            x = tx;
+            y = ty;
+            z = tz;
+
+            fx = tx - x;
+            fy = ty - y;
+            fz = tz - z;
+
+            cx = 1. - fx;
+            cy = 1. - fy;
+            cz = 1. - fz;
+
+            w = w_out[r][t];
+
+            f = cx * cy*cz;
+            inter_weight[x][y][z] += f;
+            intens2[x][y][z] += f * w;
+
+            f = cx * cy*fz;
+            inter_weight[x][y][z + 1] += f;
+            intens2[x][y][z + 1] += f * w;
+
+            f = cx * fy*cz;
+            inter_weight[x][y + 1][z] += f;
+            intens2[x][y + 1][z] += f * w;
+
+            f = cx * fy*fz;
+            inter_weight[x][y + 1][z + 1] += f;
+            intens2[x][y + 1][z + 1] += f * w;
+
+            f = fx * cy*cz;
+            inter_weight[x + 1][y][z] += f;
+            intens2[x + 1][y][z] += f * w;
+
+            f = fx * cy*fz;
+            inter_weight[x + 1][y][z + 1] += f;
+            intens2[x + 1][y][z + 1] += f * w;
+
+            f = fx * fy*cz;
+            inter_weight[x + 1][y + 1][z] += f;
+            intens2[x + 1][y + 1][z] += f * w;
+
+            f = fx * fy*fz;
+            inter_weight[x + 1][y + 1][z + 1] += f;
+            intens2[x + 1][y + 1][z + 1] += f * w;
+        }
+    }
+
+    norm = intens_norm / mean_count;
+    for (x = 0; x < size; ++x)
+        for (y = 0; y < size; ++y)
+            for (z = 0; z < size; ++z)
+                if (inter_weight[x][y][z] != 0.)
+                    intens2[x][y][z] *= norm / inter_weight[x][y][z];
+}
+
+void sym_intens() {
+    int x, y, z;
+    double ave_intens;
+
+    for (x = 0; x < size; ++x)
+        for (y = 0; y < size; ++y)
+            for (z = 0; z < q_max; ++z) {
+                ave_intens = .5 * (intens2[x][y][z] + intens2[size - x - 1][size - y - 1][size - z - 1]);
+                intens2[x][y][z] = ave_intens;
+                intens2[size - x - 1][size - y - 1][size - z - 1] = ave_intens;
+            }
+
+    for (x = 0; x < size; ++x)
+        for (y = 0; y < q_max; ++y) {
+            ave_intens = .5 * (intens2[x][y][q_max] + intens2[size - x - 1][size - y - 1][q_max]);
+            intens2[x][y][q_max] = ave_intens;
+            intens2[size - x - 1][size - y - 1][q_max] = ave_intens;
+        }
+
+    for (x = 0; x < q_max; ++x) {
+        ave_intens = .5 * (intens2[x][q_max][q_max] + intens2[size - x - 1][q_max][q_max]);
+        intens2[x][q_max][q_max] = ave_intens;
+        intens2[size - x - 1][q_max][q_max] = ave_intens;
+    }
+}
+
+void print_intens() {
+    FILE *fp;
+    int x, y, z;
+    int t;
+
+    fp = fopen("finish_intensity.dat", "w");
+
+    for (t = 0; t < num_stop; ++t)
+        intens2[stop[t][0]][stop[t][1]][stop[t][2]] = -1.;
+
+    for (x = 0; x < size; ++x)
+        for (y = 0; y < size; ++y) {
+            for (z = 0; z < size; ++z)
+                fprintf(fp, "%21.15e ", intens2[x][y][z]);
+
+            fprintf(fp, "\n");
+        }
+
+    fclose(fp);
+}
+
+int setup() {
+    FILE *fp;
+    int i, j, k, d, r, t;
+    int rand_start = 0;
+
+    fp = fopen("detector.dat", "r");
+    if (!fp) {
+        printf("cannot open detector.dat\n");
+        return 0;
+    }
+
+    fscanf(fp, "%d %d %d", &q_max, &num_pix, &num_stop);
+
+    size = 2 * q_max + 1;
+
+    pix = malloc(num_pix * sizeof (*pix));
+
+    for (t = 0; t < num_pix; ++t)
+        for (i = 0; i < 3; ++i)
+            fscanf(fp, "%lf", &pix[t][i]);
+
+    stop = malloc(num_stop * sizeof (*stop));
+
+    for (t = 0; t < num_stop; ++t)
+        for (i = 0; i < 3; ++i) {
+            fscanf(fp, "%d", &stop[t][i]);
+            stop[t][i] += q_max;
+        }
+
+    fclose(fp);
+
+    fp = fopen("start_intensity.dat", "r");
+    if (!fp) {
+        rand_start = 1;
+        srand(time(0));
+    }
+
+    intens1 = malloc(size * sizeof (double**));
+    intens2 = malloc(size * sizeof (double**));
+    inter_weight = malloc(size * sizeof (double**));
+    for (i = 0; i < size; ++i) {
+        intens1[i] = malloc(size * sizeof (double*));
+        intens2[i] = malloc(size * sizeof (double*));
+        inter_weight[i] = malloc(size * sizeof (double*));
+
+        for (j = 0; j < size; ++j) {
+            intens1[i][j] = malloc(size * sizeof (double));
+            intens2[i][j] = malloc(size * sizeof (double));
+            inter_weight[i][j] = malloc(size * sizeof (double));
+
+            if (!rand_start)
+                for (k = 0; k < size; ++k)
+                    fscanf(fp, "%lf", &intens1[i][j][k]);
+            else
+                for (k = 0; k < size; ++k)
+                    intens1[i][j][k] = ((double) rand()) / RAND_MAX;
+        }
+    }
+
+    if (!rand_start) {
+        for (t = 0; t < num_stop; ++t)
+            intens1[stop[t][0]][stop[t][1]][stop[t][2]] = 0.;
+
+        fclose(fp);
+    }
+
+    fp = fopen("quaternion.dat", "r");
+    if (!fp) {
+        printf("cannot open quaternion.dat\n");
+        return 0;
+    }
+
+    fscanf(fp, "%d", &num_rot);
+
+    quat = malloc(num_rot * sizeof (*quat));
+
+    for (r = 0; r < num_rot; ++r)
+        for (i = 0; i < 5; ++i)
+            fscanf(fp, "%lf", &quat[r][i]);
+
+    fclose(fp);
+
+    fp = fopen("photons.dat", "r");
+    if (!fp) {
+        printf("cannot open photons.dat\n");
+        return 0;
+    }
+
+    fscanf(fp, "%d %lf", &num_data, &intens_norm);
+
+    ones = malloc(num_data * sizeof (int*));
+    place_ones = malloc(num_data * sizeof (int**));
+    multi = malloc(num_data * sizeof (int*));
+    place_multi = malloc(num_data * sizeof (int**));
+    count = malloc(num_data * sizeof (int**));
+
+    for (d = 0; d < num_data; ++d) {
+        fscanf(fp, "%d", &ones[d]);
+
+        place_ones[d] = malloc(ones[d] * sizeof (int*));
+
+        for (t = 0; t < ones[d]; ++t)
+            fscanf(fp, "%d", &place_ones[d][t]);
 
 
-int main(int argc, char* argv[])
-	{
-	int iter, i ;
-	double rms_change ;
-	FILE *fp ;
-	
-	if ( argc == 2 )
-		iter = atoi(argv[1]) ;
-	else
-		{
-		printf("expected one argument: iter\n") ;
-		return 0 ;
-		}
-		
-	if (!setup())
-		return 0 ;
-		
-	initialize() ;
-	
-	fp = fopen("EMC.log", "w") ;
-	fprintf(fp, "num_rot = %d    num_data = %d    num_pix = %d    num_stop = %d\n", num_rot, num_data, num_pix, num_stop) ;
-	fprintf(fp, "mean_count = %f    oriented_info_rate = %f\n\n", mean_count, (1.-EULER) * mean_count ) ;
-	fclose(fp) ;
-	
-	for (i = 1 ; i <= iter ; ++i)
-		{
-		rms_change = emc() ;
-		
-		fp = fopen("EMC.log", "a") ;
-		fprintf(fp, "iter = %d    rms_change = %f\n\n", i, rms_change) ;
-		fclose(fp) ;
-		
-		print_intens() ;
-		}
-	
-	free_mem() ;
-	
-	return 0 ;
-	}
-	
-	
-double emc()
-	{
-	double info, change = 0., d ;
-	int x, y, z ;
-	time_t t1, t2 ;
-	FILE *fp ;
-	
-	time(&t1) ;
-	
-	expand() ;
-	
-	info = maximize() ;
-	
-	compress() ;
-	
-	sym_intens() ;
-	
-	time(&t2) ;
-		
-	fp = fopen("EMC.log", "a") ;
-	fprintf(fp, "    info_rate_ratio = %f   iter_time = %.0f sec\n", 1. - info / ((1.-EULER) * mean_count), difftime(t2, t1)) ;
-	fclose(fp) ;
-	
-	for (x = 0 ; x < size ; ++x)
-	for (y = 0 ; y < size ; ++y)
-	for (z = 0 ; z < size ; ++z)
-		{
-		d = intens1[x][y][z] - intens2[x][y][z] ;
-		change += d*d ;
-		intens1[x][y][z] = intens2[x][y][z] ;
-		}
-	
-	return (num_pix / intens_norm) * sqrt( change / (size*size*size) ) ;
-	}
-	
-	
-double maximize()
-	{
-	int d, r, t ;
-	double max_exp, p_sum ;
-	double mutual_info = 0. ;
-	double rot_intens, total_intens = 0. ;
-	double weight ;
-	double w ;
-	int *place_ones_d, *place_multi_d, *count_d ;
-	float *w_in_r, *w_out_r ;
-	
-	for (r = 0 ; r < num_rot ; ++r)
-		{
-		rot_intens = 0. ;
-		for (t = 0 ; t < num_pix ; ++t)
-			rot_intens += w_in[r][t] ;
-			
-		total_intens += quat[r][4] * rot_intens ;
-		}
-		
-	rescale = mean_count / total_intens ;
-	
-	for (r = 0 ; r < num_rot ; ++r)
-		{
-		s[r] = 0. ;
-		
-		weight = quat[r][4] ;
-		
-		u[r] = log(weight) ;
-		for (t = 0 ; t < num_pix ; ++t)
-			{
-			w = w_in[r][t] * rescale ;
-			u[r] -= w ;
-			w_in[r][t] = log(w) ;
-			
-			w_out[r][t] = 0. ;
-			}
-		}
-	
-	for (d = 0 ; d < num_data ; ++d)
-		{
-		place_ones_d = place_ones[d] ;
-		place_multi_d = place_multi[d] ;
-		count_d = count[d] ;
-		
-		max_exp = -100. * num_pix ;
-		for (r = 0 ; r < num_rot ; ++r)
-			{
-			p[r] = u[r] ;
-			
-			w_in_r = w_in[r] ;
-			
-			for (t = 0 ; t < ones[d] ; ++t)
-				p[r] += w_in_r[place_ones_d[t]] ;
-				
-			for (t = 0 ; t < multi[d] ; ++t)
-				p[r] += count_d[t] * w_in_r[place_multi_d[t]] ;
-				
-			if (p[r] > max_exp)
-				max_exp = p[r] ;
-			}
-		
-		p_sum = 0. ;
-		for (r = 0 ; r < num_rot ; ++r)
-			{
-			p[r] = exp(p[r] - max_exp) ;
-			p_sum += p[r] ;
-			}
-			
-		for (r = 0 ; r < num_rot ; ++r)
-			{
-			p[r] /= p_sum ;
-			
-			if (p[r] > 0.)
-				mutual_info += p[r] * log(p[r] / quat[r][4]) ;
-			
-			if (p[r] < P_MIN)
-				continue ;
-				
-			s[r] += p[r] ;
-				
-			w_out_r = w_out[r] ;
-			
-			for (t = 0 ; t < ones[d] ; ++t)
-				w_out_r[place_ones_d[t]] += p[r] ;
-				
-			for (t = 0 ; t < multi[d] ; ++t)
-				w_out_r[place_multi_d[t]] += p[r] * count_d[t] ;
-			}
-		}
-	
-	for (r = 0 ; r < num_rot ; ++r)
-		{
-		if (s[r] == 0.)
-			continue ;
-			
-		for (t = 0 ; t < num_pix ; ++t)
-			w_out[r][t] /= s[r] ;
-		}
-	
-	return mutual_info / num_data ;
-	}
-	
-	
-void initialize()
-	{
-	int d, t, r ;
-	double photon_count, total_count = 0. ;
-	double total_weight = 0. ;
-	
-	for (d = 0 ; d < num_data ; ++d)
-		{
-		photon_count = ones[d] ;
-		for (t = 0 ; t < multi[d] ; ++t)
-			photon_count += count[d][t] ;
-		
-		total_count += photon_count ;
-		}
-		
-	mean_count = total_count / num_data ;
-	
-	for (r = 0 ; r < num_rot ; ++r)
-		total_weight += quat[r][4] ;
-		
-	for (r = 0 ; r < num_rot ; ++r)
-		quat[r][4] /= total_weight ;
-	}
-	
-	
-void expand()
-	{
-	int r, t, i, j ;
-	double rot_pix[3] ;
-	int x, y, z ;
-	double tx, ty, tz, fx, fy, fz, cx, cy, cz ;
-	
-	for (r = 0 ; r < num_rot ; ++r)
-		{
-		make_rot(r) ;
-		
-		for (t = 0 ; t < num_pix ; ++t)
-			{
-			for (i = 0 ; i < 3 ; ++i)
-				{
-				rot_pix[i] = 0. ;
-				for (j = 0 ; j < 3 ; ++j)
-					rot_pix[i] += rot[i][j]*pix[t][j] ;
-				}
-				
-			tx = rot_pix[0] + q_max ;
-			ty = rot_pix[1] + q_max ;
-			tz = rot_pix[2] + q_max ;
-			
-			x = tx ;
-			y = ty ;
-			z = tz ;
-			
-			fx = tx - x ;
-			fy = ty - y ;
-			fz = tz - z ;
-			
-			cx = 1. - fx ;
-			cy = 1. - fy ;
-			cz = 1. - fz ;
-			
-			w_in[r][t] = cx*(cy*(cz*intens1[x][y][z] + fz*intens1[x][y][z+1]) + fy*(cz*intens1[x][y+1][z] + fz*intens1[x][y+1][z+1])) + fx*(cy*(cz*intens1[x+1][y][z] + fz*intens1[x+1][y][z+1]) + fy*(cz*intens1[x+1][y+1][z] + fz*intens1[x+1][y+1][z+1])) ;
-			}
-		}
-	}
-	
-	
-void compress()
-	{
-	int r, t, i, j ;
-	double rot_pix[3] ;
-	int x, y, z ;
-	double tx, ty, tz, fx, fy, fz, cx, cy, cz ;
-	double w, f ;
-	double norm ;
-		
-	for (x = 0 ; x < size ; ++x)
-	for (y = 0 ; y < size ; ++y)
-	for (z = 0 ; z < size ; ++z)
-		{
-		inter_weight[x][y][z] = 0. ;
-		intens2[x][y][z] = 0. ;
-		}
-	
-	for (r = 0 ; r < num_rot ; ++r)
-		{
-		if (s[r] == 0.)
-			continue ;
-			
-		make_rot(r) ;
-		
-		for (t = 0 ; t < num_pix ; ++t)
-			{
-			for (i = 0 ; i < 3 ; ++i)
-				{
-				rot_pix[i] = 0. ;
-				for (j = 0 ; j < 3 ; ++j)
-					rot_pix[i] += rot[i][j]*pix[t][j] ;
-				}
-				
-			tx = rot_pix[0] + q_max ;
-			ty = rot_pix[1] + q_max ;
-			tz = rot_pix[2] + q_max ;
-			
-			x = tx ;
-			y = ty ;
-			z = tz ;
-			
-			fx = tx - x ;
-			fy = ty - y ;
-			fz = tz - z ;
-			
-			cx = 1. - fx ;
-			cy = 1. - fy ;
-			cz = 1. - fz ;
-			
-			w = w_out[r][t] ;
-			
-			f = cx*cy*cz ;
-			inter_weight[x][y][z] += f ;
-			intens2[x][y][z] += f * w ;
-			
-			f = cx*cy*fz ;
-			inter_weight[x][y][z+1] += f ;
-			intens2[x][y][z+1] += f * w ;
-			
-			f = cx*fy*cz ;
-			inter_weight[x][y+1][z] += f ;
-			intens2[x][y+1][z] += f * w ;
-			
-			f = cx*fy*fz ;
-			inter_weight[x][y+1][z+1] += f ;
-			intens2[x][y+1][z+1] += f * w ;
-			
-			f = fx*cy*cz ;
-			inter_weight[x+1][y][z] += f ;
-			intens2[x+1][y][z] += f * w ;
-			
-			f = fx*cy*fz ;
-			inter_weight[x+1][y][z+1] += f ;
-			intens2[x+1][y][z+1] += f * w ;
-			
-			f = fx*fy*cz ;
-			inter_weight[x+1][y+1][z] += f ;
-			intens2[x+1][y+1][z] += f * w ;
-			
-			f = fx*fy*fz ;
-			inter_weight[x+1][y+1][z+1] += f ;
-			intens2[x+1][y+1][z+1] += f * w ;
-			}
-		}
-		
-	norm = intens_norm / mean_count ;
-	for (x = 0 ; x < size ; ++x)
-	for (y = 0 ; y < size ; ++y)
-	for (z = 0 ; z < size ; ++z)
-		if (inter_weight[x][y][z] != 0.)
-			intens2[x][y][z] *= norm / inter_weight[x][y][z] ;
-	}
-	
-	
-void sym_intens()
-	{
-	int x, y, z ;
-	double ave_intens ;
-	
-	for (x = 0 ; x < size ; ++x)
-	for (y = 0 ; y < size ; ++y)
-	for (z = 0 ; z < q_max ; ++z)
-		{
-		ave_intens = .5 * (intens2[x][y][z] + intens2[size-x-1][size-y-1][size-z-1]) ;
-		intens2[x][y][z] = ave_intens ;
-		intens2[size-x-1][size-y-1][size-z-1] = ave_intens ;
-		}
-		
-	for (x = 0 ; x < size ; ++x)
-	for (y = 0 ; y < q_max ; ++y)
-		{
-		ave_intens = .5 * (intens2[x][y][q_max] + intens2[size-x-1][size-y-1][q_max]) ;
-		intens2[x][y][q_max] = ave_intens ;
-		intens2[size-x-1][size-y-1][q_max] = ave_intens ;
-		}
-		
-	for (x = 0 ; x < q_max ; ++x)
-		{
-		ave_intens = .5 * (intens2[x][q_max][q_max] + intens2[size-x-1][q_max][q_max]) ;
-		intens2[x][q_max][q_max] = ave_intens ;
-		intens2[size-x-1][q_max][q_max] = ave_intens ;
-		}
-	}
-	
-	
-void print_intens()
-	{
-	FILE *fp ;
-	int x, y, z ;
-	int t ;
-	
-	fp = fopen("finish_intensity.dat", "w") ;
-	
-	for (t = 0 ; t < num_stop ; ++t)
-		intens2[stop[t][0]][stop[t][1]][stop[t][2]] = -1. ;
-	
-	for (x = 0 ; x < size ; ++x)
-	for (y = 0 ; y < size ; ++y)
-		{
-		for (z = 0 ; z < size ; ++z)
-			fprintf(fp, "%21.15e ", intens2[x][y][z]) ;
-			
-		fprintf(fp, "\n") ;
-		}
-		
-	fclose(fp) ;
-	}
-	
-	
-int setup()
-	{
-	FILE *fp ;
-	int i, j, k, d, r, t ;
-	int rand_start = 0 ;
-	
-	fp = fopen("detector.dat", "r") ;
-	if (!fp)
-		{
-		printf("cannot open detector.dat\n") ;
-		return 0 ;
-		}
-		
-	fscanf(fp, "%d %d %d", &q_max, &num_pix, &num_stop) ;
-	
-	size = 2*q_max + 1 ;
-	
-	pix = malloc(num_pix * sizeof(*pix)) ;
-	
-	for (t = 0 ; t < num_pix ; ++t)
-	for (i = 0 ; i < 3 ; ++i)
-		fscanf(fp, "%lf", &pix[t][i]) ;
-		
-	stop = malloc(num_stop * sizeof(*stop)) ;
-	
-	for (t = 0 ; t < num_stop ; ++t)
-	for (i = 0 ; i < 3 ; ++i)
-		{
-		fscanf(fp, "%d", &stop[t][i]) ;
-		stop[t][i] += q_max ;
-		}
-	
-	fclose(fp) ;
-	
-	fp = fopen("start_intensity.dat", "r") ;
-	if (!fp)
-		{
-		rand_start = 1 ;
-		srand( time(0) ) ;
-		}
-	
-	intens1 = malloc(size * sizeof(double**)) ;
-	intens2 = malloc(size * sizeof(double**)) ;
-	inter_weight = malloc(size * sizeof(double**)) ;
-	for (i = 0 ; i < size ; ++i)
-		{
-		intens1[i] = malloc(size * sizeof(double*)) ;
-		intens2[i] = malloc(size * sizeof(double*)) ;
-		inter_weight[i] = malloc(size * sizeof(double*)) ;
-		
-		for (j = 0 ; j < size ; ++j)
-			{
-			intens1[i][j] = malloc(size * sizeof(double)) ;
-			intens2[i][j] = malloc(size * sizeof(double)) ;
-			inter_weight[i][j] = malloc(size * sizeof(double)) ;
-			
-			if (!rand_start)
-				for (k = 0 ; k < size ; ++k)
-					fscanf(fp, "%lf", &intens1[i][j][k]) ;
-			else
-				for (k = 0 ; k < size ; ++k)
-					intens1[i][j][k] = ((double) rand()) / RAND_MAX ;
-			}
-		}
-		
-	if (!rand_start)
-		{
-		for (t = 0 ; t < num_stop ; ++t)
-	 		intens1[stop[t][0]][stop[t][1]][stop[t][2]] = 0. ;
-		
-		fclose(fp) ;
-		}
-	
-	fp = fopen("quaternion.dat", "r") ;
-	if (!fp)
-		{
-		printf("cannot open quaternion.dat\n") ;
-		return 0 ;
-		}
-		
-	fscanf(fp, "%d", &num_rot) ;
-	
-	quat = malloc(num_rot * sizeof(*quat)) ;
-	
-	for (r = 0 ; r < num_rot ; ++r)
-	for (i = 0 ; i < 5 ; ++i)
-		fscanf(fp, "%lf", &quat[r][i]) ;
-	
-	fclose(fp) ;
-	
-	fp = fopen("photons.dat", "r") ;
-	if (!fp)
-		{
-		printf("cannot open photons.dat\n") ;
-		return 0 ;
-		}
-		
-	fscanf(fp, "%d %lf", &num_data, &intens_norm) ;
-	
-	ones = malloc(num_data * sizeof(int*)) ;
-	place_ones = malloc(num_data * sizeof(int**)) ;
-	multi = malloc(num_data * sizeof(int*)) ;
-	place_multi = malloc(num_data * sizeof(int**)) ;
-	count = malloc(num_data * sizeof(int**)) ;
-	
-	for (d = 0 ; d < num_data ; ++d)
-		{
-		fscanf(fp, "%d", &ones[d]) ;
-		
-		place_ones[d] = malloc(ones[d] * sizeof(int*)) ;
-		
-		for (t = 0 ; t < ones[d] ; ++t)
-			fscanf(fp, "%d", &place_ones[d][t]) ;
-		
-		
-		fscanf(fp, "%d", &multi[d]) ;
-		
-		place_multi[d] = malloc(multi[d] * sizeof(int*)) ;
-		count[d] = malloc(multi[d] * sizeof(int*)) ;
-	
-		for (t = 0 ; t < multi[d] ; ++t)
-			fscanf(fp, "%d %d", &place_multi[d][t], &count[d][t]) ;
-		}
-	
-	fclose(fp) ;
-	
-	w_in = malloc(num_rot * sizeof(double*)) ;
-	w_out = malloc(num_rot * sizeof(double*)) ;
-	s = malloc(num_rot * sizeof(double)) ;
-	u = malloc(num_rot * sizeof(double)) ;
-	p = malloc(num_rot * sizeof(double)) ;
-	
-	for (r = 0 ; r < num_rot ; ++r)
-		{
-		w_in[r] = malloc(num_pix * sizeof(double)) ;
-		if (w_in[r] == NULL)
-			{
-			printf("insufficient memory\n") ;
-			return 0 ;
-			}
-			
-		w_out[r] = malloc(num_pix * sizeof(double)) ;
-		if (w_out[r] == NULL)
-			{
-			printf("insufficient memory\n") ;
-			return 0 ;
-			}
-		}
-	
-	return 1 ;
-	}
-	
-	
-void free_mem()
-	{
-	int i, j, d, r ;
-	
-	free(pix) ;
-	free(stop) ;
-	
-	for (i = 0 ; i < size ; ++i)
-		{
-		for (j = 0 ; j < size ; ++j)
-			{
-			free(intens1[i][j]) ;
-			free(intens2[i][j]) ;
-			free(inter_weight[i][j]) ;
-			}
-			
-		free(intens1[i]) ;
-		free(intens2[i]) ;
-		free(inter_weight[i]) ;
-		}
-	free(intens1) ;
-	free(intens2) ;
-	free(inter_weight) ;
-	
-	free(quat) ;
-	
-	for (d = 0 ; d < num_data ; ++d)
-		{
-		free(place_ones[d]) ;
-		free(place_multi[d]) ;
-		free(count[d]) ;
-		}
-		
-	free(ones) ;
-	free(multi) ;
-	free(place_ones) ;
-	free(place_multi) ;
-	free(count) ;
-	
-	for (r = 0 ; r < num_rot ; ++r)
-		{
-		free(w_in[r]) ;
-		free(w_out[r]) ;
-		}
-	free(w_in) ;
-	free(w_out) ;
-	
-	free(s) ;
-	free(u) ;
-	free(p) ;
-	}
-	
-	
-void make_rot( int r )
-	{
-	double q0, q1, q2, q3, q01, q02, q03, q11, q12, q13, q22, q23, q33 ;
-	
-	q0 = quat[r][0] ;
-	q1 = quat[r][1] ;
-	q2 = quat[r][2] ;
-	q3 = quat[r][3] ;
-	
-	q01 = q0*q1 ;
-	q02 = q0*q2 ;
-	q03 = q0*q3 ;
-	q11 = q1*q1 ;
-	q12 = q1*q2 ;
-	q13 = q1*q3 ;
-	q22 = q2*q2 ;
-	q23 = q2*q3 ;
-	q33 = q3*q3 ;
-	
-	rot[0][0] = 1. - 2.*(q22 + q33) ;
-	rot[0][1] = 2.*(q12 + q03) ;
-	rot[0][2] = 2.*(q13 - q02) ;
-	rot[1][0] = 2.*(q12 - q03) ;
-	rot[1][1] = 1. - 2.*(q11 + q33) ;
-	rot[1][2] = 2.*(q01 + q23) ;
-	rot[2][0] = 2.*(q02 + q13) ;
-	rot[2][1] = 2.*(q23 - q01) ;
-	rot[2][2] = 1. - 2.*(q11 + q22) ;
-	}
+        fscanf(fp, "%d", &multi[d]);
+
+        place_multi[d] = malloc(multi[d] * sizeof (int*));
+        count[d] = malloc(multi[d] * sizeof (int*));
+
+        for (t = 0; t < multi[d]; ++t)
+            fscanf(fp, "%d %d", &place_multi[d][t], &count[d][t]);
+    }
+
+    fclose(fp);
+
+    w_in = malloc(num_rot * sizeof (double*));
+    w_out = malloc(num_rot * sizeof (double*));
+    s = malloc(num_rot * sizeof (double));
+    u = malloc(num_rot * sizeof (double));
+    p = malloc(num_rot * sizeof (double));
+
+    for (r = 0; r < num_rot; ++r) {
+        w_in[r] = malloc(num_pix * sizeof (double));
+        if (w_in[r] == NULL) {
+            printf("insufficient memory\n");
+            return 0;
+        }
+
+        w_out[r] = malloc(num_pix * sizeof (double));
+        if (w_out[r] == NULL) {
+            printf("insufficient memory\n");
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+void free_mem() {
+    int i, j, d, r;
+
+    free(pix);
+    free(stop);
+
+    for (i = 0; i < size; ++i) {
+        for (j = 0; j < size; ++j) {
+            free(intens1[i][j]);
+            free(intens2[i][j]);
+            free(inter_weight[i][j]);
+        }
+
+        free(intens1[i]);
+        free(intens2[i]);
+        free(inter_weight[i]);
+    }
+    free(intens1);
+    free(intens2);
+    free(inter_weight);
+
+    free(quat);
+
+    for (d = 0; d < num_data; ++d) {
+        free(place_ones[d]);
+        free(place_multi[d]);
+        free(count[d]);
+    }
+
+    free(ones);
+    free(multi);
+    free(place_ones);
+    free(place_multi);
+    free(count);
+
+    for (r = 0; r < num_rot; ++r) {
+        free(w_in[r]);
+        free(w_out[r]);
+    }
+    free(w_in);
+    free(w_out);
+
+    free(s);
+    free(u);
+    free(p);
+}
+
+void make_rot(int r) {
+    double q0, q1, q2, q3, q01, q02, q03, q11, q12, q13, q22, q23, q33;
+
+    q0 = quat[r][0];
+    q1 = quat[r][1];
+    q2 = quat[r][2];
+    q3 = quat[r][3];
+
+    q01 = q0*q1;
+    q02 = q0*q2;
+    q03 = q0*q3;
+    q11 = q1*q1;
+    q12 = q1*q2;
+    q13 = q1*q3;
+    q22 = q2*q2;
+    q23 = q2*q3;
+    q33 = q3*q3;
+
+    rot[0][0] = 1. - 2. * (q22 + q33);
+    rot[0][1] = 2. * (q12 + q03);
+    rot[0][2] = 2. * (q13 - q02);
+    rot[1][0] = 2. * (q12 - q03);
+    rot[1][1] = 1. - 2. * (q11 + q33);
+    rot[1][2] = 2. * (q01 + q23);
+    rot[2][0] = 2. * (q02 + q13);
+    rot[2][1] = 2. * (q23 - q01);
+    rot[2][2] = 1. - 2. * (q11 + q22);
+}
 

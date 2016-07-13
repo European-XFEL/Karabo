@@ -20,13 +20,14 @@ namespace karabo {
         template <class TPix>
         class Environment {
 
+
             typedef typename boost::shared_ptr<AbstractImage<TPix> > AbstractImagePointer;
 
         public:
 
             KARABO_CLASSINFO(Environment, "Environment", "1.0")
-            
-           
+
+
             virtual void printInfo() const = 0;
 
             /***************************************

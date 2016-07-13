@@ -16,11 +16,12 @@
 
 namespace karabo {
     namespace xip {
-        
+
         class RawImageFileWriter;
 
         class RawImageData {
-            
+
+
             friend class RawImageFileWriter;
 
         protected:
@@ -28,9 +29,9 @@ namespace karabo {
             karabo::util::Hash m_hash;
             size_t m_padX;
             size_t m_padY;
-            
+
             static karabo::util::Hash m_standardHeader;
-           
+
 
         public:
 
@@ -148,21 +149,21 @@ namespace karabo {
             karabo::util::Hash getHeader() const;
 
             void setHeader(const karabo::util::Hash& header);
-            
+
             karabo::util::DetectorGeometry getGeometry() const;
-            
-            
-                        
+
+
+
             void setGeometry(karabo::util::DetectorGeometry geometry);
-            
-           
-            
+
+
+
             std::vector<long> getTileId() const;
 
             void setTileId(long id);
-            
+
             void setTileId(std::vector<long> id);
-            
+
             const karabo::util::Hash& hash() const;
 
             karabo::util::Hash& hash();
@@ -174,11 +175,11 @@ namespace karabo {
             void toLittleEndian();
 
             KARABO_DEPRECATED void toRGBAPremultiplied();
-            
+
             const RawImageData& write(const std::string& filename, const bool enableAppendMode = false) const;
-            
+
             friend std::ostream& operator<<(std::ostream& os, const RawImageData& image) {
-                os<<image.hash();
+                os << image.hash();
                 return os;
             }
 
@@ -189,7 +190,7 @@ namespace karabo {
             void swapEndianess();
 
             void ensureDataOwnership();
-            
+
             static void setStandardHeader(RawImageData* caller);
 
             template <class T>

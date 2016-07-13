@@ -21,12 +21,14 @@ namespace karabo {
 
         enum ImageType {
 
+
             CPU,
             GPU
         };
 
         template <class TPix>
         class Image {
+
 
             typedef typename boost::shared_ptr<AbstractImage<TPix> > AbstractImagePointer;
             typedef typename boost::shared_ptr<Environment<TPix> > EnvironmentPointer;

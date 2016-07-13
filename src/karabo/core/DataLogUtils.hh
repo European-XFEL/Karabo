@@ -19,9 +19,13 @@ namespace karabo {
         unsigned int const DATALOGREADERS_PER_SERVER = 2;
 
         struct MetaData {
+
+
             typedef boost::shared_ptr<MetaData> Pointer;
 
             struct Record {
+
+
                 double epochstamp;
                 unsigned long long trainId;
                 unsigned long long positionInRaw;
@@ -42,6 +46,8 @@ namespace karabo {
         };
 
         struct MetaSearchResult {
+
+
             size_t fromFileNumber;
             size_t toFileNumber;
             size_t fromRecord;

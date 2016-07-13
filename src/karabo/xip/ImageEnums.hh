@@ -15,6 +15,7 @@ namespace karabo {
 
             enum EncodingType {
 
+
                 UNDEFINED = -1,
                 GRAY,
                 RGB,
@@ -36,6 +37,7 @@ namespace karabo {
         namespace ChannelSpace {
 
             enum ChannelSpaceType {
+
 
                 UNDEFINED = -1,
                 u_8_1, // unsigned, 8 bits per color-channel, 1 byte per pixel
@@ -63,6 +65,7 @@ namespace karabo {
         namespace Endianness {
 
             enum EndiannessType {
+
 
                 UNDEFINED = -1,
                 LSB,

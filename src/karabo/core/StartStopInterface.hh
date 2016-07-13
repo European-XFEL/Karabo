@@ -15,19 +15,20 @@ namespace karabo {
     namespace core {
 
         class StartStopInterface : public virtual karabo::xms::SignalSlotable {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(StartStopInterface, "StartStopInterface", "1.3")
 
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::xms;
                 using namespace karabo::util;
-                
+
                 OVERWRITE_ELEMENT(expected).key("state")
                         .setNewOptions("Initializing,Error,Started,Stopping,Stopped,Starting")
                         .setNewDefaultValue("Initializing")
                         .commit();
-                
+
                 SLOT_ELEMENT(expected).key("start")
                         .displayedName("Start")
                         .description("Instructs device to go to started state")
@@ -55,25 +56,26 @@ namespace karabo {
                 KARABO_SLOT(stop);
                 KARABO_SLOT(reset);
             }
-            
+
             // Target state: "Stopped"
             virtual void initialize() = 0;
 
             // Target state: "Started"
             // You may use: "Starting" if start takes time
             virtual void start() = 0;
-            
+
             // Target state: "Stopped"
             virtual void stop() = 0;
-            
+
             // Target state: "Stopped"
-            virtual void reset() = 0;            
-            
+            virtual void reset() = 0;
+
             void startFsm() {
                 this->initialize();
             }
-            
-            void stopFsm() { }
+
+            void stopFsm() {
+            }
         };
     } // namespace core
 } // namespace karabo

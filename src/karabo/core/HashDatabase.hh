@@ -20,12 +20,12 @@
 namespace karabo {
     namespace core {
 
-        #define KARABO_DB_NAME "Database"
-        #define KARABO_DB_FILE "database.xml"
+#define KARABO_DB_NAME "Database"
+#define KARABO_DB_FILE "database.xml"
 
         class HashDatabase {
 
-        public: // functions
+            public: // functions
 
             typedef std::vector<karabo::util::Hash> ResultType;
 

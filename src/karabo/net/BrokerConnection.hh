@@ -32,10 +32,10 @@ namespace karabo {
     namespace net {
 
         class BrokerChannel;
-        
+
         typedef boost::function<void (const std::string&) > BrokerErrorHandler;
 
-        /**
+/**
          * The BrokerConnection class.
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
@@ -51,6 +51,7 @@ namespace karabo {
          * proper calling order of the destructors.
          */
         class BrokerConnection : public boost::enable_shared_from_this<BrokerConnection> {
+
 
             typedef boost::shared_ptr<BrokerChannel> BrokerChannelPointer;
 
@@ -87,25 +88,25 @@ namespace karabo {
              * @return hostname
              */
             virtual const std::string& getBrokerHostname() const = 0;
-            
+
             /**
              * Returns the broker port
              * @return port
              */
             virtual unsigned int getBrokerPort() const = 0;
-            
+
             /**
              * Returns the broker topic
              * @return topic
              */
             virtual const std::string& getBrokerTopic() const = 0;
-                            
+
             /**
              * Returns vector of the brokers in cluster, or just empty vector
              * @return a vector of string elements of <hostname1>:<port1>, <hostname2>:<port2>, ...
              */
             virtual const std::vector<std::string>& getBrokerHosts() const = 0;
-            
+
             /**
              * This function creates a "channel" for the given connection.
              * @return Pointer to BrokerChannel
@@ -129,7 +130,7 @@ namespace karabo {
             void setErrorHandler(const BrokerErrorHandler& handler) {
                 m_errorHandler = handler;
             }
-            
+
             virtual bool isConnected() const = 0;
 
         protected: // functions

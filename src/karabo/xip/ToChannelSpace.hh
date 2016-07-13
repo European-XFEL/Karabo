@@ -16,7 +16,7 @@ namespace karabo {
 
         class ToChannelSpace {
 
-        public:
+            public:
 
             typedef ChannelSpaceType ReturnType;
 

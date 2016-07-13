@@ -112,10 +112,10 @@ void TimeClasses_Test::testTimeDuration() {
     CPPUNIT_ASSERT(dur1.getTotalMinutes() == 60ull);
     CPPUNIT_ASSERT(dur1.getHours() == 1ull);
     CPPUNIT_ASSERT(dur1.getTotalHours() == 1ull);
-    CPPUNIT_ASSERT(dur1.getFractions(util::ATTOSEC)  == fractionsAtto);
+    CPPUNIT_ASSERT(dur1.getFractions(util::ATTOSEC) == fractionsAtto);
     CPPUNIT_ASSERT(dur1.getFractions(util::FEMTOSEC) == fractionsAtto / 1000ull);
-    CPPUNIT_ASSERT(dur1.getFractions(util::PICOSEC)  == fractionsAtto / 1000000ull);
-    CPPUNIT_ASSERT(dur1.getFractions(util::NANOSEC)  == fractionsAtto / 1000000000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(util::PICOSEC) == fractionsAtto / 1000000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(util::NANOSEC) == fractionsAtto / 1000000000ull);
     CPPUNIT_ASSERT(dur1.getFractions(util::MICROSEC) == fractionsAtto / 1000000000000ull);
     CPPUNIT_ASSERT(dur1.getFractions(util::MILLISEC) == fractionsAtto / 1000000000000000ull);
 
@@ -148,39 +148,39 @@ void TimeClasses_Test::testTimeDuration() {
     const TimeDuration durC(123ull, 4567890000ull);
     const TimeDuration durD(123ull, 4567890001ull);
     CPPUNIT_ASSERT(durC != durD);
-    CPPUNIT_ASSERT(durC <  durD);
+    CPPUNIT_ASSERT(durC < durD);
     CPPUNIT_ASSERT(durC <= durD);
-    CPPUNIT_ASSERT(durD >  durC);
+    CPPUNIT_ASSERT(durD > durC);
     CPPUNIT_ASSERT(durD >= durC);
-    CPPUNIT_ASSERT((durD <  durC) == false);
+    CPPUNIT_ASSERT((durD < durC) == false);
     CPPUNIT_ASSERT((durD <= durC) == false);
-    CPPUNIT_ASSERT((durC >  durD) == false);
+    CPPUNIT_ASSERT((durC > durD) == false);
     CPPUNIT_ASSERT((durC >= durD) == false);
 
     // Test larger/smaller comparisons with equal fractions
     const TimeDuration durE(3ull, 4567890000ull);
     const TimeDuration durF(4ull, 4567890000ull);
     CPPUNIT_ASSERT(durE != durF);
-    CPPUNIT_ASSERT(durE <  durF);
+    CPPUNIT_ASSERT(durE < durF);
     CPPUNIT_ASSERT(durE <= durF);
-    CPPUNIT_ASSERT(durF >  durE);
+    CPPUNIT_ASSERT(durF > durE);
     CPPUNIT_ASSERT(durF >= durE);
-    CPPUNIT_ASSERT((durF <  durE) == false);
+    CPPUNIT_ASSERT((durF < durE) == false);
     CPPUNIT_ASSERT((durF <= durE) == false);
-    CPPUNIT_ASSERT((durE >  durF) == false);
+    CPPUNIT_ASSERT((durE > durF) == false);
     CPPUNIT_ASSERT((durE >= durF) == false);
 
     // Test larger/smaller comparisons with seconds smaller, fractions larger
     const TimeDuration durG(444ull, 4567890000ull);
     const TimeDuration durH(555ull, 1234560000ull);
     CPPUNIT_ASSERT(durG != durH);
-    CPPUNIT_ASSERT(durG <  durH);
+    CPPUNIT_ASSERT(durG < durH);
     CPPUNIT_ASSERT(durG <= durH);
-    CPPUNIT_ASSERT(durH >  durG);
+    CPPUNIT_ASSERT(durH > durG);
     CPPUNIT_ASSERT(durH >= durG);
-    CPPUNIT_ASSERT((durH <  durG) == false);
+    CPPUNIT_ASSERT((durH < durG) == false);
     CPPUNIT_ASSERT((durH <= durG) == false);
-    CPPUNIT_ASSERT((durG >  durH) == false);
+    CPPUNIT_ASSERT((durG > durH) == false);
     CPPUNIT_ASSERT((durG >= durH) == false);
 
     // Testing operator+/- (operator +=/-= implicitly tested since used inside operator +/-))

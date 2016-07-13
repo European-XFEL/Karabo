@@ -25,18 +25,21 @@ using namespace karathon;
 typedef karabo::util::Element<std::string, karabo::util::OrderedMap<std::string, karabo::util::Element<std::string, bool> > > HashNode;
 
 // Translate C++ karabo::util::Exception into python RuntimeError exception
+
+
 void translator(const karabo::util::Exception& e) {
     PyErr_SetString(PyExc_RuntimeError, (e.userFriendlyMsg() + " -- " + e.detailedMsg()).c_str());
 }
 
+
 void exportPyUtilHash() {
 
-//    #ifdef WITH_BOOST_NUMPY
-//    bn::initialize();
-//    #endif
- 
+    //    #ifdef WITH_BOOST_NUMPY
+    //    bn::initialize();
+    //    #endif
+
     bp::docstring_options docs(true, true, false);
-    
+
     // register a translator
     bp::register_exception_translator<karabo::util::Exception>(translator);
 
@@ -111,11 +114,11 @@ void exportPyUtilHash() {
             .value("NDARRAY_COMPLEX_FLOAT", PyTypes::NDARRAY_COMPLEX_FLOAT)
             .value("NDARRAY_COMPLEX_DOUBLE", PyTypes::NDARRAY_COMPLEX_DOUBLE)
             ;
-    
-   bp::class_<PyTypes>("TypesClass", bp::no_init)
-            .def("to", (const karabo::util::Types::ReferenceType (*)(const PyTypes::ReferenceType&))&PyTypes::to, (bp::arg("Python_types"))).staticmethod("to")
-            .def("from", (const PyTypes::ReferenceType (*)(const karabo::util::Types::ReferenceType&))&PyTypes::from, (bp::arg("C++_types"))).staticmethod("from")
-            .def("category", (const PyTypes::ReferenceType (*)(int))&PyTypes::category, (bp::arg("C++_types"))).staticmethod("category")
+
+    bp::class_<PyTypes>("TypesClass", bp::no_init)
+            .def("to", (const karabo::util::Types::ReferenceType(*)(const PyTypes::ReferenceType&)) & PyTypes::to, (bp::arg("Python_types"))).staticmethod("to")
+            .def("from", (const PyTypes::ReferenceType(*)(const karabo::util::Types::ReferenceType&)) & PyTypes::from, (bp::arg("C++_types"))).staticmethod("from")
+            .def("category", (const PyTypes::ReferenceType(*)(int)) & PyTypes::category, (bp::arg("C++_types"))).staticmethod("category")
             ;
 
 
@@ -239,7 +242,7 @@ void exportPyUtilHash() {
           "h.clear() makes empty the content of current Hash object 'h' (in place).\n");
     h.def("empty", &HashWrap().empty,
           "h.empty() -> True if 'h' is empty otherwise False.\n");
-    h.def("getKeys", (void (*)(const karabo::util::Hash&, const bp::object&))&HashWrap().getKeys, (bp::arg("target_container")),
+    h.def("getKeys", (void (*)(const karabo::util::Hash&, const bp::object&)) & HashWrap().getKeys, (bp::arg("target_container")),
           "This function follows the API of C++ counterpart. Put into the target container all the keys visible\n"
           "on the top level of the tree hierarchy.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
@@ -284,7 +287,7 @@ void exportPyUtilHash() {
           "\nExample:\n\th = Hash()\n\th['a.b.c'] = 1\n\th.set('x/y/z', 2, \"/\")\n\th['u/v/w'] = 3\n\tprint h");
     h.def("setAs", &HashWrap().setAs, (bp::arg("path"), bp::arg("value"), bp::arg("type"), bp::arg("sep") = "."),
           "h.setAs(path, value, type)\nUse this method if the C++ value type cannot be deduced properly of python value"
-          "\nExample:\n\th = Hash()\n\th.setAs('a.b.c', 1L, Types.UINT64)\n\tprint h");            
+          "\nExample:\n\th = Hash()\n\th.setAs('a.b.c', 1L, Types.UINT64)\n\tprint h");
     h.def("get", &HashWrap().getRef, (bp::arg("path"), bp::arg("sep") = "."),
           "Get the 'value' by 'path'. Optionally, the separator can be defined as second argument.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\tprint h.get('a/b/c','/')");
@@ -424,9 +427,9 @@ void exportPyUtilHash() {
     h.def(bp::self != bp::self);
 
     bp::class_<std::vector<Hash>, boost::shared_ptr<std::vector<Hash> > >("VectorHash")
-        .def(bp::vector_indexing_suite<std::vector<Hash> >());
-    
+            .def(bp::vector_indexing_suite<std::vector<Hash> >());
+
     bp::class_<std::vector<boost::shared_ptr<Hash> >, boost::shared_ptr<std::vector<boost::shared_ptr<Hash> > > >("VectorHashPointer")
-        .def(bp::vector_indexing_suite<std::vector<boost::shared_ptr<Hash> >, true >());
+            .def(bp::vector_indexing_suite<std::vector<boost::shared_ptr<Hash> >, true >());
 }
 

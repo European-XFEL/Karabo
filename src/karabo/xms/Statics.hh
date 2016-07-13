@@ -27,7 +27,7 @@ namespace karabo {
          */
         class Statics {
 
-        public:
+            public:
 
             /**
              * Default constructor.

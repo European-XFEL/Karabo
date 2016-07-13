@@ -39,30 +39,32 @@ namespace karabo {
             m_status = IDLE;
         }
 
+
         void JmsBrokerIOService::post(const boost::function<void()>& handler) {
             throw KARABO_NOT_IMPLEMENTED_EXCEPTION("'post' function call");
         }
 
+
         bool JmsBrokerIOService::activateRegisteredMessageReceivers() {
-//            boost::mutex::scoped_lock lock(m_mutex);
-//            if (m_messageReceivers.empty()) return false;
-//            for (size_t i = 0; i < m_messageReceivers.size(); ++i) {
-//                m_threadGroup.create_thread(m_messageReceivers[i]);
-//            }
-//            m_messageReceivers.clear();
+            //            boost::mutex::scoped_lock lock(m_mutex);
+            //            if (m_messageReceivers.empty()) return false;
+            //            for (size_t i = 0; i < m_messageReceivers.size(); ++i) {
+            //                m_threadGroup.create_thread(m_messageReceivers[i]);
+            //            }
+            //            m_messageReceivers.clear();
             return true;
         }
 
 
-//        bool JmsBrokerIOService::activateRegisteredWaitHandlers() {
-//            boost::mutex::scoped_lock lock(m_mutex);
-//            if (m_waitHandlers.empty()) return false;
-//            for (size_t i = 0; i < m_waitHandlers.size(); ++i) {
-//                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::deadlineTimer, m_waitHandlers[i].get<0>(), m_waitHandlers[i].get<1>(), m_waitHandlers[i].get<2>(), m_waitHandlers[i].get<3>()));
-//            }
-//            m_waitHandlers.clear();
-//            return true;
-//        }
+        //        bool JmsBrokerIOService::activateRegisteredWaitHandlers() {
+        //            boost::mutex::scoped_lock lock(m_mutex);
+        //            if (m_waitHandlers.empty()) return false;
+        //            for (size_t i = 0; i < m_waitHandlers.size(); ++i) {
+        //                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::deadlineTimer, m_waitHandlers[i].get<0>(), m_waitHandlers[i].get<1>(), m_waitHandlers[i].get<2>(), m_waitHandlers[i].get<3>()));
+        //            }
+        //            m_waitHandlers.clear();
+        //            return true;
+        //        }
 
 
         void JmsBrokerIOService::stop() {
@@ -97,13 +99,13 @@ namespace karabo {
         }
 
 
-//        void JmsBrokerIOService::registerWaitChannel(JmsBrokerChannel* channel, const BrokerChannel::WaitHandler& handler, int milliseconds, const std::string& id) {
-//            //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
-//            if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
-//                m_waitHandlers.push_back(boost::tuple<JmsBrokerChannel*, BrokerChannel::WaitHandler, int, std::string>(channel, handler, milliseconds, id));
-//            } else if (m_status == WORKING) {
-//                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::deadlineTimer, channel, handler, milliseconds, id));
-//            }
-//        }
+        //        void JmsBrokerIOService::registerWaitChannel(JmsBrokerChannel* channel, const BrokerChannel::WaitHandler& handler, int milliseconds, const std::string& id) {
+        //            //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
+        //            if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
+        //                m_waitHandlers.push_back(boost::tuple<JmsBrokerChannel*, BrokerChannel::WaitHandler, int, std::string>(channel, handler, milliseconds, id));
+        //            } else if (m_status == WORKING) {
+        //                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::deadlineTimer, channel, handler, milliseconds, id));
+        //            }
+        //        }
     }
 }

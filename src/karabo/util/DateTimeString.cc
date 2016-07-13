@@ -14,15 +14,15 @@ namespace karabo {
 
 
         DateTimeString::DateTimeString() :
-        m_date("19700101"),
-        m_time("000000"),
-        m_fractionalSeconds("000000000000000000"),
-        m_timeZone("+0000"),
-        m_dateTime("19700101T000000"),
-        m_dateTimeStringAll("19700101T000000+0000"),
-        m_timeZoneSignal("+"),
-        m_timeZoneHours(0),
-        m_timeZoneMinutes(0) {
+            m_date("19700101"),
+            m_time("000000"),
+            m_fractionalSeconds("000000000000000000"),
+            m_timeZone("+0000"),
+            m_dateTime("19700101T000000"),
+            m_dateTimeStringAll("19700101T000000+0000"),
+            m_timeZoneSignal("+"),
+            m_timeZoneHours(0),
+            m_timeZoneMinutes(0) {
         }
 
 
@@ -33,11 +33,11 @@ namespace karabo {
 
         DateTimeString::DateTimeString(const std::string& inputDate, const std::string& inputTime,
                                        const std::string& inputFractionSecond, const std::string& inputTimeZone) :
-        m_date(inputDate),
-        m_time(inputTime),
-        m_fractionalSeconds(inputFractionSecond),
-        m_timeZone(inputTimeZone),
-        m_dateTime(inputDate + "T" + inputTime) {
+            m_date(inputDate),
+            m_time(inputTime),
+            m_fractionalSeconds(inputFractionSecond),
+            m_timeZone(inputTimeZone),
+            m_dateTime(inputDate + "T" + inputTime) {
 
             if (m_fractionalSeconds == "") {
                 m_fractionalSeconds = "0";
@@ -140,8 +140,8 @@ namespace karabo {
 
             //Separate Fractional seconds and Time zone from the string
             if (rest.find('Z') != std::string::npos ||
-                    rest.find('+') != std::string::npos ||
-                    rest.find('-') != std::string::npos) {
+                rest.find('+') != std::string::npos ||
+                rest.find('-') != std::string::npos) {
                 if (rest.find('Z') != std::string::npos) {
                     pos = rest.find('Z');
                 } else if (rest.find('+') != std::string::npos) {
@@ -176,10 +176,10 @@ namespace karabo {
 
 
         const std::locale formats[] = {
-            //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S%z")), //2012-12-25T13:25:36-0700
-            //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S.%f%z")), //19951231T235959.9942+0000
-            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%.%f")), //19951231T235959.789333(123456789123)
-            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S")) //2012-12-25T13:25:36
+                                       //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S%z")), //2012-12-25T13:25:36-0700
+                                       //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S.%f%z")), //19951231T235959.9942+0000
+                                       std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%.%f")), //19951231T235959.789333(123456789123)
+                                       std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S")) //2012-12-25T13:25:36
         };
         const size_t formats_n = sizeof (formats) / sizeof (formats[0]);
 
@@ -278,10 +278,10 @@ namespace karabo {
             // ["std::log10(ONESECOND / precision)"] == 3
             int zeros = int(precision);
             unsigned long long multiplier = 1;
-            while(zeros-->0) multiplier *= 10ULL;
+            while (zeros-- > 0) multiplier *= 10ULL;
             int numDigits = std::log10(1000000000000000000ULL / multiplier);
             oss << '.' << setw(numDigits) << setfill('0') << fractionalSeconds / multiplier;
-            
+
             return oss.str();
         }
 

@@ -21,14 +21,13 @@ namespace karabo {
 
 
         NetworkAppender::NetworkAppender(const std::string& name, const karabo::net::BrokerChannel::Pointer& channel) :
-        LayoutAppender(name), m_channel(channel), m_ok(true)
-        {
+            LayoutAppender(name), m_channel(channel), m_ok(true) {
             // Time format should be ISO8601, for real, not the
             // log4cpp crippled version (missing T)
             m_timeLayout.setConversionPattern("%d{%Y-%m-%dT%H:%M:%S.%l}");
             m_priorityLayout.setConversionPattern("%p"); // DEBUG, INFO, WARN or ERROR
             m_categoryLayout.setConversionPattern("%c"); // deviceId
-            m_messageLayout.setConversionPattern("%m");  // message text
+            m_messageLayout.setConversionPattern("%m"); // message text
 
             // Start thread
             m_thread = boost::thread(boost::bind(&karabo::net::NetworkAppender::checkLogCache, this));

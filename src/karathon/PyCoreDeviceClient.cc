@@ -18,6 +18,7 @@ using namespace karathon;
 using namespace std;
 namespace bp = boost::python;
 
+
 void exportPyCoreDeviceClient() {
 
     bp::class_<DeviceClient, boost::noncopyable > ("DeviceClientBase")

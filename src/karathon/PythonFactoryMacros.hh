@@ -12,7 +12,7 @@
 #include <boost/python.hpp>
 
 namespace bp = boost::python;
-        
+
 #define KARABO_PYTHON_FACTORY_CONFIGURATOR(baseClass) \
 .def("classInfo"\
         , (karabo::util::ClassInfo(*)())(&karabo::util::Configurator<baseClass>::classInfo), "Returns C++ introspection info for \""\

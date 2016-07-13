@@ -16,13 +16,14 @@
 
 class H5File_Test : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(H5File_Test);
 
     CPPUNIT_TEST(testBuffer);
 
     CPPUNIT_TEST(testWrite);
     CPPUNIT_TEST(testWriteFailure);
-            
+
 
     CPPUNIT_TEST(testRead);
     CPPUNIT_TEST(testReadTable);
@@ -30,13 +31,13 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST(testManyGroups);
     CPPUNIT_TEST(testManyTables);
-//        CPPUNIT_TEST(testVLWrite);
+    //        CPPUNIT_TEST(testVLWrite);
     CPPUNIT_TEST(testTrainFormat);
     CPPUNIT_TEST(testClose);
     CPPUNIT_TEST(testArray);
 
-//    CPPUNIT_TEST(testExternalHdf5);
-            
+    //    CPPUNIT_TEST(testExternalHdf5);
+
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -102,7 +103,7 @@ private:
 
     void testArray();
     void testExternalHdf5();
-    
+
     void testTrainFormat();
     uint64_t fillTrainBuffer(std::vector<char>& buffer, size_t bufferLen, const karabo::util::Hash& dataset,
                              unsigned long long trainId, unsigned short imageCount);

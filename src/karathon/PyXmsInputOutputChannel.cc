@@ -48,12 +48,14 @@ namespace karathon {
         return Wrapper::toObject(self->hash());
     }
 
+
     void DataWrap::attachTimestamp(const boost::shared_ptr<karabo::xms::Data>& self, const bp::object& obj) {
         if (bp::extract<karabo::util::Timestamp>(obj).check()) {
             const karabo::util::Timestamp& ts = bp::extract<karabo::util::Timestamp>(obj);
             self->attachTimestamp(ts);
         }
     }
+
 
     boost::shared_ptr<karabo::xms::Data> DataWrap::copy(const boost::shared_ptr<karabo::xms::Data>& self) {
         return boost::shared_ptr<karabo::xms::Data>(new karabo::xms::Data(*self));
@@ -269,14 +271,15 @@ namespace karathon {
             throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
     }
 
+
     bp::object NDArrayWrap::getDimensionTypesPy(const boost::shared_ptr<karabo::xms::NDArray>& self) {
         return Wrapper::fromStdVectorToPyList(self->getDimensionTypes());
     }
 
 
     karabo::xms::NDArrayElement& NDArrayElementWrap::setDefaultValue(const boost::shared_ptr<karabo::xms::NDArrayElement>& self,
-            const std::string& subKey,
-            const bp::object& defaultValue) {
+                                                                     const std::string& subKey,
+                                                                     const bp::object& defaultValue) {
         boost::any anyValue;
         karathon::Wrapper::toAny(defaultValue, anyValue);
         return self->setDefaultValue(subKey, anyValue);
@@ -284,8 +287,8 @@ namespace karathon {
 
 
     boost::shared_ptr<karabo::xms::ImageData> ImageDataWrap::make5(const bp::object& obj, const bool copy,
-            const karabo::util::Dims& dimensions, const karabo::xms::EncodingType encoding,
-            const karabo::xms::ChannelSpaceType channelSpace) {
+                                                                   const karabo::util::Dims& dimensions, const karabo::xms::EncodingType encoding,
+                                                                   const karabo::xms::ChannelSpaceType channelSpace) {
 
         using namespace karabo::util;
         using namespace karabo::xms;
@@ -313,7 +316,7 @@ namespace karathon {
             EncodingType _encoding = encoding;
             if (encoding == Encoding::UNDEFINED) {
                 // No encoding info -> try to guess it from ndarray shape
-                if (rank == 2 || (rank == 3 && shapes[2] == 1) )
+                if (rank == 2 || (rank == 3 && shapes[2] == 1))
                     _encoding = Encoding::GRAY;
                 else if (rank == 3 && shapes[2] == 3)
                     _encoding = Encoding::RGB;
@@ -325,8 +328,8 @@ namespace karathon {
             Dims _dimensions;
 
             if (_encoding == Encoding::RGB || _encoding == Encoding::RGBA ||
-                    _encoding == Encoding::BGR || _encoding == Encoding::BGRA ||
-                    _encoding == Encoding::CMYK || _encoding == Encoding::YUV) {
+                _encoding == Encoding::BGR || _encoding == Encoding::BGRA ||
+                _encoding == Encoding::CMYK || _encoding == Encoding::YUV) {
                 // Color images -> use ndarray dimensions
 
                 if (rank != 3) throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
@@ -349,7 +352,7 @@ namespace karathon {
 
                 _dimensions.fromVector(tmp);
             } else if (_encoding == Encoding::JPEG || _encoding == Encoding::PNG ||
-                    _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
+                       _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
                 // JPEG, PNG, BMP, TIFF -> cannot use ndarray dimensions, use therefore input parameter
 
                 _dimensions = dimensions;
@@ -368,16 +371,16 @@ namespace karathon {
             ChannelSpaceType _channelSpace = Types::convert<FromNumpy, karabo::xms::ToChannelSpace>(dtype->type_num);
 
             // check if we have to release carr
-            if (PyArray_DATA(carr) == PyArray_DATA(arr)) {   // The input np array was contiguous
+            if (PyArray_DATA(carr) == PyArray_DATA(arr)) { // The input np array was contiguous
                 // No real copy done 
                 self->setData(data, size, copy);
             } else {
                 // copy done
                 self->setData(data, size, true);
             }
-            
+
             // check if we have to 
-            
+
             // We need to fix the type here
             self->set("dataType", Types::convert<FromNumpy, ToLiteral>(dtype->type_num));
 
@@ -396,10 +399,10 @@ namespace karathon {
                 self->setChannelSpace(channelSpace);
 
             self->setIsBigEndian(false);
-            
+
             // Kill created earlier 'carr' object
             Py_DECREF(carr);
-            
+
         } else {
             throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray or Hash");
         }
@@ -657,7 +660,8 @@ namespace karathon {
             self->setDimensionTypes(dimTypes);
         } else
             throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
-    }      
+    }
+
 
     bp::object ImageDataWrap::getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
         karabo::util::Dims offsets = self->getROIOffsets();
@@ -685,23 +689,26 @@ namespace karathon {
         return bp::object(karabo::xms::ChannelSpaceType(self->getChannelSpace()));
     }
 
-    void ImageDataWrap::writePy(const boost::shared_ptr<karabo::xms::ImageData>& self, const std::string& filename, const bool enableAppendMode){
-      self->write(filename, enableAppendMode);
+
+    void ImageDataWrap::writePy(const boost::shared_ptr<karabo::xms::ImageData>& self, const std::string& filename, const bool enableAppendMode) {
+        self->write(filename, enableAppendMode);
     }
 
-    void ImageDataWrap::setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& geometry){
-      karabo::util::DetectorGeometry geo = bp::extract<karabo::util::DetectorGeometry>(geometry);
-      self->setGeometry(geo);
+
+    void ImageDataWrap::setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& geometry) {
+        karabo::util::DetectorGeometry geo = bp::extract<karabo::util::DetectorGeometry>(geometry);
+        self->setGeometry(geo);
     }
-    
-    karabo::util::DetectorGeometry ImageDataWrap::getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self){
+
+
+    karabo::util::DetectorGeometry ImageDataWrap::getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
         return self->getGeometry();
     }
-    
+
 
     karabo::xms::ImageDataElement& ImageDataElementWrap::setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement>& self,
-            const std::string& subKey,
-            const bp::object& defaultValue) {
+                                                                         const std::string& subKey,
+                                                                         const bp::object& defaultValue) {
         boost::any anyValue;
         karathon::Wrapper::toAny(defaultValue, anyValue);
         return self->setDefaultValue(subKey, anyValue);
@@ -717,7 +724,7 @@ namespace karathon {
         ScopedGILAcquire gil;
         handler(bp::object(outputChannel));
     }
-    
+
 
     void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data) {
         if (bp::extract<karabo::xms::ImageData>(data).check()) {
@@ -759,7 +766,7 @@ namespace karathon {
         handler(bp::object(input));
     }
 
-    
+
     void InputChannelWrap::registerDataHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
         self->registerDataHandler(boost::bind(InputChannelWrap::proxyDataHandler, handler, _1));
     }
@@ -770,7 +777,7 @@ namespace karathon {
         handler(bp::object(data));
     }
 
-    
+
     void InputChannelWrap::registerEndOfStreamEventHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
         self->registerEndOfStreamEventHandler(boost::bind(InputChannelWrap::proxyEndOfStreamEventHandler, handler, _1));
     }
@@ -781,7 +788,7 @@ namespace karathon {
         handler(bp::object(input));
     }
 
-    
+
     bp::object InputChannelWrap::getConnectedOutputChannelsPy(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
         return Wrapper::toObject(self->getConnectedOutputChannels());
     }
@@ -827,7 +834,7 @@ void exportPyXmsInputOutputChannel() {
                 .def(bp::init<const string&, const Data&>((bp::arg("key"), bp::arg("other"))))
 
                 .def("__init__", bp::make_constructor(&karathon::DataWrap::make, bp::default_call_policies(), (bp::arg("data"))))
-                
+
                 .def("setNode", &Data::setNode, (bp::arg("key"), bp::arg("data")))
 
                 .def("getNode", &karathon::DataWrap().getNode, (bp::arg("key")))
@@ -839,17 +846,17 @@ void exportPyXmsInputOutputChannel() {
                 .def("set", &karathon::DataWrap().set, (bp::arg("key"), bp::arg("value")))
 
                 .def("__setitem__", &karathon::DataWrap().set)
-        
+
                 .def("has", &Data::has, (bp::arg("key")))
-        
+
                 .def("__contains__", &Data::has, (bp::arg("key")))
-        
+
                 .def("erase", &Data::erase, (bp::arg("key")))
-        
+
                 .def("__delitem__", &Data::erase, (bp::arg("key")))
 
                 .def("hash", &karathon::DataWrap().hash)
-        
+
                 .def("attachTimestamp", &karathon::DataWrap().attachTimestamp, (bp::arg("timestamp")))
 
                 .def(bp::self_ns::str(bp::self))
@@ -880,7 +887,7 @@ void exportPyXmsInputOutputChannel() {
                 .def("setDimensions", &karathon::NDArrayWrap::setDimensionsPy, (bp::arg("dims")))
 
                 .def("setDimensionTypes", &karathon::NDArrayWrap::setDimensionTypesPy, (bp::arg("types")))
-                
+
                 .def("getDimensionTypes", &karathon::NDArrayWrap::getDimensionTypesPy)
 
                 .def("getDataType", &NDArray::getDataType, bp::return_value_policy<bp::copy_const_reference > ())
@@ -966,14 +973,14 @@ void exportPyXmsInputOutputChannel() {
                 .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make5,
                                                       bp::default_call_policies(),
                                                       (bp::arg("array"),
-                                                      bp::arg("copy") = True,
-                                                      bp::arg("dims") = karabo::util::Dims(),
-                                                      bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
-                                                      bp::arg("channelSpace") = karabo::xms::ChannelSpace::UNDEFINED)))
-                
-//                .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make2,
-//                                                      bp::default_call_policies(),
-//                                                      (bp::arg("array") = bp::object(), bp::arg("copy") = true)))
+                                                       bp::arg("copy") = True,
+                                                       bp::arg("dims") = karabo::util::Dims(),
+                                                       bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
+                                                       bp::arg("channelSpace") = karabo::xms::ChannelSpace::UNDEFINED)))
+
+                //                .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make2,
+                //                                                      bp::default_call_policies(),
+                //                                                      (bp::arg("array") = bp::object(), bp::arg("copy") = true)))
 
 
                 .def("getData", &karathon::ImageDataWrap::getDataPy)
@@ -1013,8 +1020,8 @@ void exportPyXmsInputOutputChannel() {
                 .def("write", &karathon::ImageDataWrap::writePy, (bp::arg("filename"), bp::arg("enableAppendMode") = false))
 
                 .def("setGeometry", &karathon::ImageDataWrap::setGeometryPy, (bp::arg("geometry")))
-                
-                .def("getGeometry",  &karathon::ImageDataWrap::getGeometryPy)
+
+                .def("getGeometry", &karathon::ImageDataWrap::getGeometryPy)
                 //KARABO_PYTHON_FACTORY_CONFIGURATOR(ImageData)
                 ;
     }
@@ -1049,11 +1056,11 @@ void exportPyXmsInputOutputChannel() {
                      , (bp::arg("channelSpace"))
                      , bp::return_internal_reference<> ())
                 .def("setGeometry", &ImageDataElement::setGeometry
-                    , (bp::arg("geometry"))
-                    , bp::return_internal_reference<>())
+                     , (bp::arg("geometry"))
+                     , bp::return_internal_reference<>())
                 ;
-                ;
-        
+        ;
+
     }
 
     {

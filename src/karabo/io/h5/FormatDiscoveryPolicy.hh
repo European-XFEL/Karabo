@@ -22,7 +22,7 @@ namespace karabo {
 
             class FormatDiscoveryPolicy {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(FormatDiscoveryPolicy, "Policy", "1.0")
                 KARABO_CONFIGURATION_BASE_CLASS

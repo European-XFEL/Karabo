@@ -19,7 +19,8 @@ namespace karabo {
     namespace core {
 
         class MotorInterface : public virtual karabo::xms::SignalSlotable {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(MotorInterface, "MotorInterface", "1.0")
 
@@ -28,30 +29,30 @@ namespace karabo {
 
                 using namespace karabo::xms;
                 using namespace karabo::util;
-                
+
                 OVERWRITE_ELEMENT(expected).key("state")
                         .setNewOptions("Initializing,HardwareError,Safe,Override,Off,Stopped,Idle,Homing,Moving")
                         .setNewDefaultValue("Initializing")
                         .commit();
-                
-                SLOT_ELEMENT(expected).key("resetHardware")                      
+
+                SLOT_ELEMENT(expected).key("resetHardware")
                         .description("Resets the hardware")
                         .displayedName("Reset hardware")
                         .allowedStates("HardwareError")
                         .commit();
 
-                SLOT_ELEMENT(expected).key("safe")                        
+                SLOT_ELEMENT(expected).key("safe")
                         .description("Brings device into a safe operation mode (as defined on h/w)")
                         .displayedName("Safe")
                         .commit();
 
-                SLOT_ELEMENT(expected).key("normal")                       
+                SLOT_ELEMENT(expected).key("normal")
                         .displayedName("Normal")
                         .description("Brings device into normal operation mode")
                         .expertAccess()
                         .commit();
 
-                SLOT_ELEMENT(expected).key("override")                        
+                SLOT_ELEMENT(expected).key("override")
                         .displayedName("Override")
                         .description("Brings device into override operation mode (be careful, hardware may be broken)")
                         .adminAccess()
@@ -63,7 +64,7 @@ namespace karabo {
                         .allowedStates("Override Stopped Idle Homing")
                         .commit();
 
-                SLOT_ELEMENT(expected).key("on")                        
+                SLOT_ELEMENT(expected).key("on")
                         .displayedName("On")
                         .description("Instructs device to switch on")
                         .allowedStates("Override Off")
@@ -113,7 +114,7 @@ namespace karabo {
                         .expertAccess()
                         .readOnly()
                         .commit();
-                
+
                 FLOAT_ELEMENT(expected).key("targetPosition")
                         .description("Target position in position mode")
                         .displayedName("Target position")
@@ -124,7 +125,7 @@ namespace karabo {
                         .allowedStates("Override Stopped Off Idle Moving")
                         .commit();
 
-                INT16_ELEMENT(expected).key("targetVelocity")                        
+                INT16_ELEMENT(expected).key("targetVelocity")
                         .description("Target velocity in velocity mode")
                         .displayedName("Target velocity")
                         .assignmentOptional().noDefaultValue()
@@ -133,7 +134,7 @@ namespace karabo {
                         .expertAccess()
                         .commit();
             }
-            
+
             virtual ~MotorInterface() {
             }
 
@@ -149,38 +150,39 @@ namespace karabo {
                 KARABO_SLOT(move)
                 KARABO_SLOT(stepUp)
                 KARABO_SLOT(stepDown)
-            }                        
-            
+            }
+
             virtual void resetHardware() = 0;
-            
+
             virtual void safe() = 0;
-            
+
             virtual void normal() = 0;
-            
+
             virtual void override() = 0;
-            
+
             virtual void off() = 0;
-            
+
             virtual void on() = 0;
-            
+
             virtual void stop() = 0;
-            
+
             virtual void home() = 0;
-            
+
             virtual void move() = 0;
-            
+
             virtual void stepUp() = 0;
-            
+
             virtual void stepDown() = 0;
-            
+
             virtual void initialize() = 0;
-            
+
             void startFsm() {
                 this->initialize();
             }
-            
-            void stopFsm() {};
-           
+
+            void stopFsm() {
+            };
+
         };
     }
 }

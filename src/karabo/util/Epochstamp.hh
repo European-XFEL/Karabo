@@ -34,6 +34,8 @@ namespace karabo {
          * 
          */
         class Epochstamp {
+
+
             // Number of seconds since hour 00:00 of the 1st of January, 1970
             unsigned long long m_seconds;
 
@@ -85,21 +87,21 @@ namespace karabo {
              * @param tv timeval struct
              * @param ts timespec struct
              */
-            Epochstamp& operator =(const time_t& tm);
-            Epochstamp& operator =(const timeval& tv);
-            Epochstamp& operator =(const timespec& ts);
+            Epochstamp& operator=(const time_t& tm);
+            Epochstamp& operator=(const timeval& tv);
+            Epochstamp& operator=(const timespec& ts);
 
             /**
              * Relational operations between timestamps
              * @param other Epochstamp object
              * @return bool
              */
-            bool operator ==(const Epochstamp& other) const;
-            bool operator !=(const Epochstamp& other) const;
+            bool operator==(const Epochstamp& other) const;
+            bool operator!=(const Epochstamp& other) const;
             bool operator>(const Epochstamp& other) const;
-            bool operator >=(const Epochstamp& other) const;
+            bool operator>=(const Epochstamp& other) const;
             bool operator<(const Epochstamp& other) const;
-            bool operator <=(const Epochstamp& other) const;
+            bool operator<=(const Epochstamp& other) const;
 
             /**
              * Move a timestamp forward/backward with given time distance, 
@@ -107,25 +109,25 @@ namespace karabo {
              * @param duration TimeDuration object
              * @return Epochstamp object
              */
-            Epochstamp operator +(const TimeDuration& duration) const;
-            Epochstamp operator -(const TimeDuration& duration) const;
-            Epochstamp& operator +=(const TimeDuration& duration);
-            Epochstamp& operator -=(const TimeDuration& duration);
+            Epochstamp operator+(const TimeDuration& duration) const;
+            Epochstamp operator-(const TimeDuration& duration) const;
+            Epochstamp& operator+=(const TimeDuration& duration);
+            Epochstamp& operator-=(const TimeDuration& duration);
 
             /**
              * Time duration is the difference between two timestamps
              * @param other Epochstamp object
              * @return TimeDuration object
              */
-            TimeDuration operator -(const Epochstamp& other) const;
+            TimeDuration operator-(const Epochstamp& other) const;
 
             /**
              * Auto increment/decrement operators
              */
-            Epochstamp operator ++(int);
-            Epochstamp operator --(int);
-            Epochstamp& operator ++();
-            Epochstamp& operator --();
+            Epochstamp operator++(int);
+            Epochstamp operator--(int);
+            Epochstamp& operator++();
+            Epochstamp& operator--();
 
             /**
              * Portability functions to convert Epochstamp to other system time structures
@@ -195,8 +197,8 @@ namespace karabo {
              * @return formated string in the specified Time Zone
              */
             std::string toFormattedStringLocale(const std::string& localeName = std::string(""),
-                    const std::string& format = std::string("%Y-%b-%d %H:%M:%S"),
-                    const std::string& localTimeZone = std::string("Z")) const;
+                                                const std::string& format = std::string("%Y-%b-%d %H:%M:%S"),
+                                                const std::string& localTimeZone = std::string("Z")) const;
 
 
             static bool hashAttributesContainTimeInformation(const Hash::Attributes& attributes);
@@ -226,8 +228,8 @@ namespace karabo {
              * @return The specified date/time formatted according to the specified time_facet
              */
             static std::string getPTime2String(const boost::posix_time::ptime pt,
-                    const boost::posix_time::time_facet* facet,
-                    const std::string& localeName);
+                                               const boost::posix_time::time_facet* facet,
+                                               const std::string& localeName);
 
             /**
              * Formats to specified format time stored in the object
@@ -238,8 +240,8 @@ namespace karabo {
              * @return formated string in the specified Time Zone
              */
             std::string toFormattedStringInternal(const std::string& localeName,
-                    const std::string& format,
-                    const std::string& localTimeZone) const;
+                                                  const std::string& format,
+                                                  const std::string& localTimeZone) const;
 
             /**
              * Generates a sting (respecting ISO-8601) for object time for INTERNAL usage ("%Y%m%dT%H%M%S%f" => "20121225T132536.789333[123456789123]")
@@ -275,29 +277,29 @@ namespace karabo {
         // inlines
         //
 
-        inline Epochstamp& Epochstamp::operator =(const time_t& tm) {
+        inline Epochstamp& Epochstamp::operator=(const time_t& tm) {
             m_seconds = static_cast<uint64_t> (tm);
             m_fractionalSeconds = 0ULL;
             return *this;
         }
 
-        inline Epochstamp& Epochstamp::operator =(const timeval& tv) {
+        inline Epochstamp& Epochstamp::operator=(const timeval& tv) {
             m_seconds = tv.tv_sec;
             m_fractionalSeconds = tv.tv_usec * MICROSEC;
             return *this;
         }
 
-        inline Epochstamp& Epochstamp::operator =(const timespec& ts) {
+        inline Epochstamp& Epochstamp::operator=(const timespec& ts) {
             m_seconds = ts.tv_sec;
             m_fractionalSeconds = static_cast<unsigned long long> (ts.tv_nsec) * NANOSEC;
             return *this;
         }
 
-        inline bool Epochstamp::operator ==(const Epochstamp& other) const {
+        inline bool Epochstamp::operator==(const Epochstamp& other) const {
             return (this->m_fractionalSeconds == other.m_fractionalSeconds) && (this->m_seconds == other.m_seconds);
         }
 
-        inline bool Epochstamp::operator !=(const Epochstamp& other) const {
+        inline bool Epochstamp::operator!=(const Epochstamp& other) const {
             return !(*this == other);
         }
 
@@ -305,7 +307,7 @@ namespace karabo {
             return (this->m_seconds > other.m_seconds) || ((this->m_seconds == other.m_seconds) && (this->m_fractionalSeconds > other.m_fractionalSeconds));
         }
 
-        inline bool Epochstamp::operator >=(const Epochstamp& other) const {
+        inline bool Epochstamp::operator>=(const Epochstamp& other) const {
             return (*this == other) || (*this > other);
         }
 
@@ -313,11 +315,11 @@ namespace karabo {
             return !(*this >= other);
         }
 
-        inline bool Epochstamp::operator <=(const Epochstamp& other) const {
+        inline bool Epochstamp::operator<=(const Epochstamp& other) const {
             return !(*this > other);
         }
 
-        inline TimeDuration Epochstamp::operator -(const Epochstamp& other) const {
+        inline TimeDuration Epochstamp::operator-(const Epochstamp& other) const {
             if (m_fractionalSeconds < other.m_fractionalSeconds) {
                 return TimeDuration(m_seconds - other.m_seconds - 1ULL,
                                     (TimeDuration::m_oneSecondInAtto - other.m_fractionalSeconds) + m_fractionalSeconds);
@@ -326,19 +328,19 @@ namespace karabo {
             }
         }
 
-        inline Epochstamp Epochstamp::operator +(const TimeDuration& duration) const {
+        inline Epochstamp Epochstamp::operator+(const TimeDuration& duration) const {
             Epochstamp result(*this);
             result += duration;
             return result;
         }
 
-        inline Epochstamp Epochstamp::operator -(const TimeDuration& duration) const {
+        inline Epochstamp Epochstamp::operator-(const TimeDuration& duration) const {
             Epochstamp result(*this);
             result -= duration;
             return result;
         }
 
-        inline Epochstamp& Epochstamp::operator +=(const TimeDuration& duration) {
+        inline Epochstamp& Epochstamp::operator+=(const TimeDuration& duration) {
             this->m_seconds += duration.getTotalSeconds();
             if ((this->m_fractionalSeconds += duration.getFractions(ATTOSEC)) > TimeDuration::m_oneSecondInAtto) {
                 this->m_fractionalSeconds -= TimeDuration::m_oneSecondInAtto;
@@ -347,7 +349,7 @@ namespace karabo {
             return *this;
         }
 
-        inline Epochstamp& Epochstamp::operator -=(const TimeDuration& duration) {
+        inline Epochstamp& Epochstamp::operator-=(const TimeDuration& duration) {
             this->m_seconds -= duration.getTotalSeconds();
             const TimeValue durAttoSeconds = duration.getFractions(ATTOSEC);
             if (this->m_fractionalSeconds < durAttoSeconds) {
@@ -359,24 +361,24 @@ namespace karabo {
             return *this;
         }
 
-        inline Epochstamp Epochstamp::operator ++(int) {
+        inline Epochstamp Epochstamp::operator++(int) {
             Epochstamp result(*this);
             ++ * this;
             return result;
         }
 
-        inline Epochstamp Epochstamp::operator --(int) {
+        inline Epochstamp Epochstamp::operator--(int) {
             Epochstamp result(*this);
             -- * this;
             return result;
         }
 
-        inline Epochstamp& Epochstamp::operator ++() {
+        inline Epochstamp& Epochstamp::operator++() {
             ++ * this;
             return *this;
         }
 
-        inline Epochstamp& Epochstamp::operator --() {
+        inline Epochstamp& Epochstamp::operator--() {
             -- * this;
             return *this;
         }

@@ -62,7 +62,7 @@ namespace karabo {
 
         class KARABO_DECLSPEC Hash {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(Hash, "Hash", "2.0")
 
@@ -70,6 +70,7 @@ namespace karabo {
             typedef Element<std::string, Attributes > Node;
 
             enum MergePolicy {
+
 
                 MERGE_ATTRIBUTES,
                 REPLACE_ATTRIBUTES
@@ -445,7 +446,7 @@ namespace karabo {
              * @return the current hash is shrinked in place, the other hash is untouched
              */
             void subtract(const Hash& other, const char separator = '.');
-            
+
             /**
              * Flattens a hierarchical Hash into "one-level", <i>flat</i> Hash object 
              * @return A Hash having keys that are all leaves
@@ -551,7 +552,7 @@ namespace karabo {
 
             bool operator==(const Hash& other);
             bool operator!=(const Hash& other);
-            
+
             /**
              * Implement the visitor pattern
              * @param visitor
@@ -666,7 +667,7 @@ namespace karabo {
                 return hash.m_container.get<Hash > (key);
             } else {
                 const vector<Hash>& hashVec = hash.m_container.get<vector<Hash> >(key);
-                if (static_cast<unsigned int>(index) >= hashVec.size()) {
+                if (static_cast<unsigned int> (index) >= hashVec.size()) {
                     throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" + path + "'.");
                 }
                 return hashVec[index];

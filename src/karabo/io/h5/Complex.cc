@@ -5,18 +5,18 @@
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
- 
- 
+
+
 #include "Complex.hh"
 using namespace karabo::io;
-      
-namespace karabo {  
-  namespace io {
-    namespace h5 {
-                   
-    KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, FloatComplexElement)
-    KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, DoubleComplexElement)
-                   
+
+namespace karabo {
+    namespace io {
+        namespace h5 {
+
+            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, FloatComplexElement)
+            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, DoubleComplexElement)
+
+        }
     }
-  }
 }

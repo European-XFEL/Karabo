@@ -27,7 +27,7 @@ namespace karabo {
             template<class T>
             class ScalarAttribute : public karabo::io::h5::Attribute {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(ScalarAttribute, karabo::util::ToType<karabo::util::ToLiteral>::
                                  to(
@@ -113,7 +113,7 @@ namespace karabo {
             template<>
             class ScalarAttribute<std::string> : public karabo::io::h5::Attribute {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(ScalarAttribute, karabo::util::ToType<karabo::util::ToLiteral>::
                                  to(
@@ -191,7 +191,7 @@ namespace karabo {
             template<>
             class ScalarAttribute<bool> : public karabo::io::h5::Attribute {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(ScalarAttribute, karabo::util::ToType<karabo::util::ToLiteral>::
                                  to(
@@ -248,7 +248,7 @@ namespace karabo {
                     }
                 }
 
-                void readNodeAttribute(karabo::util::Element<std::string>& attributeNode, hid_t attribute) {                 
+                void readNodeAttribute(karabo::util::Element<std::string>& attributeNode, hid_t attribute) {
 
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "reading - string attribute";
                     hid_t space = H5Aget_space(m_attribute);
@@ -256,7 +256,7 @@ namespace karabo {
                     unsigned char rdata;
                     hid_t tid = getNativeTypeId();
                     KARABO_CHECK_HDF5_STATUS(H5Aread(m_attribute, tid, &rdata));
-                    *m_attributeData = boost::numeric_cast<bool>(rdata);                    
+                    *m_attributeData = boost::numeric_cast<bool>(rdata);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                     KARABO_CHECK_HDF5_STATUS(H5Sclose(space));
 

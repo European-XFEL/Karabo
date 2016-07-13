@@ -103,7 +103,7 @@ namespace karabo {
         inline std::string toString(const karabo::util::CppNone& value) {
             return std::string("None");
         }
-        
+
         template <typename T>
         inline std::string toString(const std::vector<T>& value) {
             if (value.empty()) return "";
@@ -129,39 +129,37 @@ namespace karabo {
             }
             return s.str();
         }
-        
+
         inline std::string toString(const std::vector<unsigned char>& value) {
             return karabo::util::base64Encode(&value[0], value.size());
         }
-        
-         inline std::string toString(const std::vector<char>& value) {
-            return karabo::util::base64Encode(reinterpret_cast<const unsigned char*>(&value[0]), value.size());
+
+        inline std::string toString(const std::vector<char>& value) {
+            return karabo::util::base64Encode(reinterpret_cast<const unsigned char*> (&value[0]), value.size());
         }
 
         template <typename T>
-        inline std::string toString(const std::pair<const T*, size_t>& value) {            
-            if (value.second == 0 ) return "";            
+        inline std::string toString(const std::pair<const T*, size_t>& value) {
+            if (value.second == 0) return "";
             const T* ptr = value.first;
             std::ostringstream s;
-            s << toString(ptr[0]);            
-            for( size_t i=1; i< value.second; i++){
-                s << "," << toString(ptr[i]);                
+            s << toString(ptr[0]);
+            for (size_t i = 1; i < value.second; i++) {
+                s << "," << toString(ptr[i]);
             }
             return s.str();
         }
-        
-        inline std::string toString(const std::pair<const unsigned char*, size_t>& value) {            
-            if (value.second == 0 ) return "";            
+
+        inline std::string toString(const std::pair<const unsigned char*, size_t>& value) {
+            if (value.second == 0) return "";
             return karabo::util::base64Encode(value.first, value.second);
         }
 
-        inline std::string toString(const std::pair<const char*, size_t>& value) {            
-            if (value.second == 0 ) return "";            
-            return karabo::util::base64Encode(reinterpret_cast<const unsigned char*>(value.first), value.second);
+        inline std::string toString(const std::pair<const char*, size_t>& value) {
+            if (value.second == 0) return "";
+            return karabo::util::base64Encode(reinterpret_cast<const unsigned char*> (value.first), value.second);
         }
-        
-        
-        
+
         template <typename T>
         inline std::string toString(const std::set<T>& value) {
             if (value.empty()) return "";
@@ -206,25 +204,25 @@ namespace karabo {
         inline T fromString(const std::string& value) {
             return boost::lexical_cast<T > (value);
         }
-        
+
         template<>
         inline int fromString(const std::string& value) {
             int val = strtol(value.c_str(), NULL, 0);
             return val;
         }
-        
+
         template<>
         inline unsigned int fromString(const std::string& value) {
             unsigned int val = strtoul(value.c_str(), NULL, 0);
             return val;
         }
-        
+
         template<>
         inline long long fromString(const std::string& value) {
             long long val = strtoll(value.c_str(), NULL, 0);
             return val;
         }
-        
+
         template<>
         inline unsigned long long fromString(const std::string& value) {
             unsigned long long val = strtoull(value.c_str(), NULL, 0);
@@ -239,7 +237,7 @@ namespace karabo {
                 throw KARABO_CAST_EXCEPTION("Cannot interprete \"" + value + "\" as None.");
             return karabo::util::CppNone();
         }
-        
+
         template<typename T,
         template <typename ELEM, typename = std::allocator<ELEM> > class CONT>
         inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
@@ -265,18 +263,18 @@ namespace karabo {
                 return CONT<T>(); // Make the compiler happy
             }
         }
-        
-        template <> 
+
+        template <>
         inline std::vector<unsigned char> fromString(const std::string& value, const std::string&) {
             std::vector<unsigned char> tmp;
             karabo::util::base64Decode(value, tmp);
             return tmp;
         }
-        
-        template <> 
+
+        template <>
         inline std::vector<char> fromString(const std::string& value, const std::string&) {
             std::vector<char> tmp;
-            std::vector<unsigned char>* casted = reinterpret_cast<std::vector<unsigned char>* >(&tmp);
+            std::vector<unsigned char>* casted = reinterpret_cast<std::vector<unsigned char>*> (&tmp);
             karabo::util::base64Decode(value, *casted);
             return tmp;
         }
@@ -332,7 +330,7 @@ namespace karabo {
                 return std::vector<int>(); // Make the compiler happy
             }
         }
-        
+
         template <>
         inline std::vector<unsigned int> fromString(const std::string& value, const std::string& separator) {
             try {
@@ -358,7 +356,7 @@ namespace karabo {
                 return std::vector<unsigned int>(); // Make the compiler happy
             }
         }
-                
+
         template <>
         inline std::vector<long long> fromString(const std::string& value, const std::string& separator) {
             try {
@@ -384,7 +382,7 @@ namespace karabo {
                 return std::vector<long long>(); // Make the compiler happy
             }
         }
-        
+
         template <>
         inline std::vector<unsigned long long> fromString(const std::string& value, const std::string& separator) {
             try {
@@ -410,7 +408,7 @@ namespace karabo {
                 return std::vector<unsigned long long>(); // Make the compiler happy
             }
         }
-                
+
         template<> inline unsigned char fromString<unsigned char>(const std::string& value) {
             return boost::numeric_cast<unsigned char>(boost::lexical_cast<int>(value));
         }
@@ -433,10 +431,10 @@ namespace karabo {
             std::string val = boost::to_lower_copy(value);
             bool boolVal;
             if (val == "n" || val == "no" || val == "false" ||
-                    val == "0") {
+                val == "0") {
                 boolVal = false;
             } else if (val == "y" || val == "yes" || val == "1" ||
-                    val == "true") {
+                       val == "true") {
                 boolVal = true;
             } else {
                 throw KARABO_CAST_EXCEPTION("Cannot interprete \"" + val + "\" as boolean.");
@@ -454,6 +452,7 @@ namespace karabo {
         class Widen : public std::unary_function<
         const std::string&, std::basic_string<E, T, Sub1> > {
 
+
             std::locale loc_;
             const std::ctype<E>* pCType_;
 
@@ -465,17 +464,17 @@ namespace karabo {
             // Constructor...
 
             Widen(const std::locale& loc = std::locale()) : loc_(loc) {
-                #if defined(_MSC_VER) && (_MSC_VER < 1300) // VC++ 6.0...
+#if defined(_MSC_VER) && (_MSC_VER < 1300) // VC++ 6.0...
                 using namespace std;
                 pCType_ = &_USE(loc, ctype<E>);
-                #else
+#else
                 pCType_ = &std::use_facet<std::ctype<E> >(loc);
-                #endif
+#endif
             }
 
             // Conversion...
 
-            std::basic_string<E, T, Sub1> operator() (const std::string& str) const {
+            std::basic_string<E, T, Sub1> operator()(const std::string& str) const {
                 typename std::basic_string<E, T, Sub1>::size_type srcLen =
                         str.length();
                 const char* pSrcBeg = str.c_str();
@@ -508,7 +507,7 @@ namespace karabo {
             iter beg;
             bool in_token = false;
             for (std::string::const_iterator it = inputString.begin(), end = inputString.end();
-                    it != end; ++it) {
+                 it != end; ++it) {
                 if (delims[*it & 0xff]) {
                     if (in_token) {
                         output.push_back(typename container::value_type(beg, it));
@@ -537,6 +536,7 @@ namespace karabo {
         inline bool isBigEndian() {
 
             union {
+
 
                 unsigned int i;
                 char c[4];

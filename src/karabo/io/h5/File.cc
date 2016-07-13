@@ -35,14 +35,16 @@ namespace karabo {
                 return 1;
             }
 
-            File::File(const hid_t & h5file) : m_h5file(h5file), m_managed(true){
+
+            File::File(const hid_t & h5file) : m_h5file(h5file), m_managed(true) {
                 size_t nameSize = H5Fget_name(h5file, NULL, 0);
-                char filename[nameSize+1];
-                H5Fget_name(h5file, filename, nameSize+1);
+                char filename[nameSize + 1];
+                H5Fget_name(h5file, filename, nameSize + 1);
                 m_filename = std::string(filename);
-                
-                
+
+
             }
+
 
             File::File(const Hash& input) : m_h5file(-1), m_managed(false) {
                 m_filename = boost::filesystem::path(input.get<std::string > ("filename"));
@@ -50,17 +52,17 @@ namespace karabo {
 
 
             File::File(const boost::filesystem::path& filename)
-            : m_filename(filename), m_h5file(-1), m_managed(false) {
+                : m_filename(filename), m_h5file(-1), m_managed(false) {
             }
 
 
             File::File(const std::string& filename)
-            : m_filename(filename), m_h5file(-1), m_managed(false) {
+                : m_filename(filename), m_h5file(-1), m_managed(false) {
             }
 
 
             File::~File() {
-                if (m_h5file > -1 ) {
+                if (m_h5file > -1) {
                     close();
                 }
             }
@@ -129,16 +131,16 @@ namespace karabo {
             Table::Pointer File::createTable(const string& name, const Format::Pointer dataFormat) {
 
 
-                if( name[0] != '/'){
+                if (name[0] != '/') {
                     throw KARABO_IO_EXCEPTION("Table name must start with /");
                 }
-                
+
                 if (m_accMode == READONLY) {
                     throw KARABO_IO_EXCEPTION("Cannot create table when file is open in READONLY mode");
                 }
 
-                if(hasTable(name)){
-                    throw KARABO_IO_EXCEPTION("Cannot create table " + name +" - already exists");
+                if (hasTable(name)) {
+                    throw KARABO_IO_EXCEPTION("Cannot create table " + name + " - already exists");
                 }
 
                 Table::Pointer table = Table::Pointer(new Table(m_h5file, name));
@@ -193,7 +195,7 @@ namespace karabo {
                     m_openTables.erase(it++);
 
                 }
-                if(!m_managed) KARABO_CHECK_HDF5_STATUS(H5Fclose(m_h5file));
+                if (!m_managed) KARABO_CHECK_HDF5_STATUS(H5Fclose(m_h5file));
                 m_h5file = -1;
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "file " << m_filename.string() << " closed";
             }
@@ -216,8 +218,8 @@ namespace karabo {
             Table::Pointer File::createReadOnlyTablePointer(const std::string & name) {
                 return Table::Pointer(new Table(m_h5file, name));
             }
-            
-            
+
+
             void File::updateTableIndex(const std::string & path) {
 
                 hid_t tables;
@@ -254,7 +256,7 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Awrite(tables, tid, &ptr));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(tables))
-                
+
                 boost::split(m_existingTables, tablePaths, boost::is_any_of("\n"));
 
             }
