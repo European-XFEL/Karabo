@@ -9,229 +9,229 @@
       <Name>AlarmCondition_Test::testSignificanceEvaluation</Name>
     </Test>
     <Test id="3">
-      <Name>AlarmCondition_Test::testValidationConditionalRoundTrip</Name>
-    </Test>
-    <Test id="4">
       <Name>Base64_Test::testEncode</Name>
     </Test>
-    <Test id="5">
+    <Test id="4">
       <Name>Base64_Test::testDecode</Name>
     </Test>
-    <Test id="6">
+    <Test id="5">
       <Name>ByteSwap_Test::test16</Name>
     </Test>
-    <Test id="7">
+    <Test id="6">
       <Name>ByteSwap_Test::test32</Name>
     </Test>
-    <Test id="8">
+    <Test id="7">
       <Name>ByteSwap_Test::test64</Name>
     </Test>
-    <Test id="9">
+    <Test id="8">
       <Name>DateTimeString_Test::testConstructors</Name>
     </Test>
-    <Test id="10">
+    <Test id="9">
       <Name>DateTimeString_Test::isStringValidIso8601</Name>
     </Test>
-    <Test id="11">
+    <Test id="10">
       <Name>DateTimeString_Test::isStringKaraboValidIso8601</Name>
     </Test>
-    <Test id="12">
+    <Test id="11">
       <Name>DateTimeString_Test::isStringKaraboValidIso8601TimeZone</Name>
     </Test>
-    <Test id="13">
+    <Test id="12">
       <Name>DateTimeString_Test::validateFractionalSecondToString</Name>
     </Test>
-    <Test id="14">
+    <Test id="13">
       <Name>Dims_Test::testDims</Name>
     </Test>
-    <Test id="15">
+    <Test id="14">
       <Name>Dims_Test::testArrayTools</Name>
     </Test>
-    <Test id="16">
+    <Test id="15">
       <Name>Epochstamp_Test::testConstructors</Name>
     </Test>
-    <Test id="17">
+    <Test id="16">
       <Name>Epochstamp_Test::testOperators</Name>
     </Test>
-    <Test id="18">
+    <Test id="17">
       <Name>Epochstamp_Test::testToIso8601String</Name>
     </Test>
-    <Test id="19">
+    <Test id="18">
       <Name>Epochstamp_Test::testToFormattedString</Name>
     </Test>
-    <Test id="20">
+    <Test id="19">
       <Name>Factory_Test::testObjectCreation</Name>
     </Test>
-    <Test id="21">
+    <Test id="20">
       <Name>Factory_Test::testClassInfo</Name>
     </Test>
-    <Test id="22">
+    <Test id="21">
       <Name>HashFilter_Test::testFilterByTag</Name>
     </Test>
-    <Test id="23">
+    <Test id="22">
       <Name>HashFilter_Test::testFilterByAccessMode</Name>
     </Test>
-    <Test id="24">
+    <Test id="23">
       <Name>Hash_Test::testConstructors</Name>
     </Test>
-    <Test id="25">
+    <Test id="24">
       <Name>Hash_Test::testGetSet</Name>
     </Test>
-    <Test id="26">
+    <Test id="25">
       <Name>Hash_Test::testGetAs</Name>
     </Test>
-    <Test id="27">
+    <Test id="26">
       <Name>Hash_Test::testFind</Name>
     </Test>
-    <Test id="28">
+    <Test id="27">
       <Name>Hash_Test::testIteration</Name>
     </Test>
-    <Test id="29">
+    <Test id="28">
       <Name>Hash_Test::testAttributes</Name>
     </Test>
-    <Test id="30">
+    <Test id="29">
       <Name>Hash_Test::testGetPaths</Name>
     </Test>
-    <Test id="31">
+    <Test id="30">
       <Name>Hash_Test::testMerge</Name>
     </Test>
-    <Test id="32">
+    <Test id="31">
       <Name>Hash_Test::testSubtract</Name>
     </Test>
-    <Test id="33">
+    <Test id="32">
       <Name>Hash_Test::testErase</Name>
     </Test>
-    <Test id="34">
+    <Test id="33">
       <Name>Hash_Test::testHas</Name>
     </Test>
-    <Test id="35">
+    <Test id="34">
       <Name>Hash_Test::testIs</Name>
     </Test>
-    <Test id="36">
+    <Test id="35">
       <Name>Hash_Test::testHelper</Name>
     </Test>
-    <Test id="37">
+    <Test id="36">
       <Name>Hash_Test::testTableValidation</Name>
     </Test>
-    <Test id="38">
+    <Test id="37">
       <Name>Schema_Test::testBuildUp</Name>
     </Test>
-    <Test id="39">
+    <Test id="38">
       <Name>Schema_Test::testGetRootName</Name>
     </Test>
-    <Test id="40">
+    <Test id="39">
       <Name>Schema_Test::testGetTags</Name>
     </Test>
-    <Test id="41">
+    <Test id="40">
       <Name>Schema_Test::testGetNodeType</Name>
     </Test>
-    <Test id="42">
+    <Test id="41">
       <Name>Schema_Test::testGetValueType</Name>
     </Test>
-    <Test id="43">
+    <Test id="42">
       <Name>Schema_Test::testKeyHasAlias</Name>
     </Test>
-    <Test id="44">
+    <Test id="43">
       <Name>Schema_Test::testAliasHasKey</Name>
     </Test>
-    <Test id="45">
+    <Test id="44">
       <Name>Schema_Test::testGetAliasFromKey</Name>
     </Test>
-    <Test id="46">
+    <Test id="45">
       <Name>Schema_Test::testGetKeyFromAlias</Name>
     </Test>
-    <Test id="47">
+    <Test id="46">
       <Name>Schema_Test::testGetAliasAsString</Name>
     </Test>
-    <Test id="48">
+    <Test id="47">
       <Name>Schema_Test::testGetAccessMode</Name>
     </Test>
-    <Test id="49">
+    <Test id="48">
       <Name>Schema_Test::testGetAssignment</Name>
     </Test>
-    <Test id="50">
+    <Test id="49">
       <Name>Schema_Test::testGetOptions</Name>
     </Test>
-    <Test id="51">
+    <Test id="50">
       <Name>Schema_Test::testGetDefaultValue</Name>
     </Test>
-    <Test id="52">
+    <Test id="51">
       <Name>Schema_Test::testGetAllowedStates</Name>
     </Test>
-    <Test id="53">
+    <Test id="52">
       <Name>Schema_Test::testGetUnit</Name>
     </Test>
-    <Test id="54">
+    <Test id="53">
       <Name>Schema_Test::testGetMetricPrefix</Name>
     </Test>
-    <Test id="55">
+    <Test id="54">
       <Name>Schema_Test::testGetMinIncMaxInc</Name>
     </Test>
-    <Test id="56">
+    <Test id="55">
       <Name>Schema_Test::testGetMinExcMaxExc</Name>
     </Test>
-    <Test id="57">
+    <Test id="56">
       <Name>Schema_Test::testPerKeyFunctionality</Name>
     </Test>
-    <Test id="58">
+    <Test id="57">
       <Name>Schema_Test::testHelpFunction</Name>
     </Test>
-    <Test id="59">
+    <Test id="58">
       <Name>Schema_Test::testPaths</Name>
     </Test>
-    <Test id="60">
+    <Test id="59">
       <Name>Schema_Test::testGetRequiredAccessLevel</Name>
     </Test>
-    <Test id="61">
+    <Test id="60">
       <Name>Schema_Test::testSetRequiredAccessLevel</Name>
     </Test>
-    <Test id="62">
+    <Test id="61">
       <Name>Schema_Test::testGetAlarmLowAlarmHigh</Name>
     </Test>
-    <Test id="63">
+    <Test id="62">
       <Name>Schema_Test::testGetWarnLowWarnHigh</Name>
     </Test>
-    <Test id="64">
+    <Test id="63">
       <Name>Schema_Test::testHasAlarmWarn</Name>
     </Test>
-    <Test id="65">
+    <Test id="64">
       <Name>Schema_Test::testSlotElement</Name>
     </Test>
-    <Test id="66">
+    <Test id="65">
       <Name>Schema_Test::testVectorElements</Name>
     </Test>
-    <Test id="67">
+    <Test id="66">
       <Name>Schema_Test::testPathElement</Name>
     </Test>
-    <Test id="68">
+    <Test id="67">
       <Name>Schema_Test::testImageElement</Name>
     </Test>
-    <Test id="69">
+    <Test id="68">
       <Name>Schema_Test::testArchivePolicy</Name>
     </Test>
-    <Test id="70">
+    <Test id="69">
       <Name>Schema_Test::testOverwriteElement</Name>
     </Test>
-    <Test id="71">
+    <Test id="70">
       <Name>Schema_Test::testMerge</Name>
     </Test>
-    <Test id="72">
+    <Test id="71">
       <Name>Schema_Test::testTable</Name>
     </Test>
-    <Test id="73">
+    <Test id="72">
       <Name>Schema_Test::testList</Name>
     </Test>
-    <Test id="74">
+    <Test id="73">
       <Name>Schema_Test::testInvalidNodes</Name>
     </Test>
-    <Test id="75">
+    <Test id="74">
       <Name>States_Test::testStringRoundTrip</Name>
     </Test>
-    <Test id="76">
+    <Test id="75">
       <Name>States_Test::testSignifier</Name>
     </Test>
-    <Test id="77">
+    <Test id="76">
       <Name>States_Test::testSignifierNonDefaultList</Name>
+    </Test>
+    <Test id="77">
+      <Name>States_Test::testComparisons</Name>
     </Test>
     <Test id="78">
       <Name>StatisticalEvaluator::testMean</Name>
@@ -249,53 +249,59 @@
       <Name>StatisticalEvaluator::testUpdateMeanTriggering</Name>
     </Test>
     <Test id="83">
-      <Name>StringTools_Test::testFromString</Name>
+      <Name>StatisticalEvaluator::testPerformance</Name>
     </Test>
     <Test id="84">
-      <Name>StringTools_Test::testToString</Name>
+      <Name>StatisticalEvaluator::testValidatorPerformance</Name>
     </Test>
     <Test id="85">
-      <Name>StringTools_Test::testWiden</Name>
+      <Name>StringTools_Test::testFromString</Name>
     </Test>
     <Test id="86">
-      <Name>TimeClasses_Test::testEpochstamp</Name>
+      <Name>StringTools_Test::testToString</Name>
     </Test>
     <Test id="87">
-      <Name>TimeClasses_Test::testTimePeriod</Name>
+      <Name>StringTools_Test::testWiden</Name>
     </Test>
     <Test id="88">
-      <Name>TimeClasses_Test::testTimeDuration</Name>
+      <Name>TimeClasses_Test::testEpochstamp</Name>
     </Test>
     <Test id="89">
-      <Name>TimeClasses_Test::testTimeProfiler</Name>
+      <Name>TimeClasses_Test::testTimePeriod</Name>
     </Test>
     <Test id="90">
-      <Name>Types_Test::testIsPointer</Name>
+      <Name>TimeClasses_Test::testTimeDuration</Name>
     </Test>
     <Test id="91">
-      <Name>Types_Test::testIsVector</Name>
+      <Name>TimeClasses_Test::testTimeProfiler</Name>
     </Test>
     <Test id="92">
-      <Name>Types_Test::testIsSimple</Name>
+      <Name>Types_Test::testIsPointer</Name>
     </Test>
     <Test id="93">
-      <Name>Types_Test::testCategory</Name>
+      <Name>Types_Test::testIsVector</Name>
     </Test>
     <Test id="94">
-      <Name>Types_Test::testFrom</Name>
+      <Name>Types_Test::testIsSimple</Name>
     </Test>
     <Test id="95">
-      <Name>Types_Test::testTo</Name>
+      <Name>Types_Test::testCategory</Name>
     </Test>
     <Test id="96">
-      <Name>Types_Test::testConvert</Name>
+      <Name>Types_Test::testFrom</Name>
     </Test>
     <Test id="97">
+      <Name>Types_Test::testTo</Name>
+    </Test>
+    <Test id="98">
+      <Name>Types_Test::testConvert</Name>
+    </Test>
+    <Test id="99">
       <Name>Version_Test::testVersion</Name>
     </Test>
   </SuccessfulTests>
   <Statistics>
-    <Tests>97</Tests>
+    <Tests>99</Tests>
     <FailuresTotal>0</FailuresTotal>
     <Errors>0</Errors>
     <Failures>0</Failures>
