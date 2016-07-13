@@ -94,15 +94,8 @@ class Device(SignalSlotable):
         if "abstract" not in dict:
             Device.subclasses[name] = cls
 
-    def initSchema(self):
-        self.staticSchema = self.getClassSchema()
-        self.fullSchema = Schema(self.classId)
-        self.fullSchema.copy(self.staticSchema)
-
     @coroutine
     def _run(self):
-        self.initSchema()
-
         info = Hash()
         info["type"] = "device"
         info["classId"] = self.classId.value
@@ -146,9 +139,8 @@ class Device(SignalSlotable):
 
     @slot
     def slotGetSchema(self, onlyCurrentState):
-        # TODO we ignore onlyCurrentState here, instead we return
-        # the full schema.
-        return self.fullSchema, self.deviceId
+        return self.getDeviceSchema(
+            state=self.state if onlyCurrentState else None), self.deviceId
 
     @slot
     def slotInstanceNew(self, instanceId, info):

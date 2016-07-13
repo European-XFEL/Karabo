@@ -77,7 +77,6 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                       if isinstance(getattr(cls, k), Descriptor)]
         cls._allattrs = set.union(*(set(c._attrs) for c in cls.__mro__
                                     if hasattr(c, "_attrs")))
-        cls.xsd = cls.getClassSchema()
         cls._subclasses = { }
         for b in cls.__bases__:
             if issubclass(b, Configurable):
@@ -87,8 +86,6 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     def getClassSchema(cls, device=None, state=None):
         schema = Schema(cls.__name__)
         for c in cls.__mro__[::-1]:
-            if hasattr(c, "expectedParameters"):
-                c.expectedParameters(schema)
             if hasattr(c, "_attrs"):
                 for k in c._attrs:
                     v = getattr(c, k)
