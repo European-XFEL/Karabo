@@ -124,6 +124,10 @@ namespace karabo {
             static const State EMPTYING;
             static const State DISENGAGING;
             static const State SWITCHING_OFF;
+            
+            static const State INTERLOCK_BROKEN;
+            static const State INTERLOCK_OK;
+            static const State SEARCHING;
 
   
             static const State & fromString(const std::string & state);

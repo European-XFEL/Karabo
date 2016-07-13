@@ -20,6 +20,9 @@ namespace karabo {
             StateSignifier(const std::vector<karabo::core::State>& trumpList = std::vector<karabo::core::State>(),
                     const karabo::core::State& staticMoreSignificant = State::PASSIVE,
                     const karabo::core::State& changingMoreSignificant = State::DECREASING);
+            
+            StateSignifier(const karabo::core::State& staticMoreSignificant,
+                    const karabo::core::State& changingMoreSignificant);
 
             State returnMostSignificant(const std::vector<State>& listOfStates);
 
@@ -38,6 +41,9 @@ namespace karabo {
              * @param all  vector for accumulating of output list of ancestors
              */
             void fillAncestorNames_r(const State& s, std::vector<std::string>& all);
+            
+            
+            const bool inList(const std::vector<State> & list, const State & s) const;
             
         protected:
             std::vector<State> m_trumpList;

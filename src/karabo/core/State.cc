@@ -130,6 +130,14 @@ namespace karabo {
         KARABO_INIT_FIXED_STATE(DISENGAGING, DECREASING)
 
         KARABO_INIT_FIXED_STATE(SWITCHING_OFF, DECREASING)
+        
+        KARABO_INIT_FIXED_STATE(INTERLOCK_BROKEN, DISABLED)
+        
+        KARABO_INIT_FIXED_STATE(INTERLOCK_OK, STATIC)
+        
+        KARABO_INIT_FIXED_STATE(SEARCHING, CHANGING)
+        
+        
 
 #undef KARABO_INIT_FIXED_STATE
         
@@ -140,7 +148,6 @@ namespace karabo {
         bool State::isCompatible(const State& s) const {
             if (m_stateName == s.m_stateName) return true;
             if (m_parent && m_parent->isCompatible(s)) return true;
-            if (s.m_parent && this->isCompatible(*(s.m_parent))) return true;
             return false;
         }
         
@@ -213,6 +220,10 @@ namespace karabo {
                 KARABO_INSERT_STATE_TO_FACTORY(EMPTYING)    
                 KARABO_INSERT_STATE_TO_FACTORY(DISENGAGING)    
                 KARABO_INSERT_STATE_TO_FACTORY(SWITCHING_OFF)   
+                        
+                KARABO_INSERT_STATE_TO_FACTORY(INTERLOCK_BROKEN)    
+                KARABO_INSERT_STATE_TO_FACTORY(INTERLOCK_OK)    
+                KARABO_INSERT_STATE_TO_FACTORY(INTERLOCKED)  
                    
 
                 #undef KARABO_INSERT_STATE_TO_FACTORY
