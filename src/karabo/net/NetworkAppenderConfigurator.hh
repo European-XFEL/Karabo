@@ -19,7 +19,7 @@ namespace karabo {
 
         class NetworkAppenderConfigurator : public karabo::log::AppenderConfigurator {
 
-        public:
+            public:
             KARABO_CLASSINFO(NetworkAppenderConfigurator, "Network", "1.0")
 
             virtual ~NetworkAppenderConfigurator();

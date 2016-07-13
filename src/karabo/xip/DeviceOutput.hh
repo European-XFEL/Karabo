@@ -34,6 +34,7 @@ namespace exfel {
         template <class T>
         class DeviceOutput : public Output<T> {
 
+
             typedef boost::shared_ptr<exfel::net::Channel> TcpChannelPointer;
             typedef std::pair<TcpChannelPointer, std::string> TcpChannelInfo;
             typedef std::map<std::string, TcpChannelInfo> TcpChannelMap;

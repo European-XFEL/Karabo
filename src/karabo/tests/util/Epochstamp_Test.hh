@@ -17,6 +17,7 @@
 
 class Epochstamp_Test : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(Epochstamp_Test);
 
     CPPUNIT_TEST(testConstructors);

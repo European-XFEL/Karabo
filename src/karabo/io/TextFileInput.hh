@@ -36,6 +36,7 @@ namespace karabo {
         template <class T>
         class TextFileInput : public Input<T> {
 
+
             typename TextSerializer<T>::Pointer m_serializer;
 
             boost::filesystem::path m_filename;

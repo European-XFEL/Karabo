@@ -13,6 +13,8 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 class Data_Test : public CPPUNIT_NS::TestFixture {
+
+
     CPPUNIT_TEST_SUITE(Data_Test);
     CPPUNIT_TEST(testSetHash);
     CPPUNIT_TEST(testSetHashPtr);

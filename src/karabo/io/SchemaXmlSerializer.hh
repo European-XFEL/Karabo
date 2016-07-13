@@ -19,6 +19,7 @@ namespace karabo {
 
         class SchemaXmlSerializer : public TextSerializer<karabo::util::Schema> {
 
+
             TextSerializer<karabo::util::Hash>::Pointer m_serializer;
 
         public:
@@ -32,10 +33,10 @@ namespace karabo {
             void save(const karabo::util::Schema& object, std::string& archive);
 
             void load(karabo::util::Schema& object, const std::string& archive);
-            
+
             virtual ~SchemaXmlSerializer() {
             }
-            
+
         };
     }
 }

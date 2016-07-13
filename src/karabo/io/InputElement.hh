@@ -24,19 +24,20 @@ namespace karabo {
 
         class InputElement : public karabo::util::GenericElement<InputElement> {
 
+
             karabo::util::Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
         public:
 
             InputElement(karabo::util::Schema& expected) : karabo::util::GenericElement<InputElement>(expected) {
                 m_parentSchemaAssemblyRules = expected.getAssemblyRules();
-		this->m_node->setValue(karabo::util::Hash());
+                this->m_node->setValue(karabo::util::Hash());
             }
 
             template <class ConfigurationBase>
             InputElement& setInputType() {
-		karabo::util::Schema schema = karabo::util::Configurator<ConfigurationBase>::getSchema("Network");
-		this->m_node->setValue<karabo::util::Hash>(schema.getParameterHash());
+                karabo::util::Schema schema = karabo::util::Configurator<ConfigurationBase>::getSchema("Network");
+                this->m_node->setValue<karabo::util::Hash>(schema.getParameterHash());
                 return *this;
             }
 

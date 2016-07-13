@@ -34,6 +34,7 @@ namespace bp = boost::python;
 
 namespace karathon {
 
+
     struct AbstractInputWrap {
 
 
@@ -82,7 +83,7 @@ namespace karathon {
             ScopedGILRelease nogil;
             self->update();
         }
-        
+
 
         static void registerIOEventHandler(AbstractInput::Pointer self, const bp::object& handler) {
             self->registerIOEventHandler(handler);
@@ -92,20 +93,23 @@ namespace karathon {
         static void registerEndOfStreamEventHandler(AbstractInput::Pointer self, const bp::object& handler) {
             self->registerEndOfStreamEventHandler(handler);
         }
-    };   
+    };
+
 
     template <class T>
     struct OutputWrap {
 
+
         static void update(const boost::shared_ptr<karabo::io::Output<T> >& self) {
             ScopedGILRelease nogil;
             self->update();
-        }             
+        }
     };
 
 
     template <class T>
     struct InputWrap {
+
 
         static void registerIOEventHandler(const boost::shared_ptr<karabo::io::Input<T> >& self, const bp::object& handler) {
             self->registerIOEventHandler(handler);
@@ -120,6 +124,8 @@ namespace karathon {
 
     template <class T>
     struct loadFromFileWrap {
+
+
         static bp::object loadWrap(const bp::object& fileNameObj, const bp::object& conf) {
             if (PyUnicode_Check(fileNameObj.ptr())) {
                 string fileName = bp::extract<string>(fileNameObj);
@@ -136,8 +142,10 @@ namespace karathon {
         }
     };
 
+
     template <class T>
     struct TextSerializerWrap {
+
 
         static bp::object save(karabo::io::TextSerializer<T>& s, const T& object) {
             std::string archive;
@@ -188,10 +196,12 @@ void exportPyIo() {
                 .def("registerEndOfStreamEventHandler", &karathon::AbstractInputWrap::registerEndOfStreamEventHandler, (bp::arg("handler")))
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractInput)
                 ;
-    }   
+    }
 }
 
 // TODO: DEPRECATE THIS
+
+
 void exportPyIoFileTools() {
 
     bp::def("saveToFile"
@@ -219,6 +229,7 @@ void exportPyIoFileTools() {
             );
 }
 
+
 template <class T>
 void exportPyIOFileTools1() {
     string className = T::classInfo().getClassName();
@@ -244,13 +255,12 @@ void exportPyIoOutput() {
                 .def("write"
                      , (void (SpecificOutput::*)(T const &))(&SpecificOutput::write)
                      , (bp::arg("data")))
-                .def("use_count", &boost::shared_ptr<SpecificOutput>::use_count)              
-                .def("update", &karathon::OutputWrap<T>::update)              
+                .def("use_count", &boost::shared_ptr<SpecificOutput>::use_count)
+                .def("update", &karathon::OutputWrap<T>::update)
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificOutput)
                 ;
     }
 }
-
 
 
 template <class T>
@@ -272,7 +282,6 @@ void exportPyIoInput() {
                 ;
     }
 }
-
 
 
 template <class T>
@@ -298,9 +307,9 @@ void exportPyIoTextSerializer() {
 }
 
 
-
 template <class T>
 class BinarySerializerWrap {
+
 
 public:
 
@@ -342,6 +351,7 @@ public:
 
 template <>
 class BinarySerializerWrap<Hash> {
+
 
 public:
 

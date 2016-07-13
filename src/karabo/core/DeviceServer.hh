@@ -31,13 +31,14 @@ namespace karabo {
      * Namespace for package core
      */
     namespace core {
-        
+
         class BaseDevice;
 
-        /**
+/**
          * The DeviceServer class.
          */
-        class DeviceServer : public karabo::xms::SignalSlotable {           
+        class DeviceServer : public karabo::xms::SignalSlotable {
+
 
             typedef std::map<std::string, boost::thread*> DeviceInstanceMap;
 

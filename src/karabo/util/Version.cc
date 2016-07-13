@@ -47,13 +47,12 @@ namespace karabo {
         }
 
 
-        std::string Version::getPathToVersionFile()
-        {
+        std::string Version::getPathToVersionFile() {
             return getPathToKaraboInstallation() += "/VERSION";
         }
 
-        std::string Version::getPathToKaraboInstallation()
-        {
+
+        std::string Version::getPathToKaraboInstallation() {
             std::string karabo;
             const char* tmp = getenv("KARABO");
             if (tmp) karabo = tmp;
@@ -69,6 +68,7 @@ namespace karabo {
             }
             return karabo;
         }
+
 
         Version& Version::getInstance() {
             static Version v;

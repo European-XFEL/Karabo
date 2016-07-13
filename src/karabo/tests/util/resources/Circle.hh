@@ -18,82 +18,88 @@
 #include "Shape.hh"
 
 namespace karabo {
-  namespace util {
+    namespace util {
 
-    /**
-     * Circle class. Used for test
-     */
-    class Circle : public Shape {
-      std::string color;
+/**
+         * Circle class. Used for test
+         */
+        class Circle : public Shape {
 
-    public:
 
-      Circle() : Shape("Circle") {
-      }
+            std::string color;
 
-      Circle(const std::string& color) : Shape("Circle") {
-        this->color = color;
-      }
+        public:
 
-      Circle(const std::string& name, const std::string& color) : Shape(name) {
-        this->color = color;
-      }
+            Circle() : Shape("Circle") {
+            }
 
-      std::string draw() {
-        std::stringstream ss;
-        ss << getName() << " " << color;
-        return ss.str();
-      }
+            Circle(const std::string& color) : Shape("Circle") {
+                this->color = color;
+            }
 
-    };
+            Circle(const std::string& name, const std::string& color) : Shape(name) {
+                this->color = color;
+            }
 
-    /**
-     * This class defines how to configure Circle
-     * @see Configurable shape
-     * Every class which is instantiated by the Factory must implement two methods
-     * as seen below. The method configure(Hash&) must be implemented for both based and derived class.
-     */
-    class ConfigurableCircle : public ConfigurableShape {
-    public:
-      
-      KARABO_CLASSINFO(ConfigurableCircle, "Circle", "1.0")
-      
-      ConfigurableCircle() {
-      }
-      virtual ~ConfigurableCircle() {}
-      /**
-       * This method is called by Factory class
-       * Get all needed parameters from Schema object and setup the class
-       */
-      void configure(const Hash& conf) {
-//        Hash circle = conf.get<Hash > ("Circle");
-//        std::string color = circle.get<std::string > ("color");
-//        if (circle.has("name")) {
-//          m_name = circle.get<std::string > ("name");
-//        }
-        std::string color = "green";
-        m_shape = boost::shared_ptr<Circle > (new Circle(m_name, color));
-      }
+            std::string draw() {
+                std::stringstream ss;
+                ss << getName() << " " << color;
+                return ss.str();
+            }
 
-      /**
-       *  This method is called by Factory class
-       *  You must define here expected parameters
-       *  @param Schema& expected object to be filled
-       */
-      static void expectedParameters(Schema& expected) {
-          
-            INT32_ELEMENT(expected)
-                .key("radius")
-                .displayedName("CircleRadius")
-                .description("Circle Radius description")
-                .assignmentOptional().defaultValue(10)
-                .init()
-                .commit();
-                
-      }
-    };
+        };
 
-  } // namepspace util
+/**
+         * This class defines how to configure Circle
+         * @see Configurable shape
+         * Every class which is instantiated by the Factory must implement two methods
+         * as seen below. The method configure(Hash&) must be implemented for both based and derived class.
+         */
+        class ConfigurableCircle : public ConfigurableShape {
+
+            public:
+
+            KARABO_CLASSINFO(ConfigurableCircle, "Circle", "1.0")
+
+            ConfigurableCircle() {
+            }
+
+            virtual ~ConfigurableCircle() {
+            }
+
+            /**
+             * This method is called by Factory class
+             * Get all needed parameters from Schema object and setup the class
+             */
+            void configure(const Hash& conf) {
+                //        Hash circle = conf.get<Hash > ("Circle");
+                //        std::string color = circle.get<std::string > ("color");
+                //        if (circle.has("name")) {
+                //          m_name = circle.get<std::string > ("name");
+                //        }
+                std::string color = "green";
+                m_shape = boost::shared_ptr<Circle > (new Circle(m_name, color));
+            }
+
+            /**
+             *  This method is called by Factory class
+             *  You must define here expected parameters
+             *  @param Schema& expected object to be filled
+             */
+            static void expectedParameters(Schema& expected) {
+
+                INT32_ELEMENT(expected)
+                        .key("radius")
+                        .displayedName("CircleRadius")
+                        .description("Circle Radius description")
+                        .assignmentOptional().defaultValue(10)
+                        .init()
+                        .commit();
+
+            }
+        };
+
+    } // namepspace util
 } // namespace karabo
 
 #endif	/* KARABO_UTIL_CIRCLE_HH */

@@ -17,13 +17,14 @@ using namespace karabo::io;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Logger_Test);
 
+
 KARABO_REGISTER_FOR_CONFIGURATION(LogSomething)
 
-Logger_Test::Logger_Test() {  
+Logger_Test::Logger_Test() {
 }
 
 
-Logger_Test::~Logger_Test() { 
+Logger_Test::~Logger_Test() {
 }
 
 
@@ -40,9 +41,10 @@ void Logger_Test::testLogging() {
     Hash conf("categories[0]", s1, "appenders[0].Ostream.layout", "Pattern");
     Logger::configure(conf);
     //p->initialize();
-    KARABO_LOG_FRAMEWORK_DEBUG_C("s1") << "Some test message"; 
-    
+    KARABO_LOG_FRAMEWORK_DEBUG_C("s1") << "Some test message";
+
 }
+
 
 void Logger_Test::testInClassLogging() {
     Logger::reset();

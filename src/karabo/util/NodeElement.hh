@@ -23,6 +23,7 @@ namespace karabo {
 
         class NodeElement : public GenericElement<NodeElement> {
 
+
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
         public:
@@ -53,7 +54,7 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, T::classInfo().getClassId());
                 return *this;
             }
-            
+
             NodeElement& appendSchema(const Schema& schema) {
                 this->m_node->setValue<Hash >(schema.getParameterHash());
                 return *this;

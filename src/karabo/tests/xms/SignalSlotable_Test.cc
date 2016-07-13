@@ -15,17 +15,21 @@ using namespace karabo::io;
 using namespace karabo::net;
 using namespace karabo::xms;
 
+
 class SignalSlotDemo : public karabo::xms::SignalSlotable {
+
+
     int m_messageCount;
     bool m_allOk;
     boost::mutex m_mutex;
 
 public:
 
+
     KARABO_CLASSINFO(SignalSlotDemo, "SignalSlotDemo", "1.0")
 
     SignalSlotDemo(const std::string& instanceId, const karabo::net::BrokerConnection::Pointer connection) :
-    karabo::xms::SignalSlotable(instanceId, connection), m_messageCount(0), m_allOk(true) {
+        karabo::xms::SignalSlotable(instanceId, connection), m_messageCount(0), m_allOk(true) {
 
         KARABO_SIGNAL("signalA", std::string);
 
@@ -36,6 +40,7 @@ public:
         KARABO_SLOT(slotC, int);
 
     }
+
 
     void slotA(const std::string& msg) {
         boost::mutex::scoped_lock lock(m_mutex);
@@ -54,6 +59,7 @@ public:
         emit("signalB", 42, karabo::util::Hash("Was.soll.das.bedeuten", "nix"));
     }
 
+
     void slotB(int someInteger, const karabo::util::Hash& someConfig) {
         boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
@@ -61,6 +67,7 @@ public:
         if (someInteger != 42) m_allOk = false;
         if (someConfig.get<std::string>("Was.soll.das.bedeuten") != "nix") m_allOk = false;
     }
+
 
     void slotC(int number) {
         boost::mutex::scoped_lock lock(m_mutex);
@@ -70,10 +77,12 @@ public:
         reply(number + number);
     }
 
+
     bool wasOk(int messageCalls) {
         std::cout << "\nwasOk : m_messageCount=" << m_messageCount << ", m_allOk=" << m_allOk << std::endl;
         return ((m_messageCount == messageCalls) && m_allOk);
     }
+
 
     void myCallBack(const std::string& someData, int number) {
         boost::mutex::scoped_lock lock(m_mutex);
@@ -87,11 +96,14 @@ public:
 
 CPPUNIT_TEST_SUITE_REGISTRATION(SignalSlotable_Test);
 
+
 SignalSlotable_Test::SignalSlotable_Test() {
 }
 
 
-SignalSlotable_Test::~SignalSlotable_Test() { }
+SignalSlotable_Test::~SignalSlotable_Test() {
+}
+
 
 void SignalSlotable_Test::setUp() {
     std::pair<SignalSlotDemo::Pointer, boost::shared_ptr<boost::thread> > demo = this->createDemo("SignalSlotDemo");
@@ -129,6 +141,7 @@ SignalSlotable_Test::createDemo(const std::string& instanceId) const {
 
     return result;
 }
+
 
 void SignalSlotable_Test::tearDown() {
     m_demo.reset();
@@ -181,6 +194,7 @@ void SignalSlotable_Test::testMethod() {
     CPPUNIT_ASSERT(m_demo->wasOk(10) == true);
 }
 
+
 void SignalSlotable_Test::testAutoConnectSignal() {
     CPPUNIT_ASSERT(m_demo);
 
@@ -215,6 +229,7 @@ void SignalSlotable_Test::testAutoConnectSignal() {
     CPPUNIT_ASSERT(demo2Fine);
     CPPUNIT_ASSERT(ok2);
 }
+
 
 void SignalSlotable_Test::testAutoConnectSlot() {
     // Same as testAutoConnectSignal, but the other way round:

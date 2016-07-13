@@ -21,10 +21,11 @@ namespace karabo {
 
         class RawImageBinarySerializer : public karabo::io::BinarySerializer<RawImageData> {
 
+
             typedef karabo::io::BinarySerializer<karabo::util::Hash> HashSerializer;
-            
+
             HashSerializer::Pointer m_hashSerializer;
-            
+
         public:
 
             KARABO_CLASSINFO(RawImageBinarySerializer, "Bin", "1.0")
@@ -44,7 +45,7 @@ namespace karabo {
                 m_hashSerializer->save(image.hash(), archive);
             }
 
-            void load(RawImageData& image, const char* archive, const size_t nBytes) {                
+            void load(RawImageData& image, const char* archive, const size_t nBytes) {
                 m_hashSerializer->load(image.hash(), archive, nBytes);
             }
 

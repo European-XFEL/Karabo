@@ -22,6 +22,7 @@ namespace karabo {
 
             enum MetricPrefixType {
 
+
                 YOTTA,
                 ZETTA,
                 EXA,
@@ -45,18 +46,20 @@ namespace karabo {
                 YOCTO
             };
         }
-        
+
         typedef MetricPrefix::MetricPrefixType MetricPrefixType;
-        
-         // Compile time conversion
+
+        // Compile time conversion
+
         template <int MetricEnum>
         inline std::pair<std::string, std::string> getMetricPrefix() {
             throw KARABO_PARAMETER_EXCEPTION("");
         }
-        
-        #define _KARABO_HELPER_MACRO(metricEnum, symbol) \
+
+#define _KARABO_HELPER_MACRO(metricEnum, symbol) \
         template <> inline std::pair<std::string, std::string> getMetricPrefix<MetricPrefix::metricEnum>(){ std::string name(#metricEnum); boost::to_lower(name); return std::make_pair(name, symbol); }
-         _KARABO_HELPER_MACRO(YOTTA, "Y")
+
+        _KARABO_HELPER_MACRO(YOTTA, "Y")
         _KARABO_HELPER_MACRO(ZETTA, "Z")
         _KARABO_HELPER_MACRO(EXA, "E")
         _KARABO_HELPER_MACRO(PETA, "P")
@@ -69,6 +72,7 @@ namespace karabo {
         template <> inline std::pair<std::string, std::string> getMetricPrefix<MetricPrefix::NONE>() {
             return std::make_pair("", "");
         }
+
         _KARABO_HELPER_MACRO(DECI, "d")
         _KARABO_HELPER_MACRO(CENTI, "c")
         _KARABO_HELPER_MACRO(MILLI, "m")
@@ -80,11 +84,11 @@ namespace karabo {
         _KARABO_HELPER_MACRO(ZEPTO, "z")
         _KARABO_HELPER_MACRO(YOCTO, "y")
 
-        #undef _KARABO_HELPER_MACRO
-        
+#undef _KARABO_HELPER_MACRO
+
         // Runtime conversion
         inline std::pair<std::string, std::string> getMetricPrefix(const MetricPrefixType metricPrefix) {
-            #define _KARABO_HELPER_MACRO(MetricEnum) case MetricPrefix::MetricEnum: return getMetricPrefix<MetricPrefix::MetricEnum>();
+#define _KARABO_HELPER_MACRO(MetricEnum) case MetricPrefix::MetricEnum: return getMetricPrefix<MetricPrefix::MetricEnum>();
             switch (metricPrefix) {
                     _KARABO_HELPER_MACRO(YOTTA)
                     _KARABO_HELPER_MACRO(ZETTA)
@@ -95,10 +99,10 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(MEGA)
                     _KARABO_HELPER_MACRO(KILO)
                     _KARABO_HELPER_MACRO(HECTO)
-                    _KARABO_HELPER_MACRO(DECA)    
-                    _KARABO_HELPER_MACRO(NONE)   
+                    _KARABO_HELPER_MACRO(DECA)
+                    _KARABO_HELPER_MACRO(NONE)
                     _KARABO_HELPER_MACRO(DECI)
-                    _KARABO_HELPER_MACRO(CENTI)      
+                    _KARABO_HELPER_MACRO(CENTI)
                     _KARABO_HELPER_MACRO(MILLI)
                     _KARABO_HELPER_MACRO(MICRO)
                     _KARABO_HELPER_MACRO(NANO)
@@ -110,12 +114,13 @@ namespace karabo {
                 default:
                     throw KARABO_PARAMETER_EXCEPTION("No string translation registered for given metricPrefix");
             }
-            #undef _KARABO_HELPER_MACRO
+#undef _KARABO_HELPER_MACRO
         }
-        
+
         namespace Unit {
-            
+
             enum UnitType {
+
 
                 NUMBER,
                 COUNT,
@@ -128,7 +133,7 @@ namespace karabo {
                 CANDELA,
                 HERTZ,
                 RADIAN,
-		DEGREE,
+                DEGREE,
                 STERADIAN,
                 NEWTON,
                 PASCAL,
@@ -165,16 +170,17 @@ namespace karabo {
                 NOT_ASSIGNED
             };
         }
-        
-        typedef Unit::UnitType UnitType;            
-        
+
+        typedef Unit::UnitType UnitType;
+
         //Compile time conversion
+
         template <int UnitEnum>
         inline std::pair<std::string, std::string> getUnit() {
             throw KARABO_PARAMETER_EXCEPTION("");
         }
-        
-        #define _KARABO_HELPER_MACRO(unitEnum, symbol) \
+
+#define _KARABO_HELPER_MACRO(unitEnum, symbol) \
          template <> inline std::pair<std::string, std::string> getUnit<Unit::unitEnum>() { std::string name(#unitEnum); boost::to_lower(name); return std::make_pair(name, symbol); }
 
         _KARABO_HELPER_MACRO(NUMBER, "#")
@@ -223,12 +229,12 @@ namespace karabo {
         _KARABO_HELPER_MACRO(AMPERE_PER_SECOND, "A/s")
         _KARABO_HELPER_MACRO(PERCENT, "%")
         _KARABO_HELPER_MACRO(NOT_ASSIGNED, "N_A")
-        
-        #undef _KARABO_HELPER_MACRO
-                
+
+#undef _KARABO_HELPER_MACRO
+
         // Runtime conversion
         inline std::pair<std::string, std::string> getUnit(const UnitType unit) {
-            #define _KARABO_HELPER_MACRO(UnitEnum) case Unit::UnitEnum: return getUnit<Unit::UnitEnum>();
+#define _KARABO_HELPER_MACRO(UnitEnum) case Unit::UnitEnum: return getUnit<Unit::UnitEnum>();
             switch (unit) {
                     _KARABO_HELPER_MACRO(NUMBER)
                     _KARABO_HELPER_MACRO(COUNT)
@@ -279,7 +285,7 @@ namespace karabo {
                 default:
                     throw KARABO_PARAMETER_EXCEPTION("No string translation registered for given unit");
             }
-            #undef _KARABO_HELPER_MACRO
+#undef _KARABO_HELPER_MACRO
         }
     }
 }

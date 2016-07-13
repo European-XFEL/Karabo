@@ -74,11 +74,11 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("create", &SignalSlotableWrap::create,
                  (bp::arg("instanceId"),
-                 bp::arg("connectionType") = "Jms",
-                 bp::arg("connectionParameters") = karabo::util::Hash(),
-                 bp::arg("autostart") = false,
-                 bp::arg("heartbeatInterval") = 10
-                 ),
+                  bp::arg("connectionType") = "Jms",
+                  bp::arg("connectionParameters") = karabo::util::Hash(),
+                  bp::arg("autostart") = false,
+                  bp::arg("heartbeatInterval") = 10
+                  ),
                  "\nUse this factory method to create SignalSlotable object with given 'instanceId', 'connectionType', 'connectionParameters' and 'autostart' of event loop (by default, no start).\n"
                  "Example:\n\tss = SignalSlotable.create('a')\n"
                  ).staticmethod("create")
@@ -100,7 +100,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  "Example:\n\tss = SignalSlotable.create('a')\n\tinfo = Hash('type','device')\n\tinfo['classId'] = myclassId\n\tinfo['serverId'] = myserverId\n\t"
                  "info['visibility'] = ['']\n\tinfo['version'] = my_version\n\tinfo['host'] = host_name\n\tss.runEventLoop(10, info)\n"
                  )
-            
+
             .def("ensureOwnInstanceIdUnique", &SignalSlotableWrap::ensureOwnInstanceIdUnique,
                  "\nIt should be called to guarantee the uniqueness on the topic\n")
 
@@ -152,9 +152,9 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("connect",
                  (bool (SignalSlotable::*)(const string&, const string&, const string&, const string&))(&SignalSlotable::connect),
                  (bp::arg("signalInstanceId"),
-                 bp::arg("signalFunction"),
-                 bp::arg("slotInstanceId"),
-                 bp::arg("slotFunction")),
+                  bp::arg("signalFunction"),
+                  bp::arg("slotInstanceId"),
+                  bp::arg("slotFunction")),
                  "\nUse this method to connect \"signalFunction\" issued by \"signalInstanceId\" with \"slotFunction\" belonging to \"slotInstanceId\""
                  "\n\nExample:\n\nIf we have to communicate with remote client registered as instance \"b\" and slot \"onMoin\" ...\n\n\t"
                  "ss = SignalSlotable(\"a\")\n\tss.connect(\"\", \"moin\", \"b\", \"onMoin\")\n\tss.emit(\"moin\", 12)\n"
@@ -163,7 +163,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("connect",
                  (bool (SignalSlotable::*)(const string&, const string&))(&SignalSlotable::connect),
                  (bp::arg("signalFunction"),
-                 bp::arg("slotFunction")))
+                  bp::arg("slotFunction")))
 
             .def("updateInstanceInfo",
                  (void (SignalSlotable::*)(const Hash&))(&SignalSlotable::updateInstanceInfo),
@@ -252,28 +252,28 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)(string, const string&, string, const string&, const bp::object&))
                  (&SignalSlotableWrap::requestNoWaitPy1)
                  , (bp::arg("requestSlotInstanceId"), bp::arg("requestSlotFunction")
-                 , bp::arg("replySlotInstanceId"), bp::arg("replySlotFunction")
-                 , bp::arg("a1")))
+                    , bp::arg("replySlotInstanceId"), bp::arg("replySlotFunction")
+                    , bp::arg("a1")))
 
             .def("requestNoWait"
                  , (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)(string, const string&, string, const string&, const bp::object&, const bp::object&))
                  (&SignalSlotableWrap::requestNoWaitPy2)
                  , (bp::arg("requestSlotInstanceId"), bp::arg("requestSlotFunction"), bp::arg("replySlotInstanceId"), bp::arg("replySlotFunction")
-                 , bp::arg("a1"), bp::arg("a2")))
+                    , bp::arg("a1"), bp::arg("a2")))
 
             .def("requestNoWait"
                  , (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)
-                 (string, const string&, string, const string&, const bp::object&, const bp::object&, const bp::object&))
+                    (string, const string&, string, const string&, const bp::object&, const bp::object&, const bp::object&))
                  (&SignalSlotableWrap::requestNoWaitPy3)
                  , (bp::arg("requestSlotInstanceId"), bp::arg("requestSlotFunction"), bp::arg("replySlotInstanceId"), bp::arg("replySlotFunction")
-                 , bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+                    , bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
 
             .def("requestNoWait"
                  , (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)
-                 (string, const string&, string, const string&, const bp::object&, const bp::object&, const bp::object&, const bp::object&))
+                    (string, const string&, string, const string&, const bp::object&, const bp::object&, const bp::object&, const bp::object&))
                  (&SignalSlotableWrap::requestNoWaitPy4)
                  , (bp::arg("requestSlotInstanceId"), bp::arg("requestSlotFunction"), bp::arg("replySlotInstanceId"), bp::arg("replySlotFunction")
-                 , bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
+                    , bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
             .def("reply", (void (SignalSlotableWrap::*)()) (&SignalSlotableWrap::replyPy0))
 

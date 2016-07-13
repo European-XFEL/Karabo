@@ -15,8 +15,8 @@
 
 #include <boost/asio.hpp>
 
-std::string karabo::net::bareHostName()
-{
+
+std::string karabo::net::bareHostName() {
     std::string hostName = boost::asio::ip::host_name();
 
     // Find first dot and erase everything after it:
@@ -26,10 +26,10 @@ std::string karabo::net::bareHostName()
     return hostName;
 }
 
+
 void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> service,
-        const std::string& category, const std::string& errorMessage,
-        unsigned int delayInMilliSec)
-{
+                               const std::string& category, const std::string& errorMessage,
+                               unsigned int delayInMilliSec) {
     // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference/io_service.html:
     // "If an exception is thrown from a handler, the exception is allowed to propagate through the throwing
     //  thread's invocation of run(), run_one(), poll() or poll_one(). No other threads that are calling any of
@@ -40,19 +40,19 @@ void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> servic
     //  object's thread pool without impacting any other threads in the pool."
 
     const std::string fullMessage(" when running asio service (" + errorMessage + "), continue in " +
-    karabo::util::toString(delayInMilliSec) += " ms");
+                                  karabo::util::toString(delayInMilliSec) += " ms");
     while (true) {
         bool caught = true;
         try {
             service->run();
             caught = false; // run exited normally
             break;
-        } catch(karabo::util::Exception& e) {
+        } catch (karabo::util::Exception& e) {
             KARABO_LOG_FRAMEWORK_ERROR_C(category) << "Exception" << fullMessage << ": " << e;
-        } catch(std::exception& e) {
+        } catch (std::exception& e) {
             KARABO_LOG_FRAMEWORK_ERROR_C(category) << "Standard exception" << fullMessage << ": " << e.what();
-        } catch(...) {
-            KARABO_LOG_FRAMEWORK_ERROR_C(category) << "Unknown exception" << fullMessage <<".";
+        } catch (...) {
+            KARABO_LOG_FRAMEWORK_ERROR_C(category) << "Unknown exception" << fullMessage << ".";
         }
         if (caught) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMilliSec));
