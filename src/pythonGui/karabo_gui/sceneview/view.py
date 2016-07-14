@@ -6,22 +6,23 @@
 
 import os.path
 
-from PyQt4.QtCore import QEvent, Qt
+from PyQt4.QtCore import QEvent, QRect, Qt
 from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
 from karabo_gui.scenemodel.api import (
-    read_scene, FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH,
-    SCENE_MIN_HEIGHT)
+    read_scene, FixedLayoutModel, WorkflowItemModel,
+    SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
 from .builder import (bring_object_to_front, create_object_from_model,
-                      fill_root_layout, is_widget, remove_object_from_layout,
-                      send_object_to_back)
+                      fill_root_layout, find_top_level_model, is_widget,
+                      remove_object_from_layout,
+                      replace_model_in_top_level_model, send_object_to_back)
 from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (ConfigurationDropHandler, NavigationDropHandler,
-                        SceneSelectionTool)
+                        SceneSelectionTool, WidgetSceneHandler)
 from .utils import save_painter_state
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 
@@ -172,6 +173,18 @@ class SceneView(QWidget):
                 return widget.event(event)
         return result
 
+    def contextMenuEvent(self, event):
+        """ Show scene view specific context menu. """
+        if self.design_mode:
+            widget = self.widget_at_position(event.pos())
+            if widget is not None:
+                widget_handler = WidgetSceneHandler(widget=widget)
+                # This methods blocks here until an action is selected
+                widget_handler.handle(self, event)
+                event.accept()
+                return
+        event.ignore()
+
     # ----------------------------
     # Public methods
 
@@ -274,6 +287,32 @@ class SceneView(QWidget):
     def remove_model(self, model):
         """ Removes the given ``model`` from the scene model."""
         self.scene_model.children.remove(model)
+
+    def replace_model(self, old_model, new_model):
+        """ Replace the given ``old_model`` with the given ``new_model``. """
+        # Find top level model to which ``old_model`` belongs
+        top_level_model = find_top_level_model(self.scene_model, old_model)
+        if top_level_model is None:
+            return
+
+        # Remove it from list
+        self.remove_model(top_level_model)
+        if top_level_model is not old_model:
+            # Do the replacing in the top level model tree
+            replace_model_in_top_level_model(self.scene_model,
+                                             top_level_model,
+                                             old_model, new_model)
+        else:
+            top_level_model = new_model
+        # Add the modified top level model to the scene again
+        self.add_models(top_level_model)
+        widget = self._scene_obj_cache.get(new_model)
+        model_rect = QRect(new_model.x, new_model.y,
+                           new_model.width, new_model.height)
+        if model_rect.isEmpty():
+            model_rect.setSize(widget.sizeHint())
+            widget.setGeometry(model_rect)
+        self.selection_model.clear_selection()
 
     def bring_to_front(self, model):
         """ The given ``model`` is moved to the end of the list."""
