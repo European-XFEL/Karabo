@@ -582,6 +582,43 @@ void Schema_Test::testVectorElements() {
     CPPUNIT_ASSERT(allowedStates[1] == "AllOk.Stopped");
 }
 
+void Schema_Test::testArrayElements() {
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(sch);
+
+    CPPUNIT_ASSERT(sch.getValueType("arrBool") == Types::VECTOR_BOOL);
+    CPPUNIT_ASSERT(sch.getValueType("arrInt8") == Types::VECTOR_INT8);
+    CPPUNIT_ASSERT(sch.getValueType("arrUInt16") == Types::VECTOR_UINT16);
+    CPPUNIT_ASSERT(sch.getValueType("arrFloat") == Types::VECTOR_FLOAT);
+    CPPUNIT_ASSERT(sch.getValueType("arrDouble") == Types::VECTOR_DOUBLE);
+
+    std::vector<unsigned long long> shapeVec;
+    shapeVec.push_back(2);
+    shapeVec.push_back(2);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrBool") == shapeVec);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrInt8") == shapeVec);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrUInt16") == shapeVec);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrFloat") == shapeVec);
+    //CPPUNIT_ASSERT(sch.getArrayShape("arrDouble") == shapeVec);
+
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrBool") == true);
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrInt8") == false);
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrUInt16") == true);
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrFloat") == true);
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrDouble") == true);
+
+    std::vector<bool> arrBool(4, true);
+    vector<bool> defArrBool = sch.getDefaultValue<vector<bool> >("arrBool");
+    CPPUNIT_ASSERT(defArrBool == arrBool);
+
+    std::vector<signed char> arrInt(4, 42);
+    vector<signed char> defArrInt = sch.getDefaultValue<vector<signed char> >("arrInt8");
+    CPPUNIT_ASSERT(defArrInt == arrInt);
+
+    std::vector<float> arrFloat(4, 4.2);
+    vector<float> defArrFloat = sch.getDefaultValue<vector<float> >("arrFloat");
+    CPPUNIT_ASSERT(defArrFloat == arrFloat);
+}
 
 void Schema_Test::testPathElement() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
