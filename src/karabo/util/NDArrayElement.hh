@@ -10,7 +10,6 @@
 #ifndef KARABO_UTIL_NDARRAYELEMENT_HH
 #define KARABO_UTIL_NDARRAYELEMENT_HH
 
-#include "Dims.hh"
 #include "LeafElement.hh"
 
 namespace karabo {
@@ -19,6 +18,8 @@ namespace karabo {
         template<typename T, int NDIMS = -1,
                  template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
         class NDArrayElement : public LeafElement<NDArrayElement<T, NDIMS, CONT>, CONT<T> > {
+
+            typedef std::vector<long long> ShapeType;
 
             public:
 
@@ -36,13 +37,13 @@ namespace karabo {
             }
 
             NDArrayElement& shape(const std::string& value) {
-                const Dims dims(fromString<unsigned long long, std::vector>(value));
-                if (NDIMS != -1 && dims.rank() != NDIMS) {
-                    std::string ndimsStr = toString(dims.rank());
+                const ShapeType shp = fromString<long long, std::vector>(value);
+                if (NDIMS != -1 && shp.size() != NDIMS) {
+                    std::string ndimsStr = toString(shp.size());
                     throw KARABO_PARAMETER_EXCEPTION("Incorrect number of dimensions \"" + ndimsStr + "\" for this array element.");
                 }
 
-                this->m_node->setAttribute(KARABO_SCHEMA_ARRAY_SHAPE, dims);
+                this->m_node->setAttribute(KARABO_SCHEMA_ARRAY_SHAPE, shp);
                 return *this;
             }
 
