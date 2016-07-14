@@ -31,6 +31,7 @@ class LabelWidget(QLabel):
         self.model = model
 
         self.setText(self.model.text)
+        self.setToolTip(self.model.text)
         self.setLineWidth(model.frame_width)
 
         styleSheet = []
@@ -77,6 +78,7 @@ class SceneLinkWidget(QPushButton):
         super(SceneLinkWidget, self).__init__(parent)
         self.model = model
 
+        self.setToolTip(self.model.target)
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self._handle_click)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
