@@ -11,7 +11,7 @@
 
 #include <boost/python.hpp>
 #include <karabo/util/SimpleElement.hh>
-#include <karabo/util/VectorElement.hh>
+#include <karabo/util/NDArrayElement.hh>
 #include <karabo/util/TableElement.hh>
 namespace bp = boost::python;
 
@@ -91,14 +91,14 @@ struct AliasAttributeWrap {
 };
 
 template <class T>
-struct DefaultValueVectorWrap {
+struct DefaultValueNDArrayWrap {
 
 
     typedef std::vector< T > VType;
-    typedef karabo::util::VectorElement< T > U;
-    typedef karabo::util::DefaultValue< U, VType > DefValueVec;
+    typedef karabo::util::NDArrayElement< T > U;
+    typedef karabo::util::DefaultValue< U, VType > DefValueArr;
 
-    static U & defaultValue(DefValueVec& self, const bp::object& obj) {
+    static U & defaultValue(DefValueArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             const bp::list& l = bp::extract<bp::list > (obj);
             bp::ssize_t size = bp::len(l);
@@ -109,7 +109,7 @@ struct DefaultValueVectorWrap {
             }
             return self.defaultValue(v);
         } else {
-            throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
+            throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of NDArrayElement must be a list");
         }
     }
 
@@ -133,22 +133,22 @@ struct DefaultValueTableWrap {
             }
             return self.defaultValue(v);
         } else {
-            throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
+            throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of TableElement must be a list");
         }
     }
 
 };
 
 template <class T>
-struct ReadOnlySpecificVectorWrap {
+struct ReadOnlySpecificNDArrayWrap {
 
 
     typedef std::vector< T > VType;
-    typedef karabo::util::VectorElement< T > U;
-    typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecVec;
-    typedef karabo::util::AlarmSpecific< U, VType, ReadOnlySpecVec> AlarmSpecVec;
+    typedef karabo::util::NDArrayElement< T > U;
+    typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecArr;
+    typedef karabo::util::AlarmSpecific< U, VType, ReadOnlySpecArr> AlarmSpecArr;
 
-    static ReadOnlySpecVec & initialValue(ReadOnlySpecVec& self, const bp::object& obj) {
+    static ReadOnlySpecArr & initialValue(ReadOnlySpecArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             const bp::list& l = bp::extract<bp::list > (obj);
             bp::ssize_t size = bp::len(l);
@@ -159,43 +159,43 @@ struct ReadOnlySpecificVectorWrap {
             }
             return self.initialValue(v);
         } else {
-            throw KARABO_PYTHON_EXCEPTION("Python type of the initialValue of VectorElement must be a list");
+            throw KARABO_PYTHON_EXCEPTION("Python type of the initialValue of NDArrayElement must be a list");
         }
     }
 
-    static AlarmSpecVec warnLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
+    static AlarmSpecArr warnLowValue(ReadOnlySpecArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             VType v = pyList2StdVector(obj);
             return self.warnLow(v);
         } else {
-            throw KARABO_PYTHON_EXCEPTION("Python type of the warnLow value of VectorElement must be a list");
+            throw KARABO_PYTHON_EXCEPTION("Python type of the warnLow value of NDArrayElement must be a list");
         }
     }
 
-    static AlarmSpecVec warnHighValue(ReadOnlySpecVec& self, const bp::object& obj) {
+    static AlarmSpecArr warnHighValue(ReadOnlySpecArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             VType v = pyList2StdVector(obj);
             return self.warnHigh(v);
         } else {
-            throw KARABO_PYTHON_EXCEPTION("Python type of the warnHigh value of VectorElement must be a list");
+            throw KARABO_PYTHON_EXCEPTION("Python type of the warnHigh value of NDArrayElement must be a list");
         }
     }
 
-    static AlarmSpecVec alarmLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
+    static AlarmSpecArr alarmLowValue(ReadOnlySpecArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             VType v = pyList2StdVector(obj);
             return self.alarmLow(v);
         } else {
-            throw KARABO_PYTHON_EXCEPTION("Python type of the alarmLow value of VectorElement must be a list");
+            throw KARABO_PYTHON_EXCEPTION("Python type of the alarmLow value of NDArrayElement must be a list");
         }
     }
 
-    static AlarmSpecVec alarmHighValue(ReadOnlySpecVec& self, const bp::object& obj) {
+    static AlarmSpecArr alarmHighValue(ReadOnlySpecArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             VType v = pyList2StdVector(obj);
             return self.alarmHigh(v);
         } else {
-            throw KARABO_PYTHON_EXCEPTION("Python type of the alarmHigh value of VectorElement must be a list");
+            throw KARABO_PYTHON_EXCEPTION("Python type of the alarmHigh value of NDArrayElement must be a list");
         }
     }
 
@@ -235,25 +235,25 @@ bp::class_< DefValue, boost::noncopyable > ("DefaultValue"#e, bp::no_init)\
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//DefaultValue<VectorElement< EType, std::vector >, std::vector< EType > > where EType:
+//DefaultValue<NDArrayElement< EType, std::vector >, std::vector< EType > > where EType:
 //BOOL, INT32, UINT32, INT64, UINT64, STRING, DOUBLE
 #define KARABO_PYTHON_VECTOR_DEFAULT_VALUE(t, e)\
 {\
 typedef t EType;\
 typedef std::vector< EType > VType;\
-typedef karabo::util::VectorElement< EType, std::vector> U;\
-typedef karabo::util::DefaultValue< U, VType > DefValueVec;\
-bp::class_< DefValueVec, boost::noncopyable > ("DefaultValueVector"#e, bp::no_init)\
+typedef karabo::util::NDArrayElement< EType, std::vector> U;\
+typedef karabo::util::DefaultValue< U, VType > DefValueArr;\
+bp::class_< DefValueArr, boost::noncopyable > ("DefaultValueVector"#e, bp::no_init)\
 .def("defaultValue"\
-, &DefaultValueVectorWrap<EType>::defaultValue\
+, &DefaultValueNDArrayWrap<EType>::defaultValue\
 , (bp::arg("self"), bp::arg("pyList"))\
 , bp::return_internal_reference<> ())\
 .def("defaultValueFromString"\
-, (U & (DefValueVec::*)(std::string const &))(&DefValueVec::defaultValueFromString)\
+, (U & (DefValueArr::*)(std::string const &))(&DefValueArr::defaultValueFromString)\
 , (bp::arg("defaultValueString"))\
 , bp::return_internal_reference<> ())\
 .def("noDefaultValue"\
-, (U & (DefValueVec::*)())(&DefValueVec::noDefaultValue)\
+, (U & (DefValueArr::*)())(&DefValueArr::noDefaultValue)\
 , bp::return_internal_reference<> ())\
 ;\
 }
@@ -340,36 +340,36 @@ bp::class_< ReadOnlySpec, boost::noncopyable >( "ReadOnlySpecific"#e, bp::no_ini
 {\
 typedef t EType;\
 typedef std::vector< EType > VType;\
-typedef karabo::util::VectorElement< EType, std::vector> U;\
-typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecVec;\
-typedef karabo::util::AlarmSpecific< U, VType, ReadOnlySpecVec > AlarmSpecVec;\
-typedef RollingStatsSpecific< U, VType > RollingStatsSpecVec;\
-bp::class_< ReadOnlySpecVec, boost::noncopyable > ("ReadOnlySpecificVector"#e, bp::no_init)\
+typedef karabo::util::NDArrayElement< EType, std::vector> U;\
+typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecArr;\
+typedef karabo::util::AlarmSpecific< U, VType, ReadOnlySpecArr > AlarmSpecArr;\
+typedef RollingStatsSpecific< U, VType > RollingStatsSpecArr;\
+bp::class_< ReadOnlySpecArr, boost::noncopyable > ("ReadOnlySpecificVector"#e, bp::no_init)\
 .def("initialValue"\
-, &ReadOnlySpecificVectorWrap<EType>::initialValue\
+, &ReadOnlySpecificNDArrayWrap<EType>::initialValue\
 , (bp::arg("self"), bp::arg("pyList"))\
 , bp::return_internal_reference<> () )\
 .def("alarmHigh"\
-, &ReadOnlySpecificVectorWrap<EType>::alarmHighValue\
+, &ReadOnlySpecificNDArrayWrap<EType>::alarmHighValue\
 , (bp::arg("self"), bp::arg("pyList")))\
 .def("alarmLow"\
-, &ReadOnlySpecificVectorWrap<EType>::alarmLowValue\
+, &ReadOnlySpecificNDArrayWrap<EType>::alarmLowValue\
 , (bp::arg("self"), bp::arg("pyList")))\
 .def("warnHigh"\
-, &ReadOnlySpecificVectorWrap<EType>::warnHighValue\
+, &ReadOnlySpecificNDArrayWrap<EType>::warnHighValue\
 , (bp::arg("self"), bp::arg("pyList")))\
 .def("warnLow"\
-, &ReadOnlySpecificVectorWrap<EType>::warnLowValue\
+, &ReadOnlySpecificNDArrayWrap<EType>::warnLowValue\
 , (bp::arg("self"), bp::arg("pyList")))\
 .def("enableRollingStats"\
-, (RollingStatsSpecVec (ReadOnlySpecVec::*)(std::string const &))( &ReadOnlySpecVec::enableRollingStats))\
+, (RollingStatsSpecArr (ReadOnlySpecArr::*)(std::string const &))( &ReadOnlySpecArr::enableRollingStats))\
 .def("initialValueFromString"\
-, (ReadOnlySpecVec & (ReadOnlySpecVec::*)(std::string const &))( &ReadOnlySpecVec::initialValueFromString)\
+, (ReadOnlySpecArr & (ReadOnlySpecArr::*)(std::string const &))( &ReadOnlySpecArr::initialValueFromString)\
 , bp::return_internal_reference<> () )\
 .def("archivePolicy"\
-, (ReadOnlySpecVec & (ReadOnlySpecVec::*)(karabo::util::Schema::ArchivePolicy const &))( &ReadOnlySpecVec::archivePolicy)\
+, (ReadOnlySpecArr & (ReadOnlySpecArr::*)(karabo::util::Schema::ArchivePolicy const &))( &ReadOnlySpecArr::archivePolicy)\
 , bp::return_internal_reference<> () )\
-.def("commit", (void (ReadOnlySpecVec::*)())(&ReadOnlySpecVec::commit))\
+.def("commit", (void (ReadOnlySpecArr::*)())(&ReadOnlySpecArr::commit))\
 ;\
 }
 
@@ -487,7 +487,7 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 /**
  * The following macro KARABO_PYTHON_VECTOR is used for python binding of
  * @code
- * karabo::util::VectorElement< EType, std::vector >
+ * karabo::util::NDArrayElement< EType, std::vector >
  * @endcode
  * where EType: int, long long, double. 
  * In Python: VECTOR_INT32_ELEMENT, ..UINT32.., VECTOR_INT64_ELEMENT, ..UINT64..,
@@ -497,7 +497,7 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 #define KARABO_PYTHON_VECTOR(t, e)\
 {\
 typedef t EType;\
-typedef VectorElement< EType, std::vector > T;\
+typedef NDArrayElement< EType, std::vector > T;\
 bp::implicitly_convertible< Schema &, T >();\
 bp::class_< T, boost::noncopyable >( "VECTOR_"#e"_ELEMENT", bp::init< karabo::util::Schema & >(( bp::arg("expected") )) )\
 KARABO_PYTHON_COMMON_ATTRIBUTES(T) \
