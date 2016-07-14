@@ -78,18 +78,24 @@ _SCENE_OBJ_FACTORIES = {
 }
 
 
-def find_top_level_model(parent_model, model):
+def find_top_level_model(scene_model, model):
     """ Recursively find the model in the ``parent_model`` tree which matches
         the given ``model`` and return its parent model which is the top level
         model in the end.
     """
-    if isinstance(parent_model, BaseLayoutModel):
-        for child in parent_model.children:
-            result = find_top_level_model(child, model)
-            if result:
-                return parent_model
+    def recurse(parent_model, seek_model):
+        if isinstance(parent_model, BaseLayoutModel):
+            for child in parent_model.children:
+                result = recurse(child, seek_model)
+                if result is not None:
+                    return parent_model
 
-    return parent_model if parent_model is model else None
+        return parent_model if parent_model is seek_model else None
+
+    for child in scene_model.children:
+        top_level_model = recurse(child, model)
+        if top_level_model is not None:
+            return top_level_model
 
 
 def replace_model_in_top_level_model(layout_model, parent_model, old_model,
@@ -97,7 +103,7 @@ def replace_model_in_top_level_model(layout_model, parent_model, old_model,
     """ Recursively find the given ``old_model`` in the model tree and
         replace it with the given ``new_model``.
 
-        This method returns, if replacing was successful.
+        This method returns ``True``.
     """
     if isinstance(parent_model, BaseLayoutModel):
         for child in parent_model.children:
@@ -108,13 +114,9 @@ def replace_model_in_top_level_model(layout_model, parent_model, old_model,
     elif parent_model is old_model:
         # Replace old model with new model
         layout_children = layout_model.children
-        try:
-            index = layout_children.index(parent_model)
-            layout_children.remove(parent_model)
-            layout_children.insert(index, new_model)
-        except ValueError:
-            # Model already removed
-            return False
+        index = layout_children.index(parent_model)
+        layout_children.remove(parent_model)
+        layout_children.insert(index, new_model)
         # Enforce recalculation of geometry
         layout_model.width = 0
         layout_model.height = 0
@@ -181,11 +183,6 @@ def create_object_from_model(layout, model, scene_view, object_dict):
                 else:
                     model_rect = rect
             obj.setGeometry(model_rect)
-        elif is_widget(obj):
-            model_rect = QRect(model.x, model.y, model.width, model.height)
-            if model_rect.isEmpty():
-                model_rect.setSize(obj.sizeHint())
-                obj.setGeometry(model_rect)
 
 
 def fill_root_layout(layout, parent_model, scene_view, object_dict):
