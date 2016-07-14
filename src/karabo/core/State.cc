@@ -145,9 +145,9 @@ namespace karabo {
             
         }
         
-        bool State::isCompatible(const State& s) const {
+        bool State::isDerivedFrom(const State& s) const {
             if (m_stateName == s.m_stateName) return true;
-            if (m_parent && m_parent->isCompatible(s)) return true;
+            if (m_parent && m_parent->isDerivedFrom(s)) return true;
             return false;
         }
         
