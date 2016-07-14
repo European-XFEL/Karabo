@@ -75,10 +75,10 @@ void States_Test::testSignifierNonDefaultList() {
 }
 
 void States_Test::testComparisons(){
-    CPPUNIT_ASSERT(State::CHANGING.isCompatible(State::NORMAL));// direct parentage
-    CPPUNIT_ASSERT(!State::NORMAL.isCompatible(State::CHANGING)); // direct parentage the other way round should not compare
-    CPPUNIT_ASSERT(!State::CHANGING.isCompatible(State::ERROR)); // no parentage
-    CPPUNIT_ASSERT(!State::ERROR.isCompatible(State::CHANGING));  // the other way round
-    CPPUNIT_ASSERT(State::HEATED.isCompatible(State::NORMAL)); // longer list of ancestors
-    CPPUNIT_ASSERT(!State::KNOWN.isCompatible(State::INCREASING)); // longer list of ancestors the other way round should not compare
+    CPPUNIT_ASSERT(State::CHANGING.isDerivedFrom(State::NORMAL));// direct parentage
+    CPPUNIT_ASSERT(!State::NORMAL.isDerivedFrom(State::CHANGING)); // direct parentage the other way round should not compare
+    CPPUNIT_ASSERT(!State::CHANGING.isDerivedFrom(State::ERROR)); // no parentage
+    CPPUNIT_ASSERT(!State::ERROR.isDerivedFrom(State::CHANGING));  // the other way round
+    CPPUNIT_ASSERT(State::HEATED.isDerivedFrom(State::NORMAL)); // longer list of ancestors
+    CPPUNIT_ASSERT(!State::KNOWN.isDerivedFrom(State::INCREASING)); // longer list of ancestors the other way round should not compare
 }
