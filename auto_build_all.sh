@@ -61,6 +61,7 @@ Available flags:
   --auto       - Tries to automatically install needed system packages (sudo rights required!)
   --noBundle   - Only installs Karabo, does not create the software bundle
   --pyDevelop  - Install Python packages in development mode rather than from wheels
+  --runTests   - Run unit tests after building (useful for Debug|Release)
 
 Note: "Dependencies" builds only the external dependencies
       "Clean" cleans all Karabo code (src folder)
