@@ -4,6 +4,7 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
 
 from karabo_gui import icons
 from karabo_gui.network import Network
+from karabo_gui.sceneview.utils import get_status_symbol_as_pixmap
 from .utils import get_box, determine_if_value_unchanged
 
 
@@ -85,6 +86,8 @@ class BaseWidgetContainer(QWidget):
                     self._on_display_value_change)
             else:  # DisplayWidgets
                 box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
+            device = box.configuration
+            device.signalStatusChanged.connect(self._on_device_status_changed)
 
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""
@@ -251,19 +254,11 @@ class BaseWidgetContainer(QWidget):
             self.status_symbol.hide()
         else:
             if status != "offline" and error:
-                icon = icons.device_error
+                pixmap = get_status_symbol_as_pixmap('error', 16)
             else:
-                icon = dict(requested=icons.device_requested,
-                            schema=icons.device_schema,
-                            dead=icons.device_dead,
-                            noserver=icons.deviceOfflineNoServer,
-                            noplugin=icons.deviceOfflineNoPlugin,
-                            incompatible=icons.deviceIncompatible,
-                            offline=icons.deviceOffline,
-                            alive=icons.deviceAlive,
-                            missing=icons.propertyMissing).get(status)
-            if icon is not None:
-                self.status_symbol.setPixmap(icon.pixmap(16))
+                pixmap = get_status_symbol_as_pixmap(status, 16)
+            if pixmap is not None:
+                self.status_symbol.setPixmap(pixmap)
             else:
                 self.status_symbol.setText(status)
             self.status_symbol.show()

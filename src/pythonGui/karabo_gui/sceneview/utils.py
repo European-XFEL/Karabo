@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from PyQt4.QtGui import QFont, QFontMetrics
 
 from .const import SCREEN_MAX_VALUE
+from karabo_gui import icons
 
 
 def calc_bounding_rect(collection):
@@ -52,3 +53,31 @@ def save_painter_state(painter):
     painter.save()
     yield
     painter.restore()
+
+
+def get_status_symbol_as_icon(status):
+    """ Map the given `status` to an icon and return it. """
+    status_icons = {
+        'requested': icons.device_requested,
+        'schema': icons.device_schema,
+        'dead': icons.device_dead,
+        'noserver': icons.deviceOfflineNoServer,
+        'noplugin': icons.deviceOfflineNoPlugin,
+        'incompatible': icons.deviceIncompatible,
+        'offline': icons.deviceOffline,
+        'alive': icons.deviceAlive,
+        'missing': icons.propertyMissing,
+        'error': icons.device_error
+    }
+    return status_icons.get(status)
+
+
+def get_status_symbol_as_pixmap(status, extent=None):
+    """ Map the `status` to a pixmap and return it.
+
+        `extent` sets the size of the pixmap. The pixmap might be smaller than
+        requested, but never larger.
+    """
+    if extent is None:
+        return get_status_symbol_as_icon(status).pixmap()
+    return get_status_symbol_as_icon(status).pixmap(extent)
