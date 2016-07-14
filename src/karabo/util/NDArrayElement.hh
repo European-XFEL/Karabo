@@ -10,14 +10,15 @@
 #ifndef KARABO_UTIL_NDARRAYELEMENT_HH
 #define KARABO_UTIL_NDARRAYELEMENT_HH
 
+#include "Dims.hh"
 #include "LeafElement.hh"
 
 namespace karabo {
     namespace util {
 
-        template<typename T,
-        template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
-        class NDArrayElement : public LeafElement<NDArrayElement<T, CONT>, CONT<T> > {
+        template<typename T, int NDIMS = -1,
+                 template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
+        class NDArrayElement : public LeafElement<NDArrayElement<T, NDIMS, CONT>, CONT<T> > {
 
             public:
 
@@ -31,6 +32,17 @@ namespace karabo {
 
             NDArrayElement& maxSize(const unsigned int& value) {
                 this->m_node->setAttribute(KARABO_SCHEMA_MAX_SIZE, value);
+                return *this;
+            }
+
+            NDArrayElement& shape(const std::string& value) {
+                const Dims dims(fromString<unsigned long long, std::vector>(value));
+                if (NDIMS != -1 && dims.rank() != NDIMS) {
+                    std::string ndimsStr = toString(dims.rank());
+                    throw KARABO_PARAMETER_EXCEPTION("Incorrect number of dimensions \"" + ndimsStr + "\" for this array element.");
+                }
+
+                this->m_node->setAttribute(KARABO_SCHEMA_ARRAY_SHAPE, dims);
                 return *this;
             }
 
@@ -79,19 +91,19 @@ namespace karabo {
         typedef NDArrayElement<float> NDARRAY_FLOAT_ELEMENT;
         typedef NDArrayElement<double> NDARRAY_DOUBLE_ELEMENT;
 
-        typedef NDArrayElement<bool> VECTOR_BOOL_ELEMENT;
-        typedef NDArrayElement<signed char> VECTOR_INT8_ELEMENT;
-        typedef NDArrayElement<char> VECTOR_CHAR_ELEMENT;
-        typedef NDArrayElement<signed short> VECTOR_INT16_ELEMENT;
-        typedef NDArrayElement<int> VECTOR_INT32_ELEMENT;
-        typedef NDArrayElement<long long> VECTOR_INT64_ELEMENT;
-        typedef NDArrayElement<unsigned char> VECTOR_UINT8_ELEMENT;
-        typedef NDArrayElement<unsigned short> VECTOR_UINT16_ELEMENT;
-        typedef NDArrayElement<unsigned int> VECTOR_UINT32_ELEMENT;
-        typedef NDArrayElement<unsigned long long> VECTOR_UINT64_ELEMENT;
-        typedef NDArrayElement<float> VECTOR_FLOAT_ELEMENT;
-        typedef NDArrayElement<double> VECTOR_DOUBLE_ELEMENT;
-        typedef NDArrayElement<std::string> VECTOR_STRING_ELEMENT;
+        typedef NDArrayElement<bool, 1> VECTOR_BOOL_ELEMENT;
+        typedef NDArrayElement<signed char, 1> VECTOR_INT8_ELEMENT;
+        typedef NDArrayElement<char, 1> VECTOR_CHAR_ELEMENT;
+        typedef NDArrayElement<signed short, 1> VECTOR_INT16_ELEMENT;
+        typedef NDArrayElement<int, 1> VECTOR_INT32_ELEMENT;
+        typedef NDArrayElement<long long, 1> VECTOR_INT64_ELEMENT;
+        typedef NDArrayElement<unsigned char, 1> VECTOR_UINT8_ELEMENT;
+        typedef NDArrayElement<unsigned short, 1> VECTOR_UINT16_ELEMENT;
+        typedef NDArrayElement<unsigned int, 1> VECTOR_UINT32_ELEMENT;
+        typedef NDArrayElement<unsigned long long, 1> VECTOR_UINT64_ELEMENT;
+        typedef NDArrayElement<float, 1> VECTOR_FLOAT_ELEMENT;
+        typedef NDArrayElement<double, 1> VECTOR_DOUBLE_ELEMENT;
+        typedef NDArrayElement<std::string, 1> VECTOR_STRING_ELEMENT;
     }
 }
 

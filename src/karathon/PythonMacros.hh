@@ -208,13 +208,13 @@ bp::class_< DefValue, boost::noncopyable > ("DefaultValue"#e, bp::no_init)\
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//DefaultValue<NDArrayElement< EType, std::vector >, std::vector< EType > > where EType:
+//DefaultValue<NDArrayElement< EType, 1, std::vector >, std::vector< EType > > where EType:
 //BOOL, INT32, UINT32, INT64, UINT64, STRING, DOUBLE
 #define KARABO_PYTHON_VECTOR_DEFAULT_VALUE(t, e)\
 {\
 typedef t EType;\
 typedef std::vector< EType > VType;\
-typedef karabo::util::NDArrayElement< EType, std::vector> U;\
+typedef karabo::util::NDArrayElement< EType, 1, std::vector> U;\
 typedef karabo::util::DefaultValue< U, VType > DefValueArr;\
 bp::class_< DefValueArr, boost::noncopyable > ("DefaultValueVector"#e, bp::no_init)\
 .def("defaultValue"\
@@ -313,7 +313,7 @@ bp::class_< ReadOnlySpec, boost::noncopyable >( "ReadOnlySpecific"#e, bp::no_ini
 {\
 typedef t EType;\
 typedef std::vector< EType > VType;\
-typedef karabo::util::NDArrayElement< EType, std::vector> U;\
+typedef karabo::util::NDArrayElement< EType, 1, std::vector> U;\
 typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecArr;\
 typedef karabo::util::AlarmSpecific< U, VType, ReadOnlySpecArr > AlarmSpecArr;\
 typedef RollingStatsSpecific< U, VType > RollingStatsSpecArr;\
@@ -460,7 +460,7 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 /**
  * The following macro KARABO_PYTHON_VECTOR is used for python binding of
  * @code
- * karabo::util::NDArrayElement< EType, std::vector >
+ * karabo::util::NDArrayElement< EType, 1, std::vector >
  * @endcode
  * where EType: int, long long, double. 
  * In Python: VECTOR_INT32_ELEMENT, ..UINT32.., VECTOR_INT64_ELEMENT, ..UINT64..,
@@ -470,7 +470,7 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 #define KARABO_PYTHON_VECTOR(t, e)\
 {\
 typedef t EType;\
-typedef NDArrayElement< EType, std::vector > T;\
+typedef NDArrayElement< EType, 1, std::vector > T;\
 bp::implicitly_convertible< Schema &, T >();\
 bp::class_< T, boost::noncopyable >( "VECTOR_"#e"_ELEMENT", bp::init< karabo::util::Schema & >(( bp::arg("expected") )) )\
 KARABO_PYTHON_COMMON_ATTRIBUTES(T) \

@@ -525,6 +525,39 @@ namespace configurationTest {
                     .assignmentMandatory()
                     .commit();
 
+            std::vector<bool> arrBoolInit(4, true);
+            std::vector<signed char> arrIntDef(4, 42);
+            std::vector<float> arrFloatDef(4, 4.2);
+            NDARRAY_BOOL_ELEMENT(expected)
+                    .key("arrBool")
+                    .shape("2,2")
+                    .readOnly().initialValue(arrBoolInit)
+                    .commit();
+
+            NDARRAY_INT8_ELEMENT(expected)
+                    .key("arrInt8")
+                    .shape("2,2")
+                    .assignmentOptional().defaultValue(arrIntDef)
+                    .commit();
+
+            NDARRAY_UINT16_ELEMENT(expected)
+                    .key("arrUInt16")
+                    .shape("2,2")
+                    .readOnly()
+                    .commit();
+
+            NDARRAY_FLOAT_ELEMENT(expected)
+                    .key("arrFloat")
+                    .shape("2,2")
+                    .readOnly().initialValue(arrFloatDef)
+                    .commit();
+
+            NDARRAY_DOUBLE_ELEMENT(expected)
+                    .key("arrDouble")
+                    .shape("2,-1")
+                    .readOnly()
+                    .commit();
+
             IMAGE_ELEMENT(expected)
                     .key("image")
                     .commit();
