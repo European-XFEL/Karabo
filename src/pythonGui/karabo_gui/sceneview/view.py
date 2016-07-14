@@ -158,6 +158,13 @@ class SceneView(QWidget):
                 self.current_tool.draw(painter)
 
     def event(self, event):
+        """ This needs to be reimplemented to show tooltips not only in control
+            mode but also in design mode.
+
+            If the design mode is active the widget attribute
+            ``WA_TransparentForMouseEvents`` is set to ``False`` which prevents
+            the forwarding of the events to the actual widgets.
+        """
         result = super(SceneView, self).event(event)
         if event.type() == QEvent.ToolTip:
             widget = self.widget_at_position(event.pos())
