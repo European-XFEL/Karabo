@@ -303,9 +303,10 @@ class SceneView(QWidget):
         # Remove it from list
         self.remove_model(top_level_model)
         # Do the replacing in the top level model tree
-        replace_model_in_top_level_model(self.scene_model,
-                                         top_level_model,
-                                         old_model, new_model)
+        if not replace_model_in_top_level_model(self.scene_model,
+                                                top_level_model,
+                                                old_model, new_model):
+            top_level_model = new_model
         # Add the modified top level model to the scene again
         self.add_models(top_level_model)
 
