@@ -588,7 +588,7 @@ namespace karabo {
 
             bool hasArrayShape(const std::string& path) const;
 
-            const std::vector<unsigned long long> getArrayShape(const std::string& path) const;
+            const std::vector<long long>& getArrayShape(const std::string& path) const;
 
             //******************************************************
             //                   WarnLow                           *

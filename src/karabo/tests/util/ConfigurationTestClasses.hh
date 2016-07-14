@@ -554,7 +554,7 @@ namespace configurationTest {
 
             NDARRAY_DOUBLE_ELEMENT(expected)
                     .key("arrDouble")
-                    .shape("2,-1")
+                    .shape("2,2,-1")
                     .readOnly()
                     .commit();
 
