@@ -13,6 +13,7 @@
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/NDArrayElement.hh>
 #include <karabo/util/TableElement.hh>
+#include "Wrapper.hh"
 namespace bp = boost::python;
 
 template <typename T>
@@ -61,6 +62,7 @@ struct AliasAttributeWrap {
                 }
                 return self.alias(v);
             }
+            // XXX: Whoa! This check was already performed! -JW 14.7.2016
             if (PyLong_Check(list0.ptr())) {
                 std::vector<long long> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
@@ -75,6 +77,7 @@ struct AliasAttributeWrap {
                 }
                 return self.alias(v);
             }
+            // XXX: Whoa! This check was ALSO already performed! -JW 14.7.2016
             if (PyUnicode_Check(list0.ptr())) {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
@@ -100,13 +103,7 @@ struct DefaultValueNDArrayWrap {
 
     static U & defaultValue(DefValueArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
-            const bp::list& l = bp::extract<bp::list > (obj);
-            bp::ssize_t size = bp::len(l);
-
-            std::vector<T> v(size);
-            for (bp::ssize_t i = 0; i < size; ++i) {
-                v[i] = bp::extract<T > (obj[i]);
-            }
+            VType v = karathon::Wrapper::fromPyListToStdVector<T>(obj);
             return self.defaultValue(v);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of NDArrayElement must be a list");
@@ -124,13 +121,7 @@ struct DefaultValueTableWrap {
 
     static U & defaultValue(DefValueVec& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
-            const bp::list& l = bp::extract<bp::list > (obj);
-            bp::ssize_t size = bp::len(l);
-
-            std::vector<karabo::util::Hash> v(size);
-            for (bp::ssize_t i = 0; i < size; ++i) {
-                v[i] = bp::extract<karabo::util::Hash > (obj[i]);
-            }
+            VType v = karathon::Wrapper::fromPyListToStdVector<karabo::util::Hash>(obj);
             return self.defaultValue(v);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of TableElement must be a list");
@@ -150,13 +141,7 @@ struct ReadOnlySpecificNDArrayWrap {
 
     static ReadOnlySpecArr & initialValue(ReadOnlySpecArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
-            const bp::list& l = bp::extract<bp::list > (obj);
-            bp::ssize_t size = bp::len(l);
-
-            std::vector<T> v(size);
-            for (bp::ssize_t i = 0; i < size; ++i) {
-                v[i] = bp::extract<T > (obj[i]);
-            }
+            VType v = karathon::Wrapper::fromPyListToStdVector<T>(obj);
             return self.initialValue(v);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python type of the initialValue of NDArrayElement must be a list");
@@ -165,7 +150,7 @@ struct ReadOnlySpecificNDArrayWrap {
 
     static AlarmSpecArr warnLowValue(ReadOnlySpecArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
-            VType v = pyList2StdVector(obj);
+            VType v = karathon::Wrapper::fromPyListToStdVector<T>(obj);
             return self.warnLow(v);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python type of the warnLow value of NDArrayElement must be a list");
@@ -174,7 +159,7 @@ struct ReadOnlySpecificNDArrayWrap {
 
     static AlarmSpecArr warnHighValue(ReadOnlySpecArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
-            VType v = pyList2StdVector(obj);
+            VType v = karathon::Wrapper::fromPyListToStdVector<T>(obj);
             return self.warnHigh(v);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python type of the warnHigh value of NDArrayElement must be a list");
@@ -183,7 +168,7 @@ struct ReadOnlySpecificNDArrayWrap {
 
     static AlarmSpecArr alarmLowValue(ReadOnlySpecArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
-            VType v = pyList2StdVector(obj);
+            VType v = karathon::Wrapper::fromPyListToStdVector<T>(obj);
             return self.alarmLow(v);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python type of the alarmLow value of NDArrayElement must be a list");
@@ -192,24 +177,12 @@ struct ReadOnlySpecificNDArrayWrap {
 
     static AlarmSpecArr alarmHighValue(ReadOnlySpecArr& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
-            VType v = pyList2StdVector(obj);
+            VType v = karathon::Wrapper::fromPyListToStdVector<T>(obj);
             return self.alarmHigh(v);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python type of the alarmHigh value of NDArrayElement must be a list");
         }
     }
-
-    static std::vector<T> pyList2StdVector(const bp::object & obj) {
-        const bp::list& l = bp::extract<bp::list > (obj);
-        bp::ssize_t size = bp::len(l);
-
-        std::vector<T> v(size);
-        for (bp::ssize_t i = 0; i < size; ++i) {
-            v[i] = bp::extract<T > (obj[i]);
-        }
-        return v;
-    }
-
 };
 
 
