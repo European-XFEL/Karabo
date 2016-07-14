@@ -5,7 +5,6 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QMenu
 from traits.api import Any, ABCHasStrictTraits
 
@@ -37,13 +36,16 @@ class WidgetSceneHandler(ABCHasStrictTraits):
         for klass in widget_classes:
             ac = change_menu.addAction(klass.alias)
             ac.triggered.connect(partial(self._change_widget,
-                                         scene_view, klass))
+                                         scene_view, klass.__name__))
         main_menu.exec_(event.globalPos())
 
-    @pyqtSlot(object, object)
     def _change_widget(self, scene_view, widget_class):
-        """ """
-        model_klass = WIDGET_FACTORIES[widget_class.__name__]
+        """ The model of ``self.widget`` is about to be changed.
+
+            The given ``widget_class`` string describes the new widget class
+            with which the old model is about to be replaced with.
+        """
+        model_klass = WIDGET_FACTORIES[widget_class]
 
         old_model = self.widget.model
         # Get old model traits

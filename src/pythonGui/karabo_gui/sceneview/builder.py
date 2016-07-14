@@ -3,7 +3,7 @@ from PyQt4.QtCore import QRect
 from karabo_gui.scenemodel.api import (
     BaseLayoutModel, BoxLayoutModel, FixedLayoutModel, GridLayoutModel,
     LabelModel, LineModel, PathModel, RectangleModel, SceneLinkModel,
-    SceneModel, UnknownXMLDataModel, BitfieldModel, DisplayAlignedImageModel,
+    UnknownXMLDataModel, BitfieldModel, DisplayAlignedImageModel,
     DisplayCommandModel, DisplayIconsetModel, DisplayImageModel,
     DisplayImageElementModel, DisplayLabelModel, DisplayPlotModel,
     DoubleLineEditModel, EditableListModel, EditableListElementModel,
@@ -79,12 +79,11 @@ _SCENE_OBJ_FACTORIES = {
 
 
 def find_top_level_model(parent_model, model):
-    """ Recursively find the top level model of the given ``model``
-        in the ``parent_model`` and return ``True`` it was found.
-        If the given ``model`` is already the top level model
-        this is returned.
+    """ Recursively find the model in the ``parent_model`` tree which matches
+        the given ``model`` and return its parent model which is the top level
+        model in the end.
     """
-    if isinstance(parent_model, (BaseLayoutModel, SceneModel)):
+    if isinstance(parent_model, BaseLayoutModel):
         for child in parent_model.children:
             result = find_top_level_model(child, model)
             if result:
@@ -98,7 +97,7 @@ def replace_model_in_top_level_model(layout_model, parent_model, old_model,
     """ Recursively find the given ``old_model`` in the model tree and
         replace it with the given ``new_model``.
 
-        This method returns, if this was successful.
+        This method returns ``True``.
     """
     if isinstance(parent_model, BaseLayoutModel):
         for child in parent_model.children:
@@ -106,17 +105,16 @@ def replace_model_in_top_level_model(layout_model, parent_model, old_model,
                                                       old_model, new_model)
             if result:
                 return True
-    else:
-        if parent_model is old_model:
-            # Replace old model with new model
-            layout_children = layout_model.children
-            index = layout_children.index(parent_model)
-            layout_children.remove(parent_model)
-            layout_children.insert(index, new_model)
-            # Enforce recalculation of geometry
-            layout_model.width = 0
-            layout_model.height = 0
-            return True
+    elif parent_model is old_model:
+        # Replace old model with new model
+        layout_children = layout_model.children
+        index = layout_children.index(parent_model)
+        layout_children.remove(parent_model)
+        layout_children.insert(index, new_model)
+        # Enforce recalculation of geometry
+        layout_model.width = 0
+        layout_model.height = 0
+        return True
     return False
 
 
