@@ -15,7 +15,7 @@
 #include <string>
 
 #include <karabo/util/Configurator.hh>
-#include <karabo/util/VectorElement.hh>
+#include <karabo/util/NDArrayElement.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/FromLiteral.hh>
 
