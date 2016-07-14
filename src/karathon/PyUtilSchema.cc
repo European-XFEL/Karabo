@@ -1902,7 +1902,7 @@ void exportPyUtilSchema() {
     //    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned long long>, unsigned long long, BITSET64)
 
     ///////////////////////////////////////////////////////////
-    //DefaultValue<VectorElement< EType, std::vector >, std::vector< EType > > where EType:
+    //DefaultValue<NDArrayElement< EType, std::vector >, std::vector< EType > > where EType:
     //BOOL, INT32, UINT32, INT64, UINT64, DOUBLE, STRING 
 
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(int, INT32)
@@ -1916,7 +1916,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(char, CHAR)
 
     ///////////////////////////////////////////////////////////////
-    //ReadOnlySpecific<VectorElement< EType >, EType >, where EType:
+    //ReadOnlySpecific<NDArrayElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
 
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(int, INT32)
@@ -1965,7 +1965,7 @@ void exportPyUtilSchema() {
     }
 
     //////////////////////////////////////////////////////////////////////
-    // Binding VectorElement< EType, std::vector >
+    // Binding NDArrayElement< EType, std::vector >
     // In Python : VECTOR_INT32_ELEMENT, VECTOR_UINT32_ELEMENT, 
     // VECTOR_INT64_ELEMENT, VECTOR_UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT,
     // VECTOR_STRING_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_CHAR_ELEMENT

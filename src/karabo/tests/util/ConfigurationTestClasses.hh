@@ -12,7 +12,7 @@
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ListElement.hh>
-#include <karabo/util/VectorElement.hh>
+#include <karabo/util/NDArrayElement.hh>
 #include <karabo/util/PathElement.hh>
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/util/ImageElement.hh>

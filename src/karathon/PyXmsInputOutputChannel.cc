@@ -277,9 +277,9 @@ namespace karathon {
     }
 
 
-    karabo::xms::NDArrayElement& NDArrayElementWrap::setDefaultValue(const boost::shared_ptr<karabo::xms::NDArrayElement>& self,
-                                                                     const std::string& subKey,
-                                                                     const bp::object& defaultValue) {
+    karabo::xms::_NDArrayElement& _NDArrayElementWrap::setDefaultValue(const boost::shared_ptr<karabo::xms::_NDArrayElement>& self,
+                                                                       const std::string& subKey,
+                                                                       const bp::object& defaultValue) {
         boost::any anyValue;
         karathon::Wrapper::toAny(defaultValue, anyValue);
         return self->setDefaultValue(subKey, anyValue);
@@ -905,24 +905,24 @@ void exportPyXmsInputOutputChannel() {
     }
 
     {
-        bp::implicitly_convertible< Schema &, NDArrayElement >();
-        bp::class_<NDArrayElement > ("NDARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+        bp::implicitly_convertible< Schema &, _NDArrayElement >();
+        bp::class_<_NDArrayElement > ("NDARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
 
-                .def("key", &NDArrayElement::key
+                .def("key", &_NDArrayElement::key
                      , (bp::arg("key"))
                      , bp::return_internal_reference<> ())
 
-                .def("setDefaultValue", &karathon::NDArrayElementWrap().setDefaultValue
+                .def("setDefaultValue", &karathon::_NDArrayElementWrap().setDefaultValue
                      , (bp::arg("subKey"), bp::arg("defaultValue"))
                      , bp::return_internal_reference<> ())
 
-                .def("commit", &NDArrayElement::commit, bp::return_internal_reference<> ())
+                .def("commit", &_NDArrayElement::commit, bp::return_internal_reference<> ())
 
-                .def("setDimensionScales", &NDArrayElement::setDimensionScales
+                .def("setDimensionScales", &_NDArrayElement::setDimensionScales
                      , (bp::arg("scales"))
                      , bp::return_internal_reference<> ())
 
-                .def("setDimensions", &NDArrayElement::setDimensions
+                .def("setDimensions", &_NDArrayElement::setDimensions
                      , (bp::arg("dimensions"))
                      , bp::return_internal_reference<> ())
                 ;

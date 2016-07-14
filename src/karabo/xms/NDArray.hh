@@ -154,21 +154,21 @@ namespace karabo {
             m_hash->set("dataType", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<char>()));
         }
 
-        struct NDArrayElement : public DataElement<NDArrayElement, NDArray> {
+        struct _NDArrayElement : public DataElement<_NDArrayElement, NDArray> {
 
-            NDArrayElement(karabo::util::Schema& s) : DataElement<NDArrayElement, NDArray>(s) {
+            _NDArrayElement(karabo::util::Schema& s) : DataElement<_NDArrayElement, NDArray>(s) {
             }
 
-            NDArrayElement& setDimensionScales(const std::string& scales) {
+            _NDArrayElement& setDimensionScales(const std::string& scales) {
                 return setDefaultValue("dimScales", scales);
             }
 
-            NDArrayElement& setDimensions(const std::string& dimensions) {
+            _NDArrayElement& setDimensions(const std::string& dimensions) {
                 return setDefaultValue("dims", karabo::util::fromString<unsigned long long, std::vector>(dimensions));
             }
         };
 
-        typedef NDArrayElement NDARRAY_ELEMENT;
+        typedef _NDArrayElement NDARRAY_ELEMENT;
     }
 }
 

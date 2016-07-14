@@ -9,7 +9,7 @@
 #include <sstream> 
 #include "Dataset.hh"
 #include <karabo/util/SimpleElement.hh>
-#include <karabo/util/VectorElement.hh>
+#include <karabo/util/NDArrayElement.hh>
 #include <karabo/log/Logger.hh>
 #include <karabo/util/Dims.hh>
 
@@ -27,7 +27,7 @@ namespace karabo {
 
             void Dataset::expectedParameters(Schema & expected) {
 
-                karabo::util::VECTOR_UINT64_ELEMENT(expected)
+                VECTOR_UINT64_ELEMENT(expected)
                         .key("dims")
                         .displayedName("Dimensions")
                         .description("Array dimensions (x1,x2,x3,...). For example, for a simple image it is (width, height) ")

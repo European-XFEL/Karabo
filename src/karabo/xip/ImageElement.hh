@@ -13,7 +13,7 @@
 #define	EXFEL_XIP_IMAGEELEMENT_HH
 
 #include <exfel/util/ComplexElement.hh>
-#include <exfel/util/VectorElement.hh>
+#include <exfel/util/NDArrayElement.hh>
 #include <exfel/util/SimpleElement.hh>
 
 namespace exfel {
@@ -26,7 +26,7 @@ namespace exfel {
 
             exfel::util::ComplexElement m_outerElement;
             exfel::util::SimpleElement<unsigned int> m_dimX, m_dimY, m_dimZ, m_dimC;
-            exfel::util::VectorElement<T> m_pixelArray;
+            exfel::util::NDArrayElement<T> m_pixelArray;
 
         public:
 
