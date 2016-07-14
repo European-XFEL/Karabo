@@ -13,6 +13,7 @@
 #include <deque>
 #include <set>
 
+#include "Dims.hh"
 #include "Exception.hh"
 #include "Schema.hh"
 #include "Hash.hh"
@@ -565,6 +566,25 @@ namespace karabo {
 
         const unsigned int& Schema::getMaxSize(const std::string& path) const {
             return m_hash.getAttribute<unsigned int>(path, KARABO_SCHEMA_MAX_SIZE);
+        }
+
+        //**********************************************************
+        //	Specific functions for LEAF node (which is an NDArray) *
+        //	Shape of the array                                     *
+        //**********************************************************
+
+        void Schema::setArrayShape(const std::string& path, const std::string& value) {
+            const Dims dims(fromString<unsigned long long, std::vector>(value));
+            m_hash.setAttribute(path, KARABO_SCHEMA_ARRAY_SHAPE, dims);
+        }
+
+        bool Schema::hasArrayShape(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_ARRAY_SHAPE);
+        }
+
+        const std::vector<unsigned long long> Schema::getArrayShape(const std::string& path) const {
+            const Dims dims = m_hash.getAttribute<Dims>(path, KARABO_SCHEMA_ARRAY_SHAPE);
+            return dims.toVector();
         }
 
         //******************************************************
