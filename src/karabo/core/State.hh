@@ -52,7 +52,7 @@ namespace karabo {
                 return m_stateName == state.m_stateName;
             }
 
-            bool isCompatible(const State& s) const;
+            bool isDerivedFrom(const State& s) const;
             
             // The base states that have no parent:
 
