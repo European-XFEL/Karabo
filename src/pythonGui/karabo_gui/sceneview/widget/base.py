@@ -1,6 +1,6 @@
-from PyQt4.QtCore import QRect, QSize, QTimer, pyqtSlot
-from PyQt4.QtGui import (QAction, QHBoxLayout, QStackedLayout, QToolButton,
-                         QWidget)
+from PyQt4.QtCore import QRect, QSize, Qt, QTimer, pyqtSlot
+from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
+                         QToolButton, QWidget)
 
 from karabo_gui import icons
 from karabo_gui.network import Network
@@ -15,14 +15,22 @@ class BaseWidgetContainer(QWidget):
         super(BaseWidgetContainer, self).__init__(parent)
         self.model = model
         self.boxes = [get_box(*key.split('.', 1)) for key in self.model.keys]
+
+        self.layout = QStackedLayout(self)
+        self.layout.setStackingMode(QStackedLayout.StackAll)
+        self.status_symbol = QLabel("", self)
+        self.status_symbol.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.layout.addWidget(self.status_symbol)
+
         self.old_style_widget = self._create_widget(self.boxes)
         for box in self.boxes:
             self._make_box_connections(box)
         if self.model.parent_component == 'EditableApplyLaterComponent':
-            self.layout = self._add_edit_widgets()
+            layout = self._add_edit_widgets()
+            edit_widgets = QWidget()
+            edit_widgets.setLayout(layout)
+            self.layout.addWidget(edit_widgets)
         else:
-            self.layout = QStackedLayout(self)
-            self.layout.setStackingMode(QStackedLayout.StackAll)
             self.layout.addWidget(self.old_style_widget.widget)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
         self.setToolTip(", ".join(self.model.keys))
@@ -116,6 +124,10 @@ class BaseWidgetContainer(QWidget):
         else:
             widget.setReadOnly(True)
 
+        device = box.configuration
+        device.signalStatusChanged.connect(self._on_device_status_changed)
+        self._on_device_status_changed(device, device.status, device.error)
+
     # ---------------------------------------------------------------------
     # Edit buttons related code
 
@@ -133,7 +145,7 @@ class BaseWidgetContainer(QWidget):
             layout.addWidget(tb)
             return button, tb
 
-        layout = QHBoxLayout(self)
+        layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.old_style_widget.widget)
 
@@ -230,3 +242,28 @@ class BaseWidgetContainer(QWidget):
         self.apply_button.setStatusTip(description)
         self.apply_button.setToolTip(description)
         self.decline_button.setEnabled(allowed and not value_unchanged)
+
+    @pyqtSlot(object, str, bool)
+    def _on_device_status_changed(self, configuration, status, error):
+        """ This slot is called whenever the status of the device is changed.
+        """
+        if status == "monitoring" and not error:
+            self.status_symbol.hide()
+        else:
+            if status != "offline" and error:
+                icon = icons.device_error
+            else:
+                icon = dict(requested=icons.device_requested,
+                            schema=icons.device_schema,
+                            dead=icons.device_dead,
+                            noserver=icons.deviceOfflineNoServer,
+                            noplugin=icons.deviceOfflineNoPlugin,
+                            incompatible=icons.deviceIncompatible,
+                            offline=icons.deviceOffline,
+                            alive=icons.deviceAlive,
+                            missing=icons.propertyMissing).get(status)
+            if icon is not None:
+                self.status_symbol.setPixmap(icon.pixmap(16))
+            else:
+                self.status_symbol.setText(status)
+            self.status_symbol.show()
