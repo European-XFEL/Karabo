@@ -329,13 +329,7 @@ struct ListElementWrap {
 
     static ListElement & defaultValueList(DefListElement& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
-            const bp::list& l = bp::extract<bp::list > (obj);
-            bp::ssize_t size = bp::len(l);
-
-            vector<string> v(size);
-            for (bp::ssize_t i = 0; i < size; ++i) {
-                v[i] = bp::extract<string> (obj[i]);
-            }
+            vector<string> v = karathon::Wrapper::fromPyListToStdVector<string>(obj);
             return self.defaultValue(v);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of LIST_ELEMENT must be a list of strings");
