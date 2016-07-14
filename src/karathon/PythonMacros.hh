@@ -13,7 +13,7 @@
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/NDArrayElement.hh>
 #include <karabo/util/TableElement.hh>
-#include "Wrapper.hh"
+#include <karathon/Wrapper.hh>
 namespace bp = boost::python;
 
 template <typename T>
@@ -93,12 +93,10 @@ struct AliasAttributeWrap {
     }
 };
 
-template <class T>
+template <class T, int NDIMS>
 struct DefaultValueNDArrayWrap {
-
-
     typedef std::vector< T > VType;
-    typedef karabo::util::NDArrayElement< T > U;
+    typedef karabo::util::NDArrayElement< T, NDIMS > U;
     typedef karabo::util::DefaultValue< U, VType > DefValueArr;
 
     static U & defaultValue(DefValueArr& self, const bp::object& obj) {
@@ -109,7 +107,6 @@ struct DefaultValueNDArrayWrap {
             throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of NDArrayElement must be a list");
         }
     }
-
 };
 
 struct DefaultValueTableWrap {
@@ -130,12 +127,10 @@ struct DefaultValueTableWrap {
 
 };
 
-template <class T>
+template <class T, int NDIMS>
 struct ReadOnlySpecificNDArrayWrap {
-
-
     typedef std::vector< T > VType;
-    typedef karabo::util::NDArrayElement< T > U;
+    typedef karabo::util::NDArrayElement< T, NDIMS > U;
     typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecArr;
     typedef karabo::util::AlarmSpecific< U, VType, ReadOnlySpecArr> AlarmSpecArr;
 
@@ -186,6 +181,24 @@ struct ReadOnlySpecificNDArrayWrap {
 };
 
 
+template <class T, int NDIMS = -1>
+struct NDArrayElementWrap {
+    typedef karabo::util::NDArrayElement< T, NDIMS > U;
+
+    static U & shape(U& self, const bp::object& obj) {
+        if (PyUnicode_Check(obj.ptr())) {
+            return self.shape(bp::extract<std::string>(obj));
+        } else if (PyList_Check(obj.ptr())) {
+            const std::vector<long long> v = karathon::Wrapper::fromPyListToStdVector<long long>(obj);
+            const std::string shapeStr = karabo::util::toString<long long>(v);
+            return self.shape(shapeStr);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python type of the shape value of NDArrayElement must be a list or a string");
+        }
+    }
+};
+
+
 ///////////////////////////////////////////////////////////////////////////
 //DefaultValue<SimpleElement< EType> > where EType:
 //BOOL, INT32, UINT32, INT64, UINT64, STRING, DOUBLE
@@ -208,17 +221,16 @@ bp::class_< DefValue, boost::noncopyable > ("DefaultValue"#e, bp::no_init)\
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//DefaultValue<NDArrayElement< EType, 1, std::vector >, std::vector< EType > > where EType:
-//BOOL, INT32, UINT32, INT64, UINT64, STRING, DOUBLE
-#define KARABO_PYTHON_VECTOR_DEFAULT_VALUE(t, e)\
+// DefaultValue<NDArrayElement< EType, NDIMS, std::vector >, std::vector< EType > >
+#define KARABO_PYTHON_ARRAY_DEFAULT_VALUE(t, e, ndims)\
 {\
 typedef t EType;\
 typedef std::vector< EType > VType;\
-typedef karabo::util::NDArrayElement< EType, 1, std::vector> U;\
+typedef karabo::util::NDArrayElement< EType, ndims, std::vector> U;\
 typedef karabo::util::DefaultValue< U, VType > DefValueArr;\
 bp::class_< DefValueArr, boost::noncopyable > ("DefaultValueVector"#e, bp::no_init)\
 .def("defaultValue"\
-, &DefaultValueNDArrayWrap<EType>::defaultValue\
+, &DefaultValueNDArrayWrap<EType, ndims>::defaultValue\
 , (bp::arg("self"), bp::arg("pyList"))\
 , bp::return_internal_reference<> ())\
 .def("defaultValueFromString"\
@@ -309,30 +321,30 @@ bp::class_< ReadOnlySpec, boost::noncopyable >( "ReadOnlySpecific"#e, bp::no_ini
 }
 
 /////////////////////////////////////////////////////////////
-#define KARABO_PYTHON_VECTOR_READONLYSPECIFIC(t , e)\
+#define KARABO_PYTHON_ARRAY_READONLYSPECIFIC(t, e, ndims)\
 {\
 typedef t EType;\
 typedef std::vector< EType > VType;\
-typedef karabo::util::NDArrayElement< EType, 1, std::vector> U;\
+typedef karabo::util::NDArrayElement< EType, ndims, std::vector> U;\
 typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecArr;\
 typedef karabo::util::AlarmSpecific< U, VType, ReadOnlySpecArr > AlarmSpecArr;\
 typedef RollingStatsSpecific< U, VType > RollingStatsSpecArr;\
 bp::class_< ReadOnlySpecArr, boost::noncopyable > ("ReadOnlySpecificVector"#e, bp::no_init)\
 .def("initialValue"\
-, &ReadOnlySpecificNDArrayWrap<EType>::initialValue\
+, &ReadOnlySpecificNDArrayWrap<EType, ndims>::initialValue\
 , (bp::arg("self"), bp::arg("pyList"))\
 , bp::return_internal_reference<> () )\
 .def("alarmHigh"\
-, &ReadOnlySpecificNDArrayWrap<EType>::alarmHighValue\
+, &ReadOnlySpecificNDArrayWrap<EType, ndims>::alarmHighValue\
 , (bp::arg("self"), bp::arg("pyList")))\
 .def("alarmLow"\
-, &ReadOnlySpecificNDArrayWrap<EType>::alarmLowValue\
+, &ReadOnlySpecificNDArrayWrap<EType, ndims>::alarmLowValue\
 , (bp::arg("self"), bp::arg("pyList")))\
 .def("warnHigh"\
-, &ReadOnlySpecificNDArrayWrap<EType>::warnHighValue\
+, &ReadOnlySpecificNDArrayWrap<EType, ndims>::warnHighValue\
 , (bp::arg("self"), bp::arg("pyList")))\
 .def("warnLow"\
-, &ReadOnlySpecificNDArrayWrap<EType>::warnLowValue\
+, &ReadOnlySpecificNDArrayWrap<EType, ndims>::warnLowValue\
 , (bp::arg("self"), bp::arg("pyList")))\
 .def("enableRollingStats"\
 , (RollingStatsSpecArr (ReadOnlySpecArr::*)(std::string const &))( &ReadOnlySpecArr::enableRollingStats))\
@@ -345,7 +357,6 @@ bp::class_< ReadOnlySpecArr, boost::noncopyable > ("ReadOnlySpecificVector"#e, b
 .def("commit", (void (ReadOnlySpecArr::*)())(&ReadOnlySpecArr::commit))\
 ;\
 }
-
 
 /**
  * The following macro KARABO_PYTHON_SIMPLE
@@ -462,7 +473,7 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
  * @code
  * karabo::util::NDArrayElement< EType, 1, std::vector >
  * @endcode
- * where EType: int, long long, double. 
+ * where EType: int, long long, double.
  * In Python: VECTOR_INT32_ELEMENT, ..UINT32.., VECTOR_INT64_ELEMENT, ..UINT64..,
  *  VECTOR_DOUBLE_ELEMENT, VECTOR_STRING_ELEMENT, VECTOR_BOOL_ELEMENT.
  *
@@ -479,6 +490,28 @@ KARABO_PYTHON_COMMON_ATTRIBUTES(T) \
 , bp::return_internal_reference<> () )\
 .def("minSize"\
 , (T & ( T::*)(int const & ))(&T::minSize)\
+, bp::return_internal_reference<> () )\
+;\
+}
+
+/**
+ * The following macro KARABO_PYTHON_NDARRAY is used for python binding of
+ * @code
+ * karabo::util::NDArrayElement< EType, -1, std::vector >
+ * @endcode
+ * where EType: signed char, unsigned char, short, unsigned short, int,
+ * unsigned int, long long, unsigned long long, float, double.
+ * In Python: NDARRAY_*_ELEMENT
+ */
+#define KARABO_PYTHON_NDARRAY(t, e)\
+{\
+typedef t EType;\
+typedef NDArrayElement< EType, -1, std::vector > T;\
+bp::implicitly_convertible< Schema &, T >();\
+bp::class_< T, boost::noncopyable >( "NDARRAY_"#e"_ELEMENT", bp::init< karabo::util::Schema & >(( bp::arg("expected") )) )\
+KARABO_PYTHON_COMMON_ATTRIBUTES(T) \
+.def("shape"\
+, &NDArrayElementWrap<EType>::shape\
 , bp::return_internal_reference<> () )\
 ;\
 }

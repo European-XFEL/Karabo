@@ -13,7 +13,6 @@
 #include <deque>
 #include <set>
 
-#include "Dims.hh"
 #include "Exception.hh"
 #include "Schema.hh"
 #include "Hash.hh"
@@ -574,7 +573,7 @@ namespace karabo {
         //**********************************************************
 
         void Schema::setArrayShape(const std::string& path, const std::string& value) {
-            const Dims dims(fromString<unsigned long long, std::vector>(value));
+            const std::vector<long long> dims = fromString<long long, std::vector>(value);
             m_hash.setAttribute(path, KARABO_SCHEMA_ARRAY_SHAPE, dims);
         }
 
@@ -582,9 +581,8 @@ namespace karabo {
             return m_hash.hasAttribute(path, KARABO_SCHEMA_ARRAY_SHAPE);
         }
 
-        const std::vector<unsigned long long> Schema::getArrayShape(const std::string& path) const {
-            const Dims dims = m_hash.getAttribute<Dims>(path, KARABO_SCHEMA_ARRAY_SHAPE);
-            return dims.toVector();
+        const std::vector<long long>& Schema::getArrayShape(const std::string& path) const {
+            return m_hash.getAttribute<std::vector<long long> >(path, KARABO_SCHEMA_ARRAY_SHAPE);
         }
 
         //******************************************************

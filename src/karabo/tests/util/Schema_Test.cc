@@ -592,14 +592,15 @@ void Schema_Test::testArrayElements() {
     CPPUNIT_ASSERT(sch.getValueType("arrFloat") == Types::VECTOR_FLOAT);
     CPPUNIT_ASSERT(sch.getValueType("arrDouble") == Types::VECTOR_DOUBLE);
 
-    std::vector<unsigned long long> shapeVec;
+    std::vector<long long> shapeVec;
     shapeVec.push_back(2);
     shapeVec.push_back(2);
     CPPUNIT_ASSERT(sch.getArrayShape("arrBool") == shapeVec);
     CPPUNIT_ASSERT(sch.getArrayShape("arrInt8") == shapeVec);
     CPPUNIT_ASSERT(sch.getArrayShape("arrUInt16") == shapeVec);
     CPPUNIT_ASSERT(sch.getArrayShape("arrFloat") == shapeVec);
-    //CPPUNIT_ASSERT(sch.getArrayShape("arrDouble") == shapeVec);
+    shapeVec.push_back(-1);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrDouble") == shapeVec);
 
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrBool") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrInt8") == false);
