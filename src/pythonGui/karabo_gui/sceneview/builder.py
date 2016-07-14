@@ -97,7 +97,7 @@ def replace_model_in_top_level_model(layout_model, parent_model, old_model,
     """ Recursively find the given ``old_model`` in the model tree and
         replace it with the given ``new_model``.
 
-        This method returns ``True``.
+        This method returns, if replacing was successful.
     """
     if isinstance(parent_model, BaseLayoutModel):
         for child in parent_model.children:
@@ -108,9 +108,13 @@ def replace_model_in_top_level_model(layout_model, parent_model, old_model,
     elif parent_model is old_model:
         # Replace old model with new model
         layout_children = layout_model.children
-        index = layout_children.index(parent_model)
-        layout_children.remove(parent_model)
-        layout_children.insert(index, new_model)
+        try:
+            index = layout_children.index(parent_model)
+            layout_children.remove(parent_model)
+            layout_children.insert(index, new_model)
+        except ValueError:
+            # Model already removed
+            return False
         # Enforce recalculation of geometry
         layout_model.width = 0
         layout_model.height = 0
@@ -177,6 +181,11 @@ def create_object_from_model(layout, model, scene_view, object_dict):
                 else:
                     model_rect = rect
             obj.setGeometry(model_rect)
+        elif is_widget(obj):
+            model_rect = QRect(model.x, model.y, model.width, model.height)
+            if model_rect.isEmpty():
+                model_rect.setSize(obj.sizeHint())
+                obj.setGeometry(model_rect)
 
 
 def fill_root_layout(layout, parent_model, scene_view, object_dict):
