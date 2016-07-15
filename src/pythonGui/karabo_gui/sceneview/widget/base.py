@@ -129,8 +129,8 @@ class BaseWidgetContainer(QWidget):
             widget.setReadOnly(True)
 
         device = box.configuration
-        device.signalStatusChanged.connect(self._on_device_status_changed)
-        self._on_device_status_changed(device, device.status, device.error)
+        device.signalStatusChanged.connect(self._device_status_changed)
+        self._device_status_changed(device, device.status, device.error)
 
     # ---------------------------------------------------------------------
     # Edit buttons related code
@@ -248,8 +248,8 @@ class BaseWidgetContainer(QWidget):
         self.decline_button.setEnabled(allowed and not value_unchanged)
 
     @pyqtSlot(object, str, bool)
-    def _on_device_status_changed(self, configuration, status, error):
-        """ This slot is called whenever the status of the device is changed.
+    def _device_status_changed(self, configuration, status, error):
+        """ Callback when the status of the device is changes.
         """
         pixmap = get_status_symbol_as_pixmap(status, error)
         if pixmap is not None:
