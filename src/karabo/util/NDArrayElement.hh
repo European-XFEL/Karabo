@@ -27,22 +27,29 @@ namespace karabo {
             }
 
             NDArrayElement& minSize(const unsigned int& value) {
+                if (NDIMS == -1) {
+                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("minSize is not supported for N-dimensional arrays");
+                }
+
                 this->m_node->setAttribute(KARABO_SCHEMA_MIN_SIZE, value);
                 return *this;
             }
 
             NDArrayElement& maxSize(const unsigned int& value) {
+                if (NDIMS == -1) {
+                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("maxSize is not supported for N-dimensional arrays");
+                }
+
                 this->m_node->setAttribute(KARABO_SCHEMA_MAX_SIZE, value);
                 return *this;
             }
 
             NDArrayElement& shape(const std::string& value) {
-                const ShapeType shp = fromString<long long, std::vector>(value);
-                if (NDIMS != -1 && shp.size() != NDIMS) {
-                    std::string ndimsStr = toString(shp.size());
-                    throw KARABO_PARAMETER_EXCEPTION("Incorrect number of dimensions \"" + ndimsStr + "\" for this array element.");
+                if (NDIMS != -1) {
+                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("The shape of a vector cannot be set");
                 }
 
+                const ShapeType shp = fromString<long long, std::vector>(value);
                 this->m_node->setAttribute(KARABO_SCHEMA_ARRAY_SHAPE, shp);
                 return *this;
             }
