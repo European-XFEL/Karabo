@@ -258,13 +258,19 @@ class Descriptor(object):
                 raise TypeError("{} got unexpected keyword argument: {}".
                                 format(self.__class__.__name__, k))
 
-    def parameters(self):
-        return {p: getattr(self, p) for p in dir(type(self))
-                if isinstance(getattr(type(self), p), Attribute) and
-                   getattr(self, p) is not None}
+    def toSchemaAndAttrs(self, device, state):
+        """return schema for device in state
 
-    def subschema(self):
-        return Hash()
+        This returns the Hash representing this descriptor in a Schema, as well
+        as the attributes that have to be set for it.
+
+        if device is None, the class' Schema is returned, otherwise the
+        device's. If state is not None, only the parts of the schema available
+        in the given state are returned.
+        """
+        attrs = ((name, getattr(self, name)) for name in dir(type(self))
+                 if isinstance(getattr(type(self), name), Attribute))
+        return Hash(), {name: attr for name, attr in attrs if attr is not None}
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -366,11 +372,11 @@ class Descriptor(object):
 class Slot(Descriptor):
     iscoroutine = None
 
-    def parameters(self):
-        ret = super(Slot, self).parameters()
-        ret["nodeType"] = NodeType.Node
-        ret["displayType"] = "Slot"
-        return ret
+    def toSchemaAndAttrs(self, device, state):
+        h, attrs = super(Slot, self).toSchemaAndAttrs(device, state)
+        attrs["nodeType"] = NodeType.Node
+        attrs["displayType"] = "Slot"
+        return h, attrs
 
     def toDataAndAttrs(self, value):
         return Hash(), {}
@@ -502,11 +508,11 @@ class Type(Descriptor, Registry):
             attrs = {}
         return data.value, attrs
 
-    def parameters(self):
-        ret = super(Type, self).parameters()
-        ret["nodeType"] = NodeType.Leaf
-        ret["valueType"] = self.hashname()
-        return ret
+    def toSchemaAndAttrs(self, device, state):
+        h, attrs = super().toSchemaAndAttrs(device, state)
+        attrs["nodeType"] = NodeType.Leaf
+        attrs["valueType"] = self.hashname()
+        return h, attrs
 
     def __call__(self, method):
         if self.description is None:
