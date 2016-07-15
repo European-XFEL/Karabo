@@ -72,9 +72,8 @@ def get_status_symbol_as_icon(status, error):
 
     if status == 'monitoring' and not error:
         return None
-    else:
-        if status != 'offline' and error:
-            return status_icons.get('error')
+    elif status != 'offline' and error:
+        return status_icons.get('error')
 
     return status_icons.get(status)
 
