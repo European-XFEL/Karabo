@@ -90,7 +90,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                 descr = getattr(base, attr)
                 if (state is None or descr.allowedStates is None or
                         state in descr.allowedStates):
-                    sub_schema, attrs = descr.getSchemaAndAttrs(device, state)
+                    sub_schema, attrs = descr.toSchemaAndAttrs(device, state)
                     attrs = {k: v.value if isinstance(v, Enum) else v
                              for k, v in attrs.items()}
                     schema.hash[attr] = sub_schema
@@ -173,8 +173,8 @@ class Node(Descriptor):
         self.cls = cls
         Descriptor.__init__(self, **kwargs)
 
-    def getSchemaAndAttrs(self, device, state):
-        _, attrs = super(Node, self).getSchemaAndAttrs(device, state)
+    def toSchemaAndAttrs(self, device, state):
+        _, attrs = super(Node, self).toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Node
         return self.cls.getClassSchema(device, state).hash, attrs
 
@@ -204,13 +204,13 @@ class Node(Descriptor):
 class ChoiceOfNodes(Node):
     defaultValue = Attribute()
 
-    def getSchemaAndAttrs(self, device, state):
+    def toSchemaAndAttrs(self, device, state):
         h = Hash()
         for k, v in self.cls._subclasses.items():
             h[k] = v.getClassSchema(device, state).hash
             h[k, "nodeType"] = NodeType.Node
 
-        _, attrs = super().getSchemaAndAttrs(device, state)
+        _, attrs = super().toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.ChoiceOfNodes
         return h, attrs
 
@@ -237,13 +237,13 @@ class ChoiceOfNodes(Node):
 class ListOfNodes(Node):
     defaultValue = Attribute()
 
-    def getSchemaAndAttrs(self, device, state):
+    def toSchemaAndAttrs(self, device, state):
         h = Hash()
         for k, v in self.cls._subclasses.items():
             h[k] = v.getClassSchema(device, state).hash
             h[k, "nodeType"] = NodeType.Node
 
-        _, attrs = super(ListOfNodes, self).getSchemaAndAttrs(device, state)
+        _, attrs = super(ListOfNodes, self).toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.ListOfNodes
         return h, attrs
 
