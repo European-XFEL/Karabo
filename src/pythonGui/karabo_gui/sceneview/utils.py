@@ -56,7 +56,7 @@ def save_painter_state(painter):
 
 
 def get_status_symbol_as_icon(status, error):
-    """ Map the given `status` to an icon and return it. """
+    """ A `QIcon` for the given `status` is returned. """
     status_icons = {
         'requested': icons.device_requested,
         'schema': icons.device_schema,
@@ -80,7 +80,7 @@ def get_status_symbol_as_icon(status, error):
 
 
 def get_status_symbol_as_pixmap(status, error, extent=16):
-    """ Map the `status` to a pixmap and return it.
+    """ A `QPixmap` for the given `status` is returned.
 
         `extent` sets the size of the pixmap. The pixmap might be smaller than
         requested, but never larger.

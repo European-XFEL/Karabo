@@ -23,7 +23,7 @@ class WorkflowDeviceStatusModel(HasStrictTraits):
     status = String('offline')
     # If device is in error
     error = Bool
-    # The item associated with this channel
+    # The item model associated with this device status
     model = Instance(WorkflowItemModel)
     # The scene position of the device status
     position = Property(Instance(QPoint),
