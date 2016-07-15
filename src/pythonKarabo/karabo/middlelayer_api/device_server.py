@@ -272,10 +272,10 @@ class DeviceServer(SignalSlotable):
     def slotInstanceGone(self, id, info):
         self.deviceInstanceMap.pop(id, None)
 
-    @coslot
+    @slot
     def slotGetClassSchema(self, classid):
         cls = Device.subclasses[classid]
-        return (yield from cls.getClassSchema_async()), classid, self.serverId
+        return cls.getClassSchema(), classid, self.serverId
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cnt = self.instanceCountPerDeviceServer.setdefault(self.serverId, 0)

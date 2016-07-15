@@ -204,7 +204,23 @@ class Tests(TestCase):
         yield from sleep(0.02)
 
     @coroutine
-    def check_server_topology(self):
+    def check_server_topology(self, dc):
+        schema, classId, serverId = yield from dc.call(
+            "testServer", "slotGetClassSchema", "Remote")
+        self.assertEqual(serverId, "testServer")
+        self.assertEqual(classId, "Remote")
+        self.assertEqual(schema.name, "Remote")
+        h = schema.hash
+        self.assertEqual(h["counter", ...], {
+            'accessMode': 4,
+            'assignment': 0,
+            'defaultValue': -1,
+            'metricPrefixSymbol': '',
+            'nodeType': 0,
+            'requiredAccessLevel': 0,
+            'unitSymbol': 'N_A',
+            'valueType': 'INT32'})
+
         self.assertIn("testServer", getServers())
         self.assertIn("other", getDevices("testServer"))
         self.assertIn("Other", getClasses("testServer"))
@@ -235,7 +251,7 @@ class Tests(TestCase):
             # test that onInitialization was run properly
             self.assertEqual(proxy.something, 222)
             loop.run_until_complete(
-                loop.create_task(self.check_server_topology(), dc))
+                loop.create_task(self.check_server_topology(dc), dc))
             self.assertIn("other", server.deviceInstanceMap)
             r = weakref.ref(server.deviceInstanceMap["other"])
             with proxy:

@@ -77,31 +77,28 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                       if isinstance(getattr(cls, k), Descriptor)]
         cls._allattrs = set.union(*(set(c._attrs) for c in cls.__mro__
                                     if hasattr(c, "_attrs")))
-        cls.xsd = cls.getClassSchema()
         cls._subclasses = { }
         for b in cls.__bases__:
             if issubclass(b, Configurable):
                 b._subclasses[name] = cls
 
     @classmethod
-    def getClassSchema(cls, rules=None):
-        schema = Schema(cls.__name__, hash=rules)
-        for c in cls.__mro__[::-1]:
-            if hasattr(c, "expectedParameters"):
-                c.expectedParameters(schema)
-            if hasattr(c, "_attrs"):
-                for k in c._attrs:
-                    v = getattr(c, k)
-                    schema.hash[k] = v.subschema()
-                    schema.hash[k, ...] = {
-                        k: v.value if isinstance(v, Enum) else v
-                        for k, v in v.parameters().items()}
+    def getClassSchema(cls, device=None, state=None):
+        schema = Schema(cls.__name__)
+        for base in cls.__mro__[::-1]:
+            for attr in getattr(base, "_attrs", []):
+                descr = getattr(base, attr)
+                if (state is None or descr.allowedStates is None or
+                        state in descr.allowedStates):
+                    sub_schema, attrs = descr.toSchemaAndAttrs(device, state)
+                    attrs = {k: v.value if isinstance(v, Enum) else v
+                             for k, v in attrs.items()}
+                    schema.hash[attr] = sub_schema
+                    schema.hash[attr, ...] = attrs
         return schema
 
-    @classmethod
-    @coroutine
-    def getClassSchema_async(cls, rules=None):
-        return cls.getClassSchema(rules)
+    def getDeviceSchema(self, state=None):
+        return self.getClassSchema(self, state)
 
     def __dir__(self):
         """Return all attributes of this object.
@@ -176,13 +173,10 @@ class Node(Descriptor):
         self.cls = cls
         Descriptor.__init__(self, **kwargs)
 
-    def parameters(self):
-        ret = super(Node, self).parameters()
-        ret["nodeType"] = NodeType.Node
-        return ret
-
-    def subschema(self):
-        return self.cls.getClassSchema().hash
+    def toSchemaAndAttrs(self, device, state):
+        _, attrs = super(Node, self).toSchemaAndAttrs(device, state)
+        attrs["nodeType"] = NodeType.Node
+        return self.cls.getClassSchema(device, state).hash, attrs
 
     def _initialize(self, instance, value):
         node = self.cls(value, instance, self.key)
@@ -210,17 +204,15 @@ class Node(Descriptor):
 class ChoiceOfNodes(Node):
     defaultValue = Attribute()
 
-    def parameters(self):
-        ret = super(ChoiceOfNodes, self).parameters()
-        ret["nodeType"] = NodeType.ChoiceOfNodes
-        return ret
-
-    def subschema(self):
+    def toSchemaAndAttrs(self, device, state):
         h = Hash()
         for k, v in self.cls._subclasses.items():
-            h[k] = v.getClassSchema().hash
+            h[k] = v.getClassSchema(device, state).hash
             h[k, "nodeType"] = NodeType.Node
-        return h
+
+        _, attrs = super().toSchemaAndAttrs(device, state)
+        attrs["nodeType"] = NodeType.ChoiceOfNodes
+        return h, attrs
 
     def _initialize(self, instance, value):
         for k, v in value.items():  # there should be only one entry
@@ -245,17 +237,15 @@ class ChoiceOfNodes(Node):
 class ListOfNodes(Node):
     defaultValue = Attribute()
 
-    def parameters(self):
-        ret = super(ListOfNodes, self).parameters()
-        ret["nodeType"] = NodeType.ListOfNodes
-        return ret
-
-    def subschema(self):
+    def toSchemaAndAttrs(self, device, state):
         h = Hash()
         for k, v in self.cls._subclasses.items():
-            h[k] = v.getClassSchema().hash
+            h[k] = v.getClassSchema(device, state).hash
             h[k, "nodeType"] = NodeType.Node
-        return h
+
+        _, attrs = super(ListOfNodes, self).toSchemaAndAttrs(device, state)
+        attrs["nodeType"] = NodeType.ListOfNodes
+        return h, attrs
 
     def _initialize(self, instance, value):
         if isinstance(value, Hash):
