@@ -55,7 +55,7 @@ def save_painter_state(painter):
     painter.restore()
 
 
-def get_status_symbol_as_icon(status):
+def get_status_symbol_as_icon(status, error):
     """ Map the given `status` to an icon and return it. """
     status_icons = {
         'requested': icons.device_requested,
@@ -69,15 +69,22 @@ def get_status_symbol_as_icon(status):
         'missing': icons.propertyMissing,
         'error': icons.device_error
     }
+
+    if status == 'monitoring' and not error:
+        return None
+    else:
+        if status != 'offline' and error:
+            return status_icons.get('error')
+
     return status_icons.get(status)
 
 
-def get_status_symbol_as_pixmap(status, extent=None):
+def get_status_symbol_as_pixmap(status, error, extent=16):
     """ Map the `status` to a pixmap and return it.
 
         `extent` sets the size of the pixmap. The pixmap might be smaller than
         requested, but never larger.
     """
-    if extent is None:
-        return get_status_symbol_as_icon(status).pixmap()
-    return get_status_symbol_as_icon(status).pixmap(extent)
+    icon = get_status_symbol_as_icon(status, error)
+    if icon is not None:
+        return icon.pixmap(extent)
