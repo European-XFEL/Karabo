@@ -103,6 +103,8 @@ namespace karabo {
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, value);
                 return *this;
             }
+            
+            
 
             template <class ValueType>
             OverwriteElement& setNewMinInc(const ValueType& value) {
@@ -131,6 +133,50 @@ namespace karabo {
             OverwriteElement& setNewOptions(const std::string& opts, const std::string& sep = " ,;") {
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromString<std::string, std::vector > (opts, sep));
                 return *this;
+            }
+            
+            OverwriteElement& setNewOptions(const std::vector<karabo::core::State>& opts) {
+                return setNewOptions(toString(opts), ",");
+            }
+            
+            OverwriteElement& setNewOptions(const karabo::core::State& s1) {
+                const karabo::core::State arr[] = {s1};
+                return setNewOptions(std::vector<karabo::core::State>(arr, arr+1));
+            }
+            
+            OverwriteElement& setNewOptions(const karabo::core::State& s1, const karabo::core::State& s2) {
+                const karabo::core::State arr[] = {s1, s2};
+                return setNewOptions(std::vector<karabo::core::State>(arr, arr+2));
+            }
+            
+            OverwriteElement& setNewOptions(const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3) {
+                const karabo::core::State arr[] = {s1, s2, s3};
+                return setNewOptions(std::vector<karabo::core::State>(arr, arr+3));
+            }
+            
+            OverwriteElement& setNewOptions(const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4) {
+                const karabo::core::State arr[] = {s1, s2, s3, s4};
+                return setNewOptions(std::vector<karabo::core::State>(arr, arr+4));
+            }
+            
+            OverwriteElement& setNewOptions(const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5) {
+                const karabo::core::State arr[] = {s1, s2, s3, s4, s5};
+                return setNewOptions(std::vector<karabo::core::State>(arr, arr+5));
+            }
+            
+            OverwriteElement& setNewOptions(const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5, const karabo::core::State& s6) {
+                const karabo::core::State arr[] = {s1, s2, s3, s4, s5, s6};
+                return setNewOptions(std::vector<karabo::core::State>(arr, arr+6));
+            }
+            
+            OverwriteElement& setNewOptions(const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5, const karabo::core::State& s6, const karabo::core::State& s7) {
+                const karabo::core::State arr[] = {s1, s2, s3, s4, s5, s6, s7};
+                return setNewOptions(std::vector<karabo::core::State>(arr, arr+7));
+            }
+            
+            OverwriteElement& setNewOptions(const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5, const karabo::core::State& s6, const karabo::core::State& s7, const karabo::core::State& s8) {
+                const karabo::core::State arr[] = {s1, s2, s3, s4, s5, s6, s7, s8};
+                return setNewOptions(std::vector<karabo::core::State>(arr, arr+8));
             }
 
             OverwriteElement& setNewOptions(const std::vector<std::string>& opts) {
@@ -225,6 +271,13 @@ namespace karabo {
                 // Does nothing, changes happened on existing node
             }
         };
+        
+        template <>
+        inline OverwriteElement& OverwriteElement::setNewDefaultValue<karabo::core::State>(const karabo::core::State& value) {
+            return setNewDefaultValue(toString(value));
+        }
+        
+        
         typedef OverwriteElement OVERWRITE_ELEMENT;
     }
 }
