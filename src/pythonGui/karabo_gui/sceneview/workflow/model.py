@@ -296,7 +296,7 @@ class _DeviceEntry(HasStrictTraits):
     """
     device_id = String
     box = Any
-    device_status = Any
+    device_status = Instance(WorkflowDeviceStatusModel)
     inputs = List
     outputs = List
 
