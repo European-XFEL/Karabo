@@ -88,7 +88,7 @@ class BaseWidgetContainer(QWidget):
                 box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
             device = box.configuration
             device.signalStatusChanged.disconnect(
-                self._on_device_status_changed)
+                self._device_status_changed)
 
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""
