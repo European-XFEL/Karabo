@@ -858,8 +858,8 @@ namespace karabo {
                 try {
                     // Both, shared_from_this() and registered handlers, could throw. But we really, really must not
                     // stop listening, otherwise a deaf zombie device could be created.
-                    if (m_errorHandler) m_errorHandler(failureMsg);
-                    else KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
+                    KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
+                    //if (m_errorHandler) m_errorHandler(failureMsg);
                     caught = false;
                 } catch (const Exception& e) {
                     newFailureMsg = "An" + (newFailureMsg + ":\n") += e.detailedMsg();
