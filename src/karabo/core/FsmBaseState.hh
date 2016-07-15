@@ -69,8 +69,8 @@ namespace karabo {
             
         public:
             
-            bool isCompatible(const State& s) const {
-                return m_state.isCompatible(s);
+            bool isDerivedFrom(const State& s) const {
+                return m_state.isDerivedFrom(s);
             }
             
             const std::string & getFsmName() const {

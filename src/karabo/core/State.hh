@@ -11,6 +11,7 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>
+#include <map>
 #include <karabo/util/ClassInfo.hh>
 #include <karabo/util/Factory.hh>
 
@@ -20,13 +21,18 @@ namespace karabo {
         /**
          * Base State class
          */
+       
+       
+      
         class State {
-
+            
+           
         public:
             
             KARABO_CLASSINFO(State, "State", "1.0")
 
-            virtual ~State() {
+            //no inheritance from state!
+            ~State() {
             }
 
             virtual const std::string& operator()() const {
@@ -46,7 +52,7 @@ namespace karabo {
                 return m_stateName == state.m_stateName;
             }
 
-            bool isCompatible(const State& s) const;
+            bool isDerivedFrom(const State& s) const;
             
             // The base states that have no parent:
 
@@ -118,13 +124,23 @@ namespace karabo {
             static const State EMPTYING;
             static const State DISENGAGING;
             static const State SWITCHING_OFF;
+            
+            static const State INTERLOCK_BROKEN;
+            static const State INTERLOCK_OK;
+            static const State SEARCHING;
 
+  
+            static const State & fromString(const std::string & state);
+            
         private:
             // Private constructor to avoid states not in the predefined set (copy is OK).
             explicit State(const std::string& name, const State* parent = NULL);
             
             std::string m_stateName;
             const State* m_parent;
+            
+            static std::map<std::string, const State &> m_stateFactory;
+            
 
         };
 
