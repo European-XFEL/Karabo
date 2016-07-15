@@ -15,6 +15,7 @@
 
 #include "Schema.hh"
 
+
 namespace karabo {
     namespace util {
 
@@ -137,9 +138,41 @@ namespace karabo {
                 return *this;
             }
             
-            OverwriteElement& setNewAllowedState(const std::string& states, const std::string& sep = " ,;") {
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector > (states, sep));
+            OverwriteElement& setNewAllowedState(const std::vector<karabo::core::State>& states) {
+                const std::string stateList = karabo::util::toString(states);
+                if (m_node) m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector > (stateList, ","));
                 return *this;
+            }
+            
+            //overloads for up to six states
+            OverwriteElement& setNewAllowedState(const karabo::core::State& s1) {
+                const karabo::core::State arr[] = {s1};
+                return setNewAllowedState(std::vector<karabo::core::State>(arr, arr+1));
+            }
+            
+            OverwriteElement& setNewAllowedState(const karabo::core::State& s1, const karabo::core::State& s2) {
+                const karabo::core::State arr[] = {s1, s2};
+                return setNewAllowedState(std::vector<karabo::core::State>(arr, arr+2));
+            }
+            
+            OverwriteElement& setNewAllowedState(const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3) {
+                const karabo::core::State arr[] = {s1, s2, s3};
+                return setNewAllowedState(std::vector<karabo::core::State>(arr, arr+3));
+            }
+            
+            OverwriteElement& setNewAllowedState(const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4) {
+                const karabo::core::State arr[] = {s1, s2, s3, s4};
+                return setNewAllowedState(std::vector<karabo::core::State>(arr, arr+4));
+            }
+            
+            OverwriteElement& setNewAllowedState(const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5) {
+                const karabo::core::State arr[] = {s1, s2, s3, s4, s5};
+                return setNewAllowedState(std::vector<karabo::core::State>(arr, arr+5));
+            }
+            
+            OverwriteElement& setNewAllowedState(const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5, const karabo::core::State& s6) {
+                const karabo::core::State arr[] = {s1, s2, s3, s4, s5, s6};
+                return setNewAllowedState(std::vector<karabo::core::State>(arr, arr+6));
             }
 
             OverwriteElement& setNowObserverAccess() {
