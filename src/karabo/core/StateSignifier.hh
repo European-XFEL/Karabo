@@ -45,6 +45,10 @@ namespace karabo {
             
             const bool inList(const std::vector<State> & list, const State & s) const;
             
+            void initTrumpList(const std::vector<karabo::core::State>& trumpList,
+                    const karabo::core::State& staticMoreSignificant,
+                    const karabo::core::State& changingMoreSignificant);
+            
         protected:
             std::vector<State> m_trumpList;
         };
