@@ -259,10 +259,18 @@ class Descriptor(object):
                                 format(self.__class__.__name__, k))
 
     def getSchemaAndAttrs(self, device, state):
-        return Hash(), {
-            p: getattr(self, p) for p in dir(type(self))
-            if isinstance(getattr(type(self), p), Attribute) and
-            getattr(self, p) is not None}
+        """return schema for device in state
+
+        This returns the Hash representing this descriptor in a Schema, as well
+        as the attributes that have to be set for it.
+
+        if device is None, the class' Schema is returned, otherwise the
+        device's. If state is not None, only the parts of the schema available
+        in the given state are returned.
+        """
+        attrs = ((name, getattr(self, name)) for name in dir(type(self))
+                 if isinstance(getattr(type(self), name), Attribute))
+        return Hash(), {name: attr for name, attr in attrs if attr is not None}
 
     def __get__(self, instance, owner):
         if instance is None:
