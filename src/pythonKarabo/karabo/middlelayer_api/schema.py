@@ -85,17 +85,16 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     @classmethod
     def getClassSchema(cls, device=None, state=None):
         schema = Schema(cls.__name__)
-        for c in cls.__mro__[::-1]:
-            if hasattr(c, "_attrs"):
-                for k in c._attrs:
-                    v = getattr(c, k)
-                    if (state is None or v.allowedStates is None or
-                            state in v.allowedStates):
-                        s, a = v.getSchemaAndAttrs(device, state)
-                        schema.hash[k] = s
-                        schema.hash[k, ...] = {
-                            k: v.value if isinstance(v, Enum) else v
-                            for k, v in a.items()}
+        for base in cls.__mro__[::-1]:
+            for attr in getattr(base, "_attrs", []):
+                descr = getattr(base, attr)
+                if (state is None or descr.allowedStates is None or
+                        state in descr.allowedStates):
+                    sub_schema, attrs = descr.getSchemaAndAttrs(device, state)
+                    attrs = {k: v.value if isinstance(v, Enum) else v
+                             for k, v in attrs.items()}
+                    schema.hash[attr] = sub_schema
+                    schema.hash[attr, ...] = attrs
         return schema
 
     def getDeviceSchema(self, state=None):
@@ -175,7 +174,7 @@ class Node(Descriptor):
         Descriptor.__init__(self, **kwargs)
 
     def getSchemaAndAttrs(self, device, state):
-        _, attrs = super().getSchemaAndAttrs(device, state)
+        _, attrs = super(Node, self).getSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Node
         return self.cls.getClassSchema(device, state).hash, attrs
 
