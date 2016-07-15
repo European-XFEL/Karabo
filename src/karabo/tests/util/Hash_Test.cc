@@ -886,7 +886,7 @@ void Hash_Test::testMerge() {
     selectedPaths.insert("i[2]");
     selectedPaths.insert("i[5]"); // check that we tolerate to select path with invalid index
     h1c.merge(h2, Hash::MERGE_ATTRIBUTES, selectedPaths);
-    std::clog << "h1c:\n" << h1c << std::endl;
+
     // Keep everything it had before merging:
     CPPUNIT_ASSERT(h1c.has("a"));
     CPPUNIT_ASSERT(h1c.has("b"));
