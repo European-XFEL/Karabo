@@ -52,17 +52,21 @@ namespace karabo {
         
         
         StateSignifier::StateSignifier(const karabo::core::State& staticMoreSignificant,
-                                       const karabo::core::State& changingMoreSignificant):
-                                       StateSignifier::StateSignifier(std::vector<karabo::core::State>(),
-                                       staticMoreSignificant, changingMoreSignificant){
-            
+                                       const karabo::core::State& changingMoreSignificant): m_trumpList(){
+            initTrumpList(std::vector<karabo::core::State>(), staticMoreSignificant, changingMoreSignificant);
         }
                                        
 
         StateSignifier::StateSignifier(const std::vector<karabo::core::State>& trumpList,
                                        const karabo::core::State& staticMoreSignificant,
                                        const karabo::core::State& changingMoreSignificant)
-        : m_trumpList() {
+        : m_trumpList(){
+             initTrumpList(trumpList, staticMoreSignificant, changingMoreSignificant);
+        }
+        
+        void StateSignifier::initTrumpList(const std::vector<karabo::core::State>& trumpList,
+                    const karabo::core::State& staticMoreSignificant,
+                    const karabo::core::State& changingMoreSignificant){
 
             if (trumpList.empty()) {
                 m_trumpList.push_back(State::DISABLED);
