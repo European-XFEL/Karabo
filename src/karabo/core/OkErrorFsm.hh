@@ -13,6 +13,7 @@
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/core/BaseFsm.hh>
 #include <karabo/util/karaboDll.hh>
+#include <karabo/core/State.hh>
 
 #include "BaseFsm.hh"
 
@@ -31,7 +32,7 @@ namespace karabo {
                 SLOT_ELEMENT(expected).key("reset")
                         .displayedName("Reset")
                         .description("Resets the device in case of an error")
-                        .allowedStates("ERROR")
+                        .allowedStates(State::ERROR)
                         .commit();
             }
 

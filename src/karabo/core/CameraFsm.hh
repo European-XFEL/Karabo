@@ -14,6 +14,7 @@
 
 #include <karabo/core/BaseFsm.hh>
 #include "Device.hh"
+#include <karabo/core/State.hh>
 
 namespace karabo {
     namespace core {
@@ -30,25 +31,25 @@ namespace karabo {
                 SLOT_ELEMENT(expected).key("acquire")
                         .displayedName("Acquire")
                         .description("Instructs camera to go into acquisition state")
-                        .allowedStates("STOPPED")
+                        .allowedStates(State::STOPPED)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("trigger")
                         .displayedName("Trigger")
                         .description("Sends a software trigger to the camera")
-                        .allowedStates("STARTED")
+                        .allowedStates(State::STARTED)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("stop")
                         .displayedName("Stop")
                         .description("Instructs camera to stop current acquisition")
-                        .allowedStates("STARTED")
+                        .allowedStates(State::STARTED)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("reset")
                         .displayedName("Reset")
                         .description("Resets the camera in case of an error")
-                        .allowedStates("ERROR")
+                        .allowedStates(State::ERROR)
                         .commit();
             }
 
