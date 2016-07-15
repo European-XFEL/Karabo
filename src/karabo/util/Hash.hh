@@ -435,9 +435,12 @@ namespace karabo {
              * Creates new nodes, if they do not already exists. Creates new leaves, if they do not already exist.
              * Existing leaves will be replaced by the new hash.
              * @param hash Another hash to be merged into current hash
-             * @return A self-reference after the appending process (allows object chaining)
+             * @param policy Whether to replace attributes by those merged in or to merge them
+             * @param selectedPaths If not empty, only merge these paths
+             * @param separator The separator for nested keys in selectedPaths
              */
-            void merge(const Hash& other, const MergePolicy policy = REPLACE_ATTRIBUTES);
+            void merge(const Hash& other, const MergePolicy policy = REPLACE_ATTRIBUTES,
+            const std::set<std::string>& selectedPaths = std::set<std::string>(), char separator = '.');
 
             /**
              * Subtracts from current hash all nodes that can be found in other hash given as argument.
@@ -576,10 +579,16 @@ namespace karabo {
             template<class Visitor>
             static bool visit2(karabo::util::Hash::Node& node, Visitor& visitor);
         private:
+            /// Out of 'selectedPaths' select those that belong to child with 'childKey',
+            /// e.g. out of ["a", "b.c", "b.d.e"] return ["c", "d.e"] if childKey == "b" and separator == '.'.
+            static std::set<std::string> selectedChildPaths(const std::set<std::string>& selectedPaths,
+                                                            const std::string& childKey, char separator);
 
-            void mergeAndMergeAttributes(const Hash& other);
-
-            void mergeAndReplaceAttributes(const Hash& other);
+            /// True if the first key (separated by 'separator') of any of 'paths' matches 'key'.
+            /// A first key that contains an index also (indirectly) matches 'key' without index - but if there is no
+            /// direct match, 'selectedIndicesOfKey' is filled with all indices of 'key' stated in 'paths'.
+            static bool keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key,
+                                             std::set<unsigned int> &selectedIndicesOfKey, char separator);
 
             Hash* setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
 
