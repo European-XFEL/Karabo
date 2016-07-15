@@ -14,6 +14,10 @@ __all__ = ["Configuration"]
 
 from PyQt4.QtCore import pyqtSignal
 
+from karabo_gui.const import (
+    STATE_OFFLINE, STATE_ONLINE, STATE_ALIVE, STATE_MONITORING,
+    STATE_REQUESTED, STATE_SCHEMA, STATE_NOSERVER, STATE_NOPLUGIN,
+    STATE_INCOMPATIBLE, STATE_ERROR)
 from karabo_gui.network import Network
 from karabo_gui.schema import Schema, Box
 from karabo_gui.topology import Manager
@@ -52,7 +56,7 @@ class Configuration(Box):
         assert type in ('class', 'projectClass', 'device', 'deviceGroupClass', 'deviceGroup')
         self.type = type
         self.id = id
-        self._status = "offline"
+        self._status = STATE_OFFLINE
         self.error = False
         self.parameterEditor = None
         self.bulk_changes = False
@@ -68,7 +72,7 @@ class Configuration(Box):
         if self.descriptor is not None:
             self.redummy()
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
-        if self.status == "requested":
+        if self.status == STATE_REQUESTED:
             if self.visible > 0:
                 manager = Manager()
                 Network().onStartMonitoringDevice(self.id)
@@ -78,8 +82,7 @@ class Configuration(Box):
                     index.internalPointer().monitoring = True
                     manager.systemTopology.dataChanged.emit(
                         index, index)
-            self.status = "schema"
-
+            self.status = STATE_SCHEMA
 
     @property
     def status(self):
@@ -100,20 +103,18 @@ class Configuration(Box):
         in a project. Actual devices are just "offline". """
         return self._status
 
-
     @status.setter
     def status(self, value):
-        assert value in ('offline', 'noserver', 'noplugin', 'online',
-                         'incompatible', 'requested', 'schema', 'alive',
-                         'monitoring')
+        assert value in (STATE_OFFLINE, STATE_NOSERVER, STATE_NOPLUGIN,
+                         STATE_ONLINE, STATE_INCOMPATIBLE, STATE_REQUESTED,
+                         STATE_SCHEMA, STATE_ALIVE, STATE_MONITORING)
         if value != self._status:
             self._status = value
         self.signalStatusChanged.emit(self, value, self.error)
 
-
     def isOnline(self):
-        return self.status not in ("offline", "noplugin", "noserver",
-                                   "incompatible")
+        return self.status not in (STATE_OFFLINE, STATE_NOPLUGIN,
+                                   STATE_NOSERVER, STATE_INCOMPATIBLE)
 
 
     def checkClassSchema(self):
@@ -124,7 +125,7 @@ class Configuration(Box):
         """ determine the status from the system topology """
         manager = Manager()
         if manager.systemHash is None:
-            self.status = "offline"
+            self.status = STATE_OFFLINE
             return
         
         for k in ("device", "macro", "server"):
@@ -137,18 +138,19 @@ class Configuration(Box):
             break
         else:
             self.error = False
-            self.status = "offline"
+            self.status = STATE_OFFLINE
             return
 
         self.classId = attrs.get("classId")
         self.serverId = attrs.get("serverId")
-        error = attrs.get("status") == "error"
+        error = attrs.get("status") == STATE_ERROR
         self.error = error
-        if self.status == "offline" and self.visible > 0:
+        if self.status == STATE_OFFLINE and self.visible > 0:
             Network().onGetDeviceSchema(self.id)
-            self.status = "requested"
-        elif self.status not in ("requested", "schema", "alive", "monitoring"):
-            self.status = "online"
+            self.status = STATE_REQUESTED
+        elif self.status not in (STATE_REQUESTED, STATE_SCHEMA,
+                                 STATE_ALIVE, STATE_MONITORING):
+            self.status = STATE_ONLINE
         else:
             self.signalStatusChanged.emit(self, self.status, self.error)
 
@@ -191,10 +193,10 @@ class Configuration(Box):
 
     def addVisible(self):
         self.visible += 1
-        if self.visible == 1 and self.status not in ("offline", "requested"):
-            if self.status == "online":
+        if self.visible == 1 and self.status not in (STATE_OFFLINE, STATE_REQUESTED):
+            if self.status == STATE_ONLINE:
                 Network().onGetDeviceSchema(self.id)
-                self.status = "requested"
+                self.status = STATE_REQUESTED
             else:
                 manager = Manager()
                 Network().onStartMonitoringDevice(self.id)
@@ -209,7 +211,7 @@ class Configuration(Box):
 
     def removeVisible(self):
         self.visible -= 1
-        if self.visible == 0 and self.status not in ("offline", "requested"):
+        if self.visible == 0 and self.status not in (STATE_OFFLINE, STATE_REQUESTED):
             manager = Manager()
             Network().onStopMonitoringDevice(self.id)
             index = manager.systemTopology.findIndex(self.id)
@@ -217,8 +219,8 @@ class Configuration(Box):
                 assert index.internalPointer().monitoring
                 index.internalPointer().monitoring = False
                 manager.systemTopology.dataChanged.emit(index, index)
-            if self.status == "monitoring":
-                self.status = "alive"
+            if self.status == STATE_MONITORING:
+                self.status = STATE_ALIVE
 
 
     def __exit__(self, a, b, c):

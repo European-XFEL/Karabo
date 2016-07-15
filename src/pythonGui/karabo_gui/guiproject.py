@@ -15,6 +15,9 @@ from karabo.middlelayer_api.project import (
     BaseDevice, BaseDeviceGroup, BaseMacro, Monitor, Project,
     ProjectConfiguration)
 from karabo.middlelayer import AccessMode, Hash, XMLParser, XMLWriter
+from karabo_gui.const import (
+    STATE_OFFLINE, STATE_NOSERVER, STATE_NOPLUGIN,
+    STATE_INCOMPATIBLE)
 from karabo_gui.configuration import Configuration
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.network import network
@@ -119,20 +122,20 @@ class Device(BaseDevice, BaseConfiguration):
 
         manager = Manager()
         if manager.systemHash is None:
-            self.status = "offline"
+            self.status = STATE_OFFLINE
             return
 
-        if status == "offline":
+        if status == STATE_OFFLINE:
             try:
                 attrs = manager.systemHash[
                     "server.{}".format(self.serverId), ...]
             except KeyError:
-                self.status = "noserver"
+                self.status = STATE_NOSERVER
             else:
                 if self.classId not in attrs.get("deviceClasses", []):
-                    self.status = "noplugin"
+                    self.status = STATE_NOPLUGIN
                 else:
-                    self.status = "offline"
+                    self.status = STATE_OFFLINE
             if conf.classId is None and conf.serverId is None:
                 conf.classId = self.classId
                 conf.serverId = self.serverId
@@ -147,7 +150,7 @@ class Device(BaseDevice, BaseConfiguration):
                     conf.serverId == self.serverId):
                 self.status = status
             else:
-                self.status = "incompatible"
+                self.status = STATE_INCOMPATIBLE
 
     def onNewDescriptor(self, conf):
         BaseConfiguration.onNewDescriptor(self, conf)

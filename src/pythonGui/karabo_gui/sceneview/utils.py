@@ -7,8 +7,12 @@ from contextlib import contextmanager
 
 from PyQt4.QtGui import QFont, QFontMetrics
 
-from .const import SCREEN_MAX_VALUE
 from karabo_gui import icons
+from karabo_gui.const import (
+    STATE_OFFLINE, STATE_ALIVE, STATE_MONITORING, STATE_REQUESTED,
+    STATE_SCHEMA, STATE_DEAD, STATE_NOSERVER, STATE_NOPLUGIN,
+    STATE_INCOMPATIBLE, STATE_MISSING, STATE_ERROR)
+from .const import SCREEN_MAX_VALUE
 
 
 def calc_bounding_rect(collection):
@@ -58,21 +62,21 @@ def save_painter_state(painter):
 def get_status_symbol_as_icon(status, error):
     """ A `QIcon` for the given `status` is returned. """
     status_icons = {
-        'requested': icons.device_requested,
-        'schema': icons.device_schema,
-        'dead': icons.device_dead,
-        'noserver': icons.deviceOfflineNoServer,
-        'noplugin': icons.deviceOfflineNoPlugin,
-        'incompatible': icons.deviceIncompatible,
-        'offline': icons.deviceOffline,
-        'alive': icons.deviceAlive,
-        'missing': icons.propertyMissing,
-        'error': icons.device_error
+        STATE_OFFLINE: icons.deviceOffline,
+        STATE_ALIVE: icons.deviceAlive,
+        STATE_REQUESTED: icons.device_requested,
+        STATE_SCHEMA: icons.device_schema,
+        STATE_DEAD: icons.device_dead,
+        STATE_NOSERVER: icons.deviceOfflineNoServer,
+        STATE_NOPLUGIN: icons.deviceOfflineNoPlugin,
+        STATE_INCOMPATIBLE: icons.deviceIncompatible,
+        STATE_MISSING: icons.propertyMissing,
+        STATE_ERROR: icons.device_error
     }
 
-    if status == 'monitoring' and not error:
+    if status == STATE_MONITORING and not error:
         return None
-    elif status != 'offline' and error:
+    elif status != STATE_OFFLINE and error:
         return status_icons.get('error')
 
     return status_icons.get(status)

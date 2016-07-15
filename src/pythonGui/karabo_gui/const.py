@@ -47,3 +47,16 @@ ALLOWED_STATE          = Qt.UserRole + 15
 UNIT_SYMBOL            = Qt.UserRole + 16
 METRIC_PREFIX_SYMBOL   = Qt.UserRole + 17
 ENUMERATION            = Qt.UserRole + 18
+
+STATE_OFFLINE = 'offline'  # device could, but is not started
+STATE_ONLINE = 'online'  # the device is online but doesn't have a schema yet
+STATE_ALIVE = 'alive'  # everything is up-and-running
+STATE_MONITORING = 'monitoring'  # we are registered to monitor this device
+STATE_REQUESTED = 'requested'  # a schema is requested, but didnt arrive yet
+STATE_SCHEMA = 'schema'  # the device has a schema, but no value yet
+STATE_DEAD = 'dead'
+STATE_NOSERVER = 'noserver'  # device server not available
+STATE_NOPLUGIN = 'noplugin'  # class plugin not available
+STATE_INCOMPATIBLE = 'incompatible'  # device running, but of different type
+STATE_MISSING = 'missing'
+STATE_ERROR = 'error'
