@@ -258,7 +258,7 @@ class Descriptor(object):
                 raise TypeError("{} got unexpected keyword argument: {}".
                                 format(self.__class__.__name__, k))
 
-    def getSchemaAndAttrs(self, device, state):
+    def toSchemaAndAttrs(self, device, state):
         """return schema for device in state
 
         This returns the Hash representing this descriptor in a Schema, as well
@@ -372,8 +372,8 @@ class Descriptor(object):
 class Slot(Descriptor):
     iscoroutine = None
 
-    def getSchemaAndAttrs(self, device, state):
-        h, attrs = super(Slot, self).getSchemaAndAttrs(device, state)
+    def toSchemaAndAttrs(self, device, state):
+        h, attrs = super(Slot, self).toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Node
         attrs["displayType"] = "Slot"
         return h, attrs
@@ -508,8 +508,8 @@ class Type(Descriptor, Registry):
             attrs = {}
         return data.value, attrs
 
-    def getSchemaAndAttrs(self, device, state):
-        h, attrs = super().getSchemaAndAttrs(device, state)
+    def toSchemaAndAttrs(self, device, state):
+        h, attrs = super().toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Leaf
         attrs["valueType"] = self.hashname()
         return h, attrs
