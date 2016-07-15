@@ -125,6 +125,11 @@ namespace karabo {
             static const State DISENGAGING;
             static const State SWITCHING_OFF;
             
+            static const State HOMING;
+            static const State ACQUIRING;
+            static const State MONITORING;
+            static const State IGNORING;
+            
             static const State INTERLOCK_BROKEN;
             static const State INTERLOCK_OK;
             static const State SEARCHING;

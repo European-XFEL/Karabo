@@ -1101,7 +1101,8 @@ namespace karabo {
             }
 
             bool slotCallGuard(const std::string& slotName) {
-                std::vector<std::string> allowedStates;
+                using namespace karabo::core;
+                std::vector<State> allowedStates;
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     if (m_fullSchema.has(slotName) && m_fullSchema.hasAllowedStates(slotName)) {
@@ -1109,11 +1110,11 @@ namespace karabo {
                     }
                 }
                 if (!allowedStates.empty()) {
-                    const std::string& currentState = get<std::string > ("state");
+                    const State& currentState = getState();
                     if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
                         std::ostringstream msg;
                         msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state "
-                                << "\"" << currentState << "\" of device " << "\"" << m_deviceId << "\".";
+                                << "\"" << currentState.name() << "\" of device " << "\"" << m_deviceId << "\".";
                         std::string errorMessage = msg.str();
                         reply(errorMessage);
                         return false;
