@@ -32,6 +32,7 @@
 
 #include "Types.hh"
 #include "Exception.hh"
+#include <karabo/core/State.hh>
 
 namespace karabo {
     namespace util {
@@ -199,6 +200,22 @@ namespace karabo {
                 s << "," << toString(it->first) << ":" << toString(it->second);
             }
             s << "}";
+            return s.str();
+        }
+        
+        inline std::string toString(const karabo::core::State& value) {
+            return value.name();
+        }
+        
+        inline std::string toString(const std::vector<karabo::core::State>& value) {
+            if (value.empty()) return "";
+            std::ostringstream s;
+            typename std::vector<karabo::core::State>::const_iterator it = value.begin();
+            s << toString(*it);
+            it++;
+            for (; it != value.end(); ++it) {
+                s << "," << toString(*it);
+            }
             return s.str();
         }
 
