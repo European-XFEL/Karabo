@@ -453,7 +453,7 @@ namespace karabo {
              */
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
-                
+               
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 karabo::util::Hash validated;
                 std::pair<bool, std::string> result;
@@ -564,8 +564,6 @@ namespace karabo {
             T get(const std::string& key, const T& var = T()) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
-                    //if (karabo::util::Types::from(var) == karabo::util::Types::VECTOR_HASH && m_parameters.hasAttribute(key, KARABO_SCHEMA_ROW_SCHEMA))
-                    //    return reinterpret_cast<const T&> (getVectorHashRow(key)); //will only be reached if T is actually a vector<Hash>
                     return m_parameters.get<T>(key);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
@@ -795,6 +793,10 @@ namespace karabo {
 
             const std::string& getServerId() const {
                 return m_serverId;
+            }
+            
+            const karabo::core::State & getState(){
+                return State::fromString(this->get<std::string>("state"));
             }
 
         private:
