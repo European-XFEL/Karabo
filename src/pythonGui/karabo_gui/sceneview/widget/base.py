@@ -87,7 +87,8 @@ class BaseWidgetContainer(QWidget):
             else:  # DisplayWidgets
                 box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
             device = box.configuration
-            device.signalStatusChanged.connect(self._on_device_status_changed)
+            device.signalStatusChanged.disconnect(
+                self._on_device_status_changed)
 
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""
@@ -250,15 +251,9 @@ class BaseWidgetContainer(QWidget):
     def _on_device_status_changed(self, configuration, status, error):
         """ This slot is called whenever the status of the device is changed.
         """
-        if status == "monitoring" and not error:
-            self.status_symbol.hide()
-        else:
-            if status != "offline" and error:
-                pixmap = get_status_symbol_as_pixmap('error', 16)
-            else:
-                pixmap = get_status_symbol_as_pixmap(status, 16)
-            if pixmap is not None:
-                self.status_symbol.setPixmap(pixmap)
-            else:
-                self.status_symbol.setText(status)
+        pixmap = get_status_symbol_as_pixmap(status, error)
+        if pixmap is not None:
+            self.status_symbol.setPixmap(pixmap)
             self.status_symbol.show()
+        else:
+            self.status_symbol.hide()

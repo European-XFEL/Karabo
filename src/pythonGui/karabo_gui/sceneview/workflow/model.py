@@ -1,8 +1,8 @@
 from itertools import chain
 
 from PyQt4.QtCore import QPoint
-from traits.api import (HasStrictTraits, Any, Dict, Enum, Event, Instance, Int,
-                        List, Property, String,
+from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Event,
+                        Instance, Int, List, Property, String,
                         cached_property, on_trait_change)
 
 from karabo_gui.scenemodel.api import WorkflowItemModel
@@ -12,6 +12,30 @@ from .const import (
     CHANNEL_INPUT, CHANNEL_OUTPUT, CHANNEL_HEIGHT, CONNECTION_OFFSET,
     DATA_DIST_COPY, DATA_DIST_SHARED)
 from .utils import get_curve_points
+
+
+class WorkflowDeviceStatusModel(HasStrictTraits):
+    """ A model for workflow item device status.
+    """
+    # The box for the device
+    box = Any
+    # The status of the device
+    status = String('offline')
+    # If device is in error
+    error = Bool
+    # The item associated with this channel
+    model = Instance(WorkflowItemModel)
+    # The scene position of the device status
+    position = Property(Instance(QPoint),
+                        depends_on=['model.x', 'model.y', 'model.height',
+                                    'model.width'])
+
+    @cached_property
+    def _get_position(self):
+        model = self.model
+        x = model.x
+        y = model.y + model.height / 3
+        return QPoint(x, y)
 
 
 class WorkflowChannelModel(HasStrictTraits):
@@ -94,6 +118,8 @@ class SceneWorkflowModel(HasStrictTraits):
     # An event triggered when the connections or channels change
     updated = Event
 
+    # Ths list of current device states
+    device_states = List(Instance(WorkflowDeviceStatusModel))
     # The list of current input channels
     input_channels = List(Instance(WorkflowChannelModel))
     # The list of current output channels
@@ -110,6 +136,8 @@ class SceneWorkflowModel(HasStrictTraits):
     def add_items(self, items):
         """ Add WorkflowItemModels to be monitored. """
         self._workflow_items.extend(items)
+        # Collect the remaining device states
+        self._refresh_device_states()
         # Collect the remaining inputs and outputs
         self._refresh_channels()
 
@@ -117,6 +145,8 @@ class SceneWorkflowModel(HasStrictTraits):
         """ Remove WorkflowItemModels from monitoring """
         for it in items:
             self._workflow_items.remove(it)
+        # Collect the remaining device states
+        self._refresh_device_states()
         # Collect the remaining inputs and outputs
         self._refresh_channels()
 
@@ -133,7 +163,8 @@ class SceneWorkflowModel(HasStrictTraits):
     def _get_channels(self):
         return self.input_channels + self.output_channels
 
-    @on_trait_change('connections,input_channels,output_channels')
+    @on_trait_change('connections,input_channels,output_channels,'
+                     'device_states')
     def _needs_update(self):
         # Event traits don't have a value, they just generate notifications
         self.updated = True
@@ -141,6 +172,11 @@ class SceneWorkflowModel(HasStrictTraits):
     def __workflow_items_items_changed(self, event):
         """ A trait notification handler for the `_workflow_items` list """
         def toggle_boxes(entry, state):
+            device_status = entry.device_status
+            if state:
+                self._subscribe_device_status(device_status)
+            else:
+                self._unsubscribe_device_status(device_status)
             for ch in chain(entry.inputs, entry.outputs):
                 ch.toggle_box_notifications(state)
             for ch in entry.inputs:
@@ -232,12 +268,35 @@ class SceneWorkflowModel(HasStrictTraits):
             if conn.input in inputs:
                 conn.data_distribution = value
 
+    def _refresh_device_states(self):
+        entries = list(self._devices.values())
+        self.device_states = [entry.device_status for entry in entries]
+
+    def _subscribe_device_status(self, device_status):
+        """ Subscribe from device box updates. """
+        device_box = device_status.box
+        device_box.signalStatusChanged.connect(self._device_status_changed)
+
+    def _unsubscribe_device_status(self, device_status):
+        """ Unsubscribe from device box updates. """
+        device_box = device_status.box
+        device_box.signalStatusChanged.disconnect(self._device_status_changed)
+
+    def _device_status_changed(self, device_box, status, error):
+        """ Callback when the status of the device is changes.
+        """
+        for ds in self.device_states:
+            if ds.box is device_box:
+                ds.status = status
+                ds.error = error
+
 
 class _DeviceEntry(HasStrictTraits):
     """ A private convenience class for tracking devices
     """
     device_id = String
     box = Any
+    device_status = Any
     inputs = List
     outputs = List
 
@@ -275,6 +334,8 @@ def _get_channels(model, box, inputs=None, outputs=None):
 def _get_device_entry(model):
     """ Build a _DeviceEntry for a given WorkflowItemModel. """
     device = getDevice(model.device_id)
+    device_status = WorkflowDeviceStatusModel(box=device, model=model)
     inputs, outputs = _get_channels(model, device)
     return _DeviceEntry(device_id=model.device_id, box=device,
+                        device_status=device_status,
                         inputs=inputs, outputs=outputs)
