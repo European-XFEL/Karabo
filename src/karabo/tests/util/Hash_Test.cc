@@ -771,33 +771,186 @@ void Hash_Test::testMerge() {
             "c.c[0].d", 4,
             "c.c[1]", Hash("a.b.c", 6),
             "d.e", 7
+            //,"f.g", 99 // can only set 6 keys in constructor...
             );
+    h1.set("f.g", 99);
+    h1.set("h", -1);
+    h1.setAttribute("a", "attrKey", "Just a number");
+    h1.setAttribute("c.b", "attrKey2", 3);
+    h1.setAttribute("c.b[0].g", "attrKey3", 4.);
+    h1.setAttribute("f", "attrKey6", std::string("buaah!"));
+
+    Hash h1b(h1);
+    Hash h1c(h1);
 
     Hash h2("a", 21,
             "b.c", 22,
             "c.b[0]", Hash("key", "value"),
             "c.b[1].d", 24,
-            "e", 27
+            "e", 27,
+            "f", Hash()
             );
+    h2.set("g.h.i", -88);
+    h2.set("g.h.j", -188);
+    h2.set("h.i", -199);
+    h2.set("h.j", 200);
+    h2.set("i[3]", Hash());
+    h2.set("i[1].j", 200);
+    h2.set("i[2]", Hash("k.l", 5.));
+    h2.setAttribute("a", "attrKey", "Really just a number");
+    h2.setAttribute("e", "attrKey4", -1);
+    h2.setAttribute("e", "attrKey5", -11.f);
+    h2.setAttribute("f", "attrKey7", 77u);
 
-    h1 += h2;
+
+    h1.merge(h2); // Hash::REPLACE_ATTRIBUTES is the default
+    h1b.merge(h2, Hash::MERGE_ATTRIBUTES);
+
+    CPPUNIT_ASSERT_MESSAGE("Replace or merge attributes influenced resulting paths", similar(h1, h1b));
 
     CPPUNIT_ASSERT(h1.has("a"));
-    CPPUNIT_ASSERT(h1.get<int>("a") == 21);
+    CPPUNIT_ASSERT(h1.get<int>("a") == 21); // new value
+    // Attribute kept, but value overwritten:
+    CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept", h1.hasAttribute("a", "attrKey"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute not overwritten", std::string("Really just a number"),
+                                 h1.getAttribute<std::string>("a", "attrKey"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute added out of nothing", 1ul, h1.getAttributes("a").size());
+
+    CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept (MERGE)", h1b.hasAttribute("a", "attrKey"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute not overwritten (MERGE)", std::string("Really just a number"),
+                                 h1b.getAttribute<std::string>("a", "attrKey"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute added out of nothing (MERGE)", 1ul, h1b.getAttributes("a").size());
+
     CPPUNIT_ASSERT(h1.has("b"));
+    CPPUNIT_ASSERT(h1.is<Hash>("b")); // switch to new type...
+    CPPUNIT_ASSERT(h1.has("b.c"));    // ...and as Hash can hold a child
+
+    // Attributes overwritten by nothing or kept
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes on node kept", 0ul, h1.getAttributes("c.b").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes on untouched leaf not kept", 1ul, h1.getAttributes("c.b[0].g").size());
+    CPPUNIT_ASSERT_MESSAGE("Attribute on untouched leaf not kept", h1.hasAttribute("c.b[0].g", "attrKey3"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on untouched leaf changed", 4., h1.getAttribute<double>("c.b[0].g", "attrKey3"));
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of attributes on node changed (MERGE)", 1ul, h1b.getAttributes("c.b").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of attributes on leaf changed (MERGE)", 1ul, h1b.getAttributes("c.b[0].g").size());
+    CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept (MERGE)", h1b.hasAttribute("c.b", "attrKey2"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on node changed (MERGE)", 3, h1b.getAttribute<int>("c.b", "attrKey2"));
+    CPPUNIT_ASSERT_MESSAGE("Attribute on untouched leaf not kept (MERGE)", h1b.hasAttribute("c.b[0].g", "attrKey3"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on untouched leaf changed (MERGE)", 4., h1b.getAttribute<double>("c.b[0].g", "attrKey3"));
+
     CPPUNIT_ASSERT(!h1.has("c.b.d"));
     CPPUNIT_ASSERT(h1.has("c.b[0]"));
     CPPUNIT_ASSERT(h1.has("c.b[1]"));
     CPPUNIT_ASSERT(h1.has("c.b[2]"));
-    CPPUNIT_ASSERT(h1.get<int>("c.b[2].d") == 24);
+    CPPUNIT_ASSERT(h1.get<int>("c.b[2].d") == 24); // vector<Hash> are appended
     CPPUNIT_ASSERT(h1.has("c.c[0].d"));
     CPPUNIT_ASSERT(h1.has("c.c[1].a.b.c"));
     CPPUNIT_ASSERT(h1.has("d.e"));
     CPPUNIT_ASSERT(h1.has("e"));
+    CPPUNIT_ASSERT(h1.has("g.h.i"));
+    CPPUNIT_ASSERT(h1.has("g.h.j"));
+    CPPUNIT_ASSERT(h1.has("h.i"));
+    CPPUNIT_ASSERT(h1.has("h.j"));
+    CPPUNIT_ASSERT(h1.has("i[1].j"));
+    CPPUNIT_ASSERT(h1.has("i[2].k.l"));
+    CPPUNIT_ASSERT(h1.has("i[3]"));
 
-    Hash h3 = h1;
+    // Just add attributes with leaf (identical for )
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on leaf added", 2ul, h1.getAttributes("e").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int attribute value incorrect", -1, h1.getAttribute<int>("e", "attrKey4"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Float attribute value incorrect", -11.f, h1.getAttribute<float>("e", "attrKey5"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on leaf added (MERGE)", 2ul, h1b.getAttributes("e").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int attribute value incorrect (MERGE)", -1, h1b.getAttribute<int>("e", "attrKey4"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Float attribute value incorrect (MERGE)", -11.f, h1b.getAttribute<float>("e", "attrKey5"));
 
-    CPPUNIT_ASSERT(similar(h1, h3));
+    CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept (MERGE)", h1b.hasAttribute("c.b", "attrKey2"));
+
+
+    CPPUNIT_ASSERT(h1.has("f"));
+    CPPUNIT_ASSERT(h1.has("f.g")); // merging does not overwrite h1["f"] with empty Hash
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes not replaced", 1ul, h1.getAttributes("f").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect", 77u, h1.getAttribute<unsigned int>("f", "attrKey7"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes not merged", 2ul, h1b.getAttributes("f").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect (MERGE)", std::string("buaah!"),
+                                 h1b.getAttribute<std::string>("f", "attrKey6"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect (MERGE)", 77u,
+                                 h1b.getAttribute<unsigned int>("f", "attrKey7"));
+
+    // Now check the 'selectedPaths' feature (no extra test for attribute merging needed):
+    std::set<std::string> selectedPaths;
+    selectedPaths.insert("a");
+    selectedPaths.insert("b.c");
+    selectedPaths.insert("g.h.i");
+    selectedPaths.insert("h.i");
+    selectedPaths.insert("i[2]");
+    selectedPaths.insert("i[5]"); // check that we tolerate to select path with invalid index
+    h1c.merge(h2, Hash::MERGE_ATTRIBUTES, selectedPaths);
+    std::clog << "h1c:\n" << h1c << std::endl;
+    // Keep everything it had before merging:
+    CPPUNIT_ASSERT(h1c.has("a"));
+    CPPUNIT_ASSERT(h1c.has("b"));
+    CPPUNIT_ASSERT(h1c.has("c.b[0].g"));
+    CPPUNIT_ASSERT(h1c.has("c.c[0].d"));
+    CPPUNIT_ASSERT(h1c.has("c.c[1].a.b.c"));
+    CPPUNIT_ASSERT(h1c.has("d.e"));
+    CPPUNIT_ASSERT(h1c.has("f.g"));
+    // The additionally selected ones from h2:
+    CPPUNIT_ASSERT(h1c.has("b.c"));
+    CPPUNIT_ASSERT(h1c.has("g.h.i"));
+    CPPUNIT_ASSERT(h1c.has("h.i"));
+    CPPUNIT_ASSERT(h1c.has("i[2].k.l"));
+    // But not the other ones from h2:
+    CPPUNIT_ASSERT(!h1c.has("c.b[0].key")); // neither at old position of h2
+    CPPUNIT_ASSERT(!h1c.has("c.b[2]"));     // nor an extended vector<Hash> at all
+    CPPUNIT_ASSERT(!h1c.has("e"));
+    // Take care that adding path "g.h.i" does not trigger that other children of "g.h" in h2 are taken as well:
+    CPPUNIT_ASSERT(!h1c.has("g.h.j"));
+    CPPUNIT_ASSERT(!h1c.has("h.j"));
+    // Adding i[2] should not trigger to add children of i[1] nor i[3]]
+    CPPUNIT_ASSERT(!h1c.has("i[1].j"));
+    CPPUNIT_ASSERT(!h1c.has("i[3]"));
+
+    // Some further small tests for so far untested cases with selected paths...
+    Hash hashTarget("a.b", 1, "a.c", Hash(), "c", "so so!");
+    const Hash hashSource("a.d", 8., "ha", 9);
+    selectedPaths.clear();
+    selectedPaths.insert("a"); // trigger merging a.d
+    hashTarget.merge(hashSource, Hash::MERGE_ATTRIBUTES, selectedPaths);
+    CPPUNIT_ASSERT(hashTarget.has("a.d"));
+
+    Hash hashTargetB("a[1].b", 1, "c", "Does not matter");
+    Hash hashTargetC(hashTargetB);
+    const Hash hashSourceBC("a[2]", Hash("a", 33), "ha", 9, "c[0]", Hash("k", 5, "l", 6), "c[1]", Hash("b", -3),
+                            "d[2].b", 66);
+    selectedPaths.clear();
+    selectedPaths.insert("a"); // trigger merging full vector
+    selectedPaths.insert("c[0]"); // trigger selecting first HashVec item overwriting what was not a vec before
+    selectedPaths.insert("d"); // trigger adding full new vector
+    hashTargetB.merge(hashSourceBC, Hash::MERGE_ATTRIBUTES, selectedPaths);
+    CPPUNIT_ASSERT(hashTargetB.has("a[1].b"));
+    CPPUNIT_ASSERT(hashTargetB.has("a[4].a"));
+    CPPUNIT_ASSERT(!hashTargetB.has("a[5]"));
+    CPPUNIT_ASSERT(hashTargetB.has("c[0]"));
+    CPPUNIT_ASSERT(hashTargetB.has("c[0].k"));
+    CPPUNIT_ASSERT(hashTargetB.has("c[0].l"));
+    CPPUNIT_ASSERT(!hashTargetB.has("c[1]"));
+    CPPUNIT_ASSERT(hashTargetB.has("d[2].b"));
+    CPPUNIT_ASSERT(!hashTargetB.has("d[3]"));
+
+    selectedPaths.clear();
+    selectedPaths.insert("a[0]");
+    selectedPaths.insert("a[2]"); // trigger selective vector items
+    selectedPaths.insert("c"); // trigger overwriting with complete vector
+    hashTargetC.merge(hashSourceBC, Hash::MERGE_ATTRIBUTES, selectedPaths);
+    CPPUNIT_ASSERT(hashTargetC.has("a[1].b"));
+    CPPUNIT_ASSERT(hashTargetC.has("a[3].a"));
+    CPPUNIT_ASSERT(!hashTargetC.has("a[4]"));
+    CPPUNIT_ASSERT(hashTargetC.has("c[0].k"));
+    CPPUNIT_ASSERT(hashTargetC.has("c[0].l"));
+    CPPUNIT_ASSERT(hashTargetC.has("c[1].b"));
+    CPPUNIT_ASSERT(!hashTargetC.has("c[2]"));
+
 }
 
 
