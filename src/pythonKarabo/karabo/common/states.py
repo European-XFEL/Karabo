@@ -85,10 +85,38 @@ class StateBase(Enum):
 
 
 class State(StateBase, metaclass=ParentEnumMeta):
-    """This are all the states a Karabo device can be in
+    """The State class represents the available states in Karabo
 
-    Each state has a `parent`, which may be `None`. This leads to
-    a tree of states, where children are more specific than their parents.
+    Only members of this class should be used for indicating
+    state. The states defined here form a hierarchy, where
+
+    * UNKNOWN
+    * KNOWN
+    * INIT
+
+    are at the basis. All other states derive from the KNOWN
+    base state, which at the second hierarchy level fans out
+    to
+
+    * DISABLED
+    * NORMAL
+    * ERROR
+
+    Here, INTERLOCK derives from DISABLED and ERROR is
+    reserved for hardware errors. Conversely an unknown software
+    error should be indicated by transitioning to the UNKNOWN state,
+    whenever it is unclear if the device is still following hardware
+    state accordingly.
+
+    Finally, the NORMAL base states has the members
+
+    * STATIC -> ACTIVE, PASSIVE
+    * CHANGING -> INCREASING, DECREASING
+
+    which each in turn are the basis for the most derived
+    and descriptive leaf states.
+
+    Each state knows its parent state by the attribute `parent`.
     """
     UNKNOWN = None
     KNOWN = None
@@ -162,27 +190,30 @@ class State(StateBase, metaclass=ParentEnumMeta):
 
 
 class StateSignifier:
-    """Define an order for states
+    """Define an order of significance for the states
 
-    An order of significance can be prescribed by creating a StateSignifier
-    with an iterable. The iterable contains states ordered from high
-    to low significance.
+    :param trumplist: An order of significance can be prescribed by
+        creating a `StateSignifier` with this iterable. It contains
+        states ordered from low to high significance. It defaults to,
+        well, the default order.
 
-    For groups of states having the same parent, only the parent needs to be
-    listed, all children will be inserted in the default order. States which
-    are not listed at all are considered most significant.
+        For groups of states having the same parent, only the parent
+        needs to be listed, all children will be inserted in the
+        default order. States which are not listed at all are
+        considered least significant.
 
-    As an example, to get ACTIVE to be more significant than PASSIVE, you
-    may write::
+        As an example, to get ACTIVE to be more significant than
+        PASSIVE, you may write::
 
-        StateSignifier([State.ACTIVE, State.PASSIVE, State.NORMAL, State.INIT])
+            StateSignifier([State.PASSIVE, State.ACTIVE])
 
-    Meaning that ACTIVE is more signifcant than PASSIVE, followed by all other
-    NORMAL states, with INIT at the end, otherwise INIT will be more
-    significant even than ACTIVE.
+        Meaning that ACTIVE is more signifcant than PASSIVE.
 
-    One should note that this way the list of significance always contains
-    *all* states.
+    :param staticMoreSignificant: tells whether PASSIVE (the default)
+        or ACTIVE should be more significant in the default order.
+
+    :param changingMoreSignificant: tells whether DECREASING (the
+        default) or INCREASING should be more significant.
     """
     def __init__(self, trumplist=(),
                  staticMoreSignificant=State.ACTIVE,
