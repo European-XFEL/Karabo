@@ -2,34 +2,59 @@ from enum import Enum, EnumMeta
 
 
 class _ParentDict:
-    """allow enums to reference each other"""
-    def __init__(self, parent):
-        self.parent = parent
-        self.values = {}
+    """allow enums to reference each other
+
+    This is a wrapper for the namespace of the class body of an enum.
+    We abuse the definition of the members of the enum to instead create
+    a tree hierarchy. To this end, we save the right side of an assignment
+    into a `parents` dict, and tell the underlying dict that the value of
+    the member is its name.
+    """
+    def __init__(self, raw_dict):
+        self.raw_dict = raw_dict
+        self.parents = {}
 
     def __getitem__(self, key):
         if key.startswith("_"):
-            return self.parent[key]
+            return self.raw_dict[key]
         else:
             return key
 
     def __setitem__(self, key, value):
         if key.startswith("_"):
-            self.parent[key] = value
+            self.raw_dict[key] = value
         else:
-            self.parent[key] = key
-            self.values[key] = value
+            self.raw_dict[key] = key
+            self.parents[key] = value
 
 
 class ParentEnumMeta(EnumMeta):
-    """A metaclass for enums which define their parent"""
+    """An Enum which defines a tree hierarchy
+
+    Based on this class one can define hierarchies of enum members.
+    The value of each member is just its name, and the value that
+    you normally assign it to is the parent, or None if that's a root.
+
+    As an example::
+
+        >>> class Tree(Enum, metaclass=ParentEnumMeta):
+        ...    root = None
+        ...    some_member = root  # root is the parent of some_member
+        >>> Tree.root.value
+        'root'
+        >>> Tree.some_member.value
+        'some_member'
+        >>> Tree.root.parent
+        >>> Tree.some_member.parent
+        <Tree.root: 'root'>
+    """
     @classmethod
     def __prepare__(cls, name, bases):
         return _ParentDict(super().__prepare__(name, bases))
 
     def __new__(cls, name, bases, ns):
-        self = super().__new__(cls, name, bases, ns.parent)
-        for k, v in ns.values.items():
+        self = super().__new__(cls, name, bases, ns.raw_dict)
+        for k, v in ns.parents.items():
             if v is None:
                 self(k).parent = None
             else:
@@ -69,6 +94,7 @@ class State(StateBase, metaclass=ParentEnumMeta):
     KNOWN = None
     ERROR = KNOWN
 
+    # INTERLOCKED is derived from DISABLED, but much more significant
     INTERLOCKED = DISABLED
 
     NORMAL = KNOWN
