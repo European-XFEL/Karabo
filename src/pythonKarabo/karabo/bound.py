@@ -102,3 +102,5 @@ from karathon import (
     setDims, setStdVectorDefaultConversion, similar, u_10_2, u_12_1p5,
     u_12_2, u_16_2, u_32_4, u_64_8, u_8_1, RollingWindowStatistics
 )
+
+from .common.states import State, StateSignifier
