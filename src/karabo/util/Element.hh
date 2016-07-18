@@ -21,6 +21,7 @@
 #include "Exception.hh"
 #include "FromTypeInfo.hh"
 
+#include "ToCppString.hh"
 
 
 namespace karabo {
@@ -445,7 +446,8 @@ namespace karabo {
                         _KARABO_HELPER_MACRO(STRING, std::string)
                         _KARABO_HELPER_MACRO(NONE, CppNone)
                     default:
-                        throw KARABO_CAST_EXCEPTION("Casting of is not supported for target type");
+                        throw KARABO_CAST_EXCEPTION("Casting of '" + Types::to<ToCppString>(srcType) += "' to '"
+                                + Types::to<ToCppString>(tgtType) += "' is not supported");
                 }
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Problems with casting"));
