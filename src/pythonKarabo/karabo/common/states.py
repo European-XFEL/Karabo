@@ -63,10 +63,6 @@ class ParentEnumMeta(EnumMeta):
 
 
 class StateBase(Enum):
-    def isCompatible(self, other):
-        """two states are compatible if one is the ancestor of the other"""
-        return self.isDerivedFrom(other) or other.isDerivedFrom(self)
-
     def isDerivedFrom(self, other):
         """return whether `self` is in the ancestry of `other`"""
         while self is not None:
@@ -79,7 +75,7 @@ class StateBase(Enum):
     def fromString(cls, name):
         """return the state with `name`.
 
-        You might prefer State(name).
+        You might prefer using ``State(name)``.
         """
         return cls(name)
 
