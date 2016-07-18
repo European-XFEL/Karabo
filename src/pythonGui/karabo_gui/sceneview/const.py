@@ -54,3 +54,16 @@ QT_BOX_LAYOUT_DIRECTION = (
     QBoxLayout.TopToBottom,
     QBoxLayout.BottomToTop
 )
+
+STATUS_OFFLINE = 'offline'  # device could, but is not started
+STATUS_ONLINE = 'online'  # the device is online but doesn't have a schema yet
+STATUS_ALIVE = 'alive'  # everything is up-and-running
+STATUS_MONITORING = 'monitoring'  # we are registered to monitor this device
+STATUS_REQUESTED = 'requested'  # a schema is requested, but didnt arrive yet
+STATUS_SCHEMA = 'schema'  # the device has a schema, but no value yet
+STATUS_DEAD = 'dead'
+STATUS_NOSERVER = 'noserver'  # device server not available
+STATUS_NOPLUGIN = 'noplugin'  # class plugin not available
+STATUS_INCOMPATIBLE = 'incompatible'  # device running, but of different type
+STATUS_MISSING = 'missing'
+STATUS_ERROR = 'error'
