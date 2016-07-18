@@ -15,9 +15,10 @@ using namespace karathon;
 using namespace std;
 namespace bp = boost::python;
 
+
 void exportPyXmsRequestor() {
 
     bp::class_<RequestorWrap > ("Requestor", bp::no_init)
-    .def("waitForReply", (&RequestorWrap::waitForReply), (bp::arg("milliseconds")));
+            .def("waitForReply", (&RequestorWrap::waitForReply), (bp::arg("milliseconds")));
 }
 

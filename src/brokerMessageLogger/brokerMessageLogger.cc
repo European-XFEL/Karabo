@@ -21,18 +21,21 @@ using namespace std;
 using namespace karabo::util;
 using namespace karabo::net;
 
-void readHandler(BrokerChannel::Pointer channel, const Hash::Pointer& header, const char* body, const size_t& bodySize) {
+
+void readHandler(const Hash::Pointer& header, const char* body, const size_t& bodySize) {
     string messageBody(body, bodySize);
     cout << *header << endl;
     cout << messageBody << endl;
     cout << "-----------------------------------------------------------------------" << endl << endl;
 }
 
-void textReadHandler(BrokerChannel::Pointer channel, const Hash::Pointer& header, const std::string& body) {
+
+void textReadHandler(const Hash::Pointer& header, const std::string& body) {
     cout << *header << endl;
     cout << body << endl;
     cout << "-----------------------------------------------------------------------" << endl << endl;
 }
+
 
 int main(int argc, char** argv) {
 
@@ -41,18 +44,18 @@ int main(int argc, char** argv) {
         // Create Jms connection
         Hash config("Jms");
         BrokerConnection::Pointer connection = BrokerConnection::create(config);
-        
+
         // Get a IOService object (for async reading later)
         BrokerIOService::Pointer ioService = connection->getIOService();
-        
+
         // Start connection
         connection->start();
-        
+
         // Obtain channels
-        BrokerChannel::Pointer channel = connection->createChannel();        
+        BrokerChannel::Pointer channel = connection->createChannel();
         BrokerChannel::Pointer textChannel = connection->createChannel();
-        
-        
+
+
         // Register async reader
         if (argc <= 1) {
             channel->setFilter("signalFunction <> 'signalHeartbeat'");
@@ -60,10 +63,10 @@ int main(int argc, char** argv) {
         }
         channel->readAsyncHashRaw(readHandler);
         textChannel->readAsyncHashString(textReadHandler);
-        
+
         // Block forever
         ioService->work();
-        
+
     } catch (const Exception& e) {
         cout << e << endl;
         return EXIT_FAILURE;

@@ -37,7 +37,7 @@ namespace karabo {
             template<typename T>
             class FixedLengthArrayComplex : public Dataset {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(FixedLengthArrayComplex, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::complex<T>))), "2.0")
 

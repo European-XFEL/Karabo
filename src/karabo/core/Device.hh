@@ -37,16 +37,16 @@ namespace karabo {
     namespace core {
 
         // Convenient logging
-        #define KARABO_LOG_DEBUG this->log() << krb_log4cpp::Priority::DEBUG 
-        #define KARABO_LOG_INFO  this->log() << krb_log4cpp::Priority::INFO 
-        #define KARABO_LOG_WARN  this->log() << krb_log4cpp::Priority::WARN 
-        #define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR
+#define KARABO_LOG_DEBUG this->log() << krb_log4cpp::Priority::DEBUG
+#define KARABO_LOG_INFO  this->log() << krb_log4cpp::Priority::INFO
+#define KARABO_LOG_WARN  this->log() << krb_log4cpp::Priority::WARN
+#define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR
 
-        #define KARABO_NO_SERVER "__none__"
-        
+#define KARABO_NO_SERVER "__none__"
 
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(BaseDevice, "BaseDevice", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS;
@@ -67,6 +67,8 @@ namespace karabo {
          */
         template <class FSM = NoFsm>
         class Device : public BaseDevice, public FSM {
+
+
             karabo::util::Validator m_validatorIntern;
             karabo::util::Validator m_validatorExtern;
 
@@ -99,9 +101,9 @@ namespace karabo {
             karabo::util::Schema m_staticSchema;
             karabo::util::Schema m_injectedSchema;
             karabo::util::Schema m_fullSchema;
-            
+
             karabo::util::AlarmCondition m_globalAlarmCondition;
-            
+
 
         public:
 
@@ -207,7 +209,7 @@ namespace karabo {
                         .description("The current state the device is in")
                         .readOnly().initialValue("Ok")
                         .commit();
-                
+
                 STRING_ELEMENT(expected).key("alarmCondition")
                         .displayedName("Alarm condition")
                         .description("The current alarm condition of the device. "
@@ -279,7 +281,7 @@ namespace karabo {
             }
 
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
-                            m_globalAlarmCondition(karabo::util::AlarmCondition::NONE) {
+                m_globalAlarmCondition(karabo::util::AlarmCondition::NONE) {
 
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
@@ -309,9 +311,9 @@ namespace karabo {
 
                 // Setup device logger
                 m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + instanceId
-                
-               
-                
+
+
+
             }
 
             virtual ~Device() {
@@ -459,45 +461,44 @@ namespace karabo {
              */
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
-                
 
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 karabo::util::Hash validated;
                 std::pair<bool, std::string> result;
-                
+
                 const bool hadPreviousAlarm = m_validatorIntern.hasParametersInWarnOrAlarm();
-               
+
                 result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
-                
+
                 if (result.first == false) {
                     KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
                 }
 
                 // Check for parameters being in a bad condition
                 std::pair<bool, const AlarmCondition> resultingCondition = this->evaluateAndUpdateAlarmCondition(hadPreviousAlarm);
-                if(resultingCondition.first && resultingCondition.second.asString() != m_parameters.get<std::string>("alarmCondition")){
+                if (resultingCondition.first && resultingCondition.second.asString() != m_parameters.get<std::string>("alarmCondition")) {
                     Hash::Node& node = validated.set("alarmCondition", resultingCondition.second.asString());
                     Hash::Attributes& attributes = node.getAttributes();
                     timestamp.toHashAttributes(attributes);
                 }
-                
+
                 if (!validated.empty()) {
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
-                    
+
                     // if Hash contains at least one reconfigurable parameter -> signalStateChanged
                     if (validated.has("state")) {
-                        emit("signalStateChanged", validated, getInstanceId());     // more reliable delivery: timeToLive == 600000 (10min)
+                        emit("signalStateChanged", validated, getInstanceId()); // more reliable delivery: timeToLive == 600000 (10min)
                         return;
                     }
-                    
+
                     // if Hash contains at least one reconfigurable parameter -> signalStateChanged
                     if (m_validatorIntern.hasReconfigurableParameter()) {
                         emit("signalStateChanged", validated, getInstanceId()); // more reliable delivery: timeToLive == 600000 (10min)
                         return;
                     }
-                    
+
                     // ... otherwise -> signalChanged
-                    emit("signalChanged", validated, getInstanceId());              // less reliable delivery: timeToLive == 3000 (3 secs)
+                    emit("signalChanged", validated, getInstanceId()); // less reliable delivery: timeToLive == 3000 (3 secs)
                 }
             }
 
@@ -519,7 +520,7 @@ namespace karabo {
             void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                
+
                 // TODO Think about attaching timestamps only to top level nodes (must check all other depending code)
                 if (!hash.empty()) {
                     Hash tmp(hash);
@@ -530,14 +531,15 @@ namespace karabo {
                         timestamp.toHashAttributes(tmp.getAttributes(path));
                     }
                     m_parameters.merge(tmp, Hash::REPLACE_ATTRIBUTES);
-                    
+
                     // if Hash contains 'state' key -> signalStateChanged
                     if (tmp.has("state")) {
-                        emit("signalStateChanged", tmp, getInstanceId());     // more reliable delivery: timeToLive == 600000 (10min)
+                        emit("signalStateChanged", tmp, getInstanceId()); // more reliable delivery: timeToLive == 600000 (10min)
                         return;
                     }
-                    
+
                     // if Hash contains at least one reconfigurable parameter -> signalStateChanged
+
                     BOOST_FOREACH(std::string path, paths) {
                         if (m_fullSchema.has(path) && m_fullSchema.isAccessReconfigurable(path)) {
                             emit("signalStateChanged", tmp, getInstanceId()); // more reliable delivery: timeToLive == 600000 (10min)
@@ -855,7 +857,7 @@ namespace karabo {
             }
 
             // TODO:  Implement local call: just post command on local queue
-            
+
             void execute(const std::string& command) const {
                 call("", command);
             }
@@ -879,36 +881,37 @@ namespace karabo {
             void execute(const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) const {
                 call("", command, a1, a2, a3, a4);
             }
-            
+
             const karabo::util::AlarmCondition & getAlarmCondition() const {
                 return karabo::util::AlarmCondition::fromString(this->get<std::string>("alarmCondition"));
             }
-            
-            void setAlarmCondition(const karabo::util::AlarmCondition & condition){
+
+            void setAlarmCondition(const karabo::util::AlarmCondition & condition) {
                 using namespace karabo::util;
                 
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_globalAlarmCondition = condition;
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
-                if(result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")){
+                if (result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")) {
                     lock.unlock();
                     this->setNoValidate("alarmCondition", result.second.asString());
                 }
-                
+
             }
-            
+
             const karabo::util::AlarmCondition & getAlarmCondition(const std::string & key, const std::string & sep = ".") const {
                 const std::string & propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep);
                 return karabo::util::AlarmCondition::fromString(propertyCondition);
             }
-            
+
             bool hasRollingStatistics(const std::string & path) const {
                 return this->getFullSchema().hasRollingStatistics(path);
             }
-            
+
             karabo::util::RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & path) const {
-                return m_validatorIntern.getRollingStatistics(path);         
+                return m_validatorIntern.getRollingStatistics(path);
             }
+
             
             const karabo::util::Hash getAlarmInfo(){
                 using namespace karabo::util;
@@ -936,6 +939,7 @@ namespace karabo {
                 KARABO_LOG_INFO<<out.str();
             }
 
+
         protected: // Functions and Classes
 
             virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration) {
@@ -946,7 +950,7 @@ namespace karabo {
 
             virtual void preDestruction() {
             }
-            
+
         private: // Functions
 
             /**
@@ -957,10 +961,10 @@ namespace karabo {
 
                 if (!m_connection) {
                     m_connectionInjected = false;
-                    
+
                     // Instantiate connection
                     karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("_connection_", m_parameters);
-                
+
                     // Initialize the SignalSlotable instance
                     init(m_deviceId, connection);
                 }
@@ -997,15 +1001,15 @@ namespace karabo {
                 instanceInfo.set("archive", this->get<bool>("archive"));
 
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo));
-                
+
                 boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-                
+
                 bool ok = ensureOwnInstanceIdUnique();
                 if (!ok) {
                     t.join(); // Blocks
                     return;
                 }
-                
+
                 KARABO_LOG_INFO << "'" << m_classId << "' with deviceId: '" << this->getInstanceId() << "' got started"
                         << " on server '" << this->getServerId() << "'.";
 
@@ -1062,7 +1066,7 @@ namespace karabo {
                 using namespace std;
 
                 KARABO_SIGNAL2("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
-                
+
                 KARABO_SYSTEM_SIGNAL2("signalStateChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
 
                 KARABO_SYSTEM_SIGNAL4("signalNotification", string /*type*/, string /*messageShort*/, string /*messageDetail*/, string /*deviceId*/);
@@ -1076,6 +1080,7 @@ namespace karabo {
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
 
             }
+
             /**
              *  Called in beginning of run() to setup p2p channels, will
              *  recursively go through the schema of the device
@@ -1084,7 +1089,7 @@ namespace karabo {
              *  *                  schema of the device
              *  */
             void initChannels(const std::string& topLevel = "") {
-                
+
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 // Keys under topLevel, without leading "topLevel.":
                 const std::vector<std::string>& subKeys = m_fullSchema.getKeys(topLevel);
@@ -1102,13 +1107,13 @@ namespace karabo {
                             createInputChannel(key, m_parameters);
                         } else {
                             KARABO_LOG_FRAMEWORK_DEBUG << "'" << this->getInstanceId() << "' does not create in-/output "
-                                    << "channel for '" << key << "' since it's a '" << displayType <<"'";
+                                    << "channel for '" << key << "' since it's a '" << displayType << "'";
                         }
                     } else if (m_fullSchema.isNode(key)) {
                         // Recursive call going down the tree for channels within nodes
                         KARABO_LOG_FRAMEWORK_DEBUG << "'" << this->getInstanceId() << "' looks for input/output channels "
                                 << "under node \"" << key << "\"";
-                        
+
                         lock.unlock(); // release lock before recursion
                         this->initChannels(key);
                         lock.lock();
@@ -1143,7 +1148,7 @@ namespace karabo {
                 reply(m_parameters, m_deviceId);
             }
 
-            void slotGetSchema(bool onlyCurrentState) {           
+            void slotGetSchema(bool onlyCurrentState) {
                 if (onlyCurrentState) {
                     const std::string& currentState = get<std::string > ("state");
                     const karabo::util::Schema schema(getStateDependentSchema(currentState));
@@ -1283,32 +1288,31 @@ namespace karabo {
                 }
                 return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
             }
-            
-            
-            const std::pair<bool, const karabo::util::AlarmCondition> evaluateAndUpdateAlarmCondition(bool forceUpate){
+
+            const std::pair<bool, const karabo::util::AlarmCondition> evaluateAndUpdateAlarmCondition(bool forceUpate) {
                 using namespace karabo::util;
                 if (m_validatorIntern.hasParametersInWarnOrAlarm()) {
                     const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
                     std::vector<AlarmCondition> v;
-                    
-                    v.push_back(m_globalAlarmCondition); 
-                    
+
+                    v.push_back(m_globalAlarmCondition);
+
                     for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                         const Hash& desc = it->getValue<Hash>();
-                        KARABO_LOG_WARN << desc.get<string>("type")<<": "<< desc.get<string>("message");
+                        KARABO_LOG_WARN << desc.get<string>("type") << ": " << desc.get<string>("message");
                         emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_deviceId);
                         v.push_back(AlarmCondition::fromString(desc.get<string>("type")));
                     }
-                    return std::make_pair<bool, const AlarmCondition>(true, AlarmCondition::returnMostSignificant(v));
-                } else if(forceUpate){
-                    return std::make_pair<bool, const AlarmCondition>(true, m_globalAlarmCondition);
+                    return std::make_pair<bool, const AlarmCondition > (true, AlarmCondition::returnMostSignificant(v));
+                } else if (forceUpate) {
+                    return std::make_pair<bool, const AlarmCondition > (true, m_globalAlarmCondition);
                 }
-                return std::make_pair<bool, const AlarmCondition>(false, AlarmCondition::NONE);
+                return std::make_pair<bool, const AlarmCondition > (false, AlarmCondition::NONE);
             }
-            
-            
-           
-            
+
+
+
+
             /*const std::vector<karabo::util::Hash>& getVectorHashRow(const std::string& key) const {
                 const std::vector<karabo::util::Hash>& value = m_parameters.get<std::vector<karabo::util::Hash> >(key);
                 for (std::vector<karabo::util::Hash>::const_iterator it = value.begin(); it != value.end(); ++it) {
@@ -1334,8 +1338,8 @@ namespace karabo {
             }*/
 
         };
-        
-        
+
+
     }
 }
 

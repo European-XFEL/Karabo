@@ -75,7 +75,7 @@ namespace karathon {
         static karabo::util::Hash copy(const karabo::util::Hash& self) {
             return self;
         }
-        
+
         static bp::object
         getAs(const karabo::util::Hash& self,
               const std::string& path,
@@ -103,7 +103,7 @@ namespace karathon {
               const bp::object & obj,
               const bp::object& type,
               const std::string& separator = ".");
-        
+
         static bool
         erase(karabo::util::Hash& self,
               const bp::object & keyObj,
@@ -111,8 +111,8 @@ namespace karathon {
 
         static void
         erasePath(karabo::util::Hash& self,
-              const bp::object & keyObj,
-              const std::string& separator = ".");
+                  const bp::object & keyObj,
+                  const std::string& separator = ".");
 
         static bool
         has(karabo::util::Hash& self,
@@ -194,7 +194,7 @@ namespace karathon {
 
         static bool
         isDefault(const PyTypes::ReferenceType& type);
-        
+
     };
 
     bool

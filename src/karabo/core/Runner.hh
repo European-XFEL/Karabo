@@ -41,7 +41,7 @@ namespace karabo {
         template <class T>
         class Runner {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(Runner, "Runner", karabo::util::Version::getVersion())
 
@@ -363,10 +363,10 @@ namespace karabo {
                 // Tokens must be resolved before (see resolveTokens)
                 using namespace karabo::util;
 
-                if(token.empty()){
+                if (token.empty()) {
                     throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line (empty argument?)\n");
                 }
-                if ((*token.begin()) == '.'){
+                if ((*token.begin()) == '.') {
                     throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line. Token cannot start with dot (" + token + ")");
                 }
                 boost::filesystem::path possibleFile(token);

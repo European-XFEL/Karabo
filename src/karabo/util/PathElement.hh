@@ -23,7 +23,7 @@ namespace karabo {
          */
         class PathElement : public LeafElement<PathElement, std::string > {
 
-        public:
+            public:
 
             PathElement(Schema& expected) : LeafElement<PathElement, std::string >(expected) {
             }
@@ -72,19 +72,19 @@ namespace karabo {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
                 this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
-                
-                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) { 
-                    
+
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
+
                     //for init, reconfigurable elements - set default value of requiredAccessLevel to USER
                     if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) ||
-                         this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||
-                         this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE ) {         
-                        
-                        this->userAccess();   
-                    
+                        this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||
+                        this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE) {
+
+                        this->userAccess();
+
                     } else { //else set default value of requiredAccessLevel to OBSERVER 
-                       this->observerAccess();
-                    } 
+                        this->observerAccess();
+                    }
                 }
             }
         };

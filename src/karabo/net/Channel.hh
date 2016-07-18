@@ -28,7 +28,7 @@ namespace karabo {
 
         class Channel {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(Channel, "Channel", "1.0")
 
@@ -223,7 +223,6 @@ namespace karabo {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
-
             /**
              * Asynchronously reads data into a hash. All memory management is done by the API.
              * @param handler Call-function of signature: void (Channel::Pointer, const karabo::util::Hash&)
@@ -231,7 +230,6 @@ namespace karabo {
             virtual void readAsyncHashPointer(const ReadHashPointerHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
-
 
             /**
              * Asynchronously reads data into a vector<char>. All memory management is done by the API.
@@ -245,6 +243,7 @@ namespace karabo {
             //**************************************************************/
             //*              Asynchronous Read - With Header               */
             //**************************************************************/
+
             /**
              * Asynchronously reads data into a hash header and a vector<char>. All memory management is done by the API.
              * @param handler Call-function of signature: void (Channel::Pointer, const karabo::util::Hash&, const std::vector<char>&) 
@@ -252,7 +251,7 @@ namespace karabo {
             virtual void readAsyncHashVector(const ReadHashVectorHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
-            
+
             /**
              * Asynchronously reads data into a hash header and a string. All memory management is done by the API.
              * NOTE: A string in general is not storing data contiguously. Thus, an additional copy under the hood is
@@ -391,9 +390,9 @@ namespace karabo {
             }
 
             virtual void close() = 0;
-        
+
             virtual bool isOpen() = 0;
-            
+
             virtual void writeAsync(const char* data, const size_t& size, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
@@ -413,7 +412,7 @@ namespace karabo {
             virtual void writeAsync(const karabo::util::Hash& data, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
-            
+
             virtual void writeAsync(const karabo::util::Hash& header, const char* data, const size_t& size, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
@@ -435,7 +434,8 @@ namespace karabo {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
-            virtual void setAsyncChannelPolicy(int priority, const std::string& policy) {}
+            virtual void setAsyncChannelPolicy(int priority, const std::string& policy) {
+            }
         };
     }
 }

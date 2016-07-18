@@ -15,7 +15,6 @@
 #include <karabo/util/TableElement.hh>
 namespace bp = boost::python;
 
-
 template <typename T>
 struct AliasAttributeWrap {
 
@@ -79,7 +78,7 @@ struct AliasAttributeWrap {
             if (PyUnicode_Check(list0.ptr())) {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
-                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(obj[i]).ptr())));
+                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object> (obj[i]).ptr())));
                     Py_ssize_t size;
                     const char* data = PyUnicode_AsUTF8AndSize(str.ptr(), &size);
                     v[i] = std::string(data, size);
@@ -91,9 +90,10 @@ struct AliasAttributeWrap {
     }
 };
 
-
 template <class T>
 struct DefaultValueVectorWrap {
+
+
     typedef std::vector< T > VType;
     typedef karabo::util::VectorElement< T > U;
     typedef karabo::util::DefaultValue< U, VType > DefValueVec;
@@ -115,8 +115,9 @@ struct DefaultValueVectorWrap {
 
 };
 
-
 struct DefaultValueTableWrap {
+
+
     typedef std::vector<karabo::util::Hash > VType;
     typedef karabo::util::TableElement U;
     typedef karabo::util::TableDefaultValue< U> DefValueVec;
@@ -140,6 +141,8 @@ struct DefaultValueTableWrap {
 
 template <class T>
 struct ReadOnlySpecificVectorWrap {
+
+
     typedef std::vector< T > VType;
     typedef karabo::util::VectorElement< T > U;
     typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecVec;
@@ -147,7 +150,7 @@ struct ReadOnlySpecificVectorWrap {
 
     static ReadOnlySpecVec & initialValue(ReadOnlySpecVec& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
-              const bp::list& l = bp::extract<bp::list > (obj);
+            const bp::list& l = bp::extract<bp::list > (obj);
             bp::ssize_t size = bp::len(l);
 
             std::vector<T> v(size);
@@ -178,7 +181,7 @@ struct ReadOnlySpecificVectorWrap {
         }
     }
 
-    static AlarmSpecVec  alarmLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
+    static AlarmSpecVec alarmLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             VType v = pyList2StdVector(obj);
             return self.alarmLow(v);

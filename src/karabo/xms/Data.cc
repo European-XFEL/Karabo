@@ -42,8 +42,10 @@ namespace karabo {
         Data::Data(const karabo::util::Hash& config) : m_hash(new Hash(config)) {
         }
 
+
         Data::Data(const std::string& key, const Data& other) : m_hash(new Hash(key, other.hash())) {
         }
+
 
         Data::Data(const std::string& channelName, const karabo::util::Hash& config) {
             if (!config.has(channelName)) {
@@ -64,24 +66,24 @@ namespace karabo {
 
         Data::~Data() {
         }
-        
+
 
         void Data::setNode(const std::string& key, const Data& data) {
             // Protect using nested calls by changing the separator to '*'
             m_hash->set(key, data.hash(), '*');
         }
 
-        
+
         const karabo::util::Hash::Pointer& Data::hash() const {
             return m_hash;
         }
-        
+
+
         void Data::attachTimestamp(const karabo::util::Timestamp& ts) {
             for (Hash::iterator it = m_hash->begin(); it != m_hash->end(); ++it) {
                 ts.toHashAttributes(it->getAttributes());
             }
         }
-
 
 
         std::ostream& operator<<(std::ostream& os, const Data& data) {

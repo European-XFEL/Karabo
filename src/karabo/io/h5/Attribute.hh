@@ -28,7 +28,7 @@ namespace karabo {
 
             class Attribute {
 
-            public:
+                public:
                 KARABO_CLASSINFO(Attribute, "Attribute", "1.0");
                 KARABO_CONFIGURATION_BASE_CLASS
 
@@ -113,8 +113,8 @@ namespace karabo {
                 virtual hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {
                     return H5Screate_simple(ex.size(), &ex[0], &maxEx[0]);
                 }
-                
-                virtual void closeDataspace(hid_t dataSpace){
+
+                virtual void closeDataspace(hid_t dataSpace) {
                     KARABO_CHECK_HDF5_STATUS(H5Sclose(dataSpace));
                 }
 

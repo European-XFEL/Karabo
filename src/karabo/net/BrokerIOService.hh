@@ -18,7 +18,8 @@ namespace karabo {
         class BrokerConnection;
 
         class BrokerIOService {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(BrokerIOService, "BrokerIOService", "1.0")
 
@@ -26,8 +27,7 @@ namespace karabo {
 
             virtual ~BrokerIOService() {
             }
-            
-            
+
             /**
              * Runs all registered handlers once.
              * If the same handler should stay active it must be re-registered whilst running has not returned.
@@ -39,37 +39,36 @@ namespace karabo {
                 if (m_service)
                     m_service->run();
             }
-            
-            
+
             /**
              * Work will block until stop() is called.
              * All handlers will automatically be re-registered!
              * Registration of new handlers is always possible. 
              */
             void work() {
-              if (m_service) {
-                m_service->work();
-              }
+                if (m_service) {
+                    m_service->work();
+                }
             }
-            
+
             /**
              * Will stop work();
              */
             void stop() {
-              if(m_service) {
-                m_service->stop();
-              }
+                if (m_service) {
+                    m_service->stop();
+                }
             }
-            
+
             void post(const boost::function<void()>& handler) {
                 if (m_service) {
                     m_service->post(handler);
                 }
             }
-            
+
             template <class T>
             boost::shared_ptr<T> castTo() {
-              return boost::static_pointer_cast<T>(m_service);
+                return boost::static_pointer_cast<T>(m_service);
             }
 
         private:

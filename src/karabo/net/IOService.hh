@@ -20,7 +20,7 @@ namespace karabo {
 
         class IOService {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(IOService, "IOService", "1.0")
 
@@ -52,7 +52,7 @@ namespace karabo {
                     m_service->post(handler);
                 }
             }
-            
+
             template <class T>
             boost::shared_ptr<T> castTo() {
                 return boost::static_pointer_cast<T>(m_service);

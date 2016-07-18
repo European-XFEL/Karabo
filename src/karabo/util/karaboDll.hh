@@ -33,13 +33,13 @@
  ********************************************/
 
 #if defined(_WIN32)
-  #if defined(__DLL__)
-    #define KARABO_DECLSPEC __declspec(dllexport)
-    #define KARABO_TEMPLATE_DLL
-  #else
-    #define KARABO_DECLSPEC __declspec(dllimport)
-    #define KARABO_TEMPLATE_DLL extern
-  #endif
+#if defined(__DLL__)
+#define KARABO_DECLSPEC __declspec(dllexport)
+#define KARABO_TEMPLATE_DLL
+#else
+#define KARABO_DECLSPEC __declspec(dllimport)
+#define KARABO_TEMPLATE_DLL extern
+#endif
 #elif defined(unix)        || defined(__unix)      || defined(__unix__) \
  || defined(linux)       || defined(__linux)     || defined(__linux__) \
  || defined(sun)         || defined(__sun) \
@@ -48,8 +48,8 @@
  || defined(sgi)         || defined(__sgi) \
  || defined(__MACOSX__)  || defined(__APPLE__) \
  || defined(__CYGWIN__)
-    #define KARABO_DECLSPEC
-    #define KARABO_TEMPLATE_DLL
+#define KARABO_DECLSPEC
+#define KARABO_TEMPLATE_DLL
 #endif
 
 #if defined(_WIN32)

@@ -197,7 +197,7 @@ namespace karabo {
 
 
         void InputChannel::connect(const karabo::util::Hash& outputChannelInfo) {
-            
+
             KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\"  :   outputChannelInfo is ...\n" << outputChannelInfo;
 
             std::string connectionType = outputChannelInfo.get<std::string > ("connectionType");
@@ -208,11 +208,11 @@ namespace karabo {
                     const string& outputChannelString = outputChannelInfo.get<string>("outputChannelString");
                     boost::mutex::scoped_lock lock(m_outputChannelsMutex);
                     OpenConnections::iterator it = m_openConnections.find(outputChannelString);
-                    if (it != m_openConnections.end()) return;  // Already connected!
+                    if (it != m_openConnections.end()) return; // Already connected!
                 }
-                
+
                 KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\"   :   No old connection found.  Create one!";
-                
+
                 // Prepare connection configuration given output channel information
                 karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
                 // Instantiate connection object
@@ -274,7 +274,7 @@ namespace karabo {
             ii->second.clear();
         }
 
-        
+
         void InputChannel::closeChannelsAndStopConnections() {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             for (OpenConnections::iterator it = m_openConnections.begin(); it != m_openConnections.end(); ++it) {
@@ -371,10 +371,10 @@ namespace karabo {
                     break;
                 }
             }
-            
+
             KARABO_LOG_FRAMEWORK_INFO << "onTcpConnectionError on \"" << m_instanceId << "\"  connected to \""
                     << outputChannelString << "\"  :  code #" << error.value() << " -- \"" << error.message() << "\".  Close channel.";
-            
+
             if (outputChannelString.empty()) return;
             ConnectedOutputChannels::iterator it = m_connectedOutputChannels.find(outputChannelString);
             if (it == m_connectedOutputChannels.end()) return;
@@ -396,10 +396,10 @@ namespace karabo {
                     break;
                 }
             }
-            
+
             KARABO_LOG_FRAMEWORK_INFO << "onTcpChannelError on \"" << m_instanceId << "\"  connected to \""
                     << outputChannelString << "\"  :  code #" << error.value() << " -- \"" << error.message() << "\".  Close channel.";
-            
+
             if (outputChannelString.empty()) return;
             ConnectedOutputChannels::iterator it = m_connectedOutputChannels.find(outputChannelString);
             if (it == m_connectedOutputChannels.end()) return;
@@ -669,13 +669,13 @@ namespace karabo {
             }
         }
 
-        
+
         void InputChannel::updateOutputChannelConfiguration(const std::string& outputChannelString, const karabo::util::Hash& config) {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             m_connectedOutputChannels[outputChannelString] = config;
         }
 
-        
+
         bool InputChannel::needsDeviceConnection() const {
             return true;
         }

@@ -29,8 +29,9 @@ namespace configurationTest {
     using namespace karabo::util;
     using namespace karabo::xms;
 
-
     struct Shape {
+
+
         KARABO_CLASSINFO(Shape, "Shape", "1.0");
         KARABO_CONFIGURATION_BASE_CLASS;
 
@@ -64,8 +65,9 @@ namespace configurationTest {
     //                Circle                       *
     //**********************************************
 
-
     struct Circle : public Shape {
+
+
         KARABO_CLASSINFO(Circle, "Circle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -97,8 +99,9 @@ namespace configurationTest {
     //            Editable Circle                  *
     //**********************************************
 
-
     struct EditableCircle : public Circle {
+
+
         KARABO_CLASSINFO(EditableCircle, "EditableCircle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -123,8 +126,9 @@ namespace configurationTest {
     //                 Rectangle                   *
     //**********************************************
 
-
     struct Rectangle : public Shape {
+
+
         KARABO_CLASSINFO(Rectangle, "Rectangle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -164,8 +168,9 @@ namespace configurationTest {
         }
     };
 
-
     struct GraphicsRenderer {
+
+
         KARABO_CLASSINFO(GraphicsRenderer, "GraphicsRenderer", "1.0")
         KARABO_CONFIGURATION_BASE_CLASS;
 
@@ -224,8 +229,9 @@ namespace configurationTest {
         }
     };
 
-
     struct GraphicsRenderer1 {
+
+
         KARABO_CLASSINFO(GraphicsRenderer1, "GraphicsRenderer1", "1.0");
 
         virtual ~GraphicsRenderer1() {
@@ -296,12 +302,13 @@ namespace configurationTest {
         }
     };
 
-
     struct TestStruct1 {
+
+
         KARABO_CLASSINFO(TestStruct1, "TestStruct1", "1.0");
 
         TestStruct1(const karabo::util::Hash& config) {
-            
+
         }
 
         virtual ~TestStruct1() {
@@ -356,8 +363,8 @@ namespace configurationTest {
 
             vector<int> vecIntAlias;
             {
-                using namespace boost::assign;    // bring 'operator+=()' into scope
-                vecIntAlias += 10, 20, 30;        // use boost::assign to initialize vector
+                using namespace boost::assign; // bring 'operator+=()' into scope
+                vecIntAlias += 10, 20, 30; // use boost::assign to initialize vector
             }
             INT64_ELEMENT(expected).key("exampleKey5").alias(vecIntAlias)
                     .tags("h/w; d.m.y", ";")
@@ -379,7 +386,7 @@ namespace configurationTest {
                     .operatorAccess()
                     .assignmentOptional().defaultValue(0x0100007f) // 127.0.0.1 == localhost
                     .commit();
-            
+
             UINT16_ELEMENT(expected).key("exampleKey7").alias("key7")
                     .displayedName("Bit string")
                     .description("Example key 7 description")
@@ -387,7 +394,7 @@ namespace configurationTest {
                     .readOnly()
                     .expertAccess()
                     .commit();
-                    
+
             INT32_ELEMENT(expected).key("sampleKey")
                     .assignmentOptional().defaultValueFromString("10")
                     .reconfigurable()
@@ -400,6 +407,8 @@ namespace configurationTest {
     };
 
     struct TestStruct2 : public TestStruct1 {
+
+
         KARABO_CLASSINFO(TestStruct2, "TestStruct2", "1.0");
 
         TestStruct2(const karabo::util::Hash& config) : TestStruct1(config) {
@@ -421,8 +430,9 @@ namespace configurationTest {
 
     };
 
-
     struct OtherSchemaElements {
+
+
         KARABO_CLASSINFO(OtherSchemaElements, "OtherSchemaElements", "1.0");
 
         virtual ~OtherSchemaElements() {
@@ -456,13 +466,13 @@ namespace configurationTest {
                     .warnLow("d").needsAcknowledging(false)
                     .archivePolicy(Schema::EVERY_10MIN)
                     .commit();
-            
-           
-                    
+
+
+
 
             vector<int> vecInit;
             {
-                using namespace boost::assign;    // bring 'operator+=()' into scope
+                using namespace boost::assign; // bring 'operator+=()' into scope
                 vecInit += 10, 20, 30;
             }
 
@@ -499,13 +509,13 @@ namespace configurationTest {
                     .assignmentOptional().defaultValueFromString("11, 22, 33")
                     .reconfigurable()
                     .commit();
-            
+
             VECTOR_DOUBLE_ELEMENT(expected)
                     .key("vecDoubleReconfigStr")
                     .assignmentOptional().defaultValueFromString("1.1, 2.2, 3.3")
                     .reconfigurable()
                     .commit();
-            
+
             VECTOR_BOOL_ELEMENT(expected)
                     .key("vecBool")
                     .tags("h/w; d.m.y", ";")
@@ -514,13 +524,13 @@ namespace configurationTest {
                     .maxSize(7)
                     .assignmentMandatory()
                     .commit();
-            
+
             IMAGE_ELEMENT(expected)
                     .key("image")
                     .commit();
-            
+
             Schema rowSchema;
-            
+
             INT32_ELEMENT(rowSchema)
                     .key("a")
                     .minInc(2)
@@ -528,12 +538,12 @@ namespace configurationTest {
                     .displayedName("A")
                     .assignmentOptional().noDefaultValue()
                     .commit();
-            
+
             STRING_ELEMENT(rowSchema)
                     .key("b")
                     .assignmentOptional().noDefaultValue()
                     .commit();
-            
+
             TABLE_ELEMENT(expected)
                     .key("testTable")
                     .setNodeSchema(rowSchema)
@@ -581,6 +591,8 @@ namespace configurationTest {
     };
 
     struct SchemaNodeElements {
+
+
         KARABO_CLASSINFO(SchemaNodeElements, "SchemaNodeElements", "1.0");
 
         SchemaNodeElements(const karabo::util::Hash& config) {
@@ -590,12 +602,12 @@ namespace configurationTest {
         }
 
         static void expectedParameters(karabo::util::Schema & expected) {
-            
+
             NODE_ELEMENT(expected).key("monitor")
                     .displayedName("Monitor")
                     .description("A Monitor (Node element containing count and other Node elements: stats)")
                     .commit();
-            
+
             UINT32_ELEMENT(expected).key("monitor.count")
                     .displayedName("Count")
                     .description("Test count element")
@@ -610,10 +622,12 @@ namespace configurationTest {
 
         }
     };
-    
+
     struct SchemaNodeInjected {
+
+
         KARABO_CLASSINFO(SchemaNodeInjected, "SchemaNodeInjected", "1.0");
-        
+
         SchemaNodeInjected(const karabo::util::Hash& config) {
         }
 
@@ -626,7 +640,7 @@ namespace configurationTest {
                     .displayedName("Monitor new")
                     .description("A Monitor new (Node element containing count and other Node elements: stats)")
                     .commit();
-            
+
             NODE_ELEMENT(expected).key("monitor.stats")
                     .description("Complex status node having d1 parameter")
                     .displayedName("Stats")
@@ -638,7 +652,7 @@ namespace configurationTest {
                     .reconfigurable()
                     .assignmentOptional().defaultValue(3.1415f)
                     .commit();
-            
+
         }
     };
 }

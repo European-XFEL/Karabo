@@ -23,7 +23,7 @@ namespace karathon {
 
     class ConnectionWrap {
 
-    public:
+        public:
 
         static bp::object start(const karabo::net::Connection::Pointer& connection) {
             karabo::net::Channel::Pointer channel;
@@ -49,7 +49,7 @@ namespace karathon {
             }
             throw KARABO_PYTHON_EXCEPTION("Python object in parameters is not IOService::Pointer");
         }
-        
+
         static bp::object getIOService(const karabo::net::Connection::Pointer& connection) {
             ScopedGILRelease nogil;
             return bp::object(connection->getIOService());
