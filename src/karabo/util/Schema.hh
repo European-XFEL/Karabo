@@ -383,16 +383,16 @@ namespace karabo {
             //**********************************************
 
             //overloads for up to six states
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const std::string& sep);
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const std::string& sep);
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const std::string& sep);
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const std::string& sep);
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5, const std::string& sep);
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5, const karabo::core::State& s6, const std::string& sep);
+            void setAllowedStates(const std::string& path, const karabo::core::State& s1);
+            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2);
+            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3);
+            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4);
+            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5);
+            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5, const karabo::core::State& s6);
             
             
             //generic interface
-            void setAllowedStates(const std::string& path, const std::vector<karabo::core::State>& value, const std::string& sep);
+            void setAllowedStates(const std::string& path, const std::vector<karabo::core::State>& value);
             
             
 
@@ -862,7 +862,7 @@ namespace karabo {
 
             void r_updateAliasMap(const std::vector<std::string> keys, const std::string oldPath = "");
             
-            void setAllowedStates(const std::string& path, const std::string& value, const std::string& sep);
+            void setAllowedStates(const std::string& path, const std::string& value);
 
         };
 
