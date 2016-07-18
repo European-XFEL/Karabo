@@ -162,17 +162,6 @@ class State(StateBase, metaclass=ParentEnumMeta):
     ENGAGING = INCREASING
     SWITCHING_ON = INCREASING
 
-    ACTIVE = STATIC
-    COOLED = ACTIVE
-    HEATED = ACTIVE
-    EVACUATED = ACTIVE
-    CLOSED = ACTIVE
-    ON = ACTIVE
-    EXTRACTED = ACTIVE
-    STARTED = ACTIVE
-    LOCKED = ACTIVE
-    ENGAGED = ACTIVE
-
     PASSIVE = STATIC
     WARM = PASSIVE
     COLD = PASSIVE
@@ -183,6 +172,17 @@ class State(StateBase, metaclass=ParentEnumMeta):
     STOPPED = PASSIVE
     UNLOCKED = PASSIVE
     DISENGAGED = PASSIVE
+
+    ACTIVE = STATIC
+    COOLED = ACTIVE
+    HEATED = ACTIVE
+    EVACUATED = ACTIVE
+    CLOSED = ACTIVE
+    ON = ACTIVE
+    EXTRACTED = ACTIVE
+    STARTED = ACTIVE
+    LOCKED = ACTIVE
+    ENGAGED = ACTIVE
 
     INIT = None
     DISABLED = KNOWN
@@ -216,7 +216,7 @@ class StateSignifier:
         default) or INCREASING should be more significant.
     """
     def __init__(self, trumplist=(),
-                 staticMoreSignificant=State.ACTIVE,
+                 staticMoreSignificant=State.PASSIVE,
                  changingMoreSignificant=State.DECREASING):
         def key(state):
             while state is not None:
@@ -235,21 +235,20 @@ class StateSignifier:
         drumpf = {s: i for i, s in enumerate(defaultlist)}
         states = list(State.__members__.values())
         states.sort(key=key)
-        drumpf = {s: i for i, s in enumerate(trumplist[::-1])}
-        states.sort(key=key)
-        print(trumplist, [s.name for s in states])
+        drumpf = {s: i for i, s in enumerate(trumplist)}
+        states.sort(key=key, reverse=True)
         self.drumpf = {s: i for i, s in enumerate(states)}
 
     def returnMostSignificant(self, iterable):
-        """return the most significant state in iterable"""
+        """return the most significant state in `iterable`"""
         return min(iterable, key=self.drumpf.get)
 
     post = [State.INIT, State.DISABLED]
 
-    active_decrease = []
-    passive_decrease = [State.INTERLOCKED, State.NORMAL, State.PASSIVE,
-                        State.ACTIVE] + post
-    active_increase = [State.INTERLOCKED, State.INCREASING, State.CHANGING,
-                       State.DECREASING, State.STATIC] + post
+    passive_decrease = []
+    active_decrease = [State.INTERLOCKED, State.NORMAL, State.ACTIVE,
+                       State.PASSIVE] + post
     passive_increase = [State.INTERLOCKED, State.INCREASING, State.CHANGING,
-                        State.DECREASING, State.PASSIVE, State.ACTIVE] + post
+                        State.DECREASING, State.STATIC] + post
+    active_increase = [State.INTERLOCKED, State.INCREASING, State.CHANGING,
+                       State.DECREASING, State.ACTIVE, State.PASSIVE] + post
