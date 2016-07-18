@@ -287,26 +287,26 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             AlarmSpecific<Element, ValueType, Self>& warnVarianceLow(const double value) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(AlarmCondition::WARN_VARIANCE_LOW.asString(), value);
-                m_alarmSpecific.setScope(m_readOnlyElement, this, AlarmCondition::WARN_VARIANCE_LOW.asString());
+                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_WARN_VARIANCE_LOW, value);
+                m_alarmSpecific.setScope(m_readOnlyElement, this, KARABO_SCHEMA_WARN_VARIANCE_LOW);
                 return m_alarmSpecific;
             }
             
             AlarmSpecific<Element, ValueType, Self>& warnVarianceHigh(const double value) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(AlarmCondition::WARN_VARIANCE_HIGH.asString(), value);
-                m_alarmSpecific.setScope(m_readOnlyElement, this, AlarmCondition::WARN_VARIANCE_HIGH.asString());
+                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_WARN_VARIANCE_HIGH, value);
+                m_alarmSpecific.setScope(m_readOnlyElement, this, KARABO_SCHEMA_WARN_VARIANCE_HIGH);
                 return m_alarmSpecific;
             }
             
             AlarmSpecific<Element, ValueType, Self>& alarmVarianceLow(const double value) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(AlarmCondition::ALARM_VARIANCE_LOW.asString(), value);
-                m_alarmSpecific.setScope(m_readOnlyElement, this, AlarmCondition::ALARM_VARIANCE_LOW.asString());
+                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ALARM_VARIANCE_LOW, value);
+                m_alarmSpecific.setScope(m_readOnlyElement, this, KARABO_SCHEMA_ALARM_VARIANCE_LOW);
                 return m_alarmSpecific;
             }
             
             AlarmSpecific<Element, ValueType, Self>& alarmVarianceHigh(const double value) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(AlarmCondition::ALARM_VARIANCE_HIGH.asString(), value);
-                m_alarmSpecific.setScope(m_readOnlyElement, this, AlarmCondition::ALARM_VARIANCE_HIGH.asString());
+                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ALARM_VARIANCE_HIGH, value);
+                m_alarmSpecific.setScope(m_readOnlyElement, this, KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
                 return m_alarmSpecific;
             }
             
@@ -366,26 +366,26 @@ namespace karabo {
             }
 
             AlarmSpecific<Element, ValueType, Self> & warnLow(const ValueType& value) {
-                m_genericElement->getNode().setAttribute(AlarmCondition::WARN_LOW.asString(), value);
-                m_alarmSpecific.setScope(this, this, AlarmCondition::WARN_LOW.asString());
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_WARN_LOW, value);
+                m_alarmSpecific.setScope(this, this, KARABO_SCHEMA_WARN_LOW);
                 return m_alarmSpecific;
             }
 
             AlarmSpecific<Element, ValueType, Self> & warnHigh(const ValueType& value) {
-                m_genericElement->getNode().setAttribute(AlarmCondition::WARN_HIGH.asString(), value);
-                m_alarmSpecific.setScope(this, this, AlarmCondition::WARN_HIGH.asString());
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_WARN_HIGH, value);
+                m_alarmSpecific.setScope(this, this, KARABO_SCHEMA_WARN_HIGH);
                 return m_alarmSpecific;
             }
 
             AlarmSpecific<Element, ValueType, Self> & alarmLow(const ValueType& value) {
-                m_genericElement->getNode().setAttribute(AlarmCondition::ALARM_LOW.asString(), value);
-                m_alarmSpecific.setScope(this, this, AlarmCondition::ALARM_LOW.asString());
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ALARM_LOW, value);
+                m_alarmSpecific.setScope(this, this, KARABO_SCHEMA_ALARM_LOW);
                 return m_alarmSpecific;
             }
 
             AlarmSpecific<Element, ValueType, Self> & alarmHigh(const ValueType& value) {
-                m_genericElement->getNode().setAttribute(AlarmCondition::ALARM_HIGH.asString(), value);
-                m_alarmSpecific.setScope(this, this, AlarmCondition::ALARM_HIGH.asString());
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ALARM_HIGH, value);
+                m_alarmSpecific.setScope(this, this, KARABO_SCHEMA_ALARM_HIGH);
                 return m_alarmSpecific;
             }
             
