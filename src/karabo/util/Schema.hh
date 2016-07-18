@@ -111,6 +111,23 @@ namespace karabo {
             #define KARABO_SCHEMA_MIN_SIZE "minSize"
             #define KARABO_SCHEMA_MAX_SIZE "maxSize"
 
+            #define KARABO_SCHEMA_ALARM_NONE "none"
+            #define KARABO_SCHEMA_WARN "warn"
+            #define KARABO_SCHEMA_WARN_LOW "warnLow"
+            #define KARABO_SCHEMA_WARN_HIGH "warnHigh"
+ 
+            #define KARABO_SCHEMA_ALARM "alarm"
+            #define KARABO_SCHEMA_ALARM_LOW "alarmLow"
+            #define KARABO_SCHEMA_ALARM_HIGH "alarmHigh"
+
+            #define KARABO_SCHEMA_WARN_VARIANCE_LOW "warnVarianceLow"
+            #define KARABO_SCHEMA_WARN_VARIANCE_HIGH "warnVarianceHigh"
+
+            #define KARABO_SCHEMA_ALARM_VARIANCE_LOW "alarmVarianceLow"
+            #define KARABO_SCHEMA_ALARM_VARIANCE_HIGH "alarmVarianceHigh"
+
+            #define KARABO_SCHEMA_INTERLOCK "interlock"
+
             #define KARABO_SCHEMA_ENABLE_ROLLING_STATS "enableRollingStats"
             #define KARABO_SCHEMA_ROLLING_STATS_EVAL "rollingStatsEvalInterval"
 
