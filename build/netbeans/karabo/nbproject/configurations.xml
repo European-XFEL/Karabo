@@ -927,16 +927,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/io/SchemaXsdSerializer.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/SchemaXsdSerializer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/io/TextFileInput.cc"
             ex="false"
             tool="1"
@@ -1424,16 +1414,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2944,16 +2924,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/io/SchemaXsdSerializer.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/SchemaXsdSerializer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/io/TextFileInput.cc"
             ex="false"
             tool="1"
@@ -3453,16 +3423,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
