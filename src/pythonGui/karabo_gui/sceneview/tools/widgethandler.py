@@ -52,7 +52,9 @@ class WidgetSceneHandler(ABCHasStrictTraits):
         traits = {}
         for key in BaseWidgetObjectData.class_editable_traits():
             traits[key] = getattr(old_model, key)
-
+        # Set the `klass`, if settable
+        if 'klass' in model_klass.class_editable_traits():
+            traits['klass'] = widget_class
         # Ignore width and height for correct layout recalculation
         traits['height'] = traits['width'] = 0
         new_model = model_klass(**traits)
