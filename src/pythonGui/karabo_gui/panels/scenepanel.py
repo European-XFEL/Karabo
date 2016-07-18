@@ -17,8 +17,8 @@ from karabo_gui.sceneview.tools.api import (
     GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
     TextSceneTool, RectangleSceneTool, SceneBringToFrontAction,
     SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneLinkTool,
-    ScenePasteAction, SceneSelectAllAction, SceneSendToBackAction,
-    SceneSelectionTool, WorkflowConnectionTool)
+    ScenePasteAction, ScenePasteReplaceAction, SceneSelectAllAction,
+    SceneSendToBackAction, SceneSelectionTool)
 from karabo_gui.toolbar import ToolBar
 
 
@@ -160,22 +160,26 @@ class ScenePanel(Dockable, QScrollArea):
         actions = []
         actions.append(GroupSceneAction(icon=icons.group,
                                         text="Group without layout",
-                                        tooltip="Group without layout"))
+                                        tooltip="Group selected items"))
         actions.append(BoxVSceneAction(icon=icons.groupVertical,
                                        text="Group Vertically",
-                                       tooltip="Group Vertically"))
+                                       tooltip="Group selected items in "
+                                               "vertical layout"))
         actions.append(BoxHSceneAction(icon=icons.groupHorizontal,
                                        text="Group Horizontally",
-                                       tooltip="Group Horizontally"))
+                                       tooltip="Group selected items in "
+                                               "horizontal layout"))
         actions.append(GridSceneAction(icon=icons.groupGrid,
                                        text="Group in a Grid",
-                                       tooltip="Group in a Grid"))
+                                       tooltip="Group selected items in "
+                                               "in a grid layout"))
         actions.append(UngroupSceneAction(icon=icons.ungroup,
                                           text="Ungroup",
-                                          tooltip="Ungroup"))
+                                          tooltip="Ungroup selected items"))
         actions.append(GroupEntireSceneAction(icon=icons.entireWindow,
                                               text="Group Entire Window",
-                                              tooltip="Group Entire Window"))
+                                              tooltip="Group all items in "
+                                                      "entire window"))
         return actions
 
     def create_clipboard_actions(self):
@@ -183,29 +187,42 @@ class ScenePanel(Dockable, QScrollArea):
         actions.append(SceneSelectAllAction(icon=icons.selectAll,
                                             shortcut=QKeySequence.SelectAll,
                                             text="Select All",
-                                            tooltip="Select All"))
+                                            tooltip="Select all items of the "
+                                                    "scene"))
         actions.append(SceneCutAction(icon=icons.editCut,
                                       shortcut=QKeySequence.Cut,
-                                      text="Cut", tooltip="Cut"))
+                                      text="Cut",
+                                      tooltip="Cut selected items"))
         actions.append(SceneCopyAction(icon=icons.editCopy,
                                        shortcut=QKeySequence.Copy,
-                                       text="Copy", tooltip="Copy"))
+                                       text="Copy",
+                                       tooltip="Copy selected items"))
         actions.append(ScenePasteAction(icon=icons.editPaste,
                                         shortcut=QKeySequence.Paste,
-                                        text="Paste", tooltip="Paste"))
+                                        text="Paste",
+                                        tooltip="Paste selected items"))
+        actions.append(ScenePasteReplaceAction(icon=icons.editPasteReplace,
+                                               shortcut=QKeySequence.Replace,
+                                               text="Paste and Replace",
+                                               tooltip="Paste and replace the "
+                                                       "associated device ID "
+                                                       "of selected items"))
         actions.append(SceneDeleteAction(icon=icons.delete,
                                          shortcut=QKeySequence.Delete,
-                                         text="Delete", tooltip="Delete"))
+                                         text="Delete",
+                                         tooltip="Delete selected items"))
         return actions
 
     def create_order_actions(self):
         actions = []
         actions.append(SceneBringToFrontAction(icon=icons.bringToFront,
                                                text="Bring to Front",
-                                               tooltip="Bring to Front"))
+                                               tooltip="Bring selected items "
+                                                       "to front"))
         actions.append(SceneSendToBackAction(icon=icons.sendToBack,
                                              text="Send to Back",
-                                             tooltip="Send to Back"))
+                                             tooltip="Send selected items "
+                                                     "to Back"))
         return actions
 
     def _build_qaction(self, sv_action):

@@ -145,7 +145,7 @@ class Macro(Device):
             EventLoop.global_loop.start_device(self)
 
     @coroutine
-    def run_async(self):
+    def _run(self):
         """ implement the RemoteDevice functionality, upon
         starting the device the devices are searched and then
         assigned to the object's properties """
@@ -155,7 +155,7 @@ class Macro(Device):
         info["module"] = self.module
         self.updateInstanceInfo(info)
 
-        yield from super().run_async()
+        yield from super()._run()
 
         self.state = "SearchRemotes..."
         holders = []

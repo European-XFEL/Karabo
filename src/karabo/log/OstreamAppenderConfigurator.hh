@@ -29,6 +29,7 @@ namespace karabo {
 
         class OstreamAppenderConfigurator : public AppenderConfigurator {
 
+
             std::string m_out;
 
         public:

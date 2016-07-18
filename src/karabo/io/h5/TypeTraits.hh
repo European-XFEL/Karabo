@@ -19,7 +19,8 @@ namespace karabo {
         namespace h5 {
 
             class ScalarTypes {
-            public:
+
+                public:
 
                 template <class U>
                 static const hid_t getHdf5NativeType() {
@@ -60,18 +61,16 @@ namespace karabo {
             template<> const hid_t ScalarTypes::getHdf5StandardType< unsigned int >();
             template<> const hid_t ScalarTypes::getHdf5StandardType< unsigned long long >();
             template<> const hid_t ScalarTypes::getHdf5StandardType< float >();
-            template<> const hid_t ScalarTypes::getHdf5StandardType< std::complex<float> >();            
+            template<> const hid_t ScalarTypes::getHdf5StandardType< std::complex<float> >();
             template<> const hid_t ScalarTypes::getHdf5StandardType< double >();
-            template<> const hid_t ScalarTypes::getHdf5StandardType< std::complex<double> >();            
+            template<> const hid_t ScalarTypes::getHdf5StandardType< std::complex<double> >();
             template<> const hid_t ScalarTypes::getHdf5StandardType< bool >();
             template<> const hid_t ScalarTypes::getHdf5StandardType< std::string >();
 
-
-            
             struct Hdf5Types {
-                
-            };
-            
+
+                };
+
         }
     }
 }

@@ -129,12 +129,8 @@ class DeviceServer(SignalSlotable):
                 Hash("Network", Hash())
             ])
 
-    def run(self):
-        self._ss.enter_context(self.log.setBroker(self._ss))
-
-        self.logger = self.log.logger
-        super().run()
-
+    @coroutine
+    def _run(self):
         info = Hash()
         info["type"] = "server"
         info["serverId"] = self.serverId
@@ -142,6 +138,11 @@ class DeviceServer(SignalSlotable):
         info["host"] = self.hostname
         info["visibility"] = self.visibility.value
         self.updateInstanceInfo(info)
+
+        yield from super()._run()
+
+        self._ss.enter_context(self.log.setBroker(self._ss))
+        self.logger = self.log.logger
 
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
                       format(self.hostname))
@@ -156,7 +157,7 @@ class DeviceServer(SignalSlotable):
     @coroutine
     def scanPlugins(self):
         availableModules = set()
-        while self.running:
+        while True:
             entrypoints = self.pluginLoader.update()
             for ep in entrypoints:
                 if ep.name in availableModules:
@@ -271,10 +272,10 @@ class DeviceServer(SignalSlotable):
     def slotInstanceGone(self, id, info):
         self.deviceInstanceMap.pop(id, None)
 
-    @coslot
+    @slot
     def slotGetClassSchema(self, classid):
         cls = Device.subclasses[classid]
-        return (yield from cls.getClassSchema_async()), classid, self.serverId
+        return cls.getClassSchema(), classid, self.serverId
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cnt = self.instanceCountPerDeviceServer.setdefault(self.serverId, 0)

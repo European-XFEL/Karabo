@@ -23,8 +23,8 @@ int main(int argc, char** argv) {
 
     try {
         DeviceServer::Pointer deviceServer;
-        
-        #ifdef __linux__
+
+#ifdef __linux__
         pthread_t sig_thr_id; // Signal handler thread ID
         int ret = pthread_create(&sig_thr_id, NULL, GlobalExceptionHandler::SignalThread, NULL);
 
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
                 std::cout << "Shutting down the device server \"" << deviceServer->getInstanceId() << "\" ...\n\n";
                 deviceServer->call(deviceServer->getInstanceId(), "slotKillServer");
 
-                
+
                 int maxWait = 0;
                 while (deviceServer->isRunning() && maxWait < 10) {
                     std::cout << "Waiting for device server to die..." << std::endl;
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
             // Auto-restart application
             // system(program_invocation_name);
             deviceServer.reset();
-            
+
             std::cout << "Thread: " << pthread_self() << " -> invoke the default handler for \"" << strsignal(signum) << "\"\n\n";
             // Raise the signal again using default handler.
             // This trick will trigger the core dump
@@ -87,43 +87,43 @@ int main(int argc, char** argv) {
 
             return EXIT_FAILURE;
         }
-        #endif
+#endif
 
         deviceServer = Runner<DeviceServer>::instantiate(argc, argv);
         if (deviceServer) {
-            
-            #ifdef __linux__
-                // Register signal handlers
-                static SignalHandler<SegmentationViolation> __SegmentationFaultHandler;
-                static SignalHandler<GenericException> __GenericExceptionHandler;
-                static SignalHandler<FloatingPointException> __FloatingPointExceptionHandler;
-                static SignalHandler<QuitSignal> __QuitSignalHandler;
-                static SignalHandler<TerminateSignal> __TerminateSignalHandler;
-                static SignalHandler<HangupSignal> __HangupSignalHandler;
 
-                // Global instance of ExceptionHandler
-                static GlobalExceptionHandler __GlobalExceptionHandler;
+#ifdef __linux__
+            // Register signal handlers
+            static SignalHandler<SegmentationViolation> __SegmentationFaultHandler;
+            static SignalHandler<GenericException> __GenericExceptionHandler;
+            static SignalHandler<FloatingPointException> __FloatingPointExceptionHandler;
+            static SignalHandler<QuitSignal> __QuitSignalHandler;
+            static SignalHandler<TerminateSignal> __TerminateSignalHandler;
+            static SignalHandler<HangupSignal> __HangupSignalHandler;
 
-                //std::cout << "Main thread: " << pthread_self() << endl;
-                // Mask all signals except SIGSEGV, SIGFPE, SIGBUS
-                // Every thread will be responsible for his own error of this types.
-                // Other async. signals will be blocked for all worker threads, and caught/handled by one SignalThread
-                sigset_t signal_mask;
-                sigfillset(&signal_mask);
-                sigdelset(&signal_mask, SIGSEGV);
-                sigdelset(&signal_mask, SIGFPE);
-                sigdelset(&signal_mask, SIGBUS);
+            // Global instance of ExceptionHandler
+            static GlobalExceptionHandler __GlobalExceptionHandler;
 
-                // In debug mode, SIGINT is also not blocked so that breakpoints can be set by debugger
-                if (deviceServer->isDebugMode()) {
-                    sigdelset(&signal_mask, SIGINT);
-                } else {
-                    static SignalHandler<InterruptSignal> __InterruptSignalHandler;
-                }
+            //std::cout << "Main thread: " << pthread_self() << endl;
+            // Mask all signals except SIGSEGV, SIGFPE, SIGBUS
+            // Every thread will be responsible for his own error of this types.
+            // Other async. signals will be blocked for all worker threads, and caught/handled by one SignalThread
+            sigset_t signal_mask;
+            sigfillset(&signal_mask);
+            sigdelset(&signal_mask, SIGSEGV);
+            sigdelset(&signal_mask, SIGFPE);
+            sigdelset(&signal_mask, SIGBUS);
 
-                int ret = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
-            
-            #endif
+            // In debug mode, SIGINT is also not blocked so that breakpoints can be set by debugger
+            if (deviceServer->isDebugMode()) {
+                sigdelset(&signal_mask, SIGINT);
+            } else {
+                static SignalHandler<InterruptSignal> __InterruptSignalHandler;
+            }
+
+            int ret = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
+
+#endif
 
             deviceServer->run();
             deviceServer.reset();

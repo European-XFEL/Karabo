@@ -29,7 +29,7 @@ namespace karabo {
 
             class Dataset : public karabo::io::h5::Element {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(Dataset, "Dataset", "1.0")
 

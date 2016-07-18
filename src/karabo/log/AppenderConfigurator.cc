@@ -60,12 +60,12 @@ namespace karabo {
                     .description("Basic Layout")
                     .displayedName("Basic")
                     .commit();
-            
+
             NODE_ELEMENT(expected).key("layout.Pattern")
                     .description("Allows to define a pattern for the log string")
                     .displayedName("Pattern")
                     .commit();
-            
+
             STRING_ELEMENT(expected).key("layout.Pattern.format")
                     .description("Set conversion pattern for the layout. See log4cpp documentation.")
                     .displayedName("Format")

@@ -24,7 +24,7 @@ namespace karabo {
         template <class T>
         class Output : public AbstractOutput {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(Output, "Output", "1.0")
 

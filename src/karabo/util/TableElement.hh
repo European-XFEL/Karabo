@@ -28,13 +28,14 @@ namespace karabo {
         /**
          * The DefaultValue class defines a default value for element.
          */
-        
+
         template<typename Element>
         class TableDefaultValue {
 
+
             Element* m_genericElement;
-            
-            
+
+
         public:
 
             TableDefaultValue() : m_genericElement(0) {
@@ -50,18 +51,18 @@ namespace karabo {
              * @param val  Default value
              * @return reference to the Element for proper methods chaining
              */
-            Element& defaultValue(const std::vector<Hash>& defaultValue) { 
-                if(m_genericElement->m_nodeSchema.empty()){
+            Element& defaultValue(const std::vector<Hash>& defaultValue) {
+                if (m_genericElement->m_nodeSchema.empty()) {
                     throw KARABO_PARAMETER_EXCEPTION("Need to set a node schema first for defaults to be set");
                 }
-                
+
                 std::vector<Hash> validated;
                 Validator validator(karabo::util::tableValidationRules);
 
-                for(std::vector<Hash>::const_iterator it = defaultValue.begin(); it != defaultValue.end(); ++it){
+                for (std::vector<Hash>::const_iterator it = defaultValue.begin(); it != defaultValue.end(); ++it) {
                     Hash validatedHash;
                     std::pair<bool, std::string> validationResult = validator.validate(m_genericElement->m_nodeSchema, *it, validatedHash);
-                    if(!validationResult.first) {
+                    if (!validationResult.first) {
                         throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against present node schema");
                     }
                     validated.push_back(validatedHash);
@@ -72,8 +73,6 @@ namespace karabo {
                 return *m_genericElement;
             }
 
-            
-
             /**
              * The <b>noDefaultValue</b> serves for setting up the element that does not have a default value.
              * @return reference to the Element for proper methods chaining
@@ -83,20 +82,21 @@ namespace karabo {
             }
 
         };
-        
+
         class TableElement : public GenericElement<TableElement> {
-            
+
+
             friend class TableDefaultValue<TableElement>;
-            
+
             Schema m_nodeSchema;
             TableDefaultValue<TableElement> m_defaultValue;
-            
+
         public:
 
             TableElement(Schema& expected) : GenericElement<TableElement>(expected) {
-                
+
                 m_defaultValue.setElement(this);
-                
+
             }
 
             TableElement& minSize(const unsigned int& value) {
@@ -114,7 +114,7 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE,  std::vector<Hash>());
                 return _readOnlySpecific;
             }*/
-            
+
             /**
              * The <b>allowedStates</b> method serves for setting up allowed states for the element
              * @param states A string describing list of possible states.
@@ -125,7 +125,6 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector>(states, sep));
                 return *this;
             }
-            
 
             /**
              * The <b>assignmentMandatory</b> method serves for setting up a mode that requires the value
@@ -192,19 +191,18 @@ namespace karabo {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
                 return *this;
             }
-            
-            
+
             TableElement& setNodeSchema(const Schema& schema) {
-                
+
                 m_nodeSchema = schema;
-                
+
                 //this->addRow(); //set first element to containt parameter Hash
-                
+
                 return *this;
             }
-            
-            
-            
+
+
+
             /*TableElement& addRow(const Hash& nodeHash = Hash()) {
                 if(m_nodeSchema.empty()){
                     throw KARABO_PARAMETER_EXCEPTION("No node schema has been set. Please set one before adding schema-less nodes");
@@ -262,8 +260,8 @@ namespace karabo {
                 
                 return *this;
             }
-            */
-            
+             */
+
         protected:
 
             void beforeAddition() {
@@ -274,25 +272,25 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, "VECTOR_HASH");
                 //this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, 4);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::NO_ARCHIVING); //currently doesn't work
-                
+
                 //this->m_node->template setAttribute<int>(KARABO_SCHEMA_ROW_SCHEMA, true);
                 this->m_node->setAttribute(KARABO_SCHEMA_ROW_SCHEMA, m_nodeSchema);
                 //if (!m_nodeSchema.empty()) this->m_node->template setAttribute<int>(KARABO_SCHEMA_ROW_SCHEMA, 1); 
 
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
-                
-                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) { 
-                    
+
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
+
                     //for init, reconfigurable elements - set default value of requiredAccessLevel to USER
-                    if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) ||                         //init element 
-                         this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||   //init element 
-                         this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE ) { //reconfigurable element
-                        
+                    if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) || //init element
+                        this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT || //init element
+                        this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE) { //reconfigurable element
+
                         this->userAccess();
-                          
+
                     } else { //else set default value of requiredAccessLevel to OBSERVER 
-                       this->observerAccess();
-                    }  
+                        this->observerAccess();
+                    }
                 }
             }
         };

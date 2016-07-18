@@ -22,6 +22,7 @@
 using namespace std;
 using namespace exfel::util;
 
+
 int testFsm(int argc, char** argv) {
 
     try {
@@ -32,7 +33,7 @@ int testFsm(int argc, char** argv) {
 
         exfel::log::Logger::Pointer log = exfel::log::Logger::create("Logger", Hash("priority", "DEBUG"));
         log->initialize();
-        
+
         exfel::core::StateMachineTest fsmTest;
         fsmTest.startStateMachine();
         //fsmTest.goToB();

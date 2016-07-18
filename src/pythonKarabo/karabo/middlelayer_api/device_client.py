@@ -38,8 +38,9 @@ class DeviceClientBase(Device):
         self.loggerMap = Hash()
         super().__init__(configuration)
 
-    def run(self):
-        super().run()
+    @asyncio.coroutine
+    def _run(self):
+        yield from super()._run()
         self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
 
     @slot

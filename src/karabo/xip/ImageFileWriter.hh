@@ -32,10 +32,11 @@ namespace karabo {
         template <class TPix>
         class ImageFileWriter : public karabo::io::Output< CpuImage<TPix> > {
 
+
             karabo::util::Hash m_input;
             boost::filesystem::path m_filename;
             int m_number;
-            
+
         public:
 
             KARABO_CLASSINFO(ImageFileWriter, "ImageFile", "1.0")

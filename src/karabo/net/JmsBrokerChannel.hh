@@ -34,11 +34,13 @@ namespace karabo {
 
         class JmsBrokerIOService;
 
-        /**
+/**
          * Implementation of the BrokerChannel class specifically for Oracle's implementation of JMS within the OpenMQ
          * broker.
          */
         class JmsBrokerChannel : public BrokerChannel, public boost::enable_shared_from_this<JmsBrokerChannel> {
+
+
             // JMS-Error handling convenience
 #define MQ_SAFE_CALL(mqCall) \
             { \
@@ -63,8 +65,6 @@ namespace karabo {
               } \
             }
 
-            typedef boost::signals2::signal<void (BrokerChannel::Pointer, const std::string&) > SignalError;
-
             // Provides access to the JmsConnection object
             boost::weak_ptr<JmsBrokerConnection> m_jmsConnection;
 
@@ -75,9 +75,6 @@ namespace karabo {
 
             // Provides access to the JmsIOService object
             JmsBrokerIOService::Pointer m_ioService;
-
-            // Signals occurrence of errors
-            SignalError m_signalError;
 
             // Types needed by the OpenMQ API
             boost::mutex m_sessionProducerHandleMutex;
@@ -119,12 +116,12 @@ namespace karabo {
             // Flag: initialization required
             bool m_hasProducerSession;
             bool m_hasConsumerSession;
-            
+
             // MQ Acknowledge Mode for session
             MQAckMode m_ackMode;
-            
+
             bool m_consumerActive;
-            
+
             std::vector<boost::thread*> m_registeredMessageReceivers;
 
         public:
@@ -134,7 +131,7 @@ namespace karabo {
             JmsBrokerChannel(BrokerConnection::Pointer connection, const std::string& subDestination);
 
             virtual ~JmsBrokerChannel();
-            
+
             BrokerConnection::Pointer getConnection() {
                 boost::shared_ptr<JmsBrokerConnection> jbc(m_jmsConnection.lock());
                 return boost::reinterpret_pointer_cast<BrokerConnection, JmsBrokerConnection>(jbc);
@@ -143,7 +140,7 @@ namespace karabo {
             /**************************************************************/
             /*              Synchronous Read - No Header                  */
             /**************************************************************/
-            
+
             /**
              * This function reads binary messages into vector of chars. 
              * The reading will block until the data record is read.
@@ -253,8 +250,6 @@ namespace karabo {
              */
             const std::string& getFilter() const;
 
-            void setTimeoutSyncRead(int milliseconds);
-
             //void waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id);
 
             void setErrorHandler(const BrokerErrorHandler& handler);
@@ -270,8 +265,6 @@ namespace karabo {
             void listenForHashStringMessages();
 
             void listenForHashHashMessages();
-
-            void deadlineTimer(const WaitHandler& handler, int milliseconds, const std::string& id);
 
             void setSessionFalse();
 
@@ -333,7 +326,7 @@ namespace karabo {
 
             std::string prepareSelector() const;
 
-            void rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header);
+            void rawHash2HashHash(const char* data, const size_t& size, const karabo::util::Hash::Pointer& header);
 
             void sendTextMessage(const karabo::util::Hash& header, const std::string& messageBody, const int priority, const int messageTimeToLive);
 

@@ -37,6 +37,7 @@ namespace karabo {
         template<class TPix>
         class KARABO_API GpuImage {
 
+
             template <class UPix> friend class GpuImage;
 
             unsigned int m_dimX;
@@ -58,14 +59,14 @@ namespace karabo {
             }
 
             explicit GpuImage(const std::string& filename) :
-            m_dimX(0), m_dimY(0), m_dimZ(0), m_data(0) {
+                m_dimX(0), m_dimY(0), m_dimZ(0), m_data(0) {
                 CpuImage<TPix> cpuImg(filename);
                 GpuImage gpuImg(cpuImg);
                 this->swap(gpuImg);
             }
 
             explicit GpuImage(const unsigned int dx, const unsigned int dy = 1, const unsigned int dz = 1) :
-            m_dimX(dx), m_dimY(dy), m_dimZ(dz), m_data(0) {
+                m_dimX(dx), m_dimY(dy), m_dimZ(dz), m_data(0) {
                 const size_t bytes = byteSize();
                 if (bytes) {
                     CUDA_SAFE_CALL(cudaMalloc((void**) &m_data, bytes))
@@ -73,7 +74,7 @@ namespace karabo {
             }
 
             GpuImage(const int dx, const int dy, const int dz, const TPix& value) :
-            m_dimX(dx), m_dimY(dy), m_dimZ(dz), m_data(0) {
+                m_dimX(dx), m_dimY(dy), m_dimZ(dz), m_data(0) {
                 const size_t bytes = byteSize();
                 if (bytes) {
                     CUDA_SAFE_CALL(cudaMalloc((void**) &m_data, bytes))
@@ -84,7 +85,7 @@ namespace karabo {
             }
 
             GpuImage(const unsigned int dx, const unsigned int dy, const unsigned int dz, const std::string& values, const bool repeatValues) :
-            m_dimX(dx), m_dimY(dy), m_dimZ(dz), m_data(0) {
+                m_dimX(dx), m_dimY(dy), m_dimZ(dz), m_data(0) {
                 CpuImage<TPix> cpuImg(dx, dy, dz, values, repeatValues); // Construction through cpu image
                 GpuImage gpuImg(cpuImg);
                 this->swap(gpuImg);
@@ -93,7 +94,7 @@ namespace karabo {
             // IMPORTANT: Host data buffer !!
 
             GpuImage(const TPix * const hostDataBuffer, const int dx, const int dy, const int dz) :
-            m_dimX(dx), m_dimY(dy), m_dimZ(dz), m_data(0) {
+                m_dimX(dx), m_dimY(dy), m_dimZ(dz), m_data(0) {
                 const unsigned int bytes = byteSize();
                 if (bytes && hostDataBuffer) {
                     CUDA_SAFE_CALL(cudaMalloc((void**) &m_data, bytes))
@@ -102,7 +103,7 @@ namespace karabo {
             }
 
             GpuImage(const std::vector<TPix>& hostDataBuffer, const unsigned int dx, const unsigned int dy, const unsigned int dz) :
-            m_dimX(dx), m_dimY(dy), m_dimZ(dz), m_data(0) {
+                m_dimX(dx), m_dimY(dy), m_dimZ(dz), m_data(0) {
                 const unsigned int bytes = byteSize();
                 if (bytes && !hostDataBuffer.empty()) {
                     CUDA_SAFE_CALL(cudaMalloc((void**) &m_data, bytes))
@@ -129,7 +130,7 @@ namespace karabo {
             }
 
             GpuImage(const CpuImage<TPix>& image) :
-            m_dimX(0), m_dimY(0), m_dimZ(0), m_data(0) {
+                m_dimX(0), m_dimY(0), m_dimZ(0), m_data(0) {
                 GpuImage gpuImg(image.pixelPointer(), image.dimX(), image.dimY(), image.dimZ());
                 this->swap(gpuImg);
             }

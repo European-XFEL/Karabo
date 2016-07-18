@@ -20,12 +20,13 @@
 namespace bp = boost::python;
 
 namespace karathon {
- 
+
     class PythonOutputHandler : public karabo::io::OutputHandler {
-    public:
-        
+
+        public:
+
         KARABO_CLASSINFO(PythonOutputHandler, "PythonOutputHandler", "1.0")
-                
+
         PythonOutputHandler() {
         }
 
@@ -35,21 +36,21 @@ namespace karathon {
         virtual ~PythonOutputHandler() {
         }
 
-            void registerIOEventHandler(const boost::any& ioEventHandler) {
-                m_ioEventHandler = boost::any_cast < bp::object >(ioEventHandler);
-            }
+        void registerIOEventHandler(const boost::any& ioEventHandler) {
+            m_ioEventHandler = boost::any_cast < bp::object >(ioEventHandler);
+        }
 
-            void triggerIOEvent() {
-                ScopedGILAcquire gil;
-                if (m_ioEventHandler != bp::object()) {
-                    if (karabo::io::AbstractOutput::Pointer out = m_output.lock()) m_ioEventHandler(out);
-                }
+        void triggerIOEvent() {
+            ScopedGILAcquire gil;
+            if (m_ioEventHandler != bp::object()) {
+                if (karabo::io::AbstractOutput::Pointer out = m_output.lock()) m_ioEventHandler(out);
             }
-            
-        private:
-            boost::weak_ptr<karabo::io::AbstractOutput> m_output;
-            bp::object m_ioEventHandler;
-        
+        }
+
+    private:
+        boost::weak_ptr<karabo::io::AbstractOutput> m_output;
+        bp::object m_ioEventHandler;
+
     };
 }
 

@@ -18,12 +18,11 @@
 
 namespace karabo {
     namespace util {
-        
-            
-        class AlarmCondition{
 
-        public:
-            
+        class AlarmCondition {
+
+            public:
+
             static const AlarmCondition NONE;
             static const AlarmCondition WARN;
             static const AlarmCondition WARN_LOW;
@@ -36,8 +35,8 @@ namespace karabo {
             static const AlarmCondition ALARM_VARIANCE_LOW;
             static const AlarmCondition ALARM_VARIANCE_HIGH;
             static const AlarmCondition INTERLOCK;
-            
-            
+
+
             /**
              * Returns the most significant alarm condition out of a list of conditions
              * @param v: the list of alarm conditions
@@ -58,8 +57,8 @@ namespace karabo {
              * @return 
              */
             const std::string & asString() const;
-            
-            
+
+
             /**
              * Returns a stringified version of the alarm condition or its base if applicable
              * @return 
@@ -71,24 +70,24 @@ namespace karabo {
              * @return 
              */
             operator std::string() const;
-            
-            
+
+
 
             /**
              * Tests whether two alarm conditions are similar, e.g. are subsets of the same basic condition
              * @param test: the condition to test similarity against
              * @return true if the conditions are subsets of the same base; false otherwise.
              */
-            bool isSameCriticality (const AlarmCondition & test) const;
-            
+            bool isSameCriticality(const AlarmCondition & test) const;
+
             /**
              * Returns the more significant of the two condtions
              * @param other
              * @return 
              */
             const AlarmCondition & returnMoreSignificant(const AlarmCondition & other) const;
-            
-           
+
+
 
         private:
 
@@ -103,7 +102,7 @@ namespace karabo {
 
             boost::shared_ptr<const AlarmCondition> getBase() const;
 
-            
+
             std::string m_conditionString;
             unsigned int m_rank;
             boost::shared_ptr<const AlarmCondition> m_base;
@@ -111,12 +110,12 @@ namespace karabo {
 
 
         };
-            
-            
-       
-        
+
+
+
+
     }
-    
+
 }
 
 #define KARABO_ALARM_ATTR "alarmCondition"

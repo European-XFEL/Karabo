@@ -14,7 +14,7 @@
 
 namespace karabo {
     namespace xip {
-        
+
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<RawImageData >, RawImageFileWriter)
 
     }
