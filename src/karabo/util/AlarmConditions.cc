@@ -109,8 +109,7 @@ namespace karabo {
         const AlarmCondition AlarmCondition::ALARM_VARIANCE_HIGH(KARABO_SCHEMA_ALARM_VARIANCE_HIGH, ALARM);
         const AlarmCondition AlarmCondition::INTERLOCK(KARABO_SCHEMA_INTERLOCK, 3);
        //interlock is assumed to always be the highest conditions and knowledge of this is used in returnMostSignificant
-        
-
+ 
         std::map<std::string, const AlarmCondition & > AlarmCondition::m_alarmFactory = std::map<std::string, const AlarmCondition &> ();
 
     }
