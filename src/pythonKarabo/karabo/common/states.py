@@ -220,7 +220,7 @@ class StateSignifier:
                  changingMoreSignificant=State.DECREASING):
         def key(state):
             while state is not None:
-                ret = drumpf.get(state)
+                ret = trumpdict.get(state)
                 if ret is not None:
                     return ret
                 state = state.parent
@@ -232,16 +232,16 @@ class StateSignifier:
             (State.PASSIVE, State.DECREASING): self.passive_decrease,
             (State.ACTIVE, State.DECREASING): self.active_decrease}
         defaultlist = defaults[staticMoreSignificant, changingMoreSignificant]
-        drumpf = {s: i for i, s in enumerate(defaultlist)}
+        trumpdict = {s: i for i, s in enumerate(defaultlist)}
         states = list(State.__members__.values())
         states.sort(key=key)
-        drumpf = {s: i for i, s in enumerate(trumplist)}
+        trumpdict = {s: i for i, s in enumerate(trumplist)}
         states.sort(key=key, reverse=True)
-        self.drumpf = {s: i for i, s in enumerate(states)}
+        self.trumpdict = {s: i for i, s in enumerate(states)}
 
     def returnMostSignificant(self, iterable):
         """return the most significant state in `iterable`"""
-        return min(iterable, key=self.drumpf.get)
+        return min(iterable, key=self.trumpdict.get)
 
     post = [State.INIT, State.DISABLED]
 
