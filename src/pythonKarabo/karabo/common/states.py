@@ -168,6 +168,7 @@ class State(StateBase, metaclass=ParentEnumMeta):
     STOPPED = PASSIVE
     UNLOCKED = PASSIVE
     DISENGAGED = PASSIVE
+    IGNORING = PASSIVE
 
     ACTIVE = STATIC
     COOLED = ACTIVE
@@ -179,6 +180,8 @@ class State(StateBase, metaclass=ParentEnumMeta):
     STARTED = ACTIVE
     LOCKED = ACTIVE
     ENGAGED = ACTIVE
+    ACQUIRING = ACTIVE
+    MONITORING = ACTIVE
 
     INIT = None
     DISABLED = KNOWN
