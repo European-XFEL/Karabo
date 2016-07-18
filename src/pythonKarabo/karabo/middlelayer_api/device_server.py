@@ -129,16 +129,18 @@ class DeviceServer(SignalSlotable):
                 Hash("Network", Hash())
             ])
 
-    @coroutine
-    def _run(self):
-        info = Hash()
+    def _initInfo(self):
+        info = super()._initInfo()
         info["type"] = "server"
         info["serverId"] = self.serverId
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["visibility"] = self.visibility.value
-        self.updateInstanceInfo(info)
+        info.merge(self.deviceClassesHash())
+        return info
 
+    @coroutine
+    def _run(self):
         yield from super()._run()
 
         self._ss.enter_context(self.log.setBroker(self._ss))
@@ -146,7 +148,6 @@ class DeviceServer(SignalSlotable):
 
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
                       format(self.hostname))
-        self.notifyNewDeviceAction()
         async(self.scanPlugins())
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
@@ -173,7 +174,7 @@ class DeviceServer(SignalSlotable):
                     traceback.print_exc()
                 else:
                     availableModules.add(ep.name)
-                    self.notifyNewDeviceAction()
+                    self.updateInstanceInfo(self.deviceClassesHash())
             yield from sleep(3)
 
 
@@ -248,11 +249,11 @@ class DeviceServer(SignalSlotable):
         return classid, deviceid, configuration
 
         
-    def notifyNewDeviceAction(self):
-        self.updateInstanceInfo(Hash(
+    def deviceClassesHash(self):
+        return Hash(
             "deviceClasses", StringList([k for k in Device.subclasses.keys()]),
             "visibilities", numpy.array([c.visibility.defaultValue.value
-                             for c in Device.subclasses.values()])))
+                                         for c in Device.subclasses.values()]))
 
     @coslot
     def slotKillServer(self):
