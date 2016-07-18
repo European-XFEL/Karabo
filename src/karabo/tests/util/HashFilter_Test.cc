@@ -8,6 +8,7 @@
 #include "HashFilter_Test.hh"
 #include <karabo/util.hpp>
 #include <karabo/io.hpp>
+#include <karabo/core/State.hh>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashFilter_Test);
 
@@ -37,7 +38,7 @@ namespace hashfilter {
 
 
         static void expectedParameters(karabo::util::Schema & expected) {
-
+            using namespace karabo::core;
             STRING_ELEMENT(expected).key("a")
                     .description("a")
                     .displayedName("a")
@@ -71,7 +72,7 @@ namespace hashfilter {
                     .tags("CY,JS")
                     .displayedName("Example key 3")
                     .description("Example key 3 description")
-                    .allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState") //TODO check
+                    .allowedStates(State::STARTED, State::STOPPED, State::ACTIVE) //TODO check
                     .minExc(10)
                     .maxExc(20)
                     .assignmentOptional().defaultValue(3)
