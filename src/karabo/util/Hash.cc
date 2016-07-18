@@ -491,13 +491,17 @@ namespace karabo {
                         } else {
                             // append Hashes for ordinary vector<Hash>
                             if (selectedIndicesOfKey.empty()) {
+                                // There cannot be sub-path selections here.
                                 this_vec.insert(this_vec.end(), other_vec.begin(), other_vec.end());
                             } else {
                                 // But only the selected ones:
                                 unsigned int hashCounter = 0;
                                 for(vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it, ++hashCounter){
                                     if (selectedIndicesOfKey.find(hashCounter) != selectedIndicesOfKey.end()) {
-                                        this_vec.push_back(*it);
+                                        const std::string indexedKey((key + '[') += util::toString(hashCounter) += ']');
+                                        const std::set<std::string> paths(Hash::selectedChildPaths(selectedPaths, indexedKey, sep));
+                                        this_vec.push_back(Hash());
+                                        this_vec.back().merge(*it, policy, paths, sep);
                                     }
                                 }
                             }
