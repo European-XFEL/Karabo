@@ -5,7 +5,7 @@
  * Created on July 10, 2013, 11:49 AM
  */
 
-#include <karabo/io/SchemaXsdSerializer.hh>
+
 #include <karabo/io/SchemaBinarySerializer.hh>
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/util/TimeProfiler.hh"

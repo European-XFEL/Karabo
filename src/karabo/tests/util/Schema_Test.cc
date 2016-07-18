@@ -305,11 +305,12 @@ void Schema_Test::testGetDefaultValue() {
 
 
 void Schema_Test::testGetAllowedStates() {
-    vector<string> allowedStates = m_schema.getAllowedStates("exampleKey3");
-    CPPUNIT_ASSERT(allowedStates[0] == "AllOk.Started");
-    CPPUNIT_ASSERT(allowedStates[1] == "AllOk.Stopped");
-    CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[2] == "AllOk.Run.On");
-    CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[3] == "NewState");
+    using namespace karabo::core;
+    vector<State> allowedStates = m_schema.getAllowedStates("exampleKey3");
+    CPPUNIT_ASSERT(allowedStates[0] == State::COOLED);
+    CPPUNIT_ASSERT(allowedStates[1] == State::ACTIVE);
+    CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[2] == State::DISABLED);
+    CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[3] == State::KNOWN);
 }
 
 
@@ -502,16 +503,17 @@ void Schema_Test::testPerKeyFunctionality() {
 void Schema_Test::testSlotElement() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
-
+    using namespace karabo::core;
     CPPUNIT_ASSERT(sch.getDescription("slotTest") == "Test slot element");
-    CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[0] == "Started");
-    CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[2] == "Reset");
+    CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[0] == State::STARTED);
+    CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[2] == State::ERROR);
     CPPUNIT_ASSERT(sch.isCommand("slotTest") == true);
     CPPUNIT_ASSERT(sch.isProperty("slotTest") == false);
 }
 
 
 void Schema_Test::testVectorElements() {
+    using namespace karabo::core;
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
 
@@ -576,9 +578,9 @@ void Schema_Test::testVectorElements() {
     CPPUNIT_ASSERT(sch.getTags("vecBool")[0] == "h/w");
     CPPUNIT_ASSERT(sch.getTags("vecBool")[1] == "d.m.y");
 
-    vector<string> allowedStates = sch.getAllowedStates("vecBool");
-    CPPUNIT_ASSERT(allowedStates[0] == "AllOk.Started");
-    CPPUNIT_ASSERT(allowedStates[1] == "AllOk.Stopped");
+    vector<State> allowedStates = sch.getAllowedStates("vecBool");
+    CPPUNIT_ASSERT(allowedStates[0] == State::STARTED);
+    CPPUNIT_ASSERT(allowedStates[1] == State::STOPPED);
 }
 
 
