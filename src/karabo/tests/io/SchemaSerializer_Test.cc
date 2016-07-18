@@ -26,20 +26,28 @@ using namespace karabo::util;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(SchemaSerializer_Test);
 
+
 SchemaSerializer_Test::SchemaSerializer_Test() {
 }
+
 
 SchemaSerializer_Test::~SchemaSerializer_Test() {
 }
 
+
 void SchemaSerializer_Test::setUp() {
 }
+
 
 void SchemaSerializer_Test::tearDown() {
 }
 
+
 struct TestSchemaSerializer {
+
+
     KARABO_CLASSINFO(TestSchemaSerializer, "TestSchemaSerializer", "1.0");
+
 
     static void expectedParameters(karabo::util::Schema & expected) {
 
@@ -188,6 +196,7 @@ struct TestSchemaSerializer {
     }
 };
 
+
 void SchemaSerializer_Test::testBinarySerializer() {
     Schema testSchema("TestSchema", Schema::AssemblyRules(READ | WRITE | INIT));
     TestSchemaSerializer::expectedParameters(testSchema);
@@ -202,13 +211,13 @@ void SchemaSerializer_Test::testBinarySerializer() {
     Schema inputSchema;
 
     p->load(inputSchema, &archive1[0], archive1.size());
-    
+
     // Check whether alias maps got re-established
     CPPUNIT_ASSERT(inputSchema.keyHasAlias("exampleKey5") == true);
     CPPUNIT_ASSERT(inputSchema.aliasHasKey("exampleAlias5") == true);
     CPPUNIT_ASSERT(inputSchema.getKeyFromAlias("exampleAlias5") == "exampleKey5");
     CPPUNIT_ASSERT(inputSchema.getAliasFromKey<string>("exampleKey5") == "exampleAlias5");
-            
+
 
     std::vector<char> archive2;
 
@@ -230,13 +239,14 @@ void SchemaSerializer_Test::testBinarySerializer() {
 
     std::string archive4;
     p2->save(testSchema, archive4);
-    
+
     //std::clog << "Xml:\n" << archive4 << std::endl;
 
-//    std::clog << "Binary: " << archive2.size()   << " bytes" << std::endl;
-//    std::clog << "Xml   : " << archive4.length() << " bytes" << std::endl;
-//    std::clog << "Xsd   : " << archive3.length() << " bytes" << std::endl;
+    //    std::clog << "Binary: " << archive2.size()   << " bytes" << std::endl;
+    //    std::clog << "Xml   : " << archive4.length() << " bytes" << std::endl;
+    //    std::clog << "Xsd   : " << archive3.length() << " bytes" << std::endl;
 }
+
 
 void SchemaSerializer_Test::testXmlSerializer() {
     CPPUNIT_ASSERT(true);

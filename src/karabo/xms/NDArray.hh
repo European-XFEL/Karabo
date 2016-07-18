@@ -15,6 +15,8 @@ namespace karabo {
         namespace Dimension {
 
             enum DimensionType {
+
+
                 UNDEFINED = 0,
                 STACK = -1,
                 DATA = 1,
@@ -24,7 +26,8 @@ namespace karabo {
         typedef Dimension::DimensionType DimensionType;
 
         class NDArray : public Data {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(NDArray, "NDArray", "1.3");
 
@@ -40,7 +43,6 @@ namespace karabo {
 
 
             NDArray(const karabo::util::Hash::Pointer& data);
-
 
             template <class T>
             NDArray(const T * const data,

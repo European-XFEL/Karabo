@@ -21,11 +21,11 @@ namespace karabo {
 
     namespace io {
 
-
-        /**
+/**
          * The SchemaXsdSerializer class
          */
         class SchemaXsdSerializer : public TextSerializer<karabo::util::Schema> {
+
 
             std::string m_indentation;
             std::string m_defaultNamespace;
@@ -52,20 +52,21 @@ namespace karabo {
             void r_createXsd(const karabo::util::Schema& schema, pugi::xml_node& node, const bool isChildNodeOfListElement, const std::string& key = "") const;
 
             void appendAttributes(const karabo::util::Schema& schema, const std::string& key, pugi::xml_node& node) const;
-            
+
             void leafToXsd(const karabo::util::Schema& schema, const std::string& key, pugi::xml_node& node) const;
-            
+
             void choiceOfNodesToXsd(const karabo::util::Schema& schema, const std::string& key, pugi::xml_node& node) const;
-            
+
             void listOfNodesToXsd(const karabo::util::Schema& schema, const std::string& key, pugi::xml_node& node) const;
-            
+
             void createDocumentationNode(const karabo::util::Schema& schema, const std::string& key, pugi::xml_node& node, const bool isVector = false) const;
-            
+
             bool annotationExists(const karabo::util::Schema& schema, const std::string& key) const;
-            
+
             std::string extractKey(const std::string& key) const;
-            
+
             struct CustomWriter : public pugi::xml_writer {
+
 
                 std::string& _result;
 

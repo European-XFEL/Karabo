@@ -27,6 +27,7 @@ namespace karabo {
         template <class TPix>
         class CpuImageBinarySerializer : public karabo::io::BinarySerializer<CpuImage<TPix> > {
 
+
             typedef karabo::io::BinarySerializer<RawImageData> RawImageDataSerializer;
 
         public:
@@ -50,24 +51,24 @@ namespace karabo {
                 raw.setHeader(image.getHeader());
                 m_rawImageDataSerializer->save(raw, archive);
 
-//                const karabo::util::Hash& header = image.getHeader();
-//
-//                std::vector<char> hashArchive;
-//                m_hashSerializer->save(header, hashArchive);
-//
-//                unsigned int headerByteSize = hashArchive.size();
-//                //std::cout << "HeaderByteSize: " << headerByteSize << std::endl;
-//
-//                unsigned int imageByteSize = image.byteSize();
-//                //std::cout << "ImageByteSize: " << imageByteSize << std::endl;
-//
-//                size_t sizeTagByteSize = sizeof (unsigned int);
-//                //std::cout << "SizeTagSize: " << sizeTagByteSize << std::endl;
-//
-//                archive.resize(sizeTagByteSize + headerByteSize + imageByteSize);
-//                std::memcpy(&archive[0], reinterpret_cast<char*> (&headerByteSize), sizeTagByteSize);
-//                std::memcpy(&archive[sizeTagByteSize], &hashArchive[0], headerByteSize);
-//                std::memcpy(&archive[sizeTagByteSize + headerByteSize], image.pixelPointer(), imageByteSize);
+                //                const karabo::util::Hash& header = image.getHeader();
+                //
+                //                std::vector<char> hashArchive;
+                //                m_hashSerializer->save(header, hashArchive);
+                //
+                //                unsigned int headerByteSize = hashArchive.size();
+                //                //std::cout << "HeaderByteSize: " << headerByteSize << std::endl;
+                //
+                //                unsigned int imageByteSize = image.byteSize();
+                //                //std::cout << "ImageByteSize: " << imageByteSize << std::endl;
+                //
+                //                size_t sizeTagByteSize = sizeof (unsigned int);
+                //                //std::cout << "SizeTagSize: " << sizeTagByteSize << std::endl;
+                //
+                //                archive.resize(sizeTagByteSize + headerByteSize + imageByteSize);
+                //                std::memcpy(&archive[0], reinterpret_cast<char*> (&headerByteSize), sizeTagByteSize);
+                //                std::memcpy(&archive[sizeTagByteSize], &hashArchive[0], headerByteSize);
+                //                std::memcpy(&archive[sizeTagByteSize + headerByteSize], image.pixelPointer(), imageByteSize);
             }
 
             void load(CpuImage<TPix>& image, const char* archive, const size_t nBytes) {
@@ -80,22 +81,22 @@ namespace karabo {
                 std::memcpy(tmp.pixelPointer(), raw.getDataPointer(), raw.getByteSize());
                 tmp.setHeader(raw.getHeader());
                 tmp.swap(image);
-//
-//                size_t sizeTagByteSize = sizeof (unsigned int);
-//                //std::cout << "SizeTagSize: " << sizeTagByteSize << std::endl;
-//
-//                unsigned int headerByteSize;
-//                std::memcpy(&headerByteSize, const_cast<char*> (archive), sizeTagByteSize);
-//                //std::cout << "HeaderByteSize: " << headerByteSize << std::endl;
-//
-//                unsigned int imageByteSize = nBytes - sizeTagByteSize - headerByteSize;
-//                //std::cout << "ImageByteSize: " << imageByteSize << std::endl;
-//
-//                karabo::util::Hash header;
-//                m_rawImageDataSerializer->load(header, archive + sizeTagByteSize, headerByteSize);
-//                CpuImage<TPix> tmp(header);
-//                std::memcpy(tmp.pixelPointer(), const_cast<char*> (archive + sizeTagByteSize + headerByteSize), imageByteSize);
-//                tmp.swap(image);
+                //
+                //                size_t sizeTagByteSize = sizeof (unsigned int);
+                //                //std::cout << "SizeTagSize: " << sizeTagByteSize << std::endl;
+                //
+                //                unsigned int headerByteSize;
+                //                std::memcpy(&headerByteSize, const_cast<char*> (archive), sizeTagByteSize);
+                //                //std::cout << "HeaderByteSize: " << headerByteSize << std::endl;
+                //
+                //                unsigned int imageByteSize = nBytes - sizeTagByteSize - headerByteSize;
+                //                //std::cout << "ImageByteSize: " << imageByteSize << std::endl;
+                //
+                //                karabo::util::Hash header;
+                //                m_rawImageDataSerializer->load(header, archive + sizeTagByteSize, headerByteSize);
+                //                CpuImage<TPix> tmp(header);
+                //                std::memcpy(tmp.pixelPointer(), const_cast<char*> (archive + sizeTagByteSize + headerByteSize), imageByteSize);
+                //                tmp.swap(image);
             }
 
             /**

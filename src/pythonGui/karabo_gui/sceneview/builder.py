@@ -1,15 +1,15 @@
 from PyQt4.QtCore import QRect
 
 from karabo_gui.scenemodel.api import (
-    BoxLayoutModel, FixedLayoutModel, GridLayoutModel, LabelModel, LineModel,
-    PathModel, RectangleModel, SceneLinkModel, UnknownXMLDataModel,
-    BitfieldModel, DisplayAlignedImageModel, DisplayCommandModel,
-    DisplayIconsetModel, DisplayImageModel, DisplayImageElementModel,
-    DisplayLabelModel, DisplayPlotModel, DoubleLineEditModel,
-    EditableListModel, EditableListElementModel, EditableSpinBoxModel,
-    HexadecimalModel, IntLineEditModel, KnobModel, SliderModel, XYPlotModel,
-    CheckBoxModel, ChoiceElementModel, ComboBoxModel, DirectoryModel,
-    FileInModel, FileOutModel, LineEditModel,
+    BaseLayoutModel, BoxLayoutModel, FixedLayoutModel, GridLayoutModel,
+    LabelModel, LineModel, PathModel, RectangleModel, SceneLinkModel,
+    UnknownXMLDataModel, BitfieldModel, DisplayAlignedImageModel,
+    DisplayCommandModel, DisplayIconsetModel, DisplayImageModel,
+    DisplayImageElementModel, DisplayLabelModel, DisplayPlotModel,
+    DoubleLineEditModel, EditableListModel, EditableListElementModel,
+    EditableSpinBoxModel, HexadecimalModel, IntLineEditModel, KnobModel,
+    SliderModel, XYPlotModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
+    DirectoryModel, FileInModel, FileOutModel, LineEditModel,
     DisplayStateColorModel, DigitIconsModel, EvaluatorModel, FloatSpinBoxModel,
     LinePlotModel, MonitorModel, SelectionIconsModel, SingleBitModel,
     TableElementModel, TextIconsModel, VacuumWidgetModel, WorkflowItemModel
@@ -18,20 +18,17 @@ from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape
 from .widget.api import (
-    DisplayEditableWidgetContainer, DisplayStateColorContainer,
-    EvaluatorContainer, FloatSpinBoxContainer, GenericWidgetContainer,
-    IconsContainer, LabelWidget, LinePlotContainer, MonitorContainer,
-    SceneLinkWidget, SingleBitContainer, TableElementContainer,
-    UnknownSvgWidget, VacuumWidgetContainer, WorkflowItemWidget)
+    BaseWidgetContainer, DisplayEditableWidgetContainer,
+    DisplayStateColorContainer, EvaluatorContainer, FloatSpinBoxContainer,
+    GenericWidgetContainer, IconsContainer, LabelWidget, LinePlotContainer,
+    MonitorContainer, SceneLinkWidget, SingleBitContainer,
+    TableElementContainer, UnknownSvgWidget, VacuumWidgetContainer,
+    WorkflowItemWidget)
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (
-    DisplayEditableWidgetContainer, DisplayStateColorContainer,
-    EvaluatorContainer, FloatSpinBoxContainer, GenericWidgetContainer,
-    IconsContainer, LabelWidget, LinePlotContainer, MonitorContainer,
-    SceneLinkWidget, SingleBitContainer, TableElementContainer,
-    UnknownSvgWidget, VacuumWidgetContainer, WorkflowItemWidget)
+    BaseWidgetContainer, LabelWidget, SceneLinkWidget, UnknownSvgWidget)
 _SCENE_OBJ_FACTORIES = {
     FixedLayoutModel: lambda m, p: GroupLayout(m),
     BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
@@ -79,6 +76,52 @@ _SCENE_OBJ_FACTORIES = {
     TableElementModel: TableElementContainer,
     WorkflowItemModel: WorkflowItemWidget,
 }
+
+
+def find_top_level_model(scene_model, model):
+    """ Recursively find the model in the ``parent_model`` tree which matches
+        the given ``model`` and return its parent model which is the top level
+        model in the end.
+    """
+    def recurse(parent_model, seek_model):
+        if isinstance(parent_model, BaseLayoutModel):
+            for child in parent_model.children:
+                result = recurse(child, seek_model)
+                if result is not None:
+                    return parent_model
+
+        return parent_model if parent_model is seek_model else None
+
+    for child in scene_model.children:
+        top_level_model = recurse(child, model)
+        if top_level_model is not None:
+            return top_level_model
+
+
+def replace_model_in_top_level_model(layout_model, parent_model, old_model,
+                                     new_model):
+    """ Recursively find the given ``old_model`` in the model tree and
+        replace it with the given ``new_model``.
+
+        This method returns ``True``.
+    """
+    if isinstance(parent_model, BaseLayoutModel):
+        for child in parent_model.children:
+            result = replace_model_in_top_level_model(parent_model, child,
+                                                      old_model, new_model)
+            if result:
+                return True
+    elif parent_model is old_model:
+        # Replace old model with new model
+        layout_children = layout_model.children
+        index = layout_children.index(parent_model)
+        layout_children.remove(parent_model)
+        layout_children.insert(index, new_model)
+        # Enforce recalculation of geometry
+        layout_model.width = 0
+        layout_model.height = 0
+        return True
+    return False
 
 
 def add_object_to_layout(obj, layout):
@@ -130,7 +173,16 @@ def create_object_from_model(layout, model, scene_view, object_dict):
         if is_layout(obj):
             # recurse
             fill_root_layout(obj, model, scene_view, object_dict)
-            obj.setGeometry(QRect(model.x, model.y, model.width, model.height))
+            model_rect = QRect(model.x, model.y, model.width, model.height)
+            if model_rect.isEmpty():
+                # Ask the layout to calculate a suitable size
+                obj.invalidate()
+                rect = obj.geometry()
+                if rect.isEmpty():
+                    model_rect.setSize(obj.sizeHint())
+                else:
+                    model_rect = rect
+            obj.setGeometry(model_rect)
 
 
 def fill_root_layout(layout, parent_model, scene_view, object_dict):

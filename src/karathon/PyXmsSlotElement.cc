@@ -19,9 +19,8 @@ using namespace std;
 
 struct SlotElementBase_Wrapper : SlotElementBase< SLOT_ELEMENT >, bp::wrapper<SlotElementBase< SLOT_ELEMENT > > {
 
-
     SlotElementBase_Wrapper(Schema & expected) : SlotElementBase< SLOT_ELEMENT > (boost::ref(expected))
-    , bp::wrapper< SlotElementBase< SLOT_ELEMENT > >() {
+        , bp::wrapper< SlotElementBase< SLOT_ELEMENT > >() {
     }
 
 
@@ -41,14 +40,13 @@ struct SlotElementBase_Wrapper : SlotElementBase< SLOT_ELEMENT >, bp::wrapper<Sl
 
 struct SLOT_ELEMENT_Wrapper : SLOT_ELEMENT, bp::wrapper<SLOT_ELEMENT > {
 
-
     SLOT_ELEMENT_Wrapper(SLOT_ELEMENT const & arg) : SLOT_ELEMENT(arg)
-    , bp::wrapper< SLOT_ELEMENT > () {
+        , bp::wrapper< SLOT_ELEMENT > () {
     }
 
 
     SLOT_ELEMENT_Wrapper(Schema & expected) : SLOT_ELEMENT(boost::ref(expected))
-    , bp::wrapper< SLOT_ELEMENT > () {
+        , bp::wrapper< SLOT_ELEMENT > () {
     }
 
 
@@ -128,23 +126,23 @@ void exportPyXmsSlotElement() {
     sl.def("observerAccess"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::observerAccess)
            , bp::return_internal_reference<> ());
-    
+
     sl.def("userAccess"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::userAccess)
            , bp::return_internal_reference<> ());
-    
+
     sl.def("operatorAccess"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::operatorAccess)
            , bp::return_internal_reference<> ());
-    
+
     sl.def("advanced"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::advanced)
            , bp::return_internal_reference<> ());
-    
+
     sl.def("expertAccess"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::expertAccess)
            , bp::return_internal_reference<> ());
-    
+
     sl.def("adminAccess"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::adminAccess)
            , bp::return_internal_reference<> ());

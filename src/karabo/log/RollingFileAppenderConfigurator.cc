@@ -82,8 +82,8 @@ namespace karabo {
         krb_log4cpp::Appender* RollingFileAppenderConfigurator::create() {
 
             return new krb_log4cpp::RollingFileAppender(getName(), getFilename().string(),
-                                                    m_maxFileSize, m_maxBackupIndex,
-                                                    isAppendMode(), getAccessMode());
+                                                        m_maxFileSize, m_maxBackupIndex,
+                                                        isAppendMode(), getAccessMode());
         }
     }
 }

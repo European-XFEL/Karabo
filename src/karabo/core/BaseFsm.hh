@@ -16,7 +16,8 @@ namespace karabo {
     namespace core {
 
         class BaseFsm : public virtual karabo::xms::SignalSlotable {
-        public:
+
+            public:
 
             virtual ~BaseFsm() {
             }

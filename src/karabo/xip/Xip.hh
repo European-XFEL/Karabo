@@ -25,7 +25,7 @@ namespace karabo {
 
         class Xip : public karabo::core::Module {
 
-        public:
+            public:
             KARABO_CLASSINFO("Xip")
 
             Xip();

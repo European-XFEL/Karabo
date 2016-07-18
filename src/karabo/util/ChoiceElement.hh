@@ -24,6 +24,7 @@ namespace karabo {
 
         class ChoiceElement : public GenericElement<ChoiceElement> {
 
+
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
             DefaultValue<ChoiceElement, std::string> m_defaultValue;

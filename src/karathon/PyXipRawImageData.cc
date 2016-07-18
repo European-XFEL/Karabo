@@ -94,11 +94,11 @@ void exportPyXipRawImageData() {
 
             .def("__init__", bp::make_constructor(&RawImageDataWrap::make, bp::default_call_policies(),
                                                   (bp::arg("ndarray"),
-                                                  bp::arg("copy") = true,
-                                                  bp::arg("dimensions") = karabo::util::Dims(0),
-                                                  bp::arg("encoding") = karabo::xip::Encoding::UNDEFINED,
-                                                  bp::arg("isBigEndian") = karabo::util::isBigEndian())))
-                                                  
+                                                   bp::arg("copy") = true,
+                                                   bp::arg("dimensions") = karabo::util::Dims(0),
+                                                   bp::arg("encoding") = karabo::xip::Encoding::UNDEFINED,
+                                                   bp::arg("isBigEndian") = karabo::util::isBigEndian())))
+
 
             .def(bp::init < Hash &, bool >((bp::arg("imageHash"), bp::arg("copiesHash") = true)))
             //.def("setData", &RawImageDataWrap::setData, bp::arg("data"))

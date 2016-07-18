@@ -37,7 +37,7 @@ namespace karabo {
             template<typename T>
             class VLArray : public Dataset {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(VLArray, "VLARRAY_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "1.0")
 
@@ -201,10 +201,10 @@ namespace karabo {
 
                         hssize_t numBlocks = H5Sget_select_hyper_nblocks(fileDataSpace);
                         KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.VLArray") << "num blocks" << numBlocks;
-                        std::vector<hsize_t> buf(2*numBlocks);
+                        std::vector<hsize_t> buf(2 * numBlocks);
                         H5Sget_select_hyper_blocklist(fileDataSpace, 0, numBlocks, &buf[0]);
-                        for (ssize_t j = 0; j < numBlocks; j+=2) {
-                            KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.VLArray") << "size: " << buf[j] << " " << buf[j+1];
+                        for (ssize_t j = 0; j < numBlocks; j += 2) {
+                            KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.VLArray") << "size: " << buf[j] << " " << buf[j + 1];
                         }
 
                         KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.VLArray") << "Finished with blocks";

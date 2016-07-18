@@ -55,8 +55,8 @@ void Hdf5_Test::testPureHdf5() {
 
 
 
-    #define DET_NX 1024
-    #define DET_NY 1024
+#define DET_NX 1024
+#define DET_NY 1024
 
     string filename = "/dev/shm/pure.h5"; // in memory file
     filename = resourcePath("pure.h5"); // file on disk ($KARABO/src/karabo/tests/io/resources/pure.h5)
@@ -200,8 +200,8 @@ void Hdf5_Test::testPureHdf5() {
 void Hdf5_Test::testKaraboHdf5() {
 
 
-    #define DET_NX 1024
-    #define DET_NY 1024
+#define DET_NX 1024
+#define DET_NY 1024
 
 
     string filename = "/dev/shm/karabo.h5"; // in memory file
@@ -263,7 +263,7 @@ void Hdf5_Test::testKaraboHdf5() {
     file.close();
 
     p.stopPeriod("close");
-    p.close(); 
+    p.close();
     TimeDuration allocateTime = p.getPeriod("allocate").getDuration();
     TimeDuration createTime = p.getPeriod("create").getDuration();
     TimeDuration writeTime = p.getPeriod("write").getDuration();
@@ -319,7 +319,7 @@ void Hdf5_Test::testManyDatasets() {
     //compute the number of points in a single frame
     unsigned long long imageSize = nx*ny;
     //compute total data size in MBytes
-//    unsigned long long totalSize = imageSize * m_numImages * sizeof (unsigned short) / 1024 / 1024;
+    //    unsigned long long totalSize = imageSize * m_numImages * sizeof (unsigned short) / 1024 / 1024;
 
     TimeProfiler p("write");
     p.open();
@@ -556,7 +556,7 @@ void Hdf5_Test::testManyDatasets1() {
     p.stopPeriod("all");
     p.close();
     TimeDuration allTime = p.getPeriod("all").getDuration();
-//    clog << "Time: " << allTime << endl;
+    //    clog << "Time: " << allTime << endl;
     //
     //    hid_t scalar_id = H5Screate(H5S_SCALAR);
     //    for (size_t i = 0; i < max; ++i) {
@@ -738,35 +738,35 @@ void Hdf5_Test::testSerializer() {
             attr.set("0013", static_cast<bool> (true));
             attr.set("0014", complex<float>(34.11, 34.12));
             attr.set("0015", complex<double>(98.21, 98.22));
-            attr.set("0201", vector<char> (6,'N'));
-            attr.set("0202", vector<signed char> (6,58));
-            attr.set("0203", vector<short> (6,5));
-            attr.set("0204", vector<int> (6,5));
-            attr.set("0205", vector<long long> (6,5));
-            attr.set("0206", vector<unsigned char> (6,5));
-            attr.set("0207", vector<unsigned short> (6,5));
-            attr.set("0208", vector<unsigned int> (6,5));
-            attr.set("0209", vector<unsigned long long> (6,5));
-            attr.set("0210", vector<float> (6,5));
-            attr.set("0211", vector<double> (6,5));
-            attr.set("0212", vector<string> (6,"Hello attribute"));
-            attr.set("0213", vector<bool> (6,true));
-            attr.set("0214", vector< std::complex<float> >(3, std::complex<float>(34.11, 34.12)) );
-            attr.set("0215", vector< std::complex<double> >(2, std::complex<double>(98.21, 98.22)) );
+            attr.set("0201", vector<char> (6, 'N'));
+            attr.set("0202", vector<signed char> (6, 58));
+            attr.set("0203", vector<short> (6, 5));
+            attr.set("0204", vector<int> (6, 5));
+            attr.set("0205", vector<long long> (6, 5));
+            attr.set("0206", vector<unsigned char> (6, 5));
+            attr.set("0207", vector<unsigned short> (6, 5));
+            attr.set("0208", vector<unsigned int> (6, 5));
+            attr.set("0209", vector<unsigned long long> (6, 5));
+            attr.set("0210", vector<float> (6, 5));
+            attr.set("0211", vector<double> (6, 5));
+            attr.set("0212", vector<string> (6, "Hello attribute"));
+            attr.set("0213", vector<bool> (6, true));
+            attr.set("0214", vector< std::complex<float> >(3, std::complex<float>(34.11, 34.12)));
+            attr.set("0215", vector< std::complex<double> >(2, std::complex<double>(98.21, 98.22)));
 
 
             data.setAttributes("m", attr);
             Hash a("aa", 1, "bb", 12.89, "cc", -4);
             vector<Hash> v(4, a);
             data.set("c.d", v);
-//            clog << "Original Hash:\n" << data << endl;           
+            //            clog << "Original Hash:\n" << data << endl;
             p.startPeriod("all");
             Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("test1.h5")));
             out->write(data);
             p.stopPeriod("all");
             p.close();
             TimeDuration allTime = p.getPeriod("all").getDuration();
-//            clog << "Write time: " << allTime << endl;
+            //            clog << "Write time: " << allTime << endl;
 
 
 
@@ -778,8 +778,8 @@ void Hdf5_Test::testSerializer() {
             p.stopPeriod("read");
             p.close();
             TimeDuration readTime = p.getPeriod("read").getDuration();
-//            clog << "Read time: " << readTime << endl;
-//            clog << "Read Hash\n" << rdata << endl;
+            //            clog << "Read time: " << readTime << endl;
+            //            clog << "Read Hash\n" << rdata << endl;
         }
 
         // return;
@@ -810,7 +810,7 @@ void Hdf5_Test::testSerializer() {
             p.stopPeriod("all");
             p.close();
             TimeDuration allTime = p.getPeriod("all").getDuration();
-//            clog << "Write time: " << allTime << endl;
+            //            clog << "Write time: " << allTime << endl;
 
             Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("test2.h5")));
             p.open();
@@ -820,13 +820,13 @@ void Hdf5_Test::testSerializer() {
             p.stopPeriod("read");
             p.close();
             TimeDuration readTime = p.getPeriod("read").getDuration();
-//            clog << "Read time: " << readTime << endl;
-//            clog << "Read Hash\n" << rdata << endl;
+            //            clog << "Read time: " << readTime << endl;
+            //            clog << "Read Hash\n" << rdata << endl;
 
         }
 
         {
-//            clog << "+++++++++++++++++++++++++++" << endl;
+            //            clog << "+++++++++++++++++++++++++++" << endl;
             Hash data;
 
             data.set("a.01.Hello.World", static_cast<char> ('B'));
@@ -847,11 +847,11 @@ void Hdf5_Test::testSerializer() {
             p.stopPeriod("write");
             p.close();
             TimeDuration allTime = p.getPeriod("write").getDuration();
-//            clog << "Write time: " << allTime << endl;
+            //            clog << "Write time: " << allTime << endl;
 
             Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("test4.h5")));
             size_t size = in->size();
-//            clog << "number of Hashes in the file: " << size << endl;
+            //            clog << "number of Hashes in the file: " << size << endl;
 
             for (size_t i = 0; i < size; ++i) {
                 Hash rdata;
@@ -861,10 +861,10 @@ void Hdf5_Test::testSerializer() {
                 p.stopPeriod("read");
                 p.close();
                 TimeDuration readTime = p.getPeriod("read").getDuration();
-//                clog << "Read time: " << readTime << endl;
-             //   clog << "Read Hash\n" << rdata << endl;
+                //                clog << "Read time: " << readTime << endl;
+                //   clog << "Read Hash\n" << rdata << endl;
             }
-//            clog << "+++++++++++++++++++++++++++" << endl;
+            //            clog << "+++++++++++++++++++++++++++" << endl;
         }
 
 
@@ -894,15 +894,15 @@ void Hdf5_Test::testSerializer() {
                     tmp[i] = m_rootedHash;
                 }
                 Hash m_bigHash = big;
-//                clog << "start m_bigHash" << endl;
+                //                clog << "start m_bigHash" << endl;
                 p.startPeriod("all");
                 Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("test3.h5")));
                 out->write(m_bigHash);
-                p.stopPeriod("all");  
+                p.stopPeriod("all");
                 p.close();
                 TimeDuration allTime = p.getPeriod("all").getDuration();
-//                clog << "Write time: " << allTime << endl;
-     
+                //                clog << "Write time: " << allTime << endl;
+
 
                 Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("test3.h5")));
                 p.open();
@@ -912,8 +912,8 @@ void Hdf5_Test::testSerializer() {
                 p.stopPeriod("read");
                 p.close();
                 TimeDuration readTime = p.getPeriod("read").getDuration();
-                
-//                clog << "Read time: " << readTime << endl;
+
+                //                clog << "Read time: " << readTime << endl;
                 //                clog << "Read Hash\n" << rdata << endl;
 
 

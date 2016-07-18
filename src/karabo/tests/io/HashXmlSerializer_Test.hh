@@ -11,6 +11,8 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 class HashXmlSerializer_Test : public CPPUNIT_NS::TestFixture {
+
+
     CPPUNIT_TEST_SUITE(HashXmlSerializer_Test);
     CPPUNIT_TEST(testSerialization);
     CPPUNIT_TEST_SUITE_END();
@@ -23,9 +25,9 @@ public:
 
 private:
     void testSerialization();
-    
+
 private:
-    
+
     karabo::util::Hash m_rootedHash;
     karabo::util::Hash m_bigHash;
     karabo::util::Hash m_unrootedHash;

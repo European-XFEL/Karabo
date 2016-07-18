@@ -1,9 +1,10 @@
-from PyQt4.QtCore import QRect, QSize, QTimer, pyqtSlot
-from PyQt4.QtGui import (QAction, QHBoxLayout, QStackedLayout, QToolButton,
-                         QWidget)
+from PyQt4.QtCore import QRect, QSize, Qt, QTimer, pyqtSlot
+from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
+                         QToolButton, QWidget)
 
 from karabo_gui import icons
 from karabo_gui.network import Network
+from karabo_gui.sceneview.utils import get_status_symbol_as_pixmap
 from .utils import get_box, determine_if_value_unchanged
 
 
@@ -15,16 +16,25 @@ class BaseWidgetContainer(QWidget):
         super(BaseWidgetContainer, self).__init__(parent)
         self.model = model
         self.boxes = [get_box(*key.split('.', 1)) for key in self.model.keys]
+
+        self.layout = QStackedLayout(self)
+        self.layout.setStackingMode(QStackedLayout.StackAll)
+        self.status_symbol = QLabel("", self)
+        self.status_symbol.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.layout.addWidget(self.status_symbol)
+
         self.old_style_widget = self._create_widget(self.boxes)
         for box in self.boxes:
             self._make_box_connections(box)
         if self.model.parent_component == 'EditableApplyLaterComponent':
-            self.layout = self._add_edit_widgets()
+            layout = self._add_edit_widgets()
+            edit_widgets = QWidget()
+            edit_widgets.setLayout(layout)
+            self.layout.addWidget(edit_widgets)
         else:
-            self.layout = QStackedLayout(self)
-            self.layout.setStackingMode(QStackedLayout.StackAll)
             self.layout.addWidget(self.old_style_widget.widget)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
+        self.setToolTip(", ".join(self.model.keys))
 
     def _create_widget(self, boxes):
         """ A method for creating the child widget.
@@ -32,6 +42,26 @@ class BaseWidgetContainer(QWidget):
         THIS MUST BE IMPLEMENTED BY DERIVED CLASSES
         """
         raise NotImplementedError
+
+    def add_boxes(self, boxes):
+        """ Add more boxes to a display widget which allows more than one
+            box. ``True`` is returned when this was possible, otherwise
+            ``False`` is returned.
+        """
+        widget = self.old_style_widget
+        widget_added = False
+        if self.model.parent_component == 'DisplayComponent':
+            for box in boxes:
+                device_id, property_path = box.key().split('.', 1)
+                device_box = get_box(device_id, property_path)
+                # This is only ``True`` if the display widget allows more
+                # than one box to be added to it
+                if widget.addBox(device_box):
+                    self.model.keys.append(device_box.key())
+                    self.boxes.append(device_box)
+                    self._make_box_connections(device_box)
+                    widget_added = True
+        return widget_added
 
     def destroy(self):
         """ Disconnect the box signals
@@ -56,28 +86,9 @@ class BaseWidgetContainer(QWidget):
                     self._on_display_value_change)
             else:  # DisplayWidgets
                 box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
-
-    def add_boxes(self, boxes):
-        """ Add more boxes to a display widget which allows more than one
-            boxes. ``True`` is returned when this was possible, otherwise
-            ``False`` is returned.
-        """
-        widget = self.old_style_widget
-        widget_added = False
-        if self.model.parent_component == 'DisplayComponent':
-            for box in boxes:
-                key_list = box.key().split('.', 1)
-                device_id = key_list[0]
-                property_path = key_list[1]
-                device_box = get_box(device_id, property_path)
-                # This is only ``True`` if the display widget allows more
-                # than one box to be added to it
-                if widget.addBox(device_box):
-                    self.model.keys.append(device_box.key())
-                    self.boxes.append(device_box)
-                    self._make_box_connections(device_box)
-                    widget_added = True
-        return widget_added
+            device = box.configuration
+            device.signalStatusChanged.disconnect(
+                self._device_status_changed)
 
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""
@@ -117,6 +128,10 @@ class BaseWidgetContainer(QWidget):
         else:
             widget.setReadOnly(True)
 
+        device = box.configuration
+        device.signalStatusChanged.connect(self._device_status_changed)
+        self._device_status_changed(device, device.status, device.error)
+
     # ---------------------------------------------------------------------
     # Edit buttons related code
 
@@ -134,7 +149,7 @@ class BaseWidgetContainer(QWidget):
             layout.addWidget(tb)
             return button, tb
 
-        layout = QHBoxLayout(self)
+        layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.old_style_widget.widget)
 
@@ -231,3 +246,14 @@ class BaseWidgetContainer(QWidget):
         self.apply_button.setStatusTip(description)
         self.apply_button.setToolTip(description)
         self.decline_button.setEnabled(allowed and not value_unchanged)
+
+    @pyqtSlot(object, str, bool)
+    def _device_status_changed(self, configuration, status, error):
+        """ Callback when the status of the device is changes.
+        """
+        pixmap = get_status_symbol_as_pixmap(status, error)
+        if pixmap is not None:
+            self.status_symbol.setPixmap(pixmap)
+            self.status_symbol.show()
+        else:
+            self.status_symbol.hide()

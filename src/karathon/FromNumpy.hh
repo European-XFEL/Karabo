@@ -17,7 +17,7 @@ namespace karathon {
 
     class FromNumpy {
 
-    public:
+        public:
 
         typedef int ArgumentType;
 

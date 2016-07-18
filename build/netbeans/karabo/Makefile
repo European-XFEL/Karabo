@@ -48,7 +48,7 @@ MKDIR=mkdir
 CP=cp
 CCADMIN=CCadmin
 CURRENT_PLATFORM=$(shell uname -s)
-GUIOPT?=Gui
+EXTERN_WHAT ?= ALL
 CONF ?= Debug
 PYOPT ?= wheel
 
@@ -79,8 +79,8 @@ build: .build-post
 	@if test ! -d $(KARABO)/lib;     then $(MKDIR) -p $(KARABO)/lib; fi
 
 # Check whether external dependencies are installed, if not build them
-# Update: Check performed directly in file: .installExtern.sh 
-	@./.installExtern.sh $(EXTERN_DIR) $(EXTERN_DISTDIR) $(GUIOPT) || (echo "### Failed to build Extern dependencies... will exit now ###"; exit 1)
+# Update: Check performed directly in file: $(EXTERN_DIR)/build.sh
+	@$(EXTERN_DIR)/build.sh $(EXTERN_DISTDIR) $(EXTERN_WHAT) || (echo "### Failed to build Extern dependencies... will exit now ###"; exit 1)
 	if [ ! -h ${KARABO}/extern ]; then cd $(KARABO); ln -sf ../../../../../../extern/$(EXTERN_INSTALL_DIR) extern; cd -; fi
 
 .build-post: .build-impl
@@ -118,7 +118,7 @@ build: .build-post
 .PHONY: extern clean-extern bundle package install bundle-package bundle-install bundle-clean clean
 extern:
 	@mkdir -p $(KARABO)
-	@./.installExtern.sh $(EXTERN_DIR) $(EXTERN_DISTDIR) $(GUIOPT) $(WHAT)
+	@$(EXTERN_DIR)/build.sh $(EXTERN_DISTDIR) $(EXTERN_WHAT)
 clean-extern:
 	rm -f .marker.txt
 	rm -rf $(EXTERN_DISTDIR)
@@ -136,17 +136,17 @@ bundle: build
 
 # DEPRECATE!
 package: bundle-package
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(GUIOPT) $(PYOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(PYOPT)
 
 # DEPRECATE!
 install: bundle-install
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT) $(PYOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(PYOPT)
 
 bundle-package: bundle
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(GUIOPT) $(PYOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(PYOPT)
 
 bundle-install: bundle
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT) $(PYOPT)
+	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(PYOPT)
 
 bundle-clean: clean
 	cd ../karathon; $(MAKE) clean CONF=$(CONF)

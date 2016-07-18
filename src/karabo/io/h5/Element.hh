@@ -40,7 +40,7 @@ namespace karabo {
 
             class Element /*: public boost::enable_shared_from_this<Element>*/ {
 
-            public:
+                public:
                 KARABO_CLASSINFO(Element, "Element", "1.0");
                 KARABO_CONFIGURATION_BASE_CLASS
 
@@ -187,7 +187,7 @@ namespace karabo {
 
                 hid_t m_parentGroup; // parent group of this element
 
-                hid_t m_tableGroup;   //  hdf5 group of the table where this element belongs to
+                hid_t m_tableGroup; //  hdf5 group of the table where this element belongs to
 
                 karabo::util::Hash m_config;
 

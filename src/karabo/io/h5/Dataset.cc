@@ -75,14 +75,14 @@ namespace karabo {
                     m_dims = singleValueDims;
                 }
 
-                #ifdef KARABO_ENABLE_TRACE_LOG
+#ifdef KARABO_ENABLE_TRACE_LOG
                 KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Dataset.configureDataDimensions") << m_dims.rank();
                 for (size_t i = 0; i < m_dims.rank(); ++i) {
 
 
                     KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Dataset.configureDataDimensions") << "m_dims[" << i << "] = " << m_dims.extentIn(i);
                 }
-                #endif                
+#endif                
 
             }
 

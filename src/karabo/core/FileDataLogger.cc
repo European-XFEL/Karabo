@@ -115,7 +115,7 @@ namespace karabo {
                     tagDeviceToBeDiscontinued(deviceId, false, 'l'); // 2nd arg means: device was not valid up to now, 3rd means logger
                     refreshDeviceInformation(deviceId);
                     connect(deviceId, "signalChanged", "", "slotChanged");
-                    
+
                 }
             }
 
@@ -155,7 +155,7 @@ namespace karabo {
 
                     // Finally start listening to the changes
                     connect(deviceId, "signalChanged", "", "slotChanged");
-                    
+
                 }
 
             } catch (const Exception& e) {

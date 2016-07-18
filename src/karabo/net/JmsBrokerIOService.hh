@@ -24,11 +24,12 @@ namespace karabo {
         // Forward
         class JmsBrokerChannel;
 
-        /**
+/**
          * The JmsBrokerIOService class.
          */
         class JmsBrokerIOService : public AbstractIOService {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(JmsBrokerIOService, "Jms", "1.0")
 
@@ -43,7 +44,7 @@ namespace karabo {
             void work();
 
             void stop();
-            
+
             void post(const boost::function<void()>& handler);
 
             bool isStopped();
@@ -51,7 +52,7 @@ namespace karabo {
             bool isRunning();
 
             bool isWorking();
-            
+
             boost::thread* registerMessageReceiver(const boost::function<void ()>& function);
 
             void unregisterMessageReceiver(boost::thread* t);
@@ -65,6 +66,8 @@ namespace karabo {
         private: // members
 
             enum IOServiceStatus {
+
+
                 IDLE,
                 STOPPED,
                 RUNNING,
@@ -78,15 +81,15 @@ namespace karabo {
             std::vector<boost::function<void ()> > m_messageReceivers;
             //std::vector<boost::tuple<JmsBrokerChannel*, BrokerChannel::WaitHandler, int, std::string> > m_waitHandlers;
             boost::mutex m_mutex;
-            
+
         private: // functions
 
-            bool activateRegisteredMessageReceivers();                      
-            
+            bool activateRegisteredMessageReceivers();
+
             //bool activateRegisteredWaitHandlers();
 
         };
-    } 
+    }
 }
 
 #endif 

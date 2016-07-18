@@ -24,19 +24,19 @@ namespace karabo {
 
         class TimePeriod {
 
-        public:
+            public:
             /**
              * Default constructor creates and empty time period
              */
             TimePeriod();
-            
+
             /**
              * Constructs a time period from Hash. Start and stop timestamps are stored
              * under the two reserved keys "KRB_start" and "KRB_stop", respectively.
              * @param hash Hash object ("KRB_start", any, "KRB_stop", any)
              */
             TimePeriod(const karabo::util::Hash& hash);
-            
+
             /**
              * Constructs a time period from two given timestamps
              * @param start Epochstamp object

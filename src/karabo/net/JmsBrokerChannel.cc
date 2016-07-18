@@ -22,34 +22,35 @@ using namespace boost::signals2;
 
 namespace karabo {
     namespace net {
-        
+
         static const MQSessionHandle invalidSession = MQ_INVALID_HANDLE;
         static const MQDestinationHandle invalidDestination = MQ_INVALID_HANDLE;
         static const MQConsumerHandle invalidConsumer = MQ_INVALID_HANDLE;
         static const MQProducerHandle invalidProducer = MQ_INVALID_HANDLE;
 
-        JmsBrokerChannel::JmsBrokerChannel(BrokerConnection::Pointer connection, const std::string& subDestination)
-        : BrokerChannel()
-        , m_jmsConnection(boost::dynamic_pointer_cast<JmsBrokerConnection>(connection))
-        , m_serializationType(boost::dynamic_pointer_cast<JmsBrokerConnection>(connection)->m_serializationType)
-        , m_filterCondition("")
-        , m_isStopped(false)
-        , m_hasAsyncHandler(false)
-        , m_syncReadTimeout(600000)
-        , m_hasConsumer(false)
-        , m_hasProducer(false)
-        , m_subDestination(subDestination)
-        , m_hasProducerSession(false)
-        , m_hasConsumerSession(false)
-        , m_consumerActive(false) {
 
-            m_sessionProducerHandle.handle     = invalidSession.handle;
-            m_sessionConsumerHandle.handle     = invalidSession.handle;
+        JmsBrokerChannel::JmsBrokerChannel(BrokerConnection::Pointer connection, const std::string& subDestination)
+            : BrokerChannel()
+            , m_jmsConnection(boost::dynamic_pointer_cast<JmsBrokerConnection>(connection))
+            , m_serializationType(boost::dynamic_pointer_cast<JmsBrokerConnection>(connection)->m_serializationType)
+            , m_filterCondition("")
+            , m_isStopped(false)
+            , m_hasAsyncHandler(false)
+            , m_syncReadTimeout(600000)
+            , m_hasConsumer(false)
+            , m_hasProducer(false)
+            , m_subDestination(subDestination)
+            , m_hasProducerSession(false)
+            , m_hasConsumerSession(false)
+            , m_consumerActive(false) {
+
+            m_sessionProducerHandle.handle = invalidSession.handle;
+            m_sessionConsumerHandle.handle = invalidSession.handle;
             m_destinationProducerHandle.handle = invalidDestination.handle;
             m_destinationConsumerHandle.handle = invalidDestination.handle;
-            m_consumerHandle.handle    = invalidConsumer.handle;
-            m_producerHandle.handle    = invalidProducer.handle;
-            
+            m_consumerHandle.handle = invalidConsumer.handle;
+            m_producerHandle.handle = invalidProducer.handle;
+
             //cout << "JmsBrokerChannel::JmsBrokerChannel: connection.use_count()=" << connection.use_count() << endl << StackTrace() << endl;
             boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
             if (!jbc)
@@ -73,7 +74,7 @@ namespace karabo {
 
 
         JmsBrokerChannel::~JmsBrokerChannel() {
-            close();            
+            close();
             {
                 boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
                 if (jbc) {
@@ -86,15 +87,15 @@ namespace karabo {
                     }
                 }
             }
-            
-            if (m_registeredMessageReceivers.size() == 0) return;            
-            
+
+            if (m_registeredMessageReceivers.size() == 0) return;
+
             while (m_consumerActive) {
                 m_isStopped = true;
                 boost::this_thread::sleep(boost::posix_time::milliseconds(200));
             }
-            
-            for (vector<boost::thread*>::iterator it = m_registeredMessageReceivers.begin(); it!=m_registeredMessageReceivers.end(); ++it)
+
+            for (vector<boost::thread*>::iterator it = m_registeredMessageReceivers.begin(); it != m_registeredMessageReceivers.end(); ++it)
                 m_ioService->unregisterMessageReceiver(*it);
             m_registeredMessageReceivers.clear();
         }
@@ -135,7 +136,7 @@ namespace karabo {
                                              &m_sessionProducerHandle));
 
                 MQ_SAFE_CALL(MQGetAcknowledgeMode(m_sessionProducerHandle, &m_ackMode));
-                
+
                 string destination = jbc->m_destinationName;
                 if (!m_subDestination.empty()) destination += "_" + m_subDestination;
                 MQ_SAFE_CALL(MQCreateDestination(m_sessionProducerHandle, destination.c_str(),
@@ -166,7 +167,7 @@ namespace karabo {
                                              &m_sessionConsumerHandle));
 
                 MQ_SAFE_CALL(MQGetAcknowledgeMode(m_sessionConsumerHandle, &m_ackMode));
-                
+
                 string destination = jbc->m_destinationName;
                 if (!m_subDestination.empty()) destination += "_" + m_subDestination;
                 MQ_SAFE_CALL(MQCreateDestination(m_sessionConsumerHandle, destination.c_str(),
@@ -274,7 +275,8 @@ namespace karabo {
                     {
                         // We have a valid message, but some message has been dropped.
                         MQString statusString = MQGetStatusString(status);
-                        m_signalError(shared_from_this(), statusString);
+                        if (m_errorHandler) m_errorHandler(statusString);
+                        else KARABO_LOG_FRAMEWORK_ERROR << "Problem during message consumption: " << statusString;
                         MQFreeString(statusString);
                         status.errorCode = MQ_SUCCESS; // Message itself is fine.
                         break;
@@ -421,7 +423,7 @@ namespace karabo {
                     throw KARABO_MESSAGE_EXCEPTION("Received invalid message type (neither text nor binary)");
                 }
                 if (m_ackMode == MQ_CLIENT_ACKNOWLEDGE) {
-                     MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionConsumerHandle, messageHandle));
+                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionConsumerHandle, messageHandle));
                 }
                 // Clean up
                 MQ_SAFE_CALL(MQFreeMessage(messageHandle));
@@ -457,11 +459,6 @@ namespace karabo {
 
         const string& JmsBrokerChannel::getFilter() const {
             return m_filterCondition;
-        }
-
-
-        void JmsBrokerChannel::setTimeoutSyncRead(int milliseconds) {
-            m_syncReadTimeout = milliseconds;
         }
 
 
@@ -600,12 +597,12 @@ namespace karabo {
                         if (header->has("__compression__")) {
                             std::vector<char> tmp;
                             decompress(*header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes), tmp);
-                            m_readHashRawHandler(shared_from_this(), header, &tmp[0], tmp.size());
+                            m_readHashRawHandler(header, &tmp[0], tmp.size());
                         } else {
-                            m_readHashRawHandler(shared_from_this(), header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                            m_readHashRawHandler(header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
                         }
                     } else {
-                        m_readRawHandler(shared_from_this(), reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                        m_readRawHandler(reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
                     }
 
                     MQ_SAFE_CALL(MQFreeMessage(messageHandle));
@@ -666,12 +663,12 @@ namespace karabo {
                         if (header->has("__compression__")) {
                             std::string tmp;
                             decompress(*header, reinterpret_cast<const char*> (msgBody), strlen(msgBody), tmp);
-                            m_readHashStringHandler(shared_from_this(), header, tmp);
+                            m_readHashStringHandler(header, tmp);
                         } else {
-                            m_readHashStringHandler(shared_from_this(), header, string(msgBody));
+                            m_readHashStringHandler(header, string(msgBody));
                         }
                     } else {
-                        m_readStringHandler(shared_from_this(), string(msgBody));
+                        m_readStringHandler(string(msgBody));
                     }
 
                     MQ_SAFE_CALL(MQFreeMessage(messageHandle));
@@ -739,10 +736,10 @@ namespace karabo {
                         } else {
                             m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
                         }
-                        m_readHashHashHandler(shared_from_this(), header, body);
+                        m_readHashHashHandler(header, body);
                     } else {
                         m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
-                        m_readHashHandler(shared_from_this(), body);
+                        m_readHashHandler(body);
                     }
                 } else if (messageType == MQ_TEXT_MESSAGE) {
                     ConstMQString msgBody;
@@ -757,10 +754,10 @@ namespace karabo {
                         } else {
                             m_textSerializer->load(*body, msgBody);
                         }
-                        m_readHashHashHandler(shared_from_this(), header, body);
+                        m_readHashHashHandler(header, body);
                     } else {
                         m_textSerializer->load(*body, msgBody);
-                        m_readHashHandler(shared_from_this(), body);
+                        m_readHashHandler(body);
                     }
                 } else {
                     // Give an error if unexpected message types are going round the broker
@@ -859,10 +856,10 @@ namespace karabo {
                 std::string newFailureMsg(" exception occurred while calling error handler");
                 bool caught = true;
                 try {
-                    KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
                     // Both, shared_from_this() and registered handlers, could throw. But we really, really must not
                     // stop listening, otherwise a deaf zombie device could be created.
-                    m_signalError(shared_from_this(), failureMsg);
+                    if (m_errorHandler) m_errorHandler(failureMsg);
+                    else KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
                     caught = false;
                 } catch (const Exception& e) {
                     newFailureMsg = "An" + (newFailureMsg + ":\n") += e.detailedMsg();
@@ -894,7 +891,7 @@ namespace karabo {
                 setProperties(properties, propertiesHandle);
 
                 MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle));
-                
+
                 // TODO Care about the proper freeing of propertiesHandle
 
                 MQ_SAFE_CALL(MQSetTextMessageText(messageHandle, messageBody.c_str()));
@@ -1212,12 +1209,7 @@ namespace karabo {
 
 
         void JmsBrokerChannel::setErrorHandler(const BrokerErrorHandler& handler) {
-            m_signalError.connect(handler);
-        }
-
-        void JmsBrokerChannel::deadlineTimer(const WaitHandler& handler, int milliseconds, const std::string& id) {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(milliseconds));
-            handler(shared_from_this(), id);
+            m_errorHandler = handler;
         }
 
 
@@ -1240,8 +1232,9 @@ namespace karabo {
             m_sessionProducerHandle.handle = invalidSession.handle;
         }
 
+
         void JmsBrokerChannel::closeConsumer() {
-             MQCloseMessageConsumer(m_consumerHandle);
+            MQCloseMessageConsumer(m_consumerHandle);
             m_consumerHandle.handle = invalidConsumer.handle;
             m_hasConsumer = false;
             MQFreeDestination(m_destinationConsumerHandle);
@@ -1250,13 +1243,14 @@ namespace karabo {
             m_sessionConsumerHandle.handle = invalidSession.handle;
         }
 
+
         void JmsBrokerChannel::setSessionFalse() {
             m_hasProducerSession = false;
             m_hasConsumerSession = false;
         }
 
 
-        void JmsBrokerChannel::rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header) {
+        void JmsBrokerChannel::rawHash2HashHash(const char* data, const size_t& size, const karabo::util::Hash::Pointer& header) {
             Hash::Pointer body(new Hash());
             if (header->has("__format")) {
                 std::string format = header->get<string>("__format");
@@ -1278,7 +1272,7 @@ namespace karabo {
             } else {
                 throw KARABO_MESSAGE_EXCEPTION("De-serialization of message without __format tag is not possible");
             }
-            m_readHashHashHandler(channel, body, header);
+            m_readHashHashHandler(body, header);
         }
     }
 }

@@ -36,13 +36,14 @@ namespace karabo {
         template <class T>
         class TextFileOutput : public Output<T> {
 
+
             boost::filesystem::path m_filename;
             std::string m_writeMode;
             typename TextSerializer<T>::Pointer m_serializer;
             std::vector<T> m_sequenceBuffer;
-            
+
         public:
-            
+
             KARABO_CLASSINFO(TextFileOutput<T>, "TextFile", "1.0")
 
             static void expectedParameters(karabo::util::Schema& expected) {
@@ -91,7 +92,7 @@ namespace karabo {
             }
 
         private:
-            
+
             void update() {
                 if (this->m_appendModeEnabled) {
                     std::string archive;

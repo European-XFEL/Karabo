@@ -19,6 +19,7 @@ namespace karabo {
 
         class ComputeFsm : public BaseFsm {
 
+
             bool m_isAborted;
 
         public:
@@ -189,7 +190,7 @@ namespace karabo {
                 }
                 return true;
             }
-            
+
             void connectAction() {
                 const InputChannels& inputChannels = this->getInputChannels();
                 for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {

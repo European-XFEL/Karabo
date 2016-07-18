@@ -65,8 +65,9 @@ namespace karabo {
             serializeHash(group, object);
             KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
         }
-        
-        unsigned long long HashHdf5Serializer::size(hid_t h5file, const std::string & groupName){
+
+
+        unsigned long long HashHdf5Serializer::size(hid_t h5file, const std::string & groupName) {
             H5G_info_t ginfo;
             hid_t group = H5Gopen(h5file, groupName.c_str(), H5P_DEFAULT);
             KARABO_CHECK_HDF5_STATUS(H5Gget_info(group, &ginfo));
@@ -836,7 +837,7 @@ namespace karabo {
                 } else {
                     H5T_class_t dtClass = H5Tget_class(tid);
                     // vector<char> is handled with ndims=0 as this is OPAQUE datatype with H5S_SCALAR space                        
-                    if (dtClass == H5T_STRING) {                        
+                    if (dtClass == H5T_STRING) {
                         readSequenceString(dsId, tid, dims, name, data);
                     } else {
                         if (H5Tequal(tid, H5T_NATIVE_INT8)) {
