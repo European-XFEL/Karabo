@@ -326,42 +326,42 @@ namespace karabo {
         //                AllowedStates                *
         //**********************************************
 
-        void Schema::setAllowedStates(const std::string& path, const std::string& value, const std::string& sep) {
-            m_hash.setAttribute(path, KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector > (value, sep));
+        void Schema::setAllowedStates(const std::string& path, const std::string& value) {
+            m_hash.setAttribute(path, KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector > (value, ","));
         }
         
-        void Schema::setAllowedStates(const std::string& path, const std::vector<State>& value, const std::string& sep) {
-            setAllowedStates(path, karabo::util::toString(value), sep);
+        void Schema::setAllowedStates(const std::string& path, const std::vector<State>& value) {
+            setAllowedStates(path, karabo::util::toString(value));
         }
         
-        void Schema::setAllowedStates(const std::string& path, const State& s1, const std::string& sep) {
+        void Schema::setAllowedStates(const std::string& path, const State& s1) {
             const State arr[] = {s1};
-            setAllowedStates(path, std::vector<State>(arr, arr+1), sep);
+            setAllowedStates(path, std::vector<State>(arr, arr+1));
         }
         
-        void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const std::string& sep) {
+        void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2) {
             const State arr[] = {s1, s2};
-            setAllowedStates(path, std::vector<State>(arr, arr+2), sep);
+            setAllowedStates(path, std::vector<State>(arr, arr+2));
         }
         
-        void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3, const std::string& sep) {
+        void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3) {
             const State arr[] = {s1, s2, s3};
-            setAllowedStates(path, std::vector<State>(arr, arr+3), sep);
+            setAllowedStates(path, std::vector<State>(arr, arr+3));
         }
         
-        void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3, const State& s4, const std::string& sep) {
+        void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3, const State& s4) {
             const State arr[] = {s1, s2, s3, s4};
-            setAllowedStates(path, std::vector<State>(arr, arr+4), sep);
+            setAllowedStates(path, std::vector<State>(arr, arr+4));
         }
         
-        void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3, const State& s4, const State& s5, const std::string& sep) {
+        void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3, const State& s4, const State& s5) {
             const State arr[] = {s1, s2, s3, s4, s5};
-            setAllowedStates(path, std::vector<State>(arr, arr+5), sep);
+            setAllowedStates(path, std::vector<State>(arr, arr+5));
         }
         
-        void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3, const State& s4, const State& s5, const State& s6, const std::string& sep) {
+        void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3, const State& s4, const State& s5, const State& s6) {
             const State arr[] = {s1, s2, s3, s4, s5, s6};
-            setAllowedStates(path, std::vector<State>(arr, arr+6), sep);
+            setAllowedStates(path, std::vector<State>(arr, arr+6));
         }
         
         
