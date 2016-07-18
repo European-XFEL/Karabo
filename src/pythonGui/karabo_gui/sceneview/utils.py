@@ -8,10 +8,10 @@ from contextlib import contextmanager
 from PyQt4.QtGui import QFont, QFontMetrics
 
 from karabo_gui import icons
-from karabo_gui.const import (
-    STATE_OFFLINE, STATE_ALIVE, STATE_MONITORING, STATE_REQUESTED,
-    STATE_SCHEMA, STATE_DEAD, STATE_NOSERVER, STATE_NOPLUGIN,
-    STATE_INCOMPATIBLE, STATE_MISSING, STATE_ERROR)
+from karabo_gui.sceneview.const import (
+    STATUS_OFFLINE, STATUS_ALIVE, STATUS_MONITORING, STATUS_REQUESTED,
+    STATUS_SCHEMA, STATUS_DEAD, STATUS_NOSERVER, STATUS_NOPLUGIN,
+    STATUS_INCOMPATIBLE, STATUS_MISSING, STATUS_ERROR)
 from .const import SCREEN_MAX_VALUE
 
 
@@ -62,21 +62,21 @@ def save_painter_state(painter):
 def get_status_symbol_as_icon(status, error):
     """ A `QIcon` for the given `status` is returned. """
     status_icons = {
-        STATE_OFFLINE: icons.deviceOffline,
-        STATE_ALIVE: icons.deviceAlive,
-        STATE_REQUESTED: icons.device_requested,
-        STATE_SCHEMA: icons.device_schema,
-        STATE_DEAD: icons.device_dead,
-        STATE_NOSERVER: icons.deviceOfflineNoServer,
-        STATE_NOPLUGIN: icons.deviceOfflineNoPlugin,
-        STATE_INCOMPATIBLE: icons.deviceIncompatible,
-        STATE_MISSING: icons.propertyMissing,
-        STATE_ERROR: icons.device_error
+        STATUS_OFFLINE: icons.deviceOffline,
+        STATUS_ALIVE: icons.deviceAlive,
+        STATUS_REQUESTED: icons.device_requested,
+        STATUS_SCHEMA: icons.device_schema,
+        STATUS_DEAD: icons.device_dead,
+        STATUS_NOSERVER: icons.deviceOfflineNoServer,
+        STATUS_NOPLUGIN: icons.deviceOfflineNoPlugin,
+        STATUS_INCOMPATIBLE: icons.deviceIncompatible,
+        STATUS_MISSING: icons.propertyMissing,
+        STATUS_ERROR: icons.device_error
     }
 
-    if status == STATE_MONITORING and not error:
+    if status == STATUS_MONITORING and not error:
         return None
-    elif status != STATE_OFFLINE and error:
+    elif status != STATUS_OFFLINE and error:
         return status_icons.get('error')
 
     return status_icons.get(status)
