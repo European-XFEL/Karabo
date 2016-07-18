@@ -7,6 +7,11 @@ from contextlib import contextmanager
 
 from PyQt4.QtGui import QFont, QFontMetrics
 
+from karabo_gui import icons
+from karabo_gui.sceneview.const import (
+    STATUS_OFFLINE, STATUS_ALIVE, STATUS_MONITORING, STATUS_REQUESTED,
+    STATUS_SCHEMA, STATUS_DEAD, STATUS_NOSERVER, STATUS_NOPLUGIN,
+    STATUS_INCOMPATIBLE, STATUS_MISSING, STATUS_ERROR)
 from .const import SCREEN_MAX_VALUE
 
 
@@ -52,3 +57,37 @@ def save_painter_state(painter):
     painter.save()
     yield
     painter.restore()
+
+
+def get_status_symbol_as_icon(status, error):
+    """ A `QIcon` for the given `status` is returned. """
+    status_icons = {
+        STATUS_OFFLINE: icons.deviceOffline,
+        STATUS_ALIVE: icons.deviceAlive,
+        STATUS_REQUESTED: icons.device_requested,
+        STATUS_SCHEMA: icons.device_schema,
+        STATUS_DEAD: icons.device_dead,
+        STATUS_NOSERVER: icons.deviceOfflineNoServer,
+        STATUS_NOPLUGIN: icons.deviceOfflineNoPlugin,
+        STATUS_INCOMPATIBLE: icons.deviceIncompatible,
+        STATUS_MISSING: icons.propertyMissing,
+        STATUS_ERROR: icons.device_error
+    }
+
+    if status == STATUS_MONITORING and not error:
+        return None
+    elif status != STATUS_OFFLINE and error:
+        return status_icons.get('error')
+
+    return status_icons.get(status)
+
+
+def get_status_symbol_as_pixmap(status, error, extent=16):
+    """ A `QPixmap` for the given `status` is returned.
+
+        `extent` sets the size of the pixmap. The pixmap might be smaller than
+        requested, but never larger.
+    """
+    icon = get_status_symbol_as_icon(status, error)
+    if icon is not None:
+        return icon.pixmap(extent)
