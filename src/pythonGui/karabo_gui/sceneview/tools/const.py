@@ -8,7 +8,7 @@ from karabo_gui.scenemodel.api import (
     FloatSpinBoxModel, HexadecimalModel, DigitIconsModel,
     SelectionIconsModel, TextIconsModel, IntLineEditModel, KnobModel,
     LineEditModel, LinePlotModel, MonitorModel, SingleBitModel,
-    SliderModel, TableElementModel, XYPlotModel
+    SliderModel, TableElementModel, VacuumWidgetModel, XYPlotModel
 )
 
 WIDGET_FACTORIES = {
@@ -55,5 +55,16 @@ WIDGET_FACTORIES = {
     'SelectionIcons': SelectionIconsModel,
     'Monitor': MonitorModel,
     'SingleBit': SingleBitModel,
-    # TODO: add vacuum widgets
+    'CryoCoolerWidget': VacuumWidgetModel,
+    'HydraulicValveWidget': VacuumWidgetModel,
+    'MaxiGaugeWidget': VacuumWidgetModel,
+    'MembranePumpWidget': VacuumWidgetModel,
+    'MotorWidget': VacuumWidgetModel,
+    'PressureGaugeWidget': VacuumWidgetModel,
+    'PressureSwitchWidget': VacuumWidgetModel,
+    'RightAngleValveWidget': VacuumWidgetModel,
+    'ShutOffValveWidget': VacuumWidgetModel,
+    'TemperatureProbeWidget': VacuumWidgetModel,
+    'TurboPumpWidget': VacuumWidgetModel,
+    'ValveWidget': VacuumWidgetModel,
 }
