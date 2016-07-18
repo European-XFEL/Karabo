@@ -1,0 +1,198 @@
+from enum import Enum, EnumMeta
+
+
+class _ParentDict:
+    """allow enums to reference each other"""
+    def __init__(self, parent):
+        self.parent = parent
+        self.values = {}
+
+    def __getitem__(self, key):
+        if key.startswith("_"):
+            return self.parent[key]
+        else:
+            return key
+
+    def __setitem__(self, key, value):
+        if key.startswith("_"):
+            self.parent[key] = value
+        else:
+            self.parent[key] = key
+            self.values[key] = value
+
+
+class ParentEnumMeta(EnumMeta):
+    """A metaclass for enums which define their parent"""
+    @classmethod
+    def __prepare__(cls, name, bases):
+        return _ParentDict(super().__prepare__(name, bases))
+
+    def __new__(cls, name, bases, ns):
+        self = super().__new__(cls, name, bases, ns.parent)
+        for k, v in ns.values.items():
+            if v is None:
+                self(k).parent = None
+            else:
+                self(k).parent = self(v)
+        return self
+
+
+class StateBase(Enum):
+    def isCompatible(self, other):
+        """two states are compatible if one is the ancestor of the other"""
+        return self.isDerivedFrom(other) or other.isDerivedFrom(self)
+
+    def isDerivedFrom(self, other):
+        """return whether `self` is in the ancestry of `other`"""
+        while self is not None:
+            if self is other:
+                return True
+            self = self.parent
+        return False
+
+    @classmethod
+    def fromString(cls, name):
+        """return the state with `name`.
+
+        You might prefer State(name).
+        """
+        return cls(name)
+
+
+class State(StateBase, metaclass=ParentEnumMeta):
+    """This are all the states a Karabo device can be in
+
+    Each state has a `parent`, which may be `None`. This leads to
+    a tree of states, where children are more specific than their parents.
+    """
+    UNKNOWN = None
+    KNOWN = None
+    ERROR = KNOWN
+
+    INTERLOCKED = DISABLED
+
+    NORMAL = KNOWN
+    STATIC = NORMAL
+    INTERLOCK_OK = STATIC
+
+    CHANGING = NORMAL
+
+    DECREASING = CHANGING
+    COOLING = DECREASING
+    MOVING_LEFT = DECREASING
+    MOVING_DOWN = DECREASING
+    MOVING_BACK = DECREASING
+    ROTATING_CNTCLK = DECREASING
+    RAMPING_DOWN = DECREASING
+    EXTRACTING = DECREASING
+    STOPPING = DECREASING
+    EMPTYING = DECREASING
+    DISENGAGING = DECREASING
+    SWITCHING_OFF = DECREASING
+
+    ROTATING = CHANGING
+    MOVING = CHANGING
+    SWITCHING = CHANGING
+    SEARCHING = CHANGING
+
+    INCREASING = CHANGING
+    HEATING = INCREASING
+    MOVING_RIGHT = INCREASING
+    MOVING_UP = INCREASING
+    MOVING_FORWARD = INCREASING
+    ROTATING_CLK = INCREASING
+    RAMPING_UP = INCREASING
+    INSERTING = INCREASING
+    STARTING = INCREASING
+    FILLING = INCREASING
+    ENGAGING = INCREASING
+    SWITCHING_ON = INCREASING
+
+    ACTIVE = STATIC
+    COOLED = ACTIVE
+    HEATED = ACTIVE
+    EVACUATED = ACTIVE
+    CLOSED = ACTIVE
+    ON = ACTIVE
+    EXTRACTED = ACTIVE
+    STARTED = ACTIVE
+    LOCKED = ACTIVE
+    ENGAGED = ACTIVE
+
+    PASSIVE = STATIC
+    WARM = PASSIVE
+    COLD = PASSIVE
+    PRESSURIZED = PASSIVE
+    OPENED = PASSIVE
+    OFF = PASSIVE
+    INSERTED = PASSIVE
+    STOPPED = PASSIVE
+    UNLOCKED = PASSIVE
+    DISENGAGED = PASSIVE
+
+    INIT = None
+    DISABLED = KNOWN
+    INTERLOCK_BROKEN = DISABLED
+
+
+class StateSignifier:
+    """Define an order for states
+
+    An order of significance can be prescribed by creating a StateSignifier
+    with an iterable. The iterable contains states ordered from high
+    to low significance.
+
+    For groups of states having the same parent, only the parent needs to be
+    listed, all children will be inserted in the default order. States which
+    are not listed at all are considered most significant.
+
+    As an example, to get ACTIVE to be more significant than PASSIVE, you
+    may write::
+
+        StateSignifier([State.ACTIVE, State.PASSIVE, State.NORMAL, State.INIT])
+
+    Meaning that ACTIVE is more signifcant than PASSIVE, followed by all other
+    NORMAL states, with INIT at the end, otherwise INIT will be more
+    significant even than ACTIVE.
+
+    One should note that this way the list of significance always contains
+    *all* states.
+    """
+    def __init__(self, trumplist=(),
+                 staticMoreSignificant=State.ACTIVE,
+                 changingMoreSignificant=State.DECREASING):
+        def key(state):
+            while state is not None:
+                ret = drumpf.get(state)
+                if ret is not None:
+                    return ret
+                state = state.parent
+            return -1
+
+        defaults = {
+            (State.PASSIVE, State.INCREASING): self.passive_increase,
+            (State.ACTIVE, State.INCREASING): self.active_increase,
+            (State.PASSIVE, State.DECREASING): self.passive_decrease,
+            (State.ACTIVE, State.DECREASING): self.active_decrease}
+        defaultlist = defaults[staticMoreSignificant, changingMoreSignificant]
+        drumpf = {s: i for i, s in enumerate(defaultlist)}
+        states = list(State.__members__.values())
+        states.sort(key=key)
+        drumpf = {s: i for i, s in enumerate(trumplist[::-1])}
+        states.sort(key=key)
+        print(trumplist, [s.name for s in states])
+        self.drumpf = {s: i for i, s in enumerate(states)}
+
+    def returnMostSignificant(self, iterable):
+        """return the most significant state in iterable"""
+        return min(iterable, key=self.drumpf.get)
+
+    post = [State.INIT, State.DISABLED]
+
+    active_decrease = []
+    passive_decrease = [State.INTERLOCKED, State.NORMAL, State.PASSIVE,
+                        State.ACTIVE] + post
+    active_increase = [State.INTERLOCKED, State.INCREASING, State.CHANGING,
+                       State.DECREASING, State.STATIC] + post
+    passive_increase = [State.INTERLOCKED, State.INCREASING, State.CHANGING,
+                        State.DECREASING, State.PASSIVE, State.ACTIVE] + post
