@@ -130,7 +130,7 @@ class DeviceServer(SignalSlotable):
             ])
 
     def _initInfo(self):
-        info = super()._initInfo()
+        info = super(DeviceServer, self)._initInfo()
         info["type"] = "server"
         info["serverId"] = self.serverId
         info["version"] = self.__class__.__version__
@@ -141,7 +141,7 @@ class DeviceServer(SignalSlotable):
 
     @coroutine
     def _run(self):
-        yield from super()._run()
+        yield from super(DeviceServer, self)._run()
 
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
