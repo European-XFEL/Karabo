@@ -6,10 +6,10 @@ __date__ ="$May 10, 2013 2:17:13 PM$"
 
 import threading
 
+from karabo.common.states import State
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .fsm import KARABO_FSM_NO_TRANSITION_ACTION
 from .no_fsm import NoFsm
-from ..common.states import State
 
 
 @KARABO_CONFIGURATION_BASE_CLASS

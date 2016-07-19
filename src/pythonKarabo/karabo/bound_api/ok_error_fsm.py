@@ -4,15 +4,16 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 12, 2013 5:09:05 PM$"
 
-import karabo.bound_api.base_fsm as base
 from karathon import SLOT_ELEMENT
+
+import karabo.bound_api.base_fsm as base
+from karabo.common.states import State
 from .decorators import KARABO_CLASSINFO
 from .fsm import (
     KARABO_FSM_ACTION0, KARABO_FSM_ACTION2,
     KARABO_FSM_EVENT0, KARABO_FSM_EVENT2,
     KARABO_FSM_STATE_EE, KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE
 )
-from ..common.states import State
 
 
 @KARABO_CLASSINFO("OkErrorFsm", "1.0")
