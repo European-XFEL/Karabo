@@ -46,7 +46,7 @@ namespace karabo {
 
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(BaseDevice, "BaseDevice", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS;
@@ -67,7 +67,6 @@ namespace karabo {
          */
         template <class FSM = NoFsm>
         class Device : public BaseDevice, public FSM {
-
 
             karabo::util::Validator m_validatorIntern;
             karabo::util::Validator m_validatorExtern;
@@ -330,9 +329,9 @@ namespace karabo {
 
             /**
              * This function allows to communicate to other (remote) devices.
-             * Any device contains also a controller for other devices (DeviceClient) 
+             * Any device contains also a controller for other devices (DeviceClient)
              * which is returned by this function.
-             * 
+             *
              * @return DeviceClient instance
              */
             DeviceClient& remote() {
@@ -400,7 +399,7 @@ namespace karabo {
              * Convenience function for writing data objects that reflect a single element in the data schema.
              * In this case the root-name must not be included in the data object hierarchy but should be given
              * as second argument to this function.
-             * Data will be timestamped and send immediately (write/update).             
+             * Data will be timestamped and send immediately (write/update).
              * @param channelName The output channel name
              * @param key The data element (root-)key
              * @param data Data object
@@ -572,7 +571,7 @@ namespace karabo {
 
             /**
              * Retrieves the current value of any device parameter (that was defined in the expectedParameters function)
-             * The value is casted on the fly into the desired type. 
+             * The value is casted on the fly into the desired type.
              * NOTE: This function is considerably slower than the simple get() functionality
              * @param key A valid parameter of the device (must be defined in the expectedParameters function)
              * @return value of the requested parameter
@@ -888,7 +887,7 @@ namespace karabo {
 
             void setAlarmCondition(const karabo::util::AlarmCondition & condition) {
                 using namespace karabo::util;
-                
+
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_globalAlarmCondition = condition;
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
@@ -912,32 +911,27 @@ namespace karabo {
                 return m_validatorIntern.getRollingStatistics(path);
             }
 
-            
-            const karabo::util::Hash getAlarmInfo(){
+            const karabo::util::Hash getAlarmInfo() const {
+                /**
+                 * Returns a hash containing the info field information
+                 * for current alarms on the device
+                 *
+                 * @return a hash with structure key: path to property -> alarm info (string)
+                 */
                 using namespace karabo::util;
                 Hash info;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
-                for(Hash::const_iterator it = h.begin(); it != h.end(); ++it){
+                for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                     const Hash& desc = it->getValue<Hash>();
                     const AlarmCondition& cond = AlarmCondition::fromString(desc.get<std::string>("type"));
                     info.set(it->getKey(), m_fullSchema.getInfoForAlarm(it->getKey(), cond));
                 }
                 return info;
-                
+
             }
-            
-            void outputAlarmInfo(){
-                const karabo::util::Hash& info = this->getAlarmInfo();
-                std::ostringstream out;
-                out<<"Alarm information for device: "<<this->getInstanceId()<<std::endl;
-                for(karabo::util::Hash::const_iterator it = info.begin(); it != info.end(); ++it){
-                    out<<"Property: "<<it->getKey()<<std::endl;
-                    out<<"----------"<<std::endl;
-                    out<<it->getValue<std::string>()<<std::endl;
-                }
-                KARABO_LOG_INFO<<out.str();
-            }
+
+
 
 
         protected: // Functions and Classes
@@ -989,7 +983,7 @@ namespace karabo {
                 this->initSchema();
 
                 // Prepare some info further describing this particular instance
-                // status, visibility, owner, lang 
+                // status, visibility, owner, lang
                 karabo::util::Hash instanceInfo;
                 instanceInfo.set("type", "device");
                 instanceInfo.set("classId", m_classId);
@@ -1043,7 +1037,7 @@ namespace karabo {
                     connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick");
                 }
 
-                t.join(); // Blocks 
+                t.join(); // Blocks
             }
 
             void initClassId() {
@@ -1084,7 +1078,7 @@ namespace karabo {
             /**
              *  Called in beginning of run() to setup p2p channels, will
              *  recursively go through the schema of the device
-             *  * 
+             *  *
              *  * @param topLevel: std::string: empty or existing path of full
              *  *                  schema of the device
              *  */
