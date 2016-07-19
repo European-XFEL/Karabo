@@ -216,14 +216,16 @@ class DeviceServer(object):
 
         KARABO_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
         KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
-                    
-        DeviceServerMachineSTT=[
-                                (State.NORMAL, 'ErrorFoundEvent', State.ERROR, 'ErrorFoundAction', 'none'),
-                                (State.ERROR, 'ResetEvent', State.NORMAL,    'none',   'none')
-                               ]
-        
-        KARABO_FSM_STATE_MACHINE('DeviceServerMachine', DeviceServerMachineSTT, State.NORMAL)
-        
+
+        deviceServerMachineSTT = [
+            (State.NORMAL, 'ErrorFoundEvent', State.ERROR,
+                'ErrorFoundAction', 'none'),
+            (State.ERROR, 'ResetEvent', State.NORMAL,
+                'none', 'none')]
+
+        KARABO_FSM_STATE_MACHINE('DeviceServerMachine', deviceServerMachineSTT,
+                                 State.NORMAL)
+
         return KARABO_FSM_CREATE_MACHINE('DeviceServerMachine')
         
     def signal_handler(self, signum, frame):

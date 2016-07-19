@@ -39,8 +39,10 @@ class OkErrorFsm(base.BaseFsm):
         #**************************************************************
         #*                        States                              *
         #**************************************************************
-        KARABO_FSM_STATE_EE(State.ERROR,   self.errorStateOnEntry,   self.errorStateOnExit)
-        KARABO_FSM_STATE_EE(State.NORMAL,      self.okStateOnEntry,      self.okStateOnExit)
+        KARABO_FSM_STATE_EE(State.ERROR, self.errorStateOnEntry,
+                            self.errorStateOnExit)
+        KARABO_FSM_STATE_EE(State.NORMAL, self.okStateOnEntry,
+                            self.okStateOnExit)
 
         #**************************************************************
         #*                    Transition Actions                      *
@@ -53,14 +55,14 @@ class OkErrorFsm(base.BaseFsm):
         #*                      Top Machine                           *
         #**************************************************************
 
-        #  Source-State    Event     Target-State  Action          Guard
         stateMachineTransitionTable = [
-            (State.NORMAL, 'ErrorFoundEvent', State.ERROR, 'ErrorFoundAction', 'none'),
-            (State.ERROR, 'ResetEvent', State.NORMAL,   'ResetAction',             'none')
-        ]
+            (State.NORMAL, 'ErrorFoundEvent', State.ERROR,
+                'ErrorFoundAction', 'none'),
+            (State.ERROR, 'ResetEvent', State.NORMAL,
+                'ResetAction', 'none')]
 
-        #                           Name                Transition-Table  Initial-State
-        KARABO_FSM_STATE_MACHINE('StateMachine', stateMachineTransitionTable, State.NORMAL)
+        KARABO_FSM_STATE_MACHINE('StateMachine', stateMachineTransitionTable,
+                                 State.NORMAL)
         self.fsm = KARABO_FSM_CREATE_MACHINE('StateMachine')
     
     def getFsm(self):
