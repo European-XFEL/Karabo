@@ -23,6 +23,8 @@ from karathon import (
     Hash, Logger, Priority, Schema, SignalSlotable,
     loadFromFile, saveToFile
 )
+
+from karabo.common.states import State
 from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .device import PythonDevice
@@ -34,7 +36,6 @@ from .fsm import (
 )
 from .plugin_loader import PluginLoader
 from .runner import Runner
-from ..common.states import State
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
