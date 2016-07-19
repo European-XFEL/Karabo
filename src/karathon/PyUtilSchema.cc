@@ -437,16 +437,10 @@ struct OverwriteElementWrap {
 
 
     static OverwriteElement & setNewDefaultValue(OverwriteElement& self, const bp::object& value) {
-        bp::extract<bp::tuple> getTuple(value);
-        if(getTuple.check()){
-            bp::tuple args = getTuple();
-            //assume it is a list of states
-            std::vector<karabo::util::State> states;
-            for(unsigned int i = 0; i < bp::len(args); ++i){
-                const std::string state = bp::extract<std::string>(args[i].attr("name"));
-                states.push_back(karabo::util::State::fromString(state));
-            }
-            return self.setNewDefaultValue(states);
+        const std::string & className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
+        if(className == "State" ){
+            const std::string & state = bp::extract<std::string>(value.attr("name"));
+            return self.setNewDefaultValue(karabo::util::State::fromString(state));
         } else {
             boost::any any;
             karathon::Wrapper::toAny(value, any);
@@ -482,13 +476,13 @@ struct OverwriteElementWrap {
         return self.setNewMaxExc(any);
     }
     
-    static OverwriteElement & setNewAllowedState(OverwriteElement& self, const bp::tuple & args){
+    static OverwriteElement & setNewAllowedStates(OverwriteElement& self, const bp::tuple & args){
         std::vector<karabo::util::State> states;
         for(unsigned int i = 0; i < bp::len(args); ++i){
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
             states.push_back(karabo::util::State::fromString(state));
         }
-        return self.setNewAllowedState(states);
+        return self.setNewAllowedStates(states);
     }
             
     static OverwriteElement & setNewOptions(OverwriteElement& self, const bp::object & value){
@@ -2244,8 +2238,8 @@ void exportPyUtilSchema() {
                      , &OverwriteElementWrap().setNewOptions
                      , (bp::arg("value"))
                      , bp::return_internal_reference<> ())
-                .def("setNewAllowedState"
-                     ,  &OverwriteElementWrap().setNewAllowedState
+                .def("setNewAllowedStates"
+                     ,  &OverwriteElementWrap().setNewAllowedStates
                      , (bp::arg("states"))
                      , bp::return_internal_reference<> ())
                 .def("setNowObserverAccess"
