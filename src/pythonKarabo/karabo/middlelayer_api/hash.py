@@ -393,7 +393,7 @@ class Slot(Descriptor):
             inner.slot = self.inner
             return inner.__get__(instance, owner)
 
-    def inner(self, device, message, args):
+    def inner(self, func, device, message, args):
         if (self.allowedStates is not None and
                 device.state not in self.allowedStates):
             msg = 'calling slot "{}" not allowed in state "{}"'.format(
