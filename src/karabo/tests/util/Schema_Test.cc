@@ -305,7 +305,7 @@ void Schema_Test::testGetDefaultValue() {
 
 
 void Schema_Test::testGetAllowedStates() {
-    using namespace karabo::core;
+
     vector<State> allowedStates = m_schema.getAllowedStates("exampleKey3");
     CPPUNIT_ASSERT(allowedStates[0] == State::COOLED);
     CPPUNIT_ASSERT(allowedStates[1] == State::ACTIVE);
@@ -503,7 +503,7 @@ void Schema_Test::testPerKeyFunctionality() {
 void Schema_Test::testSlotElement() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
-    using namespace karabo::core;
+
     CPPUNIT_ASSERT(sch.getDescription("slotTest") == "Test slot element");
     CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[0] == State::STARTED);
     CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[2] == State::ERROR);
@@ -513,7 +513,7 @@ void Schema_Test::testSlotElement() {
 
 
 void Schema_Test::testVectorElements() {
-    using namespace karabo::core;
+
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
 

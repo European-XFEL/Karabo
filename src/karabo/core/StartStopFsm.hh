@@ -15,7 +15,7 @@
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/core/BaseFsm.hh>
 #include "Device.hh"
-#include <karabo/core/State.hh>
+#include <karabo/util/State.hh>
 
 namespace karabo {
     namespace core {
@@ -28,6 +28,7 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::xms;
+                using namespace karabo::util;
 
                 SLOT_ELEMENT(expected).key("start")
                         .displayedName("Start")

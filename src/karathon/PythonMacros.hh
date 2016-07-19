@@ -13,7 +13,7 @@
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/VectorElement.hh>
 #include <karabo/util/TableElement.hh>
-#include <karabo/core/State.hh>
+#include <karabo/util/State.hh>
 namespace bp = boost::python;
 
 
@@ -390,10 +390,10 @@ template<typename T>
 class CommonWrap{
 public:
     static T & allowedStatesPy(T & self,  const bp::tuple & args){
-        std::vector<karabo::core::State> states;
+        std::vector<karabo::util::State> states;
         for(unsigned int i = 0; i < bp::len(args); ++i){
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
-            states.push_back(karabo::core::State::fromString(state));
+            states.push_back(karabo::util::State::fromString(state));
         }
         return self.allowedStates(states);
     }
