@@ -35,6 +35,7 @@ class Broker:
         self.repliers = {}
         self.tasks = set()
         self.logger = logging.getLogger(deviceId)
+        self.info = None
 
     def send(self, p, args):
         hash = Hash()
