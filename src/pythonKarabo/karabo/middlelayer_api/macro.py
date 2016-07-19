@@ -145,7 +145,7 @@ class Macro(Device):
             EventLoop.global_loop.start_device(self)
 
     def _initInfo(self):
-        info = super()._initInfo()
+        info = super(Macro, self)._initInfo()
         info["type"] = "macro"
         info["project"] = self.project
         info["module"] = self.module
@@ -157,7 +157,7 @@ class Macro(Device):
         starting the device the devices are searched and then
         assigned to the object's properties """
 
-        yield from super()._run()
+        yield from super(Macro, self)._run()
 
         self.state = "SearchRemotes..."
         holders = []

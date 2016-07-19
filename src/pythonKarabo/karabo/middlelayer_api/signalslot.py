@@ -197,7 +197,7 @@ class SignalSlotable(Configurable):
                               format(self.deviceId))
         except TimeoutError:
             pass
-        yield from super()._run()
+        yield from super(SignalSlotable, self)._run()
         self.__randPing = 0  # Start answering on slotPing with argument rand=0
         async(self._ss.notify_network(self._initInfo()))
         yield from get_event_loop().run_coroutine_or_thread(
