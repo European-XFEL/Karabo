@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 from functools import wraps
 import getpass
+import inspect
 from itertools import count
 import logging
 import os
@@ -190,7 +191,7 @@ class Broker:
                     continue
                 try:
                     for slot in slots:
-                        slot(device, message, params)
+                        slot.slot(slot, device, message, params)
                 except:
                     self.logger.exception(
                         "internal error while executing slot")
@@ -199,7 +200,25 @@ class Broker:
             consumer.close()
 
     def register_slot(self, name, slot):
-        self.slots[name] = slot
+        """register a slot on the device
+
+        :param name: the name of the slot
+        :param slot: the slot to be called. If this is a bound method, it is
+            assured that no reference to the object holding the method is kept.
+        """
+        if inspect.ismethod(slot):
+            def delete(ref):
+                del self.slots[name]
+
+            weakself = weakref.ref(slot.__self__, delete)
+            func = slot.__func__
+
+            def wrapper(*args):
+                return func(weakself(), *args)
+            wrapper.slot = slot.slot
+            self.slots[name] = wrapper
+        else:
+            self.slots[name] = slot
 
     @coroutine
     def main(self, device):
