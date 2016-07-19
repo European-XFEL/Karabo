@@ -176,7 +176,7 @@ class _State(dict):
     interrupt = None
     
     def __init__(self, fsm, base, on_entry=NOOP, on_exit=NOOP, in_state=''):
-        dict.__init__(self)
+        super(_State, self).__init__()
         self.fsm = fsm
         self.base = base
         self.on_entry = on_entry
@@ -276,8 +276,10 @@ class _State(dict):
 class StateMachine(_State):
     ismachine = True
     
-    def __init__(self, fsm, stt, initial, on_entry=NOOP, on_exit=NOOP, in_state=''):
-        super(StateMachine, self).__init__(fsm, None, on_entry=on_entry, on_exit=on_exit, in_state=in_state)
+    def __init__(self, fsm, stt, initial, on_entry=NOOP, on_exit=NOOP,
+                 in_state=''):
+        super(StateMachine, self).__init__(fsm, None, on_entry=on_entry,
+                                           on_exit=on_exit, in_state=in_state)
         self.currentStateObject=None
         self.stt = dict()
         self.initial_state = list()
@@ -328,7 +330,9 @@ class StateMachine(_State):
     def _setup(self, sname):
         if sname in _states_:
             (_entry, _exit, _ta) = _states_[sname]
-            self.stt[sname] = type(sname.name, (_State,), {})(self, sname, on_entry=_entry, on_exit=_exit, in_state=_ta)
+            State = type(sname.name, (_State,), {})
+            self.stt[sname] = State(self, sname, on_entry=_entry,
+                                    on_exit=_exit, in_state=_ta)
             if sname in _interrupts_:
                 self.stt[sname].interrupt = _interrupts_[sname]
         elif sname in _machines_:

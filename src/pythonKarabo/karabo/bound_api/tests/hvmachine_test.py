@@ -3,11 +3,11 @@
 
 import unittest
 from karabo.bound import (
-    KARABO_FSM_EVENT0, KARABO_FSM_EVENT2, KARABO_FSM_ACTION0, KARABO_FSM_ACTION2, KARABO_FSM_NO_TRANSITION_ACTION,
-    KARABO_FSM_STATE, KARABO_FSM_STATE_E, KARABO_FSM_STATE_EE, KARABO_FSM_STATE_MACHINE_EE, KARABO_FSM_GUARD0,
-    KARABO_FSM_STATE_MACHINE, KARABO_FSM_STATE_MACHINE_E,
-    KARABO_FSM_CREATE_MACHINE, State
-)
+    KARABO_FSM_EVENT0, KARABO_FSM_EVENT2, KARABO_FSM_ACTION0,
+    KARABO_FSM_ACTION2, KARABO_FSM_NO_TRANSITION_ACTION, KARABO_FSM_STATE,
+    KARABO_FSM_STATE_E, KARABO_FSM_STATE_EE, KARABO_FSM_STATE_MACHINE_EE,
+    KARABO_FSM_GUARD0, KARABO_FSM_STATE_MACHINE, KARABO_FSM_STATE_MACHINE_E,
+    KARABO_FSM_CREATE_MACHINE, State)
 
 
 class HvMachine(object):
@@ -50,34 +50,39 @@ class HvMachine(object):
         # states
         KARABO_FSM_STATE(State.ERROR)
         KARABO_FSM_STATE_E(State.OFF, self.offStateEntry)
-        KARABO_FSM_STATE_EE(State.CHANGING, self.changingStateEntry, self.changingStateExit)
+        KARABO_FSM_STATE_EE(State.CHANGING, self.changingStateEntry,
+                            self.changingStateExit)
         KARABO_FSM_STATE(State.STATIC)
-        # STT
+
         onStt = [
-                    (State.STATIC,   'VoltChangingEvent', State.CHANGING, 'VoltChangingAction', 'none'),
-                    (State.CHANGING, 'LevelReachedEvent', State.STATIC,   'LevelReachedAction', 'none')
-                ]
-        # state machine             State     STT    Initial          on_entry      on_exit
-        KARABO_FSM_STATE_MACHINE_EE(State.ON, onStt, State.CHANGING, self.onStateEntry, self.onStateExit)
+            (State.STATIC, 'VoltChangingEvent', State.CHANGING,
+                'VoltChangingAction', 'none'),
+            (State.CHANGING, 'LevelReachedEvent', State.STATIC,
+                'LevelReachedAction', 'none')]
+
+        KARABO_FSM_STATE_MACHINE_EE(State.ON, onStt, State.CHANGING,
+                                    self.onStateEntry, self.onStateExit)
         # guards
         KARABO_FSM_GUARD0('SwitchOffGuard', self.switchOffGuard)
         KARABO_FSM_GUARD0('SwitchOnGuard', self.switchOnGuard)
-        # STT
+
         allOkStt = [
-                    (State.OFF, 'VoltChangingEvent', State.ON,  'none',  'SwitchOnGuard'),
-                    (State.OFF, 'SwitchOnEvent', State.ON,  'none',  'SwitchOnGuard'),
-                    (State.ON, 'SwitchOffEvent', State.OFF, 'none',  'SwitchOffGuard')
-                   ]
-        # state machine
+            (State.OFF, 'VoltChangingEvent', State.ON,
+                'none', 'SwitchOnGuard'),
+            (State.OFF, 'SwitchOnEvent', State.ON, 'none', 'SwitchOnGuard'),
+            (State.ON, 'SwitchOffEvent', State.OFF, 'none', 'SwitchOffGuard')]
+
         KARABO_FSM_STATE_MACHINE(State.NORMAL, allOkStt, State.OFF)
-        # STT
+
         hvStt = [
-                    (State.NORMAL, 'ErrorFoundEvent', State.ERROR, 'ErrorFoundAction',  'none'),
-                    (State.ERROR, 'EndErrorEvent', State.NORMAL, 'none',              'none'),
-                    (State.ERROR, 'ErrorFoundEvent', None,       'none',              'none'),
-                    (State.ERROR, 'VoltChangingEvent', None,       'none',              'none')
-                ]
-        KARABO_FSM_STATE_MACHINE_E('MpodDeviceMachine', hvStt, State.NORMAL, self.initializeHardware)
+            (State.NORMAL, 'ErrorFoundEvent', State.ERROR,
+                'ErrorFoundAction',  'none'),
+            (State.ERROR, 'EndErrorEvent', State.NORMAL, 'none', 'none'),
+            (State.ERROR, 'ErrorFoundEvent', None, 'none', 'none'),
+            (State.ERROR, 'VoltChangingEvent', None, 'none', 'none')]
+
+        KARABO_FSM_STATE_MACHINE_E('MpodDeviceMachine', hvStt, State.NORMAL,
+                                   self.initializeHardware)
 
         self.fsm = KARABO_FSM_CREATE_MACHINE('MpodDeviceMachine')
      
