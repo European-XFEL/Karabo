@@ -108,7 +108,7 @@ class Device(SignalSlotable):
 
     @coroutine
     def _run(self):
-        yield from super()._run()
+        yield from super(Device, self)._run()
 
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
