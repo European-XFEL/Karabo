@@ -94,9 +94,8 @@ class Device(SignalSlotable):
         if "abstract" not in dict:
             Device.subclasses[name] = cls
 
-    @coroutine
-    def _run(self):
-        info = Hash()
+    def _initInfo(self):
+        info = super(Device, self)._initInfo()
         info["type"] = "device"
         info["classId"] = self.classId.value
         info["serverId"] = self.serverId.value
@@ -105,9 +104,11 @@ class Device(SignalSlotable):
         info["host"] = self.hostname
         info["status"] = "ok"
         info["archive"] = self.archive.value
-        self.updateInstanceInfo(info)
+        return info
 
-        yield from super()._run()
+    @coroutine
+    def _run(self):
+        yield from super(Device, self)._run()
 
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
