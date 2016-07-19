@@ -8,7 +8,7 @@
 #include "HashFilter_Test.hh"
 #include <karabo/util.hpp>
 #include <karabo/io.hpp>
-#include <karabo/core/State.hh>
+#include <karabo/util/State.hh>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashFilter_Test);
 
@@ -38,7 +38,7 @@ namespace hashfilter {
 
 
         static void expectedParameters(karabo::util::Schema & expected) {
-            using namespace karabo::core;
+
             STRING_ELEMENT(expected).key("a")
                     .description("a")
                     .displayedName("a")

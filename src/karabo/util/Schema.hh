@@ -22,7 +22,7 @@
 #include "StringTools.hh"
 #include "ToLiteral.hh"
 #include "Units.hh"
-#include <karabo/core/State.hh>
+#include "State.hh"
 
 #include "karaboDll.hh"
 
@@ -383,22 +383,22 @@ namespace karabo {
             //**********************************************
 
             //overloads for up to six states
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1);
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2);
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3);
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4);
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5);
-            void setAllowedStates(const std::string& path, const karabo::core::State& s1, const karabo::core::State& s2, const karabo::core::State& s3, const karabo::core::State& s4, const karabo::core::State& s5, const karabo::core::State& s6);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6);
             
             
             //generic interface
-            void setAllowedStates(const std::string& path, const std::vector<karabo::core::State>& value);
+            void setAllowedStates(const std::string& path, const std::vector<karabo::util::State>& value);
             
             
 
             bool hasAllowedStates(const std::string& path) const;
 
-            const std::vector<karabo::core::State> getAllowedStates(const std::string& path) const;
+            const std::vector<karabo::util::State> getAllowedStates(const std::string& path) const;
 
 
             //**********************************************
