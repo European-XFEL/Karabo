@@ -17,7 +17,7 @@
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/util/ImageElement.hh>
 #include <karabo/util/TableElement.hh>
-#include <karabo/core/State.hh>
+#include <karabo/util/State.hh>
 
 #include <karabo/util/Configurator.hh>
 
@@ -29,7 +29,6 @@ namespace configurationTest {
 
     using namespace karabo::util;
     using namespace karabo::xms;
-    using namespace karabo::core;
 
     struct Shape {
         KARABO_CLASSINFO(Shape, "Shape", "1.0");
@@ -333,7 +332,7 @@ namespace configurationTest {
                     .operatorAccess()
                     .init()
                     .commit();
-             using namespace karabo::core;
+
             UINT32_ELEMENT(expected).key("exampleKey3").alias(5.5)
                     .tags("hardware, set")
                     .displayedName("Example key 3")

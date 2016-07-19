@@ -34,8 +34,6 @@
         <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopInterface.hh</itemPath>
-        <itemPath>../../../src/karabo/core/State.cc</itemPath>
-        <itemPath>../../../src/karabo/core/State.hh</itemPath>
         <itemPath>../../../src/karabo/core/StateSignifier.cc</itemPath>
         <itemPath>../../../src/karabo/core/StateSignifier.hh</itemPath>
       </logicalFolder>
@@ -44,6 +42,7 @@
       <itemPath>../../../src/karabo/core/DeviceServer.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.hh</itemPath>
       <itemPath>../../../src/karabo/core/Runner.hh</itemPath>
+      <itemPath>../../../src/karabo/core.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="f2" displayName="io" projectFiles="true">
       <logicalFolder name="f1" displayName="h5" projectFiles="true">
@@ -144,12 +143,11 @@
         <itemPath>../../../src/karabo/io/SchemaBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/SchemaXmlSerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/SchemaXmlSerializer.hh</itemPath>
-        <itemPath>../../../src/karabo/io/SchemaXsdSerializer.cc</itemPath>
-        <itemPath>../../../src/karabo/io/SchemaXsdSerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/TextSerializer.hh</itemPath>
       </logicalFolder>
       <itemPath>../../../src/karabo/io/FileTools.cc</itemPath>
       <itemPath>../../../src/karabo/io/FileTools.hh</itemPath>
+      <itemPath>../../../src/karabo/io.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="f4" displayName="log" projectFiles="true">
       <logicalFolder name="f1" displayName="Appender" projectFiles="true">
@@ -169,6 +167,7 @@
       <itemPath>../../../src/karabo/log/Logger.cc</itemPath>
       <itemPath>../../../src/karabo/log/Logger.hh</itemPath>
       <itemPath>../../../src/karabo/log/Tracer.hh</itemPath>
+      <itemPath>../../../src/karabo/log.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="f5" displayName="net" projectFiles="true">
       <logicalFolder name="f4" displayName="Broker" projectFiles="true">
@@ -217,6 +216,7 @@
       <itemPath>../../../src/karabo/net/AbstractIOService.hh</itemPath>
       <itemPath>../../../src/karabo/net/IOService.hh</itemPath>
       <itemPath>../../../src/karabo/net/Queues.hh</itemPath>
+      <itemPath>../../../src/karabo/net.hpp</itemPath>
       <itemPath>../../../src/karabo/net/utils.cc</itemPath>
       <itemPath>../../../src/karabo/net/utils.hh</itemPath>
     </logicalFolder>
@@ -257,6 +257,8 @@
         <itemPath>../../../src/karabo/util/Schema.cc</itemPath>
         <itemPath>../../../src/karabo/util/Schema.hh</itemPath>
         <itemPath>../../../src/karabo/util/SimpleElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/State.cc</itemPath>
+        <itemPath>../../../src/karabo/util/State.hh</itemPath>
         <itemPath>../../../src/karabo/util/TableElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/TableElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/Validator.cc</itemPath>
@@ -317,6 +319,7 @@
         <itemPath>../../../src/karabo/util/ToXsd.hh</itemPath>
         <itemPath>../../../src/karabo/util/Types.hh</itemPath>
       </logicalFolder>
+      <itemPath>../../../src/karabo/util.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="f8" displayName="webAuth" projectFiles="true">
       <itemPath>../../../src/karabo/webAuth/Authenticator.cc</itemPath>
@@ -329,6 +332,7 @@
       <itemPath>../../../src/karabo/webAuth/soapStub.h</itemPath>
       <itemPath>../../../src/karabo/webAuth/stdsoap2.cpp</itemPath>
       <itemPath>../../../src/karabo/webAuth/stdsoap2.h</itemPath>
+      <itemPath>../../../src/karabo/webAuth.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="f9" displayName="xip" projectFiles="true">
       <logicalFolder name="f1" displayName="Data" projectFiles="true">
@@ -365,6 +369,7 @@
         <itemPath>../../../src/karabo/xip/BinaryProcessor.hh</itemPath>
         <itemPath>../../../src/karabo/xip/SingleProcessor.hh</itemPath>
       </logicalFolder>
+      <itemPath>../../../src/karabo/xip.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
       <itemPath>../../../src/karabo/xms/Data.cc</itemPath>
@@ -392,6 +397,7 @@
       <itemPath>../../../src/karabo/xms/SlotElement.hh</itemPath>
       <itemPath>../../../src/karabo/xms/Statics.cc</itemPath>
       <itemPath>../../../src/karabo/xms/Statics.hh</itemPath>
+      <itemPath>../../../src/karabo/xms.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -412,8 +418,6 @@
         <itemPath>../../../src/karabo/tests/io/Hdf5_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/SchemaSerializer_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/SchemaSerializer_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/SchemaXsdSerializer_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/TestPathSetup.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/ioTestRunner.cc</itemPath>
       </logicalFolder>
@@ -457,8 +461,6 @@
         <itemPath>../../../src/karabo/tests/util/Hash_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/util/States_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/util/States_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/StatisticalEvaluator_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/StatisticalEvaluator_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/StringTools_Test.cc</itemPath>
@@ -510,7 +512,7 @@
       <itemPath>karaboPackageDependencies-GNU-Linux-x86.pc</itemPath>
       <itemPath>karaboPackageDependencies-GNU_MacPorts-MacOSX.pc</itemPath>
     </logicalFolder>
-    <itemPath>../../../src/karabo/core.hpp</itemPath>
+    <itemPath>../../../src/karabo/karabo.hpp</itemPath>
   </logicalFolder>
   <sourceRootList>
     <Elem>../../../src/karabo</Elem>
@@ -707,10 +709,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/State.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/State.hh" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/StateSignifier.cc"
             ex="false"
             tool="1"
@@ -722,6 +720,8 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/Worker.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/AbstractInput.hh"
             ex="false"
@@ -1139,6 +1139,10 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/karabo.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log.hpp" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karabo/log/AppenderConfigurator.cc"
             ex="false"
             tool="1"
@@ -1194,6 +1198,8 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/log/Tracer.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/AbstractIOService.hh"
             ex="false"
@@ -1588,16 +1594,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/util/States_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/util/States_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/util/StatisticalEvaluator_Test.cc"
             ex="false"
             tool="1"
@@ -1750,6 +1746,8 @@
             ex="false"
             tool="1"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/AlarmConditions.cc"
             ex="false"
@@ -1975,6 +1973,10 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/State.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/State.hh" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/StringTools.cc"
             ex="false"
             tool="1"
@@ -2103,6 +2105,8 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/webAuth.hpp" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karabo/webAuth/Authenticator.cc"
             ex="false"
             tool="1"
@@ -2157,6 +2161,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/AbstractImage.hh"
             ex="false"
@@ -2291,6 +2297,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Data.cc" ex="false" tool="1" flavor2="0">
       </item>
@@ -2704,10 +2712,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/State.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/State.hh" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/StateSignifier.cc"
             ex="false"
             tool="1"
@@ -2719,6 +2723,8 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/Worker.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/AbstractInput.hh"
             ex="false"
@@ -3136,6 +3142,10 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/karabo.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log.hpp" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karabo/log/AppenderConfigurator.cc"
             ex="false"
             tool="1"
@@ -3191,6 +3201,8 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/log/Tracer.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/AbstractIOService.hh"
             ex="false"
@@ -3597,16 +3609,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/util/States_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/util/States_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/util/StatisticalEvaluator_Test.cc"
             ex="false"
             tool="1"
@@ -3756,6 +3758,8 @@
             ex="false"
             tool="1"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/AlarmConditions.cc"
             ex="false"
@@ -3981,6 +3985,10 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/State.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/State.hh" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/StringTools.cc"
             ex="false"
             tool="1"
@@ -4109,6 +4117,8 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/webAuth.hpp" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karabo/webAuth/Authenticator.cc"
             ex="false"
             tool="1"
@@ -4164,6 +4174,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/AbstractImage.hh"
             ex="false"
@@ -4310,6 +4322,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Data.cc" ex="false" tool="1" flavor2="0">
       </item>

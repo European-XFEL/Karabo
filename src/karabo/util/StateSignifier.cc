@@ -10,7 +10,7 @@ using namespace std;
 using namespace karabo::util;
 
 namespace karabo {
-    namespace core {
+    namespace util {
             
         State StateSignifier::returnMostSignificant(const std::vector<State>& listOfStates) {
             if (listOfStates.empty())
@@ -51,22 +51,22 @@ namespace karabo {
         
         
         
-        StateSignifier::StateSignifier(const karabo::core::State& staticMoreSignificant,
-                                       const karabo::core::State& changingMoreSignificant): m_trumpList(){
-            initTrumpList(std::vector<karabo::core::State>(), staticMoreSignificant, changingMoreSignificant);
+        StateSignifier::StateSignifier(const karabo::util::State& staticMoreSignificant,
+                                       const karabo::util::State& changingMoreSignificant): m_trumpList(){
+            initTrumpList(std::vector<karabo::util::State>(), staticMoreSignificant, changingMoreSignificant);
         }
                                        
 
-        StateSignifier::StateSignifier(const std::vector<karabo::core::State>& trumpList,
-                                       const karabo::core::State& staticMoreSignificant,
-                                       const karabo::core::State& changingMoreSignificant)
+        StateSignifier::StateSignifier(const std::vector<karabo::util::State>& trumpList,
+                                       const karabo::util::State& staticMoreSignificant,
+                                       const karabo::util::State& changingMoreSignificant)
         : m_trumpList(){
              initTrumpList(trumpList, staticMoreSignificant, changingMoreSignificant);
         }
         
-        void StateSignifier::initTrumpList(const std::vector<karabo::core::State>& trumpList,
-                    const karabo::core::State& staticMoreSignificant,
-                    const karabo::core::State& changingMoreSignificant){
+        void StateSignifier::initTrumpList(const std::vector<karabo::util::State>& trumpList,
+                    const karabo::util::State& staticMoreSignificant,
+                    const karabo::util::State& changingMoreSignificant){
 
             if (trumpList.empty()) {
                 m_trumpList.push_back(State::DISABLED);

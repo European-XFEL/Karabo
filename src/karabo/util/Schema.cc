@@ -25,7 +25,6 @@ namespace karabo {
     namespace util {
 
         using namespace std;
-        using namespace karabo::core;
 
 
         //        Schema::Schema() : m_rootName("") {

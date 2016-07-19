@@ -441,10 +441,10 @@ struct OverwriteElementWrap {
         if(getTuple.check()){
             bp::tuple args = getTuple();
             //assume it is a list of states
-            std::vector<karabo::core::State> states;
+            std::vector<karabo::util::State> states;
             for(unsigned int i = 0; i < bp::len(args); ++i){
                 const std::string state = bp::extract<std::string>(args[i].attr("name"));
-                states.push_back(karabo::core::State::fromString(state));
+                states.push_back(karabo::util::State::fromString(state));
             }
             return self.setNewDefaultValue(states);
         } else {
@@ -483,10 +483,10 @@ struct OverwriteElementWrap {
     }
     
     static OverwriteElement & setNewAllowedState(OverwriteElement& self, const bp::tuple & args){
-        std::vector<karabo::core::State> states;
+        std::vector<karabo::util::State> states;
         for(unsigned int i = 0; i < bp::len(args); ++i){
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
-            states.push_back(karabo::core::State::fromString(state));
+            states.push_back(karabo::util::State::fromString(state));
         }
         return self.setNewAllowedState(states);
     }
@@ -496,10 +496,10 @@ struct OverwriteElementWrap {
         if(getTuple.check()){
             bp::tuple args = getTuple();
             //assume it is a list of states
-            std::vector<karabo::core::State> states;
+            std::vector<karabo::util::State> states;
             for(unsigned int i = 0; i < bp::len(args); ++i){
                 const std::string state = bp::extract<std::string>(args[i].attr("name"));
-                states.push_back(karabo::core::State::fromString(state));
+                states.push_back(karabo::util::State::fromString(state));
             }
             return self.setNewOptions(states);
         } else {
@@ -1327,10 +1327,10 @@ namespace schemawrap {
     }
     
      void setAllowedStates(Schema& self, const std::string & path, const bp::tuple & args){
-        std::vector<karabo::core::State> states;
+        std::vector<karabo::util::State> states;
         for(unsigned int i = 0; i < bp::len(args); ++i){
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
-            states.push_back(karabo::core::State::fromString(state));
+            states.push_back(karabo::util::State::fromString(state));
         }
         return self.setAllowedStates(path, states);
     }
