@@ -23,7 +23,7 @@ namespace karathon {
     template <class InputType>
     class PythonInputHandler : public karabo::io::InputHandler {
 
-    public:
+        public:
 
         KARABO_CLASSINFO(PythonInputHandler, "PythonInputHandler" + std::string(typeid (InputType).name()), "1.0")
 

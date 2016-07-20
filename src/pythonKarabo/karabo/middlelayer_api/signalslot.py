@@ -112,6 +112,7 @@ class SignalSlotable(Configurable):
         requiredAccessLevel=AccessLevel.ADMIN)
 
     def __init__(self, configuration):
+        self._ss = None
         self._sethash = {"ignore": "this"}
         for k in dir(type(self)):
             if isinstance(getattr(self, k, None), Signal):
@@ -119,7 +120,6 @@ class SignalSlotable(Configurable):
         super().__init__(configuration)
         self.deviceId = self._deviceId_
         self._devices = weakref.WeakValueDictionary()
-        self._ss = None
         self.__randPing = random.randint(2, 0x7fffffff)
         self.__initialized = False
 
@@ -135,7 +135,7 @@ class SignalSlotable(Configurable):
         self._sethash = {}
         if server is not None:
             server.addChild(self.deviceId, self)
-        return loop.create_task(self.run_async(), self)
+        return loop.create_task(self._run(), self)
 
 
     # slotPing _is_ a slot, but not using the official decorator.
@@ -181,23 +181,12 @@ class SignalSlotable(Configurable):
         else:
             return False, Hash()
 
+    def _initInfo(self):
+        """return the info hash at initialization time"""
+        return Hash("heartbeatInterval", self.heartbeatInterval.value)
+
     @coroutine
-    def run_async(self):
-        """start everything needed for this device
-
-        This coroutine is called once a device is started. Overwrite this
-        method if you want code to be called at startup time. Don't forget
-        to yield from super.
-
-        This method also calls ``self.run``, so if you don't need a coroutine,
-        it's easier to overwrite ``run``.
-
-        This method is supposed to return once everything is up and running.
-        If you have long-running tasks, start them with async.
-
-        Return a future which represents the Karabo event dispatcher.
-        Once this future is done, the entire device is considered dead, and
-        all other still running tasks should be cancelled as well."""
+    def _run(self):
         async(self._ss.main(self))
         try:
             yield from wait_for(
@@ -208,9 +197,9 @@ class SignalSlotable(Configurable):
                               format(self.deviceId))
         except TimeoutError:
             pass
-        self.run()
+        yield from super(SignalSlotable, self)._run()
         self.__randPing = 0  # Start answering on slotPing with argument rand=0
-        async(self._ss.notify_network(self.heartbeatInterval))
+        async(self._ss.notify_network(self._initInfo()))
         yield from get_event_loop().run_coroutine_or_thread(
             self.onInitialization)
         self.__initialized = True

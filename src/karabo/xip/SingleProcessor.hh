@@ -17,7 +17,7 @@ namespace karabo {
         template <class T>
         class SingleProcessor {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(SingleProcessor, "SingleProcessor", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS

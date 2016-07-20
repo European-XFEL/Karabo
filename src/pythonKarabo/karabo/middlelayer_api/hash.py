@@ -9,6 +9,7 @@ from asyncio import async, iscoroutinefunction, coroutine, get_event_loop
 import base64
 from collections import OrderedDict
 from enum import Enum
+from functools import partial
 from io import BytesIO
 import numbers
 import pint
@@ -257,13 +258,19 @@ class Descriptor(object):
                 raise TypeError("{} got unexpected keyword argument: {}".
                                 format(self.__class__.__name__, k))
 
-    def parameters(self):
-        return {p: getattr(self, p) for p in dir(type(self))
-                if isinstance(getattr(type(self), p), Attribute) and
-                   getattr(self, p) is not None}
+    def toSchemaAndAttrs(self, device, state):
+        """return schema for device in state
 
-    def subschema(self):
-        return Hash()
+        This returns the Hash representing this descriptor in a Schema, as well
+        as the attributes that have to be set for it.
+
+        if device is None, the class' Schema is returned, otherwise the
+        device's. If state is not None, only the parts of the schema available
+        in the given state are returned.
+        """
+        attrs = ((name, getattr(self, name)) for name in dir(type(self))
+                 if isinstance(getattr(type(self), name), Attribute))
+        return Hash(), {name: attr for name, attr in attrs if attr is not None}
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -279,14 +286,52 @@ class Descriptor(object):
         instance.setValue(self, self.toKaraboValue(value))
 
     def setter(self, instance, value):
-        """this is to be called if the value is changed from the outside"""
+        """This is called when the value is changed from the outside
+
+        One may override this method if something special should happen.
+        This method must return None (e.g. by having no return statement
+        at all).
+        """
         setattr(instance, self.key, value)
 
-    @coroutine
-    def setter_async(self, instance, value):
-        self.setter(instance, self.toKaraboValue(value, strict=False))
+    def _setter(self, instance, value):
+        """Return a list with callables to be called to set the value
+
+        `value` still is the bare Hash value, as it came from the network.
+        The actual setting is done by `setter` later.
+        """
+        return [partial(self.setter, instance,
+                        self.toKaraboValue(value, strict=False))]
+
+    def initialize(self, instance, value):
+        """This is called when the value is initialized
+
+        One may override this method if something special should happen,
+        otherwise `setter` is called. This method must return None
+        (e.g. by having no return statement at all).
+        """
+        return self.setter(instance, value)
+
+    def _initialize(self, instance, value):
+        """Initialize values and return a list of coroutines to be called
+
+        `value` still is the bare Hash value, as it came from the network.
+        `initialize` is called with corresponding `KaraboValue`.
+        """
+        ret = self.initialize(instance,
+                              self.toKaraboValue(value, strict=False))
+        if ret is None:
+            return []
+        else:
+            return [ret]
 
     def checkedSet(self, instance, value):
+        """Check whether it is allowed and return setters
+
+        This checks whether it is allowed to set the value and if so
+        returns an iterable with setter that need to be called to set the
+        value.
+        """
         if self.accessMode is not AccessMode.RECONFIGURABLE:
             msg = 'property "{}" is not reconfigurable'.format(self.key)
             raise KaraboError(msg)
@@ -296,7 +341,24 @@ class Descriptor(object):
                 self.key, instance.state)
             raise KaraboError(msg)
         else:
-            return self.setter_async(instance, value)
+            return self._setter(instance, value)
+
+    def checkedInit(self, instance, value=None):
+        """Check whether it is allowed and initialze
+
+        This checks whether it is allowed to initialize the value and
+        returns an iterable with coroutines which may be needed for
+        delayed initialization.
+        """
+        # initial values for READONLY attributes are ignored
+        if value is None or self.accessMode is AccessMode.READONLY:
+            if self.assignment is Assignment.MANDATORY:
+                raise KaraboError(
+                    'assignment is mandatory for "{}"'.format(self.key))
+            if self.defaultValue is None:
+                return []
+            return self._initialize(instance, self.defaultValue)
+        return self._initialize(instance, value)
 
     def toDataAndAttrs(self, value):
         """Split value in bare data and the attributes that go with it
@@ -310,11 +372,11 @@ class Descriptor(object):
 class Slot(Descriptor):
     iscoroutine = None
 
-    def parameters(self):
-        ret = super(Slot, self).parameters()
-        ret["nodeType"] = NodeType.Node
-        ret["displayType"] = "Slot"
-        return ret
+    def toSchemaAndAttrs(self, device, state):
+        h, attrs = super(Slot, self).toSchemaAndAttrs(device, state)
+        attrs["nodeType"] = NodeType.Node
+        attrs["displayType"] = "Slot"
+        return h, attrs
 
     def toDataAndAttrs(self, value):
         return Hash(), {}
@@ -338,10 +400,12 @@ class Slot(Descriptor):
                 self.key, device.state)
             device._ss.reply(message, msg)
             raise KaraboError(msg)
-        if self.iscoroutine or iscoroutinefunction(self.method):
+        if self.iscoroutine:
             coro = self.method(device)
         else:
-            coro = get_event_loop().start_thread(self.method, device)
+            coro = get_event_loop().run_coroutine_or_thread(
+                self.method, device)
+
         def inner():
             try:
                 device._ss.reply(message, (yield from coro))
@@ -354,8 +418,8 @@ class Slot(Descriptor):
     def method(self, device):
         return self.themethod(device)
 
-    def setter(self, instance, value):
-        pass  # nothing to set in a slot
+    def _initialize(self, instance, value=None):
+        return []  # nothing to initialize in a Slot
 
     def __call__(self, method):
         if self.description is None:
@@ -444,11 +508,11 @@ class Type(Descriptor, Registry):
             attrs = {}
         return data.value, attrs
 
-    def parameters(self):
-        ret = super(Type, self).parameters()
-        ret["nodeType"] = NodeType.Leaf
-        ret["valueType"] = self.hashname()
-        return ret
+    def toSchemaAndAttrs(self, device, state):
+        h, attrs = super().toSchemaAndAttrs(device, state)
+        attrs["nodeType"] = NodeType.Leaf
+        attrs["valueType"] = self.hashname()
+        return h, attrs
 
     def __call__(self, method):
         if self.description is None:

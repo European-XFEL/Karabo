@@ -13,10 +13,12 @@
 #include <karabo/util/ClassInfo.hh>
 
 struct Base_N {
+
+
     KARABO_CLASSINFO(Base_N, "Base_N", "1.0");
 
     karabo::util::Hash m_config;
-    
+
     virtual karabo::util::Hash getConfig() {
         return karabo::util::Hash();
     }
@@ -24,6 +26,8 @@ struct Base_N {
 };
 
 struct Base_Y {
+
+
     KARABO_CLASSINFO(Base_Y, "Base_Y", "1.0");
 
     karabo::util::Hash m_config;
@@ -39,6 +43,8 @@ struct Base_Y {
 
 template < class Base>
 struct Sub1_N : public Base {
+
+
     KARABO_CLASSINFO(Sub1_N, Base::classInfo().getClassId() + "-Sub1_N", "1.0");
 
     virtual karabo::util::Hash getConfig() {
@@ -49,12 +55,14 @@ struct Sub1_N : public Base {
 
 template < class Base>
 struct Sub1_Y : public Base {
+
+
     KARABO_CLASSINFO(Sub1_Y, Base::classInfo().getClassId() + "-Sub1_Y", "1.0");
 
     void configure(const karabo::util::Hash & configuration) {
         Base::m_config.template set<karabo::util::Hash > ("sub1", configuration);
     }
-    
+
     virtual karabo::util::Hash getConfig() {
         return Base::m_config;
     }
@@ -62,7 +70,9 @@ struct Sub1_Y : public Base {
 };
 
 class Configurator_Test : public CPPUNIT_NS::TestFixture {
-    CPPUNIT_TEST_SUITE(Configurator_Test);  
+
+
+    CPPUNIT_TEST_SUITE(Configurator_Test);
     CPPUNIT_TEST(testSub1);
     CPPUNIT_TEST_SUITE_END();
 
@@ -73,7 +83,7 @@ public:
     void tearDown();
 
 private:
-    
+
     void testSub1();
 
 };

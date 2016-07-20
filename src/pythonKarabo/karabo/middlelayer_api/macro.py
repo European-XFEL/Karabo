@@ -144,18 +144,20 @@ class Macro(Device):
         if not isinstance(get_event_loop(), EventLoop):
             EventLoop.global_loop.start_device(self)
 
-    @coroutine
-    def run_async(self):
-        """ implement the RemoteDevice functionality, upon
-        starting the device the devices are searched and then
-        assigned to the object's properties """
-        info = Hash()
+    def _initInfo(self):
+        info = super(Macro, self)._initInfo()
         info["type"] = "macro"
         info["project"] = self.project
         info["module"] = self.module
-        self.updateInstanceInfo(info)
+        return info
 
-        yield from super().run_async()
+    @coroutine
+    def _run(self):
+        """ implement the RemoteDevice functionality, upon
+        starting the device the devices are searched and then
+        assigned to the object's properties """
+
+        yield from super(Macro, self)._run()
 
         self.state = "SearchRemotes..."
         holders = []
@@ -233,8 +235,8 @@ class Macro(Device):
         o = cls(args)
         o.startInstance()
         try:
-            loop.run_until_complete(loop.create_task(loop.start_thread(
-                slot.method, o), o))
+            loop.run_until_complete(loop.create_task(
+                loop.run_coroutine_or_thread(slot.method, o), o))
             loop.run_until_complete(o.slotKillDevice())
         finally:
             loop.close()

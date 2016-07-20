@@ -10,6 +10,7 @@ from PyQt4.QtSvg import QSvgRenderer
 
 from karabo_gui.dialogs.textdialog import TextDialog
 from karabo_gui.scenemodel.api import write_single_model
+from karabo_gui.sceneview.utils import calc_rect_from_text
 
 LIGHT_BLUE = (224, 240, 255)
 PADDING = 10
@@ -30,6 +31,7 @@ class LabelWidget(QLabel):
         self.model = model
 
         self.setText(self.model.text)
+        self.setToolTip(self.model.text)
         self.setLineWidth(model.frame_width)
 
         styleSheet = []
@@ -40,13 +42,12 @@ class LabelWidget(QLabel):
                 model.background))
         self.setStyleSheet("".join(styleSheet))
 
-        font = QFont()
-        font.fromString(model.font)
-        fm = QFontMetrics(font)
-        CONTENT_MARGIN = 10
-        model.width = fm.width(model.text) + CONTENT_MARGIN
-        model.height = fm.height() + CONTENT_MARGIN
+        _, _, model.width, model.height = calc_rect_from_text(model.font,
+                                                              model.text)
         self.setGeometry(model.x, model.y, model.width, model.height)
+
+    def add_boxes(self, boxes):
+        """ Satisfy the informal widget interface. """
 
     def destroy(self):
         """ Satisfy the informal widget interface. """
@@ -77,13 +78,10 @@ class SceneLinkWidget(QPushButton):
         super(SceneLinkWidget, self).__init__(parent)
         self.model = model
 
+        self.setToolTip(self.model.target)
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self._handle_click)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
-
-    def _handle_click(self):
-        if len(self.model.target) > 0:
-            print("Open scene:", self.model.target)
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
@@ -101,6 +99,13 @@ class SceneLinkWidget(QPushButton):
             pen.setColor(Qt.lightGray)
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
+
+    def _handle_click(self):
+        if len(self.model.target) > 0:
+            print("Open scene:", self.model.target)
+
+    def add_boxes(self, boxes):
+        """ Satisfy the informal widget interface. """
 
     def destroy(self):
         """ Satisfy the informal widget interface. """
@@ -127,9 +132,15 @@ class UnknownSvgWidget(QWidget):
         self.renderer = renderer
         self.setGeometry(renderer.viewBox())
 
+    def minimumSizeHint(self):
+        return self.renderer.defaultSize()
+
     def paintEvent(self, event):
         with QPainter(self) as painter:
             self.renderer.render(painter)
+
+    def sizeHint(self):
+        return self.minimumSizeHint()
 
     @classmethod
     def create(cls, model, parent=None):
@@ -145,6 +156,9 @@ class UnknownSvgWidget(QWidget):
             return cls(renderer, parent=parent)
         return None
 
+    def add_boxes(self, boxes):
+        """ Satisfy the informal widget interface. """
+
     def destroy(self):
         """ Satisfy the informal widget interface. """
 
@@ -152,14 +166,10 @@ class UnknownSvgWidget(QWidget):
         """ Satisfy the informal widget interface. """
 
     def set_geometry(self, rect):
-        self.model.set(x=rect.x(), y=rect.y(),
-                       width=rect.width(), height=rect.height())
         self.setGeometry(rect)
 
     def translate(self, offset):
-        new_pos = self.pos() + offset
-        self.model.set(x=new_pos.x(), y=new_pos.y())
-        self.move(new_pos)
+        self.move(self.pos() + offset)
 
 
 class WorkflowItemWidget(QWidget):
@@ -171,12 +181,17 @@ class WorkflowItemWidget(QWidget):
         self.model = model
         self.font = QFont()
         self.font.fromString(model.font)
-        self.outline_rect = self._compute_outline(model.device_id, self.font)
         self.pen = QPen()
         if self.model.klass == 'WorkflowGroupItem':
             self.pen.setWidth(3)
 
-        self.setGeometry(model.x, model.y, model.width, model.height)
+        rect = QRect(model.x, model.y, model.width, model.height)
+        self.setGeometry(rect)
+        self.outline_rect = self._compute_outline(rect)
+        self._minimum_rect = self._compute_minimum_rect()
+
+    def minimumSize(self):
+        return self._minimum_rect.size()
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
@@ -184,12 +199,16 @@ class WorkflowItemWidget(QWidget):
             painter.setFont(self.font)
             painter.setPen(self.pen)
 
-            width, height = self.width(), self.height()
-            painter.translate(QPoint(width / 2, height / 2))
             painter.setBrush(QColor(*LIGHT_BLUE))
-            painter.drawRoundRect(self.outline_rect, PADDING / 2, PADDING / 2)
+            painter.drawRoundRect(self.outline_rect, 5, 5)
             painter.drawText(self.outline_rect, Qt.AlignCenter,
                              self.model.device_id)
+
+    def sizeHint(self):
+        return self.minimumSize()
+
+    def add_boxes(self, boxes):
+        """ Satisfy the informal widget interface. """
 
     def destroy(self):
         """ Satisfy the informal widget interface. """
@@ -201,16 +220,22 @@ class WorkflowItemWidget(QWidget):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
         self.setGeometry(rect)
+        self.outline_rect = self._compute_outline(rect)
 
     def translate(self, offset):
         new_pos = self.pos() + offset
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    @ staticmethod
-    def _compute_outline(text, font):
-        fm = QFontMetrics(font)
-        rect = fm.boundingRect(text)
-        rect.adjust(-PADDING, -PADDING, PADDING, PADDING)
-        rect.translate(-rect.center())
+    def _compute_outline(self, rect):
+        padding = self.pen.width()
+        rect.moveTo(0, 0)
+        rect.adjust(padding, padding, -padding, -padding)
+        return rect
+
+    def _compute_minimum_rect(self):
+        fm = QFontMetrics(self.font)
+        rect = fm.boundingRect(self.model.device_id)
+        padding = self.pen.width() * 2
+        rect.adjust(-padding, -padding, padding, padding)
         return rect

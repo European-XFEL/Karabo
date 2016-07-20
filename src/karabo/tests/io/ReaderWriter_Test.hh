@@ -19,6 +19,8 @@
 #include <boost/filesystem/path.hpp>
 
 class ReaderWriter_Test : public CPPUNIT_NS::TestFixture {
+
+
     CPPUNIT_TEST_SUITE(ReaderWriter_Test);
 
     CPPUNIT_TEST(testWritingReadingBinaryFormat);

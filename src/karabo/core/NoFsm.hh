@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   NoFsm.hh
  * Author: Sergey Esenov serguei.essenov@xfel.eu
  *
@@ -19,6 +19,7 @@ namespace karabo {
     namespace core {
 
         class NoFsm {
+
         public:
 
             KARABO_CLASSINFO(NoFsm, "NoFsm", "1.3")
@@ -39,7 +40,8 @@ namespace karabo {
                 for (size_t i = 0; i < m_initialFunc.size(); ++i) m_initialFunc[i]();
             }
 
-            virtual void stopFsm() {}
+            virtual void stopFsm() {
+            }
 
             void registerInitialFunction(const boost::function<void()>& func) {
                 m_initialFunc.push_back(func);

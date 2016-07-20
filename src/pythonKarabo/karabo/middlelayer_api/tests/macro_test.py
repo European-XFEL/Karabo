@@ -1,8 +1,8 @@
-from asyncio import (async, coroutine, gather, set_event_loop,
-                     TimeoutError)
+from asyncio import async, coroutine, TimeoutError
+from contextlib import contextmanager
 import sys
 import time
-from unittest import TestCase, main
+from unittest import main
 import weakref
 
 from karabo.middlelayer_api.device import Device
@@ -13,7 +13,7 @@ from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro
 
-from .eventloop import startDevices, stopDevices, sync_tst, async_tst
+from .eventloop import DeviceTest, sync_tst, async_tst
 
 
 class Superslot(Slot):
@@ -101,24 +101,33 @@ class Local(Macro):
         self.slept_count = 3
 
 
-class Tests(TestCase):
+class Tests(DeviceTest):
+    @classmethod
+    @contextmanager
+    def lifetimeManager(cls):
+        cls.local = Local(_deviceId_="local", project="test", module="test",
+                          may_start_thread=False)
+        cls.remote = Remote(dict(_deviceId_="remote"))
+        with cls.deviceManager(cls.remote, lead=cls.local):
+            yield
+
     @sync_tst
     def test_execute(self):
         """test the execution of remote commands"""
-        remote.done = False
+        self.remote.done = False
         with getDevice("remote") as d:
             d.doit()
         time.sleep(0.01)
-        self.assertTrue(remote.done)
+        self.assertTrue(self.remote.done)
 
     @sync_tst
     def test_change(self):
         """test that changes on a remote device reach the macro"""
-        remote.value = 7
+        self.remote.value = 7
         with getDevice("remote") as d:
             d.changeit()
         time.sleep(0.01)
-        self.assertEqual(remote.value, 3)
+        self.assertEqual(self.remote.value, 3)
 
     @sync_tst
     def test_disconnect(self):
@@ -142,7 +151,7 @@ class Tests(TestCase):
     @sync_tst
     def test_set(self):
         """test setting of parameters on a remote device"""
-        remote.value = 7
+        self.remote.value = 7
         with getDevice("remote") as d:
             self.assertEqual(d.value, 7)
             d.value = 10
@@ -155,26 +164,26 @@ class Tests(TestCase):
     @sync_tst
     def test_generic(self):
         """call a generic slot"""
-        remote.value = 7
+        self.remote.value = 7
         d = getDevice("remote")
         d.generic()
         time.sleep(0.1)
-        self.assertEqual(remote.value, 22)
+        self.assertEqual(self.remote.value, 22)
 
     @sync_tst
     def test_other(self):
         """test properties with special setters"""
-        remote.value = 7
+        self.remote.value = 7
         with getDevice("remote") as d:
             d.other = 102
         time.sleep(0.1)
-        self.assertEqual(remote.value, 102)
+        self.assertEqual(self.remote.value, 102)
 
     @sync_tst
     def test_selfcall(self):
         """test that slots can be called like normal methods"""
-        local.selfcall()
-        self.assertEqual(local.marker, 77)
+        self.local.selfcall()
+        self.assertEqual(self.local.marker, 77)
 
     @sync_tst
     def test_setwait(self):
@@ -182,21 +191,21 @@ class Tests(TestCase):
         d = getDevice("remote")
         setWait(d, value=200, counter=300)
 
-        self.assertEqual(remote.value, 200)
-        self.assertEqual(remote.counter, 300)
+        self.assertEqual(self.remote.value, 200)
+        self.assertEqual(self.remote.counter, 300)
 
     @sync_tst
     def test_setnowait(self):
         """test the setNoWait function"""
-        remote.value = 0
-        remote.counter = 0
+        self.remote.value = 0
+        self.remote.counter = 0
         d = getDevice("remote")
         setNoWait(d, value=200, counter=300)
-        self.assertEqual(remote.value, 0)
-        self.assertEqual(remote.counter, 0)
+        self.assertEqual(self.remote.value, 0)
+        self.assertEqual(self.remote.counter, 0)
         time.sleep(0.1)
-        self.assertEqual(remote.value, 200)
-        self.assertEqual(remote.counter, 300)
+        self.assertEqual(self.remote.value, 200)
+        self.assertEqual(self.remote.counter, 300)
 
     @sync_tst
     def test_waituntil(self):
@@ -233,12 +242,12 @@ class Tests(TestCase):
         """test that macros can print via expected parameters"""
         sys.stdout = KaraboStream(sys.stdout)
         try:
-            self.assertEqual(local.state, "Idle...")
-            yield from remote.call_local()
-            self.assertEqual(local.nowstate, "remotecalls")
-            self.assertEqual(local.state, "Idle...")
-            self.assertEqual(local.print, "hero")
-            self.assertEqual(local.printno, 2)
+            self.assertEqual(self.local.state, "Idle...")
+            yield from self.remote.call_local()
+            self.assertEqual(self.local.nowstate, "remotecalls")
+            self.assertEqual(self.local.state, "Idle...")
+            self.assertEqual(self.local.print, "hero")
+            self.assertEqual(self.local.printno, 2)
         finally:
             sys.stdout = sys.stdout.base
 
@@ -257,35 +266,35 @@ class Tests(TestCase):
     @async_tst
     def test_error(self):
         """test that errors are properly logged and error functions called"""
-        remote.done = False
+        self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"), \
                 (yield from getDevice("local")) as d:
             yield from d.error()
             yield from sleep(0.1)
-        self.assertTrue(remote.done)
-        self.assertIs(local.exc_slot, Local.error)
-        self.assertIsInstance(local.exception, RuntimeError)
-        local.traceback.tb_lasti  # stupid check whether that is a traceback
-        del local.exc_slot
-        del local.exception
-        del local.traceback
+        self.assertTrue(self.remote.done)
+        self.assertIs(self.local.exc_slot, Local.error)
+        self.assertIsInstance(self.local.exception, RuntimeError)
+        self.local.traceback.tb_lasti  # check whether that is a traceback
+        del self.local.exc_slot
+        del self.local.exception
+        del self.local.traceback
 
     @async_tst
     def test_error_in_error(self):
         """test that errors in error handlers are properly logged"""
-        remote.done = False
+        self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR") as logs, \
                 (yield from getDevice("local")) as d:
             yield from d.error_in_error()
             yield from sleep(0.1)
-        self.assertFalse(remote.done)
+        self.assertFalse(self.remote.done)
         self.assertEqual(logs.records[-1].msg, "error in error handler")
-        self.assertIs(local.exc_slot, Local.error_in_error)
-        self.assertIsInstance(local.exception, RuntimeError)
-        local.traceback.tb_lasti  # stupid check whether that is a traceback
-        del local.exc_slot
-        del local.exception
-        del local.traceback
+        self.assertIs(self.local.exc_slot, Local.error_in_error)
+        self.assertIsInstance(self.local.exception, RuntimeError)
+        self.local.traceback.tb_lasti  # check whether that is a traceback
+        del self.local.exc_slot
+        del self.local.exception
+        del self.local.traceback
 
     @async_tst
     def test_cancel(self):
@@ -301,7 +310,7 @@ class Tests(TestCase):
         karabo_sleep = sleep
         with (yield from getDevice("local")) as d:
             # cancel during time.sleep
-            local.cancelled_slot = None
+            self.local.cancelled_slot = None
             task = async(d.sleepalot())
             # Sleep for a short time so that the macro gets started
             yield from karabo_sleep(0.01)
@@ -313,12 +322,12 @@ class Tests(TestCase):
             # Finally, sleep for long enough that the macro runs in to the
             # karabo sleep which CAN be interrupted.
             yield from karabo_sleep(0.13)
-            self.assertEqual(local.cancelled_slot, Local.sleepalot)
-            self.assertEqual(local.slept_count, 1)
+            self.assertEqual(self.local.cancelled_slot, Local.sleepalot)
+            self.assertEqual(self.local.slept_count, 1)
             assert task.done()
 
             # cancel during karabo.sleep
-            local.cancelled_slot = None
+            self.local.cancelled_slot = None
             task = async(d.sleepalot())
             # Sleep for long enough for the macro to end up in the really long
             # sleep at the end
@@ -327,17 +336,17 @@ class Tests(TestCase):
             yield from d.cancel()
             # Sleep a little while, so the task can finish
             yield from karabo_sleep(0.03)
-            self.assertEqual(local.slept_count, 2)
-            self.assertEqual(local.cancelled_slot, Local.sleepalot)
+            self.assertEqual(self.local.slept_count, 2)
+            self.assertEqual(self.local.cancelled_slot, Local.sleepalot)
             assert task.done()
 
     @sync_tst
     def test_connectdevice(self):
-        remote.value = 123
+        self.remote.value = 123
         d = connectDevice("remote")
         try:
             self.assertEqual(d.value, 123)
-            remote.value = 456
+            self.remote.value = 456
             sleep(0.02)
             self.assertEqual(d.value, 456)
         finally:
@@ -345,21 +354,6 @@ class Tests(TestCase):
             weak = weakref.ref(d)
             del d
             self.assertIsNone(weak())
-
-
-def setUpModule():
-    global remote, local, loop
-    local = Local(_deviceId_="local", project="test", module="test",
-                  may_start_thread=False)
-    remote = Remote(dict(_deviceId_="remote"))
-    loop = startDevices(remote, local)
-    Tests.instance = local
-
-
-def tearDownModule():
-    global remote, local
-    stopDevices(remote, local)
-    Tests.instance = remote = local = None
 
 
 if __name__ == "__main__":

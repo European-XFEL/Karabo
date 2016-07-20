@@ -19,6 +19,7 @@ namespace karabo {
         template <class Impl>
         class FromType {
 
+
             typedef typename Impl::ArgumentType ArgumentType;
 
             FromType();

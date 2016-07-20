@@ -16,7 +16,7 @@ namespace karabo {
 
         class BinaryProcessor {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(BinaryProcessor, "BinaryProcessor", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS

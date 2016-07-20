@@ -421,8 +421,8 @@ void H5File_Test::testRead() {
         CPPUNIT_ASSERT(data.get<unsigned int>("bla") == 1006);
         vector<double>& vec = data.get< vector<double> >("db");
         for (size_t i = 0; i < dims.size(); ++i) {
-            CPPUNIT_ASSERT(vec[i] - (i * 1.0 + 0.1234)  < 10e-16); 
-            CPPUNIT_ASSERT((i * 1.0 + 0.1234) - vec[i]  < 10e-16);
+            CPPUNIT_ASSERT(vec[i] - (i * 1.0 + 0.1234) < 10e-16);
+            CPPUNIT_ASSERT((i * 1.0 + 0.1234) - vec[i] < 10e-16);
             CPPUNIT_ASSERT(vecd[i] - (i * 1.0 + 0.1234) < 10e-16);
             CPPUNIT_ASSERT((i * 1.0 + 0.1234) - vecd[i] < 10e-16);
         }
@@ -716,15 +716,15 @@ void H5File_Test::testBufferWrite() {
         bool exists = file.hasTable("/planets");
         //cerr << "/planets " << exists << endl;
         CPPUNIT_ASSERT(exists == true);
-                        
+
         exists = file.hasTable("/planet");
         //cerr << "/planet " << exists << endl;
         CPPUNIT_ASSERT(exists == false);
-                       
+
         exists = file.hasTable("planets");
         //cerr << "planets " << exists << endl;
         CPPUNIT_ASSERT(exists == false);
-                
+
 
         p.stopPeriod("create");
         p.startPeriod("write0");
@@ -1417,8 +1417,8 @@ void H5File_Test::testManyGroups() {
             //            clog << "Attributes have been written" << endl;
         }
         p.stopPeriod("attribute");
-        #define WRITE
-        #ifdef WRITE
+#define WRITE
+#ifdef WRITE
         for (int i = 0; i < n; ++i) {
             vector<int>& v1 = d1.bindReference< vector<int> >(toString(i));
             v1.resize(rec, i);
@@ -1499,10 +1499,10 @@ void H5File_Test::testManyGroups() {
         file.close();
         p.stopPeriod("close");
 
-        #endif
+#endif
 
-        #define READ 1
-        #ifdef READ
+#define READ 1
+#ifdef READ
         {
             file.open(File::READONLY);
             //clog << "a" << endl;
@@ -1594,7 +1594,7 @@ void H5File_Test::testManyGroups() {
                 }
             }
         }
-        #endif
+#endif
         p.close();
         TimeDuration formatTime = p.getPeriod("format").getDuration();
         TimeDuration createTime = p.getPeriod("create").getDuration();
@@ -1854,9 +1854,9 @@ void H5File_Test::testTrainFormat() {
             descriptors.set("storageCellNumber", reinterpret_cast<unsigned short*> (ptr + offsetDescriptors));
             descriptors.set("bunchNumber", reinterpret_cast<unsigned long long*> (ptr + offsetDescriptors + imageCount * sizeof (uint16_t)));
             descriptors.set("status", reinterpret_cast<unsigned short*> (ptr + offsetDescriptors + imageCount * sizeof (uint16_t)
-                            + imageCount * sizeof (uint64_t)));
+                                                                         + imageCount * sizeof (uint64_t)));
             descriptors.set("length", reinterpret_cast<unsigned int*> (ptr + offsetDescriptors + imageCount * sizeof (uint16_t)
-                            + imageCount * sizeof (uint64_t) + imageCount * sizeof (uint16_t)));
+                                                                       + imageCount * sizeof (uint64_t) + imageCount * sizeof (uint16_t)));
 
 
             trainData.set("detectorDataBlock", reinterpret_cast<char*> (ptr + offsetDetectorDataBlock));
@@ -2322,7 +2322,7 @@ void H5File_Test::testArray() {
             vector<int>& rarr = rdata.get<vector<int> >("array");
             CPPUNIT_ASSERT(rarr.size() == 12);
             for (size_t i = 0; i < rarr.size(); ++i) {
-                CPPUNIT_ASSERT(static_cast<size_t>(rarr[i]) == i);
+                CPPUNIT_ASSERT(static_cast<size_t> (rarr[i]) == i);
             }
         }
 

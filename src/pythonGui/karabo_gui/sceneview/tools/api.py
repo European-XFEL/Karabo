@@ -3,7 +3,12 @@ from .actions import (BoxVSceneAction, BoxHSceneAction, CreateToolAction,  # noq
                       GroupSceneAction, SceneBringToFrontAction,  # noqa
                       SceneSendToBackAction, UngroupSceneAction)  # noqa
 from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,  # noqa
-                        ScenePasteAction, SceneSelectAllAction)  # noqa
+                        ScenePasteAction, ScenePasteReplaceAction,  # noqa
+                        SceneSelectAllAction)  # noqa
 from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,  # noqa
                       TextSceneTool)  # noqa
 from .selection import SceneSelectionTool  # noqa
+from .workflow import CreateWorkflowConnectionToolAction, WorkflowConnectionTool  # noqa
+from .scenedndhandler import (ConfigurationDropHandler,  # noqa
+                              NavigationDropHandler)  # noqa
+from .widgethandler import WidgetSceneHandler  # noqa

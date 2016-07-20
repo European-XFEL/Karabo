@@ -1,9 +1,10 @@
-from PyQt4.QtCore import QRect, QSize, QTimer, pyqtSlot
-from PyQt4.QtGui import (QAction, QHBoxLayout, QStackedLayout, QToolButton,
-                         QWidget)
+from PyQt4.QtCore import QRect, QSize, Qt, QTimer, pyqtSlot
+from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
+                         QToolButton, QWidget)
 
 from karabo_gui import icons
 from karabo_gui.network import Network
+from karabo_gui.sceneview.utils import get_status_symbol_as_pixmap
 from .utils import get_box, determine_if_value_unchanged
 
 
@@ -14,17 +15,26 @@ class BaseWidgetContainer(QWidget):
     def __init__(self, model, parent):
         super(BaseWidgetContainer, self).__init__(parent)
         self.model = model
-        boxes = [get_box(*key.split('.', 1)) for key in self.model.keys]
-        self.old_style_widget = self._create_widget(boxes)
-        self.box = boxes[0]
-        self._make_box_connections()
+        self.boxes = [get_box(*key.split('.', 1)) for key in self.model.keys]
+
+        self.layout = QStackedLayout(self)
+        self.layout.setStackingMode(QStackedLayout.StackAll)
+        self.status_symbol = QLabel("", self)
+        self.status_symbol.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.layout.addWidget(self.status_symbol)
+
+        self.old_style_widget = self._create_widget(self.boxes)
+        for box in self.boxes:
+            self._make_box_connections(box)
         if self.model.parent_component == 'EditableApplyLaterComponent':
-            self.layout = self._add_edit_widgets()
+            layout = self._add_edit_widgets()
+            edit_widgets = QWidget()
+            edit_widgets.setLayout(layout)
+            self.layout.addWidget(edit_widgets)
         else:
-            self.layout = QStackedLayout(self)
-            self.layout.setStackingMode(QStackedLayout.StackAll)
             self.layout.addWidget(self.old_style_widget.widget)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
+        self.setToolTip(", ".join(self.model.keys))
 
     def _create_widget(self, boxes):
         """ A method for creating the child widget.
@@ -33,32 +43,61 @@ class BaseWidgetContainer(QWidget):
         """
         raise NotImplementedError
 
+    def add_boxes(self, boxes):
+        """ Add more boxes to a display widget which allows more than one
+            box. ``True`` is returned when this was possible, otherwise
+            ``False`` is returned.
+        """
+        widget = self.old_style_widget
+        widget_added = False
+        if self.model.parent_component == 'DisplayComponent':
+            for box in boxes:
+                device_id, property_path = box.key().split('.', 1)
+                device_box = get_box(device_id, property_path)
+                # This is only ``True`` if the display widget allows more
+                # than one box to be added to it
+                if widget.addBox(device_box):
+                    self.model.keys.append(device_box.key())
+                    self.boxes.append(device_box)
+                    self._make_box_connections(device_box)
+                    widget_added = True
+        return widget_added
+
     def destroy(self):
         """ Disconnect the box signals
         """
         from karabo_gui import gui
 
-        box = self.box
         widget = self.old_style_widget
-        box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
         if self.model.parent_component == 'EditableApplyLaterComponent':
-            widget.signalEditingFinished.connect(self._on_editing_finished)
-            box.signalUserChanged.disconnect(self._on_user_edit)
-            box.signalUpdateComponent.disconnect(self._on_display_value_change)
+            box = self.boxes[0]
+            widget.signalEditingFinished.disconnect(self._on_editing_finished)
             # These are connected in `EditableWidget.__init__`
             box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
                 widget.updateStateSlot)
             gui.window.signalGlobalAccessLevelChanged.disconnect(
                 widget.updateStateSlot)
-        else:  # DisplayWidgets
-            box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
+
+        for box in self.boxes:
+            box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
+            if self.model.parent_component == 'EditableApplyLaterComponent':
+                box.signalUserChanged.disconnect(self._on_user_edit)
+                box.signalUpdateComponent.disconnect(
+                    self._on_display_value_change)
+            else:  # DisplayWidgets
+                box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
+            device = box.configuration
+            device.signalStatusChanged.disconnect(
+                self._device_status_changed)
 
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""
         if visible:
-            self.box.addVisible()
+            for box in self.boxes:
+                box.addVisible()
         else:
-            self.box.removeVisible()
+            for box in self.boxes:
+                box.removeVisible()
 
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
@@ -70,10 +109,9 @@ class BaseWidgetContainer(QWidget):
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    def _make_box_connections(self):
+    def _make_box_connections(self, box):
         """ Hook up all the box signals to the old_style_widget instance.
         """
-        box = self.box
         widget = self.old_style_widget
         box.signalNewDescriptor.connect(widget.typeChangedSlot)
         if box.descriptor is not None:
@@ -82,9 +120,17 @@ class BaseWidgetContainer(QWidget):
         if box.hasValue():
             widget.valueChanged(box, box.value, box.timestamp)
         if self.model.parent_component == 'EditableApplyLaterComponent':
+            widget.signalEditingFinished.connect(self._on_editing_finished)
             box.signalUserChanged.connect(self._on_user_edit)
             box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
             box.signalUpdateComponent.connect(self._on_display_value_change)
+            widget.setReadOnly(False)
+        else:
+            widget.setReadOnly(True)
+
+        device = box.configuration
+        device.signalStatusChanged.connect(self._device_status_changed)
+        self._device_status_changed(device, device.status, device.error)
 
     # ---------------------------------------------------------------------
     # Edit buttons related code
@@ -103,7 +149,7 @@ class BaseWidgetContainer(QWidget):
             layout.addWidget(tb)
             return button, tb
 
-        layout = QHBoxLayout(self)
+        layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.old_style_widget.widget)
 
@@ -179,7 +225,7 @@ class BaseWidgetContainer(QWidget):
         self._update_buttons()
 
     def _update_buttons(self):
-        box = self.box
+        box = self.boxes[0]
         widget = self.old_style_widget
         allowed = box.isAllowed()
         self.apply_button.setEnabled(allowed)
@@ -200,3 +246,14 @@ class BaseWidgetContainer(QWidget):
         self.apply_button.setStatusTip(description)
         self.apply_button.setToolTip(description)
         self.decline_button.setEnabled(allowed and not value_unchanged)
+
+    @pyqtSlot(object, str, bool)
+    def _device_status_changed(self, configuration, status, error):
+        """ Callback when the status of the device is changes.
+        """
+        pixmap = get_status_symbol_as_pixmap(status, error)
+        if pixmap is not None:
+            self.status_symbol.setPixmap(pixmap)
+            self.status_symbol.show()
+        else:
+            self.status_symbol.hide()

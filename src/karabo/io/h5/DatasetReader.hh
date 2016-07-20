@@ -33,7 +33,7 @@ namespace karabo {
             template< typename T>
             class DatasetReader {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(DatasetReader, "DatasetReader", "1.0")
                 KARABO_CONFIGURATION_BASE_CLASS
@@ -58,11 +58,11 @@ namespace karabo {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
 
                     m_memoryDataSpace = Dataset::dataSpace(m_dims);
-                    #ifdef KARABO_ENABLE_TRACE_LOG
+#ifdef KARABO_ENABLE_TRACE_LOG
                     std::ostringstream oss;
                     Dataset::getDataSpaceInfo(this->m_memoryDataSpace, oss);
                     KARABO_LOG_FRAMEWORK_TRACE << oss.str();
-                    #endif
+#endif
 
                     std::vector<unsigned long long> bufferVector(m_dims.rank() + 1, 0);
                     bufferVector[0] = 0;
@@ -121,7 +121,7 @@ namespace karabo {
             template<>
             class DatasetReader<std::string> {
 
-            public:
+                public:
 
                 KARABO_CLASSINFO(DatasetReader, "DatasetReader", "1.0")
                 KARABO_CONFIGURATION_BASE_CLASS
@@ -145,11 +145,11 @@ namespace karabo {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
 
                     m_memoryDataSpace = Dataset::dataSpace(m_dims);
-                    #ifdef KARABO_ENABLE_TRACE_LOG
+#ifdef KARABO_ENABLE_TRACE_LOG
                     std::ostringstream oss;
                     Dataset::getDataSpaceInfo(this->m_memoryDataSpace, oss);
                     KARABO_LOG_FRAMEWORK_TRACE << oss.str();
-                    #endif
+#endif
 
                     std::vector<unsigned long long> bufferVector(m_dims.rank() + 1, 0);
                     bufferVector[0] = 0;
@@ -242,6 +242,7 @@ namespace karabo {
 
                 struct Mapping {
 
+
                     std::vector<std::string>& m_vec;
                     std::vector<char*> m_ch;
                     std::string* m_ptr;
@@ -269,6 +270,7 @@ namespace karabo {
             template<>
             class DatasetReader<bool> {
 
+
                 // Two issues with bool values exist:
                 // 1) vector<bool> - cannot use reference to vector elements
                 // 2) bool is not supported by hdf5 -> we will use unsigned char to store the bool values
@@ -279,6 +281,7 @@ namespace karabo {
 
             private:
                 struct Mapping {
+
 
                     std::vector<bool>& m_vec;
                     std::vector<unsigned char> m_uch;
@@ -317,11 +320,11 @@ namespace karabo {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
 
                     m_memoryDataSpace = Dataset::dataSpace(m_dims);
-                    #ifdef KARABO_ENABLE_TRACE_LOG
+#ifdef KARABO_ENABLE_TRACE_LOG
                     std::ostringstream oss;
                     Dataset::getDataSpaceInfo(this->m_memoryDataSpace, oss);
                     KARABO_LOG_FRAMEWORK_TRACE << oss.str();
-                    #endif
+#endif
 
                     std::vector<unsigned long long> bufferVector(m_dims.rank() + 1, 0);
                     bufferVector[0] = 0;

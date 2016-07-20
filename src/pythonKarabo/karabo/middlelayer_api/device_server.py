@@ -63,7 +63,7 @@ class DeviceServer(SignalSlotable):
         displayedName="Plugin Namespace",
         description="Namespace to search for plugins",
         assignment=Assignment.OPTIONAL,
-        defaultValue="karabo.python_device.api_2",
+        defaultValue="karabo.middlelayer_device",
         requiredAccessLevel=AccessLevel.EXPERT)
 
     log = Node(Logger,
@@ -129,23 +129,25 @@ class DeviceServer(SignalSlotable):
                 Hash("Network", Hash())
             ])
 
-    def run(self):
-        self._ss.enter_context(self.log.setBroker(self._ss))
-
-        self.logger = self.log.logger
-        super().run()
-
-        info = Hash()
+    def _initInfo(self):
+        info = super(DeviceServer, self)._initInfo()
         info["type"] = "server"
         info["serverId"] = self.serverId
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["visibility"] = self.visibility.value
-        self.updateInstanceInfo(info)
+        info.merge(self.deviceClassesHash())
+        return info
+
+    @coroutine
+    def _run(self):
+        yield from super(DeviceServer, self)._run()
+
+        self._ss.enter_context(self.log.setBroker(self._ss))
+        self.logger = self.log.logger
 
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
                       format(self.hostname))
-        self.notifyNewDeviceAction()
         async(self.scanPlugins())
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
@@ -156,7 +158,7 @@ class DeviceServer(SignalSlotable):
     @coroutine
     def scanPlugins(self):
         availableModules = set()
-        while self.running:
+        while True:
             entrypoints = self.pluginLoader.update()
             for ep in entrypoints:
                 if ep.name in availableModules:
@@ -172,7 +174,7 @@ class DeviceServer(SignalSlotable):
                     traceback.print_exc()
                 else:
                     availableModules.add(ep.name)
-                    self.notifyNewDeviceAction()
+                    self.updateInstanceInfo(self.deviceClassesHash())
             yield from sleep(3)
 
 
@@ -247,11 +249,11 @@ class DeviceServer(SignalSlotable):
         return classid, deviceid, configuration
 
         
-    def notifyNewDeviceAction(self):
-        self.updateInstanceInfo(Hash(
+    def deviceClassesHash(self):
+        return Hash(
             "deviceClasses", StringList([k for k in Device.subclasses.keys()]),
             "visibilities", numpy.array([c.visibility.defaultValue.value
-                             for c in Device.subclasses.values()])))
+                                         for c in Device.subclasses.values()]))
 
     @coslot
     def slotKillServer(self):
@@ -271,10 +273,10 @@ class DeviceServer(SignalSlotable):
     def slotInstanceGone(self, id, info):
         self.deviceInstanceMap.pop(id, None)
 
-    @coslot
+    @slot
     def slotGetClassSchema(self, classid):
         cls = Device.subclasses[classid]
-        return (yield from cls.getClassSchema_async()), classid, self.serverId
+        return cls.getClassSchema(), classid, self.serverId
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cnt = self.instanceCountPerDeviceServer.setdefault(self.serverId, 0)

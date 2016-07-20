@@ -20,6 +20,7 @@
 #include <karabo/util/Validator.hh>
 #include <karabo/util/HashFilter.hh>
 #include <karabo/util/TableElement.hh>
+#include <karabo/util/RollingWindowStatistics.hh>
 
 #include "PythonMacros.hh"
 #include "Wrapper.hh"
@@ -42,7 +43,7 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 
 
     SchemaWrapper(std::string const & classId, Schema::AssemblyRules const & rules)
-    : Schema(classId, boost::ref(rules)), bp::wrapper< Schema >() {
+        : Schema(classId, boost::ref(rules)), bp::wrapper< Schema >() {
     }
 
 
@@ -61,6 +62,8 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 
 
 class ValidatorWrap {
+
+
 public:
 
 
@@ -70,7 +73,7 @@ public:
         if (stamp.ptr() != Py_None && bp::extract<karabo::util::Timestamp>(stamp).check()) {
             tstamp = bp::extract<karabo::util::Timestamp>(stamp);
         }
-            
+
         pair<bool, string> result = self.validate(schema, configuration, *validated, tstamp);
         if (result.first)
             return bp::object(validated);
@@ -104,6 +107,13 @@ public:
     static bp::object hasReconfigurableParameter(Validator& self) {
         return bp::object(self.hasReconfigurableParameter());
     }
+
+
+    static const RollingWindowStatistics & getRollingStatistics(Validator& self, const std::string & path) {
+        return *self.getRollingStatistics(path);
+    }
+
+
 };
 
 
@@ -1341,7 +1351,8 @@ struct HashFilterWrap {
         HashFilter::byTag(schema, config, *result, tags, sep);
         return result;
     }
-    
+
+
     static boost::shared_ptr<Hash> byAccessMode(const Schema& schema, const Hash& config, const AccessType& value) {
         boost::shared_ptr<Hash> result(new Hash);
         HashFilter::byAccessMode(schema, config, *result, value);
@@ -1622,6 +1633,14 @@ void exportPyUtilSchema() {
 
         s.def("getAlarmHigh", &schemawrap::getAlarmHigh);
 
+        s.def("getWarnVarianceLow", &Schema::getWarnVarianceLow);
+
+        s.def("getWarnVarianceHigh", &Schema::getWarnVarianceHigh);
+
+        s.def("getAlarmVarianceLow", &Schema::getAlarmVarianceLow);
+
+        s.def("getAlarmVarianceHigh", &Schema::getAlarmVarianceHigh);
+
         s.def("getWarnLowAs", &schemawrap::getWarnLowAs, (bp::arg("path"), bp::arg("pytype")));
 
         s.def("getWarnHighAs", &schemawrap::getWarnHighAs, (bp::arg("path"), bp::arg("pytype")));
@@ -1629,6 +1648,7 @@ void exportPyUtilSchema() {
         s.def("getAlarmLowAs", &schemawrap::getAlarmLowAs, (bp::arg("path"), bp::arg("pytype")));
 
         s.def("getAlarmHighAs", &schemawrap::getAlarmHighAs, (bp::arg("path"), bp::arg("pytype")));
+
 
         //********* 'has'-methods ****************
 
@@ -1671,6 +1691,14 @@ void exportPyUtilSchema() {
         s.def("hasAlarmLow", &Schema::hasAlarmLow);
 
         s.def("hasAlarmHigh", &Schema::hasAlarmHigh);
+
+        s.def("hasWarnVarianceLow", &Schema::hasWarnVarianceLow);
+
+        s.def("hasWarnVarianceHigh", &Schema::hasWarnVarianceHigh);
+
+        s.def("hasAlarmVarianceLow", &Schema::hasAlarmVarianceLow);
+
+        s.def("hasAlarmVarianceHigh", &Schema::hasAlarmVarianceHigh);
 
         s.def("hasArchivePolicy", &Schema::hasArchivePolicy);
 
@@ -1738,12 +1766,18 @@ void exportPyUtilSchema() {
         s.def("setWarnHigh", &schemawrap::setWarnHigh, (bp::arg("path"), bp::arg("value")));
         s.def("setAlarmLow", &schemawrap::setAlarmLow, (bp::arg("path"), bp::arg("value")));
         s.def("setAlarmHigh", &schemawrap::setAlarmHigh, (bp::arg("path"), bp::arg("value")));
+        s.def("setWarnVarianceLow", &Schema::setWarnVarianceLow, (bp::arg("path"), bp::arg("value")));
+        s.def("setWarnVarianceHigh", &Schema::setWarnVarianceHigh, (bp::arg("path"), bp::arg("value")));
+        s.def("setAlarmVarianceLow", &Schema::setAlarmVarianceLow, (bp::arg("path"), bp::arg("value")));
+        s.def("setAlarmVarianceHigh", &Schema::setAlarmVarianceHigh, (bp::arg("path"), bp::arg("value")));
+        s.def("getRollingStatsEvalInterval", &Schema::getRollingStatsEvalInterval, (bp::arg("path"), bp::arg("value")));
         s.def("setArchivePolicy", &Schema::setArchivePolicy, (bp::arg("path"), bp::arg("value")));
         s.def("setMin", &Schema::setMin, (bp::arg("path"), bp::arg("value")));
         s.def("setMax", &Schema::setMax, (bp::arg("path"), bp::arg("value")));
         s.def("setRequiredAccessLevel", &Schema::setRequiredAccessLevel, (bp::arg("path"), bp::arg("value")));
         //s.def("", &Schema::, ());     // overwrite<>(default) not implemented
         s.def("updateAliasMap", &schemawrap::updateAliasMap);
+        s.def("hasRollingStatistics", &Schema::hasRollingStatistics);
     }// end Schema
 
     /////////////////////////////////////////////////////////////
@@ -1763,9 +1797,45 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(PathElement, string, PATH)
 
     ///////////////////////////////////////////////////////////////
+    //AlarmSpecific<SimpleElement< EType >, EType >, where EType:
+    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
+    // and AlarmSpecific<PathElement, std::string >
+
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<int>, int, ReadOnlySpecific, INT32)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned int>, unsigned int, ReadOnlySpecific, UINT32)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<long long>, long long, ReadOnlySpecific, INT64)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, ReadOnlySpecific, UINT64)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<float>, float, ReadOnlySpecific, FLOAT)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<double>, double, ReadOnlySpecific, DOUBLE)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<std::string>, std::string, ReadOnlySpecific, STRING)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<bool>, bool, ReadOnlySpecific, BOOL)
+
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<int>, int, RollingStatsSpecific, INT32)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned int>, unsigned int, RollingStatsSpecific, UINT32)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<long long>, long long, RollingStatsSpecific, INT64)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, RollingStatsSpecific, UINT64)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<float>, float, RollingStatsSpecific, FLOAT)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<double>, double, RollingStatsSpecific, DOUBLE)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<std::string>, std::string, RollingStatsSpecific, STRING)
+    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<bool>, bool, RollingStatsSpecific, BOOL)
+
+    ///////////////////////////////////////////////////////////////
+    //RollingStatSpecific<SimpleElement< EType >, EType >, where EType:
+    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
+
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<int>, int, INT32)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<long long>, long long, INT64)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, UINT64)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<float>, float, FLOAT)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<double>, double, DOUBLE)
+    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<bool>, bool, BOOL)
+
+    ///////////////////////////////////////////////////////////////
     //ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
     // and ReadOnlySpecific<PathElement, std::string >
+
 
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<int>, int, INT32)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
@@ -1776,35 +1846,9 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<std::string>, std::string, STRING)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<bool>, bool, BOOL)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(PathElement, std::string, PATH)
-    
-    ///////////////////////////////////////////////////////////////
-    //AlarmSpecific<SimpleElement< EType >, EType >, where EType:
-    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
-    // and AlarmSpecific<PathElement, std::string >
 
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<int>, int, INT32)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<long long>, long long, INT64)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, UINT64)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<float>, float, FLOAT)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<double>, double, DOUBLE)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<std::string>, std::string, STRING)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<bool>, bool, BOOL)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(PathElement, std::string, PATH)
-    
-    ///////////////////////////////////////////////////////////////
-    //RollingStatSpecific<SimpleElement< EType >, EType >, where EType:
-    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
- 
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<int>, int, INT32)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<long long>, long long, INT64)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, UINT64)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<float>, float, FLOAT)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<double>, double, DOUBLE)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<bool>, bool, BOOL)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(PathElement, std::string, PATH)
-    
+
+
 
     //    /////////////////////////////////////////////////////////////
     //    //DefaultValue<BitsetElement< EType >, EType >, where EType:
@@ -1952,7 +1996,7 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 ;
     }
-    
+
     //////////////////////////////////////////////////////////////////////
     // Binding TableElement
     // In Python : TABLE_ELEMENT
@@ -1960,66 +2004,66 @@ void exportPyUtilSchema() {
         bp::implicitly_convertible< Schema &, TableElement >();
         bp::class_<TableElement> ("TABLE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
                 .def("advanced", &TableElement::advanced
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("observerAccess", &TableElement::observerAccess
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("userAccess", &TableElement::userAccess
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("operatorAccess", &TableElement::operatorAccess
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("expertAccess", &TableElement::expertAccess
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("adminAccess", &TableElement::adminAccess
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("allowedStates", &TableElement::allowedStates
-                    , ( bp::arg("states"), bp::arg("sep")=" ,;" )
-                    , bp::return_internal_reference<> ())
+                     , (bp::arg("states"), bp::arg("sep") = " ,;")
+                     , bp::return_internal_reference<> ())
                 .def("assignmentInternal", &TableElement::assignmentInternal
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("assignmentMandatory", &TableElement::assignmentMandatory
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("assignmentOptional", &TableElement::assignmentOptional
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("alias"
-                    , &AliasAttributeWrap<TableElement>::aliasPy
-                    , bp::return_internal_reference<> ())
+                     , &AliasAttributeWrap<TableElement>::aliasPy
+                     , bp::return_internal_reference<> ())
                 .def("commit", &TableElement::commit
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("commit"
-                    , (TableElement & (TableElement::*)(karabo::util::Schema &))(&TableElement::commit )
-                    , bp::arg("expected")
-                    , bp::return_internal_reference<> () )
+                     , (TableElement & (TableElement::*)(karabo::util::Schema &))(&TableElement::commit)
+                     , bp::arg("expected")
+                     , bp::return_internal_reference<> ())
                 .def("description", &TableElement::description
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("displayedName", &TableElement::displayedName
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("init", &TableElement::init
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("key", &TableElement::key
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("reconfigurable", &TableElement::reconfigurable
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("tags"
-                    , (TableElement & (TableElement::*)(std::string const &, std::string const &))(&TableElement::tags)
-                    , (bp::arg("tags"), bp::arg("sep")=" ,;")
-                    , bp::return_internal_reference<> ())
+                     , (TableElement & (TableElement::*)(std::string const &, std::string const &))(&TableElement::tags)
+                     , (bp::arg("tags"), bp::arg("sep") = " ,;")
+                     , bp::return_internal_reference<> ())
                 .def("tags"
-                    , (TableElement & (TableElement::*)(std::vector<std::string> const &))(&TableElement::tags)
-                    , (bp::arg("tags"))
-                    , bp::return_internal_reference<> ())
+                     , (TableElement & (TableElement::*)(std::vector<std::string> const &))(&TableElement::tags)
+                     , (bp::arg("tags"))
+                     , bp::return_internal_reference<> ())
                 .def("defaultValue"
-                    , &DefaultValueTableWrap::defaultValue
-                    , (bp::arg("self"), bp::arg("pyList"))
-                    , bp::return_internal_reference<> ())
+                     , &DefaultValueTableWrap::defaultValue
+                     , (bp::arg("self"), bp::arg("pyList"))
+                     , bp::return_internal_reference<> ())
                 .def("noDefaultValue"
-                    , (TableElement & (karabo::util::TableDefaultValue<TableElement>::*)())(&karabo::util::TableDefaultValue<TableElement>::noDefaultValue)
-                    , bp::return_internal_reference<> ())
+                     , (TableElement & (karabo::util::TableDefaultValue<TableElement>::*)())(&karabo::util::TableDefaultValue<TableElement>::noDefaultValue)
+                     , bp::return_internal_reference<> ())
                 .def("maxSize"
-                    , (TableElement & ( TableElement::*)(int const & )) (&TableElement::maxSize)
-                    , bp::return_internal_reference<> () )
-                    .def("minSize"
-                    , (TableElement & ( TableElement::*)(int const & ))(&TableElement::minSize)
-                    , bp::return_internal_reference<> () )
+                     , (TableElement & (TableElement::*)(int const &)) (&TableElement::maxSize)
+                     , bp::return_internal_reference<> ())
+                .def("minSize"
+                     , (TableElement & (TableElement::*)(int const &))(&TableElement::minSize)
+                     , bp::return_internal_reference<> ())
                 .def("setNodeSchema"
                      , &TableElement::setNodeSchema, (bp::arg("nodeSchema"))
                      , bp::return_internal_reference<> ())
@@ -2031,7 +2075,7 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())*/
                 ;
     }
-    
+
     ///////////////////////////////////////////////////////////////////////////
     //  TableDefaultValue<TableElement> 
     {
@@ -2161,13 +2205,14 @@ void exportPyUtilSchema() {
 
         bp::class_<Validator>("Validator", bp::init<>())
                 .def(bp::init<const Validator::ValidationRules>())
-                .def("validate", &ValidatorWrap::validate, (bp::arg("schema"), bp::arg("configuration"), bp::arg("timestamp")=bp::object()))
+                .def("validate", &ValidatorWrap::validate, (bp::arg("schema"), bp::arg("configuration"), bp::arg("timestamp") = bp::object()))
                 .def("setValidationRules", &ValidatorWrap::setValidationRules, (bp::arg("rules")))
                 .def("getValidationRules", &ValidatorWrap::getValidationRules)
                 .def("hasParametersInWarnOrAlarm", &ValidatorWrap::hasParametersInWarnOrAlarm)
                 .def("getParametersInWarnOrAlarm", &ValidatorWrap::getParametersInWarnOrAlarm)
                 .def("hasReconfigurableParameter", &ValidatorWrap::hasReconfigurableParameter)
-                ;
+                .def("getRollingStatistics", &ValidatorWrap::getRollingStatistics, bp::arg("key"), bp::return_internal_reference<>());
+
     }
 
     {

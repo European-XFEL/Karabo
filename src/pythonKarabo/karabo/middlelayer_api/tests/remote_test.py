@@ -1,7 +1,8 @@
 from asyncio import (async, coroutine, get_event_loop, sleep, wait_for,
                      TimeoutError)
+from contextlib import contextmanager
 from datetime import datetime
-from unittest import TestCase, main
+from unittest import main
 import time
 import weakref
 
@@ -15,7 +16,7 @@ from karabo.middlelayer import (
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.device_client import Queue
 
-from .eventloop import startDevices, stopDevices, async_tst
+from .eventloop import DeviceTest, async_tst
 
 
 class Superslot(Slot):
@@ -136,15 +137,23 @@ class Local(Device):
                 yield from d.doit()
 
 
-class Tests(TestCase):
+class Tests(DeviceTest):
+    @classmethod
+    @contextmanager
+    def lifetimeManager(cls):
+        cls.local = Local({"_deviceId_": "local"})
+        cls.remote = Remote({"_deviceId_": "remote"})
+        with cls.deviceManager(cls.remote, lead=cls.local):
+            yield
+
     @async_tst
     def test_execute(self):
         """test the execution of remote slots"""
-        self.assertFalse(remote.done)
+        self.assertFalse(self.remote.done)
         with (yield from getDevice("remote")) as d:
             yield from d.doit()
         yield from sleep(0.1)
-        self.assertTrue(remote.done)
+        self.assertTrue(self.remote.done)
 
     @async_tst
     def test_set_remote(self):
@@ -171,17 +180,18 @@ class Tests(TestCase):
             for a, b in zip(d.string_list, ["a", "bla"]):
                 self.assertEqual(a, b)
 
-        self.assertEqual(remote.string, "bla")
-        self.assertLess(abs(remote.string.timestamp.toTimestamp() -
+        self.assertEqual(self.remote.string, "bla")
+        self.assertLess(abs(self.remote.string.timestamp.toTimestamp() -
                             time.time()), 1)
-        self.assertEqual(remote.unit_int, 3 * unit.meter)
-        self.assertEqual(remote.unit_float, 7.5 * unit.millisecond)
-        for a, b in zip(remote.unit_vector_int,
+        self.assertEqual(self.remote.unit_int, 3 * unit.meter)
+        self.assertEqual(self.remote.unit_float, 7.5 * unit.millisecond)
+        for a, b in zip(self.remote.unit_vector_int,
                         [3, 4, 5] * unit.meter / unit.second):
             self.assertEqual(a, b)
-        for a, b in zip(remote.unit_vector_float, [1, 2, 3] * unit.degree):
+        for a, b in zip(self.remote.unit_vector_float,
+                        [1, 2, 3] * unit.degree):
             self.assertEqual(a, b)
-        for a, b in zip(remote.string_list, ["a", "bla"]):
+        for a, b in zip(self.remote.string_list, ["a", "bla"]):
             self.assertEqual(a, b)
 
         with (yield from getDevice("remote")) as d:
@@ -212,37 +222,38 @@ class Tests(TestCase):
                 self.assertEqual(a, b)
             self.assertEqual(d.string_list, [])
 
-        self.assertEqual(remote.unit_int, 5000 * unit.meter)
-        self.assertEqual(remote.unit_float, 2 * unit.millisecond)
-        for a, b in zip(remote.unit_vector_int,
+        self.assertEqual(self.remote.unit_int, 5000 * unit.meter)
+        self.assertEqual(self.remote.unit_float, 2 * unit.millisecond)
+        for a, b in zip(self.remote.unit_vector_int,
                         [2, 3, 4] * unit.meter / unit.second):
             self.assertEqual(a, b)
-        for a, b in zip(remote.unit_vector_float, [5, 7, 8] * unit.degree):
+        for a, b in zip(self.remote.unit_vector_float,
+                        [5, 7, 8] * unit.degree):
             self.assertEqual(a, b)
-        self.assertEqual(remote.string_list, [])
+        self.assertEqual(self.remote.string_list, [])
 
     @async_tst
     def test_set_local(self):
         with self.assertRaises(DimensionalityError):
-            remote.unit_int = 3
+            self.remote.unit_int = 3
         with self.assertRaises(DimensionalityError):
-            remote.unit_float = 7.5
+            self.remote.unit_float = 7.5
         with self.assertRaises(DimensionalityError):
-            remote.unit_vector_int = [3, 4, 5]
+            self.remote.unit_vector_int = [3, 4, 5]
         with self.assertRaises(DimensionalityError):
-            remote.unit_int = 3 * unit.second
+            self.remote.unit_int = 3 * unit.second
         with self.assertRaises(DimensionalityError):
-            remote.unit_float = 2 * unit.meter
+            self.remote.unit_float = 2 * unit.meter
         with self.assertRaises(DimensionalityError):
-            remote.unit_vector_int = [1, 2] * unit.meter
+            self.remote.unit_vector_int = [1, 2] * unit.meter
         with self.assertRaises(DimensionalityError):
-            remote.unit_vector_float = [1, 3] * unit.meter
+            self.remote.unit_vector_float = [1, 3] * unit.meter
         with self.assertRaises(TypeError):
-            remote.string_list = [3, 4]
+            self.remote.string_list = [3, 4]
 
-        remote.string = "blub"
-        remote.unit_vector_float = [1, 3, 3]
-        remote.string_list = ["z", "bla"]
+        self.remote.string = "blub"
+        self.remote.unit_vector_float = [1, 3, 3]
+        self.remote.string_list = ["z", "bla"]
 
         with (yield from getDevice("remote")) as d:
             self.assertEqual(d.string, "blub")
@@ -253,20 +264,21 @@ class Tests(TestCase):
             for a, b in zip(d.string_list, ["z", "bla"]):
                 self.assertEqual(a, b)
 
-        self.assertEqual(remote.string, "blub")
-        self.assertLess(abs(remote.string.timestamp.toTimestamp() -
+        self.assertEqual(self.remote.string, "blub")
+        self.assertLess(abs(self.remote.string.timestamp.toTimestamp() -
                             time.time()), 1)
-        for a, b in zip(remote.unit_vector_float, [1, 3, 3] * unit.degree):
+        for a, b in zip(self.remote.unit_vector_float,
+                        [1, 3, 3] * unit.degree):
             self.assertEqual(a, b)
-        for a, b in zip(remote.string_list, ["z", "bla"]):
+        for a, b in zip(self.remote.string_list, ["z", "bla"]):
             self.assertEqual(a, b)
 
         with (yield from getDevice("remote")) as d:
-            remote.unit_int = 5 * unit.kilometer
-            remote.unit_float = 2 * unit.millisecond
-            remote.unit_vector_int = [2, 3, 4] * unit.meter / unit.second
-            remote.unit_vector_float = [5, 7, 8] * unit.degree
-            remote.string_list = []
+            self.remote.unit_int = 5 * unit.kilometer
+            self.remote.unit_float = 2 * unit.millisecond
+            self.remote.unit_vector_int = [2, 3, 4] * unit.meter / unit.second
+            self.remote.unit_vector_float = [5, 7, 8] * unit.degree
+            self.remote.string_list = []
             yield from d
 
             self.assertEqual(d.unit_int, 5000 * unit.meter)
@@ -278,27 +290,29 @@ class Tests(TestCase):
                 self.assertEqual(a, b)
             self.assertEqual(d.string_list, [])
 
-        self.assertEqual(remote.unit_int, 5000 * unit.meter)
-        self.assertEqual(remote.unit_float, 2 * unit.millisecond)
-        for a, b in zip(remote.unit_vector_int,
+        self.assertEqual(self.remote.unit_int, 5000 * unit.meter)
+        self.assertEqual(self.remote.unit_float, 2 * unit.millisecond)
+        for a, b in zip(self.remote.unit_vector_int,
                         [2, 3, 4] * unit.meter / unit.second):
             self.assertEqual(a, b)
-        for a, b in zip(remote.unit_vector_float, [5, 7, 8] * unit.degree):
+        for a, b in zip(self.remote.unit_vector_float,
+                        [5, 7, 8] * unit.degree):
             self.assertEqual(a, b)
-        self.assertEqual(remote.string_list, [])
+        self.assertEqual(self.remote.string_list, [])
 
     @async_tst
     def test_change(self):
         """test changing a remote parameter"""
-        remote.value = 7
+        self.remote.value = 7
         with (yield from getDevice("remote")) as d:
             yield from d.changeit()
         yield from sleep(0.1)
-        self.assertEqual(remote.value, 3)
+        self.assertEqual(self.remote.value, 3)
 
     @async_tst
     def test_disconnect(self):
         """test values are not updating when disconnected"""
+        self.remote.counter = -1
         d = yield from getDevice("remote")
         task = async(d.count())
         yield from sleep(0.1)
@@ -318,7 +332,7 @@ class Tests(TestCase):
     @async_tst
     def test_set(self):
         """test setting of remote values works"""
-        remote.value = 7
+        self.remote.value = 7
         with (yield from getDevice("remote")) as d:
             self.assertEqual(d.value, 7)
             d.value = 10
@@ -331,21 +345,21 @@ class Tests(TestCase):
     @async_tst
     def test_generic(self):
         """test calling a generic slot"""
-        remote.value = 7
+        self.remote.value = 7
         d = yield from getDevice("remote")
         yield from d.generic()
         yield from sleep(0.1)
-        self.assertEqual(remote.value, 22)
+        self.assertEqual(self.remote.value, 22)
 
     @async_tst
     def test_generic_int(self):
         """test setting a generic property"""
-        remote.value = 7
+        self.remote.value = 7
         d = yield from getDevice("remote")
         d.generic_int = 33
         yield from d
         yield from sleep(0.1)
-        self.assertEqual(remote.value, 66)
+        self.assertEqual(self.remote.value, 66)
 
     @async_tst
     def test_setter(self):
@@ -353,29 +367,28 @@ class Tests(TestCase):
         with (yield from getDevice("remote")) as d:
             d.other = 102
         yield from sleep(0.1)
-        self.assertEqual(remote.value, 102)
+        self.assertEqual(self.remote.value, 102)
 
     @async_tst
     def test_setwait(self):
         """test the setWait coroutine"""
         d = yield from getDevice("remote")
         yield from setWait(d, value=200, counter=300)
-        self.assertEqual(remote.value, 200)
-        self.assertEqual(remote.counter, 300)
+        self.assertEqual(self.remote.value, 200)
+        self.assertEqual(self.remote.counter, 300)
 
     @async_tst
     def test_setnowait(self):
         """test the setNoWait coroutine"""
-        remote.value = 0
-        remote.counter = 0
+        self.remote.value = 0
+        self.remote.counter = 0
         d = yield from getDevice("remote")
         setNoWait(d, value=200, counter=300)
-        self.assertEqual(remote.value, 0)
-        self.assertEqual(remote.counter, 0)
+        self.assertEqual(self.remote.value, 0)
+        self.assertEqual(self.remote.counter, 0)
         yield from sleep(0.1)
-        self.assertEqual(remote.value, 200)
-        self.assertEqual(remote.counter, 300)
-
+        self.assertEqual(self.remote.value, 200)
+        self.assertEqual(self.remote.counter, 300)
 
     @async_tst
     def test_waituntil(self):
@@ -447,11 +460,12 @@ class Tests(TestCase):
             d.once = 7
             d.once = 10
         yield from sleep(0.1)
-        self.assertEqual(remote.once_value, 10)
+        self.assertEqual(self.remote.once_value, 10)
 
     @async_tst
     def test_disallow(self):
         """test that values cannot be set if in wrong state"""
+        self.assertEqual(self.remote.state, "uninitialized")
         with (yield from getDevice("remote")) as d:
             try:
                 d.value = 7
@@ -488,9 +502,9 @@ class Tests(TestCase):
         with (yield from getDevice("remote")) as d:
             t = async(d.read_log())
             yield from sleep(0.1)
-            local.logger.warning("this is an info")
+            self.local.logger.warning("this is an info")
             yield from t
-        hash = Hash.decode(remote.logmessage, "Bin")
+        hash = Hash.decode(self.remote.logmessage, "Bin")
         hash = hash["messages"][0]
         self.assertEqual(hash["message"], "this is an info")
         self.assertEqual(hash["type"], "WARN")
@@ -503,9 +517,9 @@ class Tests(TestCase):
             try:
                 raise RuntimeError
             except Exception:
-                local.logger.exception("expected exception")
+                self.local.logger.exception("expected exception")
             yield from t
-        hash = Hash.decode(remote.logmessage, "Bin")
+        hash = Hash.decode(self.remote.logmessage, "Bin")
         hash = hash["messages"][0]
         self.assertEqual(hash["message"], "expected exception")
         self.assertEqual(hash["type"], "ERROR")
@@ -534,12 +548,13 @@ class Tests(TestCase):
     @async_tst
     def test_nested(self):
         """test accessing nested properties"""
-        remote.nested.val = 3 * unit.second
+        self.remote.nested.val = 3 * unit.second
         self.assertLess(
-            abs(remote.nested.val.timestamp.toTimestamp() - time.time()), 1)
-        ts1 = remote.nested.val.timestamp
-        remote.nested.nestnest.value = 7 * unit.meter
-        ts2 = remote.nested.nestnest.value.timestamp
+            abs(self.remote.nested.val.timestamp.toTimestamp() - time.time()),
+            1)
+        ts1 = self.remote.nested.val.timestamp
+        self.remote.nested.nestnest.value = 7 * unit.meter
+        ts2 = self.remote.nested.nestnest.value.timestamp
         with (yield from getDevice("remote")) as d:
             self.assertEqual(d.nested.val, 3 * unit.second)
             self.assertEqual(d.nested.val.timestamp, ts1)
@@ -550,65 +565,65 @@ class Tests(TestCase):
             d.nested.val = 4 * unit.second
             d.nested.nestnest.value = 5 * unit.meter
             yield from waitUntilNew(d)
-        self.assertEqual(remote.nested.val, 4 * unit.second)
-        self.assertEqual(remote.nested.nestnest.value, 5 * unit.meter)
+        self.assertEqual(self.remote.nested.val, 4 * unit.second)
+        self.assertEqual(self.remote.nested.nestnest.value, 5 * unit.meter)
 
     @async_tst
     def test_error(self):
         """test error reporting and calling of error methods"""
-        remote.done = False
+        self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
             with (yield from getDevice("local")) as d:
                 yield from d.error()
             yield from sleep(0.1)
-        self.assertTrue(remote.done)
-        remote.done = False
-        self.assertIs(local.exc_slot, Local.error)
-        self.assertIsInstance(local.exception, RuntimeError)
-        local.traceback.tb_lasti  # stupid check whether that is a traceback
-        del local.exc_slot
-        del local.exception
-        del local.traceback
+        self.assertTrue(self.remote.done)
+        self.remote.done = False
+        self.assertIs(self.local.exc_slot, Local.error)
+        self.assertIsInstance(self.local.exception, RuntimeError)
+        self.local.traceback.tb_lasti  # check whether that is a traceback
+        del self.local.exc_slot
+        del self.local.exception
+        del self.local.traceback
 
     @async_tst
     def test_error_in_error(self):
         """test what happens if an error happens in an error method"""
-        remote.done = False
+        self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR") as logs:
             with (yield from getDevice("local")) as d:
                 yield from d.error_in_error()
             yield from sleep(0.1)
         self.assertEqual(logs.records[-1].msg, "error in error handler")
-        self.assertFalse(remote.done)
-        self.assertIs(local.exc_slot, Local.error_in_error)
-        self.assertIsInstance(local.exception, RuntimeError)
-        local.traceback.tb_lasti  # stupid check whether that is a traceback
-        del local.exc_slot
-        del local.exception
-        del local.traceback
+        self.assertFalse(self.remote.done)
+        self.assertIs(self.local.exc_slot, Local.error_in_error)
+        self.assertIsInstance(self.local.exception, RuntimeError)
+        self.local.traceback.tb_lasti  # check whether that is a traceback
+        del self.local.exc_slot
+        del self.local.exception
+        del self.local.traceback
 
     @async_tst
     def test_task_error(self):
         """test that errors of created tasks are properly reported"""
-        remote.done = False
+        self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
             with (yield from getDevice("local")) as d:
                 yield from d.task_error()
                 yield from sleep(0.1)
-        self.assertTrue(remote.done)
-        remote.done = False
-        self.assertIsNone(local.exc_slot)
-        self.assertIsInstance(local.exception, RuntimeError)
-        del local.exc_slot
-        del local.exception
-        del local.traceback
+        self.assertTrue(self.remote.done)
+        self.remote.done = False
+        self.assertIsNone(self.local.exc_slot)
+        self.assertIsInstance(self.local.exception, RuntimeError)
+        del self.local.exc_slot
+        del self.local.exception
+        del self.local.traceback
 
     @async_tst
     def test_connectDevice(self):
         try:
             d = yield from connectDevice("remote")
             self.assertNotEqual(d.value, 123)
-            remote.value = 123
+            self.remote.value = 123
             yield from sleep(0.02)
             self.assertEqual(d.value, 123)
         finally:
@@ -623,20 +638,44 @@ class Tests(TestCase):
         d = yield from getDevice("remote")
         self.assertEqual(d.value.getdoc(), "The Value")
 
+    @async_tst
+    def test_device_schema(self):
+        schema, device = yield from self.local.call(
+            "remote", "slotGetSchema", False)
+        self.assertEqual(device, "remote")
+        self.assertEqual(schema.name, "Remote")
+        h = schema.hash
+        self.assertEqual(h["value", ...], {
+            'requiredAccessLevel': 0,
+            'metricPrefixSymbol': '',
+            'accessMode': 4,
+            'description': 'The Value',
+            'unitSymbol': 'N_A',
+            'assignment': 0,
+            'nodeType': 0,
+            'defaultValue': 7,
+            'valueType': 'INT32'})
+        self.assertEqual(h["nested", ...], {
+            'requiredAccessLevel': 0,
+            'assignment': 0,
+            'nodeType': 1,
+            'accessMode': 4})
+        self.assertEqual(h["doit", ...], {
+            'requiredAccessLevel': 0,
+            'assignment': 0,
+            'displayType': 'Slot',
+            'nodeType': 1,
+            'accessMode': 4})
+        self.assertIn("allow", h)
+        self.assertIn("disallowed_int", h)
 
-def setUpModule():
-    global remote, local, loop
-    local = Local({"_deviceId_": "local"})
-    remote = Remote({"_deviceId_": "remote"})
-    loop = startDevices(local, remote)
-    Tests.instance = local
-
-
-def tearDownModule():
-    global remote, local
-    stopDevices(local, remote)
-    Tests.instance = remote = local = None
-
+        schema, device = yield from self.local.call(
+            "remote", "slotGetSchema", True)
+        self.assertEqual(device, "remote")
+        self.assertEqual(schema.name, "Remote")
+        h = schema.hash
+        self.assertIn("allow", h)
+        self.assertNotIn("disallowed_int", h)
 
 if __name__ == "__main__":
     main()

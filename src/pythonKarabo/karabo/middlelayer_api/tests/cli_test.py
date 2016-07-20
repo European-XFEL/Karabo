@@ -12,7 +12,7 @@ from karabo.middlelayer_api.cli import (connectDevice, DeviceClient,
                                         start_device_client)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
-    getDevice, instantiate, shutdown, DeviceClientBase, getDevices, getServers)
+    getDevice, instantiate, shutdown, getDevices, getServers, getClasses)
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.middlelayer_api.exceptions import KaraboError
@@ -33,7 +33,30 @@ class Remote(Macro):
 
     @Slot()
     def instantiate(self):
-        instantiate("testServer", "Other", "other")
+        conf = Hash(
+            "count", Hash(),
+            "visibility", 0,
+            "log", Hash(),
+            "Logger", Hash(
+                "categories", [
+                    Hash("Category", Hash(
+                        "name", "karabo", "additivity", False,
+                        "appenders", [
+                            Hash("RollingFile", Hash(
+                                "layout", Hash("Pattern", Hash(
+                                    "format", "something")),
+                                "filename", "some.log"))]))],
+                "appenders", [
+                    Hash("Ostream", Hash(
+                        "layout", Hash(
+                            "Pattern", Hash("format", "some format")))),
+                    Hash("RollingFile", Hash(
+                        "layout", Hash("Pattern", Hash(
+                            "format", "other format")),
+                        "filename", "other.log")),
+                    Hash("Network", Hash())]))
+        instantiate("testServer", "Other", "other",
+                     configuration=conf, do_count=Hash())
 
     @Slot()
     def shutdown(self):
@@ -111,7 +134,7 @@ class Tests(TestCase):
     @skip
     def test_remote_timeout(self):
         with self.assertLogs("NoRemote"):
-            remote = NoRemote(_deviceId_="NoRemote")
+            NoRemote(_deviceId_="NoRemote")
 
     def test_main(self):
         save = sys.argv
@@ -144,7 +167,6 @@ class Tests(TestCase):
         with proxy:
             yield from proxy.do()
         return proxy
-
 
     def test_macroserver(self):
         loop = setEventLoop()
@@ -182,9 +204,27 @@ class Tests(TestCase):
         yield from sleep(0.02)
 
     @coroutine
-    def check_server_topology(self):
+    def check_server_topology(self, dc):
+        schema, classId, serverId = yield from dc.call(
+            "testServer", "slotGetClassSchema", "Remote")
+        self.assertEqual(serverId, "testServer")
+        self.assertEqual(classId, "Remote")
+        self.assertEqual(schema.name, "Remote")
+        h = schema.hash
+        self.assertEqual(h["counter", ...], {
+            'accessMode': 4,
+            'assignment': 0,
+            'defaultValue': -1,
+            'metricPrefixSymbol': '',
+            'nodeType': 0,
+            'requiredAccessLevel': 0,
+            'unitSymbol': 'N_A',
+            'valueType': 'INT32'})
+
         self.assertIn("testServer", getServers())
         self.assertIn("other", getDevices("testServer"))
+        self.assertIn("Other", getClasses("testServer"))
+        self.assertNotIn("SomeBlupp", getClasses("testServer"))
 
     def test_server(self):
         """test the full lifetime of a python device server
@@ -211,7 +251,7 @@ class Tests(TestCase):
             # test that onInitialization was run properly
             self.assertEqual(proxy.something, 222)
             loop.run_until_complete(
-                loop.create_task(self.check_server_topology(), dc))
+                loop.create_task(self.check_server_topology(dc), dc))
             self.assertIn("other", server.deviceInstanceMap)
             r = weakref.ref(server.deviceInstanceMap["other"])
             with proxy:
@@ -301,6 +341,7 @@ class Tests(TestCase):
             loop.run_until_complete(dc.slotKillDevice())
 
     def test_ikarabo(self):
+        thread = None
         try:
             with self.assertLogs(level="WARNING"):
                 thread = start_device_client()
@@ -309,9 +350,10 @@ class Tests(TestCase):
         else:
             self.fail("no log should be generated!")
         finally:
-            thread.stop()
-            thread.join(0.1)
-            self.assertFalse(thread.is_alive())
+            if thread is not None:
+                thread.stop()
+                thread.join(0.1)
+                self.assertFalse(thread.is_alive())
 
 if __name__ == "__main__":
     main()
