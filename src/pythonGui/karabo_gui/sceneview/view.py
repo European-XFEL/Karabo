@@ -352,8 +352,8 @@ class SceneView(QWidget):
             # In case of layouts or widgets
             send_object_to_back(scene_obj)
 
-    def device_dropped(self, device_id, server_id, class_id, startup_behaviour,
-                       position):
+    def create_device(self, device_id, server_id, class_id, ifexists,
+                      position):
         """ A device was dropped from the navigation panel and needs
             to be processed now.
         """
@@ -363,18 +363,15 @@ class SceneView(QWidget):
             self.select_model(workflow_item_model)
             return
 
-        model = self.project_handler.device_dropped(device_id,
-                                                    server_id,
-                                                    class_id,
-                                                    startup_behaviour,
-                                                    position)
+        model = self.project_handler.create_device(device_id, server_id,
+                                                   class_id, ifexists,
+                                                   position)
         self.add_models(model)
         # Recalculate model rectangle, if empty
         self._update_model_geometry(model)
 
-    def device_group_dropped(self, group_name, server_id, class_id,
-                             startup_behaviour, display_prefix,
-                             start_index, end_index, position):
+    def create_device_group(self, group_name, server_id, class_id, ifexists,
+                            display_prefix, start_index, end_index, position):
         """ A device group was dropped from the navigation panel and needs
             to be processed now.
         """
@@ -384,14 +381,14 @@ class SceneView(QWidget):
             self.select_model(workflow_item_model)
             return
 
-        model = self.project_handler.device_group_dropped(group_name,
-                                                          server_id,
-                                                          class_id,
-                                                          startup_behaviour,
-                                                          display_prefix,
-                                                          start_index,
-                                                          end_index,
-                                                          position)
+        model = self.project_handler.create_device_group(group_name,
+                                                         server_id,
+                                                         class_id,
+                                                         ifexists,
+                                                         display_prefix,
+                                                         start_index,
+                                                         end_index,
+                                                         position)
         self.add_models(model)
         # Recalculate model rectangle, if empty
         self._update_model_geometry(model)

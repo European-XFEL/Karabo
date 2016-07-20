@@ -111,8 +111,8 @@ class NavigationDropHandler(SceneDnDHandler):
         if sourceType == "NavigationTreeView":
             source = event.source()
             index_info = source.indexInfo()
-            type = index_info.get("type")
-            if type == NavigationItemTypes.CLASS:
+            item_type = index_info.get("type")
+            if item_type == NavigationItemTypes.CLASS:
                 self.server_id = index_info.get("serverId")
                 self.class_id = index_info.get("classId")
                 return True
@@ -134,18 +134,18 @@ class NavigationDropHandler(SceneDnDHandler):
         device_id = dialog.deviceId
         server_id = dialog.serverId
         class_id = dialog.classId
-        startup_behaviour = dialog.startupBehaviour
+        ifexists = dialog.startupBehaviour
         position = event.pos()
         if not dialog.deviceGroup:
             # Device
-            scene_view.device_dropped(device_id, server_id, class_id,
-                                      startup_behaviour, position)
+            scene_view.create_device(device_id, server_id, class_id, ifexists,
+                                     position)
         else:
             # Device Group
-            scene_view.device_group_dropped(dialog.deviceGroupName,
-                                            server_id, class_id,
-                                            startup_behaviour,
-                                            dialog.displayPrefix,
-                                            dialog.startIndex,
-                                            dialog.endIndex,
-                                            position)
+            scene_view.create_device_group(dialog.deviceGroupName,
+                                           server_id, class_id,
+                                           ifexists,
+                                           dialog.displayPrefix,
+                                           dialog.startIndex,
+                                           dialog.endIndex,
+                                           position)
