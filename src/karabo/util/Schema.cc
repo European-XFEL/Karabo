@@ -574,42 +574,46 @@ namespace karabo {
 
 
         bool Schema::hasWarnLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_LOW);
+            return m_hash.hasAttribute(path, KARABO_WARN_LOW);
         }
 
 
         bool Schema::hasWarnHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_HIGH);
+            return m_hash.hasAttribute(path, KARABO_WARN_HIGH);
         }
 
 
         bool Schema::hasAlarmLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_LOW);
+            return m_hash.hasAttribute(path, KARABO_ALARM_LOW);
         }
 
 
         bool Schema::hasAlarmHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_HIGH);
+            return m_hash.hasAttribute(path, KARABO_ALARM_HIGH);
         }
 
 
         bool Schema::hasWarnVarianceLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_LOW);
+            return m_hash.hasAttribute(path, KARABO_WARN_VARIANCE_LOW);
         }
 
 
         bool Schema::hasWarnVarianceHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_HIGH);
+            return m_hash.hasAttribute(path, KARABO_WARN_VARIANCE_HIGH);
         }
 
 
         bool Schema::hasAlarmVarianceLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_LOW);
+            return m_hash.hasAttribute(path, KARABO_ALARM_VARIANCE_LOW);
         }
 
 
         bool Schema::hasAlarmVarianceHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
+            return m_hash.hasAttribute(path, KARABO_ALARM_VARIANCE_HIGH);
+        }
+        
+        bool Schema::hasInterlock(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_INTERLOCK);
         }
 
 
@@ -1035,7 +1039,7 @@ namespace karabo {
         }
         
         const std::string Schema::getInfoForAlarm(const std::string& path, const AlarmCondition& condition) const {
-            const std::string attr = std::string(KARABO_SCHEMA_ALARM_INFO)+"_"+condition.asString();
+            const std::string attr = std::string(KARABO_ALARM_INFO)+"_"+condition.asString();
             if(m_hash.hasAttribute(path, attr)){
                 return m_hash.getAttribute<std::string>(path, attr);
             } else {
