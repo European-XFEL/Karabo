@@ -13,6 +13,7 @@ import logging
 import os
 import queue
 import socket
+import time
 import threading
 import weakref
 
@@ -101,6 +102,15 @@ class Broker:
         p['hostname'] = socket.gethostname()
         p['classId'] = self.classId
         self.send(p, args)
+
+    @coroutine
+    def request(self, device, target, *args):
+        reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
+        self.call("call", {device: [target]}, reply, args)
+        future = Future(loop=self.loop)
+        self.repliers[reply] = future
+        future.add_done_callback(lambda _: self.repliers.pop(reply))
+        return (yield from future)
 
     def log(self, message):
         p = openmq.Properties()
