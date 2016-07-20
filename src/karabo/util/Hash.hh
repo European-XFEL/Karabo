@@ -585,10 +585,18 @@ namespace karabo {
                                                             const std::string& childKey, char separator);
 
             /// True if the first key (separated by 'separator') of any of 'paths' matches 'key'.
-            /// A first key that contains an index also (indirectly) matches 'key' without index - but if there is no
-            /// direct match, 'selectedIndicesOfKey' is filled with all indices of 'key' stated in 'paths'.
-            static bool keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key,
-                                             std::set<unsigned int> &selectedIndicesOfKey, char separator);
+            /// A first key that contains an index also matches (indirectly) 'key' without index,
+            /// i.e. path "a[0].g" matches key "a".
+            static bool keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key, char separator);
+
+            /// For all 'paths', check whether their first key matches 'key' (as in keyIsPrefixOfAnyPath).
+            /// If it does indirectly (see keyIsPrefixOfAnyPath), append the index specified behind it to the result,
+            /// except if there is also a direct match - then the result is empty:
+            /// Paths = {a[0], b, a[2]} and key = a ==> return [0,2]
+            /// Paths = {a[0], b, a}    and key = a ==> return []
+            /// Indices >= 'targetSize' are ignored.
+            static std::set<unsigned int> selectIndicesOfKey(unsigned int targetSize, const std::set<std::string>& paths,
+                                                             const std::string& key, char separator);
 
             Hash* setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
 

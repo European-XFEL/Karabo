@@ -422,22 +422,14 @@ namespace karabo {
                 const Hash::Node& otherNode = *it;
                 const std::string& key = otherNode.getKey();
 
-                // If we have selected paths, check whether to go on and fill possible set of indices for key
-                std::set<unsigned int> selectedIndicesOfKey;
-                if (!selectedPaths.empty() && !Hash::keyIsPrefixOfAnyPath(selectedPaths, key, selectedIndicesOfKey, sep)) {
+                // If we have selected paths, check whether to go on
+                if (!selectedPaths.empty() && !Hash::keyIsPrefixOfAnyPath(selectedPaths, key, sep)) {
                     continue;
                 }
-                if (!selectedIndicesOfKey.empty() && otherNode.is<std::vector<Hash> >()) {
-                    // Remove invalid indices (>= otherVec.size()) by reverse iterating (set is ordered).
-                    const unsigned int vecHashSize = otherNode.getValue<std::vector<Hash> >().size();
-                    std::set<unsigned int>::reverse_iterator itLast = selectedIndicesOfKey.rbegin();
-                    while (itLast != selectedIndicesOfKey.rend()) {
-                        if (*itLast >= vecHashSize) ++itLast;
-                        else break;
-                    }
-                    // Convert to forward iterator and erase everything behind (no +1 needed after base()!).
-                    selectedIndicesOfKey.erase(itLast.base(), selectedIndicesOfKey.end());
-                }
+                // Also check for valid selected indices if otherNode (i.e. the source) is a vector<Hash>
+                const std::set<unsigned int> selectedIndicesOfKey =
+                        (!otherNode.is<std::vector<Hash> >() ? std::set<unsigned int>() :
+                         Hash::selectIndicesOfKey(otherNode.getValue<std::vector<Hash> >().size(), selectedPaths, key, sep));
 
                 boost::optional<Hash::Node&> thisNode = this->find(key);
                 if (thisNode) { // Key already exists
@@ -583,11 +575,9 @@ namespace karabo {
             return result;
         }
 
-        bool Hash::keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key,
-                                        std::set<unsigned int> &selectedIndicesOfKey, char separator) {
-            bool result = false;
 
-            bool directMatch = false; // if true, key matches without removing an index from path's first key
+        bool Hash::keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key, char separator) {
+
             BOOST_FOREACH(const std::string& path, paths) {
                 if (path.empty() || path[0] == separator) continue; // ignore paths that are empty or start with separator
 
@@ -597,23 +587,47 @@ namespace karabo {
                     // firstKeyOfPath begins with key - why is there no simple string::beginsWith(..)?!
                     if (firstKeyOfPath.size() == key.size()) {
                         // In fact, they are the same:
-                        directMatch = true;
-                        result = true;
+                        return true;
                     } else {
                         // Check whether after key there is an [<index>]:
                         std::string croppedFirstKey(firstKeyOfPath);
                         const int index = karabo::util::getAndCropIndex(croppedFirstKey);
                         if (index != -1 && croppedFirstKey == key) {
-                            selectedIndicesOfKey.insert(static_cast<unsigned int>(index));
-                            result = true;
+                            return true;
                         }
                     }
                 }
             }
 
-            if (directMatch) {
-                // For a direct match of any path, indices in other paths are irrelevant
-                selectedIndicesOfKey.clear();
+            return false;
+        }
+
+
+        std::set<unsigned int> Hash::selectIndicesOfKey(const unsigned int targetSize, const std::set<std::string>& paths,
+                                                        const std::string& key, char separator) {
+            std::set<unsigned int> result;
+
+            BOOST_FOREACH(const std::string& path, paths) {
+                if (path.empty() || path[0] == separator) continue; // ignore paths that are empty or start with separator
+
+                const size_t sepPos = path.find_first_of(separator);
+                const std::string& firstKeyOfPath = (sepPos == std::string::npos ? path : std::string(path, 0, sepPos));
+                if (firstKeyOfPath.compare(0, key.size(), key, 0, key.size()) == 0) {
+                    // firstKeyOfPath begins with key - why is there no simple string::beginsWith(..)?!
+                    if (firstKeyOfPath.size() == key.size()) {
+                        // In fact, they are the same:
+                        // For a direct match of any path, indices in other paths are irrelevant
+                        result.clear();
+                        break; // no need to look for further indices, see below
+                    } else {
+                        // Check whether after key there is an [<index>]:
+                        std::string croppedFirstKey(firstKeyOfPath);
+                        const int index = karabo::util::getAndCropIndex(croppedFirstKey);
+                        if (index != -1 && index < targetSize && croppedFirstKey == key) {
+                            result.insert(static_cast<unsigned int> (index));
+                        }
+                    }
+                }
             }
 
             return result;
