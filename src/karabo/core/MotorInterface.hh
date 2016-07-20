@@ -14,6 +14,7 @@
 
 #include <karabo/xms/SlotElement.hh>
 #include "Device.hh"
+#include <karabo/util/State.hh>
 
 namespace karabo {
     namespace core {
@@ -29,15 +30,16 @@ namespace karabo {
                 using namespace karabo::xms;
                 using namespace karabo::util;
                 
+                
                 OVERWRITE_ELEMENT(expected).key("state")
-                        .setNewOptions("Initializing,HardwareError,Safe,Override,Off,Stopped,Idle,Homing,Moving")
-                        .setNewDefaultValue("Initializing")
+                        .setNewOptions(State::INIT, State::ERROR, State::DISABLED, State::OFF, State::STOPPED, State::STATIC, State::HOMING, State::MOVING)
+                        .setNewDefaultValue(State::INIT)
                         .commit();
                 
                 SLOT_ELEMENT(expected).key("resetHardware")                      
                         .description("Resets the hardware")
                         .displayedName("Reset hardware")
-                        .allowedStates("HardwareError")
+                        .allowedStates(State::ERROR)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("safe")                        
@@ -60,43 +62,43 @@ namespace karabo {
                 SLOT_ELEMENT(expected).key("off")
                         .displayedName("Off")
                         .description("Instructs device to switch off")
-                        .allowedStates("Override Stopped Idle Homing")
+                        .allowedStates(State::DISABLED, State::STOPPED, State::STATIC, State::CHANGING)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("on")                        
                         .displayedName("On")
                         .description("Instructs device to switch on")
-                        .allowedStates("Override Off")
+                        .allowedStates(State::DISABLED, State::OFF)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("stop")
                         .displayedName("Stop")
                         .description("Instructs the device to switch on and stopped")
-                        .allowedStates("Override Idle Moving Homing")
+                        .allowedStates(State::DISABLED, State::STATIC, State::CHANGING)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("home")
                         .displayedName("Home")
                         .description("Find home position")
-                        .allowedStates("Override Stopped")
+                        .allowedStates(State::DISABLED, State::STOPPED)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("move")
                         .displayedName("Move")
                         .description("Move position")
-                        .allowedStates("Override Stopped")
+                        .allowedStates(State::DISABLED, State::STOPPED)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("stepUp")
                         .displayedName("Step up")
                         .description("Step up")
-                        .allowedStates("Override Idle Stopped")
+                        .allowedStates(State::DISABLED, State::STATIC, State::STOPPED)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("stepDown")
                         .displayedName("Step down")
                         .description("Step down")
-                        .allowedStates("Override Idle Stopped")
+                        .allowedStates(State::DISABLED, State::STATIC, State::STOPPED)
                         .commit();
 
                 FLOAT_ELEMENT(expected).key("encoderPosition")
@@ -121,7 +123,7 @@ namespace karabo {
                         .metricPrefix(MetricPrefix::MILLI)
                         .assignmentOptional().noDefaultValue()
                         .reconfigurable()
-                        .allowedStates("Override Stopped Off Idle Moving")
+                        .allowedStates(State::DISABLED, State::STOPPED, State::OFF, State::STATIC, State::MOVING)
                         .commit();
 
                 INT16_ELEMENT(expected).key("targetVelocity")                        
@@ -129,7 +131,7 @@ namespace karabo {
                         .displayedName("Target velocity")
                         .assignmentOptional().noDefaultValue()
                         .reconfigurable()
-                        .allowedStates("Override Stopped Off Idle Moving")
+                        .allowedStates(State::DISABLED, State::STOPPED, State::OFF, State::STATIC, State::MOVING)
                         .expertAccess()
                         .commit();
             }

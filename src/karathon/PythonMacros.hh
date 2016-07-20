@@ -13,6 +13,7 @@
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/VectorElement.hh>
 #include <karabo/util/TableElement.hh>
+#include <karabo/util/State.hh>
 namespace bp = boost::python;
 
 
@@ -385,6 +386,20 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 ;\
 }
 
+template<typename T>
+class CommonWrap{
+public:
+    static T & allowedStatesPy(T & self,  const bp::tuple & args){
+        std::vector<karabo::util::State> states;
+        for(unsigned int i = 0; i < bp::len(args); ++i){
+            const std::string state = bp::extract<std::string>(args[i].attr("name"));
+            states.push_back(karabo::util::State::fromString(state));
+        }
+        return self.allowedStates(states);
+    }
+    
+};
+
 #define KARABO_PYTHON_COMMON_ATTRIBUTES(T)\
 .def("advanced", &T::advanced\
 , bp::return_internal_reference<> () )\
@@ -398,8 +413,8 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 , bp::return_internal_reference<> () )\
 .def("adminAccess", &T::adminAccess\
 , bp::return_internal_reference<> () )\
-.def("allowedStates", &T::allowedStates\
-, ( bp::arg("states"), bp::arg("sep")=" ,;" )\
+.def("allowedStates", &CommonWrap<T>::allowedStatesPy\
+, ( bp::arg("states") )\
 , bp::return_internal_reference<> ())\
 .def("assignmentInternal", &T::assignmentInternal\
 , bp::return_internal_reference<> () )\

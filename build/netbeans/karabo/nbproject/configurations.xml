@@ -34,10 +34,6 @@
         <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopInterface.hh</itemPath>
-        <itemPath>../../../src/karabo/core/State.cc</itemPath>
-        <itemPath>../../../src/karabo/core/State.hh</itemPath>
-        <itemPath>../../../src/karabo/core/StateSignifier.cc</itemPath>
-        <itemPath>../../../src/karabo/core/StateSignifier.hh</itemPath>
       </logicalFolder>
       <itemPath>../../../src/karabo/core/DeviceClient.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceClient.hh</itemPath>
@@ -295,6 +291,10 @@
         <itemPath>../../../src/karabo/util/RollingWindowStatistics.hh</itemPath>
         <itemPath>../../../src/karabo/util/SignalHandler.cc</itemPath>
         <itemPath>../../../src/karabo/util/SignalHandler.hh</itemPath>
+        <itemPath>../../../src/karabo/util/State.cc</itemPath>
+        <itemPath>../../../src/karabo/util/State.hh</itemPath>
+        <itemPath>../../../src/karabo/util/StateSignifier.cc</itemPath>
+        <itemPath>../../../src/karabo/util/StateSignifier.hh</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.cc</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Units.hh</itemPath>
@@ -511,6 +511,7 @@
       <itemPath>karaboPackageDependencies-GNU_MacPorts-MacOSX.pc</itemPath>
     </logicalFolder>
     <itemPath>../../../src/karabo/core.hpp</itemPath>
+    <itemPath>../../../src/karabo/karabo.hpp</itemPath>
   </logicalFolder>
   <sourceRootList>
     <Elem>../../../src/karabo</Elem>
@@ -703,20 +704,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/StartStopInterface.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/State.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/State.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/StateSignifier.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/StateSignifier.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -923,16 +910,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaXmlSerializer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/SchemaXsdSerializer.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/SchemaXsdSerializer.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1148,6 +1125,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/karabo.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/log/AppenderConfigurator.cc"
             ex="false"
@@ -1424,16 +1403,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1991,6 +1960,20 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/SimpleElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/State.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/State.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StateSignifier.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StateSignifier.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2724,20 +2707,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/State.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/State.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/StateSignifier.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/StateSignifier.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/Worker.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/AbstractInput.hh"
@@ -2940,16 +2909,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaXmlSerializer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/SchemaXsdSerializer.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/SchemaXsdSerializer.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3165,6 +3124,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/karabo.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/log/AppenderConfigurator.cc"
             ex="false"
@@ -3453,16 +3414,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4017,6 +3968,20 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/SimpleElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/State.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/State.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StateSignifier.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StateSignifier.hh"
             ex="false"
             tool="3"
             flavor2="0">
