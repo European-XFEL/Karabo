@@ -1,6 +1,6 @@
 #include "AlarmConditions.hh"
 #include "Exception.hh"
-#include "Schema.hh" // for attribute definitions
+
 
 namespace karabo {
     namespace util {
@@ -96,18 +96,18 @@ namespace karabo {
         }
         
  
-        const AlarmCondition AlarmCondition::NONE(KARABO_SCHEMA_ALARM_NONE, 0);
-        const AlarmCondition AlarmCondition::WARN(KARABO_SCHEMA_WARN, 1);
-        const AlarmCondition AlarmCondition::WARN_LOW(KARABO_SCHEMA_WARN_LOW, WARN);
-        const AlarmCondition AlarmCondition::WARN_HIGH(KARABO_SCHEMA_WARN_HIGH, WARN);
-        const AlarmCondition AlarmCondition::WARN_VARIANCE_LOW(KARABO_SCHEMA_WARN_VARIANCE_LOW, WARN);
-        const AlarmCondition AlarmCondition::WARN_VARIANCE_HIGH(KARABO_SCHEMA_WARN_VARIANCE_HIGH, WARN);
-        const AlarmCondition AlarmCondition::ALARM(KARABO_SCHEMA_ALARM, 2);
-        const AlarmCondition AlarmCondition::ALARM_LOW(KARABO_SCHEMA_ALARM_LOW, ALARM);
-        const AlarmCondition AlarmCondition::ALARM_HIGH(KARABO_SCHEMA_ALARM_HIGH, ALARM);
-        const AlarmCondition AlarmCondition::ALARM_VARIANCE_LOW(KARABO_SCHEMA_ALARM_VARIANCE_LOW, ALARM);
-        const AlarmCondition AlarmCondition::ALARM_VARIANCE_HIGH(KARABO_SCHEMA_ALARM_VARIANCE_HIGH, ALARM);
-        const AlarmCondition AlarmCondition::INTERLOCK(KARABO_SCHEMA_INTERLOCK, 3);
+        const AlarmCondition AlarmCondition::NONE(KARABO_ALARM_NONE, 0);
+        const AlarmCondition AlarmCondition::WARN(KARABO_WARN, 1);
+        const AlarmCondition AlarmCondition::WARN_LOW(KARABO_WARN_LOW, WARN);
+        const AlarmCondition AlarmCondition::WARN_HIGH(KARABO_WARN_HIGH, WARN);
+        const AlarmCondition AlarmCondition::WARN_VARIANCE_LOW(KARABO_WARN_VARIANCE_LOW, WARN);
+        const AlarmCondition AlarmCondition::WARN_VARIANCE_HIGH(KARABO_WARN_VARIANCE_HIGH, WARN);
+        const AlarmCondition AlarmCondition::ALARM(KARABO_ALARM, 2);
+        const AlarmCondition AlarmCondition::ALARM_LOW(KARABO_ALARM_LOW, ALARM);
+        const AlarmCondition AlarmCondition::ALARM_HIGH(KARABO_ALARM_HIGH, ALARM);
+        const AlarmCondition AlarmCondition::ALARM_VARIANCE_LOW(KARABO_ALARM_VARIANCE_LOW, ALARM);
+        const AlarmCondition AlarmCondition::ALARM_VARIANCE_HIGH(KARABO_ALARM_VARIANCE_HIGH, ALARM);
+        const AlarmCondition AlarmCondition::INTERLOCK(KARABO_INTERLOCK, 3);
        //interlock is assumed to always be the highest conditions and knowledge of this is used in returnMostSignificant
  
         std::map<std::string, const AlarmCondition & > AlarmCondition::m_alarmFactory = std::map<std::string, const AlarmCondition &> ();
