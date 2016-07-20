@@ -46,8 +46,9 @@ namespace karabo {
 
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                                const karabo::util::Hash::Pointer& body) const {
-            if (instanceId == "*" || instanceId.empty())
+            if (instanceId == "*" || instanceId.empty()) {
                 return false;
+            }
 
             SignalSlotable* that = 0;
             {
@@ -111,6 +112,7 @@ namespace karabo {
             header->set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
+            // Timestamp added to be able to measure latencies even if broker is by-passed
             header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
             return header;
         }
@@ -153,6 +155,8 @@ namespace karabo {
             header->set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
+            // Timestamp added to be able to measure latencies even if broker is by-passed
+            header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
             return header;
         }
 
@@ -170,6 +174,8 @@ namespace karabo {
             header->set("slotFunctions", "|" + requestSlotInstanceId + ":" + requestSlotFunction + "|");
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
+            // Timestamp added to be able to measure latencies even if broker is by-passed
+            header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
             return header;
         }
 
