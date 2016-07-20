@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
 <TestRun>
-  <FailedTests></FailedTests>
+  <FailedTests>
+    <FailedTest id="38">
+      <Name>SchemaSerializer_Test::testBinarySerializer</Name>
+      <FailureType>Error</FailureType>
+      <Message>uncaught exception of type N6karabo4util18ParameterExceptionE
+- 1. Exception =====&gt;  {
+    Exception Type....:  Parameter Exception
+    Message...........:  alarmLow value (2) is greater than warnLow(0) on parameter &quot;SimpleElem&quot;
+    File..............:  /[...]/src/karabo/util/SimpleElement.hh
+    Function..........:  void karabo::util::SimpleElement&lt;ValueType&gt;::checkAttributeOrder(const char*, const char*) [with ValueType = int]
+    Line Number.......:  233
+    Timestamp.........:  2016-Jul-20 07:58:14.376930
+}
+
+
+</Message>
+    </FailedTest>
+  </FailedTests>
   <SuccessfulTests>
     <Test id="1">
       <Name>FileInputOutput_Test::writeTextFile</Name>
@@ -113,23 +130,14 @@
     <Test id="37">
       <Name>Hdf5_Test::testSerializer</Name>
     </Test>
-    <Test id="38">
-      <Name>SchemaSerializer_Test::testBinarySerializer</Name>
-    </Test>
     <Test id="39">
       <Name>SchemaSerializer_Test::testXmlSerializer</Name>
     </Test>
-    <Test id="40">
-      <Name>SchemaXsdSerializer_Test::testXsdSerialization</Name>
-    </Test>
-    <Test id="41">
-      <Name>SchemaXsdSerializer_Test::testTextFileOutputSchema</Name>
-    </Test>
   </SuccessfulTests>
   <Statistics>
-    <Tests>41</Tests>
-    <FailuresTotal>0</FailuresTotal>
-    <Errors>0</Errors>
+    <Tests>39</Tests>
+    <FailuresTotal>1</FailuresTotal>
+    <Errors>1</Errors>
     <Failures>0</Failures>
   </Statistics>
 </TestRun>
