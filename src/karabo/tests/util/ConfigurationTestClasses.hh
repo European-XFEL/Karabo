@@ -12,7 +12,7 @@
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ListElement.hh>
-#include <karabo/util/VectorElement.hh>
+#include <karabo/util/NDArrayElement.hh>
 #include <karabo/util/PathElement.hh>
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/util/ImageElement.hh>
@@ -523,6 +523,45 @@ namespace configurationTest {
                     .minSize(2)
                     .maxSize(7)
                     .assignmentMandatory()
+                    .commit();
+
+            std::vector<bool> arrBoolInit(6, true);
+            std::vector<signed char> arrIntDef(6, 42);
+            std::vector<float> arrFloatDef(6, 4.2);
+            NDARRAY_BOOL_ELEMENT(expected)
+                    .key("arrBool")
+                    .shape("3,2")
+                    .readOnly().initialValue(arrBoolInit)
+                    .commit();
+
+            NDARRAY_INT8_ELEMENT(expected)
+                    .key("arrInt8")
+                    .shape("3,2")
+                    .assignmentOptional().defaultValue(arrIntDef)
+                    .commit();
+
+            NDARRAY_UINT16_ELEMENT(expected)
+                    .key("arrUInt16")
+                    .shape("3,2")
+                    .readOnly()
+                    .commit();
+
+            NDARRAY_FLOAT_ELEMENT(expected)
+                    .key("arrFloat")
+                    .shape("3,2")
+                    .readOnly().initialValue(arrFloatDef)
+                    .commit();
+
+            NDARRAY_DOUBLE_ELEMENT(expected)
+                    .key("arrDouble")
+                    .shape("3,2,-1")
+                    .readOnly()
+                    .commit();
+
+            NDARRAY_FLOAT_ELEMENT(expected)
+                    .key("arrUndefined")
+                    .shape("-1,3,-1")
+                    .readOnly()
                     .commit();
 
             IMAGE_ELEMENT(expected)

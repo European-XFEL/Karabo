@@ -259,7 +259,7 @@
         <itemPath>../../../src/karabo/util/TableElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/Validator.cc</itemPath>
         <itemPath>../../../src/karabo/util/Validator.hh</itemPath>
-        <itemPath>../../../src/karabo/util/VectorElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/NDArrayElement.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f6" displayName="Tools" projectFiles="true">
         <logicalFolder name="f1" displayName="Time" projectFiles="true">
@@ -2069,7 +2069,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/VectorElement.hh"
+      <item path="../../../src/karabo/util/NDArrayElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4077,7 +4077,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/VectorElement.hh"
+      <item path="../../../src/karabo/util/NDArrayElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
