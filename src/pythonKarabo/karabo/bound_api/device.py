@@ -903,9 +903,12 @@ class PythonDevice(NoFsm):
             raise TypeError("Stringified alarmconditions are note allowed!")
         with self._stateChangeLock:
             self.globalAlarmCondition = condition
-            resultingCondition = self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
-            if resultingCondition is not None and resultingCondition.asString() != self.parameters.get("alarmCondition"):
-                self.set("alarmCondition", resultingCondition.asString(), validate=False)
+            resultingCondition = \
+                self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
+            if resultingCondition is not None and resultingCondition.asString()\
+                    != self.parameters.get("alarmCondition"):
+                self.set("alarmCondition", resultingCondition.asString(),
+                         validate=False)
 
     def getAlarmCondition(self, key = None, seperator = "."):
         if key is None:
@@ -921,23 +924,21 @@ class PythonDevice(NoFsm):
         return self.validatorIntern.getRollingStatistics(key)
 
     def getAlarmInfo(self):
+        """
+        Output information on current alarms on this device
+        :return: a Hash containing the property as key and as string for
+         the alarm information as value
+        """
         info = Hash()
         with self._stateChangeLock:
             warnings = self.validatorIntern.getParametersInWarnOrAlarm()
             for key in warnings:
-                desc = warnings[key]
-                info.set(str(key), self.fullSchema.getInfoForAlarm(str(key), AlarmCondition.fromString(desc["type"])))
-
+                desc = warnings.get(key)
+                condition = AlarmCondition.fromString(desc.get("type"))
+                thisinfo = self.fullSchema.getInfoForAlarm(str(key),condition)
+                info.set(str(key), thisinfo)
         return info
 
-    def outputAlarmInfo(self):
-        info = self.getAlarmInfo()
-        out = "Alarm information for device: {}\n".format(self.getInstanceId())
-        for k in info:
-            out += "Property: {}\n".format(k)
-            out += "----------\n"
-            out += "{}\n".format(info[k])
-        self.log.INFO(out)
 
         
     '''

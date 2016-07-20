@@ -1370,6 +1370,15 @@ namespace schemawrap {
     void updateAliasMap(Schema& schema) {
         schema.updateAliasMap();
     }
+    
+    const std::string getInfoForAlarm(Schema& schema, const std::string & path, const bp::object condition) {
+        const std::string className = bp::extract<std::string>(condition.attr("__class__").attr("__name__"));
+        if(className != "AlarmCondition"){
+            throw KARABO_PYTHON_EXCEPTION("Python argument for condition needs to be of type AlarmCondition and not "+className);
+        }
+        const std::string conditionName = bp::extract<std::string>(condition.attr("value"));
+        return schema.getInfoForAlarm(path, karabo::util::AlarmCondition::fromString(conditionName));
+    }
 }
 
 
@@ -1801,7 +1810,7 @@ void exportPyUtilSchema() {
         s.def("setAlarmVarianceLow", &Schema::setAlarmVarianceLow, (bp::arg("path"), bp::arg("value")));
         s.def("setAlarmVarianceHigh", &Schema::setAlarmVarianceHigh, (bp::arg("path"), bp::arg("value")));
         s.def("getRollingStatsEvalInterval", &Schema::getRollingStatsEvalInterval, (bp::arg("path"), bp::arg("value")));
-        s.def("getInfoForAlarm", &Schema::getInfoForAlarm, (bp::arg("path"), bp::arg("condition")));
+        s.def("getInfoForAlarm", &schemawrap::getInfoForAlarm, (bp::arg("path"), bp::arg("condition")));
         s.def("setArchivePolicy", &Schema::setArchivePolicy, (bp::arg("path"), bp::arg("value")));
         s.def("setMin", &Schema::setMin, (bp::arg("path"), bp::arg("value")));
         s.def("setMax", &Schema::setMax, (bp::arg("path"), bp::arg("value")));
