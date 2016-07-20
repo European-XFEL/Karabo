@@ -15,7 +15,7 @@
 #include <boost/shared_array.hpp>
 
 #include <karabo/util/Configurator.hh>
-#include <karabo/util/VectorElement.hh>
+#include <karabo/util/NDArrayElement.hh>
 
 #include <karabo/log/Logger.hh>
 
