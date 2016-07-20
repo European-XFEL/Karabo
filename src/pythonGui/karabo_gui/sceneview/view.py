@@ -372,11 +372,29 @@ class SceneView(QWidget):
         # Recalculate model rectangle, if empty
         self._update_model_geometry(model)
 
-    def device_group_dropped(self, device_id, server_id, class_id,
-                             startup_behaviour, position):
+    def device_group_dropped(self, group_name, server_id, class_id,
+                             startup_behaviour, display_prefix,
+                             start_index, end_index, position):
         """ A device group was dropped from the navigation panel and needs
             to be processed now.
         """
+        # Check whether an item with this ``group_name`` already exists
+        workflow_item_model = self.workflow_model.get_item(group_name)
+        if workflow_item_model is not None:
+            self.select_model(workflow_item_model)
+            return
+
+        model = self.project_handler.device_group_dropped(group_name,
+                                                          server_id,
+                                                          class_id,
+                                                          startup_behaviour,
+                                                          display_prefix,
+                                                          start_index,
+                                                          end_index,
+                                                          position)
+        self.add_models(model)
+        # Recalculate model rectangle, if empty
+        self._update_model_geometry(model)
 
     # ----------------------------
     # Private methods (yes, I know... It's just a convention)
