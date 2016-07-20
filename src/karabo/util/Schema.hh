@@ -38,7 +38,6 @@ namespace karabo {
 
         enum AccessType {
 
-
             INIT = 1 << 0,
             READ = 1 << 1,
             WRITE = 1 << 2,
@@ -69,10 +68,9 @@ namespace karabo {
          * access type, assignment type, existence of additional attributes associated with some particular key
          * like description, visual representation, aliases, default value and so on. The Schema object is the
          * place where one can enter all these informations.
-         * 
+         *
          */
         class KARABO_DECLSPEC Schema {
-
 
 #define KARABO_SCHEMA_NODE_TYPE "nodeType"
 #define KARABO_SCHEMA_LEAF_TYPE "leafType"
@@ -113,20 +111,9 @@ namespace karabo {
 #define KARABO_SCHEMA_MIN_SIZE "minSize"
 #define KARABO_SCHEMA_MAX_SIZE "maxSize"
 
-#define KARABO_SCHEMA_WARN_LOW "warnLow"
-#define KARABO_SCHEMA_WARN_HIGH "warnHigh"
-
-#define KARABO_SCHEMA_ALARM_LOW "alarmLow"
-#define KARABO_SCHEMA_ALARM_HIGH "alarmHigh"
-
-#define KARABO_SCHEMA_WARN_VARIANCE_LOW "warnVarianceLow"
-#define KARABO_SCHEMA_WARN_VARIANCE_HIGH "warnVarianceHigh"
-
-#define KARABO_SCHEMA_ALARM_VARIANCE_LOW "alarmVarianceLow"
-#define KARABO_SCHEMA_ALARM_VARIANCE_HIGH "alarmVarianceHigh"
-
 #define KARABO_SCHEMA_ENABLE_ROLLING_STATS "enableRollingStats"
 #define KARABO_SCHEMA_ROLLING_STATS_EVAL "rollingStatsEvalInterval"
+
 
 #define KARABO_SCHEMA_ARCHIVE_POLICY "archivePolicy"
 
@@ -134,9 +121,6 @@ namespace karabo {
 #define KARABO_SCHEMA_MAX "max"
 
 #define KARABO_SCHEMA_OVERWRITE "overwrite"
-
-#define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
-#define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
@@ -163,7 +147,6 @@ namespace karabo {
 
             struct AssemblyRules {
 
-
                 AccessType m_accessMode;
                 std::string m_state;
                 int m_accessLevel;
@@ -175,7 +158,6 @@ namespace karabo {
 
             enum NodeType {
 
-
                 LEAF,
                 NODE,
                 CHOICE_OF_NODES,
@@ -184,13 +166,11 @@ namespace karabo {
 
             enum LeafType {
 
-
                 PROPERTY,
                 COMMAND
             };
 
             enum AssignmentType {
-
 
                 OPTIONAL_PARAM,
                 MANDATORY_PARAM,
@@ -198,7 +178,6 @@ namespace karabo {
             };
 
             enum ArchivePolicy {
-
 
                 EVERY_EVENT,
                 EVERY_100MS,
@@ -211,7 +190,6 @@ namespace karabo {
             };
 
             enum AccessLevel {
-
 
                 OBSERVER = 0,
                 USER,
@@ -587,7 +565,7 @@ namespace karabo {
 
             //******************************************************
             //  Specific functions for LEAF node (which is vector):*
-            //  Maximum Size of the vector                         *  
+            //  Maximum Size of the vector                         *
             //******************************************************
 
             void setMaxSize(const std::string& path, const unsigned int& value);
@@ -597,106 +575,106 @@ namespace karabo {
             const unsigned int& getMaxSize(const std::string& path) const;
 
             //******************************************************
-            //                   WarnLow                          *  
+            //                   WarnLow                          *
             //******************************************************
 
             template <class ValueType>
             void setWarnLow(const std::string& path, const ValueType & value) {
-                m_hash.setAttribute(path, KARABO_SCHEMA_WARN_LOW, value);
+                m_hash.setAttribute(path, karabo::util::AlarmCondition::WARN_LOW.asString(), value);
             }
 
             template <class ValueType>
             const ValueType& getWarnLow(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_WARN_LOW);
+                return m_hash.getAttribute<ValueType > (path, karabo::util::AlarmCondition::WARN_LOW.asString());
             }
 
             template <class T>
             T getWarnLowAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_WARN_LOW);
+                return m_hash.getAttributeAs<T > (path, karabo::util::AlarmCondition::WARN_LOW.asString());
             }
 
             bool hasWarnLow(const std::string& path) const;
 
 
             //******************************************************
-            //                   WarnHigh                         *  
+            //                   WarnHigh                         *
             //******************************************************
 
             template <class ValueType>
             void setWarnHigh(const std::string& path, const ValueType & value) {
-                m_hash.setAttribute(path, KARABO_SCHEMA_WARN_HIGH, value);
+                m_hash.setAttribute(path, karabo::util::AlarmCondition::WARN_HIGH.asString(), value);
             }
 
             template <class ValueType>
             const ValueType& getWarnHigh(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_WARN_HIGH);
+                return m_hash.getAttribute<ValueType > (path, karabo::util::AlarmCondition::WARN_HIGH.asString());
             }
 
             template <class T>
             T getWarnHighAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_WARN_HIGH);
+                return m_hash.getAttributeAs<T > (path, karabo::util::AlarmCondition::WARN_HIGH.asString());
             }
 
             bool hasWarnHigh(const std::string& path) const;
 
             //******************************************************
-            //                   AlarmLow                          *  
+            //                   AlarmLow                          *
             //******************************************************
 
             template <class ValueType>
             void setAlarmLow(const std::string& path, const ValueType & value) {
-                m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_LOW, value);
+                m_hash.setAttribute(path, karabo::util::AlarmCondition::ALARM_LOW.asString(), value);
             }
 
             template <class ValueType>
             const ValueType& getAlarmLow(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_ALARM_LOW);
+                return m_hash.getAttribute<ValueType > (path, karabo::util::AlarmCondition::ALARM_LOW.asString());
             }
 
             template <class T>
             T getAlarmLowAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_ALARM_LOW);
+                return m_hash.getAttributeAs<T > (path, karabo::util::AlarmCondition::ALARM_LOW.asString());
             }
 
             bool hasAlarmLow(const std::string& path) const;
 
             //******************************************************
-            //                   AlarmHigh                          *  
+            //                   AlarmHigh                          *
             //******************************************************
 
             template <class ValueType>
             void setAlarmHigh(const std::string& path, const ValueType & value) {
-                m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_HIGH, value);
+                m_hash.setAttribute(path, karabo::util::AlarmCondition::ALARM_HIGH.asString(), value);
             }
 
             template <class ValueType>
             const ValueType& getAlarmHigh(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_ALARM_HIGH);
+                return m_hash.getAttribute<ValueType > (path, karabo::util::AlarmCondition::ALARM_HIGH.asString());
             }
 
             template <class T>
             T getAlarmHighAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_ALARM_HIGH);
+                return m_hash.getAttributeAs<T > (path, karabo::util::AlarmCondition::ALARM_HIGH.asString());
             }
 
             bool hasAlarmHigh(const std::string& path) const;
 
             //******************************************************
-            //                   WarnVarianceLow                          *  
+            //                   WarnVarianceLow                          *
             //******************************************************
 
             void setWarnVarianceLow(const std::string& path, const double value) {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
-                m_hash.setAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_LOW, value);
+                m_hash.setAttribute(path, karabo::util::AlarmCondition::WARN_VARIANCE_LOW.asString(), value);
             }
 
             double getWarnVarianceLow(const std::string& path) const {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
-                return m_hash.getAttribute<double> (path, KARABO_SCHEMA_WARN_VARIANCE_LOW);
+                return m_hash.getAttribute<double> (path, karabo::util::AlarmCondition::WARN_VARIANCE_LOW.asString());
             }
 
 
@@ -704,21 +682,21 @@ namespace karabo {
             bool hasWarnVarianceLow(const std::string& path) const;
 
             //******************************************************
-            //                   WarnVarianceHigh                          *  
+            //                   WarnVarianceHigh                          *
             //******************************************************
 
             void setWarnVarianceHigh(const std::string& path, const double value) {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
-                m_hash.setAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_HIGH, value);
+                m_hash.setAttribute(path, karabo::util::AlarmCondition::WARN_VARIANCE_HIGH.asString(), value);
             }
 
             double getWarnVarianceHigh(const std::string& path) const {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
-                return m_hash.getAttribute<double > (path, KARABO_SCHEMA_WARN_VARIANCE_HIGH);
+                return m_hash.getAttribute<double > (path, karabo::util::AlarmCondition::WARN_VARIANCE_HIGH.asString());
             }
 
 
@@ -727,51 +705,56 @@ namespace karabo {
 
 
             //******************************************************
-            //                   AlarmVarianceLow                          *  
+            //                   AlarmVarianceLow                          *
             //******************************************************
 
             void setAlarmVarianceLow(const std::string& path, const double value) {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
-                m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_LOW, value);
+                m_hash.setAttribute(path, karabo::util::AlarmCondition::ALARM_VARIANCE_LOW.asString(), value);
             }
 
             double getAlarmVarianceLow(const std::string& path) const {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
-                return m_hash.getAttribute<double > (path, KARABO_SCHEMA_ALARM_VARIANCE_LOW);
+                return m_hash.getAttribute<double > (path, karabo::util::AlarmCondition::ALARM_VARIANCE_LOW.asString());
             }
 
 
             bool hasAlarmVarianceLow(const std::string& path) const;
 
             //******************************************************
-            //                   WarnVarianceHigh                          *  
+            //                   WarnVarianceHigh                          *
             //******************************************************
 
             void setAlarmVarianceHigh(const std::string& path, const double value) {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
-                m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH, value);
+                m_hash.setAttribute(path, karabo::util::AlarmCondition::ALARM_VARIANCE_HIGH.asString(), value);
             }
 
             double getAlarmVarianceHigh(const std::string& path) const {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
                 }
-                return m_hash.getAttribute<double> (path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
+                return m_hash.getAttribute<double> (path, karabo::util::AlarmCondition::ALARM_VARIANCE_HIGH.asString());
             }
 
 
 
             bool hasAlarmVarianceHigh(const std::string& path) const;
 
+            bool hasInterlock(const std::string& path) const;
+
             bool hasRollingStatistics(const std::string& path) const;
 
             unsigned int getRollingStatsEvalInterval(const std::string& path) const;
+
+            const std::string getInfoForAlarm(const std::string& path, const karabo::util::AlarmCondition& condition) const;
+
 
             //**********************************************
             //               archivePolicy                 *
@@ -784,7 +767,7 @@ namespace karabo {
             const int& getArchivePolicy(const std::string& path) const;
 
             //******************************************************
-            //      min/max for number of nodes in ListElement     *                       
+            //      min/max for number of nodes in ListElement     *
             //******************************************************
 
             void setMin(const std::string& path, const int& value);
@@ -812,12 +795,12 @@ namespace karabo {
             /**
              * Default output using help function
              * @param key
-             * @return 
+             * @return
              */
             KARABO_DECLSPEC friend std::ostream & operator<<(std::ostream& os, const Schema& schema);
 
 
-        private: // functions            
+        private: // functions
 
             void addElement(Hash::Node& node);
 
