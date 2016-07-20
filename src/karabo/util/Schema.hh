@@ -122,6 +122,11 @@ namespace karabo {
 
 #define KARABO_SCHEMA_OVERWRITE "overwrite"
 
+#define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
+#define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
+
+#define KARABO_SCHEMA_ARRAY_SHAPE "arrayShape"
+
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
             // It will use the private addElement function
@@ -574,8 +579,19 @@ namespace karabo {
 
             const unsigned int& getMaxSize(const std::string& path) const;
 
+            //**********************************************************
+            //	Specific functions for LEAF node (which is an NDArray) *
+            //	Shape of the array                                     *
+            //**********************************************************
+
+            void setArrayShape(const std::string& path, const std::string& value);
+
+            bool hasArrayShape(const std::string& path) const;
+
+            const std::vector<long long>& getArrayShape(const std::string& path) const;
+
             //******************************************************
-            //                   WarnLow                          *
+            //                   WarnLow                           *
             //******************************************************
 
             template <class ValueType>

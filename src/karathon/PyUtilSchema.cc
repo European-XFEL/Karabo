@@ -329,13 +329,7 @@ struct ListElementWrap {
 
     static ListElement & defaultValueList(DefListElement& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
-            const bp::list& l = bp::extract<bp::list > (obj);
-            bp::ssize_t size = bp::len(l);
-
-            vector<string> v(size);
-            for (bp::ssize_t i = 0; i < size; ++i) {
-                v[i] = bp::extract<string> (obj[i]);
-            }
+            vector<string> v = karathon::Wrapper::fromPyListToStdVector<string>(obj);
             return self.defaultValue(v);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of LIST_ELEMENT must be a list of strings");
@@ -1065,7 +1059,8 @@ namespace schemawrap {
 
 
     //***********************************************************************************
-    // Wrapper functions for : getKeys, getPaths, getTags, getOptions, getAllowedStates *
+    // Wrapper functions for : getKeys, getPaths, getTags, getOptions,                  *
+    // getAllowedStates, getArrayShape                                                  *
     //***********************************************************************************
 
 
@@ -1118,6 +1113,14 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedStates' should be a string");
     }
 
+    bp::object getArrayShape(const Schema& schema, const bp::object& obj) {
+        if (PyUnicode_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            const vector<long long>& v = schema.getArrayShape(path);
+            return karathon::Wrapper::fromStdVectorToPyArray<long long>(v);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getArrayShape' should be a string");
+    }
 
     //*************************************************************
     // Wrapper functions for : setDefaultValue, getDefaultValue, getDefaultValueAs *
@@ -1652,6 +1655,8 @@ void exportPyUtilSchema() {
               , (const unsigned int& (Schema::*)(const string &) const) (&Schema::getMaxSize)
               , bp::return_value_policy< bp::copy_const_reference >());
 
+        s.def("getArrayShape", &schemawrap::getArrayShape);
+
         s.def("getArchivePolicy", &Schema::getArchivePolicy
               , bp::return_value_policy< bp::copy_const_reference >());
 
@@ -1745,6 +1750,8 @@ void exportPyUtilSchema() {
         s.def("hasMinSize", &Schema::hasMinSize);
 
         s.def("hasMaxSize", &Schema::hasMaxSize);
+
+        s.def("hasArrayShape", &Schema::hasArrayShape);
 
         //********* 'is'-methods ****************
 
@@ -1902,32 +1909,64 @@ void exportPyUtilSchema() {
     //    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned long long>, unsigned long long, BITSET64)
 
     ///////////////////////////////////////////////////////////
-    //DefaultValue<VectorElement< EType, std::vector >, std::vector< EType > > where EType:
+    //DefaultValue<NDArrayElement< EType, 1, std::vector >, std::vector< EType > > where EType:
     //BOOL, INT32, UINT32, INT64, UINT64, DOUBLE, STRING 
 
-    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(int, INT32)
-    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(unsigned int, UINT32)
-    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(long long, INT64)
-    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(unsigned long long, UINT64)
-    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(float, FLOAT)
-    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(double, DOUBLE)
-    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(std::string, STRING)
-    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(bool, BOOL)
-    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(char, CHAR)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(int, INT32, 1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned int, UINT32, 1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(long long, INT64, 1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned long long, UINT64, 1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(float, FLOAT, 1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(double, DOUBLE, 1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(std::string, STRING, 1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(bool, BOOL, 1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(char, CHAR, 1)
 
     ///////////////////////////////////////////////////////////////
-    //ReadOnlySpecific<VectorElement< EType >, EType >, where EType:
+    //ReadOnlySpecific<NDArrayElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
 
-    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(int, INT32)
-    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(unsigned int, UINT32)
-    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(long long, INT64)
-    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(unsigned long long, UINT64)
-    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(float, FLOAT)
-    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(double, DOUBLE)
-    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(std::string, STRING)
-    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(bool, BOOL)
-    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(char, CHAR)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(int, INT32, 1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned int, UINT32, 1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(long long, INT64, 1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned long long, UINT64, 1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(float, FLOAT, 1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(double, DOUBLE, 1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(std::string, STRING, 1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(bool, BOOL, 1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(char, CHAR, 1)
+
+    ///////////////////////////////////////////////////////////
+    // DefaultValue<NDArrayElement< EType, NDIMS=-1, std::vector >, std::vector< EType > > where EType:
+    // BOOL, [U]INT8, [U]INT8, [U]INT8, [U]INT8, FLOAT, DOUBLE
+
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(bool, BOOL, -1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(signed char, INT8, -1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned char, UINT8, -1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(short, INT16, -1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned short, UINT16, -1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(int, INT32, -1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned int, UINT32, -1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(long long, INT64, -1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned long long, UINT64, -1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(float, FLOAT, -1)
+    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(double, DOUBLE, -1)
+
+    ///////////////////////////////////////////////////////////////
+    // ReadOnlySpecific<NDArrayElement< EType, NDIMS=-1 >, EType >, where EType:
+    // BOOL, [U]INT8, [U]INT8, [U]INT8, [U]INT8, FLOAT, DOUBLE
+
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(bool, BOOL, -1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(signed char, INT8, -1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned char, UINT8, -1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(short, INT16, -1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned short, UINT16, -1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(int, INT32, -1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned int, UINT32, -1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(long long, INT64, -1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned long long, UINT64, -1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(float, FLOAT, -1)
+    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(double, DOUBLE, -1)
 
     //////////////////////////////////////////////////////////////////////
     //Binding SimpleElement< EType >, where EType:
@@ -1965,11 +2004,10 @@ void exportPyUtilSchema() {
     }
 
     //////////////////////////////////////////////////////////////////////
-    // Binding VectorElement< EType, std::vector >
-    // In Python : VECTOR_INT32_ELEMENT, VECTOR_UINT32_ELEMENT, 
+    // Binding NDArrayElement< EType, 1, std::vector >
+    // In Python : VECTOR_INT32_ELEMENT, VECTOR_UINT32_ELEMENT,
     // VECTOR_INT64_ELEMENT, VECTOR_UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT,
     // VECTOR_STRING_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_CHAR_ELEMENT
-
 
     KARABO_PYTHON_VECTOR(int, INT32)
     KARABO_PYTHON_VECTOR(unsigned int, UINT32)
@@ -1980,6 +2018,25 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(string, STRING)
     KARABO_PYTHON_VECTOR(bool, BOOL)
     KARABO_PYTHON_VECTOR(char, CHAR)
+
+    //////////////////////////////////////////////////////////////////////
+    // Binding NDArrayElement< EType, NDIMS=-1, std::vector >
+    // In Python : NDARRAY_BOOL_ELEMENT, NDARRAY_INT8_ELEMENT,
+    // NDARRAY_UINT8_ELEMENT, NDARRAY_INT16_ELEMENT, NDARRAY_UINT16_ELEMENT,
+    // NDARRAY_INT32_ELEMENT, NDARRAY_UINT32_ELEMENT, NDARRAY_INT64_ELEMENT,
+    // NDARRAY_UINT64_ELEMENT, NDARRAY_FLOAT_ELEMENT, NDARRAY_DOUBLE_ELEMENT
+
+    KARABO_PYTHON_NDARRAY(bool, BOOL)
+    KARABO_PYTHON_NDARRAY(signed char, INT8)
+    KARABO_PYTHON_NDARRAY(unsigned char, UINT8)
+    KARABO_PYTHON_NDARRAY(short, INT16)
+    KARABO_PYTHON_NDARRAY(unsigned short, UINT16)
+    KARABO_PYTHON_NDARRAY(int, INT32)
+    KARABO_PYTHON_NDARRAY(unsigned int, UINT32)
+    KARABO_PYTHON_NDARRAY(long long, INT64)
+    KARABO_PYTHON_NDARRAY(unsigned long long, UINT64)
+    KARABO_PYTHON_NDARRAY(float, FLOAT)
+    KARABO_PYTHON_NDARRAY(double, DOUBLE)
 
             //////////////////////////////////////////////////////////////////////
             // Binding NodeElement       
