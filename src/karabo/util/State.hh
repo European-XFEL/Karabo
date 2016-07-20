@@ -5,18 +5,18 @@
  * Created on June 8, 2016, 2:49 PM
  */
 
-#ifndef KARABO_CORE_STATE_HH
-#define	KARABO_CORE_STATE_HH
+#ifndef _KARABO_UTIL_STATE_HH
+#define	_KARABO_UTIL_STATE_HH
 
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>
 #include <map>
-#include <karabo/util/ClassInfo.hh>
-#include <karabo/util/Factory.hh>
+#include "ClassInfo.hh"
+#include "Factory.hh"
 
 namespace karabo {
-    namespace core {
+    namespace util {
 
         /**
          * Base State class
@@ -152,5 +152,5 @@ namespace karabo {
     }
 }
 
-#endif	/* KARABO_CORE_STATE_HH */
+#endif	/* _KARABO_UTIL_STATE_HH */
 

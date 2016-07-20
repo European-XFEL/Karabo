@@ -3,7 +3,7 @@
 #include "State.hh"
 
 namespace karabo {
-    namespace core {
+    namespace util {
         
 #define KARABO_INIT_BASE_STATE(X) const State  State::X(#X, NULL);
         

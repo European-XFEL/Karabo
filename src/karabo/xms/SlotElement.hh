@@ -14,6 +14,7 @@
 
 #include <karabo/util/GenericElement.hh>
 #include <karabo/util/ToLiteral.hh>
+#include <karabo/util/State.hh>
 
 namespace karabo {
     namespace xms {
@@ -54,9 +55,42 @@ namespace karabo {
              * @param sep A separator symbol used for parsing previous argument for list of states
              * @return reference to the Element (to allow method's chaining)
              */
-            Derived& allowedStates(const std::string& states, const std::string& sep = " ,;") {
-                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector>(states, sep));
+                        
+            Derived& allowedStates(const std::vector<karabo::util::State>& value) {
+                const std::string stateString = karabo::util::toString(value);
+                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector>(stateString, ","));
                 return *(static_cast<Derived*> (this));
+            }
+            
+            //overloads for up to six elements
+            Derived& allowedStates(const karabo::util::State& s1) {
+                const karabo::util::State arr[] = {s1};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr+1));
+            }
+            
+            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2) {
+                const karabo::util::State arr[] = {s1, s2};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr+2));
+            }
+            
+            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3) {
+                const karabo::util::State arr[] = {s1, s2, s3};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr+3));
+            }
+            
+            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr+4));
+            }
+            
+            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4, s5};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr+5));
+            }
+            
+            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4, s5, s6};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr+6));
             }
 
             Derived& connectionAssignmentIsMandatory() {

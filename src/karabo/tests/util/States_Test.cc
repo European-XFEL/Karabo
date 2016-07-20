@@ -6,10 +6,10 @@
  */
 
 #include "States_Test.hh"
-#include <karabo/core/StateSignifier.hh>
-#include <karabo/core/State.hh>
+#include <karabo/util/StateSignifier.hh>
+#include <karabo/util/State.hh>
 
-using namespace karabo::core;
+using namespace karabo::util;
 using namespace std;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(States_Test);

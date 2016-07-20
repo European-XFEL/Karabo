@@ -20,7 +20,7 @@
 #include <karabo/util/Version.hh>
 #include "coredll.hh"
 
-#include "State.hh"
+#include <karabo/util/State.hh>
 #include "FsmMacros.hh"
 
 
@@ -153,7 +153,7 @@ namespace karabo {
 
             void slotStartDevice(const karabo::util::Hash& configuration);
 
-            void onStateUpdate(const karabo::core::State& currentState);
+            void onStateUpdate(const karabo::util::State& currentState);
 
             void loadLogger(const karabo::util::Hash& input);
 
