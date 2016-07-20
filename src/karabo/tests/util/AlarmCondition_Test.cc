@@ -38,6 +38,7 @@ void AlarmCondition_Test::tearDown() {
 
 
 void AlarmCondition_Test::testStringAssignmentRoundTrip() {
+    
     karabo::util::AlarmCondition condition = karabo::util::AlarmCondition::fromString("WARN");
     std::string conditionString = condition;
     CPPUNIT_ASSERT(conditionString == "WARN");
@@ -46,6 +47,7 @@ void AlarmCondition_Test::testStringAssignmentRoundTrip() {
 
 
 void AlarmCondition_Test::testSignificanceEvaluation() {
+    
     std::vector<karabo::util::AlarmCondition> v;
     karabo::util::AlarmCondition ms = karabo::util::AlarmCondition::returnMostSignificant(v);
     CPPUNIT_ASSERT(ms.isSameCriticality(karabo::util::AlarmCondition::NONE));
