@@ -41,6 +41,8 @@ namespace karabo {
          */
         template <class ManufacturedType, typename ClassIDKey = std::string>
         class GenericFactory {
+
+
             typedef boost::shared_ptr<ManufacturedType> (*BaseCreateFunction)();
             typedef std::map<ClassIDKey, BaseCreateFunction> BaseCreateFunctionRegistry;
 
@@ -68,7 +70,7 @@ namespace karabo {
                     object = baseCreateFunctionIterator->second(); // () - means call base create function
                 } else {
                     throw KARABO_LOGIC_EXCEPTION("Could not find any factorized object associated "
-                            "to key: \"" + karabo::util::toString(classIdKey) + "\"");
+                                                 "to key: \"" + karabo::util::toString(classIdKey) + "\"");
                 }
                 return object;
             }
@@ -78,7 +80,7 @@ namespace karabo {
              * TODO: Should be moved outside of the class
              */
 
-            friend std::ostream& operator <<(std::ostream& os, const GenericFactory & genericFactory){
+            friend std::ostream& operator<<(std::ostream& os, const GenericFactory & genericFactory) {
                 return os << genericFactory.getKeysAsString();
             }
 
@@ -138,7 +140,7 @@ namespace karabo {
              */
             void registerBaseCreateFunction(const ClassIDKey & classIdKey, BaseCreateFunction baseCreateFunction) {
                 //std::cout << "REGISTRATION EVENT: " << classIdKey << std::endl;
-                m_registry[classIdKey] = baseCreateFunction;              
+                m_registry[classIdKey] = baseCreateFunction;
             }
 
 
@@ -165,7 +167,8 @@ namespace karabo {
          */
         template <class AbstractFactory, class ConcreteFactory, class ClassProvidingInfo >
         class RegisterInFactory {
-        public:
+
+            public:
 
             /**
              *  Base "create function". It creates object of ConcreteFactory and returns shared boost pointer

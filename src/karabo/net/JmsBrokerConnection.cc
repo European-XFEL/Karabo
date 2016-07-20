@@ -25,6 +25,7 @@ namespace karabo {
 
         static const MQConnectionHandle invalidConnection = MQ_INVALID_HANDLE;
 
+
         JmsBrokerConnection::~JmsBrokerConnection() {
             //cout << "****** " << BOOST_CURRENT_FUNCTION << " ENTRY ******" << endl;
             close();
@@ -50,7 +51,7 @@ namespace karabo {
             string defaultHostname = "exfl-broker.desy.de:7777";
             unsigned int defaultPort = 7777;
             string defaultTopic = string(getenv("USER"));
-            
+
             env = getenv("KARABO_BROKER_PORT");
             if (env != 0) defaultPort = fromString<unsigned int>(string(env));
             env = getenv("KARABO_BROKER_HOST");
@@ -183,14 +184,14 @@ namespace karabo {
                     .expertAccess()
                     .commit();
 
-//            INT32_ELEMENT(expected)
-//                    .key("messageTimeToLive")
-//                    .displayedName("Message Time to Live")
-//                    .description("Time to live for an individual message send by a producer (0 = unlimited) [ms]")
-//                    .assignmentOptional().defaultValue(600000)
-//                    .minInc(0)
-//                    .expertAccess()
-//                    .commit();
+            //            INT32_ELEMENT(expected)
+            //                    .key("messageTimeToLive")
+            //                    .displayedName("Message Time to Live")
+            //                    .description("Time to live for an individual message send by a producer (0 = unlimited) [ms]")
+            //                    .assignmentOptional().defaultValue(600000)
+            //                    .minInc(0)
+            //                    .expertAccess()
+            //                    .commit();
 
             INT32_ELEMENT(expected)
                     .key("compressionUsageThreshold")
@@ -218,10 +219,9 @@ namespace karabo {
 
 
         JmsBrokerConnection::JmsBrokerConnection(const karabo::util::Hash& input)
-        : BrokerConnection(input)
-        , m_hasConnection(false)
-        , m_closeOldConnection(false)
-        {
+            : BrokerConnection(input)
+            , m_hasConnection(false)
+            , m_closeOldConnection(false) {
             m_connectionHandle.handle = invalidConnection.handle;
             this->setIOServiceType("Jms"); // Defines the type of the composed IO service within abstract IO service
 
@@ -270,9 +270,11 @@ namespace karabo {
             }
         }
 
+
         bool JmsBrokerConnection::isConnected() const {
             return m_hasConnection;
         }
+
 
         void JmsBrokerConnection::connectToBrokers() {
             // The lock below is vital, because this code is executed on many threads

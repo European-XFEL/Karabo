@@ -457,6 +457,7 @@ namespace karabo {
         class Widen : public std::unary_function<
         const std::string&, std::basic_string<E, T, Sub1> > {
 
+
             std::locale loc_;
             const std::ctype<E>* pCType_;
 
@@ -540,6 +541,7 @@ namespace karabo {
         inline bool isBigEndian() {
 
             union {
+
 
                 unsigned int i;
                 char c[4];

@@ -15,6 +15,7 @@
 
 class LogSomething {
 
+
 public:
 
     KARABO_CLASSINFO(LogSomething, "LogSomething", "1.0")
@@ -48,6 +49,7 @@ public:
 };
 
 class Logger_Test : public CPPUNIT_NS::TestFixture {
+
 
     CPPUNIT_TEST_SUITE(Logger_Test);
 

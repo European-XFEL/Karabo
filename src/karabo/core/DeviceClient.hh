@@ -23,7 +23,7 @@ namespace karabo {
         template <class T>
         class Device;
 
-        /**
+/**
          * The Karabo Device Client
          * This class can be used to (remotely) control devices of the distributed system
          * Synchronous calls (i.e. get()) are in fact asynchronous under the hood
@@ -53,6 +53,7 @@ namespace karabo {
          */
         class DeviceClient {
 
+
             template<class T>
             friend class Device;
 
@@ -68,7 +69,7 @@ namespace karabo {
             static const unsigned int CONNECTION_KEEP_ALIVE = 15;
 
             boost::shared_ptr<karabo::xms::SignalSlotable> m_internalSignalSlotable;
-            
+
         protected: // members
 
             /**
@@ -114,7 +115,7 @@ namespace karabo {
             int m_internalTimeout;
 
             bool m_isAdvancedMode; // DEPRECATED
-            
+
             bool m_topologyInitialized;
 
             boost::thread m_ageingThread;
@@ -318,9 +319,8 @@ namespace karabo {
             void get(const std::string& instanceId, karabo::util::Hash& hash);
 
             karabo::util::Hash getConfigurationNoWait(const std::string& deviceId);
-            
-            bool hasAttribute(const std::string& instanceId, const std::string& key, const std::string& attribute, const char keySep = '.' );
 
+            bool hasAttribute(const std::string& instanceId, const std::string& key, const std::string& attribute, const char keySep = '.');
 
             template<class T>
             T get(const std::string& instanceId, const std::string& key, const char keySep = '.') {
@@ -339,7 +339,7 @@ namespace karabo {
                     return cacheAndGetConfiguration(instanceId).get(key, value, keySep);
                 } catch (const karabo::util::Exception& e) {
 
-                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
+                    KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
                 }
             }
 
@@ -352,36 +352,36 @@ namespace karabo {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
                 }
             }
-            
+
             boost::any getAsAny(const std::string& instanceId, const std::string& key, const char keySep = '.') {
                 try {
                     /*if(cacheAndGetConfiguration(instanceId).getNode(key, keySep).getType() != karabo::util::Types::VECTOR_HASH ||
                             !cacheAndGetConfiguration(instanceId).hasAttribute(key, KARABO_SCHEMA_ROW_SCHEMA, keySep)){*/
                     return cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValueAsAny();
-                   /*} else {
-                        std::vector<karabo::util::Hash> value = cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValue<std::vector<karabo::util::Hash> >();
-                        for(std::vector<karabo::util::Hash>::iterator it = value.begin(); it != value.end(); ++it){
-                            for(karabo::util::Hash::iterator h_it = it->begin(); h_it != it->end(); ++h_it){
-                                if(h_it->hasAttribute("isAliasing")){
-                                    std::string isAliasing = h_it->getAttribute<std::string>("isAliasing");
-                                    size_t sepPos = isAliasing.find(".");
-                                    std::string deviceId = isAliasing.substr(0, sepPos);
-                                    std::string keyPath = isAliasing.substr(sepPos+1);
-                                    try {
-                                        if(this->hasAttribute(deviceId, keyPath, "isAliasing")){
-                                            throw KARABO_PARAMETER_EXCEPTION("Refusing to get monitor value of "+keyPath+" as it is a monitor itself");
-                                        }
-                                        h_it->setValue(this->getAsAny(deviceId, keyPath));
-                                    } catch(const karabo::util::Exception& e){
-                                        KARABO_LOG_FRAMEWORK_WARN<<"Could not retrieve monitored parameter "<<h_it->getKey()<<" from device "<<deviceId;
-                                        KARABO_LOG_FRAMEWORK_WARN<<"Reason: "<<e.userFriendlyMsg();
-                                    }
-                                }
-                            }
-                        }
-                        return boost::any(value); //will only be reached if T is actually a vector<Hash>
+                    /*} else {
+                         std::vector<karabo::util::Hash> value = cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValue<std::vector<karabo::util::Hash> >();
+                         for(std::vector<karabo::util::Hash>::iterator it = value.begin(); it != value.end(); ++it){
+                             for(karabo::util::Hash::iterator h_it = it->begin(); h_it != it->end(); ++h_it){
+                                 if(h_it->hasAttribute("isAliasing")){
+                                     std::string isAliasing = h_it->getAttribute<std::string>("isAliasing");
+                                     size_t sepPos = isAliasing.find(".");
+                                     std::string deviceId = isAliasing.substr(0, sepPos);
+                                     std::string keyPath = isAliasing.substr(sepPos+1);
+                                     try {
+                                         if(this->hasAttribute(deviceId, keyPath, "isAliasing")){
+                                             throw KARABO_PARAMETER_EXCEPTION("Refusing to get monitor value of "+keyPath+" as it is a monitor itself");
+                                         }
+                                         h_it->setValue(this->getAsAny(deviceId, keyPath));
+                                     } catch(const karabo::util::Exception& e){
+                                         KARABO_LOG_FRAMEWORK_WARN<<"Could not retrieve monitored parameter "<<h_it->getKey()<<" from device "<<deviceId;
+                                         KARABO_LOG_FRAMEWORK_WARN<<"Reason: "<<e.userFriendlyMsg();
+                                     }
+                                 }
+                             }
+                         }
+                         return boost::any(value); //will only be reached if T is actually a vector<Hash>
                         
-                    }*/
+                     }*/
                 } catch (const karabo::util::Exception& e) {
 
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
@@ -393,7 +393,7 @@ namespace karabo {
             /// Caching speeds up repeated calls to getPropertyHistory.
             /// Returns success of action.
             bool cacheLoggerMap(bool toggle);
-            
+
             karabo::util::vector<karabo::util::Hash> getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
 
             karabo::util::vector<karabo::util::Hash> getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
@@ -434,7 +434,7 @@ namespace karabo {
 
             template <class ValueType, class UserDataType>
             bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const boost::function<void ( const std::string& /*deviceId*/, const std::string& /*key*/,
-                                         const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/, const boost::any& /*userData*/) >& callbackFunction, const UserDataType& userData) {
+                                                                                                                            const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/, const boost::any& /*userData*/) >& callbackFunction, const UserDataType& userData) {
                 karabo::util::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
                     this->cacheAndGetConfiguration(instanceId);
@@ -494,31 +494,31 @@ namespace karabo {
 
             void executeNoWait(const std::string& instanceId, const std::string& command) {
                 if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command);
-                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
+                else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
             }
 
             template <class A1>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1) {
                 if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1);
-                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
+                else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
             }
 
             template <class A1, class A2>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2) {
                 if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1, a2);
-                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
+                else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
             }
 
             template <class A1, class A2, class A3>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, const A3& a3) {
                 if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1, a2, a3);
-                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
+                else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
             }
 
             template <class A1, class A2, class A3, class A4>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
                 if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1, a2, a3, a4);
-                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
+                else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
             }
 
             std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command, int timeoutInSeconds = -1) {
@@ -612,14 +612,14 @@ namespace karabo {
             }
 
         protected: // functions
-            
+
             void initTopology();
-            
+
             void cacheAvailableInstances();
 
-            karabo::util::Hash prepareTopologyEntry(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            karabo::util::Hash prepareTopologyEntry(const std::string& instanceId, const karabo::util::Hash& instanceInfo) const;
 
-            std::string prepareTopologyPath(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            std::string prepareTopologyPath(const std::string& instanceId, const karabo::util::Hash& instanceInfo) const;
 
             void removeFromSystemTopology(const std::string& instanceId);
 
@@ -701,7 +701,7 @@ namespace karabo {
 
             /// Actually process data in 'signalChangedMap' - try/catch should be outside.
             void doSendSignalsChanged(const SignalChangedMap &signalChangedMap);
-            
+
             /// Marks 'instanceId' as used.
             /// Returns true if explicit "connect" call should still be done for it.
             bool connectNeeded(const std::string & instanceId);

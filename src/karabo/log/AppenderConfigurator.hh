@@ -25,7 +25,7 @@ namespace karabo {
 
         class AppenderConfigurator {
 
-        public:
+            public:
             KARABO_CLASSINFO(AppenderConfigurator, "Appender", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
@@ -46,11 +46,11 @@ namespace karabo {
         public:
 
             AppenderConfigurator(const std::string& appenderName, krb_log4cpp::Priority::Value threshold, krb_log4cpp::Layout* layout) :
-            m_appenderName(appenderName), m_threshold(threshold), m_layout(layout) {
+                m_appenderName(appenderName), m_threshold(threshold), m_layout(layout) {
             }
 
             AppenderConfigurator() :
-            m_appenderName("noname"), m_threshold(krb_log4cpp::Priority::NOTSET) {
+                m_appenderName("noname"), m_threshold(krb_log4cpp::Priority::NOTSET) {
             }
 
             virtual ~AppenderConfigurator() {

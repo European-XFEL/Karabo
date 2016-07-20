@@ -186,10 +186,11 @@ class EnumValue(KaraboValue):
             if descriptor is None:
                 descriptor = value.descriptor
             value = value.enum
-        if not isinstance(value, Enum):
-            raise TypeError("value must be an Enum")
         if descriptor is not None and not isinstance(value, descriptor.enum):
-            raise TypeError("value is not element of enum in descriptor")
+            raise TypeError('value "{}" is not element of enum "{}"'.
+                            format(value, descriptor.enum))
+        if not isinstance(value, Enum):
+            raise TypeError('value "{}" must be an Enum'.format(value))
         self.enum = value
 
     def __eq__(self, other):

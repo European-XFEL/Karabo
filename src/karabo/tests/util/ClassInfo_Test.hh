@@ -19,6 +19,8 @@
 #include "resources/Rectangle.hh"
 
 class ClassInfo_Test : public CPPUNIT_NS::TestFixture {
+
+
     CPPUNIT_TEST_SUITE(ClassInfo_Test);
 
     CPPUNIT_TEST(testGetClassId);
@@ -27,7 +29,7 @@ class ClassInfo_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testAnotherUsage);
     CPPUNIT_TEST(testGetRegisteredKeys);
     CPPUNIT_TEST(testExpectedParameters);
-    
+
     CPPUNIT_TEST_SUITE_END();
 
 public:

@@ -62,7 +62,7 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned long long>, DatasetArrayWriter<unsigned long long>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<double>, DatasetArrayWriter<double>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<float>, DatasetArrayWriter<float>)
-//            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<bool>, DatasetArrayWriter<bool>)
+            //            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<bool>, DatasetArrayWriter<bool>)
 
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetScalarWriter<char>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<signed char>, DatasetScalarWriter<signed char>)

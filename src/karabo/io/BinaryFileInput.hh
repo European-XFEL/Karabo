@@ -37,6 +37,7 @@ namespace karabo {
         template <class T>
         class BinaryFileInput : public Input<T> {
 
+
             boost::filesystem::path m_filename;
             typename BinarySerializer<T>::Pointer m_serializer;
             std::vector<T> m_sequenceBuffer;

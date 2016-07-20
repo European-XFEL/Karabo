@@ -13,6 +13,7 @@
 
 class ImageTest : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(ImageTest);
 
     CPPUNIT_TEST(testConstructorsFloat);
@@ -38,7 +39,7 @@ private:
     }
 
     void testConstructorsChar();
-    
+
     void testImageHeader();
 
     template <class T>

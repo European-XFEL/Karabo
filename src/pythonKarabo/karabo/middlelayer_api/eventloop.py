@@ -6,6 +6,7 @@ from asyncio import (AbstractEventLoop, CancelledError, coroutine, gather,
                      TimeoutError)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
+from functools import wraps
 import getpass
 from itertools import count
 import logging
@@ -34,8 +35,7 @@ class Broker:
         self.repliers = {}
         self.tasks = set()
         self.logger = logging.getLogger(deviceId)
-        self.info = Hash()
-        self.alive = False
+        self.info = None
 
     def send(self, p, args):
         hash = Hash()
@@ -62,22 +62,24 @@ class Broker:
         self.hbproducer.send(m, 1, 4, 100000)
 
     @coroutine
-    def notify_network(self, interval):
+    def notify_network(self, info):
         """notify the network that we are alive
 
-        we send out an instance new and gone, and the heartbeats in between."""
-        self.info["heartbeatInterval"] = interval.value
+        we send out an instance new and gone, and the heartbeats in between.
+
+        :param info: the info Hash that should be published regularly.
+        """
+        self.info = info
         self.emit('call', {'*': ['slotInstanceNew']},
                   self.deviceId, self.info)
-        self.alive = True
         try:
             while True:
-                self.heartbeat(interval.value)
+                interval = self.info["heartbeatInterval"]
+                self.heartbeat(interval)
                 yield from sleep(interval)
         finally:
             self.emit('call', {'*': ['slotInstanceGone']},
                       self.deviceId, self.info)
-            self.alive = False
 
     def call(self, signal, targets, reply, args):
         p = openmq.Properties()
@@ -219,9 +221,8 @@ class Broker:
         It is regularly published, and even lives longer than a device,
         as it is published with the message that the device died."""
         self.info.merge(info)
-        if self.alive:
-            self.emit("call", {"*": ["slotInstanceUpdated"]},
-                      self.deviceId, self.info)
+        self.emit("call", {"*": ["slotInstanceUpdated"]},
+                  self.deviceId, self.info)
 
     def decodeMessage(self, message):
         hash = Hash.decode(message.data, "Bin")
@@ -246,6 +247,23 @@ class Broker:
             "utf8").split('||')
         return ({k: v.split(",") for k, v in (s.split(":") for s in slots)},
                 params)
+
+
+def synchronize(coro):
+    """Decorate coroutine to play well in threads
+
+    Most Karabo functions are coroutines that must run in the main thread.
+    This decorator assures that the decorated coroutine will be called in the
+    main thread, and returns the return value to the caller.
+
+    If we are already in the main thread, the coroutine is simply returned.
+    """
+    coro = coroutine(coro)
+
+    @wraps(coro)
+    def wrapper(*args, timeout=-1, **kwargs):
+        return get_event_loop().sync(coro(*args, **kwargs), timeout)
+    return wrapper
 
 
 class NoEventLoop(AbstractEventLoop):
@@ -371,17 +389,6 @@ class EventLoop(SelectorEventLoop):
         return task
 
     @coroutine
-    def start_thread(self, f, *args, **kwargs):
-        def inner():
-            set_event_loop(loop)
-            try:
-                return f(*args, **kwargs)
-            finally:
-                set_event_loop(None)
-        loop = NoEventLoop(self.instance())
-        return (yield from self.run_in_executor(None, inner))
-
-    @coroutine
     def run_coroutine_or_thread(self, f, *args, **kwargs):
         """run the function *f* correctly, as a coroutine or thread
 
@@ -389,9 +396,17 @@ class EventLoop(SelectorEventLoop):
         a future, if it is a coroutine function, it returns the coroutine
         object."""
         if iscoroutinefunction(f):
-            return f(*args, **kwargs)
+            return (yield from f(*args, **kwargs))
         else:
-            return self.start_thread(f, *args, **kwargs)
+            loop = NoEventLoop(self.instance())
+
+            def inner():
+                set_event_loop(loop)
+                try:
+                    return f(*args, **kwargs)
+                finally:
+                    set_event_loop(None)
+            return (yield from self.run_in_executor(None, inner))
 
     def start_device(self, device):
         lock = threading.Lock()

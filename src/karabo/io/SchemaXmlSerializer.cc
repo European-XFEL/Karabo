@@ -39,12 +39,13 @@ namespace karabo {
             archive = object.getRootName() + ":";
             m_serializer->save(object.getParameterHash(), archive);
         }
-        
+
+
         void SchemaXmlSerializer::load(Schema& object, const std::string& archive) {
             size_t pos = archive.find_first_of(':');
             string rootName = archive.substr(0, pos);
             string hashArchive = archive.substr(pos + 1);
-            Hash hash; 
+            Hash hash;
             m_serializer->load(hash, hashArchive);
             object.setRootName(rootName);
             object.setParameterHash(hash);

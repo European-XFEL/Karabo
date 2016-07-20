@@ -22,7 +22,7 @@ namespace karabo {
         template <class Derived>
         class SlotElementBase : public karabo::util::GenericElement<Derived> {
 
-        protected:
+            protected:
 
             karabo::util::Hash m_child;
 
@@ -33,7 +33,7 @@ namespace karabo {
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, karabo::util::WRITE);
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::NODE);
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Slot"); // Reserved displayType for commands
-                
+
                 //default value of requiredAccessLevel for Slot element: USER
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, karabo::util::Schema::USER);
 
@@ -119,7 +119,7 @@ namespace karabo {
 
         class SLOT_ELEMENT : public SlotElementBase<SLOT_ELEMENT> {
 
-        public:
+            public:
 
             SLOT_ELEMENT(karabo::util::Schema& expected) : SlotElementBase<SLOT_ELEMENT>(expected) {
             }
@@ -133,7 +133,7 @@ namespace karabo {
         template <class A1>
         class SLOT_ELEMENT1 : public SlotElementBase<SLOT_ELEMENT1<A1> > {
 
-        public:
+            public:
 
             SLOT_ELEMENT1(karabo::util::Schema& expected) : SlotElementBase<SLOT_ELEMENT1<A1> >(expected) {
                 this->m_child.set("arg1", 0);

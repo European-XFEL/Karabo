@@ -7,7 +7,7 @@ from PyQt4.QtCore import QRect
 
 import unittest
 
-from karabo_gui.scenemodel.shapes import LineModel, RectangleModel
+from karabo_gui.scenemodel.api import LineModel, RectangleModel
 from karabo_gui.sceneview.selection_model import SceneSelectionModel
 from karabo_gui.sceneview.shapes import LineShape, RectangleShape
 
@@ -24,12 +24,12 @@ class TestSelectionModel(unittest.TestCase):
         self.assertFalse(self.selection_model.has_selection())
 
         line_model = LineModel(x1=0, y1=0, x2=100, y2=100)
-        line_shape = LineShape(line_model)
+        line_shape = LineShape(model=line_model)
         self.selection_model.select_object(line_shape)
         self.assertTrue(self.selection_model.has_selection())
 
         rect_model = RectangleModel(x=100, y=100, width=100, height=100)
-        rect_shape = RectangleShape(rect_model)
+        rect_shape = RectangleShape(model=rect_model)
         self.selection_model.select_object(rect_shape)
         self.assertTrue(self.selection_model.has_selection())
 

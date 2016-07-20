@@ -31,7 +31,7 @@ namespace karabo {
         template <class TPix>
         class ImageFileReader : public karabo::io::Input< CpuImage<TPix> > {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(ImageFileReader, "ImageFile", "1.0")
 
@@ -55,7 +55,7 @@ namespace karabo {
                 m_filename = config.get<std::string>("filename");
                 m_input = config;
             }
-            
+
             virtual ~ImageFileReader() {
             };
 

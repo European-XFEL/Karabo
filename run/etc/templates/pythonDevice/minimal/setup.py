@@ -23,7 +23,7 @@ setup(name='__PACKAGE_NAME__',
       package_dir={'': 'src'},
       packages=find_packages('src'),
       entry_points={
-          'karabo.python_device.api_1': [
+          'karabo.bound_device': [
               '__CLASS_NAME__ = __PACKAGE_NAME__.__CLASS_NAME__:__CLASS_NAME__',
           ],
           'console_scripts': [

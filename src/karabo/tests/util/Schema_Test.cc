@@ -73,28 +73,28 @@ void Schema_Test::testGetRequiredAccessLevel() {
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") == Schema::EXPERT);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::EXPERT);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") == Schema::EXPERT);
-    
+
     //but sub-element 'shapes.Rectangle.a' with higher level will keep its ADMIN level
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.a") == Schema::ADMIN);
-   
+
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("antiAlias") == Schema::EXPERT);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("color") == Schema::USER);
-    
+
     //check requiredAccesLevel set on leaves-elements in expectedParameters
     CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey1") == Schema::USER);
     CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey2") == Schema::OPERATOR);
     CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey3") == Schema::EXPERT);
     CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey4") == Schema::ADMIN);
-    
+
     //default for readOnly element - OBSERVER
     CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey5") == Schema::OBSERVER);
-    
+
     //default for reconfigurable element - USER
     CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("sampleKey") == Schema::USER);
-    
+
     Schema ose("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(ose);
-    
+
     //check default requiredAccessLevel by elements : slot, path, vector, image
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("slotTest") == Schema::USER); //SLOT
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("filename") == Schema::USER); //reconfigurable PATH
@@ -105,14 +105,15 @@ void Schema_Test::testGetRequiredAccessLevel() {
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("image") == Schema::OBSERVER); //IMAGE
 }
 
+
 void Schema_Test::testSetRequiredAccessLevel() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
-    
+
     CPPUNIT_ASSERT(sch.getRequiredAccessLevel("image") == Schema::OBSERVER); //IMAGE (default level OBSERVER)
     sch.setRequiredAccessLevel("image", Schema::ADMIN);
     CPPUNIT_ASSERT(sch.getRequiredAccessLevel("image") == Schema::ADMIN); //IMAGE (changed by 'set' to ADMIN)
-    
+
     Schema schema = GraphicsRenderer::getSchema("GraphicsRenderer");
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes") == Schema::EXPERT);
     //all sub-elements of Node-element 'shapes' will have EXPERT level: 
@@ -120,17 +121,17 @@ void Schema_Test::testSetRequiredAccessLevel() {
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::EXPERT);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.a") == Schema::ADMIN);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") == Schema::EXPERT);
-    
-    
+
+
     //set top-Node to lower level 'Observer' and check that sub-elements keep previous higher level
     schema.setRequiredAccessLevel("shapes", Schema::OBSERVER);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes") == Schema::OBSERVER);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") == Schema::USER);//default level for init-elem is 'user'
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") == Schema::USER); //default level for init-elem is 'user'
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::OBSERVER);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.a") == Schema::ADMIN);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") == Schema::USER);//default level for init-elem is 'user'
-    
-    
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") == Schema::USER); //default level for init-elem is 'user'
+
+
 }
 
 
@@ -643,6 +644,7 @@ void Schema_Test::testOverwriteElement() {
     CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey3") == 20);
 }
 
+
 void Schema_Test::testMerge() {
     Schema schema = Configurator<SchemaNodeElements>::getSchema("SchemaNodeElements", Schema::AssemblyRules(READ | WRITE | INIT));
     CPPUNIT_ASSERT(schema.getDefaultValue<unsigned int>("monitor.count") == 777);
@@ -656,12 +658,14 @@ void Schema_Test::testMerge() {
     CPPUNIT_ASSERT(schema.getDefaultValue<float>("monitor.stats.d1") == 3.1415f);
 }
 
+
 void Schema_Test::testTable() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
     CPPUNIT_ASSERT(sch.isLeaf("testTable") == true);
     CPPUNIT_ASSERT(sch.getParameterHash().hasAttribute("testTable", "rowSchema") == true);
 }
+
 
 void Schema_Test::testList() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
@@ -670,7 +674,7 @@ void Schema_Test::testList() {
     CPPUNIT_ASSERT(sch.isListOfNodes("shapeList") == true);
     CPPUNIT_ASSERT(sch.isNode("shapeList") == false);
     const char* classes[] = {"Circle", "Rectangle"};
-    const std::vector<std::string> defaults(classes, classes + sizeof(classes)/sizeof(classes[0]));
+    const std::vector<std::string> defaults(classes, classes + sizeof (classes) / sizeof (classes[0]));
     CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<std::string> >("shapeList") == defaults);
 
     CPPUNIT_ASSERT(sch.has("shapeList.Circle"));
@@ -684,6 +688,7 @@ void Schema_Test::testList() {
     // only nodes can be added as children of lists of elements
     CPPUNIT_ASSERT(sch.has("shapeList.orphanedLength") == false);
 }
+
 
 void Schema_Test::testInvalidNodes() {
     Schema schema("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));

@@ -20,10 +20,12 @@ namespace karabo {
     namespace net {
 
         typedef boost::function<bool (const std::string&,
-                const karabo::util::Hash::Pointer&,
-                const karabo::util::Hash::Pointer&) > ConsumeHandler;
+                                      const karabo::util::Hash::Pointer&,
+                                      const karabo::util::Hash::Pointer&) > ConsumeHandler;
 
         class PointToPoint {
+
+
             // Signal side is always a server (producer) side,  Slot side is a client (consumer) side
 
         public:
@@ -41,23 +43,23 @@ namespace karabo {
             }
 
             void connect(const std::string& signalInstanceId, const std::string& slotInstanceId,
-                    const std::string& signalConnectionString, const karabo::net::ConsumeHandler& handler);
+                         const std::string& signalConnectionString, const karabo::net::ConsumeHandler& handler);
 
             void disconnect(const std::string& signalInstanceId, const std::string& slotInstanceId);
 
             bool publish(const std::string& slotInstanceId,
-                    const karabo::util::Hash::Pointer& header,
-                    const karabo::util::Hash::Pointer& body,
-                    int prio);
+                         const karabo::util::Hash::Pointer& header,
+                         const karabo::util::Hash::Pointer& body,
+                         int prio);
 
             void publishIfConnected(std::map<std::string, std::set<std::string> >& registeredSlots,
-                    const karabo::util::Hash::Pointer& header,
-                    const karabo::util::Hash::Pointer& message, int prio);
+                                    const karabo::util::Hash::Pointer& header,
+                                    const karabo::util::Hash::Pointer& message, int prio);
 
         private:
 
             void consume(const karabo::net::Channel::Pointer& channel, karabo::util::Hash::Pointer& header,
-                    karabo::util::Hash::Pointer& body);
+                         karabo::util::Hash::Pointer& body);
 
         private:
 

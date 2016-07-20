@@ -12,6 +12,7 @@
 
 class StringTools_Test : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(StringTools_Test);
     CPPUNIT_TEST(testFromString);
     CPPUNIT_TEST(testToString);

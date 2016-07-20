@@ -17,6 +17,7 @@ namespace karabo {
         // Base64 Index Table
         const std::string b64_char = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
+
         std::string base64Encode(const unsigned char* bytes_to_encode, const size_t len) {
             unsigned char i0, i1, i2; // Bytes from input string
             unsigned char o0, o1, o2, o3; // Bytes to output string
@@ -77,7 +78,7 @@ namespace karabo {
             unsigned short pad; // Number of padding chars
             size_t t0, t1, t2, t3;
             size_t len = in.size();
-            
+
             // Empty input string => Empty output string
             if (len == 0) return;
             else out.reserve(len);
@@ -113,7 +114,7 @@ namespace karabo {
 
                 // Check that all input bytes are base64
                 if (t0 == std::string::npos || t1 == std::string::npos ||
-                        t2 == std::string::npos || t3 == std::string::npos) {
+                    t2 == std::string::npos || t3 == std::string::npos) {
                     throw (std::string)"base64_decode: Non-base64 found in the string to be decoded";
                 }
 
@@ -123,11 +124,11 @@ namespace karabo {
                 o2 = ((i2 & 0x0F) << 6) + (i3);
 
                 // Write decoded bytes to output
-                 out.push_back(o0);
+                out.push_back(o0);
                 if (pad < 2)
-                     out.push_back(o1);
+                    out.push_back(o1);
                 if (pad < 1)
-                     out.push_back(o2);
+                    out.push_back(o2);
             }
         }
     }

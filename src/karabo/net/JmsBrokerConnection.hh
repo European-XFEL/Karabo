@@ -30,10 +30,12 @@ namespace karabo {
      */
     namespace net {
 
-        /**
+/**
          * The Connection class.
          */
         class JmsBrokerConnection : public BrokerConnection {
+
+
             bool m_clusterMode;
             std::vector<std::string> m_brokerHosts;
             std::string m_hostname;
@@ -93,7 +95,7 @@ namespace karabo {
             }
 
             virtual bool isConnected() const;
-            
+
         private:
 
             void close();

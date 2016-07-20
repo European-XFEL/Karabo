@@ -22,6 +22,7 @@ namespace karabo {
          */
         class Dims {
 
+
             typedef unsigned long long ull64;
 
             std::vector<ull64> m_vec;
@@ -107,7 +108,7 @@ namespace karabo {
                 if (m_rank >= 3) return m_vec[2];
                 return 1;
             }
-            
+
             ull64 x1() const {
                 if (m_rank >= 1) return m_vec[0];
                 return 0;
@@ -122,15 +123,15 @@ namespace karabo {
                 if (m_rank >= 3) return m_vec[2];
                 return 1;
             }
-            
-             ull64 x4() const {
+
+            ull64 x4() const {
                 if (m_rank >= 4) return m_vec[3];
                 return 1;
             }
-             
-             void reverse() {
-                 std::reverse(m_vec.begin(), m_vec.end());
-             }
+
+            void reverse() {
+                std::reverse(m_vec.begin(), m_vec.end());
+            }
 
 
 

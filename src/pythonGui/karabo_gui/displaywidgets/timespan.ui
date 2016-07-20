@@ -6,78 +6,58 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>325</width>
-    <height>150</height>
+    <width>393</width>
+    <height>166</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Select Time Span</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Beginning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="QDateTimeEdit" name="beginning">
-     <property name="currentSection">
-      <enum>QDateTimeEdit::YearSection</enum>
-     </property>
-     <property name="displayFormat">
-      <string>yyyy-MM-dd hh:mm:ss</string>
-     </property>
-     <property name="calendarPopup">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>End</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QDateTimeEdit" name="end">
-     <property name="currentSection">
-      <enum>QDateTimeEdit::YearSection</enum>
-     </property>
-     <property name="displayFormat">
-      <string>yyyy-MM-dd hh:mm:ss</string>
-     </property>
-     <property name="calendarPopup">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
    <item row="2" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="hour">
+      <widget class="QPushButton" name="pb_one_week">
        <property name="text">
-        <string>Last Hour</string>
+        <string>One Week</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="minute">
+      <widget class="QPushButton" name="pb_one_day">
        <property name="text">
-        <string>Last Minute</string>
+        <string>One Day</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="s20">
+      <widget class="QPushButton" name="pb_one_hour">
        <property name="text">
-        <string>Last 20 s</string>
+        <string>One Hour</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_ten_minutes">
+       <property name="text">
+        <string>10 Minutes</string>
        </property>
       </widget>
      </item>
     </layout>
+   </item>
+   <item row="1" column="1">
+    <widget class="QDateTimeEdit" name="dt_end">
+     <property name="currentSection">
+      <enum>QDateTimeEdit::YearSection</enum>
+     </property>
+     <property name="displayFormat">
+      <string>yyyy-MM-dd hh:mm:ss</string>
+     </property>
+     <property name="calendarPopup">
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
    <item row="3" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="buttonBox">
@@ -86,6 +66,33 @@
      </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="la_end">
+     <property name="text">
+      <string>End</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="la_beginning">
+     <property name="text">
+      <string>Beginning</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QDateTimeEdit" name="dt_beginning">
+     <property name="currentSection">
+      <enum>QDateTimeEdit::YearSection</enum>
+     </property>
+     <property name="displayFormat">
+      <string>yyyy-MM-dd hh:mm:ss</string>
+     </property>
+     <property name="calendarPopup">
+      <bool>true</bool>
      </property>
     </widget>
    </item>

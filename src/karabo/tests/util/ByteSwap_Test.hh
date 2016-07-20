@@ -12,6 +12,7 @@
 
 class ByteSwap_Test : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(ByteSwap_Test);
     CPPUNIT_TEST(test16);
     CPPUNIT_TEST(test32);

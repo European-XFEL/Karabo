@@ -17,10 +17,11 @@ namespace karabo {
 
         namespace h5 {
 
-            /**
-             Table is an entity defined to store set of records...
+/**
+                                     Table is an entity defined to store set of records...
              */
             class Table {
+
 
                 friend class File;
 
@@ -31,7 +32,7 @@ namespace karabo {
             private:
 
                 Table(hid_t h5file, boost::filesystem::path name)
-                : m_h5file(h5file), m_name(name), m_group(-1), m_tableSize(0), m_numberOfRecordsAttribute(-1) {
+                    : m_h5file(h5file), m_name(name), m_group(-1), m_tableSize(0), m_numberOfRecordsAttribute(-1) {
                 }
 
             public:

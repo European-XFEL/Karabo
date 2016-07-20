@@ -17,7 +17,8 @@
 namespace karathon {
 
     class DimsWrap : public karabo::util::Dims {
-    public:
+
+        public:
 
         DimsWrap() : karabo::util::Dims() {
         }
@@ -41,7 +42,7 @@ namespace karathon {
         }
 
         DimsWrap(unsigned long long x1Size, unsigned long long x2Size, unsigned long long x3Size, unsigned long long x4Size) :
-        karabo::util::Dims(x1Size, x2Size, x3Size, x4Size) {
+            karabo::util::Dims(x1Size, x2Size, x3Size, x4Size) {
         }
 
         bp::object toVectorPy() {

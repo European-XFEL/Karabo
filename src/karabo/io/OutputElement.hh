@@ -24,15 +24,16 @@ namespace karabo {
 
         class OutputElement : public karabo::util::GenericElement<OutputElement> {
 
+
             karabo::util::Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
         public:
 
             OutputElement(karabo::util::Schema& expected) : karabo::util::GenericElement<OutputElement>(expected) {
                 m_parentSchemaAssemblyRules = expected.getAssemblyRules();
-		this->m_node->setValue(karabo::util::Hash());
-            }           
-            
+                this->m_node->setValue(karabo::util::Hash());
+            }
+
             template <class ConfigurationBase>
             OutputElement& setOutputType() {
                 using namespace karabo::util;
@@ -81,7 +82,7 @@ namespace karabo {
                 using namespace karabo::util;
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
-                this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::NODE);               
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::NODE);
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Output");
             }
 

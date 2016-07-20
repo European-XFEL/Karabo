@@ -6,21 +6,25 @@
 
 import os.path
 
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import QEvent, QRect, Qt
 from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
-from karabo_gui.scenemodel.api import (read_scene, FixedLayoutModel,
-                                       SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+from karabo_gui.scenemodel.api import (
+    read_scene, FixedLayoutModel, WorkflowItemModel,
+    SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
 from .builder import (bring_object_to_front, create_object_from_model,
-                      fill_root_layout, is_widget, remove_object_from_layout,
-                      send_object_to_back)
+                      fill_root_layout, find_top_level_model, is_widget,
+                      remove_object_from_layout,
+                      replace_model_in_top_level_model, send_object_to_back)
 from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
-from .tools.api import SceneSelectionTool
+from .tools.api import (ConfigurationDropHandler, NavigationDropHandler,
+                        SceneSelectionTool, WidgetSceneHandler)
 from .utils import save_painter_state
+from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 
 
 class SceneView(QWidget):
@@ -42,16 +46,32 @@ class SceneView(QWidget):
         self.layout = GroupLayout(layout_model, parent=self)
         self.inner = QWidget(self)
         self.inner.setLayout(self.layout)
+        # Also create an overlay for the workflow connections
+        self.overlay = WorkflowOverlay(self, parent=self)
+
         layout = QStackedLayout(self)
+        layout.setStackingMode(QStackedLayout.StackAll)
+        layout.addWidget(self.overlay)
         layout.addWidget(self.inner)
 
         self.title = None
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
+        self.workflow_model = SceneWorkflowModel()
+
+        # List of scene drag n drop handlers
+        self.scene_handler_list = [ConfigurationDropHandler(),
+                                   NavigationDropHandler()]
+        self.current_scene_handler = None
+
         self.current_tool = None
         self.design_mode = design_mode
         self.tab_visible = False
         self._scene_obj_cache = {}
+
+        # Redraw when the workflow model changes
+        self.workflow_model.on_trait_change(lambda *args: self.update(),
+                                            'updated')
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -108,6 +128,27 @@ class SceneView(QWidget):
                 self.update()
             event.accept()
 
+    def dragEnterEvent(self, event):
+        if not self.design_mode:
+            event.ignore()
+            return
+
+        for scene_handler in self.scene_handler_list:
+            if scene_handler.can_handle(event):
+                self.current_scene_handler = scene_handler
+                event.accept()
+                return
+        event.ignore()
+
+    def dropEvent(self, event):
+        if self.current_scene_handler is None:
+            event.ignore()
+            return
+
+        self.current_scene_handler.handle(self, event)
+        self.current_scene_handler = None
+        event.accept()
+
     def paintEvent(self, event):
         """ Show view content.
         """
@@ -116,6 +157,33 @@ class SceneView(QWidget):
             self._draw_selection(painter)
             if self.current_tool.visible:
                 self.current_tool.draw(painter)
+
+    def event(self, event):
+        """ This needs to be reimplemented to show tooltips not only in control
+            mode but also in design mode.
+
+            If the design mode is active the widget attribute
+            ``WA_TransparentForMouseEvents`` is set to ``False`` which prevents
+            the forwarding of the events to the actual widgets.
+        """
+        result = super(SceneView, self).event(event)
+        if event.type() == QEvent.ToolTip:
+            widget = self.widget_at_position(event.pos())
+            if widget is not None:
+                return widget.event(event)
+        return result
+
+    def contextMenuEvent(self, event):
+        """ Show scene view specific context menu. """
+        if self.design_mode:
+            widget = self.widget_at_position(event.pos())
+            if widget is not None:
+                widget_handler = WidgetSceneHandler(widget=widget)
+                # This methods blocks here until an action is selected
+                widget_handler.handle(self, event)
+                event.accept()
+                return
+        event.ignore()
 
     # ----------------------------
     # Public methods
@@ -126,6 +194,7 @@ class SceneView(QWidget):
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
                 obj.destroy()
+        self.workflow_model.destroy()
 
     def set_tab_visible(self, visible):
         """ Sets whether this scene is visible
@@ -162,6 +231,15 @@ class SceneView(QWidget):
             obj = self._scene_obj_cache.get(child)
             if obj is not None and obj.geometry().contains(pos):
                 return obj
+
+    def widget_at_position(self, pos):
+        """ Returns the topmost widget whose bounds contain `pos`.
+        """
+        widget = self.inner.childAt(pos)
+        if widget is not None:
+            while not is_widget(widget):
+                widget = widget.parent()
+        return widget
 
     def items_in_rect(self, rect):
         """ Returns the topmost objects whose bounds are contained in `rect`.
@@ -209,6 +287,32 @@ class SceneView(QWidget):
     def remove_model(self, model):
         """ Removes the given ``model`` from the scene model."""
         self.scene_model.children.remove(model)
+
+    def replace_model(self, old_model, new_model):
+        """ Replace the given ``old_model`` with the given ``new_model``. """
+        # Find top level model to which ``old_model`` belongs
+        top_level_model = find_top_level_model(self.scene_model, old_model)
+        if top_level_model is None:
+            return
+
+        # Remove it from list
+        self.remove_model(top_level_model)
+        if top_level_model is not old_model:
+            # Do the replacing in the top level model tree
+            replace_model_in_top_level_model(self.scene_model,
+                                             top_level_model,
+                                             old_model, new_model)
+        else:
+            top_level_model = new_model
+        # Add the modified top level model to the scene again
+        self.add_models(top_level_model)
+        widget = self._scene_obj_cache.get(new_model)
+        model_rect = QRect(new_model.x, new_model.y,
+                           new_model.width, new_model.height)
+        if model_rect.isEmpty():
+            model_rect.setSize(widget.sizeHint())
+            widget.setGeometry(model_rect)
+        self.selection_model.clear_selection()
 
     def bring_to_front(self, model):
         """ The given ``model`` is moved to the end of the list."""
@@ -265,6 +369,7 @@ class SceneView(QWidget):
         self.scene_model = scene_model
         self.scene_model.on_trait_change(self._model_modified,
                                          'children_items')
+        self._add_workflow_items(self.scene_model.children)
 
     def _model_modified(self, event):
         """ The scene model got modified."""
@@ -273,6 +378,19 @@ class SceneView(QWidget):
             if obj is not None:
                 remove_object_from_layout(obj, self.layout,
                                           self._scene_obj_cache)
+        self._remove_workflow_items(event.removed)
+
         for model in event.added:
             create_object_from_model(self.layout, model, self.inner,
                                      self._scene_obj_cache)
+        self._add_workflow_items(event.added)
+
+    def _add_workflow_items(self, models):
+        """ Add new WorkflowItemModel instances to the workflow model. """
+        items = [m for m in models if isinstance(m, WorkflowItemModel)]
+        self.workflow_model.add_items(items)
+
+    def _remove_workflow_items(self, models):
+        """ Remove WorkflowItemModel instances from the workflow model. """
+        items = [m for m in models if isinstance(m, WorkflowItemModel)]
+        self.workflow_model.remove_items(items)

@@ -185,6 +185,7 @@ namespace karabo {
             OverwriteElement& setNewAllowedStates(const std::vector<karabo::util::State>& states) {
                 const std::string stateList = karabo::util::toString(states);
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector > (stateList, ","));
+
                 return *this;
             }
 

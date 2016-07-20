@@ -23,10 +23,10 @@ using namespace karathon;
 
 void exportp2p() {
     bp::docstring_options docs(true, true, false);
-    
+
     {
         bp::class_<BrokerConnection, BrokerConnection::Pointer, boost::noncopyable>("BrokerConnection", bp::no_init)
-        KARABO_PYTHON_FACTORY_CONFIGURATOR(BrokerConnection);
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(BrokerConnection);
     }
 
     {
@@ -63,8 +63,8 @@ void exportp2p() {
 
     {
         bp::class_<Channel, Channel::Pointer, boost::noncopyable >("Channel",
-                "Channel is a class providing IO operations.  The instance of this class can be created when connection is established.",
-                bp::no_init)
+                                                                   "Channel is a class providing IO operations.  The instance of this class can be created when connection is established.",
+                                                                   bp::no_init)
 
                 .def("getConnection", &Channel::getConnection,
                      "Returns connection object for given channel")

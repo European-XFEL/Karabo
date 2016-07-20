@@ -7,9 +7,9 @@
 import os.path as op
 
 import karabo_gui.scenemodel.tests as sm
-from karabo_gui.scenemodel.const import SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
-from karabo_gui.scenemodel.model import SceneModel
-from karabo_gui.sceneview.view import SceneView
+from karabo_gui.scenemodel.api import (SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT,
+                                       SceneModel)
+from karabo_gui.sceneview.api import SceneView
 from karabo_gui.sceneview.layout.api import GroupLayout
 from karabo_gui.testing import GuiTestCase
 

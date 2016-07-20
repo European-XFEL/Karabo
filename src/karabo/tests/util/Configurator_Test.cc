@@ -13,14 +13,18 @@ using namespace karabo::util;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Configurator_Test);
 
+
 Configurator_Test::Configurator_Test() {
 }
 
+
 Configurator_Test::~Configurator_Test() {
 }
-  
+
+
 void Configurator_Test::setUp() {
 }
+
 
 void Configurator_Test::tearDown() {
 }
@@ -44,11 +48,12 @@ void Configurator_Test::tearDown() {
 //        CPPUNIT_ASSERT(h.has("base.a") == true);
 //    }
 //}
- 
-KARABO_REGISTER_FOR_CONFIGURATION_2(Base_N, Sub1_N<Base_N>); 
-KARABO_REGISTER_FOR_CONFIGURATION_2(Base_N, Sub1_Y<Base_N>);  
+
+KARABO_REGISTER_FOR_CONFIGURATION_2(Base_N, Sub1_N<Base_N>);
+KARABO_REGISTER_FOR_CONFIGURATION_2(Base_N, Sub1_Y<Base_N>);
 KARABO_REGISTER_FOR_CONFIGURATION_2(Base_Y, Sub1_N<Base_Y>);
-KARABO_REGISTER_FOR_CONFIGURATION_2(Base_Y, Sub1_Y<Base_Y>); 
+KARABO_REGISTER_FOR_CONFIGURATION_2(Base_Y, Sub1_Y<Base_Y>);
+
 
 void Configurator_Test::testSub1() {
 

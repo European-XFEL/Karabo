@@ -21,5 +21,5 @@ Version_Test::~Version_Test() {
 
 void Version_Test::testVersion() {
     std::clog << "### KARABO VERSION: " << karabo::util::Version::getVersion() << " ###" << std::endl;
-    
+
 }

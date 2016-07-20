@@ -22,11 +22,12 @@ namespace karabo {
 
     namespace io {
 
-        /**
+/**
          * The MasterConfigXsdFormat class.
          */
         class SchemaXsdFormat : public Format<karabo::util::Schema> {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(SchemaXsdFormat, "Xsd", "1.0")
 

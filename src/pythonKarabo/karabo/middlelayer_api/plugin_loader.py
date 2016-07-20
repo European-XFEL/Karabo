@@ -21,7 +21,7 @@ class PluginLoader(Configurable):
         displayedName="Plugin Namespace",
         description="Namespace to search for plugins",
         assignment=Assignment.OPTIONAL,
-        defaultValue="karabo.python_device.api_2",
+        defaultValue="karabo.middlelayer_device",
         requiredAccessLevel=AccessLevel.EXPERT)
 
     def __init__(self, input):
