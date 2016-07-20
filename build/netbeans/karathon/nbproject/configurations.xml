@@ -495,7 +495,6 @@
           <linkerDynSerch>
             <pElem>${KARATHON}/karabo</pElem>
             <pElem>${KARATHON}</pElem>
-            <pElem>\$$ORIGIN/../../../../lib</pElem>
             <pElem>${KARATHON}/karabo/extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
