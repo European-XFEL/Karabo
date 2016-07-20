@@ -22,6 +22,7 @@ namespace karabo {
 
             enum EncodingType {
 
+
                 UNDEFINED = -1,
                 GRAY,
                 RGB,
@@ -43,6 +44,7 @@ namespace karabo {
         namespace ChannelSpace {
 
             enum ChannelSpaceType {
+
 
                 UNDEFINED = -1,
                 u_8_1, // unsigned, 8 bits per color-channel, 1 byte per pixel
@@ -70,7 +72,8 @@ namespace karabo {
         class ImageDataFileWriter;
 
         class ImageData : public NDArray {
-            
+
+
             friend class ImageDataFileWriter;
 
         public:
@@ -92,7 +95,7 @@ namespace karabo {
              * @param isBigEndian
              */
             template <class T>
-            ImageData( const T * const data,
+            ImageData(const T * const data,
                       const size_t size,
                       const bool copy = true,
                       const karabo::util::Dims& dims = karabo::util::Dims(),
@@ -110,7 +113,7 @@ namespace karabo {
                 if (channelSpace == ChannelSpace::UNDEFINED) setChannelSpace(guessChannelSpace<T>());
                 else setChannelSpace(channelSpace);
             }
-            
+
             template <class T>
             ImageData(const karabo::xip::CpuImage<T>& image) {
                 using namespace karabo::util;
@@ -121,7 +124,7 @@ namespace karabo {
                 } else if (nDims == 2) {
                     dims = Dims(image.width(), image.height());
                 } else {
-                  dims = Dims(image.width(), image.height(), image.depth());
+                    dims = Dims(image.width(), image.height(), image.depth());
                 }
                 this->setData(image.pixelPointer(), image.size(), true);
                 this->setDimensions(dims);
@@ -160,7 +163,7 @@ namespace karabo {
             void toBigEndian();
 
             void toLittleEndian();
-            
+
             karabo::util::Dims getDimensions() const;
 
             /**
@@ -184,9 +187,9 @@ namespace karabo {
                 os << *image.hash();
                 return os;
             }
-            
+
             void setGeometry(const karabo::util::DetectorGeometry & geometry);
-            
+
             karabo::util::DetectorGeometry getGeometry();
 
         private:
@@ -241,18 +244,18 @@ namespace karabo {
             }
 
             ImageDataElement& setEncoding(const EncodingType& encoding) {
-                return setDefaultValue("encoding", (int)encoding);
+                return setDefaultValue("encoding", (int) encoding);
             }
 
             ImageDataElement& setChannelSpace(const ChannelSpaceType& channelSpace) {
-                return setDefaultValue("channelSpace", (int)channelSpace);
+                return setDefaultValue("channelSpace", (int) channelSpace);
             }
-            
-            ImageDataElement& setGeometry(karabo::util::DetectorGeometry & geometry){
+
+            ImageDataElement& setGeometry(karabo::util::DetectorGeometry & geometry) {
                 geometry.toSchema("data.geometry", m_schema);
                 return setDefaultValue("detectorGeometry", geometry.toHash());
 
-            
+
             }
         };
 
@@ -260,7 +263,8 @@ namespace karabo {
         typedef ImageDataElement IMAGEDATA;
 
         class ToChannelSpace {
-        public:
+
+            public:
 
             typedef ChannelSpaceType ReturnType;
 

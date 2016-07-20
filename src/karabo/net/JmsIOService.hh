@@ -24,11 +24,12 @@ namespace karabo {
         class Channel;
         class JmsChannel;
 
-        /**
+/**
          * The JmsIOService class.
          */
         class JmsIOService : public AbstractIOService {
-        public:
+
+            public:
 
             typedef boost::shared_ptr<Channel> ChannelPointer;
             typedef boost::function<void (ChannelPointer) > WaitHandler;
@@ -62,6 +63,8 @@ namespace karabo {
         private: // members
 
             enum IOServiceStatus {
+
+
                 IDLE,
                 STOPPED,
                 RUNNING,
@@ -74,7 +77,7 @@ namespace karabo {
             std::vector<JmsChannel*> m_binaryMessageChannels;
             std::vector<boost::tuple<JmsChannel*, WaitHandler, int> > m_waitHandlers;
             boost::mutex m_mutex;
-            
+
             //static int m_threadCount;
 
         private: // functions
@@ -82,7 +85,7 @@ namespace karabo {
             bool activateRegisteredTextMessageHandlers();
 
             bool activateRegisteredBinaryMessageHandlers();
-            
+
             bool activateRegisteredWaitHandlers();
 
         };

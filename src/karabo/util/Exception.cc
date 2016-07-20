@@ -77,7 +77,7 @@ namespace karabo {
 
         void Exception::memorize() {
 
-            #define KARABO_EXCEPTION(CLASS) Exception::ExceptionInfo myException; \
+#define KARABO_EXCEPTION(CLASS) Exception::ExceptionInfo myException; \
   myException.type = CLASS; \
   myException.message = string(e.what()); \
   myException.filename = ""; \

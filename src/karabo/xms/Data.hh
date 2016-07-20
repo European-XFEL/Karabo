@@ -12,6 +12,7 @@
 
 namespace karabo {
     namespace xms {
+
         /**
          * Class Data is used to send hierarchical data structures point-to-point.
          * 
@@ -37,11 +38,11 @@ namespace karabo {
          * or the equivalent for NDArray or ImageData replacing Data.
          */
         class Data {
-            
-        protected:
+
+            protected:
 
             karabo::util::Hash::Pointer m_hash;
-            
+
 
 
         public:
@@ -53,16 +54,16 @@ namespace karabo {
 
             Data();
 
-            
+
             /**
              * Configuration constructor (for later writing)
              */
             Data(const karabo::util::Hash& config);
 
             Data(const Data& other);
-            
+
             Data(const std::string& channelName, const karabo::util::Hash& config);
-            
+
             // TODO, add to binding...
             Data(const std::string& key, const Data& other);
 
@@ -71,11 +72,11 @@ namespace karabo {
              * @param hash
              */
             Data(const karabo::util::Hash::Pointer& hash);
-            
+
             virtual ~Data();
-            
+
             void setNode(const std::string& key, const Data& data);
-            
+
             /**
              * Get a node and create a T object from it,
              * e.g. Data, NDArray, ImageData.
@@ -88,7 +89,7 @@ namespace karabo {
                     karabo::util::Hash::Pointer ptr(new karabo::util::Hash(m_hash->get<karabo::util::Hash>(key, '*')));
                     // const_cast to achieve class promise:
                     // There are only Hash::Pointer inside.
-                    const_cast<karabo::util::Hash&>(*m_hash).set(key, ptr, '*');
+                    const_cast<karabo::util::Hash&> (*m_hash).set(key, ptr, '*');
                     return ptr;
                 } else {
                     return m_hash->get<karabo::util::Hash::Pointer>(key, '*');
@@ -100,7 +101,7 @@ namespace karabo {
                 // Protect using nested calls by changing the separator
                 m_hash->set(key, value, '*');
             }
-            
+
             template <class T>
             // inline needed to make the specialization (see below) work
             inline T& get(const std::string& key) {
@@ -119,35 +120,32 @@ namespace karabo {
                 // Protect using nested calls by changing the separator
                 return m_hash->has(key, '*');
             }
-            
+
             void erase(const std::string& key) {
                 // Protect using nested calls by changing the separator
                 m_hash->erase(key, '*');
             }
-            
+
             const karabo::util::Hash::Pointer& hash() const;
 
             void attachTimestamp(const karabo::util::Timestamp& ts);
-            
+
             friend std::ostream& operator<<(std::ostream& os, const Data& data);
 
         };
 
         template <>
-        inline karabo::util::Hash& Data::get<karabo::util::Hash>(const std::string& key)
-        {
-            throw KARABO_NOT_SUPPORTED_EXCEPTION("Cannot get Hash out of Data, only Hash::Pointer");
-        }
-        
-        template <>
-        inline const karabo::util::Hash& Data::get<karabo::util::Hash>(const std::string& key) const
-        {
+        inline karabo::util::Hash& Data::get<karabo::util::Hash>(const std::string& key) {
             throw KARABO_NOT_SUPPORTED_EXCEPTION("Cannot get Hash out of Data, only Hash::Pointer");
         }
 
         template <>
-        inline karabo::util::Hash::Pointer& Data::get<karabo::util::Hash::Pointer>(const std::string& key)
-        {
+        inline const karabo::util::Hash& Data::get<karabo::util::Hash>(const std::string& key) const {
+            throw KARABO_NOT_SUPPORTED_EXCEPTION("Cannot get Hash out of Data, only Hash::Pointer");
+        }
+
+        template <>
+        inline karabo::util::Hash::Pointer& Data::get<karabo::util::Hash::Pointer>(const std::string& key) {
             // Protect using nested calls by changing the separator to '*'
             if (m_hash->is<karabo::util::Hash>(key, '*')) {
                 // Replace Hash by Hash::Pointer
@@ -156,29 +154,28 @@ namespace karabo {
             }
             return m_hash->get<karabo::util::Hash::Pointer>(key, '*');
         }
-        
+
         template <>
-        inline const karabo::util::Hash::Pointer& Data::get<karabo::util::Hash::Pointer>(const std::string& key) const
-        {
+        inline const karabo::util::Hash::Pointer& Data::get<karabo::util::Hash::Pointer>(const std::string& key) const {
             // Protect using nested calls by changing the separator to '*'
             if (m_hash->is<karabo::util::Hash>(key, '*')) {
                 // Replace Hash by Hash::Pointer - const_cast is fair to achieve
                 // class promise: There are only Hash::Pointer inside.
                 karabo::util::Hash::Pointer ptr(new karabo::util::Hash(m_hash->get<karabo::util::Hash>(key, '*')));
-                const_cast<karabo::util::Hash&>(*m_hash).set(key, ptr, '*');
+                const_cast<karabo::util::Hash&> (*m_hash).set(key, ptr, '*');
             }
             return m_hash->get<karabo::util::Hash::Pointer>(key, '*');
         }
 
-
         template <class Derived, class Described>
         class DataElement {
-           
+
+
             std::string m_key;
 
-         protected:
+        protected:
             karabo::util::Schema& m_schema;
-            
+
         public:
 
             DataElement(karabo::util::Schema& s) : m_schema(s) {
@@ -190,7 +187,7 @@ namespace karabo {
                 m_key = key;
                 NODE_ELEMENT(m_schema).key(m_key)
                         .appendParametersOfConfigurableClass<Data>(Described::classInfo().getClassId())
-                        .commit();                
+                        .commit();
                 return *(static_cast<Derived*> (this));
             }
 
@@ -199,8 +196,8 @@ namespace karabo {
                 using namespace karabo::util;
                 if (m_schema.empty()) {
                     NODE_ELEMENT(m_schema).key(m_key)
-                        .appendParametersOfConfigurableClass<Data>(Described::classInfo().getClassId())
-                        .commit();      
+                            .appendParametersOfConfigurableClass<Data>(Described::classInfo().getClassId())
+                            .commit();
                 }
                 OVERWRITE_ELEMENT(m_schema).key(m_key + "." + subKey)
                         .setNewDefaultValue(defaultValue)
@@ -214,7 +211,7 @@ namespace karabo {
                 if (m_schema.empty()) {
                     NODE_ELEMENT(m_schema).key(m_key)
                             .appendParametersOfConfigurableClass<Data>(Described::classInfo().getClassId())
-                            .commit();      
+                            .commit();
                 }
             }
 

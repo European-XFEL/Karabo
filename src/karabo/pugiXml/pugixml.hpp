@@ -76,10 +76,10 @@ namespace karabo {
         // Character type used for all internal storage and operations; depends on PUGIXML_WCHAR_MODE
         typedef PUGIXML_CHAR char_t;
 
-        #ifndef PUGIXML_NO_STL
+#ifndef PUGIXML_NO_STL
         // String type used for operations that work with STL string; depends on PUGIXML_WCHAR_MODE
         typedef std::basic_string<PUGIXML_CHAR, std::char_traits<PUGIXML_CHAR>, std::allocator<PUGIXML_CHAR> > string_t;
-        #endif
+#endif
     }
 }
 
@@ -89,6 +89,7 @@ namespace karabo {
         // Tree node types
 
         enum xml_node_type {
+
 
             node_null, // Empty (null) node handle
             node_document, // A document tree's absolute root
@@ -157,6 +158,7 @@ namespace karabo {
 
         enum xml_encoding {
 
+
             encoding_auto, // Auto-detect input encoding using BOM or < / <? detection; use UTF8 if BOM is not found
             encoding_utf8, // UTF8 encoding
             encoding_utf16_le, // Little-endian UTF16
@@ -207,18 +209,18 @@ namespace karabo {
 
         class xml_text;
 
-        #ifndef PUGIXML_NO_XPATH
+#ifndef PUGIXML_NO_XPATH
         class xpath_node;
         class xpath_node_set;
         class xpath_query;
         class xpath_variable_set;
-        #endif
+#endif
 
         // Range-based for loop support
 
         template <typename It> class xml_object_range {
 
-        public:
+            public:
             typedef It const_iterator;
 
             xml_object_range(It b, It e) : _begin(b), _end(e) {
@@ -240,7 +242,7 @@ namespace karabo {
 
         class PUGIXML_CLASS xml_writer {
 
-        public:
+            public:
 
             virtual ~xml_writer() {
             }
@@ -253,7 +255,7 @@ namespace karabo {
 
         class PUGIXML_CLASS xml_writer_file : public xml_writer {
 
-        public:
+            public:
             // Construct writer from a FILE* object; void* is used to avoid header dependencies on stdio
             xml_writer_file(void* file);
 
@@ -263,12 +265,12 @@ namespace karabo {
             void* file;
         };
 
-        #ifndef PUGIXML_NO_STL
+#ifndef PUGIXML_NO_STL
         // xml_writer implementation for streams
 
         class PUGIXML_CLASS xml_writer_stream : public xml_writer {
 
-        public:
+            public:
             // Construct writer from an output stream object
             xml_writer_stream(std::basic_ostream<char, std::char_traits<char> >& stream);
             xml_writer_stream(std::basic_ostream<wchar_t, std::char_traits<wchar_t> >& stream);
@@ -279,11 +281,12 @@ namespace karabo {
             std::basic_ostream<char, std::char_traits<char> >* narrow_stream;
             std::basic_ostream<wchar_t, std::char_traits<wchar_t> >* wide_stream;
         };
-        #endif
+#endif
 
         // A light-weight handle for manipulating attributes in DOM tree
 
         class PUGIXML_CLASS xml_attribute {
+
 
             friend class xml_attribute_iterator;
             friend class xml_node;
@@ -361,15 +364,16 @@ namespace karabo {
             xml_attribute_struct* internal_object() const;
         };
 
-        #ifdef __BORLANDC__
+#ifdef __BORLANDC__
         // Borland C++ workaround
         bool PUGIXML_FUNCTION operator&&(const xml_attribute& lhs, bool rhs);
         bool PUGIXML_FUNCTION operator||(const xml_attribute& lhs, bool rhs);
-        #endif
+#endif
 
         // A light-weight handle for manipulating nodes in DOM tree
 
         class PUGIXML_CLASS xml_node {
+
 
             friend class xml_attribute_iterator;
             friend class xml_node_iterator;
@@ -536,10 +540,10 @@ namespace karabo {
             xml_node find_child_by_attribute(const char_t* name, const char_t* attr_name, const char_t* attr_value) const;
             xml_node find_child_by_attribute(const char_t* attr_name, const char_t* attr_value) const;
 
-            #ifndef PUGIXML_NO_STL
+#ifndef PUGIXML_NO_STL
             // Get the absolute node path from root as a text string.
             string_t path(char_t delimiter = '/') const;
-            #endif
+#endif
 
             // Search for a node by path consisting of node names and . or .. elements.
             xml_node first_element_by_path(const char_t* path, char_t delimiter = '/') const;
@@ -547,7 +551,7 @@ namespace karabo {
             // Recursively traverse subtree with xml_tree_walker
             bool traverse(xml_tree_walker& walker);
 
-            #ifndef PUGIXML_NO_XPATH
+#ifndef PUGIXML_NO_XPATH
             // Select single node by evaluating XPath query. Returns first node from the resulting node set.
             xpath_node select_single_node(const char_t* query, xpath_variable_set* variables = 0) const;
             xpath_node select_single_node(const xpath_query& query) const;
@@ -555,16 +559,16 @@ namespace karabo {
             // Select node set by evaluating XPath query
             xpath_node_set select_nodes(const char_t* query, xpath_variable_set* variables = 0) const;
             xpath_node_set select_nodes(const xpath_query& query) const;
-            #endif
+#endif
 
             // Print subtree using a writer object
             void print(xml_writer& writer, const char_t* indent = PUGIXML_TEXT("\t"), unsigned int flags = format_default, xml_encoding encoding = encoding_auto, unsigned int depth = 0) const;
 
-            #ifndef PUGIXML_NO_STL
+#ifndef PUGIXML_NO_STL
             // Print subtree to stream
             void print(std::basic_ostream<char, std::char_traits<char> >& os, const char_t* indent = PUGIXML_TEXT("\t"), unsigned int flags = format_default, xml_encoding encoding = encoding_auto, unsigned int depth = 0) const;
             void print(std::basic_ostream<wchar_t, std::char_traits<wchar_t> >& os, const char_t* indent = PUGIXML_TEXT("\t"), unsigned int flags = format_default, unsigned int depth = 0) const;
-            #endif
+#endif
 
             // Child nodes iterators
             typedef xml_node_iterator iterator;
@@ -593,15 +597,16 @@ namespace karabo {
             xml_node_struct* internal_object() const;
         };
 
-        #ifdef __BORLANDC__
+#ifdef __BORLANDC__
         // Borland C++ workaround
         bool PUGIXML_FUNCTION operator&&(const xml_node& lhs, bool rhs);
         bool PUGIXML_FUNCTION operator||(const xml_node& lhs, bool rhs);
-        #endif
+#endif
 
         // A helper for working with text inside PCDATA nodes
 
         class PUGIXML_CLASS xml_text {
+
 
             friend class xml_node;
 
@@ -662,15 +667,16 @@ namespace karabo {
             xml_node data() const;
         };
 
-        #ifdef __BORLANDC__
+#ifdef __BORLANDC__
         // Borland C++ workaround
         bool PUGIXML_FUNCTION operator&&(const xml_text& lhs, bool rhs);
         bool PUGIXML_FUNCTION operator||(const xml_text& lhs, bool rhs);
-        #endif
+#endif
 
         // Child node iterator (a bidirectional iterator over a collection of xml_node)
 
         class PUGIXML_CLASS xml_node_iterator {
+
 
             friend class xml_node;
 
@@ -687,9 +693,9 @@ namespace karabo {
             typedef xml_node* pointer;
             typedef xml_node& reference;
 
-            #ifndef PUGIXML_NO_STL
+#ifndef PUGIXML_NO_STL
             typedef std::bidirectional_iterator_tag iterator_category;
-            #endif
+#endif
 
             // Default constructor
             xml_node_iterator();
@@ -715,6 +721,7 @@ namespace karabo {
 
         class PUGIXML_CLASS xml_attribute_iterator {
 
+
             friend class xml_node;
 
         private:
@@ -730,9 +737,9 @@ namespace karabo {
             typedef xml_attribute* pointer;
             typedef xml_attribute& reference;
 
-            #ifndef PUGIXML_NO_STL
+#ifndef PUGIXML_NO_STL
             typedef std::bidirectional_iterator_tag iterator_category;
-            #endif
+#endif
 
             // Default constructor
             xml_attribute_iterator();
@@ -758,16 +765,16 @@ namespace karabo {
 
         class xml_named_node_iterator {
 
-        public:
+            public:
             // Iterator traits
             typedef ptrdiff_t difference_type;
             typedef xml_node value_type;
             typedef xml_node* pointer;
             typedef xml_node& reference;
 
-            #ifndef PUGIXML_NO_STL
+#ifndef PUGIXML_NO_STL
             typedef std::forward_iterator_tag iterator_category;
-            #endif
+#endif
 
             // Default constructor
             xml_named_node_iterator();
@@ -793,6 +800,7 @@ namespace karabo {
         // Abstract tree walker class (see xml_node::traverse)
 
         class PUGIXML_CLASS xml_tree_walker {
+
 
             friend class xml_node;
 
@@ -821,6 +829,7 @@ namespace karabo {
 
         enum xml_parse_status {
 
+
             status_ok = 0, // No error
 
             status_file_not_found, // File was not found during load_file()
@@ -845,6 +854,7 @@ namespace karabo {
 
         struct PUGIXML_CLASS xml_parse_result {
 
+
             // Parsing status (see xml_parse_status)
             xml_parse_status status;
 
@@ -868,7 +878,7 @@ namespace karabo {
 
         class PUGIXML_CLASS xml_document : public xml_node {
 
-        private:
+            private:
             char_t* _buffer;
 
             char _memory[192];
@@ -895,11 +905,11 @@ namespace karabo {
             // Removes all nodes, then copies the entire contents of the specified document
             void reset(const xml_document& proto);
 
-            #ifndef PUGIXML_NO_STL
+#ifndef PUGIXML_NO_STL
             // Load document from stream.
             xml_parse_result load(std::basic_istream<char, std::char_traits<char> >& stream, unsigned int options = parse_default, xml_encoding encoding = encoding_auto);
             xml_parse_result load(std::basic_istream<wchar_t, std::char_traits<wchar_t> >& stream, unsigned int options = parse_default);
-            #endif
+#endif
 
             // Load document from zero-terminated string. No encoding conversions are applied.
             xml_parse_result load(const char_t* contents, unsigned int options = parse_default);
@@ -922,11 +932,11 @@ namespace karabo {
             // Save XML document to writer (semantics is slightly different from xml_node::print, see documentation for details).
             void save(xml_writer& writer, const char_t* indent = PUGIXML_TEXT("\t"), unsigned int flags = format_default, xml_encoding encoding = encoding_auto) const;
 
-            #ifndef PUGIXML_NO_STL
+#ifndef PUGIXML_NO_STL
             // Save XML document to stream (semantics is slightly different from xml_node::print, see documentation for details).
             void save(std::basic_ostream<char, std::char_traits<char> >& stream, const char_t* indent = PUGIXML_TEXT("\t"), unsigned int flags = format_default, xml_encoding encoding = encoding_auto) const;
             void save(std::basic_ostream<wchar_t, std::char_traits<wchar_t> >& stream, const char_t* indent = PUGIXML_TEXT("\t"), unsigned int flags = format_default) const;
-            #endif
+#endif
 
             // Save XML to file
             bool save_file(const char* path, const char_t* indent = PUGIXML_TEXT("\t"), unsigned int flags = format_default, xml_encoding encoding = encoding_auto) const;
@@ -936,10 +946,11 @@ namespace karabo {
             xml_node document_element() const;
         };
 
-        #ifndef PUGIXML_NO_XPATH
+#ifndef PUGIXML_NO_XPATH
         // XPath query return type
 
         enum xpath_value_type {
+
 
             xpath_type_none, // Unknown type (query failed to compile)
             xpath_type_node_set, // Node set (xpath_node_set)
@@ -951,6 +962,7 @@ namespace karabo {
         // XPath parsing result
 
         struct PUGIXML_CLASS xpath_parse_result {
+
 
             // Error message (0 if no error)
             const char* error;
@@ -971,6 +983,7 @@ namespace karabo {
         // A single XPath variable
 
         class PUGIXML_CLASS xpath_variable {
+
 
             friend class xpath_variable_set;
 
@@ -1008,7 +1021,7 @@ namespace karabo {
 
         class PUGIXML_CLASS xpath_variable_set {
 
-        private:
+            private:
             xpath_variable* _data[64];
 
             // Non-copyable semantics
@@ -1040,7 +1053,7 @@ namespace karabo {
 
         class PUGIXML_CLASS xpath_query {
 
-        private:
+            private:
             void* _impl;
             xpath_parse_result _result;
 
@@ -1069,11 +1082,11 @@ namespace karabo {
             // If PUGIXML_NO_EXCEPTIONS is not defined, throws std::bad_alloc on out of memory errors.
             double evaluate_number(const xpath_node& n) const;
 
-            #ifndef PUGIXML_NO_STL
+#ifndef PUGIXML_NO_STL
             // Evaluate expression as string value in the specified context; performs type conversion if necessary.
             // If PUGIXML_NO_EXCEPTIONS is not defined, throws std::bad_alloc on out of memory errors.
             string_t evaluate_string(const xpath_node& n) const;
-            #endif
+#endif
 
             // Evaluate expression as string value in the specified context; performs type conversion if necessary.
             // At most capacity characters are written to the destination buffer, full result size is returned (includes terminating zero).
@@ -1096,12 +1109,12 @@ namespace karabo {
             bool operator!() const;
         };
 
-        #ifndef PUGIXML_NO_EXCEPTIONS
+#ifndef PUGIXML_NO_EXCEPTIONS
         // XPath exception class
 
         class PUGIXML_CLASS xpath_exception : public std::exception {
 
-        private:
+            private:
             xpath_parse_result _result;
 
         public:
@@ -1114,13 +1127,13 @@ namespace karabo {
             // Get parse result
             const xpath_parse_result& result() const;
         };
-        #endif
+#endif
 
         // XPath node class (either xml_node or xml_attribute)
 
         class PUGIXML_CLASS xpath_node {
 
-        private:
+            private:
             xml_node _node;
             xml_attribute _attribute;
 
@@ -1152,20 +1165,21 @@ namespace karabo {
             bool operator!=(const xpath_node& n) const;
         };
 
-        #ifdef __BORLANDC__
+#ifdef __BORLANDC__
         // Borland C++ workaround
         bool PUGIXML_FUNCTION operator&&(const xpath_node& lhs, bool rhs);
         bool PUGIXML_FUNCTION operator||(const xpath_node& lhs, bool rhs);
-        #endif
+#endif
 
         // A fixed-size collection of XPath nodes
 
         class PUGIXML_CLASS xpath_node_set {
 
-        public:
+            public:
             // Collection type
 
             enum type_t {
+
 
                 type_unsorted, // Not ordered
                 type_sorted, // Sorted by document order (ascending)
@@ -1220,9 +1234,9 @@ namespace karabo {
 
             void _assign(const_iterator begin, const_iterator end);
         };
-        #endif
+#endif
 
-        #ifndef PUGIXML_NO_STL
+#ifndef PUGIXML_NO_STL
         // Convert wide string to UTF8
         std::basic_string<char, std::char_traits<char>, std::allocator<char> > PUGIXML_FUNCTION as_utf8(const wchar_t* str);
         std::basic_string<char, std::char_traits<char>, std::allocator<char> > PUGIXML_FUNCTION as_utf8(const std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> >& str);
@@ -1230,7 +1244,7 @@ namespace karabo {
         // Convert UTF8 to wide string
         std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > PUGIXML_FUNCTION as_wide(const char* str);
         std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > PUGIXML_FUNCTION as_wide(const std::basic_string<char, std::char_traits<char>, std::allocator<char> >& str);
-        #endif
+#endif
 
         // Memory allocation function interface; returns pointer to allocated memory or NULL on failure
         typedef void* (*allocation_function)(size_t size);

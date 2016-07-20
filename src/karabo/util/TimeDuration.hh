@@ -18,6 +18,7 @@ namespace karabo {
 
         enum TIME_UNITS {
 
+
             // Fractions == the number of zeros after 1
             ATTOSEC = 0, // Atto-second is the smallest time unit = highest resolution for time values.
             FEMTOSEC = 3 + ATTOSEC,
@@ -47,7 +48,7 @@ namespace karabo {
 
         class TimeDuration {
 
-        public:
+            public:
 
             /**
              * Default constructor creates an empty time duration
@@ -105,29 +106,29 @@ namespace karabo {
              * @param other TimeDuration
              * @return bool
              */
-            bool operator ==(const TimeDuration& other) const;
-            bool operator !=(const TimeDuration& other) const;
+            bool operator==(const TimeDuration& other) const;
+            bool operator!=(const TimeDuration& other) const;
             bool operator>(const TimeDuration& other) const;
-            bool operator >=(const TimeDuration& other) const;
+            bool operator>=(const TimeDuration& other) const;
             bool operator<(const TimeDuration& other) const;
-            bool operator <=(const TimeDuration& other) const;
+            bool operator<=(const TimeDuration& other) const;
 
             /**
              * Arithmetic operations over time durations
              * @param other TimeDuration
              * @return TimeDuration
              */
-            TimeDuration operator +(const TimeDuration& other) const;
-            TimeDuration operator -(const TimeDuration& other) const;
-            TimeDuration& operator +=(const TimeDuration& other);
-            TimeDuration& operator -=(const TimeDuration& other);
+            TimeDuration operator+(const TimeDuration& other) const;
+            TimeDuration operator-(const TimeDuration& other) const;
+            TimeDuration& operator+=(const TimeDuration& other);
+            TimeDuration& operator-=(const TimeDuration& other);
 
             /**
              * Division, i.e. how many time one time duration is bigger/smaller than another one
              * @param other TimeDuration
              * @return long double
              */
-            long double operator /(const TimeDuration& other) const;
+            long double operator/(const TimeDuration& other) const;
 
             operator double() const {
                 return boost::lexical_cast<double>(this->format(TimeDuration::DEFAULT_FORMAT));
@@ -170,7 +171,7 @@ namespace karabo {
              * @return string/ostream object holding the string representation of the time period
              */
             std::string format(const std::string& fmt) const;
-            friend std::ostream& operator <<(std::ostream& os, const TimeDuration& dr);
+            friend std::ostream& operator<<(std::ostream& os, const TimeDuration& dr);
 
             /**
              * Set the output format. This parameter is class variable, 
@@ -206,45 +207,45 @@ namespace karabo {
 namespace karabo {
     namespace util {
 
-        inline bool TimeDuration::operator ==(const TimeDuration& other) const {
+        inline bool TimeDuration::operator==(const TimeDuration& other) const {
             return (m_Seconds == other.m_Seconds) && (m_Fractions == other.m_Fractions);
         }
 
-        inline bool TimeDuration::operator !=(const TimeDuration& other) const {
+        inline bool TimeDuration::operator!=(const TimeDuration& other) const {
             return (m_Seconds != other.m_Seconds) || (m_Fractions != other.m_Fractions);
         }
 
-        inline bool TimeDuration::operator >(const TimeDuration& other) const {
+        inline bool TimeDuration::operator>(const TimeDuration& other) const {
             return (m_Seconds > other.m_Seconds) ||
                     ((m_Seconds == other.m_Seconds) && (m_Fractions > other.m_Fractions));
         }
 
-        inline bool TimeDuration::operator >=(const TimeDuration& other) const {
+        inline bool TimeDuration::operator>=(const TimeDuration& other) const {
             return !(*this < other);
         }
 
-        inline bool TimeDuration::operator <(const TimeDuration& other) const {
+        inline bool TimeDuration::operator<(const TimeDuration& other) const {
             return (m_Seconds < other.m_Seconds) ||
                     ((m_Seconds == other.m_Seconds) && (m_Fractions < other.m_Fractions));
         }
 
-        inline bool TimeDuration::operator <=(const TimeDuration& other) const {
+        inline bool TimeDuration::operator<=(const TimeDuration& other) const {
             return !(*this > other);
         }
 
-        inline TimeDuration TimeDuration::operator +(const TimeDuration& other) const {
+        inline TimeDuration TimeDuration::operator+(const TimeDuration& other) const {
             TimeDuration result(*this);
             result += other;
             return result;
         }
 
-        inline TimeDuration TimeDuration::operator -(const TimeDuration& other) const {
+        inline TimeDuration TimeDuration::operator-(const TimeDuration& other) const {
             TimeDuration result(*this);
             result -= other;
             return result;
         }
 
-        inline long double TimeDuration::operator /(const TimeDuration& other) const {
+        inline long double TimeDuration::operator/(const TimeDuration& other) const {
             if (other.isNull()) return std::numeric_limits<long double>::quiet_NaN();
 
             long double len_this = m_Seconds + m_Fractions * 1e-18L;
@@ -253,7 +254,7 @@ namespace karabo {
             return len_this / len_other;
         }
 
-        inline TimeDuration& TimeDuration::operator +=(const TimeDuration& other) {
+        inline TimeDuration& TimeDuration::operator+=(const TimeDuration& other) {
             m_Seconds += other.m_Seconds;
             m_Fractions += other.m_Fractions;
             if (m_Fractions > m_oneSecondInAtto) {
@@ -264,7 +265,7 @@ namespace karabo {
             return *this;
         }
 
-        inline TimeDuration& TimeDuration::operator -=(const TimeDuration& other) {
+        inline TimeDuration& TimeDuration::operator-=(const TimeDuration& other) {
             m_Seconds -= other.m_Seconds;
             if (m_Fractions < other.m_Fractions) {
                 m_Fractions = (m_oneSecondInAtto - other.m_Fractions) + m_Fractions;
@@ -280,7 +281,7 @@ namespace karabo {
             DEFAULT_FORMAT = fmt;
         }
 
-        inline std::ostream& operator <<(std::ostream& os, const TimeDuration& duration) {
+        inline std::ostream& operator<<(std::ostream& os, const TimeDuration& duration) {
             return os << duration.format(TimeDuration::DEFAULT_FORMAT);
         }
 

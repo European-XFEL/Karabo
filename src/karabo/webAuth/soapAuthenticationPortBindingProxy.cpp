@@ -6,446 +6,472 @@ The generated code is released under one of the following licenses:
 GPL or Genivia's license for commercial use.
 This program is released under the GPL with the additional exemption that
 compiling, linking, and/or using OpenSSL is allowed.
-*/
+ */
 
 #include "soapAuthenticationPortBindingProxy.h"
 
-AuthenticationPortBindingProxy::AuthenticationPortBindingProxy()
-{	this->soap = soap_new();
-	this->own = true;
-	AuthenticationPortBindingProxy_init(SOAP_IO_DEFAULT, SOAP_IO_DEFAULT);
+
+AuthenticationPortBindingProxy::AuthenticationPortBindingProxy() {
+    this->soap = soap_new();
+    this->own = true;
+    AuthenticationPortBindingProxy_init(SOAP_IO_DEFAULT, SOAP_IO_DEFAULT);
 }
 
-AuthenticationPortBindingProxy::AuthenticationPortBindingProxy(struct soap *_soap)
-{	this->soap = _soap;
-	this->own = false;
-	AuthenticationPortBindingProxy_init(_soap->imode, _soap->omode);
+
+AuthenticationPortBindingProxy::AuthenticationPortBindingProxy(struct soap *_soap) {
+    this->soap = _soap;
+    this->own = false;
+    AuthenticationPortBindingProxy_init(_soap->imode, _soap->omode);
 }
 
-AuthenticationPortBindingProxy::AuthenticationPortBindingProxy(const char *url)
-{	this->soap = soap_new();
-	this->own = true;
-	AuthenticationPortBindingProxy_init(SOAP_IO_DEFAULT, SOAP_IO_DEFAULT);
-	soap_endpoint = url;
+
+AuthenticationPortBindingProxy::AuthenticationPortBindingProxy(const char *url) {
+    this->soap = soap_new();
+    this->own = true;
+    AuthenticationPortBindingProxy_init(SOAP_IO_DEFAULT, SOAP_IO_DEFAULT);
+    soap_endpoint = url;
 }
 
-AuthenticationPortBindingProxy::AuthenticationPortBindingProxy(soap_mode iomode)
-{	this->soap = soap_new();
-	this->own = true;
-	AuthenticationPortBindingProxy_init(iomode, iomode);
+
+AuthenticationPortBindingProxy::AuthenticationPortBindingProxy(soap_mode iomode) {
+    this->soap = soap_new();
+    this->own = true;
+    AuthenticationPortBindingProxy_init(iomode, iomode);
 }
 
-AuthenticationPortBindingProxy::AuthenticationPortBindingProxy(const char *url, soap_mode iomode)
-{	this->soap = soap_new();
-	this->own = true;
-	AuthenticationPortBindingProxy_init(iomode, iomode);
-	soap_endpoint = url;
+
+AuthenticationPortBindingProxy::AuthenticationPortBindingProxy(const char *url, soap_mode iomode) {
+    this->soap = soap_new();
+    this->own = true;
+    AuthenticationPortBindingProxy_init(iomode, iomode);
+    soap_endpoint = url;
 }
 
-AuthenticationPortBindingProxy::AuthenticationPortBindingProxy(soap_mode imode, soap_mode omode)
-{	this->soap = soap_new();
-	this->own = true;
-	AuthenticationPortBindingProxy_init(imode, omode);
+
+AuthenticationPortBindingProxy::AuthenticationPortBindingProxy(soap_mode imode, soap_mode omode) {
+    this->soap = soap_new();
+    this->own = true;
+    AuthenticationPortBindingProxy_init(imode, omode);
 }
 
-AuthenticationPortBindingProxy::~AuthenticationPortBindingProxy()
-{	if (this->own)
-		soap_free(this->soap);
+
+AuthenticationPortBindingProxy::~AuthenticationPortBindingProxy() {
+    if (this->own)
+        soap_free(this->soap);
 }
 
-void AuthenticationPortBindingProxy::AuthenticationPortBindingProxy_init(soap_mode imode, soap_mode omode)
-{	soap_imode(this->soap, imode);
-	soap_omode(this->soap, omode);
-	soap_endpoint = NULL;
-	static const struct Namespace namespaces[] =
-{
-	{"SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/", "http://www.w3.org/*/soap-envelope", NULL},
-	{"SOAP-ENC", "http://schemas.xmlsoap.org/soap/encoding/", "http://www.w3.org/*/soap-encoding", NULL},
-	{"xsi", "http://www.w3.org/2001/XMLSchema-instance", "http://www.w3.org/*/XMLSchema-instance", NULL},
-	{"xsd", "http://www.w3.org/2001/XMLSchema", "http://www.w3.org/*/XMLSchema", NULL},
-	{"ns1", "http://server.xfelauthwebservice.xfel.eu/", NULL, NULL},
-	{NULL, NULL, NULL, NULL}
-};
-	soap_set_namespaces(this->soap, namespaces);
+
+void AuthenticationPortBindingProxy::AuthenticationPortBindingProxy_init(soap_mode imode, soap_mode omode) {
+    soap_imode(this->soap, imode);
+    soap_omode(this->soap, omode);
+    soap_endpoint = NULL;
+    static const struct Namespace namespaces[] = {
+        {"SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/", "http://www.w3.org/*/soap-envelope", NULL},
+        {"SOAP-ENC", "http://schemas.xmlsoap.org/soap/encoding/", "http://www.w3.org/*/soap-encoding", NULL},
+        {"xsi", "http://www.w3.org/2001/XMLSchema-instance", "http://www.w3.org/*/XMLSchema-instance", NULL},
+        {"xsd", "http://www.w3.org/2001/XMLSchema", "http://www.w3.org/*/XMLSchema", NULL},
+        {"ns1", "http://server.xfelauthwebservice.xfel.eu/", NULL, NULL},
+        {NULL, NULL, NULL, NULL}
+    };
+    soap_set_namespaces(this->soap, namespaces);
 }
 
-void AuthenticationPortBindingProxy::destroy()
-{	soap_destroy(this->soap);
-	soap_end(this->soap);
+
+void AuthenticationPortBindingProxy::destroy() {
+    soap_destroy(this->soap);
+    soap_end(this->soap);
 }
 
-void AuthenticationPortBindingProxy::reset()
-{	destroy();
-	soap_done(this->soap);
-	soap_initialize(this->soap);
-	AuthenticationPortBindingProxy_init(SOAP_IO_DEFAULT, SOAP_IO_DEFAULT);
+
+void AuthenticationPortBindingProxy::reset() {
+    destroy();
+    soap_done(this->soap);
+    soap_initialize(this->soap);
+    AuthenticationPortBindingProxy_init(SOAP_IO_DEFAULT, SOAP_IO_DEFAULT);
 }
 
-void AuthenticationPortBindingProxy::soap_noheader()
-{	this->soap->header = NULL;
+
+void AuthenticationPortBindingProxy::soap_noheader() {
+    this->soap->header = NULL;
 }
 
-const SOAP_ENV__Header *AuthenticationPortBindingProxy::soap_header()
-{	return this->soap->header;
+
+const SOAP_ENV__Header *AuthenticationPortBindingProxy::soap_header() {
+    return this->soap->header;
 }
 
-const SOAP_ENV__Fault *AuthenticationPortBindingProxy::soap_fault()
-{	return this->soap->fault;
+
+const SOAP_ENV__Fault *AuthenticationPortBindingProxy::soap_fault() {
+    return this->soap->fault;
 }
 
-const char *AuthenticationPortBindingProxy::soap_fault_string()
-{	return *soap_faultstring(this->soap);
+
+const char *AuthenticationPortBindingProxy::soap_fault_string() {
+    return *soap_faultstring(this->soap);
 }
 
-const char *AuthenticationPortBindingProxy::soap_fault_detail()
-{	return *soap_faultdetail(this->soap);
+
+const char *AuthenticationPortBindingProxy::soap_fault_detail() {
+    return *soap_faultdetail(this->soap);
 }
 
-int AuthenticationPortBindingProxy::soap_close_socket()
-{	return soap_closesock(this->soap);
+
+int AuthenticationPortBindingProxy::soap_close_socket() {
+    return soap_closesock(this->soap);
 }
 
-int AuthenticationPortBindingProxy::soap_force_close_socket()
-{	return soap_force_closesock(this->soap);
+
+int AuthenticationPortBindingProxy::soap_force_close_socket() {
+    return soap_force_closesock(this->soap);
 }
 
-void AuthenticationPortBindingProxy::soap_print_fault(FILE *fd)
-{	::soap_print_fault(this->soap, fd);
+
+void AuthenticationPortBindingProxy::soap_print_fault(FILE *fd) {
+    ::soap_print_fault(this->soap, fd);
 }
 
 #ifndef WITH_LEAN
 #ifndef WITH_COMPAT
-void AuthenticationPortBindingProxy::soap_stream_fault(std::ostream& os)
-{	::soap_stream_fault(this->soap, os);
+
+
+void AuthenticationPortBindingProxy::soap_stream_fault(std::ostream& os) {
+    ::soap_stream_fault(this->soap, os);
 }
 #endif
 
-char *AuthenticationPortBindingProxy::soap_sprint_fault(char *buf, size_t len)
-{	return ::soap_sprint_fault(this->soap, buf, len);
+
+char *AuthenticationPortBindingProxy::soap_sprint_fault(char *buf, size_t len) {
+    return ::soap_sprint_fault(this->soap, buf, len);
 }
 #endif
 
-int AuthenticationPortBindingProxy::login(const char *endpoint, const char *soap_action, ns1__login *ns1__login_, ns1__loginResponse *ns1__loginResponse_)
-{	struct soap *soap = this->soap;
-	struct __ns1__login soap_tmp___ns1__login;
-	if (endpoint)
-		soap_endpoint = endpoint;
-	if (soap_endpoint == NULL)
-		soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
-	if (soap_action == NULL)
-		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/loginRequest";
-	soap_begin(soap);
-	soap->encodingStyle = NULL;
-	soap_tmp___ns1__login.ns1__login_ = ns1__login_;
-	soap_serializeheader(soap);
-	soap_serialize___ns1__login(soap, &soap_tmp___ns1__login);
-	if (soap_begin_count(soap))
-		return soap->error;
-	if (soap->mode & SOAP_IO_LENGTH)
-	{	if (soap_envelope_begin_out(soap)
-		 || soap_putheader(soap)
-		 || soap_body_begin_out(soap)
-		 || soap_put___ns1__login(soap, &soap_tmp___ns1__login, "-ns1:login", NULL)
-		 || soap_body_end_out(soap)
-		 || soap_envelope_end_out(soap))
-			 return soap->error;
-	}
-	if (soap_end_count(soap))
-		return soap->error;
-	if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
-	 || soap_envelope_begin_out(soap)
-	 || soap_putheader(soap)
-	 || soap_body_begin_out(soap)
-	 || soap_put___ns1__login(soap, &soap_tmp___ns1__login, "-ns1:login", NULL)
-	 || soap_body_end_out(soap)
-	 || soap_envelope_end_out(soap)
-	 || soap_end_send(soap))
-		return soap_closesock(soap);
-	if (!ns1__loginResponse_)
-		return soap_closesock(soap);
-	ns1__loginResponse_->soap_default(soap);
-	if (soap_begin_recv(soap)
-	 || soap_envelope_begin_in(soap)
-	 || soap_recv_header(soap)
-	 || soap_body_begin_in(soap))
-		return soap_closesock(soap);
-	ns1__loginResponse_->soap_get(soap, "ns1:loginResponse", "ns1:loginResponse");
-	if (soap->error)
-		return soap_recv_fault(soap, 0);
-	if (soap_body_end_in(soap)
-	 || soap_envelope_end_in(soap)
-	 || soap_end_recv(soap))
-		return soap_closesock(soap);
-	return soap_closesock(soap);
+
+int AuthenticationPortBindingProxy::login(const char *endpoint, const char *soap_action, ns1__login *ns1__login_, ns1__loginResponse *ns1__loginResponse_) {
+    struct soap *soap = this->soap;
+    struct __ns1__login soap_tmp___ns1__login;
+    if (endpoint)
+        soap_endpoint = endpoint;
+    if (soap_endpoint == NULL)
+        soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
+    if (soap_action == NULL)
+        soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/loginRequest";
+    soap_begin(soap);
+    soap->encodingStyle = NULL;
+    soap_tmp___ns1__login.ns1__login_ = ns1__login_;
+    soap_serializeheader(soap);
+    soap_serialize___ns1__login(soap, &soap_tmp___ns1__login);
+    if (soap_begin_count(soap))
+        return soap->error;
+    if (soap->mode & SOAP_IO_LENGTH) {
+        if (soap_envelope_begin_out(soap)
+            || soap_putheader(soap)
+            || soap_body_begin_out(soap)
+            || soap_put___ns1__login(soap, &soap_tmp___ns1__login, "-ns1:login", NULL)
+            || soap_body_end_out(soap)
+            || soap_envelope_end_out(soap))
+            return soap->error;
+    }
+    if (soap_end_count(soap))
+        return soap->error;
+    if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
+        || soap_envelope_begin_out(soap)
+        || soap_putheader(soap)
+        || soap_body_begin_out(soap)
+        || soap_put___ns1__login(soap, &soap_tmp___ns1__login, "-ns1:login", NULL)
+        || soap_body_end_out(soap)
+        || soap_envelope_end_out(soap)
+        || soap_end_send(soap))
+        return soap_closesock(soap);
+    if (!ns1__loginResponse_)
+        return soap_closesock(soap);
+    ns1__loginResponse_->soap_default(soap);
+    if (soap_begin_recv(soap)
+        || soap_envelope_begin_in(soap)
+        || soap_recv_header(soap)
+        || soap_body_begin_in(soap))
+        return soap_closesock(soap);
+    ns1__loginResponse_->soap_get(soap, "ns1:loginResponse", "ns1:loginResponse");
+    if (soap->error)
+        return soap_recv_fault(soap, 0);
+    if (soap_body_end_in(soap)
+        || soap_envelope_end_in(soap)
+        || soap_end_recv(soap))
+        return soap_closesock(soap);
+    return soap_closesock(soap);
 }
 
-int AuthenticationPortBindingProxy::logout(const char *endpoint, const char *soap_action, ns1__logout *ns1__logout_, ns1__logoutResponse *ns1__logoutResponse_)
-{	struct soap *soap = this->soap;
-	struct __ns1__logout soap_tmp___ns1__logout;
-	if (endpoint)
-		soap_endpoint = endpoint;
-	if (soap_endpoint == NULL)
-		soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
-	if (soap_action == NULL)
-		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/logoutRequest";
-	soap_begin(soap);
-	soap->encodingStyle = NULL;
-	soap_tmp___ns1__logout.ns1__logout_ = ns1__logout_;
-	soap_serializeheader(soap);
-	soap_serialize___ns1__logout(soap, &soap_tmp___ns1__logout);
-	if (soap_begin_count(soap))
-		return soap->error;
-	if (soap->mode & SOAP_IO_LENGTH)
-	{	if (soap_envelope_begin_out(soap)
-		 || soap_putheader(soap)
-		 || soap_body_begin_out(soap)
-		 || soap_put___ns1__logout(soap, &soap_tmp___ns1__logout, "-ns1:logout", NULL)
-		 || soap_body_end_out(soap)
-		 || soap_envelope_end_out(soap))
-			 return soap->error;
-	}
-	if (soap_end_count(soap))
-		return soap->error;
-	if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
-	 || soap_envelope_begin_out(soap)
-	 || soap_putheader(soap)
-	 || soap_body_begin_out(soap)
-	 || soap_put___ns1__logout(soap, &soap_tmp___ns1__logout, "-ns1:logout", NULL)
-	 || soap_body_end_out(soap)
-	 || soap_envelope_end_out(soap)
-	 || soap_end_send(soap))
-		return soap_closesock(soap);
-	if (!ns1__logoutResponse_)
-		return soap_closesock(soap);
-	ns1__logoutResponse_->soap_default(soap);
-	if (soap_begin_recv(soap)
-	 || soap_envelope_begin_in(soap)
-	 || soap_recv_header(soap)
-	 || soap_body_begin_in(soap))
-		return soap_closesock(soap);
-	ns1__logoutResponse_->soap_get(soap, "ns1:logoutResponse", "ns1:logoutResponse");
-	if (soap->error)
-		return soap_recv_fault(soap, 0);
-	if (soap_body_end_in(soap)
-	 || soap_envelope_end_in(soap)
-	 || soap_end_recv(soap))
-		return soap_closesock(soap);
-	return soap_closesock(soap);
+
+int AuthenticationPortBindingProxy::logout(const char *endpoint, const char *soap_action, ns1__logout *ns1__logout_, ns1__logoutResponse *ns1__logoutResponse_) {
+    struct soap *soap = this->soap;
+    struct __ns1__logout soap_tmp___ns1__logout;
+    if (endpoint)
+        soap_endpoint = endpoint;
+    if (soap_endpoint == NULL)
+        soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
+    if (soap_action == NULL)
+        soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/logoutRequest";
+    soap_begin(soap);
+    soap->encodingStyle = NULL;
+    soap_tmp___ns1__logout.ns1__logout_ = ns1__logout_;
+    soap_serializeheader(soap);
+    soap_serialize___ns1__logout(soap, &soap_tmp___ns1__logout);
+    if (soap_begin_count(soap))
+        return soap->error;
+    if (soap->mode & SOAP_IO_LENGTH) {
+        if (soap_envelope_begin_out(soap)
+            || soap_putheader(soap)
+            || soap_body_begin_out(soap)
+            || soap_put___ns1__logout(soap, &soap_tmp___ns1__logout, "-ns1:logout", NULL)
+            || soap_body_end_out(soap)
+            || soap_envelope_end_out(soap))
+            return soap->error;
+    }
+    if (soap_end_count(soap))
+        return soap->error;
+    if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
+        || soap_envelope_begin_out(soap)
+        || soap_putheader(soap)
+        || soap_body_begin_out(soap)
+        || soap_put___ns1__logout(soap, &soap_tmp___ns1__logout, "-ns1:logout", NULL)
+        || soap_body_end_out(soap)
+        || soap_envelope_end_out(soap)
+        || soap_end_send(soap))
+        return soap_closesock(soap);
+    if (!ns1__logoutResponse_)
+        return soap_closesock(soap);
+    ns1__logoutResponse_->soap_default(soap);
+    if (soap_begin_recv(soap)
+        || soap_envelope_begin_in(soap)
+        || soap_recv_header(soap)
+        || soap_body_begin_in(soap))
+        return soap_closesock(soap);
+    ns1__logoutResponse_->soap_get(soap, "ns1:logoutResponse", "ns1:logoutResponse");
+    if (soap->error)
+        return soap_recv_fault(soap, 0);
+    if (soap_body_end_in(soap)
+        || soap_envelope_end_in(soap)
+        || soap_end_recv(soap))
+        return soap_closesock(soap);
+    return soap_closesock(soap);
 }
 
-int AuthenticationPortBindingProxy::getUserNonce(const char *endpoint, const char *soap_action, ns1__getUserNonce *ns1__getUserNonce_, ns1__getUserNonceResponse *ns1__getUserNonceResponse_)
-{	struct soap *soap = this->soap;
-	struct __ns1__getUserNonce soap_tmp___ns1__getUserNonce;
-	if (endpoint)
-		soap_endpoint = endpoint;
-	if (soap_endpoint == NULL)
-		soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
-	if (soap_action == NULL)
-		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/getUserNonceRequest";
-	soap_begin(soap);
-	soap->encodingStyle = NULL;
-	soap_tmp___ns1__getUserNonce.ns1__getUserNonce_ = ns1__getUserNonce_;
-	soap_serializeheader(soap);
-	soap_serialize___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce);
-	if (soap_begin_count(soap))
-		return soap->error;
-	if (soap->mode & SOAP_IO_LENGTH)
-	{	if (soap_envelope_begin_out(soap)
-		 || soap_putheader(soap)
-		 || soap_body_begin_out(soap)
-		 || soap_put___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce, "-ns1:getUserNonce", NULL)
-		 || soap_body_end_out(soap)
-		 || soap_envelope_end_out(soap))
-			 return soap->error;
-	}
-	if (soap_end_count(soap))
-		return soap->error;
-	if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
-	 || soap_envelope_begin_out(soap)
-	 || soap_putheader(soap)
-	 || soap_body_begin_out(soap)
-	 || soap_put___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce, "-ns1:getUserNonce", NULL)
-	 || soap_body_end_out(soap)
-	 || soap_envelope_end_out(soap)
-	 || soap_end_send(soap))
-		return soap_closesock(soap);
-	if (!ns1__getUserNonceResponse_)
-		return soap_closesock(soap);
-	ns1__getUserNonceResponse_->soap_default(soap);
-	if (soap_begin_recv(soap)
-	 || soap_envelope_begin_in(soap)
-	 || soap_recv_header(soap)
-	 || soap_body_begin_in(soap))
-		return soap_closesock(soap);
-	ns1__getUserNonceResponse_->soap_get(soap, "ns1:getUserNonceResponse", "ns1:getUserNonceResponse");
-	if (soap->error)
-		return soap_recv_fault(soap, 0);
-	if (soap_body_end_in(soap)
-	 || soap_envelope_end_in(soap)
-	 || soap_end_recv(soap))
-		return soap_closesock(soap);
-	return soap_closesock(soap);
+
+int AuthenticationPortBindingProxy::getUserNonce(const char *endpoint, const char *soap_action, ns1__getUserNonce *ns1__getUserNonce_, ns1__getUserNonceResponse *ns1__getUserNonceResponse_) {
+    struct soap *soap = this->soap;
+    struct __ns1__getUserNonce soap_tmp___ns1__getUserNonce;
+    if (endpoint)
+        soap_endpoint = endpoint;
+    if (soap_endpoint == NULL)
+        soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
+    if (soap_action == NULL)
+        soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/getUserNonceRequest";
+    soap_begin(soap);
+    soap->encodingStyle = NULL;
+    soap_tmp___ns1__getUserNonce.ns1__getUserNonce_ = ns1__getUserNonce_;
+    soap_serializeheader(soap);
+    soap_serialize___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce);
+    if (soap_begin_count(soap))
+        return soap->error;
+    if (soap->mode & SOAP_IO_LENGTH) {
+        if (soap_envelope_begin_out(soap)
+            || soap_putheader(soap)
+            || soap_body_begin_out(soap)
+            || soap_put___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce, "-ns1:getUserNonce", NULL)
+            || soap_body_end_out(soap)
+            || soap_envelope_end_out(soap))
+            return soap->error;
+    }
+    if (soap_end_count(soap))
+        return soap->error;
+    if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
+        || soap_envelope_begin_out(soap)
+        || soap_putheader(soap)
+        || soap_body_begin_out(soap)
+        || soap_put___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce, "-ns1:getUserNonce", NULL)
+        || soap_body_end_out(soap)
+        || soap_envelope_end_out(soap)
+        || soap_end_send(soap))
+        return soap_closesock(soap);
+    if (!ns1__getUserNonceResponse_)
+        return soap_closesock(soap);
+    ns1__getUserNonceResponse_->soap_default(soap);
+    if (soap_begin_recv(soap)
+        || soap_envelope_begin_in(soap)
+        || soap_recv_header(soap)
+        || soap_body_begin_in(soap))
+        return soap_closesock(soap);
+    ns1__getUserNonceResponse_->soap_get(soap, "ns1:getUserNonceResponse", "ns1:getUserNonceResponse");
+    if (soap->error)
+        return soap_recv_fault(soap, 0);
+    if (soap_body_end_in(soap)
+        || soap_envelope_end_in(soap)
+        || soap_end_recv(soap))
+        return soap_closesock(soap);
+    return soap_closesock(soap);
 }
 
-int AuthenticationPortBindingProxy::singleSignOn(const char *endpoint, const char *soap_action, ns1__singleSignOn *ns1__singleSignOn_, ns1__singleSignOnResponse *ns1__singleSignOnResponse_)
-{	struct soap *soap = this->soap;
-	struct __ns1__singleSignOn soap_tmp___ns1__singleSignOn;
-	if (endpoint)
-		soap_endpoint = endpoint;
-	if (soap_endpoint == NULL)
-		soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
-	if (soap_action == NULL)
-		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/singleSignOnRequest";
-	soap_begin(soap);
-	soap->encodingStyle = NULL;
-	soap_tmp___ns1__singleSignOn.ns1__singleSignOn_ = ns1__singleSignOn_;
-	soap_serializeheader(soap);
-	soap_serialize___ns1__singleSignOn(soap, &soap_tmp___ns1__singleSignOn);
-	if (soap_begin_count(soap))
-		return soap->error;
-	if (soap->mode & SOAP_IO_LENGTH)
-	{	if (soap_envelope_begin_out(soap)
-		 || soap_putheader(soap)
-		 || soap_body_begin_out(soap)
-		 || soap_put___ns1__singleSignOn(soap, &soap_tmp___ns1__singleSignOn, "-ns1:singleSignOn", NULL)
-		 || soap_body_end_out(soap)
-		 || soap_envelope_end_out(soap))
-			 return soap->error;
-	}
-	if (soap_end_count(soap))
-		return soap->error;
-	if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
-	 || soap_envelope_begin_out(soap)
-	 || soap_putheader(soap)
-	 || soap_body_begin_out(soap)
-	 || soap_put___ns1__singleSignOn(soap, &soap_tmp___ns1__singleSignOn, "-ns1:singleSignOn", NULL)
-	 || soap_body_end_out(soap)
-	 || soap_envelope_end_out(soap)
-	 || soap_end_send(soap))
-		return soap_closesock(soap);
-	if (!ns1__singleSignOnResponse_)
-		return soap_closesock(soap);
-	ns1__singleSignOnResponse_->soap_default(soap);
-	if (soap_begin_recv(soap)
-	 || soap_envelope_begin_in(soap)
-	 || soap_recv_header(soap)
-	 || soap_body_begin_in(soap))
-		return soap_closesock(soap);
-	ns1__singleSignOnResponse_->soap_get(soap, "ns1:singleSignOnResponse", "ns1:singleSignOnResponse");
-	if (soap->error)
-		return soap_recv_fault(soap, 0);
-	if (soap_body_end_in(soap)
-	 || soap_envelope_end_in(soap)
-	 || soap_end_recv(soap))
-		return soap_closesock(soap);
-	return soap_closesock(soap);
+
+int AuthenticationPortBindingProxy::singleSignOn(const char *endpoint, const char *soap_action, ns1__singleSignOn *ns1__singleSignOn_, ns1__singleSignOnResponse *ns1__singleSignOnResponse_) {
+    struct soap *soap = this->soap;
+    struct __ns1__singleSignOn soap_tmp___ns1__singleSignOn;
+    if (endpoint)
+        soap_endpoint = endpoint;
+    if (soap_endpoint == NULL)
+        soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
+    if (soap_action == NULL)
+        soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/singleSignOnRequest";
+    soap_begin(soap);
+    soap->encodingStyle = NULL;
+    soap_tmp___ns1__singleSignOn.ns1__singleSignOn_ = ns1__singleSignOn_;
+    soap_serializeheader(soap);
+    soap_serialize___ns1__singleSignOn(soap, &soap_tmp___ns1__singleSignOn);
+    if (soap_begin_count(soap))
+        return soap->error;
+    if (soap->mode & SOAP_IO_LENGTH) {
+        if (soap_envelope_begin_out(soap)
+            || soap_putheader(soap)
+            || soap_body_begin_out(soap)
+            || soap_put___ns1__singleSignOn(soap, &soap_tmp___ns1__singleSignOn, "-ns1:singleSignOn", NULL)
+            || soap_body_end_out(soap)
+            || soap_envelope_end_out(soap))
+            return soap->error;
+    }
+    if (soap_end_count(soap))
+        return soap->error;
+    if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
+        || soap_envelope_begin_out(soap)
+        || soap_putheader(soap)
+        || soap_body_begin_out(soap)
+        || soap_put___ns1__singleSignOn(soap, &soap_tmp___ns1__singleSignOn, "-ns1:singleSignOn", NULL)
+        || soap_body_end_out(soap)
+        || soap_envelope_end_out(soap)
+        || soap_end_send(soap))
+        return soap_closesock(soap);
+    if (!ns1__singleSignOnResponse_)
+        return soap_closesock(soap);
+    ns1__singleSignOnResponse_->soap_default(soap);
+    if (soap_begin_recv(soap)
+        || soap_envelope_begin_in(soap)
+        || soap_recv_header(soap)
+        || soap_body_begin_in(soap))
+        return soap_closesock(soap);
+    ns1__singleSignOnResponse_->soap_get(soap, "ns1:singleSignOnResponse", "ns1:singleSignOnResponse");
+    if (soap->error)
+        return soap_recv_fault(soap, 0);
+    if (soap_body_end_in(soap)
+        || soap_envelope_end_in(soap)
+        || soap_end_recv(soap))
+        return soap_closesock(soap);
+    return soap_closesock(soap);
 }
 
-int AuthenticationPortBindingProxy::sessionsByIp(const char *endpoint, const char *soap_action, ns1__sessionsByIp *ns1__sessionsByIp_, ns1__sessionsByIpResponse *ns1__sessionsByIpResponse_)
-{	struct soap *soap = this->soap;
-	struct __ns1__sessionsByIp soap_tmp___ns1__sessionsByIp;
-	if (endpoint)
-		soap_endpoint = endpoint;
-	if (soap_endpoint == NULL)
-		soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
-	if (soap_action == NULL)
-		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/sessionsByIpRequest";
-	soap_begin(soap);
-	soap->encodingStyle = NULL;
-	soap_tmp___ns1__sessionsByIp.ns1__sessionsByIp_ = ns1__sessionsByIp_;
-	soap_serializeheader(soap);
-	soap_serialize___ns1__sessionsByIp(soap, &soap_tmp___ns1__sessionsByIp);
-	if (soap_begin_count(soap))
-		return soap->error;
-	if (soap->mode & SOAP_IO_LENGTH)
-	{	if (soap_envelope_begin_out(soap)
-		 || soap_putheader(soap)
-		 || soap_body_begin_out(soap)
-		 || soap_put___ns1__sessionsByIp(soap, &soap_tmp___ns1__sessionsByIp, "-ns1:sessionsByIp", NULL)
-		 || soap_body_end_out(soap)
-		 || soap_envelope_end_out(soap))
-			 return soap->error;
-	}
-	if (soap_end_count(soap))
-		return soap->error;
-	if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
-	 || soap_envelope_begin_out(soap)
-	 || soap_putheader(soap)
-	 || soap_body_begin_out(soap)
-	 || soap_put___ns1__sessionsByIp(soap, &soap_tmp___ns1__sessionsByIp, "-ns1:sessionsByIp", NULL)
-	 || soap_body_end_out(soap)
-	 || soap_envelope_end_out(soap)
-	 || soap_end_send(soap))
-		return soap_closesock(soap);
-	if (!ns1__sessionsByIpResponse_)
-		return soap_closesock(soap);
-	ns1__sessionsByIpResponse_->soap_default(soap);
-	if (soap_begin_recv(soap)
-	 || soap_envelope_begin_in(soap)
-	 || soap_recv_header(soap)
-	 || soap_body_begin_in(soap))
-		return soap_closesock(soap);
-	ns1__sessionsByIpResponse_->soap_get(soap, "ns1:sessionsByIpResponse", "ns1:sessionsByIpResponse");
-	if (soap->error)
-		return soap_recv_fault(soap, 0);
-	if (soap_body_end_in(soap)
-	 || soap_envelope_end_in(soap)
-	 || soap_end_recv(soap))
-		return soap_closesock(soap);
-	return soap_closesock(soap);
+
+int AuthenticationPortBindingProxy::sessionsByIp(const char *endpoint, const char *soap_action, ns1__sessionsByIp *ns1__sessionsByIp_, ns1__sessionsByIpResponse *ns1__sessionsByIpResponse_) {
+    struct soap *soap = this->soap;
+    struct __ns1__sessionsByIp soap_tmp___ns1__sessionsByIp;
+    if (endpoint)
+        soap_endpoint = endpoint;
+    if (soap_endpoint == NULL)
+        soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
+    if (soap_action == NULL)
+        soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/sessionsByIpRequest";
+    soap_begin(soap);
+    soap->encodingStyle = NULL;
+    soap_tmp___ns1__sessionsByIp.ns1__sessionsByIp_ = ns1__sessionsByIp_;
+    soap_serializeheader(soap);
+    soap_serialize___ns1__sessionsByIp(soap, &soap_tmp___ns1__sessionsByIp);
+    if (soap_begin_count(soap))
+        return soap->error;
+    if (soap->mode & SOAP_IO_LENGTH) {
+        if (soap_envelope_begin_out(soap)
+            || soap_putheader(soap)
+            || soap_body_begin_out(soap)
+            || soap_put___ns1__sessionsByIp(soap, &soap_tmp___ns1__sessionsByIp, "-ns1:sessionsByIp", NULL)
+            || soap_body_end_out(soap)
+            || soap_envelope_end_out(soap))
+            return soap->error;
+    }
+    if (soap_end_count(soap))
+        return soap->error;
+    if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
+        || soap_envelope_begin_out(soap)
+        || soap_putheader(soap)
+        || soap_body_begin_out(soap)
+        || soap_put___ns1__sessionsByIp(soap, &soap_tmp___ns1__sessionsByIp, "-ns1:sessionsByIp", NULL)
+        || soap_body_end_out(soap)
+        || soap_envelope_end_out(soap)
+        || soap_end_send(soap))
+        return soap_closesock(soap);
+    if (!ns1__sessionsByIpResponse_)
+        return soap_closesock(soap);
+    ns1__sessionsByIpResponse_->soap_default(soap);
+    if (soap_begin_recv(soap)
+        || soap_envelope_begin_in(soap)
+        || soap_recv_header(soap)
+        || soap_body_begin_in(soap))
+        return soap_closesock(soap);
+    ns1__sessionsByIpResponse_->soap_get(soap, "ns1:sessionsByIpResponse", "ns1:sessionsByIpResponse");
+    if (soap->error)
+        return soap_recv_fault(soap, 0);
+    if (soap_body_end_in(soap)
+        || soap_envelope_end_in(soap)
+        || soap_end_recv(soap))
+        return soap_closesock(soap);
+    return soap_closesock(soap);
 }
 
-int AuthenticationPortBindingProxy::hasActiveSession(const char *endpoint, const char *soap_action, ns1__hasActiveSession *ns1__hasActiveSession_, ns1__hasActiveSessionResponse *ns1__hasActiveSessionResponse_)
-{	struct soap *soap = this->soap;
-	struct __ns1__hasActiveSession soap_tmp___ns1__hasActiveSession;
-	if (endpoint)
-		soap_endpoint = endpoint;
-	if (soap_endpoint == NULL)
-		soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
-	if (soap_action == NULL)
-		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/hasActiveSessionRequest";
-	soap_begin(soap);
-	soap->encodingStyle = NULL;
-	soap_tmp___ns1__hasActiveSession.ns1__hasActiveSession_ = ns1__hasActiveSession_;
-	soap_serializeheader(soap);
-	soap_serialize___ns1__hasActiveSession(soap, &soap_tmp___ns1__hasActiveSession);
-	if (soap_begin_count(soap))
-		return soap->error;
-	if (soap->mode & SOAP_IO_LENGTH)
-	{	if (soap_envelope_begin_out(soap)
-		 || soap_putheader(soap)
-		 || soap_body_begin_out(soap)
-		 || soap_put___ns1__hasActiveSession(soap, &soap_tmp___ns1__hasActiveSession, "-ns1:hasActiveSession", NULL)
-		 || soap_body_end_out(soap)
-		 || soap_envelope_end_out(soap))
-			 return soap->error;
-	}
-	if (soap_end_count(soap))
-		return soap->error;
-	if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
-	 || soap_envelope_begin_out(soap)
-	 || soap_putheader(soap)
-	 || soap_body_begin_out(soap)
-	 || soap_put___ns1__hasActiveSession(soap, &soap_tmp___ns1__hasActiveSession, "-ns1:hasActiveSession", NULL)
-	 || soap_body_end_out(soap)
-	 || soap_envelope_end_out(soap)
-	 || soap_end_send(soap))
-		return soap_closesock(soap);
-	if (!ns1__hasActiveSessionResponse_)
-		return soap_closesock(soap);
-	ns1__hasActiveSessionResponse_->soap_default(soap);
-	if (soap_begin_recv(soap)
-	 || soap_envelope_begin_in(soap)
-	 || soap_recv_header(soap)
-	 || soap_body_begin_in(soap))
-		return soap_closesock(soap);
-	ns1__hasActiveSessionResponse_->soap_get(soap, "ns1:hasActiveSessionResponse", "ns1:hasActiveSessionResponse");
-	if (soap->error)
-		return soap_recv_fault(soap, 0);
-	if (soap_body_end_in(soap)
-	 || soap_envelope_end_in(soap)
-	 || soap_end_recv(soap))
-		return soap_closesock(soap);
-	return soap_closesock(soap);
+
+int AuthenticationPortBindingProxy::hasActiveSession(const char *endpoint, const char *soap_action, ns1__hasActiveSession *ns1__hasActiveSession_, ns1__hasActiveSessionResponse *ns1__hasActiveSessionResponse_) {
+    struct soap *soap = this->soap;
+    struct __ns1__hasActiveSession soap_tmp___ns1__hasActiveSession;
+    if (endpoint)
+        soap_endpoint = endpoint;
+    if (soap_endpoint == NULL)
+        soap_endpoint = "https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication";
+    if (soap_action == NULL)
+        soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/hasActiveSessionRequest";
+    soap_begin(soap);
+    soap->encodingStyle = NULL;
+    soap_tmp___ns1__hasActiveSession.ns1__hasActiveSession_ = ns1__hasActiveSession_;
+    soap_serializeheader(soap);
+    soap_serialize___ns1__hasActiveSession(soap, &soap_tmp___ns1__hasActiveSession);
+    if (soap_begin_count(soap))
+        return soap->error;
+    if (soap->mode & SOAP_IO_LENGTH) {
+        if (soap_envelope_begin_out(soap)
+            || soap_putheader(soap)
+            || soap_body_begin_out(soap)
+            || soap_put___ns1__hasActiveSession(soap, &soap_tmp___ns1__hasActiveSession, "-ns1:hasActiveSession", NULL)
+            || soap_body_end_out(soap)
+            || soap_envelope_end_out(soap))
+            return soap->error;
+    }
+    if (soap_end_count(soap))
+        return soap->error;
+    if (soap_connect(soap, soap_url(soap, soap_endpoint, NULL), soap_action)
+        || soap_envelope_begin_out(soap)
+        || soap_putheader(soap)
+        || soap_body_begin_out(soap)
+        || soap_put___ns1__hasActiveSession(soap, &soap_tmp___ns1__hasActiveSession, "-ns1:hasActiveSession", NULL)
+        || soap_body_end_out(soap)
+        || soap_envelope_end_out(soap)
+        || soap_end_send(soap))
+        return soap_closesock(soap);
+    if (!ns1__hasActiveSessionResponse_)
+        return soap_closesock(soap);
+    ns1__hasActiveSessionResponse_->soap_default(soap);
+    if (soap_begin_recv(soap)
+        || soap_envelope_begin_in(soap)
+        || soap_recv_header(soap)
+        || soap_body_begin_in(soap))
+        return soap_closesock(soap);
+    ns1__hasActiveSessionResponse_->soap_get(soap, "ns1:hasActiveSessionResponse", "ns1:hasActiveSessionResponse");
+    if (soap->error)
+        return soap_recv_fault(soap, 0);
+    if (soap_body_end_in(soap)
+        || soap_envelope_end_in(soap)
+        || soap_end_recv(soap))
+        return soap_closesock(soap);
+    return soap_closesock(soap);
 }
 /* End of client proxy code */

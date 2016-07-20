@@ -15,10 +15,11 @@ namespace karabo {
     namespace io {
 
         class InputHandler {
-        public:
-            
+
+            public:
+
             KARABO_CLASSINFO(InputHandler, "InputHandler", "1.0")
-            
+
             virtual void registerIOEventHandler(const boost::any& eventHandler) = 0;
             virtual void registerEndOfStreamEventHandler(const boost::any& endOfStreamEventHandler) = 0;
             virtual void triggerIOEvent() = 0;

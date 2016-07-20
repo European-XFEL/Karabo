@@ -23,6 +23,8 @@ namespace karathon {
 
 
     struct AppenderConfiguratorWrap1 : AppenderConfigurator {
+
+
         krb_log4cpp::Appender* create() = 0;
     };
 
@@ -34,8 +36,11 @@ namespace karathon {
             return this->get_override("create")();
         }
     };
-    
+
+
     struct PriorityWrap {
+
+
         static bp::object getPriorityNamePy(int priority) {
             return bp::object(krb_log4cpp::Priority::getPriorityName(priority));
         }

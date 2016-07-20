@@ -34,6 +34,8 @@ namespace karabo {
          * The DeviceOutput class.
          */
         class OutputChannel : public boost::enable_shared_from_this<OutputChannel> {
+
+
             typedef boost::shared_ptr<karabo::net::Channel> TcpChannelPointer;
 
             /*
@@ -150,7 +152,7 @@ namespace karabo {
             }
 
             void update();
-                     
+
             void signalEndOfStream();
 
         private:
@@ -218,13 +220,15 @@ namespace karabo {
         };
 
         class OutputChannelElement {
+
+
             karabo::util::NodeElement m_outputChannel;
             karabo::util::NodeElement m_dataSchema;
 
         public:
 
             OutputChannelElement(karabo::util::Schema& s) : m_outputChannel(s), m_dataSchema(s) {
-                m_outputChannel.appendParametersOf<OutputChannel>();                
+                m_outputChannel.appendParametersOf<OutputChannel>();
             }
 
             OutputChannelElement& key(const std::string& key) {
@@ -232,29 +236,29 @@ namespace karabo {
                 m_dataSchema.key(key + ".schema");
                 return *(static_cast<OutputChannelElement*> (this));
             }
-            
+
             OutputChannelElement& displayedName(const std::string& name) {
                 m_outputChannel.displayedName(name);
                 return *(static_cast<OutputChannelElement*> (this));
             }
-            
+
             OutputChannelElement& description(const std::string& description) {
                 m_outputChannel.description(description);
                 return *(static_cast<OutputChannelElement*> (this));
             }
-            
+
             OutputChannelElement& dataSchema(const karabo::util::Schema& schema) {
                 m_dataSchema.appendSchema(schema);
                 return *(static_cast<OutputChannelElement*> (this));
             }
-            
+
             void commit() {
                 m_outputChannel.commit();
                 m_dataSchema.commit();
             }
 
         };
-        
+
         typedef OutputChannelElement OUTPUT_CHANNEL_ELEMENT;
         typedef OutputChannelElement OUTPUT_CHANNEL;
 

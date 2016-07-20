@@ -181,6 +181,10 @@ class SignalSlotable(Configurable):
         else:
             return False, Hash()
 
+    def _initInfo(self):
+        """return the info hash at initialization time"""
+        return Hash("heartbeatInterval", self.heartbeatInterval.value)
+
     @coroutine
     def _run(self):
         async(self._ss.main(self))
@@ -193,9 +197,9 @@ class SignalSlotable(Configurable):
                               format(self.deviceId))
         except TimeoutError:
             pass
-        yield from super()._run()
+        yield from super(SignalSlotable, self)._run()
         self.__randPing = 0  # Start answering on slotPing with argument rand=0
-        async(self._ss.notify_network(self.heartbeatInterval))
+        async(self._ss.notify_network(self._initInfo()))
         yield from get_event_loop().run_coroutine_or_thread(
             self.onInitialization)
         self.__initialized = True

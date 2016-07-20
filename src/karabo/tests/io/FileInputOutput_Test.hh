@@ -12,6 +12,7 @@
 
 class FileInputOutput_Test : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(FileInputOutput_Test);
     CPPUNIT_TEST(writeTextFile);
     CPPUNIT_TEST(readTextFile);
@@ -28,9 +29,9 @@ class FileInputOutput_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(writeHdf5File);
     CPPUNIT_TEST(readHdf5File);
     CPPUNIT_TEST(writeSequenceToHdf5File);
-    CPPUNIT_TEST(readSequenceFromHdf5File);    
+    CPPUNIT_TEST(readSequenceFromHdf5File);
     CPPUNIT_TEST_SUITE_END();
-    
+
 
 public:
     FileInputOutput_Test();

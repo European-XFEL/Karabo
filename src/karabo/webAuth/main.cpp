@@ -19,6 +19,7 @@ AuthenticationPortBindingProxy service;
 bool OPERATION_SUCESS_TRUE = true;
 bool OPERATION_SUCESS_FALSE = false;
 
+
 /*
  *
  */
@@ -34,7 +35,7 @@ ns1__getUserNonceResponse getUserNonce(string username, string provider, string 
     // If obtain successfully answer from Web Service it print message returned!
     if (service.getUserNonce(&nsUserNonce, &nsUserNonceResp) == SOAP_OK) {
         //std::cout << &(nsUserNonceResp.return_) << std::endl;
-        if ( *nsUserNonceResp.return_->operationSuccess == 1) {
+        if (*nsUserNonceResp.return_->operationSuccess == 1) {
             printf("The nonce was: %s\n", nsUserNonceResp.return_->sessionToken->c_str());
         } else {
             printf("Error message: %s\n", nsUserNonceResp.return_->errorMsg->c_str());
@@ -46,12 +47,13 @@ ns1__getUserNonceResponse getUserNonce(string username, string provider, string 
     return nsUserNonceResp;
 }
 
+
 /*
  *
  */
 ns1__loginResponse login(string username, string password, string provider,
-        string ipAddress, string hostname, string portNumber,
-        string nonce, string software, string time) {
+                         string ipAddress, string hostname, string portNumber,
+                         string nonce, string software, string time) {
 
     ns1__login nsLogin;
     ns1__loginResponse nsLoginResp;
@@ -65,14 +67,14 @@ ns1__loginResponse login(string username, string password, string provider,
     nsLogin.nonce = &nonce;
     nsLogin.software = &software;
     nsLogin.time = &time;
-    
-    
+
+
 
 
     // If obtain successfully answer from Web Service it print message returned!
     if (service.login(&nsLogin, &nsLoginResp) == SOAP_OK) {
         //std::cout << &(nsLoginResp.return_) << std::endl;
-        if ( *nsLoginResp.return_->operationSuccess == 1) {
+        if (*nsLoginResp.return_->operationSuccess == 1) {
             printf("The SessionToken is: %s\n", nsLoginResp.return_->sessionToken->c_str());
         } else {
             printf("Error message: %s\n", nsLoginResp.return_->errorMsg->c_str());
@@ -84,8 +86,9 @@ ns1__loginResponse login(string username, string password, string provider,
     return nsLoginResp;
 }
 
+
 int authenticate(string username, string password, string provider, string ipAddress,
-        string hostname, string portNumber, string software, string time) {
+                 string hostname, string portNumber, string software, string time) {
 
     ns1__getUserNonceResponse nsUserNonceResp;
     ns1__loginResponse nsLoginResp;
@@ -110,11 +113,12 @@ int authenticate(string username, string password, string provider, string ipAdd
     printf("softwareDesc: %s\n", nsLoginResp.return_->softwareDesc->c_str());
     printf("sessionToken: %s\n", nsLoginResp.return_->sessionToken->c_str());
     printf("welcomeMessage: %s\n", nsLoginResp.return_->welcomeMessage->c_str());
-    
-    
+
+
 
     return 1; //If arrives here returns success
 }
+
 
 /*
  * 
