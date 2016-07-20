@@ -927,7 +927,7 @@ class PythonDevice(NoFsm):
         """
         Output information on current alarms on this device
         :return: a Hash containing the property as key and as string for
-         the alarm information as value
+         the alarm information as value.
         """
         info = Hash()
         with self._stateChangeLock:
