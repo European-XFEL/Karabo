@@ -21,6 +21,7 @@
 #include <karabo/util/HashFilter.hh>
 #include <karabo/util/TableElement.hh>
 #include <karabo/util/RollingWindowStatistics.hh>
+#include <karabo/util/AlarmConditions.hh>
 
 #include "PythonMacros.hh"
 #include "Wrapper.hh"
@@ -798,7 +799,7 @@ namespace schemawrap {
             karathon::Wrapper::toAny(value, any);
             self.setWarnLow(path, any);
         } else
-            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setWarnLow' must be a string");
     }
 
 
@@ -806,7 +807,7 @@ namespace schemawrap {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_WARN_LOW), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::WARN_LOW.asString()), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnLow' must be a string");
     }
@@ -819,7 +820,7 @@ namespace schemawrap {
             karathon::Wrapper::toAny(value, any);
             self.setWarnHigh(path, any);
         } else
-            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setWarnHigh' must be a string");
     }
 
 
@@ -827,7 +828,7 @@ namespace schemawrap {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_WARN_HIGH), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::WARN_HIGH.asString()), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnHigh' must be a string");
     }
@@ -840,7 +841,7 @@ namespace schemawrap {
             karathon::Wrapper::toAny(value, any);
             self.setAlarmLow(path, any);
         } else
-            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setAlarmLow' must be a string");
     }
 
 
@@ -848,7 +849,7 @@ namespace schemawrap {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALARM_LOW), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::ALARM_LOW.asString()), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmLow' must be a string");
     }
@@ -861,7 +862,7 @@ namespace schemawrap {
             karathon::Wrapper::toAny(value, any);
             self.setAlarmHigh(path, any);
         } else
-            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setAlarmHigh' must be a string");
     }
 
 
@@ -869,9 +870,84 @@ namespace schemawrap {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALARM_HIGH), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::ALARM_HIGH.asString()), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmHigh' must be a string");
+    }
+    
+    void setWarnVarianceLow(Schema& self, const bp::object& obj, const double value) {
+        if (PyUnicode_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            self.setWarnVarianceLow(path, value);
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setWarnVarianceLow' must be a string");
+    }
+
+
+    bp::object getWarnVarianceLow(const Schema& schema, const bp::object& obj) {
+        if (PyUnicode_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            const Hash& h = schema.getParameterHash();
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::WARN_VARIANCE_LOW.asString()), false);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnVarianceLow' must be a string");
+    }
+
+
+    void setWarnVarianceHigh(Schema& self, const bp::object& obj, const double value) {
+        if (PyUnicode_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            self.setWarnVarianceHigh(path, value);
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setWarnVarianceHigh' must be a string");
+    }
+
+
+    bp::object getWarnVarianceHigh(const Schema& schema, const bp::object& obj) {
+        if (PyUnicode_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            const Hash& h = schema.getParameterHash();
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::WARN_VARIANCE_HIGH.asString()), false);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnVarianceHigh' must be a string");
+    }
+
+
+    void setAlarmVarianceLow(Schema& self, const bp::object& obj, const double value) {
+        if (PyUnicode_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            self.setAlarmVarianceLow(path, value);
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setAlarmVarianceLow' must be a string");
+    }
+
+
+    bp::object getAlarmVarianceLow(const Schema& schema, const bp::object& obj) {
+        if (PyUnicode_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            const Hash& h = schema.getParameterHash();
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::ALARM_VARIANCE_LOW.asString()), false);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmVarianceLow' must be a string");
+    }
+
+
+    void setAlarmVarianceHigh(Schema& self, const bp::object& obj, const double value) {
+        if (PyUnicode_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            self.setAlarmVarianceHigh(path, value);
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setAlarmVarianceHigh' must be a string");
+    }
+
+
+    bp::object getAlarmVarianceHigh(const Schema& schema, const bp::object& obj) {
+        if (PyUnicode_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            const Hash& h = schema.getParameterHash();
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, AlarmCondition::ALARM_VARIANCE_HIGH.asString()), false);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmVarianceHigh' must be a string");
     }
 
 
@@ -1725,6 +1801,7 @@ void exportPyUtilSchema() {
         s.def("setAlarmVarianceLow", &Schema::setAlarmVarianceLow, (bp::arg("path"), bp::arg("value")));
         s.def("setAlarmVarianceHigh", &Schema::setAlarmVarianceHigh, (bp::arg("path"), bp::arg("value")));
         s.def("getRollingStatsEvalInterval", &Schema::getRollingStatsEvalInterval, (bp::arg("path"), bp::arg("value")));
+        s.def("getInfoForAlarm", &Schema::getInfoForAlarm, (bp::arg("path"), bp::arg("condition")));
         s.def("setArchivePolicy", &Schema::setArchivePolicy, (bp::arg("path"), bp::arg("value")));
         s.def("setMin", &Schema::setMin, (bp::arg("path"), bp::arg("value")));
         s.def("setMax", &Schema::setMax, (bp::arg("path"), bp::arg("value")));

@@ -38,10 +38,10 @@ void AlarmCondition_Test::tearDown() {
 
 
 void AlarmCondition_Test::testStringAssignmentRoundTrip() {
-    karabo::util::AlarmCondition condition = karabo::util::AlarmCondition::fromString("WARN");
+    karabo::util::AlarmCondition condition = karabo::util::AlarmCondition::fromString("warn");
     std::string conditionString = condition;
-    CPPUNIT_ASSERT(conditionString == "WARN");
-    CPPUNIT_ASSERT(condition.asString() == "WARN");
+    CPPUNIT_ASSERT(conditionString == "warn");
+    CPPUNIT_ASSERT(condition.asString() == "warn");
 }
 
 
@@ -248,5 +248,7 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip() {
     CPPUNIT_ASSERT(alarmParms.has("f2"));
     CPPUNIT_ASSERT(alarmParms.get<Hash>("f2").get<std::string>("type") == AlarmCondition::WARN_LOW.asString());
 
-    CPPUNIT_ASSERT(schema.getParameterHash().getAttribute<std::string>("f1", "alarmInfo_warnLow") == "This is an optional description");
+    CPPUNIT_ASSERT(schema.getInfoForAlarm("f1", AlarmCondition::WARN_LOW) == "This is an optional description");
+    CPPUNIT_ASSERT(schema.getInfoForAlarm("f1", AlarmCondition::WARN_HIGH) == "");
+
 }
