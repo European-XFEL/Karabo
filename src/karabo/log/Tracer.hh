@@ -23,6 +23,7 @@ namespace karabo {
 
         class Tracer {
 
+
             karabo::util::Hash m_conf;
             int m_numCategories;
 
@@ -46,7 +47,6 @@ namespace karabo {
                 m_conf.set("appenders[0].Ostream.layout", "Pattern");
                 m_numCategories = 0;
             }
-
 
             void enable(const std::string& category) {
                 {

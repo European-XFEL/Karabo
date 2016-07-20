@@ -102,8 +102,8 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<int > ("f.a") == 6);
 
     }
-    
-     {
+
+    {
         Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f", Hash::Pointer(new Hash("a", 6)));
         CPPUNIT_ASSERT(h.empty() == false);
         CPPUNIT_ASSERT(h.size() == 6);
@@ -112,10 +112,10 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
         CPPUNIT_ASSERT(h.get<string > ("d") == "4");
         CPPUNIT_ASSERT(h.get<std::vector<unsigned int> >("e")[0] == 5);
-        CPPUNIT_ASSERT(h.get<Hash::Pointer > ("f")->get<int>("a") == 6);        
+        CPPUNIT_ASSERT(h.get<Hash::Pointer > ("f")->get<int>("a") == 6);
     }
-    
-    
+
+
     {
         Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f", std::vector<Hash::Pointer>(5, Hash::Pointer(new Hash("a", 6))));
         CPPUNIT_ASSERT(h.empty() == false);
@@ -439,7 +439,7 @@ void Hash_Test::testGetAs() {
             Hash h("a", std::pair<const int*, size_t>(ptr, 6));
             CPPUNIT_ASSERT(h.getAs<string > ("a") == "0,1,2,3,4,5");
             ostringstream oss;
-            oss << h;            
+            oss << h;
         } catch (Exception& e) {
             cerr << e;
             KARABO_RETHROW_AS(e);
@@ -843,8 +843,8 @@ void Hash_Test::testSubtract() {
     CPPUNIT_ASSERT(h3.get<int>("b.c.d") == 33);
 }
 
-void Hash_Test::testErase()
-{
+
+void Hash_Test::testErase() {
     // prepare two identical hashes
     Hash h1("a", 1, "b", 2, "c.d", 31, "e.f.g", 411, "e.f.h", 412, "e.i", 42);
     Hash h2(h1);
@@ -865,7 +865,7 @@ void Hash_Test::testErase()
     CPPUNIT_ASSERT(h1.erase("c.d") == true);
     CPPUNIT_ASSERT(h1.has("c.d") == false);
     CPPUNIT_ASSERT(h1.has("c") == true);
-    CPPUNIT_ASSERT(h1.size() == 3);  // "c" still in!
+    CPPUNIT_ASSERT(h1.size() == 3); // "c" still in!
 
     // "e.f": composite key with two children and a sibling
     CPPUNIT_ASSERT(h1.erase("e.f") == true);
@@ -942,8 +942,7 @@ void Hash_Test::testErase()
 }
 
 
-void Hash_Test::testHas()
-{
+void Hash_Test::testHas() {
     // Hash::has(path) is already used a lot in other tests, but some corner cases
     // are missing, e.g. non-existing array indices at different positions in path.
     Hash h1("a.b[2]", Hash(), "b[1]", Hash());
@@ -964,8 +963,8 @@ void Hash_Test::testHas()
     CPPUNIT_ASSERT(h1.has("c[0]") == false);
 }
 
-void Hash_Test::testIs()
-{
+
+void Hash_Test::testIs() {
     // Test different cases: paths without indices, with index at end or in the middle.
     Hash h("a", 77, "b[1].d", 88.8, "b[2].c", 88);
     CPPUNIT_ASSERT(h.is<int>("a") == true);
@@ -1024,9 +1023,10 @@ void Hash_Test::testIs()
 
 namespace helper {
 
+
     class Helper {
 
-    public:
+        public:
 
 
         Helper() {
@@ -1083,10 +1083,11 @@ namespace helper {
         return true;
     }
 
+
     template<class V, class E>
     class Visitor {
 
-    public:
+        public:
 
 
         Visitor() {
@@ -1150,7 +1151,9 @@ namespace helper {
 
 }
 
+
 class Counter : public helper::Helper {
+
 
 public:
 
@@ -1177,7 +1180,9 @@ private:
     size_t m_counter;
 };
 
+
 class Concat : public helper::Helper {
+
 
 public:
 
@@ -1200,7 +1205,9 @@ private:
     std::string m_concat;
 };
 
+
 class Serializer : public helper::Helper {
+
 
 public:
 
@@ -1289,7 +1296,9 @@ private:
     std::stack<int> indices;
 };
 
+
 class Flatten : public helper::Helper {
+
 
 public:
 
@@ -1368,7 +1377,9 @@ private:
     std::stack<int> indices;
 };
 
+
 class Paths : public helper::Helper {
+
 
 public:
 
@@ -1525,11 +1536,12 @@ void Hash_Test::testHelper() {
     }
 }
 
-void Hash_Test::testTableValidation(){
+
+void Hash_Test::testTableValidation() {
     Hash phonyTable;
     std::vector<Hash> rows;
     phonyTable.set("tab", rows);
-    
+
     Schema s;
     INT32_ELEMENT(s).key("a")
             .assignmentOptional().noDefaultValue()
@@ -1540,29 +1552,29 @@ void Hash_Test::testTableValidation(){
     FLOAT_ELEMENT(s).key("c")
             .assignmentMandatory()
             .commit();
-    
+
     phonyTable.setAttribute("tab", "rowSchema", s);
     phonyTable.setAttribute<int>("tab", "nodeType", Schema::LEAF);
     phonyTable.setAttribute<int>("tab", "leafType", Schema::PROPERTY);
-    
-   
-    
-    
+
+
+
+
     Hash aRow;
     aRow.set<int>("a", 1);
     aRow.set<std::string>("b", "foo");
     aRow.set<float>("c", 0.1);
     rows.push_back(aRow);
-    
+
     bool allOk = false;
-    try{
+    try {
         phonyTable.set("tab", rows);
         allOk = true;
-    } catch (...){
+    } catch (...) {
         allOk = false;
     }
     CPPUNIT_ASSERT(allOk);
-    
+
     //provoke failure due to missing mandatory
     Hash aRow2;
     aRow2.set<int>("a", 1);
@@ -1570,18 +1582,18 @@ void Hash_Test::testTableValidation(){
     //aRow2.set<float>("c", 0.1);
 
     rows.push_back(aRow2);
-    Hash newPhoneyTable("tab",rows);
+    Hash newPhoneyTable("tab", rows);
 
     allOk = true;
-    try{
+    try {
         phonyTable.merge(newPhoneyTable, Hash::MERGE_ATTRIBUTES);
         allOk = true;
     } catch (karabo::util::ParameterException const& e) {
-       
+
         allOk = false;
     }
     CPPUNIT_ASSERT(allOk == false);
-    
+
     //provoke failure due to wrong type on mandatory
     Hash aRow3;
     aRow3.set<int>("a", 1);
@@ -1589,12 +1601,12 @@ void Hash_Test::testTableValidation(){
     aRow3.set<std::string>("c", "bar");
 
     rows[1] = aRow3;
-    Hash newPhoneyTable2("tab",rows);
-    
+    Hash newPhoneyTable2("tab", rows);
+
     allOk = true;
-    try{
+    try {
         phonyTable.merge(newPhoneyTable2, Hash::MERGE_ATTRIBUTES);
-       
+
         allOk = true;
     } catch (karabo::util::ParameterException const& e) {
         allOk = false;
@@ -1609,12 +1621,12 @@ void Hash_Test::testTableValidation(){
     aRow4.set<float>("d", 1.0);
 
     rows[1] = aRow4;
-    Hash newPhoneyTable4("tab",rows);
-    
+    Hash newPhoneyTable4("tab", rows);
+
     allOk = true;
-    try{
+    try {
         phonyTable.merge(newPhoneyTable4, Hash::MERGE_ATTRIBUTES);
-       
+
         allOk = true;
     } catch (karabo::util::ParameterException const& e) {
         allOk = false;
@@ -1624,15 +1636,15 @@ void Hash_Test::testTableValidation(){
     //check if defaults are set
     Hash aRow5;
     aRow5.set<float>("c", 1.0);
-    
+
 
     rows[1] = aRow5;
-    Hash newPhoneyTable5("tab",rows);
-    
+    Hash newPhoneyTable5("tab", rows);
+
     allOk = false;
-    try{
+    try {
         phonyTable.merge(newPhoneyTable5, Hash::MERGE_ATTRIBUTES);
-       
+
         allOk = true;
     } catch (karabo::util::ParameterException const& e) {
         allOk = false;

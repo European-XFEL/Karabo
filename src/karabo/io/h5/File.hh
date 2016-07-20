@@ -26,11 +26,12 @@ namespace karabo {
 
             class Format;
 
-            /**
+/**
              * Class representing physical Hdf5 file.
              * Each File may contain any number of Tables.
              */
             class File {
+
 
                 static int m_init;
                 static int initErrorHandling();
@@ -46,7 +47,7 @@ namespace karabo {
             public:
 
                 File(const hid_t & h5file);
-                
+
                 File(const karabo::util::Hash& input);
 
                 File(const boost::filesystem::path& filename);
@@ -59,6 +60,7 @@ namespace karabo {
                 static void expectedParameters(karabo::util::Schema& expected);
 
                 enum AccessMode {
+
 
                     TRUNCATE,
                     EXCLUSIVE,
@@ -75,9 +77,9 @@ namespace karabo {
                  * \li \c READONLY Readonly mode.
                  */
                 void open(File::AccessMode mode);
-                
-                
-                
+
+
+
 
                 /**
                  * Check if file is open
@@ -90,7 +92,7 @@ namespace karabo {
                  * @return True if the table exists, otherwise false
                  */
                 bool hasTable(const std::string& name) const;
-                
+
                 /**
                  * Create new table in the file.
                  * @param name Table name. It can be a path with "/" as separator.
@@ -139,8 +141,8 @@ namespace karabo {
                 }
 
                 karabo::util::Hash& reportOpenObjects(karabo::util::Hash& hash);
-                
-              
+
+
             private:
 
                 boost::filesystem::path m_filename;
@@ -150,7 +152,7 @@ namespace karabo {
                 AccessMode m_accMode;
 
                 TableMap m_openTables;
-                
+
                 std::vector<std::string> m_existingTables;
 
                 bool m_isOpen;
@@ -158,7 +160,7 @@ namespace karabo {
                 boost::shared_ptr<Table> createReadOnlyTablePointer(const std::string& name);
 
                 void updateTableIndex(const std::string& tablePath);
-                
+
                 bool m_managed;
 
                 void closeTable(const std::string& uniqueId);

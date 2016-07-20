@@ -450,11 +450,12 @@ namespace karabo {
 
 
             void Table::setUniqueId(const Format::Pointer dataFormat, hsize_t numberOfRecords) {
-                    std::ostringstream oss;
-                    oss << m_name.string() << "|" << dataFormat.get() << "|" << numberOfRecords;
-                    m_id = oss.str();
-                }
-            
+                std::ostringstream oss;
+                oss << m_name.string() << "|" << dataFormat.get() << "|" << numberOfRecords;
+                m_id = oss.str();
+            }
+
+
             void Table::setUniqueId() {
                 m_id = m_name.string() + "|0";
             }

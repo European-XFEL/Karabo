@@ -30,6 +30,7 @@ namespace karabo {
 
         class Authenticator {
 
+
             std::string m_username;
             std::string m_password;
             std::string m_provider;

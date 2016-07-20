@@ -28,7 +28,7 @@ namespace karabo {
 
         class NetworkAppender : public krb_log4cpp::LayoutAppender {
 
-        public:
+            public:
             KARABO_CLASSINFO(NetworkAppender, "NetworkAppender", "1.1")
 
             NetworkAppender(const std::string& name, const BrokerChannel::Pointer& channel);
@@ -41,7 +41,7 @@ namespace karabo {
             virtual void _append(const krb_log4cpp::LoggingEvent& event);
 
         protected: // members
-            
+
             BrokerChannel::Pointer m_channel;
 
         private: // functions
@@ -61,7 +61,7 @@ namespace karabo {
             krb_log4cpp::PatternLayout m_categoryLayout;
             krb_log4cpp::PatternLayout m_messageLayout;
             /// cash for messages
-            std::vector<util::Hash>  m_logCache;
+            std::vector<util::Hash> m_logCache;
             bool m_ok;
         };
 

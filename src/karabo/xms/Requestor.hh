@@ -24,16 +24,16 @@ namespace karabo {
     namespace xms {
 
         class SignalSlotable;
-        
+
         class Requestor {
-            
-        protected:
+
+            protected:
 
             SignalSlotable* m_signalSlotable;
-            
+
             std::string m_replyId;
             bool m_isRequested;
-            bool m_isReceived;                       
+            bool m_isReceived;
             int m_timeout;
             static boost::uuids::random_generator m_uuidGenerator;
 
@@ -76,86 +76,86 @@ namespace karabo {
                 sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
                 return *this;
             }
-            
+
             void receive(const boost::function<void () >& replyCallback) {
                 m_signalSlotable->registerSlot(replyCallback, m_replyId);
             }
-            
+
             template <class A1>
             void receive(const boost::function<void (const A1&) >& replyCallback) {
                 m_signalSlotable->registerSlot(replyCallback, m_replyId);
             }
-            
+
             template <class A1, class A2>
             void receive(const boost::function<void (const A1&, const A2&) >& replyCallback) {
                 m_signalSlotable->registerSlot(replyCallback, m_replyId);
             }
-            
+
             template <class A1, class A2, class A3>
             void receive(const boost::function<void (const A1&, const A2&, const A3&) >& replyCallback) {
                 m_signalSlotable->registerSlot(replyCallback, m_replyId);
             }
-            
+
             template <class A1, class A2, class A3, class A4>
             void receive(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& replyCallback) {
                 m_signalSlotable->registerSlot(replyCallback, m_replyId);
-            }                                                          
-            
+            }
+
             Requestor& requestNoWait(
-            const std::string& requestSlotInstanceId, 
-            const std::string& requestSlotFunction,
-            const std::string replySlotInstanceId, 
-            const std::string& replySlotFunction) {
+                                     const std::string& requestSlotInstanceId,
+                                     const std::string& requestSlotFunction,
+                                     const std::string replySlotInstanceId,
+                                     const std::string& replySlotFunction) {
                 sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash());
                 return *this;
             }
 
             template <class A1>
             Requestor& requestNoWait(
-            const std::string& requestSlotInstanceId, 
-            const std::string& requestSlotFunction,
-            const std::string replySlotInstanceId, 
-            const std::string& replySlotFunction, 
-            const A1& a1) {
+                                     const std::string& requestSlotInstanceId,
+                                     const std::string& requestSlotFunction,
+                                     const std::string replySlotInstanceId,
+                                     const std::string& replySlotFunction,
+                                     const A1& a1) {
                 sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1));
                 return *this;
             }
 
             template <class A1, class A2>
             Requestor& requestNoWait(
-            const std::string& requestSlotInstanceId, 
-            const std::string& requestSlotFunction,
-            const std::string replySlotInstanceId, 
-            const std::string& replySlotFunction,
-            const A1& a1, const A2& a2) {
+                                     const std::string& requestSlotInstanceId,
+                                     const std::string& requestSlotFunction,
+                                     const std::string replySlotInstanceId,
+                                     const std::string& replySlotFunction,
+                                     const A1& a1, const A2& a2) {
                 sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1, "a2", a2));
                 return *this;
             }
 
             template <class A1, class A2, class A3>
-            Requestor& requestNoWait(  
-            const std::string& requestSlotInstanceId, 
-            const std::string& requestSlotFunction,
-            const std::string replySlotInstanceId, 
-            const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3) {
+            Requestor& requestNoWait(
+                                     const std::string& requestSlotInstanceId,
+                                     const std::string& requestSlotFunction,
+                                     const std::string replySlotInstanceId,
+                                     const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3) {
                 sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
                 return *this;
             }
 
             template <class A1, class A2, class A3, class A4>
-            Requestor& requestNoWait( const std::string& requestSlotInstanceId, 
-            const std::string& requestSlotFunction,
-            const std::string replySlotInstanceId, 
-            const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
+            Requestor& requestNoWait(const std::string& requestSlotInstanceId,
+                                     const std::string& requestSlotFunction,
+                                     const std::string replySlotInstanceId,
+                                     const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
                 sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
                 return *this;
             }
 
             void receive() {
                 try {
-                    karabo::util::Hash::Pointer header, body;                  
+                    karabo::util::Hash::Pointer header, body;
                     receiveResponse(header, body);
-                    if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));                    
+                    if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
                 } catch (const karabo::util::TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                 } catch (const karabo::util::CastException&) {
@@ -167,10 +167,10 @@ namespace karabo {
 
             template <class A1>
             void receive(A1& a1) {
-                try {                   
+                try {
                     karabo::util::Hash::Pointer header, body;
                     receiveResponse(header, body);
-                    if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error")); 
+                    if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
                     a1 = body->get<A1 > ("a1");
                 } catch (const karabo::util::TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
@@ -183,7 +183,7 @@ namespace karabo {
 
             template <class A1, class A2>
             void receive(A1& a1, A2& a2) {
-                try {                    
+                try {
                     karabo::util::Hash::Pointer body, header;
                     receiveResponse(header, body);
                     if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
@@ -240,9 +240,9 @@ namespace karabo {
         protected: // functions
 
             karabo::util::Hash prepareHeader(const std::string& slotInstanceId, const std::string& slotFunction);
-            
+
             karabo::util::Hash prepareHeaderNoWait(const std::string& requestSlotInstanceId, const std::string& requestSlotFunction,
-            const std::string& replySlotInstanceId, const std::string& replySlotFunction);
+                                                   const std::string& replySlotInstanceId, const std::string& replySlotFunction);
 
             void registerRequest();
 
@@ -252,7 +252,7 @@ namespace karabo {
 
             void receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
 
-       
+
 
         };
 

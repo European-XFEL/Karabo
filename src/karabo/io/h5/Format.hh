@@ -35,6 +35,7 @@ namespace karabo {
 
             class Format {
 
+
                 friend class Table;
             public:
 
@@ -49,8 +50,8 @@ namespace karabo {
                 static void expectedParameters(karabo::util::Schema& expected);
 
                 static Format::Pointer createFormat(const karabo::util::Hash& config, bool validate = true);
-                
-                static Format::Pointer createEmptyFormat();                              
+
+                static Format::Pointer createEmptyFormat();
 
                 static Format::Pointer discover(const karabo::util::Hash& data, FormatDiscoveryPolicy::Pointer);
 
@@ -116,7 +117,7 @@ namespace karabo {
                     std::vector<unsigned long long> dims = el.getAttributeAs<unsigned long long, std::vector >("dims");
                     h.set("dims", dims);
                 }
-                
+
                 template< class T>
                 static void discoverArraySize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
                     std::vector<unsigned long long> dims;
@@ -136,18 +137,18 @@ namespace karabo {
             private:
 
                 void mapElementsToKeys();
-                
-                
+
+
 
                 static const char m_h5Sep = '/';
                 karabo::util::Hash m_config;
                 std::vector<karabo::io::h5::Element::Pointer> m_elements;
 
                 std::map<std::string, size_t> m_mapElements;
-                
+
                 static karabo::util::Schema m_schema;
                 static bool m_schemaExists;
-                
+
             };
 
 

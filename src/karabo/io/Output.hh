@@ -23,7 +23,7 @@ namespace karabo {
         template <class T>
         class Output {
 
-        protected:
+            protected:
 
             bool m_appendModeEnabled;
 
@@ -55,8 +55,9 @@ namespace karabo {
             }
 
             virtual void write(const T& object) = 0;
-            
-            virtual void update() {}
+
+            virtual void update() {
+            }
         };
     }
 }

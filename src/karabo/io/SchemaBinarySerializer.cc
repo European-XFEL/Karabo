@@ -30,7 +30,7 @@ namespace karabo {
 
 
         void SchemaBinarySerializer::expectedParameters(karabo::util::Schema& expected) {
-           
+
         }
 
         void SchemaBinarySerializer::save(const karabo::util::Schema& object, std::vector<char>& archive) try {

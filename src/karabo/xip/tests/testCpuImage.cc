@@ -20,6 +20,7 @@ using namespace exfel::util;
 using namespace exfel::xip;
 using namespace std;
 
+
 int testCpuImage(int argc, char** argv) {
 
     try {
@@ -82,20 +83,20 @@ int testCpuImage(int argc, char** argv) {
 
         {
             CpuImage<float> img(4, 4, 1, 1.2);
-            
+
             img.print();
-            
+
             std::vector<char> buffer;
             exfel::io::BinarySerializer<CpuImage<float> >::Pointer serializer = exfel::io::BinarySerializer<CpuImage<float> >::create("Default");
             serializer->save(img, buffer);
             std::cout << buffer.size() << std::endl;
-            
+
             CpuImage<float> img2;
             serializer->load(img2, &buffer[0], buffer.size());
             img2.print();
         }
-        
-        { 
+
+        {
             CpuImage<float> img(4, 4, 1, 1.2);
 
             unsigned int channelId = Memory<CpuImage<float> >::registerChannel("a");
@@ -120,7 +121,7 @@ int testCpuImage(int argc, char** argv) {
             CpuImage<float> result;
             Memory<CpuImage<float> >::read(result, 1, channelId2, chunkId2);
             result.print();
-            
+
         }
         {
             unsigned int channelId = Memory<Hash>::registerChannel("bla");
@@ -133,8 +134,8 @@ int testCpuImage(int argc, char** argv) {
             Hash header;
             Memory<Hash>::readAsContiguosBlock(buffer, header, channelId, chunkId);
             cout << header;
-                    
-            
+
+
         }
 
 

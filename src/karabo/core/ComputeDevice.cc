@@ -41,8 +41,8 @@ namespace karabo {
             SLOT_ELEMENT(expected).key("abort")
                     .displayedName("Abort")
                     .description("Try to abort the current computation by interrupting the compute thread and emptying the current buffer. "
-                    "The compute thread is afterwards restarted and resetting the device enables further computations."
-                    "Usage Scenario: abort a long running computation which has gone wrong.")
+                                 "The compute thread is afterwards restarted and resetting the device enables further computations."
+                                 "Usage Scenario: abort a long running computation which has gone wrong.")
                     .allowedStates("Ok.Computing Ok.Paused")
                     .commit();
 
@@ -88,7 +88,7 @@ namespace karabo {
                     .expertAccess()
                     .assignmentOptional().defaultValue(true)
                     .commit();
-            
+
             BOOL_ELEMENT(expected).key("pauseEOSAllowed")
                     .displayedName("Forward end-of-stream when paused")
                     .description("If true, end-of-stream events are forwarded when the device is paused. If false, they are only allowed in the computing and finished states.")
@@ -103,7 +103,7 @@ namespace karabo {
                     .readOnly()
                     .initialValue(0)
                     .commit();
-            
+
             UINT32_ELEMENT(expected).key("abortTimeOut")
                     .displayedName("Abort timeout (ms)")
                     .description("Time out to wait for compute to finish before calling interrupt to choke it off. The interrupt call will have the same timeout.")
@@ -111,7 +111,7 @@ namespace karabo {
                     .reconfigurable()
                     .expertAccess()
                     .commit();
-            
+
         }
 
 
@@ -131,7 +131,7 @@ namespace karabo {
 
         ComputeDevice::~ComputeDevice() {
             setDeviceDead();
-            
+
             //notify compute thread to acknowledge death of device
             m_computeCond.notify_one();
 
@@ -142,21 +142,21 @@ namespace karabo {
 
 
         void ComputeDevice::setDeviceDead() {
-       
+
             m_deviceIsDead.store(true, boost::memory_order_relaxed);
         }
 
 
         void ComputeDevice::_onInputAvailable(const karabo::io::AbstractInput::Pointer&) {
-            
-            
+
+
             //If we don't want to auto compute, do nothing
-            if(get<bool>("autoCompute")){
-                if(!m_isPaused) {
+            if (get<bool>("autoCompute")) {
+                if (!m_isPaused) {
                     m_computeCond.notify_one();
-                }  
-            } 
-            
+                }
+            }
+
         }
 
 
@@ -190,6 +190,8 @@ namespace karabo {
         }
 
         // User hook
+
+
         void ComputeDevice::onEndOfStream() {
 
         }
@@ -213,38 +215,40 @@ namespace karabo {
 
 
         void ComputeDevice::connectAction() {
-            KARABO_LOG_FRAMEWORK_DEBUG << "Connecting "<<this->getInputChannels().size()<<" IO channels";
+            KARABO_LOG_FRAMEWORK_DEBUG << "Connecting " << this->getInputChannels().size() << " IO channels";
             this->connectInputChannels();
             this->set<bool>("autoCompute", this->checkAutoComputeValidity(this->get<bool>("autoCompute")));
-           
+
         }
-        
-        void ComputeDevice::readyStateOnEntry(){
-           
-            if(this->get<bool>("autoCompute")){
+
+
+        void ComputeDevice::readyStateOnEntry() {
+
+            if (this->get<bool>("autoCompute")) {
                 m_isPaused = false;
                 this->start();
             } else {
                 this->pause();
             }
         }
-        
-        void ComputeDevice::preReconfigure(karabo::util::Hash& incomingReconfiguration){
-            
+
+
+        void ComputeDevice::preReconfigure(karabo::util::Hash& incomingReconfiguration) {
+
             incomingReconfiguration.set<bool>("autoCompute", this->checkAutoComputeValidity(incomingReconfiguration.get<bool>("autoCompute")));
-            
+
         }
 
-        bool ComputeDevice::checkAutoComputeValidity(const bool & requestedValue){
+
+        bool ComputeDevice::checkAutoComputeValidity(const bool & requestedValue) {
             //if now input channels are connected autoCompute does not make any sense
-            if(this->getInputChannels().size() == 0 &&  requestedValue){
-                KARABO_LOG_WARN<<"This device does not have any input channels connected. Setting autoCompute=false";
+            if (this->getInputChannels().size() == 0 && requestedValue) {
+                KARABO_LOG_WARN << "This device does not have any input channels connected. Setting autoCompute=false";
                 return false;
             }
-            return requestedValue; 
+            return requestedValue;
         }
 
-        
 
         bool ComputeDevice::canCompute() {
 
@@ -271,80 +275,80 @@ namespace karabo {
         }
 
 
-        void ComputeDevice::computingStateOnEntry() {        
-            m_computeCond.notify_one(); 
+        void ComputeDevice::computingStateOnEntry() {
+            m_computeCond.notify_one();
         }
 
 
         void ComputeDevice::doCompute() try {
 
             boost::unique_lock<boost::mutex> lock(m_computeMutex);
-            
+
             while (true) {
-                
+
                 //the condition variable here will block until
                 // a) an input becomes available and triggers it
                 // b) the device goes back into the compute state from one of the other states
                 // c) the device is killed, i.e. from the destructor, so that the thread returns
                 {
-                   m_computeCond.wait(lock);
+                    m_computeCond.wait(lock);
                 }
-                
-                
-                
+
+
+
                 //unset promise: it will be set again when this iteration has finished.
                 //an unset promise blocks any transitions to pause if a computation is still in process
                 boost::promise<bool> p(m_workIsFinished.move());
-        
+
                 if (m_deviceIsDead.load(boost::memory_order_consume)) {
                     m_workIsFinished.set_value(true);
                     return;
                 }
 
                 if (!m_isAborted.load(boost::memory_order_consume) && this->canCompute()) {
-                    
+
                     try {
-                        
-                      this->compute();
-                      
+
+                        this->compute();
+
                     } catch (const karabo::util::Exception& e) {
-                        
+
                         KARABO_LOG_ERROR << "Caught exception in compute thread: " << e.userFriendlyMsg();
-                        
-                    } catch (const boost::thread_interrupted& ){
-                        
+
+                    } catch (const boost::thread_interrupted&) {
+
                         KARABO_LOG_WARN << "Compute thread has been interrupted by call to abort.";
                         return;
-                        
+
                     } catch (...) {
-                        
+
                         KARABO_LOG_ERROR << "Caught unknown exception in compute thread";
-                        
+
                     }
-                    
+
                     //if we are not in autoCompute mode this compute call is now finished, and we change to finished state
                     //otherwise, the loop will return to the condition variable, which is triggered by the inputs
-                    if(!this->get<bool>("autoCompute")){
+                    if (!this->get<bool>("autoCompute")) {
                         this->computeFinished();
                     }
 
                 }
-                
+
                 try {
-                    
+
                     this->update();
-                    
+
                 } catch (const karabo::util::Exception& e) {
-                    
-                      KARABO_LOG_ERROR << "Caught exception while updating channels: " << e.userFriendlyMsg();
-                      
+
+                    KARABO_LOG_ERROR << "Caught exception while updating channels: " << e.userFriendlyMsg();
+
                 } catch (...) {
-                    
-                      KARABO_LOG_ERROR << "Caught unknown exception while updating channels";
+
+                    KARABO_LOG_ERROR << "Caught unknown exception while updating channels";
                 }
-                 
-               m_workIsFinished.set_value(true);
-               
+
+                m_workIsFinished.set_value(true);
+
             }
         } catch (const karabo::util::Exception& e) {
             KARABO_LOG_ERROR << e;
@@ -352,34 +356,36 @@ namespace karabo {
 
 
         void ComputeDevice::computingStateOnExit() {
-            
+
         }
 
-        void ComputeDevice::setComputationAborted(){
+
+        void ComputeDevice::setComputationAborted() {
             this->abort();
         }
-       
+
+
         bool ComputeDevice::registerAbort() {
-          
+
             m_isAborted.store(true, boost::memory_order_release);
-          
+
             unsigned int timeout = this->get<unsigned int>("abortTimeOut");
-           
-            
+
+
             boost::unique_future<bool> f = m_workIsFinished.get_future();
             boost::future_status status = f.wait_for(boost::chrono::milliseconds(timeout));
-            if(status == boost::future_status::timeout){
+            if (status == boost::future_status::timeout) {
                 //we kill and restart the computing thread if the wait timed out. In case it succeed we can keep the thread alive.
-           
+
                 //the cleanest way is if interruption points are set
                 m_computeThread.interrupt();
-                if(m_computeThread.try_join_for(boost::chrono::milliseconds(timeout))) {
+                if (m_computeThread.try_join_for(boost::chrono::milliseconds(timeout))) {
                     m_computeThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doCompute, this));
                 } else {
-                    KARABO_LOG_WARN<<"Thread could not be properly interrupted.  Consider using boost::interruption_point() within your compute implementation.";
-                    
+                    KARABO_LOG_WARN << "Thread could not be properly interrupted.  Consider using boost::interruption_point() within your compute implementation.";
+
                     //The following part would work, but is not safe, as terminating the thread has a high likelihood of tearing the complete device (and device server) down
-                    
+
                     /* int killSucceeded = 0;
                     try{
 #if defined(_MSC_VER)
@@ -399,12 +405,12 @@ namespace karabo {
                         }
                     }*/
                 }
-                
+
             }
-            
+
             //clear any data in the buffer which was being worked upon
             this->update();
-   
+
             return true;
         }
 
@@ -413,41 +419,47 @@ namespace karabo {
             //wait for any work to finish
             boost::unique_future<bool> f = m_workIsFinished.get_future();
             f.wait();
-            
+
             return true;
         }
-        
-         void ComputeDevice::pausedStateOnEntry(){
+
+
+        void ComputeDevice::pausedStateOnEntry() {
             m_isPaused = true;
         }
-        
-        void ComputeDevice::pausedStateOnExit(){
+
+
+        void ComputeDevice::pausedStateOnExit() {
             m_isPaused = false;
-            
+
         }
 
-        bool ComputeDevice::checkPauseEOSAllowed(){
+
+        bool ComputeDevice::checkPauseEOSAllowed() {
             return this->get<bool>("pauseEOSAllowed");
         }
-        
+
+
         void ComputeDevice::finishedOnEntry() {
             m_iterationCount++;
             m_isEndOfStream = false;
-            
+
         }
 
 
         void ComputeDevice::finishedOnExit() {
             set("iteration", m_iterationCount);
-            
+
         }
+
 
         void ComputeDevice::abortedOnEntry() {
-            
+
         }
 
+
         void ComputeDevice::abortedOnExit() {
-           
+
             m_isAborted.store(false, boost::memory_order_release);
         }
 

@@ -19,13 +19,15 @@ namespace karabo {
         template <class TPix>
         class CpuEnvironment : public Environment<TPix> {
 
+
             typedef typename boost::shared_ptr<AbstractImage<TPix> > AbstractImagePointer;
 
         public:
 
             KARABO_CLASSINFO(CpuEnvironment, "cpu", "1.0")
-            
-            virtual ~CpuEnvironment() {}
+
+            virtual ~CpuEnvironment() {
+            }
 
             static void expectedParameters(karabo::util::Schema& expected) {
             }

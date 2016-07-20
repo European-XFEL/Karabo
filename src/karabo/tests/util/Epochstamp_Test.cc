@@ -16,23 +16,28 @@ CPPUNIT_TEST_SUITE_REGISTRATION(Epochstamp_Test);
 using namespace std;
 using namespace karabo::util;
 
+
 Epochstamp_Test::Epochstamp_Test() {
 }
+
 
 Epochstamp_Test::~Epochstamp_Test() {
 }
 
+
 void Epochstamp_Test::setUp() {
 }
+
 
 void Epochstamp_Test::tearDown() {
 }
 
+
 void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
-        const unsigned long long& expectedSeconds,
-        const unsigned long long& expectedFractionalSecond,
-        bool isCompactString,
-        const std::string& expectedToIso8601) {
+                                                const unsigned long long& expectedSeconds,
+                                                const unsigned long long& expectedFractionalSecond,
+                                                bool isCompactString,
+                                                const std::string& expectedToIso8601) {
     bool writeToClog = false;
 
     if (writeToClog) {
@@ -128,13 +133,14 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
     return;
 }
 
+
 void Epochstamp_Test::toIso8601Precision(const karabo::util::Epochstamp epo,
-        const karabo::util::Epochstamp epo2,
-        const karabo::util::TIME_UNITS precision,
-        const std::string& precisionDesc,
-        const bool isCompactString,
-        const bool writeToClog,
-        const std::string& expectedToIso8601) {
+                                         const karabo::util::Epochstamp epo2,
+                                         const karabo::util::TIME_UNITS precision,
+                                         const std::string& precisionDesc,
+                                         const bool isCompactString,
+                                         const bool writeToClog,
+                                         const std::string& expectedToIso8601) {
 
     //Concatenate function name plus precision description
     std::string functionDesc = "toIso8601Precision >> toIso8601(" + precisionDesc + ") => '";
@@ -158,6 +164,7 @@ void Epochstamp_Test::toIso8601Precision(const karabo::util::Epochstamp epo,
 
     return;
 }
+
 
 void Epochstamp_Test::testConstructors() {
 
@@ -261,6 +268,7 @@ void Epochstamp_Test::testConstructors() {
 
 }
 
+
 void Epochstamp_Test::testOperators() {
 
     const TimeValue point1secInAtto = 100000000000000000ull;
@@ -270,11 +278,11 @@ void Epochstamp_Test::testOperators() {
     const TimeValue point7secInAtto = 700000000000000000ull;
     const TimeValue point9secInAtto = 900000000000000000ull;
 
-    const Epochstamp   e2(80ull, point2secInAtto);
+    const Epochstamp e2(80ull, point2secInAtto);
     const TimeDuration d2(80ull, point2secInAtto);
-    const Epochstamp   e4(77ull, point4secInAtto);
+    const Epochstamp e4(77ull, point4secInAtto);
     const TimeDuration d4(77ull, point4secInAtto);
-    const Epochstamp   e9(88ull, point9secInAtto);
+    const Epochstamp e9(88ull, point9secInAtto);
     const TimeDuration d9(88ull, point9secInAtto);
 
     // Test sums - with atto seconds sum below and above one second,
@@ -329,6 +337,7 @@ void Epochstamp_Test::testOperators() {
     // o = (those from timeval and timespec look buggy)
 }
 
+
 void Epochstamp_Test::testToIso8601String() {
 
     // Validate "UNIVERSAL" compact ISO8601 format 
@@ -351,10 +360,11 @@ void Epochstamp_Test::testToIso8601String() {
     validateStringConstructor("20121225T132536.000123456789", 1356441936ULL, 123456789000000ULL, true, "20121225T132536.000123456789000000");
 }
 
+
 void Epochstamp_Test::validateToFormattedString(const std::string& pTime,
-        const std::string& format,
-        const std::string& pTimeDesiredTimeZone,
-        const std::string& expectedStringOutput) {
+                                                const std::string& format,
+                                                const std::string& pTimeDesiredTimeZone,
+                                                const std::string& expectedStringOutput) {
     bool writeToClog = false;
     std::string utcTimeZone = "Z"; //"UTC" == "Z"
     std::string localeNameUS = "en_US.UTF-8";
@@ -405,47 +415,48 @@ void Epochstamp_Test::validateToFormattedString(const std::string& pTime,
     CPPUNIT_ASSERT(returnFormatedString == expectedStringOutput);
 }
 
+
 void Epochstamp_Test::testToFormattedString() {
 
     // This test can only be run in LINUX since C++ locale support seems completely broken on MAC OSX
     // The solution to make locale works in OSX passes for CLANG use
-    #ifdef __MACH__
-        std::string pTime = "20121225T132536.789333123456789123";
-        std::string utcTimeZone = "Z"; //"UTC" == "Z"
-        
-        std::string ptime_simple_str = "2012-Dec-25 13:25:36.789333";
+#ifdef __MACH__
+    std::string pTime = "20121225T132536.789333123456789123";
+    std::string utcTimeZone = "Z"; //"UTC" == "Z"
 
-        validateToFormattedString(pTime, "", utcTimeZone, ptime_simple_str);
-        validateToFormattedString(pTime, "%Y/%m/%d %H:%M:%S", utcTimeZone, ptime_simple_str);
-        validateToFormattedString(pTime, "%Y/%m/%d", utcTimeZone, ptime_simple_str);
-        validateToFormattedString(pTime, "%c", utcTimeZone, ptime_simple_str);
-        validateToFormattedString(pTime, "%H:%M:%S", utcTimeZone, ptime_simple_str);
-        validateToFormattedString(pTime, "%H:%M:%S.%f", utcTimeZone, ptime_simple_str);
+    std::string ptime_simple_str = "2012-Dec-25 13:25:36.789333";
 
-    #else
-        std::string pTime = "20121225T132536.789333123456789123";
-        std::string utcTimeZone = "Z"; //"UTC" == "Z"
+    validateToFormattedString(pTime, "", utcTimeZone, ptime_simple_str);
+    validateToFormattedString(pTime, "%Y/%m/%d %H:%M:%S", utcTimeZone, ptime_simple_str);
+    validateToFormattedString(pTime, "%Y/%m/%d", utcTimeZone, ptime_simple_str);
+    validateToFormattedString(pTime, "%c", utcTimeZone, ptime_simple_str);
+    validateToFormattedString(pTime, "%H:%M:%S", utcTimeZone, ptime_simple_str);
+    validateToFormattedString(pTime, "%H:%M:%S.%f", utcTimeZone, ptime_simple_str);
 
-        validateToFormattedString(pTime, "", utcTimeZone, "2012-Dec-25 13:25:36");
-        validateToFormattedString(pTime, "%Y/%m/%d %H:%M:%S", utcTimeZone, "2012/12/25 13:25:36");
-        validateToFormattedString(pTime, "%Y/%m/%d", utcTimeZone, "2012/12/25");
-        validateToFormattedString(pTime, "%c", utcTimeZone, "Tue 25 Dec 2012 01:25:36 PM ");
-        validateToFormattedString(pTime, "%H:%M:%S", utcTimeZone, "13:25:36");
-        validateToFormattedString(pTime, "%H:%M:%S.%f", utcTimeZone, "13:25:36.789333");
+#else
+    std::string pTime = "20121225T132536.789333123456789123";
+    std::string utcTimeZone = "Z"; //"UTC" == "Z"
 
-
-        std::string pTime2 = "1985-01-20T23:20:50-07:00";
-        validateToFormattedString(pTime2, "", utcTimeZone, "1985-Jan-21 06:20:50");
-        validateToFormattedString(pTime2, "", "+03:30", "1985-Jan-21 09:50:50");
-        validateToFormattedString(pTime2, "", "-07:00", "1985-Jan-20 23:20:50");
-        validateToFormattedString(pTime2, "", "+01:00", "1985-Jan-21 07:20:50");
+    validateToFormattedString(pTime, "", utcTimeZone, "2012-Dec-25 13:25:36");
+    validateToFormattedString(pTime, "%Y/%m/%d %H:%M:%S", utcTimeZone, "2012/12/25 13:25:36");
+    validateToFormattedString(pTime, "%Y/%m/%d", utcTimeZone, "2012/12/25");
+    validateToFormattedString(pTime, "%c", utcTimeZone, "Tue 25 Dec 2012 01:25:36 PM ");
+    validateToFormattedString(pTime, "%H:%M:%S", utcTimeZone, "13:25:36");
+    validateToFormattedString(pTime, "%H:%M:%S.%f", utcTimeZone, "13:25:36.789333");
 
 
-        std::string pTime3 = "1985-01-20T23:20:50+03:30";
-        validateToFormattedString(pTime3, "", utcTimeZone, "1985-Jan-20 19:50:50");
-        validateToFormattedString(pTime3, "", "+03:30", "1985-Jan-20 23:20:50");
-        validateToFormattedString(pTime3, "", "-07:00", "1985-Jan-20 12:50:50");
-        validateToFormattedString(pTime3, "", "+01:00", "1985-Jan-20 20:50:50");
-    #endif
+    std::string pTime2 = "1985-01-20T23:20:50-07:00";
+    validateToFormattedString(pTime2, "", utcTimeZone, "1985-Jan-21 06:20:50");
+    validateToFormattedString(pTime2, "", "+03:30", "1985-Jan-21 09:50:50");
+    validateToFormattedString(pTime2, "", "-07:00", "1985-Jan-20 23:20:50");
+    validateToFormattedString(pTime2, "", "+01:00", "1985-Jan-21 07:20:50");
+
+
+    std::string pTime3 = "1985-01-20T23:20:50+03:30";
+    validateToFormattedString(pTime3, "", utcTimeZone, "1985-Jan-20 19:50:50");
+    validateToFormattedString(pTime3, "", "+03:30", "1985-Jan-20 23:20:50");
+    validateToFormattedString(pTime3, "", "-07:00", "1985-Jan-20 12:50:50");
+    validateToFormattedString(pTime3, "", "+01:00", "1985-Jan-20 20:50:50");
+#endif
 }
 

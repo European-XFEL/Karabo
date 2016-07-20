@@ -29,14 +29,17 @@ namespace karabo {
         // Forward FromType
         template<class To>
         class FromType;
-        
-        class CppNone {};
+
+        class CppNone {
+
+            };
 
         class Types {
 
-        public:
+            public:
 
             enum ReferenceType {
+
 
                 BOOL, // bool
                 VECTOR_BOOL, // std::vector<std::bool>
@@ -95,13 +98,13 @@ namespace karabo {
                 PTR_DOUBLE,
                 PTR_COMPLEX_FLOAT,
                 PTR_COMPLEX_DOUBLE,
-                PTR_STRING,              
+                PTR_STRING,
 
                 SCHEMA, // Schema
                 VECTOR_SCHEMA, // std::vector<Schema>
 
                 ANY, // unspecified type
-                NONE,  // CppNone type used during serialization/de-serialization
+                NONE, // CppNone type used during serialization/de-serialization
                 VECTOR_NONE,
 
                 UNKNOWN, // unknown type
@@ -122,10 +125,10 @@ namespace karabo {
                 ARRAY_UINT64, // std::pair<unsigned long long*, size_t>
                 ARRAY_FLOAT, // std::pair<float*, size_t>
                 ARRAY_DOUBLE, // std::pair<double*, size_t>
-                        
+
                 HASH_POINTER, // Hash::Pointer 
                 VECTOR_HASH_POINTER // std::vector<Hash::Pointer>
-                        
+
             };
 
             template <class From, class To>
@@ -211,7 +214,7 @@ namespace karabo {
                     case Types::ARRAY_UINT64:
                     case Types::ARRAY_DOUBLE:
                     case Types::ARRAY_FLOAT:
-                    case Types::ARRAY_BOOL:                    
+                    case Types::ARRAY_BOOL:
                         return RAW_ARRAY;
                     case Types::VECTOR_HASH:
                         return VECTOR_HASH;
@@ -306,7 +309,7 @@ namespace karabo {
                 }
             }
 
-             static bool isRawArray(int type) {
+            static bool isRawArray(int type) {
 
                 switch (type) {
                     case Types::ARRAY_CHAR:
@@ -327,10 +330,10 @@ namespace karabo {
                 }
             }
 
-            
+
         };
 
-        #define _KARABO_HELPER_MACRO(RefType, CppType) \
+#define _KARABO_HELPER_MACRO(RefType, CppType) \
          template <> inline Types::ReferenceType Types::from<CppType>(const CppType&) { return Types::RefType; } \
          template <> inline Types::ReferenceType Types::from<std::vector<CppType> > (const std::vector<CppType>&) { return Types::VECTOR_##RefType; }
 
@@ -351,9 +354,9 @@ namespace karabo {
         _KARABO_HELPER_MACRO(STRING, std::string)
         _KARABO_HELPER_MACRO(NONE, karabo::util::CppNone)
 
-        #undef _KARABO_HELPER_MACRO
+#undef _KARABO_HELPER_MACRO
 
-        #define _KARABO_HELPER_MACRO(RefType, CppType) \
+#define _KARABO_HELPER_MACRO(RefType, CppType) \
          template <> inline Types::ReferenceType Types::from<CppType*>(CppType* const&) { return Types::RefType; }
 
         _KARABO_HELPER_MACRO(PTR_BOOL, bool)
@@ -372,9 +375,9 @@ namespace karabo {
         _KARABO_HELPER_MACRO(PTR_COMPLEX_DOUBLE, std::complex<double>)
         _KARABO_HELPER_MACRO(PTR_STRING, std::string)
 
-        #undef _KARABO_HELPER_MACRO
+#undef _KARABO_HELPER_MACRO
 
-        #define _KARABO_HELPER_MACRO(RefType, CppType) \
+#define _KARABO_HELPER_MACRO(RefType, CppType) \
          template <> inline Types::ReferenceType Types::from<std::pair<const CppType*, size_t > >(const std::pair<const CppType*, size_t>&) { return Types::RefType; }
 
         _KARABO_HELPER_MACRO(ARRAY_BOOL, bool)
@@ -390,7 +393,7 @@ namespace karabo {
         _KARABO_HELPER_MACRO(ARRAY_FLOAT, float)
         _KARABO_HELPER_MACRO(ARRAY_DOUBLE, double)
 
-        #undef _KARABO_HELPER_MACRO
+#undef _KARABO_HELPER_MACRO
 
     }
 }

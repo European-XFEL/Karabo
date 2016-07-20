@@ -34,6 +34,7 @@ namespace karabo {
         template <class T>
         class BinaryFileOutput : public Output<T> {
 
+
             boost::filesystem::path m_filename;
             std::string m_writeMode;
             typename BinarySerializer<T>::Pointer m_serializer;
@@ -89,10 +90,10 @@ namespace karabo {
             }
 
         private:
-            
-             void update() {
+
+            void update() {
                 if (this->m_appendModeEnabled) {
-                     std::vector<char> archive;
+                    std::vector<char> archive;
                     m_serializer->save(m_sequenceBuffer, archive);
                     writeFile(archive);
                     m_sequenceBuffer.clear();
@@ -135,7 +136,7 @@ namespace karabo {
                     ofstream file(filename.c_str(), ios::out | ios::trunc | ios::binary);
                     file.write(&buffer[0], buffer.size());
                     file.close();
-                } 
+                }
             }
 
 

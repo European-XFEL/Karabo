@@ -104,7 +104,7 @@ namespace karabo {
 
             void Format::getElementsNames(std::vector<std::string>& names) const {
                 for (std::map<std::string, size_t>::const_iterator it = m_mapElements.begin();
-                        it != m_mapElements.end(); ++it) {
+                     it != m_mapElements.end(); ++it) {
                     names.push_back(boost::replace_all_copy(it->first, "/", "."));
                 }
             }
@@ -318,9 +318,9 @@ namespace karabo {
             }
 
 
-            #define _KARABO_IO_H5_SEQUENCE_SIZE(T,cppType) case Types::VECTOR_##T:  Format::discoverVectorSize<cppType>(h,el); break;            
-            #define _KARABO_IO_H5_SEQUENCE_PTR_SIZE(T,cppType) case Types::PTR_##T:  Format::discoverPtrSize<cppType>(h,el); break;      
-            #define _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(T,cppType) case Types::ARRAY_##T:  Format::discoverArraySize<cppType>(h,el); break;      
+#define _KARABO_IO_H5_SEQUENCE_SIZE(T,cppType) case Types::VECTOR_##T:  Format::discoverVectorSize<cppType>(h,el); break;            
+#define _KARABO_IO_H5_SEQUENCE_PTR_SIZE(T,cppType) case Types::PTR_##T:  Format::discoverPtrSize<cppType>(h,el); break;      
+#define _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(T,cppType) case Types::ARRAY_##T:  Format::discoverArraySize<cppType>(h,el); break;      
 
 
             void Format::discoverFromDataElement(const Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy,
@@ -450,12 +450,12 @@ namespace karabo {
 
             }
 
-            #undef _KARABO_IO_H5_SEQUENCE_SIZE
-            #undef _KARABO_IO_H5_SEQUENCE_PTR_SIZE
-            #undef _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE
+#undef _KARABO_IO_H5_SEQUENCE_SIZE
+#undef _KARABO_IO_H5_SEQUENCE_PTR_SIZE
+#undef _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE
 
 
-            #define _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE(T,cppType) case Types::VECTOR_##T:  Format::discoverVectorSize<cppType>(h,(*it)); break;                        
+#define _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE(T,cppType) case Types::VECTOR_##T:  Format::discoverVectorSize<cppType>(h,(*it)); break;                        
 
 
             void Format::discoverAttributes(const Hash::Node& el, Hash& config) {
@@ -504,7 +504,7 @@ namespace karabo {
                 }
             }
 
-            #undef _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE
+#undef _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE
 
 
 

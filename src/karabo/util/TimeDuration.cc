@@ -14,8 +14,8 @@ namespace karabo {
 
 
         TimeDuration::TimeDuration() :
-        m_Seconds(0ULL),
-        m_Fractions(0ULL) {
+            m_Seconds(0ULL),
+            m_Fractions(0ULL) {
         }
 
 
@@ -25,14 +25,14 @@ namespace karabo {
 
 
         TimeDuration::TimeDuration(const TimeValue seconds, const TimeValue fractions) :
-        m_Seconds(seconds),
-        m_Fractions(fractions) {
+            m_Seconds(seconds),
+            m_Fractions(fractions) {
         }
 
 
         TimeDuration::TimeDuration(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) :
-        m_Seconds(days*DAY + hours*HOUR + minutes*MINUTE + seconds),
-        m_Fractions(fractions) {
+            m_Seconds(days*DAY + hours*HOUR + minutes*MINUTE + seconds),
+            m_Fractions(fractions) {
         }
 
 
@@ -144,8 +144,8 @@ namespace karabo {
         TimeValue TimeDuration::getFractions(const TIME_UNITS unit) const {
             int zeros = int(unit);
             unsigned long long multiplier = 1ULL;
-            while(zeros-->0) multiplier *= 10ULL;
-            return m_Fractions / multiplier;  // unsigned long long dividing
+            while (zeros-- > 0) multiplier *= 10ULL;
+            return m_Fractions / multiplier; // unsigned long long dividing
         }
 
 

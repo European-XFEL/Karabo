@@ -36,10 +36,11 @@ namespace karabo {
      */
     namespace log {
 
-        /**
+/**
          * Configures log4cpp FileAppender
          */
         class FileAppenderConfigurator : public AppenderConfigurator {
+
 
             boost::filesystem::path m_fileName;
             bool m_append;

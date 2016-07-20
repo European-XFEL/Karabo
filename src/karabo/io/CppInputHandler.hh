@@ -17,14 +17,14 @@ namespace karabo {
         template <class InputType>
         class CppInputHandler : public InputHandler {
 
-        public:
+            public:
 
             KARABO_CLASSINFO(CppInputHandler, "CppInputHandler" + std::string(typeid (InputType).name()), "1.0")
 
             CppInputHandler() {
             }
 
-            CppInputHandler(const AbstractInput::Pointer& input) :  m_input(boost::static_pointer_cast<InputType>(input)) {
+            CppInputHandler(const AbstractInput::Pointer& input) : m_input(boost::static_pointer_cast<InputType>(input)) {
             }
 
             virtual ~CppInputHandler() {

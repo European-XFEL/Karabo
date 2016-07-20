@@ -14,19 +14,18 @@
 namespace karabo {
     namespace util {
 
-        
-        
+
         Validator::Validator()
-        : m_injectDefaults(true)
-        , m_allowUnrootedConfiguration(true)
-        , m_allowAdditionalKeys(false)
-        , m_allowMissingKeys(false)
-        , m_injectTimestamps(false)
-        , m_hasReconfigurableParameter(false) {
+            : m_injectDefaults(true)
+            , m_allowUnrootedConfiguration(true)
+            , m_allowAdditionalKeys(false)
+            , m_allowMissingKeys(false)
+            , m_injectTimestamps(false)
+            , m_hasReconfigurableParameter(false) {
         }
-        
-        Validator::Validator(const Validator & other)
-        {
+
+
+        Validator::Validator(const Validator & other) {
             setValidationRules(other.getValidationRules());
             boost::unique_lock<boost::shared_mutex> lock(other.m_rollingStatMutex);
             m_parameterRollingStats = other.m_parameterRollingStats;
@@ -34,7 +33,7 @@ namespace karabo {
 
 
         Validator::Validator(const ValidationRules rules)
-        : m_hasReconfigurableParameter(false) {
+            : m_hasReconfigurableParameter(false) {
             this->setValidationRules(rules);
         }
 
@@ -61,7 +60,7 @@ namespace karabo {
 
         std::pair<bool, std::string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp) {
 
-            
+
             // Clear previous "reconfigurable" flag
             m_hasReconfigurableParameter = false;
 
@@ -118,7 +117,7 @@ namespace karabo {
                 bool userHasNode = user.has(key);
                 bool hasDefault = it->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE);
                 bool hasRowSchema = it->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA);
-                
+
                 // Remove current node from all provided
                 if (userHasNode) keys.erase(key);
 
@@ -134,12 +133,12 @@ namespace karabo {
                             }
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
                             Hash::Node& node = working.set(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE));
-                            if(hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
+                            if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
                             this->validateLeaf(*it, node, report, currentScope);
                         }
                     } else { // Node IS provided
                         Hash::Node& node = working.setNode(user.getNode(key));
-                        if(hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
+                        if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
                         this->validateLeaf(*it, node, report, currentScope);
                     }
                 } else if (nodeType == Schema::NODE) {
@@ -324,7 +323,7 @@ namespace karabo {
                                         }
 
                                         workNodes.push_back(Hash(optionName, tmp));
-                                        
+
                                     } else {
                                         report << "Provided parameter: \"" << optionName << "\" is not a valid option for list: \"" << key << "\". ";
                                         report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
@@ -357,7 +356,7 @@ namespace karabo {
 
         void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) {
 
-            
+
             if (m_injectTimestamps) attachTimestampIfNotAlreadyThere(workNode);
 
             Types::ReferenceType referenceType = Types::from<FromLiteral>(masterNode.getAttribute<string>(KARABO_SCHEMA_VALUE_TYPE));
@@ -381,7 +380,7 @@ namespace karabo {
 
             if (masterNode.hasAttribute(KARABO_SCHEMA_ACCESS_MODE) && masterNode.getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE)
                 m_hasReconfigurableParameter = true;
-            
+
             // Check ranges
             if (referenceCategory == Types::SIMPLE) {
                 if (masterNode.hasAttribute(KARABO_SCHEMA_OPTIONS)) {
@@ -423,40 +422,41 @@ namespace karabo {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of upper bound " << maxInc << endl;
                     }
                 }
-                
+
                 workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::NONE.asString());
-                
+
                 bool keepCondition = false;
                 const karabo::util::Types::ReferenceType workType = workNode.getType();
-                if(karabo::util::Types::isSimple(workType) && workType != karabo::util::Types::STRING){
+                if (karabo::util::Types::isSimple(workType) && workType != karabo::util::Types::STRING) {
                     // the order of these checks is important
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_LOW, KARABO_SCHEMA_WARN_LOW, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_LOW, KARABO_SCHEMA_ALARM_LOW, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_HIGH, KARABO_SCHEMA_WARN_HIGH, masterNode, workNode, report, scope, true);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_HIGH, KARABO_SCHEMA_ALARM_HIGH, masterNode, workNode, report, scope, true);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_LOW, masterNode, workNode, report, scope, false);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_LOW, masterNode, workNode, report, scope, false);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_HIGH, masterNode, workNode, report, scope, true);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_HIGH, masterNode, workNode, report, scope, true);
                 };
-                
-                
-                if(masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS)){
+
+
+                if (masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     assureRollingStatsInitialized(scope, masterNode.getAttributeAs<double>(KARABO_SCHEMA_ROLLING_STATS_EVAL));
                     RollingWindowStatistics::Pointer rollingStats = m_parameterRollingStats[scope];
                     rollingStats->update(workNode.getValueAs<double>());
                     double variance = rollingStats->getRollingWindowVariance();
                     // the order of these checks is important
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_LOW, KARABO_SCHEMA_WARN_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_LOW, KARABO_SCHEMA_ALARM_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_HIGH, KARABO_SCHEMA_WARN_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
-                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_HIGH, KARABO_SCHEMA_ALARM_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
-                
+
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
+                    keepCondition |= checkThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
+
                 }
-                
-                if(! keepCondition) {
+
+                if (!keepCondition) {
                     const bool wasErased = m_parametersInWarnOrAlarm.erase(scope);
-                    if(!wasErased) {
-                         KARABO_LOGIC_EXCEPTION("Parameter '"+scope+"' should have been erased from alarm parameters but wasn't!");
+                    if (!wasErased) {
+                        KARABO_LOGIC_EXCEPTION("Parameter '" + scope + "' should have been erased from alarm parameters but wasn't!");
                     }
                 }
-                
+
 
                 //if (masterNode.hasAttribute(""))
             } else if (referenceCategory == Types::SEQUENCE) {
@@ -499,46 +499,52 @@ namespace karabo {
         const Hash& Validator::getParametersInWarnOrAlarm() const {
             return m_parametersInWarnOrAlarm;
         }
-        
+
+
         bool Validator::hasReconfigurableParameter() const {
             return m_hasReconfigurableParameter;
         }
-        
-        void Validator::assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval){
+
+
+        void Validator::assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval) {
             boost::unique_lock<boost::shared_mutex> lock(m_rollingStatMutex);
-            if (m_parameterRollingStats.find(scope) == m_parameterRollingStats.end()){
+            if (m_parameterRollingStats.find(scope) == m_parameterRollingStats.end()) {
                 m_parameterRollingStats.insert(std::pair<std::string, RollingWindowStatistics::Pointer>(scope, RollingWindowStatistics::Pointer(new RollingWindowStatistics(evalInterval))));
             }
         }
-        
+
+
         RollingWindowStatistics::ConstPointer Validator::getRollingStatistics(const std::string & scope) const {
             boost::shared_lock<boost::shared_mutex> lock(m_rollingStatMutex);
             std::map<std::string, RollingWindowStatistics::Pointer>::const_iterator stats = m_parameterRollingStats.find(scope);
-            if (stats == m_parameterRollingStats.end()){
-                KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '"+scope+"'!");
+            if (stats == m_parameterRollingStats.end()) {
+                KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + scope + "'!");
             }
-            
+
             return stats->second;
         };
+
         
-        bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, const string & attr, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
-            return checkThresholdedAlarmCondition(alarmCond, attr, workNode.getValueAs<double>(), masterNode, workNode, report, scope, checkGreater);
+        bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
+            return checkThresholdedAlarmCondition(alarmCond, workNode.getValueAs<double>(), masterNode, workNode, report, scope, checkGreater);
         }
         
-        bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, const string & attr, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
-            if (masterNode.hasAttribute(attr)) {
-                double threshold = masterNode.getAttributeAs<double>(attr);
+        bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
+            const std::string & alarmString = alarmCond.asString();
+            if (masterNode.hasAttribute(alarmString)) {
+                double threshold = masterNode.getAttributeAs<double>(alarmString);
                 double value = workNode.getValueAs<double>();
                 if ((checkGreater ? value > threshold : value < threshold)) {
                     string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went " 
                         + (checkGreater ? "above" : "below")+" "+alarmCond.asBaseString() +" level of " 
                         + karabo::util::toString(threshold));
-                    m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmCond.asString(), "message", msg), '\0');
+                    m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmString, "message", msg), '\0');
+
                     attachTimestampIfNotAlreadyThere(workNode);
-                    workNode.setAttribute(KARABO_ALARM_ATTR, alarmCond.asString());
+                    workNode.setAttribute(KARABO_ALARM_ATTR, alarmString);
                     return true; //alarm condition re-raised, do not clear
                 } else {
-                    return false;  // if it is no longer in alarm we may clear
+                    return false; // if it is no longer in alarm we may clear
                 }
             }
             return false; // nothing to clear
