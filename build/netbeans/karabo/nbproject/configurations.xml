@@ -510,46 +510,10 @@
       <itemPath>karaboPackageDependencies-GNU-Linux-x86.pc</itemPath>
       <itemPath>karaboPackageDependencies-GNU_MacPorts-MacOSX.pc</itemPath>
     </logicalFolder>
-    <logicalFolder name="TestFiles"
-                   displayName="Test Files"
-                   projectFiles="false"
-                   kind="TEST_LOGICAL_FOLDER">
-      <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f3" displayName="log_test" projectFiles="true" kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f4" displayName="net_test" projectFiles="true" kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f1"
-                     displayName="util_test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f6"
-                     displayName="webAuth_test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f7" displayName="xip_test" projectFiles="true" kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f5" displayName="xms_test" projectFiles="true" kind="TEST">
-      </logicalFolder>
-    </logicalFolder>
-    <logicalFolder name="ExternalFiles"
-                   displayName="Important Files"
-                   projectFiles="false"
-                   kind="IMPORTANT_FILES_FOLDER">
-      <itemPath>Makefile</itemPath>
-      <itemPath>karaboDependencies-GNU-Linux-x86.pc</itemPath>
-      <itemPath>karaboDependencies-GNU_MacPorts-MacOSX.pc</itemPath>
-      <itemPath>karaboPackageDependencies-GNU-Linux-x86.pc</itemPath>
-      <itemPath>karaboPackageDependencies-GNU_MacPorts-MacOSX.pc</itemPath>
-    </logicalFolder>
     <itemPath>../../../src/karabo/core.hpp</itemPath>
     <itemPath>../../../src/karabo/karabo.hpp</itemPath>
   </logicalFolder>
   <sourceRootList>
-    <Elem>../../../src/karabo</Elem>
     <Elem>../../../src/karabo</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
