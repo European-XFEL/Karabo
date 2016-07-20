@@ -21,11 +21,10 @@ class ProjectSceneHandler(ABCHasStrictTraits):
             device = self.project.newDevice(server_id, class_id, device_id,
                                             startup_behaviour)
         else:
-            # Overwrite existing device box
+            # TODO: Overwrite existing device box
             pass
 
-        return self._create_device_model(device_id, server_id, class_id,
-                                         startup_behaviour, position)
+        return self._create_device_model(device_id, position)
 
     def device_group_dropped(self, group_name, server_id, class_id,
                              startup_behaviour, display_prefix,
@@ -41,17 +40,10 @@ class ProjectSceneHandler(ABCHasStrictTraits):
                                                        start_index,
                                                        end_index)
         else:
-            # Overwrite existing device group box
+            # TODO: Overwrite existing device group box
             pass
 
-        return self._create_device_group_model(group_name,
-                                               server_id,
-                                               class_id,
-                                               startup_behaviour,
-                                               display_prefix,
-                                               start_index,
-                                               end_index,
-                                               position)
+        return self._create_device_group_model(group_name, position)
 
     def _get_project_device_box(self, device_id):
         """ Checks whether a device configuration with the given ``device_id``
@@ -59,8 +51,7 @@ class ProjectSceneHandler(ABCHasStrictTraits):
         """
         return self.project.getDevice(device_id)
 
-    def _create_device_model(self, device_id, server_id, class_id,
-                             startup_behaviour, position):
+    def _create_device_model(self, device_id, position):
         """ A new device box is created, added to the project and a workflow
             item model to show in the scene view is returned.
         """
@@ -70,11 +61,9 @@ class ProjectSceneHandler(ABCHasStrictTraits):
                   'x': position.x(), 'y': position.y()}
         return WorkflowItemModel(**traits)
 
-    def _create_device_group_model(self, group_name, server_id, class_id,
-                                   startup_behaviour, display_prefix,
-                                   start_index, end_index, position):
+    def _create_device_group_model(self, group_name, position):
         traits = {'device_id': group_name,
                   'font': QFont().toString(),
-                  'klass': 'WorkflowItem',
+                  'klass': 'WorkflowGroupItem',
                   'x': position.x(), 'y': position.y()}
         return WorkflowItemModel(**traits)
