@@ -7,8 +7,9 @@ from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,  # n
                         SceneSelectAllAction)  # noqa
 from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,  # noqa
                       TextSceneTool)  # noqa
+from .projecthandler import ProjectSceneHandler  # noqa
 from .selection import SceneSelectionTool  # noqa
-from .workflow import CreateWorkflowConnectionToolAction, WorkflowConnectionTool  # noqa
 from .scenedndhandler import (ConfigurationDropHandler,  # noqa
                               NavigationDropHandler)  # noqa
 from .widgethandler import WidgetSceneHandler  # noqa
+from .workflow import CreateWorkflowConnectionToolAction, WorkflowConnectionTool  # noqa

@@ -6,13 +6,14 @@
 from abc import abstractmethod
 
 from PyQt4.QtCore import QPoint
-from PyQt4.QtGui import QBoxLayout, QFont
-from traits.api import ABCHasStrictTraits
+from PyQt4.QtGui import QApplication, QBoxLayout, QDialog, QFont
+from traits.api import ABCHasStrictTraits, String
 
 from karabo_gui.enums import NavigationItemTypes
+from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.scenemodel.api import BoxLayoutModel, LabelModel
 from karabo_gui.schema import ChoiceOfNodes
-from karabo_gui.topology import getDeviceBox
+from karabo_gui.topology import getDeviceBox, Manager
 from karabo_gui.widget import DisplayWidget, EditableWidget
 from .const import WIDGET_FACTORIES
 
@@ -101,16 +102,45 @@ class ConfigurationDropHandler(SceneDnDHandler):
 
 
 class NavigationDropHandler(SceneDnDHandler):
+    server_id = String
+    class_id = String
 
     def can_handle(self, event):
         """ Check whether the drag event can be handled. """
         sourceType = event.mimeData().data("sourceType")
         if sourceType == "NavigationTreeView":
             source = event.source()
-            type = source.indexInfo().get("type")
-            if source is not None and type == NavigationItemTypes.CLASS:
+            index_info = source.indexInfo()
+            type = index_info.get("type")
+            if type == NavigationItemTypes.CLASS:
+                self.server_id = index_info.get("serverId")
+                self.class_id = index_info.get("classId")
                 return True
         return False
 
     def handle(self, scene_view, event):
         """ Handle the drop event. """
+        # Restore cursor for dialog input
+        QApplication.restoreOverrideCursor()
+        # Open dialog to set up new device (group)
+        dialog = DeviceGroupDialog(Manager().systemHash)
+        # Set server and class id
+        dialog.serverId = self.server_id
+        dialog.classId = self.class_id
+
+        if dialog.exec_() == QDialog.Rejected:
+            return
+
+        device_id = dialog.deviceId
+        server_id = dialog.serverId
+        class_id = dialog.classId
+        startup_behaviour = dialog.startupBehaviour
+        position = event.pos()
+        if not dialog.deviceGroup:
+            # Device
+            scene_view.device_dropped(device_id, server_id, class_id,
+                                      startup_behaviour, position)
+        else:
+            # Device Group
+            scene_view.device_group_dropped(device_id, server_id, class_id,
+                                            startup_behaviour, position)
