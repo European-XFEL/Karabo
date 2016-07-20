@@ -280,7 +280,7 @@ ${OBJECTDIR}/_ext/381567218/p2pbinding.o: ../../../src/karathon/p2pbinding.cc
 .build-tests-conf: .build-conf ${TESTFILES}
 ${TESTDIR}/TestFiles/f1: ${TESTDIR}/tests/HashWrap_Test.o ${TESTDIR}/tests/karathonTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/extern/lib -Wl,-rpath,${KARATHON}/karabo -Wl,-rpath,${KARATHON} -Wl,-rpath,\$$ORIGIN/../../../../lib -Wl,-rpath,${KARATHON}/karabo/extern/lib -lcppunit `cppunit-config --libs`   
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARATHON}/karabo -Wl,-rpath,${KARATHON} -Wl,-rpath,\$$ORIGIN/../../../../lib -Wl,-rpath,${KARATHON}/karabo/extern/lib -lcppunit `cppunit-config --libs`   
 
 
 ${TESTDIR}/tests/HashWrap_Test.o: tests/HashWrap_Test.cc 
