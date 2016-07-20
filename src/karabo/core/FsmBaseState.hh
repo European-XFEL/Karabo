@@ -22,7 +22,7 @@
 #include <boost/msm/front/euml/state_grammar.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/arithmetic/sub.hpp>
-#include "State.hh"
+#include <karabo/util/State.hh>
 #include "Worker.hh"
 
 // Allow boost msm names appear globally in karabo namespace
@@ -53,9 +53,9 @@ namespace karabo {
 
         struct FsmBaseState {
             
-            FsmBaseState() : m_state(State::UNKNOWN), m_fsmName(), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
+            FsmBaseState() : m_state(karabo::util::State::UNKNOWN), m_fsmName(), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
 
-            const State& getState() const {
+            const karabo::util::State& getState() const {
                 return m_state;
             }
             
@@ -63,13 +63,13 @@ namespace karabo {
                 m_stateMachineName = name;
             }
   
-            const State* parent() const {
+            const karabo::util::State* parent() const {
                 return m_state.parent();
             }
             
         public:
             
-            bool isDerivedFrom(const State& s) const {
+            bool isDerivedFrom(const karabo::util::State& s) const {
                 return m_state.isDerivedFrom(s);
             }
             
@@ -134,11 +134,11 @@ namespace karabo {
             
         protected:
 
-            void setState(const State& state) {
+            void setState(const karabo::util::State& state) {
                 m_state = state;
             }
             
-            State m_state;
+            karabo::util::State m_state;
             std::string m_stateMachineName;
             std::string m_fsmName;
             bool m_isContained;

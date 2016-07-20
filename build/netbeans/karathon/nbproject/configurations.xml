@@ -493,9 +493,9 @@
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
-            <pElem>${KARATHON}/karabo/extern/lib</pElem>
             <pElem>${KARATHON}/karabo</pElem>
             <pElem>${KARATHON}</pElem>
+            <pElem>${KARATHON}/karabo/extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibLibItem>cppunit</linkerLibLibItem>

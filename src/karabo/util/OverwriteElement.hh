@@ -6,7 +6,7 @@
  * Created on September 23, 2011, 11:12 AM
  *
  * Major re-design on February 1, 2013, 1:00 PM
- * 
+ *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
@@ -14,6 +14,7 @@
 #define	KARABO_UTIL_OVERWRITEELEMENT_HH
 
 #include "Schema.hh"
+
 
 namespace karabo {
     namespace util {
@@ -132,14 +133,91 @@ namespace karabo {
                 return *this;
             }
 
+            OverwriteElement& setNewOptions(const std::vector<karabo::util::State>& opts) {
+                return setNewOptions(toString(opts), ",");
+            }
+
+            OverwriteElement& setNewOptions(const karabo::util::State& s1) {
+                const karabo::util::State arr[] = {s1};
+                return setNewOptions(std::vector<karabo::util::State>(arr, arr + 1));
+            }
+
+            OverwriteElement& setNewOptions(const karabo::util::State& s1, const karabo::util::State& s2) {
+                const karabo::util::State arr[] = {s1, s2};
+                return setNewOptions(std::vector<karabo::util::State>(arr, arr + 2));
+            }
+
+            OverwriteElement& setNewOptions(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3) {
+                const karabo::util::State arr[] = {s1, s2, s3};
+                return setNewOptions(std::vector<karabo::util::State>(arr, arr + 3));
+            }
+
+            OverwriteElement& setNewOptions(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4};
+                return setNewOptions(std::vector<karabo::util::State>(arr, arr + 4));
+            }
+
+            OverwriteElement& setNewOptions(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4, s5};
+                return setNewOptions(std::vector<karabo::util::State>(arr, arr + 5));
+            }
+
+            OverwriteElement& setNewOptions(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4, s5, s6};
+                return setNewOptions(std::vector<karabo::util::State>(arr, arr + 6));
+            }
+
+            OverwriteElement& setNewOptions(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6, const karabo::util::State& s7) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4, s5, s6, s7};
+                return setNewOptions(std::vector<karabo::util::State>(arr, arr + 7));
+            }
+
+            OverwriteElement& setNewOptions(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6, const karabo::util::State& s7, const karabo::util::State& s8) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4, s5, s6, s7, s8};
+                return setNewOptions(std::vector<karabo::util::State>(arr, arr + 8));
+            }
+
             OverwriteElement& setNewOptions(const std::vector<std::string>& opts) {
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
                 return *this;
             }
-            
-            OverwriteElement& setNewAllowedState(const std::string& states, const std::string& sep = " ,;") {
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector > (states, sep));
+
+            OverwriteElement& setNewAllowedStates(const std::vector<karabo::util::State>& states) {
+                const std::string stateList = karabo::util::toString(states);
+                if (m_node) m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector > (stateList, ","));
                 return *this;
+            }
+
+            //overloads for up to six states
+
+            OverwriteElement& setNewAllowedStates(const karabo::util::State& s1) {
+                const karabo::util::State arr[] = {s1};
+                return setNewAllowedStates(std::vector<karabo::util::State>(arr, arr + 1));
+            }
+
+            OverwriteElement& setNewAllowedStates(const karabo::util::State& s1, const karabo::util::State& s2) {
+                const karabo::util::State arr[] = {s1, s2};
+                return setNewAllowedStates(std::vector<karabo::util::State>(arr, arr + 2));
+            }
+
+            OverwriteElement& setNewAllowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3) {
+                const karabo::util::State arr[] = {s1, s2, s3};
+                return setNewAllowedStates(std::vector<karabo::util::State>(arr, arr + 3));
+            }
+
+            OverwriteElement& setNewAllowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4};
+                return setNewAllowedStates(std::vector<karabo::util::State>(arr, arr + 4));
+            }
+
+            OverwriteElement& setNewAllowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4, s5};
+                return setNewAllowedStates(std::vector<karabo::util::State>(arr, arr + 5));
+            }
+
+            OverwriteElement& setNewAllowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4, s5, s6};
+                return setNewAllowedStates(std::vector<karabo::util::State>(arr, arr + 6));
             }
 
             OverwriteElement& setNowObserverAccess() {
@@ -192,7 +270,14 @@ namespace karabo {
                 // Does nothing, changes happened on existing node
             }
         };
+
+        template <>
+        inline OverwriteElement& OverwriteElement::setNewDefaultValue<karabo::util::State>(const karabo::util::State& value) {
+            return setNewDefaultValue(toString(value));
+        }
+
+
         typedef OverwriteElement OVERWRITE_ELEMENT;
     }
 }
-#endif	
+#endif

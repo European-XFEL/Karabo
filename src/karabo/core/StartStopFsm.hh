@@ -15,6 +15,7 @@
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/core/BaseFsm.hh>
 #include "Device.hh"
+#include <karabo/util/State.hh>
 
 namespace karabo {
     namespace core {
@@ -27,24 +28,25 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::xms;
+                using namespace karabo::util;
 
                 SLOT_ELEMENT(expected).key("start")
                         .displayedName("Start")
                         .description("Instructs device to go to started state")
-                        .allowedStates("STOPPED")
+                        .allowedStates(State::STOPPED)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("stop")
                         .displayedName("Stop")
                         .description("Instructs device to go to stopped state")
-                        .allowedStates("STARTED")
+                        .allowedStates(State::STARTED)
                         .commit();
 
 
                 SLOT_ELEMENT(expected).key("reset")
                         .displayedName("Reset")
                         .description("Resets the device in case of an error")
-                        .allowedStates("ERROR")
+                        .allowedStates(State::ERROR)
                         .commit();
 
             }
