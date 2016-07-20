@@ -461,28 +461,27 @@ class  Schema_TestCase(unittest.TestCase):
         try:    
             self.assertEqual(schema.getWarnLow("exampleKey5"), -10)
             self.assertEqual(schema.getWarnLow("exampleKey6"), -5.5)
-            self.assertEqual(schema.getWarnLow("testPath2"), "d")
         except Exception as e:
             self.fail("test_getWarnAlarmLowHigh exception in getWarnLow: " + str(e))
         
         try:
             self.assertEqual(schema.getWarnHigh("exampleKey5"), 10)
             self.assertEqual(schema.getWarnHigh("exampleKey6"), 5.5)
-            self.assertEqual(schema.getWarnHigh("testPath2"), "c")
+
         except Exception as e:
             self.fail("test_getWarnAlarmLowHigh exception in getWarnHigh: " + str(e))
            
         try:
             self.assertEqual(schema.getAlarmLow("exampleKey5"), -20)
             self.assertEqual(schema.getAlarmLow("exampleKey6"), -22.1)
-            self.assertEqual(schema.getAlarmLow("testPath2"), "b")
+
         except Exception as e:
             self.fail("test_getWarnAlarmLowHigh exception in getAlarmLow: " + str(e))
         
         try:
             self.assertEqual(schema.getAlarmHigh("exampleKey5"), 20)
             self.assertEqual(schema.getAlarmHigh("exampleKey6"), 22.777)
-            self.assertEqual(schema.getAlarmHigh("testPath2"), "a")
+
         except Exception as e:
             self.fail("test_getWarnAlarmLowHigh exception in getAlarmHigh: " + str(e))
     
@@ -538,17 +537,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.hasDefaultValue("exampleKey14"), True)
             self.assertEqual(schema.hasDefaultValue("exampleKey15"), True)
  
-            self.assertEqual(schema.getAlarmLow("exampleKey7"), [-1,-1,-1])
-            self.assertEqual(schema.getAlarmHigh("exampleKey7"), [-2,2,-2])
-            self.assertEqual(schema.getWarnLow("exampleKey7"), [0,0,0])
-            self.assertEqual(schema.getWarnHigh("exampleKey7"), [10,20,30])
-            
-            self.assertEqual(schema.getAlarmLow("exampleKey8"), [-1.1,-2.2,-3.3])
-            self.assertEqual(schema.getWarnHigh("exampleKey8"), [5.5, 7.7, 9.9])
-            
-            self.assertEqual(schema.getAlarmLow("exampleKey9"), ["a","b"])
-            self.assertEqual(schema.getWarnHigh("exampleKey9"), ["c", "d"])
-            
+
             self.assertEqual(schema.getDefaultValue("exampleKey10"), [10, 20, 30])
 
             self.assertEqual(schema.getDefaultValue("exampleKey12"), [1.1, -2.2, 3.3])

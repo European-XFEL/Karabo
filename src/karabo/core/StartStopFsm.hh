@@ -21,7 +21,8 @@ namespace karabo {
     namespace core {
 
         class StartStopFsm : public BaseFsm {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(StartStopFsm, "StartStopFsm", "1.0")
 

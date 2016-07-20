@@ -20,23 +20,22 @@ namespace karabo {
 
 
         TcpChannel::TcpChannel(Connection::Pointer connection)
-        : m_connectionPointer(boost::dynamic_pointer_cast<TcpConnection>(connection))
-        , m_socket(*(m_connectionPointer->m_boostIoServicePointer))
-        , m_timer(*(m_connectionPointer->m_boostIoServicePointer))
-        , m_activeHandler(TcpChannel::NONE)
-        , m_readHeaderFirst(false)
-        , m_inboundData(new std::vector<char>())
-        , m_inboundHeader(new std::vector<char>())
-        , m_outboundData(new std::vector<char>())
-        , m_outboundHeader(new std::vector<char>())
-        , m_queue(10)
-        , m_writeInProgress(false)
-        , m_quit(false)
-        {
+            : m_connectionPointer(boost::dynamic_pointer_cast<TcpConnection>(connection))
+            , m_socket(*(m_connectionPointer->m_boostIoServicePointer))
+            , m_timer(*(m_connectionPointer->m_boostIoServicePointer))
+            , m_activeHandler(TcpChannel::NONE)
+            , m_readHeaderFirst(false)
+            , m_inboundData(new std::vector<char>())
+            , m_inboundHeader(new std::vector<char>())
+            , m_outboundData(new std::vector<char>())
+            , m_outboundHeader(new std::vector<char>())
+            , m_queue(10)
+            , m_writeInProgress(false)
+            , m_quit(false) {
             m_queue[4] = Queue::Pointer(new LosslessQueue);
             m_queue[2] = Queue::Pointer(new RemoveOldestQueue);
             m_queue[0] = Queue::Pointer(new RejectNewestQueue);
-            
+
             if (m_connectionPointer->m_serializationType == "binary") {
                 m_binarySerializer = karabo::io::BinarySerializer<Hash>::create("Bin");
             } else {
@@ -1061,8 +1060,7 @@ namespace karabo {
 #undef _KARABO_VECTOR_TO_SIZE
 #undef _KARABO_SIZE_TO_VECTOR
 
-        
-        
+
         void TcpChannel::setAsyncChannelPolicy(int priority, const std::string& new_policy) {
             std::string candidate = boost::to_upper_copy<std::string>(new_policy);
             if (candidate == m_policy)
@@ -1078,7 +1076,7 @@ namespace karabo {
                 m_queue[priority] = Queue::Pointer(new RemoveOldestQueue);
             } else {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Trying to assign not supported channel policy : \"" + new_policy
-                        + "\".  Supported policies are \"LOSSLESS\", \"REJECT_NEWEST\", \"REMOVE_OLDEST\"");
+                                                     + "\".  Supported policies are \"LOSSLESS\", \"REJECT_NEWEST\", \"REMOVE_OLDEST\"");
             }
         }
 
@@ -1111,16 +1109,18 @@ namespace karabo {
             if (!m_writeInProgress)
                 doWrite();
         }
-            
+
+
         bool TcpChannel::isEmpty() {
             boost::mutex::scoped_lock lock(m_queueMutex);
             int size = 0;
             for (int i = 9; i >= 0; --i) {
                 if (m_queue[i]) size += m_queue[i]->size();
             }
-            return size==0;
+            return size == 0;
         }
-        
+
+
         void TcpChannel::doWrite() {
             Message::Pointer mp;
             m_writeInProgress = true;
@@ -1133,42 +1133,42 @@ namespace karabo {
                     break;
                 }
             }
-            
+
             if (!mp) return;
-            
+
             vector<const_buffer> buf;
-            
+
             if (mp->header()) {
                 VectorCharPointer hdr = mp->header();
                 m_headerSize = hdr->size();
-                buf.push_back(buffer(&m_headerSize, sizeof(unsigned int)));
+                buf.push_back(buffer(&m_headerSize, sizeof (unsigned int)));
                 buf.push_back(buffer(*hdr));
             }
-            
+
             const VectorCharPointer& data = mp->body();
             m_bodySize = data->size();
-            
-            buf.push_back(buffer(&m_bodySize, sizeof(unsigned int)));
+
+            buf.push_back(buffer(&m_bodySize, sizeof (unsigned int)));
             buf.push_back(buffer(*data));
-            
+
             boost::asio::async_write(m_socket, buf, boost::bind(&TcpChannel::doWriteHandler, this, mp
-                    , boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred()));
+                                                                , boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred()));
         }
-        
-        
+
+
         void TcpChannel::doWriteHandler(Message::Pointer& mp, boost::system::error_code ec, std::size_t length) {
             if (!ec) {
                 if (!isEmpty()) {
                     doWrite();
                 } else {
-                    mp.reset();     // TODO:  probably it is not needed :  mp will be destroyed anyway when it leaves the scope
+                    mp.reset(); // TODO:  probably it is not needed :  mp will be destroyed anyway when it leaves the scope
                     m_writeInProgress = false;
                 }
-                
+
                 if (m_quit) {
                     m_socket.close();
                 }
-                
+
             } else {
                 if (m_errorHandler)
                     m_errorHandler(ec);
@@ -1178,7 +1178,7 @@ namespace karabo {
                 }
                 m_socket.close();
             }
-        } 
+        }
 
 
         void TcpChannel::writeAsync(const char* data, const size_t& dsize, int prio) {
@@ -1222,7 +1222,8 @@ namespace karabo {
             Message::Pointer mp(new Message(datap, headerp));
             writeAsync(mp, prio);
         }
-        
+
+
         void TcpChannel::writeAsync(const karabo::util::Hash& header, const char* data, const size_t& dsize, int prio) {
             VectorCharPointer datap(new std::vector<char>(data, data + dsize));
             VectorCharPointer headerp(new std::vector<char>());
@@ -1230,8 +1231,8 @@ namespace karabo {
             Message::Pointer mp(new Message(datap, headerp));
             writeAsync(mp, prio);
         }
-        
-        
+
+
         void TcpChannel::writeAsync(const karabo::util::Hash& header, const vector<char>& data, int prio) {
             VectorCharPointer datap(new std::vector<char>(data.begin(), data.end()));
             VectorCharPointer headerp(new std::vector<char>());

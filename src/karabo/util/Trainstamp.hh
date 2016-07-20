@@ -17,30 +17,30 @@ namespace karabo {
         /**
          * This class expresses a time point and holds it in form of one unsigned 64bit value.
          * The value is the European XFEL trainId which clocks in regular interval (initially 10Hz)
-         */ 
+         */
         class Trainstamp {
+
 
             unsigned long long m_trainId;
 
         public:
-            
-            
+
+
             /**
              * Default constructor creates invalid trainId (=0)
              */
             Trainstamp();
-                        
+
 
             /**
              * Constructor from trainId
              */
             Trainstamp(const unsigned long long trainId);
-            
-            
+
             inline const unsigned long long& getTrainId() const {
                 return m_trainId;
             }
-            
+
             static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);
 
 

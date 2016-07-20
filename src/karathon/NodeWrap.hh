@@ -43,7 +43,7 @@ namespace karathon {
             using namespace karabo::util;
             boost::any& a = node->getValueAsAny();
             // handle Hash differently returning reference to Hash
-            if (a.type() == typeid(Hash)) {
+            if (a.type() == typeid (Hash)) {
                 Hash& hash = boost::any_cast<Hash&>(a);
                 boost::shared_ptr<Hash> p(&hash, null_deleter());
                 return bp::object(p);
@@ -139,7 +139,7 @@ namespace karathon {
                 PyTypes::ReferenceType type = bp::extract<PyTypes::ReferenceType>(o_type);
                 reftype = PyTypes::to(type);
             }
-            
+
             switch (reftype) {
                 case Types::BOOL:
                     return bp::object(node->getAttributeAs<bool>(key));

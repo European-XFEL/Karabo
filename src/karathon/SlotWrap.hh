@@ -30,18 +30,19 @@ namespace karabo {
 namespace karathon {
 
     class SlotWrap : public karabo::xms::Slot {
-        
+
+
         bp::object m_slotFunction;
-        size_t m_arity;             // arity of position arguments, except *args
-        bool   m_varargs;           // flag of *args
-        bool   m_varkeywords;       // flag of **kwargs
+        size_t m_arity; // arity of position arguments, except *args
+        bool m_varargs; // flag of *args
+        bool m_varkeywords; // flag of **kwargs
 
     public:
 
         SlotWrap(const std::string& slotFunction);
 
         virtual ~SlotWrap();
-        
+
         void registerSlotFunction(const bp::object& slotHandler);
 
     private: // function

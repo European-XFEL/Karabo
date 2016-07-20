@@ -20,7 +20,9 @@ using namespace karabo::io;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FileInputOutput_Test);
 
+
 struct MySchema {
+
 
     KARABO_CLASSINFO(MySchema, "TestXsd", "1.0");
 
@@ -164,9 +166,9 @@ struct MySchema {
                 .metricPrefix(MetricPrefix::MILLI)
                 .readOnly()
                 .alarmHigh(7).needsAcknowledging(false)
-                .alarmLow(0).needsAcknowledging(false)
-                .warnHigh(2).needsAcknowledging(false)
-                .warnLow(1).needsAcknowledging(false)
+                .warnHigh(5).needsAcknowledging(false)
+                .warnLow(0).needsAcknowledging(false)
+                .alarmLow(-2).needsAcknowledging(false)
                 .commit();
 
     }
@@ -242,7 +244,7 @@ void FileInputOutput_Test::writeTextFile() {
     out->write(m_bigHash);
     p.stopPeriod("bigHash"); //p.stopPeriod(); 
     p.close();
-    if (false) clog << "writing big Hash (text) took " <<  p.getPeriod("bigHash").getDuration() << " [s]" << endl;
+    if (false) clog << "writing big Hash (text) took " << p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file3.xml"), "format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
     out->write(m_unrootedHash);
@@ -517,11 +519,11 @@ void FileInputOutput_Test::readSequenceFromBinaryFile() {
 void FileInputOutput_Test::writeHdf5File() {
 
     TimeProfiler p("writeHdf5File");
-        
+
     try {
 
         p.open();
-        
+
         Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS1.h5")));
         out->write(m_rootedHash);
 

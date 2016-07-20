@@ -18,7 +18,7 @@ namespace karabo {
 
         class NetworkAppenderConfigurator : public AppenderConfigurator {
 
-        public:
+            public:
             KARABO_CLASSINFO(NetworkAppenderConfigurator, "Network", "1.0")
 
             NetworkAppenderConfigurator();

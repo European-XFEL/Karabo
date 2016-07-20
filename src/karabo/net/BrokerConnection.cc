@@ -19,6 +19,7 @@ namespace karabo {
 
         using namespace karabo::util;
 
+
         void BrokerConnection::expectedParameters(Schema& expected) {
 
             STRING_ELEMENT(expected)
@@ -31,18 +32,22 @@ namespace karabo {
                     .commit();
         }
 
+
         BrokerConnection::BrokerConnection(const karabo::util::Hash& input) {
             input.get("serializationType", m_serializationType);
             m_service = BrokerIOService::Pointer(new BrokerIOService);
         }
 
+
         BrokerIOService::Pointer BrokerConnection::getIOService() const {
             return m_service;
         }
 
+
         void BrokerConnection::setIOService(const BrokerIOService::Pointer& ioService) {
             m_service = ioService;
         }
+
 
         void BrokerConnection::setIOServiceType(const std::string& serviceType) {
             m_service->setService(serviceType);

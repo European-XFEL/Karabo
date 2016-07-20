@@ -26,8 +26,8 @@ namespace karabo {
 
                     if (data.has(m_key, '/')) {
                         extendFileDataspace(recordId, 1);
-                        selectFileRecords(recordId, 1); 
-                        const karabo::util::Element<string>& node = data.getAttributes(m_key, '/').getNode("aa");                        
+                        selectFileRecords(recordId, 1);
+                        const karabo::util::Element<string>& node = data.getAttributes(m_key, '/').getNode("aa");
                         writeNode(node, m_h5obj, m_fileDataSpace);
                     } else {
                         throw KARABO_HDF_IO_EXCEPTION("No " + m_key + " key in the hash");
@@ -46,7 +46,7 @@ namespace karabo {
                     if (data.has(m_key, '/')) {
                         //OPT1
                         if (m_h5obj < 0) {
-                            m_h5obj = H5Dopen2(m_tableGroup, m_h5PathName.c_str(), H5P_DEFAULT);                            
+                            m_h5obj = H5Dopen2(m_tableGroup, m_h5PathName.c_str(), H5P_DEFAULT);
                         }
                         //
                         extendFileDataspace(recordId, len);

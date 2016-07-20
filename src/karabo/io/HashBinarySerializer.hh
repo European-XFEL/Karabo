@@ -21,19 +21,20 @@ namespace karabo {
 
     namespace io {
 
-        /**
+/**
          * The HashBinarySerializer class.
          */
         class HashBinarySerializer : public BinarySerializer<karabo::util::Hash> {
-            
+
+
             bool m_nodesAsSharedPtr;
-            
+
         public:
 
             KARABO_CLASSINFO(HashBinarySerializer, "Bin", "1.0")
 
             static void expectedParameters(karabo::util::Schema& expected);
-            
+
 
             HashBinarySerializer(const karabo::util::Hash& input);
 
@@ -117,17 +118,19 @@ namespace karabo {
             static inline void writeSize(std::ostream& os, const unsigned size);
 
             void readHash(karabo::util::Hash& hash, std::istream& is);
-            
+
             void readNode(karabo::util::Hash::Node& element, std::istream& is);
-            
+
             void readAttributes(karabo::util::Hash::Attributes& attributes, std::istream& is);
-            
+
             void readAny(boost::any& value, const karabo::util::Types::ReferenceType type, std::istream& is);
 
             template<typename T>
             inline T readSingleValue(std::istream& is) {
 
                 union {
+
+
                     char buffer[32];
                     T tbuffer[32 / sizeof (T)];
                 } all;
@@ -173,7 +176,7 @@ namespace karabo {
         };
 
         template<>
-        void HashBinarySerializer::writeSingleValue(std::ostream& os, const std::string&);       
+        void HashBinarySerializer::writeSingleValue(std::ostream& os, const std::string&);
 
         template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const std::complex<float>&);
@@ -183,10 +186,10 @@ namespace karabo {
 
         template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const karabo::util::Schema&);
-        
+
         template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const karabo::util::Hash&);
-        
+
         template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const karabo::util::CppNone& value);
 
@@ -201,7 +204,7 @@ namespace karabo {
 
         template<>
         karabo::util::Schema HashBinarySerializer::readSingleValue(std::istream& is);
-        
+
         template<>
         karabo::util::Hash HashBinarySerializer::readSingleValue(std::istream& is);
 

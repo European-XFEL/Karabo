@@ -12,6 +12,8 @@
 #include <karabo/util/SimpleElement.hh>
 
 class Hash_Test : public CPPUNIT_NS::TestFixture {
+
+
     CPPUNIT_TEST_SUITE(Hash_Test);
 
     CPPUNIT_TEST(testConstructors);
@@ -37,7 +39,7 @@ public:
     void tearDown();
 
 private:
-    
+
     void testConstructors();
     void testGetSet();
     void testGetAs();

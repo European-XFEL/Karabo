@@ -16,7 +16,6 @@
 #include <karabo/util/State.hh>
 namespace bp = boost::python;
 
-
 template <typename T>
 struct AliasAttributeWrap {
 
@@ -80,7 +79,7 @@ struct AliasAttributeWrap {
             if (PyUnicode_Check(list0.ptr())) {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
-                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(obj[i]).ptr())));
+                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object> (obj[i]).ptr())));
                     Py_ssize_t size;
                     const char* data = PyUnicode_AsUTF8AndSize(str.ptr(), &size);
                     v[i] = std::string(data, size);
@@ -92,9 +91,10 @@ struct AliasAttributeWrap {
     }
 };
 
-
 template <class T>
 struct DefaultValueVectorWrap {
+
+
     typedef std::vector< T > VType;
     typedef karabo::util::VectorElement< T > U;
     typedef karabo::util::DefaultValue< U, VType > DefValueVec;
@@ -116,8 +116,9 @@ struct DefaultValueVectorWrap {
 
 };
 
-
 struct DefaultValueTableWrap {
+
+
     typedef std::vector<karabo::util::Hash > VType;
     typedef karabo::util::TableElement U;
     typedef karabo::util::TableDefaultValue< U> DefValueVec;
@@ -141,14 +142,16 @@ struct DefaultValueTableWrap {
 
 template <class T>
 struct ReadOnlySpecificVectorWrap {
+
+
     typedef std::vector< T > VType;
     typedef karabo::util::VectorElement< T > U;
     typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecVec;
-    typedef karabo::util::AlarmSpecific< U, VType > AlarmSpecVec;
+    typedef karabo::util::AlarmSpecific< U, VType, ReadOnlySpecVec> AlarmSpecVec;
 
     static ReadOnlySpecVec & initialValue(ReadOnlySpecVec& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
-              const bp::list& l = bp::extract<bp::list > (obj);
+            const bp::list& l = bp::extract<bp::list > (obj);
             bp::ssize_t size = bp::len(l);
 
             std::vector<T> v(size);
@@ -179,7 +182,7 @@ struct ReadOnlySpecificVectorWrap {
         }
     }
 
-    static AlarmSpecVec  alarmLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
+    static AlarmSpecVec alarmLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             VType v = pyList2StdVector(obj);
             return self.alarmLow(v);
@@ -257,13 +260,16 @@ bp::class_< DefValueVec, boost::noncopyable > ("DefaultValueVector"#e, bp::no_in
 }
 
 /////////////////////////////////////////////////////////////
-#define KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(U, EType, e)\
+#define KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(U, EType, Rtype, e)\
 {\
-typedef ReadOnlySpecific< U, EType > ReadOnlySpec;\
-typedef AlarmSpecific< U, EType > AlarmSpec;\
-bp::class_< AlarmSpec, boost::noncopyable >( "AlarmSpecific"#e, bp::no_init)\
+typedef Rtype< U, EType > ReturnSpec;\
+typedef AlarmSpecific< U, EType, ReturnSpec > AlarmSpec;\
+bp::class_< AlarmSpec, boost::noncopyable >( "AlarmSpecific"#e#Rtype, bp::no_init)\
 .def("needsAcknowledging"\
-, (ReadOnlySpec & (AlarmSpec::*)(EType const &))( &AlarmSpec::needsAcknowledging)\
+, (ReturnSpec & (AlarmSpec::*)(const bool))( &AlarmSpec::needsAcknowledging)\
+, bp::return_internal_reference<> () )\
+.def("info"\
+, (AlarmSpec & (AlarmSpec::*)(const std::string &))( &AlarmSpec::info)\
 , bp::return_internal_reference<> () )\
 ;\
 }
@@ -275,21 +281,22 @@ bp::class_< AlarmSpec, boost::noncopyable >( "AlarmSpecific"#e, bp::no_init)\
 {\
 typedef ReadOnlySpecific< U, EType > ReadOnlySpec;\
 typedef RollingStatsSpecific< U, EType > RollingStatsSpec;\
+typedef AlarmSpecific< U, EType, RollingStatsSpec> AlarmSpec;\
 bp::class_< RollingStatsSpec, boost::noncopyable >( "RollingStatsSpecific"#e, bp::no_init)\
 .def("warnVarianceLow"\
-, (RollingStatsSpec & (RollingStatsSpec::*)(EType const &))( &RollingStatsSpec::warnVarianceLow)\
+, (AlarmSpec & (RollingStatsSpec::*)(const double))( &RollingStatsSpec::warnVarianceLow)\
 , bp::return_internal_reference<> () )\
 .def("warnVarianceHigh"\
-, (RollingStatsSpec & (RollingStatsSpec::*)(EType const &))( &RollingStatsSpec::warnVarianceHigh)\
+, (AlarmSpec & (RollingStatsSpec::*)(const double))( &RollingStatsSpec::warnVarianceHigh)\
 , bp::return_internal_reference<> () )\
 .def("alarmVarianceLow"\
-, (RollingStatsSpec & (RollingStatsSpec::*)(EType const &))( &RollingStatsSpec::alarmVarianceLow)\
+, (AlarmSpec & (RollingStatsSpec::*)(const double))( &RollingStatsSpec::alarmVarianceLow)\
 , bp::return_internal_reference<> () )\
 .def("alarmVarianceHigh"\
-, (RollingStatsSpec & (RollingStatsSpec::*)(EType const &))( &RollingStatsSpec::alarmVarianceHigh)\
+, (AlarmSpec & (RollingStatsSpec::*)(const double))( &RollingStatsSpec::alarmVarianceHigh)\
 , bp::return_internal_reference<> () )\
 .def("evaluationInterval"\
-, (ReadOnlySpec & (RollingStatsSpec::*)(unsigned long long const &))( &RollingStatsSpec::evaluationInterval)\
+, (ReadOnlySpec & (RollingStatsSpec::*)(const unsigned int))( &RollingStatsSpec::evaluationInterval)\
 , bp::return_internal_reference<> () )\
 ;\
 }
@@ -298,19 +305,24 @@ bp::class_< RollingStatsSpec, boost::noncopyable >( "RollingStatsSpecific"#e, bp
 #define KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(U, EType, e)\
 {\
 typedef ReadOnlySpecific< U, EType > ReadOnlySpec;\
-typedef AlarmSpecific< U, EType > AlarmSpec;\
+typedef AlarmSpecific< U, EType, ReadOnlySpec> AlarmSpec;\
 typedef RollingStatsSpecific< U, EType > RollingStatsSpec;\
 bp::class_< ReadOnlySpec, boost::noncopyable >( "ReadOnlySpecific"#e, bp::no_init)\
 .def("alarmHigh"\
-, (AlarmSpec (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::alarmHigh))\
+, (AlarmSpec & (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::alarmHigh)\
+, bp::return_internal_reference<> ())\
 .def("alarmLow"\
-, (AlarmSpec (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::alarmLow))\
+, (AlarmSpec & (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::alarmLow)\
+, bp::return_internal_reference<> ())\
 .def("warnHigh"\
-, (AlarmSpec (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::warnHigh))\
+, (AlarmSpec & (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::warnHigh)\
+, bp::return_internal_reference<> ())\
 .def("warnLow"\
-, (AlarmSpec (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::warnLow))\
+, (AlarmSpec & (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::warnLow)\
+, bp::return_internal_reference<> ())\
 .def("enableRollingStats"\
-, (RollingStatsSpec (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::enableRollingStats))\
+, &ReadOnlySpec::enableRollingStats\
+, bp::return_internal_reference<> ())\
 .def("initialValueFromString"\
 , (ReadOnlySpec & (ReadOnlySpec::*)(std::string const &))( &ReadOnlySpec::initialValueFromString)\
 , bp::return_internal_reference<> () )\
@@ -331,7 +343,7 @@ typedef t EType;\
 typedef std::vector< EType > VType;\
 typedef karabo::util::VectorElement< EType, std::vector> U;\
 typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecVec;\
-typedef karabo::util::AlarmSpecific< U, VType > AlarmSpecVec;\
+typedef karabo::util::AlarmSpecific< U, VType, ReadOnlySpecVec > AlarmSpecVec;\
 typedef RollingStatsSpecific< U, VType > RollingStatsSpecVec;\
 bp::class_< ReadOnlySpecVec, boost::noncopyable > ("ReadOnlySpecificVector"#e, bp::no_init)\
 .def("initialValue"\

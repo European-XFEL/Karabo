@@ -18,7 +18,7 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(AbstractInput, Input<Hash >, NetworkInput<Hash>)
         KARABO_REGISTER_FOR_CONFIGURATION(Input<Hash >, NetworkInput<Hash>)
-                
+
         KARABO_REGISTER_FOR_CONFIGURATION(AbstractInput, Input<std::vector<char> >, NetworkInput<std::vector<char> >)
         KARABO_REGISTER_FOR_CONFIGURATION(Input<std::vector<char> >, NetworkInput<std::vector<char> >)
     }

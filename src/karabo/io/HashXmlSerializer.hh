@@ -20,6 +20,7 @@ namespace karabo {
 
         class HashXmlSerializer : public TextSerializer<karabo::util::Hash> {
 
+
             std::string m_indentation;
             std::string m_xmlns;
             std::string m_prefix;
@@ -32,7 +33,7 @@ namespace karabo {
             std::string m_artificialRootFlag;
             std::string m_itemFlag;
             bool m_writeCompact;
-           
+
         public:
 
             KARABO_CLASSINFO(HashXmlSerializer, "Xml", "1.0")
@@ -44,11 +45,11 @@ namespace karabo {
             void save(const karabo::util::Hash& object, std::string& archive);
 
             void load(karabo::util::Hash& object, const std::string& archive);
-            
+
             void load(karabo::util::Hash& object, const char* archive);
-            
+
             void save(const std::vector<karabo::util::Hash>& objects, std::string& archive);
-            
+
             void load(std::vector<karabo::util::Hash>& objects, const std::string& archive);
 
             virtual ~HashXmlSerializer() {
@@ -67,6 +68,7 @@ namespace karabo {
             std::pair<std::string, karabo::util::Types::ReferenceType> readXmlAttribute(const std::string& xmlAttribute) const;
 
             struct CustomWriter : public pugi::xml_writer {
+
 
                 std::string& _result;
 

@@ -1,9 +1,7 @@
-
-__all__ = ["DisplayTrendline"]
-
 import time
 import datetime
 from bisect import bisect
+from collections import OrderedDict
 import os.path as op
 import pickle
 import base64
@@ -15,8 +13,9 @@ from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 
 from PyQt4 import uic
-from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSlot
-from PyQt4.QtGui import QDialog
+from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSignal, pyqtSlot
+from PyQt4.QtGui import (QButtonGroup, QDateTimeEdit, QDialog, QHBoxLayout,
+                         QPushButton, QVBoxLayout, QWidget)
 
 import numpy
 
@@ -27,6 +26,36 @@ from guiqwt.tools import SelectPointTool
 from guiqwt.builder import make
 
 from karabo.middlelayer import Simple, Timestamp
+
+ONE_WEEK = "One Week"
+ONE_DAY = "One Day"
+ONE_HOUR = "One Hour"
+TEN_MINUTES = "Ten Minutes"
+RESET = "Uptime"
+HIDDEN = "Hidden"
+
+
+def get_start_end_date_time(selected_time_span):
+    """ Return beginning and end date time for given ``selected_time_span``.
+        If the ``selected_time_span`` is not supported ``None`` is returned.
+    """
+    current_date_time = QDateTime.currentDateTime()
+    if selected_time_span == ONE_WEEK:
+        # One week
+        start_date_time = current_date_time.addDays(-7)
+    elif selected_time_span == ONE_DAY:
+        # One day
+        start_date_time = current_date_time.addDays(-1)
+    elif selected_time_span == ONE_HOUR:
+        # One hour
+        start_date_time = current_date_time.addSecs(-3600)
+    elif selected_time_span == TEN_MINUTES:
+        # Ten minutes
+        start_date_time = current_date_time.addSecs(-600)
+    else:
+        return None, None
+
+    return start_date_time, current_date_time
 
 
 class _Generation(object):
@@ -135,10 +164,17 @@ class Curve(QObject):
     def changeInterval(self, t0, t1):
         p0 = self.x[:self.fill].searchsorted(t0)
         p1 = self.x[:self.fill].searchsorted(t1)
-        if (p1 - p0 < self.minHistory and self.histsize > self.sparsesize or
-                self.x[p0] > 0.9 * self.t0 + 0.1 * self.t1 or
-                p1 < self.histsize and
-                self.x[p1 - 1] < 0.1 * self.t0 + 0.9 * self.t1):
+
+        not_enough_data = (p1 - p0) < self.minHistory
+        no_data = self.histsize == 0
+        zoomed_out = self.histsize > self.sparsesize
+        nearly_left_border = 0.9 * self.t0 + 0.1 * self.t1
+        nearly_right_border = 0.1 * self.t0 + 0.9 * self.t1
+
+        # Request history only needs to be done under certain circumstances
+        if (no_data or (not_enough_data and zoomed_out) or
+                (self.x[p0] > nearly_left_border) or
+                (p1 < self.histsize and self.x[p1 - 1] < nearly_right_border)):
             self.getPropertyHistory(t0, t1)
         self.t0 = t0
         self.t1 = t1
@@ -249,33 +285,103 @@ class ScaleEngine(QwtLinearScaleEngine):
         self.drawer.setFormat(start, v)
         return QwtScaleDiv(x1, x2, [], [], list(range(start, int(x2), v)))
 
+
 class Timespan(QDialog):
     def __init__(self, parent):
         super(Timespan, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), "timespan.ui"), self)
 
-    def on_hour_clicked(self):
-        self.end.setDateTime(QDateTime.currentDateTime())
-        self.beginning.setDateTime(
-            QDateTime.currentDateTime().addSecs(-60 * 60))
+    def _set_beginning_end_date_time(self, selected_time_span):
+        start_dt, end_dt = get_start_end_date_time(selected_time_span)
+        self.dt_beginning.setDateTime(start_dt)
+        self.dt_end.setDateTime(end_dt)
 
-    def on_minute_clicked(self):
-        self.end.setDateTime(QDateTime.currentDateTime())
-        self.beginning.setDateTime(QDateTime.currentDateTime().addSecs(-60))
+    def on_pb_one_week_clicked(self):
+        self._set_beginning_end_date_time(ONE_WEEK)
 
-    def on_s20_clicked(self):
-        self.end.setDateTime(QDateTime.currentDateTime())
-        self.beginning.setDateTime(QDateTime.currentDateTime().addSecs(-20))
+    def on_pb_one_day_clicked(self):
+        self._set_beginning_end_date_time(ONE_DAY)
+
+    def on_pb_one_hour_clicked(self):
+        self._set_beginning_end_date_time(ONE_HOUR)
+
+    def on_pb_ten_minutes_clicked(self):
+        self._set_beginning_end_date_time(TEN_MINUTES)
+
+
+class _KaraboCurveDialog(CurveDialog):
+    signal_mouse_event = pyqtSignal()
+
+    def __init__(self, **kwargs):
+        """ Possible key arguments:
+            * wintitle: window title
+            * icon: window icon
+            * edit: editable state
+            * toolbar: show/hide toolbar
+            * options: options sent to the :py:class:`guiqwt.curve.CurvePlot`
+                       object (dictionary)
+            * parent: parent widget
+            * panels (optional): additionnal panels (list, tuple)
+        """
+        super(_KaraboCurveDialog, self).__init__(**kwargs)
+
+    def mousePressEvent(self, event):
+        if event.button() in (Qt.LeftButton, Qt.MidButton, Qt.RightButton):
+            self.signal_mouse_event.emit()
+        super(_KaraboCurveDialog, self).mousePressEvent(event)
 
 
 class DisplayTrendline(DisplayWidget):
     category = Simple
     alias = "Trendline"
- 
+
     def __init__(self, box, parent):
         super(DisplayTrendline, self).__init__(None)
-        self.dialog = CurveDialog(edit=False, toolbar=True,
-                                  wintitle="Trendline")
+        self.dialog = _KaraboCurveDialog(wintitle="Trendline", edit=False,
+                                         toolbar=True)
+        # Make connection to update time buttons when mouse event in QwtWidget
+        # happened
+        self.dialog.signal_mouse_event.connect(self._uncheck_time_buttons)
+
+        # Create widget for beginning and end date time
+        self.date_time_widget = QWidget()
+        self.date_time_layout = QHBoxLayout(self.date_time_widget)
+        self.date_time_layout.setContentsMargins(0, 0, 0, 0)
+
+        style_sheet = ("QDateTimeEdit {text-align: center; font-size: 9px;"
+                       "padding: 0}")
+        current_date_time = QDateTime.currentDateTime()
+        self.dt_start = QDateTimeEdit(current_date_time)
+        self.dt_start.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
+        self.dt_start.setStyleSheet(style_sheet)
+        self.dt_end = QDateTimeEdit(current_date_time)
+        self.dt_end.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
+        self.dt_end.setStyleSheet(style_sheet)
+        self.date_time_layout.addWidget(self.dt_start)
+        self.date_time_layout.addWidget(self.dt_end)
+
+        self.buttons_widget = QWidget()
+        self.buttons_layout = QHBoxLayout(self.buttons_widget)
+        self.buttons_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.time_string_btns = OrderedDict()  # Map time_string to QPushButton
+        self.time_string_btns[ONE_WEEK] = None
+        self.time_string_btns[ONE_DAY] = None
+        self.time_string_btns[ONE_HOUR] = None
+        self.time_string_btns[TEN_MINUTES] = None
+        self.time_string_btns[RESET] = None
+        self.time_buttons = self._create_time_buttons(self.buttons_layout)
+        self._selected_time_btn = None
+
+        self.widget = QWidget()
+        self.layout = QVBoxLayout(self.widget)
+        self.layout.addWidget(self.dialog)
+        self.layout.addWidget(self.date_time_widget)
+        self.layout.addWidget(self.buttons_widget)
+
+        # Keep the initial start time to recover trendline for 'Reset'
+        self.initial_start_time = QDateTime.currentDateTime()
+
         self.plot = self.dialog.get_plot()
         self.plot.set_antialiasing(True)
         self.plot.setAxisTitle(QwtPlot.xBottom, 'Time')
@@ -294,14 +400,14 @@ class DisplayTrendline(DisplayWidget):
         self.timer.setSingleShot(True)
         self.plot.axisWidget(QwtPlot.xBottom).scaleDivChanged.connect(
             self.timer.start)
-        self.timer.timeout.connect(self.scaleChanged)
+        self.timer.timeout.connect(self._x_axis_scale_changed)
 
-        self.curves = { }
+        self.curves = {}
 
         self.manager = PlotManager(self)
         self.manager.add_plot(self.plot)
 
-        self.manager.register_all_curve_tools( )
+        self.manager.register_all_curve_tools()
         self.manager.register_other_tools()
         self.manager.add_tool(SelectPointTool, title='Test',
                               on_active_item=True, mode='create')
@@ -324,23 +430,25 @@ class DisplayTrendline(DisplayWidget):
             # call the original method that we monkey-patched over
             type(self.plot).edit_axis_parameters(self.plot, axis_id)
         else:
-            dialog = Timespan(self.widget)
+            dialog = Timespan(self.dialog)
             sd = self.plot.axisScaleDiv(QwtPlot.xBottom)
-            dialog.beginning.setDateTime(
+            dialog.dt_beginning.setDateTime(
                 QDateTime.fromMSecsSinceEpoch(sd.lowerBound() * 1000))
-            dialog.end.setDateTime(
+            dialog.dt_end.setDateTime(
                 QDateTime.fromMSecsSinceEpoch(sd.upperBound() * 1000))
-            if dialog.exec() != dialog.Accepted:
+            if dialog.exec_() != dialog.Accepted:
                 return
-            self.plot.setAxisScale(
-                QwtPlot.xBottom,
-                dialog.beginning.dateTime().toMSecsSinceEpoch() / 1000,
-                dialog.end.dateTime().toMSecsSinceEpoch() / 1000)
+            # Reset time buttons
+            self._uncheck_time_buttons()
+            start_date_time = dialog.dt_beginning.dateTime()
+            end_date_time = dialog.dt_end.dateTime()
+            start_secs = start_date_time.toMSecsSinceEpoch() / 1000
+            end_secs = end_date_time.toMSecsSinceEpoch() / 1000
+            self.plot.setAxisScale(QwtPlot.xBottom, start_secs, end_secs)
             self.updateLater()
 
     def typeChanged(self, box):
         self.plot.setAxisTitle(QwtPlot.yLeft, box.axisLabel())
-
 
     def addBox(self, box):
         curve = make.curve([], [], box.key(), "r")
@@ -352,13 +460,7 @@ class DisplayTrendline(DisplayWidget):
         for box in self.curves:
             box.removeVisible()
 
-    @property
-    def widget(self):
-        return self.dialog
-
-
     value = None
-
 
     def removeKey(self, key):
         # XXX: This appears to be dead code!
@@ -368,11 +470,9 @@ class DisplayTrendline(DisplayWidget):
         del self.curves[key]
         key.removeVisible()
 
-
     @property
     def boxes(self):
         return list(self.curves)
-
 
     def valueChanged(self, box, value, timestamp=None):
         if timestamp is None:
@@ -380,14 +480,14 @@ class DisplayTrendline(DisplayWidget):
 
         t = timestamp.toTimestamp()
         self.curves[box].addPoint(value, t)
+
+        t0 = self.plot.axisScaleDiv(QwtPlot.xBottom).lowerBound()
         t1 = self.plot.axisScaleDiv(QwtPlot.xBottom).upperBound()
         if self.lasttime < t1 < t:
-            aw = self.plot.axisWidget(QwtPlot.xBottom)
-            with SignalBlocker(aw):
-                self.plot.setAxisScale(
-                    QwtPlot.xBottom,
-                    self.plot.axisScaleDiv(QwtPlot.xBottom).lowerBound(),
-                    t + 10)
+            if not self._update_x_axis_scale():
+                aw = self.plot.axisWidget(QwtPlot.xBottom)
+                with SignalBlocker(aw):
+                    self.plot.setAxisScale(QwtPlot.xBottom, t0, t + 10)
 
         self.lasttime = timestamp.toTimestamp()
         self.wasVisible = True
@@ -395,12 +495,12 @@ class DisplayTrendline(DisplayWidget):
 
     def deferredUpdate(self):
         self.plot.replot()
-
-    def scaleChanged(self):
         asd = self.plot.axisScaleDiv(QwtPlot.xBottom)
         t0, t1 = asd.lowerBound(), asd.upperBound()
-        for v in self.curves.values():
-            v.changeInterval(t0, t1)
+        # Update date time widgets
+        start = QDateTime.fromMSecsSinceEpoch(t0 * 1000)
+        end = QDateTime.fromMSecsSinceEpoch(t1 * 1000)
+        self._update_date_time_widgets(start, end)
 
     def save(self, e):
         for k, v in self.curves.items():
@@ -421,6 +521,50 @@ class DisplayTrendline(DisplayWidget):
             curve.curve = pickle.loads(base64.b64decode(ee.text))
             self._addCurve(box, curve)
 
+    @pyqtSlot()
+    def _x_axis_scale_changed(self):
+        """ This slot is called whenever the timer timed out and previously the
+            x axis scale was changed. """
+        asd = self.plot.axisScaleDiv(QwtPlot.xBottom)
+        t0, t1 = asd.lowerBound(), asd.upperBound()
+        self._update_x_axis_interval(t0, t1)
+
+    @pyqtSlot(object)
+    def _time_buttons_toggled(self, button):
+        """ A time button was clicked which needs to update the axis scale. """
+        self._selected_time_btn = button
+        if self._update_x_axis_scale():
+            self.updateLater()
+
+    @pyqtSlot()
+    def _reset_button_clicked(self):
+        """ Reset the x axis scale to the initial start time."""
+        self._uncheck_time_buttons()
+
+        start_date_time = self.initial_start_time
+        end_date_time = QDateTime.currentDateTime()
+
+        start_secs = start_date_time.toMSecsSinceEpoch() / 1000
+        end_secs = end_date_time.toMSecsSinceEpoch() / 1000
+        # Rescale x axis
+        self.plot.setAxisScale(QwtPlot.xBottom, start_secs, end_secs)
+        self.updateLater()
+
+    @pyqtSlot()
+    def _uncheck_time_buttons(self):
+        """ No time button should be selected. To realize that the ``HIDDEN``
+            button of the button group is clicked and the
+            ``self._selected_time_btn`` is set to ``None``.
+        """
+        if self._selected_time_btn is None:
+            return
+
+        self.time_string_btns[HIDDEN].click()
+        self._selected_time_btn = None
+
+    # ----------------------------
+    # Private methods
+
     def _addCurve(self, box, curve):
         """ Give derived classes a place to respond to changes. """
         if box in self.curves:
@@ -432,3 +576,69 @@ class DisplayTrendline(DisplayWidget):
         self.curves[box] = curve
         self.plot.add_item(curve.curve)
         curve.update()
+
+    def _update_x_axis_interval(self, t0, t1):
+        """ Update lower and upper bound of curve intervals. """
+        for v in self.curves.values():
+            v.changeInterval(t0, t1)
+
+    def _create_time_buttons(self, layout):
+        """ The buttons for time scaling are created, added to the given
+            ``layout`` and return a list of them.
+        """
+        button_group = QButtonGroup()
+        button_group.buttonClicked.connect(self._time_buttons_toggled)
+
+        for btn_text in self.time_string_btns.keys():
+            button = QPushButton(btn_text)
+            style_sheet = ("QPushButton {text-align: center; font-size: 9px;"
+                           "padding: 0}")
+            button.setStyleSheet(style_sheet)
+            self.time_string_btns[btn_text] = button
+            if btn_text == RESET:
+                button.clicked.connect(self._reset_button_clicked)
+            else:
+                # Do not add reset button to button group
+                button.setCheckable(True)
+                button_group.addButton(button)
+            layout.addWidget(button)
+
+        # Add invisible button to get the state that no buttons are visible
+        hidden_btn = QPushButton()
+        hidden_btn.setCheckable(True)
+        hidden_btn.setVisible(False)
+        self.time_string_btns[HIDDEN] = hidden_btn
+        button_group.addButton(hidden_btn, 0)
+        layout.addWidget(hidden_btn)
+
+        return button_group
+
+    def _update_date_time_widgets(self, start, end):
+        """ The date time widgets get updated to the corresponding x axis
+            scale.
+        """
+        self.dt_start.setDateTime(start)
+        self.dt_end.setDateTime(end)
+
+    def _update_x_axis_scale(self):
+        """ The start and end time date for the x axis is updated here
+            depending on the selected time button.
+            In case of success ``True`` is returned, else ``False``."""
+        if self._selected_time_btn is None:
+            return False
+
+        start, end = get_start_end_date_time(self._selected_time_btn.text())
+
+        if start is None or end is None:
+            return False
+
+        start_secs = start.toMSecsSinceEpoch() / 1000
+        end_secs = end.toMSecsSinceEpoch() / 1000
+
+        # Rescale x axis
+        aw = self.plot.axisWidget(QwtPlot.xBottom)
+        with SignalBlocker(aw):
+            # Use blocker to prevent timer start
+            self.plot.setAxisScale(QwtPlot.xBottom, start_secs, end_secs)
+        self._update_x_axis_interval(start_secs, end_secs)
+        return True

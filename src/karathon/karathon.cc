@@ -34,6 +34,7 @@ void exportPyUtilTimestamp();
 void exportPyUtilTimeDuration();
 void exportPyUtilDims();
 void exportPyUtilDetectorGeometry();
+void exportPyUtilRollingWindowStatistics();
 
 // io
 void exportPyIo();
@@ -67,27 +68,26 @@ void exportPyXipStatistics();
 template <class T> void exportPyXipCpuImage();
 void exportPyXipRawImageData();
 
-void *convert_to_cstring(PyObject *obj)
-{
+
+void *convert_to_cstring(PyObject *obj) {
     char *ret = PyUnicode_AsUTF8(obj);
     if (!ret)
         PyErr_Clear();
     return ret;
 }
 
-void *convertible_string(PyObject *obj)
-{
+
+void *convertible_string(PyObject *obj) {
     if (PyUnicode_Check(obj))
-        return const_cast<char *>("");
+        return const_cast<char *> ("");
     else
         return 0;
 }
 
 
-void construct_string(PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data* data)
-{
+void construct_string(PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data* data) {
     void* storage = ((boost::python::converter::rvalue_from_python_storage<std::string>*)data)->
-	storage.bytes;
+            storage.bytes;
     char *str;
     Py_ssize_t size;
     str = PyUnicode_AsUTF8AndSize(obj, &size);
@@ -95,8 +95,8 @@ void construct_string(PyObject *obj, boost::python::converter::rvalue_from_pytho
     data->convertible = storage;
 }
 
-void *import_numpy()
-{
+
+void *import_numpy() {
     // init Array C-API
     import_array();
     return 0;
@@ -118,45 +118,46 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilSchema();
     exportPyUtilDateTimeString();
     exportPyUtilDetectorGeometry();
-    
+    exportPyUtilRollingWindowStatistics();
+
     // io
     exportPyIo();
     exportPyIoFileTools();
-    
+
     exportPyIoOutput<karabo::util::Hash>();
     exportPyIoOutput<karabo::util::Schema>();
     exportPyIoOutput<karabo::xip::RawImageData>();
-    
+
     exportPyIoInput<karabo::util::Hash>();
     exportPyIoInput<karabo::util::Schema>();
     exportPyIoInput<karabo::xip::RawImageData>();
-    
+
     exportPyIoTextSerializer<karabo::util::Hash>();
     exportPyIoTextSerializer<karabo::util::Schema>();
-    
+
     exportPyIoBinarySerializer<karabo::util::Hash>();
     exportPyIoBinarySerializer<karabo::util::Schema>();
     exportPyIoBinarySerializer<karabo::xip::RawImageData>();
 
     exportPyIoH5File();
-    
+
     // webAuth
     exportPyWebAuthenticator();
-    
+
     // xms       
     exportPyXmsInputOutputChannel();
     exportPyXmsSignalSlotable();
     exportPyXmsSlotElement();
-    
+
     // core
     exportPyCoreDeviceClient();
-    
+
     // log
     exportPyLogLogger();
-    
+
     // net
     exportp2p();
-    
+
     // xip
     //exportPyXipImage<double>();
     //exportPyXipImage<float>();
@@ -174,9 +175,9 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyXipRawImageData();
 
     boost::python::converter::registry::insert(convert_to_cstring,
-	boost::python::type_id<char>(),
-	&boost::python::converter::wrap_pytype<&PyUnicode_Type>::get_pytype);
+                                               boost::python::type_id<char>(),
+                                               &boost::python::converter::wrap_pytype<&PyUnicode_Type>::get_pytype);
     boost::python::converter::registry::insert(convertible_string,
-	construct_string, boost::python::type_id<std::string>(),
-	&boost::python::converter::wrap_pytype<&PyUnicode_Type>::get_pytype);
+                                               construct_string, boost::python::type_id<std::string>(),
+                                               &boost::python::converter::wrap_pytype<&PyUnicode_Type>::get_pytype);
 }

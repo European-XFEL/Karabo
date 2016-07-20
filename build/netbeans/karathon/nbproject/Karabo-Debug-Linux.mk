@@ -49,6 +49,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyUtilDims.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilEpochstamp.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilHash.o \
+	${OBJECTDIR}/_ext/381567218/PyUtilRollingWindowStatistics.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilSchema.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilTimeDuration.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilTimestamp.o \
@@ -172,6 +173,11 @@ ${OBJECTDIR}/_ext/381567218/PyUtilHash.o: ../../../src/karathon/PyUtilHash.cc
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilHash.o ../../../src/karathon/PyUtilHash.cc
 
+${OBJECTDIR}/_ext/381567218/PyUtilRollingWindowStatistics.o: ../../../src/karathon/PyUtilRollingWindowStatistics.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilRollingWindowStatistics.o ../../../src/karathon/PyUtilRollingWindowStatistics.cc
+
 ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o: ../../../src/karathon/PyUtilSchema.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
@@ -274,7 +280,7 @@ ${OBJECTDIR}/_ext/381567218/p2pbinding.o: ../../../src/karathon/p2pbinding.cc
 .build-tests-conf: .build-conf ${TESTFILES}
 ${TESTDIR}/TestFiles/f1: ${TESTDIR}/tests/HashWrap_Test.o ${TESTDIR}/tests/karathonTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARATHON}/karabo -Wl,-rpath,${KARATHON} -Wl,-rpath,\$$ORIGIN/../../../../lib -Wl,-rpath,${KARATHON}/karabo/extern/lib -lcppunit `cppunit-config --libs`   
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARATHON}/karabo -Wl,-rpath,${KARATHON} -Wl,-rpath,${KARATHON}/karabo/extern/lib -lcppunit `cppunit-config --libs`   
 
 
 ${TESTDIR}/tests/HashWrap_Test.o: tests/HashWrap_Test.cc 
@@ -469,6 +475,19 @@ ${OBJECTDIR}/_ext/381567218/PyUtilHash_nomain.o: ${OBJECTDIR}/_ext/381567218/PyU
 	    $(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilHash_nomain.o ../../../src/karathon/PyUtilHash.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilHash.o ${OBJECTDIR}/_ext/381567218/PyUtilHash_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PyUtilRollingWindowStatistics_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilRollingWindowStatistics.o ../../../src/karathon/PyUtilRollingWindowStatistics.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyUtilRollingWindowStatistics.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilRollingWindowStatistics_nomain.o ../../../src/karathon/PyUtilRollingWindowStatistics.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilRollingWindowStatistics.o ${OBJECTDIR}/_ext/381567218/PyUtilRollingWindowStatistics_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/PyUtilSchema_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o ../../../src/karathon/PyUtilSchema.cc 

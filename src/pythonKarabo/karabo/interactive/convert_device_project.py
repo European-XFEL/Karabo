@@ -48,7 +48,7 @@ setup(name='{package_name}',
       package_dir={{'': 'src'}},
       packages=find_packages('src'),
       entry_points={{
-          'karabo.python_device.api_1': [{entry_points}
+          'karabo.bound_device': [{entry_points}
           ],
       }},
       package_data={{}},

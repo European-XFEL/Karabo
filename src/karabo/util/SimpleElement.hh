@@ -23,7 +23,8 @@ namespace karabo {
          */
         template<typename ValueType>
         class SimpleElement : public LeafElement<SimpleElement<ValueType>, ValueType > {
-        public:
+
+            public:
 
             SimpleElement(Schema& expected) : LeafElement<SimpleElement<ValueType>, ValueType >(expected) {
             }
@@ -136,7 +137,7 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "bin");
                 return *this;
             }
-            
+
             /**
              * The <b>bin</b> tells the GUI to interpret the numeric value as a bit string.
              * @param meaning A string which describes the meaning of each bit, the format is
@@ -148,7 +149,7 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "bin|" + meaning);
                 return *this;
             }
-            
+
 
         protected:
 
@@ -164,8 +165,8 @@ namespace karabo {
 
                     //for init, reconfigurable elements - set default value of requiredAccessLevel to USER
                     if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) ||
-                            this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||
-                            this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE) {
+                        this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||
+                        this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE) {
 
                         this->userAccess();
 
@@ -209,8 +210,9 @@ namespace karabo {
                     }
                 }
             }
-            
+
             //only makes sense for simple element, as we cannot know how to evaluated for vectors etc
+
             void checkWarnAndAlarm() {
                 this->checkAttributeOrder(KARABO_SCHEMA_WARN_LOW, KARABO_SCHEMA_WARN_HIGH);
                 this->checkAttributeOrder(KARABO_SCHEMA_WARN_LOW, KARABO_SCHEMA_ALARM_HIGH);
@@ -218,11 +220,10 @@ namespace karabo {
                 this->checkAttributeOrder(KARABO_SCHEMA_ALARM_LOW, KARABO_SCHEMA_WARN_LOW);
                 this->checkAttributeOrder(KARABO_SCHEMA_ALARM_LOW, KARABO_SCHEMA_WARN_HIGH);
                 this->checkAttributeOrder(KARABO_SCHEMA_WARN_HIGH, KARABO_SCHEMA_ALARM_HIGH);
-               
+
             }
-            
-            
-            void checkAttributeOrder(const char* attributeLow, const char* attributeHigh){
+
+            void checkAttributeOrder(const char* attributeLow, const char* attributeHigh) {
                 if (this->m_node->hasAttribute(attributeLow) && this->m_node->hasAttribute(attributeHigh)) {
                     const ValueType& min = this->m_node->template getAttribute<ValueType > (attributeLow);
                     const ValueType& max = this->m_node->template getAttribute<ValueType > (attributeHigh);
@@ -234,10 +235,10 @@ namespace karabo {
                     }
                 }
             }
-            
+
         };
 
-        
+
 
         typedef SimpleElement<bool > BOOL_ELEMENT;
         typedef SimpleElement<signed char> INT8_ELEMENT;

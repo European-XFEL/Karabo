@@ -18,6 +18,7 @@ namespace karabo {
 
         class SchemaBinarySerializer : public BinarySerializer<karabo::util::Schema> {
 
+
             BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
 
         public:

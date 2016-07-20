@@ -12,12 +12,13 @@
 
 namespace karabo {
     namespace io {
-     
+
         class OutputHandler {
-        public:
-            
+
+            public:
+
             KARABO_CLASSINFO(OutputHandler, "OutputHandler", "1.0")
-            
+
             virtual void registerIOEventHandler(const boost::any& eventHandler) = 0;
             virtual void triggerIOEvent() = 0;
         };

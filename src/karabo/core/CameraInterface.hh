@@ -15,7 +15,8 @@ namespace karabo {
     namespace core {
 
         class CameraInterface : public virtual karabo::xms::SignalSlotable {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(CameraInterface, "CameraInterface", "1.3")
 
@@ -52,16 +53,16 @@ namespace karabo {
                         .description("Resets the camera in case of an error")
                         .allowedStates(State::ERROR)
                         .commit();
-                
+
                 Schema data;
                 IMAGEDATA(data).key("image")
                         .commit();
-                
+
                 OUTPUT_CHANNEL(expected).key("output")
                         .displayedName("Output")
                         .dataSchema(data)
                         .commit();
-                                
+
                 DOUBLE_ELEMENT(expected).key("exposureTime")
                         .displayedName("Exposure Time")
                         .description("The requested exposure time in seconds")
@@ -71,11 +72,11 @@ namespace karabo {
                         .maxInc(5.0)
                         .reconfigurable()
                         .commit();
-                
+
                 NODE_ELEMENT(expected).key("imageStorage")
                         .displayedName("Local Image Storage")
                         .commit();
-                
+
                 BOOL_ELEMENT(expected).key("imageStorage.enable")
                         .displayedName("Enable")
                         .description("Save images while acquiring.")
@@ -143,32 +144,33 @@ namespace karabo {
              
              * From any state we may be driven to hardwareError
              */
-               
+
             /**
              * In the end call: updateState("Initializing")
              */
             virtual void resetHardware() = 0;
-            
-          
+
+
             /**
              * Should end in "Acquiring"
              */
             virtual void acquire() = 0;
-            
+
             /**
              * ....
              */
             virtual void stop() = 0;
-            
+
             virtual void trigger() = 0;
-            
+
             virtual void initialize() = 0;
-            
+
             void startFsm() {
                 this->initialize();
             }
-            
-            void stopFsm() { }
+
+            void stopFsm() {
+            }
         };
     } // namespace core
 } // namespace karabo
