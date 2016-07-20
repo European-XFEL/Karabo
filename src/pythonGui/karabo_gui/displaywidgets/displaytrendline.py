@@ -208,7 +208,12 @@ class Curve(QObject):
         np0 = x[:datasize].searchsorted(self.t0)
         np1 = x[:datasize].searchsorted(self.t1)
 
-        span = (self.x[p1 - 1] - self.x[p0]) / (self.t1 - self.t0)
+        denominator = self.t1 - self.t0
+        if denominator == 0:
+            # Prevent division by 0, otherwise self.curve.plot() is None
+            return
+
+        span = (self.x[p1 - 1] - self.x[p0]) / denominator
         nspan = (x[np1 - 1] - x[np0]) / (self.t1 - self.t0)
 
         if (np1 - np0 < p1 - p0) and not nspan > span < 0.9:
@@ -570,7 +575,6 @@ class DisplayTrendline(DisplayWidget):
         if box in self.curves:
             old_curve = self.curves[box]
             self.plot.del_item(old_curve.curve)
-
         if not isinstance(curve, Curve):
             curve = Curve(box, curve, self.dialog)
         self.curves[box] = curve
