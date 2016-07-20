@@ -591,6 +591,7 @@ void Schema_Test::testArrayElements() {
     CPPUNIT_ASSERT(sch.getValueType("arrUInt16") == Types::VECTOR_UINT16);
     CPPUNIT_ASSERT(sch.getValueType("arrFloat") == Types::VECTOR_FLOAT);
     CPPUNIT_ASSERT(sch.getValueType("arrDouble") == Types::VECTOR_DOUBLE);
+    CPPUNIT_ASSERT(sch.getValueType("arrUndefined") == Types::VECTOR_FLOAT);
 
     std::vector<long long> shapeVec;
     shapeVec.push_back(3);
@@ -601,6 +602,12 @@ void Schema_Test::testArrayElements() {
     CPPUNIT_ASSERT(sch.getArrayShape("arrFloat") == shapeVec);
     shapeVec.push_back(-1);
     CPPUNIT_ASSERT(sch.getArrayShape("arrDouble") == shapeVec);
+
+    std::vector<long long> undefShapeVec;
+    undefShapeVec.push_back(-1);
+    undefShapeVec.push_back(3);
+    undefShapeVec.push_back(-1);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrUndefined") == undefShapeVec);
 
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrBool") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrInt8") == false);

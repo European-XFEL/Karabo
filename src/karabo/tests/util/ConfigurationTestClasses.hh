@@ -558,6 +558,12 @@ namespace configurationTest {
                     .readOnly()
                     .commit();
 
+            NDARRAY_FLOAT_ELEMENT(expected)
+                    .key("arrUndefined")
+                    .shape("-1,3,-1")
+                    .readOnly()
+                    .commit();
+
             IMAGE_ELEMENT(expected)
                     .key("image")
                     .commit();
