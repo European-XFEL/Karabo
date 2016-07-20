@@ -136,16 +136,54 @@ class NavigationDropHandler(SceneDnDHandler):
         class_id = dialog.classId
         ifexists = dialog.startupBehaviour
         position = event.pos()
+
+        # Check whether an item for this device_id already exists
+        workflow_item_model = scene_view.workflow_model.get_item(device_id)
+        if workflow_item_model is not None:
+            scene_view.select_model(workflow_item_model)
+            return
+
         if not dialog.deviceGroup:
             # Device
-            scene_view.create_device(device_id, server_id, class_id, ifexists,
-                                     position)
+            self.create_device(scene_view, device_id, server_id, class_id,
+                               ifexists, position)
         else:
             # Device Group
-            scene_view.create_device_group(dialog.deviceGroupName,
-                                           server_id, class_id,
-                                           ifexists,
-                                           dialog.displayPrefix,
-                                           dialog.startIndex,
-                                           dialog.endIndex,
-                                           position)
+            self.create_device_group(scene_view,
+                                     dialog.deviceGroupName,
+                                     server_id, class_id,
+                                     ifexists,
+                                     dialog.displayPrefix,
+                                     dialog.startIndex,
+                                     dialog.endIndex,
+                                     position)
+
+    def create_device(self, scene_view, device_id, server_id, class_id,
+                      ifexists, position):
+        """ A device was dropped from the navigation panel and needs
+            to be processed now.
+        """
+        model = scene_view.project_handler.create_device(device_id, server_id,
+                                                         class_id, ifexists,
+                                                         position)
+        scene_view.add_models(model)
+        # Recalculate model rectangle, if empty
+        scene_view.update_model_geometry(model)
+
+    def create_device_group(self, scene_view, group_name, server_id, class_id,
+                            ifexists, display_prefix, start_index, end_index,
+                            position):
+        """ A device group was dropped from the navigation panel and needs
+            to be processed now.
+        """
+        model = scene_view.project_handler.create_device_group(group_name,
+                                                               server_id,
+                                                               class_id,
+                                                               ifexists,
+                                                               display_prefix,
+                                                               start_index,
+                                                               end_index,
+                                                               position)
+        scene_view.add_models(model)
+        # Recalculate model rectangle, if empty
+        scene_view.update_model_geometry(model)
