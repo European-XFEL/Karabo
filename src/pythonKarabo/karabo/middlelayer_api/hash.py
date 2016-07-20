@@ -5,16 +5,17 @@ This file closely corresponds to karabo.util.ReferenceType.
 The C++ types are mostly implemented by using the corresponding numpy type.
 """
 
-from asyncio import async, iscoroutinefunction, coroutine, get_event_loop
+from asyncio import async, coroutine, get_event_loop
 import base64
 from collections import OrderedDict
 from enum import Enum
-from functools import partial
+from functools import partial, wraps
 from io import BytesIO
 import numbers
 import pint
 from struct import pack, unpack, calcsize
 import sys
+import weakref
 from xml.etree import ElementTree
 
 import numpy as np
@@ -370,8 +371,6 @@ class Descriptor(object):
 
 
 class Slot(Descriptor):
-    iscoroutine = None
-
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super(Slot, self).toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Node
@@ -387,36 +386,36 @@ class Slot(Descriptor):
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        else:
-            def inner(device):
-                return self.method(device)
-            inner.slot = self.inner
-            return inner.__get__(instance, owner)
 
-    def inner(self, func, device, message, args):
+        @wraps(self.method)
+        def wrapper(device):
+            return self.method(device)
+        wrapper.slot = partial(self.slot, weakref.ref(instance))
+        return wrapper.__get__(instance, owner)
+
+    def slot(self, weakinstance, func, device, message, args):
+        instance = weakinstance()
+        if instance is None:
+            return
+
         if (self.allowedStates is not None and
-                device.state not in self.allowedStates):
+                instance.state not in self.allowedStates):
             msg = 'calling slot "{}" not allowed in state "{}"'.format(
-                self.key, device.state)
+                self.key, instance.state)
             device._ss.reply(message, msg)
             raise KaraboError(msg)
-        if self.iscoroutine:
-            coro = self.method(device)
-        else:
-            coro = get_event_loop().run_coroutine_or_thread(
-                self.method, device)
 
-        def inner():
+        coro = get_event_loop().run_coroutine_or_thread(func)
+
+        @coroutine
+        def wrapper():
             try:
                 device._ss.reply(message, (yield from coro))
             except Exception as e:
                 _, exc, tb = sys.exc_info()
-                device._onException(self, exc, tb)
+                instance._onException(self, exc, tb)
                 device._ss.reply(message, str(e))
-        return async(inner())
-
-    def method(self, device):
-        return self.themethod(device)
+        return async(wrapper())
 
     def _initialize(self, instance, value=None):
         return []  # nothing to initialize in a Slot
@@ -424,8 +423,7 @@ class Slot(Descriptor):
     def __call__(self, method):
         if self.description is None:
             self.description = method.__doc__
-        self.iscoroutine = iscoroutinefunction(method)
-        self.themethod = method
+        self.method = method
         return self
 
 

@@ -213,9 +213,9 @@ class Broker:
             weakself = weakref.ref(slot.__self__, delete)
             func = slot.__func__
 
+            @wraps(func)
             def wrapper(*args):
                 return func(weakself(), *args)
-            wrapper.slot = slot.slot
             self.slots[name] = wrapper
         else:
             self.slots[name] = slot
