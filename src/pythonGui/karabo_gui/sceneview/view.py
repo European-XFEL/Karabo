@@ -319,7 +319,7 @@ class SceneView(QWidget):
         # Add the modified top level model to the scene again
         self.add_models(top_level_model)
         # Recalculate model rectangle, if empty
-        self._update_model_geometry(new_model)
+        self.update_model_geometry(new_model)
         self.selection_model.clear_selection()
 
     def bring_to_front(self, model):
@@ -351,47 +351,6 @@ class SceneView(QWidget):
         if scene_obj is not None:
             # In case of layouts or widgets
             send_object_to_back(scene_obj)
-
-    def create_device(self, device_id, server_id, class_id, ifexists,
-                      position):
-        """ A device was dropped from the navigation panel and needs
-            to be processed now.
-        """
-        # Check whether an item for this device_id already exists
-        workflow_item_model = self.workflow_model.get_item(device_id)
-        if workflow_item_model is not None:
-            self.select_model(workflow_item_model)
-            return
-
-        model = self.project_handler.create_device(device_id, server_id,
-                                                   class_id, ifexists,
-                                                   position)
-        self.add_models(model)
-        # Recalculate model rectangle, if empty
-        self._update_model_geometry(model)
-
-    def create_device_group(self, group_name, server_id, class_id, ifexists,
-                            display_prefix, start_index, end_index, position):
-        """ A device group was dropped from the navigation panel and needs
-            to be processed now.
-        """
-        # Check whether an item with this ``group_name`` already exists
-        workflow_item_model = self.workflow_model.get_item(group_name)
-        if workflow_item_model is not None:
-            self.select_model(workflow_item_model)
-            return
-
-        model = self.project_handler.create_device_group(group_name,
-                                                         server_id,
-                                                         class_id,
-                                                         ifexists,
-                                                         display_prefix,
-                                                         start_index,
-                                                         end_index,
-                                                         position)
-        self.add_models(model)
-        # Recalculate model rectangle, if empty
-        self._update_model_geometry(model)
 
     # ----------------------------
     # Private methods (yes, I know... It's just a convention)
@@ -444,7 +403,7 @@ class SceneView(QWidget):
         items = [m for m in models if isinstance(m, WorkflowItemModel)]
         self.workflow_model.remove_items(items)
 
-    def _update_model_geometry(self, model):
+    def update_model_geometry(self, model):
         obj = self._scene_obj_cache.get(model)
         if obj is not None:
             model_rect = QRect(model.x, model.y,
