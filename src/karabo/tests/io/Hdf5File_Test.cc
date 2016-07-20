@@ -21,6 +21,7 @@ using namespace karabo::io::hdf5;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Hdf5File_Test);
 
+
 Hdf5File_Test::Hdf5File_Test() : arraySize(6), vecSize(10) {
 
     va.resize(arraySize);
@@ -52,21 +53,25 @@ Hdf5File_Test::Hdf5File_Test() : arraySize(6), vecSize(10) {
     runDir = string(TESTPATH) + string("io/resources/");
 }
 
+
 Hdf5File_Test::~Hdf5File_Test() {
 }
+
 
 void Hdf5File_Test::setUp() {
 
 }
 
+
 void Hdf5File_Test::tearDown() {
 
 }
 
+
 void Hdf5File_Test::testWrite() {
 
     hdf5::File file(runDir + "writer.h5");
-    file.open(hdf5::File::TRUNCATE);    
+    file.open(hdf5::File::TRUNCATE);
     vector<Hash> data(vecSize);
 
 
@@ -119,18 +124,18 @@ void Hdf5File_Test::testWrite() {
 
 
     for (size_t i = 0; i < vecSize; ++i) {
-        readData[i].setFromPath("vectors.va", vector<signed char>(arraySize)); 
-        readData[i].setFromPath("vectors.vb", vector<short>(arraySize)); 
-        readData[i].setFromPath("vectors.vc", vector<int>(arraySize)); 
-        readData[i].setFromPath("vectors.vd", vector<long long>(arraySize)); 
-        readData[i].setFromPath("vectors.ve", vector<unsigned char >(arraySize)); 
-        readData[i].setFromPath("vectors.vf", vector<unsigned short >(arraySize)); 
-        readData[i].setFromPath("vectors.vg", vector<unsigned int>(arraySize)); 
-        readData[i].setFromPath("vectors.vh", vector<unsigned long long >(arraySize)); 
+        readData[i].setFromPath("vectors.va", vector<signed char>(arraySize));
+        readData[i].setFromPath("vectors.vb", vector<short>(arraySize));
+        readData[i].setFromPath("vectors.vc", vector<int>(arraySize));
+        readData[i].setFromPath("vectors.vd", vector<long long>(arraySize));
+        readData[i].setFromPath("vectors.ve", vector<unsigned char >(arraySize));
+        readData[i].setFromPath("vectors.vf", vector<unsigned short >(arraySize));
+        readData[i].setFromPath("vectors.vg", vector<unsigned int>(arraySize));
+        readData[i].setFromPath("vectors.vh", vector<unsigned long long >(arraySize));
         readData[i].setFromPath("vectors.vo", vector<float>(arraySize));
-        readData[i].setFromPath("vectors.vp", vector<double >(arraySize)); 
-        readData[i].setFromPath("vectors.vs", vector<string >(arraySize)); 
-        readData[i].setFromPath("deque.vx", deque<bool >(arraySize)); 
+        readData[i].setFromPath("vectors.vp", vector<double >(arraySize));
+        readData[i].setFromPath("vectors.vs", vector<string >(arraySize));
+        readData[i].setFromPath("deque.vx", deque<bool >(arraySize));
         tableRead->allocate(readData[i]);
         tableRead->read(readData[i], i);
     }
@@ -186,8 +191,8 @@ void Hdf5File_Test::testWrite() {
         assertArrayView<unsigned long long>("vh", readData[i]);
         assertArrayView<float>("vo", readData[i]);
         assertArrayView<double>("vp", readData[i]);
-        assertStringArrayView("vs", i, readData[i]);        
-        assertBoolArrayView("vx", i, readData[i]);        
+        assertStringArrayView("vs", i, readData[i]);
+        assertBoolArrayView("vx", i, readData[i]);
 
         assertVector<signed char>("va", i, readData[i]);
         assertVector<signed short>("vb", i, readData[i]);
@@ -199,15 +204,16 @@ void Hdf5File_Test::testWrite() {
         assertVector<unsigned long long>("vh", i, readData[i]);
         assertVector<float>("vo", i, readData[i]);
         assertVector<double>("vp", i, readData[i]);
-        assertStringVector("vs", i, readData[i]);        
-        assertBoolVector("vx", i, readData[i]);        
-        
-        
+        assertStringVector("vs", i, readData[i]);
+        assertBoolVector("vx", i, readData[i]);
+
+
         CPPUNIT_ASSERT(readData[i].hasFromPath("vectors.nonexisting") == false);
     }
 
 
 }
+
 
 void Hdf5File_Test::compute(Hash& rec, int idx) {
 
@@ -229,7 +235,7 @@ void Hdf5File_Test::compute(Hash& rec, int idx) {
     string s = str.str();
 
     //char a = 'a'+ (idx%20);
-   
+
     for (size_t i = 0; i < arraySize; ++i) {
         va[i] = i + idx;
         vb[i] = i + idx;
@@ -244,10 +250,10 @@ void Hdf5File_Test::compute(Hash& rec, int idx) {
         vx[i] = false;
         if (i % 2) vx[i] = true;
         tracer << "original vx[" << i << "] = " << vx[i] << endl;
-        axArr[i] = vx[i];        
+        axArr[i] = vx[i];
         std::ostringstream str;
         str << "Hello " << idx << "[" << i << "]" << " from me";
-        for(size_t j=0; j< i; ++j){
+        for (size_t j = 0; j < i; ++j) {
             str << j;
         }
         vs[i] = str.str();
@@ -283,7 +289,7 @@ void Hdf5File_Test::compute(Hash& rec, int idx) {
     rec.setFromPath("arrayView.vh", ArrayView<unsigned long long>(vh));
     rec.setFromPath("arrayView.vo", ArrayView<float>(vo));
     rec.setFromPath("arrayView.vp", ArrayView<double>(vp));
-    rec.setFromPath("arrayView.vs", ArrayView<std::string > (vs));   
+    rec.setFromPath("arrayView.vs", ArrayView<std::string > (vs));
     rec.setFromPath("arrayView.vx", ArrayView<bool>(axArr.get(), arraySize));
 
 

@@ -11,3 +11,4 @@ from .selection import SceneSelectionTool  # noqa
 from .workflow import CreateWorkflowConnectionToolAction, WorkflowConnectionTool  # noqa
 from .scenedndhandler import (ConfigurationDropHandler,  # noqa
                               NavigationDropHandler)  # noqa
+from .widgethandler import WidgetSceneHandler  # noqa

@@ -96,6 +96,7 @@ private:
 
 struct TcpClient {
 
+
     TcpClient(const std::string& host, int port) : m_count(0), m_port(port) {
     }
 
@@ -184,6 +185,7 @@ private:
     karabo::net::Connection::Pointer m_connection;
 };
 
+
 TcpNetworking_Test::TcpNetworking_Test() {
 }
 
@@ -202,7 +204,7 @@ void TcpNetworking_Test::tearDown() {
 
 void TcpNetworking_Test::testClientServer() {
     using namespace std;
-    
+
     TcpServer server;
     boost::thread server_thread(boost::bind(&TcpServer::run, &server));
     boost::this_thread::sleep(boost::posix_time::milliseconds(1500));

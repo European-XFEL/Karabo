@@ -31,7 +31,7 @@ namespace karabo {
             dims.fromVector(vec);
         }
 
-        inline void setDims(Hash& hash, const std::string& path, const Dims& dims, const char separator = '.' ){
+        inline void setDims(Hash& hash, const std::string& path, const Dims& dims, const char separator = '.') {
             hash.setAttribute(path, "dims", dims.toVector(), separator);
         }
 

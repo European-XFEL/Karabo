@@ -19,31 +19,33 @@
 
 namespace karabo {
 
-  namespace util {
+    namespace util {
 
-    class BobbyCar : public Vehicle {
-    public:
-      KARABO_CLASSINFO(BobbyCar, "BobbyCar", "1.0")
-              
-      template <class Derived>
-      BobbyCar(Derived* derived) : Vehicle() {
-      }
+        class BobbyCar : public Vehicle {
 
-      BobbyCar();
+            public:
 
-      void start();
-      void stop();
+            KARABO_CLASSINFO(BobbyCar, "BobbyCar", "1.0")
 
-      static void expectedParameters(Schema&);
+            template <class Derived>
+            BobbyCar(Derived* derived) : Vehicle() {
+            }
 
-      void configure(const Hash&);
+            BobbyCar();
 
-    private:
-      std::string m_name, m_equipment;
+            void start();
+            void stop();
 
-    };
+            static void expectedParameters(Schema&);
 
-  } 
-} 
+            void configure(const Hash&);
+
+        private:
+            std::string m_name, m_equipment;
+
+        };
+
+    }
+}
 
 #endif

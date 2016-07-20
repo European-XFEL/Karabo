@@ -12,9 +12,9 @@
 #include "Rectangle.hh"
 
 namespace karabo {
-  namespace util {
+    namespace util {
 
-    KARABO_REGISTER_FACTORY_CC(ConfigurableShape, ConfigurableRectangle)
+        KARABO_REGISTER_FACTORY_CC(ConfigurableShape, ConfigurableRectangle)
 
-  }
+    }
 }

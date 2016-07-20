@@ -41,6 +41,8 @@ void SchemaXsdSerializer_Test::tearDown() {
 
 
 struct TestSchemaXsdSerializer {
+
+
     KARABO_CLASSINFO(TestSchemaXsdSerializer, "TestXsd", "1.0");
 
 
@@ -199,25 +201,26 @@ void SchemaXsdSerializer_Test::testXsdSerialization() {
     //cout << "Schema : \n" << testSchema << endl;
 
     TextSerializer<Schema>::Pointer p = TextSerializer<Schema>::create("Xsd");
-     
+
     std::string archive;
     p->save(testSchema, archive);
     //cout << "\n XSD representation: \n" << archive << endl;
-}    
+}
+
 
 void SchemaXsdSerializer_Test::testTextFileOutputSchema() {
-    
+
     Schema testSchema("TestSchema", Schema::AssemblyRules(READ | WRITE | INIT));
     TestSchemaXsdSerializer::expectedParameters(testSchema);
-    
+
     string fileName = resourcePath("testSchemaFile.xsd");
-    
+
     saveToFile(testSchema, fileName, Hash("format.Xsd.indentation", 2));
-    
+
     //or:
     //Output<Schema>::Pointer out = Output<Schema>::create("TextFile", Hash("filename", fileName, "format.Xsd.indentation", 2));
     //out->write(testSchema);
-    
+
     ifstream newFile(fileName.c_str());
 
     string fnameEtalon = resourcePath("testSchemaFile_readonly.xsd");
@@ -246,5 +249,5 @@ void SchemaXsdSerializer_Test::testTextFileOutputSchema() {
         }
     } else {
         cout << "Error opening etalon file " << fnameEtalon << endl;
-    }    
-}  
+    }
+}

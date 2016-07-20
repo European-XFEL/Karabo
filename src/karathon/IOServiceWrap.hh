@@ -19,7 +19,8 @@ namespace bp = boost::python;
 namespace karathon {
 
     class IOServiceWrap {
-    public:
+
+        public:
 
         static void run(karabo::net::IOService::Pointer ioserv) {
             try {

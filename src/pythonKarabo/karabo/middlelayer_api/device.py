@@ -1,4 +1,4 @@
-from asyncio import coroutine, gather
+from asyncio import coroutine
 import socket
 
 from .enums import AccessLevel, AccessMode, Assignment
@@ -94,16 +94,8 @@ class Device(SignalSlotable):
         if "abstract" not in dict:
             Device.subclasses[name] = cls
 
-    def initSchema(self):
-        self.staticSchema = self.getClassSchema()
-        self.fullSchema = Schema(self.classId)
-        self.fullSchema.copy(self.staticSchema)
-
-    @coroutine
-    def _run(self):
-        self.initSchema()
-
-        info = Hash()
+    def _initInfo(self):
+        info = super(Device, self)._initInfo()
         info["type"] = "device"
         info["classId"] = self.classId.value
         info["serverId"] = self.serverId.value
@@ -112,9 +104,11 @@ class Device(SignalSlotable):
         info["host"] = self.hostname
         info["status"] = "ok"
         info["archive"] = self.archive.value
-        self.updateInstanceInfo(info)
+        return info
 
-        yield from super()._run()
+    @coroutine
+    def _run(self):
+        yield from super(Device, self)._run()
 
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
@@ -136,11 +130,8 @@ class Device(SignalSlotable):
 
     @coslot
     def slotReconfigure(self, reconfiguration):
-        props = ((getattr(self.__class__, k), v)
-                 for k, v in reconfiguration.items())
         try:
-            setters = [t.checkedSet(self, v) for t, v in props]
-            yield from gather(*setters)
+            yield from super().slotReconfigure(reconfiguration)
         except KaraboError as e:
             self.logger.exception("Failed to set property")
             return False, str(e)
@@ -149,9 +140,8 @@ class Device(SignalSlotable):
 
     @slot
     def slotGetSchema(self, onlyCurrentState):
-        # TODO we ignore onlyCurrentState here, instead we return
-        # the full schema.
-        return self.fullSchema, self.deviceId
+        return self.getDeviceSchema(
+            state=self.state if onlyCurrentState else None), self.deviceId
 
     @slot
     def slotInstanceNew(self, instanceId, info):

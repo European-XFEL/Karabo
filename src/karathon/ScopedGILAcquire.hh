@@ -14,7 +14,7 @@ namespace karathon {
 
     class ScopedGILAcquire {
 
-    public:
+        public:
 
         inline ScopedGILAcquire() : m_gstate(PyGILState_Ensure()) {
         }

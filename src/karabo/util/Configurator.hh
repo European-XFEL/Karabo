@@ -20,7 +20,7 @@ namespace karabo {
     namespace util {
         namespace confTools {
 
-            #define _KARABO_SCHEMA_DESCRIPTION_FUNCTION expectedParameters
+#define _KARABO_SCHEMA_DESCRIPTION_FUNCTION expectedParameters
             typedef void(*PointerToSchemaDescriptionFunction)(Schema&);
 
             //**********************************************
@@ -30,7 +30,7 @@ namespace karabo {
             template<class Class, class Argument, void (*)(Argument&) >
             struct VoidArg1FunctionExists {
 
-            };
+                };
 
             template<class Class>
             inline PointerToSchemaDescriptionFunction getSchemaDescriptionFunction(VoidArg1FunctionExists<Class, Schema, &Class::_KARABO_SCHEMA_DESCRIPTION_FUNCTION>*) {
@@ -53,10 +53,10 @@ namespace karabo {
         //**********************************************
         //               Configurator                  *
         //**********************************************
-        
-        
+
         template <class BaseClass>
         class Configurator {
+
 
             typedef std::map<std::string, boost::any > CtorMap;
             typedef std::map<std::string, CtorMap> Registry;
@@ -268,6 +268,7 @@ namespace karabo {
         template <class Base>
         struct RegisterConfigurator1 {
 
+
             static const ConfiguratorMember1<Base> registerMe;
         };
 
@@ -287,6 +288,7 @@ namespace karabo {
 
         template <class Base, class Sub1>
         struct RegisterConfigurator2 {
+
 
             static const ConfiguratorMember2<Base, Sub1> registerMe;
         };
@@ -309,11 +311,11 @@ namespace karabo {
         template <class Base, class Sub1, class Sub2>
         struct RegisterConfigurator3 {
 
+
             static const ConfiguratorMember3<Base, Sub1, Sub2> registerMe;
         };
 
-        
-                template <class Base, class Sub1, class Sub2, class Sub3>
+        template <class Base, class Sub1, class Sub2, class Sub3>
         struct ConfiguratorMember4 {
 
             ConfiguratorMember4(int) {
@@ -332,9 +334,10 @@ namespace karabo {
         template <class Base, class Sub1, class Sub2, class Sub3>
         struct RegisterConfigurator4 {
 
+
             static const ConfiguratorMember4<Base, Sub1, Sub2, Sub3> registerMe;
         };
-        
+
         template <class Base, class Sub1, class Sub2, class Sub3, class Sub4>
         struct ConfiguratorMember5 {
 
@@ -355,33 +358,34 @@ namespace karabo {
         template <class Base, class Sub1, class Sub2, class Sub3, class Sub4>
         struct RegisterConfigurator5 {
 
+
             static const ConfiguratorMember5<Base, Sub1, Sub2, Sub3, Sub4> registerMe;
         };
 
-        
-        #define _KARABO_REGISTER_FOR_CONFIGURATION_1(base) \
+
+#define _KARABO_REGISTER_FOR_CONFIGURATION_1(base) \
                 template<> const karabo::util::ConfiguratorMember1<base> \
                 karabo::util::RegisterConfigurator1<base>::registerMe(1);
 
-        #define _KARABO_REGISTER_FOR_CONFIGURATION_2(base, sub1) \
+#define _KARABO_REGISTER_FOR_CONFIGURATION_2(base, sub1) \
                 template<> const karabo::util::ConfiguratorMember2<base, sub1> \
                 karabo::util::RegisterConfigurator2<base, sub1>::registerMe(1);
 
-        #define _KARABO_REGISTER_FOR_CONFIGURATION_3(base, sub1, sub2) \
+#define _KARABO_REGISTER_FOR_CONFIGURATION_3(base, sub1, sub2) \
                 template<> const karabo::util::ConfiguratorMember3<base, sub1, sub2> \
                 karabo::util::RegisterConfigurator3<base, sub1, sub2>::registerMe(1);
 
-        #define _KARABO_REGISTER_FOR_CONFIGURATION_4(base, sub1, sub2, sub3) \
+#define _KARABO_REGISTER_FOR_CONFIGURATION_4(base, sub1, sub2, sub3) \
                 template<> const karabo::util::ConfiguratorMember4<base, sub1, sub2, sub3> \
                 karabo::util::RegisterConfigurator4<base, sub1, sub2, sub3>::registerMe(1);
 
-        #define _KARABO_REGISTER_FOR_CONFIGURATION_5(base, sub1, sub2, sub3, sub4) \
+#define _KARABO_REGISTER_FOR_CONFIGURATION_5(base, sub1, sub2, sub3, sub4) \
                 template<> const karabo::util::ConfiguratorMember5<base, sub1, sub2, sub3, sub4> \
                 karabo::util::RegisterConfigurator5<base, sub1, sub2, sub3, sub4>::registerMe(1);
 
-        #define _KARABO_REGISTER_FOR_CONFIGURATION_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
+#define _KARABO_REGISTER_FOR_CONFIGURATION_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
 
-        #define KARABO_REGISTER_FOR_CONFIGURATION(...) \
+#define KARABO_REGISTER_FOR_CONFIGURATION(...) \
                     _KARABO_REGISTER_FOR_CONFIGURATION_N(,##__VA_ARGS__, \
                     _KARABO_REGISTER_FOR_CONFIGURATION_5(__VA_ARGS__), \
                     _KARABO_REGISTER_FOR_CONFIGURATION_4(__VA_ARGS__), \
@@ -396,23 +400,23 @@ namespace karabo {
          * in case of dll import. If karaboFramework is compiled into a dll, the symbols are exported, if we have an
          * application linking against the karabo dll, the symbols are imported and templates must be flagged extern!
          */
-        #ifdef _WIN32
-        #ifdef __DLL__
-        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) template class __declspec(dllexport) karabo::util::Configurator< className >;
-        #else
-        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) extern template class __declspec(dllimport) karabo::util::Configurator< className >;
-        #endif
-        #else
-        #ifdef __SO__
-        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className)
-        #else
-        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) extern template class karabo::util::Configurator< className >;
-        #endif
-        #endif
+#ifdef _WIN32
+#ifdef __DLL__
+#define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) template class __declspec(dllexport) karabo::util::Configurator< className >;
+#else
+#define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) extern template class __declspec(dllimport) karabo::util::Configurator< className >;
+#endif
+#else
+#ifdef __SO__
+#define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className)
+#else
+#define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) extern template class karabo::util::Configurator< className >;
+#endif
+#endif
 
-        #define KARABO_EXPLICIT_TEMPLATE(className) template class className;
+#define KARABO_EXPLICIT_TEMPLATE(className) template class className;
 
-        #define KARABO_CONFIGURATION_BASE_CLASS \
+#define KARABO_CONFIGURATION_BASE_CLASS \
                 static boost::shared_ptr<Self> create(const karabo::util::Hash& configuration, const bool validate = true) { \
                 return karabo::util::Configurator<Self>::create(configuration, validate); } \
                 \

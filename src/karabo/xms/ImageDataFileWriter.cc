@@ -14,7 +14,7 @@
 
 namespace karabo {
     namespace xms {
-        
+
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<ImageData >, ImageDataFileWriter)
 
     }

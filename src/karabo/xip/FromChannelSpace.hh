@@ -19,7 +19,7 @@ namespace karabo {
 
         class FromChannelSpace {
 
-        public:
+            public:
 
             typedef int ArgumentType;
 

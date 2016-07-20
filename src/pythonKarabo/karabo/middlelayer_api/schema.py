@@ -55,15 +55,17 @@ class Configurable(Registry, metaclass=MetaConfigurable):
 
         self.__parent = parent
         self.__key = key
+        self._initializers = []
         for k in self._allattrs:
             t = getattr(type(self), k)
+            init = []
             if k in configuration:
                 v = configuration[k]
-                t.setter(self, v)
+                init = t.checkedInit(self, v)
                 del configuration[k]
             else:
-                if t.defaultValue is not None:
-                    setattr(self, k, t.defaultValue)
+                init = t.checkedInit(self)
+            self._initializers.extend(init)
 
     @classmethod
     def register(cls, name, dict):
@@ -75,31 +77,28 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                       if isinstance(getattr(cls, k), Descriptor)]
         cls._allattrs = set.union(*(set(c._attrs) for c in cls.__mro__
                                     if hasattr(c, "_attrs")))
-        cls.xsd = cls.getClassSchema()
         cls._subclasses = { }
         for b in cls.__bases__:
             if issubclass(b, Configurable):
                 b._subclasses[name] = cls
 
     @classmethod
-    def getClassSchema(cls, rules=None):
-        schema = Schema(cls.__name__, hash=rules)
-        for c in cls.__mro__[::-1]:
-            if hasattr(c, "expectedParameters"):
-                c.expectedParameters(schema)
-            if hasattr(c, "_attrs"):
-                for k in c._attrs:
-                    v = getattr(c, k)
-                    schema.hash[k] = v.subschema()
-                    schema.hash[k, ...] = {
-                        k: v.value if isinstance(v, Enum) else v
-                        for k, v in v.parameters().items()}
+    def getClassSchema(cls, device=None, state=None):
+        schema = Schema(cls.__name__)
+        for base in cls.__mro__[::-1]:
+            for attr in getattr(base, "_attrs", []):
+                descr = getattr(base, attr)
+                if (state is None or descr.allowedStates is None or
+                        state in descr.allowedStates):
+                    sub_schema, attrs = descr.toSchemaAndAttrs(device, state)
+                    attrs = {k: v.value if isinstance(v, Enum) else v
+                             for k, v in attrs.items()}
+                    schema.hash[attr] = sub_schema
+                    schema.hash[attr, ...] = attrs
         return schema
 
-    @classmethod
-    @coroutine
-    def getClassSchema_async(cls, rules=None):
-        return cls.getClassSchema(rules)
+    def getDeviceSchema(self, state=None):
+        return self.getClassSchema(self, state)
 
     def __dir__(self):
         """Return all attributes of this object.
@@ -132,6 +131,13 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             self.__parent.setChildValue(self.__key + "." + key, value, desc)
 
     @coroutine
+    def slotReconfigure(self, config):
+        props = ((getattr(self.__class__, k), v) for k, v in config.items())
+        setters = sum((t.checkedSet(self, v) for t, v in props), [])
+        setters = (s() for s in setters)
+        yield from gather(*[s for s in setters if s is not None])
+
+    @coroutine
     def _run(self):
         """ post-initialization of a Configurable
 
@@ -142,7 +148,8 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         This method should only be overridden inside Karabo (thus
         the underscore). Do not forget to ``yield from super()._run()``.
         """
-        pass
+        yield from gather(*self._initializers)
+        del self._initializers
 
     def _use(self):
         """this method is called each time an attribute of this configurable
@@ -166,27 +173,22 @@ class Node(Descriptor):
         self.cls = cls
         Descriptor.__init__(self, **kwargs)
 
-    def parameters(self):
-        ret = super(Node, self).parameters()
-        ret["nodeType"] = NodeType.Node
+    def toSchemaAndAttrs(self, device, state):
+        _, attrs = super(Node, self).toSchemaAndAttrs(device, state)
+        attrs["nodeType"] = NodeType.Node
+        return self.cls.getClassSchema(device, state).hash, attrs
+
+    def _initialize(self, instance, value):
+        node = self.cls(value, instance, self.key)
+        instance.__dict__[self.key] = node
+        ret = node._initializers
+        del node._initializers
         return ret
 
-    def subschema(self):
-        return self.cls.getClassSchema().hash
-
-    def __set__(self, instance, value):
-        instance.setValue(self, self.cls(value, instance, self.key))
-
-    def setter(self, instance, value):
-        self.__set__(instance, value)
-
-    @coroutine
-    def setter_async(self, instance, hash):
-        props = ((getattr(self.cls, k), v)
-                 for k, v in hash.items())
+    def _setter(self, instance, value):
+        props = ((getattr(self.cls, k), v) for k, v in value.items())
         parent = getattr(instance, self.key)
-        setters = [t.checkedSet(parent, v) for t, v in props]
-        yield from gather(*setters)
+        return sum((t.checkedSet(parent, v) for t, v in props), [])
 
     def toDataAndAttrs(self, instance):
         r = Hash()
@@ -202,22 +204,23 @@ class Node(Descriptor):
 class ChoiceOfNodes(Node):
     defaultValue = Attribute()
 
-    def parameters(self):
-        ret = super(ChoiceOfNodes, self).parameters()
-        ret["nodeType"] = NodeType.ChoiceOfNodes
-        return ret
-
-    def subschema(self):
+    def toSchemaAndAttrs(self, device, state):
         h = Hash()
         for k, v in self.cls._subclasses.items():
-            h[k] = v.getClassSchema().hash
+            h[k] = v.getClassSchema(device, state).hash
             h[k, "nodeType"] = NodeType.Node
-        return h
 
-    def __set__(self, instance, value):
-        for k, v in value.items():
-            instance.setValue(self, self.cls._subclasses[k](v))
-            break  # there should be only one entry
+        _, attrs = super().toSchemaAndAttrs(device, state)
+        attrs["nodeType"] = NodeType.ChoiceOfNodes
+        return h, attrs
+
+    def _initialize(self, instance, value):
+        for k, v in value.items():  # there should be only one entry
+            node = self.cls._subclasses[k](v)
+            instance.__dict__[self.key] = node
+            ret = node._initializers
+            del node._initializers
+            return ret
 
     def toDataAndAttrs(self, instance):
         r = Hash()
@@ -234,26 +237,29 @@ class ChoiceOfNodes(Node):
 class ListOfNodes(Node):
     defaultValue = Attribute()
 
-    def parameters(self):
-        ret = super(ListOfNodes, self).parameters()
-        ret["nodeType"] = NodeType.ListOfNodes
-        return ret
-
-    def subschema(self):
+    def toSchemaAndAttrs(self, device, state):
         h = Hash()
         for k, v in self.cls._subclasses.items():
-            h[k] = v.getClassSchema().hash
+            h[k] = v.getClassSchema(device, state).hash
             h[k, "nodeType"] = NodeType.Node
-        return h
 
-    def __set__(self, instance, value):
+        _, attrs = super(ListOfNodes, self).toSchemaAndAttrs(device, state)
+        attrs["nodeType"] = NodeType.ListOfNodes
+        return h, attrs
+
+    def _initialize(self, instance, value):
         if isinstance(value, Hash):
             l = [self.cls._subclasses[k](v, instance, self.key)
                  for k, v in value.items()]
         else:
             l = [self.cls._subclasses[k](Hash(), instance, self.key)
                  for k in value]
-        instance.setValue(self, l)
+        instance.__dict__[self.key] = l
+        ret = []
+        for o in l:
+            ret += o._initializers
+            del o._initializers
+        return ret
 
     def toDataAndAttrs(self, instance):
         l = []

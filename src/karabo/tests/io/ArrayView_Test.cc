@@ -13,18 +13,23 @@ using namespace std;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(ArrayView_Test);
 
+
 ArrayView_Test::ArrayView_Test() {
-    
+
 }
+
 
 ArrayView_Test::~ArrayView_Test() {
 }
 
+
 void ArrayView_Test::setUp() {
 }
 
+
 void ArrayView_Test::tearDown() {
 }
+
 
 void ArrayView_Test::testCArray() {
 
@@ -69,6 +74,7 @@ void ArrayView_Test::testCArray() {
     tracer << endl;
 
 }
+
 
 void ArrayView_Test::testIndexable() {
 
@@ -120,7 +126,7 @@ void ArrayView_Test::testIndexable() {
     CPPUNIT_ASSERT(b2.getNumDims() == 1);
     tracer << "number of columns: " << b2.getSize() << endl;
     CPPUNIT_ASSERT(b2.getSize() == 3);
-        
+
     tracer << "number of rows: " << b2[0].getSize() << endl;
     CPPUNIT_ASSERT(b2[0].getSize() == 4);
     CPPUNIT_ASSERT(b2[1].getSize() == 4);

@@ -16,11 +16,14 @@ using namespace karabo::util;
 using namespace karabo::io;
 using namespace karabo::xip;
 
+
 RawImageData_Test::RawImageData_Test() {
 }
 
+
 RawImageData_Test::~RawImageData_Test() {
 }
+
 
 void RawImageData_Test::testConstructor() {
 
@@ -41,6 +44,7 @@ void RawImageData_Test::testConstructor() {
 
 
 }
+
 
 void RawImageData_Test::testPerformance() {
     try {

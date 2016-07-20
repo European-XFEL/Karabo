@@ -190,7 +190,7 @@ namespace karabo {
         }
 
 
-        std::ostream & operator <<(std::ostream& os, const TimeProfiler & profiler) {
+        std::ostream & operator<<(std::ostream& os, const TimeProfiler & profiler) {
             profiler.serialize(os);
             return os;
         }

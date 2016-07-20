@@ -102,10 +102,10 @@ namespace karabo {
 
 
         TcpConnection::TcpConnection(const karabo::util::Hash& input)
-        : Connection(input)
-        , m_boostIoServicePointer()
-        , m_resolver()
-        , m_acceptor() {
+            : Connection(input)
+            , m_boostIoServicePointer()
+            , m_resolver()
+            , m_acceptor() {
 
             input.get("hostname", m_hostname);
             input.get("port", m_port);
@@ -214,9 +214,9 @@ namespace karabo {
                             m_port = le.port();
                         }
                         m_acceptor = acceptor;
-//                        if (m_port != endpoint.port()) {
-//                            m_port = endpoint.port(); // if m_port was == 0 then the OS assigns free port number.
-//                        }
+                        //                        if (m_port != endpoint.port()) {
+                        //                            m_port = endpoint.port(); // if m_port was == 0 then the OS assigns free port number.
+                        //                        }
                     } catch (...) {
                         KARABO_RETHROW
                     }
@@ -252,7 +252,7 @@ namespace karabo {
                 } else {
                     if (m_errorHandler)
                         m_errorHandler(e);
-                    else if (e.value() != 125) {   // 125 -- Operation canceled
+                    else if (e.value() != 125) { // 125 -- Operation canceled
                         KARABO_LOG_FRAMEWORK_WARN << "TCP : Accept handler got code #" << e.value() << " -- " << e.message();
                     }
                 }

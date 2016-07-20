@@ -24,7 +24,7 @@ namespace karabo {
 
         class HashFilter {
 
-        public:
+            public:
             KARABO_CLASSINFO(HashFilter, "HashFilter", "1.0");
 
             HashFilter();
@@ -38,10 +38,10 @@ namespace karabo {
 
             static void r_byTag(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const std::set<std::string>& tags);
             static bool processNode(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const std::set<std::string>& tags);
-            
+
             static void r_byAccessMode(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const AccessType& value);
             static bool processNodeForAccessMode(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const AccessType& value);
-                        
+
         };
     }
 }

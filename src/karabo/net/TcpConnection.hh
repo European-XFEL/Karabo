@@ -41,12 +41,13 @@ namespace karabo {
         typedef boost::shared_ptr<boost::asio::ip::tcp::resolver> BoostTcpResolver;
         typedef boost::shared_ptr<boost::asio::ip::tcp::acceptor> BoostTcpAcceptor;
 
-        /**
+/**
          * The Connection class.
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
          */
         class TcpConnection : public Connection {
+
 
             friend class TcpChannel;
 
@@ -80,11 +81,11 @@ namespace karabo {
              * @return Pointer to Channel
              */
             virtual ChannelPointer createChannel();
-            
+
             size_t getSizeofLength() const {
                 return m_sizeofLength;
             }
-            
+
             bool lengthIsText() const {
                 return m_lengthIsTextFlag;
             }

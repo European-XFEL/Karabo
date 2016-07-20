@@ -17,7 +17,7 @@ namespace karabo {
 
         class ToXsd {
 
-        public:
+            public:
 
             typedef std::string ReturnType;
 

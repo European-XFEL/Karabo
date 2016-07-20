@@ -16,7 +16,7 @@ using namespace std;
 namespace karabo {
     namespace util {
 
-        #ifdef __linux__
+#ifdef __linux__
 
         jmp_buf context;
 
@@ -60,7 +60,7 @@ namespace karabo {
         }
 
 
-        std::ostream& operator <<(std::ostream& os, const StackTrace& trace) {
+        std::ostream& operator<<(std::ostream& os, const StackTrace& trace) {
             trace.print(os);
             return os;
         }
@@ -109,7 +109,7 @@ namespace karabo {
             oss << endl << StackTrace() << endl;
 
             cerr << oss.str() << endl;
-            
+
             KARABO_LOG_FRAMEWORK_ERROR_C("TerminateCallback")
                     << "\n------------------- STACK TRACE ----------------------\n"
                     << oss.str()
@@ -142,8 +142,8 @@ namespace karabo {
             sigdelset(&signal_mask, SIGBUS);
             sigdelset(&signal_mask, SIGUSR1);
             sigdelset(&signal_mask, SIGUSR2);
-//            sigdelset(&signal_mask, SIGINT);
-//            sigdelset(&signal_mask, SIGHUP);
+            //            sigdelset(&signal_mask, SIGINT);
+            //            sigdelset(&signal_mask, SIGHUP);
 
             while (true) {
                 int sig_num;
@@ -177,7 +177,7 @@ namespace karabo {
             }
         }
 
-        #endif
+#endif
 
     }
 }

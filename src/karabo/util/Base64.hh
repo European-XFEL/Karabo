@@ -16,10 +16,10 @@ namespace karabo {
     namespace util {
 
         // Base64 encoder/decoder
-        
+
         std::string base64Encode(const unsigned char* bytes_to_encode, const size_t len);
         void base64Decode(const std::string& in, std::vector<unsigned char>& out);
-        
+
     }
 }
 

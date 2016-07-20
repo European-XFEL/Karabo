@@ -190,7 +190,7 @@ void Authenticate_Test::testIncorrectLogin() {
     // Test wrong password
     try {
         CPPUNIT_ASSERT(a.login() == false);
-    } catch(karabo::util::NetworkException& e) {
+    } catch (karabo::util::NetworkException& e) {
         CPPUNIT_ASSERT(true);
     }
 
@@ -202,7 +202,7 @@ void Authenticate_Test::testIncorrectLogin() {
     // Test wrong password
     try {
         CPPUNIT_ASSERT(a.login() == false);
-    } catch(karabo::util::NetworkException& e) {
+    } catch (karabo::util::NetworkException& e) {
         CPPUNIT_ASSERT(true);
     }
 
@@ -219,10 +219,10 @@ void Authenticate_Test::testIncorrectLogin() {
 
     try {
         CPPUNIT_ASSERT(a.login() == false);
-    } catch(karabo::util::NetworkException& e) {
+    } catch (karabo::util::NetworkException& e) {
         CPPUNIT_ASSERT(true);
     }
-        
+
 
     // Class instance should be in the initial state
     testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
@@ -230,7 +230,7 @@ void Authenticate_Test::testIncorrectLogin() {
     // Unsuccessful logout
     try {
         CPPUNIT_ASSERT(a.logout() == false);
-    } catch(karabo::util::NetworkException& e) {
+    } catch (karabo::util::NetworkException& e) {
         CPPUNIT_ASSERT(true);
     }
 }

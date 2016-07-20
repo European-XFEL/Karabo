@@ -44,7 +44,7 @@ namespace karabo {
         struct StateVisitor {
 
             template <class T>
-            void visitState(T* state, bool stopWorker=false) {
+            void visitState(T* state, bool stopWorker = false) {
                 if (stopWorker) {
                     Worker* worker = state->getWorker();
                     if (worker && worker->is_running()) worker->abort().join();
@@ -159,7 +159,7 @@ namespace karabo {
 // Instantiates a state machine as a shared pointer
 #define KARABO_FSM_CREATE_MACHINE(machineName, instanceName) instanceName = boost::shared_ptr<machineName > (new machineName());
 
-#define KARABO_FSM_TABLE_BEGIN(tableName) struct tableName : boost::mpl::vector< 
+#define KARABO_FSM_TABLE_BEGIN(tableName) struct tableName : boost::mpl::vector<
 
 #define KARABO_FSM_TABLE_END > {};
 
@@ -177,8 +177,8 @@ namespace karabo {
 // It is possible to use in code KARABO_FSM_GET(3,A,B,C)->setContext(this);
 #define KARABO_FSM_GET_DECLARE(machineName, instanceName) boost::shared_ptr<machineName> getFsm() { return instanceName; } \
     virtual void stopFsm() { boost::shared_ptr<StateVisitor> v(new StateVisitor); this->getFsm()->visit_current_states(v, true); }
-    
-#define KARABO_FSM_GET0() getFsm() 
+
+#define KARABO_FSM_GET0() getFsm()
 #define KARABO_FSM_GET1(A)            KARABO_FSM_GET0()->get_state<A*>()
 #define KARABO_FSM_GET2(A,B)          KARABO_FSM_GET1(A)->get_state<B*>()
 #define KARABO_FSM_GET3(A,B,C)        KARABO_FSM_GET2(A,B)->get_state<C*>()
@@ -187,7 +187,7 @@ namespace karabo {
 #define KARABO_FSM_GET6(A,B,C,D,E,F)  KARABO_FSM_GET5(A,B,C,D,E)->get_state<F*>()
 
 #define KARABO_FSM_GETN(n,...) KARABO_FSM_GET ## n(__VA_ARGS__)
-#define KARABO_FSM_VSIZE(...) BOOST_PP_SUB(KARABO_FSM_VSIZE_I(e0,##__VA_ARGS__,10,9,8,7,6,5,4,3,2,1),1) 
+#define KARABO_FSM_VSIZE(...) BOOST_PP_SUB(KARABO_FSM_VSIZE_I(e0,##__VA_ARGS__,10,9,8,7,6,5,4,3,2,1),1)
 #define KARABO_FSM_VSIZE_I(e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,N,...) N
 #define KARABO_FSM_GET(...) BOOST_PP_CAT(KARABO_FSM_GET,KARABO_FSM_VSIZE(__VA_ARGS__))(__VA_ARGS__)
 

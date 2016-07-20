@@ -13,11 +13,14 @@ using namespace karabo::util;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(ClassInfo_Test);
 
+
 ClassInfo_Test::ClassInfo_Test() {
 }
 
+
 ClassInfo_Test::~ClassInfo_Test() {
 }
+
 
 void ClassInfo_Test::setUp() {
 
@@ -44,12 +47,14 @@ void ClassInfo_Test::setUp() {
 
 }
 
+
 void ClassInfo_Test::testGetClassId() {
 
     string cId = vp->getClassInfo().getClassId();
     CPPUNIT_ASSERT(cId == "BobbyCar");
 
 }
+
 
 void ClassInfo_Test::testGetClassName() {
 
@@ -58,12 +63,14 @@ void ClassInfo_Test::testGetClassName() {
 
 }
 
+
 void ClassInfo_Test::testGetNamespace() {
 
     string cNamespace = vp->getClassInfo().getNamespace();
     CPPUNIT_ASSERT(cNamespace == "karabo::util");
 
 }
+
 
 void ClassInfo_Test::testAnotherUsage() {
 
@@ -78,6 +85,7 @@ void ClassInfo_Test::testAnotherUsage() {
 
 }
 
+
 void ClassInfo_Test::testGetRegisteredKeys() {
 
     vector<string> keys = Factory<Vehicle>::getRegisteredKeys();
@@ -89,8 +97,9 @@ void ClassInfo_Test::testGetRegisteredKeys() {
 
 }
 
+
 void ClassInfo_Test::testExpectedParameters() {
     Schema expected = Vehicle::expectedParameters();
-    vector<string> keys = expected.getKeysAsVector();  
+    vector<string> keys = expected.getKeysAsVector();
     CPPUNIT_ASSERT(keys[0] == "BobbyCar");
 }

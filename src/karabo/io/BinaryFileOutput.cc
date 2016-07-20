@@ -18,6 +18,6 @@ namespace karabo {
         KARABO_REGISTER_FOR_CONFIGURATION(Output<Hash>, BinaryFileOutput<Hash>)
         KARABO_REGISTER_FOR_CONFIGURATION(Output<Schema>, BinaryFileOutput<Schema>)
         KARABO_REGISTER_FOR_CONFIGURATION(Output<std::vector<char> >, BinaryFileOutput<std::vector<char> >)
-        
+
     }
 }

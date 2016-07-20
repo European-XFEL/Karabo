@@ -23,9 +23,11 @@ namespace karabo {
 
         template<typename T>
         class Hdf5Serializer {
-        public:
+
+            public:
 
             KARABO_CLASSINFO(Hdf5Serializer, "Hdf5Serializer", "1.0");
+
             KARABO_CONFIGURATION_BASE_CLASS
 
             static void expectedParameters(karabo::util::Schema& expected) {
@@ -40,13 +42,12 @@ namespace karabo {
 
             virtual void save(const T& object, hid_t h5file, const std::string& groupName) = 0;
 
-            virtual void load(T& object, hid_t h5file, const std::string& groupName) = 0;   
-            
+            virtual void load(T& object, hid_t h5file, const std::string& groupName) = 0;
+
             virtual unsigned long long size(hid_t h5file, const std::string & groupName) = 0;
-            
-            
+
             virtual void onCloseFile() {
-                
+
             }
 
         private:

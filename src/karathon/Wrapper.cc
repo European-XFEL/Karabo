@@ -20,6 +20,7 @@ using namespace std;
 
 namespace karathon {
 
+
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<bool>& v, bool numpyFlag) {
         if (numpyFlag) {
@@ -27,8 +28,8 @@ namespace karathon {
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_BOOL);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
-            bool* data = reinterpret_cast<bool*>(PyArray_DATA(arr));
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            bool* data = reinterpret_cast<bool*> (PyArray_DATA(arr));
             for (int i = 0; i < PyArray_SIZE(arr); i++) {
                 data[i] = v[i];
             }
@@ -37,6 +38,7 @@ namespace karathon {
         return Wrapper::fromStdVectorToPyList(v);
     }
 
+
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<short>& v, bool numpyFlag) {
         if (numpyFlag) {
@@ -44,12 +46,13 @@ namespace karathon {
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_SHORT);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
             return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
+
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned short>& v, bool numpyFlag) {
@@ -58,12 +61,13 @@ namespace karathon {
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_USHORT);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
             return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
+
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<int>& v, bool numpyFlag) {
@@ -72,12 +76,13 @@ namespace karathon {
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_INT);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
             return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
+
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned int>& v, bool numpyFlag) {
@@ -86,12 +91,13 @@ namespace karathon {
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_UINT);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
             return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
+
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<long long>& v, bool numpyFlag) {
@@ -100,12 +106,13 @@ namespace karathon {
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_LONGLONG);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
             return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
+
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned long long>& v, bool numpyFlag) {
@@ -114,12 +121,13 @@ namespace karathon {
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_ULONGLONG);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
             return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
+
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<float>& v, bool numpyFlag) {
@@ -128,12 +136,13 @@ namespace karathon {
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_FLOAT);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
             return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
+
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<double>& v, bool numpyFlag) {
@@ -142,12 +151,13 @@ namespace karathon {
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_DOUBLE); // reinterpret_cast<void*> (&v[0]));
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
             return bp::object(bp::handle<>(pyobj));
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
+
 
     bp::object Wrapper::toObject(const boost::any& operand, bool numpyFlag) {
         try {
@@ -241,8 +251,9 @@ namespace karathon {
         } catch (const boost::bad_any_cast& e) {
             KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(e.what()));
         }
-        return bp::object();   // make compiler happy -- we never reach this statement
+        return bp::object(); // make compiler happy -- we never reach this statement
     }
+
 
     karabo::util::Types::ReferenceType Wrapper::toAny(const bp::object& obj, boost::any& any) {
         if (obj.ptr() == Py_None) {
@@ -255,38 +266,35 @@ namespace karathon {
             return karabo::util::Types::BOOL;
         }
         if (PyLong_Check(obj.ptr())) {
-            long long const kNegInt32Min = -(1LL<<31);
-            long long const kPosUint32Max = (1LL<<32)-1;
-            long long const kPosInt32Max = (1LL<<31)-1;
-            long long const kPosInt64Max = (1ULL<<63)-1;
+            long long const kNegInt32Min = -(1LL << 31);
+            long long const kPosUint32Max = (1LL << 32) - 1;
+            long long const kPosInt32Max = (1LL << 31) - 1;
+            long long const kPosInt64Max = (1ULL << 63) - 1;
             int overflow = 0;
             PY_LONG_LONG value = PyLong_AsLongLongAndOverflow(obj.ptr(), &overflow);
             if (overflow == 0) {
                 if (value < 0) {
                     if (value < kNegInt32Min) {
-                        any = static_cast<long long>(value);
+                        any = static_cast<long long> (value);
                         return karabo::util::Types::INT64;
-                    }
-                    else {
-                        any = static_cast<int>(value);
+                    } else {
+                        any = static_cast<int> (value);
                         return karabo::util::Types::INT32;
                     }
-                }
-                else {
+                } else {
                     if (value > kPosUint32Max) {
                         if (value <= kPosInt64Max) {
-                            any = static_cast<long long>(value);
+                            any = static_cast<long long> (value);
                             return karabo::util::Types::INT64;
                         }
-                        any = static_cast<unsigned long long>(value);
+                        any = static_cast<unsigned long long> (value);
                         return karabo::util::Types::UINT64;
-                    }
-                    else {
+                    } else {
                         if (value <= kPosInt32Max) {
-                            any = static_cast<int>(value);
+                            any = static_cast<int> (value);
                             return karabo::util::Types::INT32;
                         }
-                        any = static_cast<unsigned int>(value);
+                        any = static_cast<unsigned int> (value);
                         return karabo::util::Types::UINT32;
                     }
                 }
@@ -336,7 +344,7 @@ namespace karathon {
         if (bp::extract<wchar_t* const>(obj).check()) {
             wchar_t* const b = bp::extract<wchar_t* const>(obj);
             any = b;
-            return karabo::util::Types::PTR_CHAR;       //TODO: Define WCHAR and PTR_WCHAR. Check with Burkhard and Martin
+            return karabo::util::Types::PTR_CHAR; //TODO: Define WCHAR and PTR_WCHAR. Check with Burkhard and Martin
         }
         if (bp::extract<std::vector<std::string> >(obj).check()) {
             std::vector<std::string> const b = bp::extract<std::vector<std::string> >(obj);
@@ -369,7 +377,7 @@ namespace karathon {
             return karabo::util::Types::VECTOR_HASH_POINTER;
         }
         if (PyArray_Check(obj.ptr())) {
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(obj.ptr());
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
             int nd = PyArray_NDIM(arr);
             npy_intp* shapes = PyArray_DIMS(arr);
             int nelems = 1;
@@ -538,7 +546,7 @@ namespace karathon {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     Py_ssize_t size;
-                    const char* data = PyUnicode_AsUTF8AndSize(static_cast<bp::object>(obj[i]).ptr(), &size);
+                    const char* data = PyUnicode_AsUTF8AndSize(static_cast<bp::object> (obj[i]).ptr(), &size);
                     v[i] = string(data, size);
                 }
                 any = v;

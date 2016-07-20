@@ -13,26 +13,28 @@
 #include <karabo/util.hpp>
 
 class H5Format_Test : public CPPUNIT_NS::TestFixture {
+
+
     CPPUNIT_TEST_SUITE(H5Format_Test);
 
     CPPUNIT_TEST(testEmptyFormat);
     CPPUNIT_TEST(testManualFormat);
     CPPUNIT_TEST(testDiscoverFromHash);
-    
-    
+
+
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    
+
     KARABO_CLASSINFO(H5Format_Test, "H5Format_Test", "1.0")
-            
+
     H5Format_Test();
     virtual ~H5Format_Test();
     void setUp();
     void tearDown();
 
 private:
-  
+
     void testDiscoverFromHash();
     void testEmptyFormat();
     void testManualFormat();

@@ -108,12 +108,12 @@ namespace karabo {
 
             pugi::xml_node rootElementNode = node.append_child("xs:element");
             rootElementNode.append_attribute("name") = elementName.c_str();
-            
-            if(isChildNodeOfListElement){
-               rootElementNode.append_attribute("minOccurs") = "0";
-               rootElementNode.append_attribute("maxOccurs") = "unbounded";
+
+            if (isChildNodeOfListElement) {
+                rootElementNode.append_attribute("minOccurs") = "0";
+                rootElementNode.append_attribute("maxOccurs") = "unbounded";
             }
-            
+
             if (!key.empty()) {
                 if (schema.hasDisplayedName(key)) {//sufficient condition for 'annotation' to be added to element 
                     pugi::xml_node annotationNode = rootElementNode.append_child("xs:annotation");
@@ -137,7 +137,7 @@ namespace karabo {
                     leafToXsd(schema, name, allNode);
 
                 } else if (schema.getNodeType(name) == Schema::NODE) {
-                    
+
                     r_createXsd(schema, allNode, false, name);
 
                 } else if (schema.getNodeType(name) == Schema::CHOICE_OF_NODES) {
@@ -223,10 +223,11 @@ namespace karabo {
 
             vector<string> keys = schema.getKeys(key);
 
+
             BOOST_FOREACH(string name, keys) {
-                string currentKey = key + "." + name;           
-                if (schema.getNodeType(currentKey) == Schema::NODE) {                   
-                   r_createXsd(schema, choiceTag, false, currentKey);            
+                string currentKey = key + "." + name;
+                if (schema.getNodeType(currentKey) == Schema::NODE) {
+                    r_createXsd(schema, choiceTag, false, currentKey);
                 } else if (schema.getNodeType(currentKey) == Schema::CHOICE_OF_NODES) {
                     choiceOfNodesToXsd(schema, currentKey, choiceTag);
                 } else if (schema.getNodeType(currentKey) == Schema::LIST_OF_NODES) {
@@ -255,8 +256,8 @@ namespace karabo {
 
             BOOST_FOREACH(string name, keys) {
                 string currentKey = key + "." + name;
-                if (schema.getNodeType(currentKey) == Schema::NODE) {      
-                   r_createXsd(schema, sequenceTag, true, currentKey);  
+                if (schema.getNodeType(currentKey) == Schema::NODE) {
+                    r_createXsd(schema, sequenceTag, true, currentKey);
                 } else if (schema.getNodeType(currentKey) == Schema::CHOICE_OF_NODES) {
                     choiceOfNodesToXsd(schema, currentKey, sequenceTag);
                 } else if (schema.getNodeType(currentKey) == Schema::LIST_OF_NODES) {
@@ -273,17 +274,17 @@ namespace karabo {
 
             //type
             if ((schema.getNodeType(key) == Schema::LEAF) && !schema.hasOptions(key) &&
-                    !schema.hasMinInc(key) && !schema.hasMinExc(key) && !schema.hasMaxInc(key) && !schema.hasMaxExc(key)) {
+                !schema.hasMinInc(key) && !schema.hasMinExc(key) && !schema.hasMaxInc(key) && !schema.hasMaxExc(key)) {
                 string xsdType = Types::to<ToXsd > (schema.getValueType(key));
                 node.append_attribute("type") = xsdType.c_str();
             }
-            
+
             //default
-            if ((schema.getNodeType(key) == Schema::LEAF) && schema.hasDefaultValue(key)){
+            if ((schema.getNodeType(key) == Schema::LEAF) && schema.hasDefaultValue(key)) {
                 string defaultValue = schema.getDefaultValueAs<string>(key);
                 node.append_attribute("default") = defaultValue.c_str();
             }
-            
+
             //assignment -> minOccurs, maxOccurs
             if (schema.getAssignment(key) == Schema::OPTIONAL_PARAM) {
                 node.append_attribute("minOccurs") = "0";
@@ -310,18 +311,18 @@ namespace karabo {
                 pugi::xml_node displayedNameElem = documentationNode.append_child("a:displayedName");
                 displayedNameElem.append_child(pugi::node_pcdata).set_value(displayedName.c_str());
             }
-            
+
             if (schema.keyHasAlias(key)) {
                 string alias = schema.getAliasAsString(key);
                 pugi::xml_node aliasElem = documentationNode.append_child("a:alias");
                 aliasElem.append_child(pugi::node_pcdata).set_value(alias.c_str());
             }
-            
-           
+
+
             int expertLevel = schema.getRequiredAccessLevel(key);
             pugi::xml_node expertLevelElem = documentationNode.append_child("a:requiredAccessLevel");
             expertLevelElem.append_child(pugi::node_pcdata).set_value(toString(expertLevel).c_str());
-            
+
 
             if (schema.hasDefaultValue(key)) {
                 string defaultValue = schema.getDefaultValueAs<string > (key);
@@ -346,85 +347,85 @@ namespace karabo {
                 pugi::xml_node allowedStatesElem = documentationNode.append_child("a:allowedStates");
                 allowedStatesElem.append_child(pugi::node_pcdata).set_value(toString(allowedStates).c_str());
             }
-            
+
             if (schema.hasTags(key)) {
                 vector<string> tags = schema.getTags(key);
                 pugi::xml_node tagsElem = documentationNode.append_child("a:tags");
                 tagsElem.append_child(pugi::node_pcdata).set_value(toString(tags).c_str());
             }
-            
-            if (schema.hasUnit(key)){
-               string unitName = schema.getUnitName(key);
-               string unitSymbol = schema.getUnitSymbol(key);
-               
-               pugi::xml_node unitNameElem = documentationNode.append_child("a:unitName");
-               unitNameElem.append_child(pugi::node_pcdata).set_value(unitName.c_str());
-               
-               pugi::xml_node unitSymbolElem = documentationNode.append_child("a:unitSymbol");
-               unitSymbolElem.append_child(pugi::node_pcdata).set_value(unitSymbol.c_str());
+
+            if (schema.hasUnit(key)) {
+                string unitName = schema.getUnitName(key);
+                string unitSymbol = schema.getUnitSymbol(key);
+
+                pugi::xml_node unitNameElem = documentationNode.append_child("a:unitName");
+                unitNameElem.append_child(pugi::node_pcdata).set_value(unitName.c_str());
+
+                pugi::xml_node unitSymbolElem = documentationNode.append_child("a:unitSymbol");
+                unitSymbolElem.append_child(pugi::node_pcdata).set_value(unitSymbol.c_str());
             }
-            
-            if (schema.hasMetricPrefix(key)){
-               string prefixName = schema.getMetricPrefixName(key);
-               string prefixSymbol = schema.getMetricPrefixSymbol(key);
-               
-               pugi::xml_node prefixNameElem = documentationNode.append_child("a:metricPrefixName");
-               prefixNameElem.append_child(pugi::node_pcdata).set_value(prefixName.c_str());
-               
-               pugi::xml_node prefixSymbolElem = documentationNode.append_child("a:metricPrefixSymbol");
-               prefixSymbolElem.append_child(pugi::node_pcdata).set_value(prefixSymbol.c_str());
+
+            if (schema.hasMetricPrefix(key)) {
+                string prefixName = schema.getMetricPrefixName(key);
+                string prefixSymbol = schema.getMetricPrefixSymbol(key);
+
+                pugi::xml_node prefixNameElem = documentationNode.append_child("a:metricPrefixName");
+                prefixNameElem.append_child(pugi::node_pcdata).set_value(prefixName.c_str());
+
+                pugi::xml_node prefixSymbolElem = documentationNode.append_child("a:metricPrefixSymbol");
+                prefixSymbolElem.append_child(pugi::node_pcdata).set_value(prefixSymbol.c_str());
             }
-            
-            if (schema.hasMin(key)){ //relevant for LIST element
+
+            if (schema.hasMin(key)) { //relevant for LIST element
                 int minNumNodes = schema.getMin(key);
                 pugi::xml_node minNumNodesElem = documentationNode.append_child("a:min");
                 minNumNodesElem.append_child(pugi::node_pcdata).set_value(toString(minNumNodes).c_str());
             }
-            
-            if (schema.hasMax(key)){ //relevant for LIST element
+
+            if (schema.hasMax(key)) { //relevant for LIST element
                 int maxNumNodes = schema.getMax(key);
                 pugi::xml_node maxNumNodesElem = documentationNode.append_child("a:max");
                 maxNumNodesElem.append_child(pugi::node_pcdata).set_value(toString(maxNumNodes).c_str());
             }
-            
-            if( schema.isAccessReadOnly(key) ){//if element 'readOnly', check for Warn and Alarm
-              
-                if (schema.hasWarnLow(key)){
-                  string warnLow = schema.getWarnLowAs<string>(key);
-                  
-                  pugi::xml_node warnLowElem = documentationNode.append_child("a:warnLow");
-                  warnLowElem.append_child(pugi::node_pcdata).set_value(warnLow.c_str());
-              }
-              
-              if (schema.hasWarnHigh(key)){
-                  string warnHigh = schema.getWarnHighAs<string>(key);
-                  
-                  pugi::xml_node warnHighElem = documentationNode.append_child("a:warnHigh");
-                  warnHighElem.append_child(pugi::node_pcdata).set_value(warnHigh.c_str());
-              }
-              
-              if (schema.hasAlarmLow(key)){
-                  string alarmLow = schema.getAlarmLowAs<string>(key);
-                  
-                  pugi::xml_node alarmLowElem = documentationNode.append_child("a:alarmLow");
-                  alarmLowElem.append_child(pugi::node_pcdata).set_value(alarmLow.c_str());   
-              }
-              
-              if (schema.hasAlarmHigh(key)){
-                  string alarmHigh = schema.getAlarmHighAs<string>(key);
-                  
-                  pugi::xml_node alarmHighElem = documentationNode.append_child("a:alarmHigh");
-                  alarmHighElem.append_child(pugi::node_pcdata).set_value(alarmHigh.c_str());   
-              }
-              
-              if (schema.hasArchivePolicy(key)){
-                  int archivePolicy = schema.getArchivePolicy(key);
-                  pugi::xml_node archivePolicyElem = documentationNode.append_child("a:archivePolicy");
-                  archivePolicyElem.append_child(pugi::node_pcdata).set_value(toString(archivePolicy).c_str());
-              } 
-                  
+
+            if (schema.isAccessReadOnly(key)) {//if element 'readOnly', check for Warn and Alarm
+
+                if (schema.hasWarnLow(key)) {
+                    string warnLow = schema.getWarnLowAs<string>(key);
+
+                    pugi::xml_node warnLowElem = documentationNode.append_child("a:warnLow");
+                    warnLowElem.append_child(pugi::node_pcdata).set_value(warnLow.c_str());
+                }
+
+                if (schema.hasWarnHigh(key)) {
+                    string warnHigh = schema.getWarnHighAs<string>(key);
+
+                    pugi::xml_node warnHighElem = documentationNode.append_child("a:warnHigh");
+                    warnHighElem.append_child(pugi::node_pcdata).set_value(warnHigh.c_str());
+                }
+
+                if (schema.hasAlarmLow(key)) {
+                    string alarmLow = schema.getAlarmLowAs<string>(key);
+
+                    pugi::xml_node alarmLowElem = documentationNode.append_child("a:alarmLow");
+                    alarmLowElem.append_child(pugi::node_pcdata).set_value(alarmLow.c_str());
+                }
+
+                if (schema.hasAlarmHigh(key)) {
+                    string alarmHigh = schema.getAlarmHighAs<string>(key);
+
+                    pugi::xml_node alarmHighElem = documentationNode.append_child("a:alarmHigh");
+                    alarmHighElem.append_child(pugi::node_pcdata).set_value(alarmHigh.c_str());
+                }
+
+                if (schema.hasArchivePolicy(key)) {
+                    int archivePolicy = schema.getArchivePolicy(key);
+                    pugi::xml_node archivePolicyElem = documentationNode.append_child("a:archivePolicy");
+                    archivePolicyElem.append_child(pugi::node_pcdata).set_value(toString(archivePolicy).c_str());
+                }
+
             }
-            
+
             if (isVector) {
                 string valueTypeStr = Types::to<ToLiteral>(schema.getValueType(key));
                 pugi::xml_node displayTypeVect = documentationNode.append_child("a:displayType");
@@ -448,9 +449,9 @@ namespace karabo {
         bool SchemaXsdSerializer::annotationExists(const Schema& schema, const string& key) const {
 
             if (schema.hasDescription(key) || schema.hasDisplayedName(key) ||
-                    schema.hasDefaultValue(key) || schema.hasUnit(key) || schema.hasAccessMode(key) ||
-                    schema.hasDisplayType(key) || schema.hasAllowedStates(key) || schema.hasTags(key) ||
-                    schema.hasMin(key) || schema.hasMax(key) ) {
+                schema.hasDefaultValue(key) || schema.hasUnit(key) || schema.hasAccessMode(key) ||
+                schema.hasDisplayType(key) || schema.hasAllowedStates(key) || schema.hasTags(key) ||
+                schema.hasMin(key) || schema.hasMax(key)) {
                 return true;
             } else {
                 return false;

@@ -44,7 +44,7 @@ namespace karabo {
 
             void Group::create(hid_t tableGroup) {
                 m_tableGroup = tableGroup;
-                
+
                 hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
                 KARABO_CHECK_HDF5_STATUS(lcpl);
                 KARABO_CHECK_HDF5_STATUS(H5Pset_create_intermediate_group(lcpl, 1));

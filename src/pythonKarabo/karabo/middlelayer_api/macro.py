@@ -144,18 +144,20 @@ class Macro(Device):
         if not isinstance(get_event_loop(), EventLoop):
             EventLoop.global_loop.start_device(self)
 
+    def _initInfo(self):
+        info = super(Macro, self)._initInfo()
+        info["type"] = "macro"
+        info["project"] = self.project
+        info["module"] = self.module
+        return info
+
     @coroutine
     def _run(self):
         """ implement the RemoteDevice functionality, upon
         starting the device the devices are searched and then
         assigned to the object's properties """
-        info = Hash()
-        info["type"] = "macro"
-        info["project"] = self.project
-        info["module"] = self.module
-        self.updateInstanceInfo(info)
 
-        yield from super()._run()
+        yield from super(Macro, self)._run()
 
         self.state = "SearchRemotes..."
         holders = []

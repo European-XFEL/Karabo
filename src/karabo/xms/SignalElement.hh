@@ -19,7 +19,7 @@ namespace karabo {
 
         class SignalElement {
 
-        protected:
+            protected:
 
             karabo::util::ComplexElement m_outerElement;
             karabo::util::SimpleElement<std::vector<std::string> > m_connectedSlots;

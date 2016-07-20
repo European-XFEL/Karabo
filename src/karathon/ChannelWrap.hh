@@ -18,7 +18,7 @@ namespace karathon {
 
     class ChannelWrap {
 
-    public:
+        public:
 
         static bp::object getConnection(karabo::net::Channel::Pointer channel) {
             karabo::net::Connection::Pointer connection;
@@ -69,6 +69,7 @@ namespace karathon {
         static void proxyWriteCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel);
         static void proxyWaitCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel);
         static void proxyErrorHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code);
+
         static bool hasattr(bp::object obj, const std::string& attrName) {
             return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));
         }

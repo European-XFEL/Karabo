@@ -15,6 +15,7 @@ class SignalSlotDemo;
 
 class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(SignalSlotable_Test);
 
     CPPUNIT_TEST(testMethod);

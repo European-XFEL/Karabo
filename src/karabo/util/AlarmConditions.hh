@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   AlarmConditions.hh
  * Author: haufs
  *
@@ -14,16 +14,38 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 
+#define KARABO_ALARM_NONE "none"
+#define KARABO_WARN "warn"
+#define KARABO_WARN_LOW "warnLow"
+#define KARABO_WARN_HIGH "warnHigh"
 
+#define KARABO_ALARM "alarm"
+#define KARABO_ALARM_LOW "alarmLow"
+#define KARABO_ALARM_HIGH "alarmHigh"
+
+
+#define KARABO_WARN_VARIANCE_LOW "warnVarianceLow"
+#define KARABO_WARN_VARIANCE_HIGH "warnVarianceHigh"
+
+#define KARABO_ALARM_VARIANCE_LOW "alarmVarianceLow"
+#define KARABO_ALARM_VARIANCE_HIGH "alarmVarianceHigh"
+
+#define KARABO_INTERLOCK "interlock"
+
+#define KARABO_ALARM_ACK "alarmNeedsAck"
+#define KARABO_ALARM_INFO "alarmInfo"
 
 namespace karabo {
     namespace util {
-        
-            
-        class AlarmCondition{
+
+        class AlarmCondition {
+
+            /**
+             A unified alarm condition class, which holds the alarm conditions known to Karabo
+             */
 
         public:
-            
+
             static const AlarmCondition NONE;
             static const AlarmCondition WARN;
             static const AlarmCondition WARN_LOW;
@@ -36,8 +58,8 @@ namespace karabo {
             static const AlarmCondition ALARM_VARIANCE_LOW;
             static const AlarmCondition ALARM_VARIANCE_HIGH;
             static const AlarmCondition INTERLOCK;
-            
-            
+
+
             /**
              * Returns the most significant alarm condition out of a list of conditions
              * @param v: the list of alarm conditions
@@ -55,40 +77,40 @@ namespace karabo {
 
             /**
              * Returns a stringified version of the alarm condition
-             * @return 
+             * @return
              */
             const std::string & asString() const;
-            
-            
+
+
             /**
              * Returns a stringified version of the alarm condition or its base if applicable
-             * @return 
+             * @return
              */
             const std::string & asBaseString() const;
 
             /**
              * Allows for direct assignment of conditions to strings
-             * @return 
+             * @return
              */
             operator std::string() const;
-            
-            
+
+
 
             /**
              * Tests whether two alarm conditions are similar, e.g. are subsets of the same basic condition
              * @param test: the condition to test similarity against
              * @return true if the conditions are subsets of the same base; false otherwise.
              */
-            bool isSameCriticality (const AlarmCondition & test) const;
-            
+            bool isSameCriticality(const AlarmCondition & test) const;
+
             /**
              * Returns the more significant of the two condtions
              * @param other
-             * @return 
+             * @return
              */
             const AlarmCondition & returnMoreSignificant(const AlarmCondition & other) const;
-            
-           
+
+
 
         private:
 
@@ -103,7 +125,7 @@ namespace karabo {
 
             boost::shared_ptr<const AlarmCondition> getBase() const;
 
-            
+
             std::string m_conditionString;
             unsigned int m_rank;
             boost::shared_ptr<const AlarmCondition> m_base;
@@ -111,12 +133,12 @@ namespace karabo {
 
 
         };
-            
-            
-       
-        
+
+
+
+
     }
-    
+
 }
 
 #define KARABO_ALARM_ATTR "alarmCondition"

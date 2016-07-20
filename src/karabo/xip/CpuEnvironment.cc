@@ -17,7 +17,7 @@ namespace karabo {
         KARABO_REGISTER_IN_FACTORY(Environment<unsigned int>, CpuEnvironment<unsigned int>)
         KARABO_REGISTER_IN_FACTORY(Environment<unsigned short>, CpuEnvironment<unsigned short>)
         KARABO_REGISTER_IN_FACTORY(Environment<unsigned char>, CpuEnvironment<unsigned char>)
-        
+
     }
 }
 
