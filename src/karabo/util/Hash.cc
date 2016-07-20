@@ -523,9 +523,9 @@ namespace karabo {
                                 const unsigned int maxIndex = *(--selectedIndicesOfKey.end()); // last item in set is highest
                                 thisNode->setValue(std::vector<Hash>(maxIndex + 1));
                                 std::vector<Hash>& thisVec = thisNode->getValue<std::vector<Hash> >();
+                                const std::vector<Hash>& otherVec = otherNode.getValue<std::vector<Hash> >();
                                 for (std::set<unsigned int>::const_iterator itIndex = selectedIndicesOfKey.begin(),
                                         itEnd = selectedIndicesOfKey.end(); itIndex != itEnd; ++itIndex) {
-                                    const std::vector<Hash>& otherVec = otherNode.getValue<std::vector<Hash> >();
                                     const std::string indexedKey((key + '[') += util::toString(*itIndex) += ']');
                                     const std::set<std::string> paths(Hash::selectedChildPaths(selectedPaths, indexedKey, sep));
                                     thisVec[*itIndex].merge(otherVec[*itIndex], policy, paths, sep);
