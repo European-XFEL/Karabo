@@ -142,5 +142,10 @@ class NavigationDropHandler(SceneDnDHandler):
                                       startup_behaviour, position)
         else:
             # Device Group
-            scene_view.device_group_dropped(device_id, server_id, class_id,
-                                            startup_behaviour, position)
+            scene_view.device_group_dropped(dialog.deviceGroupName,
+                                            server_id, class_id,
+                                            startup_behaviour,
+                                            dialog.displayPrefix,
+                                            dialog.startIndex,
+                                            dialog.endIndex,
+                                            position)
