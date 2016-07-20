@@ -1603,7 +1603,7 @@ class ProjectModel(QStandardItemModel):
         if not fn:
             return
         # Create scene view
-        scene_view = SceneView()
+        scene_view = SceneView(project=project)
         # Load file into view
         scene_view.load(fn)
         # Add to tab and show
