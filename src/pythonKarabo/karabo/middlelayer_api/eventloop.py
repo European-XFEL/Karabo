@@ -1,8 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
-import asyncio
 from asyncio import (
-    AbstractEventLoop, async, CancelledError, coroutine, gather,
+    AbstractEventLoop, async, CancelledError, coroutine, Future, gather,
     get_event_loop, iscoroutinefunction, Queue, set_event_loop,
     SelectorEventLoop, sleep, Task, TimeoutError)
 from concurrent.futures import ThreadPoolExecutor
@@ -108,7 +107,7 @@ class Broker:
     def request(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
         self.call("call", {device: [target]}, reply, args)
-        future = asyncio.Future(loop=self.loop)
+        future = Future(loop=self.loop)
         self.repliers[reply] = future
         future.add_done_callback(lambda _: self.repliers.pop(reply))
         return (yield from future)
@@ -280,7 +279,7 @@ def synchronize(coro):
     return wrapper
 
 
-class Future:
+class KaraboFuture(object):
     """A handle for a result that will be available in the future
 
     This will be returned by many Karabo methods, if a callback has been
@@ -304,10 +303,10 @@ class Future:
         return (yield from self.future)
 
 for f in ["cancel", "cancelled", "done", "result", "exception"]:
-    @wraps(getattr(asyncio.Future, f))
+    @wraps(getattr(Future, f))
     def method(self, *args, name=f):
         return getattr(self.future, name)(*args)
-    setattr(Future, f, synchronize(method))
+    setattr(KaraboFuture, f, synchronize(method))
 
 
 class NoEventLoop(AbstractEventLoop):
@@ -351,7 +350,7 @@ class NoEventLoop(AbstractEventLoop):
                 raise TimeoutError
         else:
             hastask.acquire()
-            future = Future(self.task)
+            future = KaraboFuture(self.task)
             if callback is not None:
                 future.add_done_callback(callback)
             return future
@@ -475,7 +474,7 @@ class EventLoop(SelectorEventLoop):
 
     @coroutine
     def waitForChanges(self):
-        f = asyncio.Future(loop=self)
+        f = Future(loop=self)
         self.changedFutures.add(f)
         try:
             yield from f
