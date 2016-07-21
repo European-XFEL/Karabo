@@ -6,7 +6,7 @@
 
 import os.path
 
-from PyQt4.QtCore import pyqtSignal, QEvent, Qt
+from PyQt4.QtCore import QEvent, Qt
 from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
@@ -31,8 +31,6 @@ from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 class SceneView(QWidget):
     """ An object representing the view for a Karabo GUI scene.
     """
-    signalSceneLinkTriggered = pyqtSignal(str)
-
     def __init__(self, project=None, parent=None, design_mode=False):
         super(SceneView, self).__init__(parent)
 
