@@ -184,6 +184,11 @@ def create_object_from_model(layout, model, scene_view, object_dict):
                 else:
                     model_rect = rect
             obj.setGeometry(model_rect)
+        elif is_widget(obj):
+            model_rect = QRect(model.x, model.y, model.width, model.height)
+            if model_rect.isEmpty():
+                model_rect.setSize(obj.sizeHint())
+                obj.set_geometry(model_rect)
 
 
 def fill_root_layout(layout, parent_model, scene_view, object_dict):
