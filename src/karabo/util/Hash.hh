@@ -440,7 +440,7 @@ namespace karabo {
              * @param separator The separator for nested keys in selectedPaths
              */
             void merge(const Hash& other, const MergePolicy policy = REPLACE_ATTRIBUTES,
-            const std::set<std::string>& selectedPaths = std::set<std::string>(), char separator = '.');
+                       const std::set<std::string>& selectedPaths = std::set<std::string>(), char separator = '.');
 
             /**
              * Subtracts from current hash all nodes that can be found in other hash given as argument.
