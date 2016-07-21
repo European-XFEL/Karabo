@@ -579,10 +579,10 @@ namespace karabo {
             template<class Visitor>
             static bool visit2(karabo::util::Hash::Node& node, Visitor& visitor);
         private:
-            /// Out of 'selectedPaths' select those that belong to child with 'childKey',
+            /// Out of 'paths' select those that belong to child with 'childKey',
             /// e.g. out of ["a", "b.c", "b.d.e"] return ["c", "d.e"] if childKey == "b" and separator == '.'.
-            static std::set<std::string> selectedChildPaths(const std::set<std::string>& selectedPaths,
-                                                            const std::string& childKey, char separator);
+            static std::set<std::string> selectChildPaths(const std::set<std::string>& paths,
+                                                          const std::string& childKey, char separator);
 
             /// True if the first key (separated by 'separator') of any of 'paths' matches 'key'.
             /// A first key that contains an index also matches (indirectly) 'key' without index,
@@ -602,17 +602,17 @@ namespace karabo {
             static void mergeAttributes(Hash::Node& targetNode, const Hash::Attributes& attrs, Hash::MergePolicy policy);
 
             /// Merge two vector<Hash> nodes that represent table elements, i.e. the content of 'source' replaces
-            /// the content of 'target'. The 'selectedPaths' with the separator 'sep' are respected.
+            /// the content of 'target'. The 'selectedPaths' with their 'separator' are respected.
             /// Note that the 'selectedPaths' are those that selected 'source' for merging, i.e. begin with
             /// the key of 'source', possibly suffixed by indices.
             static void mergeTableElement(const Hash::Node& source, Hash::Node& target,
-                                                const std::set<std::string>& selectedPaths, char sep);
+                                          const std::set<std::string>& selectedPaths, char separator);
 
-            /// Merge two ordinary vector<Hash> nodes, respecting the 'selectedPaths' with the separator 'sep'.
+            /// Merge two ordinary vector<Hash> nodes, respecting the 'selectedPaths' with their 'separator'.
             /// Note that the 'selectedPaths' are those that selected 'source' node for merging, i.e. begin with
             /// the key of 'source', possibly suffixed by some indices.
             static void mergeVectorHashNodes(const Hash::Node& source, Hash::Node& target, Hash::MergePolicy policy,
-                                             const std::set<std::string>& selectedPaths, char sep);
+                                             const std::set<std::string>& selectedPaths, char separator);
 
             Hash * setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
 
