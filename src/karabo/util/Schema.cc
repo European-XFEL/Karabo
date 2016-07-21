@@ -610,6 +610,24 @@ namespace karabo {
             return m_hash.getAttribute<unsigned int>(path, KARABO_SCHEMA_MAX_SIZE);
         }
 
+        //**********************************************************
+        //	Specific functions for LEAF node (which is an NDArray) *
+        //	Shape of the array                                     *
+        //**********************************************************
+
+        void Schema::setArrayShape(const std::string& path, const std::string& value) {
+            const std::vector<long long> dims = fromString<long long, std::vector>(value);
+            m_hash.setAttribute(path, KARABO_SCHEMA_ARRAY_SHAPE, dims);
+        }
+
+        bool Schema::hasArrayShape(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_ARRAY_SHAPE);
+        }
+
+        const std::vector<long long>& Schema::getArrayShape(const std::string& path) const {
+            return m_hash.getAttribute<std::vector<long long> >(path, KARABO_SCHEMA_ARRAY_SHAPE);
+        }
+
         //******************************************************
         //    has/ WarnLow, WarnHigh, AlarmLow, AlarmHigh      *
         //    also for Variance                                *
@@ -617,42 +635,46 @@ namespace karabo {
 
 
         bool Schema::hasWarnLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_LOW);
+            return m_hash.hasAttribute(path, KARABO_WARN_LOW);
         }
 
 
         bool Schema::hasWarnHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_HIGH);
+            return m_hash.hasAttribute(path, KARABO_WARN_HIGH);
         }
 
 
         bool Schema::hasAlarmLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_LOW);
+            return m_hash.hasAttribute(path, KARABO_ALARM_LOW);
         }
 
 
         bool Schema::hasAlarmHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_HIGH);
+            return m_hash.hasAttribute(path, KARABO_ALARM_HIGH);
         }
 
 
         bool Schema::hasWarnVarianceLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_LOW);
+            return m_hash.hasAttribute(path, KARABO_WARN_VARIANCE_LOW);
         }
 
 
         bool Schema::hasWarnVarianceHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_WARN_VARIANCE_HIGH);
+            return m_hash.hasAttribute(path, KARABO_WARN_VARIANCE_HIGH);
         }
 
 
         bool Schema::hasAlarmVarianceLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_LOW);
+            return m_hash.hasAttribute(path, KARABO_ALARM_VARIANCE_LOW);
         }
 
 
         bool Schema::hasAlarmVarianceHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_VARIANCE_HIGH);
+            return m_hash.hasAttribute(path, KARABO_ALARM_VARIANCE_HIGH);
+        }
+        
+        bool Schema::hasInterlock(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_INTERLOCK);
         }
 
 
@@ -1076,7 +1098,15 @@ namespace karabo {
         bool similar(const Schema& left, const Schema& right) {
             return similar(left.getParameterHash(), right.getParameterHash());
         }
-
+        
+        const std::string Schema::getInfoForAlarm(const std::string& path, const AlarmCondition& condition) const {
+            const std::string attr = std::string(KARABO_ALARM_INFO)+"_"+condition.asString();
+            if(m_hash.hasAttribute(path, attr)){
+                return m_hash.getAttribute<std::string>(path, attr);
+            } else {
+                return std::string();
+            }
+        }
 
     }
 }

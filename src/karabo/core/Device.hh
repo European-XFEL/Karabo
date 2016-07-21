@@ -50,7 +50,6 @@ namespace karabo {
 
         public:
 
-
             KARABO_CLASSINFO(BaseDevice, "BaseDevice", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS;
 
@@ -462,7 +461,6 @@ namespace karabo {
              */
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
-
 
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 karabo::util::Hash validated;
@@ -909,6 +907,7 @@ namespace karabo {
             void setAlarmCondition(const karabo::util::AlarmCondition & condition) {
 
                 using namespace karabo::util;
+
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_globalAlarmCondition = condition;
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
@@ -931,6 +930,27 @@ namespace karabo {
             karabo::util::RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & path) const {
                 return m_validatorIntern.getRollingStatistics(path);
             }
+
+            const karabo::util::Hash getAlarmInfo() const {
+                /**
+                 * Returns a hash containing the info field information
+                 * for current alarms on the device
+                 *
+                 * @return a hash with structure key: path to property -> alarm info (string)
+                 */
+                using namespace karabo::util;
+                Hash info;
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
+                for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
+                    const Hash& desc = it->getValue<Hash>();
+                    const AlarmCondition& cond = AlarmCondition::fromString(desc.get<std::string>("type"));
+                    info.set(it->getKey(), m_fullSchema.getInfoForAlarm(it->getKey(), cond));
+                }
+                return info;
+
+            }
+
 
 
 

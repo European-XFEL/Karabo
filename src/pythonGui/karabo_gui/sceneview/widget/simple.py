@@ -185,6 +185,7 @@ class WorkflowItemWidget(QWidget):
         if self.model.klass == 'WorkflowGroupItem':
             self.pen.setWidth(3)
 
+        self.setToolTip(self.model.device_id)
         rect = QRect(model.x, model.y, model.width, model.height)
         self.setGeometry(rect)
         self.outline_rect = self._compute_outline(rect)

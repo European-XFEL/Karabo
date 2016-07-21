@@ -28,7 +28,8 @@ from .widget.api import (
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (
-    BaseWidgetContainer, LabelWidget, SceneLinkWidget, UnknownSvgWidget)
+    BaseWidgetContainer, LabelWidget, SceneLinkWidget, UnknownSvgWidget,
+    WorkflowItemWidget)
 _SCENE_OBJ_FACTORIES = {
     FixedLayoutModel: lambda m, p: GroupLayout(m),
     BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa

@@ -15,8 +15,6 @@ namespace karabo {
         namespace Dimension {
 
             enum DimensionType {
-
-
                 UNDEFINED = 0,
                 STACK = -1,
                 DATA = 1,
@@ -41,7 +39,6 @@ namespace karabo {
              */
             NDArray(const karabo::util::Hash& config);
 
-
             NDArray(const karabo::util::Hash::Pointer& data);
 
             template <class T>
@@ -55,9 +52,7 @@ namespace karabo {
                 setIsBigEndian(isBigEndian);
             }
 
-
             virtual ~NDArray();
-
 
             const char* getDataPointer() const;
 
@@ -115,11 +110,9 @@ namespace karabo {
 
         protected:
 
-
             bool dataIsCopy() const;
 
             void ensureDataOwnership();
-
 
         };
 
@@ -153,22 +146,6 @@ namespace karabo {
 
             m_hash->set("dataType", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<char>()));
         }
-
-        struct NDArrayElement : public DataElement<NDArrayElement, NDArray> {
-
-            NDArrayElement(karabo::util::Schema& s) : DataElement<NDArrayElement, NDArray>(s) {
-            }
-
-            NDArrayElement& setDimensionScales(const std::string& scales) {
-                return setDefaultValue("dimScales", scales);
-            }
-
-            NDArrayElement& setDimensions(const std::string& dimensions) {
-                return setDefaultValue("dims", karabo::util::fromString<unsigned long long, std::vector>(dimensions));
-            }
-        };
-
-        typedef NDArrayElement NDARRAY_ELEMENT;
     }
 }
 
