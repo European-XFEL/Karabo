@@ -585,9 +585,10 @@ namespace karabo {
                                                           const std::string& childKey, char separator);
 
             /// True if the first key (separated by 'separator') of any of 'paths' matches 'key'.
-            /// A first key that contains an index also matches (indirectly) 'key' without index,
-            /// i.e. path "a[0].g" matches key "a".
-            static bool keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key, char separator);
+            /// A first key that contains an index also matches (indirectly) 'key' without index if index < 'size',
+            /// i.e. path "a[0].g" matches key "a" if 'size' >= 1, but not if 'size' == 0.
+            static bool keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key, char separator,
+                                             unsigned int size);
 
             /// For all 'paths', check whether their first key matches 'key' (as in keyIsPrefixOfAnyPath).
             /// If it does indirectly (see keyIsPrefixOfAnyPath), append the index specified behind it to the result,

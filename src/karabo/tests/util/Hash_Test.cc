@@ -921,8 +921,9 @@ void Hash_Test::testMerge() {
 
     Hash hashTargetB("a[1].b", 1, "c", "Does not matter");
     Hash hashTargetC(hashTargetB);
-    const Hash hashSourceBC("a[2]", Hash("a", 33, "b", 4.4), "ha", 9, "c[1]", Hash("k", 5, "l", 6),
-                            "c[2]", Hash("b", -3), "d[2].b", 66, "e[1]", Hash("1", 1, "2", 2, "3", 3));
+    Hash hashTargetD(hashTargetB);
+    const Hash hashSourceBCD("a[2]", Hash("a", 33, "b", 4.4), "ha", 9, "c[1]", Hash("k", 5, "l", 6),
+                             "c[2]", Hash("b", -3), "d[2].b", 66, "e[1]", Hash("1", 1, "2", 2, "3", 3));
     selectedPaths.clear();
     selectedPaths.insert("a"); // trigger merging full vector
     // trigger selecting first HashVec item overwriting what was not a hashVec before, but only keep selected items
@@ -930,7 +931,7 @@ void Hash_Test::testMerge() {
     selectedPaths.insert("d"); // trigger adding full new vector
     selectedPaths.insert("e[1].2"); // trigger selective adding of hashVec where there was not node before
     selectedPaths.insert("e[1].3");
-    hashTargetB.merge(hashSourceBC, Hash::MERGE_ATTRIBUTES, selectedPaths);
+    hashTargetB.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths);
     CPPUNIT_ASSERT(hashTargetB.has("a[1].b"));
     CPPUNIT_ASSERT(hashTargetB.has("a[4].a"));
     CPPUNIT_ASSERT(hashTargetB.has("a[4].b"));
@@ -950,7 +951,7 @@ void Hash_Test::testMerge() {
     selectedPaths.insert("a[0]");
     selectedPaths.insert("a[2].b"); // trigger selective vector items
     selectedPaths.insert("c"); // trigger overwriting with complete vector
-    hashTargetC.merge(hashSourceBC, Hash::MERGE_ATTRIBUTES, selectedPaths);
+    hashTargetC.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths);
     CPPUNIT_ASSERT(hashTargetC.has("a[1].b"));
     CPPUNIT_ASSERT(!hashTargetC.has("a[3].a"));
     CPPUNIT_ASSERT(hashTargetC.has("a[3].b"));
@@ -960,6 +961,15 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(hashTargetC.has("c[2].b"));
     CPPUNIT_ASSERT(!hashTargetC.has("c[3]"));
 
+    // Now select only invalid indices - nothing should be added
+    selectedPaths.clear();
+    selectedPaths.insert("a[10]"); // to existing vector
+    selectedPaths.insert("c[10]"); // where there was another node
+    selectedPaths.insert("d[10]"); // where there was no node at all
+    selectedPaths.insert("ha[0]"); // for leaves, all indices are invalid
+    Hash copyD(hashTargetD);
+    hashTargetD.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths);
+    CPPUNIT_ASSERT_MESSAGE("Selecting only invalid indices changed something", similar(copyD, hashTargetD));
 }
 
 
