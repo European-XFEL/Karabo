@@ -328,11 +328,11 @@ class NoEventLoop(AbstractEventLoop):
         if self._cancelled:
             raise CancelledError
         loop = self._instance._ss.loop
-        hastask = threading.Lock()
-        hastask.acquire()
         if callback is False:
             done = threading.Lock()
             done.acquire()
+        hastask = threading.Lock()
+        hastask.acquire()
 
         def inner():
             self.task = loop.create_task(coro, instance=self._instance)
