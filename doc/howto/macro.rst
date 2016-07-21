@@ -256,25 +256,25 @@ Parallelizing Operation
 Often, different things need to be done at the same time. This is why
 many blocking Karabo operations can also be used in a asynchronous
 way: instead of blocking until the operation is finished, one may
-define a callback function to be called once the operation is done. It
-is also fine to set the callback to `None`, which means that we don't
-want to anything special once the operation is done. As a simple
-example, in order to call a function once the motor has stopped, one
-may write::
+define a callback function to be called once the operation is done.
+Setting the `wait` function argument to `False` makes it return a
+:class:`~karabo.middlelayer.KaraboFuture` immediately, to which a
+callback may be added with `add_done_callback`. As a simple example,
+in order to call a function once the motor has stopped, one may
+write::
 
-    waitUntil(lambda: motor.state == "Stopped", callback=on_stopped)
+    waitUntil(lambda: motor.state == "Stopped",
+              wait=False).add_done_callback(on_stopped)
 
-Those methods return a :class:`~karabo.middlelayer.Future`, which is
-also handed over as the single argument to the callback, so the
+The callback will receive the future as single argument, so the
 callback should be defined like::
 
     def on_stopped(future):
         # do something when the motor is stopped
 
-One can do several operations on the returned future. One may add
-additional callbacks with
-:meth:`~karabo.middlelayer.Future.add_done_callback`, or wait until
-the future has a result with :meth:`~karabo.middlelayer.Future.wait`.
+There are more things one can do with the returned future, like
+waiting until the operation finally finishes with
+:meth:`~karabo.middlelayer.KaraboFuture.wait`.
 
 Error Handling
 ==============
