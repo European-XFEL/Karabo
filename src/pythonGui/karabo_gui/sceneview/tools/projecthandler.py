@@ -12,6 +12,9 @@ from karabo_gui.scenemodel.api import WorkflowItemModel
 class ProjectSceneHandler(ABCHasStrictTraits):
     project = WeakRef('karabo_gui.guiproject.GuiProject')
 
+    def get_scene_names(self):
+        return self.project.getSceneNames()
+
     def create_device(self, device_id, server_id, class_id, ifexists,
                       position):
         # Check, if device box already exists
