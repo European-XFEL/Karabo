@@ -25,27 +25,27 @@ namespace karabo {
                 using namespace karabo::util;
 
                 OVERWRITE_ELEMENT(expected).key("state")
-                        .setNewOptions("Initializing,Error,Started,Stopping,Stopped,Starting")
-                        .setNewDefaultValue("Initializing")
+                        .setNewOptions(State::INIT, State::ERROR, State::STARTED, State::STOPPING, State::STOPPED, State::STARTING)
+                        .setNewDefaultValue(State::INIT)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("start")
                         .displayedName("Start")
                         .description("Instructs device to go to started state")
-                        .allowedStates("Stopped")
+                        .allowedStates(State::STOPPED)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("stop")
                         .displayedName("Stop")
                         .description("Instructs device to go to stopped state")
-                        .allowedStates("Started")
+                        .allowedStates(State::STARTED)
                         .commit();
 
 
                 SLOT_ELEMENT(expected).key("reset")
                         .displayedName("Reset")
                         .description("Resets the device in case of an error")
-                        .allowedStates("Error")
+                        .allowedStates(State::ERROR)
                         .commit();
 
             }

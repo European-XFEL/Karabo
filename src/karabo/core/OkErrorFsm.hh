@@ -13,6 +13,7 @@
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/core/BaseFsm.hh>
 #include <karabo/util/karaboDll.hh>
+#include <karabo/util/State.hh>
 
 #include "BaseFsm.hh"
 
@@ -28,11 +29,12 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::xms;
+                using namespace karabo::util;
 
                 SLOT_ELEMENT(expected).key("reset")
                         .displayedName("Reset")
                         .description("Resets the device in case of an error")
-                        .allowedStates("Error")
+                        .allowedStates(State::ERROR)
                         .commit();
             }
 
@@ -58,9 +60,9 @@ namespace karabo {
             /*                        States                              */
             /**************************************************************/
 
-            KARABO_FSM_STATE_VE_EE(Ok, okStateOnEntry, okStateOnExit)
+            KARABO_FSM_STATE_VE_EE(NORMAL, okStateOnEntry, okStateOnExit)
 
-            KARABO_FSM_STATE_VE_EE(Error, errorStateOnEntry, errorStateOnExit)
+            KARABO_FSM_STATE_VE_EE(ERROR, errorStateOnEntry, errorStateOnExit)
 
             /**************************************************************/
             /*                    Transition Actions                      */
@@ -77,13 +79,13 @@ namespace karabo {
             //  Source-State    Event        Target-State    Action         Guard
 
             KARABO_FSM_TABLE_BEGIN(StateMachineTransitionTable)
-            Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
-            Row< Error, ResetEvent, Ok, ResetAction, none >
+            Row< NORMAL, ErrorFoundEvent, ERROR, ErrorFoundAction, none >,
+            Row< ERROR, ResetEvent, NORMAL, ResetAction, none >
             KARABO_FSM_TABLE_END
 
 
             //                       Name          Transition-Table             Initial-State Context
-            KARABO_FSM_STATE_MACHINE(StateMachine, StateMachineTransitionTable, Ok, Self)
+            KARABO_FSM_STATE_MACHINE(StateMachine, StateMachineTransitionTable, NORMAL, Self)
 
 
             void startFsm() {

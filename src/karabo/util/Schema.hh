@@ -22,7 +22,11 @@
 #include "StringTools.hh"
 #include "ToLiteral.hh"
 #include "Units.hh"
+
+#include "State.hh"
+
 #include "AlarmConditions.hh"
+
 
 #include "karaboDll.hh"
 
@@ -374,11 +378,23 @@ namespace karabo {
             //                AllowedStates                *
             //**********************************************
 
-            void setAllowedStates(const std::string& path, const std::string& value, const std::string& sep);
+            //overloads for up to six states
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6);
+
+
+            //generic interface
+            void setAllowedStates(const std::string& path, const std::vector<karabo::util::State>& value);
+
+
 
             bool hasAllowedStates(const std::string& path) const;
 
-            const std::vector<std::string>& getAllowedStates(const std::string& path) const;
+            const std::vector<karabo::util::State> getAllowedStates(const std::string& path) const;
 
 
             //**********************************************
@@ -591,7 +607,7 @@ namespace karabo {
             const std::vector<long long>& getArrayShape(const std::string& path) const;
 
             //******************************************************
-            //                   WarnLow                           *
+            //                   WarnLow                          *
             //******************************************************
 
             template <class ValueType>
@@ -849,6 +865,8 @@ namespace karabo {
             bool checkRequiredAccessLevel(const std::string& path, const Schema::AccessLevel& accessLevel) const;
 
             void r_updateAliasMap(const std::vector<std::string> keys, const std::string oldPath = "");
+
+            void setAllowedStates(const std::string& path, const std::string& value);
 
         };
 
