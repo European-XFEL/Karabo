@@ -17,7 +17,7 @@ namespace karabo {
     namespace xms {
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(Data, NDArray, ImageData)
+        KARABO_REGISTER_FOR_CONFIGURATION(Data, ImageData)
 
         void ImageData::expectedParameters(karabo::util::Schema& s) {
 
@@ -46,11 +46,11 @@ namespace karabo {
         }
 
 
-        ImageData::ImageData(const karabo::util::Hash& hash) : NDArray(hash) {
+        ImageData::ImageData(const karabo::util::Hash& hash) : Data(hash) {
         }
 
 
-        ImageData::ImageData(const karabo::util::Hash::Pointer& data) : NDArray(data) {
+        ImageData::ImageData(const karabo::util::Hash::Pointer& data) : Data(data) {
         }
 
 
@@ -93,85 +93,85 @@ namespace karabo {
 
 
         void ImageData::swapEndianess() {
-            ensureDataOwnership();
-            int cs = getChannelSpace();
-            switch (cs) {
-                case ChannelSpace::u_16_2:
-                case ChannelSpace::s_16_2:
-                {
-                    unsigned short* data = reinterpret_cast<unsigned short*> (const_cast<char*> (getDataPointer()));
-                    for (size_t i = 0; i < getDimensions().size(); ++i) {
-                        data[i] = byteSwap16(data[i]);
-                    }
-                    break;
-                }
-                case ChannelSpace::u_32_4:
-                case ChannelSpace::s_32_4:
-                case ChannelSpace::f_32_4:
-                {
-                    unsigned int* data = reinterpret_cast<unsigned int*> (const_cast<char*> (getDataPointer()));
-                    for (size_t i = 0; i < getDimensions().size(); ++i) {
-                        data[i] = byteSwap32(data[i]);
-                    }
-                    break;
-                }
-                case ChannelSpace::u_64_8:
-                case ChannelSpace::s_64_8:
-                case ChannelSpace::f_64_8:
-                {
-                    unsigned long long* data = reinterpret_cast<unsigned long long*> (const_cast<char*> (getDataPointer()));
-                    for (size_t i = 0; i < getDimensions().size(); ++i) {
-                        data[i] = byteSwap64(data[i]);
-                    }
-                    break;
-                }
-                default:
-                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Endianess conversion not implemented for this channel type");
-            }
+            //            ensureDataOwnership();
+            //            int cs = getChannelSpace();
+            //            switch (cs) {
+            //                case ChannelSpace::u_16_2:
+            //                case ChannelSpace::s_16_2:
+            //                {
+            //                    unsigned short* data = reinterpret_cast<unsigned short*> (const_cast<char*> (getDataPointer()));
+            //                    for (size_t i = 0; i < getDimensions().size(); ++i) {
+            //                        data[i] = byteSwap16(data[i]);
+            //                    }
+            //                    break;
+            //                }
+            //                case ChannelSpace::u_32_4:
+            //                case ChannelSpace::s_32_4:
+            //                case ChannelSpace::f_32_4:
+            //                {
+            //                    unsigned int* data = reinterpret_cast<unsigned int*> (const_cast<char*> (getDataPointer()));
+            //                    for (size_t i = 0; i < getDimensions().size(); ++i) {
+            //                        data[i] = byteSwap32(data[i]);
+            //                    }
+            //                    break;
+            //                }
+            //                case ChannelSpace::u_64_8:
+            //                case ChannelSpace::s_64_8:
+            //                case ChannelSpace::f_64_8:
+            //                {
+            //                    unsigned long long* data = reinterpret_cast<unsigned long long*> (const_cast<char*> (getDataPointer()));
+            //                    for (size_t i = 0; i < getDimensions().size(); ++i) {
+            //                        data[i] = byteSwap64(data[i]);
+            //                    }
+            //                    break;
+            //                }
+            //                default:
+            //                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Endianess conversion not implemented for this channel type");
+            //            }
         }
 
 
         void ImageData::toLittleEndian() {
-            if (isBigEndian()) {
-                swapEndianess();
-                setIsBigEndian(false);
-            }
+            //if (isBigEndian()) {
+            //    swapEndianess();
+            //    setIsBigEndian(false);
+            //}
         }
 
 
         void ImageData::toBigEndian() {
-            if (!isBigEndian()) {
-                swapEndianess();
-                setIsBigEndian(true);
-            }
+            //if (!isBigEndian()) {
+            //    swapEndianess();
+            //    setIsBigEndian(true);
+            //}
         }
 
 
         karabo::util::Dims ImageData::getDimensions() const {
-            Dims dims(NDArray::getDimensions());
-            dims.reverse();
+            Dims dims;
+            //dims.reverse();
             return dims;
         }
 
 
         void ImageData::setDimensions(const karabo::util::Dims& dims) {
-            Dims tmp(dims);
-            tmp.reverse();
-            NDArray::setDimensions(tmp);
+            //Dims tmp(dims);
+            //tmp.reverse();
+            //NDArray::setDimensions(tmp);
         }
 
 
         const std::vector<int> ImageData::getDimensionTypes() const {
-            std::vector<int> dimTypes(NDArray::getDimensionTypes());
-            std::reverse(dimTypes.begin(), dimTypes.end());
+            std::vector<int> dimTypes;
+            //std::reverse(dimTypes.begin(), dimTypes.end());
             return dimTypes;
         }
 
 
         void ImageData::setDimensionTypes(const std::vector<int>& dimTypes) {
-            std::vector<int> tmp = dimTypes;
-            std::reverse(tmp.begin(), tmp.end());
-            NDArray::setDimensionTypes(tmp);
+            //std::vector<int> tmp = dimTypes;
+            //std::reverse(tmp.begin(), tmp.end());
+            //NDArray::setDimensionTypes(tmp);
         }
 
 

@@ -12,7 +12,7 @@
 #include <karabo/util/Dims.hh>
 #include <karabo/util/ToLiteral.hh>
 #include <karabo/xip/CpuImage.hh>
-#include "NDArray.hh"
+#include "Data.hh"
 #include <karabo/util/DetectorGeometry.hh>
 
 namespace karabo {
@@ -71,14 +71,14 @@ namespace karabo {
 
         class ImageDataFileWriter;
 
-        class ImageData : public NDArray {
+        class ImageData : public Data {
 
 
             friend class ImageDataFileWriter;
 
         public:
 
-            KARABO_CLASSINFO(ImageData, "ImageData", "1.3")
+            KARABO_CLASSINFO(ImageData, "ImageData", "1.4")
 
             static void expectedParameters(karabo::util::Schema& expected);
 
@@ -100,7 +100,7 @@ namespace karabo {
                       const bool copy = true,
                       const karabo::util::Dims& dims = karabo::util::Dims(),
                       const EncodingType encoding = Encoding::GRAY,
-                      const ChannelSpaceType channelSpace = ChannelSpace::UNDEFINED) : NDArray(data, size, copy) {
+                      const ChannelSpaceType channelSpace = ChannelSpace::UNDEFINED) : Data() {
 
                 setDimensions(dims);
                 if (dims.size() == 0) {
@@ -126,7 +126,6 @@ namespace karabo {
                 } else {
                     dims = Dims(image.width(), image.height(), image.depth());
                 }
-                this->setData(image.pixelPointer(), image.size(), true);
                 this->setDimensions(dims);
                 if (dims.size() == 0) {
                     setROIOffsets(karabo::util::Dims(0));
