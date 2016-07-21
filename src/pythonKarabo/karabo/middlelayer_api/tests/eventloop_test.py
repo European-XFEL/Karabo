@@ -73,20 +73,10 @@ class Tests(TestCase):
         self.assertEqual("this was the thread test.", r)
 
     @thread_tst
-    def test_callback(self):
-        mock = Mock()
-        barrier = Barrier(self.loop)
-        fut = barrier.block(callback=mock)
-        mock.assert_not_called()
-        barrier.free()
-        fut.wait()
-        mock.assert_called_once_with(fut)
-
-    @thread_tst
     def test_add_callback(self):
         mock = Mock()
         barrier = Barrier(self.loop)
-        fut = barrier.block(callback=None)
+        fut = barrier.block(wait=False)
         fut.add_done_callback(mock)
         mock.assert_not_called()
         barrier.free()
@@ -96,7 +86,7 @@ class Tests(TestCase):
     @thread_tst
     def test_cancel(self):
         barrier = Barrier(self.loop)
-        fut = barrier.block(callback=None)
+        fut = barrier.block(wait=False)
         self.assertFalse(fut.cancelled())
         self.assertFalse(fut.done())
         fut.cancel()
@@ -108,7 +98,7 @@ class Tests(TestCase):
     @thread_tst
     def test_result(self):
         barrier = Barrier(self.loop)
-        fut = barrier.block(callback=None)
+        fut = barrier.block(wait=False)
         barrier.free()
         self.assertEqual(fut.wait(), "something")
         self.assertEqual(fut.result(), "something")
@@ -117,7 +107,7 @@ class Tests(TestCase):
     def test_error(self):
         barrier = Barrier(self.loop)
         barrier.error = True
-        fut = barrier.block(callback=None)
+        fut = barrier.block(wait=False)
         barrier.free()
         with self.assertRaises(RuntimeError):
             fut.wait()

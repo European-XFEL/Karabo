@@ -151,7 +151,7 @@ class Proxy(object):
             h = Hash()
             h[desc.longkey], _ = desc.toDataAndAttrs(value)
             ok, msg = loop.sync(self._device.call(
-                self.deviceId, "slotReconfigure", h), -1, False)
+                self.deviceId, "slotReconfigure", h), timeout=-1, wait=True)
             if not ok:
                 raise KaraboError(msg)
         else:
