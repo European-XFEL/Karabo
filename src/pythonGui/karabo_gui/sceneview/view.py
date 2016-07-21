@@ -6,7 +6,7 @@
 
 import os.path
 
-from PyQt4.QtCore import QEvent, QRect, Qt
+from PyQt4.QtCore import QEvent, Qt
 from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
@@ -318,8 +318,6 @@ class SceneView(QWidget):
             top_level_model = new_model
         # Add the modified top level model to the scene again
         self.add_models(top_level_model)
-        # Recalculate model rectangle, if empty
-        self.update_model_geometry(new_model)
         self.selection_model.clear_selection()
 
     def bring_to_front(self, model):
@@ -402,12 +400,3 @@ class SceneView(QWidget):
         """ Remove WorkflowItemModel instances from the workflow model. """
         items = [m for m in models if isinstance(m, WorkflowItemModel)]
         self.workflow_model.remove_items(items)
-
-    def update_model_geometry(self, model):
-        obj = self._scene_obj_cache.get(model)
-        if obj is not None:
-            model_rect = QRect(model.x, model.y,
-                               model.width, model.height)
-            if model_rect.isEmpty():
-                model_rect.setSize(obj.sizeHint())
-                obj.set_geometry(model_rect)

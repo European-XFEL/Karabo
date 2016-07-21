@@ -7,7 +7,7 @@ from abc import abstractmethod
 
 from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QApplication, QBoxLayout, QDialog, QFont
-from traits.api import ABCHasStrictTraits, String
+from traits.api import ABCHasStrictTraits
 
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
@@ -44,8 +44,6 @@ class ConfigurationDropHandler(SceneDnDHandler):
         return False
 
     def handle(self, scene_view, event):
-        mimeData = event.mimeData()
-        sourceType = mimeData.data("sourceType")
         source = event.source()
 
         pos = event.pos()
@@ -56,13 +54,12 @@ class ConfigurationDropHandler(SceneDnDHandler):
                 event.accept()
                 return
 
-        if sourceType == "ParameterTreeWidget":
-            models = []
-            for item in source.selectedItems():
-                model = self._create_model_from_parameter_item(item, pos)
-                models.append(model)
-                pos += QPoint(0, _STACKED_WIDGET_OFFSET)
-            scene_view.add_models(*models)
+        models = []
+        for item in source.selectedItems():
+            model = self._create_model_from_parameter_item(item, pos)
+            models.append(model)
+            pos += QPoint(0, _STACKED_WIDGET_OFFSET)
+        scene_view.add_models(*models)
         event.accept()
 
     def _create_model_from_parameter_item(self, item, pos):
@@ -102,33 +99,34 @@ class ConfigurationDropHandler(SceneDnDHandler):
 
 
 class NavigationDropHandler(SceneDnDHandler):
-    server_id = String
-    class_id = String
 
     def can_handle(self, event):
         """ Check whether the drag event can be handled. """
         sourceType = event.mimeData().data("sourceType")
         if sourceType == "NavigationTreeView":
             source = event.source()
-            index_info = source.indexInfo()
-            item_type = index_info.get("type")
+            item_type = source.indexInfo().get("type")
             if item_type == NavigationItemTypes.CLASS:
-                self.server_id = index_info.get("serverId")
-                self.class_id = index_info.get("classId")
                 return True
         return False
 
     def handle(self, scene_view, event):
         """ Handle the drop event. """
+        source = event.source()
+        index_info = source.indexInfo()
+        server_id = index_info.get("serverId")
+        class_id = index_info.get("classId")
+
         # Restore cursor for dialog input
         QApplication.restoreOverrideCursor()
         # Open dialog to set up new device (group)
         dialog = DeviceGroupDialog(Manager().systemHash)
         # Set server and class id
-        dialog.serverId = self.server_id
-        dialog.classId = self.class_id
+        dialog.serverId = server_id
+        dialog.classId = class_id
 
         if dialog.exec_() == QDialog.Rejected:
+            event.accept()
             return
 
         device_id = dialog.deviceId
@@ -141,49 +139,26 @@ class NavigationDropHandler(SceneDnDHandler):
         workflow_item_model = scene_view.workflow_model.get_item(device_id)
         if workflow_item_model is not None:
             scene_view.select_model(workflow_item_model)
+            event.accept()
             return
 
+        project_handler = scene_view.project_handler
         if not dialog.deviceGroup:
             # Device
-            self.create_device(scene_view, device_id, server_id, class_id,
-                               ifexists, position)
+            model = project_handler.create_device(device_id,
+                                                  server_id,
+                                                  class_id,
+                                                  ifexists,
+                                                  position)
         else:
             # Device Group
-            self.create_device_group(scene_view,
-                                     dialog.deviceGroupName,
-                                     server_id, class_id,
-                                     ifexists,
-                                     dialog.displayPrefix,
-                                     dialog.startIndex,
-                                     dialog.endIndex,
-                                     position)
-
-    def create_device(self, scene_view, device_id, server_id, class_id,
-                      ifexists, position):
-        """ A device was dropped from the navigation panel and needs
-            to be processed now.
-        """
-        model = scene_view.project_handler.create_device(device_id, server_id,
-                                                         class_id, ifexists,
-                                                         position)
+            model = project_handler.create_device_group(dialog.deviceGroupName,
+                                                        server_id,
+                                                        class_id,
+                                                        ifexists,
+                                                        dialog.displayPrefix,
+                                                        dialog.startIndex,
+                                                        dialog.endIndex,
+                                                        position)
         scene_view.add_models(model)
-        # Recalculate model rectangle, if empty
-        scene_view.update_model_geometry(model)
-
-    def create_device_group(self, scene_view, group_name, server_id, class_id,
-                            ifexists, display_prefix, start_index, end_index,
-                            position):
-        """ A device group was dropped from the navigation panel and needs
-            to be processed now.
-        """
-        model = scene_view.project_handler.create_device_group(group_name,
-                                                               server_id,
-                                                               class_id,
-                                                               ifexists,
-                                                               display_prefix,
-                                                               start_index,
-                                                               end_index,
-                                                               position)
-        scene_view.add_models(model)
-        # Recalculate model rectangle, if empty
-        scene_view.update_model_geometry(model)
+        event.accept()
