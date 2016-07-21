@@ -412,8 +412,9 @@ namespace karabo {
             }
         }
 
+
         void Hash::merge(const Hash& other, const Hash::MergePolicy policy,
-                const std::set<std::string>& selectedPaths, char sep) {
+                         const std::set<std::string>& selectedPaths, char sep) {
             if (selectedPaths.empty() && this->empty() && !other.empty()) {
                 *this = other;
                 return;
@@ -432,130 +433,91 @@ namespace karabo {
                          Hash::selectIndicesOfKey(otherNode.getValue<std::vector<Hash> >().size(), selectedPaths, key, sep));
 
                 boost::optional<Hash::Node&> thisNode = this->find(key);
-                if (thisNode) { // Key already exists
-                    // Treat attributes
-                    const Hash::Attributes& attrs = otherNode.getAttributes();
-                    switch (policy) {
-                        case MERGE_ATTRIBUTES:
-                            for (Hash::Attributes::const_iterator jt = attrs.begin(); jt != attrs.end(); ++jt) {
-                                thisNode->setAttribute(jt->getKey(), jt->getValueAsAny());
-                            }
-                            break;
-                        case REPLACE_ATTRIBUTES:
-                            thisNode->setAttributes(attrs);
-                        // No 'default:' to get compiler warning if we add a further MergePolicy like IGNORE_ATTRIBUTES?
-                    }
-
-                    // Both nodes are Hash
-                    if (thisNode->is<Hash>() && otherNode.is<Hash>()) {
-                        const std::set<std::string>& subPaths =
-                                (selectedPaths.empty() ? selectedPaths : Hash::selectedChildPaths(selectedPaths, key, sep));
-                        thisNode->getValue<Hash>().merge(otherNode.getValue<Hash>(), policy, subPaths, sep);
+                if (!thisNode) {
+                    // No node yet - create one with appropriate type or simply copy over and go on with next key.
+                    if (otherNode.is<Hash>()) {
+                        thisNode = this->set(key, Hash());
+                    } else if (otherNode.is<std::vector<Hash> >()) {
+                        thisNode = this->set(key, std::vector<Hash>());
+                    } else {
+                        // Other merge policies than REPLACE or MERGE might have to be treated here.
+                        this->setNode(otherNode);
                         continue;
                     }
-
-                    // Both nodes are vector<Hash>
-                    if (thisNode->is<vector<Hash> > () && otherNode.is<vector<Hash> > ()) {
-                        vector<Hash>& this_vec = thisNode->getValue<vector<Hash> > ();
-                        const vector<Hash>& other_vec = otherNode.getValue<vector<Hash> > ();
-
-                        if(thisNode->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)){
-                           // replace rows for table elements
-                            const Schema& nodeSchema = thisNode->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA);
-
-                            vector<Hash> validatedOtherVec;
-
-                            Validator validator(karabo::util::tableValidationRules);
-                            unsigned int rowCounter = 0;
-                            for(vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it, ++rowCounter){
-                                if (!selectedIndicesOfKey.empty() && selectedIndicesOfKey.find(rowCounter) == selectedIndicesOfKey.end()) {
-                                    // Skip non-selected indices
-                                    continue;
-                                }
-                                validatedOtherVec.push_back(Hash());
-                                std::pair<bool, std::string> validationResult = validator.validate(nodeSchema, *it, validatedOtherVec.back());
-                                if(!validationResult.first){
-                                    throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against present node schema: " + validationResult.second);
-                                }
-                            }
-                            this_vec.swap(validatedOtherVec);
-
-                        } else {
-                            // append Hashes for ordinary vector<Hash>
-                            if (selectedIndicesOfKey.empty()) {
-                                // There cannot be sub-path selections here.
-                                this_vec.insert(this_vec.end(), other_vec.begin(), other_vec.end());
-                            } else {
-                                // But only the selected ones:
-                                unsigned int hashCounter = 0;
-                                for(vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it, ++hashCounter){
-                                    if (selectedIndicesOfKey.find(hashCounter) != selectedIndicesOfKey.end()) {
-                                        const std::string indexedKey((key + '[') += util::toString(hashCounter) += ']');
-                                        const std::set<std::string> paths(Hash::selectedChildPaths(selectedPaths, indexedKey, sep));
-                                        this_vec.push_back(Hash());
-                                        this_vec.back().merge(*it, policy, paths, sep);
-                                    }
-                                }
-                            }
-                        }
-                        continue;
-                    }
-
-                    if (!selectedPaths.empty() &&
-                        (otherNode.is<Hash>() || otherNode.is<std::vector<Hash> >())) {
-                        if (otherNode.is<Hash>()) {
+                } else {
+                    // Merge attributes and take care that node has proper type if it requires further treatment
+                    // or just take over and go on with net key if not.
+                    Hash::mergeAttributes(*thisNode, otherNode.getAttributes(), policy);
+                    if (otherNode.is<Hash>()) {
+                        if (!thisNode->is<Hash>()) {
                             thisNode->setValue(Hash());
-                            thisNode->getValue<Hash>().merge(otherNode.getValue<Hash>(), policy,
-                                                             Hash::selectedChildPaths(selectedPaths, key, sep), sep);
-                        } else { // i.e. is<std::vector<Hash> >()) {
-                            if (selectedIndicesOfKey.empty()) { // no keys selected - copy over full vector
-                                thisNode->setValue(otherNode.getValueAsAny());
-                            } else {
-                                // Make hashVec of appropriate size and merge selected indices
-                                thisNode->setValue(std::vector<Hash>(selectedIndicesOfKey.size()));
-                                std::vector<Hash>& thisVec = thisNode->getValue<std::vector<Hash> >();
-                                const std::vector<Hash>& otherVec = otherNode.getValue<std::vector<Hash> >();
-                                unsigned int counter = 0;
-                                for (std::set<unsigned int>::const_iterator itIndex = selectedIndicesOfKey.begin(),
-                                     itEnd = selectedIndicesOfKey.end(); itIndex != itEnd; ++itIndex, ++counter) {
-                                    const std::string indexedKey((key + '[') += util::toString(*itIndex) += ']');
-                                    const std::set<std::string> paths(Hash::selectedChildPaths(selectedPaths, indexedKey, sep));
-                                    thisVec[counter].merge(otherVec[*itIndex], policy, paths, sep);
-                                }
-                            }
+                        }
+                    } else if (otherNode.is<std::vector<Hash> >()) {
+                        if (!thisNode->is<std::vector<Hash> >()) {
+                            thisNode->setValue(std::vector<Hash>());
                         }
                     } else {
                         thisNode->setValue(otherNode.getValueAsAny());
+                        continue;
                     }
+                }
+                // We are done except of merging Hash and vector<Hash> - but both nodes are already of same type.
 
-                } else { // Key does not exist
-                    if (!selectedPaths.empty() &&
-                        (otherNode.is<Hash>() || otherNode.is<std::vector<Hash> >())) {
-                        if (otherNode.is<Hash>()) {
-                            Hash& thisHash = this->bindReference<Hash>(key);
-                            thisHash.merge(otherNode.getValue<Hash>(), policy,
-                                           Hash::selectedChildPaths(selectedPaths, key, sep), sep);
-                        } else { // i.e. is<std::vector<Hash> >()
-                            if (selectedIndicesOfKey.empty()) { // no keys selected - copy over full vector
-                                this->setNode(otherNode);
-                            } else {
-                                const std::vector<Hash>& otherVec = otherNode.getValue<std::vector<Hash> >();
-                                // Make hashVec of appropriate size and merge selected indices
-                                std::vector<Hash>& thisVec = this->bindReference<std::vector<Hash> >(key);
-                                thisVec.resize(selectedIndicesOfKey.size());
-                                unsigned int counter = 0;
-                                for (std::set<unsigned int>::const_iterator itIndex = selectedIndicesOfKey.begin(),
-                                     itEnd = selectedIndicesOfKey.end(); itIndex != itEnd; ++itIndex, ++counter) {
-                                    const std::string indexedKey((key + '[') += util::toString(*itIndex) += ']');
+                // Both nodes are Hash
+                if (thisNode->is<Hash>() && otherNode.is<Hash>()) {
+                    const std::set<std::string>& subPaths =
+                            (selectedPaths.empty() ? selectedPaths : Hash::selectedChildPaths(selectedPaths, key, sep));
+                    thisNode->getValue<Hash>().merge(otherNode.getValue<Hash>(), policy, subPaths, sep);
+                    continue;
+                }
+
+                // Both nodes are vector<Hash>
+                if (thisNode->is<vector<Hash> > () && otherNode.is<vector<Hash> > ()) {
+                    vector<Hash>& this_vec = thisNode->getValue<vector<Hash> > ();
+                    const vector<Hash>& other_vec = otherNode.getValue<vector<Hash> > ();
+
+                    if (thisNode->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)) {
+                        // replace rows for table elements
+                        const Schema& nodeSchema = thisNode->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA);
+
+                        vector<Hash> validatedOtherVec;
+
+                        Validator validator(karabo::util::tableValidationRules);
+                        unsigned int rowCounter = 0;
+                        for (vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it, ++rowCounter) {
+                            if (!selectedIndicesOfKey.empty() && selectedIndicesOfKey.find(rowCounter) == selectedIndicesOfKey.end()) {
+                                // Skip non-selected indices
+                                continue;
+                            }
+                            validatedOtherVec.push_back(Hash());
+                            std::pair<bool, std::string> validationResult = validator.validate(nodeSchema, *it, validatedOtherVec.back());
+                            if (!validationResult.first) {
+                                throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against present node schema: " + validationResult.second);
+                            }
+                        }
+                        this_vec.swap(validatedOtherVec);
+
+                    } else {
+                        // append Hashes for ordinary vector<Hash>
+                        if (selectedIndicesOfKey.empty()) {
+                            // There cannot be sub-path selections here.
+                            this_vec.insert(this_vec.end(), other_vec.begin(), other_vec.end());
+                        } else {
+                            // But only the selected ones:
+                            unsigned int hashCounter = 0;
+                            for (vector<Hash>::const_iterator it = other_vec.begin(); it != other_vec.end(); ++it, ++hashCounter) {
+                                if (selectedIndicesOfKey.find(hashCounter) != selectedIndicesOfKey.end()) {
+                                    const std::string indexedKey((key + '[') += util::toString(hashCounter) += ']');
                                     const std::set<std::string> paths(Hash::selectedChildPaths(selectedPaths, indexedKey, sep));
-                                    thisVec[counter].merge(otherVec[*itIndex], policy, paths, sep);
+                                    this_vec.push_back(Hash());
+                                    this_vec.back().merge(*it, policy, paths, sep);
                                 }
                             }
                         }
-                    } else {
-                        this->setNode(otherNode);
                     }
+                    continue;
                 }
+
             } // loop on other
         }
 
@@ -631,6 +593,20 @@ namespace karabo {
             }
 
             return result;
+        }
+
+
+        void Hash::mergeAttributes(Hash::Node& targetNode, const Hash::Attributes& attrs, Hash::MergePolicy policy) {
+            switch (policy) {
+                case MERGE_ATTRIBUTES:
+                    for (Hash::Attributes::const_iterator jt = attrs.begin(); jt != attrs.end(); ++jt) {
+                        targetNode.setAttribute(jt->getKey(), jt->getValueAsAny());
+                    }
+                    break;
+                case REPLACE_ATTRIBUTES:
+                    targetNode.setAttributes(attrs);
+                    // No 'default:' to get compiler warning if we add a further MergePolicy like IGNORE_ATTRIBUTES?
+            }
         }
 
 
