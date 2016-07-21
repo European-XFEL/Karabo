@@ -40,41 +40,30 @@ namespace karathon {
         static boost::shared_ptr<karabo::xms::Data> copy(const boost::shared_ptr<karabo::xms::Data>& self);
     };
 
-    struct NDArrayWrap {
-
-
-        static boost::shared_ptr<karabo::xms::NDArray> make2(const bp::object& obj, const bool copy = true);
-        static bp::object getDataPy(const boost::shared_ptr<karabo::xms::NDArray>& self);
-        static void setDataPy(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& obj, const bool copy);
-        static bp::object getDimensionsPy(const boost::shared_ptr<karabo::xms::NDArray>& self);
-        static void setDimensionsPy(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& obj);
-        static void setDimensionTypesPy(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& obj);
-        static bp::object getDimensionTypesPy(const boost::shared_ptr<karabo::xms::NDArray>& self);
-    };
-
-    struct ImageDataWrap : public karabo::xms::ImageData {
-
-
-        static boost::shared_ptr<karabo::xms::ImageData> make5(const bp::object& obj, const bool copy = true,
-                                                               const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                                                               const karabo::xms::EncodingType encoding = karabo::xms::Encoding::UNDEFINED,
-                                                               const karabo::xms::ChannelSpaceType channelSpace = karabo::xms::ChannelSpace::UNDEFINED);
-        static boost::shared_ptr<karabo::xms::ImageData> make2(const bp::object& obj, const bool copy = true);
-        static bp::object getDataPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-        static void setDataPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj, const bool copy);
-        static bp::object getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-        static void setDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj);
-        static void setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj);
-        static bp::object getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-        static void setROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj);
-        static bp::object getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-        static bp::object getChannelSpacePy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-        static void writePy(const boost::shared_ptr<karabo::xms::ImageData>& self, const std::string& filename, const bool enableAppendMode = false);
-        static void setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& geometry);
-        static karabo::util::DetectorGeometry getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-    };
+    //    struct ImageDataWrap : public karabo::xms::ImageData {
+    //
+    //
+    //        static boost::shared_ptr<karabo::xms::ImageData> make5(const bp::object& obj, const bool copy = true,
+    //                                                               const karabo::util::Dims& dimensions = karabo::util::Dims(),
+    //                                                               const karabo::xms::EncodingType encoding = karabo::xms::Encoding::UNDEFINED,
+    //                                                               const karabo::xms::ChannelSpaceType channelSpace = karabo::xms::ChannelSpace::UNDEFINED);
+    //        static boost::shared_ptr<karabo::xms::ImageData> make2(const bp::object& obj, const bool copy = true);
+    //        static bp::object getDataPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
+    //        static void setDataPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj, const bool copy);
+    //        static bp::object getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
+    //        static void setDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj);
+    //        static void setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj);
+    //        static bp::object getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
+    //        static void setROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj);
+    //        static bp::object getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
+    //        static bp::object getChannelSpacePy(const boost::shared_ptr<karabo::xms::ImageData>& self);
+    //        static void writePy(const boost::shared_ptr<karabo::xms::ImageData>& self, const std::string& filename, const bool enableAppendMode = false);
+    //        static void setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& geometry);
+    //        static karabo::util::DetectorGeometry getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
+    //    };
 
     struct ImageDataElementWrap {
+
 
 
         static karabo::xms::ImageDataElement& setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement>& self,
