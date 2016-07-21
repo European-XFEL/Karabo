@@ -598,6 +598,9 @@ namespace karabo {
             static std::set<unsigned int> selectIndicesOfKey(unsigned int targetSize, const std::set<std::string>& paths,
                                                              const std::string& key, char separator);
 
+            /// Merge 'attrs' to 'targetNode' according to merge 'policy'.
+            static void mergeAttributes(Hash::Node& targetNode, const Hash::Attributes& attrs, Hash::MergePolicy policy);
+
             Hash* setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
 
             Hash& getLastHash(const std::string& path, std::string& last_key, const char separator = '.');
