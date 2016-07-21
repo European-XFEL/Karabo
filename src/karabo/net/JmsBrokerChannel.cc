@@ -858,11 +858,8 @@ namespace karabo {
                 try {
                     // Both, shared_from_this() and registered handlers, could throw. But we really, really must not
                     // stop listening, otherwise a deaf zombie device could be created.
-                    KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
-		    // CAVEAT: The error handler is temporarily disabled as it causes a seg-fault during object destruction
-		    // CAVEAT: No functionality is hampered, as the error only reported the problem as is done in the line above
-		    // TODO: The code must be largely refactored and the error handler brought back in shape		   
-                    //if (m_errorHandler) m_errorHandler(failureMsg);
+                    if (m_errorHandler) m_errorHandler(failureMsg);
+                    else KARABO_LOG_FRAMEWORK_ERROR << failureMsg;
                     caught = false;
                 } catch (const Exception& e) {
                     newFailureMsg = "An" + (newFailureMsg + ":\n") += e.detailedMsg();
