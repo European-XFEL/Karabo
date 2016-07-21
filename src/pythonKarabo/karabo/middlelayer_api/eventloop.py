@@ -274,8 +274,8 @@ def synchronize(coro):
     coro = coroutine(coro)
 
     @wraps(coro)
-    def wrapper(*args, timeout=-1, callback=False, **kwargs):
-        return get_event_loop().sync(coro(*args, **kwargs), timeout, callback)
+    def wrapper(*args, timeout=-1, wait=True, **kwargs):
+        return get_event_loop().sync(coro(*args, **kwargs), timeout, wait)
     return wrapper
 
 
@@ -323,11 +323,11 @@ class NoEventLoop(AbstractEventLoop):
         if self.task is not None:
             self._instance._ss.loop.call_soon_threadsafe(self.task.cancel)
 
-    def sync(self, coro, timeout, callback):
+    def sync(self, coro, timeout, wait):
         if self._cancelled:
             raise CancelledError
         loop = self._instance._ss.loop
-        if callback is False:
+        if wait:
             done = threading.Lock()
             done.acquire()
         hastask = threading.Lock()
@@ -335,12 +335,12 @@ class NoEventLoop(AbstractEventLoop):
 
         def inner():
             self.task = loop.create_task(coro, instance=self._instance)
-            if callback is False:
+            if wait:
                 self.task.add_done_callback(lambda _: done.release())
             hastask.release()
 
         loop.call_soon_threadsafe(inner)
-        if callback is False:
+        if wait:
             done.acquire(timeout=timeout)
             hastask.acquire()
             if self.task.done():
@@ -350,10 +350,7 @@ class NoEventLoop(AbstractEventLoop):
                 raise TimeoutError
         else:
             hastask.acquire()
-            future = KaraboFuture(self.task)
-            if callback is not None:
-                future.add_done_callback(callback)
-            return future
+            return KaraboFuture(self.task)
 
     def instance(self):
         return self._instance
@@ -481,8 +478,8 @@ class EventLoop(SelectorEventLoop):
         finally:
             self.changedFutures.remove(f)
 
-    def sync(self, coro, timeout, callback):
-        assert callback is False
+    def sync(self, coro, timeout, wait):
+        assert wait is True
         return coro
 
     def close(self):
