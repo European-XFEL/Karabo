@@ -2,7 +2,7 @@
  * $Id$
  *
  * Author: <irina.kozlova@xfel.eu>
- * 
+ *
  * Created on December 21, 2011, 11:12 AM
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
@@ -42,6 +42,8 @@
 #include "util/TimeProfiler.hh"
 #include "util/karaboDll.hh"
 #include "util/Version.hh"
+#include "util/State.hh"
+#include "util/StateSignifier.hh"
 
 #endif
 

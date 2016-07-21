@@ -442,9 +442,15 @@ struct OverwriteElementWrap {
 
 
     static OverwriteElement & setNewDefaultValue(OverwriteElement& self, const bp::object& value) {
-        boost::any any;
-        karathon::Wrapper::toAny(value, any);
-        return self.setNewDefaultValue(any);
+        const std::string & className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
+        if(className == "State" ){
+            const std::string & state = bp::extract<std::string>(value.attr("name"));
+            return self.setNewDefaultValue(karabo::util::State::fromString(state));
+        } else {
+            boost::any any;
+            karathon::Wrapper::toAny(value, any);
+            return self.setNewDefaultValue(any);
+        }
     }
 
 
@@ -473,6 +479,33 @@ struct OverwriteElementWrap {
         boost::any any;
         karathon::Wrapper::toAny(value, any);
         return self.setNewMaxExc(any);
+    }
+    
+    static OverwriteElement & setNewAllowedStates(OverwriteElement& self, const bp::tuple & args){
+        std::vector<karabo::util::State> states;
+        for(unsigned int i = 0; i < bp::len(args); ++i){
+            const std::string state = bp::extract<std::string>(args[i].attr("name"));
+            states.push_back(karabo::util::State::fromString(state));
+        }
+        return self.setNewAllowedStates(states);
+    }
+            
+    static OverwriteElement & setNewOptions(OverwriteElement& self, const bp::object & value){
+        bp::extract<bp::tuple> getTuple(value);
+        if(getTuple.check()){
+            bp::tuple args = getTuple();
+            //assume it is a list of states
+            std::vector<karabo::util::State> states;
+            for(unsigned int i = 0; i < bp::len(args); ++i){
+                const std::string state = bp::extract<std::string>(args[i].attr("name"));
+                states.push_back(karabo::util::State::fromString(state));
+            }
+            return self.setNewOptions(states);
+        } else {
+            //other option is string. We can let bp throw if not:
+            std::string s = bp::extract<std::string>(value);
+            return self.setNewOptions(s, ",;");
+        }
     }
 
 };
@@ -1107,7 +1140,9 @@ namespace schemawrap {
     bp::object getAllowedStates(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
-            const vector<string>& v = schema.getAllowedStates(path);
+            const std::string s = karabo::util::toString(schema.getAllowedStates(path));
+            
+            const vector<string> v = karabo::util::fromString<std::string, std::vector>(s);
             return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedStates' should be a string");
@@ -1373,6 +1408,17 @@ namespace schemawrap {
     void updateAliasMap(Schema& schema) {
         schema.updateAliasMap();
     }
+    
+     void setAllowedStates(Schema& self, const std::string & path, const bp::tuple & args){
+        std::vector<karabo::util::State> states;
+        for(unsigned int i = 0; i < bp::len(args); ++i){
+            const std::string state = bp::extract<std::string>(args[i].attr("name"));
+            states.push_back(karabo::util::State::fromString(state));
+        }
+        return self.setAllowedStates(path, states);
+    }
+            
+   
 }
 
 
@@ -1788,7 +1834,7 @@ void exportPyUtilSchema() {
         s.def("setDisplayType", &Schema::setDisplayType, (bp::arg("path"), bp::arg("value")));
         s.def("setAssignment", &Schema::setAssignment, (bp::arg("path"), bp::arg("value")));
         s.def("setOptions", &Schema::setOptions, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
-        s.def("setAllowedStates", &Schema::setAllowedStates, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
+        s.def("setAllowedStates", &schemawrap::setAllowedStates, (bp::arg("path"), bp::arg("value")));
         s.def("setDefaultValue", &schemawrap::setDefaultValue, (bp::arg("path"), bp::arg("value")));
         s.def("setAlias", &schemawrap::setAlias, (bp::arg("path"), bp::arg("value"))); // setAlias<type>
         s.def("setUnit", &Schema::setUnit, (bp::arg("path"), bp::arg("value")));
@@ -2304,6 +2350,9 @@ void exportPyUtilSchema() {
     }
 
     {
+        
+        
+        
         bp::implicitly_convertible< Schema &, OverwriteElement >();
         bp::class_<OverwriteElement> ("OVERWRITE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
                 .def("key"
@@ -2365,12 +2414,12 @@ void exportPyUtilSchema() {
                      , (bp::arg("value"))
                      , bp::return_internal_reference<> ())
                 .def("setNewOptions"
-                     , (OverwriteElement & (OverwriteElement::*)(const std::string&, const std::string&))(&OverwriteElement::setNewOptions)
-                     , (bp::arg("value"), bp::arg("sep") = ",;")
+                     , &OverwriteElementWrap().setNewOptions
+                     , (bp::arg("value"))
                      , bp::return_internal_reference<> ())
-                .def("setNewAllowedState"
-                     , (OverwriteElement & (OverwriteElement::*)(const std::string&, const std::string&))(&OverwriteElement::setNewAllowedState)
-                     , (bp::arg("states"), bp::arg("sep") = " ,;")
+                .def("setNewAllowedStates"
+                     ,  &OverwriteElementWrap().setNewAllowedStates
+                     , (bp::arg("states"))
                      , bp::return_internal_reference<> ())
                 .def("setNowObserverAccess"
                      , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowObserverAccess)
