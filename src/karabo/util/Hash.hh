@@ -601,7 +601,20 @@ namespace karabo {
             /// Merge 'attrs' to 'targetNode' according to merge 'policy'.
             static void mergeAttributes(Hash::Node& targetNode, const Hash::Attributes& attrs, Hash::MergePolicy policy);
 
-            Hash* setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
+            /// Merge two vector<Hash> nodes that represent table elements, i.e. the content of 'source' replaces
+            /// the content of 'target'. The 'selectedPaths' with the separator 'sep' are respected.
+            /// Note that the 'selectedPaths' are those that selected 'source' for merging, i.e. begin with
+            /// the key of 'source', possibly suffixed by indices.
+            static void mergeTableElement(const Hash::Node& source, Hash::Node& target,
+                                                const std::set<std::string>& selectedPaths, char sep);
+
+            /// Merge two ordinary vector<Hash> nodes, respecting the 'selectedPaths' with the separator 'sep'.
+            /// Note that the 'selectedPaths' are those that selected 'source' node for merging, i.e. begin with
+            /// the key of 'source', possibly suffixed by some indices.
+            static void mergeVectorHashNodes(const Hash::Node& source, Hash::Node& target, Hash::MergePolicy policy,
+                                             const std::set<std::string>& selectedPaths, char sep);
+
+            Hash * setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
 
             Hash& getLastHash(const std::string& path, std::string& last_key, const char separator = '.');
             const Hash& getLastHash(const std::string& path, std::string& last_key, const char separator = '.') const;
