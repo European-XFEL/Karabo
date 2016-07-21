@@ -8,6 +8,7 @@ from PyQt4.QtGui import (QColor, QDialog, QFont, QFontMetrics, QFrame, QLabel,
                          QPainter, QPen, QPushButton, QWidget)
 from PyQt4.QtSvg import QSvgRenderer
 
+from karabo_gui.dialogs.dialogs import SceneLinkDialog
 from karabo_gui.dialogs.textdialog import TextDialog
 from karabo_gui.scenemodel.api import write_single_model
 from karabo_gui.sceneview.utils import calc_rect_from_text
@@ -65,7 +66,7 @@ class LabelWidget(QLabel):
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    def edit(self):
+    def edit(self, scene_view):
         dialog = TextDialog(self.model)
         if dialog.exec() == QDialog.Rejected:
             return
@@ -122,6 +123,15 @@ class SceneLinkWidget(QPushButton):
         new_pos = self.pos() + offset
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
+
+    def edit(self, scene_view):
+        project_handler = scene_view.project_handler
+        scenes = project_handler.get_scene_names()
+        dialog = SceneLinkDialog(scenes, self.model.target, parent=scene_view)
+        if dialog.exec() == QDialog.Rejected:
+            return
+
+        self.model.target = dialog.selectedScene
 
 
 class UnknownSvgWidget(QWidget):
