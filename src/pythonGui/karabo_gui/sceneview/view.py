@@ -31,7 +31,6 @@ from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 class SceneView(QWidget):
     """ An object representing the view for a Karabo GUI scene.
     """
-
     def __init__(self, project=None, parent=None, design_mode=False):
         super(SceneView, self).__init__(parent)
 
@@ -127,7 +126,7 @@ class SceneView(QWidget):
         if self.design_mode:
             item = self.item_at_position(event.pos())
             if item is not None and hasattr(item, 'edit'):
-                item.edit()
+                item.edit(self)
                 self.update()
             event.accept()
 

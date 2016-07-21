@@ -70,7 +70,7 @@ class BaseShape(ABCHasStrictTraits):
             pen.setMiterLimit(model.stroke_miterlimit)
         return pen
 
-    def edit(self):
+    def edit(self, scene_view):
         """ Edits the pen and brush of the shape."""
         dialog = PenDialog(self.pen, self.brush)
         if dialog.exec_() == QDialog.Rejected:
