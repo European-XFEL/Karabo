@@ -174,13 +174,21 @@ def create_object_from_model(layout, model, scene_view, object_dict):
         if is_layout(obj):
             # recurse
             fill_root_layout(obj, model, scene_view, object_dict)
-            model_rect = recalculate_model_geometry(obj, model)
-            # Ask the layout to calculate a suitable size
-            obj.invalidate()
-            obj.set_geometry(model_rect)
+            model_rect = QRect(model.x, model.y, model.width, model.height)
+            if model_rect.isEmpty():
+                # Ask the layout to calculate a suitable size
+                obj.invalidate()
+                rect = obj.geometry()
+                if rect.isEmpty():
+                    model_rect.setSize(obj.sizeHint())
+                else:
+                    model_rect = rect
+            obj.setGeometry(model_rect)
         elif is_widget(obj):
-            model_rect = recalculate_model_geometry(obj, model)
-            obj.set_geometry(model_rect)
+            model_rect = QRect(model.x, model.y, model.width, model.height)
+            if model_rect.isEmpty():
+                model_rect.setSize(obj.sizeHint())
+                obj.set_geometry(model_rect)
 
 
 def fill_root_layout(layout, parent_model, scene_view, object_dict):
@@ -191,17 +199,6 @@ def fill_root_layout(layout, parent_model, scene_view, object_dict):
     """
     for child_model in parent_model.children:
         create_object_from_model(layout, child_model, scene_view, object_dict)
-
-
-def recalculate_model_geometry(obj, model):
-    """ Recalculate the geometry rectangle of the ``model`` and return it.
-    """
-    model_rect = QRect(model.x, model.y, model.width, model.height)
-    if model_rect.isEmpty():
-        model_rect.setSize(obj.sizeHint())
-    else:
-        model_rect = obj.geometry()
-    return model_rect
 
 
 def bring_object_to_front(obj):
