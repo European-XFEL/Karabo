@@ -461,7 +461,7 @@ namespace karabo {
 
                 if (otherNode.is<Hash>()) { // Both (!) nodes are Hash
                     const std::set<std::string>& subPaths =
-                            (selectedPaths.empty() ? selectedPaths : Hash::selectedChildPaths(selectedPaths, key, sep));
+                            (selectedPaths.empty() ? selectedPaths : Hash::selectChildPaths(selectedPaths, key, sep));
                     thisNode->getValue<Hash>().merge(otherNode.getValue<Hash>(), policy, subPaths, sep);
                 } else { // Both nodes are vector<Hash>
                     // Note that thisNode's attributes are already copied from otherNode!
@@ -476,10 +476,11 @@ namespace karabo {
         }
 
 
-        std::set<std::string> Hash::selectedChildPaths(const std::set<std::string>& selectedPaths,
-                                                       const std::string& key, char separator) {
+        std::set<std::string> Hash::selectChildPaths(const std::set<std::string>& paths,
+                                                     const std::string& key, char separator) {
             std::set<std::string> result;
-            BOOST_FOREACH(const std::string& path, selectedPaths) {
+
+            BOOST_FOREACH(const std::string& path, paths) {
                 const size_t sepPos = path.find_first_of(separator);
                 // Add what is left after first separator - if that is not empty and if that before separator matches key:
                 if (sepPos != string::npos // Found a separator,
@@ -522,7 +523,6 @@ namespace karabo {
         std::set<unsigned int> Hash::selectIndicesOfKey(const unsigned int targetSize, const std::set<std::string>& paths,
                                                         const std::string& key, char separator) {
             std::set<unsigned int> result;
-
             BOOST_FOREACH(const std::string& path, paths) {
                 if (path.empty() || path[0] == separator) continue; // ignore paths that are empty or start with separator
 
@@ -565,12 +565,12 @@ namespace karabo {
 
 
         void Hash::mergeTableElement(const Hash::Node& source, Hash::Node& target,
-                                     const std::set<std::string>& selectedPaths, char sep) {
+                                     const std::set<std::string>& selectedPaths, char separator) {
 
             std::vector<Hash>& targetVec = target.getValue<vector<Hash> > ();
             const vector<Hash>& sourceVec = source.getValue<vector<Hash> > ();
             const std::set<unsigned int> selectedIndices(Hash::selectIndicesOfKey(sourceVec.size(), selectedPaths,
-                                                                                  source.getKey(), sep));
+                                                                                  source.getKey(), separator));
 
             // replace rows for table elements
             const Schema& nodeSchema = target.getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA);
@@ -595,12 +595,12 @@ namespace karabo {
 
 
         void Hash::mergeVectorHashNodes(const Hash::Node& source, Hash::Node& target, Hash::MergePolicy policy,
-                                        const std::set<std::string>& selectedPaths, char sep) {
+                                        const std::set<std::string>& selectedPaths, char separator) {
 
             std::vector<Hash>& targetVec = target.getValue<vector<Hash> > ();
             const vector<Hash>& sourceVec = source.getValue<vector<Hash> > ();
             const std::set<unsigned int> selectedIndices(Hash::selectIndicesOfKey(sourceVec.size(), selectedPaths,
-                                                                                  source.getKey(), sep));
+                                                                                  source.getKey(), separator));
 
             // Append Hashes for ordinary vector<Hash>
             if (selectedIndices.empty()) {
@@ -614,9 +614,9 @@ namespace karabo {
                     if (selectedIndices.find(hashCounter) != selectedIndices.end()) {
                         // Extract sub-paths
                         const std::string indexedKey((source.getKey() + '[') += util::toString(hashCounter) += ']');
-                        const std::set<std::string> paths(Hash::selectedChildPaths(selectedPaths, indexedKey, sep));
+                        const std::set<std::string> paths(Hash::selectChildPaths(selectedPaths, indexedKey, separator));
                         targetVec.push_back(Hash());
-                        targetVec.back().merge(*it, policy, paths, sep);
+                        targetVec.back().merge(*it, policy, paths, separator);
                     }
                 }
             }
