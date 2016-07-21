@@ -9,7 +9,7 @@
 
 #include "Attribute.hh"
 #include <karabo/util/SimpleElement.hh>
-#include <karabo/util/VectorElement.hh>
+#include <karabo/util/NDArrayElement.hh>
 #include <karabo/log/Logger.hh>
 #include <karabo/util/Dims.hh>
 
@@ -42,7 +42,7 @@ namespace karabo {
                         .reconfigurable()
                         .commit();
 
-                karabo::util::VECTOR_UINT64_ELEMENT(expected)
+                VECTOR_UINT64_ELEMENT(expected)
                         .key("dims")
                         .displayedName("Dimensions")
                         .description("Array dimensions.")

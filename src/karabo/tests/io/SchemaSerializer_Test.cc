@@ -15,7 +15,7 @@
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ListElement.hh>
-#include <karabo/util/VectorElement.hh>
+#include <karabo/util/NDArrayElement.hh>
 #include <karabo/io/FileTools.hh>
 
 #include "SchemaSerializer_Test.hh"
