@@ -20,7 +20,9 @@
 #include <karabo/util/Version.hh>
 #include "coredll.hh"
 
+#include <karabo/util/State.hh>
 #include "FsmMacros.hh"
+
 
 /**
  * The main European XFEL namespace
@@ -112,9 +114,9 @@ namespace karabo {
             /*                        States                              */
             /**************************************************************/
 
-            KARABO_FSM_STATE_V_E(Ok, okStateOnEntry)
+            KARABO_FSM_STATE_V_E(NORMAL, okStateOnEntry)
 
-            KARABO_FSM_STATE(Error)
+            KARABO_FSM_STATE(ERROR)
 
             /**************************************************************/
             /*                    Transition Actions                      */
@@ -129,14 +131,14 @@ namespace karabo {
             //  Source-State    Event        Target-State    Action         Guard
 
             KARABO_FSM_TABLE_BEGIN(StateMachineTransitionTable)
-            Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
-            Row< Error, ResetEvent, Ok, none, none >,
-            Row< Error, ErrorFoundEvent, Error, ErrorFoundAction, none >
+            Row< NORMAL, ErrorFoundEvent, ERROR, ErrorFoundAction, none >,
+            Row< ERROR, ResetEvent, NORMAL, none, none >,
+            Row< ERROR, ErrorFoundEvent, ERROR, ErrorFoundAction, none >
             KARABO_FSM_TABLE_END
 
 
             //                       Name          Transition-Table             Initial-State Context
-            KARABO_FSM_STATE_MACHINE(StateMachine, StateMachineTransitionTable, Ok, Self)
+            KARABO_FSM_STATE_MACHINE(StateMachine, StateMachineTransitionTable, NORMAL, Self)
 
 
             void startFsm() {
@@ -152,7 +154,7 @@ namespace karabo {
 
             void slotStartDevice(const karabo::util::Hash& configuration);
 
-            void onStateUpdate(const std::string& currentState);
+            void onStateUpdate(const karabo::util::State& currentState);
 
             void loadLogger(const karabo::util::Hash& input);
 

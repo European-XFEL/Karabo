@@ -1,6 +1,6 @@
-/* 
+/*
  * $Id$
- * 
+ *
  * Author: <irina.kozlova@xfel.eu>
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
@@ -13,7 +13,10 @@
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/NDArrayElement.hh>
 #include <karabo/util/TableElement.hh>
+#include <karabo/util/State.hh>
 #include <karathon/Wrapper.hh>
+
+
 namespace bp = boost::python;
 
 template <typename T>
@@ -95,6 +98,7 @@ struct AliasAttributeWrap {
 
 template <class T, int NDIMS>
 struct DefaultValueNDArrayWrap {
+
     typedef std::vector< T > VType;
     typedef karabo::util::NDArrayElement< T, NDIMS > U;
     typedef karabo::util::DefaultValue< U, VType > DefValueArr;
@@ -110,7 +114,6 @@ struct DefaultValueNDArrayWrap {
 };
 
 struct DefaultValueTableWrap {
-
 
     typedef std::vector<karabo::util::Hash > VType;
     typedef karabo::util::TableElement U;
@@ -129,6 +132,7 @@ struct DefaultValueTableWrap {
 
 template <class T, int NDIMS>
 struct ReadOnlySpecificNDArrayWrap {
+
     typedef std::vector< T > VType;
     typedef karabo::util::NDArrayElement< T, NDIMS > U;
     typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecArr;
@@ -180,9 +184,9 @@ struct ReadOnlySpecificNDArrayWrap {
     }
 };
 
-
-template <class T, int NDIMS = -1>
+template <class T, int NDIMS = -1 >
 struct NDArrayElementWrap {
+
     typedef karabo::util::NDArrayElement< T, NDIMS > U;
 
     static U & shape(U& self, const bp::object& obj) {
@@ -381,6 +385,22 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 ;\
 }
 
+template<typename T>
+class CommonWrap {
+
+public:
+
+    static T & allowedStatesPy(T & self, const bp::tuple & args) {
+        std::vector<karabo::util::State> states;
+        for (unsigned int i = 0; i < bp::len(args); ++i) {
+            const std::string state = bp::extract<std::string>(args[i].attr("name"));
+            states.push_back(karabo::util::State::fromString(state));
+        }
+        return self.allowedStates(states);
+    }
+
+};
+
 #define KARABO_PYTHON_COMMON_ATTRIBUTES(T)\
 .def("advanced", &T::advanced\
 , bp::return_internal_reference<> () )\
@@ -394,8 +414,8 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 , bp::return_internal_reference<> () )\
 .def("adminAccess", &T::adminAccess\
 , bp::return_internal_reference<> () )\
-.def("allowedStates", &T::allowedStates\
-, ( bp::arg("states"), bp::arg("sep")=" ,;" )\
+.def("allowedStates", &CommonWrap<T>::allowedStatesPy\
+, ( bp::arg("states") )\
 , bp::return_internal_reference<> ())\
 .def("assignmentInternal", &T::assignmentInternal\
 , bp::return_internal_reference<> () )\
@@ -589,7 +609,7 @@ return boost::python::object(str);\
  * @code
  * karabo::util::ImageElement
  * @endcode
- * 
+ *
  * In Python: IMAGE_ELEMENT
  *
  */
