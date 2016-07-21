@@ -511,16 +511,16 @@ namespace karabo {
                             if (selectedIndicesOfKey.empty()) { // no keys selected - copy over full vector
                                 thisNode->setValue(otherNode.getValueAsAny());
                             } else {
-                                // Make hashVec of minimum length and merge selected indices
-                                const unsigned int maxIndex = *(--selectedIndicesOfKey.end()); // last item in set is highest
-                                thisNode->setValue(std::vector<Hash>(maxIndex + 1));
+                                // Make hashVec of appropriate size and merge selected indices
+                                thisNode->setValue(std::vector<Hash>(selectedIndicesOfKey.size()));
                                 std::vector<Hash>& thisVec = thisNode->getValue<std::vector<Hash> >();
                                 const std::vector<Hash>& otherVec = otherNode.getValue<std::vector<Hash> >();
+                                unsigned int counter = 0;
                                 for (std::set<unsigned int>::const_iterator itIndex = selectedIndicesOfKey.begin(),
-                                        itEnd = selectedIndicesOfKey.end(); itIndex != itEnd; ++itIndex) {
+                                     itEnd = selectedIndicesOfKey.end(); itIndex != itEnd; ++itIndex, ++counter) {
                                     const std::string indexedKey((key + '[') += util::toString(*itIndex) += ']');
                                     const std::set<std::string> paths(Hash::selectedChildPaths(selectedPaths, indexedKey, sep));
-                                    thisVec[*itIndex].merge(otherVec[*itIndex], policy, paths, sep);
+                                    thisVec[counter].merge(otherVec[*itIndex], policy, paths, sep);
                                 }
                             }
                         }
@@ -540,15 +540,15 @@ namespace karabo {
                                 this->setNode(otherNode);
                             } else {
                                 const std::vector<Hash>& otherVec = otherNode.getValue<std::vector<Hash> >();
-                                // Make hashVec of minimum length and merge selected indices
+                                // Make hashVec of appropriate size and merge selected indices
                                 std::vector<Hash>& thisVec = this->bindReference<std::vector<Hash> >(key);
-                                const unsigned int maxIndex = *(--selectedIndicesOfKey.end());  // last item in set is highest
-                                thisVec.resize(maxIndex + 1);
+                                thisVec.resize(selectedIndicesOfKey.size());
+                                unsigned int counter = 0;
                                 for (std::set<unsigned int>::const_iterator itIndex = selectedIndicesOfKey.begin(),
-                                        itEnd = selectedIndicesOfKey.end(); itIndex != itEnd; ++itIndex) {
+                                     itEnd = selectedIndicesOfKey.end(); itIndex != itEnd; ++itIndex, ++counter) {
                                     const std::string indexedKey((key + '[') += util::toString(*itIndex) += ']');
                                     const std::set<std::string> paths(Hash::selectedChildPaths(selectedPaths, indexedKey, sep));
-                                    thisVec[*itIndex].merge(otherVec[*itIndex], policy, paths, sep);
+                                    thisVec[counter].merge(otherVec[*itIndex], policy, paths, sep);
                                 }
                             }
                         }

@@ -899,7 +899,7 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(h1c.has("b.c"));
     CPPUNIT_ASSERT(h1c.has("g.h.i"));
     CPPUNIT_ASSERT(h1c.has("h.i"));
-    CPPUNIT_ASSERT(h1c.has("i[2].k.l"));
+    CPPUNIT_ASSERT(h1c.has("i[0].k.l"));
     // But not the other ones from h2:
     CPPUNIT_ASSERT(!h1c.has("c.b[0].key")); // neither at old position of h2
     CPPUNIT_ASSERT(!h1c.has("c.b[2]"));     // nor an extended vector<Hash> at all
@@ -921,12 +921,12 @@ void Hash_Test::testMerge() {
 
     Hash hashTargetB("a[1].b", 1, "c", "Does not matter");
     Hash hashTargetC(hashTargetB);
-    const Hash hashSourceBC("a[2]", Hash("a", 33, "b", 4.4), "ha", 9, "c[0]", Hash("k", 5, "l", 6),
-                            "c[1]", Hash("b", -3), "d[2].b", 66, "e[1]", Hash("1", 1, "2", 2, "3", 3));
+    const Hash hashSourceBC("a[2]", Hash("a", 33, "b", 4.4), "ha", 9, "c[1]", Hash("k", 5, "l", 6),
+                            "c[2]", Hash("b", -3), "d[2].b", 66, "e[1]", Hash("1", 1, "2", 2, "3", 3));
     selectedPaths.clear();
     selectedPaths.insert("a"); // trigger merging full vector
     // trigger selecting first HashVec item overwriting what was not a hashVec before, but only keep selected items
-    selectedPaths.insert("c[0].l");
+    selectedPaths.insert("c[1].l");
     selectedPaths.insert("d"); // trigger adding full new vector
     selectedPaths.insert("e[1].2"); // trigger selective adding of hashVec where there was not node before
     selectedPaths.insert("e[1].3");
@@ -941,10 +941,10 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(!hashTargetB.has("c[1]"));
     CPPUNIT_ASSERT(hashTargetB.has("d[2].b"));
     CPPUNIT_ASSERT(!hashTargetB.has("d[3]"));
-    CPPUNIT_ASSERT(!hashTargetB.has("e[1].1"));
-    CPPUNIT_ASSERT(hashTargetB.has("e[1].2"));
-    CPPUNIT_ASSERT(hashTargetB.has("e[1].3"));
-    CPPUNIT_ASSERT(!hashTargetB.has("e[2]"));
+    CPPUNIT_ASSERT(!hashTargetB.has("e[0].1"));
+    CPPUNIT_ASSERT(hashTargetB.has("e[0].2"));
+    CPPUNIT_ASSERT(hashTargetB.has("e[0].3"));
+    CPPUNIT_ASSERT(!hashTargetB.has("e[1]"));
 
     selectedPaths.clear();
     selectedPaths.insert("a[0]");
@@ -955,10 +955,10 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(!hashTargetC.has("a[3].a"));
     CPPUNIT_ASSERT(hashTargetC.has("a[3].b"));
     CPPUNIT_ASSERT(!hashTargetC.has("a[4]"));
-    CPPUNIT_ASSERT(hashTargetC.has("c[0].k"));
-    CPPUNIT_ASSERT(hashTargetC.has("c[0].l"));
-    CPPUNIT_ASSERT(hashTargetC.has("c[1].b"));
-    CPPUNIT_ASSERT(!hashTargetC.has("c[2]"));
+    CPPUNIT_ASSERT(hashTargetC.has("c[1].k"));
+    CPPUNIT_ASSERT(hashTargetC.has("c[1].l"));
+    CPPUNIT_ASSERT(hashTargetC.has("c[2].b"));
+    CPPUNIT_ASSERT(!hashTargetC.has("c[3]"));
 
 }
 
