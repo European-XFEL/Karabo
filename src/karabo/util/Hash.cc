@@ -424,8 +424,12 @@ namespace karabo {
                 const std::string& key = otherNode.getKey();
 
                 // If we have selected paths, check whether to go on
-                if (!selectedPaths.empty() && !Hash::keyIsPrefixOfAnyPath(selectedPaths, key, sep)) {
-                    continue;
+                if (!selectedPaths.empty()) {
+                    const unsigned int size = (otherNode.is<vector<Hash> >() ?
+                                               otherNode.getValue<vector<Hash> >().size() : 0u);
+                    if (!Hash::keyIsPrefixOfAnyPath(selectedPaths, key, sep, size)) {
+                        continue;
+                    }
                 }
 
                 boost::optional<Hash::Node&> thisNode = this->find(key);
@@ -442,7 +446,7 @@ namespace karabo {
                     }
                 } else {
                     // Merge attributes and take care that node has proper type if it requires further treatment
-                    // or just take over and go on with net key if not.
+                    // or just take over and go on with next key if not.
                     Hash::mergeAttributes(*thisNode, otherNode.getAttributes(), policy);
                     if (otherNode.is<Hash>()) {
                         if (!thisNode->is<Hash>()) {
@@ -457,8 +461,7 @@ namespace karabo {
                         continue;
                     }
                 }
-                // We are done except of merging Hash and vector<Hash> - but both nodes are already of same type.
-
+                // We are done except of merging Hash or vector<Hash> - but both nodes are already of same type.
                 if (otherNode.is<Hash>()) { // Both (!) nodes are Hash
                     const std::set<std::string>& subPaths =
                             (selectedPaths.empty() ? selectedPaths : Hash::selectChildPaths(selectedPaths, key, sep));
@@ -493,7 +496,8 @@ namespace karabo {
         }
 
 
-        bool Hash::keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key, char separator) {
+        bool Hash::keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key, char separator,
+                                        unsigned int size) {
 
             BOOST_FOREACH(const std::string& path, paths) {
                 if (path.empty() || path[0] == separator) continue; // ignore paths that are empty or start with separator
@@ -506,10 +510,10 @@ namespace karabo {
                         // In fact, they are the same:
                         return true;
                     } else {
-                        // Check whether after key there is an [<index>]:
+                        // Check whether after key there is a valid (i.e. < size) [<index>]:
                         std::string croppedFirstKey(firstKeyOfPath);
                         const int index = karabo::util::getAndCropIndex(croppedFirstKey);
-                        if (index != -1 && croppedFirstKey == key) {
+                        if (index != -1 && static_cast<unsigned int> (index) < size && croppedFirstKey == key) {
                             return true;
                         }
                     }
