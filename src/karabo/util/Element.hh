@@ -92,6 +92,10 @@ namespace karabo {
             template <typename ValueType >
             ValueType getValueAs() const;
 
+
+            template<typename T, template <typename Elem> class Arr >
+            Arr<T> getValueAs() const;
+
             template<typename T,
             template <typename Elem, typename = std::allocator<Elem> > class Cont >
             Cont<T> getValueAs() const;
@@ -284,6 +288,18 @@ namespace karabo {
                                                         += " (string '" + this->getValueAsString() += "')"));
             }
             return ValueType();
+        }
+
+        template<class KeyType, typename AttributeType>
+        template<typename T, template <typename Elem> class Arr >
+        inline Arr<T> Element<KeyType, AttributeType>::getValueAs() const {
+            Types::ReferenceType srcType = this->getType();
+            Types::ReferenceType tgtType = Types::from<Arr<T> >();
+
+            if (tgtType == srcType) return this->getValue<Arr<T> > ();
+            else throw KARABO_CAST_EXCEPTION("Unknown source type for key: \"" + m_key + "\". Cowardly refusing to cast.");
+
+            return Arr<T>(); // Make the compiler happy
         }
 
         template<class KeyType, typename AttributeType>
