@@ -21,7 +21,7 @@ def thread_tst(f):
     return wrapper
 
 
-class Barrier:
+class Barrier(object):
     def __init__(self, loop):
         self.lock = Lock(loop=loop)
         self.state = "init"
