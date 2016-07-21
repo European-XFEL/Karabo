@@ -6,7 +6,7 @@
 
 import os.path
 
-from PyQt4.QtCore import QEvent, QRect, Qt
+from PyQt4.QtCore import QEvent, Qt
 from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
@@ -22,7 +22,8 @@ from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (ConfigurationDropHandler, NavigationDropHandler,
-                        SceneSelectionTool, WidgetSceneHandler)
+                        ProjectSceneHandler, SceneSelectionTool,
+                        WidgetSceneHandler)
 from .utils import save_painter_state
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 
@@ -31,7 +32,7 @@ class SceneView(QWidget):
     """ An object representing the view for a Karabo GUI scene.
     """
 
-    def __init__(self, parent=None, design_mode=False):
+    def __init__(self, project=None, parent=None, design_mode=False):
         super(SceneView, self).__init__(parent)
 
         layout_model = FixedLayoutModel(x=0, y=0, width=SCENE_MIN_WIDTH,
@@ -53,6 +54,8 @@ class SceneView(QWidget):
         layout.setStackingMode(QStackedLayout.StackAll)
         layout.addWidget(self.overlay)
         layout.addWidget(self.inner)
+
+        self.project_handler = ProjectSceneHandler(project=project)
 
         self.title = None
         self.scene_model = None
@@ -261,6 +264,15 @@ class SceneView(QWidget):
                 self.selection_model.select_object(obj)
         self.update()
 
+    def select_model(self, model):
+        """ Select widget object for the given ``model``.
+        """
+        self.selection_model.clear_selection()
+        obj = self._scene_obj_cache.get(model)
+        if obj is not None:
+            self.selection_model.select_object(obj)
+        self.update()
+
     def set_cursor(self, name):
         """ Sets the cursor for the scene view.
         """
@@ -306,12 +318,6 @@ class SceneView(QWidget):
             top_level_model = new_model
         # Add the modified top level model to the scene again
         self.add_models(top_level_model)
-        widget = self._scene_obj_cache.get(new_model)
-        model_rect = QRect(new_model.x, new_model.y,
-                           new_model.width, new_model.height)
-        if model_rect.isEmpty():
-            model_rect.setSize(widget.sizeHint())
-            widget.setGeometry(model_rect)
         self.selection_model.clear_selection()
 
     def bring_to_front(self, model):

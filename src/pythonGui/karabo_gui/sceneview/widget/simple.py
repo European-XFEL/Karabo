@@ -237,6 +237,5 @@ class WorkflowItemWidget(QWidget):
     def _compute_minimum_rect(self):
         fm = QFontMetrics(self.font)
         rect = fm.boundingRect(self.model.device_id)
-        padding = self.pen.width() * 2
-        rect.adjust(-padding, -padding, padding, padding)
+        rect.adjust(-PADDING, -PADDING, PADDING, PADDING)
         return rect
