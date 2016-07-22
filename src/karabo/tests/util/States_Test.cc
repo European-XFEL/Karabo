@@ -81,4 +81,9 @@ void States_Test::testComparisons(){
     CPPUNIT_ASSERT(!State::ERROR.isDerivedFrom(State::CHANGING));  // the other way round
     CPPUNIT_ASSERT(State::HEATED.isDerivedFrom(State::NORMAL)); // longer list of ancestors
     CPPUNIT_ASSERT(!State::KNOWN.isDerivedFrom(State::INCREASING)); // longer list of ancestors the other way round should not compare
+
+    const State state(State::fromString("ON"));
+    CPPUNIT_ASSERT(state == State::ON);
+    CPPUNIT_ASSERT(state != State::INIT);
+
 }
