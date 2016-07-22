@@ -10,7 +10,7 @@ from karabo.bound import (
 from .configuration_example_classes import (
     Base, GraphicsRenderer, GraphicsRenderer1, Shape, SomeClass, TestStruct1
 )
-
+from karabo.common.states import State
 
 class  Schema_TestCase(unittest.TestCase):
     #def setUp(self):
@@ -331,13 +331,13 @@ class  Schema_TestCase(unittest.TestCase):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
             allowedStates = schema.getAllowedStates("exampleKey3")
-            self.assertEqual(allowedStates[0], "AllOk.Started")
-            self.assertEqual(allowedStates[1], "AllOk.Stopped")
-            self.assertEqual(schema.getAllowedStates("exampleKey3")[2], "AllOk.Run.On")
-            self.assertEqual(schema.getAllowedStates("exampleKey3")[3], "NewState")
+            self.assertEqual(allowedStates[0], State.STARTED)
+            self.assertEqual(allowedStates[1], State.STOPPED)
+            self.assertEqual(schema.getAllowedStates("exampleKey3")[2], State.NORMAL)
+
             
-            self.assertEqual(schema.getAllowedStates("exampleKey7")[0], "Started")
-            self.assertEqual(schema.getAllowedStates("exampleKey7")[1], "AllOk")
+            self.assertEqual(schema.getAllowedStates("exampleKey7")[0], State.STARTED)
+            self.assertEqual(schema.getAllowedStates("exampleKey7")[1], State.NORMAL)
         except Exception as e:
             self.fail("test_getAllowedStates exception: " + str(e))
     
