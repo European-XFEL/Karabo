@@ -445,9 +445,8 @@ namespace karabo {
                         continue;
                     }
                 } else {
-                    // Merge attributes and take care that node has proper type if it requires further treatment
+                    // Take care that node has proper type if it requires further treatment
                     // or just take over and go on with next key if not.
-                    Hash::mergeAttributes(*thisNode, otherNode.getAttributes(), policy);
                     if (otherNode.is<Hash>()) {
                         if (!thisNode->is<Hash>()) {
                             thisNode->setValue(Hash());
@@ -457,11 +456,15 @@ namespace karabo {
                             thisNode->setValue(std::vector<Hash>());
                         }
                     } else {
+                        Hash::mergeAttributes(*thisNode, otherNode.getAttributes(), policy);
                         thisNode->setValue(otherNode.getValueAsAny());
                         continue;
                     }
                 }
                 // We are done except of merging Hash or vector<Hash> - but both nodes are already of same type.
+                // First treat the attributes:
+                Hash::mergeAttributes(*thisNode, otherNode.getAttributes(), policy);
+                // Now merge content:
                 if (otherNode.is<Hash>()) { // Both (!) nodes are Hash
                     const std::set<std::string>& subPaths =
                             (selectedPaths.empty() ? selectedPaths : Hash::selectChildPaths(selectedPaths, key, sep));
