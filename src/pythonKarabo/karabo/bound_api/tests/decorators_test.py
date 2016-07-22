@@ -7,7 +7,7 @@ from karabo.bound import (
     Configurator, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
     INT32_ELEMENT,STRING_ELEMENT, Hash, Types
 )
-
+from karabo.common.states import State
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("ExampleBase", "1.0")
@@ -32,7 +32,7 @@ class ExampleBaseClass(object):
         e = INT32_ELEMENT(expected)
         e.key("multiply").displayedName("Multiply").description("multiplies word")
         e.assignmentOptional().defaultValue(1)
-        e.allowedStates("ErrorState").reconfigurable().commit()
+        e.allowedStates(State.ERROR).reconfigurable().commit()
 
         e = STRING_ELEMENT(expected)
         e.key("composedWord").displayedName("Composed word").description("The composed word")
