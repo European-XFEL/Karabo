@@ -797,10 +797,13 @@ void Hash_Test::testMerge() {
     h2.set("i[3]", Hash());
     h2.set("i[1].j", 200);
     h2.set("i[2]", Hash("k.l", 5.));
+    h2.set("j", Hash("k", 5.));
     h2.setAttribute("a", "attrKey", "Really just a number");
     h2.setAttribute("e", "attrKey4", -1);
     h2.setAttribute("e", "attrKey5", -11.f);
     h2.setAttribute("f", "attrKey7", 77u);
+    h2.setAttribute("i", "attrKey8", 123ll); // attribute on new vector<Hash> node
+    h2.setAttribute("j", "attrKey9", 12.3); // ... and new Hash node
 
 
     h1.merge(h2); // Hash::REPLACE_ATTRIBUTES is the default
@@ -854,14 +857,29 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(h1.has("i[1].j"));
     CPPUNIT_ASSERT(h1.has("i[2].k.l"));
     CPPUNIT_ASSERT(h1.has("i[3]"));
+    CPPUNIT_ASSERT(h1.has("j.k"));
 
-    // Just add attributes with leaf (identical for )
+    // Just add attributes with leaf (identical for REPLACE or MERGE)
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on leaf added", 2ul, h1.getAttributes("e").size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Int attribute value incorrect", -1, h1.getAttribute<int>("e", "attrKey4"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Float attribute value incorrect", -11.f, h1.getAttribute<float>("e", "attrKey5"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on leaf added (MERGE)", 2ul, h1b.getAttributes("e").size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Int attribute value incorrect (MERGE)", -1, h1b.getAttribute<int>("e", "attrKey4"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Float attribute value incorrect (MERGE)", -11.f, h1b.getAttribute<float>("e", "attrKey5"));
+    // Just add attributes for new Hash/vector<Hash> (identical for REPLACE or MERGE)
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on vector<Hash> added", 1ul, h1.getAttributes("i").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int64 attributes on vector<Hash> wrong",
+                                 123ll, h1.getAttribute<long long>("i", "attrKey8"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on Hash added", 1ul, h1.getAttributes("j").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Double attributes on Hash wrong",
+                                 12.3, h1.getAttribute<double>("j", "attrKey9"));
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on vector<Hash> added (MERGE)", 1ul, h1b.getAttributes("i").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int64 attributes on vector<Hash> wrong  (MERGE)",
+                                 123ll, h1b.getAttribute<long long>("i", "attrKey8"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on Hash added (MERGE)", 1ul, h1b.getAttributes("j").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Double attributes on Hash wrong (MERGE)",
+                                 12.3, h1b.getAttribute<double>("j", "attrKey9"));
 
     CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept (MERGE)", h1b.hasAttribute("c.b", "attrKey2"));
 
