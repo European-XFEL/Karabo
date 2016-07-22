@@ -279,7 +279,6 @@ class Type(hashmod.Type, metaclass=Monkey):
         """
         box.signalUpdateComponent.connect(other.slotSet)
 
-
     def dispatchUserChanges(self, box, hash, attrs=None):
         self._copyAttrs(box, attrs)
         box.signalUserChanged.emit(box, box.descriptor.cast(hash), None)
@@ -661,6 +660,24 @@ class Schema(hashmod.Descriptor):
             if myChild is not None and otherChild is not None:
                 myChild.connectOtherBox(otherChild)
 
+    def get_read_only_keys(self):
+        """ This recursive methode returns a list with all full keys with
+            accessMode readOnly.
+        """
+        def recurse(parent_key, parent_value, read_only_keys):
+            if isinstance(parent_value, Schema):
+                for key, value in parent_value.dict.items():
+                    new_key = "{}.{}".format(parent_key, key)
+                    recurse(new_key, value, read_only_keys)
+
+            if parent_value.accessMode is AccessMode.READONLY:
+                return read_only_keys.append(parent_key)
+
+        read_only_keys = []
+        for key, value in self.dict.items():
+            recurse(key, value, read_only_keys)
+        return read_only_keys
+
 
 class ImageNode(Schema):
     def item(self, treeWidget, parentItem, box, isClass):
@@ -877,6 +894,7 @@ class ListOfNodes(hashmod.Descriptor):
         value changes.
         """
         box.signalUpdateComponent.connect(other.slotSet)
+
 
 class VectorHash(hashmod.VectorHash, metaclass=Monkey):
     # Means that parent class is overwritten/updated
