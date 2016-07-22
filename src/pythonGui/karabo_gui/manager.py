@@ -121,7 +121,7 @@ class _Manager(QObject):
         # from instantiating
         descriptor = conf.descriptor
         if descriptor is not None:
-            read_only_keys = descriptor.get_read_only_keys()
+            read_only_keys = descriptor.getReadOnlyKeys()
             for key in read_only_keys:
                 # Remove all read only parameters
                 config.erase(key)

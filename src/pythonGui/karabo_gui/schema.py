@@ -660,7 +660,7 @@ class Schema(hashmod.Descriptor):
             if myChild is not None and otherChild is not None:
                 myChild.connectOtherBox(otherChild)
 
-    def get_read_only_keys(self):
+    def getReadOnlyKeys(self):
         """ This recursive methode returns a list with all full keys with
             accessMode readOnly.
         """
