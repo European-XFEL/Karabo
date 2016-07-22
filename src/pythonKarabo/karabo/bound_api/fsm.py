@@ -328,16 +328,17 @@ class StateMachine(_State):
             raise IndexError('The "no_transition" action was not defined')
 
     def _setup(self, sname):
-        if sname in _states_:
+        if sname in _machines_:
+            (_stt, _initial, _entry, _exit, _ta) = _machines_[sname]
+            self.stt[sname] = type(str(sname), (StateMachine,), {})(self, _stt, _initial, _entry, _exit, _ta)
+        elif sname in _states_:
             (_entry, _exit, _ta) = _states_[sname]
             State = type(sname.name, (_State,), {})
             self.stt[sname] = State(self, sname, on_entry=_entry,
                                     on_exit=_exit, in_state=_ta)
             if sname in _interrupts_:
                 self.stt[sname].interrupt = _interrupts_[sname]
-        elif sname in _machines_:
-            (_stt, _initial, _entry, _exit, _ta) = _machines_[sname]
-            self.stt[sname] = type(str(sname), (StateMachine,), {})(self, _stt, _initial, _entry, _exit, _ta)
+
         else:
             raise NameError('Undefined name of initial state in State machine '
                             'declaration: {}'.format(sname))
