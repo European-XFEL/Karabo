@@ -87,7 +87,7 @@ namespace karabo {
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_UINT64, "pair<unsigned long long*,size_t>")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_FLOAT, "pair<float*,size_t>")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_DOUBLE, "pair<double*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_BOOL, "NDArray<bool*,size_t>")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_BOOL, "NDArray<bool>")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_INT8, "NDArray<signed char>")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_UINT8, "NDArray<unsigned char>")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_INT16, "NDArray<short>")

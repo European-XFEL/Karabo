@@ -162,6 +162,20 @@ namespace karabo {
         }
 
         template <typename T>
+        inline std::string toString(const karabo::util::NDArray<T>& value) {
+            typename karabo::util::NDArray<T>::VectorType const & data = *value.getData(); 
+            if (data.empty()) return "";
+            std::ostringstream s;
+            typename karabo::util::NDArray<T>::VectorType::const_iterator it = data.begin();
+            s << toString(*it);
+            ++it;
+            for (; it != data.end(); ++it) {
+                s << "," << toString(*it);
+            }
+            return s.str();
+        }
+
+        template <typename T>
         inline std::string toString(const std::set<T>& value) {
             if (value.empty()) return "";
             std::ostringstream s;

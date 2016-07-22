@@ -19,8 +19,28 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(Data, ImageData)
 
-        void ImageData::expectedParameters(karabo::util::Schema& s) {
+        void ImageData::expectedParameters(::Schema& s) {
 
+            NDARRAY_UINT8_ELEMENT(s).key("data")
+                    .displayedName("Data")
+                    .description("Pixel array")
+                    .readOnly()
+                    .commit();
+            VECTOR_UINT32_ELEMENT(s).key("dims")
+                    .displayedName("Dimensions")
+                    .description("The length of the array reflects total dimensionality and each element the extension in this dimension")
+                    .readOnly()
+                    .commit();
+            VECTOR_INT32_ELEMENT(s).key("dimTypes")
+                    .displayedName("Dimension Types")
+                    .description("Any dimension should have an enumerated type")
+                    .readOnly()
+                    .commit();
+            STRING_ELEMENT(s).key("dimScales")
+                    .displayedName("Dimension Scales")
+                    .description("")
+                    .readOnly()
+                    .commit();
             VECTOR_UINT32_ELEMENT(s).key("roiOffsets")
                     .displayedName("ROI Offsets")
                     .description("Describes the offset of the Region-of-Interest; it will contain zeros if the image has no ROI defined")
@@ -31,13 +51,21 @@ namespace karabo {
                     .description("Describes the color space of pixel encoding of the data (e.g. GRAY, RGB, JPG, PNG etc.")
                     .readOnly()
                     .commit();
-            INT32_ELEMENT(s).key("channelSpace")
-                    .displayedName("Channel space")
-                    .description("Describes the channel encoding, i.e. signed/unsigned/floating point, bits per channel and bytes per pixel")
+            INT32_ELEMENT(s).key("bitsPerPixel")
+                    .displayedName("Bits per pixel")
+                    .description("The number of bits needed for each pixel")
+                    .readOnly()
+                    .commit();
+            BOOL_ELEMENT(s).key("isBigEndian")
+                    .displayedName("Is big endian")
+                    .description("Flags whether the raw data are in big or little endian")
                     .readOnly()
                     .commit();
             NODE_ELEMENT(s).key("geometry")
                     .displayedName("Geometry")
+                    .commit();
+            NODE_ELEMENT(s).key("header")
+                    .displayedName("Hash containing user-defined header data")
                     .commit();
         }
 
@@ -45,12 +73,31 @@ namespace karabo {
         ImageData::ImageData() {
         }
 
+        ImageData::ImageData(const unsigned char* const data,
+                             const size_t size,
+                             const bool copy,
+                             const Dims& dims,
+                             const EncodingType encoding,
+                             const int bitsPerPixel) : Data() {
 
-        ImageData::ImageData(const karabo::util::Hash& hash) : Data(hash) {
+            setData(data, size, copy);
+            setDimensions(dims);
+            if (dims.size() == 0) {
+                setROIOffsets(Dims(0));
+            } else {
+                std::vector<unsigned long long> offsets(dims.rank(), 0);
+                setROIOffsets(Dims(offsets));
+            }
+            setEncoding(encoding);
+            setBitsPerPixel(bitsPerPixel);
         }
 
 
-        ImageData::ImageData(const karabo::util::Hash::Pointer& data) : Data(data) {
+        ImageData::ImageData(const Hash& hash) : Data(hash) {
+        }
+
+
+        ImageData::ImageData(const Hash::Pointer& data) : Data(data) {
         }
 
 
@@ -58,17 +105,36 @@ namespace karabo {
         }
 
 
-        karabo::util::Dims ImageData::getROIOffsets() const {
-            Dims offsets(m_hash->get<std::vector<unsigned long long> >("roiOffsets"));
-            offsets.reverse();
-            return offsets;
+        const NDArray<unsigned char>& ImageData::getData() const {
+            return m_hash->get<NDArray<unsigned char> >("data");
         }
 
 
-        void ImageData::setROIOffsets(const karabo::util::Dims& offsets) {
-            Dims tmp(offsets);
-            tmp.reverse();
-            m_hash->set<std::vector<unsigned long long> >("roiOffsets", tmp.toVector());
+        void ImageData::setData(const unsigned char* data, const size_t size, const bool copy) {
+            boost::shared_ptr<std::vector<unsigned char> > dataVec(new std::vector<unsigned char>(data, data+size));
+            NDArrayShapeType shape(1, size);
+            NDArray<unsigned char> array(dataVec, shape);
+            m_hash->set<NDArray<unsigned char> >("data", array);
+        }
+
+
+        Dims ImageData::getROIOffsets() const {
+            return Dims(m_hash->get<std::vector<unsigned long long> >("roiOffsets"));
+        }
+
+
+        void ImageData::setROIOffsets(const Dims& offsets) {
+            m_hash->set<std::vector<unsigned long long> >("roiOffsets", offsets.toVector());
+        }
+
+
+        int ImageData::getBitsPerPixel() const {
+            return m_hash->get<int>("bitsPerPixel");
+        }
+
+
+        void ImageData::setBitsPerPixel(const int bitsPerPixel) {
+            m_hash->set<int>("bitsPerPixel", bitsPerPixel);
         }
 
 
@@ -82,117 +148,140 @@ namespace karabo {
         }
 
 
-        int ImageData::getChannelSpace() const {
-            return m_hash->get<int>("channelSpace");
-        }
-
-
-        void ImageData::setChannelSpace(const int channelSpace) {
-            m_hash->set<int>("channelSpace", channelSpace);
-        }
-
-
         void ImageData::swapEndianess() {
-            //            ensureDataOwnership();
-            //            int cs = getChannelSpace();
-            //            switch (cs) {
-            //                case ChannelSpace::u_16_2:
-            //                case ChannelSpace::s_16_2:
-            //                {
-            //                    unsigned short* data = reinterpret_cast<unsigned short*> (const_cast<char*> (getDataPointer()));
-            //                    for (size_t i = 0; i < getDimensions().size(); ++i) {
-            //                        data[i] = byteSwap16(data[i]);
-            //                    }
-            //                    break;
-            //                }
-            //                case ChannelSpace::u_32_4:
-            //                case ChannelSpace::s_32_4:
-            //                case ChannelSpace::f_32_4:
-            //                {
-            //                    unsigned int* data = reinterpret_cast<unsigned int*> (const_cast<char*> (getDataPointer()));
-            //                    for (size_t i = 0; i < getDimensions().size(); ++i) {
-            //                        data[i] = byteSwap32(data[i]);
-            //                    }
-            //                    break;
-            //                }
-            //                case ChannelSpace::u_64_8:
-            //                case ChannelSpace::s_64_8:
-            //                case ChannelSpace::f_64_8:
-            //                {
-            //                    unsigned long long* data = reinterpret_cast<unsigned long long*> (const_cast<char*> (getDataPointer()));
-            //                    for (size_t i = 0; i < getDimensions().size(); ++i) {
-            //                        data[i] = byteSwap64(data[i]);
-            //                    }
-            //                    break;
-            //                }
-            //                default:
-            //                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Endianess conversion not implemented for this channel type");
-            //            }
+            int bpp = getBitsPerPixel();
+            NDArray<unsigned char>& dataArray = m_hash->get<NDArray<unsigned char> >("data");
+
+            switch (bpp) {
+                case 8:
+                    // No swap needed.
+                    break;
+                case 16:
+                {
+                    unsigned short* data = reinterpret_cast<unsigned short*> (&(*dataArray.getData())[0]);
+                    for (size_t i = 0; i < getDimensions().size(); ++i) {
+                        data[i] = byteSwap16(data[i]);
+                    }
+                    break;
+                }
+                case 32:
+                {
+                    unsigned int* data = reinterpret_cast<unsigned int*> (&(*dataArray.getData())[0]);
+                    for (size_t i = 0; i < getDimensions().size(); ++i) {
+                        data[i] = byteSwap32(data[i]);
+                    }
+                    break;
+                }
+                case 64:
+                {
+                    unsigned long long* data = reinterpret_cast<unsigned long long*> (&(*dataArray.getData())[0]);
+                    for (size_t i = 0; i < getDimensions().size(); ++i) {
+                        data[i] = byteSwap64(data[i]);
+                    }
+                    break;
+                }
+                default:
+                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Endianess conversion not implemented for this channel type");
+            }
         }
 
 
         void ImageData::toLittleEndian() {
-            //if (isBigEndian()) {
-            //    swapEndianess();
-            //    setIsBigEndian(false);
-            //}
+            if (isBigEndian()) {
+               swapEndianess();
+               setIsBigEndian(false);
+            }
         }
 
 
         void ImageData::toBigEndian() {
-            //if (!isBigEndian()) {
-            //    swapEndianess();
-            //    setIsBigEndian(true);
-            //}
+            if (!isBigEndian()) {
+               swapEndianess();
+               setIsBigEndian(true);
+            }
         }
 
 
-        karabo::util::Dims ImageData::getDimensions() const {
-            Dims dims;
-            //dims.reverse();
-            return dims;
+        bool ImageData::isBigEndian() const {
+            return m_hash->get<bool>("isBigEndian");
         }
 
 
-        void ImageData::setDimensions(const karabo::util::Dims& dims) {
-            //Dims tmp(dims);
-            //tmp.reverse();
-            //NDArray::setDimensions(tmp);
+        void ImageData::setIsBigEndian(const bool isBigEndian) {
+            m_hash->set<bool>("isBigEndian", isBigEndian);
+        }
+
+
+        size_t ImageData::getByteSize() const {
+            const NDArray<unsigned char>& data = m_hash->get<NDArray<unsigned char> >("data");
+            const NDArrayShapeType shape = data.getShape();
+            size_t size = 1;
+            for (NDArrayShapeType::const_iterator it = shape.begin(); it != shape.end(); ++it) {
+                size *= static_cast<size_t>(*it);
+            }
+            return size;
+        }
+
+
+        Dims ImageData::getDimensions() const {
+            return Dims(m_hash->get<std::vector<unsigned long long> >("dims"));
+        }
+
+
+        void ImageData::setDimensions(const Dims& dims) {
+            m_hash->set<std::vector<unsigned long long> >("dims", dims.toVector());
+            // In case the dimensionTypes were not yet set, inject a default here
+            if (!m_hash->has("dimTypes")) {
+                setDimensionTypes(vector<int>(dims.rank(), Dimension::UNDEFINED));
+            }
         }
 
 
         const std::vector<int> ImageData::getDimensionTypes() const {
-            std::vector<int> dimTypes;
-            //std::reverse(dimTypes.begin(), dimTypes.end());
-            return dimTypes;
+            return m_hash->get<std::vector<int> >("dimTypes");
         }
 
 
         void ImageData::setDimensionTypes(const std::vector<int>& dimTypes) {
-            //std::vector<int> tmp = dimTypes;
-            //std::reverse(tmp.begin(), tmp.end());
-            //NDArray::setDimensionTypes(tmp);
+            m_hash->set<std::vector<int> >("dimTypes", dimTypes);
+        }
+
+
+        const std::string& ImageData::getDimensionScales() const {
+            return m_hash->get<string>("dimScales");
+        }
+
+
+        void ImageData::setDimensionScales(const std::string& scales) {
+            m_hash->set("dimScales", scales);
         }
 
 
         const ImageData& ImageData::write(const std::string& filename, const bool enableAppendMode) const {
-            karabo::util::Hash h("ImageDataFileWriter.filename", filename, "ImageDataFileWriter.enableAppendMode", enableAppendMode);
+            Hash h("ImageDataFileWriter.filename", filename, "ImageDataFileWriter.enableAppendMode", enableAppendMode);
             karabo::io::Output<ImageData >::Pointer out = karabo::io::Output<ImageData >::create(h);
             out->write(*this);
             return *this;
         }
 
 
-        void ImageData::setGeometry(const DetectorGeometry & geometry) {
-            m_hash->set("detectorGeometry", geometry.toHash());
-
-            //geometry.toSchema("", this->getSchema());
-
+        DetectorGeometry ImageData::getGeometry() {
+            return DetectorGeometry(m_hash->get<Hash>("detectorGeometry"));
         }
 
 
-        DetectorGeometry ImageData::getGeometry() {
-            return DetectorGeometry(m_hash->get<Hash>("detectorGeometry"));
+        void ImageData::setGeometry(const DetectorGeometry & geometry) {
+            m_hash->set("detectorGeometry", geometry.toHash());
+        }
+
+
+        Hash ImageData::getHeader() {
+            return m_hash->get<Hash>("header");
+        }
+
+
+        void ImageData::setHeader(const Hash & header) {
+            m_hash->set("header", header);
         }
 
     }

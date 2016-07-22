@@ -297,8 +297,7 @@ namespace karabo {
             Types::ReferenceType tgtType = Types::from<Arr<T> >();
 
             if (tgtType == srcType) return this->getValue<Arr<T> > ();
-            else throw KARABO_CAST_EXCEPTION("Unknown source type for key: \"" + m_key + "\". Cowardly refusing to cast.");
-
+            else throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType) + "\". Cowardly refusing to cast.");
             return Arr<T>(); // Make the compiler happy
         }
 
@@ -482,6 +481,9 @@ namespace karabo {
 #define _KARABO_HELPER_MACRO_1(RefType, CppType)\
                     case Types::ARRAY_##RefType: return karabo::util::toString(getValue<std::pair<const CppType*, size_t> >());
 
+#define _KARABO_HELPER_MACRO_2(RefType, CppType)\
+                    case Types::NDARRAY_##RefType: return karabo::util::toString(getValue<NDArray<CppType> >());
+
             Types::ReferenceType type = this->getType();
             switch (type) {
                     _KARABO_HELPER_MACRO(BOOL, bool)
@@ -513,6 +515,17 @@ namespace karabo {
                     _KARABO_HELPER_MACRO_1(UINT64, unsigned long long)
                     _KARABO_HELPER_MACRO_1(FLOAT, float)
                     _KARABO_HELPER_MACRO_1(DOUBLE, double)
+                    _KARABO_HELPER_MACRO_2(BOOL, bool)
+                    _KARABO_HELPER_MACRO_2(INT8, signed char)
+                    _KARABO_HELPER_MACRO_2(UINT8, unsigned char)
+                    _KARABO_HELPER_MACRO_2(INT16, short)
+                    _KARABO_HELPER_MACRO_2(UINT16, unsigned short)
+                    _KARABO_HELPER_MACRO_2(INT32, int)
+                    _KARABO_HELPER_MACRO_2(UINT32, unsigned int)
+                    _KARABO_HELPER_MACRO_2(INT64, long long)
+                    _KARABO_HELPER_MACRO_2(UINT64, unsigned long long)
+                    _KARABO_HELPER_MACRO_2(FLOAT, float)
+                    _KARABO_HELPER_MACRO_2(DOUBLE, double)
                 case Types::SCHEMA: return std::string("Schema Object");
 
                 default:
