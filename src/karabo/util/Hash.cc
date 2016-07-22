@@ -504,7 +504,7 @@ namespace karabo {
 
                 const size_t sepPos = path.find_first_of(separator);
                 const std::string& firstKeyOfPath = (sepPos == std::string::npos ? path : std::string(path, 0, sepPos));
-                if (firstKeyOfPath.compare(0, key.size(), key, 0, key.size()) == 0) {
+                if (firstKeyOfPath.compare(0, key.size(), key) == 0) {
                     // firstKeyOfPath begins with key - why is there no simple string::beginsWith(..)?!
                     if (firstKeyOfPath.size() == key.size()) {
                         // In fact, they are the same:
@@ -613,7 +613,6 @@ namespace karabo {
             } else {
                 // But only the selected ones:
                 unsigned int hashCounter = 0;
-                //                targetVec.rese
                 for (vector<Hash>::const_iterator it = sourceVec.begin(); it != sourceVec.end(); ++it, ++hashCounter) {
                     if (selectedIndices.find(hashCounter) != selectedIndices.end()) {
                         // Extract sub-paths
