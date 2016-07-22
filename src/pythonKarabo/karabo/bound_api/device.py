@@ -664,15 +664,16 @@ class PythonDevice(NoFsm):
         
     def updateState(self, currentState):
         assert isinstance(currentState, State)
-        self.log.DEBUG("updateState: {}".format(currentState))
-        if self["state"] is not currentState:
-            self["state"] = currentState
+        stateName = currentState.name
+        self.log.DEBUG("updateState: {}".format(stateName))
+        if self["state"] != stateName:
+            self["state"] = stateName
             if currentState is State.ERROR:
                 self._ss.updateInstanceInfo(Hash("status", "error"))
             else:
                 if self._ss.getInstanceInfo()["status"] == "error":
                     self._ss.updateInstanceInfo(Hash("status", "ok"))
-        self._ss.reply(currentState.name)  # reply new state to interested event initiators
+        self._ss.reply(stateName)  # reply new state to interested event initiators
 
     def onStateUpdate(self, currentState):
         assert isinstance(currentState, State)
