@@ -340,8 +340,13 @@ namespace karabo {
             if (m_updatePerformanceStatistics) {
                 if (header->has("MQTimestamp")) {
                     boost::mutex::scoped_lock lock(m_latencyMutex);
-                    m_brokerLatency.get<0>() += (getEpochMillis() - header->get<long long>("MQTimestamp"));
+                    const long long latency = getEpochMillis() - header->get<long long>("MQTimestamp");
+                    const unsigned int posLatency = static_cast<unsigned int>(latency >= 0ll ? latency : 0ll);
+                    m_brokerLatency.get<0>() += posLatency;
                     ++(m_brokerLatency.get<1>());
+                    if (posLatency > m_brokerLatency.get<2>()) {
+                        m_brokerLatency.get<2>() = posLatency;
+                    }
                 }
             }
 
@@ -609,8 +614,13 @@ namespace karabo {
                     if (m_updatePerformanceStatistics) {
                         if (header.has("MQTimestamp")) {
                             boost::mutex::scoped_lock lock(m_latencyMutex);
-                            m_processingLatency.get<0>() += (getEpochMillis() - header.get<long long>("MQTimestamp"));
+                            const long long latency = getEpochMillis() - header.get<long long>("MQTimestamp");
+                            const unsigned int posLatency = static_cast<unsigned int> (latency >= 0ll ? latency : 0ll);
+                            m_processingLatency.get<0>() += posLatency;
                             ++(m_processingLatency.get<1>());
+                            if (posLatency > m_processingLatency.get<2>()) {
+                                m_processingLatency.get<2>() = posLatency;
+                            }
                         }
                     }
 
@@ -1673,17 +1683,19 @@ namespace karabo {
                     // This thread is used as a "Trittbrett" for slowly updating latency information and queue sizes
                     if (m_updatePerformanceStatistics) {
                         boost::mutex::scoped_lock lock(m_latencyMutex);
-                        float blAve = -1;
-                        float plAve = -1;
+                        float blAve = -1.f;
+                        float plAve = -1.f;
                         if (m_brokerLatency.get<1>() > 0) {
-                            blAve = m_brokerLatency.get<0>() / static_cast<float> (m_brokerLatency.get<1>());
+                            blAve = m_brokerLatency.get<0>() / static_cast<float>(m_brokerLatency.get<1>());
                         }
                         if (m_processingLatency.get<1>() > 0) {
-                            plAve = m_processingLatency.get<0>() / static_cast<float> (m_processingLatency.get<1>());
+                            plAve = m_processingLatency.get<0>() / static_cast<float>(m_processingLatency.get<1>());
                         }
 
                         // Call handler
-                        m_updatePerformanceStatistics(blAve, plAve, static_cast<unsigned int> (m_eventQueue.size()));
+                        m_updatePerformanceStatistics(blAve, m_brokerLatency.get<2>(),
+                                                      plAve, m_processingLatency.get<2>(),
+                                                      static_cast<unsigned int> (m_eventQueue.size()));
 
                         // Reset statistics
                         m_brokerLatency.get<0>() = m_brokerLatency.get<1>() = m_brokerLatency.get<2>() = 0u;
