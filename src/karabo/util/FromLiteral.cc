@@ -89,6 +89,8 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(VECTOR_NONE)
                     _KARABO_HELPER_MACRO(HASH_POINTER)
                     _KARABO_HELPER_MACRO(VECTOR_HASH_POINTER)
+                    _KARABO_HELPER_MACRO(STATE)
+                    _KARABO_HELPER_MACRO(ALARM_CONDITION)
 
                     ;
 #undef _KARABO_HELPER_MACRO
@@ -160,6 +162,8 @@ namespace karabo {
                             , _KARABO_HELPER_MACRO(ARRAY_DOUBLE)
                             , _KARABO_HELPER_MACRO(NONE)
                             , _KARABO_HELPER_MACRO(VECTOR_NONE)
+                            , _KARABO_HELPER_MACRO(STATE)
+                            , _KARABO_HELPER_MACRO(ALARM_CONDITION)
             };
 #undef _KARABO_HELPER_MACRO
 

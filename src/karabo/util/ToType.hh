@@ -1,9 +1,9 @@
-/* 
+/*
  * File:   ToType.hpp
  * Author: <burkhard.heisen@xsmail.com>
  *
  * Created on January 22, 2013
- * 
+ *
  */
 
 #ifndef KARABO_UTIL_TOTYPE_HH
@@ -18,7 +18,6 @@ namespace karabo {
 
         template <class Impl>
         class ToType {
-
 
 #define KARABO_MAP_TO_REFERENCE_TYPE(ClassName, ReferenceType, ToType) template<> inline ClassName::ReturnType ClassName::to<karabo::util::Types::ReferenceType>() {return ToType;}
 
@@ -106,6 +105,8 @@ namespace karabo {
                         _KARABO_HELPER_MACRO(VECTOR_NONE)
                         _KARABO_HELPER_MACRO(HASH_POINTER)
                         _KARABO_HELPER_MACRO(VECTOR_HASH_POINTER)
+                        _KARABO_HELPER_MACRO(STATE)
+                        _KARABO_HELPER_MACRO(ALARM_CONDITION)
 
                     default:
                         throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Requested datatype conversion not implemented");

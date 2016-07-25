@@ -1,9 +1,9 @@
-/* 
+/*
  * File:   ToLiteral.hh
  * Author: <burkhard.heisen@xsmail.com>
  *
  * Created on January 22, 2013 9:12 PM
- * 
+ *
  */
 
 #include "ToType.hh"
@@ -17,7 +17,7 @@ namespace karabo {
 
         class ToLiteral {
 
-            public:
+        public:
 
             typedef std::string ReturnType;
 
@@ -92,6 +92,8 @@ namespace karabo {
         KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, ARRAY_DOUBLE, "ARRAY_DOUBLE")
         KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, HASH_POINTER, "HASH_POINTER")
         KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_HASH_POINTER, "VECTOR_HASH_POINTER")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, STATE, "STATE")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, ALARM_CONDITION, "ALARM_CONDITION")
 
     }
 }
