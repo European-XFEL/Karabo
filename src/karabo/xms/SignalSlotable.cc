@@ -338,10 +338,10 @@ namespace karabo {
         void SignalSlotable::injectEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
 
             if (m_updatePerformanceStatistics) {
-                boost::mutex::scoped_lock lock(m_latencyMutex);
                 if (header->has("MQTimestamp")) {
-                    m_brokerLatency.first += (getEpochMillis() - header->get<long long>("MQTimestamp"));
-                    m_brokerLatency.second++;
+                    boost::mutex::scoped_lock lock(m_latencyMutex);
+                    m_brokerLatency.get<0>() += (getEpochMillis() - header->get<long long>("MQTimestamp"));
+                    ++(m_brokerLatency.get<1>());
                 }
             }
 
@@ -607,10 +607,10 @@ namespace karabo {
 
                     // Collect performance statistics
                     if (m_updatePerformanceStatistics) {
-                        boost::mutex::scoped_lock lock(m_latencyMutex);
                         if (header.has("MQTimestamp")) {
-                            m_processingLatency.first += (getEpochMillis() - header.get<long long>("MQTimestamp"));
-                            m_processingLatency.second++;
+                            boost::mutex::scoped_lock lock(m_latencyMutex);
+                            m_processingLatency.get<0>() += (getEpochMillis() - header.get<long long>("MQTimestamp"));
+                            ++(m_processingLatency.get<1>());
                         }
                     }
 
@@ -1675,19 +1675,19 @@ namespace karabo {
                         boost::mutex::scoped_lock lock(m_latencyMutex);
                         float blAve = -1;
                         float plAve = -1;
-                        if (m_brokerLatency.second > 0) {
-                            blAve = m_brokerLatency.first / (float) m_brokerLatency.second;
+                        if (m_brokerLatency.get<1>() > 0) {
+                            blAve = m_brokerLatency.get<0>() / static_cast<float> (m_brokerLatency.get<1>());
                         }
-                        if (m_processingLatency.second > 0) {
-                            plAve = m_processingLatency.first / (float) m_processingLatency.second;
+                        if (m_processingLatency.get<1>() > 0) {
+                            plAve = m_processingLatency.get<0>() / static_cast<float> (m_processingLatency.get<1>());
                         }
 
                         // Call handler
                         m_updatePerformanceStatistics(blAve, plAve, static_cast<unsigned int> (m_eventQueue.size()));
 
                         // Reset statistics
-                        m_brokerLatency.first = m_brokerLatency.second = 0;
-                        m_processingLatency.first = m_processingLatency.second = 0;
+                        m_brokerLatency.get<0>() = m_brokerLatency.get<1>() = m_brokerLatency.get<2>() = 0u;
+                        m_processingLatency.get<0>() = m_processingLatency.get<1>() = m_processingLatency.get<2>() = 0u;
                     }
 
                 } catch (const Exception& e) {
