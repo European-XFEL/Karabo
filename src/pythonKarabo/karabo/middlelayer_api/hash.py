@@ -421,6 +421,7 @@ class Slot(Descriptor):
         return []  # nothing to initialize in a Slot
 
     def __call__(self, method):
+        """Decorate a method to be a Slot"""
         if self.description is None:
             self.description = method.__doc__
         self.method = method
