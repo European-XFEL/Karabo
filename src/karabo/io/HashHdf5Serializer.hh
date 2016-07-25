@@ -34,7 +34,7 @@ namespace karabo {
 
         class HashHdf5Serializer : public Hdf5Serializer<karabo::util::Hash> {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(HashHdf5Serializer, "h5", "1.0")
 
@@ -79,6 +79,10 @@ namespace karabo {
             void serializeNodeByte(const karabo::util::Hash::Node& node, hid_t group);
 
             void serializeNodeString(const karabo::util::Hash::Node& node, hid_t group);
+
+            void serializeNodeState(const karabo::util::Hash::Node& node, hid_t group);
+
+            void serializeNodeAlarmCondition(const karabo::util::Hash::Node& node, hid_t group);
 
             void serializeNodeBool(const karabo::util::Hash::Node& node, hid_t group);
 
@@ -338,7 +342,7 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
 
             } else {
-                // vector<T> or complex<T> 
+                // vector<T> or complex<T>
                 htri_t exists = H5Aexists(dsId, "KRB_complex");
                 KARABO_CHECK_HDF5_STATUS(exists);
                 if (exists) {
@@ -380,7 +384,7 @@ namespace karabo {
                 node.setAttribute(name, vec);
 
             } else {
-                // vector<T> or complex<T> 
+                // vector<T> or complex<T>
                 std::string krbAttributeName = "KRB_complex_" + name;
                 htri_t exists = H5Aexists(h5obj, krbAttributeName.c_str());
                 KARABO_CHECK_HDF5_STATUS(exists);
