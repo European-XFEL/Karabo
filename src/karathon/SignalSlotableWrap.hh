@@ -501,7 +501,7 @@ namespace karathon {
 
         void registerPerformanceStatisticsHandlerPy(const bp::object& handler) {
             registerPerformanceStatisticsHandler(boost::bind(&SignalSlotableWrap::proxyUpdatePerformanceStatisticsHandler,
-                                                             this, handler, _1, _2, _3));
+                                                             this, handler, _1, _2, _3, _4, _5));
         }
 
         karabo::xms::OutputChannel::Pointer
@@ -560,7 +560,7 @@ namespace karathon {
 
         bool proxySlotCallGuardHandler(const bp::object&, const std::string&);
 
-        void proxyUpdatePerformanceStatisticsHandler(const bp::object&, float, float, unsigned int);
+        void proxyUpdatePerformanceStatisticsHandler(const bp::object&, float, unsigned int, float, unsigned int, unsigned int);
 
         void proxyOnOutputPossibleHandler(const bp::object& handler, const karabo::xms::OutputChannel::Pointer& channel);
 

@@ -883,23 +883,24 @@ class PythonDevice(NoFsm):
     def registerSlot(self, slotFunc):
         self._ss.registerSlot(slotFunc)
         
-    def updateLatencies(self, brokerLatency, processingLatency, messageQueueSize):
+    def updateLatencies(self, avgBrokerLatency, maxBrokerLatency,
+                        avgProcessingLatency, maxProcessingLatency, messageQueueSize):
         if self.get("performanceStatistics.trafficJam"):
             # TODO: Remove jam flag, once notification system is in place
             jamFlag = self.get("performanceStatistics.trafficJam")
             latencyUpper = self.get("performanceStatistics.latencyUpper")
             latencyLower = self.get("performanceStatistics.latencyLower")
 
-            h = Hash("performanceStatistics.brokerLatency", brokerLatency,
-                     "performanceStatistics.processingLatency", processingLatency,
-                     "performanceStatistics.messageQueueSize", messageQueueSize)
-
+            h = Hash("performanceStatistics", Hash("brokerLatency", avgBrokerLatency,
+                                                   "processingLatency", avgProcessingLatency,
+                                                   "maxProcessingLatency", maxProcessingLatency,
+                                                   "messageQueueSize", messageQueueSize))
             if jamFlag:
-                if processingLatency < latencyLower: self.set("performanceStatistics.trafficJam", False)
+                if avgProcessingLatency < latencyLower: self.set("performanceStatistics.trafficJam", False)
             else:
-                if processingLatency > latencyUpper:
+                if avgProcessingLatency > latencyUpper:
                     self.set("performanceStatistics.trafficJam", True)
-                    self.log.WARN("Processing latency {} are higher than established limit : {}".format(processingLatency,latencyUpper))
+                    self.log.WARN("Processing latency {} are higher than established limit : {}".format(avgProcessingLatency,latencyUpper))
             self.set(h)
 
 
