@@ -432,7 +432,9 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Exception& /*exception*/) > ExceptionHandler;
             typedef boost::function<bool (const std::string& /*slotFunction*/) > SlotCallGuardHandler;
-            typedef boost::function<void (float /*brokerLatency*/, float /*processingLatency*/, unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
+            typedef boost::function<void (float /*avgBrokerLatency*/, unsigned int /*maxBrokerLatency*/,
+                                          float /*avgProcessingLatency*/, unsigned int /*maxProcessingLatency*/,
+                                          unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
 
             typedef std::map<std::string, InputChannel::Pointer> InputChannels;
             typedef std::map<std::string, OutputChannel::Pointer> OutputChannels;
