@@ -105,8 +105,6 @@ namespace karabo {
                         _KARABO_HELPER_MACRO(VECTOR_NONE)
                         _KARABO_HELPER_MACRO(HASH_POINTER)
                         _KARABO_HELPER_MACRO(VECTOR_HASH_POINTER)
-                        _KARABO_HELPER_MACRO(STATE)
-                        _KARABO_HELPER_MACRO(ALARM_CONDITION)
 
                     default:
                         throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Requested datatype conversion not implemented");

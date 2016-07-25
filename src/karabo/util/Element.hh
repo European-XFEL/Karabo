@@ -24,14 +24,11 @@
 #include "ToCppString.hh"
 
 
-
 namespace karabo {
     namespace util {
 
         // Class forward (needed to prevent assignment of Hash to Attribute)
         class Hash;
-        class AlarmCondition;
-        class State;
 
         template <class T> class GenericElement;
 
@@ -446,8 +443,6 @@ namespace karabo {
                         _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
                         _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
                         _KARABO_HELPER_MACRO(STRING, std::string)
-                        _KARABO_HELPER_MACRO(STATE, karabo::util::State)
-                        _KARABO_HELPER_MACRO(ALARM_CONDITION, karabo::util::AlarmCondition)
                         _KARABO_HELPER_MACRO(NONE, CppNone)
                     default:
                         throw KARABO_CAST_EXCEPTION("Casting of '" + Types::to<ToCppString>(srcType) += "' to '"
@@ -487,8 +482,6 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
                     _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
                     _KARABO_HELPER_MACRO(STRING, std::string)
-                    _KARABO_HELPER_MACRO(STATE, karabo::util::State)
-                    _KARABO_HELPER_MACRO(ALARM_CONDITION, karabo::util::AlarmCondition)
                     _KARABO_HELPER_MACRO(HASH, Hash)
                     _KARABO_HELPER_MACRO(NONE, CppNone)
                     _KARABO_HELPER_MACRO_1(BOOL, bool)

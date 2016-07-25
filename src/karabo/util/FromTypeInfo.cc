@@ -49,8 +49,6 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
                     _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
                     _KARABO_HELPER_MACRO(STRING, std::string)
-                    _KARABO_HELPER_MACRO(STATE, std::string)
-                    _KARABO_HELPER_MACRO(ALARM_CONDITION, std::string)
 
                     _KARABO_HELPER_MACRO1(HASH, Hash)
                     _KARABO_HELPER_MACRO1(SCHEMA, Schema)

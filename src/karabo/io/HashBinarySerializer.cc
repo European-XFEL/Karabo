@@ -123,18 +123,6 @@ namespace karabo {
                     throw KARABO_IO_EXCEPTION("Could not properly categorize value type \"" + Types::to<ToLiteral>(type) + "\" for writing to archive");
             }
         }
-        
-        template<>
-        void HashBinarySerializer::writeSingleValue(std::ostream& os, const State& value) {
-            const string& str = value.name();
-            writeSingleValue(os, str);
-        }
-        
-        template<>
-        void HashBinarySerializer::writeSingleValue(std::ostream& os, const AlarmCondition& value) {
-            const string& str = value.asString();
-            writeSingleValue(os, str);
-        }
 
 
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const boost::any& value, const Types::ReferenceType type) {
@@ -154,8 +142,6 @@ namespace karabo {
                 case Types::COMPLEX_FLOAT: return writeSingleValue(os, boost::any_cast<const std::complex<float>& >(value));
                 case Types::COMPLEX_DOUBLE: return writeSingleValue(os, boost::any_cast<const std::complex<double>& >(value));
                 case Types::STRING: return writeSingleValue(os, boost::any_cast<const std::string& > (value)); //               
-                case Types::STATE: return writeSingleValue(os, boost::any_cast<const State& > (value)); //               
-                case Types::ALARM_CONDITION: return writeSingleValue(os, boost::any_cast<const AlarmCondition& > (value)); //               
                 case Types::SCHEMA: return writeSingleValue(os, boost::any_cast<const Schema& >(value));
                 case Types::HASH: return writeSingleValue(os, boost::any_cast<const Hash& > (value));
                 case Types::NONE: return writeSingleValue(os, boost::any_cast<const CppNone&>(value));
@@ -208,8 +194,6 @@ namespace karabo {
             unsigned size = 0;
             writeSize(os, size);
         }
-        
-        
 
 
         void HashBinarySerializer::writeSequence(std::ostream& os, const boost::any& value, const Types::ReferenceType type) {
@@ -228,8 +212,6 @@ namespace karabo {
                 case Types::VECTOR_COMPLEX_FLOAT: return writeSequence(os, boost::any_cast<const vector <std::complex<float> >& >(value));
                 case Types::VECTOR_COMPLEX_DOUBLE: return writeSequence(os, boost::any_cast<const vector <std::complex<double> >& >(value));
                 case Types::VECTOR_STRING: return writeSequence(os, boost::any_cast<const vector <std::string>& >(value));
-                case Types::VECTOR_STATE: return writeSequence(os, boost::any_cast<const vector <State>& >(value));
-                case Types::VECTOR_ALARM_CONDITION: return writeSequence(os, boost::any_cast<const vector <AlarmCondition>& >(value));
                 case Types::VECTOR_BOOL: return writeSequence(os, boost::any_cast < const vector <bool>& >(value));
                 case Types::VECTOR_HASH: return writeSequence(os, boost::any_cast<const vector <Hash >& >(value));
                 case Types::VECTOR_NONE: return writeSequence(os, boost::any_cast < const vector <CppNone>& >(value));
@@ -402,18 +384,6 @@ namespace karabo {
                 throw KARABO_IO_EXCEPTION("Encountered not 'None' data type whilst reading from binary archive: size is " + toString(size) + ", but should be 0");
             return karabo::util::CppNone();
         }
-        
-        template<>
-        karabo::util::State HashBinarySerializer::readSingleValue(std::istream& is) {
-            const string& str = readSingleValue<std::string>(is);
-            return State::fromString(str);
-        }
-        
-        template<>
-        karabo::util::AlarmCondition HashBinarySerializer::readSingleValue(std::istream& is) {
-            const string& str = readSingleValue<std::string>(is);
-            return AlarmCondition::fromString(str);
-        }
 
 
         boost::any HashBinarySerializer::readSingleValue(std::istream& is, const Types::ReferenceType type) {
@@ -433,8 +403,6 @@ namespace karabo {
                 case Types::COMPLEX_FLOAT: return boost::any(readSingleValue<std::complex<float> >(is));
                 case Types::COMPLEX_DOUBLE: return boost::any(readSingleValue<std::complex<double> >(is));
                 case Types::STRING: return boost::any(readSingleValue<std::string > (is));
-                case Types::STATE: return boost::any(readSingleValue<State > (is));
-                case Types::ALARM_CONDITION: return boost::any(readSingleValue<AlarmCondition > (is));
                 case Types::SCHEMA: return boost::any(readSingleValue<Schema >(is));
                 case Types::HASH: return boost::any(readSingleValue<Hash > (is));
                 case Types::NONE: return boost::any(readSingleValue<CppNone >(is));

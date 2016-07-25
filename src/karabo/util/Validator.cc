@@ -377,6 +377,14 @@ namespace karabo {
                     }
                 }
             }
+            
+            if(masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE) == karabo::util::Schema::STATE && !workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
+                report << "State Element at "<<scope<<" may only be set using predefined states"<<endl;
+            }
+            
+            if(masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE) != karabo::util::Schema::STATE && workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
+                report << "Tried setting non-state element at "<<scope<<" with state object"<<endl;
+            }
 
             if (masterNode.hasAttribute(KARABO_SCHEMA_ACCESS_MODE) && masterNode.getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE)
                 m_hasReconfigurableParameter = true;
