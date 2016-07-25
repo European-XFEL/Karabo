@@ -87,19 +87,19 @@ class CameraFsm(base.BaseFsm):
         (State.ACQUIRING, 'TriggerEvent', 'none',        'TriggerAction', 'none')
         ]
         #                        Name  Transition-Table  Initial-State
-        KARABO_FSM_STATE_MACHINE("ok", okStt, State.ACTIVE)
+        KARABO_FSM_STATE_MACHINE(State.NORMAL, okStt, State.ACTIVE)
         
         #**************************************************************
         #*                       Top Machine                          *
         #**************************************************************
         cameraStt=[
         # Source-State      Event        Target-State   Action              Guard
-        (State.INIT, 'none',            'Ok',    'none',             'none'),
+        (State.INIT, 'none',            State.NORMAL,    'none',             'none'),
         ('Ok',             'ErrorFoundEvent', State.ERROR, 'ErrorFoundAction', 'none'),
-        (State.ERROR,          'ResetEvent',      'Ok',    'none',             'none')
+        (State.ERROR,          'ResetEvent',      State.NORMAL,    'none',             'none')
         ]
         #                         Name      Transition-Table  Initial-State
-        KARABO_FSM_STATE_MACHINE('CameraMachine', cameraStt, 'Initialization')
+        KARABO_FSM_STATE_MACHINE('CameraMachine', cameraStt, State.INIT)
         self.fsm = KARABO_FSM_CREATE_MACHINE('CameraMachine')
         
     def getFsm(self):
