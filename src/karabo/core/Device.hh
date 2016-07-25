@@ -353,6 +353,12 @@ namespace karabo {
                 this->set<ValueType>(key, value, getActualTimestamp());
             }
 
+            void set(const std::string& key, const karabo::util::State& state) {
+                karabo::util::Hash h(key, state.name());
+                h.setAttribute(key, KARABO_INDICATE_STATE_SET, true);
+                set(h, getActualTimestamp());
+            }
+
             /**
              * Updates the state of the device. This function automatically notifies any observers in the distributed system.
              * @param key A valid parameter of the device (must be defined in the expectedParameters function)
@@ -363,6 +369,12 @@ namespace karabo {
             void set(const std::string& key, const ValueType& value, const karabo::util::Timestamp& timestamp) {
                 karabo::util::Hash h(key, value);
                 this->set(h, timestamp);
+            }
+
+            void set(const std::string& key, const karabo::util::State& state, const karabo::util::Timestamp& timestamp) {
+                karabo::util::Hash h(key, state.name());
+                h.setAttribute(key, KARABO_INDICATE_STATE_SET, true);
+                set(h, timestamp);
             }
 
             //            template <class PixelType>
@@ -563,8 +575,24 @@ namespace karabo {
             template <class T>
             T get(const std::string& key, const T& var = T()) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                if (m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE) == karabo::util::Schema::STATE) {
+                    KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
+                }
                 try {
                     return m_parameters.get<T>(key);
+                } catch (const karabo::util::Exception& e) {
+                    KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
+                }
+                return var; // never reached. Keep it to make the compiler happy.
+            }
+
+            karabo::util::State get(const std::string& key, const karabo::util::State& var = karabo::util::State::UNKNOWN) const {
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                if (m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE) != karabo::util::Schema::STATE) {
+                    KARABO_PARAMETER_EXCEPTION("Can only retreive a state object from a State element, not " + key);
+                }
+                try {
+                    return m_parameters.get<karabo::util::State>(key);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
                 }
@@ -804,7 +832,9 @@ namespace karabo {
             void updateState(const std::string& currentState) { // private
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
                 if (get<std::string>("state") != currentState) {
-                    set("state", currentState);
+                    karabo::util::Hash h("state", currentState);
+                    h.setAttribute("state", KARABO_INDICATE_STATE_SET, true);
+                    set(h);
                     if (boost::regex_match(currentState, m_errorRegex)) {
                         updateInstanceInfo(karabo::util::Hash("status", "error"));
                     } else {
