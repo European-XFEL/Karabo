@@ -60,8 +60,8 @@ namespace karabo {
 
             // Performance statistics
             mutable boost::mutex m_latencyMutex;
-            std::pair<int, int> m_brokerLatency;
-            std::pair<int, int> m_processingLatency;
+            boost::tuple<unsigned int, unsigned int, unsigned int> m_brokerLatency; // sum of milliseconds, counts, max
+            boost::tuple<unsigned int, unsigned int, unsigned int> m_processingLatency; // dito
 
             friend class Signal;
 
