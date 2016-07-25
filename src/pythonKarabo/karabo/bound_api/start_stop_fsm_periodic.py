@@ -78,7 +78,7 @@ class StartStopFsmPeriodic(base.BaseFsm):
         ]
 
         #                        Name     Transition-Table   Initial-State
-        KARABO_FSM_STATE_MACHINE('Ok', okStateTransitionTable, State.STOPPED)
+        KARABO_FSM_STATE_MACHINE(State.NORMAL, okStateTransitionTable, State.STOPPED)
 
         #**************************************************************
         #*                      Top Machine                           *
@@ -86,13 +86,13 @@ class StartStopFsmPeriodic(base.BaseFsm):
 
         #  Source-State    Event     Target-State  Action          Guard
         startStopMachineTransitionTable = [
-            (State.INIT, 'none', 'Ok',   'none',             'none'),
+            (State.INIT, 'none', State.NORMAL,   'none',             'none'),
             ('Ok', 'ErrorFoundEvent', State.ERROR, 'ErrorFoundAction', 'none'),
-            (State.ERROR, 'ResetEvent',    'Ok',   'none',             'none')
+            (State.ERROR, 'ResetEvent',    State.NORMAL,   'none',             'none')
         ]
 
         #                               Name                Transition-Table           Initial-State
-        KARABO_FSM_STATE_MACHINE('StartStopMachine', startStopMachineTransitionTable, 'Initialization')
+        KARABO_FSM_STATE_MACHINE('StartStopMachine', startStopMachineTransitionTable, State.INIT)
         self.fsm = KARABO_FSM_CREATE_MACHINE('StartStopMachine')
     
     def stop(self):
