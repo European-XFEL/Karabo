@@ -181,10 +181,6 @@ namespace karabo {
                     break;
                 case karabo::util::Types::STRING: serializeNodeString(el, group);
                     break;
-                case karabo::util::Types::STATE: serializeNodeState(el, group);
-                    break;
-                case karabo::util::Types::ALARM_CONDITION: serializeNodeAlarmCondition(el, group);
-                    break;
                 case karabo::util::Types::BOOL: serializeNodeBool(el, group);
                     break;
                 case karabo::util::Types::COMPLEX_FLOAT: serializeNodeComplex<float>(el, group);
@@ -327,20 +323,6 @@ namespace karabo {
 
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
             }
-        }
-        
-        void HashHdf5Serializer::serializeNodeState(const karabo::util::Hash::Node& node, hid_t group) {
-            const std::string& str = node.getValue<karabo::util::State>().name();
-            const std::string& key = node.getKey();
-            const karabo::util::Hash h(key, str);
-            serializeNodeString(h.getNode(key), group);
-        }
-        
-        void HashHdf5Serializer::serializeNodeAlarmCondition(const karabo::util::Hash::Node& node, hid_t group) {
-            const std::string& str = node.getValue<karabo::util::AlarmCondition>().asString();
-            const std::string& key = node.getKey();
-            const karabo::util::Hash h(key, str);
-            serializeNodeString(h.getNode(key), group);
         }
 
 

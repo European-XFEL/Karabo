@@ -75,15 +75,8 @@ namespace karabo {
                 return options(std::vector<karabo::util::State>(arr, arr + 8));
             }
 
-            /**
-             * The <b>options</b> method specifies values allowed for this parameter. Each value is an element of the vector.
-             * This function can be used when space cannot be used as a separator.
-             * @param opts vector of strings. The values are casted to the proper type.
-             * @return reference to the StateElement
-             */
-            StateElement& options(const std::vector<std::string>& opts) {
-                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
-                return *this;
+            StateElement& options(const std::vector<karabo::util::State>& opts) {
+                return options(toString(opts), ",");
             }
 
             /**
@@ -118,9 +111,12 @@ namespace karabo {
                 return *this;
             }
 
-            StateElement& options(const std::vector<karabo::util::State>& opts) {
-                return options(toString(opts), ",");
+            StateElement& options(const std::vector<std::string>& opts) {
+                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
+                return *this;
             }
+
+
 
         };
 

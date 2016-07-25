@@ -19,14 +19,8 @@
 #include <complex>
 #include <vector>
 
-
-
 namespace karabo {
     namespace util {
-
-
-        class State;
-        class AlarmCondition;
 
         // Forward ToType
         template<class To>
@@ -132,15 +126,7 @@ namespace karabo {
                 ARRAY_DOUBLE, // std::pair<double*, size_t>
 
                 HASH_POINTER, // Hash::Pointer
-                VECTOR_HASH_POINTER, // std::vector<Hash::Pointer>
-
-                STATE, //std::string
-                ALARM_CONDITION, //std::string
-                VECTOR_STATE,
-                VECTOR_ALARM_CONDITION,
-                PTR_STATE,
-                PTR_ALARM_CONDITION
-
+                VECTOR_HASH_POINTER // std::vector<Hash::Pointer>
 
             };
 
@@ -183,8 +169,6 @@ namespace karabo {
                     case Types::COMPLEX_FLOAT:
                     case Types::COMPLEX_DOUBLE:
                     case Types::NONE:
-                    case Types::STATE:
-                    case Types::ALARM_CONDITION:
                         return SIMPLE;
                     case Types::VECTOR_STRING:
                     case Types::VECTOR_CHAR:
@@ -201,8 +185,6 @@ namespace karabo {
                     case Types::VECTOR_BOOL:
                     case Types::VECTOR_COMPLEX_FLOAT:
                     case Types::VECTOR_COMPLEX_DOUBLE:
-                    case Types::VECTOR_STATE:
-                    case Types::VECTOR_ALARM_CONDITION:
                     case Types::VECTOR_NONE:
                     case Types::PTR_STRING:
                     case Types::PTR_CHAR:
@@ -295,8 +277,6 @@ namespace karabo {
                     case Types::VECTOR_COMPLEX_FLOAT:
                     case Types::VECTOR_COMPLEX_DOUBLE:
                     case Types::VECTOR_HASH:
-                    case Types::VECTOR_STATE:
-                    case Types::VECTOR_ALARM_CONDITION:
                     case Types::VECTOR_NONE:
                         return true;
                     default:
@@ -322,8 +302,6 @@ namespace karabo {
                     case Types::COMPLEX_FLOAT:
                     case Types::COMPLEX_DOUBLE:
                     case Types::NONE:
-                    case Types::STATE:
-                    case Types::ALARM_CONDITION:
                         return true;
                     default:
                         return false;
@@ -373,8 +351,6 @@ namespace karabo {
         _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
         _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
         _KARABO_HELPER_MACRO(STRING, std::string)
-        _KARABO_HELPER_MACRO(STATE, State)
-        _KARABO_HELPER_MACRO(ALARM_CONDITION, AlarmCondition)
         _KARABO_HELPER_MACRO(NONE, karabo::util::CppNone)
 
 #undef _KARABO_HELPER_MACRO

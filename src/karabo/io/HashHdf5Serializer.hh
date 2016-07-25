@@ -80,10 +80,6 @@ namespace karabo {
 
             void serializeNodeString(const karabo::util::Hash::Node& node, hid_t group);
 
-            void serializeNodeState(const karabo::util::Hash::Node& node, hid_t group);
-
-            void serializeNodeAlarmCondition(const karabo::util::Hash::Node& node, hid_t group);
-
             void serializeNodeBool(const karabo::util::Hash::Node& node, hid_t group);
 
             template<class U>
