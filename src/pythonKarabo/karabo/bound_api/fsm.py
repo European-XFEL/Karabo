@@ -340,6 +340,7 @@ class StateMachine(_State):
             raise IndexError('The "no_transition" action was not defined')
 
     def _setup(self, sname):
+        #note that the order here is important. Machines should be checked for first.
         if sname in _machines_:
             (_stt, _initial, _entry, _exit, _ta) = copy.copy(_machines_[sname])
             self.stt[sname] = type(str(sname), (StateMachine,), {})(self, _stt, _initial, _entry, _exit, _ta)
