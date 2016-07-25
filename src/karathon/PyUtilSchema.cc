@@ -515,7 +515,7 @@ struct OverwriteElementWrap {
     static bp::object allowedStatesPy(bp::tuple args, bp::dict kwargs) {
         TableElement& self = bp::extract<TableElement&>(args[0]);
         std::vector<karabo::util::State> states;
-        for (unsigned int i = 0; i < bp::len(args); ++i) {
+        for (unsigned int i = 1; i < bp::len(args); ++i) {
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
             states.push_back(karabo::util::State::fromString(state));
         }
@@ -1155,7 +1155,6 @@ namespace schemawrap {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const std::string s = karabo::util::toString(schema.getAllowedStates(path));
-            
             const vector<string> v = karabo::util::fromString<std::string, std::vector>(s);
             //now construct python states
             bp::list states;
