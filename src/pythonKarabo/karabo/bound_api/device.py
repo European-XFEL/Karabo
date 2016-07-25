@@ -113,7 +113,7 @@ class PythonDevice(NoFsm):
                     
             STRING_ELEMENT(expected).key("state")
                     .displayedName("State").description("The current state the device is in")
-                    .assignmentOptional().defaultValue("uninitialized").readOnly()
+                    .readOnly().initialValue(State.UNKNOWN.name)
                     .commit(),
 
             STRING_ELEMENT(expected).key("alarmCondition")
