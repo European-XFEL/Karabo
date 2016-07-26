@@ -35,7 +35,7 @@
 #define KARABO_ALARM_ACK "alarmNeedsAck"
 #define KARABO_ALARM_INFO "alarmInfo"
 
-#define KARABO_INDICATE_ALARM_SET "indicateState"
+#define KARABO_INDICATE_ALARM_SET "indicateAlarm"
 
 namespace karabo {
     namespace util {

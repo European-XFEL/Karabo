@@ -205,18 +205,18 @@ namespace karabo {
                         .adminAccess()
                         .commit();
 
-                STRING_ELEMENT(expected).key("state")
+                STATE_ELEMENT(expected).key("state")
                         .displayedName("State")
                         .description("The current state the device is in")
-                        .readOnly().initialValue(State::UNKNOWN.name())
+                        .initialValue(State::UNKNOWN)
                         .commit();
 
-                STRING_ELEMENT(expected).key("alarmCondition")
+                ALARM_ELEMENT(expected).key("alarmCondition")
                         .displayedName("Alarm condition")
                         .description("The current alarm condition of the device. "
                                      "Evaluates to the highest condition on any"
                                      " property if not set manually.")
-                        .readOnly().initialValue(AlarmCondition::NONE.asString())
+                        .initialValue(AlarmCondition::NONE)
                         .commit();
 
                 NODE_ELEMENT(expected).key("performanceStatistics")
@@ -359,6 +359,14 @@ namespace karabo {
                 set(h, getActualTimestamp());
             }
 
+            void set(const std::string& key, const karabo::util::AlarmCondition& condition) {
+                karabo::util::Hash h(key, condition.asString());
+                h.setAttribute(key, KARABO_INDICATE_ALARM_SET, true);
+                set(h, getActualTimestamp());
+                //also set the fields attribute
+                this->m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
+            }
+
             /**
              * Updates the state of the device. This function automatically notifies any observers in the distributed system.
              * @param key A valid parameter of the device (must be defined in the expectedParameters function)
@@ -375,6 +383,14 @@ namespace karabo {
                 karabo::util::Hash h(key, state.name());
                 h.setAttribute(key, KARABO_INDICATE_STATE_SET, true);
                 set(h, timestamp);
+            }
+
+            void set(const std::string& key, const karabo::util::AlarmCondition& condition, const karabo::util::Timestamp& timestamp) {
+                karabo::util::Hash h(key, condition.asString());
+                h.setAttribute(key, KARABO_INDICATE_ALARM_SET, true);
+                set(h, timestamp);
+                //also set the fields attribute
+                this->m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
             }
 
             //            template <class PixelType>
@@ -943,7 +959,12 @@ namespace karabo {
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
                 if (result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")) {
                     lock.unlock();
-                    this->setNoValidate("alarmCondition", result.second.asString());
+                    Hash h;
+                    h.set("alarmCondition", result.second.asString());
+                    h.setAttribute("alarmCondition", KARABO_INDICATE_ALARM_SET, true);
+                    //also set the fields attribute to this condition
+                    this->m_parameters.setAttribute("alarmCondition", KARABO_ALARM_ATTR, result.second.asString());
+                    this->setNoValidate("alarmCondition", h);
                 }
 
             }
