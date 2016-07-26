@@ -371,6 +371,18 @@ class Descriptor(object):
 
 
 class Slot(Descriptor):
+    '''Define a slot callable from the outside
+
+    This is a decorator for methods that should be callable over the network.
+    The cannot have parameters. All the arguments can be given in the same
+    way as for descriptors. A docstring will be taken as Karabo description::
+
+        class SomeDevice(Device):
+            @Slot(displayedName="Do something important")
+            def do_something_important(self):
+                """Document the important things done here"""
+                # add some important code here
+    '''
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super(Slot, self).toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Node
