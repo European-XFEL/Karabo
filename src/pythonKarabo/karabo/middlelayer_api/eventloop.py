@@ -177,7 +177,7 @@ class Broker:
                 try:
                     slots, params = self.decodeMessage(message)
                 except:
-                    self.logger.exception("malformated message")
+                    self.logger.exception("Malformated message")
                     continue
                 if device is None:
                     continue
@@ -192,9 +192,11 @@ class Broker:
                 try:
                     for slot in slots:
                         slot.slot(slot, device, message, params)
-                except:
+                except Exception:
+                    # the slot.slot wrapper should already catch all exceptions
+                    # all exceptions raised additionally are a bug in Karabo
                     self.logger.exception(
-                        "internal error while executing slot")
+                        "Internal error while executing slot")
                 slot = slots = None  # delete reference to device
         finally:
             consumer.close()
