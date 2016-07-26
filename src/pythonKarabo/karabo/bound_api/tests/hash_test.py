@@ -906,7 +906,8 @@ class  Hash_TestCase(unittest.TestCase):
                          "d[10]", # where there was no node at all
                          "ha[0]"] # for leaves, all indices are invalid
         copyD = Hash(hashTargetD)
-        hashTargetD.merge(hashSourceBCD, HashMergePolicy.MERGE_ATTRIBUTES, selectedPaths)
+        # also test use of keyword parameter:
+        hashTargetD.merge(hashSourceBCD, selectedPaths=selectedPaths)
         self.assertTrue(similar(copyD, hashTargetD),
                         "Selecting only invalid indices changed something")
 
