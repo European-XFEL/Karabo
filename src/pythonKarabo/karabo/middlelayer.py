@@ -18,6 +18,7 @@ from .middlelayer_api.basetypes import (
     BoolValue, EnumValue, KaraboValue, QuantityValue, StringValue,
     unit_registry as unit, VectorStringValue, VectorCharValue
 )
+from .middlelayer_api.devicenode import DeviceNode
 from .middlelayer_api.exceptions import KaraboError
 from .middlelayer_api.hash import (
     Attribute, Bool, Char, ComplexDouble, ComplexFloat, Descriptor,

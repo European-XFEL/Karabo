@@ -256,6 +256,17 @@ class SubProxy(object):
     def _use(self):
         self._parent._use()
 
+    def _update(self):
+        self._parent._update()
+
+    @property
+    def _deviceId(self):
+        return self._parent._deviceId
+
+    @property
+    def _device(self):
+        return self._parent._device
+
 
 class OneShotQueue(asyncio.Future):
     """ This is a future that looks like a queue
@@ -437,7 +448,6 @@ def _createProxyDict(hash, prefix):
             dict[k] = d
         elif nodeType is NodeType.Node:
             if a.get("displayType") == "Slot":
-                del a["nodeType"]
                 dict[k] = ProxySlot()
             else:
                 sub = _createProxyDict(v, prefix + k + ".")
@@ -463,6 +473,7 @@ def _getDevice(deviceId, sync, Proxy=Proxy):
     Cls = type(schema.name, (Proxy,), dict)
 
     ret = Cls(instance, deviceId, sync)
+    ret._schema_hash = schema.hash
     instance._devices[deviceId] = ret
     yield from ret
     return ret
