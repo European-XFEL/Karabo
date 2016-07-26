@@ -140,6 +140,16 @@ class SceneWorkflowModel(HasStrictTraits):
     # --------------------------------------------
     # Public interface
 
+    def get_item(self, device_id):
+        """ This method checks whether a workflow item with the given
+            ``device_id`` already exists.
+            If that it the case the item is returned, else None.
+        """
+        for item in self._workflow_items:
+            if item.device_id == device_id:
+                return item
+        return None
+
     def add_items(self, items):
         """ Add WorkflowItemModels to be monitored. """
         self._workflow_items.extend(items)

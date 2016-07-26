@@ -553,6 +553,7 @@ namespace karabo {
 
         void SignalSlotable::stopBrokerMessageConsumption() {
             this->deregisterFromShortcutMessaging(); // stop short-cut messaging as well
+            m_consumerChannel->close(); // stop consuming new messages
             if (!m_connectionInjected) {
                 if (m_ioService) {
                     m_ioService->stop();

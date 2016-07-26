@@ -5,7 +5,7 @@
  * Created on July 10, 2013, 11:49 AM
  */
 
-#include <karabo/io/SchemaXsdSerializer.hh>
+
 #include <karabo/io/SchemaBinarySerializer.hh>
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/util/TimeProfiler.hh"
@@ -15,7 +15,7 @@
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ListElement.hh>
-#include <karabo/util/VectorElement.hh>
+#include <karabo/util/NDArrayElement.hh>
 #include <karabo/io/FileTools.hh>
 
 #include "SchemaSerializer_Test.hh"
@@ -189,7 +189,7 @@ struct TestSchemaSerializer {
                 .readOnly()
                 .alarmHigh(7).needsAcknowledging(false)
                 .alarmLow(-2).needsAcknowledging(false)
-                .warnHigh(1).needsAcknowledging(false)
+                .warnHigh(5).needsAcknowledging(false)
                 .warnLow(0).needsAcknowledging(false)
                 .commit();
 
@@ -230,12 +230,7 @@ void SchemaSerializer_Test::testBinarySerializer() {
 
     CPPUNIT_ASSERT(memcmp(&archive1[0], &archive2[0], archive1.size()) == 0);
 
-    TextSerializer<Schema>::Pointer p2 = TextSerializer<Schema>::create("Xsd");
-
-    std::string archive3;
-    p2->save(testSchema, archive3);
-
-    p2 = TextSerializer<Schema>::create("Xml");
+    TextSerializer<Schema>::Pointer p2  = TextSerializer<Schema>::create("Xml");
 
     std::string archive4;
     p2->save(testSchema, archive4);

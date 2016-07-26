@@ -24,6 +24,8 @@ from karathon import (
     Timestamp, Trainstamp, Validator, ValidatorValidationRules,
     loadFromFile
 )
+
+from karabo.common.states import State
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .configurator import Configurator
 from .no_fsm import NoFsm
@@ -111,7 +113,7 @@ class PythonDevice(NoFsm):
                     
             STRING_ELEMENT(expected).key("state")
                     .displayedName("State").description("The current state the device is in")
-                    .assignmentOptional().defaultValue("uninitialized").readOnly()
+                    .readOnly().initialValue(State.UNKNOWN.name)
                     .commit(),
 
             STRING_ELEMENT(expected).key("alarmCondition")
@@ -661,17 +663,20 @@ class PythonDevice(NoFsm):
         self.fullSchema.copy(self.staticSchema)
         
     def updateState(self, currentState):
-        self.log.DEBUG("updateState: {}".format(currentState))
-        if self["state"] != currentState:
-            self["state"] = currentState
-            if self.errorRegex.match(currentState) is not None:
+        assert isinstance(currentState, State)
+        stateName = currentState.name
+        self.log.DEBUG("updateState: {}".format(stateName))
+        if self["state"] != stateName:
+            self["state"] = stateName
+            if currentState is State.ERROR:
                 self._ss.updateInstanceInfo(Hash("status", "error"))
             else:
                 if self._ss.getInstanceInfo()["status"] == "error":
                     self._ss.updateInstanceInfo(Hash("status", "ok"))
-        self._ss.reply(currentState)  # reply new state to interested event initiators
+        self._ss.reply(stateName)  # reply new state to interested event initiators
 
     def onStateUpdate(self, currentState):
+        assert isinstance(currentState, State)
         print("onStateUpdate() is deprecated, use updateState() instead")
         self.updateState(currentState)
 

@@ -3,7 +3,6 @@ from asyncio import (async, CancelledError, coroutine, Future, get_event_loop,
                      sleep, TimeoutError, wait, wait_for)
 import logging
 import random
-import time
 import weakref
 import inspect
 
@@ -197,9 +196,9 @@ class SignalSlotable(Configurable):
                               format(self.deviceId))
         except TimeoutError:
             pass
-        yield from super(SignalSlotable, self)._run()
         self.__randPing = 0  # Start answering on slotPing with argument rand=0
-        async(self._ss.notify_network(self._initInfo()))
+        self._ss.notify_network(self._initInfo())
+        yield from super(SignalSlotable, self)._run()
         yield from get_event_loop().run_coroutine_or_thread(
             self.onInitialization)
         self.__initialized = True
@@ -217,13 +216,9 @@ class SignalSlotable(Configurable):
             self._ss.loop.call_soon_threadsafe(
                 self._ss.loop.create_task, self.slotKillDevice())
 
+    @coroutine
     def call(self, device, target, *args):
-        reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
-        self._ss.call("call", {device: [target]}, reply, args)
-        future = Future(loop=self._ss.loop)
-        self._ss.repliers[reply] = future
-        future.add_done_callback(lambda _: self._ss.repliers.pop(reply))
-        return future
+        return (yield from self._ss.request(device, target, *args))
 
     def stopEventLoop(self):
         get_event_loop().stop()
