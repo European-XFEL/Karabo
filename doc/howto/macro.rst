@@ -250,6 +250,32 @@ wait forever. This is done as follows::
 
     waitUntilNew(motor, timeout=10).state
 
+Parallelizing Operation
+=======================
+
+Often, different things need to be done at the same time. This is why
+many blocking Karabo operations can also be used in a asynchronous
+way: instead of blocking until the operation is finished, one may
+define a callback function to be called once the operation is done.
+Setting the `wait` function argument to `False` makes it return a
+:class:`~karabo.middlelayer.KaraboFuture` immediately, to which a
+callback may be added with `add_done_callback`. As a simple example,
+in order to call a function once the motor has stopped, one may
+write::
+
+    waitUntil(lambda: motor.state == "Stopped",
+              wait=False).add_done_callback(on_stopped)
+
+The callback will receive the future as single argument, so the
+callback should be defined like::
+
+    def on_stopped(future):
+        # do something when the motor is stopped
+
+There are more things one can do with the returned future, like
+waiting until the operation finally finishes with
+:meth:`~karabo.middlelayer.KaraboFuture.wait`.
+
 Error Handling
 ==============
 

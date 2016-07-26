@@ -1,7 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 from asyncio import (
-    AbstractEventLoop, async, CancelledError, coroutine, gather, Future,
+    AbstractEventLoop, async, CancelledError, coroutine, Future, gather,
     get_event_loop, iscoroutinefunction, Queue, set_event_loop,
     SelectorEventLoop, sleep, Task, TimeoutError)
 from concurrent.futures import ThreadPoolExecutor
@@ -274,9 +274,39 @@ def synchronize(coro):
     coro = coroutine(coro)
 
     @wraps(coro)
-    def wrapper(*args, timeout=-1, **kwargs):
-        return get_event_loop().sync(coro(*args, **kwargs), timeout)
+    def wrapper(*args, timeout=-1, wait=True, **kwargs):
+        return get_event_loop().sync(coro(*args, **kwargs), timeout, wait)
     return wrapper
+
+
+class KaraboFuture(object):
+    """A handle for a result that will be available in the future
+
+    This will be returned by many Karabo methods, if a callback has been
+    set to a function or None. It is possible to add more callbacks, to
+    wait for completion, or cancel the operation in question.
+    """
+    def __init__(self, future):
+        self.future = future
+
+    @synchronize
+    def add_done_callback(self, fn):
+        """Add another callback to the future"""
+        def func(future):
+            loop = get_event_loop()
+            loop.create_task(loop.run_coroutine_or_thread(fn, self))
+        self.future.add_done_callback(func)
+
+    @synchronize
+    def wait(self):
+        """Wait for the result to be available, and return the result"""
+        return (yield from self.future)
+
+for f in ["cancel", "cancelled", "done", "result", "exception"]:
+    @wraps(getattr(Future, f))
+    def method(self, *args, name=f):
+        return getattr(self.future, name)(*args)
+    setattr(KaraboFuture, f, synchronize(method))
 
 
 class NoEventLoop(AbstractEventLoop):
@@ -293,34 +323,34 @@ class NoEventLoop(AbstractEventLoop):
         if self.task is not None:
             self._instance._ss.loop.call_soon_threadsafe(self.task.cancel)
 
-    def _sync(self, coro, l1, l2):
-        if isinstance(coro, Future):
-            self.task = coro
-        else:
-            self.task = self._instance._ss.loop.create_task(
-                coro, instance=self._instance)
-        self.task.add_done_callback(lambda _: l2.release())
-        l1.release()
-
-    def sync(self, coro, timeout=-1):
+    def sync(self, coro, timeout, wait):
         if self._cancelled:
             raise CancelledError
-        l1 = threading.Lock()
-        l1.acquire()
-        l2 = threading.Lock()
-        l2.acquire()
         loop = self._instance._ss.loop
-        loop.call_soon_threadsafe(self._sync, coro, l1, l2)
-        l2.acquire(timeout=timeout)
-        l1.acquire()
-        try:
+        if wait:
+            done = threading.Lock()
+            done.acquire()
+        hastask = threading.Lock()
+        hastask.acquire()
+
+        def inner():
+            self.task = loop.create_task(coro, instance=self._instance)
+            if wait:
+                self.task.add_done_callback(lambda _: done.release())
+            hastask.release()
+
+        loop.call_soon_threadsafe(inner)
+        if wait:
+            done.acquire(timeout=timeout)
+            hastask.acquire()
             if self.task.done():
                 return self.task.result()
             else:
                 loop.call_soon_threadsafe(self.task.cancel)
                 raise TimeoutError
-        finally:
-            self.task = None
+        else:
+            hastask.acquire()
+            return KaraboFuture(self.task)
 
     def instance(self):
         return self._instance
@@ -448,7 +478,8 @@ class EventLoop(SelectorEventLoop):
         finally:
             self.changedFutures.remove(f)
 
-    def sync(self, coro, timeout):
+    def sync(self, coro, timeout, wait):
+        assert wait is True
         return coro
 
     def close(self):

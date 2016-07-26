@@ -53,6 +53,10 @@ namespace karabo {
                 return m_stateName == state.m_stateName;
             }
 
+            bool operator!=(const State& state) const {
+                return (!this->operator==(state));
+            }
+
             bool isDerivedFrom(const State& s) const;
 
             // The base states that have no parent:
