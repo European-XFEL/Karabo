@@ -44,7 +44,7 @@ namespace karabo {
                  * Schema is a read-only, leaf property
                  */
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::ALARM_CONDITION);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, Schema::ALARM_CONDITION);
                 this->m_node->template setAttribute<std::string>(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::INTERNAL_PARAM);
