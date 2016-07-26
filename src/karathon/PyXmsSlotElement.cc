@@ -7,10 +7,12 @@
  */
 
 #include "boost/python.hpp"
+#include "boost/python/raw_function.hpp"
 
 #include <karabo/xms/SlotElement.hh>
 #include "PythonMacros.hh"
 #include <karabo/util/State.hh>
+
 
 namespace bp = boost::python;
 using namespace karabo::xms;
@@ -68,13 +70,15 @@ struct SLOT_ELEMENT_Wrapper : SLOT_ELEMENT, bp::wrapper<SLOT_ELEMENT > {
 
 class SlotElementWrap{
 public:
-    static SLOT_ELEMENT & allowedStatesPy(SLOT_ELEMENT & self,  const bp::tuple & args){
+    static bp::object allowedStatesPy(bp::tuple args, bp::dict kwargs){
         std::vector<karabo::util::State> states;
-        for(unsigned int i = 0; i < bp::len(args); ++i){
+        SLOT_ELEMENT & self = bp::extract<SLOT_ELEMENT&>(args[0]);
+        for(unsigned int i = 1; i < bp::len(args); ++i){
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
             states.push_back(karabo::util::State::fromString(state));
         }
-        return self.allowedStates(states);
+        self.allowedStates(states);
+        return args[0];
     }
     
 };
@@ -85,9 +89,7 @@ void exportPyXmsSlotElement() {
     bp::class_< SlotElementBase_Wrapper, boost::noncopyable > sl("SlotElementBase", bp::init< Schema & > (bp::arg("expected")));
 
     sl.def("allowedStates"
-           , &SlotElementWrap::allowedStatesPy
-           , (bp::arg("states"))
-           , bp::return_internal_reference<> ());
+           , bp::raw_function(&SlotElementWrap::allowedStatesPy, 2 ));
 
     sl.def("commit"
            , bp::pure_virtual((void (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase< SLOT_ELEMENT >::commit))

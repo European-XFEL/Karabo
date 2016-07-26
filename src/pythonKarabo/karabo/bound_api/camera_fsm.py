@@ -13,6 +13,8 @@ from .fsm import (
     KARABO_FSM_STATE_EE, KARABO_FSM_STATE_MACHINE,
     KARABO_FSM_CREATE_MACHINE)
 
+from karabo.common.states import State
+
 
 @KARABO_CLASSINFO("CameraFsm", "1.0")
 class CameraFsm(base.BaseFsm):
@@ -23,25 +25,25 @@ class CameraFsm(base.BaseFsm):
         SLOT_ELEMENT(expected).key("acquire")
         .displayedName("Acquire")
         .description("Instructs camera to go into acquisition state")
-        .allowedStates("Ok.Ready")
+        .allowedStates(State.ACTIVE)
         .commit()
         ,
         SLOT_ELEMENT(expected).key("trigger")
         .displayedName("Trigger")
         .description("Sends a software trigger to the camera")
-        .allowedStates("Ok.Acquisition")
+        .allowedStates(State.ACQUIRING)
         .commit()
         ,
         SLOT_ELEMENT(expected).key("stop")
         .displayedName("Stop")
         .description("Instructs camera to stop current acquisition")
-        .allowedStates("Ok.Acquisition")
+        .allowedStates(State.ACQUIRING)
         .commit()
         ,
         SLOT_ELEMENT(expected).key("reset")
         .displayedName("Reset")
         .description("Resets the camera in case of an error")
-        .allowedStates("Error")
+        .allowedStates(State.ERROR)
         .commit()
         )
     
@@ -60,10 +62,10 @@ class CameraFsm(base.BaseFsm):
         #**************************************************************
         #*                        States                              *
         #**************************************************************
-        KARABO_FSM_STATE_EE('Error', self.errorStateOnEntry, self.errorStateOnExit)
-        KARABO_FSM_STATE_EE('Initialization', self.initializationStateOnEntry, self.initializationStateOnExit)
-        KARABO_FSM_STATE_EE('Acquisition', self.acquisitionStateOnEntry, self.acquisitionStateOnExit)
-        KARABO_FSM_STATE_EE('Ready', self.readyStateOnEntry, self.readyStateOnExit)
+        KARABO_FSM_STATE_EE(State.ERROR, self.errorStateOnEntry, self.errorStateOnExit)
+        KARABO_FSM_STATE_EE(State.INIT, self.initializationStateOnEntry, self.initializationStateOnExit)
+        KARABO_FSM_STATE_EE(State.ACQUIRING, self.acquisitionStateOnEntry, self.acquisitionStateOnExit)
+        KARABO_FSM_STATE_EE(State.ACTIVE, self.readyStateOnEntry, self.readyStateOnExit)
         
         #**************************************************************
         #*                    Transition Actions                      *
@@ -80,24 +82,24 @@ class CameraFsm(base.BaseFsm):
         #**************************************************************
         okStt=[
         # Source-State   Event           Target-State   Action           Guard
-        ('Ready',       'AcquireEvent', 'Acquisition', 'AcquireAction', 'none'),
-        ('Acquisition', 'StopEvent',    'Ready',       'StopAction',    'none'),
-        ('Acquisition', 'TriggerEvent', 'none',        'TriggerAction', 'none')
+        (State.ACTIVE,       'AcquireEvent', State.ACQUIRING, 'AcquireAction', 'none'),
+        (State.ACQUIRING, 'StopEvent',    State.ACTIVE,       'StopAction',    'none'),
+        (State.ACQUIRING, 'TriggerEvent', 'none',        'TriggerAction', 'none')
         ]
         #                        Name  Transition-Table  Initial-State
-        KARABO_FSM_STATE_MACHINE('Ok', okStt, 'Ready')
+        KARABO_FSM_STATE_MACHINE(State.NORMAL, okStt, State.ACTIVE)
         
         #**************************************************************
         #*                       Top Machine                          *
         #**************************************************************
         cameraStt=[
         # Source-State      Event        Target-State   Action              Guard
-        ('Initialization', 'none',            'Ok',    'none',             'none'),
-        ('Ok',             'ErrorFoundEvent', 'Error', 'ErrorFoundAction', 'none'),
-        ('Error',          'ResetEvent',      'Ok',    'none',             'none')
+        (State.INIT, 'none',            State.NORMAL,    'none',             'none'),
+        ('Ok',             'ErrorFoundEvent', State.ERROR, 'ErrorFoundAction', 'none'),
+        (State.ERROR,          'ResetEvent',      State.NORMAL,    'none',             'none')
         ]
         #                         Name      Transition-Table  Initial-State
-        KARABO_FSM_STATE_MACHINE('CameraMachine', cameraStt, 'Initialization')
+        KARABO_FSM_STATE_MACHINE('CameraMachine', cameraStt, State.INIT)
         self.fsm = KARABO_FSM_CREATE_MACHINE('CameraMachine')
         
     def getFsm(self):
