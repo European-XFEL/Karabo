@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   TableElement.hh
  * Author: haufs
  *
@@ -31,7 +31,6 @@ namespace karabo {
 
         template<typename Element>
         class TableDefaultValue {
-
 
             Element* m_genericElement;
 
@@ -85,7 +84,6 @@ namespace karabo {
 
         class TableElement : public GenericElement<TableElement> {
 
-
             friend class TableDefaultValue<TableElement>;
 
             Schema m_nodeSchema;
@@ -121,9 +119,42 @@ namespace karabo {
              * @param sep A separator symbol used for parsing previous argument for list of states
              * @return reference to the Element (to allow method's chaining)
              */
-            TableElement& allowedStates(const std::string& states, const std::string& sep = " ,;") {
-                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector>(states, sep));
+            TableElement& allowedStates(const std::vector<karabo::util::State>& value) {
+                const std::string stateString = karabo::util::toString(value);
+                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector>(stateString, ","));
                 return *this;
+            }
+
+            //overloads for up to six elements
+
+            TableElement& allowedStates(const karabo::util::State& s1) {
+                const karabo::util::State arr[] = {s1};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr + 1));
+            }
+
+            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2) {
+                const karabo::util::State arr[] = {s1, s2};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr + 2));
+            }
+
+            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3) {
+                const karabo::util::State arr[] = {s1, s2, s3};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr + 3));
+            }
+
+            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr + 4));
+            }
+
+            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4, s5};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr + 5));
+            }
+
+            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6) {
+                const karabo::util::State arr[] = {s1, s2, s3, s4, s5, s6};
+                return allowedStates(std::vector<karabo::util::State>(arr, arr + 6));
             }
 
             /**
@@ -144,7 +175,7 @@ namespace karabo {
              * When the default value is not specified (noDefaultValue) you must always check
              * if the parameter has a value set in delivered User configuration.
              * @return reference to DefaultValue object allowing proper <b>defaultValue</b> method chaining.
-             * 
+             *
              * <b>Example:</b>
              * @code
              * SOME_ELEMENT(expected)
@@ -207,14 +238,14 @@ namespace karabo {
                 if(m_nodeSchema.empty()){
                     throw KARABO_PARAMETER_EXCEPTION("No node schema has been set. Please set one before adding schema-less nodes");
                 } else {
-                    
+
                     return this->addRow(m_nodeSchema, nodeHash);
                 }
-                 
+
             }
-            
-            
-            
+
+
+
             TableElement& addRow(const Schema& schema,  const Hash& nodeHash = Hash()) {
                 if(!m_nodeSchema.empty()){
                     Hash validatedHash;
@@ -230,34 +261,34 @@ namespace karabo {
                     }
                 }
                 // Create an empty Hash as value of this choice node if not there yet
-              
+
                 if (this->m_node->getType() != Types::VECTOR_HASH) this->m_node->setValue(std::vector<Hash>());
                 // Retrieve reference for filling
                std::vector<Hash>& listOfNodes = this->m_node->template getValue<std::vector<Hash> >();
-                
-               
-                
-                
+
+
+
+
                 Hash validatedHash;
                 if(nodeHash.empty()) {
                     validatedHash =  schema.getParameterHash();
                 } else {
-                   
-                
-                    
+
+
+
                     Validator validator;
                     std::pair<bool, std::string> validationResult = validator.validate(schema, nodeHash, validatedHash);
                     if(!validationResult.first){
                         throw KARABO_PARAMETER_EXCEPTION("Node Hash didn't validate against preset node schema");
                     }
-                    
-                   
+
+
                 }
-                
-              
-                
+
+
+
                 listOfNodes.push_back(validatedHash);
-                
+
                 return *this;
             }
              */
@@ -275,7 +306,7 @@ namespace karabo {
 
                 //this->m_node->template setAttribute<int>(KARABO_SCHEMA_ROW_SCHEMA, true);
                 this->m_node->setAttribute(KARABO_SCHEMA_ROW_SCHEMA, m_nodeSchema);
-                //if (!m_nodeSchema.empty()) this->m_node->template setAttribute<int>(KARABO_SCHEMA_ROW_SCHEMA, 1); 
+                //if (!m_nodeSchema.empty()) this->m_node->template setAttribute<int>(KARABO_SCHEMA_ROW_SCHEMA, 1);
 
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
 
@@ -288,7 +319,7 @@ namespace karabo {
 
                         this->userAccess();
 
-                    } else { //else set default value of requiredAccessLevel to OBSERVER 
+                    } else { //else set default value of requiredAccessLevel to OBSERVER
                         this->observerAccess();
                     }
                 }

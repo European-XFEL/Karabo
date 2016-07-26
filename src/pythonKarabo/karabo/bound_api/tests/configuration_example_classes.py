@@ -15,6 +15,8 @@ from karabo.bound import (
     MetricPrefix, Unit
 )
 
+from karabo.common.states import State
+
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Shape", "1.0")
@@ -278,7 +280,7 @@ class TestStruct1(object):
                 .tags("hardware, set")
                 .displayedName("Example key 3")
                 .description("Example key 3 description")
-                .allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState")
+                .allowedStates(State.STARTED, State.STOPPED, State.NORMAL)
                 .minExc(10).maxExc(20)
                 .assignmentMandatory()
                 .expertAccess()
@@ -324,7 +326,7 @@ class TestStruct1(object):
                 ,
         VECTOR_INT32_ELEMENT(expected).key("exampleKey7")
                 .displayedName("Example key 7")
-                .allowedStates("Started, AllOk")
+                .allowedStates(State.STARTED, State.NORMAL)
                 .readOnly().initialValue([1,2,3])
                 .archivePolicy(EVERY_1S)
                 .commit()
@@ -487,7 +489,7 @@ class TestStruct1(object):
         SLOT_ELEMENT(expected).key("slotTest")
                 .displayedName("Reset")
                 .description("Test slot element")
-                .allowedStates("Started, Stopped, Reset")
+                .allowedStates(State.STARTED, State.STOPPED, State.NORMAL)
                 .commit()
                 ,
         IMAGE_ELEMENT(expected).key("myImageElement")
@@ -586,7 +588,7 @@ class P1(Base):
         UINT32_ELEMENT(expected).key("d").alias(5.5)
          .tags("CY,JS")
          .displayedName("Example key 3").description("Example key 3 description")
-         .allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState") #TODO check
+         .allowedStates(State.STARTED, State.STOPPED, State.NORMAL) #TODO check
          .minExc(10).maxExc(20).assignmentOptional().defaultValue(11)
          .reconfigurable().commit(),
 

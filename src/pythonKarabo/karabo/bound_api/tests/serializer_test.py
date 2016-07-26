@@ -41,16 +41,6 @@ class  Serializer_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_textserializer_schema_xml exception group 1: " + str(e))
 
-    def test_textserializer_schema_xsd(self):
-        try:
-            config = Hash("indentation", -1)
-            ser = TextSerializerSchema.create("Xsd", config)     # create default serializer
-            schema = Shape.getSchema("EditableCircle")
-            archive = ser.save(schema)      # serialize schema
-            self.assertEqual(archive,'<?xml version="1.0"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:a="http://www.karabo.eu"><xs:element name="EditableCircle"><xs:complexType><xs:all><xs:element name="shadowEnabled" type="xs:boolean" default="0" minOccurs="0" maxOccurs="1"><xs:annotation><xs:documentation><a:description>Shadow enabled</a:description><a:displayedName>Shadow</a:displayedName><a:requiredAccessLevel>1</a:requiredAccessLevel><a:default>0</a:default><a:accessType>1</a:accessType></xs:documentation></xs:annotation></xs:element><xs:element name="radius" default="10.000000000000000" minOccurs="0" maxOccurs="1"><xs:annotation><xs:documentation><a:description>The radius of the circle</a:description><a:displayedName>Radius</a:displayedName><a:alias>1</a:alias><a:requiredAccessLevel>1</a:requiredAccessLevel><a:default>10.000000000000000</a:default><a:accessType>4</a:accessType><a:unitName>meter</a:unitName><a:unitSymbol>m</a:unitSymbol><a:metricPrefixName>milli</a:metricPrefixName><a:metricPrefixSymbol>m</a:metricPrefixSymbol></xs:documentation></xs:annotation><xs:simpleType><xs:restriction base="xs:double"><xs:minExclusive value="0.000000000000000" /><xs:maxExclusive value="100.000000000000000" /></xs:restriction></xs:simpleType></xs:element></xs:all></xs:complexType></xs:element></xs:schema>')
-            
-        except Exception as e:
-            self.fail("test_textserializer_schema_xsd exception group 1: " + str(e))
 
     def test_binaryserializer_hash(self):
         try:

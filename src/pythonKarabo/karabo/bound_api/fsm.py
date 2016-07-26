@@ -164,10 +164,22 @@ KARABO_FSM_STATE_MACHINE_AEE = KARABO_FSM_STATE_MACHINE_AE = \
 
 
 def KARABO_FSM_CREATE_MACHINE(name):
+    global _events_, _states_, _interrupts_, _actions_, _guards_, _machines_, _state_periodic_actions_
     (_stt, _initial, _on_entry, _on_exit, _in_state) = _machines_[name]
     cls = type(str(name), (StateMachine,), { })
-    return cls(None, _stt, _initial, on_entry=_on_entry, on_exit=_on_exit,
+    ret =  cls(None, _stt, _initial, on_entry=_on_entry, on_exit=_on_exit,
                in_state = _in_state)
+
+    #reset everything
+    _events_ = ['none']
+    _states_ = {None: None}
+    _interrupts_ = {}
+    _actions_ = {'none':(NOOP, ())}
+    _guards_ = {'none':(GNOOP, ())}
+    _machines_ = {None: None}
+    _state_periodic_actions_ = {'none':(-1, -1, NOOP)}
+
+    return ret
 
             
 #======================================== Base classes...    
@@ -193,7 +205,7 @@ class _State(dict):
     
     def entry_action(self):
         if self.target_action != '':
-            self.timeout, self.repetition, self.hook = _state_periodic_actions_[self.target_action]
+            self.timeout, self.repetition, self.hook = copy.copy(_state_periodic_actions_[self.target_action])
         topfsm = self._get_top_fsm()
         topfsm.currentStateObject = self
         if self.on_entry != NOOP:
@@ -318,26 +330,28 @@ class StateMachine(_State):
                 raise NameError('Undefined name in StateTransitionTable: {}'.
                                 format(_guard))
 
-            self.stt[_source][_event] = (_target, _actions_[_action], _guards_[_guard])    
+            self.stt[_source][_event] = (_target, copy.copy(_actions_[_action]), copy.copy(_guards_[_guard]))
         
         # use global no_transition
         if "NoTransition" in _actions_:
-            _f, _a = _actions_['NoTransition']
+            _f, _a = copy.copy(_actions_['NoTransition'])
             self.no_transition = _f
         else:
             raise IndexError('The "no_transition" action was not defined')
 
     def _setup(self, sname):
-        if sname in _states_:
-            (_entry, _exit, _ta) = _states_[sname]
+        #note that the order here is important. Machines should be checked for first.
+        if sname in _machines_:
+            (_stt, _initial, _entry, _exit, _ta) = copy.copy(_machines_[sname])
+            self.stt[sname] = type(str(sname), (StateMachine,), {})(self, _stt, _initial, _entry, _exit, _ta)
+        elif sname in _states_:
+            (_entry, _exit, _ta) = copy.copy(_states_[sname])
             State = type(sname.name, (_State,), {})
             self.stt[sname] = State(self, sname, on_entry=_entry,
                                     on_exit=_exit, in_state=_ta)
             if sname in _interrupts_:
-                self.stt[sname].interrupt = _interrupts_[sname]
-        elif sname in _machines_:
-            (_stt, _initial, _entry, _exit, _ta) = _machines_[sname]
-            self.stt[sname] = type(str(sname), (StateMachine,), {})(self, _stt, _initial, _entry, _exit, _ta)
+                self.stt[sname].interrupt = copy.copy(_interrupts_[sname])
+
         else:
             raise NameError('Undefined name of initial state in State machine '
                             'declaration: {}'.format(sname))
