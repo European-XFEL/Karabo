@@ -497,7 +497,8 @@ struct OverwriteElementWrap {
     static bp::object setNewOptions(bp::tuple args, bp::dict kwargs){
         OverwriteElement& self = bp::extract<OverwriteElement&>(args[0]);
         //get type of first arg
-        bp::extract<std::string> first_arg(args[0]);
+        
+        bp::extract<const std::string> first_arg(args[1]);
         if(first_arg.check()){
             self.setNewOptions(first_arg(), ",;");
             return args[0];
