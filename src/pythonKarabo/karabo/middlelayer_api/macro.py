@@ -67,7 +67,7 @@ class EventThread(threading.Thread):
 def _wrapslot(slot, name):
     if slot.allowedStates is None:
         slot.allowedStates = ["Idle..."]
-    themethod = slot.themethod
+    themethod = slot.method
 
     @wraps(themethod)
     def wrapper(device):
@@ -77,7 +77,7 @@ def _wrapslot(slot, name):
             return themethod(device)
         finally:
             device.state = "Idle..."
-    slot.themethod = wrapper
+    slot.method = wrapper
 
 
 class Macro(Device):
