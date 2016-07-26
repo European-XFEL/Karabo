@@ -187,7 +187,7 @@ class Broker:
                             [self.slots[s] for s in slots.get("*", [])
                              if s in self.slots]
                 except KeyError:
-                    self.logger.exception("slot does not exist")
+                    self.logger.exception("Slot does not exist")
                     continue
                 try:
                     for slot in slots:
@@ -261,6 +261,13 @@ class Broker:
                   self.deviceId, self.info)
 
     def decodeMessage(self, message):
+        """Decode a Karabo message
+
+        reply messages are dispatched directly.
+
+        :returns: a dictionary that maps the device id of slots to be called
+            to a list of slots to be called on that device
+        """
         hash = Hash.decode(message.data, "Bin")
         params = []
         for i in count(1):
