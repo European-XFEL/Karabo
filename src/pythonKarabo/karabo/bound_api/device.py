@@ -908,9 +908,12 @@ class PythonDevice(NoFsm):
             raise TypeError("Stringified alarmconditions are note allowed!")
         with self._stateChangeLock:
             self.globalAlarmCondition = condition
-            resultingCondition = self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
-            if resultingCondition is not None and resultingCondition.asString() != self.parameters.get("alarmCondition"):
-                self.set("alarmCondition", resultingCondition.asString(), validate=False)
+            resultingCondition = \
+                self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
+            if resultingCondition is not None and resultingCondition.asString()\
+                    != self.parameters.get("alarmCondition"):
+                self.set("alarmCondition", resultingCondition.asString(),
+                         validate=False)
 
     def getAlarmCondition(self, key = None, seperator = "."):
         if key is None:
@@ -924,6 +927,23 @@ class PythonDevice(NoFsm):
 
     def getRollingStatistics(self, key):
         return self.validatorIntern.getRollingStatistics(key)
+
+    def getAlarmInfo(self):
+        """
+        Output information on current alarms on this device
+        :return: a Hash containing the property as key and as string for
+         the alarm information as value.
+        """
+        info = Hash()
+        with self._stateChangeLock:
+            warnings = self.validatorIntern.getParametersInWarnOrAlarm()
+            for key in warnings:
+                desc = warnings.get(key)
+                condition = AlarmCondition.fromString(desc.get("type"))
+                thisinfo = self.fullSchema.getInfoForAlarm(str(key),condition)
+                info.set(str(key), thisinfo)
+        return info
+
 
         
     '''
