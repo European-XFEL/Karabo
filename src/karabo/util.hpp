@@ -45,6 +45,8 @@
 #include "util/Version.hh"
 #include "util/State.hh"
 #include "util/StateSignifier.hh"
+#include "util/StateElement.hh"
+#include "util/AlarmConditionElement.hh"
 
 #endif
 

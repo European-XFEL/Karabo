@@ -32,7 +32,7 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             AlarmConditionElement& initialValue(const karabo::util::AlarmCondition& a) {
-                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, a.toString());
+                this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, a.asString());
                 return *this;
             }
 
@@ -45,10 +45,11 @@ namespace karabo {
                  */
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::ALARM_CONDITION);
-                this->m_node->template setAttribute(KARABO_SCHEMA_VALUE_TYPE, Types::STRING);
-                this->m_node->template setAttribute(KARABO_SCHEMA_ACCESS_MODE, READ);
-
-
+                this->m_node->template setAttribute<std::string>(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::INTERNAL_PARAM);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::EVERY_EVENT);
+                this->m_node->template setAttribute<bool>(KARABO_INDICATE_ALARM_SET, true);
             }
 
         private:
