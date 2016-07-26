@@ -7,6 +7,7 @@
  */
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include "boost/python/raw_function.hpp"
 #include <iostream>
 #include <karabo/util/Factory.hh>
 #include <karabo/util/NodeElement.hh>
@@ -442,9 +443,9 @@ struct OverwriteElementWrap {
 
 
     static OverwriteElement & setNewDefaultValue(OverwriteElement& self, const bp::object& value) {
-        const std::string & className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
+        const std::string className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
         if(className == "State" ){
-            const std::string & state = bp::extract<std::string>(value.attr("name"));
+            const std::string state = bp::extract<std::string>(value.attr("name"));
             return self.setNewDefaultValue(karabo::util::State::fromString(state));
         } else {
             boost::any any;
@@ -481,34 +482,58 @@ struct OverwriteElementWrap {
         return self.setNewMaxExc(any);
     }
     
-    static OverwriteElement & setNewAllowedStates(OverwriteElement& self, const bp::tuple & args){
+    static bp::object setNewAllowedStates(bp::tuple args, bp::dict kwargs) {
+        OverwriteElement& self = bp::extract<OverwriteElement&>(args[0]);
         std::vector<karabo::util::State> states;
-        for(unsigned int i = 0; i < bp::len(args); ++i){
+        for (unsigned int i = 1; i < bp::len(args); ++i) {
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
             states.push_back(karabo::util::State::fromString(state));
         }
-        return self.setNewAllowedStates(states);
+        self.setNewAllowedStates(states);
+        return args[0];
     }
+    
             
-    static OverwriteElement & setNewOptions(OverwriteElement& self, const bp::object & value){
-        bp::extract<bp::tuple> getTuple(value);
-        if(getTuple.check()){
-            bp::tuple args = getTuple();
-            //assume it is a list of states
-            std::vector<karabo::util::State> states;
-            for(unsigned int i = 0; i < bp::len(args); ++i){
-                const std::string state = bp::extract<std::string>(args[i].attr("name"));
-                states.push_back(karabo::util::State::fromString(state));
-            }
-            return self.setNewOptions(states);
+    static bp::object setNewOptions(bp::tuple args, bp::dict kwargs){
+        OverwriteElement& self = bp::extract<OverwriteElement&>(args[0]);
+        //get type of first arg
+        
+        bp::extract<const std::string> first_arg(args[1]);
+        if(first_arg.check()){
+            self.setNewOptions(first_arg(), ",;");
+            return args[0];
         } else {
-            //other option is string. We can let bp throw if not:
-            std::string s = bp::extract<std::string>(value);
-            return self.setNewOptions(s, ",;");
+            //try states
+            std::vector<karabo::util::State> states;
+            for (unsigned int i = 1; i < bp::len(args); ++i) {
+                const std::string className = bp::extract<std::string>(args[i].attr("__class__").attr("__name__"));
+                if( className == "State"){
+                    const std::string state = bp::extract<std::string>(args[i].attr("name"));
+                    states.push_back(karabo::util::State::fromString(state));
+                } else {
+                    throw KARABO_PYTHON_EXCEPTION("setNewOptions expects either a string or an arbitrary number of arguments of type State.");
+                }
+            }
+            self.setNewOptions(states);
+            return args[0];
         }
+        
     }
 
 };
+
+ namespace tableElementWrap {
+    static bp::object allowedStatesPy(bp::tuple args, bp::dict kwargs) {
+        TableElement& self = bp::extract<TableElement&>(args[0]);
+        std::vector<karabo::util::State> states;
+        for (unsigned int i = 1; i < bp::len(args); ++i) {
+            const std::string state = bp::extract<std::string>(args[i].attr("name"));
+            states.push_back(karabo::util::State::fromString(state));
+        }
+        self.allowedStates(states);
+        return args[0];
+    }
+}
 
 
 namespace schemawrap {
@@ -1141,9 +1166,15 @@ namespace schemawrap {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const std::string s = karabo::util::toString(schema.getAllowedStates(path));
-            
             const vector<string> v = karabo::util::fromString<std::string, std::vector>(s);
-            return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
+            //now construct python states
+            bp::list states;
+            bp::object sModule = bp::import("karabo.common.states");
+            for(vector<string>::const_iterator it = v.begin(); it != v.end(); ++it){
+                states.append(sModule.attr("State")(*it));
+            }
+            
+            return states;
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedStates' should be a string");
     }
@@ -1409,7 +1440,18 @@ namespace schemawrap {
         schema.updateAliasMap();
     }
     
-     void setAllowedStates(Schema& self, const std::string & path, const bp::tuple & args){
+
+    const std::string getInfoForAlarm(Schema& schema, const std::string & path, const bp::object condition) {
+        const std::string className = bp::extract<std::string>(condition.attr("__class__").attr("__name__"));
+        if(className != "AlarmCondition"){
+            throw KARABO_PYTHON_EXCEPTION("Python argument for condition needs to be of type AlarmCondition and not "+className);
+        }
+        const std::string conditionName = bp::extract<std::string>(condition.attr("value"));
+        return schema.getInfoForAlarm(path, karabo::util::AlarmCondition::fromString(conditionName));
+    }
+
+    void setAllowedStates(Schema& self, const std::string & path, PyObject* rargs){
+        bp::tuple args = bp::extract<bp::tuple>(rargs);
         std::vector<karabo::util::State> states;
         for(unsigned int i = 0; i < bp::len(args); ++i){
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
@@ -1418,7 +1460,7 @@ namespace schemawrap {
         return self.setAllowedStates(path, states);
     }
             
-   
+
 }
 
 
@@ -1854,7 +1896,7 @@ void exportPyUtilSchema() {
         s.def("setAlarmVarianceLow", &Schema::setAlarmVarianceLow, (bp::arg("path"), bp::arg("value")));
         s.def("setAlarmVarianceHigh", &Schema::setAlarmVarianceHigh, (bp::arg("path"), bp::arg("value")));
         s.def("getRollingStatsEvalInterval", &Schema::getRollingStatsEvalInterval, (bp::arg("path"), bp::arg("value")));
-        s.def("getInfoForAlarm", &Schema::getInfoForAlarm, (bp::arg("path"), bp::arg("condition")));
+        s.def("getInfoForAlarm", &schemawrap::getInfoForAlarm, (bp::arg("path"), bp::arg("condition")));
         s.def("setArchivePolicy", &Schema::setArchivePolicy, (bp::arg("path"), bp::arg("value")));
         s.def("setMin", &Schema::setMin, (bp::arg("path"), bp::arg("value")));
         s.def("setMax", &Schema::setMax, (bp::arg("path"), bp::arg("value")));
@@ -2135,6 +2177,8 @@ void exportPyUtilSchema() {
     // Binding TableElement
     // In Python : TABLE_ELEMENT
     {
+       
+        
         bp::implicitly_convertible< Schema &, TableElement >();
         bp::class_<TableElement> ("TABLE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
                 .def("advanced", &TableElement::advanced
@@ -2149,9 +2193,7 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("adminAccess", &TableElement::adminAccess
                      , bp::return_internal_reference<> ())
-                .def("allowedStates", &TableElement::allowedStates
-                     , (bp::arg("states"), bp::arg("sep") = " ,;")
-                     , bp::return_internal_reference<> ())
+                .def("allowedStates", bp::raw_function(&tableElementWrap::allowedStatesPy,2))
                 .def("assignmentInternal", &TableElement::assignmentInternal
                      , bp::return_internal_reference<> ())
                 .def("assignmentMandatory", &TableElement::assignmentMandatory
@@ -2413,14 +2455,8 @@ void exportPyUtilSchema() {
                      , &OverwriteElementWrap().setNewMaxExc
                      , (bp::arg("value"))
                      , bp::return_internal_reference<> ())
-                .def("setNewOptions"
-                     , &OverwriteElementWrap().setNewOptions
-                     , (bp::arg("value"))
-                     , bp::return_internal_reference<> ())
-                .def("setNewAllowedStates"
-                     ,  &OverwriteElementWrap().setNewAllowedStates
-                     , (bp::arg("states"))
-                     , bp::return_internal_reference<> ())
+                .def("setNewOptions", bp::raw_function(&OverwriteElementWrap::setNewOptions,2))
+                .def("setNewAllowedStates", bp::raw_function(&OverwriteElementWrap::setNewAllowedStates,2))
                 .def("setNowObserverAccess"
                      , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowObserverAccess)
                      , bp::return_internal_reference<> ())

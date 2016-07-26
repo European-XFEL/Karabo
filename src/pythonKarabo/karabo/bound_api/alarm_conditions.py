@@ -1,40 +1,61 @@
 __author__="Steffen Hauf <steffen.hauf at xfel.eu>"
 __date__ ="$June 30, 2016 2:17:13 PM$"
 
-class AlarmCondition:
 
-    NONE = None
-    WARN = None
-    WARN_LOW = None
-    WARN_HIGH = None
-    WARN_VARIANCE_LOW = None
-    WARN_VARIANCE_HIGH = None
-    ALARM = None
-    ALARM_LOW = None
-    ALARM_HIGH = None
-    ALARM_VARIANCE_LOW = None
-    ALARM_VARIANCE_HIGH = None
-    INTERLOCK = None
+from enum import Enum
+
+class AlarmCondition(Enum):
+    """
+    A class for unified alarm conditions. Alarms
+    are categorized by severity, which can either
+    be none, warn, alarm or interlock. Interlock
+    is the most severe condition.
+    """
+    NONE = "none"
+    WARN = "warn"
+    WARN_LOW = "warnLow"
+    WARN_HIGH = "warnHigh"
+    WARN_VARIANCE_LOW = "warnVarianceLow"
+    WARN_VARIANCE_HIGH = "warnVarianceHigh"
+    ALARM = "alarm"
+    ALARM_LOW = "alarmLow"
+    ALARM_HIGH = "alarmHigh"
+    ALARM_VARIANCE_LOW = "alarmVarianceLow"
+    ALARM_VARIANCE_HIGH = "alarmVarianceHigh"
+    INTERLOCK = "interlock"
+
+    @staticmethod
+    def criticalityList():
+        """
+        Returns the severity list, with severity increasing
+        from left to right
+        :return: an list with alarm severities
+        """
+
+        return [AlarmCondition.NONE, AlarmCondition.WARN,
+             AlarmCondition.ALARM, AlarmCondition.INTERLOCK]
 
 
-    def __init__(self, name, rank = None, parent=None):
 
-        if rank is not None:
-           self.rank = rank
-        elif parent is not None:
-            self.rank = parent.rank
-        else:
-            raise AttributeError("Either a rank or a parent needs to be given for alarm condition {}!".format(name))
-
-        #protect against new conditions:
-        if name not in [k for k,d in AlarmCondition.__dict__.items() if isinstance(d,AlarmCondition) or d is None]:
-            raise AttributeError("Alarm condition {} may not be declared, only predeclared conditions are allowed!".format(name))
-
-        self.name = name
-        self.parent = parent
+    def criticalityLevel(self):
+        """
+        Returns the severity level of this alarm conditoon
+        :return:
+        """
+        for p in AlarmCondition.criticalityList():
+            if p.value in self.value:
+                return p
+        return self
 
     @staticmethod
     def returnMostSignificant(conditionList):
+        """
+        Returns the most severe/significant condition in
+        the given list of conditions
+        :param conditionList: an iterable containing alarm
+        conditions
+        :return: The most severe condition in the list
+        """
         if len(conditionList) == 0:
             return AlarmCondition.NONE
 
@@ -42,42 +63,48 @@ class AlarmCondition:
             s = conditionList[0]
             for c in conditionList:
                 s = s.returnMoreSignificant(c)
-            return s if s.parent is None else s.parent
+            return s.criticalityLevel()
 
 
     def returnMoreSignificant(self, other):
-        return self if self.rank > other.rank else other
+        """
+        Return the more signifcant of this and the other condition
+        :param other: The condition to compare against
+        :return:
+        """
+        return self if self.criticalityList().index(self.criticalityLevel()) \
+                 > self.criticalityList().index(other.criticalityLevel()) else other
 
-    @classmethod
-    def fromString(cls, name):
-        if name not in cls.__dict__:
-            raise AttributeError("Alarm condition of name {} does not exist!")
-        return cls.__dict__[name]
+    @staticmethod
+    def fromString(name):
+        """
+        Return an alarm condition from its stringified representation.
+        :param name:
+        :return:
+        """
+        return AlarmCondition(name)
 
 
     def asString(self):
-        return self.name
+        """
+        Return the string representation of the alarm condition
+        :return:
+        """
+        return self.value
 
     def asBaseString(self):
-        return self.parent.name if self.parent is not None else self.name
+        """
+        Return the severity level, e.g. base of the alarmcondtions
+        :return:
+        """
+        return self.parent().value
 
     def isSameCriticality(self, other):
-        return self.rank == other.rank
-
-    def __repr__(self):
-        return self.name
-
-
-AlarmCondition.NONE = AlarmCondition("NONE", rank=0)
-AlarmCondition.WARN = AlarmCondition("WARN", rank=1)
-AlarmCondition.WARN_LOW = AlarmCondition("WARN_LOW", parent=AlarmCondition.WARN)
-AlarmCondition.WARN_HIGH = AlarmCondition("WARN_LOW", parent=AlarmCondition.WARN)
-AlarmCondition.WARN_VARIANCE_LOW = AlarmCondition("WARN_VARIANCE_LOW", parent=AlarmCondition.WARN)
-AlarmCondition.WARN_VARIANCE_HIGH = AlarmCondition("WARN_VARIANCE_HIGH", parent=AlarmCondition.WARN)
-AlarmCondition.ALARM = AlarmCondition("ALARM", rank=2)
-AlarmCondition.ALARM_LOW = AlarmCondition("ALARM_LOW", parent=AlarmCondition.ALARM)
-AlarmCondition.ALARM_HIGH = AlarmCondition("ALARM_HIGH", parent=AlarmCondition.ALARM)
-AlarmCondition.ALARM_VARIANCE_LOW = AlarmCondition("ALARM_VARIANCE_LOW", parent=AlarmCondition.ALARM)
-AlarmCondition.ALARM_VARIANCE_HIGH = AlarmCondition("ALARM_VARIANCE_HIGH", parent=AlarmCondition.ALARM)
-AlarmCondition.INTERLOCK = AlarmCondition("INTERLOCK", rank=3) #interlock is always the highest
-
+        """
+        Returns if this alarm condition is of same criticality/severity
+        as other
+        :param other: the alarm condition to compare against
+        :return:
+        """
+        return self.criticalityList().index(self.criticalityLevel()) \
+               == self.criticalityList().index(other.criticalityLevel())

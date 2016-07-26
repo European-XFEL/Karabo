@@ -113,7 +113,7 @@ class PythonDevice(NoFsm):
                     
             STRING_ELEMENT(expected).key("state")
                     .displayedName("State").description("The current state the device is in")
-                    .assignmentOptional().defaultValue("uninitialized").readOnly()
+                    .readOnly().initialValue(State.UNKNOWN.name)
                     .commit(),
 
             STRING_ELEMENT(expected).key("alarmCondition")
@@ -664,15 +664,16 @@ class PythonDevice(NoFsm):
         
     def updateState(self, currentState):
         assert isinstance(currentState, State)
-        self.log.DEBUG("updateState: {}".format(currentState))
-        if self["state"] is not currentState:
-            self["state"] = currentState
+        stateName = currentState.name
+        self.log.DEBUG("updateState: {}".format(stateName))
+        if self["state"] != stateName:
+            self["state"] = stateName
             if currentState is State.ERROR:
                 self._ss.updateInstanceInfo(Hash("status", "error"))
             else:
                 if self._ss.getInstanceInfo()["status"] == "error":
                     self._ss.updateInstanceInfo(Hash("status", "ok"))
-        self._ss.reply(currentState.name)  # reply new state to interested event initiators
+        self._ss.reply(stateName)  # reply new state to interested event initiators
 
     def onStateUpdate(self, currentState):
         assert isinstance(currentState, State)
@@ -907,9 +908,12 @@ class PythonDevice(NoFsm):
             raise TypeError("Stringified alarmconditions are note allowed!")
         with self._stateChangeLock:
             self.globalAlarmCondition = condition
-            resultingCondition = self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
-            if resultingCondition is not None and resultingCondition.asString() != self.parameters.get("alarmCondition"):
-                self.set("alarmCondition", resultingCondition.asString(), validate=False)
+            resultingCondition = \
+                self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
+            if resultingCondition is not None and resultingCondition.asString()\
+                    != self.parameters.get("alarmCondition"):
+                self.set("alarmCondition", resultingCondition.asString(),
+                         validate=False)
 
     def getAlarmCondition(self, key = None, seperator = "."):
         if key is None:
@@ -923,6 +927,23 @@ class PythonDevice(NoFsm):
 
     def getRollingStatistics(self, key):
         return self.validatorIntern.getRollingStatistics(key)
+
+    def getAlarmInfo(self):
+        """
+        Output information on current alarms on this device
+        :return: a Hash containing the property as key and as string for
+         the alarm information as value.
+        """
+        info = Hash()
+        with self._stateChangeLock:
+            warnings = self.validatorIntern.getParametersInWarnOrAlarm()
+            for key in warnings:
+                desc = warnings.get(key)
+                condition = AlarmCondition.fromString(desc.get("type"))
+                thisinfo = self.fullSchema.getInfoForAlarm(str(key),condition)
+                info.set(str(key), thisinfo)
+        return info
+
 
         
     '''

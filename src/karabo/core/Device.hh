@@ -208,7 +208,7 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("state")
                         .displayedName("State")
                         .description("The current state the device is in")
-                        .readOnly().initialValue("Ok")
+                        .readOnly().initialValue(State::UNKNOWN.name())
                         .commit();
 
                 STRING_ELEMENT(expected).key("alarmCondition")
