@@ -22,7 +22,11 @@
 #include "StringTools.hh"
 #include "ToLiteral.hh"
 #include "Units.hh"
+
+#include "State.hh"
+
 #include "AlarmConditions.hh"
+
 
 #include "karaboDll.hh"
 
@@ -121,6 +125,11 @@ namespace karabo {
 #define KARABO_SCHEMA_MAX "max"
 
 #define KARABO_SCHEMA_OVERWRITE "overwrite"
+
+#define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
+#define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
+
+#define KARABO_SCHEMA_ARRAY_SHAPE "arrayShape"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
@@ -369,11 +378,23 @@ namespace karabo {
             //                AllowedStates                *
             //**********************************************
 
-            void setAllowedStates(const std::string& path, const std::string& value, const std::string& sep);
+            //overloads for up to six states
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5);
+            void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6);
+
+
+            //generic interface
+            void setAllowedStates(const std::string& path, const std::vector<karabo::util::State>& value);
+
+
 
             bool hasAllowedStates(const std::string& path) const;
 
-            const std::vector<std::string>& getAllowedStates(const std::string& path) const;
+            const std::vector<karabo::util::State> getAllowedStates(const std::string& path) const;
 
 
             //**********************************************
@@ -573,6 +594,17 @@ namespace karabo {
             bool hasMaxSize(const std::string& path) const;
 
             const unsigned int& getMaxSize(const std::string& path) const;
+
+            //**********************************************************
+            //	Specific functions for LEAF node (which is an NDArray) *
+            //	Shape of the array                                     *
+            //**********************************************************
+
+            void setArrayShape(const std::string& path, const std::string& value);
+
+            bool hasArrayShape(const std::string& path) const;
+
+            const std::vector<long long>& getArrayShape(const std::string& path) const;
 
             //******************************************************
             //                   WarnLow                          *
@@ -833,6 +865,8 @@ namespace karabo {
             bool checkRequiredAccessLevel(const std::string& path, const Schema::AccessLevel& accessLevel) const;
 
             void r_updateAliasMap(const std::vector<std::string> keys, const std::string oldPath = "");
+
+            void setAllowedStates(const std::string& path, const std::string& value);
 
         };
 

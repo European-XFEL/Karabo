@@ -28,7 +28,8 @@ from .widget.api import (
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (
-    BaseWidgetContainer, LabelWidget, SceneLinkWidget, UnknownSvgWidget)
+    BaseWidgetContainer, LabelWidget, SceneLinkWidget, UnknownSvgWidget,
+    WorkflowItemWidget)
 _SCENE_OBJ_FACTORIES = {
     FixedLayoutModel: lambda m, p: GroupLayout(m),
     BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
@@ -183,6 +184,11 @@ def create_object_from_model(layout, model, scene_view, object_dict):
                 else:
                     model_rect = rect
             obj.setGeometry(model_rect)
+        elif is_widget(obj):
+            model_rect = QRect(model.x, model.y, model.width, model.height)
+            if model_rect.isEmpty():
+                model_rect.setSize(obj.sizeHint())
+                obj.set_geometry(model_rect)
 
 
 def fill_root_layout(layout, parent_model, scene_view, object_dict):

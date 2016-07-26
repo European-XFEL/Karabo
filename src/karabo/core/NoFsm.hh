@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   NoFsm.hh
  * Author: Sergey Esenov serguei.essenov@xfel.eu
  *
@@ -8,16 +8,19 @@
 #ifndef KARABO_CORE_NOFSM_HH
 #define	KARABO_CORE_NOFSM_HH
 
-
+#include <vector>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 #include <karabo/xms/SlotElement.hh>
-#include "Device.hh"
+#include <karabo/util/ClassInfo.hh>
+#include <karabo/util/Schema.hh>
 
 namespace karabo {
     namespace core {
 
         class NoFsm {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(NoFsm, "NoFsm", "1.3")
 

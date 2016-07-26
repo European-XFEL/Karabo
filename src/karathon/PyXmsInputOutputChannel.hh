@@ -52,14 +52,6 @@ namespace karathon {
         static bp::object getDimensionTypesPy(const boost::shared_ptr<karabo::xms::NDArray>& self);
     };
 
-    struct NDArrayElementWrap {
-
-
-        static karabo::xms::NDArrayElement& setDefaultValue(const boost::shared_ptr<karabo::xms::NDArrayElement>& self,
-                                                            const std::string& subKey,
-                                                            const bp::object& defaultValue);
-    };
-
     struct ImageDataWrap : public karabo::xms::ImageData {
 
 

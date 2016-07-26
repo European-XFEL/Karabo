@@ -1197,6 +1197,13 @@ namespace karabo {
                 }
                 if (m_runtimeSystemDescription.has(path)) {
                     Hash& tmp = m_runtimeSystemDescription.get<Hash>(path);
+                    // Note: 1) If hash contains empty Hash at "key", merging does not erase child "key.a".
+                    //          Could be a (minor?) problem if a device injected an extension of its Schema
+                    //          and later withdraws that.
+                    //       2) If hash has vector<Hash> at "key", these will be appended instead that they replace
+                    //          (except for table elements). To be checked that cannot be a problem.
+                    //       3)  We must not send dynamic attributes with 'hash' - they would erase any previously
+                    //           set attributes.
                     tmp.merge(hash);
                 } else {
                     m_runtimeSystemDescription.set(path, hash);
@@ -1209,6 +1216,10 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_signalsChangedMutex);
                 // Just book keep paths here and call 'notifyDeviceChangedMonitors'
                 // later with content from m_runtimeSystemDescription.
+                // Note:
+                // If there is path "a.b" coming, should we erase possible previous changes to daughters like
+                // "a.b.c.d"? No - that should better be handled in merging into m_runtimeSystemDescription above and
+                // then the invalid path "a.b.c.d" should be ignored 'downstream' when sending.
                 hash.getPaths(m_signalsChanged[instanceId]);
             } else {
                 // There is a tiny (!) risk here: The last loop of the corresponding thread
@@ -1468,28 +1479,7 @@ if (nodeData) {\
                 }
                 // Now collect all changed properties (including their attributes).
                 util::Hash toSend;
-                for (std::set<std::string>::const_iterator it = properties.begin(), iEnd = properties.end();
-                     it != iEnd; ++it) {
-                    const boost::optional<const util::Hash::Node&> propertyNode = config.find(*it);
-                    if (!propertyNode) {
-                        KARABO_LOG_FRAMEWORK_INFO << "sendSignalsChanged: no '" << *it << "' for " << instanceId;
-                        continue;
-                    }
-                    // Use Hash::setNode below to copy the full property with its attributes. But that uses
-                    // 'propertyNode's key, not full path => find (or even create) direct mother:
-                    util::Hash* motherNode = &toSend;
-                    const std::string::size_type posOfDot = it->find_last_of('.'); // I'd love to get '.' from Hash!
-                    if (posOfDot != std::string::npos) {
-                        // So '*it' is a path with nested keys => find or create mother.
-                        const std::string motherNodePath(*it, 0, posOfDot);
-                        if (toSend.has(motherNodePath)) {
-                            motherNode = &(toSend.get<util::Hash>(motherNodePath));
-                        } else {
-                            motherNode = toSend.bindPointer<util::Hash>(motherNodePath);
-                        }
-                    }
-                    motherNode->setNode(propertyNode.get());
-                } // end loop on changed properties
+                toSend.merge(config, Hash::REPLACE_ATTRIBUTES, properties);
                 this->notifyDeviceChangedMonitors(toSend, instanceId);
             } // end loop on instances
         }

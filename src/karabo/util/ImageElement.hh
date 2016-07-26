@@ -17,7 +17,7 @@
 
 
 #include "GenericElement.hh"
-#include "VectorElement.hh"
+#include "NDArrayElement.hh"
 #include "SimpleElement.hh"
 
 namespace karabo {

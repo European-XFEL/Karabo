@@ -435,9 +435,12 @@ namespace karabo {
              * Creates new nodes, if they do not already exists. Creates new leaves, if they do not already exist.
              * Existing leaves will be replaced by the new hash.
              * @param hash Another hash to be merged into current hash
-             * @return A self-reference after the appending process (allows object chaining)
+             * @param policy Whether to replace attributes by those merged in or to merge them
+             * @param selectedPaths If not empty, only merge these paths
+             * @param separator The separator for nested keys in selectedPaths
              */
-            void merge(const Hash& other, const MergePolicy policy = REPLACE_ATTRIBUTES);
+            void merge(const Hash& other, const MergePolicy policy = REPLACE_ATTRIBUTES,
+                       const std::set<std::string>& selectedPaths = std::set<std::string>(), char separator = '.');
 
             /**
              * Subtracts from current hash all nodes that can be found in other hash given as argument.
@@ -576,12 +579,43 @@ namespace karabo {
             template<class Visitor>
             static bool visit2(karabo::util::Hash::Node& node, Visitor& visitor);
         private:
+            /// Out of 'paths' select those that belong to child with 'childKey',
+            /// e.g. out of ["a", "b.c", "b.d.e"] return ["c", "d.e"] if childKey == "b" and separator == '.'.
+            static std::set<std::string> selectChildPaths(const std::set<std::string>& paths,
+                                                          const std::string& childKey, char separator);
 
-            void mergeAndMergeAttributes(const Hash& other);
+            /// True if the first key (separated by 'separator') of any of 'paths' matches 'key'.
+            /// A first key that contains an index also matches (indirectly) 'key' without index if index < 'size',
+            /// i.e. path "a[0].g" matches key "a" if 'size' >= 1, but not if 'size' == 0.
+            static bool keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key, char separator,
+                                             unsigned int size);
 
-            void mergeAndReplaceAttributes(const Hash& other);
+            /// For all 'paths', check whether their first key matches 'key' (as in keyIsPrefixOfAnyPath).
+            /// If it does indirectly (see keyIsPrefixOfAnyPath), append the index specified behind it to the result,
+            /// except if there is also a direct match - then the result is empty:
+            /// Paths = {a[0], b, a[2]} and key = a ==> return [0,2]
+            /// Paths = {a[0], b, a}    and key = a ==> return []
+            /// Indices >= 'targetSize' are ignored.
+            static std::set<unsigned int> selectIndicesOfKey(unsigned int targetSize, const std::set<std::string>& paths,
+                                                             const std::string& key, char separator);
 
-            Hash* setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
+            /// Merge 'attrs' to 'targetNode' according to merge 'policy'.
+            static void mergeAttributes(Hash::Node& targetNode, const Hash::Attributes& attrs, Hash::MergePolicy policy);
+
+            /// Merge two vector<Hash> nodes that represent table elements, i.e. the content of 'source' replaces
+            /// the content of 'target'. The 'selectedPaths' with their 'separator' are respected.
+            /// Note that the 'selectedPaths' are those that selected 'source' for merging, i.e. begin with
+            /// the key of 'source', possibly suffixed by indices.
+            static void mergeTableElement(const Hash::Node& source, Hash::Node& target,
+                                          const std::set<std::string>& selectedPaths, char separator);
+
+            /// Merge two ordinary vector<Hash> nodes, respecting the 'selectedPaths' with their 'separator'.
+            /// Note that the 'selectedPaths' are those that selected 'source' node for merging, i.e. begin with
+            /// the key of 'source', possibly suffixed by some indices.
+            static void mergeVectorHashNodes(const Hash::Node& source, Hash::Node& target, Hash::MergePolicy policy,
+                                             const std::set<std::string>& selectedPaths, char separator);
+
+            Hash * setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
 
             Hash& getLastHash(const std::string& path, std::string& last_key, const char separator = '.');
             const Hash& getLastHash(const std::string& path, std::string& last_key, const char separator = '.') const;

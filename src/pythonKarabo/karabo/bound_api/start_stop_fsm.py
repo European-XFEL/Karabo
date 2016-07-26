@@ -4,8 +4,10 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 10, 2013 2:35:08 PM$"
 
-import karabo.bound_api.base_fsm as base
 from karathon import SLOT_ELEMENT
+
+import karabo.bound_api.base_fsm as base
+from karabo.common.states import State
 from .decorators import KARABO_CLASSINFO
 from .fsm import (
     KARABO_FSM_ACTION0, KARABO_FSM_ACTION2,
@@ -22,17 +24,17 @@ class StartStopFsm(base.BaseFsm):
         
         e = SLOT_ELEMENT(expected).key("start")
         e.displayedName("Start").description("Instructs device to go to started state")
-        e.allowedStates("Ok.Stopped")
+        e.allowedStates(State.STOPPED)
         e.commit()
 
         e = SLOT_ELEMENT(expected).key("stop")
         e.displayedName("Stop").description("Instructs device to go to stopped state")
-        e.allowedStates("Ok.Started")
+        e.allowedStates(State.STARTED)
         e.commit()
 
         e = SLOT_ELEMENT(expected).key("reset")
         e.displayedName("Reset").description("Resets the device in case of an error")
-        e.allowedStates("Error")
+        e.allowedStates(State.ERROR)
         e.commit()
 
     def __init__(self, configuration):
@@ -49,10 +51,14 @@ class StartStopFsm(base.BaseFsm):
         #**************************************************************
         #*                        States                              *
         #**************************************************************
-        KARABO_FSM_STATE_EE('Error',   self.errorStateOnEntry,   self.errorStateOnExit)
-        KARABO_FSM_STATE_EE('Initialization', self.initializationStateOnEntry, self.initializationStateOnExit)
-        KARABO_FSM_STATE_EE('Started', self.startedStateOnEntry, self.startedStateOnExit)
-        KARABO_FSM_STATE_EE('Stopped', self.stoppedStateOnEntry, self.stoppedStateOnExit)
+        KARABO_FSM_STATE_EE(State.ERROR, self.errorStateOnEntry,
+                            self.errorStateOnExit)
+        KARABO_FSM_STATE_EE(State.INIT, self.initializationStateOnEntry,
+                            self.initializationStateOnExit)
+        KARABO_FSM_STATE_EE(State.STARTED, self.startedStateOnEntry,
+                            self.startedStateOnExit)
+        KARABO_FSM_STATE_EE(State.STOPPED, self.stoppedStateOnEntry,
+                            self.stoppedStateOnExit)
 
         #**************************************************************
         #*                    Transition Actions                      *
@@ -68,27 +74,26 @@ class StartStopFsm(base.BaseFsm):
         #**************************************************************
 
         okStateTransitionTable = [
-        # Source-State      Event    Target-State    Action     Guard
-            ('Stopped', 'StartEvent', 'Started', 'StartAction', 'none'),
-            ('Started', 'StopEvent',  'Stopped', 'StopAction',  'none')
-        ]
+            (State.STOPPED, 'StartEvent', State.STARTED,
+                'StartAction', 'none'),
+            (State.STARTED, 'StopEvent', State.STOPPED,
+                'StopAction',  'none')]
 
-        #                        Name     Transition-Table   Initial-State
-        KARABO_FSM_STATE_MACHINE('Ok', okStateTransitionTable, 'Stopped')
+        KARABO_FSM_STATE_MACHINE(State.NORMAL, okStateTransitionTable,
+                                 State.STOPPED)
 
         #**************************************************************
         #*                      Top Machine                           *
         #**************************************************************
 
-        #  Source-State    Event     Target-State  Action          Guard
         startStopMachineTransitionTable = [
-            ('Initialization', 'none', 'Ok',   'none',             'none'),
-            ('Ok', 'ErrorFoundEvent', 'Error', 'ErrorFoundAction', 'none'),
-            ('Error', 'ResetEvent',    'Ok',   'none',             'none')
-        ]
+            (State.INIT, 'none', State.NORMAL, 'none', 'none'),
+            (State.NORMAL, 'ErrorFoundEvent', State.ERROR,
+                'ErrorFoundAction', 'none'),
+            (State.ERROR, 'ResetEvent', State.NORMAL, 'none', 'none')]
 
-        #                               Name                Transition-Table           Initial-State
-        KARABO_FSM_STATE_MACHINE('StartStopMachine', startStopMachineTransitionTable, 'Initialization')
+        KARABO_FSM_STATE_MACHINE('StartStopMachine',
+                                 startStopMachineTransitionTable, State.INIT)
         self.fsm = KARABO_FSM_CREATE_MACHINE('StartStopMachine')
     
     def getFsm(self):
@@ -140,4 +145,3 @@ class StartStopFsm(base.BaseFsm):
         
     def resetAction(self):
         print("Reset action executed")
-        

@@ -1,9 +1,9 @@
 from __future__ import absolute_import, unicode_literals
 
-from asyncio import (AbstractEventLoop, CancelledError, coroutine, gather,
-                     Future, get_event_loop, iscoroutinefunction, Queue,
-                     set_event_loop, SelectorEventLoop, sleep, Task,
-                     TimeoutError)
+from asyncio import (
+    AbstractEventLoop, async, CancelledError, coroutine, gather, Future,
+    get_event_loop, iscoroutinefunction, Queue, set_event_loop,
+    SelectorEventLoop, sleep, Task, TimeoutError)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 from functools import wraps
@@ -13,6 +13,7 @@ import logging
 import os
 import queue
 import socket
+import time
 import threading
 import weakref
 
@@ -61,7 +62,6 @@ class Broker:
         m.properties = p
         self.hbproducer.send(m, 1, 4, 100000)
 
-    @coroutine
     def notify_network(self, info):
         """notify the network that we are alive
 
@@ -72,14 +72,18 @@ class Broker:
         self.info = info
         self.emit('call', {'*': ['slotInstanceNew']},
                   self.deviceId, self.info)
-        try:
-            while True:
-                interval = self.info["heartbeatInterval"]
-                self.heartbeat(interval)
-                yield from sleep(interval)
-        finally:
-            self.emit('call', {'*': ['slotInstanceGone']},
-                      self.deviceId, self.info)
+
+        @coroutine
+        def heartbeat():
+            try:
+                while True:
+                    interval = self.info["heartbeatInterval"]
+                    self.heartbeat(interval)
+                    yield from sleep(interval)
+            finally:
+                self.emit('call', {'*': ['slotInstanceGone']},
+                          self.deviceId, self.info)
+        async(heartbeat())
 
     def call(self, signal, targets, reply, args):
         p = openmq.Properties()
@@ -98,6 +102,15 @@ class Broker:
         p['hostname'] = socket.gethostname()
         p['classId'] = self.classId
         self.send(p, args)
+
+    @coroutine
+    def request(self, device, target, *args):
+        reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
+        self.call("call", {device: [target]}, reply, args)
+        future = Future(loop=self.loop)
+        self.repliers[reply] = future
+        future.add_done_callback(lambda _: self.repliers.pop(reply))
+        return (yield from future)
 
     def log(self, message):
         p = openmq.Properties()

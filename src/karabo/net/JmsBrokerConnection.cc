@@ -12,7 +12,7 @@
 #include "JmsBrokerConnection.hh"
 #include "karabo/log/Logger.hh"
 #include <karabo/util/SimpleElement.hh>
-#include <karabo/util/VectorElement.hh>
+#include <karabo/util/NDArrayElement.hh>
 
 using namespace std;
 using namespace karabo::util;

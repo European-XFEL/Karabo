@@ -32,6 +32,7 @@
 
 #include "Types.hh"
 #include "Exception.hh"
+#include "State.hh"
 
 namespace karabo {
     namespace util {
@@ -198,6 +199,10 @@ namespace karabo {
             }
             s << "}";
             return s.str();
+        }
+
+        inline std::string toString(const karabo::util::State& value) {
+            return value.name();
         }
 
         template <class T>

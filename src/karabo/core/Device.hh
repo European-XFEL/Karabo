@@ -25,8 +25,10 @@
 
 #include "coredll.hh"
 
+#include <karabo/util/State.hh>
 #include "NoFsm.hh"
 #include "DeviceClient.hh"
+
 
 
 /**
@@ -206,7 +208,7 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("state")
                         .displayedName("State")
                         .description("The current state the device is in")
-                        .readOnly().initialValue("Ok")
+                        .readOnly().initialValue(State::UNKNOWN.name())
                         .commit();
 
                 STRING_ELEMENT(expected).key("alarmCondition")
@@ -310,7 +312,6 @@ namespace karabo {
 
                 // Setup device logger
                 m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + instanceId
-
 
 
             }
@@ -465,7 +466,9 @@ namespace karabo {
                 karabo::util::Hash validated;
                 std::pair<bool, std::string> result;
 
+
                 const bool hadPreviousAlarm = m_validatorIntern.hasParametersInWarnOrAlarm();
+
 
                 result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
 
@@ -480,6 +483,7 @@ namespace karabo {
                     Hash::Attributes& attributes = node.getAttributes();
                     timestamp.toHashAttributes(attributes);
                 }
+
 
                 if (!validated.empty()) {
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
@@ -560,8 +564,6 @@ namespace karabo {
             T get(const std::string& key, const T& var = T()) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
-                    //if (karabo::util::Types::from(var) == karabo::util::Types::VECTOR_HASH && m_parameters.hasAttribute(key, KARABO_SCHEMA_ROW_SCHEMA))
-                    //    return reinterpret_cast<const T&> (getVectorHashRow(key)); //will only be reached if T is actually a vector<Hash>
                     return m_parameters.get<T>(key);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
@@ -793,9 +795,13 @@ namespace karabo {
                 return m_serverId;
             }
 
-            // This function will polymorphically be called by the FSM template
+            const karabo::util::State & getState() {
+                return karabo::util::State::fromString(this->get<std::string>("state"));
+            }
 
-            virtual void updateState(const std::string& currentState) { // private
+        private:
+
+            void updateState(const std::string& currentState) { // private
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
                 if (get<std::string>("state") != currentState) {
                     set("state", currentState);
@@ -810,6 +816,19 @@ namespace karabo {
                 }
                 // Reply new state to interested event initiators
                 reply(currentState);
+            }
+
+        public:
+
+            // This function will polymorphically be called by the FSM template
+
+            void updateState(const karabo::util::State& cs) {
+                try {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "updateState(state): \"" << cs.name() << "\".";
+                    this->updateState(cs.name());
+                } catch (const karabo::util::Exception& e) {
+                    KARABO_RETHROW
+                }
             }
 
             KARABO_DEPRECATED virtual void onStateUpdate(const std::string& currentState) {
@@ -886,6 +905,7 @@ namespace karabo {
             }
 
             void setAlarmCondition(const karabo::util::AlarmCondition & condition) {
+
                 using namespace karabo::util;
 
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
@@ -1116,7 +1136,8 @@ namespace karabo {
             }
 
             bool slotCallGuard(const std::string& slotName) {
-                std::vector<std::string> allowedStates;
+                using namespace karabo::util;
+                std::vector<State> allowedStates;
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     if (m_fullSchema.has(slotName) && m_fullSchema.hasAllowedStates(slotName)) {
@@ -1124,11 +1145,11 @@ namespace karabo {
                     }
                 }
                 if (!allowedStates.empty()) {
-                    const std::string& currentState = get<std::string > ("state");
+                    const State& currentState = getState();
                     if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
                         std::ostringstream msg;
                         msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state "
-                                << "\"" << currentState << "\" of device " << "\"" << m_deviceId << "\".";
+                                << "\"" << currentState.name() << "\" of device " << "\"" << m_deviceId << "\".";
                         std::string errorMessage = msg.str();
                         reply(errorMessage);
                         return false;
@@ -1303,6 +1324,7 @@ namespace karabo {
                 }
                 return std::make_pair<bool, const AlarmCondition > (false, AlarmCondition::NONE);
             }
+
 
 
 

@@ -24,33 +24,34 @@ namespace karabo {
                 using namespace karabo::xms;
                 using namespace karabo::util;
 
+                
                 OVERWRITE_ELEMENT(expected).key("state")
-                        .setNewOptions("Initializing,HardwareError,Acquiring,Ready")
-                        .setNewDefaultValue("Initializing")
+                        .setNewOptions(State::INIT, State::ERROR, State::ACQUIRING, State::ACTIVE)
+                        .setNewDefaultValue(State::INIT)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("acquire")
                         .displayedName("Acquire")
                         .description("Instructs camera to go into acquisition state")
-                        .allowedStates("Ready")
+                        .allowedStates(State::ACTIVE)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("trigger")
                         .displayedName("Trigger")
                         .description("Sends a software trigger to the camera")
-                        .allowedStates("Acquiring")
+                        .allowedStates(State::ACQUIRING)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("stop")
                         .displayedName("Stop")
                         .description("Instructs camera to stop current acquisition")
-                        .allowedStates("Acquiring")
+                        .allowedStates(State::ACQUIRING)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("resetHardware")
                         .displayedName("Reset")
                         .description("Resets the camera in case of an error")
-                        .allowedStates("HardwareError")
+                        .allowedStates(State::ERROR)
                         .commit();
 
                 Schema data;
@@ -81,7 +82,7 @@ namespace karabo {
                         .description("Save images while acquiring.")
                         .assignmentOptional().defaultValue(false)
                         .reconfigurable()
-                        .allowedStates("Ready")
+                        .allowedStates(State::ACTIVE)
                         .commit();
 
                 PATH_ELEMENT(expected).key("imageStorage.filePath")
@@ -90,7 +91,7 @@ namespace karabo {
                         .isDirectory()
                         .assignmentOptional().defaultValue("/tmp")
                         .reconfigurable()
-                        .allowedStates("Ready")
+                        .allowedStates(State::ACTIVE)
                         .commit();
 
                 STRING_ELEMENT(expected).key("imageStorage.fileName")
@@ -98,7 +99,7 @@ namespace karabo {
                         .description("The name for saving images to file")
                         .assignmentOptional().defaultValue("image")
                         .reconfigurable()
-                        .allowedStates("Ready")
+                        .allowedStates(State::ACTIVE)
                         .commit();
 
                 STRING_ELEMENT(expected).key("imageStorage.fileType")
@@ -107,7 +108,7 @@ namespace karabo {
                         .assignmentOptional().defaultValue("tif")
                         .options("tif jpg png")
                         .reconfigurable()
-                        .allowedStates("Ready")
+                        .allowedStates(State::ACTIVE)
                         .commit();
 
                 STRING_ELEMENT(expected).key("imageStorage.lastSaved")
@@ -123,7 +124,7 @@ namespace karabo {
                         .minInc(1)
                         .assignmentOptional().defaultValue(10)
                         .reconfigurable()
-                        .allowedStates("HardwareError,Acquiring,Ready")
+                        .allowedStates(State::ERROR, State::ACTIVE, State::ACQUIRING)
                         .commit();
 
             }

@@ -306,11 +306,12 @@ void Schema_Test::testGetDefaultValue() {
 
 
 void Schema_Test::testGetAllowedStates() {
-    vector<string> allowedStates = m_schema.getAllowedStates("exampleKey3");
-    CPPUNIT_ASSERT(allowedStates[0] == "AllOk.Started");
-    CPPUNIT_ASSERT(allowedStates[1] == "AllOk.Stopped");
-    CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[2] == "AllOk.Run.On");
-    CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[3] == "NewState");
+
+    vector<State> allowedStates = m_schema.getAllowedStates("exampleKey3");
+    CPPUNIT_ASSERT(allowedStates[0] == State::COOLED);
+    CPPUNIT_ASSERT(allowedStates[1] == State::ACTIVE);
+    CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[2] == State::DISABLED);
+    CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[3] == State::KNOWN);
 }
 
 
@@ -505,14 +506,15 @@ void Schema_Test::testSlotElement() {
     OtherSchemaElements::expectedParameters(sch);
 
     CPPUNIT_ASSERT(sch.getDescription("slotTest") == "Test slot element");
-    CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[0] == "Started");
-    CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[2] == "Reset");
+    CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[0] == State::STARTED);
+    CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[2] == State::ERROR);
     CPPUNIT_ASSERT(sch.isCommand("slotTest") == true);
     CPPUNIT_ASSERT(sch.isProperty("slotTest") == false);
 }
 
 
 void Schema_Test::testVectorElements() {
+
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
 
@@ -577,11 +579,56 @@ void Schema_Test::testVectorElements() {
     CPPUNIT_ASSERT(sch.getTags("vecBool")[0] == "h/w");
     CPPUNIT_ASSERT(sch.getTags("vecBool")[1] == "d.m.y");
 
-    vector<string> allowedStates = sch.getAllowedStates("vecBool");
-    CPPUNIT_ASSERT(allowedStates[0] == "AllOk.Started");
-    CPPUNIT_ASSERT(allowedStates[1] == "AllOk.Stopped");
+    vector<State> allowedStates = sch.getAllowedStates("vecBool");
+    CPPUNIT_ASSERT(allowedStates[0] == State::STARTED);
+    CPPUNIT_ASSERT(allowedStates[1] == State::STOPPED);
 }
 
+void Schema_Test::testArrayElements() {
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(sch);
+
+    CPPUNIT_ASSERT(sch.getValueType("arrBool") == Types::VECTOR_BOOL);
+    CPPUNIT_ASSERT(sch.getValueType("arrInt8") == Types::VECTOR_INT8);
+    CPPUNIT_ASSERT(sch.getValueType("arrUInt16") == Types::VECTOR_UINT16);
+    CPPUNIT_ASSERT(sch.getValueType("arrFloat") == Types::VECTOR_FLOAT);
+    CPPUNIT_ASSERT(sch.getValueType("arrDouble") == Types::VECTOR_DOUBLE);
+    CPPUNIT_ASSERT(sch.getValueType("arrUndefined") == Types::VECTOR_FLOAT);
+
+    std::vector<long long> shapeVec;
+    shapeVec.push_back(3);
+    shapeVec.push_back(2);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrBool") == shapeVec);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrInt8") == shapeVec);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrUInt16") == shapeVec);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrFloat") == shapeVec);
+    shapeVec.push_back(-1);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrDouble") == shapeVec);
+
+    std::vector<long long> undefShapeVec;
+    undefShapeVec.push_back(-1);
+    undefShapeVec.push_back(3);
+    undefShapeVec.push_back(-1);
+    CPPUNIT_ASSERT(sch.getArrayShape("arrUndefined") == undefShapeVec);
+
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrBool") == true);
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrInt8") == false);
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrUInt16") == true);
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrFloat") == true);
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrDouble") == true);
+
+    std::vector<bool> arrBool(6, true);
+    vector<bool> defArrBool = sch.getDefaultValue<vector<bool> >("arrBool");
+    CPPUNIT_ASSERT(defArrBool == arrBool);
+
+    std::vector<signed char> arrInt(6, 42);
+    vector<signed char> defArrInt = sch.getDefaultValue<vector<signed char> >("arrInt8");
+    CPPUNIT_ASSERT(defArrInt == arrInt);
+
+    std::vector<float> arrFloat(6, 4.2);
+    vector<float> defArrFloat = sch.getDefaultValue<vector<float> >("arrFloat");
+    CPPUNIT_ASSERT(defArrFloat == arrFloat);
+}
 
 void Schema_Test::testPathElement() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));

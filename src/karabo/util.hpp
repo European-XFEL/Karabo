@@ -2,7 +2,7 @@
  * $Id$
  *
  * Author: <irina.kozlova@xfel.eu>
- * 
+ *
  * Created on December 21, 2011, 11:12 AM
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
@@ -24,8 +24,9 @@
 #include "util/OverwriteElement.hh"
 #include "util/PathElement.hh"
 #include "util/SimpleElement.hh"
-#include "util/VectorElement.hh"
+#include "util/NDArrayElement.hh"
 #include "util/ImageElement.hh"
+#include "util/TableElement.hh"
 #include "util/StringTools.hh"
 #include "util/Base64.hh"
 #include "util/ByteSwap.hh"
@@ -42,6 +43,8 @@
 #include "util/TimeProfiler.hh"
 #include "util/karaboDll.hh"
 #include "util/Version.hh"
+#include "util/State.hh"
+#include "util/StateSignifier.hh"
 
 #endif
 

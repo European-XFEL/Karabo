@@ -143,7 +143,7 @@ class Layout(Loadable):
                 s.translate(rect.topLeft() - self.lastTopLeft)
         self.lastTopLeft = rect.topLeft()
 
-    def edit(self):
+    def edit(self, scene_view):
         pass
 
 
