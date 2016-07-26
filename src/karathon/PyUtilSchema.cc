@@ -1419,13 +1419,13 @@ namespace schemawrap {
         return schema.getInfoForAlarm(path, karabo::util::AlarmCondition::fromString(conditionName));
     }
 
-     void setAllowedStates(Schema& self, const std::string & path, const bp::tuple & args){
-        std::vector<karabo::util::State> states;
-        for(unsigned int i = 0; i < bp::len(args); ++i){
-            const std::string state = bp::extract<std::string>(args[i].attr("name"));
-            states.push_back(karabo::util::State::fromString(state));
-        }
-        return self.setAllowedStates(path, states);
+    void setAllowedStates(Schema& self, const std::string & path, const bp::tuple & args){
+       std::vector<karabo::util::State> states;
+       for(unsigned int i = 0; i < bp::len(args); ++i){
+           const std::string state = bp::extract<std::string>(args[i].attr("name"));
+           states.push_back(karabo::util::State::fromString(state));
+       }
+       return self.setAllowedStates(path, states);
     }
             
 
