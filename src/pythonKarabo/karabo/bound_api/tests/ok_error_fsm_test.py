@@ -4,7 +4,7 @@
 
 import unittest
 
-from karabo.bound import OkErrorFsm
+from karabo.bound import OkErrorFsm, State
 
 
 class OkErrorUser(OkErrorFsm):
@@ -47,14 +47,14 @@ class  Ok_error_fsm_TestCase(unittest.TestCase):
         #self.fail("TODO: Write test")
         fsm = self.okerr.fsm
         fsm.start()
-        self.assertEqual(fsm.get_state(), "Ok", "Assert failed")
+        self.assertIs(fsm.get_state(), State.NORMAL)
         print ("*** State 'Ok' reached")
         self.okerr.errorFound("user error message", "detailed error message")
-        self.assertEqual(fsm.get_state(), "Error", "Assert failed")
+        self.assertEqual(fsm.get_state(), State.ERROR, "Assert failed")
         print ("*** State 'Error' reached")
         self.okerr.reset()
         print ("*** State 'Ok' reached")
-        self.assertEqual(fsm.get_state(), "Ok", "Assert failed")
+        self.assertEqual(fsm.get_state(), State.NORMAL, "Assert failed")
         
 
 if __name__ == '__main__':

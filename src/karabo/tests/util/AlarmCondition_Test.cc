@@ -46,6 +46,7 @@ void AlarmCondition_Test::testStringAssignmentRoundTrip() {
 
 
 void AlarmCondition_Test::testSignificanceEvaluation() {
+    
     std::vector<karabo::util::AlarmCondition> v;
     karabo::util::AlarmCondition ms = karabo::util::AlarmCondition::returnMostSignificant(v);
     CPPUNIT_ASSERT(ms.isSameCriticality(karabo::util::AlarmCondition::NONE));

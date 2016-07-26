@@ -23,6 +23,8 @@ from karathon import (
     Hash, Logger, Priority, Schema, SignalSlotable,
     loadFromFile, saveToFile
 )
+
+from karabo.common.states import State
 from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .device import PythonDevice
@@ -205,8 +207,8 @@ class DeviceServer(object):
         # *                        States                              *
         # **************************************************************
 
-        KARABO_FSM_STATE_E('Ok', self.okStateOnEntry)
-        KARABO_FSM_STATE('Error')
+        KARABO_FSM_STATE_E(State.NORMAL, self.okStateOnEntry)
+        KARABO_FSM_STATE(State.ERROR)
 
         # **************************************************************
         # *                    Transition Actions                      *
@@ -214,14 +216,16 @@ class DeviceServer(object):
 
         KARABO_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
         KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
-                    
-        DeviceServerMachineSTT=[
-                                ('Ok', 'ErrorFoundEvent', 'Error', 'ErrorFoundAction', 'none'),
-                                ('Error', 'ResetEvent',   'Ok',    'none',   'none')
-                               ]
-        
-        KARABO_FSM_STATE_MACHINE('DeviceServerMachine', DeviceServerMachineSTT, 'Ok')
-        
+
+        deviceServerMachineSTT = [
+            (State.NORMAL, 'ErrorFoundEvent', State.ERROR,
+                'ErrorFoundAction', 'none'),
+            (State.ERROR, 'ResetEvent', State.NORMAL,
+                'none', 'none')]
+
+        KARABO_FSM_STATE_MACHINE('DeviceServerMachine', deviceServerMachineSTT,
+                                 State.NORMAL)
+
         return KARABO_FSM_CREATE_MACHINE('DeviceServerMachine')
         
     def signal_handler(self, signum, frame):

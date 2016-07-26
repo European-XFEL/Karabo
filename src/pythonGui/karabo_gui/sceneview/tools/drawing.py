@@ -119,8 +119,8 @@ class SceneLinkTool(BaseSceneTool):
         """ A callback which is fired whenever the user ends a mouse click
         in the SceneView.
         """
-        # XXX: We need access to the project here to get a list of scenes
-        scenes = []
+        project_handler = scene_view.project_handler
+        scenes = project_handler.get_scene_names()
         dialog = SceneLinkDialog(scenes, "", parent=scene_view)
         result = dialog.exec_()
         if result == QDialog.Accepted:

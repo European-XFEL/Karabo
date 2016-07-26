@@ -34,7 +34,7 @@ namespace karabo {
 
             KARABO_DEPRECATED virtual void onStateUpdate(const std::string& currentState) = 0;
 
-            virtual void updateState(const std::string& state) = 0;
+            virtual void updateState(const karabo::util::State& state) = 0;
 
             KARABO_FSM_ON_CURRENT_STATE_CHANGE(updateState);
 
