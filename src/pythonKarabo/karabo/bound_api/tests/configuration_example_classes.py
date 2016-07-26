@@ -65,6 +65,9 @@ class Circle(Shape):
          .commit(),
         STRING_ELEMENT(expected).key("state")
         .readOnly()
+        .commit(),
+        STRING_ELEMENT(expected).key("status")
+        .readOnly()
         .commit()
         )
         
@@ -94,6 +97,11 @@ class EditableCircle(Circle):
          .setNewOptions(State.INIT, State.ERROR, State.NORMAL)
          .setNewDefaultValue(State.INIT)
          .commit(),
+        OVERWRITE_ELEMENT(expected)
+         .key("status")
+         .setNewOptions("a,b,c")
+         .setNewDefaultValue("a")
+         .commit()
          )
         
     def draw(self):
