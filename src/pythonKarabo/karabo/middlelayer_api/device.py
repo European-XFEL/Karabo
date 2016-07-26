@@ -133,8 +133,8 @@ class Device(SignalSlotable):
         try:
             yield from super().slotReconfigure(reconfiguration)
         except KaraboError as e:
-            self.logger.exception("Failed to set property")
-            return False, str(e)
+            self.logger.warn(e.args[0])
+            return False, e.args[0]
         self.signalChanged(self.configurationAsHash(), self.deviceId)
         return True, ""
 
