@@ -328,8 +328,14 @@ void exportPyUtilHash() {
     h.def("getType", &HashWrap().getType, (bp::arg("path"), bp::arg("sep") = "."),
           "Get type by 'path'.  Returns 'Types.<value>' object.\n"
           "Example:\n\th = Hash('a.b.c', True)\n\tprint h.getType('a.b.c')");
-    h.def("merge", &Hash::merge, (bp::arg("hash")),
-          "h.merge(h2) <==> h += h2  :  merging 'h2' into 'h'");
+    h.def("merge", &HashWrap().merge,
+          (bp::arg("hash"), bp::arg("policy") = Hash::REPLACE_ATTRIBUTES,
+           bp::arg("selectedPaths") = bp::object(), bp::arg("sep") = "."),
+          "h.merge(h2) <==> h += h2  :  merging 'h2' into 'h'.\n\nBut merge allows to specify more details:\n"
+          "policy:        REPLACE_ATTRIBUTES or MERGE_ATTRIBUTES\n"
+          "selectedPaths: an iterable of paths to in h2 to select\n"
+          "               (None means to select all)\n"
+          "sep:           single letter between keys in paths of nested Hash");
     //    h.def("__add__", &Hash::operator+, (bp::arg("hash1"), bp::arg("hash2")), bp::return_value_policy<copy_non_const_reference>());
     h.def("__iadd__", &Hash::operator+=, (bp::arg("hash")), bp::return_internal_reference<>(),
           "This form of merging is preferable.\nExample:\n"

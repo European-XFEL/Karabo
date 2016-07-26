@@ -182,6 +182,12 @@ namespace karathon {
                       const bp::object& attributes,
                       const std::string& separator = ".");
 
+        static void
+        merge(karabo::util::Hash& self, const karabo::util::Hash& other,
+              const karabo::util::Hash::MergePolicy policy,
+              const bp::object& selectedPaths,
+              const std::string& separator);
+
         static boost::shared_ptr<karabo::util::Hash::Node>
         find(karabo::util::Hash& self, const std::string& path,
              const std::string& separator = ".");
