@@ -15,8 +15,10 @@ from .fsm import (
     KARABO_FSM_STATE, KARABO_FSM_STATE_E, KARABO_FSM_STATE_EE,
     KARABO_FSM_INTERRUPT_STATE, KARABO_FSM_EVENT0, KARABO_FSM_EVENT2,
     KARABO_FSM_ACTION0, KARABO_FSM_ACTION2, KARABO_FSM_GUARD0,
-    KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE
+    KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE, State
 )
+
+
 
 
 @KARABO_CLASSINFO("ComputeFsm", "1.0")
@@ -28,38 +30,38 @@ class ComputeFsm(base.BaseFsm):
         SLOT_ELEMENT(expected).key("start")
                 .displayedName("Compute")
                 .description("Starts computing if data is available")
-                .allowedStates("Ok:Ready")
+                .allowedStates(State.PASSIVE)
                 .commit()
                 ,
         SLOT_ELEMENT(expected).key("pause")
                 .displayedName("Pause")
                 .description("Will finish current computation and pause")
-                .allowedStates("Ok:Ready")
+                .allowedStates(State.PASSIVE)
                 .commit()
                 ,
         SLOT_ELEMENT(expected).key("abort")
                 .displayedName("Abort")
                 .description("Abort contribution to this run, fully disconnect")
-                .allowedStates("Ok:Ready Ok:Computing Ok:WaitingIO Ok:Paused")
+                .allowedStates(State.PASSIVE, State.ACTIVE, State.IDLE, State.STOPPED)
                 .commit()
                 ,
         SLOT_ELEMENT(expected).key("endOfStream")
                 .displayedName("End-Of-Stream")
                 .description("Completely reset this device")
-                .allowedStates("Ok:Ready")
+                .allowedStates(State.PASSIVE)
                 .commit()
                 ,
         SLOT_ELEMENT(expected).key("reset")
                 .displayedName("Reset")
                 .description("Completely reset this device")
-                .allowedStates("Error:Ready Error:Computing Error:WaitingIO Ok:Finished Ok:Aborted")
+                .allowedStates(State.UNKNOWN, State.ACTIVE, State.IDLE, State.STOPPED, State.DISABLED, State.DONE)
                 .commit()
                 ,
         )
-        
+
     def __init__(self, configuration):
         super(ComputeFsm, self).__init__(configuration)
-        
+
         #**************************************************************
         #*                        Events                              *
         #**************************************************************
@@ -75,15 +77,15 @@ class ComputeFsm(base.BaseFsm):
         #**************************************************************
         #*                        States                              *
         #**************************************************************
-        KARABO_FSM_STATE   ('Ok')
-        KARABO_FSM_INTERRUPT_STATE('Error', 'ResetEvent')
-        KARABO_FSM_STATE   ('ConnectingIO')
-        KARABO_FSM_STATE_E ('Ready',     self.readyStateOnEntry)
-        KARABO_FSM_STATE_EE('Computing', self.computingStateOnEntry, self.computingStateOnExit)
-        KARABO_FSM_STATE_EE('WaitingIO', self.waitingIOOnEntry,      self.waitingIOOnExit)
-        KARABO_FSM_STATE   ('Paused')
-        KARABO_FSM_STATE_EE('Finished',  self.finishedOnEntry,       self.finishedOnExit)
-        KARABO_FSM_STATE_E ('Aborted',   self.abortedOnEntry)
+        KARABO_FSM_STATE   (State.NORMAL)
+        KARABO_FSM_INTERRUPT_STATE(State.UNKNOWN, 'ResetEvent')
+        KARABO_FSM_STATE   (State.INIT)
+        KARABO_FSM_STATE_E (State.PASSIVE,     self.readyStateOnEntry)
+        KARABO_FSM_STATE_EE(State.ACTIVE, self.computingStateOnEntry, self.computingStateOnExit)
+        KARABO_FSM_STATE_EE(State.IDLE, self.waitingIOOnEntry,      self.waitingIOOnExit)
+        KARABO_FSM_STATE   (State.STOPPED)
+        KARABO_FSM_STATE_EE(State.DONE,  self.finishedOnEntry,       self.finishedOnExit)
+        KARABO_FSM_STATE_E (State.DISABLED,   self.abortedOnEntry)
 
         #**************************************************************
         #*                    Transition Actions                      *
@@ -100,31 +102,31 @@ class ComputeFsm(base.BaseFsm):
         KARABO_FSM_GUARD0('CanCompute', self.canCompute)
         KARABO_FSM_GUARD0('AbortGuard', self.registerAbort)
         KARABO_FSM_GUARD0('PauseGuard', self.registerPause)
-        
+
         #**************************************************************
         #*                    State Machine                           *
         #**************************************************************
         onSTT = [
         # Source-State        Event              Target-State    Action             Guard
-            ('ConnectingIO', 'none',             'Ready',     'ConnectAction',      'none'),
-            ('Ready',        'StartEvent',       'Computing', 'none',               'CanCompute'),
-            ('Ready',        'PauseEvent',       'Paused',    'none',               'none'),
-            ('Ready',        'AbortEvent',       'Aborted',   'none',               'none'),
-            ('Ready',        'EndOfStreamEvent', 'Finished',  'EndOfStreamAction',  'none'),
-            ('Paused',       'ResetEvent',       'Ready',     'none',               'CanCompute'),
-            ('Computing','ComputeFinishedEvent', 'WaitingIO', 'none',               'none'),
-            ('Computing',    'AbortEvent',       'Aborted',   'none',               'AbortGuard'),
-            ('Computing',    'PauseEvent',       'Paused',    'none',               'PauseGuard'),
-            ('WaitingIO',    'UpdatedIOEvent',   'Ready',     'none',               'none'),
-            ('Aborted',      'ResetEvent',       'Ready',     'none',               'none'),
-            ('Finished',     'ResetEvent',       'Ready',     'none',               'none'),
-            ('Finished',     'StartEvent',       'Computing', 'NextIterationAction','none'),
-            ('Ok',           'ErrorFoundEvent',  'Error',     'ErrorFoundAction',   'none'),
-            ('Error',        'ResetEvent',       'Ok',        'none',               'none')
+            (State.INIT, 'none',             State.PASSIVE,     'ConnectAction',      'none'),
+            (State.PASSIVE,        'StartEvent',       State.ACTIVE, 'none',               'CanCompute'),
+            (State.PASSIVE,        'PauseEvent',       State.STOPPED,    'none',               'none'),
+            (State.PASSIVE,        'AbortEvent',       State.DISABLED,   'none',               'none'),
+            (State.PASSIVE,        'EndOfStreamEvent', State.DONE,  'EndOfStreamAction',  'none'),
+            (State.STOPPED,       'ResetEvent',       State.PASSIVE,     'none',               'CanCompute'),
+            (State.ACTIVE,'ComputeFinishedEvent', State.IDLE, 'none',               'none'),
+            (State.ACTIVE,    'AbortEvent',       State.DISABLED,   'none',               'AbortGuard'),
+            (State.ACTIVE,    'PauseEvent',       State.STOPPED,    'none',               'PauseGuard'),
+            (State.IDLE,    'UpdatedIOEvent',   State.PASSIVE,     'none',               'none'),
+            (State.DISABLED,      'ResetEvent',       State.PASSIVE,     'none',               'none'),
+            (State.DONE,     'ResetEvent',       State.PASSIVE,     'none',               'none'),
+            (State.DONE,     'StartEvent',       State.ACTIVE, 'NextIterationAction','none'),
+            (State.NORMAL,           'ErrorFoundEvent',  State.UNKNOWN,     'ErrorFoundAction',   'none'),
+            (State.UNKNOWN,        'ResetEvent',       State.NORMAL,        'none',               'none')
         ]
 
         #                        Name     Transition-Table   Initial-State
-        KARABO_FSM_STATE_MACHINE('StateMachine', onSTT, ('Ok', 'ConnectingIO'))
+        KARABO_FSM_STATE_MACHINE('StateMachine', onSTT, (State.NORMAL, State.INIT))
         self.fsm = KARABO_FSM_CREATE_MACHINE('StateMachine')
     
     def getFsm(self):

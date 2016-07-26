@@ -6,6 +6,7 @@ from karathon import (
     STRING_ELEMENT, INT32_ELEMENT, Schema, SignalSlotable, Unit)
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .no_fsm import NoFsm
+from karabo.common.states import State
 
 __author__ = "esenov"
 __date__ = "$Apr 22, 2015 4:14:47 PM$"
@@ -19,32 +20,32 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
     def expectedParameters(expected):
         (
         OVERWRITE_ELEMENT(expected).key("state")
-                .setNewOptions("Initializing,HardwareError,Acquiring,Ready,Changing...")
-                .setNewDefaultValue("Initializing")
+                .setNewOptions(State.INIT, State.ERROR, State.ACQUIRING, State.READY, State.CHANGING, State.ACTIVE)
+                .setNewDefaultValue(State.INIT)
                 .commit(),
 
         SLOT_ELEMENT(expected).key("acquire")
                 .displayedName("Acquire")
                 .description("Instructs camera to go into acquisition state")
-                .allowedStates("Ready")
+                .allowedStates(State.ACTIVE)
                 .commit(),
 
         SLOT_ELEMENT(expected).key("trigger")
                 .displayedName("Trigger")
                 .description("Sends a software trigger to the camera")
-                .allowedStates("Acquiring")
+                .allowedStates(State.ACQUIRING)
                 .commit(),
 
         SLOT_ELEMENT(expected).key("stop")
                 .displayedName("Stop")
                 .description("Instructs camera to stop current acquisition")
-                .allowedStates("Acquiring")
+                .allowedStates(State.ACQUIRING)
                 .commit(),
 
         SLOT_ELEMENT(expected).key("resetHardware")
                 .displayedName("Reset")
                 .description("Resets the camera in case of an error")
-                .allowedStates("HardwareError")
+                .allowedStates(State.ERROR)
                 .commit(),
         )
         
@@ -78,7 +79,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .description("Save images while acquiring.")
                 .assignmentOptional().defaultValue(False)
                 .reconfigurable()
-                .allowedStates("Ready")
+                .allowedStates(State.ACTIVE)
                 .commit(),
 
         PATH_ELEMENT(expected).key("imageStorage.filePath")
@@ -87,7 +88,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .isDirectory()
                 .assignmentOptional().defaultValue("/tmp")
                 .reconfigurable()
-                .allowedStates("Ready")
+                .allowedStates(State.ACTIVE)
                 .commit(),
 
         STRING_ELEMENT(expected).key("imageStorage.fileName")
@@ -96,7 +97,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .assignmentOptional().defaultValue("image")
                 .reconfigurable()
 
-                .allowedStates("Ready")
+                .allowedStates(State.ACTIVE)
                 .commit(),
 
         STRING_ELEMENT(expected).key("imageStorage.fileType")
@@ -105,7 +106,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .assignmentOptional().defaultValue("tif")
                 .options("tif jpg png")
                 .reconfigurable()
-                .allowedStates("Ready")
+                .allowedStates(State.ACTIVE)
                 .commit(),
 
         STRING_ELEMENT(expected).key("imageStorage.lastSaved")
@@ -121,7 +122,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .minInc(1)
                 .assignmentOptional().defaultValue(10)
                 .reconfigurable()
-                .allowedStates("HardwareError,Acquiring,Ready")
+                .allowedStates(State.ACTIVE, State.ACQUIRING, State.ERROR)
                 .commit(),
 
         )

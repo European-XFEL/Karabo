@@ -7,6 +7,7 @@
  */
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include "boost/python/raw_function.hpp"
 #include <iostream>
 #include <karabo/util/Factory.hh>
 #include <karabo/util/NodeElement.hh>
@@ -442,9 +443,9 @@ struct OverwriteElementWrap {
 
 
     static OverwriteElement & setNewDefaultValue(OverwriteElement& self, const bp::object& value) {
-        const std::string & className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
+        const std::string className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
         if(className == "State" ){
-            const std::string & state = bp::extract<std::string>(value.attr("name"));
+            const std::string state = bp::extract<std::string>(value.attr("name"));
             return self.setNewDefaultValue(karabo::util::State::fromString(state));
         } else {
             boost::any any;
@@ -509,6 +510,19 @@ struct OverwriteElementWrap {
     }
 
 };
+
+ namespace tableElementWrap {
+    static bp::object allowedStatesPy(bp::tuple args, bp::dict kwargs) {
+        TableElement& self = bp::extract<TableElement&>(args[0]);
+        std::vector<karabo::util::State> states;
+        for (unsigned int i = 1; i < bp::len(args); ++i) {
+            const std::string state = bp::extract<std::string>(args[i].attr("name"));
+            states.push_back(karabo::util::State::fromString(state));
+        }
+        self.allowedStates(states);
+        return args[0];
+    }
+}
 
 
 namespace schemawrap {
@@ -1141,9 +1155,15 @@ namespace schemawrap {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const std::string s = karabo::util::toString(schema.getAllowedStates(path));
-            
             const vector<string> v = karabo::util::fromString<std::string, std::vector>(s);
-            return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
+            //now construct python states
+            bp::list states;
+            bp::object sModule = bp::import("karabo.common.states");
+            for(vector<string>::const_iterator it = v.begin(); it != v.end(); ++it){
+                states.append(sModule.attr("State")(*it));
+            }
+            
+            return states;
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedStates' should be a string");
     }
@@ -1419,13 +1439,14 @@ namespace schemawrap {
         return schema.getInfoForAlarm(path, karabo::util::AlarmCondition::fromString(conditionName));
     }
 
-    void setAllowedStates(Schema& self, const std::string & path, const bp::tuple & args){
-       std::vector<karabo::util::State> states;
-       for(unsigned int i = 0; i < bp::len(args); ++i){
-           const std::string state = bp::extract<std::string>(args[i].attr("name"));
-           states.push_back(karabo::util::State::fromString(state));
-       }
-       return self.setAllowedStates(path, states);
+    void setAllowedStates(Schema& self, const std::string & path, PyObject* rargs){
+        bp::tuple args = bp::extract<bp::tuple>(rargs);
+        std::vector<karabo::util::State> states;
+        for(unsigned int i = 0; i < bp::len(args); ++i){
+            const std::string state = bp::extract<std::string>(args[i].attr("name"));
+            states.push_back(karabo::util::State::fromString(state));
+        }
+        return self.setAllowedStates(path, states);
     }
             
 
@@ -2145,6 +2166,8 @@ void exportPyUtilSchema() {
     // Binding TableElement
     // In Python : TABLE_ELEMENT
     {
+       
+        
         bp::implicitly_convertible< Schema &, TableElement >();
         bp::class_<TableElement> ("TABLE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
                 .def("advanced", &TableElement::advanced
@@ -2159,9 +2182,7 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("adminAccess", &TableElement::adminAccess
                      , bp::return_internal_reference<> ())
-                .def("allowedStates", &TableElement::allowedStates
-                     , (bp::arg("states"), bp::arg("sep") = " ,;")
-                     , bp::return_internal_reference<> ())
+                .def("allowedStates", bp::raw_function(&tableElementWrap::allowedStatesPy,2))
                 .def("assignmentInternal", &TableElement::assignmentInternal
                      , bp::return_internal_reference<> ())
                 .def("assignmentMandatory", &TableElement::assignmentMandatory

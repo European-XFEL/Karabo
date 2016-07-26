@@ -15,6 +15,7 @@
 #include <karabo/util/TableElement.hh>
 #include <karabo/util/State.hh>
 #include <karathon/Wrapper.hh>
+#include "boost/python/raw_function.hpp"
 
 
 namespace bp = boost::python;
@@ -390,13 +391,16 @@ class CommonWrap {
 
 public:
 
-    static T & allowedStatesPy(T & self, const bp::tuple & args) {
+    static bp::object allowedStatesPy(bp::tuple args, bp::dict kwargs) {
+        T& self = bp::extract<T&>(args[0]);
         std::vector<karabo::util::State> states;
-        for (unsigned int i = 0; i < bp::len(args); ++i) {
+        for (unsigned int i = 1; i < bp::len(args); ++i) {
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
             states.push_back(karabo::util::State::fromString(state));
         }
-        return self.allowedStates(states);
+        self.allowedStates(states);
+        return args[0];
+
     }
 
 };
@@ -414,9 +418,7 @@ public:
 , bp::return_internal_reference<> () )\
 .def("adminAccess", &T::adminAccess\
 , bp::return_internal_reference<> () )\
-.def("allowedStates", &CommonWrap<T>::allowedStatesPy\
-, ( bp::arg("states") )\
-, bp::return_internal_reference<> ())\
+.def("allowedStates", bp::raw_function(&CommonWrap<T>::allowedStatesPy, 2))\
 .def("assignmentInternal", &T::assignmentInternal\
 , bp::return_internal_reference<> () )\
 .def("assignmentMandatory", &T::assignmentMandatory\
