@@ -7,6 +7,7 @@
  */
 
 #include <boost/python.hpp>
+#include <boost/python/stl_iterator.hpp>
 #include <boost/filesystem.hpp>
 #include <iostream>
 #include <set>
@@ -691,6 +692,19 @@ namespace karathon {
             return;
         }
         throw KARABO_PYTHON_EXCEPTION("Python object contains not a C++ 'Hash::Attributes' type");
+    }
+
+
+    void
+    HashWrap::merge(karabo::util::Hash& self, const karabo::util::Hash& other,
+                    const karabo::util::Hash::MergePolicy policy,
+                    const bp::object& selectedPaths, const std::string& separator) {
+        std::set<std::string> selectedPathsCpp;
+        if (selectedPaths.ptr() != Py_None) {
+            bp::stl_input_iterator<std::string> pathsBegin(selectedPaths), pathsEnd;
+            selectedPathsCpp.insert(pathsBegin, pathsEnd);
+        }
+        self.merge(other, policy, selectedPathsCpp, separator.at(0));
     }
 
 
