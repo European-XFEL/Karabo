@@ -63,6 +63,9 @@ class Circle(Shape):
          .assignmentOptional().defaultValue(10)
          .init()
          .commit(),
+        STRING_ELEMENT(expected).key("state")
+        .readOnly()
+        .commit()
         )
         
     def draw(self):
@@ -85,6 +88,11 @@ class EditableCircle(Circle):
         OVERWRITE_ELEMENT(expected)
          .key("radius")
          .setNowReconfigurable()
+         .commit(),
+        OVERWRITE_ELEMENT(expected)
+         .key("state")
+         .setNewOptions(State.INIT, State.ERROR, State.NORMAL)
+         .setNewDefaultValue(State.INIT)
          .commit(),
          )
         
