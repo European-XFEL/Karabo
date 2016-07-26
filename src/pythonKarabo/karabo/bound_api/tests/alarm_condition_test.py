@@ -14,14 +14,14 @@ class  AlarmCondition_TestCase(unittest.TestCase):
 
     def test_alarm_condition_roundtrip(self):
         condition = AlarmCondition.ALARM_HIGH
-        self.assertEqual(condition.asString(), "ALARM_HIGH")
+        self.assertEqual(condition.asString(), "alarmHigh")
         condition = AlarmCondition.fromString(condition.asString())
-        self.assertEqual(condition.asString(), "ALARM_HIGH")
+        self.assertEqual(condition.asString(), "alarmHigh")
         self.assertEqual(condition, AlarmCondition.ALARM_HIGH)
 
 
     def test_alarm_condition_no_other_conditions(self):
-        self.assertRaises(AttributeError, AlarmCondition, "SOME_NEW_NAME", {"rank", 0})
+        self.assertRaises(ValueError, AlarmCondition, "SOME_NEW_NAME")
 
     def test_alarm_condition_significance_evaluation(self):
         condition_list = [AlarmCondition.ALARM_LOW, AlarmCondition.WARN, AlarmCondition.INTERLOCK]
