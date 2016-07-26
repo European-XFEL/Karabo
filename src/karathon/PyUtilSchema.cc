@@ -443,9 +443,9 @@ struct OverwriteElementWrap {
 
 
     static OverwriteElement & setNewDefaultValue(OverwriteElement& self, const bp::object& value) {
-        const std::string & className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
+        const std::string className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
         if(className == "State" ){
-            const std::string & state = bp::extract<std::string>(value.attr("name"));
+            const std::string state = bp::extract<std::string>(value.attr("name"));
             return self.setNewDefaultValue(karabo::util::State::fromString(state));
         } else {
             boost::any any;
