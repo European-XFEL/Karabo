@@ -28,7 +28,7 @@ public:
     static AlarmConditionElement & initialValuePy(AlarmConditionElement& self, const bp::object& value) {
         const std::string className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
         if(className == "AlarmCondition" ){
-            const std::string condition = bp::extract<std::string>(value.attr("name"));
+            const std::string condition = bp::extract<std::string>(value.attr("asString")());
             return self.initialValue(karabo::util::AlarmCondition::fromString(condition));
         } else {
             throw KARABO_PYTHON_EXCEPTION("initialValue() expects parameter of type AlarmCondition.");
