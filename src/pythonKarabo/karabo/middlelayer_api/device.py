@@ -3,7 +3,7 @@ import socket
 
 from .enums import AccessLevel, AccessMode, Assignment
 from .exceptions import KaraboError
-from .hash import Bool, Hash, HashType, Int32, Schema, SchemaHashType, String
+from .hash import Bool, Hash, HashType, Int32, SchemaHashType, String
 from .logger import Logger
 from .schema import Validator, Node
 from .signalslot import SignalSlotable, Signal, slot, coslot
@@ -131,7 +131,7 @@ class Device(SignalSlotable):
     @coslot
     def slotReconfigure(self, reconfiguration):
         try:
-            yield from super().slotReconfigure(reconfiguration)
+            yield from super(Device, self).slotReconfigure(reconfiguration)
         except KaraboError as e:
             self.logger.warn(e.args[0])
             return False, e.args[0]
