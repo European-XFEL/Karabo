@@ -119,15 +119,12 @@ class _Manager(QObject):
         # Old projects save all parameters, even the read only ones. This fix
         # removes them from the initial configuration to not stop the validator
         # from instantiating
-        descriptor = conf.descriptor
+        descriptor = conf.descriptor if conf is not None else None
         if descriptor is not None:
             read_only_keys = descriptor.getReadOnlyKeys()
             for key in read_only_keys:
                 # Remove all read only parameters
                 config.erase(key)
-        else:
-            # Remove only the read only state key
-            config.erase("state")
 
         # Compute a runtime schema from the configuration and an unmodified
         # copy of the device class schema.
