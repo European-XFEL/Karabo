@@ -20,9 +20,18 @@ class Signal(object):
         self.args = args
 
 
+def _log_exception(func, device):
+    logger = logging.getLogger(device.deviceId)
+    logger.exception('Exception in slot "%s" of device "%s"',
+                     func.__qualname__, device.deviceId)
+
+
 def slot(f):
     def inner(func, device, message, args):
-        device._ss.reply(message, func(*args))
+        try:
+            device._ss.reply(message, func(*args))
+        except Exception:
+            _log_exception(func, device)
     f.slot = inner
     return f
 
@@ -35,9 +44,7 @@ def coslot(f):
         try:
             device._ss.reply(message, (yield from func(*args)))
         except Exception:
-            logger = logging.getLogger(device.deviceId)
-            logger.exception('exception in slot "{}" of device "{}"'.
-                             format(func.__qualname__, device.deviceId))
+            _log_exception(func, device)
 
     def outer(func, device, message, args):
         async(inner(func, device, message, args))

@@ -338,7 +338,7 @@ class Descriptor(object):
             raise KaraboError(msg)
         elif (self.allowedStates is not None and
               instance.state not in self.allowedStates):
-            msg = 'setting "{}" is not allowed in state "{}"'.format(
+            msg = 'Setting "{}" is not allowed in state "{}"'.format(
                 self.key, instance.state)
             raise KaraboError(msg)
         else:
@@ -412,10 +412,10 @@ class Slot(Descriptor):
 
         if (self.allowedStates is not None and
                 instance.state not in self.allowedStates):
-            msg = 'calling slot "{}" not allowed in state "{}"'.format(
+            msg = 'Calling slot "{}" not allowed in state "{}"'.format(
                 self.key, instance.state)
             device._ss.reply(message, msg)
-            raise KaraboError(msg)
+            device.logger.warn(msg)
 
         coro = get_event_loop().run_coroutine_or_thread(func)
 
