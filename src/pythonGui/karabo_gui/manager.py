@@ -124,7 +124,8 @@ class _Manager(QObject):
             read_only_keys = descriptor.getReadOnlyKeys()
             for key in read_only_keys:
                 # Remove all read only parameters
-                config.erase(key)
+                if key in config: # erase does not tolerate non-existing keys
+                    config.erase(key)
 
         # Compute a runtime schema from the configuration and an unmodified
         # copy of the device class schema.
