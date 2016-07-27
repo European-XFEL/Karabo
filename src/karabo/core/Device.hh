@@ -594,6 +594,9 @@ namespace karabo {
                 if (m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE) == karabo::util::Schema::STATE) {
                     KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
                 }
+                if (m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE) == karabo::util::Schema::ALARM_CONDITION) {
+                    KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
+                }
                 try {
                     return m_parameters.get<T>(key);
                 } catch (const karabo::util::Exception& e) {
@@ -605,7 +608,7 @@ namespace karabo {
             karabo::util::State get(const std::string& key, const karabo::util::State& var = karabo::util::State::UNKNOWN) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 if (m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE) != karabo::util::Schema::STATE) {
-                    KARABO_PARAMETER_EXCEPTION("Can only retreive a state object from a State element, not " + key);
+                    KARABO_PARAMETER_EXCEPTION("Can only retrieve a state object from a State element, not " + key);
                 }
                 try {
                     return m_parameters.get<karabo::util::State>(key);
@@ -840,14 +843,14 @@ namespace karabo {
             }
 
             const karabo::util::State & getState() {
-                return karabo::util::State::fromString(this->get<std::string>("state"));
+                return this->get("state");
             }
 
         private:
 
             void updateState(const std::string& currentState) { // private
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
-                if (get<std::string>("state") != currentState) {
+                if (getState().name() != currentState) {
                     karabo::util::Hash h("state", currentState);
                     h.setAttribute("state", KARABO_INDICATE_STATE_SET, true);
                     set(h);
@@ -1195,6 +1198,7 @@ namespace karabo {
                         allowedStates = m_fullSchema.getAllowedStates(slotName);
                     }
                 }
+
                 if (!allowedStates.empty()) {
                     const State& currentState = getState();
                     if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
@@ -1216,7 +1220,7 @@ namespace karabo {
 
             void slotGetSchema(bool onlyCurrentState) {
                 if (onlyCurrentState) {
-                    const std::string& currentState = get<std::string > ("state");
+                    const karabo::util::State& currentState = getState();
                     const karabo::util::Schema schema(getStateDependentSchema(currentState));
                     reply(schema, m_deviceId);
                 } else {
@@ -1251,7 +1255,7 @@ namespace karabo {
 
             std::pair<bool, std::string> validate(const karabo::util::Hash& unvalidated, karabo::util::Hash& validated) {
                 // Retrieve the current state of the device instance
-                const std::string& currentState = get<std::string > ("state");
+                const karabo::util::State& currentState = getState();
                 const karabo::util::Schema whiteList(getStateDependentSchema(currentState));
                 KARABO_LOG_DEBUG << "Incoming (un-validated) reconfiguration:\n" << unvalidated;
                 std::pair<bool, std::string> valResult = m_validatorExtern.validate(whiteList, unvalidated, validated);
@@ -1288,7 +1292,8 @@ namespace karabo {
                 stopEventLoop();
             }
 
-            karabo::util::Schema getStateDependentSchema(const std::string& currentState) {
+            karabo::util::Schema getStateDependentSchema(const karabo::util::State& state) {
+                const std::string& currentState = state.name();
                 KARABO_LOG_DEBUG << "call: getStateDependentSchema() for state: " << currentState;
                 boost::mutex::scoped_lock lock(m_stateDependendSchemaMutex);
                 // Check cache, whether a special set of state-dependent expected parameters was created before
