@@ -4,13 +4,12 @@ import atexit
 from functools import wraps
 import sys
 import threading
-import weakref
 
 from .device import Device
-from .device_client import waitUntilNew, Proxy, getDevice
+from .device_client import waitUntilNew, getDevice
 from .enums import AccessLevel, AccessMode
 from .eventloop import EventLoop
-from .hash import Descriptor, Hash, Int32 as Int, Slot, String, Type
+from .hash import Descriptor, Int32, Slot, String
 
 
 def Monitor():
@@ -105,7 +104,7 @@ class Macro(Device):
         accessMode=AccessMode.READONLY,
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    printno = Int(
+    printno = Int32(
         displayedName="Number of prints",
         description="The number of prints issued so far",
         defaultValue=0,
