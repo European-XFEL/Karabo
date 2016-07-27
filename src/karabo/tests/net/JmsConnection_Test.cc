@@ -6,6 +6,7 @@
  */
 
 #include "JmsConnection_Test.hh"
+#include "karabo/net/EventLoop.hh"
 #include "karabo/net/JmsChannel.hh"
 #include "karabo/net/IOService.hh"
 #include "karabo/log/Logger.hh"
@@ -20,7 +21,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(JmsConnection_Test);
 
 JmsConnection_Test::JmsConnection_Test() {
 
-    karabo::log::Logger::configure();
+    karabo::log::Logger::configure(Hash("priority", "DEBUG"));
 
 }
 
@@ -73,39 +74,34 @@ void JmsConnection_Test::readHandler(karabo::net::JmsChannel::Pointer channel,
 
     m_counter++;
     if (m_counter == 1) tick = boost::posix_time::microsec_clock::local_time();
-    if (m_counter == 1001) {
+    if (m_counter == 2001) {
         boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - tick;
         clog << diff.total_milliseconds() << std::endl;
-        throw KARABO_PARAMETER_EXCEPTION("test");
+        return;
     }
-    channel->readAsync(boost::bind(&JmsConnection_Test::readHandler, this, channel, _1, _2), "heisen");
-    channel->write("heisen", header, body);
+    channel->readAsync(boost::bind(&JmsConnection_Test::readHandler, this, channel, _1, _2), "heisenb");
+    channel->write("heisenb", header, body);
 }
 
 
 void JmsConnection_Test::testChannel() {
-
-    boost::shared_ptr<boost::asio::io_service> ioService(new boost::asio::io_service());
-    boost::asio::io_service::work work(*ioService);
-    boost::thread t(boost::bind(&boost::asio::io_service::run, ioService));
-
+    
     m_connection = JmsConnection::Pointer(new JmsConnection());
     m_connection->connect();
+    
+    JmsChannel::Pointer channel = m_connection->createChannel();
 
-    JmsChannel::Pointer channel = m_connection->createChannel(ioService);
-
-    channel->readAsync(boost::bind(&JmsConnection_Test::readHandler, this, channel, _1, _2), "heisen");
-
-    boost::this_thread::sleep(boost::posix_time::millisec(100));
+    channel->readAsync(boost::bind(&JmsConnection_Test::readHandler, this, channel, _1, _2), "heisenb");   
 
     Hash::Pointer header(new Hash("header", "shit"));
 
-    Hash::Pointer body(new Hash("body", std::vector<char>(10000, 't')));
+    Hash::Pointer body(new Hash("body", std::vector<char>(1000, 't')));
 
     m_counter = 0;
-    channel->write("heisen", header, body);    
 
+    channel->write("heisenb", header, body);
 
-    t.join();
+    EventLoop::work();
+   
 }
 

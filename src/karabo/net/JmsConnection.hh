@@ -82,11 +82,6 @@ namespace karabo {
             typedef std::set<boost::weak_ptr<JmsChannel> > Channels;
             Channels m_channels;
 
-            typedef boost::shared_ptr<boost::asio::io_service> IOServicePointer;
-            IOServicePointer m_openMQService;
-            boost::asio::io_service::work m_openMQWork;
-            boost::thread_group m_openMQThreads;
-            boost::mutex m_openMQThreadsMutex;
             boost::asio::io_service::strand m_reconnectStrand;
 
 
@@ -106,8 +101,6 @@ namespace karabo {
 
             bool isConnected() const;
 
-
-
             /**
              * Reports the url of the currently connected-to broker
              * In case no connection is established returns and empty string
@@ -115,20 +108,12 @@ namespace karabo {
              */
             std::string getBrokerUrl() const;
 
-            boost::shared_ptr<JmsChannel> createChannel(const IOServicePointer& ioService);
+            boost::shared_ptr<JmsChannel> createChannel();
 
 
         private:
 
-            static void onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData);
-
-            /**
-             * Adds a thread to the openMQ thread pool.
-             * NOTE: This function is thread safe
-             */
-            void addOpenMQServiceThread();
-
-            void stopOpenMQService();
+            static void onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData);          
 
             void setFlagConnected();
 

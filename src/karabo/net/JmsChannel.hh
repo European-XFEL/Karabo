@@ -29,6 +29,7 @@ namespace karabo {
 
         class JmsChannel {
 
+
             friend class JmsConnection;
 
             // OpenMQ failed to provide an publicly available constant to check handle validity
@@ -58,10 +59,10 @@ namespace karabo {
             typedef std::map<std::string, MQConsumerHandle > Consumers;
             std::map<std::string, MQConsumerHandle > m_consumers;
 
-
-
             typedef boost::shared_ptr<boost::asio::io_service> IOServicePointer;
-            IOServicePointer m_ioService;          
+            IOServicePointer m_ioService;
+
+            boost::asio::io_service::strand m_writeStrand;
 
         public:
 
@@ -81,8 +82,7 @@ namespace karabo {
 
         private:
 
-            JmsChannel(const JmsConnection::Pointer& connection,
-                       const IOServicePointer& ioService);           
+            JmsChannel(const JmsConnection::Pointer& connection);
 
             MQProducerHandle getProducer(const std::string& topic);
 
@@ -113,7 +113,13 @@ namespace karabo {
              * NOTE: This function is thread-safe, locks m_consumerHandlesMutex
              */
             void clearConsumerHandles();
-            
+
+
+            void asyncWrite(const std::string& topic,
+                            const karabo::util::Hash::Pointer& header,
+                            const karabo::util::Hash::Pointer& body,
+                            const int priority = 4,
+                            const int timeToLive = 0);
         };
     }
 }

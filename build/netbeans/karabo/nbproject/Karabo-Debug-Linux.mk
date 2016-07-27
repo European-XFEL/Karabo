@@ -99,6 +99,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/AsioIOService.o \
 	${OBJECTDIR}/_ext/1103112890/BrokerConnection.o \
 	${OBJECTDIR}/_ext/1103112890/Connection.o \
+	${OBJECTDIR}/_ext/1103112890/EventLoop.o \
 	${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o \
 	${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o \
 	${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o \
@@ -521,6 +522,11 @@ ${OBJECTDIR}/_ext/1103112890/Connection.o: ../../../src/karabo/net/Connection.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/Connection.o ../../../src/karabo/net/Connection.cc
+
+${OBJECTDIR}/_ext/1103112890/EventLoop.o: ../../../src/karabo/net/EventLoop.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/EventLoop.o ../../../src/karabo/net/EventLoop.cc
 
 ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o: ../../../src/karabo/net/JmsBrokerChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -1951,6 +1957,19 @@ ${OBJECTDIR}/_ext/1103112890/Connection_nomain.o: ${OBJECTDIR}/_ext/1103112890/C
 	    $(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/Connection_nomain.o ../../../src/karabo/net/Connection.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/Connection.o ${OBJECTDIR}/_ext/1103112890/Connection_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/EventLoop_nomain.o: ${OBJECTDIR}/_ext/1103112890/EventLoop.o ../../../src/karabo/net/EventLoop.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/EventLoop.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/EventLoop_nomain.o ../../../src/karabo/net/EventLoop.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/EventLoop.o ${OBJECTDIR}/_ext/1103112890/EventLoop_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o ../../../src/karabo/net/JmsBrokerChannel.cc 

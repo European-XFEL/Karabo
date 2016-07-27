@@ -13,6 +13,7 @@
 #include "JmsConnection.hh"
 #include "JmsChannel.hh"
 #include "JmsBrokerConnection.hh"
+#include "EventLoop.hh"
 
 namespace karabo {
     namespace net {
@@ -23,9 +24,7 @@ namespace karabo {
 
         JmsConnection::JmsConnection(const std::string& brokerUrls, const int nThreads)
             : m_availableBrokerUrls(brokerUrls),
-            m_openMQService(new boost::asio::io_service),
-            m_openMQWork(*m_openMQService),
-            m_reconnectStrand(*m_openMQService) {
+            m_reconnectStrand(*EventLoop::getIOService()) {
 
             this->setFlagDisconnected();
 
@@ -35,36 +34,14 @@ namespace karabo {
             if (env != 0) m_availableBrokerUrls = string(env);
             parseBrokerUrl();
 
-            // Add one openMQ thread for handling broker disconnects
-            this->addOpenMQServiceThread();
+            // Add one event-loop thread for handling broker disconnects
+            EventLoop::addThread();
         }
 
 
         JmsConnection::~JmsConnection() {
-            this->stopOpenMQService();
-        }
-
-
-        void JmsConnection::addOpenMQServiceThread() {
-            boost::mutex::scoped_lock lock(m_openMQThreadsMutex);
-            m_openMQThreads.create_thread(boost::bind(&karabo::net::runProtected, m_openMQService,
-                                                                                 "JmsConnection",
-                                                                                 "OpenMQ",
-                                                                                 100));
-            std::cout << "OpenMQ thread was added, now running: " << m_openMQThreads.size() << " in total" << std::endl;
-        }
-
-
-        void JmsConnection::stopOpenMQService() {
-            // Stop openMq service (will stop message reading)
-            m_openMQService->stop();
-            {
-                // Join all threads
-                boost::mutex::scoped_lock lock(m_openMQThreadsMutex);
-                m_openMQThreads.join_all();
-            }
-        }
-
+            EventLoop::removeThread();
+        }       
 
         void JmsConnection::parseBrokerUrl() {
 
@@ -196,8 +173,8 @@ namespace karabo {
         }
 
 
-        boost::shared_ptr<JmsChannel> JmsConnection::createChannel(const IOServicePointer& ioService) {
-            boost::shared_ptr<JmsChannel> channel(new JmsChannel(shared_from_this(), ioService));
+        boost::shared_ptr<JmsChannel> JmsConnection::createChannel() {
+            boost::shared_ptr<JmsChannel> channel(new JmsChannel(shared_from_this()));
             m_channels.insert(channel);
             return channel;
         }
