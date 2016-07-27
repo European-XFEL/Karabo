@@ -177,7 +177,7 @@ class Broker:
                 try:
                     slots, params = self.decodeMessage(message)
                 except:
-                    self.logger.exception("Malformated message")
+                    self.logger.exception("Malformed message")
                     continue
                 if device is None:
                     continue
