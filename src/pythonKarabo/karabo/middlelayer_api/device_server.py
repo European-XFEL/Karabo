@@ -16,13 +16,12 @@ import numpy
 from .device import Device
 from .enums import AccessLevel, AccessMode, Assignment
 from .eventloop import EventLoop
-from .hash import (Hash, XMLParser, saveToFile, SchemaHashType, String,
-                   StringList, Int32)
+from .hash import Hash, XMLParser, saveToFile, String, StringList, Int32
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
 from .schema import Node
-from .signalslot import SignalSlotable, Signal, slot, coslot
+from .signalslot import SignalSlotable, slot, coslot
 
 # XXX: These imports are needed for their side-effects...
 import karabo.middlelayer_api.metamacro  # add a default Device MetaMacro
