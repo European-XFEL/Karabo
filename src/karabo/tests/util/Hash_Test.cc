@@ -782,6 +782,7 @@ void Hash_Test::testMerge() {
 
     Hash h1b(h1);
     Hash h1c(h1);
+    Hash h1d(h1);
 
     Hash h2("a", 21,
             "b.c", 22,
@@ -808,8 +809,10 @@ void Hash_Test::testMerge() {
 
     h1.merge(h2); // Hash::REPLACE_ATTRIBUTES is the default
     h1b.merge(h2, Hash::MERGE_ATTRIBUTES);
+    h1d += h2; // same as h1d.merge(h2), only check similarity and once attribute replacement below
 
     CPPUNIT_ASSERT_MESSAGE("Replace or merge attributes influenced resulting paths", similar(h1, h1b));
+    CPPUNIT_ASSERT_MESSAGE("merge and += don't do the same", similar(h1, h1d));
 
     CPPUNIT_ASSERT(h1.has("a"));
     CPPUNIT_ASSERT(h1.get<int>("a") == 21); // new value
@@ -889,6 +892,10 @@ void Hash_Test::testMerge() {
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes not replaced", 1ul, h1.getAttributes("f").size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect", 77u, h1.getAttribute<unsigned int>("f", "attrKey7"));
+    // += is merge with REPLACE_ATTRIBUTES
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes not replaced (+=)", 1ul, h1d.getAttributes("f").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect (+=)", 77u, h1d.getAttribute<unsigned int>("f", "attrKey7"));
+    // here is MERGE_ATTRIBUTES
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes not merged", 2ul, h1b.getAttributes("f").size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect (MERGE)", std::string("buaah!"),
                                  h1b.getAttribute<std::string>("f", "attrKey6"));
