@@ -8,7 +8,7 @@ import numpy
 from karabo.middlelayer_api.enums import Unit, MetricPrefix
 from karabo.middlelayer_api.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
-    VectorStringValue, wrap)
+    TableValue, VectorStringValue, wrap)
 from karabo.middlelayer_api.hash import Int32, Float
 from karabo.middlelayer_api.timestamp import Timestamp
 
@@ -151,6 +151,14 @@ class Tests(TestCase):
 
         c = VectorStringValue(s for s in l)
         self.assertEqual(c, l)
+
+    def test_table(self):
+        t = TableValue([])
+        self.assertEqual(len(t), 0)
+
+        t = TableValue([3, 4, 5], timestamp=self.t2)
+        self.assertEqual(t, [3, 4, 5])
+        self.assertEqual(t.timestamp, self.t2)
 
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
