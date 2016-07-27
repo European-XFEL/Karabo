@@ -4,8 +4,8 @@ API cross test
 
 from karabo.bound import (
     AMPERE, Configurator, Hash, DOUBLE_ELEMENT, Epochstamp, KARABO_CLASSINFO,
-    KILO, METER, MILLI, NODE_ELEMENT, PythonDevice, SLOT_ELEMENT, Timestamp,
-    Trainstamp
+    KILO, METER, MILLI, NODE_ELEMENT, PythonDevice, SLOT_ELEMENT,
+    State, TABLE_ELEMENT, Timestamp, Trainstamp
 )
 
 
@@ -19,7 +19,7 @@ class TestDevice(PythonDevice):
             .displayedName("parameter a")
             .alias("something")
             .description("a's description")
-            .allowedStates("some thing")
+            .allowedStates(State.INIT, State.UNKNOWN)
             .unit(AMPERE)
             .metricPrefix(MILLI)
             .expertAccess()
