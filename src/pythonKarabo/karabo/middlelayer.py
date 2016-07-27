@@ -38,7 +38,7 @@ from .middlelayer_api.project import (
 )
 from .middlelayer_api.registry import MetaRegistry, Registry
 from .middlelayer_api.schema import (
-    Configurable, Node, ChoiceOfNodes, ListOfNodes, Validator
+    Configurable, Node, ChoiceOfNodes, ListOfNodes
 )
 from .middlelayer_api.signalslot import Signal, SignalSlotable, slot, coslot
 from .middlelayer_api.timestamp import Timestamp
