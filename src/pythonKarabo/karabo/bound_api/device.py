@@ -413,7 +413,7 @@ class PythonDevice(NoFsm):
                     h.set(key, value.name)
                     h.setAttribute(key, "indicateState", True)
                 elif isinstance(value, AlarmCondition):
-                    h.set(key, value.name)
+                    h.set(key, value.asString())
                     h.setAttribute(key, "indicateAlarm", True)
                 else:
                     h.set(key, value)
@@ -437,7 +437,17 @@ class PythonDevice(NoFsm):
                     elif isinstance(value, RawImageData):
                         self._setRawImageData(key, value)
                         return
-                    pars = tuple([Hash(key,value), self._getActualTimestamp()])
+                    h = Hash()
+                    if isinstance(value, State):
+                        h.set(key, value.name)
+                        h.setAttribute(key, "indicateState", True)
+                    elif isinstance(value, AlarmCondition):
+                        h.set(key, value.asString())
+                        h.setAttribute(key, "indicateAlarm", True)
+                    else:
+                        h.set(key, value)
+                    pars = tuple([h, self._getActualTimestamp()])
+
                 hash, stamp = pars
                 # Check that hash is image's free
                 paths = hash.getPaths()
@@ -540,9 +550,10 @@ class PythonDevice(NoFsm):
             try:
                 leafType = None if not self.fullSchema.getParameterHash().hasAttribute(key, "leafType") \
                     else self.fullSchema.getParameterHash().getAttribute(key, "leafType")
-                if leafType is LeafType.STATE:
+
+                if leafType == LeafType.STATE:
                     return State[self.parameters[key]]
-                elif leafType is LeafType.ALARM_CONDITION:
+                elif leafType == LeafType.ALARM_CONDITION:
                     return AlarmCondition[self.parameters[key]]
                 else:
                     return self.parameters[key]
@@ -685,7 +696,7 @@ class PythonDevice(NoFsm):
         assert isinstance(currentState, State)
         stateName = currentState.name
         self.log.DEBUG("updateState: {}".format(stateName))
-        if self["state"] != stateName:
+        if self["state"] != currentState:
             self.set("state", currentState)
             if currentState is State.ERROR:
                 self._ss.updateInstanceInfo(Hash("status", "error"))
@@ -789,10 +800,10 @@ class PythonDevice(NoFsm):
         if slotName in self.fullSchema and self.fullSchema.hasAllowedStates(slotName):
             allowedStates = self.fullSchema.getAllowedStates(slotName)
             if allowedStates:
-                # print("Validating slot")
                 currentState = self["state"]
                 if currentState not in allowedStates:
-                    msg = "Command \"{}\" is not allowed in current state \"{}\" of device \"{}\"".format(slotName, currentState, self.deviceid)
+                    msg = "Command \"{}\" is not allowed in current state \"{}\" " \
+                          "of device \"{}\"".format(slotName, currentState, self.deviceid)
                     self._ss.reply(msg)
                     return False
         return True
