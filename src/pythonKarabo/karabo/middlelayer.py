@@ -11,8 +11,8 @@ from .middlelayer_api.device_client import (
     execute, executeNoWait, updateDevice, sleep
 )
 from .middlelayer_api.enums import (
-    AccessLevel, AccessMode, Assignment, ChannelSpaceType, EncodingType,
-    MetricPrefix, NodeType, Unit
+    AccessLevel, AccessMode, Assignment, EncodingType, MetricPrefix, NodeType,
+    Unit
 )
 from .middlelayer_api.basetypes import (
     BoolValue, EnumValue, KaraboValue, QuantityValue, StringValue,
