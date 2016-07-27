@@ -37,9 +37,9 @@ namespace karabo {
             static const int HANDLED_OBJECT_INVALID_HANDLE = 0xFEEEFEEE;
 
             JmsConnection::Pointer m_connection;
-            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;            
+            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
 
-            boost::mutex::scoped_lock m_writeMutex;
+            mutable boost::mutex m_consumerHandlesMutex;
 
             MQSessionHandle m_producerSessionHandle;
 
@@ -49,10 +49,19 @@ namespace karabo {
             typedef std::map<std::string, MQProducerHandle > Producers;
             Producers m_producers;
 
+            typedef std::map<std::string, MQSessionHandle > ConsumerSessions;
+            ConsumerSessions m_consumerSessions;
 
-            std::map<std::string, MQSessionHandle > m_consumerSessions;          
+            typedef std::map<std::string, std::pair<MQSessionHandle, MQDestinationHandle > > ConsumerDestinations;
+            ConsumerDestinations m_consumerDestinations;
 
+            typedef std::map<std::string, MQConsumerHandle > Consumers;
             std::map<std::string, MQConsumerHandle > m_consumers;
+
+
+
+            typedef boost::shared_ptr<boost::asio::io_service> IOServicePointer;
+            IOServicePointer m_ioService;          
 
         public:
 
@@ -60,7 +69,7 @@ namespace karabo {
 
             typedef boost::function< void (karabo::util::Hash::Pointer, karabo::util::Hash::Pointer) > MessageHandler;
 
-            void readAsync(const std::string& topic, const MessageHandler handler, const std::string& selector = "");
+            void readAsync(const MessageHandler handler, const std::string& topic, const std::string& selector = "");
 
             void write(const std::string& topic,
                        const karabo::util::Hash::Pointer& header,
@@ -68,17 +77,42 @@ namespace karabo {
                        const int priority = 4,
                        const int timeToLive = 0);
 
+            ~JmsChannel();
+
         private:
 
-            JmsChannel(const JmsConnection::Pointer&);
+            JmsChannel(const JmsConnection::Pointer& connection,
+                       const IOServicePointer& ioService);           
 
             MQProducerHandle getProducer(const std::string& topic);
 
             MQSessionHandle ensureProducerSessionAvailable();
 
-            std::pair<MQSessionHandle, MQDestinationHandle> ensureProducerDestinationAvailable(const std::string& topic);                       
+            std::pair<MQSessionHandle, MQDestinationHandle> ensureProducerDestinationAvailable(const std::string& topic);
 
-            void setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle& propertiesHandle);           
+            void clearProducerHandles();
+
+            void setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle& propertiesHandle);
+
+            void asyncConsumeMessage(const MessageHandler handler, const std::string& topic, const std::string& selector);
+
+            bool hasConsumer(const std::string& topic, const std::string& selector) const;
+
+            MQConsumerHandle getConsumer(const std::string& topic, const std::string& selector);
+
+            std::pair<MQSessionHandle, MQDestinationHandle> ensureConsumerDestinationAvailable(const std::string& topic);
+
+            MQSessionHandle ensureConsumerSessionAvailable(const std::string& topic);
+
+            void parseHeader(const MQMessageHandle& messageHandle, karabo::util::Hash& header);
+
+            void getProperties(karabo::util::Hash& properties, const MQPropertiesHandle& propertiesHandle) const;
+
+            /**
+             * Clears the all consumer related cached handles
+             * NOTE: This function is thread-safe, locks m_consumerHandlesMutex
+             */
+            void clearConsumerHandles();
             
         };
     }

@@ -45,7 +45,7 @@ void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> servic
     //  without the need for an intervening call to reset(). This allows the thread to rejoin the io_service
     //  object's thread pool without impacting any other threads in the pool."
 
-    const std::string fullMessage(" when running asio service (" + errorMessage + "), continue in " +
+    const std::string fullMessage(" when running io_service (" + errorMessage + "), continue in " +
                                   karabo::util::toString(delayInMilliSec) += " ms");
     while (true) {
         bool caught = true;

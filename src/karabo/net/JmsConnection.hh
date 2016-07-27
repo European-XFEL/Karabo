@@ -9,6 +9,7 @@
 #define	KARABO_NET_JMSCONNECTION_HH
 
 #include <string>
+#include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -43,23 +44,25 @@ namespace karabo {
 
         class JmsConnection : public boost::enable_shared_from_this<JmsConnection> {
 
+
             // OpenMQ failed to provide an publicly available constant to check handle validity
             // This constant is copied from the openMQ source in which
             // it is used for exactly the aforementioned purpose
             static const int HANDLED_OBJECT_INVALID_HANDLE = 0xFEEEFEEE;
 
-            friend class JmsChannel;
-
-            typedef boost::shared_ptr<boost::asio::io_service> IOServicePointer;
+            friend class JmsChannel;           
 
             std::string m_availableBrokerUrls;
 
             std::string m_connectedBrokerUrl;
 
-            IOServicePointer m_ioService;
+            boost::condition_variable m_cond;
+
+            mutable boost::mutex m_mut;
+
+            bool m_isConnected;
 
             typedef boost::tuple<std::string, std::string, std::string> BrokerAddress;
-
             std::vector<BrokerAddress > m_brokerAddresses;
 
             MQConnectionHandle m_connectionHandle;
@@ -79,23 +82,31 @@ namespace karabo {
             typedef std::set<boost::weak_ptr<JmsChannel> > Channels;
             Channels m_channels;
 
+            typedef boost::shared_ptr<boost::asio::io_service> IOServicePointer;
+            IOServicePointer m_openMQService;
+            boost::asio::io_service::work m_openMQWork;
+            boost::thread_group m_openMQThreads;
+            boost::mutex m_openMQThreadsMutex;
+            boost::asio::io_service::strand m_reconnectStrand;
+
+
 
         public:
 
             KARABO_CLASSINFO(JmsConnection, "JmsConnection", "1.0")
 
             JmsConnection(const std::string& brokerUrl = std::string("tcp://exfl-broker.desy.de:7777"),
-                          const IOServicePointer& ioService = IOServicePointer(new boost::asio::io_service()));
+                          const int nThreads = 10);
+
+            ~JmsConnection();
 
             void connect();
 
-            void start();
-
-            void stop();
-
             void disconnect();
 
-            bool isConnected();
+            bool isConnected() const;
+
+
 
             /**
              * Reports the url of the currently connected-to broker
@@ -104,10 +115,26 @@ namespace karabo {
              */
             std::string getBrokerUrl() const;
 
-            boost::shared_ptr<JmsChannel> createChannel();
+            boost::shared_ptr<JmsChannel> createChannel(const IOServicePointer& ioService);
 
 
         private:
+
+            static void onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData);
+
+            /**
+             * Adds a thread to the openMQ thread pool.
+             * NOTE: This function is thread safe
+             */
+            void addOpenMQServiceThread();
+
+            void stopOpenMQService();
+
+            void setFlagConnected();
+
+            void setFlagDisconnected();
+
+            void waitForConnectionAvailable();
 
             MQConnectionHandle getConnection() const;
 

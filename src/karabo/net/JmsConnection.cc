@@ -12,6 +12,7 @@
 #include "utils.hh"
 #include "JmsConnection.hh"
 #include "JmsChannel.hh"
+#include "JmsBrokerConnection.hh"
 
 namespace karabo {
     namespace net {
@@ -20,16 +21,48 @@ namespace karabo {
         using namespace boost;
 
 
-        JmsConnection::JmsConnection(const std::string& brokerUrls, const IOServicePointer& ioService)
-            : m_availableBrokerUrls(brokerUrls), m_ioService(ioService) {
+        JmsConnection::JmsConnection(const std::string& brokerUrls, const int nThreads)
+            : m_availableBrokerUrls(brokerUrls),
+            m_openMQService(new boost::asio::io_service),
+            m_openMQWork(*m_openMQService),
+            m_reconnectStrand(*m_openMQService) {
 
-            m_connectionHandle.handle = HANDLED_OBJECT_INVALID_HANDLE;
+            this->setFlagDisconnected();
 
             // Give precedence to the environment variable (if defined)
             char* env = 0;
             env = getenv("KARABO_BROKER");
             if (env != 0) m_availableBrokerUrls = string(env);
             parseBrokerUrl();
+
+            // Add one openMQ thread for handling broker disconnects
+            this->addOpenMQServiceThread();
+        }
+
+
+        JmsConnection::~JmsConnection() {
+            this->stopOpenMQService();
+        }
+
+
+        void JmsConnection::addOpenMQServiceThread() {
+            boost::mutex::scoped_lock lock(m_openMQThreadsMutex);
+            m_openMQThreads.create_thread(boost::bind(&karabo::net::runProtected, m_openMQService,
+                                                                                 "JmsConnection",
+                                                                                 "OpenMQ",
+                                                                                 100));
+            std::cout << "OpenMQ thread was added, now running: " << m_openMQThreads.size() << " in total" << std::endl;
+        }
+
+
+        void JmsConnection::stopOpenMQService() {
+            // Stop openMq service (will stop message reading)
+            m_openMQService->stop();
+            {
+                // Join all threads
+                boost::mutex::scoped_lock lock(m_openMQThreadsMutex);
+                m_openMQThreads.join_all();
+            }
         }
 
 
@@ -61,7 +94,7 @@ namespace karabo {
                     // Set all properties
                     setConnectionProperties(scheme, host, port, propertiesHandle);
                     MQStatus status;
-                    status = MQCreateConnection(propertiesHandle, "guest", "guest", NULL, NULL, NULL, &m_connectionHandle);
+                    status = MQCreateConnection(propertiesHandle, "guest", "guest", NULL /*clientID*/, &onException, this, &m_connectionHandle);
                     if (MQStatusIsError(status) == MQ_TRUE) {
                         MQString tmp = MQGetStatusString(status);
                         KARABO_LOG_FRAMEWORK_WARN << tmp;
@@ -70,11 +103,23 @@ namespace karabo {
                     } else { // Connection established
                         m_connectedBrokerUrl = adr.get<0>() + "://" + adr.get<1>() + ":" + adr.get<2>();
                         MQFreeProperties(propertiesHandle);
+                        this->setFlagConnected();
+                        // Immediately enable message consumption
+                        MQ_SAFE_CALL(MQStartConnection(m_connectionHandle));
                         return;
                     }
                 }
                 boost::this_thread::sleep(boost::posix_time::seconds(10));
             }
+        }
+
+
+        void JmsConnection::onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData) {
+            JmsConnection* that = reinterpret_cast<JmsConnection*> (callbackData);
+            // Cleanly disconnect
+            that->m_reconnectStrand.post(boost::bind(&karabo::net::JmsConnection::disconnect, that));
+            // Try to reconnect
+            that->m_reconnectStrand.post(boost::bind(&karabo::net::JmsConnection::connect, that));
         }
 
 
@@ -92,17 +137,9 @@ namespace karabo {
         }
 
 
-        void JmsConnection::start() {
-            MQ_SAFE_CALL(MQStartConnection(m_connectionHandle));
-        }
-
-
-        void JmsConnection::stop() {
-            MQ_SAFE_CALL(MQStopConnection(m_connectionHandle));
-        }
-
-
         void JmsConnection::disconnect() {
+
+            MQ_SAFE_CALL(MQStopConnection(m_connectionHandle));
 
             MQ_SAFE_CALL(MQCloseConnection(m_connectionHandle));
 
@@ -111,7 +148,7 @@ namespace karabo {
             MQ_SAFE_CALL(MQFreeConnection(m_connectionHandle));
 
             // Unfortunately, openMQ does not do this
-            m_connectionHandle.handle = HANDLED_OBJECT_INVALID_HANDLE;
+            this->setFlagDisconnected();
 
             // Invalidate the connectedBrokerUrl
             m_connectedBrokerUrl = "";
@@ -119,8 +156,9 @@ namespace karabo {
         }
 
 
-        bool JmsConnection::isConnected() {
-            return m_connectionHandle.handle != HANDLED_OBJECT_INVALID_HANDLE;
+        bool JmsConnection::isConnected() const {
+            boost::lock_guard<boost::mutex> lock(m_mut);
+            return m_isConnected;
         }
 
 
@@ -130,14 +168,36 @@ namespace karabo {
 
 
         std::string JmsConnection::getBrokerUrl() const {
-
             return m_connectedBrokerUrl;
-
         }
 
 
-        boost::shared_ptr<JmsChannel> JmsConnection::createChannel() {
-            boost::shared_ptr<JmsChannel> channel(new JmsChannel(shared_from_this()));
+        void JmsConnection::waitForConnectionAvailable() {
+            boost::unique_lock<boost::mutex> lock(m_mut);
+            while (!m_isConnected) {
+                m_cond.wait(lock);
+            }
+        }
+
+
+        void JmsConnection::setFlagConnected() {
+            {
+                boost::lock_guard<boost::mutex> lock(m_mut);
+                m_isConnected = true;
+            }
+            m_cond.notify_all();
+        }
+
+
+        void JmsConnection::setFlagDisconnected() {
+            boost::lock_guard<boost::mutex> lock(m_mut);
+            m_isConnected = false;
+            m_connectionHandle.handle = HANDLED_OBJECT_INVALID_HANDLE;
+        }
+
+
+        boost::shared_ptr<JmsChannel> JmsConnection::createChannel(const IOServicePointer& ioService) {
+            boost::shared_ptr<JmsChannel> channel(new JmsChannel(shared_from_this(), ioService));
             m_channels.insert(channel);
             return channel;
         }
