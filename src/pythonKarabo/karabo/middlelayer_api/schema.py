@@ -1,11 +1,9 @@
 from asyncio import coroutine, gather
 from collections import OrderedDict
 from enum import Enum
-from functools import partial
-import weakref
 
 from .basetypes import KaraboValue
-from .enums import AccessLevel, AccessMode, Assignment, NodeType
+from .enums import NodeType
 from .hash import Attribute, Descriptor, Hash, Schema
 from .registry import Registry
 from .timestamp import Timestamp
@@ -272,48 +270,3 @@ class ListOfNodes(Node):
                 r[k, ...] = attrs
             l.append(r)
         return Hash(self.key, l), {}
-
-
-class Validator(object):
-    def __init__(self, injectDefaults=True):
-        self.injectDefaults = injectDefaults
-
-    def validate(self, schema, hash, stamp=None):
-        """validate the hash to fit schema and return the validated hash
-
-        most importantly, if hash does not contain some parameters, those
-        are inserted with their default value"""
-        return self.r_validate(schema.hash, hash)
-
-    def r_validate(self, subject, object):
-        for k, v, a in subject.iterall():
-            nodeType = NodeType(a["nodeType"])
-            if nodeType is NodeType.ListOfNodes:
-                if k in object:
-                    object[k] = [[Hash(kk, self.r_validate(v[kk], vv))
-                                  for kk, vv in vvv.items()][0]
-                                 for vvv in object[k]]
-                elif self.injectDefaults:
-                    dv = a.get('defaultValue', [])
-                    if isinstance(dv, str):
-                        dv = dv.split()
-                    object[k] = [Hash(vv, self.r_validate(v[vv], Hash()))
-                                 for vv in dv]
-            elif nodeType is NodeType.ChoiceOfNodes:
-                if k in object:
-                    object[k] = [Hash(kk, self.r_validate(v[kk], vv))
-                                 for kk, vv in object[k].items()][0]
-                elif self.injectDefaults and "defaultValue" in a:
-                    dv = a['defaultValue']
-                    object[k] = Hash(
-                        dv, self.r_validate(v[dv], Hash()))
-            elif k in object:
-                object[k] = self.r_validate(v, object[k])
-            elif self.injectDefaults and 'defaultValue' in a:
-                object[k] = a['defaultValue']
-            elif nodeType is NodeType.Node:
-                object[k] = self.r_validate(v, Hash())
-            else:
-                pass
-                #print 'not validated:', k
-        return object
