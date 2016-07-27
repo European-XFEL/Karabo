@@ -482,31 +482,42 @@ struct OverwriteElementWrap {
         return self.setNewMaxExc(any);
     }
     
-    static OverwriteElement & setNewAllowedStates(OverwriteElement& self, const bp::tuple & args){
+    static bp::object setNewAllowedStates(bp::tuple args, bp::dict kwargs) {
+        OverwriteElement& self = bp::extract<OverwriteElement&>(args[0]);
         std::vector<karabo::util::State> states;
-        for(unsigned int i = 0; i < bp::len(args); ++i){
+        for (unsigned int i = 1; i < bp::len(args); ++i) {
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
             states.push_back(karabo::util::State::fromString(state));
         }
-        return self.setNewAllowedStates(states);
+        self.setNewAllowedStates(states);
+        return args[0];
     }
+    
             
-    static OverwriteElement & setNewOptions(OverwriteElement& self, const bp::object & value){
-        bp::extract<bp::tuple> getTuple(value);
-        if(getTuple.check()){
-            bp::tuple args = getTuple();
-            //assume it is a list of states
-            std::vector<karabo::util::State> states;
-            for(unsigned int i = 0; i < bp::len(args); ++i){
-                const std::string state = bp::extract<std::string>(args[i].attr("name"));
-                states.push_back(karabo::util::State::fromString(state));
-            }
-            return self.setNewOptions(states);
+    static bp::object setNewOptions(bp::tuple args, bp::dict kwargs){
+        OverwriteElement& self = bp::extract<OverwriteElement&>(args[0]);
+        //get type of first arg
+        
+        bp::extract<const std::string> first_arg(args[1]);
+        if(first_arg.check()){
+            self.setNewOptions(first_arg(), ",;");
+            return args[0];
         } else {
-            //other option is string. We can let bp throw if not:
-            std::string s = bp::extract<std::string>(value);
-            return self.setNewOptions(s, ",;");
+            //try states
+            std::vector<karabo::util::State> states;
+            for (unsigned int i = 1; i < bp::len(args); ++i) {
+                const std::string className = bp::extract<std::string>(args[i].attr("__class__").attr("__name__"));
+                if( className == "State"){
+                    const std::string state = bp::extract<std::string>(args[i].attr("name"));
+                    states.push_back(karabo::util::State::fromString(state));
+                } else {
+                    throw KARABO_PYTHON_EXCEPTION("setNewOptions expects either a string or an arbitrary number of arguments of type State.");
+                }
+            }
+            self.setNewOptions(states);
+            return args[0];
         }
+        
     }
 
 };
@@ -2444,14 +2455,8 @@ void exportPyUtilSchema() {
                      , &OverwriteElementWrap().setNewMaxExc
                      , (bp::arg("value"))
                      , bp::return_internal_reference<> ())
-                .def("setNewOptions"
-                     , &OverwriteElementWrap().setNewOptions
-                     , (bp::arg("value"))
-                     , bp::return_internal_reference<> ())
-                .def("setNewAllowedStates"
-                     ,  &OverwriteElementWrap().setNewAllowedStates
-                     , (bp::arg("states"))
-                     , bp::return_internal_reference<> ())
+                .def("setNewOptions", bp::raw_function(&OverwriteElementWrap::setNewOptions,2))
+                .def("setNewAllowedStates", bp::raw_function(&OverwriteElementWrap::setNewAllowedStates,2))
                 .def("setNowObserverAccess"
                      , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowObserverAccess)
                      , bp::return_internal_reference<> ())

@@ -28,11 +28,18 @@ class  Schema_TestCase(unittest.TestCase):
 
     def test_buildUp(self):
         try:
-            schema = Shape.getSchema("EditableCircle")
+            #schema = Shape.getSchema("EditableCircle")
             schema = Configurator("Shape").getSchema("Circle")
             self.assertTrue(schema.isAccessInitOnly("shadowEnabled"))
             self.assertTrue(schema.isAccessInitOnly("radius"))
             self.assertTrue(schema.isLeaf("radius"))
+            schema = Configurator("Shape").getSchema("EditableCircle")
+            allowedStates = schema.getOptions("state")
+            self.assertEqual(allowedStates, ['INIT', 'ERROR', 'NORMAL'])
+            self.assertEqual(schema.getDefaultValue("state"), 'INIT')
+            allowedStates = schema.getOptions("status")
+            self.assertEqual(allowedStates, ['a', 'b', 'c'])
+            self.assertEqual(schema.getDefaultValue("status"), 'a')
         except Exception as e:
             self.fail("test_buildUp exception group 1: " + str(e))
         
