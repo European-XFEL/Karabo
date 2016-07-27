@@ -229,9 +229,8 @@ class Descriptor(object):
     requiredAccessLevel = Attribute(AccessLevel.OBSERVER)
     displayType = Attribute()
 
-    key = "(unknown key)"
 
-    def __init__(self, strict=True, **kwargs):
+    def __init__(self, strict=True, key="(unknown key)", **kwargs):
         """Create a new descriptor with appropriate attributes
 
         The attributes are given as keyword arguments. If we define
@@ -241,7 +240,7 @@ class Descriptor(object):
         unknown attributes, and properly set the enum type for those
         we find.
         """
-
+        self.key = key
         for k, v in kwargs.items():
             attr = getattr(self.__class__, k, None)
             if isinstance(attr, Attribute):
