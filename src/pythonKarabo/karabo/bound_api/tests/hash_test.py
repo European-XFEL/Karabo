@@ -10,7 +10,7 @@ import unittest
 import numpy as np
 
 from karabo.bound import (
-    Hash, HashAttributes, Types, VectorHash,
+    Hash, HashAttributes, HashMergePolicy, Types, VectorHash,
     isStdVectorDefaultConversion, setStdVectorDefaultConversion, similar
 )
 
@@ -665,44 +665,252 @@ class  Hash_TestCase(unittest.TestCase):
 
 
     def test_merge(self):
-        try:
-            h1 = Hash("a", 1,
-                      "b", 2,
-                      "c.b[0].g", 3,
-                      "c.c[0].d", 4,
-                      "c.c[1]", Hash("a.b.c", 6),
-                      "d.e", 7
-                     )
-            
-            h2 = Hash("a", 21,
-                      "b.c", 22,
-                      "c.b[0]", Hash("key", "value"),
-                      "c.b[1].d", 24,
-                      "e", 27
-                     )
-            
-            h1 += h2
-            
-            self.assertTrue(h1.has("a"))
-            self.assertEqual(h1.get("a"), 21)
-            self.assertEqual(h1["a"], 21)
-            self.assertTrue(h1.has("b"))
-            self.assertFalse(h1.has("c.b.d"))
-            self.assertTrue(h1.has("c.b[0]"))
-            self.assertTrue(h1.has("c.b[1]"))
-            self.assertTrue(h1.has("c.b[2]"))
-            self.assertEqual(h1.get("c.b[2].d"), 24)
-            self.assertTrue(h1.has("c.c[0].d"))
-            self.assertTrue(h1.has("c.c[1].a.b.c"))
-            self.assertTrue(h1.has("d.e"))
-            self.assertTrue(h1.has("e"))
 
-            h3 = h1
+        h1 = Hash("a", 1,
+                  "b", 2,
+                  "c.b[0].g", 3,
+                  "c.c[0].d", 4,
+                  "c.c[1]", Hash("a.b.c", 6),
+                  "d.e", 7)
+        h1.set("f.g", 99)
+        h1.set("h", -1)
+        h1.setAttribute("a", "attrKey", "Just a number")
+        h1.setAttribute("c.b", "attrKey2", 3)
+        h1.setAttribute("c.b[0].g", "attrKey3", 4.)
+        h1.setAttribute("f", "attrKey6", "buaah!")
 
-            self.assertTrue(similar(h1, h3))
-            
-        except Exception as e:
-            self.fail("test_iteration exception group 1: " + str(e))
+        h1b = Hash(h1)
+        h1c = Hash(h1)
+        h1d = Hash(h1)
+
+        h2 = Hash("a", 21,
+                  "b.c", 22,
+                  "c.b[0]", Hash("key", "value"),
+                  "c.b[1].d", 24,
+                  "e", 27,
+                  "f", Hash())
+        h2.set("g.h.i", -88)
+        h2.set("g.h.j", -188)
+        h2.set("h.i", -199)
+        h2.set("h.j", 200)
+        h2.set("i[3]", Hash())
+        h2.set("i[1].j", 200)
+        h2.set("i[2]", Hash("k.l", 5.))
+        h2.set("j", Hash("k", 5.))
+        h2.setAttribute("a", "attrKey", "Really just a number")
+        h2.setAttribute("e", "attrKey4", -1)
+        h2.setAttribute("e", "attrKey5", -11.)
+        h2.setAttribute("f", "attrKey7", 77)
+        h2.setAttribute("i", "attrKey8", 123)  # attribute on new vector<Hash> node
+        h2.setAttribute("j", "attrKey9", 12.3) # ... and new Hash node
+
+
+        h1.merge(h2) # HashMergePolicy.REPLACE_ATTRIBUTES is the default
+        h1b.merge(h2, HashMergePolicy.MERGE_ATTRIBUTES)
+        # same as h1d.merge(h2): only check similarity and once attribute replacement below
+        h1d += h2
+
+        self.assertTrue(similar(h1, h1b), "Replace or merge attributes influenced resulting paths")
+        self.assertTrue(similar(h1, h1d), "merge and += don't do the same")
+
+        self.assertTrue(h1.has("a"))
+        self.assertEqual(h1.get("a"), 21) # new value
+        #  Attribute kept, but value overwritten:
+        self.assertTrue(h1.hasAttribute("a", "attrKey"), "Attribute on node not kept")
+        self.assertEqual("Really just a number", h1.getAttribute("a", "attrKey"),
+                         "Attribute not overwritten")
+        self.assertEqual(1, h1.getAttributes("a").size(), "Attribute added out of nothing")
+
+        self.assertTrue(h1b.hasAttribute("a", "attrKey"), "Attribute on node not kept (MERGE)")
+        self.assertEqual("Really just a number", h1b.getAttribute("a", "attrKey"),
+                         "Attribute not overwritten (MERGE)")
+        self.assertEqual(1, h1b.getAttributes("a").size(),
+                         "Attribute added out of nothing (MERGE)")
+
+        self.assertTrue(h1.has("b"))
+        self.assertTrue(h1.isType("b", Types.HASH)) # switch to new type...
+        self.assertTrue(h1.has("b.c"))              # ...and as Hash can hold a child
+
+        # Attributes overwritten by nothing or kept
+        self.assertEqual(0, h1.getAttributes("c.b").size(), "Attributes on node kept")
+        self.assertEqual(1, h1.getAttributes("c.b[0].g").size(),
+                         "Attributes on untouched leaf not kept")
+        self.assertTrue(h1.hasAttribute("c.b[0].g", "attrKey3"))
+        self.assertEqual(4., h1.getAttribute("c.b[0].g", "attrKey3"),
+                         "Attribute on untouched leaf changed")
+
+        self.assertEqual(1, h1b.getAttributes("c.b").size(),
+                         "Number of attributes on node changed (MERGE)")
+        self.assertEqual(1, h1b.getAttributes("c.b[0].g").size(),
+                         "Number of attributes on leaf changed (MERGE)")
+        self.assertTrue(h1b.hasAttribute("c.b", "attrKey2"), "Attribute on node not kept (MERGE)")
+        self.assertEqual(3, h1b.getAttribute("c.b", "attrKey2"),
+                         "Attribute on node changed (MERGE)")
+        self.assertTrue(h1b.hasAttribute("c.b[0].g", "attrKey3"),
+                        "Attribute on untouched leaf not kept (MERGE)")
+        self.assertEqual(4., h1b.getAttribute("c.b[0].g", "attrKey3"),
+                         "Attribute on untouched leaf changed (MERGE)")
+
+        self.assertFalse(h1.has("c.b.d"))
+        self.assertTrue(h1.has("c.b[0]"))
+        self.assertTrue(h1.has("c.b[1]"))
+        self.assertTrue(h1.has("c.b[2]"))
+        self.assertEqual(h1.get("c.b[2].d"), 24) # vector<Hash> are appended
+        self.assertTrue(h1.has("c.c[0].d"))
+        self.assertTrue(h1.has("c.c[1].a.b.c"))
+        self.assertTrue(h1.has("d.e"))
+        self.assertTrue(h1.has("e"))
+        self.assertTrue(h1.has("g.h.i"))
+        self.assertTrue(h1.has("g.h.j"))
+        self.assertTrue(h1.has("h.i"))
+        self.assertTrue(h1.has("h.j"))
+        self.assertTrue(h1.has("i[1].j"))
+        self.assertTrue(h1.has("i[2].k.l"))
+        self.assertTrue(h1.has("i[3]"))
+        self.assertTrue(h1.has("j.k"))
+
+        # Just add attributes with leaf (identical for REPLACE or MERGE)
+        self.assertEqual(2, h1.getAttributes("e").size(), "Not all attributes on leaf added")
+        self.assertEqual(-1, h1.getAttribute("e", "attrKey4"), "Int attribute value incorrect")
+        self.assertEqual(-11., h1.getAttribute("e", "attrKey5"),
+                         "Float attribute value incorrect")
+        self.assertEqual(2, h1b.getAttributes("e").size(),
+                         "Not all attributes on leaf added (MERGE)")
+        self.assertEqual(-1, h1b.getAttribute("e", "attrKey4"),
+                         "Int attribute value incorrect (MERGE)")
+        self.assertEqual(-11., h1b.getAttribute("e", "attrKey5"),
+                         "Float attribute value incorrect (MERGE)")
+        # Just add attributes for new Hash/vector<Hash> (identical for REPLACE or MERGE)
+        self.assertEqual(1, h1.getAttributes("i").size(),
+                         "Not all attributes on vector<Hash> added")
+        self.assertEqual(123, h1.getAttribute("i", "attrKey8"),
+                         "attributes on vector<Hash> wrong")
+        self.assertEqual(1, h1.getAttributes("j").size(), "Not all attributes on Hash added")
+        self.assertEqual(12.3, h1.getAttribute("j", "attrKey9"), "Attribute on Hash wrong")
+
+        self.assertEqual(1, h1b.getAttributes("i").size(),
+                         "Not all attributes on vector<Hash> added (MERGE)")
+        self.assertEqual(123, h1b.getAttribute("i", "attrKey8"),
+                         "Attributes on vector<Hash> wrong  (MERGE)")
+        self.assertEqual(1, h1b.getAttributes("j").size(),
+                         "Not all attributes on Hash added (MERGE)")
+        self.assertEqual(12.3, h1b.getAttribute("j", "attrKey9"),
+                         "A attributes on Hash wrong (MERGE)")
+
+        self.assertTrue(h1b.hasAttribute("c.b", "attrKey2"),
+                            "Attribute on node not kept (MERGE)")
+
+        self.assertTrue(h1.has("f"))
+        self.assertTrue(h1.has("f.g")) # merging does not overwrite h1["f"] with empty Hash
+
+        self.assertEqual(1, h1.getAttributes("f").size(), "Attributes not replaced")
+        self.assertEqual(77, h1.getAttribute("f", "attrKey7"), "Attribute value incorrect")
+        # += is merge with REPLACE_ATTRIBUTES
+        self.assertEqual(1, h1d.getAttributes("f").size(), "Attributes not replaced (+=)")
+        self.assertEqual(77, h1d.getAttribute("f", "attrKey7"),
+                         "Attribute value incorrect (+=)")
+        # here is MERGE_ATTRIBUTES
+        self.assertEqual(2, h1b.getAttributes("f").size(), "Attributes not merged")
+        self.assertEqual("buaah!", h1b.getAttribute("f", "attrKey6"),
+                         "Attribute value incorrect (MERGE)")
+        self.assertEqual(77, h1b.getAttribute("f", "attrKey7"),
+                         "Attribute value incorrect (MERGE)")
+
+
+        # Now check the 'selectedPaths' feature (no extra test for attribute merging needed):
+        selectedPaths = ["a", "b.c", "g.h.i", "h.i", "i[2]",
+                         "i[5]"] # check that we tolerate to select path with invalid index
+
+        h1c.merge(h2, HashMergePolicy.MERGE_ATTRIBUTES, selectedPaths)
+
+        # Keep everything it had before merging:
+        self.assertTrue(h1c.has("a"))
+        self.assertTrue(h1c.has("b"))
+        self.assertTrue(h1c.has("c.b[0].g"))
+        self.assertTrue(h1c.has("c.c[0].d"))
+        self.assertTrue(h1c.has("c.c[1].a.b.c"))
+        self.assertTrue(h1c.has("d.e"))
+        self.assertTrue(h1c.has("f.g"))
+        # The additionally selected ones from h2:
+        self.assertTrue(h1c.has("b.c"))
+        self.assertTrue(h1c.has("g.h.i"))
+        self.assertTrue(h1c.has("h.i"))
+        self.assertTrue(h1c.has("i[0].k.l"))
+        # But not the other ones from h2:
+        self.assertFalse(h1c.has("c.b[0].key")) # neither at old position of h2
+        self.assertFalse(h1c.has("c.b[2]"))     # nor an extended vector<Hash> at all
+        self.assertFalse(h1c.has("e"))
+        # Take care that adding path "g.h.i" does not trigger that other children of "g.h"
+        # in h2 are taken as well:
+        self.assertFalse(h1c.has("g.h.j"))
+        self.assertFalse(h1c.has("h.j"))
+        # Adding i[2] should not trigger to add children of i[1] nor i[3]]
+        self.assertFalse(h1c.has("i[1].j"))
+        self.assertFalse(h1c.has("i[3]"))
+
+        # Some further small tests for so far untested cases with selected paths...
+        hashTarget = Hash("a.b", 1, "a.c", Hash(), "c", "so so!")
+        hashSource = Hash("a.d", 8., "ha", 9)
+        selectedPaths = ("a", ) # trigger merging a.d - tuple should work as well
+        hashTarget.merge(hashSource, HashMergePolicy.MERGE_ATTRIBUTES, selectedPaths)
+        self.assertTrue(hashTarget.has("a.d"))
+
+
+        hashTargetB = Hash("a[1].b", 1, "c", "Does not matter")
+        hashTargetC = Hash(hashTargetB)
+        hashTargetD = Hash(hashTargetB)
+        hashSourceBCD = Hash("a[2]", Hash("a", 33, "b", 4.4), "ha", 9,
+                             "c[1]", Hash("k", 5, "l", 6),
+                             "c[2]", Hash("b", -3), "d[2].b", 66,
+                             "e[1]", Hash("1", 1, "2", 2, "3", 3))
+        selectedPaths = ["a", # trigger merging full vector
+                         # trigger selecting first HashVec item overwriting what was not
+                         # a hashVec before, but only keep selected items
+                         "c[1].l",
+                         "d", # trigger adding full new vector
+                         "e[1].2", # selective adding of hashVec where there was no node before
+                         "e[1].3"]
+        hashTargetB.merge(hashSourceBCD, HashMergePolicy.MERGE_ATTRIBUTES, selectedPaths)
+        self.assertTrue(hashTargetB.has("a[1].b"))
+        self.assertTrue(hashTargetB.has("a[4].a"))
+        self.assertTrue(hashTargetB.has("a[4].b"))
+        self.assertFalse(hashTargetB.has("a[5]"))
+        self.assertTrue(hashTargetB.has("c[0]"))
+        self.assertFalse(hashTargetB.has("c[0].k"))
+        self.assertTrue(hashTargetB.has("c[0].l"))
+        self.assertFalse(hashTargetB.has("c[1]"))
+        self.assertTrue(hashTargetB.has("d[2].b"))
+        self.assertFalse(hashTargetB.has("d[3]"))
+        self.assertFalse(hashTargetB.has("e[0].1"))
+        self.assertTrue(hashTargetB.has("e[0].2"))
+        self.assertTrue(hashTargetB.has("e[0].3"))
+        self.assertFalse(hashTargetB.has("e[1]"))
+
+
+        selectedPaths = ("a[0]",
+                         "a[2].b", # trigger selective vector items
+                         "c")      # trigger overwriting with complete vector
+        hashTargetC.merge(hashSourceBCD, HashMergePolicy.MERGE_ATTRIBUTES, selectedPaths)
+        self.assertTrue(hashTargetC.has("a[1].b"))
+        self.assertFalse(hashTargetC.has("a[3].a"))
+        self.assertTrue(hashTargetC.has("a[3].b"))
+        self.assertFalse(hashTargetC.has("a[4]"))
+        self.assertTrue(hashTargetC.has("c[1].k"))
+        self.assertTrue(hashTargetC.has("c[1].l"))
+        self.assertTrue(hashTargetC.has("c[2].b"))
+        self.assertFalse(hashTargetC.has("c[3]"))
+
+        # Now select only invalid indices - nothing should be added
+        selectedPaths = ["a[10]", # to existing vector
+                         "c[10]", # where there was another node
+                         "d[10]", # where there was no node at all
+                         "ha[0]"] # for leaves, all indices are invalid
+        copyD = Hash(hashTargetD)
+        # also test use of keyword parameter:
+        hashTargetD.merge(hashSourceBCD, selectedPaths=selectedPaths)
+        self.assertTrue(similar(copyD, hashTargetD),
+                        "Selecting only invalid indices changed something")
+
             
     def test_subtract(self):
         try:
