@@ -47,6 +47,9 @@ class Tests(TestCase):
         self.assertEqual(a_desc.maxInc, 23)
         self.assertEqual(a_desc.allowedStates, ["INIT", "UNKNOWN"])
 
+        self.assertEqual(len(proxy.table), 1)
+        self.assertEqual(proxy.table[0].d, 5)
+
         with proxy:
             yield from proxy.setA()
             self.assertEqual(proxy.a, 22.7 * unit.milliampere,
