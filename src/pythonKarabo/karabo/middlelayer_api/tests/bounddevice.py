@@ -4,15 +4,21 @@ API cross test
 
 from karabo.bound import (
     AMPERE, Configurator, Hash, DOUBLE_ELEMENT, Epochstamp, KARABO_CLASSINFO,
-    KILO, METER, MILLI, NODE_ELEMENT, PythonDevice, SLOT_ELEMENT,
-    State, TABLE_ELEMENT, Timestamp, Trainstamp
-)
+    KILO, METER, MILLI, NODE_ELEMENT, PythonDevice, Schema, SLOT_ELEMENT,
+    State, TABLE_ELEMENT, Timestamp, Trainstamp)
 
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
 class TestDevice(PythonDevice):
     @staticmethod
     def expectedParameters(expected):
+        tableSchema = Schema()
+        (
+            DOUBLE_ELEMENT(tableSchema).key("d")
+            .assignmentOptional()
+            .noDefaultValue()
+            .commit()
+        )
         (
             DOUBLE_ELEMENT(expected).key("a")
             .minExc(22).maxExc(33).minInc(11).maxInc(23)
@@ -41,6 +47,13 @@ class TestDevice(PythonDevice):
             .commit(),
 
             SLOT_ELEMENT(expected).key("backfire")
+            .commit(),
+
+            TABLE_ELEMENT(expected).key("table")
+            .displayedName("bla")
+            .setNodeSchema(tableSchema)
+            .assignmentOptional()
+            .defaultValue([Hash("d", 5)])
             .commit()
         )
 

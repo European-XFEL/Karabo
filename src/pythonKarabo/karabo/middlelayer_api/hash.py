@@ -229,9 +229,8 @@ class Descriptor(object):
     requiredAccessLevel = Attribute(AccessLevel.OBSERVER)
     displayType = Attribute()
 
-    key = "(unknown key)"
 
-    def __init__(self, strict=True, **kwargs):
+    def __init__(self, strict=True, key="(unknown key)", **kwargs):
         """Create a new descriptor with appropriate attributes
 
         The attributes are given as keyword arguments. If we define
@@ -241,7 +240,7 @@ class Descriptor(object):
         unknown attributes, and properly set the enum type for those
         we find.
         """
-
+        self.key = key
         for k, v in kwargs.items():
             attr = getattr(self.__class__, k, None)
             if isinstance(attr, Attribute):
@@ -1004,6 +1003,16 @@ class VectorHash(Vector):
     basetype = HashType
     number = 31
 
+    def __init__(self, rowSchema, strict, **kwargs):
+        from .schema import Configurable
+
+        super(VectorHash, self).__init__(strict=strict, **kwargs)
+        namespace = {}
+        for k, v, a in rowSchema.hash.iterall():
+            desc = Type.fromname[a["valueType"]](strict=strict, key=k, **a)
+            namespace[k] = desc
+        self.cls = type(self.key, (Configurable,), namespace)
+
     @classmethod
     def read(cls, file):
         return list(super(VectorHash, cls).read(file))
@@ -1011,6 +1020,13 @@ class VectorHash(Vector):
     def cast(self, other):
         ht = HashType()
         return [ht.cast(o) for o in other]
+
+    def toKaraboValue(self, data, strict=True):
+        table = [
+            self.cls({k: getattr(self.cls, k).toKaraboValue(v, strict=strict)
+                      for k, v in row.items()})
+            for row in data]
+        return basetypes.TableValue(table, descriptor=self)
 
 
 class SchemaHashType(HashType):
