@@ -140,7 +140,7 @@ class PythonDevice(NoFsm):
 
             FLOAT_ELEMENT(expected).key("performanceStatistics.brokerLatency")
                     .displayedName("Broker latency (ms)")
-                    .description("Average time interval (in millis) between remote message sending and receiving it on this device before queuing.")
+                    .description("Average time interval between remote message sending and receiving it on this device before queuing.")
                     .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
                     .expertAccess()
                     .readOnly().initialValue(0.0)
@@ -148,7 +148,7 @@ class PythonDevice(NoFsm):
 
             FLOAT_ELEMENT(expected).key("performanceStatistics.processingLatency")
                     .displayedName("Processing latency (ms)")
-                    .description("Average time interval (in millis) between remote message sending and reading it from the queue on this device.")
+                    .description("Average time interval between remote message sending and reading it from the queue on this device.")
                     .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
                     .expertAccess()
                     .readOnly().initialValue(0.0)
