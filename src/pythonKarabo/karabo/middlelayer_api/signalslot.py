@@ -1,18 +1,16 @@
 from __future__ import unicode_literals
-from asyncio import (async, CancelledError, coroutine, Future, get_event_loop,
+from asyncio import (async, CancelledError, coroutine, get_event_loop,
                      sleep, TimeoutError, wait, wait_for)
 import logging
 import random
 import weakref
 import inspect
 
-from .basetypes import KaraboValue
 from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
 from .hash import Hash, HashType, Int32, String
 from .p2p import NetworkOutput
 from .schema import Configurable
-from .timestamp import Timestamp
 
 
 class Signal(object):

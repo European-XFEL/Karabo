@@ -11,8 +11,8 @@ from .middlelayer_api.device_client import (
     execute, executeNoWait, updateDevice, sleep
 )
 from .middlelayer_api.enums import (
-    AccessLevel, AccessMode, Assignment, ChannelSpaceType, EncodingType,
-    MetricPrefix, NodeType, Unit
+    AccessLevel, AccessMode, Assignment, EncodingType, MetricPrefix, NodeType,
+    Unit
 )
 from .middlelayer_api.basetypes import (
     BoolValue, EnumValue, KaraboValue, QuantityValue, StringValue,
@@ -38,7 +38,7 @@ from .middlelayer_api.project import (
 )
 from .middlelayer_api.registry import MetaRegistry, Registry
 from .middlelayer_api.schema import (
-    Configurable, Node, ChoiceOfNodes, ListOfNodes, Validator
+    Configurable, Node, ChoiceOfNodes, ListOfNodes
 )
 from .middlelayer_api.signalslot import Signal, SignalSlotable, slot, coslot
 from .middlelayer_api.timestamp import Timestamp
