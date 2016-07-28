@@ -12,8 +12,7 @@ namespace karabo {
     namespace net {
 
 
-        EventLoop::EventLoop() : m_ioServicePointer(new boost::asio::io_service()) {
-            std::cout << "ONCE" << std::endl;
+        EventLoop::EventLoop() : m_ioServicePointer(new boost::asio::io_service()) {          
         }
 
 
@@ -33,7 +32,7 @@ namespace karabo {
 
 
         void EventLoop::run() {
-            getInstance().runProtected();
+            getInstance().runProtected();          
         }
 
 
@@ -41,6 +40,11 @@ namespace karabo {
             EventLoop& loop = getInstance();
             boost::asio::io_service::work work(*(loop.m_ioServicePointer));
             loop.runProtected();
+        }
+
+
+        void EventLoop::reset() {
+            getInstance().m_ioServicePointer->reset();
         }
 
 
@@ -113,11 +117,11 @@ namespace karabo {
                     // This is a sign to remove this thread from the pool
                     // As we can not kill ourselves we will ask another thread to kindly do so
                     if (isValidThreadId()) {
-                        m_ioServicePointer->post(boost::bind(&karabo::net::EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
-                        std::cout << "Bad thread killer trial" << std::endl;
+                        m_ioServicePointer->post(boost::bind(&karabo::net::EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));                       
                         return; // No more while, we want to die
                     } else {
                         m_ioServicePointer->post(&asyncInjectException);
+                        // This sleep is experimental, the idea is to prevent being called on the main thread again
                         boost::this_thread::sleep(boost::posix_time::milliseconds(10));
                     }
                 } catch (karabo::util::Exception& e) {

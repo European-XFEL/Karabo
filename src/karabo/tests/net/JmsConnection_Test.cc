@@ -7,7 +7,8 @@
 
 #include "JmsConnection_Test.hh"
 #include "karabo/net/EventLoop.hh"
-#include "karabo/net/JmsChannel.hh"
+#include "karabo/net/JmsConsumer.hh"
+#include "karabo/net/JmsProducer.hh"
 #include "karabo/net/IOService.hh"
 #include "karabo/log/Logger.hh"
 #include <karabo/net/JmsConnection.hh>
@@ -21,12 +22,26 @@ CPPUNIT_TEST_SUITE_REGISTRATION(JmsConnection_Test);
 
 JmsConnection_Test::JmsConnection_Test() {
 
+
     karabo::log::Logger::configure(Hash("priority", "DEBUG"));
 
 }
 
 
 JmsConnection_Test::~JmsConnection_Test() {
+}
+
+
+unsigned int JmsConnection_Test::incrementMessageCount() {
+    boost::mutex::scoped_lock lock(m_mutex);
+    return ++m_messageCount;
+}
+
+
+void JmsConnection_Test::testAll() {
+    testConnect();
+    testCommunication1();
+    testCommunication2();
 }
 
 
@@ -37,6 +52,7 @@ void JmsConnection_Test::testConnect() {
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         m_connection->connect();
         CPPUNIT_ASSERT(m_connection->isConnected() == true);
+        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == "tcp://exfl-broker.desy.de:7777");
         m_connection->disconnect();
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         m_connection->connect();
@@ -67,41 +83,109 @@ void JmsConnection_Test::testConnect() {
 }
 
 
-void JmsConnection_Test::readHandler(karabo::net::JmsChannel::Pointer channel,
-                                     karabo::util::Hash::Pointer header,
-                                     karabo::util::Hash::Pointer body) {
+void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer,
+                                      karabo::net::JmsProducer::Pointer producer,
+                                      karabo::util::Hash::Pointer header,
+                                      karabo::util::Hash::Pointer body) {
 
 
-    m_counter++;
-    if (m_counter == 1) tick = boost::posix_time::microsec_clock::local_time();
-    if (m_counter == 2001) {
-        boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - tick;
-        clog << diff.total_milliseconds() << std::endl;
-        return;
+
+    if (m_messageCount == 0) {
+        m_tick = boost::posix_time::microsec_clock::local_time();
+        CPPUNIT_ASSERT(header->has("header"));
+        CPPUNIT_ASSERT(header->get<string>("header") == "some header");
+        CPPUNIT_ASSERT(body->has("body"));
+        CPPUNIT_ASSERT(body->get<int>("body") == 42);
     }
-    channel->readAsync(boost::bind(&JmsConnection_Test::readHandler, this, channel, _1, _2), "heisenb");
-    channel->write("heisenb", header, body);
+
+    if (m_messageCount == 1000) {
+        boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - m_tick;
+        const float msPerMsg = diff.total_milliseconds() / 1000.;
+        std::clog << "Average message round-trip time: " << msPerMsg << std::endl;
+        CPPUNIT_ASSERT(msPerMsg < 5); // Performance assert...
+        return;
+    } 
+
+    m_messageCount++;
+    consumer->readAsync(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2), "testTopic2");
+    producer->write("testTopic2", header, body);
 }
 
 
-void JmsConnection_Test::testChannel() {
-    
+void JmsConnection_Test::testCommunication1() {
+
+    m_messageCount = 0;
+
     m_connection = JmsConnection::Pointer(new JmsConnection());
+
     m_connection->connect();
-    
-    JmsChannel::Pointer channel = m_connection->createChannel();
 
-    channel->readAsync(boost::bind(&JmsConnection_Test::readHandler, this, channel, _1, _2), "heisenb");   
+    JmsConsumer::Pointer consumer = m_connection->createConsumer();
+    JmsProducer::Pointer producer = m_connection->createProducer();
 
-    Hash::Pointer header(new Hash("header", "shit"));
+    consumer->readAsync(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2), "testTopic1");
 
-    Hash::Pointer body(new Hash("body", std::vector<char>(1000, 't')));
+    Hash::Pointer header(new Hash("header", "some header"));
 
-    m_counter = 0;
+    Hash::Pointer body(new Hash("body", 42));
 
-    channel->write("heisenb", header, body);
+    producer->write("testTopic1", header, body);
 
-    EventLoop::work();
-   
+    EventLoop::run();
+
+    CPPUNIT_ASSERT(m_messageCount == 1000);
 }
+
+
+void JmsConnection_Test::readHandler2(karabo::net::JmsConsumer::Pointer channel,
+                                      karabo::util::Hash::Pointer header,
+                                      karabo::util::Hash::Pointer body) {    
+    incrementMessageCount();
+}
+
+
+void JmsConnection_Test::readHandler3(karabo::net::JmsConsumer::Pointer channel,
+                                      karabo::util::Hash::Pointer header,
+                                      karabo::util::Hash::Pointer body) {    
+    incrementMessageCount();
+    
+}
+
+
+void JmsConnection_Test::readHandler4(karabo::net::JmsConsumer::Pointer c,
+                                      karabo::util::Hash::Pointer header,
+                                      karabo::util::Hash::Pointer body) {
+    clog << *header << endl;
+    if (incrementMessageCount() < 2) {
+        c->readAsync(boost::bind(&JmsConnection_Test::readHandler4, this, c, _1, _2), "testTopic1");
+    }
+}
+
+
+void JmsConnection_Test::testCommunication2() {
+    
+    m_messageCount = 0;
+    Hash::Pointer header1(new Hash("key", "foo"));
+    Hash::Pointer header2(new Hash("key", "bar"));
+    Hash::Pointer body(new Hash("body", 42));
+
+    JmsConsumer::Pointer c1 = m_connection->createConsumer();
+    JmsConsumer::Pointer c2 = m_connection->createConsumer();
+    JmsConsumer::Pointer c3 = m_connection->createConsumer();
+    JmsProducer::Pointer p = m_connection->createProducer();
+
+    c1->readAsync(boost::bind(&JmsConnection_Test::readHandler2, this, c1, _1, _2), "testTopic1", "key = 'foo'");
+    c2->readAsync(boost::bind(&JmsConnection_Test::readHandler3, this, c2, _1, _2), "testTopic1", "key = 'bar'");
+    c3->readAsync(boost::bind(&JmsConnection_Test::readHandler4, this, c3, _1, _2), "testTopic1");
+
+    p->write("testTopic1", header1, body);
+    p->write("testTopic1", header2, body);
+
+    EventLoop::reset(); // Needed in preparation for any subsequent run() invocation
+    EventLoop::run();
+
+    clog << "Messages " << m_messageCount << endl;
+    CPPUNIT_ASSERT(m_messageCount == 4);
+}
+
 
