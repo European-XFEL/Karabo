@@ -44,20 +44,27 @@ class DeviceNode(String):
         else:
             return Hash(), {}
 
+    def _copy_properties(self, data, swapped):
+        """return a Hash that contains our properties in Hash data"""
+        ret = Hash()
+        for prop in self.properties:
+            if not isinstance(prop, dict):
+                prop = {prop: prop}
+            for name, rename in prop.items():
+                if swapped:
+                    name, rename = rename, name
+                val = data.get(rename)
+                if val is not None:
+                    ret[name] = val
+        return ret
+
     def _setter(self, instance, value):
         proxy = instance.__dict__[self.key]
         proxy._current.merge(value)
 
         @coroutine
         def setter():
-            config = Hash()
-            for prop in self.properties:
-                if not isinstance(prop, dict):
-                    prop = {prop: prop}
-                for name, rename in prop.items():
-                    val = value.get(rename)
-                    if val is not None:
-                        config[name] = val
+            config = self._copy_properties(value, False)
             yield from instance.call(proxy._deviceId,
                                      "slotReconfigure", config)
         return [setter]
@@ -90,17 +97,10 @@ class DeviceNode(String):
                     proxy._current = Hash()
                     yield from proxy
                     while True:
-                        h_in = yield from queue.get()
-                        h_out = Hash()
-                        for prop in self.properties:
-                            if not isinstance(prop, dict):
-                                prop = {prop: prop}
-                            for name, rename in prop.items():
-                                value = h_in.get(name)
-                                if value is not None:
-                                    h_out[rename] = value
-                        proxy._current.merge(h_out)
-                        instance.signalChanged(Hash(self.key, h_out),
+                        out = self._copy_properties(
+                            (yield from queue.get()), True)
+                        proxy._current.merge(out)
+                        instance.signalChanged(Hash(self.key, out),
                                                instance.deviceId)
                 else:
                     yield from Future()  # wait until we are cancelled
