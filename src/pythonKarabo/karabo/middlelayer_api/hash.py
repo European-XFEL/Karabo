@@ -1289,50 +1289,6 @@ class ListElement(Element):
     def hashname(self):
         return "VECTOR_HASH"
 
-class TableElement(Element):
-    def __init__(self, tag, attrs={}):
-        Element.__init__(self, tag, attrs)
-        self.children = [ ]
- 
- 
-    def __len__(self):
-        return len(self.children)
- 
- 
-    def append(self, elem):
-        self.children.append(elem)
- 
- 
-    def __iter__(self):
-        return iter(self.children)
- 
- 
-    def iter(self, tag=None):
-        if tag == "*":
-            tag = None
-        if tag is None or self.tag == tag:
-            yield self
-        for e in self.children:
-            for ee in e.iter(tag):
-                yield ee
- 
- 
-    @property
-    def data(self):
-        return [e.data for e in self.children]
- 
- 
-    @data.setter
-    def data(self, value):
-        self.children = [ ]
-        for c in value:
-            e = HashElement('KRB_Item')
-            e.children = c
-            self.children.append(e)
- 
- 
-    def hashname(self):
-        return "VECTOR_HASH"
 
 class Hash(OrderedDict):
     """This is the serialization data structure of Karabo

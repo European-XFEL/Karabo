@@ -1,4 +1,4 @@
-from asyncio import coroutine, gather
+from asyncio import gather
 
 from .device import Device
 from .enums import AccessLevel, AccessMode

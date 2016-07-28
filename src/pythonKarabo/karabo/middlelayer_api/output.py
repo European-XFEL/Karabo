@@ -1,6 +1,6 @@
 """ This module redirects output """
 
-from asyncio import coroutine, get_event_loop
+from asyncio import get_event_loop
 
 class KaraboStream:
     """ An output stream that redirects output to the karabo network """

@@ -5,7 +5,7 @@ from .enums import AccessLevel, AccessMode, Assignment
 from .exceptions import KaraboError
 from .hash import Bool, Hash, HashType, Int32, SchemaHashType, String
 from .logger import Logger
-from .schema import Validator, Node
+from .schema import Node
 from .signalslot import SignalSlotable, Signal, slot, coslot
 
 
@@ -79,13 +79,7 @@ class Device(SignalSlotable):
         if not hasattr(self, "serverId"):
             self.serverId = self._serverId_
 
-        # host & domain names
         self.hostname, _, self.domainname = socket.gethostname().partition('.')
-
-        # Setup the validation classes
-        self.validatorIntern = Validator(injectDefaults=False)
-        self.validatorExtern = Validator(injectDefaults=False)
-
         self.classId = type(self).__name__
 
     @classmethod

@@ -16,13 +16,12 @@ import numpy
 from .device import Device
 from .enums import AccessLevel, AccessMode, Assignment
 from .eventloop import EventLoop
-from .hash import (Hash, XMLParser, saveToFile, SchemaHashType, String,
-                   StringList, Int32)
+from .hash import Hash, XMLParser, saveToFile, String, StringList, Int32
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
-from .schema import Validator, Node
-from .signalslot import SignalSlotable, Signal, slot, coslot
+from .schema import Node
+from .signalslot import SignalSlotable, slot, coslot
 
 # XXX: These imports are needed for their side-effects...
 import karabo.middlelayer_api.metamacro  # add a default Device MetaMacro
@@ -293,10 +292,8 @@ def main(args=None):
     args = args or sys.argv
     loop = EventLoop()
     set_event_loop(loop)
-    v = Validator()
-    h = Hash({k: v for k, v in (a.split("=", 2) for a in args[1:])})
-    validated = v.validate(DeviceServer.getClassSchema(), h)
-    server = DeviceServer(validated["DeviceServer"])
+    params = Hash({k: v for k, v in (a.split("=", 2) for a in args[1:])})
+    server = DeviceServer(params["DeviceServer"])
     if server:
         server.startInstance()
         try:
