@@ -342,11 +342,7 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_latencyMutex);
                     const long long latency = getEpochMillis() - header->get<long long>("MQTimestamp");
                     const unsigned int posLatency = static_cast<unsigned int>(latency >= 0ll ? latency : 0ll);
-                    m_brokerLatency.get<0>() += posLatency;
-                    ++(m_brokerLatency.get<1>());
-                    if (posLatency > m_brokerLatency.get<2>()) {
-                        m_brokerLatency.get<2>() = posLatency;
-                    }
+                    m_brokerLatency.add(posLatency);
                 }
             }
 
@@ -616,11 +612,7 @@ namespace karabo {
                             boost::mutex::scoped_lock lock(m_latencyMutex);
                             const long long latency = getEpochMillis() - header.get<long long>("MQTimestamp");
                             const unsigned int posLatency = static_cast<unsigned int> (latency >= 0ll ? latency : 0ll);
-                            m_processingLatency.get<0>() += posLatency;
-                            ++(m_processingLatency.get<1>());
-                            if (posLatency > m_processingLatency.get<2>()) {
-                                m_processingLatency.get<2>() = posLatency;
-                            }
+                            m_processingLatency.add(posLatency);
                         }
                     }
 
@@ -1683,23 +1675,13 @@ namespace karabo {
                     // This thread is used as a "Trittbrett" for slowly updating latency information and queue sizes
                     if (m_updatePerformanceStatistics) {
                         boost::mutex::scoped_lock lock(m_latencyMutex);
-                        float blAve = -1.f;
-                        float plAve = -1.f;
-                        if (m_brokerLatency.get<1>() > 0) {
-                            blAve = m_brokerLatency.get<0>() / static_cast<float>(m_brokerLatency.get<1>());
-                        }
-                        if (m_processingLatency.get<1>() > 0) {
-                            plAve = m_processingLatency.get<0>() / static_cast<float>(m_processingLatency.get<1>());
-                        }
-
                         // Call handler
-                        m_updatePerformanceStatistics(blAve, m_brokerLatency.get<2>(),
-                                                      plAve, m_processingLatency.get<2>(),
+                        m_updatePerformanceStatistics(m_brokerLatency.average(), m_brokerLatency.maximum,
+                                                      m_processingLatency.average(), m_processingLatency.maximum,
                                                       static_cast<unsigned int> (m_eventQueue.size()));
-
                         // Reset statistics
-                        m_brokerLatency.get<0>() = m_brokerLatency.get<1>() = m_brokerLatency.get<2>() = 0u;
-                        m_processingLatency.get<0>() = m_processingLatency.get<1>() = m_processingLatency.get<2>() = 0u;
+                        m_brokerLatency.clear();
+                        m_processingLatency.clear();
                     }
 
                 } catch (const Exception& e) {
@@ -2218,5 +2200,29 @@ namespace karabo {
             //  go to the Gui as well which is desirable here.)
             KARABO_LOG_FRAMEWORK_ERROR_C(m_instanceId) << "Problem in '" << channelName << "' broker channel:\n" << info;
         }
+
+
+        SignalSlotable::LatencyStats::LatencyStats() : sum(0), counts(0), maximum(0) {
+        }
+
+
+        void SignalSlotable::LatencyStats::add(unsigned int latency) {
+            sum += latency;
+            ++counts;
+            if (latency > maximum) {
+                maximum = latency;
+            }
+        }
+
+
+        void SignalSlotable::LatencyStats::clear() {
+            sum = counts = maximum = 0;
+        }
+
+
+        float SignalSlotable::LatencyStats::average() const {
+            return counts > 0 ? sum / static_cast<float> (counts) : -1.f;
+        }
+
     }
 }

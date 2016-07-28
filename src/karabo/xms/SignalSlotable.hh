@@ -57,11 +57,24 @@ namespace karabo {
          */
         class SignalSlotable : public boost::enable_shared_from_this<SignalSlotable> {
 
-
             // Performance statistics
+
+            struct LatencyStats {
+
+
+                unsigned int sum;
+                unsigned int counts;
+                unsigned int maximum;
+
+                LatencyStats();
+                void add(unsigned int latency);
+                void clear();
+                float average() const;
+            };
+
             mutable boost::mutex m_latencyMutex;
-            boost::tuple<unsigned int, unsigned int, unsigned int> m_brokerLatency; // sum of milliseconds, counts, max
-            boost::tuple<unsigned int, unsigned int, unsigned int> m_processingLatency; // dito
+            LatencyStats m_brokerLatency; // all in milliseconds
+            LatencyStats m_processingLatency; // dito
 
             friend class Signal;
 
