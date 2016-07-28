@@ -11,7 +11,8 @@
 
 #include "utils.hh"
 #include "JmsConnection.hh"
-#include "JmsChannel.hh"
+#include "JmsConsumer.hh"
+#include "JmsProducer.hh"
 #include "JmsBrokerConnection.hh"
 #include "EventLoop.hh"
 
@@ -173,12 +174,18 @@ namespace karabo {
         }
 
 
-        boost::shared_ptr<JmsChannel> JmsConnection::createChannel() {
-            boost::shared_ptr<JmsChannel> channel(new JmsChannel(shared_from_this()));
-            m_channels.insert(channel);
-            return channel;
+        boost::shared_ptr<JmsConsumer> JmsConnection::createConsumer() {
+            boost::shared_ptr<JmsConsumer> consumer(new JmsConsumer(shared_from_this()));
+            m_consumers.insert(consumer);
+            return consumer;
         }
 
+
+        boost::shared_ptr<JmsProducer> JmsConnection::createProducer() {
+            boost::shared_ptr<JmsProducer> producer(new JmsProducer(shared_from_this()));
+            m_producers.insert(producer);
+            return producer;
+        }
 
 
 

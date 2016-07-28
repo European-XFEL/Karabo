@@ -39,8 +39,10 @@ namespace karabo {
      */
     namespace net {
 
-        // Forward declaration of JmsChannel
-        class JmsChannel;
+        // Forward declarations
+        class JmsConsumer;
+        class JmsProducer;
+
 
         class JmsConnection : public boost::enable_shared_from_this<JmsConnection> {
 
@@ -50,7 +52,8 @@ namespace karabo {
             // it is used for exactly the aforementioned purpose
             static const int HANDLED_OBJECT_INVALID_HANDLE = 0xFEEEFEEE;
 
-            friend class JmsChannel;           
+            friend class JmsConsumer;
+            friend class JmsProducer;
 
             std::string m_availableBrokerUrls;
 
@@ -79,8 +82,11 @@ namespace karabo {
 
             static const unsigned int acknowledgeTimeout = 0;
 
-            typedef std::set<boost::weak_ptr<JmsChannel> > Channels;
-            Channels m_channels;
+            typedef std::set<boost::weak_ptr<JmsConsumer> > Consumers;
+            Consumers m_consumers;
+
+            typedef std::set<boost::weak_ptr<JmsProducer> > Producers;
+            Producers m_producers;
 
             boost::asio::io_service::strand m_reconnectStrand;
 
@@ -108,7 +114,9 @@ namespace karabo {
              */
             std::string getBrokerUrl() const;
 
-            boost::shared_ptr<JmsChannel> createChannel();
+            boost::shared_ptr<JmsConsumer> createConsumer();
+
+            boost::shared_ptr<JmsProducer> createProducer();
 
 
         private:

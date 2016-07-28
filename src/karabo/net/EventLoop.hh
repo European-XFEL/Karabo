@@ -21,18 +21,15 @@ namespace karabo {
 
             };
 
-        class EventLoop {
+        class EventLoop : private boost::noncopyable {
+
 
         public:
 
             KARABO_CLASSINFO(EventLoop, "EventLoop", "1.0")
 
             typedef boost::shared_ptr<boost::asio::io_service> IOServicePointer;
-
-            EventLoop();
-
-            EventLoop(const EventLoop& orig);
-
+           
             virtual ~EventLoop();
 
             static void addThread(const int nThreads = 1);
@@ -45,10 +42,15 @@ namespace karabo {
 
             static void work();
 
+            static void reset();
+
             static EventLoop& getInstance();
 
         private:
 
+            EventLoop();
+
+            EventLoop(const EventLoop& orig);
 
             void _addThread(const int nThreads);
 
