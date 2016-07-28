@@ -341,7 +341,7 @@ namespace karabo {
                 if (header->has("MQTimestamp")) {
                     boost::mutex::scoped_lock lock(m_latencyMutex);
                     const long long latency = getEpochMillis() - header->get<long long>("MQTimestamp");
-                    const unsigned int posLatency = static_cast<unsigned int>(latency >= 0ll ? latency : 0ll);
+                    const unsigned int posLatency = static_cast<unsigned int>(std::max(latency, 0ll));
                     m_brokerLatency.add(posLatency);
                 }
             }
@@ -611,7 +611,7 @@ namespace karabo {
                         if (header.has("MQTimestamp")) {
                             boost::mutex::scoped_lock lock(m_latencyMutex);
                             const long long latency = getEpochMillis() - header.get<long long>("MQTimestamp");
-                            const unsigned int posLatency = static_cast<unsigned int> (latency >= 0ll ? latency : 0ll);
+                            const unsigned int posLatency = static_cast<unsigned int>(std::max(latency, 0ll));
                             m_processingLatency.add(posLatency);
                         }
                     }
