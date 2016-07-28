@@ -771,7 +771,7 @@ class PythonDevice(NoFsm):
             allowedStates = self.fullSchema.getAllowedStates(slotName)
             if allowedStates:
                 # print("Validating slot")
-                currentState = self["state"]
+                currentState = State(self["state"])
                 if currentState not in allowedStates:
                     msg = "Command \"{}\" is not allowed in current state \"{}\" of device \"{}\"".format(slotName, currentState, self.deviceid)
                     self._ss.reply(msg)
@@ -779,8 +779,6 @@ class PythonDevice(NoFsm):
         return True
     
     def slotGetConfiguration(self):
-        #senderId = self._ss.getSenderInfo("slotGetConfiguration").getInstanceIdOfSender()
-        #self._ss.call(senderId, "slotChanged", self.parameters, self.deviceid)
         self._ss.reply(self.parameters, self.deviceid)
         
     def slotReconfigure(self, newConfiguration):
