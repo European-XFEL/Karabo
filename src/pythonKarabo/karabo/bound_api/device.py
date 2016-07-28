@@ -166,7 +166,7 @@ class PythonDevice(NoFsm):
                      .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
                      .expertAccess()
                      .readOnly().initialValue(0)
-                     .commit();
+                     .commit(),
 
             UINT32_ELEMENT(expected).key("performanceStatistics.messageQueueSize")
                     .displayedName("Local message queue size")
@@ -883,7 +883,7 @@ class PythonDevice(NoFsm):
             stats = Hash("brokerLatency", avgBrokerLatency,
                          "processingLatency", avgProcessingLatency,
                          "maxProcessingLatency", maxProcessingLatency,
-                         "messageQueueSize", messageQueueSize))
+                         "messageQueueSize", messageQueueSize)
             self.set(Hash("performanceStatistics", stats))
 
 
