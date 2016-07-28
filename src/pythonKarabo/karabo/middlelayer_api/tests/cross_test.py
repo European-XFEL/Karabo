@@ -9,7 +9,7 @@ from unittest import TestCase, main
 
 from karabo.middlelayer import (
     AccessLevel, Assignment, Device, getDevice, Int32,
-    MetricPrefix, shutdown, Slot, unit, Unit, waitUntilNew)
+    MetricPrefix, shutdown, Slot, State, unit, Unit, waitUntilNew)
 
 from .eventloop import setEventLoop
 
@@ -45,7 +45,7 @@ class Tests(TestCase):
         self.assertEqual(a_desc.maxExc, 33)
         self.assertEqual(a_desc.minInc, 11)
         self.assertEqual(a_desc.maxInc, 23)
-        self.assertEqual(a_desc.allowedStates, ["some", "thing"])
+        self.assertEqual(a_desc.allowedStates, ["INIT", "UNKNOWN"])
 
         with proxy:
             yield from proxy.setA()
