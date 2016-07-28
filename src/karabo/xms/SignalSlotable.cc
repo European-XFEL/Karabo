@@ -46,8 +46,9 @@ namespace karabo {
 
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                                const karabo::util::Hash::Pointer& body) const {
-            if (instanceId == "*" || instanceId.empty())
+            if (instanceId == "*" || instanceId.empty()) {
                 return false;
+            }
 
             SignalSlotable* that = 0;
             {
@@ -111,6 +112,7 @@ namespace karabo {
             header->set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
+            // Timestamp added to be able to measure latencies even if broker is by-passed
             header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
             return header;
         }
@@ -153,6 +155,8 @@ namespace karabo {
             header->set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
+            // Timestamp added to be able to measure latencies even if broker is by-passed
+            header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
             return header;
         }
 
@@ -170,6 +174,8 @@ namespace karabo {
             header->set("slotFunctions", "|" + requestSlotInstanceId + ":" + requestSlotFunction + "|");
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
+            // Timestamp added to be able to measure latencies even if broker is by-passed
+            header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
             return header;
         }
 
@@ -332,10 +338,11 @@ namespace karabo {
         void SignalSlotable::injectEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
 
             if (m_updatePerformanceStatistics) {
-                boost::mutex::scoped_lock lock(m_latencyMutex);
                 if (header->has("MQTimestamp")) {
-                    m_brokerLatency.first += (getEpochMillis() - header->get<long long>("MQTimestamp"));
-                    m_brokerLatency.second++;
+                    boost::mutex::scoped_lock lock(m_latencyMutex);
+                    const long long latency = getEpochMillis() - header->get<long long>("MQTimestamp");
+                    const unsigned int posLatency = static_cast<unsigned int>(std::max(latency, 0ll));
+                    m_brokerLatency.add(posLatency);
                 }
             }
 
@@ -601,10 +608,11 @@ namespace karabo {
 
                     // Collect performance statistics
                     if (m_updatePerformanceStatistics) {
-                        boost::mutex::scoped_lock lock(m_latencyMutex);
                         if (header.has("MQTimestamp")) {
-                            m_processingLatency.first += (getEpochMillis() - header.get<long long>("MQTimestamp"));
-                            m_processingLatency.second++;
+                            boost::mutex::scoped_lock lock(m_latencyMutex);
+                            const long long latency = getEpochMillis() - header.get<long long>("MQTimestamp");
+                            const unsigned int posLatency = static_cast<unsigned int>(std::max(latency, 0ll));
+                            m_processingLatency.add(posLatency);
                         }
                     }
 
@@ -1667,21 +1675,13 @@ namespace karabo {
                     // This thread is used as a "Trittbrett" for slowly updating latency information and queue sizes
                     if (m_updatePerformanceStatistics) {
                         boost::mutex::scoped_lock lock(m_latencyMutex);
-                        float blAve = -1;
-                        float plAve = -1;
-                        if (m_brokerLatency.second > 0) {
-                            blAve = m_brokerLatency.first / (float) m_brokerLatency.second;
-                        }
-                        if (m_processingLatency.second > 0) {
-                            plAve = m_processingLatency.first / (float) m_processingLatency.second;
-                        }
-
                         // Call handler
-                        m_updatePerformanceStatistics(blAve, plAve, static_cast<unsigned int> (m_eventQueue.size()));
-
+                        m_updatePerformanceStatistics(m_brokerLatency.average(), m_brokerLatency.maximum,
+                                                      m_processingLatency.average(), m_processingLatency.maximum,
+                                                      static_cast<unsigned int> (m_eventQueue.size()));
                         // Reset statistics
-                        m_brokerLatency.first = m_brokerLatency.second = 0;
-                        m_processingLatency.first = m_processingLatency.second = 0;
+                        m_brokerLatency.clear();
+                        m_processingLatency.clear();
                     }
 
                 } catch (const Exception& e) {
@@ -2200,5 +2200,29 @@ namespace karabo {
             //  go to the Gui as well which is desirable here.)
             KARABO_LOG_FRAMEWORK_ERROR_C(m_instanceId) << "Problem in '" << channelName << "' broker channel:\n" << info;
         }
+
+
+        SignalSlotable::LatencyStats::LatencyStats() : sum(0), counts(0), maximum(0) {
+        }
+
+
+        void SignalSlotable::LatencyStats::add(unsigned int latency) {
+            sum += latency;
+            ++counts;
+            if (latency > maximum) {
+                maximum = latency;
+            }
+        }
+
+
+        void SignalSlotable::LatencyStats::clear() {
+            sum = counts = maximum = 0;
+        }
+
+
+        float SignalSlotable::LatencyStats::average() const {
+            return counts > 0 ? sum / static_cast<float> (counts) : -1.f;
+        }
+
     }
 }

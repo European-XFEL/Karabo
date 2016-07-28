@@ -567,12 +567,15 @@ namespace karathon {
 
 
     void SignalSlotableWrap::proxyUpdatePerformanceStatisticsHandler(const bp::object& handler,
-                                                                     float brokerLatency,
-                                                                     float processingLatency,
+                                                                     float avgBrokerLatency,
+                                                                     unsigned int maxBrokerLatency,
+                                                                     float avgProcessingLatency,
+                                                                     unsigned int maxProcessingLatency,
                                                                      unsigned int queueSize) {
         ScopedGILAcquire gil;
         try {
-            if (handler) handler(bp::object(brokerLatency), bp::object(processingLatency), bp::object(queueSize));
+            if (handler) handler(bp::object(avgBrokerLatency), bp::object(maxBrokerLatency),
+                                 bp::object(avgProcessingLatency), bp::object(maxProcessingLatency), bp::object(queueSize));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) PyErr_Print();
             throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
