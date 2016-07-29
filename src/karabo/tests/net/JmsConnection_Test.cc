@@ -101,10 +101,10 @@ void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer
     if (m_messageCount == 1000) {
         boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - m_tick;
         const float msPerMsg = diff.total_milliseconds() / 1000.;
-        std::clog << "Average message round-trip time: " << msPerMsg << std::endl;
+        std::clog << "Average message round-trip time: " << msPerMsg << " ms" << std::endl;
         CPPUNIT_ASSERT(msPerMsg < 5); // Performance assert...
         return;
-    } 
+    }
 
     m_messageCount++;
     consumer->readAsync(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2), "testTopic2");
@@ -139,14 +139,17 @@ void JmsConnection_Test::testCommunication1() {
 
 void JmsConnection_Test::readHandler2(karabo::net::JmsConsumer::Pointer channel,
                                       karabo::util::Hash::Pointer header,
-                                      karabo::util::Hash::Pointer body) {    
+                                      karabo::util::Hash::Pointer body) {
+
+    cout << "handler2" << endl;
     incrementMessageCount();
 }
 
 
 void JmsConnection_Test::readHandler3(karabo::net::JmsConsumer::Pointer channel,
                                       karabo::util::Hash::Pointer header,
-                                      karabo::util::Hash::Pointer body) {    
+                                      karabo::util::Hash::Pointer body) {
+    cout << "handler3" << endl;
     incrementMessageCount();
     
 }
@@ -155,10 +158,10 @@ void JmsConnection_Test::readHandler3(karabo::net::JmsConsumer::Pointer channel,
 void JmsConnection_Test::readHandler4(karabo::net::JmsConsumer::Pointer c,
                                       karabo::util::Hash::Pointer header,
                                       karabo::util::Hash::Pointer body) {
-    clog << *header << endl;
-    if (incrementMessageCount() < 2) {
-        c->readAsync(boost::bind(&JmsConnection_Test::readHandler4, this, c, _1, _2), "testTopic1");
-    }
+    cout << "handler4" << endl;
+    incrementMessageCount();
+    if (header->get<string>("key") == "bar") return;
+    c->readAsync(boost::bind(&JmsConnection_Test::readHandler4, this, c, _1, _2), "testTopic1");
 }
 
 
