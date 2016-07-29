@@ -36,7 +36,10 @@ namespace karabo {
 
         /**
          * Parses a URL and returns a tuple.
-         * @param url
+         * 
+         * The URL must of format: <scheme>://<domain>:<port>/<path>?<query>
+         *
+         * @param url A well formed URL
          * @return tuple containing scheme, domain, port, path and query
          */
         boost::tuple<std::string, std::string, std::string, std::string, std::string> parseUrl(const std::string& url);

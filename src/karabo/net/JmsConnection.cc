@@ -24,7 +24,7 @@ namespace karabo {
         using namespace boost;
 
 
-        JmsConnection::JmsConnection(const std::string& brokerUrls, const int nThreads)
+        JmsConnection::JmsConnection(const std::string& brokerUrls)
             : m_availableBrokerUrls(brokerUrls),
             m_reconnectStrand(*EventLoop::getIOService()) {
 
@@ -36,10 +36,13 @@ namespace karabo {
             if (env != 0) m_availableBrokerUrls = string(env);
             parseBrokerUrl();
 
-            // Add one event-loop thread for handling broker disconnects
+            // Add one event-loop thread for handling automatic reconnection
+            // Specifially, the thread is needed because connect() is posted and is of blocking nature
+            // thanks to openMQ :-(
             EventLoop::addThread();
 
             // Set logging function
+            // TODO: Decide what should be done here
             MQSetLogFileName("broker.log");
 
         }
@@ -47,7 +50,8 @@ namespace karabo {
 
         JmsConnection::~JmsConnection() {
             EventLoop::removeThread();
-        }       
+        }
+
 
         void JmsConnection::parseBrokerUrl() {
 
@@ -96,15 +100,6 @@ namespace karabo {
         }
 
 
-        void JmsConnection::onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData) {
-            JmsConnection* that = reinterpret_cast<JmsConnection*> (callbackData);
-            KARABO_LOG_FRAMEWORK_ERROR << "Lost TCP connection to broker " << that->m_connectedBrokerUrl;
-            that->setFlagDisconnected();
-            // Try to reconnect
-            that->m_reconnectStrand.post(boost::bind(&karabo::net::JmsConnection::connect, that));
-        }
-
-
         void JmsConnection::setConnectionProperties(const std::string& scheme, const std::string& host,
                                                     const int port,
                                                     const MQPropertiesHandle& propertiesHandle) const {
@@ -116,6 +111,31 @@ namespace karabo {
             MQ_SAFE_CALL(MQSetBoolProperty(propertiesHandle, MQ_SSL_BROKER_IS_TRUSTED, trustBroker));
             MQ_SAFE_CALL(MQSetBoolProperty(propertiesHandle, MQ_ACK_ON_PRODUCE_PROPERTY, blockUntilAcknowledge));
             MQ_SAFE_CALL(MQSetInt32Property(propertiesHandle, MQ_ACK_TIMEOUT_PROPERTY, acknowledgeTimeout));
+        }
+
+
+        void JmsConnection::onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData) {
+            JmsConnection* that = reinterpret_cast<JmsConnection*> (callbackData);
+            KARABO_LOG_FRAMEWORK_ERROR << "Lost TCP connection to broker " << that->m_connectedBrokerUrl;
+            that->setFlagDisconnected();
+            // Try to reconnect
+            that->m_reconnectStrand.post(boost::bind(&karabo::net::JmsConnection::connect, that));
+        }
+
+
+        void JmsConnection::setFlagDisconnected() {
+            boost::lock_guard<boost::mutex> lock(m_isConnectedMutex);
+            m_isConnected = false;
+            m_connectionHandle.handle = HANDLED_OBJECT_INVALID_HANDLE;
+        }
+
+
+        void JmsConnection::setFlagConnected() {
+            {
+                boost::lock_guard<boost::mutex> lock(m_isConnectedMutex);
+                m_isConnected = true;
+            }
+            m_isConnectedCond.notify_all();
         }
 
 
@@ -140,7 +160,7 @@ namespace karabo {
 
 
         bool JmsConnection::isConnected() const {
-            boost::lock_guard<boost::mutex> lock(m_mut);
+            boost::lock_guard<boost::mutex> lock(m_isConnectedMutex);
             return m_isConnected;
         }
 
@@ -156,46 +176,21 @@ namespace karabo {
 
 
         void JmsConnection::waitForConnectionAvailable() {
-            boost::unique_lock<boost::mutex> lock(m_mut);
+            boost::unique_lock<boost::mutex> lock(m_isConnectedMutex);
             while (!m_isConnected) {
-                m_cond.wait(lock);
+                m_isConnectedCond.wait(lock);
             }
-        }
-
-
-        void JmsConnection::setFlagConnected() {
-            {
-                boost::lock_guard<boost::mutex> lock(m_mut);
-                m_isConnected = true;
-            }
-            m_cond.notify_all();
-        }
-
-
-        void JmsConnection::setFlagDisconnected() {
-            boost::lock_guard<boost::mutex> lock(m_mut);
-            m_isConnected = false;
-            m_connectionHandle.handle = HANDLED_OBJECT_INVALID_HANDLE;
         }
 
 
         boost::shared_ptr<JmsConsumer> JmsConnection::createConsumer() {
-            boost::shared_ptr<JmsConsumer> consumer(new JmsConsumer(shared_from_this()));
-            m_consumers.insert(consumer);
-            return consumer;
+            return boost::shared_ptr<JmsConsumer>(new JmsConsumer(shared_from_this()));
         }
 
 
         boost::shared_ptr<JmsProducer> JmsConnection::createProducer() {
-            boost::shared_ptr<JmsProducer> producer(new JmsProducer(shared_from_this()));
-            m_producers.insert(producer);
-            return producer;
+            return boost::shared_ptr<JmsProducer>(new JmsProducer(shared_from_this()));
         }
-
-
-
-
-
-    } // namespace net
-} // namespace karabo
+    }
+}
 
