@@ -40,7 +40,9 @@ namespace karabo {
         void JmsConsumer::readAsync(const MessageHandler handler, const std::string& topic, const std::string& selector) {
 
             m_connection->waitForConnectionAvailable();
-            // This calls may happen concurrently, hence both functions are thread-safe
+            // If readAsync is scheduled before the event-loop is started, corresponding writes
+            // (that are also only scheduled) may be executed first once the event-loop is started.
+            // Registering the consumers to the broker BEFORE the event-loop runs protects from message loss.
             this->ensureConsumerSessionAvailable(topic, selector);
             this->getConsumer(topic, selector);
 
@@ -51,9 +53,7 @@ namespace karabo {
 
         void JmsConsumer::asyncConsumeMessage(const MessageHandler handler, const std::string& topic, const std::string& selector) {
 
-            m_connection->waitForConnectionAvailable();
-
-            // This calls may happen concurrently, hence both functions are thread-safe
+            m_connection->waitForConnectionAvailable();            
             MQSessionHandle sessionHandle = this->ensureConsumerSessionAvailable(topic, selector);
             MQConsumerHandle consumerHandle = this->getConsumer(topic, selector);
 
@@ -79,6 +79,7 @@ namespace karabo {
 
                     // Wrong message type -> notify error, ignore this message and re-post
                     if (messageType != MQ_BYTES_MESSAGE) {
+                        KARABO_LOG_FRAMEWORK_WARN << "Received a message of wrong type";
                         m_mqStrand.post(boost::bind(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
                                                     handler, topic, selector));
                         return;

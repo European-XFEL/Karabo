@@ -43,68 +43,42 @@ namespace karabo {
         class JmsConsumer;
         class JmsProducer;
 
-
         class JmsConnection : public boost::enable_shared_from_this<JmsConnection> {
-
-
-            // OpenMQ failed to provide an publicly available constant to check handle validity
-            // This constant is copied from the openMQ source in which
-            // it is used for exactly the aforementioned purpose
-            static const int HANDLED_OBJECT_INVALID_HANDLE = 0xFEEEFEEE;
 
             friend class JmsConsumer;
             friend class JmsProducer;
-
-            std::string m_availableBrokerUrls;
-
-            std::string m_connectedBrokerUrl;
-
-            boost::condition_variable m_cond;
-
-            mutable boost::mutex m_mut;
-
-            bool m_isConnected;
-
-            typedef boost::tuple<std::string, std::string, std::string> BrokerAddress;
-            std::vector<BrokerAddress > m_brokerAddresses;
-
-            MQConnectionHandle m_connectionHandle;
-
-            static const int ping = 20;
-
-            //static const std::string username = "guest";
-
-            //static const std::string password = "guest";
-
-            static const bool trustBroker = true;
-
-            static const bool blockUntilAcknowledge = false;
-
-            static const unsigned int acknowledgeTimeout = 0;
-
-            typedef std::set<boost::weak_ptr<JmsConsumer> > Consumers;
-            Consumers m_consumers;
-
-            typedef std::set<boost::weak_ptr<JmsProducer> > Producers;
-            Producers m_producers;
-
-            boost::asio::io_service::strand m_reconnectStrand;
-
-
-
+            
         public:
 
             KARABO_CLASSINFO(JmsConnection, "JmsConnection", "1.0")
 
-            JmsConnection(const std::string& brokerUrl = std::string("tcp://exfl-broker.desy.de:7777"),
-                          const int nThreads = 10);
+            /**
+             * This class allows to create a single TCP connection to a JMS (openMQ) broker.
+             * One or more broker URLs can be provided. If several URLs are provided they will be tried
+             * in order once a previous connection failed.
+             * NOTE: Automatic reconnection needs a running event-loop
+             * @param brokerUrl A single or a comma separated list of broker URLs (tcp://<host>:<port>)
+             */
+            JmsConnection(const std::string& brokerUrl = std::string("tcp://exfl-broker.desy.de:7777"));
 
             ~JmsConnection();
 
+            /**
+             * Tries to establish a connection to the broker as provided in the constructor
+             * If a connection can not be established, the next address (if available) is tried.
+             * This function will try to connect (cycling the provided URLs) forever, until a connection is established.
+             */
             void connect();
 
+            /**
+             * Disconnects from the broker
+             */
             void disconnect();
 
+            /**
+             * Indicates whether a connection is available.
+             * @return true if connected, false otherwise
+             */
             bool isConnected() const;
 
             /**
@@ -114,19 +88,36 @@ namespace karabo {
              */
             std::string getBrokerUrl() const;
 
+
+            /**
+             * Creates a new consumer channel
+             * In order to consume from different topics (selectors) in parallel several instances of consumers
+             * must be created
+             * NOTE: Each call to this function, will open new thread in the central event-loop
+             * @return JmsConsumer
+             */
             boost::shared_ptr<JmsConsumer> createConsumer();
 
+            /**
+             * Creates a new producer channel.
+             * Messages can be send to different topics via a single instance of this object
+             * @return JmsProducer
+             */
             boost::shared_ptr<JmsProducer> createProducer();
 
 
         private:
 
-            static void onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData);          
+            static void onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData);
 
             void setFlagConnected();
 
             void setFlagDisconnected();
 
+            /**
+             * This functions blocks the current thread in case no connection is available.
+             * It will return in case a connection gets or is available.
+             */
             void waitForConnectionAvailable();
 
             MQConnectionHandle getConnection() const;
@@ -136,6 +127,37 @@ namespace karabo {
             void setConnectionProperties(const std::string& scheme, const std::string& host, const int port,
                                          const MQPropertiesHandle& propertiesHandle) const;
 
+
+        private:
+
+            // OpenMQ failed to provide an publicly available constant to check handle validity
+            // This constant is copied from the openMQ source in which
+            // it is used for exactly the aforementioned purpose
+            static const int HANDLED_OBJECT_INVALID_HANDLE = 0xFEEEFEEE;
+
+            std::string m_availableBrokerUrls;
+
+            std::string m_connectedBrokerUrl;
+
+            MQConnectionHandle m_connectionHandle;
+
+            boost::asio::io_service::strand m_reconnectStrand;
+
+            bool m_isConnected;
+            boost::condition_variable m_isConnectedCond;
+            mutable boost::mutex m_isConnectedMutex;
+
+            // Represents the scheme, host and port part of a standard URL
+            typedef boost::tuple<std::string, std::string, std::string> BrokerAddress;
+            std::vector<BrokerAddress > m_brokerAddresses;
+
+            static const int ping = 20;
+
+            static const bool trustBroker = true;
+
+            static const bool blockUntilAcknowledge = false;
+
+            static const unsigned int acknowledgeTimeout = 0;
         };
 
     }
