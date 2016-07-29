@@ -90,7 +90,9 @@ namespace karabo {
             typedef std::map<std::string, MQConsumerHandle > Consumers;
             std::map<std::string, MQConsumerHandle > m_consumers;
 
-            boost::asio::io_service::strand m_strand;
+            boost::asio::io_service::strand m_mqStrand;
+
+            boost::asio::io_service::strand m_notifyStrand;
         };
     }
 }

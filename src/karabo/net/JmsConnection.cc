@@ -5,6 +5,7 @@
  * Created on July 15, 2016, 4:08 PM
  */
 
+#include <openmqc/mqlogutil-priv.h>
 
 #include <karabo/util.hpp>
 #include <karabo/log.hpp>
@@ -37,6 +38,10 @@ namespace karabo {
 
             // Add one event-loop thread for handling broker disconnects
             EventLoop::addThread();
+
+            // Set logging function
+            MQSetLogFileName("broker.log");
+
         }
 
 
@@ -67,6 +72,7 @@ namespace karabo {
                     const std::string scheme = to_upper_copy(adr.get<0>());
                     const std::string host = adr.get<1>();
                     const int port = fromString<int>(adr.get<2>());
+                    const string url = adr.get<0>() + "://" + adr.get<1>() + ":" + adr.get<2>();
                     // Retrieve property handle
                     MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle));
                     // Set all properties
@@ -74,16 +80,14 @@ namespace karabo {
                     MQStatus status;
                     status = MQCreateConnection(propertiesHandle, "guest", "guest", NULL /*clientID*/, &onException, this, &m_connectionHandle);
                     if (MQStatusIsError(status) == MQ_TRUE) {
-                        MQString tmp = MQGetStatusString(status);
-                        KARABO_LOG_FRAMEWORK_WARN << tmp;
-                        std::cout << tmp; // TODO Remove
-                        MQFreeString(tmp);
+                        KARABO_LOG_FRAMEWORK_WARN << "Failed to open TCP connection to broker " << url;
                     } else { // Connection established
-                        m_connectedBrokerUrl = adr.get<0>() + "://" + adr.get<1>() + ":" + adr.get<2>();
+                        m_connectedBrokerUrl = url;
                         MQFreeProperties(propertiesHandle);
                         this->setFlagConnected();
                         // Immediately enable message consumption
                         MQ_SAFE_CALL(MQStartConnection(m_connectionHandle));
+                        KARABO_LOG_FRAMEWORK_INFO << "Opened TCP connection to broker " << m_connectedBrokerUrl;
                         return;
                     }
                 }
@@ -94,8 +98,8 @@ namespace karabo {
 
         void JmsConnection::onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData) {
             JmsConnection* that = reinterpret_cast<JmsConnection*> (callbackData);
-            // Cleanly disconnect
-            that->m_reconnectStrand.post(boost::bind(&karabo::net::JmsConnection::disconnect, that));
+            KARABO_LOG_FRAMEWORK_ERROR << "Lost TCP connection to broker " << that->m_connectedBrokerUrl;
+            that->setFlagDisconnected();
             // Try to reconnect
             that->m_reconnectStrand.post(boost::bind(&karabo::net::JmsConnection::connect, that));
         }
@@ -128,9 +132,10 @@ namespace karabo {
             // Unfortunately, openMQ does not do this
             this->setFlagDisconnected();
 
+            KARABO_LOG_FRAMEWORK_INFO << "Closed TCP connection to broker" << m_connectedBrokerUrl;
+
             // Invalidate the connectedBrokerUrl
             m_connectedBrokerUrl = "";
-
         }
 
 
