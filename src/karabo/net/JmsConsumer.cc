@@ -24,7 +24,8 @@ namespace karabo {
 
         JmsConsumer::JmsConsumer(const JmsConnection::Pointer& connection) :
             m_connection(connection),
-            m_strand(*EventLoop::getIOService()) {
+            m_mqStrand(*EventLoop::getIOService()),
+            m_notifyStrand(*EventLoop::getIOService()) {
             m_binarySerializer = BinarySerializer<Hash>::create("Bin");
             EventLoop::addThread();
         }
@@ -44,7 +45,7 @@ namespace karabo {
             this->getConsumer(topic, selector);
 
             // Posting through strand guarantees thread-safety, never will the posted message run concurrently
-            m_strand.post(boost::bind(&karabo::net::JmsConsumer::asyncConsumeMessage, this, handler, topic, selector));
+            m_mqStrand.post(boost::bind(&karabo::net::JmsConsumer::asyncConsumeMessage, this, handler, topic, selector));
         }
 
 
@@ -78,8 +79,8 @@ namespace karabo {
 
                     // Wrong message type -> notify error, ignore this message and re-post
                     if (messageType != MQ_BYTES_MESSAGE) {
-                        m_strand.post(boost::bind(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
-                                                  handler, topic, selector));
+                        m_mqStrand.post(boost::bind(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
+                                                    handler, topic, selector));
                         return;
                     }
                     Hash::Pointer header(new Hash());
@@ -96,14 +97,14 @@ namespace karabo {
                     //                    } else {
                     m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
                     //}
-                    EventLoop::getIOService()->post(boost::bind(handler, header, body));
+                    m_notifyStrand.post(boost::bind(handler, header, body));
                     break;
                 }
 
                 case MQ_TIMEOUT_EXPIRED:
                 { // No message received, post again
-                    m_strand.post(boost::bind(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
-                                              handler, topic, selector));
+                    m_mqStrand.post(boost::bind(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
+                                                handler, topic, selector));
                     break;
                 }
                 case MQ_STATUS_INVALID_HANDLE:
@@ -113,8 +114,8 @@ namespace karabo {
                 { // Invalidate handles and re-post
                     // This function may be called concurrently, hence its thread-safe
                     this->clearConsumerHandles();
-                    m_strand.post(boost::bind(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
-                                              handler, topic, selector));
+                    m_mqStrand.post(boost::bind(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
+                                                handler, topic, selector));
                     break;
                 }
                 default:
