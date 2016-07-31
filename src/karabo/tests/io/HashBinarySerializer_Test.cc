@@ -60,7 +60,7 @@ void HashBinarySerializer_Test::setUp() {
     //Old:    cout << "\nCopy time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("copy")) << endl;
 
     vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
-    tmp.resize(1);
+    tmp.resize(10);
     for (size_t i = 0; i < tmp.size(); ++i) {
         tmp[i] = m_rootedHash;
     }
@@ -87,13 +87,13 @@ void HashBinarySerializer_Test::tearDown() {
 
 void HashBinarySerializer_Test::testSerialization() {
 
-    BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
+    BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("FastBin");
 
     {
         Schema s = TextSerializer<Hash>::getSchema("Xml");
         Hash schemaIncluded("a1", 3.2, "a2", s);
-        vector<char> archive;
-        p->save(schemaIncluded, archive);
+        vector<char> archive;        
+        p->save(schemaIncluded, archive);       
         Hash fresh;
         p->load(fresh, archive);
         //cout << "HASH: " << fresh.get<Schema>("a2") << endl;
@@ -124,19 +124,26 @@ void HashBinarySerializer_Test::testSerialization() {
         vector<char> archive1;
         vector<char> archive2;
 
-        //cout << "\nSerialize start ----------------------------\n";
-        TimeProfiler pr("binary");
-        pr.open();
-        pr.startPeriod("serialize");
-
-        p->save(m_bigHash, archive1);
-        pr.stopPeriod("serialize");
-        pr.close();
-        //cout << "\nSerialize time: " << pr.getPeriod("serialize").getDuration() << endl;
-        //cout << "\n\n Archive size: " << archive1.size() << " bytes" << endl;
-
+        boost::posix_time::ptime tick = boost::posix_time::microsec_clock::local_time();
+        
+        for (int i = 0; i < 10; ++i) {
+            p->save(m_bigHash, archive1);
+        }
+        
+        boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - tick;
+        float ave = diff.total_milliseconds() / 10.0;
+        clog << "\n Average serialization time: " << ave << " ms for Hash of size: " << archive1.size() / 10.e6 << " MB" << endl;
+        
         Hash h;
-        p->load(h, archive1);
+        
+        tick = boost::posix_time::microsec_clock::local_time();
+        
+        for (int i = 0; i < 10; ++i) {
+            p->load(h, archive1);
+        }
+        diff = boost::posix_time::microsec_clock::local_time() - tick;
+        ave = diff.total_milliseconds() / 10.0;
+        clog << "\n Average de-serialization time: " << ave << " ms" << endl;
 
         // This is commented as the m_bigHash has value type pair<const T*, size_t>,
         // whilst the serialized h has a vector<T>, this is intended but will break the similar function
@@ -186,16 +193,10 @@ void HashBinarySerializer_Test::testSerialization() {
         vector<char> archive1;
         vector<char> archive2;
 
-        p->save(m_sharedPtrHash, archive1);
-
-        cout << m_sharedPtrHash << endl;
-
-        //cout << "\n\nXML string size: " << archive.size() / 1024 / 1024 << " MB" << endl;
+        p->save(m_sharedPtrHash, archive1);     
 
         Hash h;
-        p->load(h, archive1);
-
-        cout << h << endl;
+        p->load(h, archive1);      
 
         CPPUNIT_ASSERT(karabo::util::similar(m_sharedPtrHash, h) == true);
 

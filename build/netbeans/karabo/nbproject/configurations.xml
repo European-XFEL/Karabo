@@ -132,6 +132,8 @@
         <itemPath>../../../src/karabo/io/BinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashBinarySerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashBinarySerializer.hh</itemPath>
+        <itemPath>../../../src/karabo/io/HashBinarySerializerFast.cc</itemPath>
+        <itemPath>../../../src/karabo/io/HashBinarySerializerFast.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashHdf5Serializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashHdf5Serializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashXmlSerializer.cc</itemPath>
@@ -403,21 +405,8 @@
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
       <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
-        <itemPath>../../../src/karabo/tests/io/FileInputOutput_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/FileInputOutput_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/H5File_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/H5File_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/H5Format_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/H5Format_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/HashBinarySerializer_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/HashBinarySerializer_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/HashXmlSerializer_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/HashXmlSerializer_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/Hdf5_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/Hdf5_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/SchemaSerializer_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/SchemaSerializer_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/TestPathSetup.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/ioTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="log_test" projectFiles="true" kind="TEST">
@@ -780,6 +769,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashBinarySerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashBinarySerializerFast.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashBinarySerializerFast.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1345,77 +1344,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/io/FileInputOutput_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/FileInputOutput_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/H5File_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/H5File_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/H5Format_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/H5Format_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/io/HashBinarySerializer_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/HashBinarySerializer_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/HashXmlSerializer_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/HashXmlSerializer_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/Hdf5_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/Hdf5_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/TestPathSetup.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2798,6 +2732,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/HashBinarySerializerFast.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashBinarySerializerFast.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/HashHdf5Serializer.cc"
             ex="false"
             tool="1"
@@ -3371,77 +3315,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/io/FileInputOutput_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/FileInputOutput_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/H5File_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/H5File_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/H5Format_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/H5Format_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/io/HashBinarySerializer_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/HashBinarySerializer_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/HashXmlSerializer_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/HashXmlSerializer_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/Hdf5_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/Hdf5_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/TestPathSetup.hh"
             ex="false"
             tool="3"
             flavor2="0">
