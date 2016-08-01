@@ -1003,10 +1003,14 @@ class VectorHash(Vector):
     basetype = HashType
     number = 31
 
-    def __init__(self, rowSchema, strict, **kwargs):
+    def __init__(self, rowSchema=None, strict=True, **kwargs):
         from .schema import Configurable
 
         super(VectorHash, self).__init__(strict=strict, **kwargs)
+
+        if rowSchema is None:
+            return
+
         namespace = {}
         for k, v, a in rowSchema.hash.iterall():
             desc = Type.fromname[a["valueType"]](strict=strict, key=k, **a)
