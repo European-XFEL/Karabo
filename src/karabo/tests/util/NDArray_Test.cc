@@ -42,7 +42,7 @@ void NDArray_Test::testConstructor() {
 
     {
         NDArray<int> ar(someData, shape);
-        NDArrayShapeType const arShape = ar.getShape();
+        const NDArrayShapeType& arShape = ar.getShape();
 
         CPPUNIT_ASSERT(arShape[0] == 100);
         CPPUNIT_ASSERT(arShape[1] == 200);

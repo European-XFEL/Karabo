@@ -214,7 +214,7 @@ namespace karabo {
 
         size_t ImageData::getByteSize() const {
             const NDArray<unsigned char>& data = m_hash->get<NDArray<unsigned char> >("data");
-            const NDArrayShapeType shape = data.getShape();
+            const NDArrayShapeType& shape = data.getShape();
             size_t size = 1;
             for (NDArrayShapeType::const_iterator it = shape.begin(); it != shape.end(); ++it) {
                 size *= static_cast<size_t>(*it);

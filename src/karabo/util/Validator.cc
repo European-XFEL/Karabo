@@ -529,62 +529,62 @@ namespace karabo {
 
 
         void Validator::checkNDArrayShape(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string& scope) {
-            const NDArrayShapeType schemaShape = masterNode.getAttribute<NDArrayShapeType>(KARABO_SCHEMA_ARRAY_SHAPE);
+            const NDArrayShapeType& schemaShape = masterNode.getAttribute<NDArrayShapeType>(KARABO_SCHEMA_ARRAY_SHAPE);
             const Types::ReferenceType givenType = workNode.getType();
 
             switch (givenType) {
                 case Types::NDARRAY_BOOL: {
-                    NDArrayShapeType shape = workNode.getValueAs<bool, NDArray>().getShape();
+                    const NDArrayShapeType& shape = workNode.getValueAs<bool, NDArray>().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_INT8: {
-                    NDArrayShapeType shape = workNode.getValueAs<signed char, NDArray>().getShape();
+                    const NDArrayShapeType& shape = workNode.getValueAs<signed char, NDArray>().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_UINT8: {
-                    NDArrayShapeType shape = workNode.getValueAs<unsigned char, NDArray>().getShape();
+                    const NDArrayShapeType& shape = workNode.getValueAs<unsigned char, NDArray>().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_INT16: {
-                    NDArrayShapeType shape = workNode.getValueAs<short, NDArray>().getShape();
+                    const NDArrayShapeType& shape = workNode.getValueAs<short, NDArray>().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_UINT16: {
-                    NDArrayShapeType shape = workNode.getValueAs<unsigned short, NDArray>().getShape();
+                    const NDArrayShapeType& shape = workNode.getValueAs<unsigned short, NDArray>().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_INT32: {
-                    NDArrayShapeType shape = workNode.getValueAs<int, NDArray>().getShape();
+                    const NDArrayShapeType& shape = workNode.getValueAs<int, NDArray>().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_UINT32: {
-                    NDArrayShapeType shape = workNode.getValueAs<unsigned int, NDArray>().getShape();
+                    const NDArrayShapeType& shape = workNode.getValueAs<unsigned int, NDArray>().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_INT64: {
-                    NDArrayShapeType shape = workNode.getValueAs<long long, NDArray>().getShape();
+                    const NDArrayShapeType& shape = workNode.getValueAs<long long, NDArray>().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_UINT64: {
-                    NDArrayShapeType shape = workNode.getValueAs<unsigned long long, NDArray>().getShape();
+                    const NDArrayShapeType& shape = workNode.getValueAs<unsigned long long, NDArray>().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_FLOAT: {
-                    NDArrayShapeType shape = workNode.getValueAs<float, NDArray>().getShape();
+                    const NDArrayShapeType& shape = workNode.getValueAs<float, NDArray>().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_DOUBLE: {
-                    NDArrayShapeType shape = workNode.getValueAs<double, NDArray>().getShape();
+                    const NDArrayShapeType& shape = workNode.getValueAs<double, NDArray>().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
@@ -607,7 +607,7 @@ namespace karabo {
                 double value = workNode.getValueAs<double>();
                 if ((checkGreater ? value > threshold : value < threshold)) {
                     string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went "
-                        + (checkGreater ? "above" : "below")+" "+alarmCond.asBaseString() +" level of "
+                        + (checkGreater ? "above " : "below ") + alarmCond.asBaseString() + " level of "
                         + karabo::util::toString(threshold));
                     m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmString, "message", msg), '\0');
 
