@@ -61,7 +61,7 @@ namespace karabo {
                 m_dataPtr = dataPtr;
             }
 
-            NDArrayShapeType getShape() const { return m_shape; }
+            const NDArrayShapeType& getShape() const { return m_shape; }
 
             void setShape(const NDArrayShapeType& shape) {
                 m_shape = shape;
