@@ -97,8 +97,8 @@ class DeviceNode(String):
                     proxy._current = Hash()
                     yield from proxy
                     while True:
-                        out = self._copy_properties(
-                            (yield from queue.get()), True)
+                        data = yield from queue.get()
+                        out = self._copy_properties(data, True)
                         proxy._current.merge(out)
                         instance.signalChanged(Hash(self.key, out),
                                                instance.deviceId)
