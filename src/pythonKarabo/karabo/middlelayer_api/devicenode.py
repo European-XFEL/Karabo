@@ -71,7 +71,6 @@ class DeviceNode(String):
 
     def _setter(self, instance, value):
         proxy = instance.__dict__[self.key]
-        proxy._current.merge(value)
 
         @coroutine
         def setter():

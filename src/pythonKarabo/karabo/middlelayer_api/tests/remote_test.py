@@ -645,7 +645,8 @@ class Tests(DeviceTest):
     @async_tst
     def test_devicenode(self):
         class A(Device):
-            dn = DeviceNode(properties=["value", {"counter": "cntr"}],
+            dn = DeviceNode(properties=["value", {"counter": "cntr",
+                                                  "other": "othr"}],
                             commands=[{"doit": "do_it"}, "changeit"])
 
         a = A({"_deviceId_": "devicenode", "dn": "remote"})
@@ -664,12 +665,18 @@ class Tests(DeviceTest):
                 yield from d.dn.do_it()
                 self.assertEqual(d.dn.value, 8)
                 self.assertEqual(d.dn.cntr, 12)
+                self.assertEqual(a.dn.value, 8)
+                self.assertEqual(a.dn.counter, 12)
                 self.assertTrue(self.remote.done)
                 d.dn.value = 22
                 yield from d.dn.changeit()
                 yield from sleep(0.02)
                 self.assertEqual(d.dn.value, 18)
+                self.assertEqual(a.dn.value, 18)
 
+                d.dn.othr = 111
+                yield from d
+                self.assertFalse(hasattr(d.dn, "othr"))
         finally:
             yield from a.slotKillDevice()
 
