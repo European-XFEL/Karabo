@@ -23,7 +23,7 @@ namespace karabo {
          * in a hierarchical data structure. Instead, use Data::setNode(key, data)
          * with data being a Data object (or something inheriting from Data [without
          * adding new data members] and providing a constructor from a Hash::Pointer,
-         * e.g. NDArray or ImageData).
+         * e.g. ImageData).
          * Internally, all nodes are stored as Hash::Pointer or are converted
          * from Hash to Hash::Pointer when one tries to get them out of a Data
          * object. This means also that one cannot use nested keys like
@@ -35,7 +35,7 @@ namespace karabo {
          *   top.setNode("topkey", node);
          *  
          * To get back the nodes, use e.g. Data d(data.getNode<Data>(key));
-         * or the equivalent for NDArray or ImageData replacing Data.
+         * or the equivalent for ImageData replacing Data.
          */
         class Data {
 
@@ -79,7 +79,7 @@ namespace karabo {
 
             /**
              * Get a node and create a T object from it,
-             * e.g. Data, NDArray, ImageData.
+             * e.g. Data, ImageData.
              */
             template <class T>
             T getNode(const std::string& key) const {

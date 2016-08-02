@@ -5,16 +5,17 @@ This file closely corresponds to karabo.util.ReferenceType.
 The C++ types are mostly implemented by using the corresponding numpy type.
 """
 
-from asyncio import async, iscoroutinefunction, coroutine, get_event_loop
+from asyncio import async, coroutine, get_event_loop
 import base64
 from collections import OrderedDict
 from enum import Enum
-from functools import partial
+from functools import partial, wraps
 from io import BytesIO
 import numbers
 import pint
 from struct import pack, unpack, calcsize
 import sys
+import weakref
 from xml.etree import ElementTree
 
 import numpy as np
@@ -228,9 +229,8 @@ class Descriptor(object):
     requiredAccessLevel = Attribute(AccessLevel.OBSERVER)
     displayType = Attribute()
 
-    key = "(unknown key)"
 
-    def __init__(self, strict=True, **kwargs):
+    def __init__(self, strict=True, key="(unknown key)", **kwargs):
         """Create a new descriptor with appropriate attributes
 
         The attributes are given as keyword arguments. If we define
@@ -240,7 +240,7 @@ class Descriptor(object):
         unknown attributes, and properly set the enum type for those
         we find.
         """
-
+        self.key = key
         for k, v in kwargs.items():
             attr = getattr(self.__class__, k, None)
             if isinstance(attr, Attribute):
@@ -337,7 +337,7 @@ class Descriptor(object):
             raise KaraboError(msg)
         elif (self.allowedStates is not None and
               instance.state not in self.allowedStates):
-            msg = 'setting "{}" is not allowed in state "{}"'.format(
+            msg = 'Setting "{}" is not allowed in state "{}"'.format(
                 self.key, instance.state)
             raise KaraboError(msg)
         else:
@@ -370,8 +370,18 @@ class Descriptor(object):
 
 
 class Slot(Descriptor):
-    iscoroutine = None
+    '''Define a slot callable from the outside
 
+    This is a decorator for methods that should be callable over the network.
+    The cannot have parameters. All the arguments can be given in the same
+    way as for descriptors. A docstring will be taken as Karabo description::
+
+        class SomeDevice(Device):
+            @Slot(displayedName="Do something important")
+            def do_something_important(self):
+                """Document the important things done here"""
+                # add some important code here
+    '''
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super(Slot, self).toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Node
@@ -387,45 +397,45 @@ class Slot(Descriptor):
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        else:
-            def inner(device):
-                return self.method(device)
-            inner.slot = self.inner
-            return inner.__get__(instance, owner)
 
-    def inner(self, device, message, args):
+        @wraps(self.method)
+        def wrapper(device):
+            return self.method(device)
+        wrapper.slot = partial(self.slot, weakref.ref(instance))
+        return wrapper.__get__(instance, owner)
+
+    def slot(self, weakinstance, func, device, message, args):
+        instance = weakinstance()
+        if instance is None:
+            return
+
         if (self.allowedStates is not None and
-                device.state not in self.allowedStates):
-            msg = 'calling slot "{}" not allowed in state "{}"'.format(
-                self.key, device.state)
+                instance.state not in self.allowedStates):
+            msg = 'Calling slot "{}" not allowed in state "{}"'.format(
+                self.key, instance.state)
             device._ss.reply(message, msg)
-            raise KaraboError(msg)
-        if self.iscoroutine:
-            coro = self.method(device)
-        else:
-            coro = get_event_loop().run_coroutine_or_thread(
-                self.method, device)
+            device.logger.warn(msg)
 
-        def inner():
+        coro = get_event_loop().run_coroutine_or_thread(func)
+
+        @coroutine
+        def wrapper():
             try:
                 device._ss.reply(message, (yield from coro))
             except Exception as e:
                 _, exc, tb = sys.exc_info()
-                device._onException(self, exc, tb)
+                instance._onException(self, exc, tb)
                 device._ss.reply(message, str(e))
-        return async(inner())
-
-    def method(self, device):
-        return self.themethod(device)
+        return async(wrapper())
 
     def _initialize(self, instance, value=None):
         return []  # nothing to initialize in a Slot
 
     def __call__(self, method):
+        """Decorate a method to be a Slot"""
         if self.description is None:
             self.description = method.__doc__
-        self.iscoroutine = iscoroutinefunction(method)
-        self.themethod = method
+        self.method = method
         return self
 
 
@@ -993,6 +1003,16 @@ class VectorHash(Vector):
     basetype = HashType
     number = 31
 
+    def __init__(self, rowSchema, strict, **kwargs):
+        from .schema import Configurable
+
+        super(VectorHash, self).__init__(strict=strict, **kwargs)
+        namespace = {}
+        for k, v, a in rowSchema.hash.iterall():
+            desc = Type.fromname[a["valueType"]](strict=strict, key=k, **a)
+            namespace[k] = desc
+        self.cls = type(self.key, (Configurable,), namespace)
+
     @classmethod
     def read(cls, file):
         return list(super(VectorHash, cls).read(file))
@@ -1000,6 +1020,13 @@ class VectorHash(Vector):
     def cast(self, other):
         ht = HashType()
         return [ht.cast(o) for o in other]
+
+    def toKaraboValue(self, data, strict=True):
+        table = [
+            self.cls({k: getattr(self.cls, k).toKaraboValue(v, strict=strict)
+                      for k, v in row.items()})
+            for row in data]
+        return basetypes.TableValue(table, descriptor=self)
 
 
 class SchemaHashType(HashType):
@@ -1278,50 +1305,6 @@ class ListElement(Element):
     def hashname(self):
         return "VECTOR_HASH"
 
-class TableElement(Element):
-    def __init__(self, tag, attrs={}):
-        Element.__init__(self, tag, attrs)
-        self.children = [ ]
- 
- 
-    def __len__(self):
-        return len(self.children)
- 
- 
-    def append(self, elem):
-        self.children.append(elem)
- 
- 
-    def __iter__(self):
-        return iter(self.children)
- 
- 
-    def iter(self, tag=None):
-        if tag == "*":
-            tag = None
-        if tag is None or self.tag == tag:
-            yield self
-        for e in self.children:
-            for ee in e.iter(tag):
-                yield ee
- 
- 
-    @property
-    def data(self):
-        return [e.data for e in self.children]
- 
- 
-    @data.setter
-    def data(self, value):
-        self.children = [ ]
-        for c in value:
-            e = HashElement('KRB_Item')
-            e.children = c
-            self.children.append(e)
- 
- 
-    def hashname(self):
-        return "VECTOR_HASH"
 
 class Hash(OrderedDict):
     """This is the serialization data structure of Karabo

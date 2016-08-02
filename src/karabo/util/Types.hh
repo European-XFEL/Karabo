@@ -30,6 +30,10 @@ namespace karabo {
         template<class To>
         class FromType;
 
+        // Forward NDArray
+        template<typename T>
+        class NDArray;
+
         class CppNone {
 
         };
@@ -111,6 +115,7 @@ namespace karabo {
                 SEQUENCE,
                 POINTER,
                 RAW_ARRAY,
+                NDARRAY,
 
                 ARRAY_BOOL, // std::pair<bool*, size_t>
                 ARRAY_CHAR, // std::pair<char*, size_t>
@@ -124,6 +129,18 @@ namespace karabo {
                 ARRAY_UINT64, // std::pair<unsigned long long*, size_t>
                 ARRAY_FLOAT, // std::pair<float*, size_t>
                 ARRAY_DOUBLE, // std::pair<double*, size_t>
+
+                NDARRAY_BOOL, // NDArray<bool>
+                NDARRAY_INT8, // NDArray<signed char>
+                NDARRAY_UINT8, // NDArray<unsigned char>
+                NDARRAY_INT16, // NDArray<short>
+                NDARRAY_UINT16, // NDArray<unsigned short>
+                NDARRAY_INT32, // NDArray<int>
+                NDARRAY_UINT32, // NDArray<unsigned int>
+                NDARRAY_INT64, // NDArray<long long>
+                NDARRAY_UINT64, // NDArray<unsigned long long>
+                NDARRAY_FLOAT, // NDArray<float>
+                NDARRAY_DOUBLE, // NDArray<double>
 
                 HASH_POINTER, // Hash::Pointer
                 VECTOR_HASH_POINTER // std::vector<Hash::Pointer>
@@ -215,6 +232,18 @@ namespace karabo {
                     case Types::ARRAY_FLOAT:
                     case Types::ARRAY_BOOL:
                         return RAW_ARRAY;
+                    case Types::NDARRAY_BOOL:
+                    case Types::NDARRAY_INT8:
+                    case Types::NDARRAY_UINT8:
+                    case Types::NDARRAY_INT16:
+                    case Types::NDARRAY_UINT16:
+                    case Types::NDARRAY_INT32:
+                    case Types::NDARRAY_UINT32:
+                    case Types::NDARRAY_INT64:
+                    case Types::NDARRAY_UINT64:
+                    case Types::NDARRAY_FLOAT:
+                    case Types::NDARRAY_DOUBLE:
+                        return NDARRAY;
                     case Types::VECTOR_HASH:
                         return VECTOR_HASH;
                     case Types::VECTOR_HASH_POINTER:
@@ -329,6 +358,25 @@ namespace karabo {
                 }
             }
 
+            static bool isNDArray(int type) {
+                switch (type) {
+                    case Types::NDARRAY_BOOL:
+                    case Types::NDARRAY_INT8:
+                    case Types::NDARRAY_UINT8:
+                    case Types::NDARRAY_INT16:
+                    case Types::NDARRAY_UINT16:
+                    case Types::NDARRAY_INT32:
+                    case Types::NDARRAY_UINT32:
+                    case Types::NDARRAY_INT64:
+                    case Types::NDARRAY_UINT64:
+                    case Types::NDARRAY_FLOAT:
+                    case Types::NDARRAY_DOUBLE:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
 
         };
 
@@ -394,6 +442,22 @@ namespace karabo {
 
 #undef _KARABO_HELPER_MACRO
 
+#define _KARABO_HELPER_MACRO(RefType, CppType) \
+         template <> inline Types::ReferenceType Types::from<NDArray<CppType> >(const NDArray<CppType>&) { return Types::RefType; }
+
+        _KARABO_HELPER_MACRO(NDARRAY_BOOL, bool)
+        _KARABO_HELPER_MACRO(NDARRAY_INT8, signed char)
+        _KARABO_HELPER_MACRO(NDARRAY_UINT8, unsigned char)
+        _KARABO_HELPER_MACRO(NDARRAY_INT16, short)
+        _KARABO_HELPER_MACRO(NDARRAY_UINT16, unsigned short)
+        _KARABO_HELPER_MACRO(NDARRAY_INT32, int)
+        _KARABO_HELPER_MACRO(NDARRAY_UINT32, unsigned int)
+        _KARABO_HELPER_MACRO(NDARRAY_INT64, long long)
+        _KARABO_HELPER_MACRO(NDARRAY_UINT64, unsigned long long)
+        _KARABO_HELPER_MACRO(NDARRAY_FLOAT, float)
+        _KARABO_HELPER_MACRO(NDARRAY_DOUBLE, double)
+
+#undef _KARABO_HELPER_MACRO
     }
 }
 

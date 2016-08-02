@@ -8,7 +8,7 @@
 #ifndef NDARRAY_TEST_HH
 #define	NDARRAY_TEST_HH
 
-#include <karabo/xms.hpp>
+#include <karabo/util.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
 class NDArray_Test : public CPPUNIT_NS::TestFixture {
@@ -16,7 +16,6 @@ class NDArray_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(NDArray_Test);
     CPPUNIT_TEST(testConstructor);
-    CPPUNIT_TEST(testSetAndGetMethods);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -28,8 +27,6 @@ public:
 private:
 
     void testConstructor();
-
-    void testSetAndGetMethods();
 };
 
 #endif	/* NDARRAY_TEST_HH */

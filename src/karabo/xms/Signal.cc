@@ -120,6 +120,8 @@ namespace karabo {
             header->set("slotFunctions", m_registeredSlotsString);
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
+            // Timestamp added to be able to measure latencies even if broker is by-passed
+            header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
             return header;
         }
 

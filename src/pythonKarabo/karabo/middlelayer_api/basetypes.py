@@ -267,6 +267,17 @@ class VectorStringValue(KaraboValue, list):
         return self
 
 
+class TableValue(KaraboValue, list):
+    def __init__(self, value=None, **kwargs):
+        super(TableValue, self).__init__(value, **kwargs)
+        if value is not None:
+            self.extend(value)
+
+    @property
+    def value(self):
+        return self
+
+
 # Pint is based on the concept of a unit registry. For each unit registry,
 # a new class (!) is created, and quantities are only compatible if we
 # use the same class. Here we define the Karabo quantity class.

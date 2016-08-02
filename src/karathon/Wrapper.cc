@@ -158,7 +158,6 @@ namespace karathon {
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-
     bp::object Wrapper::toObject(const boost::any& operand, bool numpyFlag) {
         try {
             if (operand.type() == typeid (bool)) {
@@ -225,13 +224,33 @@ namespace karathon {
                 return fromStdVectorToPyList(boost::any_cast < std::vector<std::string> >(operand));
             } else if (operand.type() == typeid (std::vector<karabo::util::CppNone>)) {
                 return fromStdVectorToPyListNone(boost::any_cast < std::vector<karabo::util::CppNone> >(operand));
+            } else if (operand.type() == typeid (karabo::util::NDArray<bool>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<bool> >(operand), NPY_BOOL);
+            } else if (operand.type() == typeid (karabo::util::NDArray<signed char>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<signed char> >(operand), NPY_INT8);
+            } else if (operand.type() == typeid (karabo::util::NDArray<unsigned char>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<unsigned char> >(operand), NPY_UINT8);
+            } else if (operand.type() == typeid (karabo::util::NDArray<short>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<short> >(operand), NPY_SHORT);
+            } else if (operand.type() == typeid (karabo::util::NDArray<unsigned short>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<unsigned short> >(operand), NPY_USHORT);
+            } else if (operand.type() == typeid (karabo::util::NDArray<int>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<int> >(operand), NPY_LONG);
+            } else if (operand.type() == typeid (karabo::util::NDArray<unsigned int>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<unsigned int> >(operand), NPY_ULONG);
+            } else if (operand.type() == typeid (karabo::util::NDArray<long long>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<long long> >(operand), NPY_LONGLONG);
+            } else if (operand.type() == typeid (karabo::util::NDArray<unsigned long long>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<unsigned long long> >(operand), NPY_ULONGLONG);
+            } else if (operand.type() == typeid (karabo::util::NDArray<float>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<float> >(operand), NPY_FLOAT);
+            } else if (operand.type() == typeid (karabo::util::NDArray<double>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<double> >(operand), NPY_DOUBLE);
             } else if (operand.type() == typeid (karabo::xip::RawImageData)) {
                 karabo::xip::RawImageData raw = boost::any_cast<karabo::xip::RawImageData>(operand);
                 return bp::object(boost::shared_ptr<karabo::xip::RawImageData>(new karabo::xip::RawImageData(raw)));
             } else if (operand.type() == typeid (karabo::xms::ImageData)) {
                 return bp::object(boost::any_cast<karabo::xms::ImageData>(operand));
-            } else if (operand.type() == typeid (karabo::xms::NDArray)) {
-                return bp::object(boost::any_cast<karabo::xms::NDArray>(operand));
             } else if (operand.type() == typeid (karabo::xms::Data)) {
                 return bp::object(boost::any_cast<karabo::xms::Data>(operand));
             } else if (operand.type() == typeid (karabo::util::Hash)) {
@@ -378,100 +397,80 @@ namespace karathon {
         }
         if (PyArray_Check(obj.ptr())) {
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
-            int nd = PyArray_NDIM(arr);
-            npy_intp* shapes = PyArray_DIMS(arr);
-            int nelems = 1;
-            for (int i = 0; i < nd; i++) nelems *= shapes[i];
             PyArray_Descr* dtype = PyArray_DESCR(arr);
             switch (dtype->type_num) {
                 case NPY_BOOL:
                 {
-                    bool* data = reinterpret_cast<bool*> (PyArray_DATA(arr));
-                    std::vector<bool> v(data, data + nelems);
-                    any = v;
-                    return karabo::util::Types::VECTOR_BOOL;
+                    any = fromPyArrayToNDArray<bool>(arr);
+                    return karabo::util::Types::NDARRAY_BOOL;
+                }
+                case NPY_INT8:
+                {
+                    any = fromPyArrayToNDArray<signed char>(arr);
+                    return karabo::util::Types::NDARRAY_INT8;
+                }
+                case NPY_UINT8:
+                {
+                    any = fromPyArrayToNDArray<unsigned char>(arr);
+                    return karabo::util::Types::NDARRAY_UINT8;
                 }
                 case NPY_SHORT:
                 {
-                    short* data = reinterpret_cast<short*> (PyArray_DATA(arr));
-                    std::vector<short> v(data, data + nelems);
-                    any = v;
-                    return karabo::util::Types::VECTOR_INT16;
+                    any = fromPyArrayToNDArray<short>(arr);
+                    return karabo::util::Types::NDARRAY_INT16;
                 }
                 case NPY_USHORT:
                 {
-                    unsigned short* data = reinterpret_cast<unsigned short*> (PyArray_DATA(arr));
-                    std::vector<unsigned short> v(data, data + nelems);
-                    any = v;
-                    return karabo::util::Types::VECTOR_UINT16;
+                    any = fromPyArrayToNDArray<unsigned short>(arr);
+                    return karabo::util::Types::NDARRAY_UINT16;
                 }
                 case NPY_INT:
                 {
-                    int* data = reinterpret_cast<int*> (PyArray_DATA(arr));
-                    std::vector<int> v(data, data + nelems);
-                    any = v;
-                    return karabo::util::Types::VECTOR_INT32;
+                    any = fromPyArrayToNDArray<int>(arr);
+                    return karabo::util::Types::NDARRAY_INT32;
                 }
                 case NPY_UINT:
                 {
-                    unsigned int* data = reinterpret_cast<unsigned int*> (PyArray_DATA(arr));
-                    std::vector<unsigned int> v(data, data + nelems);
-                    any = v;
-                    return karabo::util::Types::VECTOR_UINT32;
+                    any = fromPyArrayToNDArray<unsigned int>(arr);
+                    return karabo::util::Types::NDARRAY_UINT32;
                 }
                 case NPY_LONG:
                 {
-                    long* data = reinterpret_cast<long*> (PyArray_DATA(arr));
                     if (sizeof (long) == sizeof (int)) {
-                        std::vector<int> v(data, data + nelems);
-                        any = v;
+                        any = fromPyArrayToNDArray<int>(arr);
                     } else if (sizeof (long) == sizeof (long long)) {
-                        std::vector<long long> v(data, data + nelems);
-                        any = v;
+                        any = fromPyArrayToNDArray<long long>(arr);
                     }
-                    return karabo::util::Types::VECTOR_INT64;
+                    return karabo::util::Types::NDARRAY_INT64;
                 }
                 case NPY_ULONG:
                 {
-                    unsigned long* data = reinterpret_cast<unsigned long*> (PyArray_DATA(arr));
                     if (sizeof (unsigned long) == sizeof (unsigned int)) {
-                        std::vector<unsigned int> v(data, data + nelems);
-                        any = v;
+                        any = fromPyArrayToNDArray<unsigned int>(arr);
                     } else if (sizeof (unsigned long) == sizeof (unsigned long long)) {
-                        std::vector<unsigned long long> v(data, data + nelems);
-                        any = v;
+                        any = fromPyArrayToNDArray<unsigned long long>(arr);
                     }
-                    std::vector<unsigned long long> v(data, data + nelems);
-                    any = v;
-                    return karabo::util::Types::VECTOR_UINT64;
+                    return karabo::util::Types::NDARRAY_UINT64;
                 }
                 case NPY_LONGLONG:
                 {
-                    long long* data = reinterpret_cast<long long*> (PyArray_DATA(arr));
-                    std::vector<long long> v(data, data + nelems);
-                    any = v;
-                    return karabo::util::Types::VECTOR_INT64;
+                    any = fromPyArrayToNDArray<long long>(arr);
+                    return karabo::util::Types::NDARRAY_INT64;
                 }
                 case NPY_ULONGLONG:
                 {
-                    unsigned long long* data = reinterpret_cast<unsigned long long*> (PyArray_DATA(arr));
-                    std::vector<unsigned long long> v(data, data + nelems);
-                    any = v;
-                    return karabo::util::Types::VECTOR_UINT64;
+                    any = fromPyArrayToNDArray<unsigned long long>(arr);
+                    return karabo::util::Types::NDARRAY_UINT64;
                 }
                 case NPY_FLOAT:
                 {
-                    float* data = reinterpret_cast<float*> (PyArray_DATA(arr));
-                    std::vector<float> v(data, data + nelems);
-                    any = v;
-                    return karabo::util::Types::VECTOR_FLOAT;
+                    any = fromPyArrayToNDArray<float>(arr);
+                    return karabo::util::Types::NDARRAY_FLOAT;
                 }
                 case NPY_DOUBLE:
                 {
-                    double* data = reinterpret_cast<double*> (PyArray_DATA(arr));
-                    std::vector<double> v(data, data + nelems);
-                    any = v;
-                    return karabo::util::Types::VECTOR_DOUBLE;
+                    any = fromPyArrayToNDArray<double>(arr);
+                    return karabo::util::Types::NDARRAY_DOUBLE;
                 }
                 default:
                     break;

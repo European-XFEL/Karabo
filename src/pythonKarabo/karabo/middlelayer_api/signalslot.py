@@ -1,18 +1,16 @@
 from __future__ import unicode_literals
-from asyncio import (async, CancelledError, coroutine, Future, get_event_loop,
+from asyncio import (async, CancelledError, coroutine, get_event_loop,
                      sleep, TimeoutError, wait, wait_for)
 import logging
 import random
 import weakref
 import inspect
 
-from .basetypes import KaraboValue
 from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
 from .hash import Hash, HashType, Int32, String
 from .p2p import NetworkOutput
 from .schema import Configurable
-from .timestamp import Timestamp
 
 
 class Signal(object):
@@ -20,9 +18,18 @@ class Signal(object):
         self.args = args
 
 
+def _log_exception(func, device):
+    logger = logging.getLogger(device.deviceId)
+    logger.exception('Exception in slot "%s" of device "%s"',
+                     func.__qualname__, device.deviceId)
+
+
 def slot(f):
-    def inner(device, message, args):
-        device._ss.reply(message, f(device, *args))
+    def inner(func, device, message, args):
+        try:
+            device._ss.reply(message, func(*args))
+        except Exception:
+            _log_exception(func, device)
     f.slot = inner
     return f
 
@@ -31,16 +38,14 @@ def coslot(f):
     f = coroutine(f)
 
     @coroutine
-    def inner(device, message, args):
+    def inner(func, device, message, args):
         try:
-            device._ss.reply(message, (yield from f(device, *args)))
+            device._ss.reply(message, (yield from func(*args)))
         except Exception:
-            logger = logging.getLogger(device.deviceId)
-            logger.exception('exception in slot "{}" of device "{}"'.
-                             format(f.__qualname__, device.deviceId))
+            _log_exception(func, device)
 
-    def outer(device, message, args):
-        async(inner(device, message, args))
+    def outer(func, device, message, args):
+        async(inner(func, device, message, args))
 
     f.slot = outer
     return f
@@ -154,11 +159,11 @@ class SignalSlotable(Configurable):
             self._ss.emit("call", {instanceId: ["slotPingAnswer"]},
                           self.deviceId, self._ss.info)
 
-    def inner(self, message, args):
-        ret = self.slotPing(*args)
+    def inner(func, device, message, args):
+        ret = func(*args)
         # In contrast to normal slots, let slotPing not send an empty reply.
         if ret is not None:
-            self._ss.reply(message, ret)
+            device._ss.reply(message, ret)
     slotPing.slot = inner
     del inner
 
@@ -186,6 +191,10 @@ class SignalSlotable(Configurable):
 
     @coroutine
     def _run(self):
+        for k in dir(self.__class__):
+            v = getattr(self, k, None)
+            if callable(v) and hasattr(v, "slot"):
+                self._ss.register_slot(k, v)
         async(self._ss.main(self))
         try:
             yield from wait_for(

@@ -6,6 +6,7 @@
  */
 
 #include <karabo/util/Hash.hh>
+#include <karabo/util/NDArray.hh>
 #include <karabo/util/Schema.hh>
 #include <stack>
 #include "Hash_Test.hh"
@@ -76,6 +77,18 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
         CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
         CPPUNIT_ASSERT(h.get<string > ("d") == "4");
+    }
+
+    {
+        typedef NDArray<float> ArrayType;
+        NDArrayShapeType shape;
+        shape.push_back(2);
+        shape.push_back(5);
+        ArrayType arr(std::vector<float>(10, 4.2), shape);
+
+        Hash h("arr", arr);
+        CPPUNIT_ASSERT(h.empty() == false);
+        CPPUNIT_ASSERT(h.get<ArrayType> ("arr").getShape() == shape);
     }
 
     {

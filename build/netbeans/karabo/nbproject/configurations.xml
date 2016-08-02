@@ -289,6 +289,7 @@
         <itemPath>../../../src/karabo/util/ByteSwap.hh</itemPath>
         <itemPath>../../../src/karabo/util/DetectorGeometry.hh</itemPath>
         <itemPath>../../../src/karabo/util/Dims.hh</itemPath>
+        <itemPath>../../../src/karabo/util/NDArray.hh</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.cc</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
         <itemPath>../../../src/karabo/util/RollingWindowStatistics.cc</itemPath>
@@ -384,8 +385,6 @@
       <itemPath>../../../src/karabo/xms/InputChannel.hh</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.hh</itemPath>
-      <itemPath>../../../src/karabo/xms/NDArray.cc</itemPath>
-      <itemPath>../../../src/karabo/xms/NDArray.hh</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkInput.cc</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkInput.hh</itemPath>
       <itemPath>../../../src/karabo/xms/OutputChannel.cc</itemPath>
@@ -461,6 +460,8 @@
         <itemPath>../../../src/karabo/tests/util/HashFilter_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/util/NDArray_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/NDArray_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/States_Test.cc</itemPath>
@@ -499,8 +500,6 @@
         <itemPath>../../../src/karabo/tests/xms/Data_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xms/ImageData_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/xms/ImageData_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/xms/NDArray_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/xms/NDArray_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xms/SignalSlotable_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/xms/SignalSlotable_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xms/xmsTestRunner.cc</itemPath>
@@ -1578,6 +1577,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/util/NDArray_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/NDArray_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/util/Schema_Test.cc"
             ex="false"
             tool="1"
@@ -1722,16 +1731,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/xms/ImageData_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xms/NDArray_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xms/NDArray_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1919,6 +1918,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ListElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/NDArray.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2361,10 +2365,6 @@
       <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Memory.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/NDArray.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/NDArray.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/NetworkInput.cc"
             ex="false"
@@ -3613,6 +3613,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/util/NDArray_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/NDArray_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/util/Schema_Test.cc"
             ex="false"
             tool="1"
@@ -3754,16 +3764,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/xms/ImageData_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xms/NDArray_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xms/NDArray_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3951,6 +3951,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ListElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/NDArray.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4406,10 +4411,6 @@
       <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Memory.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/NDArray.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/NDArray.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/NetworkInput.cc"
             ex="false"
