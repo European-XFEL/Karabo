@@ -1,4 +1,5 @@
 from asyncio import async, CancelledError, coroutine, Future, Queue
+from collections import OrderedDict
 from itertools import chain
 
 from .device_client import getDevice
@@ -35,8 +36,18 @@ class DeviceNode(String):
     """
     def __init__(self, properties=(), commands=(), **kwargs):
         super().__init__(**kwargs)
-        self.properties = properties
-        self.commands = commands
+
+        def recode(names):
+            ret = OrderedDict()
+            for name in names:
+                if isinstance(name, dict):
+                    ret.update(name)
+                else:
+                    ret[name] = name
+            return ret
+
+        self.properties = recode(properties)
+        self.commands = recode(commands)
 
     def toDataAndAttrs(self, proxy):
         if self.properties:
@@ -47,15 +58,12 @@ class DeviceNode(String):
     def _copy_properties(self, data, swapped):
         """return a Hash that contains our properties in Hash data"""
         ret = Hash()
-        for prop in self.properties:
-            if not isinstance(prop, dict):
-                prop = {prop: prop}
-            for name, rename in prop.items():
-                if swapped:
-                    name, rename = rename, name
-                val = data.get(rename)
-                if val is not None:
-                    ret[name] = val
+        for name, rename in self.properties.items():
+            if swapped:
+                name, rename = rename, name
+            val = data.get(rename)
+            if val is not None:
+                ret[name] = val
         return ret
 
     def _setter(self, instance, value):
@@ -96,12 +104,8 @@ class DeviceNode(String):
                 yield from instance._ss.request(proxy._deviceId, theirname)
             instance._ss.register_slot("{}.{}".format(self.key, myname), slot)
 
-        for cmd in self.commands:
-            if isinstance(cmd, dict):
-                for theirname, myname in cmd.items():
-                    register(theirname, myname)
-            else:
-                register(cmd, cmd)
+        for theirname, myname in self.commands.items():
+            register(theirname, myname)
 
         @coroutine
         def run():
@@ -128,10 +132,8 @@ class DeviceNode(String):
 
         proxy = getattr(device, self.key, None)
         h = Hash()
-        for prop in chain(self.properties, self.commands):
-            if not isinstance(prop, dict):
-                prop = {prop: prop}
-            for name, rename in prop.items():
-                h[rename] = proxy._schema_hash[name]
-                h[rename, ...] = proxy._schema_hash[name, ...]
+        for name, rename in chain(self.properties.items(),
+                                  self.commands.items()):
+            h[rename] = proxy._schema_hash[name]
+            h[rename, ...] = proxy._schema_hash[name, ...]
         return h, attrs
