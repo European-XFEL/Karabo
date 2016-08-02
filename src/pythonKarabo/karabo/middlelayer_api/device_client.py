@@ -250,7 +250,6 @@ class SubProxy(object):
     _parent = Weak()
 
     def setValue(self, desc, value):
-        self.__dict__[desc.key] = value
         self._parent.setValue(desc, value)
 
     def _use(self):
