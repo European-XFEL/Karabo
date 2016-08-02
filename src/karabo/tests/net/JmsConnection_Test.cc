@@ -183,8 +183,7 @@ void JmsConnection_Test::testCommunication2() {
 
     p->write("testTopic1", header1, body);
     p->write("testTopic1", header2, body);
-
-    EventLoop::reset(); // Needed in preparation for any subsequent run() invocation
+   
     EventLoop::run();
 
     clog << "Messages " << m_messageCount << endl;

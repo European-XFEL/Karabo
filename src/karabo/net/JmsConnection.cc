@@ -26,7 +26,7 @@ namespace karabo {
 
         JmsConnection::JmsConnection(const std::string& brokerUrls)
             : m_availableBrokerUrls(brokerUrls),
-            m_reconnectStrand(*EventLoop::getIOService()) {
+            m_reconnectStrand(EventLoop::getIOService()) {
 
             this->setFlagDisconnected();
 
@@ -43,7 +43,7 @@ namespace karabo {
 
             // Set logging function
             // TODO: Decide what should be done here
-            MQSetLogFileName("broker.log");
+            MQSetLogFileName("openMQLib.log");
 
         }
 
