@@ -85,6 +85,7 @@ namespace karabo {
                     status = MQCreateConnection(propertiesHandle, "guest", "guest", NULL /*clientID*/, &onException, this, &m_connectionHandle);
                     if (MQStatusIsError(status) == MQ_TRUE) {
                         KARABO_LOG_FRAMEWORK_WARN << "Failed to open TCP connection to broker " << url;
+                        MQFreeProperties(propertiesHandle);
                     } else { // Connection established
                         m_connectedBrokerUrl = url;
                         MQFreeProperties(propertiesHandle);
@@ -127,6 +128,8 @@ namespace karabo {
             boost::lock_guard<boost::mutex> lock(m_isConnectedMutex);
             m_isConnected = false;
             m_connectionHandle.handle = HANDLED_OBJECT_INVALID_HANDLE;
+            // Invalidate the connectedBrokerUrl
+            m_connectedBrokerUrl = "";
         }
 
 
@@ -149,13 +152,9 @@ namespace karabo {
 
             MQ_SAFE_CALL(MQFreeConnection(m_connectionHandle));
 
-            // Unfortunately, openMQ does not do this
-            this->setFlagDisconnected();
-
             KARABO_LOG_FRAMEWORK_INFO << "Closed TCP connection to broker" << m_connectedBrokerUrl;
 
-            // Invalidate the connectedBrokerUrl
-            m_connectedBrokerUrl = "";
+            this->setFlagDisconnected();
         }
 
 
