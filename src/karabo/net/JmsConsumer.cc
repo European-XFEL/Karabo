@@ -24,8 +24,8 @@ namespace karabo {
 
         JmsConsumer::JmsConsumer(const JmsConnection::Pointer& connection) :
             m_connection(connection),
-            m_mqStrand(*EventLoop::getIOService()),
-            m_notifyStrand(*EventLoop::getIOService()) {
+            m_mqStrand(EventLoop::getIOService()),
+            m_notifyStrand(EventLoop::getIOService()) {
             m_binarySerializer = BinarySerializer<Hash>::create("Bin");
             EventLoop::addThread();
         }
@@ -90,14 +90,8 @@ namespace karabo {
                     const MQInt8* bytes;
 
                     MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
-                    this->parseHeader(messageHandle, *header);
-                    //                    if (header->has("__compression__")) {
-                    //                        std::vector<char> tmp;
-                    //                        //decompress(*header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes), tmp);
-                    //                        m_binarySerializer->load(*body, tmp);
-                    //                    } else {
-                    m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
-                    //}
+                    this->parseHeader(messageHandle, *header);                   
+                    m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));                   
                     m_notifyStrand.post(boost::bind(handler, header, body));
                     break;
                 }

@@ -12,7 +12,11 @@ namespace karabo {
     namespace net {
 
 
-        EventLoop::EventLoop() : m_ioServicePointer(new boost::asio::io_service()) {          
+        EventLoop::EventLoop() {
+        }
+
+
+        EventLoop::EventLoop(const EventLoop&) {
         }
 
 
@@ -20,37 +24,41 @@ namespace karabo {
         }
 
 
-        EventLoop& EventLoop::getInstance() {
+        EventLoop& EventLoop::instance() {
             static EventLoop loop;
             return loop;
         }
 
 
-        EventLoop::IOServicePointer EventLoop::getIOService() {
-            return getInstance().m_ioServicePointer;
+        boost::asio::io_service& EventLoop::getIOService() {
+            return instance().m_ioService;
         }
 
 
         void EventLoop::run() {
-            getInstance().runProtected();          
+            instance().runProtected();
+            instance().m_threadPool.join_all();
+            instance().m_ioService.reset();
+        }        
+
+        void EventLoop::stop() {
+            instance().m_ioService.stop();
+        }      
+
+        size_t EventLoop::getNumberOfThreads() {
+            return instance()._getNumberOfThreads();
         }
 
 
-        void EventLoop::work() {
-            EventLoop& loop = getInstance();
-            boost::asio::io_service::work work(*(loop.m_ioServicePointer));
-            loop.runProtected();
-        }
-
-
-        void EventLoop::reset() {
-            getInstance().m_ioServicePointer->reset();
+        size_t EventLoop::_getNumberOfThreads() const {
+            boost::mutex::scoped_lock lock(m_threadPoolMutex);
+            return m_threadPool.size();
         }
 
 
         void EventLoop::addThread(const int nThreads) {
-            EventLoop& loop = getInstance();
-            loop.m_ioServicePointer->post(boost::bind(&karabo::net::EventLoop::_addThread, &loop, nThreads));
+            EventLoop& loop = instance();
+            loop.m_ioService.post(boost::bind(&karabo::net::EventLoop::_addThread, &loop, nThreads));
         }
 
 
@@ -67,13 +75,13 @@ namespace karabo {
 
 
         void EventLoop::removeThread(const int nThreads) {
-            getInstance()._removeThread(nThreads);
+            instance()._removeThread(nThreads);
         }
 
 
         void EventLoop::_removeThread(const int nThreads) {
             for (int i = 0; i < nThreads; ++i) {
-                m_ioServicePointer->post(&asyncInjectException);
+                m_ioService.post(&asyncInjectException);
             }
         }
 
@@ -107,22 +115,25 @@ namespace karabo {
             //  without the need for an intervening call to reset(). This allows the thread to rejoin the io_service
             //  object's thread pool without impacting any other threads in the pool."
 
-            const std::string fullMessage(" during event-loop callback (io_service), continuing in 100 ms");
+            const std::string fullMessage(" during event-loop callback (io_service) ");
 
             while (true) {
                 try {
-                    m_ioServicePointer->run();
+                    m_ioService.run();
                     return; // Regular exit
                 } catch (const RemoveThreadException&) {
                     // This is a sign to remove this thread from the pool
                     // As we can not kill ourselves we will ask another thread to kindly do so
-                    if (isValidThreadId()) {
-                        m_ioServicePointer->post(boost::bind(&karabo::net::EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));                       
+                    if (m_threadPool.is_this_thread_in()) {
+                        m_ioService.post(boost::bind(&karabo::net::EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
                         return; // No more while, we want to die
                     } else {
-                        m_ioServicePointer->post(&asyncInjectException);
-                        // This sleep is experimental, the idea is to prevent being called on the main thread again
-                        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+                        // We are in the main blocking thread here, which we never want to kill
+                        // Hence, we are injecting the exception again to be taken by another thread
+                        m_ioService.post(&asyncInjectException);
+                        // We kindly ask the scheduler to put us on the back of the threads queue, avoiding we will
+                        // eat the just posted exception again
+                        boost::this_thread::yield();
                     }
                 } catch (karabo::util::Exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Exception" << fullMessage << ": " << e;
@@ -133,14 +144,7 @@ namespace karabo {
                 }
                 boost::this_thread::sleep(boost::posix_time::milliseconds(100));
             }
-        }
-
-
-        bool EventLoop::isValidThreadId() {
-            boost::mutex::scoped_lock lock(m_threadPoolMutex);
-            return m_threadMap.find(boost::this_thread::get_id()) != m_threadMap.end();
-        }
-
+        }       
     }
 }
 
