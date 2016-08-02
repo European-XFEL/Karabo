@@ -9,10 +9,10 @@ import weakref
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    Configurable, connectDevice, Device, Float, getDevice, Hash, Int32,
-    MetricPrefix, Node, setNoWait, setWait, Slot, String, unit, Unit,
-    VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil, waitUntilNew
-)
+    Configurable, connectDevice, Device, DeviceNode, Float, getDevice, Hash,
+    Int32, MetricPrefix, Node, setNoWait, setWait, Slot, String, unit, Unit,
+    VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
+    waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.device_client import Queue
 
@@ -641,6 +641,67 @@ class Tests(DeviceTest):
         # this is usually done by iPython/iKarabo
         d = yield from getDevice("remote")
         self.assertEqual(d.value.getdoc(), "The Value")
+
+    @async_tst
+    def test_devicenode(self):
+        class A(Device):
+            dn = DeviceNode(properties=["value", {"counter": "cntr",
+                                                  "other": "othr"}],
+                            commands=[{"doit": "do_it"}, "changeit"])
+
+        a = A({"_deviceId_": "devicenode", "dn": "remote"})
+        yield from a.startInstance()
+        try:
+            a.dn.value = 5
+            yield from a.dn
+            self.assertEqual(self.remote.value, 5)
+
+            with (yield from getDevice("devicenode")) as d:
+                self.assertEqual(d.dn.value, 5)
+                self.assertEqual(d.dn.cntr, -1)
+                d.dn.value = 8
+                d.dn.cntr = 12
+                self.remote.done = False
+                yield from d.dn.do_it()
+                self.assertEqual(d.dn.value, 8)
+                self.assertEqual(d.dn.cntr, 12)
+                self.assertEqual(a.dn.value, 8)
+                self.assertEqual(a.dn.counter, 12)
+                self.assertTrue(self.remote.done)
+                d.dn.value = 22
+                yield from d.dn.changeit()
+                yield from sleep(0.02)
+                self.assertEqual(d.dn.value, 18)
+                self.assertEqual(a.dn.value, 18)
+
+                d.dn.othr = 111
+                yield from d
+                self.assertFalse(hasattr(d.dn, "othr"))
+        finally:
+            yield from a.slotKillDevice()
+
+    @async_tst
+    def test_devicenode_nocopy(self):
+        class A(Device):
+            dn = DeviceNode()
+
+        a = A({"_deviceId_": "devicenode", "dn": "remote"})
+        yield from a.startInstance()
+        try:
+            a.dn.value = 5
+            yield from a.dn
+            self.assertEqual(self.remote.value, 5)
+        finally:
+            yield from a.slotKillDevice()
+
+    @async_tst
+    def test_devicenode_novalue(self):
+        class A(Device):
+            dn = DeviceNode()
+
+        a = A({"_deviceId_": "devicenode"})
+        yield from a.startInstance()
+        self.assertFalse(hasattr(a, "dn"))
 
     @async_tst
     def test_device_schema(self):
