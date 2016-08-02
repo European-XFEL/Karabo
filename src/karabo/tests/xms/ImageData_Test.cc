@@ -37,7 +37,7 @@ void ImageData_Test::tearDown() {
 void ImageData_Test::testConstructor() {
 
     Dims dims(200, 100); // width, height
-    std::vector<int> someData(dims.size(), 2);
+    std::vector<unsigned char> someData(dims.size(), 2);
 
     {
         ImageData image(&someData[0], someData.size(), true, dims);
@@ -45,8 +45,7 @@ void ImageData_Test::testConstructor() {
         Dims imageDims(image.getDimensions());
         Dims imageOffsets(image.getROIOffsets());
 
-        CPPUNIT_ASSERT(image.getByteSize() == 20000 * sizeof (int));
-        CPPUNIT_ASSERT(image.getChannelSpace() == ChannelSpace::s_32_4);
+        CPPUNIT_ASSERT(image.getByteSize() == 200 * 100);
         CPPUNIT_ASSERT(image.getEncoding() == Encoding::GRAY);
 
         CPPUNIT_ASSERT(imageDims.size() == 20000);
@@ -57,35 +56,7 @@ void ImageData_Test::testConstructor() {
         CPPUNIT_ASSERT(imageOffsets.rank() == 2);
         CPPUNIT_ASSERT(imageOffsets.x1() == 0);
         CPPUNIT_ASSERT(imageOffsets.x2() == 0);
-
-        CPPUNIT_ASSERT(image.getDataType() == "INT32");
     }
-
-    {
-        karabo::xip::CpuImage<unsigned char> cpuImage(200, 100, 5); // width, height, depth
-        ImageData image(cpuImage);
-
-        Dims imageDims(image.getDimensions());
-        Dims imageOffsets(image.getROIOffsets());
-
-        CPPUNIT_ASSERT(image.getByteSize() == 200 * 100 * 5 * sizeof (unsigned char));
-        CPPUNIT_ASSERT(image.getChannelSpace() == ChannelSpace::u_8_1);
-        CPPUNIT_ASSERT(image.getEncoding() == Encoding::GRAY);
-
-        CPPUNIT_ASSERT(imageDims.size() == 100000);
-        CPPUNIT_ASSERT(imageDims.rank() == 3);
-        CPPUNIT_ASSERT(imageDims.x1() == 200);
-        CPPUNIT_ASSERT(imageDims.x2() == 100);
-        CPPUNIT_ASSERT(imageDims.x3() == 5);
-
-        CPPUNIT_ASSERT(imageOffsets.rank() == 3);
-        CPPUNIT_ASSERT(imageOffsets.x1() == 0);
-        CPPUNIT_ASSERT(imageOffsets.x2() == 0);
-        CPPUNIT_ASSERT(imageOffsets.x3() == 0);
-
-        CPPUNIT_ASSERT(image.getDataType() == "UINT8");
-    }
-
 }
 
 
@@ -95,7 +66,7 @@ void ImageData_Test::testSetAndGetMethods() {
     Dims offsets(10, 50);
     int tmp[] = {Dimension::DATA, Dimension::STACK};
     std::vector<int> dimTypes(tmp, tmp + 2);
-    std::vector<int> someData(dims.size(), 2);
+    std::vector<unsigned char> someData(dims.size(), 2);
 
     {
         ImageData image;
