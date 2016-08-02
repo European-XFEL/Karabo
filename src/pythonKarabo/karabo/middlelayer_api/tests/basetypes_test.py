@@ -114,8 +114,8 @@ class Tests(TestCase):
         self.assertNotEqual(e, F.a)
         self.assertEqual(e.timestamp, self.t1)
         self.assertEqual((e == f).timestamp, self.t1)
-        self.assertEqual(str(e), str(E.a))
-        self.assertEqual(repr(e), repr(E.a))
+        self.assertEqual(str(e), "E.a")
+        self.assertEqual(repr(e), "<E.a: 3>")
         self.assertEqual(e.value, 3)
         self.assertEqual(f.value, 5)
 
