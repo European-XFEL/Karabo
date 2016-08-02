@@ -233,27 +233,34 @@ namespace karabo {
                         .assignmentOptional().defaultValue(false)
                         .commit();
 
-                BOOL_ELEMENT(expected).key("performanceStatistics.trafficJam")
-                        .displayedName("Traffic jam for messages")
-                        .description("Flag denoting traffic jam for messages traveling via broker")
-                        .expertAccess()
-                        .readOnly().initialValue(false)
-                        .commit();
-
                 FLOAT_ELEMENT(expected).key("performanceStatistics.brokerLatency")
                         .displayedName("Broker latency (ms)")
-                        .description("Time interval (in millis) between message sending to broker and receiving it on the device before queuing.")
+                        .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
+                        .description("Average time interval between remote message sending and receiving it on this device before queuing.")
                         .expertAccess()
                         .readOnly().initialValue(0)
-                        //.warnHigh(10000LL)
                         .commit();
 
                 FLOAT_ELEMENT(expected).key("performanceStatistics.processingLatency")
                         .displayedName("Processing latency (ms)")
-                        .description("Time interval (in millis) between message sending to broker and reading it from the queue on the device.")
+                        .description("Average time interval between remote message sending and reading it from the queue on this device.")
+                        .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                         .expertAccess()
                         .readOnly().initialValue(0)
-                        //.warnHigh(10000LL)
+                        .warnHigh(3000.f) // 3 s
+                        .info("Long average time between message being sent and start of its processing")
+                        .needsAcknowledging(false)
+                        .alarmHigh(10000.f) // 10 s
+                        .info("Very long average time between message being sent and start of its processing")
+                        .needsAcknowledging(false)
+                        .commit();
+
+                UINT32_ELEMENT(expected).key("performanceStatistics.maxProcessingLatency")
+                        .displayedName("Maximum proc. latency")
+                        .description("Maximum processing latency within averaging interval.")
+                        .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
+                        .expertAccess()
+                        .readOnly().initialValue(0)
                         .commit();
 
                 UINT32_ELEMENT(expected).key("performanceStatistics.messageQueueSize")
@@ -262,20 +269,6 @@ namespace karabo {
                         .expertAccess()
                         .readOnly().initialValue(0)
                         //.warnHigh(100)
-                        .commit();
-
-                INT64_ELEMENT(expected).key("performanceStatistics.latencyUpper")
-                        .displayedName("Latency upper limit")
-                        .description("Message latency above that the \"Traffic jam\" flag will be set.")
-                        .assignmentOptional().defaultValue(10000LL)
-                        .adminAccess()
-                        .commit();
-
-                INT64_ELEMENT(expected).key("performanceStatistics.latencyLower")
-                        .displayedName("Latency lower limit")
-                        .description("Message latency below that the \"Traffic jam\" flag will be unset.")
-                        .assignmentOptional().defaultValue(5000LL)
-                        .adminAccess()
                         .commit();
 
                 FSM::expectedParameters(expected);
@@ -1022,7 +1015,8 @@ namespace karabo {
                 this->registerExceptionHandler(boost::bind(&karabo::core::Device<FSM>::exceptionFound, this, _1));
 
                 // Register updateLatencies handler
-                this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies, this, _1, _2, _3));
+                this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies,
+                                                                       this, _1, _2, _3, _4, _5));
 
                 // This initializations or done here and not in the constructor as they involve virtual function calls
                 this->initClassId();
@@ -1280,27 +1274,18 @@ namespace karabo {
                 return it->second;
             }
 
-            void updateLatencies(float brokerLatency, float processingLatency, unsigned int messageQueueSize) {
+            void updateLatencies(float avgBrokerLatency, unsigned int /*maxBrokerLatency*/,
+                                 float avgProcessingLatency, unsigned int maxProcessingLatency,
+                                 unsigned int messageQueueSize) {
 
                 // updateLatencies
                 if (this->get<bool>("performanceStatistics.enable")) {
 
-                    // TODO Remove jam flag, once notification system is in place
-                    bool jamFlag = this->get<bool>("performanceStatistics.trafficJam");
-                    long long latencyUpper = this->get<long long>("performanceStatistics.latencyUpper");
-                    long long latencyLower = this->get<long long>("performanceStatistics.latencyLower");
-
-                    karabo::util::Hash h("performanceStatistics.brokerLatency", brokerLatency, "performanceStatistics.processingLatency", processingLatency, "performanceStatistics.messageQueueSize", messageQueueSize);
-
-                    if (jamFlag) {
-                        if (processingLatency < latencyLower)
-                            h.set("performanceStatistics.trafficJam", false);
-                    } else {
-                        if (processingLatency > latencyUpper) {
-                            h.set("performanceStatistics.trafficJam", true);
-                            KARABO_LOG_WARN << "Processing latency " << processingLatency << " are higher than established limit : " << latencyUpper;
-                        }
-                    }
+                    using karabo::util::Hash;
+                    const Hash h("performanceStatistics", Hash("brokerLatency", avgBrokerLatency,
+                                                               "processingLatency", avgProcessingLatency,
+                                                               "maxProcessingLatency", maxProcessingLatency,
+                                                               "messageQueueSize", messageQueueSize));
                     this->set(h);
                 }
             }

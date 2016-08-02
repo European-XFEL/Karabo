@@ -97,6 +97,7 @@ namespace karathon {
             SEQUENCE = karabo::util::Types::SEQUENCE,
             POINTER = karabo::util::Types::POINTER,
             RAW_ARRAY = karabo::util::Types::RAW_ARRAY,
+            NDARRAY = karabo::util::Types::NDARRAY,
 
             ARRAY_BOOL = karabo::util::Types::ARRAY_BOOL,
             ARRAY_CHAR = karabo::util::Types::ARRAY_CHAR,
@@ -111,20 +112,23 @@ namespace karathon {
             ARRAY_FLOAT = karabo::util::Types::ARRAY_FLOAT,
             ARRAY_DOUBLE = karabo::util::Types::ARRAY_DOUBLE,
 
+            NDARRAY_BOOL = karabo::util::Types::NDARRAY_BOOL,
+            NDARRAY_INT8 = karabo::util::Types::NDARRAY_INT8,
+            NDARRAY_UINT8 = karabo::util::Types::NDARRAY_UINT8,
+            NDARRAY_INT16 = karabo::util::Types::NDARRAY_INT16,
+            NDARRAY_UINT16 = karabo::util::Types::NDARRAY_UINT16,
+            NDARRAY_INT32 = karabo::util::Types::NDARRAY_INT32,
+            NDARRAY_UINT32 = karabo::util::Types::NDARRAY_UINT32,
+            NDARRAY_INT64 = karabo::util::Types::NDARRAY_INT64,
+            NDARRAY_UINT64 = karabo::util::Types::NDARRAY_UINT64,
+            NDARRAY_FLOAT = karabo::util::Types::NDARRAY_FLOAT,
+            NDARRAY_DOUBLE = karabo::util::Types::NDARRAY_DOUBLE,
+
             HASH_POINTER = karabo::util::Types::HASH_POINTER,
             VECTOR_HASH_POINTER = karabo::util::Types::VECTOR_HASH_POINTER,
             LAST_CPP_TYPE = karabo::util::Types::VECTOR_HASH_POINTER + 1,
             PYTHON_DEFAULT, // global switch: treat std::vector as bp::list
-            NUMPY_DEFAULT, // global switch: treat std::vector as numpy ndarray
-            NDARRAY_BOOL, // numpy ndarray of booleans
-            NDARRAY_INT16, // numpy ndarray of shorts
-            NDARRAY_UINT16, // numpy ndarray of unsigned shorts        
-            NDARRAY_INT32, // numpy ndarray of ints
-            NDARRAY_UINT32,
-            NDARRAY_INT64,
-            NDARRAY_UINT64,
-            NDARRAY_FLOAT,
-            NDARRAY_DOUBLE,
+            NUMPY_DEFAULT, // global switch: treat std::vector as ndarray
             NDARRAY_COMPLEX_FLOAT,
             NDARRAY_COMPLEX_DOUBLE
         };
@@ -199,6 +203,17 @@ namespace karathon {
                 case karabo::util::Types::ARRAY_UINT64: return ARRAY_UINT64;
                 case karabo::util::Types::ARRAY_FLOAT: return ARRAY_FLOAT;
                 case karabo::util::Types::ARRAY_DOUBLE: return ARRAY_DOUBLE;
+                case karabo::util::Types::NDARRAY_BOOL: return NDARRAY_BOOL;
+                case karabo::util::Types::NDARRAY_INT8: return NDARRAY_INT8;
+                case karabo::util::Types::NDARRAY_UINT8: return NDARRAY_UINT8;
+                case karabo::util::Types::NDARRAY_INT16: return NDARRAY_INT16;
+                case karabo::util::Types::NDARRAY_UINT16: return NDARRAY_UINT16;
+                case karabo::util::Types::NDARRAY_INT32: return NDARRAY_INT32;
+                case karabo::util::Types::NDARRAY_UINT32: return NDARRAY_UINT32;
+                case karabo::util::Types::NDARRAY_INT64: return NDARRAY_INT64;
+                case karabo::util::Types::NDARRAY_UINT64: return NDARRAY_UINT64;
+                case karabo::util::Types::NDARRAY_FLOAT: return NDARRAY_FLOAT;
+                case karabo::util::Types::NDARRAY_DOUBLE: return NDARRAY_DOUBLE;
                 case karabo::util::Types::HASH_POINTER: return HASH_POINTER;
                 case karabo::util::Types::VECTOR_HASH_POINTER: return VECTOR_HASH_POINTER;
                 default:
@@ -276,6 +291,17 @@ namespace karathon {
                 case ARRAY_UINT64: return karabo::util::Types::ARRAY_UINT64;
                 case ARRAY_FLOAT: return karabo::util::Types::ARRAY_FLOAT;
                 case ARRAY_DOUBLE: return karabo::util::Types::ARRAY_DOUBLE;
+                case NDARRAY_BOOL: return karabo::util::Types::NDARRAY_BOOL;
+                case NDARRAY_INT8: return karabo::util::Types::NDARRAY_INT8;
+                case NDARRAY_UINT8: return karabo::util::Types::NDARRAY_UINT8;
+                case NDARRAY_INT16: return karabo::util::Types::NDARRAY_INT16;
+                case NDARRAY_UINT16: return karabo::util::Types::NDARRAY_UINT16;
+                case NDARRAY_INT32: return karabo::util::Types::NDARRAY_INT32;
+                case NDARRAY_UINT32: return karabo::util::Types::NDARRAY_UINT32;
+                case NDARRAY_INT64: return karabo::util::Types::NDARRAY_INT64;
+                case NDARRAY_UINT64: return karabo::util::Types::NDARRAY_UINT64;
+                case NDARRAY_FLOAT: return karabo::util::Types::NDARRAY_FLOAT;
+                case NDARRAY_DOUBLE: return karabo::util::Types::NDARRAY_DOUBLE;
                 case HASH_POINTER: return karabo::util::Types::HASH_POINTER;
                 case VECTOR_HASH_POINTER: return karabo::util::Types::VECTOR_HASH_POINTER;
                 default:
@@ -394,6 +420,23 @@ namespace karathon {
             return v;
         }
 
+        template<typename T>
+        static karabo::util::NDArray<T> fromPyArrayToNDArray(PyArrayObject* arr) {
+            typedef typename karabo::util::NDArray<T> ArrayType;
+
+            npy_intp* pDims = PyArray_DIMS(arr);
+            std::vector<long long> shape;
+            int nelems = 1;
+            for (int i = 0; i < PyArray_NDIM(arr); i++) {
+                shape.push_back(pDims[i]);
+                nelems *= pDims[i];
+            }
+
+            T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
+            typename ArrayType::VectorTypePtr v(new typename ArrayType::VectorType(data, data + nelems));
+            return ArrayType(v, shape);
+        }
+
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);
         static karabo::util::Types::ReferenceType toAny(const bp::object& operand, boost::any& any);
 
@@ -406,6 +449,24 @@ namespace karathon {
         template<class ValueType>
         static bp::object fromStdVectorToPyArray(const std::vector<ValueType>& v, bool numpyFlag = false) {
             return fromStdVectorToPyList(v);
+        }
+
+        template<typename T>
+        static bp::object fromNDArrayToPyArray(const karabo::util::NDArray<T>& a, const int typenum) {
+            const std::vector<long long> shape = a.getShape();
+            const typename karabo::util::NDArray<T>::VectorTypePtr dataPtr = a.getData();
+            const int nd = shape.size();
+            std::vector<npy_intp> dims(nd, 0);
+            for (int i = 0; i < nd; ++i) {
+                dims[i] = shape[i];
+            }
+            PyObject* pyobj = PyArray_SimpleNew(nd, &dims[0], typenum);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
+            for (int i = 0; i < PyArray_SIZE(arr); i++) {
+                data[i] = (*dataPtr)[i];
+            }
+            return bp::object(bp::handle<>(pyobj));
         }
     };
 

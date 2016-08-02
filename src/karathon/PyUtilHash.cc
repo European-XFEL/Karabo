@@ -12,6 +12,7 @@
 #include <string>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Exception.hh>
+#include <karabo/util/NDArray.hh>
 #include "HashWrap.hh"
 #include "NodeWrap.hh"
 #include "AttributesWrap.hh"

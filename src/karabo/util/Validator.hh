@@ -17,6 +17,7 @@
 #include "ToLiteral.hh"
 #include "Units.hh"
 #include "AlarmConditions.hh"
+#include "NDArray.hh"
 
 #include "karaboDll.hh"
 #include "Timestamp.hh"
@@ -102,10 +103,13 @@ namespace karabo {
 
             void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
 
+            void checkNDArrayShape(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string& scope);
+
             bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
 
             bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
 
+            void compareNDArrayShapes(const NDArrayShapeType& schemaShape, const NDArrayShapeType& shape, std::ostringstream& report, const std::string& scope);
 
         };
     }

@@ -4,13 +4,12 @@ import atexit
 from functools import wraps
 import sys
 import threading
-import weakref
 
 from .device import Device
-from .device_client import waitUntilNew, Proxy, getDevice
+from .device_client import waitUntilNew, getDevice
 from .enums import AccessLevel, AccessMode
 from .eventloop import EventLoop
-from .hash import Descriptor, Hash, Int32 as Int, Slot, String, Type
+from .hash import Descriptor, Int32, Slot, String
 
 
 def Monitor():
@@ -67,7 +66,7 @@ class EventThread(threading.Thread):
 def _wrapslot(slot, name):
     if slot.allowedStates is None:
         slot.allowedStates = ["Idle..."]
-    themethod = slot.themethod
+    themethod = slot.method
 
     @wraps(themethod)
     def wrapper(device):
@@ -77,7 +76,7 @@ def _wrapslot(slot, name):
             return themethod(device)
         finally:
             device.state = "Idle..."
-    slot.themethod = wrapper
+    slot.method = wrapper
 
 
 class Macro(Device):
@@ -105,7 +104,7 @@ class Macro(Device):
         accessMode=AccessMode.READONLY,
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    printno = Int(
+    printno = Int32(
         displayedName="Number of prints",
         description="The number of prints issued so far",
         defaultValue=0,

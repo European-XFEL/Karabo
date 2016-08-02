@@ -106,15 +106,26 @@ class _Manager(QObject):
             if conf.descriptor is not None:
                 conf.redummy()
 
-
     def initDevice(self, serverId, classId, deviceId, config=None):
+        # Use standard configuration for server/classId
+        conf = self.serverClassData.get((serverId, classId))
         if config is None:
-            # Use standard configuration for server/classId
-            conf = self.serverClassData.get((serverId, classId))
             if conf is not None:
                 config, _ = conf.toHash()  # Ignore returned attributes
             else:
                 config = Hash()
+
+        # XXX: Temporary fix - due to the state changes
+        # Old projects save all parameters, even the read only ones. This fix
+        # removes them from the initial configuration to not stop the validator
+        # from instantiating
+        descriptor = conf.descriptor if conf is not None else None
+        if descriptor is not None:
+            read_only_keys = descriptor.getReadOnlyKeys()
+            for key in read_only_keys:
+                # Remove all read only parameters
+                if key in config: # erase does not tolerate non-existing keys
+                    config.erase(key)
 
         # Compute a runtime schema from the configuration and an unmodified
         # copy of the device class schema.
