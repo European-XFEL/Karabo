@@ -270,7 +270,10 @@ class Descriptor(object):
         """
         attrs = ((name, getattr(self, name)) for name in dir(type(self))
                  if isinstance(getattr(type(self), name), Attribute))
-        return Hash(), {name: attr for name, attr in attrs if attr is not None}
+        attrs = ((name, value.value if isinstance(value, Enum) else value)
+                 for name, value in attrs)
+        attrs = {name: attr for name, attr in attrs if attr is not None}
+        return Hash(), attrs
 
     def __get__(self, instance, owner):
         if instance is None:
