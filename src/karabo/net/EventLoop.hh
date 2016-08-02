@@ -26,9 +26,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(EventLoop, "EventLoop", "1.0")
-
-            typedef boost::shared_ptr<boost::asio::io_service> IOServicePointer;
+            KARABO_CLASSINFO(EventLoop, "EventLoop", "1.0")            
            
             virtual ~EventLoop();
 
@@ -36,21 +34,21 @@ namespace karabo {
 
             static void removeThread(const int nThreads = 1);
 
-            static IOServicePointer getIOService();
+            static boost::asio::io_service& getIOService();
 
-            static void run();
+            static void run();        
 
-            static void work();
+            static void stop();         
 
-            static void reset();
-
-            static EventLoop& getInstance();
+            static size_t getNumberOfThreads();
 
         private:
 
             EventLoop();
 
-            EventLoop(const EventLoop& orig);
+            EventLoop(const EventLoop&);
+
+            static EventLoop& instance();
 
             void _addThread(const int nThreads);
 
@@ -61,14 +59,12 @@ namespace karabo {
             static void asyncInjectException();
 
             void asyncDestroyThread(const boost::thread::id& id);
+          
+            size_t _getNumberOfThreads() const;
 
-            bool isValidThreadId();
-
-
-
-            IOServicePointer m_ioServicePointer;
+            boost::asio::io_service m_ioService;
             boost::thread_group m_threadPool;
-            boost::mutex m_threadPoolMutex;
+            mutable boost::mutex m_threadPoolMutex;
 
             typedef std::map<boost::thread::id, boost::thread*> ThreadMap;
             ThreadMap m_threadMap;

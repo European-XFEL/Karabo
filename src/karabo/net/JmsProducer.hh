@@ -55,7 +55,7 @@ namespace karabo {
 
             void clearProducerHandles();
 
-            void setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle& propertiesHandle);         
+            void setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle& propertiesHandle) const;
 
             void asyncWrite(const std::string& topic,
                             const karabo::util::Hash::Pointer& header,

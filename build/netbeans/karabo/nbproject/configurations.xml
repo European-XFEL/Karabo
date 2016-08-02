@@ -435,8 +435,16 @@
         <itemPath>../../../src/karabo/tests/log/logTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f4" displayName="net_test" projectFiles="true" kind="TEST">
+        <itemPath>../../../src/karabo/tests/net/EventLoop_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/net/EventLoop_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/net/JmsBroker_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/net/JmsBroker_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/JmsConnection_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/net/JmsConnection_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/net/MQTcpNetworking.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/net/MQTcpNetworking.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/net/TcpNetworking_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/net/TcpNetworking_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/netTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f1"
@@ -1485,12 +1493,52 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/net/EventLoop_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/EventLoop_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/JmsBroker_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/JmsBroker_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/net/JmsConnection_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/net/JmsConnection_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/MQTcpNetworking.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/MQTcpNetworking.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/TcpNetworking_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/TcpNetworking_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3530,12 +3578,52 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/net/EventLoop_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/EventLoop_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/JmsBroker_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/JmsBroker_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/net/JmsConnection_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/net/JmsConnection_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/MQTcpNetworking.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/MQTcpNetworking.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/TcpNetworking_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/TcpNetworking_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">

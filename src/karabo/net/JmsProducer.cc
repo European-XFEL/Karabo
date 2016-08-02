@@ -24,7 +24,7 @@ namespace karabo {
 
         JmsProducer::JmsProducer(const JmsConnection::Pointer& connection) :
             m_connection(connection),
-            m_mqStrand(*EventLoop::getIOService()) {
+            m_mqStrand(EventLoop::getIOService()) {
             m_binarySerializer = BinarySerializer<Hash>::create("Bin");
             m_producerSessionHandle.handle = HANDLED_OBJECT_INVALID_HANDLE;
         }
@@ -176,7 +176,7 @@ namespace karabo {
         }
 
 
-        void JmsProducer::setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle & propertiesHandle) {
+        void JmsProducer::setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle & propertiesHandle) const {
             try {
                 for (Hash::const_iterator it = properties.begin(); it != properties.end(); it++) {
                     Types::ReferenceType type = it->getType();
@@ -184,21 +184,26 @@ namespace karabo {
                         case Types::STRING:
                             MQ_SAFE_CALL(MQSetStringProperty(propertiesHandle, it->getKey().c_str(), it->getValue<string>().c_str()))
                             break;
+                        case Types::UINT8:
+                            MQ_SAFE_CALL(MQSetInt8Property(propertiesHandle, it->getKey().c_str(), it->getValueAs<signed char>()))
+                            break;
                         case Types::INT8:
                             MQ_SAFE_CALL(MQSetInt8Property(propertiesHandle, it->getKey().c_str(), it->getValue<signed char>()))
                             break;
                         case Types::UINT16:
+                            MQ_SAFE_CALL(MQSetInt16Property(propertiesHandle, it->getKey().c_str(), it->getValueAs<short>()))
+                            break;
                         case Types::INT16:
                             MQ_SAFE_CALL(MQSetInt16Property(propertiesHandle, it->getKey().c_str(), it->getValue<short>()))
                             break;
                         case Types::UINT32:
-                            MQ_SAFE_CALL(MQSetInt32Property(propertiesHandle, it->getKey().c_str(), it->getValue<unsigned int>()))
+                            MQ_SAFE_CALL(MQSetInt32Property(propertiesHandle, it->getKey().c_str(), it->getValueAs<int>()))
                             break;
                         case Types::INT32:
                             MQ_SAFE_CALL(MQSetInt32Property(propertiesHandle, it->getKey().c_str(), it->getValue<int>()))
                             break;
                         case Types::UINT64:
-                            MQ_SAFE_CALL(MQSetInt64Property(propertiesHandle, it->getKey().c_str(), it->getValue<unsigned long long>()))
+                            MQ_SAFE_CALL(MQSetInt64Property(propertiesHandle, it->getKey().c_str(), it->getValueAs<long long>()))
                             break;
                         case Types::INT64:
                             MQ_SAFE_CALL(MQSetInt64Property(propertiesHandle, it->getKey().c_str(), it->getValue<long long>()))
