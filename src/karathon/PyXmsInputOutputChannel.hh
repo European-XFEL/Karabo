@@ -59,7 +59,9 @@ namespace karathon {
            static void writePy(const boost::shared_ptr<karabo::xms::ImageData>& self, const std::string& filename, const bool enableAppendMode = false);
            static void setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& geometry);
            static karabo::util::DetectorGeometry getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-       };
+           static void setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& header);
+           static const karabo::util::Hash& getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
+    };
 
     struct ImageDataElementWrap {
 

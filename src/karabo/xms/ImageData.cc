@@ -275,7 +275,7 @@ namespace karabo {
         }
 
 
-        Hash ImageData::getHeader() {
+        const Hash& ImageData::getHeader() const {
             return m_hash->get<Hash>("header");
         }
 
