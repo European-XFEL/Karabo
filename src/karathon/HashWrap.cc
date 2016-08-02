@@ -21,6 +21,7 @@
 #include <karabo/util/Types.hh>
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/ToLiteral.hh>
+#include <karabo/util/NDArray.hh>
 #include "Wrapper.hh"
 
 #include "HashWrap.hh"

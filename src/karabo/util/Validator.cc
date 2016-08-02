@@ -478,6 +478,9 @@ namespace karabo {
                     }
                 }
             }
+            else if (referenceCategory == Types::NDARRAY) {
+                checkNDArrayShape(masterNode, workNode, report, scope);
+            }
         }
 
 
@@ -524,19 +527,87 @@ namespace karabo {
             return stats->second;
         };
 
-        
+
+        void Validator::checkNDArrayShape(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string& scope) {
+            const NDArrayShapeType& schemaShape = masterNode.getAttribute<NDArrayShapeType>(KARABO_SCHEMA_ARRAY_SHAPE);
+            const Types::ReferenceType givenType = workNode.getType();
+
+            switch (givenType) {
+                case Types::NDARRAY_BOOL: {
+                    const NDArrayShapeType& shape = workNode.getValue<NDArray<bool> >().getShape();
+                    compareNDArrayShapes(schemaShape, shape, report, scope);
+                    break;
+                }
+                case Types::NDARRAY_INT8: {
+                    const NDArrayShapeType& shape = workNode.getValue<NDArray<signed char> >().getShape();
+                    compareNDArrayShapes(schemaShape, shape, report, scope);
+                    break;
+                }
+                case Types::NDARRAY_UINT8: {
+                    const NDArrayShapeType& shape = workNode.getValue<NDArray<unsigned char> >().getShape();
+                    compareNDArrayShapes(schemaShape, shape, report, scope);
+                    break;
+                }
+                case Types::NDARRAY_INT16: {
+                    const NDArrayShapeType& shape = workNode.getValue<NDArray<short> >().getShape();
+                    compareNDArrayShapes(schemaShape, shape, report, scope);
+                    break;
+                }
+                case Types::NDARRAY_UINT16: {
+                    const NDArrayShapeType& shape = workNode.getValue<NDArray<unsigned short> >().getShape();
+                    compareNDArrayShapes(schemaShape, shape, report, scope);
+                    break;
+                }
+                case Types::NDARRAY_INT32: {
+                    const NDArrayShapeType& shape = workNode.getValue<NDArray<int> >().getShape();
+                    compareNDArrayShapes(schemaShape, shape, report, scope);
+                    break;
+                }
+                case Types::NDARRAY_UINT32: {
+                    const NDArrayShapeType& shape = workNode.getValue<NDArray<unsigned int> >().getShape();
+                    compareNDArrayShapes(schemaShape, shape, report, scope);
+                    break;
+                }
+                case Types::NDARRAY_INT64: {
+                    const NDArrayShapeType& shape = workNode.getValue<NDArray<long long> >().getShape();
+                    compareNDArrayShapes(schemaShape, shape, report, scope);
+                    break;
+                }
+                case Types::NDARRAY_UINT64: {
+                    const NDArrayShapeType& shape = workNode.getValue<NDArray<unsigned long long> >().getShape();
+                    compareNDArrayShapes(schemaShape, shape, report, scope);
+                    break;
+                }
+                case Types::NDARRAY_FLOAT: {
+                    const NDArrayShapeType& shape = workNode.getValue<NDArray<float> >().getShape();
+                    compareNDArrayShapes(schemaShape, shape, report, scope);
+                    break;
+                }
+                case Types::NDARRAY_DOUBLE: {
+                    const NDArrayShapeType& shape = workNode.getValue<NDArray<double> >().getShape();
+                    compareNDArrayShapes(schemaShape, shape, report, scope);
+                    break;
+                }
+                default:
+                    report << "Unkown Type (" << givenType << ") for (ndarray-)parameter \"" << scope << "\"" << endl;
+                    break;
+            }
+        }
+
+
         bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
             return checkThresholdedAlarmCondition(alarmCond, workNode.getValueAs<double>(), masterNode, workNode, report, scope, checkGreater);
         }
-        
+
+
         bool Validator::checkThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
             const std::string & alarmString = alarmCond.asString();
             if (masterNode.hasAttribute(alarmString)) {
                 double threshold = masterNode.getAttributeAs<double>(alarmString);
                 double value = workNode.getValueAs<double>();
                 if ((checkGreater ? value > threshold : value < threshold)) {
-                    string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went " 
-                        + (checkGreater ? "above" : "below")+" "+alarmCond.asBaseString() +" level of " 
+                    string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went "
+                        + (checkGreater ? "above " : "below ") + alarmCond.asBaseString() + " level of "
                         + karabo::util::toString(threshold));
                     m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmString, "message", msg), '\0');
 
@@ -549,5 +620,22 @@ namespace karabo {
             }
             return false; // nothing to clear
         }
+
+
+        void Validator::compareNDArrayShapes(const NDArrayShapeType& expected, const NDArrayShapeType& observed, std::ostringstream& report, const std::string& scope) {
+            for (NDArrayShapeType::const_iterator eit = expected.begin(), oit = observed.begin(); eit != expected.end() && oit != observed.end(); ++eit, ++oit) {
+                if (*eit == -1) {
+                    // Negative dimension => variable.
+                    continue;
+                }
+                if (*eit != *oit) {
+                    std::string expectedStr = toString<long long>(expected);
+                    std::string observedStr = toString<long long>(observed);
+                    report << "Expected array shape: " << expectedStr << " for (ndarray-)parameter \"" << scope << "\", but got " << observedStr << " instead." << endl;
+                    return;
+                }
+            }
+        }
+
     }
 }

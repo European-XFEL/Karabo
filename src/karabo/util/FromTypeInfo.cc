@@ -9,6 +9,7 @@
 #include <boost/assign.hpp>
 
 #include "Hash.hh"
+#include "NDArray.hh"
 #include "Schema.hh"
 
 #include "FromTypeInfo.hh"
@@ -30,6 +31,9 @@ namespace karabo {
 
 #define _KARABO_HELPER_MACRO2(ReferenceType, CppType) \
 (std::string(typeid (std::pair<const CppType*, size_t>).name()), Types::ARRAY_##ReferenceType)
+
+#define _KARABO_HELPER_MACRO3(ReferenceType, CppType) \
+(std::string(typeid (NDArray<CppType>).name()), Types::NDARRAY_##ReferenceType)
 
 
         FromTypeInfo::FromTypeInfo() {
@@ -66,6 +70,19 @@ namespace karabo {
                     _KARABO_HELPER_MACRO2(UINT64, unsigned long long)
                     _KARABO_HELPER_MACRO2(FLOAT, float)
                     _KARABO_HELPER_MACRO2(DOUBLE, double)
+
+                    _KARABO_HELPER_MACRO3(BOOL, bool)
+                    _KARABO_HELPER_MACRO3(INT8, signed char)
+                    _KARABO_HELPER_MACRO3(UINT8, unsigned char)
+                    _KARABO_HELPER_MACRO3(INT16, short)
+                    _KARABO_HELPER_MACRO3(UINT16, unsigned short)
+                    _KARABO_HELPER_MACRO3(INT32, int)
+                    _KARABO_HELPER_MACRO3(UINT32, unsigned int)
+                    _KARABO_HELPER_MACRO3(INT64, long long)
+                    _KARABO_HELPER_MACRO3(UINT64, unsigned long long)
+                    _KARABO_HELPER_MACRO3(FLOAT, float)
+                    _KARABO_HELPER_MACRO3(DOUBLE, double)
+
                     (std::string(typeid (Hash::Pointer).name()), Types::HASH_POINTER)
                     (std::string(typeid (std::vector<Hash::Pointer>).name()), Types::VECTOR_HASH_POINTER)
 
@@ -73,6 +90,7 @@ namespace karabo {
 #undef _KARABO_HELPER_MACRO
 #undef _KARABO_HELPER_MACRO1
 #undef _KARABO_HELPER_MACRO2
+#undef _KARABO_HELPER_MACRO3
 
 #else
 
@@ -89,6 +107,8 @@ namespace karabo {
 #define _KARABO_HELPER_MACRO2(ReferenceType, CppType) \
 {std::string(typeid (std::pair<const CppType*, size_t>).name()), Types::ARRAY_##ReferenceType}
 
+#define _KARABO_HELPER_MACRO3(ReferenceType, CppType) \
+{std::string(typeid (NDArray<CppType>).name()), Types::NDARRAY_##ReferenceType}
 
         FromTypeInfo::FromTypeInfo() {
 
@@ -126,11 +146,23 @@ namespace karabo {
                             , _KARABO_HELPER_MACRO2(FLOAT, float)
                             , _KARABO_HELPER_MACRO2(DOUBLE, double)
 
+                            , _KARABO_HELPER_MACRO3(BOOL, bool)
+                            , _KARABO_HELPER_MACRO3(INT8, signed char)
+                            , _KARABO_HELPER_MACRO3(UINT8, unsigned char)
+                            , _KARABO_HELPER_MACRO3(INT16, short)
+                            , _KARABO_HELPER_MACRO3(UINT16, unsigned short)
+                            , _KARABO_HELPER_MACRO3(INT32, int)
+                            , _KARABO_HELPER_MACRO3(UINT32, unsigned int)
+                            , _KARABO_HELPER_MACRO3(INT64, long long)
+                            , _KARABO_HELPER_MACRO3(UINT64, unsigned long long)
+                            , _KARABO_HELPER_MACRO3(FLOAT, float)
+                            , _KARABO_HELPER_MACRO3(DOUBLE, double)
             };
 
 #undef _KARABO_HELPER_MACRO
 #undef _KARABO_HELPER_MACRO1
 #undef _KARABO_HELPER_MACRO2
+#undef _KARABO_HELPER_MACRO3
 
 #endif
         }

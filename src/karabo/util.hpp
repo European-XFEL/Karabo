@@ -24,6 +24,7 @@
 #include "util/OverwriteElement.hh"
 #include "util/PathElement.hh"
 #include "util/SimpleElement.hh"
+#include "util/NDArray.hh"
 #include "util/NDArrayElement.hh"
 #include "util/ImageElement.hh"
 #include "util/TableElement.hh"
