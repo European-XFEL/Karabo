@@ -5,6 +5,7 @@ from functools import wraps
 import sys
 import threading
 
+from karabo.common.states import State
 from .device import Device
 from .device_client import waitUntilNew, getDevice
 from .enums import AccessLevel, AccessMode
@@ -65,17 +66,19 @@ class EventThread(threading.Thread):
 
 def _wrapslot(slot, name):
     if slot.allowedStates is None:
-        slot.allowedStates = ["Idle..."]
+        slot.allowedStates = {State.PASSIVE}
     themethod = slot.method
 
     @wraps(themethod)
     def wrapper(device):
         device._lastloop = get_event_loop()
-        device.state = name
+        device.status = name
+        device.state = State.ACTIVE
         try:
             return themethod(device)
         finally:
-            device.state = "Idle..."
+            device.status = "Idle..."
+            device.state = State.PASSIVE
     slot.method = wrapper
 
 
@@ -96,6 +99,12 @@ class Macro(Device):
         defaultValue="__none__",
         accessMode=AccessMode.INITONLY,
         requiredAccessLevel=AccessLevel.EXPERT)
+
+    status = String(
+        displayedName="Status",
+        description="A detailed description of what we are doing",
+        defaultValue="initializing...",
+        accessMode=AccessMode.READONLY)
 
     print = String(
         displayedName="Printed output",
@@ -158,7 +167,7 @@ class Macro(Device):
 
         yield from super(Macro, self)._run()
 
-        self.state = "SearchRemotes..."
+        self.status = "SearchRemotes..."
         holders = []
 
         @coroutine
@@ -181,7 +190,8 @@ class Macro(Device):
                           if isinstance(v, RemoteDevice)))
         for h in holders:
             async(h)
-        self.state = "Idle..."
+        self.status = "Idle..."
+        self.state = State.PASSIVE
 
     def __holdDevice(self, d):
         """keep the connection to a remote device
