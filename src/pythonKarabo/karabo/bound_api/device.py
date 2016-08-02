@@ -22,7 +22,7 @@ from karathon import (
     Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
     ImageData, Logger, Priority, RawImageData, Schema, SignalSlotable,
     Timestamp, Trainstamp, Validator, ValidatorValidationRules,
-    loadFromFile, STATE_ELEMENT, ALARM_ELEMENT, LeafType
+    loadFromFile, STATE_ELEMENT, ALARM_ELEMENT, LeafType, Unit, MetricPrefix
 )
 
 from karabo.common.states import State
