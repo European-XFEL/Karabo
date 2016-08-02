@@ -15,13 +15,13 @@ import numpy as np
 from karathon import (
     CpuImageCHAR, CpuImageDOUBLE, CpuImageFLOAT, CpuImageINT16,
     CpuImageINT32, CpuImageUINT16, CpuImageUINT8,
-    BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, INT64_ELEMENT,
+    BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
     UINT32_ELEMENT, NODE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, BrokerConnection,
     Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
-    ImageData, Logger, NDArray, Priority, RawImageData, Schema, SignalSlotable,
-    Timestamp, Trainstamp, Unit, MetricPrefix, Validator, ValidatorValidationRules,
+    ImageData, Logger, Priority, RawImageData, Schema, SignalSlotable,
+    Timestamp, Trainstamp, Validator, ValidatorValidationRules,
     loadFromFile
 )
 
@@ -489,7 +489,7 @@ class PythonDevice(NoFsm):
             channelName, key, value = pars
             if isCpuImage(value):
                 dataval = ImageData(value)
-            elif isinstance(value, (Data, ImageData, NDArray)):
+            elif isinstance(value, (Data, ImageData)):
                 dataval = value
             elif isinstance(value, Image.Image):
                 dataval = ImageData(np.array(value))
@@ -498,7 +498,7 @@ class PythonDevice(NoFsm):
             data = Data(key, dataval)
         elif len(pars) == 2:
             channelName, data = pars
-            if isinstance(data, (ImageData, NDArray)):
+            if isinstance(data, ImageData):
                 data = Data(data.hash())
             elif isinstance(data, Image.Image):
                 img = data
