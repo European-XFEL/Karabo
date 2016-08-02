@@ -69,37 +69,37 @@ namespace karabo {
             }
 
             OverwriteElement& setNewAssignmentMandatory() {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
                 return *this;
             }
 
             OverwriteElement& setNewAssignmentOptional() {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
                 return *this;
             }
 
             OverwriteElement& setNewAssignmentInternal() {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::INTERNAL_PARAM);
                 return *this;
             }
 
             OverwriteElement& setNowInit() {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
                 return *this;
             }
 
             OverwriteElement& setNowReconfigurable() {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
                 return *this;
             }
 
             OverwriteElement& setNowReadOnly() {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 return *this;
             }
@@ -112,34 +112,34 @@ namespace karabo {
 
             template <class ValueType>
             OverwriteElement& setNewMinInc(const ValueType& value) {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_MIN_INC, value);
                 return *this;
             }
 
             template <class ValueType>
             OverwriteElement& setNewMaxInc(const ValueType& value) {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_MAX_INC, value);
                 return *this;
             }
 
             template <class ValueType>
             OverwriteElement& setNewMinExc(const ValueType& value) {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_MIN_EXC, value);
                 return *this;
             }
 
             template <class ValueType>
             OverwriteElement& setNewMaxExc(const ValueType& value) {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_MAX_EXC, value);
                 return *this;
             }
 
             OverwriteElement& setNewOptions(const std::string& opts, const std::string& sep = " ,;") {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromString<std::string, std::vector > (opts, sep));
                 return *this;
             }
@@ -189,13 +189,13 @@ namespace karabo {
             }
 
             OverwriteElement& setNewOptions(const std::vector<std::string>& opts) {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
                 return *this;
             }
 
             OverwriteElement& setNewAllowedStates(const std::vector<karabo::util::State>& states) {
-                disallowedForStateAndAlarm();
+
                 const std::string stateList = karabo::util::toString(states);
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector > (stateList, ","));
 
@@ -235,37 +235,37 @@ namespace karabo {
             }
 
             OverwriteElement& setNowObserverAccess() {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
                 return *this;
             }
 
             OverwriteElement& setNowUserAccess() {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::USER);
                 return *this;
             }
 
             OverwriteElement& setNowOperatorAccess() {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OPERATOR);
                 return *this;
             }
 
             OverwriteElement& setNowExpertAccess() {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
                 return *this;
             }
 
             OverwriteElement& setNowAdminAccess() {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::ADMIN);
                 return *this;
             }
 
             OverwriteElement& setNewUnit(const UnitType& unit) {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, unit);
                 std::pair<std::string, std::string> names = karabo::util::getUnit(unit);
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_UNIT_NAME, names.first);
@@ -274,7 +274,7 @@ namespace karabo {
             }
 
             OverwriteElement& setNewMetricPrefix(const MetricPrefixType& metricPrefix) {
-                disallowedForStateAndAlarm();
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_METRIC_PREFIX_ENUM, metricPrefix);
                 std::pair<std::string, std::string> names = karabo::util::getMetricPrefix(metricPrefix);
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
@@ -291,15 +291,8 @@ namespace karabo {
                 // Does nothing, changes happened on existing node
             }
 
-        private:
 
-            void disallowedForStateAndAlarm() {
-                if (m_node->getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE) == Schema::STATE ||
-                    m_node->getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE) == Schema::ALARM_CONDITION) {
-                    const std::string element = (m_node->getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE) == Schema::STATE) ? "STATE_ELEMENT" : "ALARM_ELEMENT";
-                    KARABO_NOT_IMPLEMENTED_EXCEPTION("This option is not available for " + element + " at key " + m_node->getKey());
-                }
-            }
+
         };
 
         template <>
