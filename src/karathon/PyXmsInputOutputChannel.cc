@@ -340,6 +340,17 @@ namespace karathon {
     }
 
 
+    void setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& header){
+        karabo::util::Hash head = bp::extract<karabo::util::Hash>(header);
+        self->setHeader(head);
+    }
+
+
+    const karabo::util::Hash& getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
+        return self->getHeader();
+    }
+
+
     karabo::xms::ImageDataElement& ImageDataElementWrap::setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement>& self,
                                                                          const std::string& subKey,
                                           const bp::object& defaultValue) {
@@ -570,6 +581,10 @@ void exportPyXmsInputOutputChannel() {
                 .def("setGeometry", &karathon::ImageDataWrap::setGeometryPy, (bp::arg("geometry")))
 
                 .def("getGeometry", &karathon::ImageDataWrap::getGeometryPy)
+
+                .def("getHeader", &karathon::ImageDataWrap::getHeaderPy, bp::return_value_policy< bp::copy_const_reference >())
+
+                .def("setHeader", &karathon::ImageDataWrap::setHeaderPy, (bp::arg("header")))
                 //KARABO_PYTHON_FACTORY_CONFIGURATOR(ImageData)
                 ;
     }
