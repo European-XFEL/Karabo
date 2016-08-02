@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 from functools import wraps
 import getpass
+import inspect
 from itertools import count
 import logging
 import os
@@ -37,6 +38,7 @@ class Broker:
         self.tasks = set()
         self.logger = logging.getLogger(deviceId)
         self.info = None
+        self.slots = {}
 
     def send(self, p, args):
         hash = Hash()
@@ -175,27 +177,50 @@ class Broker:
                 try:
                     slots, params = self.decodeMessage(message)
                 except:
-                    self.logger.exception("malformated message")
+                    self.logger.exception("Malformed message")
                     continue
                 if device is None:
                     continue
                 try:
-                    slots = [getattr(device, s)
+                    slots = [self.slots[s]
                              for s in slots.get(self.deviceId, [])] + \
-                            [getattr(device, s) for s in slots.get("*", [])
-                             if hasattr(device, s)]
-                except AttributeError:
-                    self.logger.exception("slot does not exist")
+                            [self.slots[s] for s in slots.get("*", [])
+                             if s in self.slots]
+                except KeyError:
+                    self.logger.exception("Slot does not exist")
                     continue
                 try:
                     for slot in slots:
-                        slot.slot(device, message, params)
-                except:
+                        slot.slot(slot, device, message, params)
+                except Exception:
+                    # the slot.slot wrapper should already catch all exceptions
+                    # all exceptions raised additionally are a bug in Karabo
                     self.logger.exception(
-                        "internal error while executing slot")
+                        "Internal error while executing slot")
                 slot = slots = None  # delete reference to device
         finally:
             consumer.close()
+
+    def register_slot(self, name, slot):
+        """register a slot on the device
+
+        :param name: the name of the slot
+        :param slot: the slot to be called. If this is a bound method, it is
+            assured that no reference to the object holding the method is kept.
+        """
+        if inspect.ismethod(slot):
+            def delete(ref):
+                del self.slots[name]
+
+            weakself = weakref.ref(slot.__self__, delete)
+            func = slot.__func__
+
+            @wraps(func)
+            def wrapper(*args):
+                return func(weakself(), *args)
+            self.slots[name] = wrapper
+        else:
+            self.slots[name] = slot
 
     @coroutine
     def main(self, device):
@@ -238,6 +263,13 @@ class Broker:
                   self.deviceId, self.info)
 
     def decodeMessage(self, message):
+        """Decode a Karabo message
+
+        reply messages are dispatched directly.
+
+        :returns: a dictionary that maps the device id of slots to be called
+            to a list of slots to be called on that device
+        """
         hash = Hash.decode(message.data, "Bin")
         params = []
         for i in count(1):

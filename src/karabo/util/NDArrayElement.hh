@@ -11,6 +11,7 @@
 #define KARABO_UTIL_NDARRAYELEMENT_HH
 
 #include "LeafElement.hh"
+#include "NDArray.hh"
 
 namespace karabo {
     namespace util {
@@ -18,8 +19,6 @@ namespace karabo {
         template<typename T, int NDIMS = -1,
                  template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
         class NDArrayElement : public LeafElement<NDArrayElement<T, NDIMS, CONT>, CONT<T> > {
-
-            typedef std::vector<long long> ShapeType;
 
             public:
 
@@ -49,7 +48,7 @@ namespace karabo {
                     throw KARABO_NOT_IMPLEMENTED_EXCEPTION("The shape of a vector cannot be set");
                 }
 
-                const ShapeType shp = fromString<long long, std::vector>(value);
+                const NDArrayShapeType shp = fromString<long long, std::vector>(value);
                 this->m_node->setAttribute(KARABO_SCHEMA_ARRAY_SHAPE, shp);
                 return *this;
             }
