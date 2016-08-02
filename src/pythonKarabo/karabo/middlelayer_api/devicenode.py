@@ -41,8 +41,11 @@ class DeviceNode(String):
             ret = OrderedDict()
             for name in names:
                 if isinstance(name, dict):
+                    assert all(isinstance(k, str) and isinstance(v, str)
+                               for k, v in name.items())
                     ret.update(name)
                 else:
+                    assert isinstance(name, str)
                     ret[name] = name
             return ret
 
