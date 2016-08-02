@@ -92,10 +92,6 @@ namespace karabo {
             template <typename ValueType >
             ValueType getValueAs() const;
 
-
-            template<typename T, template <typename Elem> class Arr >
-            Arr<T> getValueAs() const;
-
             template<typename T,
             template <typename Elem, typename = std::allocator<Elem> > class Cont >
             Cont<T> getValueAs() const;
