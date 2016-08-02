@@ -340,13 +340,13 @@ namespace karathon {
     }
 
 
-    void setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& header){
+    void ImageDataWrap::setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& header){
         karabo::util::Hash head = bp::extract<karabo::util::Hash>(header);
         self->setHeader(head);
     }
 
 
-    const karabo::util::Hash& getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
+    const karabo::util::Hash& ImageDataWrap::getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
         return self->getHeader();
     }
 
