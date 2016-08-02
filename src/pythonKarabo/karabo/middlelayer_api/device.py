@@ -1,6 +1,7 @@
 from asyncio import coroutine
 import socket
 
+from karabo.common.states import State
 from .enums import AccessLevel, AccessMode, Assignment
 from .exceptions import KaraboError
 from .hash import Bool, Hash, HashType, Int32, SchemaHashType, String
@@ -31,10 +32,10 @@ class Device(SignalSlotable):
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL)
 
     state = String(
-        displayedName="State",
+        displayedName="State", enum=State,
         description="The current state the device is in",
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
-        defaultValue="uninitialized")
+        defaultValue=State.UNKNOWN)
 
     archive = Bool(
         displayedName="Archive",
