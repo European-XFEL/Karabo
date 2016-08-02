@@ -291,17 +291,6 @@ namespace karabo {
         }
 
         template<class KeyType, typename AttributeType>
-        template<typename T, template <typename Elem> class Arr >
-        inline Arr<T> Element<KeyType, AttributeType>::getValueAs() const {
-            Types::ReferenceType srcType = this->getType();
-            Types::ReferenceType tgtType = Types::from<Arr<T> >();
-
-            if (tgtType == srcType) return this->getValue<Arr<T> > ();
-            else throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType) + "\". Cowardly refusing to cast.");
-            return Arr<T>(); // Make the compiler happy
-        }
-
-        template<class KeyType, typename AttributeType>
         template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
         inline Cont<T> Element<KeyType, AttributeType>::getValueAs() const {
 
