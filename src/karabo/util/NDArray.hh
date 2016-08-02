@@ -35,7 +35,7 @@ namespace karabo {
             NDArray() {}
 
             NDArray(const VectorType& data,
-                    const NDArrayShapeType& shape = NDArrayShapeType(-1, 1),
+                    const NDArrayShapeType& shape = NDArrayShapeType(1, -1),
                     const bool isBigEndian = karabo::util::isBigEndian()) {
                         // Explicitly copy the data which is passed!
                         const VectorTypePtr dataPtr(new VectorType(data));
@@ -46,7 +46,7 @@ namespace karabo {
 
             // Copy-free constructor
             NDArray(const VectorTypePtr& dataPtr,
-                    const NDArrayShapeType& shape = NDArrayShapeType(-1, 1),
+                    const NDArrayShapeType& shape = NDArrayShapeType(1, -1),
                     const bool isBigEndian = karabo::util::isBigEndian()) {
                         setData(dataPtr);
                         setShape(shape);
