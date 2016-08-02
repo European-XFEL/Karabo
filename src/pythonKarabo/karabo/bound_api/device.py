@@ -21,7 +21,7 @@ from karathon import (
     AccessLevel, AccessType, AssemblyRules, BrokerConnection,
     Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
     ImageData, Logger, NDArray, Priority, RawImageData, Schema, SignalSlotable,
-    Timestamp, Trainstamp, Validator, ValidatorValidationRules,
+    Timestamp, Trainstamp, Unit, MetricPrefix, Validator, ValidatorValidationRules,
     loadFromFile
 )
 
@@ -138,28 +138,35 @@ class PythonDevice(NoFsm):
                     .assignmentOptional().defaultValue(False)
                     .commit(),
 
-            BOOL_ELEMENT(expected).key("performanceStatistics.trafficJam")
-                    .displayedName("Traffic jam for messages")
-                    .description("Flag denoting traffic jam for messages traveling via broker")
-                    .expertAccess()
-                    .readOnly().initialValue(False)
-                    .commit(),
-
             FLOAT_ELEMENT(expected).key("performanceStatistics.brokerLatency")
                     .displayedName("Broker latency (ms)")
-                    .description("Time interval (in millis) between message sending to broker and receiving it on the device before queuing.")
+                    .description("Average time interval between remote message sending and receiving it on this device before queuing.")
+                    .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
                     .expertAccess()
                     .readOnly().initialValue(0.0)
-                    #.warnHigh(10000.0)
                     .commit(),
 
             FLOAT_ELEMENT(expected).key("performanceStatistics.processingLatency")
                     .displayedName("Processing latency (ms)")
-                    .description("Time interval (in millis) between message sending to broker and reading it from the queue on the device.")
+                    .description("Average time interval between remote message sending and reading it from the queue on this device.")
+                    .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
                     .expertAccess()
                     .readOnly().initialValue(0.0)
-                    #.warnHigh(10000.0)
+                    .warnHigh(3000.)  # 3 s
+                    .info("Long average time between message being sent and start of its processing")
+                    .needsAcknowledging(False)
+                    .alarmHigh(10000.)  # 10 s
+                    .info("Very long average time between message being sent and start of its processing")
+                    .needsAcknowledging(False)
                     .commit(),
+
+            UINT32_ELEMENT(expected).key("performanceStatistics.maxProcessingLatency")
+                     .displayedName("Maximum proc. latency")
+                     .description("Maximum processing latency within averaging interval.")
+                     .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
+                     .expertAccess()
+                     .readOnly().initialValue(0)
+                     .commit(),
 
             UINT32_ELEMENT(expected).key("performanceStatistics.messageQueueSize")
                     .displayedName("Local message queue size")
@@ -167,20 +174,6 @@ class PythonDevice(NoFsm):
                     .expertAccess()
                     .readOnly().initialValue(0)
                     #.warnHigh(100)
-                    .commit(),
-
-            INT64_ELEMENT(expected).key("performanceStatistics.latencyUpper")
-                    .displayedName("Latency upper limit")
-                    .description("Message latency above that the \"Traffic jam\" flag will be set.")
-                    .assignmentOptional().defaultValue(10000)
-                    .adminAccess()
-                    .commit(),
-
-            INT64_ELEMENT(expected).key("performanceStatistics.latencyLower")
-                    .displayedName("Latency lower limit")
-                    .description("Message latency below that the \"Traffic jam\" flag will be unset.")
-                    .assignmentOptional().defaultValue(5000)
-                    .adminAccess()
                     .commit(),
 
             NODE_ELEMENT(expected).key("Logger")
@@ -881,24 +874,15 @@ class PythonDevice(NoFsm):
     def registerSlot(self, slotFunc):
         self._ss.registerSlot(slotFunc)
         
-    def updateLatencies(self, brokerLatency, processingLatency, messageQueueSize):
-        if self.get("performanceStatistics.trafficJam"):
-            # TODO: Remove jam flag, once notification system is in place
-            jamFlag = self.get("performanceStatistics.trafficJam")
-            latencyUpper = self.get("performanceStatistics.latencyUpper")
-            latencyLower = self.get("performanceStatistics.latencyLower")
-
-            h = Hash("performanceStatistics.brokerLatency", brokerLatency,
-                     "performanceStatistics.processingLatency", processingLatency,
-                     "performanceStatistics.messageQueueSize", messageQueueSize)
-
-            if jamFlag:
-                if processingLatency < latencyLower: self.set("performanceStatistics.trafficJam", False)
-            else:
-                if processingLatency > latencyUpper:
-                    self.set("performanceStatistics.trafficJam", True)
-                    self.log.WARN("Processing latency {} are higher than established limit : {}".format(processingLatency,latencyUpper))
-            self.set(h)
+    def updateLatencies(self, avgBrokerLatency, maxBrokerLatency,
+                        avgProcessingLatency, maxProcessingLatency, messageQueueSize):
+        if self.get("performanceStatistics.enable"):
+            # ignore maxBrokerLatency
+            stats = Hash("brokerLatency", avgBrokerLatency,
+                         "processingLatency", avgProcessingLatency,
+                         "maxProcessingLatency", maxProcessingLatency,
+                         "messageQueueSize", messageQueueSize)
+            self.set(Hash("performanceStatistics", stats))
 
 
     def setAlarmCondition(self, condition):

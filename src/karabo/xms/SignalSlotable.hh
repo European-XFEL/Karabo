@@ -57,11 +57,24 @@ namespace karabo {
          */
         class SignalSlotable : public boost::enable_shared_from_this<SignalSlotable> {
 
-
             // Performance statistics
+
+            struct LatencyStats {
+
+
+                unsigned int sum;
+                unsigned int counts;
+                unsigned int maximum;
+
+                LatencyStats();
+                void add(unsigned int latency);
+                void clear();
+                float average() const;
+            };
+
             mutable boost::mutex m_latencyMutex;
-            std::pair<int, int> m_brokerLatency;
-            std::pair<int, int> m_processingLatency;
+            LatencyStats m_brokerLatency; // all in milliseconds
+            LatencyStats m_processingLatency; // dito
 
             friend class Signal;
 
@@ -432,7 +445,9 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Exception& /*exception*/) > ExceptionHandler;
             typedef boost::function<bool (const std::string& /*slotFunction*/) > SlotCallGuardHandler;
-            typedef boost::function<void (float /*brokerLatency*/, float /*processingLatency*/, unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
+            typedef boost::function<void (float /*avgBrokerLatency*/, unsigned int /*maxBrokerLatency*/,
+                                          float /*avgProcessingLatency*/, unsigned int /*maxProcessingLatency*/,
+                                          unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
 
             typedef std::map<std::string, InputChannel::Pointer> InputChannels;
             typedef std::map<std::string, OutputChannel::Pointer> OutputChannels;
