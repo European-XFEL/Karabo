@@ -132,6 +132,44 @@ class Tests(TestCase):
         a = {E.a: 4}
         self.assertEqual(a[e], 4)
 
+    def test_enum_str(self):
+        class E(Enum):
+            a = "bla"
+            b = "blub"
+
+        class F(Enum):
+            a = "ham"
+
+        class Descriptor:
+            enum = E
+
+        d = Descriptor()
+        e = EnumValue(E.a, descriptor=d, timestamp=self.t1)
+        f = EnumValue(E.b, descriptor=d, timestamp=self.t2)
+        self.assertEqual(e, E.a)
+        self.assertNotEqual(e, E.b)
+        self.assertEqual(e.descriptor, d)
+        self.assertNotEqual(e, F.a)
+        self.assertEqual(e.timestamp, self.t1)
+        self.assertEqual((e == f).timestamp, self.t1)
+        self.assertEqual(str(e), "E.a")
+        self.assertEqual(repr(e), "<E.a: 'bla'>")
+        self.assertEqual(e.value, "bla")
+        self.assertEqual(f.value, "blub")
+
+        with self.assertRaises(TypeError):
+            e = EnumValue(F.a, d)
+
+        c = EnumValue(e)
+        self.assertEqual(c, e)
+        self.assertEqual(c, E.a)
+        self.assertEqual(c.timestamp, self.t1)
+
+        a = {e: 3}
+        self.assertEqual(a[E.a], 3)
+        a = {E.a: 4}
+        self.assertEqual(a[e], 4)
+
     def test_stringlist(self):
         l = VectorStringValue(["a", "b", "c"], descriptor=3, timestamp=self.t2)
         self.assertEqual(l, ["a", "b", "c"])
