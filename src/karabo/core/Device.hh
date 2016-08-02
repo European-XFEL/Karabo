@@ -354,17 +354,11 @@ namespace karabo {
             }
 
             void set(const std::string& key, const karabo::util::State& state) {
-                karabo::util::Hash h(key, state.name());
-                h.setAttribute(key, KARABO_INDICATE_STATE_SET, true);
-                set(h, getActualTimestamp());
+                set(key, state, getActualTimestamp());
             }
 
             void set(const std::string& key, const karabo::util::AlarmCondition& condition) {
-                karabo::util::Hash h(key, condition.asString());
-                h.setAttribute(key, KARABO_INDICATE_ALARM_SET, true);
-                set(h, getActualTimestamp());
-                //also set the fields attribute
-                this->m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
+                set(key, condition, getActualTimestamp());
             }
 
             /**
@@ -454,21 +448,6 @@ namespace karabo {
 
             void signalEndOfStream(const std::string& channelName) {
                 this->getOutputChannel(channelName)->signalEndOfStream();
-            }
-
-            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::RawImageData& image) {
-                this->set(key, image, getActualTimestamp());
-            }
-
-            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::RawImageData& image, const karabo::util::Timestamp& timestamp) {
-                using namespace karabo::util;
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-
-                Hash hash(key, image.hash());
-
-                hash.setAttribute(key, "image", 1);
-                m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
-                emit("signalChanged", hash, getInstanceId());
             }
 
             /**
@@ -589,12 +568,18 @@ namespace karabo {
              * @return value of the requested parameter
              */
             template <class T>
-            T get(const std::string& key, const T& var = T()) const {
+            T get(const std::string& key) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 if (m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE) == karabo::util::Schema::STATE) {
+                    if (typeid (T) == typeid (karabo::util::State)) {
+                        return *reinterpret_cast<const T*> (&karabo::util::State::fromString(m_parameters.get<std::string>(key)));
+                    }
                     KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
                 }
                 if (m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE) == karabo::util::Schema::ALARM_CONDITION) {
+                    if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
+                        return *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(m_parameters.get<std::string>(key)));
+                    }
                     KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
                 }
                 try {
@@ -602,20 +587,7 @@ namespace karabo {
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
                 }
-                return var; // never reached. Keep it to make the compiler happy.
-            }
-
-            karabo::util::State get(const std::string& key, const karabo::util::State& var = karabo::util::State::UNKNOWN) const {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                if (m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE) != karabo::util::Schema::STATE) {
-                    KARABO_PARAMETER_EXCEPTION("Can only retrieve a state object from a State element, not " + key);
-                }
-                try {
-                    return m_parameters.get<karabo::util::State>(key);
-                } catch (const karabo::util::Exception& e) {
-                    KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
-                }
-                return var; // never reached. Keep it to make the compiler happy.
+                return *static_cast<T*> (NULL); // never reached. Keep it to make the compiler happy.
             }
 
             /**
@@ -842,8 +814,8 @@ namespace karabo {
                 return m_serverId;
             }
 
-            const karabo::util::State & getState() {
-                return this->get("state");
+            const karabo::util::State getState() {
+                return this->get<karabo::util::State>("state");
             }
 
         private:

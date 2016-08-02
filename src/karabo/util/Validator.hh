@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Validator.hh
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -31,7 +31,6 @@ namespace karabo {
     namespace util {
 
         class Validator {
-
 
             // Validation flags
             bool m_injectDefaults;
@@ -102,9 +101,9 @@ namespace karabo {
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
 
             void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
-            
+
             bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
-            
+
             bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
 
 
