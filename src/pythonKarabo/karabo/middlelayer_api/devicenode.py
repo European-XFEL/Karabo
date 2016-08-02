@@ -1,4 +1,4 @@
-from asyncio import async, coroutine, Future, Queue
+from asyncio import async, CancelledError, coroutine, Future, Queue
 from itertools import chain
 
 from .device_client import getDevice
@@ -70,6 +70,21 @@ class DeviceNode(String):
         return [setter]
 
     @coroutine
+    def _main_loop(self, proxy, instance):
+        """relay data coming from *proxy* on behalf of *instance*"""
+        queue = Queue()
+        proxy._queues[None].add(queue)
+        proxy._current = Hash()
+        with proxy:
+            yield from proxy
+            while True:
+                data = yield from queue.get()
+                out = self._copy_properties(data, True)
+                proxy._current.merge(out)
+                instance.signalChanged(Hash(self.key, out),
+                                       instance.deviceId)
+
+    @coroutine
     def initialize(self, instance, value):
         proxy = yield from getDevice(value)
         proxy._datahash = Hash()
@@ -89,22 +104,20 @@ class DeviceNode(String):
                 register(cmd, cmd)
 
         @coroutine
-        def copy_data_from_proxy():
-            with proxy:
+        def run():
+            try:
                 if self.properties:
-                    queue = Queue()
-                    proxy._queues[None].add(queue)
-                    proxy._current = Hash()
-                    yield from proxy
-                    while True:
-                        data = yield from queue.get()
-                        out = self._copy_properties(data, True)
-                        proxy._current.merge(out)
-                        instance.signalChanged(Hash(self.key, out),
-                                               instance.deviceId)
+                    yield from self._main_loop(proxy, instance)
                 else:
-                    yield from Future()  # wait until we are cancelled
-        async(copy_data_from_proxy())
+                    with proxy:
+                        yield from Future()  # wait until we are cancelled
+            except CancelledError:
+                raise
+            except Exception:
+                instance.logger.exception(
+                    'device node "{}" failed'.format(self.key))
+
+        async(run())
 
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super().toSchemaAndAttrs(device, state)
