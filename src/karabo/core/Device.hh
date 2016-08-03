@@ -542,6 +542,7 @@ namespace karabo {
                         return;
                     }
 
+
                     // if Hash contains at least one reconfigurable parameter -> signalStateChanged
 
                     BOOST_FOREACH(std::string path, paths) {
