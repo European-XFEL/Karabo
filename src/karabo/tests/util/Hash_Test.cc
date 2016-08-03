@@ -81,14 +81,12 @@ void Hash_Test::testConstructors() {
 
     {
         typedef NDArray<float> ArrayType;
-        NDArrayShapeType shape;
-        shape.push_back(2);
-        shape.push_back(5);
+        const Dims shape(2, 5);
         ArrayType arr(std::vector<float>(10, 4.2), shape);
 
         Hash h("arr", arr);
         CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.get<ArrayType> ("arr").getShape() == shape);
+        CPPUNIT_ASSERT(h.get<ArrayType>("arr").getShape().toVector() == shape.toVector());
     }
 
     {
