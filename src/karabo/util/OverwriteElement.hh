@@ -46,33 +46,35 @@ namespace karabo {
                  The Restriction struct resembles an individual restriction on the OVERWRITE_ELEMENT
                  * While restrictions are set through boolean assignment, its internal data structure
                  * is a Karabo Hash.
+                 *
+                 * This struct is fully private on purpose.
                  */
                 struct Restriction {
 
-                    Hash::Pointer m_rest;
+                    Hash::Pointer m_rest_ptr;
                     std::string name;
 
                     Restriction() {
                     };
 
-                    Restriction(const std::string& _name, Hash::Pointer _rest, const bool def) : name(_name), m_rest(_rest) {
-                        m_rest->set(name, def);
+                    Restriction(const std::string& _name, Hash::Pointer _rest, const bool def) : name(_name), m_rest_ptr(_rest) {
+                        m_rest_ptr->set(name, def);
                     };
 
                     Restriction& operator=(const bool rhs) {
-                        m_rest->set(name, rhs);
+                        m_rest_ptr->set(name, rhs);
                     }
 
                     bool operator==(const bool rhs) const {
-                        return m_rest->get<bool>(name) == rhs;
+                        return m_rest_ptr->get<bool>(name) == rhs;
                     }
 
                     bool operator!=(const bool rhs) const {
-                        return m_rest->get<bool>(name) != rhs;
+                        return m_rest_ptr->get<bool>(name) != rhs;
                     }
 
                     bool operator!() const {
-                        return !m_rest->get<bool>(name);
+                        return !m_rest_ptr->get<bool>(name);
                     }
                 };
 
@@ -118,6 +120,7 @@ namespace karabo {
                     for (Hash::const_iterator it = m_rest->begin(); it != m_rest->end(); ++it) {
                         ret.push_back(it->getValue<bool>());
                     }
+                    return ret;
                 }
 
                 /**
@@ -170,13 +173,13 @@ namespace karabo {
                 }
 
                 /**
-                 * Constructor from a vector<bool> indicating restrictions. Order of entries is in declaration order
+                 * Assigns from a vector<bool> indicating restrictions. Order of entries is in declaration order
                  * of restrictions.
                  * @param attrs
                  */
-                Restrictions(const std::vector<bool>& attrs) {
+                void assignFromAttrVector(const std::vector<bool>& attrs) {
                     if (attrs.size() != m_rest->size()) {
-                        KARABO_PARAMETER_EXCEPTION("Overwrite restriction cannot be created from the passed attribute");
+                        throw KARABO_PARAMETER_EXCEPTION("Overwrite restrictions cannot be created from the passed attribute");
                     }
                     unsigned int i = 0;
                     for (Hash::iterator it = m_rest->begin(); it != m_rest->end(); ++it) {
@@ -203,7 +206,7 @@ namespace karabo {
                 if (node) { // exists
                     m_node = node.get_ptr();
                     if (node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
-                        m_restrictions = Restrictions(node->getAttribute < std::vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
+                        m_restrictions.assignFromAttrVector(node->getAttribute < std::vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
                     }
                 } else {
                     // Could be, the parameter is assembled under different rules, we should silently ignore this then.
@@ -488,7 +491,8 @@ namespace karabo {
             OverwriteElement& setNewOverWriteRestrictions(OverwriteElement::Restrictions & restrictions) {
                 checkIfRestrictionApplies(m_restrictions.overwriteRestrictions);
                 if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
-                    OverwriteElement::Restrictions existing(m_node->getAttribute < vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
+                    OverwriteElement::Restrictions existing;
+                    existing.assignFromAttrVector(m_node->getAttribute < vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
                     //now merge
                     restrictions.merge(existing);
                 }
@@ -513,8 +517,10 @@ namespace karabo {
              */
             void checkIfRestrictionApplies(const Restrictions::Restriction& restriction) const {
                 if (restriction == true) {
-                    KARABO_LOGIC_EXCEPTION("Element (" + m_node->getKey() + ") does not allow overwriting attribute " +
-                                           restriction.name + "!");
+                    const std::string& key = m_node->getKey();
+                    const std::string& name = restriction.name;
+                    const std::string& msg = "Element (" + key + ") does not allow overwriting attribute " + name + "!";
+                    throw KARABO_LOGIC_EXCEPTION(msg);
                 }
             }
 
