@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Schema_Test.hh
  * Author: irinak
  *
@@ -13,7 +13,6 @@
 #include "ConfigurationTestClasses.hh"
 
 class Schema_Test : public CPPUNIT_NS::TestFixture {
-
 
     CPPUNIT_TEST_SUITE(Schema_Test);
 
@@ -55,6 +54,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testTable);
     CPPUNIT_TEST(testList);
     CPPUNIT_TEST(testInvalidNodes);
+    CPPUNIT_TEST(testOverwriteRestrictions);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -109,6 +109,7 @@ private: //functions
     void testTable();
     void testList();
     void testInvalidNodes();
+    void testOverwriteRestrictions();
 
 };
 
