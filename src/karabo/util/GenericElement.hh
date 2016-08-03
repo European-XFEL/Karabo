@@ -14,6 +14,7 @@
 #define	KARABO_UTIL_GENERIC_ELEMENT_HH
 
 #include "Schema.hh"
+#include "OverwriteElement.hh"
 
 namespace karabo {
     namespace util {
@@ -26,7 +27,7 @@ namespace karabo {
         template <class Derived>
         class GenericElement {
 
-            protected:
+        protected:
 
             Schema* m_schema;
             boost::shared_ptr<Hash::Node> m_node;
@@ -45,7 +46,7 @@ namespace karabo {
              * The <b>key</b> method serves for setting up a unique name for the element.
              * @param name Unique name for the key
              * @return reference to the Element (to allow method's chaining)
-             * 
+             *
              * <b>Example:</b>
              * @code
              * SOME_ELEMENT(expected)
@@ -88,7 +89,7 @@ namespace karabo {
              * to be used by GUI
              * @param name User friendly name for the element
              * @return reference to the Element (to allow method's chaining)
-             * 
+             *
              * <b>Example:</b>
              * @code
              * SOME_ELEMENT(expected)
@@ -107,7 +108,7 @@ namespace karabo {
              * The <b>description</b> method serves for setting up a description of the element
              * @param desc Short description of the element
              * @return reference to the Element (to allow method's chaining)
-             * 
+             *
              * <b>Example:</b>
              * @code
              * SOME_ELEMENT(expected)
@@ -178,6 +179,20 @@ namespace karabo {
             }
 
             /**
+             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be ADMIN.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            Derived& overWriteRestrictions(OverwriteElement::Restrictions & restrictions) {
+                if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
+                    OverwriteElement::Restrictions existing(m_node->getAttribute < vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
+                    //now merge
+                    restrictions.merge(existing);
+                }
+                m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
+                return *(static_cast<Derived*> (this));
+            }
+
+            /**
              * The <b>commit</b> method injects the element to the expected parameters list. If not called
              * the element is not usable. This must be called after the element is fully defined.
              */
@@ -207,5 +222,5 @@ namespace karabo {
 
 
 
-#endif	
+#endif
 
