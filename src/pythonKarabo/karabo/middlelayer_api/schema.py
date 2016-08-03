@@ -117,9 +117,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     def setValue(self, descriptor, value):
         if isinstance(value, KaraboValue) and value.timestamp is None:
             value.timestamp = Timestamp()
-        if self.__parent is not None:
-            self.__parent.setChildValue(
-                self.__key + "." + descriptor.key, value, descriptor)
+        self.setChildValue(descriptor.key, value, descriptor)
         self.__dict__[descriptor.key] = value
 
     def setChildValue(self, key, value, desc):

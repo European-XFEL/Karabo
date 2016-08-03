@@ -260,13 +260,6 @@ class SignalSlotable(Configurable):
     def updateInstanceInfo(self, info):
         self._ss.updateInstanceInfo(info)
 
-    def setValue(self, desc, value):
-        super(SignalSlotable, self).setValue(desc, value)
-        update = not self._sethash
-        self._sethash[desc.key] = value, desc
-        if update:
-            self._ss.loop.call_soon_threadsafe(self.update)
-
     def update(self):
         h = Hash()
         while self._sethash:
