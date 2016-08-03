@@ -18,7 +18,6 @@ from .bound_api.plugin_loader import PluginLoader
 from .bound_api.runner import Runner
 from .bound_api.server_entry_point import runSingleDeviceServer
 from .bound_api.worker import Worker, QueueWorker
-from .bound_api.alarm_conditions import  AlarmCondition
 
 
 from .bound_api.fsm import (
@@ -109,4 +108,5 @@ from karathon import (
 
 )
 
+from .common.alarm_conditions import AlarmCondition
 from .common.states import State, StateSignifier
