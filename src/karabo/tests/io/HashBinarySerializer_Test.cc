@@ -35,29 +35,8 @@ void HashBinarySerializer_Test::setUp() {
     rooted.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
     m_rootedHash = rooted;
 
-    TimeProfiler p("binary");
-    p.open();
-    p.startPeriod("create");
     m_data = std::vector<double>(20 * 1024 * 1024, 1.0);
     Hash big("a.b", std::pair<const double*, size_t>(&m_data[0], m_data.size()));
-    p.stopPeriod("create");
-
-    //Old:    cout << "\nCreation time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("create")) << endl;
-
-    //p.startPeriod("ref");
-    //const vector<double>& vect = big.get<vector<double> >("a.b");
-    //p.stopPeriod("ref");
-    //Old:    cout << "\nReference time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("ref")) << endl;
-
-    //    p.startPeriod("copy");
-    //    vector<double> vect1 = vect;
-    //    p.stopPeriod("copy");
-    p.close();
-    //cout << "\nCreation time: " << p.getPeriod("create").getDuration() << endl;
-    //cout << "\nReference time: " << p.getPeriod(ref).getDuration() << endl;
-    //cout << "\nCopy time: " << p.getPeriod("copy").getDuration() << endl;
-
-    //Old:    cout << "\nCopy time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("copy")) << endl;
 
     vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
     tmp.resize(10);
@@ -87,16 +66,16 @@ void HashBinarySerializer_Test::tearDown() {
 
 void HashBinarySerializer_Test::testSerialization() {
 
-    BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("FastBin");
+    BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
 
     {
         Schema s = TextSerializer<Hash>::getSchema("Xml");
         Hash schemaIncluded("a1", 3.2, "a2", s);
-        vector<char> archive;        
-        p->save(schemaIncluded, archive);       
+        vector<char> archive;
+        p->save(schemaIncluded, archive);
         Hash fresh;
         p->load(fresh, archive);
-        //cout << "HASH: " << fresh.get<Schema>("a2") << endl;
+        CPPUNIT_ASSERT(karabo::util::similar(s.getParameterHash(), fresh.get<Schema>("a2").getParameterHash()));
     }
 
     {
@@ -125,19 +104,19 @@ void HashBinarySerializer_Test::testSerialization() {
         vector<char> archive2;
 
         boost::posix_time::ptime tick = boost::posix_time::microsec_clock::local_time();
-        
+
         for (int i = 0; i < 10; ++i) {
             p->save(m_bigHash, archive1);
         }
-        
+
         boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - tick;
         float ave = diff.total_milliseconds() / 10.0;
         clog << "\n Average serialization time: " << ave << " ms for Hash of size: " << archive1.size() / 10.e6 << " MB" << endl;
-        
+
         Hash h;
-        
+
         tick = boost::posix_time::microsec_clock::local_time();
-        
+
         for (int i = 0; i < 10; ++i) {
             p->load(h, archive1);
         }
@@ -193,10 +172,10 @@ void HashBinarySerializer_Test::testSerialization() {
         vector<char> archive1;
         vector<char> archive2;
 
-        p->save(m_sharedPtrHash, archive1);     
+        p->save(m_sharedPtrHash, archive1);
 
         Hash h;
-        p->load(h, archive1);      
+        p->load(h, archive1);
 
         CPPUNIT_ASSERT(karabo::util::similar(m_sharedPtrHash, h) == true);
 
