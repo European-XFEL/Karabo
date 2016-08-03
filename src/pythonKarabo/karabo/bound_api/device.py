@@ -4,7 +4,6 @@ __date__ = "$Jul 30, 2012 9:03:51 PM$"
 import threading
 import os
 import time
-import datetime
 import sys
 import socket
 import re
@@ -20,9 +19,10 @@ from karathon import (
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, BrokerConnection,
     Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
-    ImageData, Logger, Priority, RawImageData, Schema, SignalSlotable,
-    Timestamp, Trainstamp, Validator, ValidatorValidationRules,
-    loadFromFile, STATE_ELEMENT, ALARM_ELEMENT, LeafType, Unit, MetricPrefix
+    ImageData, Logger, MetricPrefix, Priority, RawImageData, Schema,
+    SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
+    ValidatorValidationRules, loadFromFile, STATE_ELEMENT, ALARM_ELEMENT
+
 )
 
 from karabo.common.states import State
@@ -927,11 +927,12 @@ class PythonDevice(NoFsm):
                 self.set("alarmCondition", resultingCondition,
                          validate=False)
 
-    def getAlarmCondition(self, key = None, seperator = "."):
+    def getAlarmCondition(self, key=None, separator="."):
         if key is None:
             return AlarmCondition.fromString(self.get("alarmCondition"))
         else:
-            condition = self.parameters.getAttribute(key,"alarmCondition", sep)
+            condition = self.parameters.getAttribute(
+                key, "alarmCondition", separator)
             return AlarmCondition.fromString(condition)
 
     def hasRollingStatistics(self, key):
