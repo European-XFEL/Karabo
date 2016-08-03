@@ -112,8 +112,7 @@ namespace karabo {
 
         void ImageData::setData(const unsigned char* data, const size_t size, const bool copy) {
             boost::shared_ptr<std::vector<unsigned char> > dataVec(new std::vector<unsigned char>(data, data+size));
-            NDArrayShapeType shape(1, size);
-            NDArray<unsigned char> array(dataVec, shape);
+            NDArray<unsigned char> array(dataVec, Dims(size));
             m_hash->set<NDArray<unsigned char> >("data", array);
         }
 
@@ -214,10 +213,10 @@ namespace karabo {
 
         size_t ImageData::getByteSize() const {
             const NDArray<unsigned char>& data = m_hash->get<NDArray<unsigned char> >("data");
-            const NDArrayShapeType& shape = data.getShape();
+            const Dims& shape = data.getShape();
             size_t size = 1;
-            for (NDArrayShapeType::const_iterator it = shape.begin(); it != shape.end(); ++it) {
-                size *= static_cast<size_t>(*it);
+            for (int idx = 0; idx < shape.rank(); ++idx) {
+                size *= static_cast<size_t>(shape.extentIn(idx));
             }
             return size;
         }
@@ -229,6 +228,7 @@ namespace karabo {
 
 
         void ImageData::setDimensions(const Dims& dims) {
+            // XXX: Make sure dimensions match the size of the data!
             m_hash->set<std::vector<unsigned long long> >("dims", dims.toVector());
             // In case the dimensionTypes were not yet set, inject a default here
             if (!m_hash->has("dimTypes")) {
