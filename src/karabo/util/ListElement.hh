@@ -7,7 +7,7 @@
  * Created on July 1, 2011, 11:48 AM
  *
  * Major re-design on February 30, 2013, 17:22 PM
- * 
+ *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
@@ -22,7 +22,6 @@ namespace karabo {
     namespace util {
 
         class ListElement : public GenericElement<ListElement> {
-
 
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
@@ -104,6 +103,17 @@ namespace karabo {
             void beforeAddition() {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LIST_OF_NODES);
+
+                //finally protect setting options etc to table element via overwrite
+                OverwriteElement::Restrictions restrictions;
+
+                restrictions.minInc = true;
+                restrictions.minExc = true;
+                restrictions.maxInc = true;
+                restrictions.maxExc = true;
+                restrictions.min = true;
+                restrictions.max = true;
+                m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
             }
 
         };
