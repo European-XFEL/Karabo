@@ -1009,6 +1009,16 @@ class VectorHash(Vector):
         super(VectorHash, self).__init__(strict=strict, **kwargs)
 
         if rowSchema is None:
+            # This (and the default for rowSchema) is a HACK to enable the Gui
+            # again to work with table elements. That was broken after
+            # introduction of this VectorHash.__init__ - which itself was added
+            # for partial support of the TableElement in middlelayer_api
+            # (partial means: getDevice("device_with_table_elem") does not
+            #  crash anymore).
+            # The problematic line in the Gui code was line 523 in schema.py:
+            #   ret = Type.fromname[attrs['valueType']]()
+            # which requires __init__ to work without arguments.
+            self.cls = None
             return
 
         namespace = {}
