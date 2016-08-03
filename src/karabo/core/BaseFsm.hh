@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   FsmBase.hh
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -17,7 +17,7 @@ namespace karabo {
 
         class BaseFsm : public virtual karabo::xms::SignalSlotable {
 
-            public:
+        public:
 
             virtual ~BaseFsm() {
             }
@@ -31,8 +31,6 @@ namespace karabo {
             virtual void exceptionFound(const std::string&, const std::string&) const = 0;
 
             KARABO_FSM_ON_EXCEPTION(exceptionFound);
-
-            KARABO_DEPRECATED virtual void onStateUpdate(const std::string& currentState) = 0;
 
             virtual void updateState(const karabo::util::State& state) = 0;
 
