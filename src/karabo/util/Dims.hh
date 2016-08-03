@@ -10,9 +10,12 @@
 #ifndef KARABO_UTIL_DIMS_HH
 #define	KARABO_UTIL_DIMS_HH
 
+#include <algorithm>
 #include <vector>
 #include <string>
-#include "Configurator.hh"
+
+#include "karaboDll.hh"
+
 
 namespace karabo {
     namespace util {
@@ -133,9 +136,6 @@ namespace karabo {
                 std::reverse(m_vec.begin(), m_vec.end());
             }
 
-
-
-
         private:
 
             /**
@@ -154,11 +154,7 @@ namespace karabo {
                     //std::clog << "calculate i=" << i << " numEl= " << m_numberOfElements << std::endl;
                 }
             }
-
-
         };
-
-
     }
 }
 

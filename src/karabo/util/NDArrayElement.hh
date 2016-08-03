@@ -11,7 +11,6 @@
 #define KARABO_UTIL_NDARRAYELEMENT_HH
 
 #include "LeafElement.hh"
-#include "NDArray.hh"
 
 namespace karabo {
     namespace util {
@@ -44,19 +43,37 @@ namespace karabo {
             }
 
             NDArrayElement& shape(const std::string& value) {
-                if (NDIMS != -1) {
-                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("The shape of a vector cannot be set");
-                }
+                const NDArrayElementShapeType shp = fromString<long long, std::vector>(value);
+                return _shapeImpl(shp);
+            }
 
-                const NDArrayShapeType shp = fromString<long long, std::vector>(value);
-                this->m_node->setAttribute(KARABO_SCHEMA_ARRAY_SHAPE, shp);
-                return *this;
+            NDArrayElement& shape(const long long x1, const long long x2=0, const long long x3=0, const long long x4=0) {
+                NDArrayElementShapeType shp(1, x1);
+                if (x2 != 0) {
+                    shp.push_back(x2);
+                    if (x3 != 0) {
+                        shp.push_back(x3);
+                        if (x4 != 0) {
+                            shp.push_back(x4);
+                        }
+                    }
+                }
+                return _shapeImpl(shp);
             }
 
             virtual ReadOnlySpecific<NDArrayElement, CONT<T> >& readOnly() {
                 ReadOnlySpecific<NDArrayElement, CONT<T> >& _readOnlySpecific = LeafElement<NDArrayElement, CONT<T> >::readOnly();
                 this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, CONT<T>());
                 return _readOnlySpecific;
+            }
+
+        private:
+            NDArrayElement& _shapeImpl(const NDArrayElementShapeType& shape) {
+                if (NDIMS != -1) {
+                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("The shape of a vector cannot be set");
+                }
+                this->m_node->setAttribute(KARABO_SCHEMA_ARRAY_SHAPE, shape);
+                return *this;
             }
 
         protected:
