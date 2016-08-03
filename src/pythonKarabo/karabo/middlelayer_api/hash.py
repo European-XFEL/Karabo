@@ -237,7 +237,7 @@ class Descriptor(object):
         The attributes are given as keyword arguments. If we define
         those in our code, we assume that all attributes are correctly
         given, or raise an error. If we are parsing a schema that came
-        over the network, we are more sloppy and silently discard
+        over the network, we are not so *strict* and silently discard
         unknown attributes, and properly set the enum type for those
         we find.
         """
