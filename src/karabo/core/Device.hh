@@ -377,6 +377,7 @@ namespace karabo {
                 h.setAttribute(key, KARABO_INDICATE_ALARM_SET, true);
                 set(h, timestamp);
                 //also set the fields attribute
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 this->m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
             }
 
@@ -563,13 +564,15 @@ namespace karabo {
             template <class T>
             T get(const std::string& key) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                if (m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE) == karabo::util::Schema::STATE) {
+                const karabo::util::Hash::Attributes& attrs = m_fullSchema.getParameterHash().getNode(key).getAttributes();
+                const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
+                if (leafType == karabo::util::Schema::STATE) {
                     if (typeid (T) == typeid (karabo::util::State)) {
                         return *reinterpret_cast<const T*> (&karabo::util::State::fromString(m_parameters.get<std::string>(key)));
                     }
                     KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
                 }
-                if (m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE) == karabo::util::Schema::ALARM_CONDITION) {
+                if (leafType == karabo::util::Schema::ALARM_CONDITION) {
                     if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
                         return *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(m_parameters.get<std::string>(key)));
                     }
@@ -811,26 +814,7 @@ namespace karabo {
                 return this->get<karabo::util::State>("state");
             }
 
-        private:
 
-            void updateState(const std::string& currentState) { // private
-                KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
-                if (getState().name() != currentState) {
-                    karabo::util::Hash h("state", currentState);
-                    h.setAttribute("state", KARABO_INDICATE_STATE_SET, true);
-                    set(h);
-                    if (boost::regex_match(currentState, m_errorRegex)) {
-                        updateInstanceInfo(karabo::util::Hash("status", "error"));
-                    } else {
-                        // Reset the error status - protect against non-initialised instanceInfo
-                        if (!getInstanceInfo().has("status") || getInstanceInfo().get<std::string>("status") == "error") {
-                            updateInstanceInfo(karabo::util::Hash("status", "ok"));
-                        }
-                    }
-                }
-                // Reply new state to interested event initiators
-                reply(currentState);
-            }
 
         public:
 
@@ -839,14 +823,26 @@ namespace karabo {
             void updateState(const karabo::util::State& cs) {
                 try {
                     KARABO_LOG_FRAMEWORK_DEBUG << "updateState(state): \"" << cs.name() << "\".";
-                    this->updateState(cs.name());
+                    const std::string& currentState = cs.name();
+                    if (getState().name() != currentState) {
+                        karabo::util::Hash h("state", currentState);
+                        h.setAttribute("state", KARABO_INDICATE_STATE_SET, true);
+                        set(h);
+                        if (boost::regex_match(currentState, m_errorRegex)) {
+                            updateInstanceInfo(karabo::util::Hash("status", "error"));
+                        } else {
+                            // Reset the error status - protect against non-initialised instanceInfo
+                            if (!getInstanceInfo().has("status") || getInstanceInfo().get<std::string>("status") == "error") {
+                                updateInstanceInfo(karabo::util::Hash("status", "ok"));
+                            }
+                        }
+                    }
+                    // Reply new state to interested event initiators
+                    reply(currentState);
+
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW
                 }
-            }
-
-            KARABO_DEPRECATED virtual void onStateUpdate(const std::string& currentState) {
-                this->updateState(currentState);
             }
 
             /**
@@ -928,11 +924,10 @@ namespace karabo {
                 if (result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")) {
                     lock.unlock();
                     Hash h;
-                    h.set("alarmCondition", result.second.asString());
-                    h.setAttribute("alarmCondition", KARABO_INDICATE_ALARM_SET, true);
+                    h.set("alarmCondition", result.second.asString()).setAttribute(KARABO_INDICATE_ALARM_SET, true);
                     //also set the fields attribute to this condition
-                    this->m_parameters.setAttribute("alarmCondition", KARABO_ALARM_ATTR, result.second.asString());
                     this->setNoValidate("alarmCondition", h);
+                    this->m_parameters.setAttribute("alarmCondition", KARABO_ALARM_ATTR, result.second.asString());
                 }
 
             }
