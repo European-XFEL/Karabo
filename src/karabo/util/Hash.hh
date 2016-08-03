@@ -28,6 +28,7 @@
 #include "Element.hh"
 #include "OrderedMap.hh"
 #include "Exception.hh"
+#include "NDArray.hh"
 
 #include "karaboDll.hh"
 
