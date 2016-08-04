@@ -36,7 +36,7 @@ namespace karabo {
 
         class BaseDevice;
 
-                /**
+        /**
          * The DeviceServer class.
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
