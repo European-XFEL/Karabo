@@ -11,7 +11,8 @@
 #define	KARABO_NET_UTILS_HH
 
 #include <string>
-#include "boost/shared_ptr.hpp"
+#include <boost/shared_ptr.hpp>
+#include <boost/tuple/tuple.hpp>
 
 namespace boost {
     namespace asio {
@@ -32,6 +33,16 @@ namespace karabo {
         /// @param delayInMilliSec is the delay after each catch
         void runProtected(boost::shared_ptr<boost::asio::io_service> service, const std::string& category,
                           const std::string& errorMessage, unsigned int delayInMilliSec = 100);
+
+        /**
+         * Parses a URL and returns a tuple.
+         * 
+         * The URL must of format: <scheme>://<domain>:<port>/<path>?<query>
+         *
+         * @param url A well formed URL
+         * @return tuple containing scheme, domain, port, path and query
+         */
+        boost::tuple<std::string, std::string, std::string, std::string, std::string> parseUrl(const std::string& url);
     }
 }
 
