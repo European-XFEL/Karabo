@@ -104,7 +104,7 @@ namespace karabo {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LIST_OF_NODES);
 
-                //finally protect setting options etc to table element via overwrite
+                //finally protect setting options etc to list element via overwrite
                 OverwriteElement::Restrictions restrictions;
 
                 restrictions.minInc = true;

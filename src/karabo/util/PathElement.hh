@@ -88,7 +88,7 @@ namespace karabo {
                     }
                 }
 
-                //finally protect setting options etc to table element via overwrite
+                //finally protect setting options etc to path element via overwrite
                 OverwriteElement::Restrictions restrictions;
 
                 restrictions.minInc = true;
