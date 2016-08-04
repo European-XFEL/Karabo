@@ -20,21 +20,15 @@ class HashBinarySerializer_Test : public CPPUNIT_NS::TestFixture {
 public:
     HashBinarySerializer_Test();
     virtual ~HashBinarySerializer_Test();
-    void setUp();
-    void tearDown();
+    void setUp();    
 
 private:
     void testSerialization();
 
 private:
 
-    karabo::util::Hash m_rootedHash;
-    karabo::util::Hash m_bigHash;
-    karabo::util::Hash m_unrootedHash;
-    std::vector<karabo::util::Hash> m_vectorOfHashes;
-    karabo::util::Hash m_sharedPtrHash;
+    karabo::util::Hash m_hash;
 
-    std::vector<double> m_data;
 };
 
 #endif	/* HASHXMLSERIALIZER_TEST_HH */
