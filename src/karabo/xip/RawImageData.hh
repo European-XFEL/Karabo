@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   RawImageData.hh
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -20,7 +20,6 @@ namespace karabo {
         class RawImageFileWriter;
 
         class RawImageData {
-
 
             friend class RawImageFileWriter;
 
@@ -46,7 +45,7 @@ namespace karabo {
              * @param copy
              * @param dimensions
              * @param encoding
-             * @param channelSpace             
+             * @param channelSpace
              * @param isBigEndian
              */
             template <class T>
@@ -173,8 +172,6 @@ namespace karabo {
             void toBigEndian();
 
             void toLittleEndian();
-
-            KARABO_DEPRECATED void toRGBAPremultiplied();
 
             const RawImageData& write(const std::string& filename, const bool enableAppendMode = false) const;
 

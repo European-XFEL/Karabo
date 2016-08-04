@@ -152,10 +152,6 @@ void exportPyXmsSlotElement() {
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::operatorAccess)
            , bp::return_internal_reference<> ());
 
-    sl.def("advanced"
-           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::advanced)
-           , bp::return_internal_reference<> ());
-
     sl.def("expertAccess"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::expertAccess)
            , bp::return_internal_reference<> ());
