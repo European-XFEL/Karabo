@@ -73,8 +73,14 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                 v.key = k
         cls._attrs = [k for k in dict
                       if isinstance(getattr(cls, k), Descriptor)]
-        cls._allattrs = set.union(*(set(c._attrs) for c in cls.__mro__
-                                    if hasattr(c, "_attrs")))
+        allattrs = []
+        seen = set()
+        for base in cls.__mro__[::-1]:
+            for attr in getattr(base, "_attrs", []):
+                if attr not in seen:
+                    allattrs.append(attr)
+                    seen.add(attr)
+        cls._allattrs = allattrs
         cls._subclasses = { }
         for b in cls.__bases__:
             if issubclass(b, Configurable):
