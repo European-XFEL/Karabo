@@ -16,6 +16,7 @@ class NDArray_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(NDArray_Test);
     CPPUNIT_TEST(testConstructor);
+    CPPUNIT_TEST(testShapeException);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -27,6 +28,7 @@ public:
 private:
 
     void testConstructor();
+    void testShapeException();
 };
 
 #endif	/* NDARRAY_TEST_HH */
