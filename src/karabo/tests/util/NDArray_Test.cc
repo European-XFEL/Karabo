@@ -47,3 +47,13 @@ void NDArray_Test::testConstructor() {
     }
 
 }
+
+
+void NDArray_Test::testShapeException() {
+    vector<int> data(10, -42);
+    const Dims badShape(2, 500);
+
+    {
+        CPPUNIT_ASSERT_THROW(NDArray<int>(data, badShape), karabo::util::ParameterException);
+    }
+}
