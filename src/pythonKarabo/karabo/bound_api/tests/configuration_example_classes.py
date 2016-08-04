@@ -7,6 +7,7 @@ from karabo.bound import (
     KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
     BOOL_ELEMENT, CHOICE_ELEMENT, DOUBLE_ELEMENT, FLOAT_ELEMENT, IMAGE_ELEMENT,
     LIST_ELEMENT, INT32_ELEMENT, INT64_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT,
+    STATE_ELEMENT, ALARM_ELEMENT,
     VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT,
     NDARRAY_BOOL_ELEMENT, NDARRAY_UINT32_ELEMENT, NDARRAY_FLOAT_ELEMENT,
     NODE_ELEMENT, OVERWRITE_ELEMENT, PATH_ELEMENT, SLOT_ELEMENT, STRING_ELEMENT,
@@ -63,8 +64,9 @@ class Circle(Shape):
          .assignmentOptional().defaultValue(10)
          .init()
          .commit(),
-        STRING_ELEMENT(expected).key("state")
-        .readOnly()
+        STATE_ELEMENT(expected).key("state")
+        .commit(),
+        ALARM_ELEMENT(expected).key("alarm")
         .commit(),
         STRING_ELEMENT(expected).key("status")
         .readOnly()
