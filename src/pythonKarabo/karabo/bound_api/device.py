@@ -16,10 +16,10 @@ from karathon import (
     CpuImageINT32, CpuImageUINT16, CpuImageUINT8,
     ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
     UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
-    OBSERVER, READ, WRITE, INIT,
+    OBSERVER, READ, WRITE, INIT
     AccessLevel, AccessType, AssemblyRules, BrokerConnection,
     Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
-    ImageData, loadFromFile, Logger, MetricPrefix, Priority,
+    ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
     RawImageData, Schema, SignalSlotable, Timestamp, Trainstamp,
     Unit, Validator, ValidatorValidationRules
 
