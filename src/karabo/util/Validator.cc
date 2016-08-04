@@ -136,11 +136,15 @@ namespace karabo {
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
                             Hash::Node& node = working.set(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE));
                             if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
+                            if (it->hasAttribute(KARABO_INDICATE_STATE_SET)) node.setAttribute(KARABO_INDICATE_STATE_SET, true);
+                            if (it->hasAttribute(KARABO_INDICATE_ALARM_SET)) node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
                             this->validateLeaf(*it, node, report, currentScope);
                         }
                     } else { // Node IS provided
                         Hash::Node& node = working.setNode(user.getNode(key));
                         if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
+                        if (user.hasAttribute(key,KARABO_INDICATE_STATE_SET)) node.setAttribute(KARABO_INDICATE_STATE_SET, true);
+                        if (user.hasAttribute(key,KARABO_INDICATE_ALARM_SET)) node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
                         this->validateLeaf(*it, node, report, currentScope);
                     }
                 } else if (nodeType == Schema::NODE) {
@@ -378,6 +382,23 @@ namespace karabo {
                         return;
                     }
                 }
+            }
+            const int leafType = masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE);
+           
+            if(leafType == karabo::util::Schema::STATE && !workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
+                report << "State element at "<< scope <<" may only be set using predefined states"<<endl;
+            }
+            
+            if(leafType != karabo::util::Schema::STATE && workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
+                report << "Tried setting non-state element at "<< scope <<" with state object"<<endl;
+            }
+            
+            if(leafType == karabo::util::Schema::ALARM_CONDITION && !workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)){
+                report << "Alarm Condition element at "<< scope <<" may only be set using predefined alarm conditions"<<endl;
+            }
+            
+            if(leafType != karabo::util::Schema::ALARM_CONDITION && workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)){
+                report << "Tried setting non-alarm condition element at "<< scope <<" with alarm condition object"<<endl;
             }
 
             if (masterNode.hasAttribute(KARABO_SCHEMA_ACCESS_MODE) && masterNode.getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE)

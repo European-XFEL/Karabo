@@ -43,8 +43,10 @@
         <itemPath>../../../src/karathon/PyUtilHash.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Schema" projectFiles="true">
+        <itemPath>../../../src/karathon/PyUtilAlarmElement.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilClassInfo.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilSchema.cc</itemPath>
+        <itemPath>../../../src/karathon/PyUtilStateElement.cc</itemPath>
         <itemPath>../../../src/karathon/PyXmsSlotElement.cc</itemPath>
         <itemPath>../../../src/karathon/PythonFactoryMacros.hh</itemPath>
         <itemPath>../../../src/karathon/PythonMacros.hh</itemPath>
@@ -244,6 +246,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/PyUtilAlarmElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyUtilClassInfo.cc"
             ex="false"
             tool="1"
@@ -304,6 +311,11 @@
             <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
           </preprocessorList>
         </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilStateElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilTimeDuration.cc"
             ex="false"
@@ -674,6 +686,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/PyUtilAlarmElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyUtilClassInfo.cc"
             ex="false"
             tool="1"
@@ -733,6 +750,11 @@
             <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
           </preprocessorList>
         </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilStateElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilTimeDuration.cc"
             ex="false"

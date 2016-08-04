@@ -1597,6 +1597,8 @@ void exportPyUtilSchema() {
         bp::enum_< Schema::LeafType>("LeafType")
                 .value("PROPERTY", Schema::PROPERTY)
                 .value("COMMAND", Schema::COMMAND)
+                .value("STATE", Schema::STATE)
+                .value("ALARM_CONDITION", Schema::ALARM_CONDITION)
                 .export_values()
                 ;
         bp::enum_< Schema::NodeType>("NodeType")

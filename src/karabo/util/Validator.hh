@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Validator.hh
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -36,7 +36,6 @@ namespace karabo {
         class Dims;
 
         class Validator {
-
 
             // Validation flags
             bool m_injectDefaults;
