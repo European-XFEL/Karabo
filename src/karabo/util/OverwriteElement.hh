@@ -51,30 +51,30 @@ namespace karabo {
                  */
                 struct Restriction {
 
-                    Hash::Pointer m_rest_ptr;
+                    Hash::Pointer m_restrictionsPtr;
                     std::string name;
 
                     Restriction() {
                     };
 
-                    Restriction(const std::string& _name, Hash::Pointer _rest, const bool def) : name(_name), m_rest_ptr(_rest) {
-                        m_rest_ptr->set(name, def);
+                    Restriction(const std::string& name_, Hash::Pointer restrictionPtr, const bool def) : name(name_), m_restrictionsPtr(restrictionPtr) {
+                        m_restrictionsPtr->set(name, def);
                     };
 
                     Restriction& operator=(const bool rhs) {
-                        m_rest_ptr->set(name, rhs);
+                        m_restrictionsPtr->set(name, rhs);
                     }
 
                     bool operator==(const bool rhs) const {
-                        return m_rest_ptr->get<bool>(name) == rhs;
+                        return m_restrictionsPtr->get<bool>(name) == rhs;
                     }
 
                     bool operator!=(const bool rhs) const {
-                        return m_rest_ptr->get<bool>(name) != rhs;
+                        return m_restrictionsPtr->get<bool>(name) != rhs;
                     }
 
                     bool operator!() const {
-                        return !m_rest_ptr->get<bool>(name);
+                        return !m_restrictionsPtr->get<bool>(name);
                     }
                 };
 
@@ -488,7 +488,7 @@ namespace karabo {
                 return *this;
             }
 
-            OverwriteElement& setNewOverWriteRestrictions(OverwriteElement::Restrictions & restrictions) {
+            OverwriteElement& setNewOverwriteRestrictions(OverwriteElement::Restrictions & restrictions) {
                 checkIfRestrictionApplies(m_restrictions.overwriteRestrictions);
                 if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
                     OverwriteElement::Restrictions existing;

@@ -179,10 +179,10 @@ namespace karabo {
             }
 
             /**
-             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be ADMIN.
-             * @return reference to the Element (to allow method's chaining)
+             * The <b>overWriteRestrictions</b> allows for setting restrictions to overwrite element. Any attributes
+             * specified here cannot be altered through use of overwrite element.
              */
-            Derived& overWriteRestrictions(OverwriteElement::Restrictions & restrictions) {
+            Derived& overwriteRestrictions(OverwriteElement::Restrictions & restrictions) {
                 if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
                     OverwriteElement::Restrictions existing(m_node->getAttribute < vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
                     //now merge
