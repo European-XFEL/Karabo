@@ -295,6 +295,7 @@
         </logicalFolder>
         <itemPath>../../../src/karabo/util/AlarmConditions.cc</itemPath>
         <itemPath>../../../src/karabo/util/AlarmConditions.hh</itemPath>
+        <itemPath>/home/wigginsj/source/karaboFramework/src/karabo/util/ArrayData.hh</itemPath>
         <itemPath>../../../src/karabo/util/ArrayTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
         <itemPath>../../../src/karabo/util/Base64.hh</itemPath>
@@ -2515,6 +2516,11 @@
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="/home/wigginsj/source/karaboFramework/src/karabo/util/ArrayData.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <folder path="TestFiles">
         <ccTool>
           <incDir>
@@ -4645,6 +4651,11 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="/home/wigginsj/source/karaboFramework/src/karabo/util/ArrayData.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>

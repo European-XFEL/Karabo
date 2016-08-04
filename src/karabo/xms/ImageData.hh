@@ -158,6 +158,8 @@ namespace karabo {
 
             void swapEndianess();
 
+            static void deallocateNonCopied(unsigned char *);
+
         };
 
         struct ImageDataElement : public DataElement<ImageDataElement, ImageData> {
