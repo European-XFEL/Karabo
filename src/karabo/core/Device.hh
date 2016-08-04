@@ -378,7 +378,7 @@ namespace karabo {
                 set(h, timestamp);
                 //also set the fields attribute
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                this->m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
+                m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
             }
 
             //            template <class PixelType>
