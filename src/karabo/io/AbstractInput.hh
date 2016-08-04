@@ -23,7 +23,7 @@ namespace karabo {
 
         class AbstractInput : public boost::enable_shared_from_this<AbstractInput> {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
@@ -86,9 +86,6 @@ namespace karabo {
                 std::vector<int> v;
             }
 
-            KARABO_DEPRECATED virtual void connectNow(const karabo::util::Hash& outputChannelInfo) {
-            }
-
             virtual void connect(const karabo::util::Hash& outputChannelInfo) {
             }
 
@@ -127,4 +124,4 @@ namespace karabo {
     }
 }
 
-#endif	
+#endif

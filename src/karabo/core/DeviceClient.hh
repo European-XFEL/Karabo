@@ -23,36 +23,35 @@ namespace karabo {
         template <class T>
         class Device;
 
-/**
+        /**
          * The Karabo Device Client
          * This class can be used to (remotely) control devices of the distributed system
          * Synchronous calls (i.e. get()) are in fact asynchronous under the hood
-         * 
+         *
          * Following signals and slots are available on the various components:
-         * 
+         *
          * All instances:
-         * 
+         *
          * ## SIGNALS ##
          *   1) signalInstanceUpdated(string, Hash) // instanceId, instanceInfo
          *      Implemented in SignalSlotable and emitted if new instance is started.
          *      Re-emitted whenever instanceInfo changes.
-         *  
+         *
          *   2) signalInstanceGone(string) // instanceId
          *      Implemented in SignalSlotable and emitted if instance is going down.
-         * 
+         *
          *   NOTE: Both signals are connected to corresponding global slots
-         * 
+         *
          * ## SLOTS ##
          *   1) slotStopEventLoop()
-         *      Calls stop() on the IOService object, will unblock the run() method and stop communicating  
+         *      Calls stop() on the IOService object, will unblock the run() method and stop communicating
          * Device:
          *   1) signalChanged(Hash, string) // Changed configuration, deviceId
-         *   2) 
-         * 
-         * 
+         *   2)
+         *
+         *
          */
         class DeviceClient {
-
 
             template<class T>
             friend class Device;
@@ -81,14 +80,14 @@ namespace karabo {
              *         configuration HASH
              *     description SCHEMA
              *     configuration HASH
-             *     
+             *
              * device +
              *   <deviceId> type host version status classId serverId +
              *      fullSchema => SCHEMA
              *      configuration => HASH
              *      activeSchema +
              *         <stateName> => SCHEMA
-             *   
+             *
              */
             karabo::util::Hash m_runtimeSystemDescription;
 
@@ -113,8 +112,6 @@ namespace karabo {
             boost::mutex m_propertyChangedHandlersMutex;
 
             int m_internalTimeout;
-
-            bool m_isAdvancedMode; // DEPRECATED
 
             bool m_topologyInitialized;
 
@@ -184,15 +181,11 @@ namespace karabo {
              */
             int getInternalTimeout() const;
 
-            // DEPRECATE
-            void enableAdvancedMode();
 
-            // DEPRECATE
-            void disableAdvancedMode();
 
             /**
              * Set ageing on or off (on by default)
-             * @return 
+             * @return
              */
             void setAgeing(bool toggle);
 
@@ -209,7 +202,7 @@ namespace karabo {
             /**
              * Allows asking whether an instance is online in the current distributed system
              * @param boolean indicating whether existing and hostname if exists
-             * @return 
+             * @return
              */
             std::pair<bool, std::string> exists(const std::string& instanceId);
 
@@ -380,7 +373,7 @@ namespace karabo {
                              }
                          }
                          return boost::any(value); //will only be reached if T is actually a vector<Hash>
-                        
+
                      }*/
                 } catch (const karabo::util::Exception& e) {
 

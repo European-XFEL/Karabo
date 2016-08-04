@@ -2181,8 +2181,6 @@ void exportPyUtilSchema() {
         
         bp::implicitly_convertible< Schema &, TableElement >();
         bp::class_<TableElement> ("TABLE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
-                .def("advanced", &TableElement::advanced
-                     , bp::return_internal_reference<> ())
                 .def("observerAccess", &TableElement::observerAccess
                      , bp::return_internal_reference<> ())
                 .def("userAccess", &TableElement::userAccess
