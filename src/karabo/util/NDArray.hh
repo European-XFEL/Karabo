@@ -67,8 +67,8 @@ namespace karabo {
                     m_shape = Dims(m_dataPtr->size());
                 }
                 else {
-                    size_t dataSize = m_dataPtr->size();
-                    unsigned long long shapeSize = shape.size();
+                    const unsigned long long dataSize = m_dataPtr->size();
+                    const unsigned long long shapeSize = shape.size();
                     if (dataSize != shapeSize) {
                         // NOTE: I'm avoiding StringTools here to avoid complicated header interdependency...
                         std::ostringstream msg;
