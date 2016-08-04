@@ -43,7 +43,7 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeHash(const karabo::util::Hash& hash, std::vector<char>& buffer) {
+        void HashBinarySerializer::writeHash(const karabo::util::Hash& hash, std::vector<char>& buffer) const {
             writeSize(buffer, hash.size());
             for (Hash::const_iterator iter = hash.begin(); iter != hash.end(); ++iter) {
                 writeNode(*iter, buffer);
@@ -51,12 +51,12 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeSize(std::vector<char>& buffer, const unsigned int size) {
+        void HashBinarySerializer::writeSize(std::vector<char>& buffer, const unsigned int size) const {
             writeSingleValue(buffer, size);
         }
 
 
-        void HashBinarySerializer::writeNode(const karabo::util::Hash::Node& element, std::vector<char>& buffer) {
+        void HashBinarySerializer::writeNode(const karabo::util::Hash::Node& element, std::vector<char>& buffer) const {
             writeKey(buffer, element.getKey());
             if (element.is<Hash>()) {
                 writeType(buffer, Types::HASH);
@@ -90,10 +90,10 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeKey(std::vector<char>& buffer, const std::string& str) {
+        void HashBinarySerializer::writeKey(std::vector<char>& buffer, const std::string& str) const {
             // ATTENTION: Some optimization takes place here, the size indicator for a key is limited to 1 byte
             // instead of the generic 4 byte for everything else!!
-            signed char size = str.size();
+            const unsigned char size = str.size();
             writeSingleValue(buffer, size);
             const size_t pos = buffer.size();
             buffer.resize(pos + size);
@@ -101,12 +101,12 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeType(std::vector<char>& buffer, const Types::ReferenceType type) {
-            return writeSize(buffer, type);
+        void HashBinarySerializer::writeType(std::vector<char>& buffer, const Types::ReferenceType type) const {
+            return writeSingleValue(buffer, static_cast<unsigned int> (type));
         }
 
 
-        void HashBinarySerializer::writeAttributes(const karabo::util::Hash::Attributes& attributes, std::vector<char>& buffer) {
+        void HashBinarySerializer::writeAttributes(const karabo::util::Hash::Attributes& attributes, std::vector<char>& buffer) const {
             writeSize(buffer, attributes.size());
             for (Hash::Attributes::const_iterator iter = attributes.begin(); iter != attributes.end(); ++iter) {
                 const Element<std::string>& attr = *iter;
@@ -118,7 +118,7 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeAny(const boost::any& value, const karabo::util::Types::ReferenceType type, std::vector<char>& buffer) {
+        void HashBinarySerializer::writeAny(const boost::any& value, const karabo::util::Types::ReferenceType type, std::vector<char>& buffer) const {
 
             switch (Types::category(type)) {
                 case Types::SCHEMA:
@@ -133,7 +133,7 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const boost::any& value, const Types::ReferenceType type) {
+        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const boost::any& value, const Types::ReferenceType type) const {
             switch (type) {
                 case Types::CHAR: return writeSingleValue(buffer, boost::any_cast<const char&>(value));
                 case Types::INT8: return writeSingleValue(buffer, boost::any_cast<const signed char&>(value));
@@ -160,26 +160,25 @@ namespace karabo {
 
 
         template<>
-        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const std::string& str) {
-            size_t size = str.length();
-            writeRawArray(buffer, std::make_pair(str.c_str(), size));
+        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const std::string& str) const {
+            writeRawArray(buffer, std::make_pair(str.c_str(), str.length()));
         }
 
 
         template<>
-        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const std::complex<float>& value) {
+        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const std::complex<float>& value) const {
             return writeComplexValue(buffer, value);
         }
 
 
         template<>
-        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const std::complex<double>& value) {
+        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const std::complex<double>& value) const {
             return writeComplexValue(buffer, value);
         }
 
 
         template<>
-        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const Schema& schema) {
+        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const Schema& schema) const {
 
             // TODO !!!! IMPROVE THIS CRAZY COPIES !!!!
             Hash hash;
@@ -191,19 +190,18 @@ namespace karabo {
 
 
         template<>
-        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const Hash& hash) {
+        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const Hash& hash) const {
             writeHash(hash, buffer);
         }
 
 
         template<>
-        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const CppNone& value) {
-            unsigned int size = 0;
-            writeSize(buffer, size);
+        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const CppNone& value) const {
+            writeSize(buffer, 0);
         }
 
 
-        void HashBinarySerializer::writeSequence(std::vector<char>& buffer, const boost::any& value, const Types::ReferenceType type) {
+        void HashBinarySerializer::writeSequence(std::vector<char>& buffer, const boost::any& value, const Types::ReferenceType type) const {
             switch (type) {
                 case Types::VECTOR_CHAR: return writeSequenceBulk(buffer, boost::any_cast<const vector <char>& >(value));
                 case Types::VECTOR_INT8: return writeSequenceBulk(buffer, boost::any_cast < const vector <signed char>& >(value));
@@ -228,7 +226,7 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeRawArray(std::vector<char>& buffer, const boost::any& value, const karabo::util::Types::ReferenceType type) {
+        void HashBinarySerializer::writeRawArray(std::vector<char>& buffer, const boost::any& value, const karabo::util::Types::ReferenceType type) const {
             switch (type) {
 #define _KARABO_HELPER_MACRO(RefType, CppType) case Types::RefType: return writeRawArray(buffer, boost::any_cast<std::pair<const CppType*, size_t> >(value));
 
@@ -257,7 +255,9 @@ namespace karabo {
             is.rdbuf()->pubsetbuf(const_cast<char*> (archive), nBytes);
             this->readHash(object, is);
         }
-void HashBinarySerializer::readHash(Hash& hash, std::istream& is) {
+
+
+        void HashBinarySerializer::readHash(Hash& hash, std::istream& is) const {
             unsigned size = readSize(is);
             for (unsigned i = 0; i < size; ++i) {               
                 std::string name = readKey(is);
@@ -267,7 +267,7 @@ void HashBinarySerializer::readHash(Hash& hash, std::istream& is) {
         }
 
 
-        void HashBinarySerializer::readNode(Hash::Node& node, std::istream& is) {
+        void HashBinarySerializer::readNode(Hash::Node& node, std::istream& is) const {
             Types::ReferenceType type = readType(is);
             readAttributes(node.getAttributes(), is);
 
@@ -304,7 +304,7 @@ void HashBinarySerializer::readHash(Hash& hash, std::istream& is) {
         }
 
 
-        void HashBinarySerializer::readAttributes(Hash::Attributes& attributes, std::istream& is) {
+        void HashBinarySerializer::readAttributes(Hash::Attributes& attributes, std::istream& is) const {
             unsigned size = readSize(is);
             for (unsigned i = 0; i < size; ++i) {
                 std::string name = readKey(is);
@@ -316,7 +316,7 @@ void HashBinarySerializer::readHash(Hash& hash, std::istream& is) {
         }
 
 
-        void HashBinarySerializer::readAny(boost::any& value, const Types::ReferenceType type, std::istream& is) {
+        void HashBinarySerializer::readAny(boost::any& value, const Types::ReferenceType type, std::istream& is) const {
             switch (Types::category(type)) {
                 case Types::SCHEMA:
                 case Types::SIMPLE: readSingleValue(is, value, type);
@@ -345,7 +345,7 @@ void HashBinarySerializer::readHash(Hash& hash, std::istream& is) {
 
 
         template<>
-        std::string HashBinarySerializer::readSingleValue(std::istream& is) {
+        std::string HashBinarySerializer::readSingleValue(std::istream& is) const {
             unsigned size = readSize(is);
             boost::shared_array<char> buffer(new char[size + 1]);
             buffer[size] = 0;
@@ -355,7 +355,7 @@ void HashBinarySerializer::readHash(Hash& hash, std::istream& is) {
 
 
         template<>
-        Schema HashBinarySerializer::readSingleValue(std::istream& is) {
+        Schema HashBinarySerializer::readSingleValue(std::istream& is) const {
             Hash hash;
             SchemaBinarySerializer serializer /*= SchemaBinarySerializer*/(hash);
             // TODO Optimize this by reading directly from istream
@@ -369,19 +369,19 @@ void HashBinarySerializer::readHash(Hash& hash, std::istream& is) {
 
 
         template<>
-        std::complex<double> HashBinarySerializer::readSingleValue(std::istream& is) {
+        std::complex<double> HashBinarySerializer::readSingleValue(std::istream& is) const {
             return readComplexValue<double > (is);
         }
 
 
         template<>
-        std::complex<float> HashBinarySerializer::readSingleValue(std::istream& is) {
+        std::complex<float> HashBinarySerializer::readSingleValue(std::istream& is) const {
             return readComplexValue<float> (is);
         }
 
 
         template<>
-        Hash HashBinarySerializer::readSingleValue(std::istream& is) {
+        Hash HashBinarySerializer::readSingleValue(std::istream& is) const {
             Hash hash;
             readHash(hash, is);
             return hash;
@@ -389,7 +389,7 @@ void HashBinarySerializer::readHash(Hash& hash, std::istream& is) {
 
 
         template<>
-        karabo::util::CppNone HashBinarySerializer::readSingleValue(std::istream& is) {
+        karabo::util::CppNone HashBinarySerializer::readSingleValue(std::istream& is) const {
             unsigned size = readSize(is);
             if (size != 0)
                 throw KARABO_IO_EXCEPTION("Encountered not 'None' data type whilst reading from binary archive: size is " + toString(size) + ", but should be 0");
@@ -397,7 +397,7 @@ void HashBinarySerializer::readHash(Hash& hash, std::istream& is) {
         }
 
 
-        void HashBinarySerializer::readSingleValue(std::istream& is, boost::any& value, const Types::ReferenceType type) {
+        void HashBinarySerializer::readSingleValue(std::istream& is, boost::any& value, const Types::ReferenceType type) const {
             switch (type) {
                 case Types::CHAR: value = readSingleValue<char>(is); break;
                 case Types::INT8: value = readSingleValue<signed char>(is); break;
@@ -423,7 +423,7 @@ void HashBinarySerializer::readHash(Hash& hash, std::istream& is) {
         }
 
 
-        void HashBinarySerializer::readSequence(std::istream& is, boost::any& result, const Types::ReferenceType type) {
+        void HashBinarySerializer::readSequence(std::istream& is, boost::any& result, const Types::ReferenceType type) const {
             unsigned size = readSize(is);
             switch (type) {
 
@@ -479,7 +479,7 @@ void HashBinarySerializer::readHash(Hash& hash, std::istream& is) {
         }
 
 
-        Types::ReferenceType HashBinarySerializer::readType(std::istream& is) {
+        Types::ReferenceType HashBinarySerializer::readType(std::istream& is) const {
             return Types::ReferenceType(readSize(is));
         }
 
