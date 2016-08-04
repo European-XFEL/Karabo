@@ -46,7 +46,7 @@ public:
                 const std::string state = bp::extract<std::string>(args[i].attr("name"));
                 states.push_back(karabo::util::State::fromString(state));
             } else {
-                throw KARABO_PYTHON_EXCEPTION("options() expects either a string or an arbitrary number of arguments of type State.");
+                throw KARABO_PYTHON_EXCEPTION("options() an arbitrary number of arguments of type State.");
             }
         }
         self.options(states);

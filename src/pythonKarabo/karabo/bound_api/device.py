@@ -14,14 +14,14 @@ import numpy as np
 from karathon import (
     CpuImageCHAR, CpuImageDOUBLE, CpuImageFLOAT, CpuImageINT16,
     CpuImageINT32, CpuImageUINT16, CpuImageUINT8,
-    BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
-    UINT32_ELEMENT, NODE_ELEMENT, STRING_ELEMENT,
+    ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
+    UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, BrokerConnection,
     Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
-    ImageData, Logger, MetricPrefix, Priority, RawImageData, Schema,
-    SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
-    ValidatorValidationRules, loadFromFile, STATE_ELEMENT, ALARM_ELEMENT
+    ImageData, loadFromFile, Logger, MetricPrefix, Priority,
+    RawImageData, Schema, SignalSlotable, Timestamp, Trainstamp,
+    Unit, Validator, ValidatorValidationRules
 
 )
 
@@ -916,7 +916,7 @@ class PythonDevice(NoFsm):
 
 
     def setAlarmCondition(self, condition):
-        if isinstance(condition, str):
+        if not isinstance(condition, AlarmCondition):
             raise TypeError("Stringified alarmconditions are note allowed!")
         with self._stateChangeLock:
             self.globalAlarmCondition = condition

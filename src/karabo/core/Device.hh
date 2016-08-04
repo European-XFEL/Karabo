@@ -565,24 +565,27 @@ namespace karabo {
             template <class T>
             T get(const std::string& key) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                const karabo::util::Hash::Attributes& attrs = m_fullSchema.getParameterHash().getNode(key).getAttributes();
-                const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
-                if (leafType == karabo::util::Schema::STATE) {
-                    if (typeid (T) == typeid (karabo::util::State)) {
-                        return *reinterpret_cast<const T*> (&karabo::util::State::fromString(m_parameters.get<std::string>(key)));
-                    }
-                    KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
-                }
-                if (leafType == karabo::util::Schema::ALARM_CONDITION) {
-                    if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
-                        return *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(m_parameters.get<std::string>(key)));
-                    }
-                    KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
-                }
+
                 try {
+                    const karabo::util::Hash::Attributes& attrs = m_fullSchema.getParameterHash().getNode(key).getAttributes();
+                    const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
+                    if (leafType == karabo::util::Schema::STATE) {
+                        if (typeid (T) == typeid (karabo::util::State)) {
+                            return *reinterpret_cast<const T*> (&karabo::util::State::fromString(m_parameters.get<std::string>(key)));
+                        }
+                        KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
+                    }
+                    if (leafType == karabo::util::Schema::ALARM_CONDITION) {
+                        if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
+                            return *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(m_parameters.get<std::string>(key)));
+                        }
+                        KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
+                    }
+
                     return m_parameters.get<T>(key);
                 } catch (const karabo::util::Exception& e) {
-                    KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
+                    KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device:" +
+                                                                 e.userFriendlyMsg()));
                 }
                 return *static_cast<T*> (NULL); // never reached. Keep it to make the compiler happy.
             }
