@@ -12,7 +12,7 @@
 namespace karabo {
     namespace core {
 
-        KARABO_NAMESPACES;
+        USING_KARABO_NAMESPACES;
 
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, ProjectManager)
