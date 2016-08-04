@@ -422,8 +422,6 @@ namespace karathon {
 
         template<typename T>
         static karabo::util::NDArray<T> fromPyArrayToNDArray(PyArrayObject* arr) {
-            typedef typename karabo::util::NDArray<T> ArrayType;
-
             npy_intp* pDims = PyArray_DIMS(arr);
             std::vector<unsigned long long> dims;
             for (int i = 0; i < PyArray_NDIM(arr); i++) {
@@ -432,8 +430,7 @@ namespace karathon {
 
             T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
             const karabo::util::Dims shape(dims);
-            typename ArrayType::VectorTypePtr v(new typename ArrayType::VectorType(data, data + shape.size()));
-            return ArrayType(v, shape);
+            return karabo::util::NDArray<T>(data, shape.size(), shape);
         }
 
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);
@@ -453,7 +450,6 @@ namespace karathon {
         template<typename T>
         static bp::object fromNDArrayToPyArray(const karabo::util::NDArray<T>& a, const int typenum) {
             const karabo::util::Dims shape = a.getShape();
-            const typename karabo::util::NDArray<T>::VectorTypePtr dataPtr = a.getData();
             const int nd = shape.rank();
             std::vector<npy_intp> dims(nd, 0);
             for (int i = 0; i < nd; ++i) {
@@ -462,8 +458,9 @@ namespace karathon {
             PyObject* pyobj = PyArray_SimpleNew(nd, &dims[0], typenum);
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
             T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
+            T* cppData = a.getData()->data();
             for (int i = 0; i < PyArray_SIZE(arr); i++) {
-                data[i] = (*dataPtr)[i];
+                data[i] = cppData[i];
             }
             return bp::object(bp::handle<>(pyobj));
         }

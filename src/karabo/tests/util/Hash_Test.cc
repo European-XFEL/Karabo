@@ -82,7 +82,8 @@ void Hash_Test::testConstructors() {
     {
         typedef NDArray<float> ArrayType;
         const Dims shape(2, 5);
-        ArrayType arr(std::vector<float>(10, 4.2), shape);
+        std::vector<float> data(10, 4.2);
+        ArrayType arr(&data[0], data.size(), shape);
 
         Hash h("arr", arr);
         CPPUNIT_ASSERT(h.empty() == false);

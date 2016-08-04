@@ -111,9 +111,15 @@ namespace karabo {
 
 
         void ImageData::setData(const unsigned char* data, const size_t size, const bool copy) {
-            boost::shared_ptr<std::vector<unsigned char> > dataVec(new std::vector<unsigned char>(data, data+size));
-            NDArray<unsigned char> array(dataVec, Dims(size));
-            m_hash->set<NDArray<unsigned char> >("data", array);
+            if (copy) {
+                NDArray<unsigned char> array(data, size, Dims(size));
+                m_hash->set<NDArray<unsigned char> >("data", array);
+            }
+            else {
+                boost::shared_ptr<ArrayData<unsigned char> > arrayPtr(new ArrayData<unsigned char>(data, &ImageData::deallocateNonCopied, size));
+                NDArray<unsigned char> array(data, size, Dims(size));
+                m_hash->set<NDArray<unsigned char> >("data", array);
+            }
         }
 
 
@@ -184,6 +190,9 @@ namespace karabo {
             }
         }
 
+        void ImageData::deallocateNonCopied(unsigned char *) {
+            // Do nothing.
+        }
 
         void ImageData::toLittleEndian() {
             if (isBigEndian()) {
