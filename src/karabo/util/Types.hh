@@ -5,7 +5,7 @@
  * Author: <burkhard.heisen@xfel.eu>
  *
  * Created on July 13, 2010, 6:55 PM
- * 
+ *
  * Major update on January 17, 2013 9:00 AM
  * Contributions by: <djelloul.boukhelef@xfel.eu>
  *
@@ -36,14 +36,13 @@ namespace karabo {
 
         class CppNone {
 
-            };
+        };
 
         class Types {
 
-            public:
+        public:
 
             enum ReferenceType {
-
 
                 BOOL, // bool
                 VECTOR_BOOL, // std::vector<std::bool>
@@ -143,7 +142,7 @@ namespace karabo {
                 NDARRAY_FLOAT, // NDArray<float>
                 NDARRAY_DOUBLE, // NDArray<double>
 
-                HASH_POINTER, // Hash::Pointer 
+                HASH_POINTER, // Hash::Pointer
                 VECTOR_HASH_POINTER // std::vector<Hash::Pointer>
 
             };

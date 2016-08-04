@@ -11,6 +11,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "ConfigurationTestClasses.hh"
+#include <karabo/util.hpp>
 
 class Schema_Test : public CPPUNIT_NS::TestFixture {
 
@@ -55,6 +56,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testList);
     CPPUNIT_TEST(testInvalidNodes);
     CPPUNIT_TEST(testOverwriteRestrictions);
+    CPPUNIT_TEST(testStateAndAlarmSets);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -110,6 +112,8 @@ private: //functions
     void testList();
     void testInvalidNodes();
     void testOverwriteRestrictions();
+    void testStateAndAlarmSets();
+
 
 };
 
