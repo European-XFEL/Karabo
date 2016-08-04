@@ -176,7 +176,9 @@ namespace karabo {
             enum LeafType {
 
                 PROPERTY,
-                COMMAND
+                COMMAND,
+                STATE,
+                ALARM_CONDITION
             };
 
             enum AssignmentType {

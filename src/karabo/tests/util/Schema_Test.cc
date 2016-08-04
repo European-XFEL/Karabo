@@ -745,3 +745,37 @@ void Schema_Test::testInvalidNodes() {
     CPPUNIT_ASSERT(schema.has("vecDouble") == true);
     CPPUNIT_ASSERT(schema.has("vecDouble.uint16") == false);
 }
+
+void Schema_Test::testStateAndAlarmSets(){
+    Schema schema;
+    
+    STRING_ELEMENT(schema).key("string")
+            .readOnly()
+            .commit();
+    
+    STATE_ELEMENT(schema).key("state")
+            .commit();
+    
+    ALARM_ELEMENT(schema).key("alarm")
+            .commit();
+    
+    Hash h("string", "abc");
+    Validator val;
+    Hash h_out;
+    std::pair<bool, std::string> r = val.validate(schema, h, h_out);
+    CPPUNIT_ASSERT(r.first == true); //should validate
+    h.set("state", "abc");
+    r = val.validate(schema, h, h_out);
+    CPPUNIT_ASSERT(r.first == false); //should not validate as we are setting string to state
+    Hash h2("alarm", "abc");
+    r = val.validate(schema, h2, h_out);
+    CPPUNIT_ASSERT(r.first == false); //should not validate as we are setting string to alarm
+    Hash::Node& n = h.set("state", "UNKNOWN");
+    n.setAttribute(KARABO_INDICATE_STATE_SET, true);
+    r = val.validate(schema, h, h_out);
+    CPPUNIT_ASSERT(r.first == true); //should validate as we faked updateState
+    Hash::Node& n2 = h2.set("alarm", "None");
+    n2.setAttribute(KARABO_INDICATE_ALARM_SET, true);
+    r = val.validate(schema, h2, h_out);
+    CPPUNIT_ASSERT(r.first == true); //should validate as we faked setAlarmCondition
+}

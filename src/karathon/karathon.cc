@@ -35,6 +35,8 @@ void exportPyUtilTimeDuration();
 void exportPyUtilDims();
 void exportPyUtilDetectorGeometry();
 void exportPyUtilRollingWindowStatistics();
+void exportPyUtilStateElement();
+void exportPyUtilAlarmConditionElement();
 
 // io
 void exportPyIo();
@@ -119,6 +121,8 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilDateTimeString();
     exportPyUtilDetectorGeometry();
     exportPyUtilRollingWindowStatistics();
+    exportPyUtilStateElement();
+    exportPyUtilAlarmConditionElement();
 
     // io
     exportPyIo();
