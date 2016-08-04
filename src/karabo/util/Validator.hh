@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Validator.hh
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -17,7 +17,6 @@
 #include "ToLiteral.hh"
 #include "Units.hh"
 #include "AlarmConditions.hh"
-#include "NDArray.hh"
 
 #include "karaboDll.hh"
 #include "Timestamp.hh"
@@ -31,8 +30,12 @@
 namespace karabo {
     namespace util {
 
-        class Validator {
+        typedef std::vector<long long> NDArrayElementShapeType;
 
+        // Forward declaration
+        class Dims;
+
+        class Validator {
 
             // Validation flags
             bool m_injectDefaults;
@@ -110,7 +113,7 @@ namespace karabo {
 
             bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
 
-            void compareNDArrayShapes(const NDArrayShapeType& schemaShape, const NDArrayShapeType& shape, std::ostringstream& report, const std::string& scope);
+            void compareNDArrayShapes(const NDArrayElementShapeType& schemaShape, const Dims& shape, std::ostringstream& report, const std::string& scope);
 
         };
     }

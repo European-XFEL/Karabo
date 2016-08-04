@@ -51,8 +51,8 @@ namespace karabo {
                  */
                 struct Restriction {
 
-                    Hash::Pointer m_restrictionsPtr;
                     std::string name;
+                    Hash::Pointer m_restrictionsPtr;
 
                     Restriction() {
                     };
@@ -63,6 +63,7 @@ namespace karabo {
 
                     Restriction& operator=(const bool rhs) {
                         m_restrictionsPtr->set(name, rhs);
+                        return *this;
                     }
 
                     bool operator==(const bool rhs) const {
@@ -156,7 +157,7 @@ namespace karabo {
                     minSize("minSize", m_rest, false),
                     maxSize("maxSize", m_rest, false),
                     options("options", m_rest, false),
-                    stateOptions("stateOptions", m_rest, true),
+                    stateOptions("stateOptions", m_rest, true), //true by default as all elements but state are restricted
                     allowedStates("allowedStates", m_rest, false),
                     observerAccess("observerAccess", m_rest, false),
                     userAccess("userAccess", m_rest, false),

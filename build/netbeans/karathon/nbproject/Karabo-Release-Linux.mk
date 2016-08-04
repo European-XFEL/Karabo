@@ -43,6 +43,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyH5Tools.o \
 	${OBJECTDIR}/_ext/381567218/PyIoFileTools.o \
 	${OBJECTDIR}/_ext/381567218/PyLogLogger.o \
+	${OBJECTDIR}/_ext/381567218/PyUtilAlarmElement.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilDateTimeString.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilDetectorGeometry.o \
@@ -51,6 +52,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyUtilHash.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilRollingWindowStatistics.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilSchema.o \
+	${OBJECTDIR}/_ext/381567218/PyUtilStateElement.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilTimeDuration.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilTimestamp.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp.o \
@@ -143,6 +145,11 @@ ${OBJECTDIR}/_ext/381567218/PyLogLogger.o: ../../../src/karathon/PyLogLogger.cc
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyLogLogger.o ../../../src/karathon/PyLogLogger.cc
 
+${OBJECTDIR}/_ext/381567218/PyUtilAlarmElement.o: ../../../src/karathon/PyUtilAlarmElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilAlarmElement.o ../../../src/karathon/PyUtilAlarmElement.cc
+
 ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o: ../../../src/karathon/PyUtilClassInfo.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
@@ -182,6 +189,11 @@ ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o: ../../../src/karathon/PyUtilSchema.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o ../../../src/karathon/PyUtilSchema.cc
+
+${OBJECTDIR}/_ext/381567218/PyUtilStateElement.o: ../../../src/karathon/PyUtilStateElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilStateElement.o ../../../src/karathon/PyUtilStateElement.cc
 
 ${OBJECTDIR}/_ext/381567218/PyUtilTimeDuration.o: ../../../src/karathon/PyUtilTimeDuration.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -399,6 +411,19 @@ ${OBJECTDIR}/_ext/381567218/PyLogLogger_nomain.o: ${OBJECTDIR}/_ext/381567218/Py
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyLogLogger.o ${OBJECTDIR}/_ext/381567218/PyLogLogger_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/381567218/PyUtilAlarmElement_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilAlarmElement.o ../../../src/karathon/PyUtilAlarmElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyUtilAlarmElement.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilAlarmElement_nomain.o ../../../src/karathon/PyUtilAlarmElement.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilAlarmElement.o ${OBJECTDIR}/_ext/381567218/PyUtilAlarmElement_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o ../../../src/karathon/PyUtilClassInfo.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o`; \
@@ -501,6 +526,19 @@ ${OBJECTDIR}/_ext/381567218/PyUtilSchema_nomain.o: ${OBJECTDIR}/_ext/381567218/P
 	    $(COMPILE.cc) -O2 -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilSchema_nomain.o ../../../src/karathon/PyUtilSchema.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o ${OBJECTDIR}/_ext/381567218/PyUtilSchema_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PyUtilStateElement_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilStateElement.o ../../../src/karathon/PyUtilStateElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyUtilStateElement.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilStateElement_nomain.o ../../../src/karathon/PyUtilStateElement.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilStateElement.o ${OBJECTDIR}/_ext/381567218/PyUtilStateElement_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/PyUtilTimeDuration_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilTimeDuration.o ../../../src/karathon/PyUtilTimeDuration.cc 

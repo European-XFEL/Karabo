@@ -242,6 +242,7 @@
         <itemPath>../../../src/karabo/util/karaboDll.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="Schema" projectFiles="true">
+        <itemPath>../../../src/karabo/util/AlarmConditionElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ChoiceElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/GenericElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/HashFilter.cc</itemPath>
@@ -256,6 +257,7 @@
         <itemPath>../../../src/karabo/util/Schema.cc</itemPath>
         <itemPath>../../../src/karabo/util/Schema.hh</itemPath>
         <itemPath>../../../src/karabo/util/SimpleElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/StateElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/TableElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/TableElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/Validator.cc</itemPath>
@@ -1750,6 +1752,11 @@
       </item>
       <item path="../../../src/karabo/util.hpp" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/AlarmConditionElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/AlarmConditions.cc"
             ex="false"
             tool="1"
@@ -1987,6 +1994,11 @@
       <item path="../../../src/karabo/util/State.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/State.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StateElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/StateSignifier.cc"
             ex="false"
@@ -3773,6 +3785,11 @@
       </item>
       <item path="../../../src/karabo/util.hpp" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/AlarmConditionElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/AlarmConditions.cc"
             ex="false"
             tool="1"
@@ -4010,6 +4027,11 @@
       <item path="../../../src/karabo/util/State.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/State.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StateElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/StateSignifier.cc"
             ex="false"

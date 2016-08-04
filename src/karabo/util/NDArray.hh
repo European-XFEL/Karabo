@@ -9,11 +9,10 @@
 
 #include <boost/shared_ptr.hpp>
 #include <vector>
+#include "Dims.hh"
 
 namespace karabo {
     namespace util {
-
-        typedef std::vector<long long> NDArrayShapeType;
 
         template <typename T>
         class NDArray {
@@ -26,7 +25,7 @@ namespace karabo {
             private:
 
             VectorTypePtr m_dataPtr;
-            NDArrayShapeType m_shape;
+            Dims m_shape;
             bool m_isBigEndian;
 
             public:
@@ -35,7 +34,7 @@ namespace karabo {
             NDArray() {}
 
             NDArray(const VectorType& data,
-                    const NDArrayShapeType& shape = NDArrayShapeType(1, -1),
+                    const Dims& shape = Dims(),
                     const bool isBigEndian = karabo::util::isBigEndian()) {
                         // Explicitly copy the data which is passed!
                         const VectorTypePtr dataPtr(new VectorType(data));
@@ -46,7 +45,7 @@ namespace karabo {
 
             // Copy-free constructor
             NDArray(const VectorTypePtr& dataPtr,
-                    const NDArrayShapeType& shape = NDArrayShapeType(1, -1),
+                    const Dims& shape = Dims(),
                     const bool isBigEndian = karabo::util::isBigEndian()) {
                         setData(dataPtr);
                         setShape(shape);
@@ -61,10 +60,16 @@ namespace karabo {
                 m_dataPtr = dataPtr;
             }
 
-            const NDArrayShapeType& getShape() const { return m_shape; }
+            const Dims& getShape() const { return m_shape; }
 
-            void setShape(const NDArrayShapeType& shape) {
-                m_shape = shape;
+            void setShape(const Dims& shape) {
+                if (shape.size() == 0) {
+                    // shape needs to be derived from the data
+                    m_shape = Dims(m_dataPtr->size());
+                }
+                else {
+                    m_shape = shape;
+                }
             }
 
             bool isBigEndian() const { return m_isBigEndian; }

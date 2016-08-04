@@ -1,9 +1,9 @@
-/* 
+/*
  * File:   ToLiteral.hh
  * Author: <burkhard.heisen@xsmail.com>
  *
  * Created on January 22, 2013 9:12 PM
- * 
+ *
  */
 
 #include "ToType.hh"
@@ -17,7 +17,7 @@ namespace karabo {
 
         class ToLiteral {
 
-            public:
+        public:
 
             typedef std::string ReturnType;
 
