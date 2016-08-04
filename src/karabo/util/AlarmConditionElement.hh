@@ -15,9 +15,8 @@ namespace karabo {
     namespace util {
 
         /**
-         * The AlarmConditionElement represents a leaf and can be of any (supported) type
+         * The AlarmConditionElement represents a leaf and needs to be of type AlarmCondition
          */
-
         class AlarmConditionElement : public GenericElement<AlarmConditionElement> {
 
         public:
@@ -31,7 +30,7 @@ namespace karabo {
              * @param val  Initial value
              * @return reference to the Element for proper methods chaining
              */
-            AlarmConditionElement& initialValue(const karabo::util::AlarmCondition& a) {
+            AlarmConditionElement& initialValue(const AlarmCondition& a) {
                 this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, a.asString());
                 return *this;
             }

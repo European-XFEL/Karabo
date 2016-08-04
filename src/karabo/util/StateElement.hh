@@ -16,7 +16,7 @@ namespace karabo {
     namespace util {
 
         /**
-         * The StateElement represents a leaf and can be of any (supported) type
+         * The StateElement represents a leaf and needs to be of type State
          */
 
         class StateElement : public GenericElement<StateElement> {
@@ -29,12 +29,9 @@ namespace karabo {
 
             /**
              * The <b>options</b> method specifies values allowed for the parameter.
-             * @param opts A string with space separated values. The values are casted to the proper type.
-             * @param sep  A separator symbols. Default values are " ,;"
+             * @param one to eight States or a vector of States
              * @return reference to the StateElement
              */
-
-
             StateElement& options(const karabo::util::State& s1) {
                 const karabo::util::State arr[] = {s1};
                 return options(std::vector<karabo::util::State>(arr, arr + 1));
