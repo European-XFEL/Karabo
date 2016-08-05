@@ -6,7 +6,7 @@
  * Created on May 14, 2012, 1:57 PM
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
- * 
+ *
  * Modified to new concepts: April 17, 2015
  */
 
@@ -31,7 +31,6 @@ namespace karabo {
          * The InputChannel class.
          */
         class InputChannel : public boost::enable_shared_from_this<InputChannel> {
-
 
             // Maps outputChannelString to the Hash with connection parameters
             typedef std::map<std::string, karabo::util::Hash> ConnectedOutputChannels;
@@ -121,7 +120,7 @@ namespace karabo {
              * Returns a map of between  "output channel string" and "output channel info" Hash
              * outputChannelString (STRING) represented like "instanceId@channelName" or "instanceId:channelName"
              * outputChannelInfo contains connection parameters or is empty, depending on connection state.
-             * @return map. 
+             * @return map.
              */
             std::map<std::string, karabo::util::Hash> getConnectedOutputChannels();
 
@@ -138,8 +137,6 @@ namespace karabo {
             size_t size();
 
             unsigned int getMinimumNumberOfData() const;
-
-            KARABO_DEPRECATED void connectNow(const karabo::util::Hash& outputChannelInfo);
 
             void connect(const karabo::util::Hash& outputChannelInfo);
 
@@ -188,7 +185,6 @@ namespace karabo {
         };
 
         class InputChannelElement {
-
 
             karabo::util::NodeElement m_inputChannel;
             karabo::util::NodeElement m_dataSchema;

@@ -381,24 +381,6 @@ namespace karabo {
                 m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
             }
 
-            //            template <class PixelType>
-            //            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
-            //                this->set<PixelType>(key, image, getActualTimestamp());
-            //            }
-            //
-            //            template <class PixelType>
-            //            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp) {
-            //                using namespace karabo::util;
-            //
-            //                Dims dims(image.dimX(), image.dimY(), image.dimZ());
-            //                karabo::xip::RawImageData raw(image.pixelPointer(), image.size(), true, dims);
-            //
-            //                Hash hash(key, raw.hash());
-            //                hash.setAttribute(key, "image", 1);
-            //                m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
-            //                emit("signalChanged", hash, getInstanceId());
-            //            }
-
             /**
              * This function allows to write a CpuImage instead of an ImageElement to an output channel.
              * Data will be timestamped and send immediately (write/update).
@@ -879,12 +861,6 @@ namespace karabo {
                         << "\" does not allow a transition for event \"" << eventName << "\".";
             }
 
-            // Use execute instead to trigger your error event
-
-            KARABO_DEPRECATED virtual void triggerError(const std::string& shortMessage, const std::string& detailedMessage) const {
-                KARABO_LOG_ERROR << detailedMessage;
-            }
-
             virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
 
@@ -1339,31 +1315,6 @@ namespace karabo {
 
 
 
-
-
-            /*const std::vector<karabo::util::Hash>& getVectorHashRow(const std::string& key) const {
-                const std::vector<karabo::util::Hash>& value = m_parameters.get<std::vector<karabo::util::Hash> >(key);
-                for (std::vector<karabo::util::Hash>::const_iterator it = value.begin(); it != value.end(); ++it) {
-                    for (karabo::util::Hash::const_iterator h_it = it->begin(); h_it != it->end(); ++h_it) {
-                        if (h_it->hasAttribute("isAliasing")) {
-                            std::string isAliasing = h_it->getAttribute<std::string>("isAliasing");
-                            size_t sepPos = isAliasing.find(".");
-                            std::string deviceId = isAliasing.substr(0, sepPos);
-                            std::string keyPath = isAliasing.substr(sepPos + 1);
-                            try {
-                                if (const_cast<Device<FSM>*> (this)->remote().hasAttribute(deviceId, keyPath, "isAliasing")) {
-                                    throw KARABO_PARAMETER_EXCEPTION("Refusing to get monitor value of " + keyPath + " as it is a monitor itself");
-                                }
-                                h_it->setValue(const_cast<Device<FSM>*> (this)->remote().getAsAny(deviceId, keyPath));
-                            } catch (const karabo::util::Exception& e) {
-                                KARABO_LOG_WARN << "Could not retrieve monitored parameter " << h_it->getKey() << " from device " << deviceId;
-                                KARABO_LOG_WARN << "Reason: " << e.userFriendlyMsg();
-                            }
-                        }
-                    }
-                }
-                return value;
-            }*/
 
         };
 

@@ -21,10 +21,9 @@ namespace karabo {
     namespace util {
 
         /**
-         * Describes array dimensions. 
+         * Describes array dimensions.
          */
         class Dims {
-
 
             typedef unsigned long long ull64;
 
@@ -97,21 +96,6 @@ namespace karabo {
                 calculate();
             }
 
-            KARABO_DEPRECATED ull64 x() const {
-                if (m_rank >= 1) return m_vec[0];
-                return 0;
-            }
-
-            KARABO_DEPRECATED ull64 y() const {
-                if (m_rank >= 2) return m_vec[1];
-                return 1;
-            }
-
-            KARABO_DEPRECATED ull64 z() const {
-                if (m_rank >= 3) return m_vec[2];
-                return 1;
-            }
-
             ull64 x1() const {
                 if (m_rank >= 1) return m_vec[0];
                 return 0;
@@ -160,5 +144,5 @@ namespace karabo {
 
 
 
-#endif	
+#endif
 

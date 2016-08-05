@@ -407,8 +407,6 @@ public:
 };
 
 #define KARABO_PYTHON_COMMON_ATTRIBUTES(T)\
-.def("advanced", &T::advanced\
-, bp::return_internal_reference<> () )\
 .def("observerAccess", &T::observerAccess\
 , bp::return_internal_reference<> () )\
 .def("userAccess", &T::userAccess\
@@ -549,8 +547,6 @@ KARABO_PYTHON_COMMON_ATTRIBUTES(T) \
  *
  */
 #define KARABO_PYTHON_NODE_CHOICE_LIST(NameElem)\
-.def("advanced", &NameElem::advanced\
-, bp::return_internal_reference<> ())\
 .def("observerAccess", &NameElem::observerAccess\
 , bp::return_internal_reference<> () )\
 .def("userAccess", &NameElem::userAccess\
@@ -632,8 +628,6 @@ return boost::python::object(str);\
 , bp::return_internal_reference<> () )\
 .def("alias"\
 , (U & (U::*)(int const &))(&U::alias)\
-, bp::return_internal_reference<> ())\
-.def("advanced", &U::advanced\
 , bp::return_internal_reference<> ())\
 .def("observerAccess", &U::observerAccess\
 , bp::return_internal_reference<> () )\
