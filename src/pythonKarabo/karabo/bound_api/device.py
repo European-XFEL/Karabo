@@ -19,7 +19,7 @@ from karathon import (
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, BrokerConnection,
     Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
-    ImageData, loadFromFile, Logger, MetricPrefix, Priority,
+    ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
     RawImageData, Schema, SignalSlotable, Timestamp, Trainstamp,
     Unit, Validator, ValidatorValidationRules
 
@@ -551,6 +551,7 @@ class PythonDevice(NoFsm):
                 else:
                     return self.parameters[key]
             except RuntimeError as e:
+                print(e)
                 raise AttributeError(
                     "Error while retrieving '{}' from device".format(key))
 

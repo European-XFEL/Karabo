@@ -24,7 +24,8 @@ namespace karabo {
         public:
 
             StateElement(Schema& expected) : GenericElement<StateElement>(expected) {
-
+                //if no initial value is set the state will be unknown
+                this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, State::UNKNOWN.name());
             }
 
             /**
@@ -97,7 +98,7 @@ namespace karabo {
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, Schema::STATE);
                 this->m_node->template setAttribute<std::string>(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::INTERNAL_PARAM);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::EVERY_EVENT);
                 this->m_node->template setAttribute<bool>(KARABO_INDICATE_STATE_SET, true);
 
