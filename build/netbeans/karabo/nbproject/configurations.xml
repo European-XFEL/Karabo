@@ -260,6 +260,7 @@
         <itemPath>../../../src/karabo/util/ListElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/NDArrayElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/NodeElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/OverwriteElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/OverwriteElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/PathElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/Schema.cc</itemPath>
@@ -2012,6 +2013,11 @@
       <item path="../../../src/karabo/util/OrderedMap.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/OverwriteElement.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/OverwriteElement.hh"
@@ -4105,6 +4111,11 @@
       <item path="../../../src/karabo/util/OrderedMap.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/OverwriteElement.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/OverwriteElement.hh"

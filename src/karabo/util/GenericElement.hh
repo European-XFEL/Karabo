@@ -181,6 +181,9 @@ namespace karabo {
             /**
              * The <b>overWriteRestrictions</b> allows for setting restrictions to overwrite element. Any attributes
              * specified here cannot be altered through use of overwrite element.
+             *
+             * After execution restrictions contains the new applicable restrictions, e.g. those resulting from merging
+             * with previously existing restrictions. This means, one can add restrictions but not cancel existing ones.
              */
             Derived& overwriteRestrictions(OverwriteElement::Restrictions & restrictions) {
                 if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
