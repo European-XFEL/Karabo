@@ -7,13 +7,11 @@
 #ifndef KARABO_UTIL_NDARRAY_HH
 #define	KARABO_UTIL_NDARRAY_HH
 
-#include <boost/shared_ptr.hpp>
-#include <vector>
+#include "Exception.hh"
+#include "Dims.hh"
 
 namespace karabo {
     namespace util {
-
-        typedef std::vector<long long> NDArrayShapeType;
 
         template <typename T>
         class NDArray {
@@ -26,7 +24,7 @@ namespace karabo {
             private:
 
             VectorTypePtr m_dataPtr;
-            NDArrayShapeType m_shape;
+            Dims m_shape;
             bool m_isBigEndian;
 
             public:
@@ -35,7 +33,7 @@ namespace karabo {
             NDArray() {}
 
             NDArray(const VectorType& data,
-                    const NDArrayShapeType& shape = NDArrayShapeType(1, -1),
+                    const Dims& shape = Dims(),
                     const bool isBigEndian = karabo::util::isBigEndian()) {
                         // Explicitly copy the data which is passed!
                         const VectorTypePtr dataPtr(new VectorType(data));
@@ -46,7 +44,7 @@ namespace karabo {
 
             // Copy-free constructor
             NDArray(const VectorTypePtr& dataPtr,
-                    const NDArrayShapeType& shape = NDArrayShapeType(1, -1),
+                    const Dims& shape = Dims(),
                     const bool isBigEndian = karabo::util::isBigEndian()) {
                         setData(dataPtr);
                         setShape(shape);
@@ -61,10 +59,25 @@ namespace karabo {
                 m_dataPtr = dataPtr;
             }
 
-            const NDArrayShapeType& getShape() const { return m_shape; }
+            const Dims& getShape() const { return m_shape; }
 
-            void setShape(const NDArrayShapeType& shape) {
-                m_shape = shape;
+            void setShape(const Dims& shape) {
+                if (shape.size() == 0) {
+                    // shape needs to be derived from the data
+                    m_shape = Dims(m_dataPtr->size());
+                }
+                else {
+                    const unsigned long long dataSize = m_dataPtr->size();
+                    const unsigned long long shapeSize = shape.size();
+                    if (dataSize != shapeSize) {
+                        // NOTE: I'm avoiding StringTools here to avoid complicated header interdependency...
+                        std::ostringstream msg;
+                        msg << "NDArray::setShape: Size of shape: " << std::fixed << shapeSize;
+                        msg << " does not match size of data: " << std::fixed << dataSize;
+                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
+                    }
+                    m_shape = shape;
+                }
             }
 
             bool isBigEndian() const { return m_isBigEndian; }

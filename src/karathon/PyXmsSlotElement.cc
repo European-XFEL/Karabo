@@ -9,6 +9,7 @@
 #include "boost/python.hpp"
 #include "boost/python/raw_function.hpp"
 
+#include <karabo/util/Validator.hh>
 #include <karabo/xms/SlotElement.hh>
 #include "PythonMacros.hh"
 #include <karabo/util/State.hh>

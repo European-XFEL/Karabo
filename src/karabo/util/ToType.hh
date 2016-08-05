@@ -1,9 +1,9 @@
-/* 
+/*
  * File:   ToType.hpp
  * Author: <burkhard.heisen@xsmail.com>
  *
  * Created on January 22, 2013
- * 
+ *
  */
 
 #ifndef KARABO_UTIL_TOTYPE_HH
@@ -18,7 +18,6 @@ namespace karabo {
 
         template <class Impl>
         class ToType {
-
 
 #define KARABO_MAP_TO_REFERENCE_TYPE(ClassName, ReferenceType, ToType) template<> inline ClassName::ReturnType ClassName::to<karabo::util::Types::ReferenceType>() {return ToType;}
 

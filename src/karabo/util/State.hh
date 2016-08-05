@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   State.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
@@ -15,20 +15,21 @@
 #include "ClassInfo.hh"
 #include "Factory.hh"
 
+#define KARABO_INDICATE_STATE_SET "indicateState"
+
 namespace karabo {
     namespace util {
 
         /**
          * Base State class
          */
-       
-       
-      
+
+
+
         class State {
-            
-           
+
         public:
-            
+
             KARABO_CLASSINFO(State, "State", "1.0")
 
             //no inheritance from state!
@@ -38,11 +39,11 @@ namespace karabo {
             virtual const std::string& operator()() const {
                 return m_stateName;
             }
-            
+
             const std::string& name() const {
                 return m_stateName;
             }
-            
+
             const State* parent() const {
                 return m_parent;
             }
@@ -57,7 +58,7 @@ namespace karabo {
             }
 
             bool isDerivedFrom(const State& s) const;
-            
+
             // The base states that have no parent:
 
             static const State UNKNOWN;
@@ -128,28 +129,28 @@ namespace karabo {
             static const State EMPTYING;
             static const State DISENGAGING;
             static const State SWITCHING_OFF;
-            
+
             static const State HOMING;
             static const State ACQUIRING;
             static const State MONITORING;
             static const State IGNORING;
-            
+
             static const State INTERLOCK_BROKEN;
             static const State INTERLOCK_OK;
             static const State SEARCHING;
 
-  
+
             static const State & fromString(const std::string & state);
-            
+
         private:
             // Private constructor to avoid states not in the predefined set (copy is OK).
             explicit State(const std::string& name, const State* parent = NULL);
-            
+
             std::string m_stateName;
             const State* m_parent;
-            
+
             static std::map<std::string, const State &> m_stateFactory;
-            
+
 
         };
 

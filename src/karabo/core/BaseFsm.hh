@@ -32,7 +32,6 @@ namespace karabo {
 
             KARABO_FSM_ON_EXCEPTION(exceptionFound);
 
-
             virtual void updateState(const karabo::util::State& state) = 0;
 
             KARABO_FSM_ON_CURRENT_STATE_CHANGE(updateState);

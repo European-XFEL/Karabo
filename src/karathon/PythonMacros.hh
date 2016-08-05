@@ -10,6 +10,7 @@
 #define	KARATHON_MACROSFORPYTHON_HH
 
 #include <boost/python.hpp>
+#include <karabo/util/Validator.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/NDArrayElement.hh>
 #include <karabo/util/TableElement.hh>

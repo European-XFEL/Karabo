@@ -1,4 +1,5 @@
 /* 
+
  * File:   Validator.cc
  * Author: <burkhard.heisen@xfel.eu>
  * 
@@ -9,6 +10,7 @@
 #include "Schema.hh"
 #include "FromLiteral.hh"
 #include "Epochstamp.hh"
+#include "NDArray.hh"
 
 
 namespace karabo {
@@ -134,11 +136,15 @@ namespace karabo {
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
                             Hash::Node& node = working.set(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE));
                             if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
+                            if (it->hasAttribute(KARABO_INDICATE_STATE_SET)) node.setAttribute(KARABO_INDICATE_STATE_SET, true);
+                            if (it->hasAttribute(KARABO_INDICATE_ALARM_SET)) node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
                             this->validateLeaf(*it, node, report, currentScope);
                         }
                     } else { // Node IS provided
                         Hash::Node& node = working.setNode(user.getNode(key));
                         if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
+                        if (user.hasAttribute(key,KARABO_INDICATE_STATE_SET)) node.setAttribute(KARABO_INDICATE_STATE_SET, true);
+                        if (user.hasAttribute(key,KARABO_INDICATE_ALARM_SET)) node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
                         this->validateLeaf(*it, node, report, currentScope);
                     }
                 } else if (nodeType == Schema::NODE) {
@@ -377,7 +383,26 @@ namespace karabo {
                     }
                 }
             }
+            if(masterNode.hasAttribute(KARABO_SCHEMA_LEAF_TYPE)){
+                const int leafType = masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE);
 
+                if(leafType == karabo::util::Schema::STATE && !workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
+                    report << "State element at "<< scope <<" may only be set using predefined states"<<endl;
+                }
+
+                if(leafType != karabo::util::Schema::STATE && workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
+                    report << "Tried setting non-state element at "<< scope <<" with state object"<<endl;
+                }
+
+                if(leafType == karabo::util::Schema::ALARM_CONDITION && !workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)){
+                    report << "Alarm Condition element at "<< scope <<" may only be set using predefined alarm conditions"<<endl;
+                }
+
+                if(leafType != karabo::util::Schema::ALARM_CONDITION && workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)){
+                    report << "Tried setting non-alarm condition element at "<< scope <<" with alarm condition object"<<endl;
+                }
+            }
+                
             if (masterNode.hasAttribute(KARABO_SCHEMA_ACCESS_MODE) && masterNode.getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE)
                 m_hasReconfigurableParameter = true;
 
@@ -529,62 +554,62 @@ namespace karabo {
 
 
         void Validator::checkNDArrayShape(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string& scope) {
-            const NDArrayShapeType& schemaShape = masterNode.getAttribute<NDArrayShapeType>(KARABO_SCHEMA_ARRAY_SHAPE);
+            const NDArrayElementShapeType& schemaShape = masterNode.getAttribute<NDArrayElementShapeType>(KARABO_SCHEMA_ARRAY_SHAPE);
             const Types::ReferenceType givenType = workNode.getType();
 
             switch (givenType) {
                 case Types::NDARRAY_BOOL: {
-                    const NDArrayShapeType& shape = workNode.getValue<NDArray<bool> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<bool> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_INT8: {
-                    const NDArrayShapeType& shape = workNode.getValue<NDArray<signed char> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<signed char> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_UINT8: {
-                    const NDArrayShapeType& shape = workNode.getValue<NDArray<unsigned char> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<unsigned char> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_INT16: {
-                    const NDArrayShapeType& shape = workNode.getValue<NDArray<short> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<short> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_UINT16: {
-                    const NDArrayShapeType& shape = workNode.getValue<NDArray<unsigned short> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<unsigned short> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_INT32: {
-                    const NDArrayShapeType& shape = workNode.getValue<NDArray<int> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<int> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_UINT32: {
-                    const NDArrayShapeType& shape = workNode.getValue<NDArray<unsigned int> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<unsigned int> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_INT64: {
-                    const NDArrayShapeType& shape = workNode.getValue<NDArray<long long> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<long long> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_UINT64: {
-                    const NDArrayShapeType& shape = workNode.getValue<NDArray<unsigned long long> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<unsigned long long> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_FLOAT: {
-                    const NDArrayShapeType& shape = workNode.getValue<NDArray<float> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<float> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
                 case Types::NDARRAY_DOUBLE: {
-                    const NDArrayShapeType& shape = workNode.getValue<NDArray<double> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<double> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }
@@ -622,15 +647,16 @@ namespace karabo {
         }
 
 
-        void Validator::compareNDArrayShapes(const NDArrayShapeType& expected, const NDArrayShapeType& observed, std::ostringstream& report, const std::string& scope) {
-            for (NDArrayShapeType::const_iterator eit = expected.begin(), oit = observed.begin(); eit != expected.end() && oit != observed.end(); ++eit, ++oit) {
+        void Validator::compareNDArrayShapes(const NDArrayElementShapeType& expected, const Dims& observed, std::ostringstream& report, const std::string& scope) {
+            NDArrayElementShapeType::const_iterator eit = expected.begin();
+            for (int idx=0; eit != expected.end() && idx < observed.rank(); ++eit, ++idx) {
                 if (*eit == -1) {
                     // Negative dimension => variable.
                     continue;
                 }
-                if (*eit != *oit) {
+                if (*eit != static_cast<long long>(observed.extentIn(idx))) {
                     std::string expectedStr = toString<long long>(expected);
-                    std::string observedStr = toString<long long>(observed);
+                    std::string observedStr = toString<unsigned long long>(observed.toVector());
                     report << "Expected array shape: " << expectedStr << " for (ndarray-)parameter \"" << scope << "\", but got " << observedStr << " instead." << endl;
                     return;
                 }
