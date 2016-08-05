@@ -1335,9 +1335,7 @@ namespace karabo {
                         serviceIds.push_back(it->get<std::string>("instance"));
                     }
                     set("alarmServiceDevices", serviceIds);
-                    reply(true);
                 }
-                reply(false);
             }
 
 
