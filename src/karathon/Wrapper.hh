@@ -315,11 +315,23 @@ namespace karathon {
     };
 
     template <typename T>
-    class ArrayRefHandler {
-        PyArrayObject *m_arrayRef;
+    class CppArrayRefHandler {
+    public:
+        typedef boost::shared_ptr<karabo::util::ArrayData<T> > ArrayDataPtr;
+
+    private:
+        ArrayDataPtr m_arrayData;
 
     public:
-        explicit ArrayRefHandler(PyArrayObject* obj) : m_arrayRef(obj) {}
+        explicit CppArrayRefHandler(const ArrayDataPtr& arr) : m_arrayData(arr) {}
+    };
+
+    template <typename T>
+    class PyArrayRefHandler {
+        PyArrayObject* m_arrayRef;
+
+    public:
+        explicit PyArrayRefHandler(PyArrayObject* obj) : m_arrayRef(obj) {}
 
         void operator ()(const T*) {
             Py_DECREF(m_arrayRef);
@@ -442,7 +454,7 @@ namespace karathon {
 
             const T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
             const npy_intp nelems = PyArray_SIZE(arr);
-            const ArrayRefHandler<T> refHandler(arr);
+            const PyArrayRefHandler<T> refHandler(arr);
 
             Py_INCREF(arr); // Grab a new reference to the array object
             boost::shared_ptr<karabo::util::ArrayData<T> > array(new karabo::util::ArrayData<T>(data, nelems, refHandler));
@@ -471,13 +483,15 @@ namespace karathon {
             for (int i = 0; i < nd; ++i) {
                 dims[i] = shape.extentIn(i);
             }
-            PyObject* pyobj = PyArray_SimpleNew(nd, &dims[0], typenum);
+
+            boost::shared_ptr<karabo::util::ArrayData<T> > arrayData(a.getData());
+            const boost::shared_ptr<CppArrayRefHandler<T> > refHandler(new CppArrayRefHandler<T>(arrayData));
+            bp::object pyRefHandler(refHandler);
+            void* data = reinterpret_cast<void*> (arrayData->data());
+            // XXX: SimpleNewFromData must have a pointer to ALIGNED memory!!
+            PyObject* pyobj = PyArray_SimpleNewFromData(nd, &dims[0], typenum, data);
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
-            T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
-            T* cppData = a.getData()->data();
-            for (int i = 0; i < PyArray_SIZE(arr); i++) {
-                data[i] = cppData[i];
-            }
+            PyArray_SetBaseObject(arr, pyRefHandler.ptr());
             return bp::object(bp::handle<>(pyobj));
         }
     };
