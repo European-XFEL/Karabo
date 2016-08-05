@@ -8,6 +8,8 @@
 #ifndef KARABO_ALARMSERVICE_HH
 #define	KARABO_ALARMSERVICE_HH
 
+#include <set>
+
 #include "Device.hh"
 #include "OkErrorFsm.hh"
 
@@ -36,6 +38,12 @@ namespace karabo {
         private: // Functions
 
             void initialize();
+
+            void registerAlarmWithNewDevice(const karabo::util::Hash& topologyEntry);
+
+        private: // members
+
+            std::set<karabo::util::Hash> m_registeredDevices;
 
         };
     }
