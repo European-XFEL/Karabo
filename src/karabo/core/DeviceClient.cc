@@ -30,7 +30,6 @@ namespace karabo {
             , m_signalSlotable()
             , m_isShared(false)
             , m_internalTimeout(2000)
-            , m_isAdvancedMode(false)
             , m_topologyInitialized(false)
             , m_getOlder(false) // Sic! To start aging in setAgeing below.
             , m_runSignalsChangedThread(false)
@@ -67,7 +66,6 @@ namespace karabo {
             , m_signalSlotable(signalSlotable)
             , m_isShared(true)
             , m_internalTimeout(2000)
-            , m_isAdvancedMode(false)
             , m_topologyInitialized(false)
             , m_getOlder(false) // Sic! To start aging in setAgeing below.
             , m_runSignalsChangedThread(false)
@@ -291,16 +289,7 @@ namespace karabo {
         }
 
 
-        void DeviceClient::enableAdvancedMode() {
-            m_isAdvancedMode = true;
-        }
-
-
-        void DeviceClient::disableAdvancedMode() {
-            m_isAdvancedMode = false;
-        }
-
-
+        
         void DeviceClient::setAgeing(bool on) {
             if (on && !m_getOlder) {
                 m_getOlder = true;

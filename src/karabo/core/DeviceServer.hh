@@ -36,11 +36,10 @@ namespace karabo {
 
         class BaseDevice;
 
-/**
+        /**
          * The DeviceServer class.
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
-
 
             typedef std::map<std::string, boost::thread*> DeviceInstanceMap;
 
@@ -199,7 +198,5 @@ namespace karabo {
     }
 }
 
-// TODO windows
-//KARABO_REGISTER_FACTORY_BASE_HH(karabo::core::DeviceServer, TEMPLATE_CORE, DECLSPEC_CORE)
 
 #endif

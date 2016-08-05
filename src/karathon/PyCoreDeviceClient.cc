@@ -34,8 +34,6 @@ void exportPyCoreDeviceClient() {
             .def("logout", &DeviceClient::logout)
             .def("setInternalTimeout", (void (DeviceClient::*)(const unsigned int))(&DeviceClient::setInternalTimeout), bp::arg("internalTimeout"))
             .def("getInternalTimeout", (int (DeviceClient::*)() const) (&DeviceClient::getInternalTimeout))
-            .def("enableAdvancedMode", &DeviceClient::enableAdvancedMode)
-            .def("disableAdvancedMode", &DeviceClient::disableAdvancedMode)
             .def("exists", &DeviceClientWrap::existsPy, (bp::arg("instanceId")))
             .def("getSystemInformation", (Hash(DeviceClient::*)())(&DeviceClient::getSystemInformation))
             .def("getSystemTopology", (Hash(DeviceClient::*)())(&DeviceClient::getSystemTopology))
