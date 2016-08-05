@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Hash.hh
  * Author: <burkhard.heisen@xfel.eu>
  * Author: <djelloul.boukhelef@xfel.eu>
@@ -40,20 +40,20 @@ namespace karabo {
          * Hash container:
          * - The Hash is a heterogeneous generic key/value container that associates a string key to a value of any type.<br>
          * - The Hash is a core data structure in Karabo software framework, and is widly used in the karabo system.<br>
-         * - For instance, exchanging data and configurations between two or more entities (devices, GUI), 
+         * - For instance, exchanging data and configurations between two or more entities (devices, GUI),
          * database interface (store and retrival ), meta-data handling, etc.<br>
-         * - The Hash class is much like a XML-DOM container with the difference of 
+         * - The Hash class is much like a XML-DOM container with the difference of
          * allowing only unique keys on a given tree-level.<br>
-         * - Like and XML DOM object, the Hash provides a multi-level (recursive) key-value associative container, 
+         * - Like and XML DOM object, the Hash provides a multi-level (recursive) key-value associative container,
          * where keys are strings and values can be of any C++ type.<br>
-         * 
+         *
          * Concept:
          * - Provide recursive key-value associative container (keys are strings and unique, values can be of any type)<br>
          * - Preserve insertion order, while optimized for random key-based lookup. Different iterators are available for each use case.<br>
          * - Like in XML, each hash key can have a list of (key-value) attributes (attribute keys are strings and unique, attribute values can be of any type).<br>
          * - Seamless serialization to/from XML, Binary, HDF5, etc.<br>
          * - Usage: configuration, device-state cache, database interface (result-set), message protocol, meta-data handling, etc.<br>
-         * - Templated set, get for retrieving values from keys. Assumes recursursion on "." characters in key by default. 
+         * - Templated set, get for retrieving values from keys. Assumes recursursion on "." characters in key by default.
          *   Seperator can be specified per function call. <br>
          * - Exposed iterators will a sequential iterator (insertion order) and a alpha-numeric order iterator.<br>
          * - Each iterator provides access to its key, value, and attributes in form of a Hash::Node and can thus be used for recursive traversal.<br>
@@ -63,7 +63,7 @@ namespace karabo {
 
         class KARABO_DECLSPEC Hash {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(Hash, "Hash", "2.0")
 
@@ -71,7 +71,6 @@ namespace karabo {
             typedef Element<std::string, Attributes > Node;
 
             enum MergePolicy {
-
 
                 MERGE_ATTRIBUTES,
                 REPLACE_ATTRIBUTES
@@ -109,7 +108,7 @@ namespace karabo {
             map_iterator mend();
 
             /**
-             * Lookup for the hash element identified by "path". If the node exists, 
+             * Lookup for the hash element identified by "path". If the node exists,
              * it returns a reference to it wrapped in boost::optional object.
              * Otherwise, uninitialized boost::optional object is returned.
              * @param path sequence of keys to the searched for element
@@ -121,7 +120,7 @@ namespace karabo {
 
             /**
              * Default constructor creates an empty hash
-             * 
+             *
              * <b>Example:</b>
              * @code
              * Hash hash;
@@ -132,7 +131,7 @@ namespace karabo {
             /**
              * Use this constructor to create a hash with one key/value pair where value is just an empty hash
              * @param key Name of empty child
-             * 
+             *
              * <b>Example:</b>
              * The code like this ...
              * @code
@@ -160,7 +159,7 @@ namespace karabo {
              * @param value5 Any object as value
              * @param key6 A string hash key
              * @param value6 Any object as value
-             * 
+             *
              * <b>Example:</b>
              * @code
              * Hash hash("firstKey", 1, "secondKey", 2, "thirdKey", 3, "fourthKey", 4, "fifthKey", 5, "sixthKey", 6);
@@ -214,6 +213,8 @@ namespace karabo {
             friend
             Hash& operator+(const Hash& hash1, const Hash& hash2);
 
+
+
             /*******************************************************************
              * Provide same interface as STL
              *******************************************************************/
@@ -236,7 +237,7 @@ namespace karabo {
             void clear();
 
             /**
-             * Remove the element identified by 'path' if it exists. 
+             * Remove the element identified by 'path' if it exists.
              * Otherwise, do nothing.
              * If 'path' is a composite element, all its descendents are removed
              * as well. The path up to the last part of 'path' is not removed.
@@ -305,12 +306,12 @@ namespace karabo {
             /**
              * Insert key/value pair in current container
              * Optimization: to avoid double-copy, ie <i>value</i> into <i>boost::any</i> object, and the later into the map;
-             * we insert first insert an empty object of type <b>boost::any</b> into the map, 
+             * we insert first insert an empty object of type <b>boost::any</b> into the map,
              * get a reference to the <i>boost::any</i> object associated with <b>key</b>, then copy the given value into it.
              * @param key A string key
              * @param value Any object as value
              * @return void
-             * 
+             *
              * <b>Example:</b>
              * @code
              * Hash hash;
@@ -338,7 +339,7 @@ namespace karabo {
              * <b>Example:<b>
              * @code
              *  vector<string>& vec = set<vector<string> >("key");
-             *  vec.resize(20);   
+             *  vec.resize(20);
              *  vec[1] = "a string";
              * @endcode
              */
@@ -386,7 +387,7 @@ namespace karabo {
             inline void get(const std::string& path, ValueType & value, const char separator = '.') const;
 
             /**
-             * Casts the the value of element identified by "path" from its original type 
+             * Casts the the value of element identified by "path" from its original type
              * to another different target type.
              * Throws CastException if casting fails, i.e. not posible or unsafe
              * @param path
@@ -452,7 +453,7 @@ namespace karabo {
             void subtract(const Hash& other, const char separator = '.');
 
             /**
-             * Flattens a hierarchical Hash into "one-level", <i>flat</i> Hash object 
+             * Flattens a hierarchical Hash into "one-level", <i>flat</i> Hash object
              * @return A Hash having keys that are all leaves
              */
             void flatten(Hash& flat, const char separator = '.') const;
@@ -494,7 +495,7 @@ namespace karabo {
             ValueType& getAttribute(const std::string& path, const std::string& attribute, const char separator = '.');
 
             /**
-             * Casts the value of the attribute called "attribute" of the element identified 
+             * Casts the value of the attribute called "attribute" of the element identified
              * by "path" from its original type to another different target type.
              * Throws CastException if casting fails, i.e. not posible or unsafe
              * @param path
@@ -556,6 +557,13 @@ namespace karabo {
 
             bool operator==(const Hash& other);
             bool operator!=(const Hash& other);
+
+            /**
+             * Compare two Hashes by comparing their containers
+             * @param other Hash object
+             */
+            bool operator<(const Hash& other) const;
+            bool operator>(const Hash& other) const;
 
             /**
              * Implement the visitor pattern
