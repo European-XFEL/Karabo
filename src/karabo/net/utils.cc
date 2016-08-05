@@ -8,12 +8,18 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include <iostream>
+
+#include <boost/asio.hpp>
+#include <boost/regex.hpp>
+
 #include "karabo/net/utils.hh"
 #include "karabo/util/Exception.hh"
 #include "karabo/util/StringTools.hh"
 #include "karabo/log/Logger.hh"
 
-#include <boost/asio.hpp>
+using namespace std;
+using namespace boost;
 
 
 std::string karabo::net::bareHostName() {
@@ -39,7 +45,7 @@ void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> servic
     //  without the need for an intervening call to reset(). This allows the thread to rejoin the io_service
     //  object's thread pool without impacting any other threads in the pool."
 
-    const std::string fullMessage(" when running asio service (" + errorMessage + "), continue in " +
+    const std::string fullMessage(" when running io_service (" + errorMessage + "), continue in " +
                                   karabo::util::toString(delayInMilliSec) += " ms");
     while (true) {
         bool caught = true;
@@ -57,5 +63,19 @@ void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> servic
         if (caught) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMilliSec));
         }
+    }
+}
+
+
+boost::tuple<std::string, std::string, std::string, std::string, std::string> karabo::net::parseUrl(const std::string& url) {
+    boost::regex ex("(.+)://([^/ :]+):?([^/ ]*)(/?[^ #?]*)\\x3f?([^ #]*)#?([^ ]*)");
+    boost::cmatch what;
+    if (regex_match(url.c_str(), what, ex)) {
+        string protocol = string(what[1].first, what[1].second);
+        string domain = string(what[2].first, what[2].second);
+        string port = string(what[3].first, what[3].second);
+        string path = string(what[4].first, what[4].second);
+        string query = string(what[5].first, what[5].second);
+        return make_tuple(protocol, domain, port, path, query);
     }
 }
