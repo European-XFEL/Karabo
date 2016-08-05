@@ -30,7 +30,6 @@ namespace karabo {
         template <class T>
         class NetworkInput : public karabo::io::Input<T> {
 
-
             typedef std::set<karabo::net::Connection::Pointer> TcpConnections;
             typedef std::map<std::string /*host + port*/, karabo::net::Channel::Pointer> TcpChannels;
             typedef Memory<T> MemoryType;
@@ -202,10 +201,6 @@ namespace karabo {
 
             unsigned int getMinimumNumberOfData() const {
                 return m_minData;
-            }
-
-            KARABO_DEPRECATED void connectNow(const karabo::util::Hash& outputChannelInfo) {
-                connect(outputChannelInfo);
             }
 
             void connect(const karabo::util::Hash& outputChannelInfo) {
@@ -403,7 +398,7 @@ namespace karabo {
                 // Clear active chunk
                 MemoryType::clearChunkData(m_channelId, m_activeChunk);
 
-                // Swap buffers               
+                // Swap buffers
                 swapBuffers();
 
                 // Fetch number of data pieces
