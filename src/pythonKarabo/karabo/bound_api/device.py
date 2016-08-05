@@ -551,6 +551,7 @@ class PythonDevice(NoFsm):
                 else:
                     return self.parameters[key]
             except RuntimeError as e:
+                print(e)
                 raise AttributeError(
                     "Error while retrieving '{}' from device".format(key))
 
