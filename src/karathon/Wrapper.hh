@@ -324,6 +324,7 @@ namespace karathon {
 
     public:
         explicit CppArrayRefHandler(const ArrayDataPtr& arr) : m_arrayData(arr) {}
+        ArrayDataPtr getDataPtr() const { return m_arrayData; }
     };
 
     template <typename T>
@@ -446,18 +447,35 @@ namespace karathon {
 
         template<typename T>
         static karabo::util::NDArray<T> fromPyArrayToNDArray(PyArrayObject* arr) {
+            // Convert the array shape to a std::vector
             npy_intp* pDims = PyArray_DIMS(arr);
             std::vector<unsigned long long> dims;
             for (int i = 0; i < PyArray_NDIM(arr); i++) {
                 dims.push_back(pDims[i]);
             }
 
-            const T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
-            const npy_intp nelems = PyArray_SIZE(arr);
-            const PyArrayRefHandler<T> refHandler(arr);
+            // Get an ArrayData object which points to the array's data
+            boost::shared_ptr<karabo::util::ArrayData<T> > array;
+            bp::object base(bp::handle<>(PyArray_BASE(arr)));
 
-            Py_INCREF(arr); // Grab a new reference to the array object
-            boost::shared_ptr<karabo::util::ArrayData<T> > array(new karabo::util::ArrayData<T>(data, nelems, refHandler));
+            // Determine if the array data is owned by a C++ object
+            if (base != bp::object()) {
+                if (bp::extract<CppArrayRefHandler<T> >(base).check()) {
+                    const CppArrayRefHandler<T>& arrayRef = bp::extract<CppArrayRefHandler<T>& >(base);
+                    array = arrayRef.getDataPtr();
+                }
+            }
+
+            // Array ref is still empty. Create a new ArrayData
+            if (!array) {
+                // Get a contiguous copy of the array (or just a reference if already contiguous)
+                PyArrayObject* carr = PyArray_GETCONTIGUOUS(arr);
+                const T* data = reinterpret_cast<T*> (PyArray_DATA(carr));
+                const npy_intp nelems = PyArray_SIZE(carr);
+                const PyArrayRefHandler<T> refHandler(carr);
+                array = boost::shared_ptr<karabo::util::ArrayData<T> >(new karabo::util::ArrayData<T>(data, nelems, refHandler));
+            }
+
             return karabo::util::NDArray<T>(array, karabo::util::Dims(dims));
         }
 
@@ -486,11 +504,13 @@ namespace karathon {
 
             boost::shared_ptr<karabo::util::ArrayData<T> > arrayData(a.getData());
             const boost::shared_ptr<CppArrayRefHandler<T> > refHandler(new CppArrayRefHandler<T>(arrayData));
-            bp::object pyRefHandler(refHandler);
+            bp::object pyRefHandler(refHandler); // Python reference count starts a 1
             void* data = reinterpret_cast<void*> (arrayData->data());
             // XXX: SimpleNewFromData must have a pointer to ALIGNED memory!!
             PyObject* pyobj = PyArray_SimpleNewFromData(nd, &dims[0], typenum, data);
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            // PyArray_SetBaseObject steals a reference. Increase the refcount to protect bp::object::~object()
+            Py_INCREF(pyRefHandler.ptr());
             PyArray_SetBaseObject(arr, pyRefHandler.ptr());
             return bp::object(bp::handle<>(pyobj));
         }
