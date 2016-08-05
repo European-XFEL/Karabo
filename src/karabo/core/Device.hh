@@ -567,8 +567,9 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
                 try {
-                    if (m_fullSchema.getParameterHash().hasAttribute(key, KARABO_SCHEMA_LEAF_TYPE)) {
-                        const int leafType = m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE);
+                    const karabo::util::Hash::Attributes& attrs = m_fullSchema.getParameterHash().getNode(key).getAttributes();
+                    if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
+                        const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
                         if (leafType == karabo::util::Schema::STATE) {
                             if (typeid (T) == typeid (karabo::util::State)) {
                                 return *reinterpret_cast<const T*> (&karabo::util::State::fromString(m_parameters.get<std::string>(key)));
