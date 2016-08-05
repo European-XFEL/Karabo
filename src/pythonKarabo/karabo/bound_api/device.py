@@ -14,14 +14,15 @@ import numpy as np
 from karathon import (
     CpuImageCHAR, CpuImageDOUBLE, CpuImageFLOAT, CpuImageINT16,
     CpuImageINT32, CpuImageUINT16, CpuImageUINT8,
-    BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
-    UINT32_ELEMENT, NODE_ELEMENT, STRING_ELEMENT,
+    ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
+    UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, BrokerConnection,
     Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
-    ImageData, Logger, MetricPrefix, Priority, RawImageData, Schema,
-    SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
-    ValidatorValidationRules, loadFromFile
+    ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
+    RawImageData, Schema, SignalSlotable, Timestamp, Trainstamp,
+    Unit, Validator, ValidatorValidationRules
+
 )
 
 from karabo.common.states import State
@@ -110,17 +111,17 @@ class PythonDevice(NoFsm):
                     .displayedName("Progress").description("The progress of the current action")
                     .readOnly().initialValue(0).commit(),
                     
-            STRING_ELEMENT(expected).key("state")
+            STATE_ELEMENT(expected).key("state")
                     .displayedName("State").description("The current state the device is in")
-                    .readOnly().initialValue(State.UNKNOWN.name)
+                    .initialValue(State.UNKNOWN)
                     .commit(),
 
-            STRING_ELEMENT(expected).key("alarmCondition")
+            ALARM_ELEMENT(expected).key("alarmCondition")
                         .displayedName("Alarm condition")
                         .description("The current alarm condition of the device. "
                                      "Evaluates to the highest condition on any"
                                      " property if not set manually.")
-                        .readOnly().initialValue(AlarmCondition.NONE.asString())
+                        .initialValue(AlarmCondition.NONE)
                         .commit(),
 
             NODE_ELEMENT(expected).key("performanceStatistics")
@@ -390,6 +391,7 @@ class PythonDevice(NoFsm):
             # key, value, timestamp args
             if len(pars) == 3:
                 key, value, stamp = pars
+
                 if not isinstance(stamp, Timestamp):
                     raise TypeError("The 3rd argument should be Timestamp")
                 if isCpuImage(value):
@@ -398,7 +400,18 @@ class PythonDevice(NoFsm):
                 elif isinstance(value, RawImageData):
                     self._setRawImageData(key, value)
                     return
-                pars = tuple([Hash(key, value), stamp])
+                h = Hash()
+                # assure we are allowed to set states and alarms to appropriate elements
+                if isinstance(value, State):
+                    h.set(key, value.name)
+                    h.setAttribute(key, "indicateState", True)
+                elif isinstance(value, AlarmCondition):
+                    h.set(key, value.asString())
+                    h.setAttribute(key, "indicateAlarm", True)
+                else:
+                    h.set(key, value)
+                pars = tuple([h, stamp])
+
             
             # hash args
             if len(pars) == 1:
@@ -417,7 +430,17 @@ class PythonDevice(NoFsm):
                     elif isinstance(value, RawImageData):
                         self._setRawImageData(key, value)
                         return
-                    pars = tuple([Hash(key,value), self._getActualTimestamp()])
+                    h = Hash()
+                    if isinstance(value, State):
+                        h.set(key, value.name)
+                        h.setAttribute(key, "indicateState", True)
+                    elif isinstance(value, AlarmCondition):
+                        h.set(key, value.asString())
+                        h.setAttribute(key, "indicateAlarm", True)
+                    else:
+                        h.set(key, value)
+                    pars = tuple([h, self._getActualTimestamp()])
+
                 hash, stamp = pars
                 # Check that hash is image's free
                 paths = hash.getPaths()
@@ -518,8 +541,17 @@ class PythonDevice(NoFsm):
     def get(self,key):
         with self._stateChangeLock:
             try:
-                return self.parameters[key]
+                leafType = None if not self.fullSchema.getParameterHash().hasAttribute(key, "leafType") \
+                    else self.fullSchema.getParameterHash().getAttribute(key, "leafType")
+
+                if leafType == LeafType.STATE:
+                    return State[self.parameters[key]]
+                elif leafType == LeafType.ALARM_CONDITION:
+                    return AlarmCondition[self.parameters[key]]
+                else:
+                    return self.parameters[key]
             except RuntimeError as e:
+                print(e)
                 raise AttributeError(
                     "Error while retrieving '{}' from device".format(key))
 
@@ -658,8 +690,8 @@ class PythonDevice(NoFsm):
         assert isinstance(currentState, State)
         stateName = currentState.name
         self.log.DEBUG("updateState: {}".format(stateName))
-        if self["state"] != stateName:
-            self["state"] = stateName
+        if self["state"] != currentState:
+            self.set("state", currentState)
             if currentState is State.ERROR:
                 self._ss.updateInstanceInfo(Hash("status", "error"))
             else:
@@ -762,10 +794,10 @@ class PythonDevice(NoFsm):
         if slotName in self.fullSchema and self.fullSchema.hasAllowedStates(slotName):
             allowedStates = self.fullSchema.getAllowedStates(slotName)
             if allowedStates:
-                # print("Validating slot")
-                currentState = State(self["state"])
+                currentState = self["state"]
                 if currentState not in allowedStates:
-                    msg = "Command \"{}\" is not allowed in current state \"{}\" of device \"{}\"".format(slotName, currentState, self.deviceid)
+                    msg = "Command \"{}\" is not allowed in current state \"{}\" " \
+                          "of device \"{}\"".format(slotName, currentState, self.deviceid)
                     self._ss.reply(msg)
                     return False
         return True
@@ -885,7 +917,7 @@ class PythonDevice(NoFsm):
 
 
     def setAlarmCondition(self, condition):
-        if isinstance(condition, str):
+        if not isinstance(condition, AlarmCondition):
             raise TypeError("Stringified alarmconditions are note allowed!")
         with self._stateChangeLock:
             self.globalAlarmCondition = condition
@@ -893,7 +925,7 @@ class PythonDevice(NoFsm):
                 self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
             if resultingCondition is not None and resultingCondition.asString()\
                     != self.parameters.get("alarmCondition"):
-                self.set("alarmCondition", resultingCondition.asString(),
+                self.set("alarmCondition", resultingCondition,
                          validate=False)
 
     def getAlarmCondition(self, key=None, separator="."):

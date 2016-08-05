@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Element.hh
  * Author: <djelloul.boukhelef@xfel.eu>
  * Author: <burkhard.heisen@xfel.eu>
@@ -34,7 +34,6 @@ namespace karabo {
 
         template<typename KeyType, typename AttributesType = bool>
         class Element {
-
 
             // Grant friendship to container
             template<typename T, typename U>
@@ -161,7 +160,7 @@ namespace karabo {
         /**********************************************************************
          *
          * Implementation Node
-         * 
+         *
          **********************************************************************/
 
         // TODO This should be implemented in a cleaner way
@@ -447,7 +446,7 @@ namespace karabo {
                         _KARABO_HELPER_MACRO(NONE, CppNone)
                     default:
                         throw KARABO_CAST_EXCEPTION("Casting of '" + Types::to<ToCppString>(srcType) += "' to '"
-                                + Types::to<ToCppString>(tgtType) += "' is not supported");
+                                                    + Types::to<ToCppString>(tgtType) += "' is not supported");
                 }
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Problems with casting"));

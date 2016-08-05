@@ -69,31 +69,37 @@ namespace karabo {
             }
 
             OverwriteElement& setNewAssignmentMandatory() {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
                 return *this;
             }
 
             OverwriteElement& setNewAssignmentOptional() {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
                 return *this;
             }
 
             OverwriteElement& setNewAssignmentInternal() {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::INTERNAL_PARAM);
                 return *this;
             }
 
             OverwriteElement& setNowInit() {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
                 return *this;
             }
 
             OverwriteElement& setNowReconfigurable() {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
                 return *this;
             }
 
             OverwriteElement& setNowReadOnly() {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 return *this;
             }
@@ -106,29 +112,34 @@ namespace karabo {
 
             template <class ValueType>
             OverwriteElement& setNewMinInc(const ValueType& value) {
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_MIN_INC, value);
                 return *this;
             }
 
             template <class ValueType>
             OverwriteElement& setNewMaxInc(const ValueType& value) {
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_MAX_INC, value);
                 return *this;
             }
 
             template <class ValueType>
             OverwriteElement& setNewMinExc(const ValueType& value) {
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_MIN_EXC, value);
                 return *this;
             }
 
             template <class ValueType>
             OverwriteElement& setNewMaxExc(const ValueType& value) {
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_MAX_EXC, value);
                 return *this;
             }
 
             OverwriteElement& setNewOptions(const std::string& opts, const std::string& sep = " ,;") {
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromString<std::string, std::vector > (opts, sep));
                 return *this;
             }
@@ -178,11 +189,13 @@ namespace karabo {
             }
 
             OverwriteElement& setNewOptions(const std::vector<std::string>& opts) {
+
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
                 return *this;
             }
 
             OverwriteElement& setNewAllowedStates(const std::vector<karabo::util::State>& states) {
+
                 const std::string stateList = karabo::util::toString(states);
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector > (stateList, ","));
 
@@ -222,31 +235,37 @@ namespace karabo {
             }
 
             OverwriteElement& setNowObserverAccess() {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
                 return *this;
             }
 
             OverwriteElement& setNowUserAccess() {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::USER);
                 return *this;
             }
 
             OverwriteElement& setNowOperatorAccess() {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OPERATOR);
                 return *this;
             }
 
             OverwriteElement& setNowExpertAccess() {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
                 return *this;
             }
 
             OverwriteElement& setNowAdminAccess() {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::ADMIN);
                 return *this;
             }
 
             OverwriteElement& setNewUnit(const UnitType& unit) {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, unit);
                 std::pair<std::string, std::string> names = karabo::util::getUnit(unit);
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_UNIT_NAME, names.first);
@@ -255,6 +274,7 @@ namespace karabo {
             }
 
             OverwriteElement& setNewMetricPrefix(const MetricPrefixType& metricPrefix) {
+
                 if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_METRIC_PREFIX_ENUM, metricPrefix);
                 std::pair<std::string, std::string> names = karabo::util::getMetricPrefix(metricPrefix);
                 if (m_node) m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
@@ -270,6 +290,9 @@ namespace karabo {
             void commit() {
                 // Does nothing, changes happened on existing node
             }
+
+
+
         };
 
         template <>

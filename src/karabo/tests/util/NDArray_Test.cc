@@ -35,17 +35,25 @@ void NDArray_Test::tearDown() {
 
 void NDArray_Test::testConstructor() {
 
-    NDArrayShapeType shape;
-    shape.push_back(100); // height
-    shape.push_back(200); // width
+    const Dims shape(100, 200);
     vector<int> someData(100*200, 2);
 
     {
         NDArray<int> ar(someData, shape);
-        const NDArrayShapeType& arShape = ar.getShape();
+        const Dims& arShape = ar.getShape();
 
-        CPPUNIT_ASSERT(arShape[0] == 100);
-        CPPUNIT_ASSERT(arShape[1] == 200);
+        CPPUNIT_ASSERT(arShape.x1() == 100);
+        CPPUNIT_ASSERT(arShape.x2() == 200);
     }
 
+}
+
+
+void NDArray_Test::testShapeException() {
+    vector<int> data(10, -42);
+    const Dims badShape(2, 500);
+
+    {
+        CPPUNIT_ASSERT_THROW(NDArray<int>(data, badShape), karabo::util::ParameterException);
+    }
 }
