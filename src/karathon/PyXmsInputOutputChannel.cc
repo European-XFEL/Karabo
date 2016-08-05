@@ -117,7 +117,7 @@ namespace karathon {
                     _dimensions.reverse();
                 }
                 else {
-                    _dimensions = Dims(_dimensions.x2(), _dimensions.x1(), _dimensions.x3());
+                    _dimensions = Dims(_dimensions.x2(), _dimensions.x1());
                 }
             } else if (_encoding == Encoding::JPEG || _encoding == Encoding::PNG ||
                         _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
@@ -128,6 +128,7 @@ namespace karathon {
                 }
             } else {
                 // Other encodings. Likely it will need to be fixed!
+                _dimensions.reverse();
             }
 
             // XXX: Bits per pixel?
@@ -164,19 +165,19 @@ namespace karathon {
         if (PyBytes_Check(obj.ptr())) {
             size_t size = PyBytes_Size(obj.ptr());
             char* data = PyBytes_AsString(obj.ptr());
-            self->setData(reinterpret_cast<unsigned char*> (data), size, copy);
+            self->setData(reinterpret_cast<unsigned char*> (data), size, true);
             return;
         }
         if (PyByteArray_Check(obj.ptr())) {
             size_t size = PyByteArray_Size(obj.ptr());
             char* data = PyByteArray_AsString(obj.ptr());
-            self->setData(reinterpret_cast<unsigned char*> (data), size, copy);
+            self->setData(reinterpret_cast<unsigned char*> (data), size, true);
             return;
         }
         if (PyUnicode_Check(obj.ptr())) {
             Py_ssize_t size;
             const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
-            self->setData(reinterpret_cast<const unsigned char*> (data), size, copy);
+            self->setData(reinterpret_cast<const unsigned char*> (data), size, true);
             return;
         }
         if (PyArray_Check(obj.ptr())) {

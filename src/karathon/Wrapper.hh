@@ -314,6 +314,7 @@ namespace karathon {
         }
     };
 
+    // Handler class for arrays originating in C++ code
     template <typename T>
     class CppArrayRefHandler {
     public:
@@ -327,6 +328,7 @@ namespace karathon {
         ArrayDataPtr getDataPtr() const { return m_arrayData; }
     };
 
+    // Handler class for arrays originating in Python code
     template <typename T>
     class PyArrayRefHandler {
         PyArrayObject* m_arrayRef;
@@ -462,18 +464,20 @@ namespace karathon {
             if (base != bp::object()) {
                 if (bp::extract<CppArrayRefHandler<T> >(base).check()) {
                     const CppArrayRefHandler<T>& arrayRef = bp::extract<CppArrayRefHandler<T>& >(base);
+                    // The data already has an ArrayData<T> object managing it.
                     array = arrayRef.getDataPtr();
                 }
             }
 
             // Array ref is still empty. Create a new ArrayData
             if (!array) {
-                // Get a contiguous copy of the array with the correct type (or just a reference if already compatible)
                 PyObject* pyobj = reinterpret_cast<PyObject*>(arr);
+                // Get a contiguous copy of the array with the correct type (or just a reference if already compatible)
                 PyArrayObject* carr = reinterpret_cast<PyArrayObject*>(PyArray_FROMANY(pyobj, typenum, 1, 6, NPY_ARRAY_C_CONTIGUOUS));
                 const T* data = reinterpret_cast<T*> (PyArray_DATA(carr));
                 const npy_intp nelems = PyArray_SIZE(carr);
                 const PyArrayRefHandler<T> refHandler(carr); // Steals the reference to carr
+                // Create a new ArrayData<T> which uses PyArrayRefHandler to manage the Python reference count
                 array = boost::shared_ptr<karabo::util::ArrayData<T> >(new karabo::util::ArrayData<T>(data, nelems, refHandler));
             }
 
