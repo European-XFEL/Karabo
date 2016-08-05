@@ -105,6 +105,8 @@ namespace karabo {
 
             karabo::util::AlarmCondition m_globalAlarmCondition;
 
+            std::set<karabo::util::Hash> m_alarmServices;
+
 
         public:
 
@@ -217,6 +219,13 @@ namespace karabo {
                                      "Evaluates to the highest condition on any"
                                      " property if not set manually.")
                         .initialValue(AlarmCondition::NONE)
+                        .commit();
+
+                VECTOR_STRING_ELEMENT(expected).key("alarmServiceDevices")
+                        .displayedName("Alarm Service Device(s)")
+                        .description("The alarm service devices this device reports to")
+                        .expertAccess()
+                        .readOnly()
                         .commit();
 
                 NODE_ELEMENT(expected).key("performanceStatistics")
@@ -804,7 +813,7 @@ namespace karabo {
 
 
 
-        public:
+
 
             // This function will polymorphically be called by the FSM template
 
@@ -1087,6 +1096,7 @@ namespace karabo {
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
                 KARABO_SLOT(slotKillDevice)
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
+                KARABO_SLOT(slotRegisterAlarmService, karabo::util::Hash);
 
             }
 
@@ -1311,6 +1321,23 @@ namespace karabo {
                     return std::make_pair<bool, const AlarmCondition > (true, m_globalAlarmCondition);
                 }
                 return std::make_pair<bool, const AlarmCondition > (false, AlarmCondition::NONE);
+            }
+
+            void slotRegisterAlarmService(const karabo::util::Hash& serviceInfo) {
+                //protect from registering ourselves:
+                const std::string& instance = serviceInfo.get<std::string>("instance");
+                if (instance == getInstanceId()) return;
+                KARABO_LOG_INFO << "Alarm service " << instance << " made its presence aware!";
+                //update property if a new element was inserted
+                if (m_alarmServices.insert(serviceInfo).second) {
+                    std::vector<std::string> serviceIds;
+                    for (std::set<karabo::util::Hash>::const_iterator it = m_alarmServices.begin(); it != m_alarmServices.end(); ++it) {
+                        serviceIds.push_back(it->get<std::string>("instance"));
+                    }
+                    set("alarmServiceDevices", serviceIds);
+                    reply(true);
+                }
+                reply(false);
             }
 
 
