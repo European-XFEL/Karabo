@@ -125,6 +125,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/FromTypeInfo.o \
 	${OBJECTDIR}/_ext/163016059/Hash.o \
 	${OBJECTDIR}/_ext/163016059/HashFilter.o \
+	${OBJECTDIR}/_ext/163016059/OverwriteElement.o \
 	${OBJECTDIR}/_ext/163016059/PluginLoader.o \
 	${OBJECTDIR}/_ext/163016059/RollingWindowStatistics.o \
 	${OBJECTDIR}/_ext/163016059/Schema.o \
@@ -652,6 +653,11 @@ ${OBJECTDIR}/_ext/163016059/HashFilter.o: ../../../src/karabo/util/HashFilter.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/HashFilter.o ../../../src/karabo/util/HashFilter.cc
+
+${OBJECTDIR}/_ext/163016059/OverwriteElement.o: ../../../src/karabo/util/OverwriteElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/OverwriteElement.o ../../../src/karabo/util/OverwriteElement.cc
 
 ${OBJECTDIR}/_ext/163016059/PluginLoader.o: ../../../src/karabo/util/PluginLoader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -2319,6 +2325,19 @@ ${OBJECTDIR}/_ext/163016059/HashFilter_nomain.o: ${OBJECTDIR}/_ext/163016059/Has
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/HashFilter_nomain.o ../../../src/karabo/util/HashFilter.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/HashFilter.o ${OBJECTDIR}/_ext/163016059/HashFilter_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/OverwriteElement_nomain.o: ${OBJECTDIR}/_ext/163016059/OverwriteElement.o ../../../src/karabo/util/OverwriteElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/OverwriteElement.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/OverwriteElement_nomain.o ../../../src/karabo/util/OverwriteElement.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/OverwriteElement.o ${OBJECTDIR}/_ext/163016059/OverwriteElement_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/PluginLoader_nomain.o: ${OBJECTDIR}/_ext/163016059/PluginLoader.o ../../../src/karabo/util/PluginLoader.cc 
