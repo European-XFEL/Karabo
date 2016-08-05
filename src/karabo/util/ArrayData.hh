@@ -26,14 +26,16 @@ namespace karabo {
 
             public:
 
+            // Copy & ownership of data
             ArrayData(const T* data, const size_t nelems) : m_numElems(nelems) {
                 T* copy = new T[nelems];
                 std::memcpy(copy, data, nelems * sizeof(T));
                 m_data = PointerType(copy, &ArrayData::deallocator);
             }
 
+            // Non-ownership of data
             template<class D>
-            ArrayData(const T* data, const D& deleter, const size_t nelems) : m_numElems(nelems), m_data(const_cast<T*>(data), deleter) {}
+            ArrayData(const T* data, const size_t nelems, const D& deleter) : m_numElems(nelems), m_data(const_cast<T*>(data), deleter) {}
 
             const size_t size() const { return m_numElems; }
 
@@ -45,7 +47,7 @@ namespace karabo {
 
             private:
 
-            static void deallocator(const T * p) {
+            static void deallocator(const T* p) {
                 delete [] p;
             }
 
