@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Schema_Test.hh
  * Author: irinak
  *
@@ -11,9 +11,9 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "ConfigurationTestClasses.hh"
+#include <karabo/util.hpp>
 
 class Schema_Test : public CPPUNIT_NS::TestFixture {
-
 
     CPPUNIT_TEST_SUITE(Schema_Test);
 
@@ -55,6 +55,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testTable);
     CPPUNIT_TEST(testList);
     CPPUNIT_TEST(testInvalidNodes);
+    CPPUNIT_TEST(testStateAndAlarmSets);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -109,6 +110,7 @@ private: //functions
     void testTable();
     void testList();
     void testInvalidNodes();
+    void testStateAndAlarmSets();
 
 };
 
