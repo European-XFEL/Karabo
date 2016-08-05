@@ -83,7 +83,7 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             StateElement& initialValue(const karabo::util::State& s) {
-                this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, s.name());
+                m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, s.name());
                 return *this;
             }
 
@@ -94,14 +94,13 @@ namespace karabo {
                 /**
                  * Schema is a read-only, leaf property
                  */
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, Schema::STATE);
-                this->m_node->template setAttribute<std::string>(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::EVERY_EVENT);
-                this->m_node->template setAttribute<bool>(KARABO_INDICATE_STATE_SET, true);
-
+                m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
+                m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, Schema::STATE);
+                m_node->setAttribute<std::string>(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
+                m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
+                m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
+                m_node->setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::EVERY_EVENT);
+                m_node->setAttribute<bool>(KARABO_INDICATE_STATE_SET, true);
             }
 
         private:
