@@ -117,7 +117,6 @@ void exportPyXipRawImageData() {
             .def("getHeader", &RawImageDataWrap::getHeaderPy)
             .def("setHeader", &RawImageDataWrap::setHeaderPy, bp::arg("header"))
             .def("hash", (const Hash & (RawImageData::*)() const) (&RawImageData::hash), bp::return_internal_reference<>())
-            .def("toRGBAPremultiplied", &RawImageDataWrap::toRGBAPremultiplied)
             .def("write", &RawImageDataWrap::writePy, (bp::arg("filename"), bp::arg("enableAppendMode") = false))
             ;
 }

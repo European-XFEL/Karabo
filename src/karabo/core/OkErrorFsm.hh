@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   OkErrorFsm.hh
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -22,7 +22,7 @@ namespace karabo {
 
         class OkErrorFsm : public BaseFsm {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(OkErrorFsm, "OkErrorFsm", "0.1")
 

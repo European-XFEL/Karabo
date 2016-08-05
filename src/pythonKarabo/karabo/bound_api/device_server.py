@@ -75,20 +75,6 @@ class DeviceServer(object):
                     .init()
                     .commit()
                     ,                    
-            #LIST_ELEMENT(expected).key("autoStart")
-            #        .displayedName("Auto start")
-            #        .description("Auto starts selected devices")
-            #        .appendNodesOfConfigurationBase(PythonDevice)
-            #        .assignmentOptional().noDefaultValue()
-            #        .commit()
-            #        ,
-            #BOOL_ELEMENT(expected).key("scanPlugins")
-            #        .displayedName("Scan plug-ins?")
-            #        .description("Decides whether the server will scan the content of the plug-in folder and dynamically load found devices")
-            #        .expertAccess()
-            #        .assignmentOptional().defaultValue(True)
-            #        .commit()
-            #        ,
             PATH_ELEMENT(expected).key("pluginDirectory")
                     .displayedName("Plugin Directory")
                     .description("Directory to search for plugins")
@@ -121,7 +107,6 @@ class DeviceServer(object):
                     .description("Log Appender settings for file")
                     .displayedName("Rolling File Appender")
                     .appendParametersOfConfigurableClass(AppenderConfigurator,"RollingFile")
-                    .advanced()
                     .commit()
                     ,
             OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout")
@@ -140,14 +125,12 @@ class DeviceServer(object):
                     .description("Log Appender settings for Network")
                     .displayedName("Network Appender")
                     .appendParametersOfConfigurableClass(AppenderConfigurator,"Network")
-                    .advanced()
                     .commit()
                     ,
             NODE_ELEMENT(expected).key("Logger.ostream")
                     .description("Log Appender settings for terminal")
                     .displayedName("Ostream Appender")
                     .appendParametersOfConfigurableClass(AppenderConfigurator,"Ostream")
-                    .advanced()
                     .commit()
                     ,
             OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout")
@@ -162,7 +145,6 @@ class DeviceServer(object):
                     .description("Logger category for karabo framework")
                     .displayedName("Karabo framework logger")
                     .appendParametersOfConfigurableClass(CategoryConfigurator, "Category")
-                    .advanced()
                     .commit()
                     ,
             OVERWRITE_ELEMENT(expected).key("Logger.karabo.name")
