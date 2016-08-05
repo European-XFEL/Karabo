@@ -14,6 +14,7 @@
 #define	KARABO_UTIL_GENERIC_ELEMENT_HH
 
 #include "Schema.hh"
+#include "OverwriteElement.hh"
 
 namespace karabo {
     namespace util {
@@ -164,6 +165,23 @@ namespace karabo {
              */
             Derived& adminAccess() {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::ADMIN);
+                return *(static_cast<Derived*> (this));
+            }
+
+            /**
+             * The <b>overWriteRestrictions</b> allows for setting restrictions to overwrite element. Any attributes
+             * specified here cannot be altered through use of overwrite element.
+             *
+             * After execution restrictions contains the new applicable restrictions, e.g. those resulting from merging
+             * with previously existing restrictions. This means, one can add restrictions but not cancel existing ones.
+             */
+            Derived& overwriteRestrictions(OverwriteElement::Restrictions & restrictions) {
+                if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
+                    OverwriteElement::Restrictions existing(m_node->getAttribute < vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
+                    //now merge
+                    restrictions.merge(existing);
+                }
+                m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
                 return *(static_cast<Derived*> (this));
             }
 

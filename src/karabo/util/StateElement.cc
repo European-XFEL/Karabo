@@ -77,14 +77,27 @@ namespace karabo {
 
 
         void StateElement::beforeAddition() {
-            // Schema is a read-only, leaf property
-            m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
-            m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, Schema::STATE);
-            m_node->setAttribute<std::string>(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
-            m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
-            m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
-            m_node->setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::EVERY_EVENT);
-            m_node->setAttribute<bool>(KARABO_INDICATE_STATE_SET, true);
+            this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
+            this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, Schema::STATE);
+            this->m_node->template setAttribute<std::string>(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
+            this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
+            this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
+            this->m_node->template setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::EVERY_EVENT);
+            this->m_node->template setAttribute<bool>(KARABO_INDICATE_STATE_SET, true);
+
+            //finally protect setting options etc to state element via overwrite
+            OverwriteElement::Restrictions restrictions;
+            restrictions.options = true;
+            restrictions.minInc = true;
+            restrictions.minExc = true;
+            restrictions.maxInc = true;
+            restrictions.maxExc = true;
+            restrictions.readOnly = true;
+            restrictions.reconfigurable = true;
+            restrictions.displayedName = true;
+            restrictions.overwriteRestrictions = true;
+            restrictions.stateOptions = false; //set to true by default
+            m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
         }
 
 
