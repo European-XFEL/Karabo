@@ -3,6 +3,8 @@
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
       <logicalFolder name="f2" displayName="Devices" projectFiles="true">
+        <itemPath>../../../src/karabo/core/AlarmService.cc</itemPath>
+        <itemPath>../../../src/karabo/core/AlarmService.hh</itemPath>
         <itemPath>../../../src/karabo/core/CentralLogging.cc</itemPath>
         <itemPath>../../../src/karabo/core/CentralLogging.hh</itemPath>
         <itemPath>../../../src/karabo/core/DataLogReader.cc</itemPath>
@@ -577,6 +579,16 @@
         </packFileList>
       </packaging>
       <item path="../../../src/karabo/core.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/AlarmService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/AlarmService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/core/BaseFsm.hh"
             ex="false"
@@ -2661,6 +2673,16 @@
         </packFileList>
       </packaging>
       <item path="../../../src/karabo/core.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/AlarmService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/AlarmService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/core/BaseFsm.hh"
             ex="false"
