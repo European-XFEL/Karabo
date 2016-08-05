@@ -79,144 +79,78 @@ namespace karathon {
         } else if (bp::extract<Hash>(obj).check()) {
             self = boost::shared_ptr<ImageData>(new ImageData(bp::extract<Hash>(obj)));
         } else if (PyArray_Check(obj.ptr())) {
-            // Get a contiguous copy of the array (or just a reference if already contiguous)
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
-            PyArrayObject* carr = PyArray_GETCONTIGUOUS(arr);
-            // Data pointer and size
-            unsigned char* data = reinterpret_cast<unsigned char*> (PyArray_DATA(carr));
-            size_t size = PyArray_NBYTES(arr);
-            int rank = PyArray_NDIM(arr);
-            npy_intp* shapes = PyArray_DIMS(arr);
+            const NDArray<unsigned char> ndarray = Wrapper::fromPyArrayToNDArray<unsigned char>(arr);
+            Dims _dimensions = ndarray.getShape();
+            const int rank = _dimensions.rank();
 
             // Encoding
             EncodingType _encoding = encoding;
             if (encoding == Encoding::UNDEFINED) {
                 // No encoding info -> try to guess it from ndarray shape
-                if (rank == 2 || (rank == 3 && shapes[2] == 1))
+                if (rank == 2 || (rank == 3 && _dimensions.x3() == 1))
                     _encoding = Encoding::GRAY;
-                else if (rank == 3 && shapes[2] == 3)
+                else if (rank == 3 && _dimensions.x3() == 3)
                     _encoding = Encoding::RGB;
-                else if (rank == 3 && shapes[2] == 4)
+                else if (rank == 3 && _dimensions.x3() == 4)
                     _encoding = Encoding::RGBA;
             }
 
             // Dimensions (shape)
-            Dims _dimensions;
 
             if (_encoding == Encoding::RGB || _encoding == Encoding::RGBA ||
                 _encoding == Encoding::BGR || _encoding == Encoding::BGRA ||
                 _encoding == Encoding::CMYK || _encoding == Encoding::YUV) {
                 // Color images -> use ndarray dimensions
-
-                if (rank != 3) throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
-
-                std::vector<unsigned long long> tmp(3);
-                tmp[2] = shapes[2]; // Number of channels
-                tmp[1] = shapes[0]; // Image height
-                tmp[0] = shapes[1]; // Image width
-
-                _dimensions.fromVector(tmp);
+                if (rank != 3) {
+                    throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
+                }
+                // Flip X & Y dimensions
+                _dimensions = Dims(_dimensions.x2(), _dimensions.x1(), _dimensions.x3());
             } else if (_encoding == Encoding::GRAY) {
                 // Gray-scale images -> use ndarray dimensions
-
-                if ((rank != 2) && !((rank == 3) && (shapes[2] == 1)))
+                if ((rank != 2) && !((rank == 3) && (_dimensions.x3() == 1))) {
                     throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
-
-                std::vector<unsigned long long> tmp(2);
-                tmp[1] = shapes[0]; // Image height
-                tmp[0] = shapes[1]; // Image width
-
-                _dimensions.fromVector(tmp);
+                }
+                // Flip X & Y dimensions
+                if (rank == 2) {
+                    _dimensions.reverse();
+                }
+                else {
+                    _dimensions = Dims(_dimensions.x2(), _dimensions.x1(), _dimensions.x3());
+                }
             } else if (_encoding == Encoding::JPEG || _encoding == Encoding::PNG ||
                         _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
                 // JPEG, PNG, BMP, TIFF -> cannot use ndarray dimensions, use therefore input parameter
-
                 _dimensions = dimensions;
+                if (dimensions.size() == 0) {
+                    throw KARABO_PYTHON_EXCEPTION("Dimensions must be supplied for encoded images");
+                }
             } else {
                 // Other encodings. Likely it will need to be fixed!
-                // getDataPy(ImageData&) will need to be changed accordingly!!!
-
-                std::vector<unsigned long long> tmp(rank);
-                for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
-
-                _dimensions.fromVector(tmp);
             }
 
             // XXX: Bits per pixel?
 
-            // check if we have to release carr
-            if (PyArray_DATA(carr) == PyArray_DATA(arr)) { // The input np array was contiguous
-                // No real copy done
+            if (copy) {
+                // Guarantee a copy is made.
+                PyArrayObject* carr = PyArray_GETCONTIGUOUS(arr);
+                unsigned char* data = reinterpret_cast<unsigned char*> (PyArray_DATA(carr));
+                const size_t size = PyArray_SIZE(carr);
                 self->setData(data, size, copy);
-            } else {
-                // copy done
-                self->setData(data, size, true);
+                Py_DECREF(carr);
+            }
+            else {
+                // No copy
+                self->setData(ndarray);
             }
 
-            if (_dimensions.size() == 0) {
-                self->setDimensions(Dims(size));
-                self->setROIOffsets(Dims(0));
-            } else {
-                self->setDimensions(_dimensions);
-                std::vector<unsigned long long> offsets(_dimensions.rank(), 0);
-                self->setROIOffsets(Dims(offsets));
-            }
+            std::vector<unsigned long long> offsets(_dimensions.rank(), 0);
+            self->setDimensions(_dimensions);
+            self->setROIOffsets(Dims(offsets));
+
             self->setEncoding(_encoding);
-
             self->setIsBigEndian(false);
-
-            // Kill created earlier 'carr' object
-            Py_DECREF(carr);
-
-        } else {
-            throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray or Hash");
-        }
-        return self;
-    }
-
-
-    boost::shared_ptr<karabo::xms::ImageData> ImageDataWrap::make2(const bp::object& obj, const bool copy) {
-        using namespace karabo::xms;
-        using namespace karabo::util;
-
-        boost::shared_ptr<ImageData> self(new ImageData());
-
-        if (obj == bp::object())
-            return self;
-
-        if (bp::extract<Hash::Pointer>(obj).check()) {
-            self = boost::shared_ptr<ImageData>(new ImageData(bp::extract<Hash::Pointer>(obj)));
-        } else if (bp::extract<Hash>(obj).check()) {
-            self = boost::shared_ptr<ImageData>(new ImageData(bp::extract<Hash>(obj)));
-        } else if (PyArray_Check(obj.ptr())) {
-
-            // Get a contiguous copy of the array (or just a reference if already contiguous)
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
-            PyArrayObject* carr = PyArray_GETCONTIGUOUS(arr);
-
-            // Data pointer and size
-            unsigned char* data = reinterpret_cast<unsigned char*> (PyArray_DATA(carr));
-            size_t size = PyArray_NBYTES(arr);
-            self->setData(data, size, copy);
-
-            // Dimensions (shape)
-            int rank = PyArray_NDIM(arr);
-            npy_intp* shapes = PyArray_SHAPE(arr);
-            std::vector<unsigned long long> dimsvec(rank);
-            for (int i = 0; i < rank; i++) {
-                dimsvec[i] = shapes[i];
-            }
-
-            Dims dims;
-            dims.fromVector(dimsvec);
-
-            if (dims.size() == 0)
-                self->setDimensions(Dims(size));
-            else
-                self->setDimensions(dims);
-
-            self->setIsBigEndian(false);
-
         } else {
             throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray or Hash");
         }
@@ -249,17 +183,22 @@ namespace karathon {
             return;
         }
         if (PyArray_Check(obj.ptr())) {
-            PyObject* arr = PyArray_FROMANY(obj.ptr(), NPY_UINT8, 1, 6, NPY_ARRAY_C_CONTIGUOUS);
-            PyArrayObject* ubarr = reinterpret_cast<PyArrayObject*> (arr);
-            int nd = PyArray_NDIM(ubarr);
-            npy_intp* shapes = PyArray_DIMS(ubarr);
-            int nelems = 1;
-            for (int i = 0; i < nd; i++) nelems *= shapes[i];
-            unsigned char* data = reinterpret_cast<unsigned char*> (PyArray_DATA(ubarr));
-            self->setData(data, nelems, copy);
-
-            // Kill created earlier 'ubarr' object
-            Py_DECREF(ubarr);
+            if (copy) {
+                // Guarantee a copy is made.
+                PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
+                unsigned char* data = reinterpret_cast<unsigned char*> (PyArray_DATA(arr));
+                const size_t size = PyArray_SIZE(arr);
+                self->setData(data, size, copy);
+            }
+            else {
+                // No copy IFF array type matches
+                PyObject* arr = PyArray_FROMANY(obj.ptr(), NPY_UINT8, 1, 6, NPY_ARRAY_C_CONTIGUOUS);
+                PyArrayObject* ubarr = reinterpret_cast<PyArrayObject*> (arr);
+                const karabo::util::NDArray<unsigned char> ndarray = Wrapper::fromPyArrayToNDArray<unsigned char>(ubarr);
+                self->setData(ndarray);
+                // Kill created earlier 'ubarr' object
+                Py_DECREF(ubarr);
+            }
             return;
         }
         throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
@@ -540,11 +479,6 @@ void exportPyXmsInputOutputChannel() {
                                                         bp::arg("dims") = karabo::util::Dims(),
                                                         bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
                                                         bp::arg("bitsPerPixel") = 8)))
-
-                //                .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make2,
-                //                                                      bp::default_call_policies(),
-                //                                                      (bp::arg("array") = bp::object(), bp::arg("copy") = true)))
-
 
                 .def("getData", &karathon::ImageDataWrap::getDataPy)
 

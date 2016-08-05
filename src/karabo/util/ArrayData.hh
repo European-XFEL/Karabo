@@ -7,6 +7,7 @@
 #ifndef KARABO_UTIL_ARRAYDATA_HH
 #define KARABO_UTIL_ARRAYDATA_HH
 
+#include <stdlib.h>
 #include <boost/shared_ptr.hpp>
 
 namespace karabo {
@@ -28,8 +29,10 @@ namespace karabo {
 
             // Copy & ownership of data
             ArrayData(const T* data, const size_t nelems) : m_numElems(nelems) {
-                T* copy = new T[nelems];
-                std::memcpy(copy, data, nelems * sizeof(T));
+                // Align to the pointer size of the platform
+                const size_t nbytes = nelems * sizeof(T);
+                T* copy = reinterpret_cast<T*>(aligned_alloc(sizeof(char*), nbytes));
+                std::memcpy(copy, data, nbytes);
                 m_data = PointerType(copy, &ArrayData::deallocator);
             }
 
@@ -39,7 +42,7 @@ namespace karabo {
 
             const size_t size() const { return m_numElems; }
 
-            const T& operator[](const size_t idx) const { return m_data[idx]; }
+            const T& operator[](const size_t idx) const { return m_data.get()[idx]; }
             T& operator[](const size_t idx) { return const_cast<T*>(m_data.get())[idx]; }
 
             const T* data() const { return m_data.get(); }
@@ -48,7 +51,7 @@ namespace karabo {
             private:
 
             static void deallocator(const T* p) {
-                delete [] p;
+                free(const_cast<T*>(p));
             }
 
         };

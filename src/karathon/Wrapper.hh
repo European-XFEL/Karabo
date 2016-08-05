@@ -506,7 +506,6 @@ namespace karathon {
             const boost::shared_ptr<CppArrayRefHandler<T> > refHandler(new CppArrayRefHandler<T>(arrayData));
             bp::object pyRefHandler(refHandler); // Python reference count starts a 1
             void* data = reinterpret_cast<void*> (arrayData->data());
-            // XXX: SimpleNewFromData must have a pointer to ALIGNED memory!!
             PyObject* pyobj = PyArray_SimpleNewFromData(nd, &dims[0], typenum, data);
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
             // PyArray_SetBaseObject steals a reference. Increase the refcount to protect bp::object::~object()
