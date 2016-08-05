@@ -15,14 +15,13 @@ namespace karabo {
 
         class Schema;
         class State;
+
         /**
          * The StateElement represents a leaf and needs to be of type State
          */
         class StateElement : public GenericElement<StateElement> {
 
-
-
-            public:
+        public:
 
             StateElement(Schema& expected);
 
