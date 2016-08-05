@@ -567,19 +567,20 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
                 try {
-                    const karabo::util::Hash::Attributes& attrs = m_fullSchema.getParameterHash().getNode(key).getAttributes();
-                    const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
-                    if (leafType == karabo::util::Schema::STATE) {
-                        if (typeid (T) == typeid (karabo::util::State)) {
-                            return *reinterpret_cast<const T*> (&karabo::util::State::fromString(m_parameters.get<std::string>(key)));
+                    if (m_fullSchema.getParameterHash().hasAttribute(key, KARABO_SCHEMA_LEAF_TYPE)) {
+                        const int leafType = m_fullSchema.getParameterHash().getAttribute<int>(key, KARABO_SCHEMA_LEAF_TYPE);
+                        if (leafType == karabo::util::Schema::STATE) {
+                            if (typeid (T) == typeid (karabo::util::State)) {
+                                return *reinterpret_cast<const T*> (&karabo::util::State::fromString(m_parameters.get<std::string>(key)));
+                            }
+                            KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
                         }
-                        KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
-                    }
-                    if (leafType == karabo::util::Schema::ALARM_CONDITION) {
-                        if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
-                            return *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(m_parameters.get<std::string>(key)));
+                        if (leafType == karabo::util::Schema::ALARM_CONDITION) {
+                            if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
+                                return *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(m_parameters.get<std::string>(key)));
+                            }
+                            KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
                         }
-                        KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
                     }
 
                     return m_parameters.get<T>(key);
@@ -826,12 +827,10 @@ namespace karabo {
 
             void updateState(const karabo::util::State& cs) {
                 try {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "updateState(state): \"" << cs.name() << "\".";
                     const std::string& currentState = cs.name();
+                    KARABO_LOG_FRAMEWORK_DEBUG << "updateState(state): \"" << currentState << "\".";
                     if (getState().name() != currentState) {
-                        karabo::util::Hash h("state", currentState);
-                        h.setAttribute("state", KARABO_INDICATE_STATE_SET, true);
-                        set(h);
+                        set("state", cs);
                         if (boost::regex_match(currentState, m_errorRegex)) {
                             updateInstanceInfo(karabo::util::Hash("status", "error"));
                         } else {

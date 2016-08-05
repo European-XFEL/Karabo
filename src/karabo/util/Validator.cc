@@ -383,24 +383,26 @@ namespace karabo {
                     }
                 }
             }
-            const int leafType = masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE);
-           
-            if(leafType == karabo::util::Schema::STATE && !workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
-                report << "State element at "<< scope <<" may only be set using predefined states"<<endl;
-            }
-            
-            if(leafType != karabo::util::Schema::STATE && workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
-                report << "Tried setting non-state element at "<< scope <<" with state object"<<endl;
-            }
-            
-            if(leafType == karabo::util::Schema::ALARM_CONDITION && !workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)){
-                report << "Alarm Condition element at "<< scope <<" may only be set using predefined alarm conditions"<<endl;
-            }
-            
-            if(leafType != karabo::util::Schema::ALARM_CONDITION && workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)){
-                report << "Tried setting non-alarm condition element at "<< scope <<" with alarm condition object"<<endl;
-            }
+            if(masterNode.hasAttribute(KARABO_SCHEMA_LEAF_TYPE)){
+                const int leafType = masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE);
 
+                if(leafType == karabo::util::Schema::STATE && !workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
+                    report << "State element at "<< scope <<" may only be set using predefined states"<<endl;
+                }
+
+                if(leafType != karabo::util::Schema::STATE && workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
+                    report << "Tried setting non-state element at "<< scope <<" with state object"<<endl;
+                }
+
+                if(leafType == karabo::util::Schema::ALARM_CONDITION && !workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)){
+                    report << "Alarm Condition element at "<< scope <<" may only be set using predefined alarm conditions"<<endl;
+                }
+
+                if(leafType != karabo::util::Schema::ALARM_CONDITION && workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)){
+                    report << "Tried setting non-alarm condition element at "<< scope <<" with alarm condition object"<<endl;
+                }
+            }
+                
             if (masterNode.hasAttribute(KARABO_SCHEMA_ACCESS_MODE) && masterNode.getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE)
                 m_hasReconfigurableParameter = true;
 
