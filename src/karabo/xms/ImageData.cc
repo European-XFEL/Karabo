@@ -116,7 +116,7 @@ namespace karabo {
                 m_hash->set<NDArray<unsigned char> >("data", array);
             }
             else {
-                boost::shared_ptr<ArrayData<unsigned char> > arrayPtr(new ArrayData<unsigned char>(data, &ImageData::deallocateNonCopied, size));
+                boost::shared_ptr<ArrayData<unsigned char> > arrayPtr(new ArrayData<unsigned char>(data, size, &ImageData::deallocateNonCopied));
                 NDArray<unsigned char> array(data, size, Dims(size));
                 m_hash->set<NDArray<unsigned char> >("data", array);
             }

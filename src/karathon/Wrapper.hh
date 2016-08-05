@@ -314,6 +314,18 @@ namespace karathon {
         }
     };
 
+    template <typename T>
+    class ArrayRefHandler {
+        PyArrayObject *m_arrayRef;
+
+    public:
+        explicit ArrayRefHandler(PyArrayObject* obj) : m_arrayRef(obj) {}
+
+        void operator ()(const T*) {
+            Py_DECREF(m_arrayRef);
+        }
+    };
+
     struct Wrapper {
 
         static bool hasattr(bp::object obj, const std::string& attrName) {
@@ -428,9 +440,13 @@ namespace karathon {
                 dims.push_back(pDims[i]);
             }
 
-            T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
-            const karabo::util::Dims shape(dims);
-            return karabo::util::NDArray<T>(data, shape.size(), shape);
+            const T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
+            const npy_intp nelems = PyArray_SIZE(arr);
+            const ArrayRefHandler<T> refHandler(arr);
+
+            Py_INCREF(arr); // Grab a new reference to the array object
+            boost::shared_ptr<karabo::util::ArrayData<T> > array(new karabo::util::ArrayData<T>(data, nelems, refHandler));
+            return karabo::util::NDArray<T>(array, karabo::util::Dims(dims));
         }
 
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);
