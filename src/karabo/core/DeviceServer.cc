@@ -243,22 +243,7 @@ namespace karabo {
 
             // Deprecate the isMaster in future
             config.get("debugMode", m_debugMode);
-            config.get("isMaster", m_isMaster);
-            if (m_isMaster) {
-
-                //                cerr << "\n#### WARNING ####\nThe \"isMaster\" option will be deprecated!\n"
-                //                        << "If you were using the startMasterDeviceServer script,\n"
-                //                        << "please delete the whole masterDeviceServer folder and use \"make test\" (in base folder) instead."
-                //                        << "\n##################\n\n";
-
-                m_visibility = 5;
-                m_scanPlugins = false;
-                m_autoStart.resize(3);
-                m_autoStart[0] = Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0");
-                m_autoStart[1] = Hash("DataLoggerManager.deviceId", "Karabo_DataLoggerManager_0");
-                m_autoStart[2] = Hash("ProjectManager.deviceId", "Karabo_ProjectManager");
-            }
-
+            
             m_connectionConfiguration = config.get<Hash>("connection");
             m_connection = BrokerConnection::createChoice("connection", config);
             // Real connection parameters were chosen in above call.  Use the same parameters for logger

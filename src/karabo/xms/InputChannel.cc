@@ -191,11 +191,6 @@ namespace karabo {
         }
 
 
-        void InputChannel::connectNow(const karabo::util::Hash& outputChannelInfo) {
-            connect(outputChannelInfo);
-        }
-
-
         void InputChannel::connect(const karabo::util::Hash& outputChannelInfo) {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\"  :   outputChannelInfo is ...\n" << outputChannelInfo;

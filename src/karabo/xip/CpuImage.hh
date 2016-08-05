@@ -50,7 +50,6 @@ namespace karabo {
         template<class TPix>
         class CpuImage : public AbstractImage<TPix> {
 
-
             // Grant friendship in order to copy-construct from foreign pixelTypes
             template <class UPix> friend class CpuImage;
 
@@ -91,7 +90,7 @@ namespace karabo {
             explicit CpuImage(const size_t dx, const size_t dy = 1, const size_t dz = 1) : m_cimg(ci::CImg<TPix>(dx, dy, dz)) {
             }
 
-            /** 
+            /**
              * Constructor
              * @param dx image width
              * @param dy image height
@@ -191,7 +190,7 @@ namespace karabo {
              * Copying from foreign pixelType
              * @param image
              * @param isShared
-             * @return 
+             * @return
              */
             template <class UPix>
             inline CpuImage& assign(const CpuImage<UPix>& image, bool isShared = false) {
@@ -235,9 +234,9 @@ namespace karabo {
 
             /**
              * Moves the content of the instance image into another one in a way that memory copies are avoided if possible.
-             * 
+             *
              * CAVEAT: The instance image is always empty after a call to this function.
-             * 
+             *
              * @param image The image this instance should be moved into
              * @return The new image
              */
@@ -409,7 +408,7 @@ namespace karabo {
             }
 
             /**
-             * Operator() 
+             * Operator()
              * @return Address of pixel buffer
              */
             inline operator TPix*() {
@@ -435,7 +434,7 @@ namespace karabo {
              * If instance image is shared, replace the image content by the content of the argument image.
              *
              * @param image Another image
-             * @return Image 
+             * @return Image
              */
             template <typename U>
             CpuImage& operator=(const CpuImage<U>& image) {
@@ -552,7 +551,7 @@ namespace karabo {
             }
 
             /***************************************
-             *             Pixel Access            *  
+             *             Pixel Access            *
              ***************************************/
 
             inline const TPix* pixelPointer() const {
@@ -566,7 +565,7 @@ namespace karabo {
             /**
              * Read a pixel value with Dirichlet boundary conditions.
              * @param value
-             * @return 
+             * @return
              */
             TPix& at(const int offset, const TPix beyondBorderValue) {
                 return m_cimg.at(offset, beyondBorderValue);
@@ -864,7 +863,7 @@ namespace karabo {
             /**
              * *this function fills an image with values
              * @param value
-             * @return 
+             * @return
              */
             CpuImage& fill(const TPix& value) {
                 m_cimg.fill(value);

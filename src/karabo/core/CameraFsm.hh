@@ -21,7 +21,7 @@ namespace karabo {
 
         class CameraFsm : public BaseFsm {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(CameraFsm, "CameraFsm", "1.0")
 
