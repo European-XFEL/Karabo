@@ -80,7 +80,7 @@ namespace karathon {
             self = boost::shared_ptr<ImageData>(new ImageData(bp::extract<Hash>(obj)));
         } else if (PyArray_Check(obj.ptr())) {
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
-            const NDArray<unsigned char> ndarray = Wrapper::fromPyArrayToNDArray<unsigned char>(arr);
+            const NDArray<unsigned char> ndarray = Wrapper::fromPyArrayToNDArray<unsigned char>(arr, NPY_UINT8);
             Dims _dimensions = ndarray.getShape();
             const int rank = _dimensions.rank();
 
@@ -181,21 +181,17 @@ namespace karathon {
         }
         if (PyArray_Check(obj.ptr())) {
             // No copy IFF array type matches
-            PyObject* arr = PyArray_FROMANY(obj.ptr(), NPY_UINT8, 1, 6, NPY_ARRAY_C_CONTIGUOUS);
-            PyArrayObject* ubarr = reinterpret_cast<PyArrayObject*> (arr);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
+            const karabo::util::NDArray<unsigned char> ndarray = Wrapper::fromPyArrayToNDArray<unsigned char>(arr, NPY_UINT8);
 
             if (copy) {
                 // Guarantee a copy is made.
-                unsigned char* data = reinterpret_cast<unsigned char*> (PyArray_DATA(ubarr));
-                const size_t size = PyArray_SIZE(ubarr);
-                self->setData(data, size, true);
+                const boost::shared_ptr<karabo::util::ArrayData<unsigned char> > arrayData(ndarray.getData());
+                self->setData(arrayData->data(), arrayData->size(), true);
             }
             else {
-                const karabo::util::NDArray<unsigned char> ndarray = Wrapper::fromPyArrayToNDArray<unsigned char>(ubarr);
                 self->setData(ndarray);
             }
-            // Kill created earlier 'ubarr' object
-            Py_DECREF(ubarr);
             return;
         }
         throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");

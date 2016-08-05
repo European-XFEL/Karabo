@@ -446,7 +446,7 @@ namespace karathon {
         }
 
         template<typename T>
-        static karabo::util::NDArray<T> fromPyArrayToNDArray(PyArrayObject* arr) {
+        static karabo::util::NDArray<T> fromPyArrayToNDArray(PyArrayObject* arr, const int typenum) {
             // Convert the array shape to a std::vector
             npy_intp* pDims = PyArray_DIMS(arr);
             std::vector<unsigned long long> dims;
@@ -468,8 +468,9 @@ namespace karathon {
 
             // Array ref is still empty. Create a new ArrayData
             if (!array) {
-                // Get a contiguous copy of the array (or just a reference if already contiguous)
-                PyArrayObject* carr = PyArray_GETCONTIGUOUS(arr);
+                // Get a contiguous copy of the array with the correct type (or just a reference if already compatible)
+                PyObject* pyobj = reinterpret_cast<PyObject*>(arr);
+                PyArrayObject* carr = reinterpret_cast<PyArrayObject*>(PyArray_FROMANY(pyobj, typenum, 1, 6, NPY_ARRAY_C_CONTIGUOUS));
                 const T* data = reinterpret_cast<T*> (PyArray_DATA(carr));
                 const npy_intp nelems = PyArray_SIZE(carr);
                 const PyArrayRefHandler<T> refHandler(carr); // Steals the reference to carr
