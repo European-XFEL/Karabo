@@ -456,7 +456,7 @@ namespace karathon {
 
             // Get an ArrayData object which points to the array's data
             boost::shared_ptr<karabo::util::ArrayData<T> > array;
-            bp::object base(bp::handle<>(PyArray_BASE(arr)));
+            bp::object base(bp::handle<>(bp::borrowed(PyArray_BASE(arr))));
 
             // Determine if the array data is owned by a C++ object
             if (base != bp::object()) {
@@ -472,7 +472,7 @@ namespace karathon {
                 PyArrayObject* carr = PyArray_GETCONTIGUOUS(arr);
                 const T* data = reinterpret_cast<T*> (PyArray_DATA(carr));
                 const npy_intp nelems = PyArray_SIZE(carr);
-                const PyArrayRefHandler<T> refHandler(carr);
+                const PyArrayRefHandler<T> refHandler(carr); // Steals the reference to carr
                 array = boost::shared_ptr<karabo::util::ArrayData<T> >(new karabo::util::ArrayData<T>(data, nelems, refHandler));
             }
 
@@ -507,10 +507,9 @@ namespace karathon {
             bp::object pyRefHandler(refHandler); // Python reference count starts a 1
             void* data = reinterpret_cast<void*> (arrayData->data());
             PyObject* pyobj = PyArray_SimpleNewFromData(nd, &dims[0], typenum, data);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(pyobj), pyRefHandler.ptr());
             // PyArray_SetBaseObject steals a reference. Increase the refcount to protect bp::object::~object()
             Py_INCREF(pyRefHandler.ptr());
-            PyArray_SetBaseObject(arr, pyRefHandler.ptr());
             return bp::object(bp::handle<>(pyobj));
         }
     };

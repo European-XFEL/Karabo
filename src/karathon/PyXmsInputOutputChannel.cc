@@ -134,11 +134,8 @@ namespace karathon {
 
             if (copy) {
                 // Guarantee a copy is made.
-                PyArrayObject* carr = PyArray_GETCONTIGUOUS(arr);
-                unsigned char* data = reinterpret_cast<unsigned char*> (PyArray_DATA(carr));
-                const size_t size = PyArray_SIZE(carr);
-                self->setData(data, size, copy);
-                Py_DECREF(carr);
+                const boost::shared_ptr<ArrayData<unsigned char> > arrayDataPtr(ndarray.getData());
+                self->setData(arrayDataPtr->data(), arrayDataPtr->size(), true);
             }
             else {
                 // No copy
@@ -183,22 +180,22 @@ namespace karathon {
             return;
         }
         if (PyArray_Check(obj.ptr())) {
+            // No copy IFF array type matches
+            PyObject* arr = PyArray_FROMANY(obj.ptr(), NPY_UINT8, 1, 6, NPY_ARRAY_C_CONTIGUOUS);
+            PyArrayObject* ubarr = reinterpret_cast<PyArrayObject*> (arr);
+
             if (copy) {
                 // Guarantee a copy is made.
-                PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
-                unsigned char* data = reinterpret_cast<unsigned char*> (PyArray_DATA(arr));
-                const size_t size = PyArray_SIZE(arr);
-                self->setData(data, size, copy);
+                unsigned char* data = reinterpret_cast<unsigned char*> (PyArray_DATA(ubarr));
+                const size_t size = PyArray_SIZE(ubarr);
+                self->setData(data, size, true);
             }
             else {
-                // No copy IFF array type matches
-                PyObject* arr = PyArray_FROMANY(obj.ptr(), NPY_UINT8, 1, 6, NPY_ARRAY_C_CONTIGUOUS);
-                PyArrayObject* ubarr = reinterpret_cast<PyArrayObject*> (arr);
                 const karabo::util::NDArray<unsigned char> ndarray = Wrapper::fromPyArrayToNDArray<unsigned char>(ubarr);
                 self->setData(ndarray);
-                // Kill created earlier 'ubarr' object
-                Py_DECREF(ubarr);
             }
+            // Kill created earlier 'ubarr' object
+            Py_DECREF(ubarr);
             return;
         }
         throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
