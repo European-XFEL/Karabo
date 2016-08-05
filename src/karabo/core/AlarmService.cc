@@ -23,18 +23,23 @@ namespace karabo {
             
             Schema tableRow;
             
-            STRING_ELEMENT(tableRow).key("timeOfOccurance")
-                    .displayedName("Occured at")
+            STRING_ELEMENT(tableRow).key("timeOfOccurrence")
+                    .displayedName("Occurred at")
                     .readOnly()
                     .commit();
             
-            STRING_ELEMENT(tableRow).key("timeOfFirstOccurance")
-                    .displayedName("First occured at")
+            STRING_ELEMENT(tableRow).key("timeOfFirstOccurrence")
+                    .displayedName("First occurred at")
                     .readOnly()
                     .commit();
             
             STRING_ELEMENT(tableRow).key("deviceId")
                     .displayedName("Device")
+                    .readOnly()
+                    .commit();
+            
+            STRING_ELEMENT(tableRow).key("property")
+                    .displayedName("Property")
                     .readOnly()
                     .commit();
             
@@ -61,6 +66,7 @@ namespace karabo {
             
             TABLE_ELEMENT(expected).key("currentAlarms")
                     .displayedName("Current Alarms")
+                    .setNodeSchema(tableRow)
                     .assignmentOptional().noDefaultValue()
                     .reconfigurable()
                     .commit();
@@ -75,6 +81,10 @@ namespace karabo {
         }
      
         AlarmService::~AlarmService() {
+        }
+        
+        void AlarmService::okStateOnEntry() {
+            
         }
     }
 }
