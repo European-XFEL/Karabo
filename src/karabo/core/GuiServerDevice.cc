@@ -1039,12 +1039,7 @@ namespace karabo {
 
         void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
             try {
-                //                if (errorCode.value() != 2 && errorCode.value() != 32 && errorCode.value() != 104) {
-                //                    // NOT End of file or Broken pipe: an unknown reason why connection to GUI client stopped.
-                //                    KARABO_LOG_ERROR << "Tcp channel error, code: " << errorCode.value() << ", message: " << errorCode.message();
-                //                    return;
-                //                }
-
+                
                 KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
 
                 // TODO Fork on error message

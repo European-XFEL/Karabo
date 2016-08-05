@@ -57,7 +57,6 @@ struct TestSchemaSerializer {
                 .description("Example key 1 description")
                 .options("Radio,Air Condition,Navigation", ",")
                 .assignmentOptional().defaultValue("Navigation")
-                .advanced()
                 .commit();
 
         NODE_ELEMENT(expected).key("MyNodeElement")

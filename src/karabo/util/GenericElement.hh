@@ -160,16 +160,6 @@ namespace karabo {
             }
 
             /**
-             * NOTE: WILL BE DEPRECATED !!!
-             * The <b>advanced</b> method serves for setting up the <i>access level</i> attribute to be EXPERT.
-             * @return reference to the Element (to allow method's chaining)
-             */
-            KARABO_DEPRECATED Derived& advanced() {
-                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
-                return *(static_cast<Derived*> (this));
-            }
-
-            /**
              * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be ADMIN.
              * @return reference to the Element (to allow method's chaining)
              */
