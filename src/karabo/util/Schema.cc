@@ -1107,6 +1107,15 @@ namespace karabo {
                 return std::string();
             }
         }
+        
+        const bool Schema::doesAlarmNeedAcknowledging(const std::string& path, const karabo::util::AlarmCondition& condition) const{
+            const std::string attr = std::string(KARABO_SCHEMA_ALARM_ACK)+"_"+condition.asString();
+            if(m_hash.hasAttribute(path, attr)){
+                return m_hash.getAttribute<bool>(path, attr);
+            } else {
+                return false;
+            }
+        }
 
     }
 }
