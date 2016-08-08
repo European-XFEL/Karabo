@@ -8,6 +8,9 @@
 #include "AlarmService.hh"
 
 namespace karabo {
+    
+   
+    
     namespace core {
 
         using namespace krb_log4cpp;
