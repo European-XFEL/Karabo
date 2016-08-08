@@ -39,7 +39,7 @@ void NDArray_Test::testConstructor() {
     vector<int> someData(100*200, 2);
 
     {
-        NDArray<int> ar(someData, shape);
+        NDArray<int> ar(&someData[0], someData.size(), shape);
         const Dims& arShape = ar.getShape();
 
         CPPUNIT_ASSERT(arShape.x1() == 100);
@@ -54,6 +54,6 @@ void NDArray_Test::testShapeException() {
     const Dims badShape(2, 500);
 
     {
-        CPPUNIT_ASSERT_THROW(NDArray<int>(data, badShape), karabo::util::ParameterException);
+        CPPUNIT_ASSERT_THROW(NDArray<int>(&data[0], data.size(), badShape), karabo::util::ParameterException);
     }
 }

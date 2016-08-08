@@ -33,6 +33,7 @@ void exportPyUtilEpochstamp();
 void exportPyUtilTimestamp();
 void exportPyUtilTimeDuration();
 void exportPyUtilDims();
+template <class T> void exportPyUtilNDArray();
 void exportPyUtilDetectorGeometry();
 void exportPyUtilRollingWindowStatistics();
 void exportPyUtilStateElement();
@@ -123,6 +124,17 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilRollingWindowStatistics();
     exportPyUtilStateElement();
     exportPyUtilAlarmConditionElement();
+    exportPyUtilNDArray<bool>();
+    exportPyUtilNDArray<char>();
+    exportPyUtilNDArray<unsigned char>();
+    exportPyUtilNDArray<short>();
+    exportPyUtilNDArray<unsigned short>();
+    exportPyUtilNDArray<int>();
+    exportPyUtilNDArray<unsigned int>();
+    exportPyUtilNDArray<long long>();
+    exportPyUtilNDArray<unsigned long long>();
+    exportPyUtilNDArray<float>();
+    exportPyUtilNDArray<double>();
 
     // io
     exportPyIo();
