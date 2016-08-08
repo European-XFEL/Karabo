@@ -20,8 +20,9 @@ def test_imagedata_from_ndarray():
     assert imageData.getROIOffsets() == [0, 0]
 
     b = np.arange(60000, dtype='uint8').reshape(100, 200, 3)
-    imageData = ImageData(b)
+    imageData = ImageData(b, copy=True)
     assert np.all(imageData.getData() == b.flat)
+    assert _array_mem_addr(imageData.getData()) != _array_mem_addr(b)
 
     assert imageData.getDimensionTypes() == [0, 0, 0]
     assert imageData.getDimensions() == [200, 100, 3]
@@ -30,12 +31,13 @@ def test_imagedata_from_ndarray():
 
     c = np.arange(80000, dtype='uint8').reshape(100, 200, 4)
     imageData = ImageData(c, copy=False)
+    assert np.all(imageData.getData() == c)
+    assert _array_mem_addr(imageData.getData()) == _array_mem_addr(c)
+
     assert imageData.getDimensionTypes() == [0, 0, 0]
     assert imageData.getDimensions() == [200, 100, 4]
     assert imageData.getEncoding() == Encoding.RGBA
     assert imageData.getROIOffsets() == [0, 0, 0]
-    assert np.all(imageData.getData() == c)
-    assert _array_mem_addr(imageData.getData()) == _array_mem_addr(c)
 
 
 def test_imagedata_from_hash():

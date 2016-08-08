@@ -13,6 +13,9 @@
 #include <karabo/util/Hash.hh>
 
 #define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
+#define KRB_NDARRAY_MIN_DIM 1
+#define KRB_NDARRAY_MAX_DIM 6
+
 #define NO_IMPORT_ARRAY
 #include <numpy/arrayobject.h>
 
@@ -463,8 +466,9 @@ namespace karathon {
             // Determine if the array data is owned by a C++ object
             if (arrBase != NULL && arrBase != Py_None) {
                 bp::object base(bp::handle<>(bp::borrowed(arrBase)));
-                if (bp::extract<CppArrayRefHandler<T> >(base).check()) {
-                    const CppArrayRefHandler<T>& arrayRef = bp::extract<CppArrayRefHandler<T>& >(base);
+                bp::extract<CppArrayRefHandler<T> > maybeArrayRef(base);
+                if (maybeArrayRef.check()) {
+                    const CppArrayRefHandler<T>& arrayRef = maybeArrayRef();
                     // The data already has an ArrayData<T> object managing it.
                     array = arrayRef.getDataPtr();
                 }
@@ -474,12 +478,18 @@ namespace karathon {
             if (!array) {
                 PyObject* pyobj = reinterpret_cast<PyObject*>(arr);
                 // Get a contiguous copy of the array with the correct type (or just a reference if already compatible)
-                PyArrayObject* carr = reinterpret_cast<PyArrayObject*>(PyArray_FROMANY(pyobj, typenum, 1, 6, NPY_ARRAY_C_CONTIGUOUS));
-                const T* data = reinterpret_cast<T*> (PyArray_DATA(carr));
-                const npy_intp nelems = PyArray_SIZE(carr);
-                const PyArrayRefHandler<T> refHandler(carr); // Steals the reference to carr
-                // Create a new ArrayData<T> which uses PyArrayRefHandler to manage the Python reference count
-                array = boost::shared_ptr<karabo::util::ArrayData<T> >(new karabo::util::ArrayData<T>(data, nelems, refHandler));
+                PyArrayObject* carr = reinterpret_cast<PyArrayObject*>(PyArray_FROMANY(pyobj, typenum, KRB_NDARRAY_MIN_DIM, KRB_NDARRAY_MAX_DIM, NPY_ARRAY_C_CONTIGUOUS));
+                if (carr != NULL) {
+                    const T* data = reinterpret_cast<T*> (PyArray_DATA(carr));
+                    const npy_intp nelems = PyArray_SIZE(carr);
+                    const PyArrayRefHandler<T> refHandler(carr); // Steals the reference to carr
+                    // Create a new ArrayData<T> which uses PyArrayRefHandler to manage the Python reference count
+                    array = boost::shared_ptr<karabo::util::ArrayData<T> >(new karabo::util::ArrayData<T>(data, nelems, refHandler));
+                }
+            }
+
+            if (!array) {
+                throw KARABO_PYTHON_EXCEPTION("Failed conversion of ndarray to C++ NDArray.");
             }
 
             return karabo::util::NDArray<T>(array, karabo::util::Dims(dims));
@@ -510,7 +520,7 @@ namespace karathon {
 
             boost::shared_ptr<karabo::util::ArrayData<T> > arrayData(a.getData());
             const boost::shared_ptr<CppArrayRefHandler<T> > refHandler(new CppArrayRefHandler<T>(arrayData));
-            bp::object pyRefHandler(refHandler); // Python reference count starts a 1
+            bp::object pyRefHandler(refHandler); // Python reference count starts at 1
             void* data = reinterpret_cast<void*> (arrayData->data());
             PyObject* pyobj = PyArray_SimpleNewFromData(nd, &dims[0], typenum, data);
             PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(pyobj), pyRefHandler.ptr());
