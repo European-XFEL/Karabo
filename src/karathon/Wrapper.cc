@@ -401,75 +401,75 @@ namespace karathon {
             switch (dtype->type_num) {
                 case NPY_BOOL:
                 {
-                    any = fromPyArrayToNDArray<bool>(arr);
+                    any = fromPyArrayToNDArray<bool>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_BOOL;
                 }
                 case NPY_INT8:
                 {
-                    any = fromPyArrayToNDArray<signed char>(arr);
+                    any = fromPyArrayToNDArray<signed char>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_INT8;
                 }
                 case NPY_UINT8:
                 {
-                    any = fromPyArrayToNDArray<unsigned char>(arr);
+                    any = fromPyArrayToNDArray<unsigned char>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_UINT8;
                 }
                 case NPY_SHORT:
                 {
-                    any = fromPyArrayToNDArray<short>(arr);
+                    any = fromPyArrayToNDArray<short>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_INT16;
                 }
                 case NPY_USHORT:
                 {
-                    any = fromPyArrayToNDArray<unsigned short>(arr);
+                    any = fromPyArrayToNDArray<unsigned short>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_UINT16;
                 }
                 case NPY_INT:
                 {
-                    any = fromPyArrayToNDArray<int>(arr);
+                    any = fromPyArrayToNDArray<int>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_INT32;
                 }
                 case NPY_UINT:
                 {
-                    any = fromPyArrayToNDArray<unsigned int>(arr);
+                    any = fromPyArrayToNDArray<unsigned int>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_UINT32;
                 }
                 case NPY_LONG:
                 {
                     if (sizeof (long) == sizeof (int)) {
-                        any = fromPyArrayToNDArray<int>(arr);
+                        any = fromPyArrayToNDArray<int>(arr, dtype->type_num);
                     } else if (sizeof (long) == sizeof (long long)) {
-                        any = fromPyArrayToNDArray<long long>(arr);
+                        any = fromPyArrayToNDArray<long long>(arr, dtype->type_num);
                     }
                     return karabo::util::Types::NDARRAY_INT64;
                 }
                 case NPY_ULONG:
                 {
                     if (sizeof (unsigned long) == sizeof (unsigned int)) {
-                        any = fromPyArrayToNDArray<unsigned int>(arr);
+                        any = fromPyArrayToNDArray<unsigned int>(arr, dtype->type_num);
                     } else if (sizeof (unsigned long) == sizeof (unsigned long long)) {
-                        any = fromPyArrayToNDArray<unsigned long long>(arr);
+                        any = fromPyArrayToNDArray<unsigned long long>(arr, dtype->type_num);
                     }
                     return karabo::util::Types::NDARRAY_UINT64;
                 }
                 case NPY_LONGLONG:
                 {
-                    any = fromPyArrayToNDArray<long long>(arr);
+                    any = fromPyArrayToNDArray<long long>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_INT64;
                 }
                 case NPY_ULONGLONG:
                 {
-                    any = fromPyArrayToNDArray<unsigned long long>(arr);
+                    any = fromPyArrayToNDArray<unsigned long long>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_UINT64;
                 }
                 case NPY_FLOAT:
                 {
-                    any = fromPyArrayToNDArray<float>(arr);
+                    any = fromPyArrayToNDArray<float>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_FLOAT;
                 }
                 case NPY_DOUBLE:
                 {
-                    any = fromPyArrayToNDArray<double>(arr);
+                    any = fromPyArrayToNDArray<double>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_DOUBLE;
                 }
                 default:

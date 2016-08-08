@@ -295,6 +295,7 @@
         </logicalFolder>
         <itemPath>../../../src/karabo/util/AlarmConditions.cc</itemPath>
         <itemPath>../../../src/karabo/util/AlarmConditions.hh</itemPath>
+        <itemPath>../../../src/karabo/util/ArrayData.hh</itemPath>
         <itemPath>../../../src/karabo/util/ArrayTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
         <itemPath>../../../src/karabo/util/Base64.hh</itemPath>
@@ -441,8 +442,6 @@
         <itemPath>../../../src/karabo/tests/log/logTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f4" displayName="net_test" projectFiles="true" kind="TEST">
-        <itemPath>../../../src/karabo/tests/net/EventLoop_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/net/EventLoop_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/JmsBroker_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/net/JmsBroker_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/JmsConnection_Test.cc</itemPath>
@@ -1509,16 +1508,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/net/EventLoop_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/net/EventLoop_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/net/JmsBroker_Test.cc"
             ex="false"
             tool="1"
@@ -2514,6 +2503,11 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ArrayData.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>
@@ -3630,16 +3624,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/net/EventLoop_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/net/EventLoop_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/net/JmsBroker_Test.cc"
             ex="false"
             tool="1"
@@ -4645,6 +4629,11 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ArrayData.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>
