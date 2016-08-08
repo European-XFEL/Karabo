@@ -32,12 +32,22 @@ namespace karabo {
                     .readOnly()
                     .commit();
             
+            UINT64_ELEMENT(tableRow).key("trainOfOccurrence")
+                    .displayedName("Occurred at train")
+                    .readOnly()
+                    .commit();
+            
             STRING_ELEMENT(tableRow).key("timeOfFirstOccurrence")
                     .displayedName("First occurred at")
                     .readOnly()
                     .commit();
             
-            STRING_ELEMENT(tableRow).key("deviceId")
+            UINT64_ELEMENT(tableRow).key("trainOfFirstOccurrence")
+                    .displayedName("First occurred at train")
+                    .readOnly()
+                    .commit();
+            
+            STRING_ELEMENT(tableRow).key("instanceId")
                     .displayedName("Device")
                     .readOnly()
                     .commit();
@@ -47,7 +57,7 @@ namespace karabo {
                     .readOnly()
                     .commit();
             
-            STRING_ELEMENT(tableRow).key("severity")
+            STRING_ELEMENT(tableRow).key("type")
                     .displayedName("Severity")
                     .readOnly()
                     .commit();
@@ -94,23 +104,31 @@ namespace karabo {
         }
         
         void AlarmService::initialize() {
+            
+            
+            
             updateState(State::INIT);
+            
+            setupSignalsAndSlots();
             remote().registerInstanceNewMonitor(boost::bind(&AlarmService::registerAlarmWithNewDevice, this, _1));
-            //make existing device aware of us
-            emit("*", "signalAlarmDevice", getInstanceId());
-<<<<<<< HEAD
+            
+            //make existing instance aware of us
+            Hash lastKnownAlarms;
+            emit("*", "signalAlarmDeviceStarted", getInstanceId(), lastKnownAlarms);
             updateState(State::NORMAL);
-=======
->>>>>>> Add handling for alarm device reappearing
+        }
+        
+        void AlarmService::setupSignalsAndSlots(){         
+            KARABO_SYSTEM_SIGNAL2("signalAlarmDeviceStarted", std::string, Hash)
         }
         
         void AlarmService::registerAlarmWithNewDevice(const karabo::util::Hash& topologyEntry){
-            //only act upon device we do not know about yet coming up
+            //only act upon instance we do not know about yet coming up
             
                 try {
                     const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
                     // const ref is fine even for temporary std::string+
-                    if(type == "device"){
+                    if(type == "instance"){
                         const Hash& entry = topologyEntry.begin()->getValue<Hash>();
                         if(m_registeredDevices.insert(entry).second){
                             const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
@@ -124,7 +142,7 @@ namespace karabo {
                             call(instanceId, "slotRegisterAlarmService", serviceInfo);
                             
                         } else {
-                        //this device reappeared, we should ask for resubmitting all alarms
+                        //this instance reappeared, we should ask for resubmitting all alarms
                         }
                     }
                 
@@ -139,70 +157,131 @@ namespace karabo {
         }
         
         void AlarmService::slotRegisterExistingDevice(const karabo::util::Hash& instanceInfo){
-            if(m_registeredDevices.insert(entry).second){
-                const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
-                                                 topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
-                KARABO_LOG_FRAMEWORK_INFO << "slotRegisterExistingDevice --> instanceId: '" << instanceId
-                        << "', type: '" << type << "'";
-
-                //can later be extended
-
-                const Hash serviceInfo("instance", getInstanceId());
-                call(instanceId, "slotRegisterAlarmService", serviceInfo);
-
-            } else {
-            //this device reappeared, we should ask for resubmitting all alarms
-            }
+            
         }
         
         void AlarmService::slotUpdateAlarms(const karabo::util::Hash& alarmInfo){
+            const Hash::Node& instanceNode = *alarmInfo.begin(); //we assume only one instance entry here
+            const std::string& instance = instanceNode.getKey();
+            const Hash& instanceNodeHash = instanceNode.getValue<Hash>();
             //get rid of alarm conditions that have passed or can now be acknowledged
-            const Hash& toClear = alarmInfo.get<Hash>("toClear");
-            for(Hash::const_iterator it = toClear.begin(); it != toClear.end(); ++it){
-                const std::string& device = it->getKey();
-                boost::optional<Hash::Node&> deviceEntryNode = m_alarms.find(device);
-                if(!deviceEntryNode) continue; //no alarms present for this device
+            const Hash& toClear = instanceNodeHash.get<Hash>("toClear");
+            
+            //check if any alarms exist for this instance
+            boost::optional<Hash::Node&> existingDeviceEntryN = m_alarms.find(instance);
+            if(existingDeviceEntryN){
+                Hash& existingDeviceEntry = existingDeviceEntryN->getValue<Hash>();
                 
-                Hash& deviceEntry = deviceEntryNode->getValue<Hash>();
-                const Hash& properties = it->getValue<Hash>();
-                for(Hash::const_iterator pit = properties.begin(); pit != properties.end(); ++pit){
-                    boost::optional<Hash::Node&> propertyEntryNode = deviceEntry.find(pit->getKey());
-                    if(!propertyEntryNode) continue; //no alarm for this property
+                
+                //iterate over properties for this instance
+                for(Hash::const_iterator pit = toClear.begin(); pit != toClear.end(); ++pit){
+                    boost::optional<Hash::Node&> existingPropEntryN = existingDeviceEntry.find(pit->getKey()); //existing property alarms for instance
+                    if(!existingPropEntryN) continue; //no alarm for this property
                     
-                    Hash& propertyEntry = propertyEntryNode->getValue<Hash>();
-                    if(propertyEntry.get<bool>("needsAcknowledging")){
-                        //if the alarm needs to be acknowledged we allow this now
-                        propertyEntry.set("acknowledgeable", true);
-                    } else {
-                       //go ahead and erase the alarm condition
-                        deviceEntry.erase(pit->getKey());
+                    Hash& existingPropEntry = existingPropEntryN->getValue<Hash>();
+                    //iterate over alarm types in this property
+                    const Hash& alarms = pit->getValue<Hash>();
+                    for(Hash::const_iterator ait = alarms.begin(); ait != alarms.end(); ++ait){
+                        boost::optional<Hash::Node&> existingTypeEntryN = existingPropEntry.find(ait->getKey()); //existing property alarms for instance
+                        if(!existingTypeEntryN) continue; //no alarm for this property and alarm type
+                        
+                        //alarm of this type exists for the property
+                        Hash& existingTypeEntry = existingTypeEntryN->getValue<Hash>();
+                        if(existingTypeEntry.get<bool>("needsAcknowledging")){
+                            //if the alarm needs to be acknowledged we allow this now
+                            existingTypeEntry.set("acknowledgeable", true);
+                        } else {
+                           //go ahead and erase the alarm condition as it is allowed to silently disappear
+                            existingPropEntry.erase(pit->getKey());
+                        }
                     }
-                    
                     
                 }
             }
             //now add new alarms
-            const Hash& toAdd = alarmInfo.get<Hash>("toAdd");
-            for(Hash::const_iterator it = toAdd.begin(); it != toAdd.end(); ++it){
-                const std::string& device = it->getKey();
-                boost::optional<Hash::Node&> deviceEntryNode = m_alarms.find(device);
-                if(!deviceEntryNode){
-                    deviceEntryNode = m_alarms.set(device, Hash());
+            const Hash& toAdd = instanceNodeHash.get<Hash>("toAdd");
+            if(!toAdd.empty()){
+                //if instance appears for first time we add it to the alarm entries
+                if(!existingDeviceEntryN){
+                    existingDeviceEntryN = m_alarms.set(instance, Hash());
                 }
-                Hash& deviceEntry = deviceEntryNode->getValue<Hash>();
-                const Hash& properties = it->getValue<Hash>();
-                for(Hash::const_iterator pit = properties.begin(); pit != properties.end(); ++pit){
-                    boost::optional<Hash::Node&> propertyEntryNode = deviceEntry.find(pit->getKey());
-                    std::string& firstOccurance = pit->getValue<Hash>().get<std::string>("timeOfFirstOccurrence");
-                    if(propertyEntryNode) {
-                        firstOccurance =  propertyEntryNode->getValue<Hash>().get<std::string>("timeOfFirstOccurrence");
+                Hash& existingDeviceEntry = existingDeviceEntryN->getValue<Hash>();
+                
+                //iteration over properties with alarms
+                for(Hash::const_iterator pit = toAdd.begin(); pit != toAdd.end(); ++pit){
+                    //check if alarms for this property exist
+                    boost::optional<Hash::Node&> existingPropEntryN = existingDeviceEntry.find(pit->getKey());
+                    if(!existingPropEntryN) { 
+                        //create node for property if it doesn't exist
+                        existingPropEntryN = existingDeviceEntry.set(pit->getKey(), Hash());
                     }
-                    Hash::Node& newEntry = deviceEntry.set(pit->getKey(), pit->getValue<Hash>());
-                    newEntry.getValue<Hash>().set("timeOfFirstOccurrence", firstOccurance);
+                    
+                    //update this property
+                    const Hash& updatingPropEntry =  pit->getValue<Hash>(); 
+                    Hash& existingPropEntry = existingPropEntryN->getValue<Hash>();
+                    
+                    //iterates over alarm type of this property
+                    for(Hash::const_iterator ait = updatingPropEntry.begin(); ait != updatingPropEntry.end(); ++ait){
+                        boost::optional<Hash::Node&> existingTypeEntryN = existingPropEntry.find(pit->getKey());
+          
+                        
+                        const Timestamp updatedTimeStamp = Timestamp::fromHashAttributes(existingTypeEntryN->getAttributes());
+                        std::string timeOfFirstOccurrence = updatedTimeStamp.toIso8601();
+                        unsigned long long trainOfFirstOccurrence = updatedTimeStamp.getTrainId();
+                        
+                        if(existingTypeEntryN) {
+                            //alarm exists, we use its first occurance
+                            Hash& existingTypeEntry = existingTypeEntryN->getValue<Hash>();
+                            timeOfFirstOccurrence =  existingTypeEntry.get<std::string>("timeOfFirstOccurrence");
+                            trainOfFirstOccurrence =  existingTypeEntry.get<unsigned long long>("trainOfFirstOccurrence");
+                        }
+                        
+
+                        Hash::Node& newEntry = existingPropEntry.set(pit->getKey(), ait->getValueAsAny());
+                        newEntry.getValue<Hash>().set("timeOfFirstOccurrence", timeOfFirstOccurrence);
+                        newEntry.getValue<Hash>().set("trainOfFirstOccurrence", trainOfFirstOccurrence);
+                
+                    }
                 }
             }
             
-            set("currentAlarms", m_alarms);
+            updateAlarmTable();
+            
+        }
+        
+        void AlarmService::updateAlarmTable(){
+            std::vector<Hash> tableVector;
+            //instance level
+            for(Hash::const_iterator it = m_alarms.begin(); it != m_alarms.end(); ++it){
+                const std::string& instance = it->getKey();
+                const Hash& instances = it->getValue<Hash>();
+                
+                //property level
+                for(Hash::const_iterator pit = instances.begin(); pit != instances.end(); ++pit){
+                    const std::string& property = pit->getKey();
+                    const Hash& properties = pit->getValue<Hash>();
+                    
+                    //type level
+                    for(Hash::const_iterator ait = properties.begin(); ait != properties.end(); ++ait){
+                        const Hash& entry = ait->getValue<Hash>();
+                        Hash h;
+                        h.set("timeOfOccurrence", entry.get<std::string>("timeOfOccurrence"));
+                        h.set("trainOfOccurrence", entry.get<unsigned long long>("trainOfOccurrence"));
+                        h.set("timeOfFirstOccurrence", entry.get<std::string>("timeOfFirstOccurrence"));
+                        h.set("trainOfFirstOccurrence", entry.get<unsigned long long>("trainOfFirstOccurrence"));
+                        h.set("instanceId", instance);
+                        h.set("property", property);
+                        h.set("type", entry.get<std::string>("type"));
+                        h.set("description", entry.get<std::string>("description"));
+                        h.set("needsAcknowledging", entry.get<bool>("needsAcknowledging"));
+                        h.set("acknowledgeable", entry.get<bool>("acknowledgeable"));
+                        tableVector.push_back(h);
+                        
+                    }
+                }
+            }
+            
+            set("currentAlarms", tableVector);
         }
     }
 }
