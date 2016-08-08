@@ -15,6 +15,7 @@ void exportPyUtilNDArray() {
     bp::class_<CppArrayRefHandler<T>, boost::shared_ptr<CppArrayRefHandler<T> > > d(name.c_str(), bp::init<CppArrayRefHandler<T> >());
 }
 
+template void exportPyUtilNDArray<bool>();
 template void exportPyUtilNDArray<char>();
 template void exportPyUtilNDArray<unsigned char>();
 template void exportPyUtilNDArray<short>();
