@@ -634,7 +634,10 @@ namespace karabo {
                     string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went "
                         + (checkGreater ? "above " : "below ") + alarmCond.asBaseString() + " level of "
                         + karabo::util::toString(threshold));
-                    m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmString, "message", msg), '\0');
+                    
+                    Hash::Node& desc = m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmString, "message", msg), '\0');
+                    const Timestamp& occurredAt = Timestamp::fromHashAttributes(workNode.getAttributes());
+                    occurredAt.toHashAttributes(desc.getAttributes());
 
                     attachTimestampIfNotAlreadyThere(workNode);
                     workNode.setAttribute(KARABO_ALARM_ATTR, alarmString);
