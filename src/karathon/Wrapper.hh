@@ -458,10 +458,11 @@ namespace karathon {
 
             // Get an ArrayData object which points to the array's data
             boost::shared_ptr<karabo::util::ArrayData<T> > array;
-            bp::object base(bp::handle<>(bp::borrowed(PyArray_BASE(arr))));
+            PyObject* arrBase = PyArray_BASE(arr);
 
             // Determine if the array data is owned by a C++ object
-            if (base != bp::object()) {
+            if (arrBase != NULL && arrBase != Py_None) {
+                bp::object base(bp::handle<>(bp::borrowed(arrBase)));
                 if (bp::extract<CppArrayRefHandler<T> >(base).check()) {
                     const CppArrayRefHandler<T>& arrayRef = bp::extract<CppArrayRefHandler<T>& >(base);
                     // The data already has an ArrayData<T> object managing it.

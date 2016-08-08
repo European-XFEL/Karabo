@@ -124,6 +124,7 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilRollingWindowStatistics();
     exportPyUtilStateElement();
     exportPyUtilAlarmConditionElement();
+    exportPyUtilNDArray<bool>();
     exportPyUtilNDArray<char>();
     exportPyUtilNDArray<unsigned char>();
     exportPyUtilNDArray<short>();
