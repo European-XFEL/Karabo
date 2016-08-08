@@ -789,6 +789,8 @@ namespace karabo {
 
             const std::string getInfoForAlarm(const std::string& path, const karabo::util::AlarmCondition& condition) const;
 
+            const bool doesAlarmNeedAcknowledging(const std::string& path, const karabo::util::AlarmCondition& condition) const;
+
 
             //**********************************************
             //               archivePolicy                 *
