@@ -16,6 +16,11 @@
  */
 namespace karabo {
 
+    namespace util {
+        class Schema;
+        class Hash;
+    }
+
     /**
      * Namespace for package core
      */
