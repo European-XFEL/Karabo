@@ -57,7 +57,7 @@
         <itemPath>../../../src/karathon/PyUtilDetectorGeometry.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilDims.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilEpochstamp.cc</itemPath>
-        <itemPath>/home/wigginsj/source/karaboFramework/src/karathon/PyUtilNDArray.cc</itemPath>
+        <itemPath>../../../src/karathon/PyUtilNDArray.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilRollingWindowStatistics.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilTimeDuration.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilTimestamp.cc</itemPath>
@@ -506,7 +506,7 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="/home/wigginsj/source/karaboFramework/src/karathon/PyUtilNDArray.cc"
+      <item path="../../../src/karathon/PyUtilNDArray.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -950,7 +950,7 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="/home/wigginsj/source/karaboFramework/src/karathon/PyUtilNDArray.cc"
+      <item path="../../../src/karathon/PyUtilNDArray.cc"
             ex="false"
             tool="1"
             flavor2="0">
