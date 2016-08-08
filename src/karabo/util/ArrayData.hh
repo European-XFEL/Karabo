@@ -43,10 +43,10 @@ namespace karabo {
             const size_t size() const { return m_numElems; }
 
             const T& operator[](const size_t idx) const { return m_data.get()[idx]; }
-            T& operator[](const size_t idx) { return const_cast<T*>(m_data.get())[idx]; }
+            T& operator[](const size_t idx) { return m_data.get()[idx]; }
 
             const T* data() const { return m_data.get(); }
-            T* data() { return const_cast<T*>(m_data.get()); }
+            T* data() { return m_data.get(); }
 
             private:
 
