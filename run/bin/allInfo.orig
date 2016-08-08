@@ -100,7 +100,7 @@ serverId=Karabo_MacroServer
 ALLINFO[5]="$KARABO_SERVERS/macroServer/startPythonServerApi2:DeviceServer.serverId=$serverId:0:1000:yes"
 
 logLevel=INFO
-serverId=Karabo_AlarmServiceServer
+serverId=Karabo_AlarmServer
 ALLINFO[5]="$KARABO_SERVERS/alarmServer/startCppServer:DeviceServer.Logger.priority=$logLevel DeviceServer.serverId=$serverId:0:1000:yes"
 
 

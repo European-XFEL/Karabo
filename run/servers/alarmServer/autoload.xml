@@ -7,7 +7,7 @@
     </KRB_Item>
   </autoStart>
   <scanPlugins KRB_Type="STRING">false</scanPlugins>
-  <serverId KRB_Type="STRING">Karabo_AlarmServiceServer</serverId>
+  <serverId KRB_Type="STRING">Karabo_AlarmServer</serverId>
   <visibility>4</visibility>
-  <Logger><priority>DEBUG</priority></Logger>
+  <Logger><priority>INFO</priority></Logger>
 </DeviceServer>
