@@ -53,13 +53,15 @@ namespace karabo {
             void _addThread(const int nThreads);
 
             void _removeThread(const int nThreads);
-            
+
             void runProtected();
 
             static void asyncInjectException();
 
             void asyncDestroyThread(const boost::thread::id& id);
-          
+
+            void clearThreadPool();
+
             size_t _getNumberOfThreads() const;
 
             boost::asio::io_service m_ioService;
