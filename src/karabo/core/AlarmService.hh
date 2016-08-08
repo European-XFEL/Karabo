@@ -41,6 +41,8 @@ namespace karabo {
 
             void registerAlarmWithNewDevice(const karabo::util::Hash& topologyEntry);
 
+            void slotRegisterExistingDevice(const karabo::util::Hash& instanceInfo);
+
             void slotUpdateAlarms(const karabo::util::Hash& alarmInfo);
 
         private: // members
