@@ -16,17 +16,12 @@
  */
 namespace karabo {
 
-    namespace util {
-        class Schema;
-        class Hash;
-    }
-
     /**
      * Namespace for package core
      */
     namespace core {
 
-        class AlarmService : public karabo::core::Device<karabo::core::OkErrorFsm> {
+        class AlarmService : public karabo::core::Device<> {
 
         public:
 
@@ -40,7 +35,7 @@ namespace karabo {
 
         private: // Functions
 
-            void okStateOnEntry();
+            void initialize();
 
         };
     }
