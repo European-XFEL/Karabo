@@ -229,7 +229,7 @@ namespace karabo {
             const NDArray<unsigned char>& data = m_hash->get<NDArray<unsigned char> >("data");
             const Dims& shape = data.getShape();
             size_t size = 1;
-            for (int idx = 0; idx < shape.rank(); ++idx) {
+            for (unsigned int idx = 0; idx < shape.rank(); ++idx) {
                 size *= static_cast<size_t>(shape.extentIn(idx));
             }
             return size;
