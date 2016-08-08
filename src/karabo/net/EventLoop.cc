@@ -38,6 +38,7 @@ namespace karabo {
         void EventLoop::run() {
             instance().runProtected();
             instance().m_threadPool.join_all();
+            instance().clearThreadPool();
             instance().m_ioService.reset();
         }        
 
@@ -95,6 +96,7 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_threadPoolMutex);
             ThreadMap::iterator it = m_threadMap.find(id);
             if (it != m_threadMap.end()) {
+                it->second->join();
                 m_threadPool.remove_thread(it->second);
                 delete it->second;
             }
@@ -102,6 +104,15 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "Removed thread (id: " << id
                     << ") from event-loop, now running: "
                     << m_threadPool.size() << " threads in total";
+        }
+
+
+        void EventLoop::clearThreadPool() {
+            for (ThreadMap::iterator it = m_threadMap.begin(); it != m_threadMap.end(); ++it) {
+                m_threadPool.remove_thread(it->second);
+                delete it->second;
+            }
+            m_threadMap.clear();
         }
 
 
@@ -130,10 +141,14 @@ namespace karabo {
                     } else {
                         // We are in the main blocking thread here, which we never want to kill
                         // Hence, we are injecting the exception again to be taken by another thread
-                        m_ioService.post(&asyncInjectException);
-                        // We kindly ask the scheduler to put us on the back of the threads queue, avoiding we will
-                        // eat the just posted exception again
-                        boost::this_thread::yield();
+                        // Only if at least one thread to kill
+                        if (m_threadPool.size() > 0) {
+                            std::cout << "Illegal trial to remove thread on empty thread-pool" << std::endl;
+                            m_ioService.post(&asyncInjectException);
+                            // We kindly ask the scheduler to put us on the back of the threads queue, avoiding we will
+                            // eat the just posted exception again
+                            boost::this_thread::yield();
+                        }
                     }
                 } catch (karabo::util::Exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Exception" << fullMessage << ": " << e;
