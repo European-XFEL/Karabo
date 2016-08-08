@@ -98,7 +98,10 @@ namespace karabo {
             remote().registerInstanceNewMonitor(boost::bind(&AlarmService::registerAlarmWithNewDevice, this, _1));
             //make existing device aware of us
             emit("*", "signalAlarmDevice", getInstanceId());
+<<<<<<< HEAD
             updateState(State::NORMAL);
+=======
+>>>>>>> Add handling for alarm device reappearing
         }
         
         void AlarmService::registerAlarmWithNewDevice(const karabo::util::Hash& topologyEntry){
