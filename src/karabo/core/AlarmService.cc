@@ -6,6 +6,7 @@
  */
 
 #include "AlarmService.hh"
+#include "karabo/util/State.hh"
 
 namespace karabo {
     
@@ -19,7 +20,7 @@ namespace karabo {
         using namespace karabo::io;
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>, AlarmService)
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, AlarmService)
 
 
         void AlarmService::expectedParameters(Schema& expected) {
@@ -80,13 +81,15 @@ namespace karabo {
 
 
         AlarmService::AlarmService(const karabo::util::Hash& input) :
-            karabo::core::Device<karabo::core::OkErrorFsm>(input){
+            karabo::core::Device<>(input){
+            KARABO_INITIAL_FUNCTION(initialize);
         }
      
         AlarmService::~AlarmService() {
         }
         
-        void AlarmService::okStateOnEntry() {
+        void AlarmService::initialize() {
+            updateState(State::INIT);
             
         }
     }
