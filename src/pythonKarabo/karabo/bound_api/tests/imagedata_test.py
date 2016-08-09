@@ -3,12 +3,7 @@ import weakref
 import numpy as np
 
 from karabo.bound import ImageData, Encoding
-
-
-def _array_mem_addr(arr):
-    """ Return the memory address of the buffer backing a numpy array.
-    """
-    return arr.__array_interface__['data'][0]
+from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
 def test_imagedata_from_ndarray():
@@ -24,7 +19,7 @@ def test_imagedata_from_ndarray():
     b = np.arange(60000, dtype='uint8').reshape(100, 200, 3)
     imageData = ImageData(b, copy=True)
     assert np.all(imageData.getData() == b.flat)
-    assert _array_mem_addr(imageData.getData()) != _array_mem_addr(b)
+    assert not compare_ndarray_data_ptrs(imageData.getData(), b)
 
     assert imageData.getDimensionTypes() == [0, 0, 0]
     assert imageData.getDimensions() == [200, 100, 3]
@@ -34,7 +29,7 @@ def test_imagedata_from_ndarray():
     c = np.arange(80000, dtype='uint8').reshape(100, 200, 4)
     imageData = ImageData(c, copy=False)
     assert np.all(imageData.getData() == c)
-    assert _array_mem_addr(imageData.getData()) == _array_mem_addr(c)
+    assert compare_ndarray_data_ptrs(imageData.getData(), c)
 
     assert imageData.getDimensionTypes() == [0, 0, 0]
     assert imageData.getDimensions() == [200, 100, 4]
