@@ -1,3 +1,5 @@
+import weakref
+
 import numpy as np
 
 from karabo.bound import ImageData, Encoding
@@ -38,6 +40,26 @@ def test_imagedata_from_ndarray():
     assert imageData.getDimensions() == [200, 100, 4]
     assert imageData.getEncoding() == Encoding.RGBA
     assert imageData.getROIOffsets() == [0, 0, 0]
+
+
+def test_ndarry_refcounting():
+    arr = np.arange(20000, dtype='uint8').reshape(100, 200)
+    arr_weak = weakref.ref(arr)
+    img = ImageData(arr, copy=False)
+
+    del arr
+    assert arr_weak() is not None
+    del img
+    assert arr_weak() is None
+
+    arr = np.arange(20000, dtype='uint8').reshape(100, 200)
+    arr_weak = weakref.ref(arr)
+    img_data = ImageData(arr, copy=False).getData()
+
+    del arr
+    assert arr_weak() is not None
+    del img_data
+    assert arr_weak() is None
 
 
 def test_imagedata_from_hash():
