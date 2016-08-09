@@ -1,8 +1,9 @@
+import gc
 import weakref
 
 import numpy as np
 
-from karabo.bound import ImageData, Encoding
+from karabo.bound import Encoding, ImageData, ImageDataUINT8
 from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
@@ -51,6 +52,7 @@ def test_ndarry_refcounting():
     del arr
     assert arr_weak() is not None
     del img
+    gc.collect()  # The img._internal reference tends to linger...
     assert arr_weak() is None
 
     arr = np.arange(20000, dtype='uint8').reshape(100, 200)
@@ -60,6 +62,7 @@ def test_ndarry_refcounting():
     del arr
     assert arr_weak() is not None
     del img_data
+    gc.collect()  # The img._internal reference tends to linger...
     assert arr_weak() is None
 
     # Make sure conversion from Fortran order creates a copy
@@ -89,7 +92,7 @@ def test_imagedata_from_hash():
 
 def test_imagedata_set_and_get():
     a = np.arange(20000, dtype='uint8').reshape(100, 200)
-    imageData = ImageData()
+    imageData = ImageDataUINT8()
     # Set
     imageData.setData(a)  # Also set dataType
     imageData.setDimensionTypes([0, 1])
