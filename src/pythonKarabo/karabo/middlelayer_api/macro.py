@@ -72,12 +72,12 @@ def _wrapslot(slot, name):
     @wraps(themethod)
     def wrapper(device):
         device._lastloop = get_event_loop()
-        device.status = name
+        device.currentSlot = name
         device.state = State.ACTIVE
         try:
             return themethod(device)
         finally:
-            device.status = "Idle..."
+            device.currentSlot = ""
             device.state = State.PASSIVE
     slot.method = wrapper
 
@@ -100,10 +100,10 @@ class Macro(Device):
         accessMode=AccessMode.INITONLY,
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    status = String(
-        displayedName="Status",
-        description="A detailed description of what we are doing",
-        defaultValue="initializing...",
+    currentSlot = String(
+        displayedName="Current Slot",
+        description="The name of the slot which is currently running",
+        defaultValue="",
         accessMode=AccessMode.READONLY)
 
     print = String(
@@ -167,7 +167,6 @@ class Macro(Device):
 
         yield from super(Macro, self)._run()
 
-        self.status = "SearchRemotes..."
         holders = []
 
         @coroutine
@@ -190,7 +189,6 @@ class Macro(Device):
                           if isinstance(v, RemoteDevice)))
         for h in holders:
             async(h)
-        self.status = "Idle..."
         self.state = State.PASSIVE
 
     def __holdDevice(self, d):

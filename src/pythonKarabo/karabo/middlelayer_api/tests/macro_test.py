@@ -60,7 +60,7 @@ class Remote(Device):
 class Local(Macro):
     @Slot()
     def remotecalls(self):
-        self.nowstatus = self.status
+        self.nowslot = self.currentSlot
         self.nowstate = self.state
         print("superpuper", end="hero")
 
@@ -244,12 +244,12 @@ class Tests(DeviceTest):
         """test that macros can print via expected parameters"""
         sys.stdout = KaraboStream(sys.stdout)
         try:
-            self.assertEqual(self.local.status, "Idle...")
+            self.assertEqual(self.local.currentSlot, "")
             self.assertEqual(self.local.state, State.PASSIVE)
             yield from self.remote.call_local()
-            self.assertEqual(self.local.nowstatus, "remotecalls")
+            self.assertEqual(self.local.nowslot, "remotecalls")
             self.assertEqual(self.local.nowstate, State.ACTIVE)
-            self.assertEqual(self.local.status, "Idle...")
+            self.assertEqual(self.local.currentSlot, "")
             self.assertEqual(self.local.state, State.PASSIVE)
             self.assertEqual(self.local.print, "hero")
             self.assertEqual(self.local.printno, 2)
