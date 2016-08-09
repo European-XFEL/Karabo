@@ -14,7 +14,6 @@ namespace karathon {
     int ConnectionWrap::startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler) {
         if (!PyCallable_Check(connectionHandler.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
-        IOService::Pointer ioserv = connection->getIOService();
         int port = 0;
         try {
             ScopedGILRelease nogil;

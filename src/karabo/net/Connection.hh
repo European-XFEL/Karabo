@@ -87,15 +87,6 @@ namespace karabo {
             virtual ChannelPointer createChannel() = 0;
 
             /**
-             * This function returns a pointer to a IO service that had to be
-             * injected via configuration parameter
-             * @return a pointer to an IO service instance
-             */
-            IOService::Pointer getIOService() const;
-
-            void setIOService(const IOService::Pointer& ioService);
-
-            /**
              * This function sets the error handler that will be called if connection process failed
              * @param Call-back function of signature: void (boost::shared_ptr<Channel>, const ErrorCode&)
              * @return void
@@ -106,15 +97,12 @@ namespace karabo {
 
         protected: // functions
 
-            void setIOServiceType(const std::string& serviceType);
-
             boost::shared_ptr<Connection> getConnectionPointer() {
                 return shared_from_this();
             }
 
         protected: // members
 
-            IOService::Pointer m_service;
             ErrorHandler m_errorHandler;
             std::string m_serializationType;
 

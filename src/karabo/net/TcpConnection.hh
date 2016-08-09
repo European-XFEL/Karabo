@@ -90,6 +90,7 @@ namespace karabo {
                 return m_lengthIsTextFlag;
             }
 
+            
         private:
 
             void resolveHandler(const ConnectionHandler&, const ErrorCode&, boost::asio::ip::tcp::resolver::iterator);
@@ -103,10 +104,8 @@ namespace karabo {
 
         private:
 
-            BoostIOServicePointer m_boostIoServicePointer;
             BoostTcpResolver m_resolver;
             BoostTcpAcceptor m_acceptor;
-            boost::mutex m_boostTcpMutex;
             std::string m_connectionType;
             std::string m_hostname;
             unsigned int m_port;
