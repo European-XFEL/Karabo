@@ -33,34 +33,11 @@ namespace karabo {
 
 
         Connection::Connection(const karabo::util::Hash& input) {
-
             input.get("serializationType", m_serializationType);
-
-            // Always create an IOService object
-            m_service = IOService::Pointer(new IOService);
         }
 
 
         Connection::~Connection() {
-            if (m_service) {
-                m_service->stop();
-                m_service.reset();
-            }
-        }
-
-
-        IOService::Pointer Connection::getIOService() const {
-            return m_service;
-        }
-
-
-        void Connection::setIOService(const IOService::Pointer& ioService) {
-            m_service = ioService;
-        }
-
-
-        void Connection::setIOServiceType(const std::string& serviceType) {
-            m_service->setService(serviceType);
         }
 
     }

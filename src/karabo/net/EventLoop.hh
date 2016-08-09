@@ -19,15 +19,14 @@ namespace karabo {
 
         struct RemoveThreadException : public std::exception {
 
-            };
+        };
 
         class EventLoop : private boost::noncopyable {
 
-
         public:
 
-            KARABO_CLASSINFO(EventLoop, "EventLoop", "1.0")            
-           
+            KARABO_CLASSINFO(EventLoop, "EventLoop", "1.0")
+
             virtual ~EventLoop();
 
             static void addThread(const int nThreads = 1);
@@ -36,9 +35,9 @@ namespace karabo {
 
             static boost::asio::io_service& getIOService();
 
-            static void run();        
+            static void run();
 
-            static void stop();         
+            static void stop();
 
             static size_t getNumberOfThreads();
 
@@ -53,13 +52,15 @@ namespace karabo {
             void _addThread(const int nThreads);
 
             void _removeThread(const int nThreads);
-            
+
             void runProtected();
 
             static void asyncInjectException();
 
             void asyncDestroyThread(const boost::thread::id& id);
-          
+
+            void clearThreadPool();
+
             size_t _getNumberOfThreads() const;
 
             boost::asio::io_service m_ioService;

@@ -16,7 +16,7 @@
 #include <karabo/net/IOService.hh>
 #include <karabo/net/Connection.hh>
 #include <karabo/net/Channel.hh>
-
+#include <karabo/net/EventLoop.hh>
 #include "TcpNetworking_Test.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TcpNetworking_Test);
@@ -43,12 +43,6 @@ struct TcpServer {
     void connectHandler(const karabo::net::Channel::Pointer& channel) {
         channel->setErrorHandler(boost::bind(&TcpServer::errorHandler, this, channel, _1));
         channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, channel, _1, _2));
-    }
-
-
-    void run() {
-        karabo::net::IOService::Pointer io = m_connection->getIOService();
-        io->run();
     }
 
 
@@ -98,6 +92,9 @@ struct TcpClient {
 
 
     TcpClient(const std::string& host, int port) : m_count(0), m_port(port) {
+        m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "localhost"));
+        m_connection->setErrorHandler(boost::bind(&TcpClient::connectionErrorHandler, this, m_connection, _1));
+        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1));
     }
 
 
@@ -105,16 +102,8 @@ struct TcpClient {
     }
 
 
-    void run() {
-        m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "localhost"));
-        m_connection->setErrorHandler(boost::bind(&TcpClient::connectionErrorHandler, this, m_connection, _1));
-        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1));
-        karabo::net::IOService::Pointer io = m_connection->getIOService();
-        io->run();
-    }
-
-
     void connectHandler(const karabo::net::Channel::Pointer& channel) {
+        std::clog << "TcpClient connectHandler" << std::endl;
         channel->setErrorHandler(boost::bind(&TcpClient::errorHandler, this, channel, _1));
         karabo::util::Hash header("headline", "*** CLIENT ***");
         karabo::util::Hash data("a.b", "?", "a.c", 42.22f, "a.d", 12);
@@ -145,6 +134,9 @@ struct TcpClient {
     void readHashHashHandler(const karabo::net::Channel::Pointer& channel, karabo::util::Hash& header, karabo::util::Hash& body) {
         // inspect here the server reply.... just count
         m_count++;
+        
+        std::clog << "TcpClient readHashHashHandler count = " << m_count << std::endl;
+        
         if (m_count >= 3) { // stop after 3 attempts
             channel->close();
             return;
@@ -204,13 +196,14 @@ void TcpNetworking_Test::tearDown() {
 
 void TcpNetworking_Test::testClientServer() {
     using namespace std;
+    clog << "\n=== testClientServer START nThreads = " << karabo::net::EventLoop::getNumberOfThreads() << endl;
+    try {
+        TcpServer server;
+        TcpClient client("localhost", server.port());
 
-    TcpServer server;
-    boost::thread server_thread(boost::bind(&TcpServer::run, &server));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
-
-    TcpClient client("localhost", server.port());
-    client.run();
-
-    server_thread.join();
+        karabo::net::EventLoop::getIOService().run();
+    } catch (const std::exception& e) {
+        clog << "Standard exception in testClientServer: " << e.what() << endl;
+    }
+    clog << "\ntestClientServer STOPPED nThreads = " << karabo::net::EventLoop::getNumberOfThreads() << endl;
 }
