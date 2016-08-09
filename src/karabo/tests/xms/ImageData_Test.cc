@@ -40,7 +40,7 @@ void ImageData_Test::testConstructor() {
     std::vector<unsigned char> someData(dims.size(), 2);
 
     {
-        ImageData image(&someData[0], someData.size(), true, dims);
+        ImageData<unsigned char> image(&someData[0], someData.size(), true, dims);
 
         Dims imageDims(image.getDimensions());
         Dims imageOffsets(image.getROIOffsets());
@@ -69,7 +69,7 @@ void ImageData_Test::testSetAndGetMethods() {
     std::vector<unsigned char> someData(dims.size(), 2);
 
     {
-        ImageData image;
+        ImageData<unsigned char> image;
 
         // Set
         image.setData(&someData[0], someData.size(), true);

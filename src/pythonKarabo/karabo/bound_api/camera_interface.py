@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 from karathon import (
-    OVERWRITE_ELEMENT, SLOT_ELEMENT, IMAGEDATA, OUTPUT_CHANNEL,
+    OVERWRITE_ELEMENT, SLOT_ELEMENT, IMAGEDATA_UINT8_ELEMENT, OUTPUT_CHANNEL,
     DOUBLE_ELEMENT, NODE_ELEMENT, BOOL_ELEMENT, PATH_ELEMENT,
     STRING_ELEMENT, INT32_ELEMENT, Schema, SignalSlotable, Unit)
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
@@ -52,7 +52,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
         data = Schema()
         
         (
-        IMAGEDATA(data).key("image")
+        IMAGEDATA_UINT8_ELEMENT(data).key("image")
                 .commit(),
 
         OUTPUT_CHANNEL(expected).key("output")

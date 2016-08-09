@@ -29,7 +29,6 @@ namespace karathon {
 
     struct DataWrap {
 
-
         static boost::shared_ptr<karabo::xms::Data> make(bp::object& obj);
         static karabo::util::Hash::Pointer getNode(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key);
         static bp::object get(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key);
@@ -39,41 +38,41 @@ namespace karathon {
         static boost::shared_ptr<karabo::xms::Data> copy(const boost::shared_ptr<karabo::xms::Data>& self);
     };
 
-       struct ImageDataWrap : public karabo::xms::ImageData {
 
+    template <typename T>
+    struct ImageDataWrap : public karabo::xms::ImageData<T> {
 
-           static boost::shared_ptr<karabo::xms::ImageData> make5(const bp::object& obj, const bool copy = true,
-                                                                  const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                                                                  const karabo::xms::EncodingType encoding = karabo::xms::Encoding::UNDEFINED,
-                                                                  const int bitsPerPixel = 8);
-           static boost::shared_ptr<karabo::xms::ImageData> make2(const bp::object& obj, const bool copy = true);
-           static bp::object getDataPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-           static void setDataPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj, const bool copy);
-           static bp::object getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-           static void setDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj);
-           static bp::object getDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-           static void setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj);
-           static bp::object getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-           static void setROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj);
-           static bp::object getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-           static void writePy(const boost::shared_ptr<karabo::xms::ImageData>& self, const std::string& filename, const bool enableAppendMode = false);
-           static void setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& geometry);
-           static karabo::util::DetectorGeometry getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-           static void setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& header);
-           static const karabo::util::Hash& getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
+        static boost::shared_ptr<karabo::xms::ImageData<T> > make5(const bp::object& obj, const bool copy = true,
+                                                                    const karabo::util::Dims& dimensions = karabo::util::Dims(),
+                                                                    const karabo::xms::EncodingType encoding = karabo::xms::Encoding::UNDEFINED,
+                                                                    const int bitsPerPixel = 8);
+        static bp::object getDataPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self);
+        static void setDataPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& obj, const bool copy);
+        static bp::object getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self);
+        static void setDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& obj);
+        static bp::object getDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self);
+        static void setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& obj);
+        static bp::object getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self);
+        static void setROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& obj);
+        static bp::object getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self);
+        static void setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& geometry);
+        static karabo::util::DetectorGeometry getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self);
+        static void setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& header);
+        static const karabo::util::Hash& getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self);
+
     };
 
+
+    template <typename T>
     struct ImageDataElementWrap {
 
-
-
-        static karabo::xms::ImageDataElement& setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement>& self,
-                                                              const std::string& subKey,
-                                                              const bp::object& defaultValue);
+        static karabo::xms::ImageDataElement<T>& setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement<T> >& self,
+                                                                 const std::string& subKey,
+                                                                 const bp::object& defaultValue);
     };
 
-    struct OutputChannelWrap {
 
+    struct OutputChannelWrap {
 
         static void registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler);
         static void proxyIOEventHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::OutputChannel>& self);
@@ -82,8 +81,8 @@ namespace karathon {
         static void signalEndOfStreamPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self);
     };
 
-    struct InputChannelWrap {
 
+    struct InputChannelWrap {
 
         static void registerDataHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
         static void proxyDataHandler(const bp::object& handler, const karabo::xms::Data& data);
