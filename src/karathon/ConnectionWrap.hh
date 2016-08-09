@@ -39,22 +39,6 @@ namespace karathon {
             connection->stop();
         }
 
-        static void setIOService(const karabo::net::Connection::Pointer& connection, const bp::object& obj) {
-            using namespace karabo::net;
-            if (bp::extract<IOService::Pointer>(obj).check()) {
-                const IOService::Pointer& io = bp::extract<IOService::Pointer>(obj);
-                ScopedGILRelease nogil;
-                connection->setIOService(io);
-                return;
-            }
-            throw KARABO_PYTHON_EXCEPTION("Python object in parameters is not IOService::Pointer");
-        }
-
-        static bp::object getIOService(const karabo::net::Connection::Pointer& connection) {
-            ScopedGILRelease nogil;
-            return bp::object(connection->getIOService());
-        }
-
         static int startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler);
         static void setErrorHandler(const karabo::net::Connection::Pointer& connection, const bp::object& errorHandler);
 

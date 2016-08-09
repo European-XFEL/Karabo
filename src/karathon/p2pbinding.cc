@@ -54,8 +54,6 @@ void exportp2p() {
                      "new handlers in this handler using given channel if you want follow asynchronous model.")
                 .def("stop", &ConnectionWrap().stop, "Stops IO service operation.")
                 //.def("createChannel", &Connection::createChannel)
-                .def("getIOService", &ConnectionWrap().getIOService, "Creates new IO service object for you and register connection on it.")
-                .def("setIOService", &ConnectionWrap().setIOService, (bp::arg("ioserv")), "Registers connection on IO service object created externally.")
                 .def("setErrorHandler", &ConnectionWrap().setErrorHandler, (bp::arg("handler")), "Sets a handler being called in case of error conditions")
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Connection)
                 ;

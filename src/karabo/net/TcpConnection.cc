@@ -16,6 +16,7 @@
 #include "TcpChannel.hh"
 #include "AsioIOService.hh"
 #include "karabo/log/Logger.hh"
+#include "EventLoop.hh"
 #include <karabo/util/SimpleElement.hh>
 
 using namespace std;
@@ -103,7 +104,6 @@ namespace karabo {
 
         TcpConnection::TcpConnection(const karabo::util::Hash& input)
             : Connection(input)
-            , m_boostIoServicePointer()
             , m_resolver()
             , m_acceptor() {
 
@@ -121,22 +121,17 @@ namespace karabo {
         TcpConnection::~TcpConnection() {
             m_acceptor.reset();
             m_resolver.reset();
-            m_boostIoServicePointer.reset();
         }
 
 
         Channel::Pointer TcpConnection::start() {
-
-            this->setIOServiceType("Asio");
-            // Get the specific boost::asio::io_service object
-            m_boostIoServicePointer = getIOService()->castTo<AsioIOService > ()->getBoostIOService();
 
             m_isAsyncConnect = false;
 
             if (m_connectionType == "server") {
                 if (!m_acceptor) {
                     try {
-                        BoostTcpAcceptor acceptor(new ip::tcp::acceptor(*m_boostIoServicePointer));
+                        BoostTcpAcceptor acceptor(new ip::tcp::acceptor(EventLoop::getIOService()));
                         ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
                         acceptor->open(endpoint.protocol());
                         acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
@@ -153,7 +148,7 @@ namespace karabo {
                 return startServer();
             } else {
                 if (!m_resolver) {
-                    BoostTcpResolver resolv(new ip::tcp::resolver(*m_boostIoServicePointer));
+                    BoostTcpResolver resolv(new ip::tcp::resolver(EventLoop::getIOService()));
                     m_resolver = resolv;
                 }
                 return startClient();
@@ -193,16 +188,11 @@ namespace karabo {
 
         int TcpConnection::startAsync(const ConnectionHandler& handler) {
 
-            this->setIOServiceType("Asio");
-            // Get the specific boost::asio::io_service object
-            m_boostIoServicePointer = getIOService()->castTo<AsioIOService > ()->getBoostIOService();
-
-
             m_isAsyncConnect = true;
             if (m_connectionType == "server") {
                 if (!m_acceptor) {
                     try {
-                        BoostTcpAcceptor acceptor(new ip::tcp::acceptor(*m_boostIoServicePointer));
+                        BoostTcpAcceptor acceptor(new ip::tcp::acceptor(EventLoop::getIOService()));
                         ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
                         acceptor->open(endpoint.protocol());
                         acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
@@ -224,7 +214,7 @@ namespace karabo {
                 startServer(handler);
             } else if (m_connectionType == "client") {
                 if (!m_resolver) {
-                    BoostTcpResolver resolv(new ip::tcp::resolver(*m_boostIoServicePointer));
+                    BoostTcpResolver resolv(new ip::tcp::resolver(EventLoop::getIOService()));
                     m_resolver = resolv;
                 }
                 startClient(handler);
@@ -329,23 +319,23 @@ namespace karabo {
 
 
         void TcpConnection::stop() {
-            boost::system::error_code ec;
-            {
-                boost::mutex::scoped_lock lock(m_boostTcpMutex);
-                if (m_connectionType == "server" && m_acceptor) {
-                    m_acceptor->cancel(ec);
-                    if (ec) cout << "WARN  :  Acceptor cancellation failed: #" << ec.value() << " -- " << ec.message() << endl;
-                    ec.clear();
-                    m_acceptor->close(ec);
-                    if (ec) cout << "WARN  :  Acceptor closing failed: #" << ec.value() << " -- " << ec.message() << endl;
-                    m_acceptor.reset();
-                } else if (m_resolver) {
-                    m_resolver->cancel();
-                    m_resolver.reset();
+            if (m_connectionType == "server" && m_acceptor) {
+                try {
+                    m_acceptor->cancel();
+                } catch (...) {
                 }
+                try {
+                    m_acceptor->close();
+                } catch (...) {
+                }
+                m_acceptor.reset();
+            } else if (m_resolver) {
+                try {
+                    m_resolver->cancel();
+                } catch (...) {
+                }
+                m_resolver.reset();
             }
-            m_boostIoServicePointer.reset();
-            m_service.reset();
         }
 
 
