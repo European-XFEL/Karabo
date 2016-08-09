@@ -636,10 +636,8 @@ namespace karabo {
                         + karabo::util::toString(threshold));
                     
                     Hash::Node& desc = m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmString, "message", msg), '\0');
-                    const Timestamp& occurredAt = Timestamp::fromHashAttributes(workNode.getAttributes());
-                    occurredAt.toHashAttributes(desc.getAttributes());
-
-                    attachTimestampIfNotAlreadyThere(workNode);
+                    m_timestamp.toHashAttributes(desc.getAttributes());
+                    
                     workNode.setAttribute(KARABO_ALARM_ATTR, alarmString);
                     return true; //alarm condition re-raised, do not clear
                 } else {
