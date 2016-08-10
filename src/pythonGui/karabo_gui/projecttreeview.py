@@ -14,12 +14,15 @@ __all__ = ["ProjectTreeView"]
 
 import karabo_gui.globals as globals
 
-from karabo_gui.dialogs.projectdialog import ProjectDialog, ProjectSaveDialog, ProjectLoadDialog
-from karabo_gui.scene import Scene
-from karabo_gui.network import Network
-from karabo_gui.topology import Manager
-from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject, Macro
+from karabo_gui.dialogs.projectdialog import (
+    ProjectDialog, ProjectSaveDialog, ProjectLoadDialog)
+from karabo_gui.guiproject import (
+    Category, Device, DeviceGroup, GuiProject, Macro)
 from karabo_gui.projectmodel import ProjectModel
+from karabo_gui.network import Network
+from karabo_gui.scene import Scene
+from karabo_gui.scenemodel.api import SceneModel
+from karabo_gui.topology import Manager
 
 from karabo.middlelayer_api.project import (Monitor, Project, ProjectAccess,
                                             ProjectConfiguration)
@@ -398,7 +401,7 @@ class ProjectTreeView(QTreeView):
                 menu.addAction(acFilename)
                 menu.addAction(acInterval)
                 menu.addAction(acMonitoring)
-        elif selectedType in (Device, DeviceGroup, Scene, Macro, Monitor):
+        elif selectedType in (Device, DeviceGroup, SceneModel, Macro, Monitor):
             # Device or Scene menu
             if nbSelected > 1:
                 text = "Delete selected"
@@ -454,7 +457,7 @@ class ProjectTreeView(QTreeView):
             elif selectedType is Macro:
                 acEdit.triggered.connect(self.model().onEditMacro)
                 acDuplicate.triggered.connect(self.model().onDuplicateMacro)
-            elif selectedType is Scene:
+            elif selectedType is SceneModel:
                 if nbSelected == 1:
                     acEdit.triggered.connect(self.model().onEditScene)
                     acDuplicate.triggered.connect(self.model().onDuplicateScene)

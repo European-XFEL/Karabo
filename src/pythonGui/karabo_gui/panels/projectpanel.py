@@ -26,6 +26,7 @@ class ProjectPanel(Dockable, QWidget):
     signalRenameScene = pyqtSignal(object) # scene
     signalAddSceneView = pyqtSignal(object, object) # SceneModel, Project
     signalRemoveSceneView = pyqtSignal(object) # SceneModel
+    signalRenameSceneView = pyqtSignal(object) # SceneModel
     signalAddMacro = pyqtSignal(object)
     signalRemoveMacro = pyqtSignal(object) # macro
 
@@ -42,6 +43,7 @@ class ProjectPanel(Dockable, QWidget):
         self.twProject.model().signalRenameScene.connect(self.signalRenameScene)
         self.twProject.model().signalAddSceneView.connect(self.signalAddSceneView)
         self.twProject.model().signalRemoveSceneView.connect(self.signalRemoveSceneView)
+        self.twProject.model().signalRenameSceneView.connect(self.signalRenameSceneView)
         self.twProject.model().signalAddMacro.connect(self.signalAddMacro)
         self.twProject.model().signalRemoveMacro.connect(self.signalRemoveMacro)
         self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)

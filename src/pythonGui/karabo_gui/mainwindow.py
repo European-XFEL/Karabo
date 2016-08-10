@@ -174,6 +174,7 @@ class MainWindow(QMainWindow):
         self.projectPanel.signalRenameScene.connect(self.onRenameScene)
         self.projectPanel.signalAddSceneView.connect(self.addSceneView)
         self.projectPanel.signalRemoveSceneView.connect(self.removeSceneView)
+        self.projectPanel.signalRenameSceneView.connect(self.renameSceneView)
         self.projectPanel.signalAddMacro.connect(self.onAddMacro)
         self.projectPanel.signalRemoveMacro.connect(self.onRemoveMacro)
         self.projectTab = DockTabWindow("Projects", self.leftArea)
@@ -399,6 +400,12 @@ class MainWindow(QMainWindow):
             #sceneView = self.middleTab.widget(index)
             #sceneView.signalSceneLinkTriggered.disconnect(self.openSceneLink)
             del self._openedScenes[sceneModel]
+
+    @pyqtSlot(object)
+    def renameSceneView(self, sceneModel):
+        if sceneModel in self._openedScenes:
+            index = self._openedScenes.get(sceneModel)
+            self.middleTab.setTabText(index, sceneModel.filename)
 
     @pyqtSlot(object)
     def onAddMacro(self, macro):
