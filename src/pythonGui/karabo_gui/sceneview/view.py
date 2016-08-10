@@ -98,9 +98,6 @@ class SceneView(QWidget):
             self.selection_model.clear_selection()
             self.set_tool(None)
 
-    def update_project_handler(self, project):
-        self.project_handler.project = project
-
     # ----------------------------
     # Qt Methods
 

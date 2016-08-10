@@ -26,9 +26,7 @@ from karabo_gui.dialogs.monitordialog import MonitorDialog
 from karabo_gui.dialogs.scenedialog import SceneDialog
 from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from karabo_gui.messagebox import MessageBox
-from karabo_gui.scene import Scene
 from karabo_gui.scenemodel.api import read_scene, SceneModel
-from karabo_gui.sceneview.api import SceneView
 import karabo_gui.network as network
 from karabo_gui.topology import getDevice, Manager
 from karabo_gui.util import getSaveFileName
@@ -47,9 +45,6 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalItemChanged = pyqtSignal(str, object) # type, configuration
     signalSelectionChanged = pyqtSignal(list)
-    signalAddScene = pyqtSignal(object) # scene
-    signalRemoveScene = pyqtSignal(object) # scene
-    signalRenameScene = pyqtSignal(object) # scene
     signalAddSceneView = pyqtSignal(object, object) # SceneModel, Project
     signalRemoveSceneView = pyqtSignal(object) # SceneModel
     signalRenameSceneView = pyqtSignal(object) # SceneModel
@@ -489,16 +484,16 @@ class ProjectModel(QStandardItemModel):
         item.setText(monitor.name)
 
 
-    def createSceneItem(self, scene):
+    def createSceneItem(self, sceneModel):
         """
-        This function creates a QStandardItem for the given \scene and
+        This function creates a QStandardItem for the given \sceneModel and
         returns it.
         """
-        item = QStandardItem(scene.filename)
+        item = QStandardItem(sceneModel.filename)
         item.setIcon(icons.image)
-        item.setData(scene, ProjectModel.ITEM_OBJECT)
+        item.setData(sceneModel, ProjectModel.ITEM_OBJECT)
         item.setEditable(False)
-        item.setToolTip(scene.filename)
+        item.setToolTip(sceneModel.filename)
         
         return item
 
@@ -509,7 +504,7 @@ class ProjectModel(QStandardItemModel):
         """
         item = self.createSceneItem(sceneModel)
 
-        # XXX: TODO: the project should come from the model
+        # XXX: TODO: the project should come from somewhere else..
         project = self.currentProject() # sceneModel.project
         projectItem = self.findItem(project)
         # Find folder for scenes
@@ -702,14 +697,12 @@ class ProjectModel(QStandardItemModel):
         
         return device
 
-
     def currentScene(self):
         scene = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
         if not isinstance(scene, SceneModel):
             return None
         
         return scene
-
 
     def currentMacro(self):
         macro = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
@@ -1276,13 +1269,14 @@ class ProjectModel(QStandardItemModel):
         """ This method gets a `sceneModel` and triggers a signal to open a
             scene view in the GUI.
         """
+        # XXX: TODO: where should the project come from?
         self.signalAddSceneView.emit(sceneModel, self.currentProject())
 
-    def openSceneLink(self, sceneName):
+    def openSceneLink(self, title):
         project = self.currentProject()
-        scene = project.getScene(sceneName)
-        if scene is not None:
-            self.openScene(scene)
+        sceneModel = project.getScene(title)
+        if sceneModel is not None:
+            self.openScene(sceneModel)
 
     def editMacro(self, macro):
         if macro is None:

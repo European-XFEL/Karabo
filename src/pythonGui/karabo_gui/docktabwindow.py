@@ -75,7 +75,6 @@ class DockTabWindow(QTabWidget):
         self.divWidgetList.remove(divWidget)
         self.updateTabsClosable()
 
-
     def addCornerWidget(self, tbNewTab):
         self.setCornerWidget(tbNewTab)
 
@@ -241,6 +240,11 @@ class DivWidget(QFrame):
     def addToolBar(self, toolBar):
         self.toolBarLayout.addWidget(toolBar)
 
+    def updateTitle(self, title):
+        """ The title of the widget changed and needs to be updated.
+        """
+        self.label = title
+        self.setWindowTitle(self.label)
 
     def onUndock(self):
         self.acDock.setVisible(True)
