@@ -25,7 +25,7 @@ namespace karabo {
         template<typename ValueType>
         class SimpleElement : public LeafElement<SimpleElement<ValueType>, ValueType > {
 
-            public:
+        public:
 
             SimpleElement(Schema& expected) : LeafElement<SimpleElement<ValueType>, ValueType >(expected) {
             }
@@ -171,7 +171,7 @@ namespace karabo {
 
                         this->userAccess();
 
-                    } else { //else set default value of requiredAccessLevel to OBSERVER 
+                    } else { //else set default value of requiredAccessLevel to OBSERVER
                         this->observerAccess();
                     }
 
@@ -180,6 +180,7 @@ namespace karabo {
                 checkMinExcMaxExc();
                 checkMinIncMaxInc();
                 checkWarnAndAlarm();
+
 
             }
 
@@ -222,11 +223,10 @@ namespace karabo {
                 this->checkAttributeOrder(AlarmCondition::ALARM_LOW, AlarmCondition::WARN_LOW);
                 this->checkAttributeOrder(AlarmCondition::ALARM_LOW, AlarmCondition::WARN_HIGH);
                 this->checkAttributeOrder(AlarmCondition::WARN_HIGH, AlarmCondition::ALARM_HIGH);
-               
+
             }
-            
-            
-            void checkAttributeOrder(const karabo::util::AlarmCondition& condLow, const karabo::util::AlarmCondition& condHigh){
+
+            void checkAttributeOrder(const karabo::util::AlarmCondition& condLow, const karabo::util::AlarmCondition& condHigh) {
                 const std::string& attributeLow = condLow.asString();
                 const std::string& attributeHigh = condHigh.asString();
                 if (this->m_node->hasAttribute(attributeLow) && this->m_node->hasAttribute(attributeHigh)) {

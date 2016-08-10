@@ -94,7 +94,11 @@ namespace karabo {
 
             const karabo::util::NDArray<unsigned char>& getData() const;
 
+            // Data MAYBE copied
             void setData(const unsigned char* data, const size_t size, const bool copy);
+
+            // Data NOT copied
+            void setData(const karabo::util::NDArray<unsigned char>& array);
 
             karabo::util::Dims getROIOffsets() const;
 
@@ -157,6 +161,8 @@ namespace karabo {
         private:
 
             void swapEndianess();
+
+            static void deallocateNonCopied(unsigned char *);
 
         };
 
