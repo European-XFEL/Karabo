@@ -644,8 +644,8 @@ namespace karabo {
                 this->erase(*it, separator);
             }
         }
-
-
+        
+        
         Hash& Hash::operator-=(const Hash& other) {
             this->subtract(other);
             return *this;
