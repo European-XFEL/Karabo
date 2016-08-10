@@ -1,43 +1,77 @@
+import weakref
+
 import numpy as np
 
 from karabo.bound import ImageData, Encoding
-
-
-def _array_mem_addr(arr):
-    """ Return the memory address of the buffer backing a numpy array.
-    """
-    return arr.__array_interface__['data'][0]
+from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
 def test_imagedata_from_ndarray():
-    a = np.arange(20000, dtype='uint8').reshape(100, 200)
-    imageData = ImageData(a)
-    assert np.all(imageData.getData() == a.flat)
+    arr = np.arange(20000, dtype='uint8').reshape(100, 200)
+    imageData = ImageData(arr)
+    assert np.all(imageData.getData() == arr.flat)
 
     assert imageData.getDimensionTypes() == [0, 0]
     assert imageData.getDimensions() == [200, 100]
     assert imageData.getEncoding() == Encoding.GRAY
     assert imageData.getROIOffsets() == [0, 0]
 
-    b = np.arange(60000, dtype='uint8').reshape(100, 200, 3)
-    imageData = ImageData(b, copy=True)
-    assert np.all(imageData.getData() == b.flat)
-    assert _array_mem_addr(imageData.getData()) != _array_mem_addr(b)
+    # Make sure conversion from Fortran order doesn't harm dimensions
+    arr = np.asarray(np.arange(20000, dtype='uint8').reshape(100, 200),
+                     order='F')
+    imageData = ImageData(arr)
+    assert imageData.getDimensions() == [200, 100]
+
+    arr = np.arange(60000, dtype='uint8').reshape(100, 200, 3)
+    imageData = ImageData(arr, copy=True)
+    assert np.all(imageData.getData() == arr.flat)
+    assert not compare_ndarray_data_ptrs(imageData.getData(), arr)
 
     assert imageData.getDimensionTypes() == [0, 0, 0]
     assert imageData.getDimensions() == [200, 100, 3]
     assert imageData.getEncoding() == Encoding.RGB
     assert imageData.getROIOffsets() == [0, 0, 0]
 
-    c = np.arange(80000, dtype='uint8').reshape(100, 200, 4)
-    imageData = ImageData(c, copy=False)
-    assert np.all(imageData.getData() == c)
-    assert _array_mem_addr(imageData.getData()) == _array_mem_addr(c)
+    arr = np.arange(80000, dtype='uint8').reshape(100, 200, 4)
+    imageData = ImageData(arr, copy=False)
+    assert np.all(imageData.getData() == arr)
+    assert compare_ndarray_data_ptrs(imageData.getData(), arr)
 
     assert imageData.getDimensionTypes() == [0, 0, 0]
     assert imageData.getDimensions() == [200, 100, 4]
     assert imageData.getEncoding() == Encoding.RGBA
     assert imageData.getROIOffsets() == [0, 0, 0]
+
+
+def test_ndarry_refcounting():
+    arr = np.arange(20000, dtype='uint8').reshape(100, 200)
+    arr_weak = weakref.ref(arr)
+    img = ImageData(arr, copy=False)
+
+    del arr
+    assert arr_weak() is not None
+    del img
+    assert arr_weak() is None
+
+    arr = np.arange(20000, dtype='uint8').reshape(100, 200)
+    arr_weak = weakref.ref(arr)
+    img_data = ImageData(arr, copy=False).getData()
+
+    del arr
+    assert arr_weak() is not None
+    del img_data
+    assert arr_weak() is None
+
+    # Make sure conversion from Fortran order creates a copy
+    arr = np.asarray(np.arange(20000, dtype='uint8').reshape(100, 200),
+                     order='F')
+    img_data = ImageData(arr, copy=False).getData()
+    assert not compare_ndarray_data_ptrs(img_data, arr)
+
+    img_data_weak = weakref.ref(img_data)
+    assert img_data_weak() is not None
+    del img_data
+    assert img_data_weak() is None
 
 
 def test_imagedata_from_hash():
