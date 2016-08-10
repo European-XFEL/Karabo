@@ -13,6 +13,9 @@
 #include <karabo/util/Hash.hh>
 
 #define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
+#define KRB_NDARRAY_MIN_DIM 1
+#define KRB_NDARRAY_MAX_DIM 6
+
 #define NO_IMPORT_ARRAY
 #include <numpy/arrayobject.h>
 
@@ -314,6 +317,33 @@ namespace karathon {
         }
     };
 
+    // Handler class for arrays originating in C++ code
+    template <typename T>
+    class CppArrayRefHandler {
+    public:
+        typedef boost::shared_ptr<karabo::util::ArrayData<T> > ArrayDataPtr;
+
+    private:
+        ArrayDataPtr m_arrayData;
+
+    public:
+        explicit CppArrayRefHandler(const ArrayDataPtr& arr) : m_arrayData(arr) {}
+        ArrayDataPtr getDataPtr() const { return m_arrayData; }
+    };
+
+    // Handler class for arrays originating in Python code
+    template <typename T>
+    class PyArrayRefHandler {
+        PyArrayObject* m_arrayRef;
+
+    public:
+        explicit PyArrayRefHandler(PyArrayObject* obj) : m_arrayRef(obj) {}
+
+        void operator ()(const T*) {
+            Py_DECREF(m_arrayRef);
+        }
+    };
+
     struct Wrapper {
 
         static bool hasattr(bp::object obj, const std::string& attrName) {
@@ -421,19 +451,48 @@ namespace karathon {
         }
 
         template<typename T>
-        static karabo::util::NDArray<T> fromPyArrayToNDArray(PyArrayObject* arr) {
-            typedef typename karabo::util::NDArray<T> ArrayType;
-
+        static karabo::util::NDArray<T> fromPyArrayToNDArray(PyArrayObject* arr, const int typenum) {
+            // Convert the array shape to a std::vector
             npy_intp* pDims = PyArray_DIMS(arr);
             std::vector<unsigned long long> dims;
             for (int i = 0; i < PyArray_NDIM(arr); i++) {
                 dims.push_back(pDims[i]);
             }
 
-            T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
-            const karabo::util::Dims shape(dims);
-            typename ArrayType::VectorTypePtr v(new typename ArrayType::VectorType(data, data + shape.size()));
-            return ArrayType(v, shape);
+            // Get an ArrayData object which points to the array's data
+            boost::shared_ptr<karabo::util::ArrayData<T> > array;
+            PyObject* arrBase = PyArray_BASE(arr);
+
+            // Determine if the array data is owned by a C++ object
+            if (arrBase != NULL && arrBase != Py_None) {
+                bp::object base(bp::handle<>(bp::borrowed(arrBase)));
+                bp::extract<CppArrayRefHandler<T> > maybeArrayRef(base);
+                if (maybeArrayRef.check()) {
+                    const CppArrayRefHandler<T>& arrayRef = maybeArrayRef();
+                    // The data already has an ArrayData<T> object managing it.
+                    array = arrayRef.getDataPtr();
+                }
+            }
+
+            // Array ref is still empty. Create a new ArrayData
+            if (!array) {
+                PyObject* pyobj = reinterpret_cast<PyObject*>(arr);
+                // Get a contiguous copy of the array with the correct type (or just a reference if already compatible)
+                PyArrayObject* carr = reinterpret_cast<PyArrayObject*>(PyArray_FROMANY(pyobj, typenum, KRB_NDARRAY_MIN_DIM, KRB_NDARRAY_MAX_DIM, NPY_ARRAY_C_CONTIGUOUS));
+                if (carr != NULL) {
+                    const T* data = reinterpret_cast<T*> (PyArray_DATA(carr));
+                    const npy_intp nelems = PyArray_SIZE(carr);
+                    const PyArrayRefHandler<T> refHandler(carr); // Steals the reference to carr
+                    // Create a new ArrayData<T> which uses PyArrayRefHandler to manage the Python reference count
+                    array = boost::shared_ptr<karabo::util::ArrayData<T> >(new karabo::util::ArrayData<T>(data, nelems, refHandler));
+                }
+            }
+
+            if (!array) {
+                throw KARABO_PYTHON_EXCEPTION("Failed conversion of ndarray to C++ NDArray.");
+            }
+
+            return karabo::util::NDArray<T>(array, karabo::util::Dims(dims));
         }
 
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);
@@ -453,18 +512,20 @@ namespace karathon {
         template<typename T>
         static bp::object fromNDArrayToPyArray(const karabo::util::NDArray<T>& a, const int typenum) {
             const karabo::util::Dims shape = a.getShape();
-            const typename karabo::util::NDArray<T>::VectorTypePtr dataPtr = a.getData();
             const int nd = shape.rank();
             std::vector<npy_intp> dims(nd, 0);
             for (int i = 0; i < nd; ++i) {
                 dims[i] = shape.extentIn(i);
             }
-            PyObject* pyobj = PyArray_SimpleNew(nd, &dims[0], typenum);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
-            T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
-            for (int i = 0; i < PyArray_SIZE(arr); i++) {
-                data[i] = (*dataPtr)[i];
-            }
+
+            boost::shared_ptr<karabo::util::ArrayData<T> > arrayData(a.getData());
+            const boost::shared_ptr<CppArrayRefHandler<T> > refHandler(new CppArrayRefHandler<T>(arrayData));
+            bp::object pyRefHandler(refHandler); // Python reference count starts at 1
+            void* data = reinterpret_cast<void*> (arrayData->data());
+            PyObject* pyobj = PyArray_SimpleNewFromData(nd, &dims[0], typenum, data);
+            PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(pyobj), pyRefHandler.ptr());
+            // PyArray_SetBaseObject steals a reference. Increase the refcount to protect bp::object::~object()
+            Py_INCREF(pyRefHandler.ptr());
             return bp::object(bp::handle<>(pyobj));
         }
     };
