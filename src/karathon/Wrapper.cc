@@ -230,8 +230,8 @@ namespace karathon {
                 return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<signed char> >(operand), NPY_INT8);
             } else if (operand.type() == typeid (karabo::util::NDArray<unsigned char>)) {
                 return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<unsigned char> >(operand), NPY_UINT8);
-            } else if (operand.type() == typeid (karabo::util::NDArray<short>)) {
-                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<short> >(operand), NPY_SHORT);
+            } else if (operand.type() == typeid (karabo::util::NDArray<signed short>)) {
+                return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<signed short> >(operand), NPY_SHORT);
             } else if (operand.type() == typeid (karabo::util::NDArray<unsigned short>)) {
                 return fromNDArrayToPyArray(boost::any_cast<karabo::util::NDArray<unsigned short> >(operand), NPY_USHORT);
             } else if (operand.type() == typeid (karabo::util::NDArray<int>)) {
@@ -436,7 +436,7 @@ namespace karathon {
                 }
                 case NPY_SHORT:
                 {
-                    any = fromPyArrayToNDArray<short>(arr, dtype->type_num);
+                    any = fromPyArrayToNDArray<signed short>(arr, dtype->type_num);
                     return karabo::util::Types::NDARRAY_INT16;
                 }
                 case NPY_USHORT:
