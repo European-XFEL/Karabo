@@ -20,7 +20,6 @@ from karabo_gui.guiproject import (
     Category, Device, DeviceGroup, GuiProject, Macro)
 from karabo_gui.projectmodel import ProjectModel
 from karabo_gui.network import Network
-from karabo_gui.scene import Scene
 from karabo_gui.scenemodel.api import SceneModel
 from karabo_gui.topology import Manager
 
@@ -243,7 +242,7 @@ class ProjectTreeView(QTreeView):
         object = index.data(ProjectModel.ITEM_OBJECT)
         if isinstance(object, Device) or isinstance(object, DeviceGroup):
             self.model().editDevice(object)
-        elif isinstance(object, Scene):
+        elif isinstance(object, SceneModel):
             self.model().openScene(object)
         elif isinstance(object, Macro):
             self.model().openMacro(object)
