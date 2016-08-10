@@ -469,7 +469,7 @@ class Tests(DeviceTest):
         with (yield from getDevice("remote")) as d:
             try:
                 d.value = 7
-                yield from sleep(0.02)
+                yield from waitUntil(lambda: d.value == 7)
                 # disallowed_int is normally not allowed
                 with self.assertLogs(logger="remote", level="WARNING") as logs:
                     d.disallowed_int = 333
@@ -480,7 +480,7 @@ class Tests(DeviceTest):
                 # allow set value to 777 and is changing state such that
                 # disallowed_int can be set ...
                 yield from d.allow()
-                yield from sleep(0.02)
+                yield from waitUntil(lambda: d.value == 777)
                 self.assertEqual(d.value, 777)
                 d.value = 4
                 # ... but it cannot be called itself anymore ...
@@ -491,11 +491,11 @@ class Tests(DeviceTest):
                 self.assertEqual(d.value, 4)
                 # ... but disallowed_int sets this back ...
                 d.disallowed_int = 444
-                yield from sleep(0.02)
+                yield from waitUntil(lambda: d.value == 444)
                 self.assertEqual(d.value, 444)
                 # ... so allow can be called again!
                 yield from d.allow()
-                self.assertEqual(d.value, 777)
+                yield from waitUntil(lambda: d.value == 777)
             finally:
                 # set the state back
                 d.disallowed_int = 7
