@@ -90,19 +90,10 @@ namespace karabo {
                     karabo::util::Hash h("type", "server", "port", 0, "compressionUsageThreshold", m_compression * 10E06);
                     m_dataConnection = karabo::net::Connection::create("Tcp", h);
                     m_dataConnection->setErrorHandler(boost::bind(&karabo::xms::OutputChannel::onTcpConnectionError, this, m_dataConnection, _1));
-                    m_dataIOService = m_dataConnection->getIOService();
                     m_ownPort = m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1));
-
-                    // Start data thread
-                    m_dataThread = boost::thread(boost::bind(&karabo::net::IOService::run, m_dataIOService));
-
                 } catch (...) {
                     if (tryAgain > 0) {
                         tryAgain--;
-                        if (m_dataThread.joinable()) {
-                            m_dataIOService->stop();
-                            m_dataThread.join();
-                        }
                         continue;
                     } else {
                         throw KARABO_NETWORK_EXCEPTION("Could not start TcpServer for output channel");

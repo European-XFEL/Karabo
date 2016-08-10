@@ -8,6 +8,7 @@
 
 #include "GuiServerDevice.hh"
 #include "DataLogUtils.hh"
+#include "karabo/net/EventLoop.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -92,7 +93,6 @@ namespace karabo {
             h.set("type", "server");
             h.set("serializationType", "binary"); // Will lead to binary header hashes
             m_dataConnection = Connection::create("Tcp", h);
-            m_ioService = m_dataConnection->getIOService();
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading
 
             m_loggerInput = config;
@@ -100,9 +100,7 @@ namespace karabo {
 
 
         GuiServerDevice::~GuiServerDevice() {
-            if (m_ioService) m_ioService->stop();
             if (m_dataConnection) m_dataConnection->stop();
-            if (m_loggerIoService) m_loggerIoService->stop();
         }
 
 
@@ -119,7 +117,6 @@ namespace karabo {
             m_loggerInput.set("loggerConnection.Jms.brokerHosts", brokers);
 
             m_loggerConnection = BrokerConnection::createChoice("loggerConnection", m_loggerInput);
-            m_loggerIoService = m_loggerConnection->getIOService();
 
             // This creates a connection in order to forward exceptions happened in the GUI
             m_guiDebugConnection = BrokerConnection::create("Jms", Hash("destinationName", "karaboGuiDebug",
@@ -147,20 +144,19 @@ namespace karabo {
 
                 m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
                 // Use one thread currently (you may start this multiple time for having more threads doing the work)
-                boost::thread(boost::bind(&karabo::net::IOService::run, m_ioService));
-
+                //!!!!!!! boost::thread(boost::bind(&boost::asio::io_service::run, m_ioService));
+                
                 // Start the logging thread
                 m_loggerConnection->start();
                 m_loggerChannel = m_loggerConnection->createChannel();
                 m_loggerChannel->setFilter("target = 'log'");
                 m_loggerChannel->setErrorHandler(boost::bind(&GuiServerDevice::logErrorHandler, this, m_loggerChannel, _1));
                 m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2));
-                boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
-
+                
                 // Start the guiDebugChannel
                 m_guiDebugConnection->start();
                 m_guiDebugChannel = m_guiDebugConnection->createChannel();
-
+                
                 // Produce some information
                 KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port");
 
