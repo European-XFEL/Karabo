@@ -217,24 +217,10 @@ class SceneView(QWidget):
 
         self.tab_visible = visible
 
-    def load(self, filename):
-        """ The given ``filename`` is loaded.
-        """
-        # Set name
-        self.title = os.path.basename(filename)
-        # Read file into scene model
-        self._set_scene_model(read_scene(filename))
-        # Set width and height
-        self.resize(max(self.scene_model.width, SCENE_MIN_WIDTH),
-                    max(self.scene_model.height, SCENE_MIN_HEIGHT))
-
-        self._scene_obj_cache = {}
-        fill_root_layout(self.layout, self.scene_model, self.inner,
-                         self._scene_obj_cache)
-
     def update_model(self, scene_model):
         if scene_model is None:
             return
+
         # Set scene model
         self._set_scene_model(scene_model)
         # Set width and height
