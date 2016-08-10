@@ -30,6 +30,27 @@ class Tests(TestCase):
         a.amin = 55
         self.assertEqual(a.alarmCondition, AlarmCondition.WARN_HIGH)
 
+    def test_multiple(self):
+        class A(AlarmMixin):
+            aminwmax = Int32(alarmLow=3, warnHigh=7)
+            amaxwmax = Int32(alarmHigh=7, warnHigh=9)
+
+
+        a = A({})
+        self.assertEqual(a.alarmCondition, AlarmCondition.NONE)
+        a.aminwmax = 2
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_LOW)
+        a.aminwmax = 22
+        self.assertEqual(a.alarmCondition, AlarmCondition.WARN_HIGH)
+        a.aminwmax = 4
+        self.assertEqual(a.alarmCondition, AlarmCondition.NONE)
+        a.amaxwmax = 10
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_HIGH)
+        a.amaxwmax = 8
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_HIGH)
+        a.amaxwmax = 5
+        self.assertEqual(a.alarmCondition, AlarmCondition.NONE)
+
     def test_nested(self):
         class N(Configurable):
             amin = Int32(alarmLow=3)
