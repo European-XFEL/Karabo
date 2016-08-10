@@ -175,7 +175,6 @@ TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
 
 # Test Files
 TESTFILES= \
-	${TESTDIR}/TestFiles/f8 \
 	${TESTDIR}/TestFiles/f2 \
 	${TESTDIR}/TestFiles/f3 \
 	${TESTDIR}/TestFiles/f4 \
@@ -883,10 +882,6 @@ ${OBJECTDIR}/_ext/1103122747/Statics.o: ../../../src/karabo/xms/Statics.cc
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f8: ${TESTDIR}/_ext/267650667/AlarmService_Test.o ${TESTDIR}/_ext/267650667/AlarmTesterDevice.o ${TESTDIR}/_ext/267650667/alarmServiceRunner.o ${OBJECTFILES:%.o=%_nomain.o}
-	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc}   -o ${TESTDIR}/TestFiles/f8 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
-
 ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/SchemaSerializer_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
@@ -914,24 +909,6 @@ ${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/936507918/Image_Test.o ${TESTDIR}/_ext/
 ${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/Data_Test.o ${TESTDIR}/_ext/936508045/ImageData_Test.o ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f5 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
-
-
-${TESTDIR}/_ext/267650667/AlarmService_Test.o: ../../../src/karabo/tests/alarmService/AlarmService_Test.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/267650667
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/267650667/AlarmService_Test.o ../../../src/karabo/tests/alarmService/AlarmService_Test.cc
-
-
-${TESTDIR}/_ext/267650667/AlarmTesterDevice.o: ../../../src/karabo/tests/alarmService/AlarmTesterDevice.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/267650667
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/267650667/AlarmTesterDevice.o ../../../src/karabo/tests/alarmService/AlarmTesterDevice.cc
-
-
-${TESTDIR}/_ext/267650667/alarmServiceRunner.o: ../../../src/karabo/tests/alarmService/alarmServiceRunner.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/267650667
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/267650667/alarmServiceRunner.o ../../../src/karabo/tests/alarmService/alarmServiceRunner.cc
 
 
 ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o: ../../../src/karabo/tests/io/FileInputOutput_Test.cc 
@@ -2944,7 +2921,6 @@ ${OBJECTDIR}/_ext/1103122747/Statics_nomain.o: ${OBJECTDIR}/_ext/1103122747/Stat
 .test-conf:
 	@if [ "${TEST}" = "" ]; \
 	then  \
-	    ${TESTDIR}/TestFiles/f8 || true; \
 	    ${TESTDIR}/TestFiles/f2 || true; \
 	    ${TESTDIR}/TestFiles/f3 || true; \
 	    ${TESTDIR}/TestFiles/f4 || true; \
