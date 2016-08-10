@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/163556830/AlarmService.o \
 	${OBJECTDIR}/_ext/163556830/CentralLogging.o \
 	${OBJECTDIR}/_ext/163556830/DataLogReader.o \
 	${OBJECTDIR}/_ext/163556830/DataLogUtils.o \
@@ -113,6 +114,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/TcpConnection.o \
 	${OBJECTDIR}/_ext/1103112890/utils.o \
 	${OBJECTDIR}/_ext/1080827789/pugixml.o \
+	${OBJECTDIR}/_ext/163016059/AlarmConditionElement.o \
 	${OBJECTDIR}/_ext/163016059/AlarmConditions.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/163016059/ByteSwap.o \
@@ -125,11 +127,13 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/FromTypeInfo.o \
 	${OBJECTDIR}/_ext/163016059/Hash.o \
 	${OBJECTDIR}/_ext/163016059/HashFilter.o \
+	${OBJECTDIR}/_ext/163016059/OverwriteElement.o \
 	${OBJECTDIR}/_ext/163016059/PluginLoader.o \
 	${OBJECTDIR}/_ext/163016059/RollingWindowStatistics.o \
 	${OBJECTDIR}/_ext/163016059/Schema.o \
 	${OBJECTDIR}/_ext/163016059/SignalHandler.o \
 	${OBJECTDIR}/_ext/163016059/State.o \
+	${OBJECTDIR}/_ext/163016059/StateElement.o \
 	${OBJECTDIR}/_ext/163016059/StateSignifier.o \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
 	${OBJECTDIR}/_ext/163016059/TableElement.o \
@@ -202,6 +206,11 @@ LDLIBSOPTIONS=-L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib `pkg-con
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
+
+${OBJECTDIR}/_ext/163556830/AlarmService.o: ../../../src/karabo/core/AlarmService.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/AlarmService.o ../../../src/karabo/core/AlarmService.cc
 
 ${OBJECTDIR}/_ext/163556830/CentralLogging.o: ../../../src/karabo/core/CentralLogging.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -593,6 +602,11 @@ ${OBJECTDIR}/_ext/1080827789/pugixml.o: ../../../src/karabo/pugiXml/pugixml.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1080827789/pugixml.o ../../../src/karabo/pugiXml/pugixml.cpp
 
+${OBJECTDIR}/_ext/163016059/AlarmConditionElement.o: ../../../src/karabo/util/AlarmConditionElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/AlarmConditionElement.o ../../../src/karabo/util/AlarmConditionElement.cc
+
 ${OBJECTDIR}/_ext/163016059/AlarmConditions.o: ../../../src/karabo/util/AlarmConditions.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
@@ -653,6 +667,11 @@ ${OBJECTDIR}/_ext/163016059/HashFilter.o: ../../../src/karabo/util/HashFilter.cc
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/HashFilter.o ../../../src/karabo/util/HashFilter.cc
 
+${OBJECTDIR}/_ext/163016059/OverwriteElement.o: ../../../src/karabo/util/OverwriteElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/OverwriteElement.o ../../../src/karabo/util/OverwriteElement.cc
+
 ${OBJECTDIR}/_ext/163016059/PluginLoader.o: ../../../src/karabo/util/PluginLoader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
@@ -677,6 +696,11 @@ ${OBJECTDIR}/_ext/163016059/State.o: ../../../src/karabo/util/State.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/State.o ../../../src/karabo/util/State.cc
+
+${OBJECTDIR}/_ext/163016059/StateElement.o: ../../../src/karabo/util/StateElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/StateElement.o ../../../src/karabo/util/StateElement.cc
 
 ${OBJECTDIR}/_ext/163016059/StateSignifier.o: ../../../src/karabo/util/StateSignifier.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -1150,6 +1174,19 @@ ${TESTDIR}/_ext/936508045/xmsTestRunner.o: ../../../src/karabo/tests/xms/xmsTest
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ../../../src/karabo/tests/xms/xmsTestRunner.cc
 
+
+${OBJECTDIR}/_ext/163556830/AlarmService_nomain.o: ${OBJECTDIR}/_ext/163556830/AlarmService.o ../../../src/karabo/core/AlarmService.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/AlarmService.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/AlarmService_nomain.o ../../../src/karabo/core/AlarmService.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/AlarmService.o ${OBJECTDIR}/_ext/163556830/AlarmService_nomain.o;\
+	fi
 
 ${OBJECTDIR}/_ext/163556830/CentralLogging_nomain.o: ${OBJECTDIR}/_ext/163556830/CentralLogging.o ../../../src/karabo/core/CentralLogging.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -2165,6 +2202,19 @@ ${OBJECTDIR}/_ext/1080827789/pugixml_nomain.o: ${OBJECTDIR}/_ext/1080827789/pugi
 	    ${CP} ${OBJECTDIR}/_ext/1080827789/pugixml.o ${OBJECTDIR}/_ext/1080827789/pugixml_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/163016059/AlarmConditionElement_nomain.o: ${OBJECTDIR}/_ext/163016059/AlarmConditionElement.o ../../../src/karabo/util/AlarmConditionElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/AlarmConditionElement.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/AlarmConditionElement_nomain.o ../../../src/karabo/util/AlarmConditionElement.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/AlarmConditionElement.o ${OBJECTDIR}/_ext/163016059/AlarmConditionElement_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/163016059/AlarmConditions_nomain.o: ${OBJECTDIR}/_ext/163016059/AlarmConditions.o ../../../src/karabo/util/AlarmConditions.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/AlarmConditions.o`; \
@@ -2321,6 +2371,19 @@ ${OBJECTDIR}/_ext/163016059/HashFilter_nomain.o: ${OBJECTDIR}/_ext/163016059/Has
 	    ${CP} ${OBJECTDIR}/_ext/163016059/HashFilter.o ${OBJECTDIR}/_ext/163016059/HashFilter_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/163016059/OverwriteElement_nomain.o: ${OBJECTDIR}/_ext/163016059/OverwriteElement.o ../../../src/karabo/util/OverwriteElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/OverwriteElement.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/OverwriteElement_nomain.o ../../../src/karabo/util/OverwriteElement.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/OverwriteElement.o ${OBJECTDIR}/_ext/163016059/OverwriteElement_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/163016059/PluginLoader_nomain.o: ${OBJECTDIR}/_ext/163016059/PluginLoader.o ../../../src/karabo/util/PluginLoader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/PluginLoader.o`; \
@@ -2384,6 +2447,19 @@ ${OBJECTDIR}/_ext/163016059/State_nomain.o: ${OBJECTDIR}/_ext/163016059/State.o 
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/State_nomain.o ../../../src/karabo/util/State.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/State.o ${OBJECTDIR}/_ext/163016059/State_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/StateElement_nomain.o: ${OBJECTDIR}/_ext/163016059/StateElement.o ../../../src/karabo/util/StateElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/StateElement.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/StateElement_nomain.o ../../../src/karabo/util/StateElement.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/StateElement.o ${OBJECTDIR}/_ext/163016059/StateElement_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/StateSignifier_nomain.o: ${OBJECTDIR}/_ext/163016059/StateSignifier.o ../../../src/karabo/util/StateSignifier.cc 

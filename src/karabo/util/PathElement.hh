@@ -14,6 +14,7 @@
 #define	KARABO_UTIL_PATH_ELEMENT_HH
 
 #include "LeafElement.hh"
+#include "OverwriteElement.hh"
 
 namespace karabo {
     namespace util {
@@ -23,7 +24,7 @@ namespace karabo {
          */
         class PathElement : public LeafElement<PathElement, std::string > {
 
-            public:
+        public:
 
             PathElement(Schema& expected) : LeafElement<PathElement, std::string >(expected) {
             }
@@ -82,10 +83,23 @@ namespace karabo {
 
                         this->userAccess();
 
-                    } else { //else set default value of requiredAccessLevel to OBSERVER 
+                    } else { //else set default value of requiredAccessLevel to OBSERVER
                         this->observerAccess();
                     }
                 }
+
+                //finally protect setting options etc to path element via overwrite
+                OverwriteElement::Restrictions restrictions;
+
+                restrictions.minInc = true;
+                restrictions.minExc = true;
+                restrictions.maxInc = true;
+                restrictions.maxExc = true;
+                restrictions.min = true;
+                restrictions.max = true;
+                restrictions.minSize = true;
+                restrictions.maxSize = true;
+                m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
             }
         };
         typedef PathElement PATH_ELEMENT;

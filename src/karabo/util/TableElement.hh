@@ -17,6 +17,7 @@
 #include <vector>
 #include <boost/any.hpp>
 #include <boost/cast.hpp>
+#include "OverwriteElement.hh"
 
 
 namespace karabo {
@@ -234,64 +235,7 @@ namespace karabo {
 
 
 
-            /*TableElement& addRow(const Hash& nodeHash = Hash()) {
-                if(m_nodeSchema.empty()){
-                    throw KARABO_PARAMETER_EXCEPTION("No node schema has been set. Please set one before adding schema-less nodes");
-                } else {
 
-                    return this->addRow(m_nodeSchema, nodeHash);
-                }
-
-            }
-
-
-
-            TableElement& addRow(const Schema& schema,  const Hash& nodeHash = Hash()) {
-                if(!m_nodeSchema.empty()){
-                    Hash validatedHash;
-                    Validator validator;
-                    Validator::ValidationRules rules;
-                    rules.allowAdditionalKeys = true;
-                    rules.allowMissingKeys = true;
-                    rules.allowUnrootedConfiguration = true;
-                    validator.setValidationRules(rules);
-                    std::pair<bool, std::string> validationResult = validator.validate(m_nodeSchema, schema.getParameterHash(), validatedHash);
-                    if(!validationResult.first){
-                        throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against preset node schema");
-                    }
-                }
-                // Create an empty Hash as value of this choice node if not there yet
-
-                if (this->m_node->getType() != Types::VECTOR_HASH) this->m_node->setValue(std::vector<Hash>());
-                // Retrieve reference for filling
-               std::vector<Hash>& listOfNodes = this->m_node->template getValue<std::vector<Hash> >();
-
-
-
-
-                Hash validatedHash;
-                if(nodeHash.empty()) {
-                    validatedHash =  schema.getParameterHash();
-                } else {
-
-
-
-                    Validator validator;
-                    std::pair<bool, std::string> validationResult = validator.validate(schema, nodeHash, validatedHash);
-                    if(!validationResult.first){
-                        throw KARABO_PARAMETER_EXCEPTION("Node Hash didn't validate against preset node schema");
-                    }
-
-
-                }
-
-
-
-                listOfNodes.push_back(validatedHash);
-
-                return *this;
-            }
-             */
 
         protected:
 
@@ -301,12 +245,9 @@ namespace karabo {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Table");
                 this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, "VECTOR_HASH");
-                //this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, 4);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::NO_ARCHIVING); //currently doesn't work
-
-                //this->m_node->template setAttribute<int>(KARABO_SCHEMA_ROW_SCHEMA, true);
                 this->m_node->setAttribute(KARABO_SCHEMA_ROW_SCHEMA, m_nodeSchema);
-                //if (!m_nodeSchema.empty()) this->m_node->template setAttribute<int>(KARABO_SCHEMA_ROW_SCHEMA, 1);
+
 
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
 
@@ -323,6 +264,15 @@ namespace karabo {
                         this->observerAccess();
                     }
                 }
+
+                //finally protect setting options etc to table element via overwrite
+                OverwriteElement::Restrictions restrictions;
+                restrictions.options = true;
+                restrictions.minInc = true;
+                restrictions.minExc = true;
+                restrictions.maxInc = true;
+                restrictions.maxExc = true;
+                m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
             }
         };
 

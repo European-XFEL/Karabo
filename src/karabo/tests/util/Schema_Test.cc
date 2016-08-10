@@ -746,6 +746,21 @@ void Schema_Test::testInvalidNodes() {
     CPPUNIT_ASSERT(schema.has("vecDouble.uint16") == false);
 }
 
+
+void Schema_Test::testOverwriteRestrictions() {
+    Schema schema;
+    PATH_ELEMENT(schema).key("path")
+         .readOnly()
+         .commit();
+    
+    CPPUNIT_ASSERT_THROW(
+        OVERWRITE_ELEMENT(schema).key("path")
+                .setNewMinInc(100)
+                .commit(), karabo::util::LogicException);
+    
+    
+}
+
 void Schema_Test::testStateAndAlarmSets(){
     Schema schema;
     
@@ -779,3 +794,4 @@ void Schema_Test::testStateAndAlarmSets(){
     r = val.validate(schema, h2, h_out);
     CPPUNIT_ASSERT(r.first == true); //should validate as we faked setAlarmCondition
 }
+

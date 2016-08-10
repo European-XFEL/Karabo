@@ -130,6 +130,6 @@ void HashBinarySerializer_Test::testSerialization() {
 
     p->save(hash, archive2);
 
-    CPPUNIT_ASSERT(string(archive1[0], archive1.size()) == string(archive2[0], archive2.size()));
+    CPPUNIT_ASSERT(string(&archive1[0], archive1.size()) == string(&archive2[0], archive2.size()));
 
 }

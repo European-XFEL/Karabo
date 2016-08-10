@@ -3,6 +3,8 @@
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
       <logicalFolder name="f2" displayName="Devices" projectFiles="true">
+        <itemPath>../../../src/karabo/core/AlarmService.cc</itemPath>
+        <itemPath>../../../src/karabo/core/AlarmService.hh</itemPath>
         <itemPath>../../../src/karabo/core/CentralLogging.cc</itemPath>
         <itemPath>../../../src/karabo/core/CentralLogging.hh</itemPath>
         <itemPath>../../../src/karabo/core/DataLogReader.cc</itemPath>
@@ -250,6 +252,7 @@
         <itemPath>../../../src/karabo/util/karaboDll.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="Schema" projectFiles="true">
+        <itemPath>../../../src/karabo/util/AlarmConditionElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/AlarmConditionElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ChoiceElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/GenericElement.hh</itemPath>
@@ -260,11 +263,13 @@
         <itemPath>../../../src/karabo/util/ListElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/NDArrayElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/NodeElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/OverwriteElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/OverwriteElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/PathElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/Schema.cc</itemPath>
         <itemPath>../../../src/karabo/util/Schema.hh</itemPath>
         <itemPath>../../../src/karabo/util/SimpleElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/StateElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/StateElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/TableElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/TableElement.hh</itemPath>
@@ -290,6 +295,7 @@
         </logicalFolder>
         <itemPath>../../../src/karabo/util/AlarmConditions.cc</itemPath>
         <itemPath>../../../src/karabo/util/AlarmConditions.hh</itemPath>
+        <itemPath>../../../src/karabo/util/ArrayData.hh</itemPath>
         <itemPath>../../../src/karabo/util/ArrayTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
         <itemPath>../../../src/karabo/util/Base64.hh</itemPath>
@@ -577,6 +583,16 @@
         </packFileList>
       </packaging>
       <item path="../../../src/karabo/core.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/AlarmService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/AlarmService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/core/BaseFsm.hh"
             ex="false"
@@ -1824,6 +1840,11 @@
       </item>
       <item path="../../../src/karabo/util.hpp" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/AlarmConditionElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/AlarmConditionElement.hh"
             ex="false"
             tool="3"
@@ -2014,6 +2035,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/OverwriteElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/OverwriteElement.hh"
             ex="false"
             tool="3"
@@ -2066,6 +2092,11 @@
       <item path="../../../src/karabo/util/State.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/State.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StateElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/StateElement.hh"
             ex="false"
@@ -2485,6 +2516,11 @@
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/ArrayData.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <folder path="TestFiles">
         <ccTool>
           <incDir>
@@ -2661,6 +2697,16 @@
         </packFileList>
       </packaging>
       <item path="../../../src/karabo/core.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/AlarmService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/AlarmService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/core/BaseFsm.hh"
             ex="false"
@@ -3917,6 +3963,11 @@
       </item>
       <item path="../../../src/karabo/util.hpp" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/AlarmConditionElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/AlarmConditionElement.hh"
             ex="false"
             tool="3"
@@ -4107,6 +4158,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/OverwriteElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/OverwriteElement.hh"
             ex="false"
             tool="3"
@@ -4159,6 +4215,11 @@
       <item path="../../../src/karabo/util/State.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/State.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StateElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/StateElement.hh"
             ex="false"
@@ -4590,6 +4651,11 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ArrayData.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>
