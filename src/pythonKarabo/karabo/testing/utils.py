@@ -5,6 +5,15 @@ from xml.dom import minidom
 from zipfile import ZipFile
 
 
+def compare_ndarray_data_ptrs(arr0, arr1):
+    """ Return True if two numpy arrays are using the same data
+    """
+    ptr0 = arr0.__array_interface__['data'][0]
+    ptr1 = arr1.__array_interface__['data'][0]
+
+    return ptr0 == ptr1
+
+
 def compare_zip_files(path0, path1):
     """ Given the paths of two zip files, compare their contents and return
     True if they match.

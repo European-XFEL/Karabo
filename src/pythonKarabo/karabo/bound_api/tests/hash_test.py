@@ -6,6 +6,7 @@ Created on Oct 17, 2012
 
 import copy
 import unittest
+import weakref
 
 import numpy as np
 
@@ -13,9 +14,10 @@ from karabo.bound import (
     Hash, HashAttributes, HashMergePolicy, Types, VectorHash,
     isStdVectorDefaultConversion, setStdVectorDefaultConversion, similar
 )
+from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
-class  Hash_TestCase(unittest.TestCase):
+class Hash_TestCase(unittest.TestCase):
 
     def test_constructors(self):
         
@@ -374,6 +376,20 @@ class  Hash_TestCase(unittest.TestCase):
                 self.assertEqual(h["a"], value, msg=msg)
             except OverflowError:
                 self.fail(msg)
+
+    def test_numpy_arrays(self):
+        arr = np.ones((100,), dtype=np.uint32)
+        arr_weak = weakref.ref(arr)
+
+        h = Hash("a", arr)
+        assert compare_ndarray_data_ptrs(h["a"], arr)  # no copy
+
+        # Make sure references are cleaned up appropriately
+        del arr
+        assert arr_weak() is not None  # h is still holding a reference
+        del h
+        assert arr_weak() is None
+
 
     def test_find(self):
         try:
