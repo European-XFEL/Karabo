@@ -56,7 +56,7 @@ class SceneView(QWidget):
         layout.addWidget(self.inner)
 
         self.project_handler = ProjectSceneHandler(project=project)
-
+            
         self.title = None
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
@@ -82,6 +82,8 @@ class SceneView(QWidget):
         self.setAttribute(Qt.WA_MouseTracking)
         self.setBackgroundRole(QPalette.Window)
         self.resize(SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+
+        self.update_model(model)
 
     @property
     def design_mode(self):
@@ -222,6 +224,19 @@ class SceneView(QWidget):
         self.title = os.path.basename(filename)
         # Read file into scene model
         self._set_scene_model(read_scene(filename))
+        # Set width and height
+        self.resize(max(self.scene_model.width, SCENE_MIN_WIDTH),
+                    max(self.scene_model.height, SCENE_MIN_HEIGHT))
+
+        self._scene_obj_cache = {}
+        fill_root_layout(self.layout, self.scene_model, self.inner,
+                         self._scene_obj_cache)
+
+    def update_model(self, scene_model):
+        if scene_model is None:
+            return
+        # Set scene model
+        self._set_scene_model(scene_model)
         # Set width and height
         self.resize(max(self.scene_model.width, SCENE_MIN_WIDTH),
                     max(self.scene_model.height, SCENE_MIN_HEIGHT))
