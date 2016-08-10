@@ -73,8 +73,14 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                 v.key = k
         cls._attrs = [k for k in dict
                       if isinstance(getattr(cls, k), Descriptor)]
-        cls._allattrs = set.union(*(set(c._attrs) for c in cls.__mro__
-                                    if hasattr(c, "_attrs")))
+        allattrs = []
+        seen = set()
+        for base in cls.__mro__[::-1]:
+            for attr in getattr(base, "_attrs", []):
+                if attr not in seen:
+                    allattrs.append(attr)
+                    seen.add(attr)
+        cls._allattrs = allattrs
         cls._subclasses = { }
         for b in cls.__bases__:
             if issubclass(b, Configurable):
@@ -117,9 +123,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     def setValue(self, descriptor, value):
         if isinstance(value, KaraboValue) and value.timestamp is None:
             value.timestamp = Timestamp()
-        if self.__parent is not None:
-            self.__parent.setChildValue(
-                self.__key + "." + descriptor.key, value, descriptor)
+        self.setChildValue(descriptor.key, value, descriptor)
         self.__dict__[descriptor.key] = value
 
     def setChildValue(self, key, value, desc):

@@ -20,6 +20,7 @@ from xml.etree import ElementTree
 
 import numpy as np
 
+from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from . import basetypes
 from .enums import (AccessLevel, AccessMode, Assignment, MetricPrefix,
@@ -84,6 +85,11 @@ class Simple(object):
     minInc = Attribute()
     maxInc = Attribute()
 
+    alarmHigh = Attribute()
+    alarmLow = Attribute()
+    warnHigh = Attribute()
+    warnLow = Attribute()
+
     @classmethod
     def read(cls, file):
         ret = np.frombuffer(file.data, cls.numpy, 1, file.pos)[0]
@@ -115,6 +121,17 @@ class Simple(object):
                 self.maxInc is not None and ret > self.maxInc):
             raise ValueError("value {} of {} not in allowed range".
                              format(ret, self.key))
+
+    def alarmCondition(self, data):
+        if self.alarmLow is not None and data < self.alarmLow:
+            return AlarmCondition.ALARM_LOW
+        if self.alarmHigh is not None and data > self.alarmHigh:
+            return AlarmCondition.ALARM_HIGH
+        if self.warnLow is not None and data < self.warnLow:
+            return AlarmCondition.WARN_LOW
+        if self.warnHigh is not None and data > self.warnHigh:
+            return AlarmCondition.WARN_HIGH
+        return AlarmCondition.NONE
 
     def toKaraboValue(self, data, strict=True):
         if self.enum is not None:
@@ -532,6 +549,10 @@ class Type(Descriptor, Registry):
         else:
             attrs = {}
         return data.value, attrs
+
+    def alarmCondition(self, data):
+        """return the alarm condition for given *data*"""
+        return AlarmCondition.NONE
 
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super().toSchemaAndAttrs(device, state)
