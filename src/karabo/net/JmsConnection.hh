@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   JmsConnection.hh
  * Author: heisenb
  *
@@ -47,7 +47,7 @@ namespace karabo {
 
             friend class JmsConsumer;
             friend class JmsProducer;
-            
+
         public:
 
             KARABO_CLASSINFO(JmsConnection, "JmsConnection", "1.0")
@@ -61,7 +61,7 @@ namespace karabo {
              */
             JmsConnection(const std::string& brokerUrl = std::string("tcp://exfl-broker.desy.de:7777"));
 
-            ~JmsConnection();
+            virtual ~JmsConnection();
 
             /**
              * Tries to establish a connection to the broker as provided in the constructor
