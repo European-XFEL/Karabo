@@ -559,13 +559,6 @@ namespace karabo {
             bool operator!=(const Hash& other);
 
             /**
-             * Compare two Hashes by comparing their containers
-             * @param other Hash object
-             */
-            bool operator<(const Hash& other) const;
-            bool operator>(const Hash& other) const;
-
-            /**
              * Implement the visitor pattern
              * @param visitor
              * @return bool
