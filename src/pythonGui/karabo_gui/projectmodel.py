@@ -52,6 +52,7 @@ class ProjectModel(QStandardItemModel):
     signalRenameScene = pyqtSignal(object) # scene
     signalAddSceneView = pyqtSignal(object, object) # SceneModel, Project
     signalRemoveSceneView = pyqtSignal(object) # SceneModel
+    signalRenameSceneView = pyqtSignal(object) # SceneModel
     signalAddMacro = pyqtSignal(object)
     signalRemoveMacro = pyqtSignal(object) # macro
 
@@ -529,13 +530,14 @@ class ProjectModel(QStandardItemModel):
         parentItem.insertRow(row, item)
 
 
-    def renameScene(self, scene):
-        item = self.findItem(scene)
-        item.setText(scene.filename)
-        scene.project.setModified(True)
+    def renameScene(self, sceneModel):
+        item = self.findItem(sceneModel)
+        item.setText(sceneModel.filename)
+        # XXX: TODO update dirty flag
+        #sceneModel.project.setModified(True)
         
         # Send signal to mainwindow to update the tab text as well
-        self.signalRenameScene.emit(scene)
+        self.signalRenameSceneView.emit(sceneModel)
 
 
     def createConfigurationItem(self, deviceId, configuration):
@@ -703,7 +705,7 @@ class ProjectModel(QStandardItemModel):
 
     def currentScene(self):
         scene = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
-        if not isinstance(scene, Scene):
+        if not isinstance(scene, SceneModel):
             return None
         
         return scene
@@ -1202,16 +1204,18 @@ class ProjectModel(QStandardItemModel):
         self.selectObject(newDevice)
 
 
-    def editScene(self, scene=None):
-        dialog = SceneDialog(scene)
+    def editScene(self, sceneModel=None):
+        """ This method changes the title of the scene model.
+        """
+        dialog = SceneDialog(sceneModel)
         if dialog.exec_() == QDialog.Rejected:
             return
         
-        if scene is None:
+        if sceneModel is None:
             self.addScene(self.currentProject(), dialog.sceneName())
         else:
-            scene.filename = dialog.sceneName()
-            self.renameScene(scene)
+            sceneModel.filename = dialog.sceneName()
+            self.renameScene(sceneModel)
 
     def addScene(self, project, title, filename=None):
         """
