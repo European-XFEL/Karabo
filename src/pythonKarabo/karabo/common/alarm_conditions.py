@@ -57,7 +57,7 @@ class AlarmCondition(Enum):
             return s.criticalityLevel()
 
     def returnMoreSignificant(self, other):
-        """Return the more signifcant of this and the other condition
+        """Return the more significant of this and the other condition
 
         :param other: The condition to compare against
         """
