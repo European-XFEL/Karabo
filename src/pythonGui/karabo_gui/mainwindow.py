@@ -379,19 +379,23 @@ class MainWindow(QMainWindow):
         """
         if sceneModel not in self._openedScenes:
             sceneView = SceneView(model=sceneModel, project=project)
-            self._openedScenes[sceneModel] = sceneView
+            # XXX: TODO scenelink
             #sceneView.signalSceneLinkTriggered.connect(self.openSceneLink)
 
             # Add scene view to tab widget
             scenePanel = ScenePanel(sceneView, self.acServerConnect.isChecked())
-            self.middleTab.addDockableTab(scenePanel, sceneModel.filename, self)
             scenePanel.signalClosed.connect(self.onMiddlePanelRemoved)
+            index = self.middleTab.addDockableTab(scenePanel,
+                                                  sceneModel.filename,
+                                                  self)
+            self._openedScenes[sceneModel] = index
             self.selectLastMiddlePanel()
 
     @pyqtSlot(object)
     def removeSceneView(self, sceneModel):
         if sceneModel in self._openedScenes:
-            #sceneView = self._openedScenes(sceneModel)
+            sceneView = self.middleTab.widget(self._openedScenes(sceneModel))
+            # XXX: TODO scenelink
             #sceneView.signalSceneLinkTriggered.disconnect(self.openSceneLink)
             self._openedScenes.remove(sceneModel)
 
