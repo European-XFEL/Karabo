@@ -5,9 +5,9 @@ from pint import DimensionalityError
 
 from karabo.middlelayer import (
     AccessMode, Assignment, AccessLevel, Bool, Char, ComplexFloat, Double,
-    Float, Hash, Int8, Int16, MetricPrefix, NumpyVector, QuantityValue, String,
-    Timestamp, Unit, UInt64, VectorBool, VectorChar, VectorComplexFloat,
-    VectorFloat, VectorInt8, VectorString)
+    Float, Hash, Int8, Int16, MetricPrefix, NumpyVector, QuantityValue, State,
+    String, Timestamp, Unit, UInt64, VectorBool, VectorChar,
+    VectorComplexFloat, VectorFloat, VectorInt8, VectorString)
 
 
 class Tests(TestCase):
@@ -294,7 +294,7 @@ class Tests(TestCase):
             minExc=22, maxExc=33, minInc=11, maxInc=23,
             absoluteError=0.2, relativeError=0.3,
             displayedName="hallo", alias="something",
-            description="whatever", allowedStates=["some", "thing"],
+            description="whatever", allowedStates={State.KNOWN, State.INIT},
             defaultValue=22.5, accessMode=AccessMode.READONLY,
             assignment=Assignment.MANDATORY,
             requiredAccessLevel=AccessLevel.EXPERT, displayType="nothing",
@@ -310,7 +310,7 @@ class Tests(TestCase):
         self.assertEqual(d.displayedName, "hallo")
         self.assertEqual(d.alias, "something")
         self.assertEqual(d.description, "whatever")
-        self.assertEqual(d.allowedStates, ["some", "thing"])
+        self.assertEqual(d.allowedStates, {State.INIT, State.KNOWN})
         self.assertEqual(d.defaultValue, 22.5)
         self.assertIs(d.accessMode, AccessMode.READONLY)
         self.assertIs(d.assignment, Assignment.MANDATORY)
