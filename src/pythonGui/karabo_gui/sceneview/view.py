@@ -31,7 +31,8 @@ from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 class SceneView(QWidget):
     """ An object representing the view for a Karabo GUI scene.
     """
-    def __init__(self, project=None, parent=None, design_mode=False):
+    def __init__(self, model=None, project=None, parent=None,
+                 design_mode=False):
         super(SceneView, self).__init__(parent)
 
         layout_model = FixedLayoutModel(x=0, y=0, width=SCENE_MIN_WIDTH,
@@ -94,6 +95,9 @@ class SceneView(QWidget):
         if not value:
             self.selection_model.clear_selection()
             self.set_tool(None)
+
+    def update_project_handler(self, project):
+        self.project_handler.project = project
 
     # ----------------------------
     # Qt Methods

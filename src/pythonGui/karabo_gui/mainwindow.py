@@ -24,6 +24,7 @@ from karabo_gui.docktabwindow import DockTabWindow
 from karabo_gui.guiproject import Macro
 from karabo_gui.network import Network
 from karabo_gui.scene import Scene
+from karabo_gui.sceneview.api import SceneView
 
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.custommiddlepanel import CustomMiddlePanel
@@ -172,6 +173,7 @@ class MainWindow(QMainWindow):
         self.projectPanel.signalRemoveScene.connect(self.onRemoveScene)
         self.projectPanel.signalRenameScene.connect(self.onRenameScene)
         self.projectPanel.signalAddSceneView.connect(self.addSceneView)
+        self.projectPanel.signalRemoveSceneView.connect(self.removeSceneView)
         self.projectPanel.signalAddMacro.connect(self.onAddMacro)
         self.projectPanel.signalRemoveMacro.connect(self.onRemoveMacro)
         self.projectTab = DockTabWindow("Projects", self.leftArea)
@@ -182,6 +184,9 @@ class MainWindow(QMainWindow):
         self.middleTab = DockTabWindow("Custom view", self.middleArea)
         self.placeholderPanel = None
         self._addPlaceholderMiddlePanel(False)
+        # A dict which associates scene models to the middle tab page index of
+        # the scene view which are opened in the middleTab
+        self._openedScenes = {}
         self.middleArea.setStretchFactor(0, 6)
 
         self.loggingPanel = LoggingPanel()
@@ -367,19 +372,28 @@ class MainWindow(QMainWindow):
                 if divWidget.dockableWidget.scene is scene:
                     self.middleTab.setTabText(i, scene.filename)
 
+    @pyqtSlot(object, object)
+    def addSceneView(self, sceneModel, project):
+        """ Add a scene view to show the content of the given `sceneModel in
+            the GUI.
+        """
+        if sceneModel not in self._openedScenes:
+            sceneView = SceneView(model=sceneModel, project=project)
+            self._openedScenes[sceneModel] = sceneView
+            #sceneView.signalSceneLinkTriggered.connect(self.openSceneLink)
+
+            # Add scene view to tab widget
+            scenePanel = ScenePanel(sceneView, self.acServerConnect.isChecked())
+            self.middleTab.addDockableTab(scenePanel, sceneModel.filename, self)
+            scenePanel.signalClosed.connect(self.onMiddlePanelRemoved)
+            self.selectLastMiddlePanel()
+
     @pyqtSlot(object)
-    def addSceneView(self, scene_view):
-        if self.middlePanelExists("scene_view", scene_view):
-            return
-
-        if self.isMiddlePanelUndocked(scene_view):
-            return
-
-        scenePanel = ScenePanel(scene_view, self.acServerConnect.isChecked())
-        self.middleTab.addDockableTab(scenePanel, scene_view.title, self)
-        scenePanel.signalClosed.connect(self.onMiddlePanelRemoved)
-
-        self.selectLastMiddlePanel()
+    def removeSceneView(self, sceneModel):
+        if sceneModel in self._openedScenes:
+            #sceneView = self._openedScenes(sceneModel)
+            #sceneView.signalSceneLinkTriggered.disconnect(self.openSceneLink)
+            self._openedScenes.remove(sceneModel)
 
     @pyqtSlot(object)
     def onAddMacro(self, macro):
