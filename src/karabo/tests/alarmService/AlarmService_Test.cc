@@ -84,19 +84,6 @@ void AlarmService_Test::testDeviceRegistration() {
     
 }
 
-void AlarmService_Test::registrationTestCallback(const std::string& deviceId, const std::string& key, const std::vector<std::string>& value, const karabo::util::Timestamp& timestamp, bool & waiting){
-    std::clog<<"registrationTestCallback called"<<std::endl;
-    std::clog<<deviceId<<" "<<key<<std::endl;
-    waiting = false;
-    m_waitCond.notify_one();
-    CPPUNIT_ASSERT(deviceId == "alarmTester");
-    CPPUNIT_ASSERT(key == "alarmServiceDevices");
-    CPPUNIT_ASSERT(value[0] == "testAlarmService");
-    
-    
-}
- 
-
 
 #undef KRB_TEST_MAX_TIMEOUT
 
