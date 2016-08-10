@@ -394,10 +394,11 @@ class MainWindow(QMainWindow):
     @pyqtSlot(object)
     def removeSceneView(self, sceneModel):
         if sceneModel in self._openedScenes:
-            sceneView = self.middleTab.widget(self._openedScenes(sceneModel))
             # XXX: TODO scenelink
+            #index = self._openedScenes.get(sceneModel)
+            #sceneView = self.middleTab.widget(index)
             #sceneView.signalSceneLinkTriggered.disconnect(self.openSceneLink)
-            self._openedScenes.remove(sceneModel)
+            del self._openedScenes[sceneModel]
 
     @pyqtSlot(object)
     def onAddMacro(self, macro):

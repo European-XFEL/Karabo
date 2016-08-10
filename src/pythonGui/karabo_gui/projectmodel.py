@@ -507,9 +507,9 @@ class ProjectModel(QStandardItemModel):
             the model.
         """
         item = self.createSceneItem(sceneModel)
-        
-        project = self.currentProject() #scene.project
-        print("project", project)
+
+        # XXX: TODO: the project should come from the model
+        project = self.currentProject() # sceneModel.project
         projectItem = self.findItem(project)
         # Find folder for scenes
         parentItem = self.getCategoryItem(Project.SCENES_LABEL, projectItem)
