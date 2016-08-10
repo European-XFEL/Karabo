@@ -21,9 +21,6 @@ from PyQt4.QtGui import (QAction, QVBoxLayout, QWidget)
 
 
 class ProjectPanel(Dockable, QWidget):
-    signalAddScene = pyqtSignal(object) # scene
-    signalRemoveScene = pyqtSignal(object) # scene
-    signalRenameScene = pyqtSignal(object) # scene
     signalAddSceneView = pyqtSignal(object, object) # SceneModel, Project
     signalRemoveSceneView = pyqtSignal(object) # SceneModel
     signalRenameSceneView = pyqtSignal(object) # SceneModel
@@ -38,9 +35,6 @@ class ProjectPanel(Dockable, QWidget):
         self.setWindowTitle(title)
 
         self.twProject = ProjectTreeView(self)
-        self.twProject.model().signalAddScene.connect(self.signalAddScene)
-        self.twProject.model().signalRemoveScene.connect(self.signalRemoveScene)
-        self.twProject.model().signalRenameScene.connect(self.signalRenameScene)
         self.twProject.model().signalAddSceneView.connect(self.signalAddSceneView)
         self.twProject.model().signalRemoveSceneView.connect(self.signalRemoveSceneView)
         self.twProject.model().signalRenameSceneView.connect(self.signalRenameSceneView)
