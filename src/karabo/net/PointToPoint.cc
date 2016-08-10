@@ -3,6 +3,7 @@
 #include <karabo/log.hpp>
 #include "utils.hh"
 #include "PointToPoint.hh"
+#include "EventLoop.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -26,8 +27,8 @@ namespace karabo {
             virtual ~Producer();
 
 
-            IOService::Pointer getIOService() const {
-                return m_connection->getIOService();
+            boost::asio::io_service& getIOService() {
+                return EventLoop::getIOService();
             }
 
 
@@ -95,8 +96,7 @@ namespace karabo {
                                      const karabo::net::Channel::Pointer& channel,
                                      const karabo::net::ErrorCode& ec);
 
-            void connect(const karabo::net::IOService::Pointer& svc,
-                         const std::string& signalInstanceId,
+            void connect(const std::string& signalInstanceId,
                          const std::string& slotInstanceId,
                          const std::string& signalConnectionString,
                          const karabo::net::ConsumeHandler& handler);
@@ -367,8 +367,7 @@ namespace karabo {
         }
 
 
-        void PointToPoint::Consumer::connect(const karabo::net::IOService::Pointer& svc,
-                                             const std::string& signalInstanceId,
+        void PointToPoint::Consumer::connect(const std::string& signalInstanceId,
                                              const std::string& slotInstanceId,
                                              const std::string& signalConnectionString,
                                              const karabo::net::ConsumeHandler& handler) {
@@ -390,7 +389,6 @@ namespace karabo {
                     }
 
                     Connection::Pointer connection = Connection::create(Hash("Tcp", params));
-                    connection->setIOService(svc);
 
                     connection->setErrorHandler(boost::bind(&Consumer::connectionErrorHandler, this,
                                                             signalInstanceId, signalConnectionString, connection, _1));
@@ -498,22 +496,19 @@ namespace karabo {
 
 
         PointToPoint::PointToPoint() : m_producer(new Producer), m_consumer(new Consumer) {
-            m_svc = m_producer->getIOService();
-            m_thread = boost::thread(boost::bind(&IOService::work, m_svc));
-            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+            EventLoop::addThread();
         }
 
 
         PointToPoint::~PointToPoint() {
             m_producer->stop();
-            m_svc->stop();
-            m_thread.join();
+            EventLoop::removeThread();
         }
 
 
         void PointToPoint::connect(const std::string& signalInstanceId, const std::string& slotInstanceId,
                                    const std::string& signalConnectionString, const karabo::net::ConsumeHandler& handler) {
-            m_consumer->connect(m_svc, signalInstanceId, slotInstanceId, signalConnectionString, handler);
+            m_consumer->connect(signalInstanceId, slotInstanceId, signalConnectionString, handler);
         }
 
 

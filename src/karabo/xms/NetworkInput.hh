@@ -48,9 +48,6 @@ namespace karabo {
             int m_activeChunk;
             int m_inactiveChunk;
 
-            karabo::net::IOService::Pointer m_tcpIoService;
-            boost::thread m_tcpIoServiceThread;
-
             TcpConnections m_tcpConnections;
             TcpChannels m_tcpChannels;
 
@@ -68,10 +65,6 @@ namespace karabo {
                 // Close all connections
                 for (TcpConnections::iterator it = m_tcpConnections.begin(); it != m_tcpConnections.end(); ++it) {
                     (*it)->stop();
-                }
-                if (m_tcpIoServiceThread.joinable()) {
-                    m_tcpIoService->stop();
-                    m_tcpIoServiceThread.join();
                 }
                 MemoryType::unregisterChannel(m_channelId);
             }
@@ -213,16 +206,7 @@ namespace karabo {
                     karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
                     karabo::net::Connection::Pointer tcpConnection = karabo::net::Connection::create(config); // Instantiate
 
-                    if (!m_tcpIoService) {
-                        // Get IO service and save for later sharing
-                        m_tcpIoService = tcpConnection->getIOService();
-                        // Establish connection (and define sub-type of server)
-                        startConnection(tcpConnection, outputChannelInfo);
-                        m_tcpIoServiceThread = boost::thread(boost::bind(&karabo::net::IOService::run, m_tcpIoService));
-                    } else {
-                        tcpConnection->setIOService(m_tcpIoService);
-                        startConnection(tcpConnection, outputChannelInfo);
-                    }
+                    startConnection(tcpConnection, outputChannelInfo);
                 }
             }
 
