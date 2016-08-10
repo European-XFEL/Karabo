@@ -105,6 +105,8 @@ namespace karabo {
 
             karabo::util::AlarmCondition m_globalAlarmCondition;
 
+            std::map<std::string, karabo::util::Hash> m_alarmServices;
+
 
         public:
 
@@ -217,6 +219,13 @@ namespace karabo {
                                      "Evaluates to the highest condition on any"
                                      " property if not set manually.")
                         .initialValue(AlarmCondition::NONE)
+                        .commit();
+
+                VECTOR_STRING_ELEMENT(expected).key("alarmServiceDevices")
+                        .displayedName("Alarm Service Device(s)")
+                        .description("The alarm service devices this device reports to")
+                        .expertAccess()
+                        .readOnly()
                         .commit();
 
                 NODE_ELEMENT(expected).key("performanceStatistics")
@@ -451,6 +460,10 @@ namespace karabo {
 
 
                 const bool hadPreviousAlarm = m_validatorIntern.hasParametersInWarnOrAlarm();
+                boost::optional<Hash> previousParametersInAlarm;
+                if (hadPreviousAlarm) {
+                    previousParametersInAlarm = m_validatorIntern.getParametersInWarnOrAlarm(); //copies on purpose
+                }
 
 
                 result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
@@ -614,7 +627,7 @@ namespace karabo {
                 return m_fullSchema;
             }
 
-            void appendSchema(const karabo::util::Schema& schema) {
+            void appendSchema(const karabo::util::Schema& schema, const bool keepParameters = false) {
                 KARABO_LOG_DEBUG << "Append Schema requested";
                 karabo::util::Hash validated;
                 karabo::util::Validator::ValidationRules rules;
@@ -643,6 +656,7 @@ namespace karabo {
                 emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
                 // Merge all parameters
+                if (keepParameters) validated.merge(m_parameters);
                 set(validated);
 
                 KARABO_LOG_INFO << "Schema updated";
@@ -653,7 +667,7 @@ namespace karabo {
              * add additional (dynamic) descriptions
              * @param schema
              */
-            void updateSchema(const karabo::util::Schema& schema) {
+            void updateSchema(const karabo::util::Schema& schema, const bool keepParameters = false) {
 
                 KARABO_LOG_DEBUG << "Update Schema requested";
                 karabo::util::Hash validated;
@@ -691,6 +705,7 @@ namespace karabo {
                 emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
                 // Merge all parameters
+                if (keepParameters) validated.merge(m_parameters);
                 set(validated);
 
                 KARABO_LOG_INFO << "Schema updated";
@@ -804,7 +819,7 @@ namespace karabo {
 
 
 
-        public:
+
 
             // This function will polymorphically be called by the FSM template
 
@@ -1052,6 +1067,8 @@ namespace karabo {
                     connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick");
                 }
 
+                this->setupAlarmSignaling();
+
                 t.join(); // Blocks
             }
 
@@ -1087,6 +1104,7 @@ namespace karabo {
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
                 KARABO_SLOT(slotKillDevice)
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
+                KARABO_SLOT(slotRegisterAlarmService, karabo::util::Hash);
 
             }
 
@@ -1313,7 +1331,35 @@ namespace karabo {
                 return std::make_pair<bool, const AlarmCondition > (false, AlarmCondition::NONE);
             }
 
+            void slotRegisterAlarmService(const karabo::util::Hash& serviceInfo) {
+                //protect from registering ourselves:
+                const std::string& instance = serviceInfo.get<std::string>("instance");
+                if (instance == getInstanceId()) return;
+                KARABO_LOG_INFO << "Alarm service " << instance << " made its presence aware!";
+                //update property if a new element was inserted
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                if (m_alarmServices.insert(std::pair<std::string, karabo::util::Hash>(instance, serviceInfo)).second) {
+                    lock.unlock();
+                    KARABO_LOG_INFO << "Adding " << instance << " to alarm service devices.";
+                    std::vector<std::string> serviceIds;
+                    for (std::map<std::string, karabo::util::Hash>::const_iterator it = m_alarmServices.begin(); it != m_alarmServices.end(); ++it) {
+                        serviceIds.push_back(it->first);
+                    }
+                    set("alarmServiceDevices", serviceIds);
+                } else {
+                    KARABO_LOG_INFO << "A known device reappeared";
+                }
+            }
 
+            void setupAlarmSignaling() {
+                KARABO_SYSTEM_SIGNAL2("signalAlarmDeviceStarted", std::string, karabo::util::Hash);
+                registerSlot<std::string, karabo::util::Hash > (boost::bind(&karabo::core::Device<FSM>::slotAlarmDeviceStarted, this, _1, _2), "_slotAlarmDeviceStarted");
+                connect("", "signalAlarmDeviceStarted", "", "_slotAlarmDeviceStarted");
+            }
+
+            void slotAlarmDeviceStarted(const std::string& alarmInstance, const karabo::util::Hash& knownAlarms) {
+                //currently only a stub
+            }
 
 
         };
