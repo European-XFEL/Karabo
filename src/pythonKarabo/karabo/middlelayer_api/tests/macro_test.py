@@ -5,6 +5,7 @@ import time
 from unittest import main
 import weakref
 
+from karabo.common.states import State
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     waitUntilNew, waitUntil, setWait, setNoWait, getDevice, executeNoWait,
@@ -59,6 +60,7 @@ class Remote(Device):
 class Local(Macro):
     @Slot()
     def remotecalls(self):
+        self.nowslot = self.currentSlot
         self.nowstate = self.state
         print("superpuper", end="hero")
 
@@ -242,10 +244,13 @@ class Tests(DeviceTest):
         """test that macros can print via expected parameters"""
         sys.stdout = KaraboStream(sys.stdout)
         try:
-            self.assertEqual(self.local.state, "Idle...")
+            self.assertEqual(self.local.currentSlot, "")
+            self.assertEqual(self.local.state, State.PASSIVE)
             yield from self.remote.call_local()
-            self.assertEqual(self.local.nowstate, "remotecalls")
-            self.assertEqual(self.local.state, "Idle...")
+            self.assertEqual(self.local.nowslot, "remotecalls")
+            self.assertEqual(self.local.nowstate, State.ACTIVE)
+            self.assertEqual(self.local.currentSlot, "")
+            self.assertEqual(self.local.state, State.PASSIVE)
             self.assertEqual(self.local.print, "hero")
             self.assertEqual(self.local.printno, 2)
         finally:

@@ -89,8 +89,6 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                 if (state is None or descr.allowedStates is None or
                         state in descr.allowedStates):
                     sub_schema, attrs = descr.toSchemaAndAttrs(device, state)
-                    attrs = {k: v.value if isinstance(v, Enum) else v
-                             for k, v in attrs.items()}
                     schema.hash[attr] = sub_schema
                     schema.hash[attr, ...] = attrs
         return schema
