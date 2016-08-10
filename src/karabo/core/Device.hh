@@ -1099,8 +1099,6 @@ namespace karabo {
 
                 KARABO_SYSTEM_SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
 
-
-
                 KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
                 KARABO_SLOT(slotGetConfiguration)
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
@@ -1339,7 +1337,9 @@ namespace karabo {
                 if (instance == getInstanceId()) return;
                 KARABO_LOG_INFO << "Alarm service " << instance << " made its presence aware!";
                 //update property if a new element was inserted
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 if (m_alarmServices.insert(std::pair<std::string, karabo::util::Hash>(instance, serviceInfo)).second) {
+                    lock.unlock();
                     KARABO_LOG_INFO << "Adding " << instance << " to alarm service devices.";
                     std::vector<std::string> serviceIds;
                     for (std::map<std::string, karabo::util::Hash>::const_iterator it = m_alarmServices.begin(); it != m_alarmServices.end(); ++it) {
