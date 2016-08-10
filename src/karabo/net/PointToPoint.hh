@@ -12,9 +12,11 @@
 #include <set>
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
+#include <boost/asio.hpp>
 #include <karabo/util/Hash.hh>
 #include "Connection.hh"
 #include "Channel.hh"
+#include "EventLoop.hh"
 
 namespace karabo {
     namespace net {
@@ -38,8 +40,8 @@ namespace karabo {
 
             std::string getConnectionString() const;
 
-            karabo::net::IOService::Pointer getIOService() const {
-                return m_svc;
+            boost::asio::io_service& getIOService() {
+                return karabo::net::EventLoop::getIOService();
             }
 
             void connect(const std::string& signalInstanceId, const std::string& slotInstanceId,
@@ -68,10 +70,6 @@ namespace karabo {
 
             boost::shared_ptr<Producer> m_producer;
             boost::shared_ptr<Consumer> m_consumer;
-
-            // Producer stuff ...
-            karabo::net::IOService::Pointer m_svc;
-            boost::thread m_thread;
 
         };
 

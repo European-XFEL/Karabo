@@ -215,18 +215,8 @@ namespace karabo {
                 // Set connection error handler
                 tcpConnection->setErrorHandler(boost::bind(&karabo::xms::InputChannel::onTcpConnectionError, this, tcpConnection, _1));
 
-                if (!m_tcpIoService) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\"   :   m_tcpIoService not yet initialized!";
-                    // Get IO service and save for later sharing
-                    m_tcpIoService = tcpConnection->getIOService();
-                    // Establish connection (and define sub-type of server)
-                    startConnectionAsync(tcpConnection, outputChannelInfo);
-                    m_tcpIoServiceThread = boost::thread(boost::bind(&karabo::net::IOService::work, m_tcpIoService));
-                } else {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\"   :   m_tcpIoService exists!";
-                    tcpConnection->setIOService(m_tcpIoService);
-                    startConnectionAsync(tcpConnection, outputChannelInfo);
-                }
+                // Establish connection (and define sub-type of server)
+                startConnectionAsync(tcpConnection, outputChannelInfo);
             }
         }
 
