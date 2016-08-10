@@ -35,7 +35,6 @@ public:
 private:
     void startServer();
     void testDeviceRegistration();
-    void registrationTestCallback(const std::string& deviceId, const std::string& key, const std::vector<std::string>& value, const karabo::util::Timestamp& timestamp, bool & waiting);
 
     pid_t m_pid;
     //alarm service device
