@@ -645,17 +645,7 @@ namespace karabo {
             }
         }
         
-        bool Hash::operator>(const Hash& other) const {
-            if(this->size() > other.size()) return true;
-            return !similar(*this, other);
-        }
         
-        bool Hash::operator<(const Hash& other) const {
-            if(this->size() < other.size()) return true;
-            return !similar(*this, other);
-        }
-
-
         Hash& Hash::operator-=(const Hash& other) {
             this->subtract(other);
             return *this;
