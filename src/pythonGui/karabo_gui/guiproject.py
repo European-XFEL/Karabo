@@ -395,9 +395,9 @@ class GuiProject(Project, QObject):
             deviceGroup.addDevice(device)
         return deviceGroup
 
-    def addScene(self, scene):
-        self.scenes.append(scene)
-        self.signalSceneAdded.emit(scene)
+    def addScene(self, sceneModel):
+        super(GuiProject, self).addScene(sceneModel)
+        self.signalSceneAdded.emit(sceneModel)
         self.setModified(True)
 
     def insertScene(self, index, scene):
