@@ -216,21 +216,20 @@ class Project(object):
 
     def insertScene(self, index, scene):
         self.scenes.insert(index, scene)
-        scene.project = self
 
-    def getScene(self, filename):
-        """ The first occurrence of a scene with the given \filename is
+    def getScene(self, title):
+        """ The first occurrence of a scene with the given \title is
         returned.
         """
         for scene in self.scenes:
-            if filename == scene.filename:
+            if title == scene.filename:
                 return scene
 
-    def getSceneURL(self, filename):
+    def getSceneURL(self, title):
         """ Return a URL which can be passed to getURL to read the scene data
         from the project.
         """
-        return "project:{}/{}".format(self.SCENES_KEY, filename)
+        return "project:{}/{}".format(self.SCENES_KEY, title)
 
     def getSceneNames(self):
         """ All the scene names for this project.
