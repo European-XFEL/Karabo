@@ -418,16 +418,6 @@
                    displayName="Test Files"
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
-      <logicalFolder name="f8"
-                     displayName="alarmService_test"
-                     projectFiles="true"
-                     kind="TEST">
-        <itemPath>../../../src/karabo/tests/alarmService/AlarmService_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/alarmService/AlarmService_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/alarmService/AlarmTesterDevice.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/alarmService/AlarmTesterDevice.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/alarmService/alarmServiceRunner.cc</itemPath>
-      </logicalFolder>
       <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/io/FileInputOutput_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/FileInputOutput_Test.hh</itemPath>
@@ -1423,31 +1413,6 @@
       <item path="../../../src/karabo/pugiXml/pugixml.hpp"
             ex="false"
             tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/alarmService/AlarmService_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/alarmService/AlarmService_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/alarmService/AlarmTesterDevice.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/alarmService/AlarmTesterDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/alarmService/alarmServiceRunner.cc"
-            ex="false"
-            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/FileInputOutput_Test.cc"
@@ -2661,20 +2626,6 @@
           <output>${TESTDIR}/TestFiles/f7</output>
         </linkerTool>
       </folder>
-      <folder path="TestFiles/f8">
-        <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </cTool>
-        <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </ccTool>
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f8</output>
-          <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
-          </linkerLibItems>
-        </linkerTool>
-      </folder>
       <folder path="f2/f1">
         <ccTool>
           <preprocessorList>
@@ -3588,31 +3539,6 @@
       <item path="../../../src/karabo/pugiXml/pugixml.hpp"
             ex="false"
             tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/alarmService/AlarmService_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/alarmService/AlarmService_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/alarmService/AlarmTesterDevice.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/alarmService/AlarmTesterDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/alarmService/alarmServiceRunner.cc"
-            ex="false"
-            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/FileInputOutput_Test.cc"
@@ -4816,20 +4742,6 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f6</output>
-          <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
-          </linkerLibItems>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f8">
-        <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </cTool>
-        <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </ccTool>
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f8</output>
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
