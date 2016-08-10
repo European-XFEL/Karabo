@@ -10,8 +10,8 @@ from pint import DimensionalityError
 
 from karabo.middlelayer import (
     Configurable, connectDevice, Device, DeviceNode, Float, getDevice, Hash,
-    Int32, MetricPrefix, Node, setNoWait, setWait, Slot, String, unit, Unit,
-    VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
+    Int32, MetricPrefix, Node, setNoWait, setWait, Slot, State, String, unit,
+    Unit, VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
     waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.device_client import Queue
@@ -63,14 +63,14 @@ class Remote(Device):
         if self.once_value is None:
             self.once_value = value
 
-    @Int32(allowedStates=["Other state"])
+    @Int32(allowedStates=[State.ON])
     def disallowed_int(self, value):
         self.value = value
-        self.state = "uninitialized"
+        self.state = State.UNKNOWN
 
-    @Slot(allowedStates=["uninitialized"])
+    @Slot(allowedStates=[State.UNKNOWN])
     def allow(self):
-        self.state = "Other state"
+        self.state = State.ON
         self.value = 777
 
     @Slot()
@@ -465,7 +465,7 @@ class Tests(DeviceTest):
     @async_tst
     def test_disallow(self):
         """test that values cannot be set if in wrong state"""
-        self.assertEqual(self.remote.state, "uninitialized")
+        self.assertEqual(self.remote.state, State.UNKNOWN)
         with (yield from getDevice("remote")) as d:
             try:
                 d.value = 7

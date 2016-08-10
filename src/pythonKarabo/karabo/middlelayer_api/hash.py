@@ -20,6 +20,7 @@ from xml.etree import ElementTree
 
 import numpy as np
 
+from karabo.common.states import State
 from . import basetypes
 from .enums import (AccessLevel, AccessMode, Assignment, MetricPrefix,
                     NodeType, Unit)
@@ -222,21 +223,21 @@ class Descriptor(object):
     displayedName = Attribute()
     alias = Attribute()
     description = Attribute()
-    allowedStates = Attribute()
     defaultValue = Attribute()
     accessMode = Attribute(AccessMode.RECONFIGURABLE)
     assignment = Attribute(Assignment.OPTIONAL)
     requiredAccessLevel = Attribute(AccessLevel.OBSERVER)
     displayType = Attribute()
+    allowedStates = None
 
-
-    def __init__(self, strict=True, key="(unknown key)", **kwargs):
+    def __init__(self, strict=True, key="(unknown key)",
+                 allowedStates=None, **kwargs):
         """Create a new descriptor with appropriate attributes
 
         The attributes are given as keyword arguments. If we define
         those in our code, we assume that all attributes are correctly
         given, or raise an error. If we are parsing a schema that came
-        over the network, we are more sloppy and silently discard
+        over the network, we are not so *strict* and silently discard
         unknown attributes, and properly set the enum type for those
         we find.
         """
@@ -257,6 +258,15 @@ class Descriptor(object):
             elif strict:
                 raise TypeError("{} got unexpected keyword argument: {}".
                                 format(self.__class__.__name__, k))
+        if allowedStates is not None:
+            if strict:
+                self.allowedStates = set(allowedStates)
+                if not all((isinstance(s, State) for s in self.allowedStates)):
+                    raise TypeError(
+                        'allowedStates must contain States, not "{}"'.
+                        format(allowedStates))
+            else:
+                self.allowedStates = set((State(s) for s in allowedStates))
 
     def toSchemaAndAttrs(self, device, state):
         """return schema for device in state
@@ -270,7 +280,12 @@ class Descriptor(object):
         """
         attrs = ((name, getattr(self, name)) for name in dir(type(self))
                  if isinstance(getattr(type(self), name), Attribute))
-        return Hash(), {name: attr for name, attr in attrs if attr is not None}
+        attrs = ((name, value.value if isinstance(value, Enum) else value)
+                 for name, value in attrs)
+        attrs = {name: attr for name, attr in attrs if attr is not None}
+        if self.allowedStates is not None:
+            attrs["allowedStates"] = [s.value for s in self.allowedStates]
+        return Hash(), attrs
 
     def __get__(self, instance, owner):
         if instance is None:
