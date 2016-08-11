@@ -249,8 +249,28 @@ namespace karathon {
             } else if (operand.type() == typeid (karabo::xip::RawImageData)) {
                 karabo::xip::RawImageData raw = boost::any_cast<karabo::xip::RawImageData>(operand);
                 return bp::object(boost::shared_ptr<karabo::xip::RawImageData>(new karabo::xip::RawImageData(raw)));
-            } else if (operand.type() == typeid (karabo::xms::ImageData)) {
-                return bp::object(boost::any_cast<karabo::xms::ImageData>(operand));
+            } else if (operand.type() == typeid (karabo::xms::ImageData<bool>)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData<bool> >(operand));
+            } else if (operand.type() == typeid (karabo::xms::ImageData<signed char>)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData<signed char> >(operand));
+            } else if (operand.type() == typeid (karabo::xms::ImageData<signed short>)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData<signed short> >(operand));
+            } else if (operand.type() == typeid (karabo::xms::ImageData<int>)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData<int> >(operand));
+            } else if (operand.type() == typeid (karabo::xms::ImageData<long long>)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData<long long> >(operand));
+            } else if (operand.type() == typeid (karabo::xms::ImageData<unsigned char>)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData<unsigned char> >(operand));
+            } else if (operand.type() == typeid (karabo::xms::ImageData<unsigned short>)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData<unsigned short> >(operand));
+            } else if (operand.type() == typeid (karabo::xms::ImageData<unsigned int>)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData<unsigned int> >(operand));
+            } else if (operand.type() == typeid (karabo::xms::ImageData<unsigned long long>)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData<unsigned long long> >(operand));
+            } else if (operand.type() == typeid (karabo::xms::ImageData<float>)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData<float> >(operand));
+            } else if (operand.type() == typeid (karabo::xms::ImageData<double>)) {
+                return bp::object(boost::any_cast<karabo::xms::ImageData<double> >(operand));
             } else if (operand.type() == typeid (karabo::xms::Data)) {
                 return bp::object(boost::any_cast<karabo::xms::Data>(operand));
             } else if (operand.type() == typeid (karabo::util::Hash)) {
