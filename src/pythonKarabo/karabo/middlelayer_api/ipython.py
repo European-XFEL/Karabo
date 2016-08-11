@@ -8,6 +8,7 @@ from IPython.kernel.channelsabc import ChannelABC, HBChannelABC
 from IPython.kernel.manager import KernelManager
 from IPython.kernel import KernelClient
 
+from karabo.common.states import State
 from .device import Device
 from .enums import AccessLevel, AccessMode, Assignment
 from .hash import Bool, Int32, Slot, VectorChar
@@ -101,13 +102,12 @@ class IPythonKernel(Device):
         self.client.iopub_channel.device = self
         self.client.stdin_channel.device = self
         self.client.start_channels()
-        self.state = "Running"
+        self.state = State.STARTED
 
     @coslot
     def slotKillDevice(self):
-        self.state = "Closing"
+        self.state = State.STOPPING
         yield from self._ss.loop.run_in_executor(None,
                                                  self.manager.shutdown_kernel)
-        self.state = "Killing"
+        self.state = State.STOPPED
         yield from super().slotKillDevice()
-        self.state = "Killed"

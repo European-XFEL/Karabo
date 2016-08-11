@@ -160,7 +160,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103122620/RawImageFileWriter.o \
 	${OBJECTDIR}/_ext/1103122747/Data.o \
 	${OBJECTDIR}/_ext/1103122747/ImageData.o \
-	${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o \
 	${OBJECTDIR}/_ext/1103122747/InputChannel.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkInput.o \
@@ -832,11 +831,6 @@ ${OBJECTDIR}/_ext/1103122747/ImageData.o: ../../../src/karabo/xms/ImageData.cc
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/ImageData.o ../../../src/karabo/xms/ImageData.cc
 
-${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o: ../../../src/karabo/xms/ImageDataFileWriter.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o ../../../src/karabo/xms/ImageDataFileWriter.cc
-
 ${OBJECTDIR}/_ext/1103122747/InputChannel.o: ../../../src/karabo/xms/InputChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
 	${RM} "$@.d"
@@ -894,7 +888,7 @@ ${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/EventLoop_Test.o ${TESTDIR}/_
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/AlarmCondition_Test.o ${TESTDIR}/_ext/1033104525/Base64_Test.o ${TESTDIR}/_ext/1033104525/ByteSwap_Test.o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/DateTimeString_Test.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/NDArray_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/States_Test.o ${TESTDIR}/_ext/1033104525/StatisticalEvaluator_Test.o ${TESTDIR}/_ext/1033104525/StringTools_Test.o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/Version_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/AlarmCondition_Test.o ${TESTDIR}/_ext/1033104525/Base64_Test.o ${TESTDIR}/_ext/1033104525/ByteSwap_Test.o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/DateTimeString_Test.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/MetaTools_Test.o ${TESTDIR}/_ext/1033104525/NDArray_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/Serializable_Test.o ${TESTDIR}/_ext/1033104525/States_Test.o ${TESTDIR}/_ext/1033104525/StatisticalEvaluator_Test.o ${TESTDIR}/_ext/1033104525/StringTools_Test.o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/Version_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -1067,6 +1061,12 @@ ${TESTDIR}/_ext/1033104525/Hash_Test.o: ../../../src/karabo/tests/util/Hash_Test
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
 
 
+${TESTDIR}/_ext/1033104525/MetaTools_Test.o: ../../../src/karabo/tests/util/MetaTools_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/MetaTools_Test.o ../../../src/karabo/tests/util/MetaTools_Test.cc
+
+
 ${TESTDIR}/_ext/1033104525/NDArray_Test.o: ../../../src/karabo/tests/util/NDArray_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
@@ -1077,6 +1077,12 @@ ${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
+
+
+${TESTDIR}/_ext/1033104525/Serializable_Test.o: ../../../src/karabo/tests/util/Serializable_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Serializable_Test.o ../../../src/karabo/tests/util/Serializable_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/States_Test.o: ../../../src/karabo/tests/util/States_Test.cc 
@@ -2798,19 +2804,6 @@ ${OBJECTDIR}/_ext/1103122747/ImageData_nomain.o: ${OBJECTDIR}/_ext/1103122747/Im
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/ImageData_nomain.o ../../../src/karabo/xms/ImageData.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103122747/ImageData.o ${OBJECTDIR}/_ext/1103122747/ImageData_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter_nomain.o: ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o ../../../src/karabo/xms/ImageDataFileWriter.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter_nomain.o ../../../src/karabo/xms/ImageDataFileWriter.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/InputChannel_nomain.o: ${OBJECTDIR}/_ext/1103122747/InputChannel.o ../../../src/karabo/xms/InputChannel.cc 

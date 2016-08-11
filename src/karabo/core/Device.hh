@@ -390,7 +390,7 @@ namespace karabo {
              */
             template <class PixelType>
             void writeChannel(const std::string& channelName, const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
-                karabo::xms::Data data(key, karabo::xms::ImageData(image));
+                karabo::xms::Data data(key, karabo::xms::ImageData<PixelType>(image));
                 writeChannel(channelName, data);
             }
 

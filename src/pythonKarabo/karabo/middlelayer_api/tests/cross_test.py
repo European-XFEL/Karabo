@@ -45,7 +45,7 @@ class Tests(TestCase):
         self.assertEqual(a_desc.maxExc, 33)
         self.assertEqual(a_desc.minInc, 11)
         self.assertEqual(a_desc.maxInc, 23)
-        self.assertEqual(a_desc.allowedStates, ["INIT", "UNKNOWN"])
+        self.assertEqual(a_desc.allowedStates, {State.INIT, State.UNKNOWN})
 
         self.assertEqual(len(proxy.table), 1)
         self.assertEqual(proxy.table[0].d, 5)

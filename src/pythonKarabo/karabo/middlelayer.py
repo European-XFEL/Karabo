@@ -44,4 +44,5 @@ from .middlelayer_api.schema import (
 from .middlelayer_api.signalslot import Signal, SignalSlotable, slot, coslot
 from .middlelayer_api.timestamp import Timestamp
 
+from .common.alarm_conditions import AlarmCondition
 from .common.states import State, StateSignifier

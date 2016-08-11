@@ -7,6 +7,7 @@ from .bound_api.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CL
 from .bound_api.base_fsm import BaseFsm
 from .bound_api.camera_fsm import CameraFsm
 from .bound_api.compute_device import ComputeFsm
+from .bound_api.image_data import ImageData
 from .bound_api.no_fsm import NoFsm
 from .bound_api.ok_error_fsm import OkErrorFsm
 from .bound_api.start_stop_fsm import StartStopFsm
@@ -18,8 +19,6 @@ from .bound_api.plugin_loader import PluginLoader
 from .bound_api.runner import Runner
 from .bound_api.server_entry_point import runSingleDeviceServer
 from .bound_api.worker import Worker, QueueWorker
-from .bound_api.alarm_conditions import  AlarmCondition
-
 
 from .bound_api.fsm import (
     KARABO_FSM_EVENT0, KARABO_FSM_EVENT1, KARABO_FSM_EVENT2, KARABO_FSM_EVENT3,
@@ -65,9 +64,17 @@ from karathon import (
     FARAD, FEMTO, FEMTOSEC, FLOAT_ELEMENT, GIGA, GRAM, GRAY,
     H5accessMode, H5element, H5file, H5format, H5formatDiscoveryPolicy,
     H5table, HECTO, HENRY, HERTZ, HOUR, Hash, HashAttributes,
-    HashAttributesNode, HashFilter, HashMergePolicy, HashNode, IMAGEDATA,
-    IMAGE_ELEMENT, INIT, INPUT_CHANNEL, INPUT_ELEMENT, INT32_ELEMENT,
-    INT64_ELEMENT, INTERNAL, IOService, ImageData, InputChannel, InputHash,
+    HashAttributesNode, HashFilter, HashMergePolicy, HashNode, IMAGE_ELEMENT,
+    IMAGEDATA_BOOL_ELEMENT, IMAGEDATA_INT8_ELEMENT, IMAGEDATA_UINT8_ELEMENT,
+    IMAGEDATA_INT16_ELEMENT, IMAGEDATA_UINT16_ELEMENT, IMAGEDATA_INT32_ELEMENT,
+    IMAGEDATA_UINT32_ELEMENT, IMAGEDATA_INT64_ELEMENT, IMAGEDATA_UINT64_ELEMENT,
+    IMAGEDATA_FLOAT_ELEMENT, IMAGEDATA_DOUBLE_ELEMENT,
+    INIT, INPUT_CHANNEL, INPUT_ELEMENT, INT32_ELEMENT,
+    INT64_ELEMENT, INTERNAL, IOService,
+    ImageDataBOOL, ImageDataINT8, ImageDataINT16, ImageDataINT32,
+    ImageDataINT64, ImageDataUINT8, ImageDataUINT16, ImageDataUINT32,
+    ImageDataUINT64, ImageDataFLOAT, ImageDataDOUBLE,
+    InputChannel, InputHash,
     InputRawImageData, InputSchema, JOULE, JPEG, KATAL, KELVIN, KILO, LEAF,
     LIST_ELEMENT, LIST_OF_NODES, LSB, LUMEN, LUX, LeafType, Logger,
     MANDATORY, MEGA, METER, METER_PER_SECOND, MICRO, MICROSEC, MILLI, MILLISEC,
@@ -109,4 +116,5 @@ from karathon import (
 
 )
 
+from .common.alarm_conditions import AlarmCondition
 from .common.states import State, StateSignifier
