@@ -197,29 +197,30 @@ namespace karabo {
         void TcpChannel::readAsyncSizeInBytes(const ReadSizeInBytesHandler& handler) {
             size_t sizeofLength = m_connectionPointer->getSizeofLength();
             if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
-            m_inboundMessagePrefix.resize(sizeofLength);
-            boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
+            boost::shared_ptr<std::vector<char> > prefix(new std::vector<char>(sizeofLength));
+            boost::asio::async_read(m_socket, buffer(*prefix), transfer_all(),
                                     m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::onSizeInBytesAvailable,
-                                                                  this, handler, boost::asio::placeholders::error)));
+                                                                  this, handler, prefix, boost::asio::placeholders::error)));
         }
 
 
-        void TcpChannel::onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, const ErrorCode& e) {
+        void TcpChannel::onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, boost::shared_ptr<std::vector<char> > prefix, const ErrorCode& e) {
             if (e) {
-                bytesAvailableHandler(e);
+                boost::shared_ptr<std::vector<char> > inData(new std::vector<char>);
+                bytesAvailableHandler(inData, e);
                 return;
             }
 
             size_t messageSize;
-            _KARABO_VECTOR_TO_SIZE(m_inboundMessagePrefix, messageSize);
+            _KARABO_VECTOR_TO_SIZE(*prefix, messageSize);
             handler(messageSize);
         }
 
 
         void TcpChannel::byteSizeAvailableHandler(const size_t byteSize) {
-            m_inboundData->resize(byteSize);
-            this->readAsyncRaw(&(*m_inboundData)[0], byteSize,
-                               m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1)));
+            boost::shared_ptr<std::vector<char> > inboundData(new std::vector<char>(byteSize));
+            this->readAsyncRaw(&(*inboundData)[0], byteSize,
+                               m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, inboundData, _1)));
         }
 
 
@@ -320,15 +321,16 @@ namespace karabo {
         }
 
 
-        void TcpChannel::bytesAvailableHandler(const boost::system::error_code& e) {
+        void TcpChannel::bytesAvailableHandler(boost::shared_ptr<std::vector<char> > inboundData, const boost::system::error_code& e) {
             if (!e) {
                 // Only parse header information
                 if (m_readHeaderFirst) {
                     m_readHeaderFirst = false;
-                    m_inboundData.swap(m_inboundHeader);
+                    inboundData.swap(m_inboundHeader);
                     this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
                     return;
-                }
+                } else
+                    inboundData.swap(m_inboundData);
             }
             HandlerType type = m_activeHandler;
             m_activeHandler = TcpChannel::NONE;
