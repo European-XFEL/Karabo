@@ -4,15 +4,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-import os.path
-
 from PyQt4.QtCore import QEvent, Qt
 from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
 from karabo_gui.scenemodel.api import (
-    read_scene, FixedLayoutModel, WorkflowItemModel,
-    SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+    FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
 from .builder import (bring_object_to_front, create_object_from_model,
                       fill_root_layout, find_top_level_model, is_widget,
@@ -56,7 +53,7 @@ class SceneView(QWidget):
         layout.addWidget(self.inner)
 
         self.project_handler = ProjectSceneHandler(project=project)
-            
+
         self.title = None
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
