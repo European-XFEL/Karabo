@@ -62,8 +62,6 @@ class DockTabWindow(QTabWidget):
         # Store divWidget in list to keep it alive for un/dock event!!!
         self.divWidgetList.add(divWidget)
 
-        return index
-
     def removeDockableTab(self, widget):
         divWidget = widget.parent()
         index = self.indexOf(divWidget)
@@ -118,9 +116,9 @@ class DockTabWindow(QTabWidget):
     def onDock(self, div):
         if div.parent() is None:
             if div.hasIcon():
-                index = self.insertTab(div.index, div, div.icon, div.label)
+                index = self.insertTab(div.index, div, div.icon, div.title)
             else:
-                index = self.insertTab(div.index, div, div.label)
+                index = self.insertTab(div.index, div, div.title)
 
             for i in range(self.count()):
                 if self.widget(i) is not None:
@@ -147,14 +145,14 @@ class DivWidget(QFrame):
     signalTabMaximize = pyqtSignal(object) # object - tabWidget
     signalTabMinimize = pyqtSignal(object) # object - tabWidget
 
-    def __init__(self, dockWindow, dockableWidget, label, mainWindow=None, icon=None):
+    def __init__(self, dockWindow, dockableWidget, title, mainWindow=None, icon=None):
         super(DivWidget, self).__init__()
 
         self.setFrameStyle(QFrame.Box | QFrame.Plain)
         self.setLineWidth(1)
 
         self.index = -1
-        self.label = label
+        self.title = title
         self.doesDockOnClose = True
         self.dockableWidget = dockableWidget # panel
         self.dockWindow = dockWindow # tab widget
@@ -243,15 +241,15 @@ class DivWidget(QFrame):
     def updateTitle(self, title):
         """ The title of the widget changed and needs to be updated.
         """
-        self.label = title
-        self.setWindowTitle(self.label)
+        self.title = title
+        self.setWindowTitle(self.title)
 
     def onUndock(self):
         self.acDock.setVisible(True)
         self.acUndock.setVisible(False)
         if self.icon is not None:
             self.setWindowIcon(self.icon)
-        self.setWindowTitle(self.label)
+        self.setWindowTitle(self.title)
         self.dockWindow.onUndock(self)
         self.dockableWidget.onUndock()
 
@@ -282,9 +280,9 @@ class DivWidget(QFrame):
                 continue
             
             if w.hasIcon():
-                self.dockWindow.insertTab(w.index, w, w.icon, w.label)
+                self.dockWindow.insertTab(w.index, w, w.icon, w.title)
             else:
-                self.dockWindow.insertTab(w.index, w, w.label)
+                self.dockWindow.insertTab(w.index, w, w.title)
         self.signalTabMinimize.emit(self.dockWindow)
 
     def hasIcon(self):

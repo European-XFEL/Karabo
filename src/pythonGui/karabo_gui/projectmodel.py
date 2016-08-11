@@ -1247,14 +1247,14 @@ class ProjectModel(QStandardItemModel):
     def closeScene(self, sceneModel):
         self.signalRemoveScene.emit(sceneModel)
 
-    def insertScene(self, index, project, sceneName):
+    def insertScene(self, index, project, title):
         """
-        Insert a scene for the given \project with the given data.
+        Insert a scene model for the given \project with the given data.
         """
-        scene = Scene(project, sceneName, designMode=True)
-        project.insertScene(index, scene)
+        sceneModel = SceneModel(title=title)
+        project.insertScene(index, sceneModel)
 
-        return scene
+        return sceneModel
 
     def duplicateScene(self, oldSceneModel):
         dialog = DuplicateDialog(oldSceneModel.title[:-4])
@@ -1266,6 +1266,7 @@ class ProjectModel(QStandardItemModel):
         for index in range(dialog.startIndex, dialog.endIndex+1):
             title = "{}{}".format(dialog.displayPrefix, index)
             newSceneModel = self.addScene(self.currentProject(), title, fileObj)
+            fileObj.seek(0)
             # XXX: TODO set dirty flag project modified
         self.selectObject(newSceneModel)
 
