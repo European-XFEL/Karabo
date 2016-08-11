@@ -368,7 +368,7 @@ class MainWindow(QMainWindow):
             scenePanel = ScenePanel(sceneView, self.acServerConnect.isChecked())
             scenePanel.signalClosed.connect(self.onMiddlePanelRemoved)
             self.middleTab.addDockableTab(scenePanel,
-                                          sceneModel.filename,
+                                          sceneModel.title,
                                           self)
             self._openedScenes.add(sceneModel)
             self.selectLastMiddlePanel()
@@ -400,7 +400,7 @@ class MainWindow(QMainWindow):
     def renameSceneView(self, sceneModel):
         """ Adapt tab text of corresponding `sceneModel`.
 
-            The filename of the scene was already changed in the project panel
+            The title of the scene was already changed in the project panel
             and needs to be updated.
         """
         if sceneModel in self._openedScenes:
@@ -408,9 +408,9 @@ class MainWindow(QMainWindow):
             if divWidget is not None:
                 index = self.middleTab.indexOf(divWidget)
                 # Update title - important for undocked widgets
-                divWidget.updateTitle(sceneModel.filename)
+                divWidget.updateTitle(sceneModel.title)
                 if index > -1:
-                    self.middleTab.setTabText(index, sceneModel.filename)
+                    self.middleTab.setTabText(index, sceneModel.title)
 
     @pyqtSlot(object)
     def onAddMacro(self, macro):
