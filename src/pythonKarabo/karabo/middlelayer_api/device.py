@@ -1,6 +1,8 @@
 from asyncio import coroutine
 import socket
 
+from karabo.common.states import State
+from .alarm import AlarmMixin
 from .enums import AccessLevel, AccessMode, Assignment
 from .exceptions import KaraboError
 from .hash import Bool, Hash, HashType, Int32, SchemaHashType, String
@@ -9,7 +11,7 @@ from .schema import Node
 from .signalslot import SignalSlotable, Signal, slot, coslot
 
 
-class Device(SignalSlotable):
+class Device(AlarmMixin, SignalSlotable):
     """This is the base class for all devices.
 
     It inherits from :class:`~karabo.middlelayer.Configurable` and thus
@@ -31,10 +33,10 @@ class Device(SignalSlotable):
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL)
 
     state = String(
-        displayedName="State",
+        displayedName="State", enum=State,
         description="The current state the device is in",
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
-        defaultValue="uninitialized")
+        defaultValue=State.UNKNOWN)
 
     archive = Bool(
         displayedName="Archive",
