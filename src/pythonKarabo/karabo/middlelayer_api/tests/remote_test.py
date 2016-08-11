@@ -477,7 +477,7 @@ class Tests(DeviceTest):
                 self.assertEqual(len(logs.records), 1)
                 self.assertEqual(logs.records[0].levelname, "WARNING")
                 self.assertEqual(d.value, 7)
-                # allow set value to 777 and is changing state such that
+                # d.allow() sets d.value to 777 and is changing state such that
                 # disallowed_int can be set ...
                 yield from d.allow()
                 yield from waitUntil(lambda: d.value == 777)
