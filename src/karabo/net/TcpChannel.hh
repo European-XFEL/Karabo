@@ -208,7 +208,7 @@ namespace karabo {
              * @param byteSize
              * @param error
              */
-            void onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, const ErrorCode& error);
+            void onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, boost::shared_ptr<std::vector<char> > prefix, const ErrorCode& error);
 
             /**
              * Internal default handler
@@ -226,7 +226,7 @@ namespace karabo {
              * Internal default handler
              * @param channel
              */
-            void bytesAvailableHandler(const boost::system::error_code& e);
+            void bytesAvailableHandler(boost::shared_ptr<std::vector<char> > inData, const boost::system::error_code& e);
 
             void readAsyncRaw(char* data, size_t& size, const ReadRawHandler& handler);
 
