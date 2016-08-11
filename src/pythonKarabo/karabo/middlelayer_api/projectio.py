@@ -23,7 +23,6 @@ def read_project(path, factories, instance=None):
         projectConfig = projectHash[Project.PROJECT_KEY]
         dev_groups, devices = _read_devices(zf, projectConfig, factories)
         for grp in dev_groups:
-            grp.project = proj  # FIXME: This should be a weak reference
             proj.addDeviceGroup(grp)
         for dev in devices:
             proj.addDevice(dev)

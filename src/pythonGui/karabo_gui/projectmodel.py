@@ -822,7 +822,7 @@ class ProjectModel(QStandardItemModel):
             obj = item.data(ProjectModel.ITEM_OBJECT)
         return item
 
-    def _getProjectToObject(self, obj):
+    def getProjectToObject(self, obj):
         """ Returns the project object of the given `obj`.
         """
         index = self.findIndex(obj)
@@ -844,7 +844,7 @@ class ProjectModel(QStandardItemModel):
             return None
 
         obj = index.data(ProjectModel.ITEM_OBJECT)
-        return self._getProjectToObject(obj)
+        return self.getProjectToObject(obj)
 
     def modifiedProjects(self):
         """
@@ -1196,7 +1196,7 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
-        project = self._getProjectToObject(device)
+        project = self.getProjectToObject(device)
         for index in range(dialog.startIndex, dialog.endIndex+1):
             deviceId = "{}{}".format(dialog.displayPrefix, index)
             newDevice = self.addDevice(project, device.serverId,
@@ -1275,7 +1275,7 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
-        project = self._getProjectToObject(oldSceneModel)
+        project = self.getProjectToObject(oldSceneModel)
         xml = write_scene(oldSceneModel)
         fileObj = BytesIO(xml)
         for index in range(dialog.startIndex, dialog.endIndex+1):
@@ -1289,7 +1289,7 @@ class ProjectModel(QStandardItemModel):
         """ This method gets a `sceneModel` and triggers a signal to open a
             scene view in the GUI.
         """
-        project = self._getProjectToObject(sceneModel)
+        project = self.getProjectToObject(sceneModel)
         self.signalAddSceneView.emit(sceneModel, project)
 
     def openSceneLink(self, title):
@@ -1626,7 +1626,7 @@ class ProjectModel(QStandardItemModel):
         for index in selectedIndexes:
             obj = index.data(ProjectModel.ITEM_OBJECT)
             # Get project to given object
-            project = self._getProjectToObject(obj)
+            project = self.getProjectToObject(obj)
             # Remove data from project
             self.removeObject(project, obj, nbSelected == 1)
 
@@ -1647,7 +1647,7 @@ class ProjectModel(QStandardItemModel):
             deviceId = parentIndex.data()
             configuration = index.data(ProjectModel.ITEM_OBJECT)
             
-            project = self._getProjectToObject(configuration)
+            project = self.getProjectToObject(configuration)
             project.removeConfiguration(deviceId, configuration)
             
             if project.configurations.get(deviceId) is None:
