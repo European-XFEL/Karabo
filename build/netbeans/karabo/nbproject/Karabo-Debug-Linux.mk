@@ -160,7 +160,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103122620/RawImageFileWriter.o \
 	${OBJECTDIR}/_ext/1103122747/Data.o \
 	${OBJECTDIR}/_ext/1103122747/ImageData.o \
-	${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o \
 	${OBJECTDIR}/_ext/1103122747/InputChannel.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkInput.o \
@@ -831,11 +830,6 @@ ${OBJECTDIR}/_ext/1103122747/ImageData.o: ../../../src/karabo/xms/ImageData.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/ImageData.o ../../../src/karabo/xms/ImageData.cc
-
-${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o: ../../../src/karabo/xms/ImageDataFileWriter.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o ../../../src/karabo/xms/ImageDataFileWriter.cc
 
 ${OBJECTDIR}/_ext/1103122747/InputChannel.o: ../../../src/karabo/xms/InputChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -2810,19 +2804,6 @@ ${OBJECTDIR}/_ext/1103122747/ImageData_nomain.o: ${OBJECTDIR}/_ext/1103122747/Im
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/ImageData_nomain.o ../../../src/karabo/xms/ImageData.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103122747/ImageData.o ${OBJECTDIR}/_ext/1103122747/ImageData_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter_nomain.o: ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o ../../../src/karabo/xms/ImageDataFileWriter.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter_nomain.o ../../../src/karabo/xms/ImageDataFileWriter.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o ${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/InputChannel_nomain.o: ${OBJECTDIR}/_ext/1103122747/InputChannel.o ../../../src/karabo/xms/InputChannel.cc 
