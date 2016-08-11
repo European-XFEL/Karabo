@@ -14,12 +14,14 @@ __all__ = ["ProjectTreeView"]
 
 import karabo_gui.globals as globals
 
-from karabo_gui.dialogs.projectdialog import ProjectDialog, ProjectSaveDialog, ProjectLoadDialog
-from karabo_gui.scene import Scene
-from karabo_gui.network import Network
-from karabo_gui.topology import Manager
-from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject, Macro
+from karabo_gui.dialogs.projectdialog import (
+    ProjectDialog, ProjectSaveDialog, ProjectLoadDialog)
+from karabo_gui.guiproject import (
+    Category, Device, DeviceGroup, GuiProject, Macro)
 from karabo_gui.projectmodel import ProjectModel
+from karabo_gui.network import Network
+from karabo_gui.scenemodel.api import SceneModel
+from karabo_gui.topology import Manager
 
 from karabo.middlelayer_api.project import (Monitor, Project, ProjectAccess,
                                             ProjectConfiguration)
@@ -240,7 +242,7 @@ class ProjectTreeView(QTreeView):
         object = index.data(ProjectModel.ITEM_OBJECT)
         if isinstance(object, Device) or isinstance(object, DeviceGroup):
             self.model().editDevice(object)
-        elif isinstance(object, Scene):
+        elif isinstance(object, SceneModel):
             self.model().openScene(object)
         elif isinstance(object, Macro):
             self.model().openMacro(object)
@@ -327,16 +329,9 @@ class ProjectTreeView(QTreeView):
                 acOpenScene.setStatusTip(text)
                 acOpenScene.setToolTip(text)
                 acOpenScene.triggered.connect(self.model().onOpenScene)
-                
-                text = "Open Refactored Scene..."
-                acOpenSceneView = QAction(text, self)
-                acOpenSceneView.setStatusTip(text)
-                acOpenSceneView.setToolTip(text)
-                acOpenSceneView.triggered.connect(self.model().openSceneView)
 
                 menu.addAction(acAddScene)
                 menu.addAction(acOpenScene)
-                menu.addAction(acOpenSceneView)
             elif firstObj.displayName == Project.MACROS_LABEL:
                 text = "Add macro"
                 acAddMacro = QAction(text, self)
@@ -405,7 +400,7 @@ class ProjectTreeView(QTreeView):
                 menu.addAction(acFilename)
                 menu.addAction(acInterval)
                 menu.addAction(acMonitoring)
-        elif selectedType in (Device, DeviceGroup, Scene, Macro, Monitor):
+        elif selectedType in (Device, DeviceGroup, SceneModel, Macro, Monitor):
             # Device or Scene menu
             if nbSelected > 1:
                 text = "Delete selected"
@@ -461,7 +456,7 @@ class ProjectTreeView(QTreeView):
             elif selectedType is Macro:
                 acEdit.triggered.connect(self.model().onEditMacro)
                 acDuplicate.triggered.connect(self.model().onDuplicateMacro)
-            elif selectedType is Scene:
+            elif selectedType is SceneModel:
                 if nbSelected == 1:
                     acEdit.triggered.connect(self.model().onEditScene)
                     acDuplicate.triggered.connect(self.model().onDuplicateScene)
