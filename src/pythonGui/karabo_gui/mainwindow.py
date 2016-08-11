@@ -376,7 +376,7 @@ class MainWindow(QMainWindow):
             divWidget = self._getSceneDivWidget(sceneModel)
             if divWidget is not None:
                 index = self.middleTab.indexOf(divWidget)
-                if index > 0:
+                if index > -1:
                     self.middleTab.setCurrentIndex(index)
                 else:
                     divWidget.activateWindow()
@@ -407,10 +407,10 @@ class MainWindow(QMainWindow):
             divWidget = self._getSceneDivWidget(sceneModel)
             if divWidget is not None:
                 index = self.middleTab.indexOf(divWidget)
-                if index > 0:
-                    self.middleTab.setTabText(index, sceneModel.filename)
                 # Update title - important for undocked widgets
                 divWidget.updateTitle(sceneModel.filename)
+                if index > -1:
+                    self.middleTab.setTabText(index, sceneModel.filename)
 
     @pyqtSlot(object)
     def onAddMacro(self, macro):
