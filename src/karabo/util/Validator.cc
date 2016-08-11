@@ -574,7 +574,7 @@ namespace karabo {
                     break;
                 }
                 case Types::NDARRAY_INT16: {
-                    const Dims& shape = workNode.getValue<NDArray<short> >().getShape();
+                    const Dims& shape = workNode.getValue<NDArray<signed short> >().getShape();
                     compareNDArrayShapes(schemaShape, shape, report, scope);
                     break;
                 }

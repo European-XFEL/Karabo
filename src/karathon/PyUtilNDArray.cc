@@ -16,9 +16,9 @@ void exportPyUtilNDArray() {
 }
 
 template void exportPyUtilNDArray<bool>();
-template void exportPyUtilNDArray<char>();
+template void exportPyUtilNDArray<signed char>();
 template void exportPyUtilNDArray<unsigned char>();
-template void exportPyUtilNDArray<short>();
+template void exportPyUtilNDArray<signed short>();
 template void exportPyUtilNDArray<unsigned short>();
 template void exportPyUtilNDArray<int>();
 template void exportPyUtilNDArray<unsigned int>();
