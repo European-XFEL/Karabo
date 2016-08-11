@@ -34,7 +34,7 @@
 
 namespace karabo {
 
-    namespace util {
+    namespace util {        
 
         /**
          * Hash container:
@@ -80,7 +80,7 @@ namespace karabo {
         private:
 
             typedef OrderedMap<std::string, Node > Container;
-            Container m_container;
+            Container m_container;           
 
         public:
 
@@ -319,7 +319,7 @@ namespace karabo {
              * @endcode
              */
             template<typename ValueType>
-            inline Node& set(const std::string& path, const ValueType& value, const char separator = '.'); /**/
+            inline Node& set(const std::string& path, const ValueType& value, const char separator = '.');
 
             /**
              * Clone the content (key, value, attributes) of another elements.
@@ -388,7 +388,7 @@ namespace karabo {
             /**
              * Casts the the value of element identified by "path" from its original type 
              * to another different target type.
-             * Throws CastException if casting fails, i.e. not posible or unsafe
+             * Throws CastException if casting fails, i.e. not possible or unsafe
              * @param path
              * @param separator
              * @return value
