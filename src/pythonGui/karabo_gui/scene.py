@@ -1090,7 +1090,7 @@ class Scene(QSvgWidget):
         self.signalSceneItemSelected.connect(self.project.signalSelectObject)
         self.project.signalDeviceSelected.connect(self.onSelectionChanged)
         
-        self.filename = name
+        self.title = name
 
         self.inner = QWidget(self)
         self.inner.setLayout(FixedLayout())
@@ -1121,7 +1121,7 @@ class Scene(QSvgWidget):
         """
         This scene gets copied into a new scene object which is returned.
         """
-        scene = Scene(self.project, self.filename)
+        scene = Scene(self.project, self.title)
         xml = self.toXml()
         scene.fromXml(xml)
         
