@@ -59,8 +59,8 @@ freetype hdf5 log4cpp cppunit openmq openmqc patchelf gmock )
 DEPENDENCIES_PYTHON=( setuptools pip wheel cython numpy scipy nose pillow
 sip backports tornado pyparsing six dateutil pytz pexpect pyzmq markupsafe
 jinja2 pygments docutils alabaster babel snowballstemmer sphinx_rtd_theme
-sphinx ipython h5py pyusb parse suds jsonschema ecdsa pycrypto paramiko
-tzlocal httplib2 pssh traits pint )
+imagesize sphinx ipython h5py pyusb parse suds jsonschema ecdsa pycrypto
+paramiko tzlocal httplib2 pssh traits pint )
 
 DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib pyqwt5 guidata guiqwt )
 
