@@ -237,15 +237,7 @@ namespace karabo {
 
         void TcpConnection::acceptHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
-                if (!e) {
-                    handler(channel);
-                } else {
-                    if (m_errorHandler)
-                        m_errorHandler(e);
-                    else if (e.value() != 125) { // 125 -- Operation canceled
-                        KARABO_LOG_FRAMEWORK_WARN << "TCP : Accept handler got code #" << e.value() << " -- " << e.message();
-                    }
-                }
+                handler(channel,e);
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW
             } catch (const std::exception& ex) {
@@ -283,10 +275,8 @@ namespace karabo {
                                             boost::bind(&TcpConnection::connectHandler, this,
                                                         new_channel, handler, boost::asio::placeholders::error));
                 } else {
-                    if (m_errorHandler)
-                        m_errorHandler(e);
-                    else
-                        throw KARABO_NETWORK_EXCEPTION(e.message());
+                    Channel::Pointer c;
+                    handler(c, e);
                 }
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW
@@ -300,14 +290,7 @@ namespace karabo {
 
         void TcpConnection::connectHandler(const Channel::Pointer& channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
-                if (!e) {
-                    handler(channel);
-                } else {
-                    if (m_errorHandler)
-                        m_errorHandler(e);
-                    else
-                        throw KARABO_NETWORK_EXCEPTION(e.message());
-                }
+                handler(channel, e);
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW
             } catch (const std::exception& ex) {

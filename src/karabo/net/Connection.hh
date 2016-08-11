@@ -53,7 +53,7 @@ namespace karabo {
             KARABO_CLASSINFO(Connection, "Connection", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            typedef boost::function<void (const ChannelPointer&) > ConnectionHandler;
+            typedef boost::function<void (const ChannelPointer&, const ErrorCode&) > ConnectionHandler;
 
             virtual ~Connection();
 

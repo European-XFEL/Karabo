@@ -27,7 +27,7 @@ struct TcpServer {
 
     TcpServer() : m_count(0), m_port(0) {
         m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", 0, "Tcp.type", "server"));
-        m_port = m_connection->startAsync(boost::bind(&TcpServer::connectHandler, this, _1));
+        m_port = m_connection->startAsync(boost::bind(&TcpServer::connectHandler, this, _1, _2));
     }
 
 
@@ -40,9 +40,13 @@ struct TcpServer {
     }
 
 
-    void connectHandler(const karabo::net::Channel::Pointer& channel) {
-        channel->setErrorHandler(boost::bind(&TcpServer::errorHandler, this, channel, _1));
-        channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, channel, _1, _2));
+    void connectHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
+        if (ec) {
+            std::clog << "\nSERVER_ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
+            if (channel) channel->close();
+            return;
+        }
+        channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, channel, _1, _2, _3));
     }
 
 
@@ -52,11 +56,18 @@ struct TcpServer {
         } else {
             std::clog << "\nSERVER_ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
         }
-        channel->close();
+        if (channel) channel->close();
     }
 
 
-    void readHashHashHandler(const karabo::net::Channel::Pointer& channel, karabo::util::Hash& header, karabo::util::Hash& body) {
+    void readHashHashHandler(const karabo::net::Channel::Pointer& channel,
+                             karabo::util::Hash& header, karabo::util::Hash& body,
+                             const karabo::net::ErrorCode& ec) {
+        if (ec) {
+            errorHandler(channel, ec);
+            return;
+        }
+
         m_count++;
         //std::clog << "\nSERVER_INFO: count " << m_count << "\n" << header << body << "-----------------\n";
 
@@ -72,13 +83,18 @@ struct TcpServer {
             body.set("a.b", "counter " + karabo::util::toString(m_count));
 
 
-        channel->writeAsyncHashHash(header, body, boost::bind(&TcpServer::writeCompleteHandler, this, channel, "some string"));
+        channel->writeAsyncHashHash(header, body, boost::bind(&TcpServer::writeCompleteHandler, this, channel, "some string", _1));
     }
 
 
-    void writeCompleteHandler(const karabo::net::Channel::Pointer& channel, const std::string& id) {
+    void writeCompleteHandler(const karabo::net::Channel::Pointer& channel, const std::string& id, const karabo::net::ErrorCode& ec) {
+        if (ec) {
+            errorHandler(channel, ec);
+            return;
+        }
+
         BOOST_ASSERT(id == "some string");
-        channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, channel, _1, _2));
+        channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, channel, _1, _2, _3));
     }
 
 private:
@@ -93,8 +109,7 @@ struct TcpClient {
 
     TcpClient(const std::string& host, int port) : m_count(0), m_port(port) {
         m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "localhost"));
-        m_connection->setErrorHandler(boost::bind(&TcpClient::connectionErrorHandler, this, m_connection, _1));
-        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1));
+        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1, _2));
     }
 
 
@@ -102,9 +117,12 @@ struct TcpClient {
     }
 
 
-    void connectHandler(const karabo::net::Channel::Pointer& channel) {
+    void connectHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
+        if (ec) {
+            std::clog << "\nCLIENT_ERROR: Failed to connect to remote server. Stop...\n";
+            return;
+        }
         std::clog << "TcpClient connectHandler" << std::endl;
-        channel->setErrorHandler(boost::bind(&TcpClient::errorHandler, this, channel, _1));
         karabo::util::Hash header("headline", "*** CLIENT ***");
         karabo::util::Hash data("a.b", "?", "a.c", 42.22f, "a.d", 12);
 
@@ -112,31 +130,27 @@ struct TcpClient {
         channel->writeAsyncHashHash(header, data, boost::bind(&TcpClient::writeCompleteHandler, this, channel, 42));
     }
 
-
-    void connectionErrorHandler(const karabo::net::Connection::Pointer& connection, const karabo::net::ErrorCode& ec) {
-        std::clog << "\nCLIENT_ERROR: Failed to connect to remote server. Stop...\n";
-        boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
-        connection->stop();
-    }
-
-
     void errorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
-        // Check if it is End-Of-File
-        if (ec.value() == 2) {
-            //std::clog << "\nCLIENT: server has closed the connection!" << std::endl;
-        } else {
+        if (ec != boost::asio::error::eof)
             std::clog << "\nCLIENT_ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
-        }
-        channel->close();
+        if (channel) channel->close();
     }
+    
+    
+    void readHashHashHandler(const karabo::net::Channel::Pointer& channel,
+                             karabo::util::Hash& header,
+                             karabo::util::Hash& body,
+                             const karabo::net::ErrorCode& ec) {
+        if (ec) {
+            errorHandler(channel, ec);
+            return;
+        }
 
-
-    void readHashHashHandler(const karabo::net::Channel::Pointer& channel, karabo::util::Hash& header, karabo::util::Hash& body) {
         // inspect here the server reply.... just count
         m_count++;
-        
+
         std::clog << "TcpClient readHashHashHandler count = " << m_count << std::endl;
-        
+
         if (m_count >= 3) { // stop after 3 attempts
             channel->close();
             return;
@@ -167,7 +181,7 @@ struct TcpClient {
     void writeCompleteHandler(const karabo::net::Channel::Pointer& channel, int id) {
         CPPUNIT_ASSERT(id == 42);
         // data was sent successfully! Prepare to read a reply asynchronous from a server: placeholder _1 is a Hash
-        channel->readAsyncHashHash(boost::bind(&TcpClient::readHashHashHandler, this, channel, _1, _2));
+        channel->readAsyncHashHash(boost::bind(&TcpClient::readHashHashHandler, this, channel, _1, _2, _3));
     }
 
 

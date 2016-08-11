@@ -52,11 +52,14 @@ private:
 
     void createServer();
 
-    void serverConnectHandler(const karabo::net::Channel::Pointer& channel);
+    void serverConnectHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& e);
 
     void serverErrorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec);
-
-    void serverReadHashHashHandler(const karabo::net::Channel::Pointer& channel, karabo::util::Hash& header, karabo::util::Hash& body);
+    
+    void serverReadHashHashHandler(const karabo::net::Channel::Pointer& channel,
+                                   karabo::util::Hash& header,
+                                   karabo::util::Hash& body,
+                                   const karabo::net::ErrorCode& ec);
 
     void serverPublish(const karabo::net::Channel::Pointer& channel);
 
@@ -64,15 +67,16 @@ private:
 
     void testClientServerMethod();
 
-    void clientConnectionErrorHandler(const karabo::net::Connection::Pointer& connection, const karabo::net::ErrorCode& ec);
-
-    void onClientConnected(const karabo::net::Channel::Pointer& channel);
+    void onClientConnected(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec);
 
     void clientChannelErrorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec);
+    
+    void clientReadHashHashHandler(const karabo::net::Channel::Pointer& channel,
+                                   karabo::util::Hash& header,
+                                   karabo::util::Hash& body,
+                                   const karabo::net::ErrorCode& ec);
 
-    void clientReadHashHashHandler(const karabo::net::Channel::Pointer& channel, karabo::util::Hash& header, karabo::util::Hash& body);
-
-    void onClientEnd(const karabo::net::Channel::Pointer& channel);
+    void onClientEnd(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec);
 };
 
 #endif	/* MQTCPNETWORKING_HH */
