@@ -298,6 +298,11 @@
           </preprocessorList>
         </ccTool>
       </item>
+      <item path="../../../src/karathon/PyUtilNDArray.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyUtilRollingWindowStatistics.cc"
             ex="false"
             tool="1"
@@ -502,11 +507,6 @@
         </ccTool>
       </item>
       <item path="../../../src/karathon/p2pbinding.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/PyUtilNDArray.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -742,6 +742,11 @@
           </preprocessorList>
         </ccTool>
       </item>
+      <item path="../../../src/karathon/PyUtilNDArray.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyUtilRollingWindowStatistics.cc"
             ex="false"
             tool="1"
@@ -946,11 +951,6 @@
         </ccTool>
       </item>
       <item path="../../../src/karathon/p2pbinding.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/PyUtilNDArray.cc"
             ex="false"
             tool="1"
             flavor2="0">

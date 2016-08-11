@@ -55,7 +55,7 @@ namespace karabo {
                         .commit();
 
                 Schema data;
-                IMAGEDATA(data).key("image")
+                IMAGEDATA_UINT8_ELEMENT(data).key("image")
                         .commit();
 
                 OUTPUT_CHANNEL(expected).key("output")
