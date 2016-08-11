@@ -6,7 +6,6 @@
  */
 
 #include "MetaTools_Test.hh"
-#include <karabo/util/MetaTools.hh>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(MetaTools_Test);
 
@@ -22,9 +21,11 @@ MetaTools_Test::~MetaTools_Test() {
 
 void MetaTools_Test::testMethod() {
 
+    CPPUNIT_ASSERT(PointerTest::isSharedPointer<boost::shared_ptr<int> >());
+    CPPUNIT_ASSERT(!PointerTest::isSharedPointer<int>());
+
     CPPUNIT_ASSERT((is_base_of<Hash, MyPublicHash>::value));
     CPPUNIT_ASSERT((is_base_of<Hash, MyProtectedHash>::value));
     CPPUNIT_ASSERT((is_base_of<Hash, MyPrivateHash>::value));
     CPPUNIT_ASSERT((!is_base_of<Hash, int>::value));
-
 }

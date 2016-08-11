@@ -10,6 +10,7 @@
 
 #include <karabo/util/Hash.hh>
 #include <cppunit/extensions/HelperMacros.h>
+#include <karabo/util/MetaTools.hh>
 
 struct MyPublicHash : public karabo::util::Hash {
 
@@ -22,6 +23,25 @@ struct MyProtectedHash : protected karabo::util::Hash {
 struct MyPrivateHash : private karabo::util::Hash {
 
 };
+
+struct PointerTest {
+
+    template<class T>
+    static bool isSharedPointer() {
+        return isSharedPointer<T>(karabo::util::is_shared_ptr<T>());
+    }
+
+    template<class T>
+    static bool isSharedPointer(boost::true_type) {
+        return true;
+    }
+
+    template<class T>
+    static bool isSharedPointer(boost::false_type) {
+        return false;
+    }
+};
+
 
 class MetaTools_Test : public CPPUNIT_NS::TestFixture {
 
