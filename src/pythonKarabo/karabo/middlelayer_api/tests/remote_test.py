@@ -659,6 +659,7 @@ class Tests(DeviceTest):
             with (yield from getDevice("devicenode")) as d:
                 self.assertEqual(d.dn.value, 5)
                 self.assertEqual(d.dn.cntr, -1)
+                self.assertEqual(type(d).dn.displayType, "deviceNode")
                 d.dn.value = 8
                 d.dn.cntr = 12
                 self.remote.done = False
