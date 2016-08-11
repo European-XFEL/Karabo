@@ -26,8 +26,8 @@ from karabo_gui.dialogs.monitordialog import MonitorDialog
 from karabo_gui.dialogs.scenedialog import SceneDialog
 from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from karabo_gui.messagebox import MessageBox
-from karabo_gui.scenemodel.api import read_scene, SceneModel
 import karabo_gui.network as network
+from karabo_gui.scenemodel.api import read_scene, SceneModel, write_scene
 from karabo_gui.topology import getDevice, Manager
 from karabo_gui.util import getSaveFileName
 
@@ -36,6 +36,7 @@ from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
                          QItemSelectionModel, QMessageBox, QStandardItem,
                          QStandardItemModel)
 
+from io import BytesIO
 import os
 import os.path
 from zipfile import ZipFile
@@ -1210,7 +1211,7 @@ class ProjectModel(QStandardItemModel):
             sceneModel.title = dialog.sceneName()
             self.renameScene(sceneModel)
 
-    def addScene(self, project, title, filename=None):
+    def addScene(self, project, title, filename_or_fileobj=None):
         """
         Create new SceneModel object for given \project.
         """
@@ -1228,12 +1229,12 @@ class ProjectModel(QStandardItemModel):
             index = self.removeObject(project, sceneModel, False)
             sceneModel = self.insertScene(index, project, title)
         else:
-            if filename is None:
+            if filename_or_fileobj is None:
                 # Create empty scene model
                 sceneModel = SceneModel()
             else:
                 # Read file to create scene model
-                sceneModel = read_scene(filename)
+                sceneModel = read_scene(filename_or_fileobj)
             # Set the scene model title
             sceneModel.title = title
             project.addScene(sceneModel)
@@ -1252,22 +1253,21 @@ class ProjectModel(QStandardItemModel):
         """
         scene = Scene(project, sceneName, designMode=True)
         project.insertScene(index, scene)
-        
+
         return scene
 
-    def duplicateScene(self, scene):
-        dialog = DuplicateDialog(scene.title[:-4])
+    def duplicateScene(self, oldSceneModel):
+        dialog = DuplicateDialog(oldSceneModel.title[:-4])
         if dialog.exec_() == QDialog.Rejected:
             return
 
-        xml = scene.toXml()
+        xml = write_scene(oldSceneModel)
+        fileObj = BytesIO(xml)
         for index in range(dialog.startIndex, dialog.endIndex+1):
-            filename = "{}{}".format(dialog.displayPrefix, index)
-            newScene = self.addScene(self.currentProject(), filename)
-            newScene.fromXml(xml)
-            newScene.setModified()
-        
-        self.selectObject(newScene)
+            title = "{}{}".format(dialog.displayPrefix, index)
+            newSceneModel = self.addScene(self.currentProject(), title, fileObj)
+            # XXX: TODO set dirty flag project modified
+        self.selectObject(newSceneModel)
 
     def openScene(self, sceneModel):
         """ This method gets a `sceneModel` and triggers a signal to open a
