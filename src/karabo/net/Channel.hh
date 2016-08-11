@@ -33,22 +33,22 @@ namespace karabo {
             KARABO_CLASSINFO(Channel, "Channel", "1.0")
 
             typedef boost::function<void (const size_t&) > ReadSizeInBytesHandler;
-            typedef boost::function<void () > ReadRawHandler;
-            typedef boost::function<void (karabo::util::Hash&) > ReadHashRawHandler;
+            typedef boost::function<void (const boost::system::error_code&) > ReadRawHandler;
+            typedef boost::function<void (karabo::util::Hash&, const boost::system::error_code&) > ReadHashRawHandler;
 
-            typedef boost::function<void (std::vector<char>&) > ReadVectorHandler;
-            typedef boost::function<void (std::string&) > ReadStringHandler;
-            typedef boost::function<void (karabo::util::Hash&) > ReadHashHandler;
-            typedef boost::function<void (karabo::util::Hash::Pointer&) > ReadHashPointerHandler;
-            typedef boost::function<void (boost::shared_ptr<std::vector<char> >&) > ReadVectorPointerHandler;
+            typedef boost::function<void (std::vector<char>&, const boost::system::error_code&) > ReadVectorHandler;
+            typedef boost::function<void (std::string&, const boost::system::error_code&) > ReadStringHandler;
+            typedef boost::function<void (karabo::util::Hash&, const boost::system::error_code&) > ReadHashHandler;
+            typedef boost::function<void (karabo::util::Hash::Pointer&, const boost::system::error_code&) > ReadHashPointerHandler;
+            typedef boost::function<void (boost::shared_ptr<std::vector<char> >&, const boost::system::error_code&) > ReadVectorPointerHandler;
 
-            typedef boost::function<void (karabo::util::Hash&, std::vector<char>&) > ReadHashVectorHandler;
-            typedef boost::function<void (karabo::util::Hash&, std::string&) > ReadHashStringHandler;
-            typedef boost::function<void (karabo::util::Hash&, karabo::util::Hash&) > ReadHashHashHandler;
-            typedef boost::function<void (karabo::util::Hash::Pointer&, karabo::util::Hash::Pointer&) > ReadHashPointerHashPointerHandler;
-            typedef boost::function<void (karabo::util::Hash&, boost::shared_ptr<std::vector<char> >&) > ReadHashVectorPointerHandler;
+            typedef boost::function<void (karabo::util::Hash&, std::vector<char>&, const boost::system::error_code&) > ReadHashVectorHandler;
+            typedef boost::function<void (karabo::util::Hash&, std::string&, const boost::system::error_code&) > ReadHashStringHandler;
+            typedef boost::function<void (karabo::util::Hash&, karabo::util::Hash&, const boost::system::error_code&) > ReadHashHashHandler;
+            typedef boost::function<void (karabo::util::Hash::Pointer&, karabo::util::Hash::Pointer&, const boost::system::error_code&) > ReadHashPointerHashPointerHandler;
+            typedef boost::function<void (karabo::util::Hash&, boost::shared_ptr<std::vector<char> >&, const boost::system::error_code&) > ReadHashVectorPointerHandler;
 
-            typedef boost::function<void () > WriteCompleteHandler;
+            typedef boost::function<void (const boost::system::error_code&) > WriteCompleteHandler;
             typedef boost::function<void () > WaitHandler;
 
             virtual ~Channel() {

@@ -200,44 +200,38 @@ namespace karabo {
             m_inboundMessagePrefix.resize(sizeofLength);
             boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
                                     m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::onSizeInBytesAvailable,
-                                                this, handler, boost::asio::placeholders::bytes_transferred,
-                                                boost::asio::placeholders::error)));
+                                                                  this, handler, boost::asio::placeholders::error)));
         }
 
 
-        void TcpChannel::onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler,
-                                                const size_t bytesTransferred, const ErrorCode& error) {
-            if (error) {
-                if (m_errorHandler) m_errorHandler(error);
-                else throw KARABO_NETWORK_EXCEPTION(error.message());
-            } else {
-                size_t messageSize;
-                _KARABO_VECTOR_TO_SIZE(m_inboundMessagePrefix, messageSize);
-                handler(messageSize);
+        void TcpChannel::onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, const ErrorCode& e) {
+            if (e) {
+                bytesAvailableHandler(e);
+                return;
             }
+
+            size_t messageSize;
+            _KARABO_VECTOR_TO_SIZE(m_inboundMessagePrefix, messageSize);
+            handler(messageSize);
         }
 
 
         void TcpChannel::byteSizeAvailableHandler(const size_t byteSize) {
             m_inboundData->resize(byteSize);
-            this->readAsyncRaw(&(*m_inboundData)[0], byteSize, m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this)));
+            this->readAsyncRaw(&(*m_inboundData)[0], byteSize,
+                               m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1)));
         }
 
 
         void TcpChannel::readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
             boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
                                     m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::onBytesAvailable, this, handler,
-                                                boost::asio::placeholders::error)));
+                                                                  boost::asio::placeholders::error)));
         }
 
 
         void TcpChannel::onBytesAvailable(const ReadRawHandler& handler, const ErrorCode& error) {
-            if (error) {
-                if (m_errorHandler) m_errorHandler(error);
-                else throw KARABO_NETWORK_EXCEPTION(error.message());
-            } else {
-                handler();  // Using "EventLoop::getIOService().post(handler)"  slowing down the performance
-            }
+            handler(error);
         }
 
 
@@ -326,120 +320,135 @@ namespace karabo {
         }
 
 
-        void TcpChannel::bytesAvailableHandler() {
-
-            // Only parse header information
-            if (m_readHeaderFirst) {
-                m_readHeaderFirst = false;
-                m_inboundData.swap(m_inboundHeader);
-                this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
-                return;
+        void TcpChannel::bytesAvailableHandler(const boost::system::error_code& e) {
+            if (!e) {
+                // Only parse header information
+                if (m_readHeaderFirst) {
+                    m_readHeaderFirst = false;
+                    m_inboundData.swap(m_inboundHeader);
+                    this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+                    return;
+                }
             }
-
             HandlerType type = m_activeHandler;
             m_activeHandler = TcpChannel::NONE;
             switch (type) {
                 case VECTOR:
                 {
-                    boost::any_cast<ReadVectorHandler>(m_readHandler) (*m_inboundData);
+                    if (!e)
+                        boost::any_cast<ReadVectorHandler>(m_readHandler) (*m_inboundData, e);
+                    else {
+                        std::vector<char> vec;
+                        boost::any_cast<ReadVectorHandler>(m_readHandler) (vec, e);
+                    }
                     break;
                 }
                 case VECTOR_POINTER:
                 {
                     boost::shared_ptr<std::vector<char> > vec(new std::vector<char>());
-                    vec.swap(m_inboundData);
-                    boost::any_cast<ReadVectorPointerHandler>(m_readHandler) (vec);
+                    if (!e) vec.swap(m_inboundData);
+                    boost::any_cast<ReadVectorPointerHandler>(m_readHandler) (vec, e);
                     break;
                 }
                 case STRING:
                 {
-                    string tmp(m_inboundData->begin(), m_inboundData->end());
-                    boost::any_cast<ReadStringHandler>(m_readHandler) (tmp);
+                    string tmp;
+                    if (!e) tmp.assign(m_inboundData->begin(), m_inboundData->end());
+                    boost::any_cast<ReadStringHandler>(m_readHandler) (tmp, e);
                     break;
                 }
                 case HASH:
                 {
                     Hash h;
-                    this->prepareHashFromData(h);
-                    boost::any_cast<ReadHashHandler>(m_readHandler) (h);
+                    if (!e) this->prepareHashFromData(h);
+                    boost::any_cast<ReadHashHandler>(m_readHandler) (h, e);
                     break;
                 }
                 case HASH_POINTER:
                 {
                     Hash::Pointer h(new Hash);
-                    this->prepareHashFromData(*h);
-                    boost::any_cast<ReadHashPointerHandler>(m_readHandler) (h);
+                    if (!e) this->prepareHashFromData(*h);
+                    boost::any_cast<ReadHashPointerHandler>(m_readHandler) (h, e);
                     break;
                 }
 
                 case HASH_VECTOR:
                 {
                     Hash header;
-                    this->prepareHashFromHeader(header);
-                    if (header.has("__compression__")) {
-                        std::vector<char> inData;
-                        decompress(header, *m_inboundData, inData);
-                        boost::any_cast<ReadHashVectorHandler>(m_readHandler) (header, inData);
-                    } else
-                        boost::any_cast<ReadHashVectorHandler>(m_readHandler) (header, *m_inboundData);
+                    std::vector<char> inData;
+                    if (!e) {
+                        this->prepareHashFromHeader(header);
+                        if (header.has("__compression__"))
+                            decompress(header, *m_inboundData, inData);
+                        else {
+                            boost::any_cast<ReadHashVectorHandler>(m_readHandler) (header, *m_inboundData, e);
+                            break;
+                        }
+                    }
+                    boost::any_cast<ReadHashVectorHandler>(m_readHandler) (header, inData, e);
                     break;
                 }
                 case HASH_VECTOR_POINTER:
                 {
                     Hash header;
-                    this->prepareHashFromHeader(header);
-                    if (header.has("__compression__")) {
-                        boost::shared_ptr<std::vector<char> > inData(new std::vector<char>());
-                        decompress(header, *m_inboundData, *inData);
-                        boost::any_cast<ReadHashVectorPointerHandler>(m_readHandler) (header, inData);
-                    } else {
-                        boost::shared_ptr<std::vector<char> > vec(new std::vector<char>());
-                        vec.swap(m_inboundData);
-                        boost::any_cast<ReadHashVectorPointerHandler>(m_readHandler) (header, vec);
+                    boost::shared_ptr<std::vector<char> > inData(new std::vector<char>());
+                    if (!e) {
+                        this->prepareHashFromHeader(header);
+                        if (header.has("__compression__"))
+                            decompress(header, *m_inboundData, *inData);
+                        else
+                            inData.swap(m_inboundData);
                     }
+                    boost::any_cast<ReadHashVectorPointerHandler>(m_readHandler) (header, inData, e);
                     break;
                 }
 
                 case HASH_STRING:
                 {
                     Hash header;
-                    this->prepareHashFromHeader(header);
                     string tmp;
-                    if (header.has("__compression__"))
-                        decompress(header, *m_inboundData, tmp);
-                    else
-                        tmp.assign(m_inboundData->begin(), m_inboundData->end());
-                    boost::any_cast<ReadHashStringHandler>(m_readHandler) (header, tmp);
+                    if (!e) {
+                        this->prepareHashFromHeader(header);
+                        if (header.has("__compression__"))
+                            decompress(header, *m_inboundData, tmp);
+                        else
+                            tmp.assign(m_inboundData->begin(), m_inboundData->end());
+                    }
+                    boost::any_cast<ReadHashStringHandler>(m_readHandler) (header, tmp, e);
                     break;
                 }
 
                 case HASH_HASH:
                 {
                     Hash header;
-                    this->prepareHashFromHeader(header);
-                    if (header.has("__compression__")) {
-                        boost::shared_ptr<std::vector<char> > tmp(new std::vector<char>());
-                        tmp.swap(m_inboundData);
-                        decompress(header, *tmp, *m_inboundData);
-                    }
                     Hash body;
-                    this->prepareHashFromData(body);
-                    boost::any_cast<ReadHashHashHandler>(m_readHandler) (header, body);
+                    if (!e) {
+                        this->prepareHashFromHeader(header);
+                        if (header.has("__compression__")) {
+                            boost::shared_ptr<std::vector<char> > tmp(new std::vector<char>());
+                            tmp.swap(m_inboundData);
+                            decompress(header, *tmp, *m_inboundData);
+                        }
+                        this->prepareHashFromData(body);
+                    }
+                    boost::any_cast<ReadHashHashHandler>(m_readHandler) (header, body, e);
                     break;
                 }
 
                 case HASH_POINTER_HASH_POINTER:
                 {
                     Hash::Pointer header(new Hash);
-                    this->prepareHashFromHeader(*header);
-                    if (header->has("__compression__")) {
-                        boost::shared_ptr<std::vector<char> > tmp(new std::vector<char>());
-                        tmp.swap(m_inboundData);
-                        decompress(*header, *tmp, *m_inboundData);
-                    }
                     Hash::Pointer body(new Hash);
-                    this->prepareHashFromData(*body);
-                    boost::any_cast<ReadHashPointerHashPointerHandler>(m_readHandler) (header, body);
+                    if (!e) {
+                        this->prepareHashFromHeader(*header);
+                        if (header->has("__compression__")) {
+                            boost::shared_ptr<std::vector<char> > tmp(new std::vector<char>());
+                            tmp.swap(m_inboundData);
+                            decompress(*header, *tmp, *m_inboundData);
+                        }
+                        this->prepareHashFromData(*body);
+                    }
+                    boost::any_cast<ReadHashPointerHashPointerHandler>(m_readHandler) (header, body, e);
                     break;
                 }
                 default:
@@ -693,7 +702,7 @@ namespace karabo {
                 buf.push_back(buffer(*m_outboundData));
                 boost::asio::async_write(m_socket, buf,
                                          m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler, this,
-                                                                   handler, boost::asio::placeholders::error)));
+                                                                        handler, boost::asio::placeholders::error)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -713,7 +722,7 @@ namespace karabo {
                 buf.push_back(buffer(*m_outboundData));
                 boost::asio::async_write(m_socket, buf,
                                          m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler, this,
-                                                                   handler, boost::asio::placeholders::error)));
+                                                                        handler, boost::asio::placeholders::error)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -731,7 +740,7 @@ namespace karabo {
                 buf.push_back(buffer(data, size));
                 boost::asio::async_write(m_socket, buf,
                                          m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler, this,
-                                                                   handler, boost::asio::placeholders::error)));
+                                                                        handler, boost::asio::placeholders::error)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -751,7 +760,7 @@ namespace karabo {
                 buf.push_back(buffer(data, size));
                 boost::asio::async_write(m_socket, buf,
                                          m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler, this,
-                                                                   handler, boost::asio::placeholders::error)));
+                                                                        handler, boost::asio::placeholders::error)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -848,8 +857,8 @@ namespace karabo {
                 buf.push_back(buffer(*dataPtr));
                 boost::asio::async_write(m_socket, buf,
                                          m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler,
-                                                                    this, handler, dataPtr,
-                                                                    boost::asio::placeholders::error)));
+                                                                        this, handler, dataPtr,
+                                                                        boost::asio::placeholders::error)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -921,10 +930,10 @@ namespace karabo {
                 buf.push_back(buffer(*header));
                 buf.push_back(buffer(m_outboundMessagePrefix));
                 buf.push_back(buffer(*body));
-                boost::asio::async_write(m_socket, buf, 
+                boost::asio::async_write(m_socket, buf,
                                          m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler,
-                                                                    this, handler, header, body,
-                                                                    boost::asio::placeholders::error)));
+                                                                        this, handler, header, body,
+                                                                        boost::asio::placeholders::error)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -967,17 +976,7 @@ namespace karabo {
 
         void TcpChannel::asyncWriteHandler(const Channel::WriteCompleteHandler& handler, const ErrorCode& e) {
             try {
-                if (!e) {
-                    try {
-                        EventLoop::getIOService().post(handler);
-                    } catch (...) {
-                        KARABO_RETHROW
-                    }
-                } else if (m_errorHandler) {
-                    m_errorHandler(e);
-                } else {
-                    throw KARABO_NETWORK_EXCEPTION(e.message());
-                }
+                m_writeStrand.post(boost::bind(handler, e));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -988,17 +987,7 @@ namespace karabo {
                                            const boost::shared_ptr<std::vector<char> >& body,
                                            const ErrorCode& e) {
             try {
-                if (!e) {
-                    try {
-                        EventLoop::getIOService().post(handler);
-                    } catch (...) {
-                        KARABO_RETHROW
-                    }
-                } else if (m_errorHandler) {
-                    m_errorHandler(e);
-                } else {
-                    throw KARABO_NETWORK_EXCEPTION(e.message());
-                }
+                m_writeStrand.post(boost::bind(handler, e));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -1010,17 +999,7 @@ namespace karabo {
                                            const boost::shared_ptr<std::vector<char> >& body,
                                            const ErrorCode& e) {
             try {
-                if (!e) {
-                    try {
-                        EventLoop::getIOService().post(handler);
-                    } catch (...) {
-                        KARABO_RETHROW
-                    }
-                } else if (m_errorHandler) {
-                    m_errorHandler(e);
-                } else {
-                    throw KARABO_NETWORK_EXCEPTION(e.message());
-                }
+                m_writeStrand.post(boost::bind(handler, e));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -1167,8 +1146,8 @@ namespace karabo {
 
             boost::asio::async_write(m_socket, buf,
                                      m_writeStrand.wrap(boost::bind(&TcpChannel::doWriteHandler, this,
-                                                               mp, boost::asio::placeholders::error,
-                                                               boost::asio::placeholders::bytes_transferred())));
+                                                                    mp, boost::asio::placeholders::error,
+                                                                    boost::asio::placeholders::bytes_transferred())));
         }
 
 
