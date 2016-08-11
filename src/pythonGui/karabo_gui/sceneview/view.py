@@ -4,15 +4,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-import os.path
-
 from PyQt4.QtCore import QEvent, Qt
 from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
 from karabo_gui.scenemodel.api import (
-    read_scene, FixedLayoutModel, WorkflowItemModel,
-    SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+    FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from .bases import BaseSceneTool
 from .builder import (bring_object_to_front, create_object_from_model,
                       fill_root_layout, find_top_level_model, is_widget,
@@ -31,7 +28,8 @@ from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 class SceneView(QWidget):
     """ An object representing the view for a Karabo GUI scene.
     """
-    def __init__(self, project=None, parent=None, design_mode=False):
+    def __init__(self, model=None, project=None, parent=None,
+                 design_mode=False):
         super(SceneView, self).__init__(parent)
 
         layout_model = FixedLayoutModel(x=0, y=0, width=SCENE_MIN_WIDTH,
@@ -81,6 +79,8 @@ class SceneView(QWidget):
         self.setAttribute(Qt.WA_MouseTracking)
         self.setBackgroundRole(QPalette.Window)
         self.resize(SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+
+        self.update_model(model)
 
     @property
     def design_mode(self):
@@ -211,13 +211,12 @@ class SceneView(QWidget):
 
         self.tab_visible = visible
 
-    def load(self, filename):
-        """ The given ``filename`` is loaded.
-        """
-        # Set name
-        self.title = os.path.basename(filename)
-        # Read file into scene model
-        self._set_scene_model(read_scene(filename))
+    def update_model(self, scene_model):
+        if scene_model is None:
+            return
+
+        # Set scene model
+        self._set_scene_model(scene_model)
         # Set width and height
         self.resize(max(self.scene_model.width, SCENE_MIN_WIDTH),
                     max(self.scene_model.height, SCENE_MIN_HEIGHT))

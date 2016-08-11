@@ -26,9 +26,8 @@ from karabo_gui.dialogs.monitordialog import MonitorDialog
 from karabo_gui.dialogs.scenedialog import SceneDialog
 from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from karabo_gui.messagebox import MessageBox
-from karabo_gui.scene import Scene
-from karabo_gui.sceneview.api import SceneView
 import karabo_gui.network as network
+from karabo_gui.scenemodel.api import read_scene, SceneModel, write_scene
 from karabo_gui.topology import getDevice, Manager
 from karabo_gui.util import getSaveFileName
 
@@ -37,6 +36,7 @@ from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
                          QItemSelectionModel, QMessageBox, QStandardItem,
                          QStandardItemModel)
 
+from io import BytesIO
 import os
 import os.path
 from zipfile import ZipFile
@@ -46,10 +46,9 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalItemChanged = pyqtSignal(str, object) # type, configuration
     signalSelectionChanged = pyqtSignal(list)
-    signalAddScene = pyqtSignal(object) # scene
-    signalRemoveScene = pyqtSignal(object) # scene
-    signalRenameScene = pyqtSignal(object) # scene
-    signalAddSceneView = pyqtSignal(object) # scene view
+    signalAddSceneView = pyqtSignal(object, object) # SceneModel, Project
+    signalRemoveSceneView = pyqtSignal(object) # SceneModel
+    signalRenameSceneView = pyqtSignal(object) # SceneModel
     signalAddMacro = pyqtSignal(object)
     signalRemoveMacro = pyqtSignal(object) # macro
 
@@ -63,9 +62,6 @@ class ProjectModel(QStandardItemModel):
         
         # List stores projects
         self.projects = []
-
-        # The set of scenes which have been opened.
-        self._openedScenes = set()
 
         # Dialog to add and change a device
         self.deviceDialog = None
@@ -489,27 +485,28 @@ class ProjectModel(QStandardItemModel):
         item.setText(monitor.name)
 
 
-    def createSceneItem(self, scene):
+    def createSceneItem(self, sceneModel):
         """
-        This function creates a QStandardItem for the given \scene and
+        This function creates a QStandardItem for the given \sceneModel and
         returns it.
         """
-        item = QStandardItem(scene.filename)
+        item = QStandardItem(sceneModel.title)
         item.setIcon(icons.image)
-        item.setData(scene, ProjectModel.ITEM_OBJECT)
+        item.setData(sceneModel, ProjectModel.ITEM_OBJECT)
         item.setEditable(False)
-        item.setToolTip(scene.filename)
+        item.setToolTip(sceneModel.title)
         
         return item
 
 
-    def addSceneItem(self, scene):
+    def addSceneItem(self, sceneModel):
+        """ This function adds the given `sceneModel` at the right position to
+            the model.
         """
-        This function adds the given \scene at the right position to the model.
-        """
-        item = self.createSceneItem(scene)
-        
-        project = scene.project
+        item = self.createSceneItem(sceneModel)
+
+        # XXX: TODO: the project should come from somewhere else..
+        project = self.currentProject() # sceneModel.project
         projectItem = self.findItem(project)
         # Find folder for scenes
         parentItem = self.getCategoryItem(Project.SCENES_LABEL, projectItem)
@@ -529,13 +526,14 @@ class ProjectModel(QStandardItemModel):
         parentItem.insertRow(row, item)
 
 
-    def renameScene(self, scene):
-        item = self.findItem(scene)
-        item.setText(scene.filename)
-        scene.project.setModified(True)
+    def renameScene(self, sceneModel):
+        item = self.findItem(sceneModel)
+        item.setText(sceneModel.title)
+        # XXX: TODO update dirty flag
+        #sceneModel.project.setModified(True)
         
         # Send signal to mainwindow to update the tab text as well
-        self.signalRenameScene.emit(scene)
+        self.signalRenameSceneView.emit(sceneModel)
 
 
     def createConfigurationItem(self, deviceId, configuration):
@@ -700,14 +698,12 @@ class ProjectModel(QStandardItemModel):
         
         return device
 
-
     def currentScene(self):
         scene = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
-        if not isinstance(scene, Scene):
+        if not isinstance(scene, SceneModel):
             return None
         
         return scene
-
 
     def currentMacro(self):
         macro = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
@@ -898,8 +894,8 @@ class ProjectModel(QStandardItemModel):
         This function closes the project related scenes and removes it from the
         project list.
         """
-        for scene in project.scenes:
-            self.closeScene(scene)
+        for sceneModel in project.scenes:
+            self.signalRemoveSceneView.emit(sceneModel)
 
         for m in project.macros.values():
             self.signalRemoveMacro.emit(m)
@@ -1202,84 +1198,90 @@ class ProjectModel(QStandardItemModel):
         self.selectObject(newDevice)
 
 
-    def editScene(self, scene=None):
-        dialog = SceneDialog(scene)
+    def editScene(self, sceneModel=None):
+        """ This method changes the title of the scene model.
+        """
+        dialog = SceneDialog(sceneModel)
         if dialog.exec_() == QDialog.Rejected:
             return
         
-        if scene is None:
+        if sceneModel is None:
             self.addScene(self.currentProject(), dialog.sceneName())
         else:
-            scene.filename = dialog.sceneName()
-            self.renameScene(scene)
+            sceneModel.title = dialog.sceneName()
+            self.renameScene(sceneModel)
 
-    def addScene(self, project, sceneName):
+    def addScene(self, project, title, filename_or_fileobj=None):
         """
-        Create new Scene object for given \project.
+        Create new SceneModel object for given \project.
         """
-        scene = project.getScene(sceneName)
-        if scene is not None:
+        sceneModel = project.getScene(title)
+        if sceneModel is not None:
             reply = QMessageBox.question(None, 'Scene already exists',
                 "Another scene with the same name \"<b>{}</b>\" <br> "
-                "already exists. Do you want to overwrite it?".format(sceneName),
+                "already exists. Do you want to overwrite it?".format(title),
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.No:
                 return None
 
             # Overwrite existing scene
-            index = self.removeObject(project, scene, False)
-            scene = self.insertScene(index, project, sceneName)
+            index = self.removeObject(project, sceneModel, False)
+            sceneModel = self.insertScene(index, project, title)
         else:
-            scene = Scene(project, sceneName, designMode=True)
-            project.addScene(scene)
-        
-        self.openScene(scene)
-        self.selectObject(scene)
-        
-        return scene
+            if filename_or_fileobj is None:
+                # Create empty scene model
+                sceneModel = SceneModel()
+            else:
+                # Read file to create scene model
+                sceneModel = read_scene(filename_or_fileobj)
+            # Set the scene model title
+            sceneModel.title = title
+            project.addScene(sceneModel)
 
-    def closeScene(self, scene):
-        if scene in self._openedScenes:
-            self._openedScenes.remove(scene)
-            scene.signalSceneLinkTriggered.disconnect(self.openSceneLink)
-        self.signalRemoveScene.emit(scene)
+        self.openScene(sceneModel)
+        self.selectObject(sceneModel)
 
-    def insertScene(self, index, project, sceneName):
+        return sceneModel
+
+    def closeScene(self, sceneModel):
+        self.signalRemoveScene.emit(sceneModel)
+
+    def insertScene(self, index, project, title):
         """
-        Insert a scene for the given \project with the given data.
+        Insert a scene model for the given \project with the given data.
         """
-        scene = Scene(project, sceneName, designMode=True)
-        project.insertScene(index, scene)
-        
-        return scene
+        sceneModel = SceneModel(title=title)
+        project.insertScene(index, sceneModel)
 
-    def duplicateScene(self, scene):
-        dialog = DuplicateDialog(scene.filename[:-4])
+        return sceneModel
+
+    def duplicateScene(self, oldSceneModel):
+        dialog = DuplicateDialog(oldSceneModel.title[:-4])
         if dialog.exec_() == QDialog.Rejected:
             return
 
-        xml = scene.toXml()
+        xml = write_scene(oldSceneModel)
+        fileObj = BytesIO(xml)
         for index in range(dialog.startIndex, dialog.endIndex+1):
-            filename = "{}{}".format(dialog.displayPrefix, index)
-            newScene = self.addScene(self.currentProject(), filename)
-            newScene.fromXml(xml)
-            newScene.setModified()
-        
-        self.selectObject(newScene)
+            title = "{}{}".format(dialog.displayPrefix, index)
+            newSceneModel = self.addScene(self.currentProject(), title, fileObj)
+            fileObj.seek(0)
+            # XXX: TODO set dirty flag project modified
+        self.selectObject(newSceneModel)
 
-    def openScene(self, scene):
-        if scene not in self._openedScenes:
-            self._openedScenes.add(scene)
-            scene.signalSceneLinkTriggered.connect(self.openSceneLink)
+    def openScene(self, sceneModel):
+        """ This method gets a `sceneModel` and triggers a signal to open a
+            scene view in the GUI.
+        """
+        # XXX: TODO: where should the project come from?
+        self.signalAddSceneView.emit(sceneModel, self.currentProject())
 
-        self.signalAddScene.emit(scene)
-
-    def openSceneLink(self, sceneName):
+    def openSceneLink(self, title):
         project = self.currentProject()
-        scene = project.getScene(sceneName)
-        if scene is not None:
-            self.openScene(scene)
+        sceneModel = project.getScene(title)
+        if sceneModel is not None:
+            self.openScene(sceneModel)
 
     def editMacro(self, macro):
         if macro is None:
@@ -1577,7 +1579,7 @@ class ProjectModel(QStandardItemModel):
             fn = "{}.svg".format(fn)
         
         with ZipFile(project.filename, "r") as zf:
-            s = zf.read("{}/{}".format(project.SCENES_KEY, scene.filename))
+            s = zf.read("{}/{}".format(project.SCENES_KEY, scene.title))
         s = s.decode()
         with open(fn, "w") as fout:
             fout.write(s)
@@ -1589,25 +1591,8 @@ class ProjectModel(QStandardItemModel):
                                          "SVG (*.svg)")
         if not fn:
             return
-        scene = self.addScene(project, os.path.basename(fn))
-        with open(fn, "r") as fin:
-            s = fin.read()
-            scene.fromXml(s.encode())
-
-    @pyqtSlot()
-    def openSceneView(self):
-        project = self.currentProject()
-        fn = QFileDialog.getOpenFileName(None, "Open Refactored Scene",
-                                         globals.HIDDEN_KARABO_FOLDER,
-                                         "SVG (*.svg)")
-        if not fn:
-            return
         # Create scene view
-        scene_view = SceneView(project=project)
-        # Load file into view
-        scene_view.load(fn)
-        # Add to tab and show
-        self.signalAddSceneView.emit(scene_view)
+        self.addScene(project, os.path.basename(fn), fn)
 
     def onRemove(self):
         """
@@ -1684,7 +1669,7 @@ class ProjectModel(QStandardItemModel):
         
         index = project.remove(object)
         
-        if isinstance(object, Scene):
+        if isinstance(object, SceneModel):
             self.closeScene(object)
         
         if isinstance(object, Macro):
