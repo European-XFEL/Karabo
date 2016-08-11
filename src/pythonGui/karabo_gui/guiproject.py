@@ -407,37 +407,6 @@ class GuiProject(Project, QObject):
         super(GuiProject, self).insertScene(index, scene)
         self.signalSceneInserted.emit(index, scene)
 
-    def replaceScene(self, scene):
-        """
-        The \scene is copied into a \newScene. This newScene object replaces the
-        old one.
-        """
-        currentlyModified = self.isModified
-        # Create a new Scene instance from the data in the project.
-        newScene = self.rereadScene(scene.title)
-
-        # Remove old scene from project
-        index = self.remove(scene)
-        # Insert \newScene
-        self.insertScene(index, newScene)
-        self.setModified(currentlyModified)
-
-    def rereadScene(self, filename):
-        """ Create a new Scene instance by reading the scene XML/SVG data from
-        the project file and constructing a new object.
-        """
-        url = self.getSceneURL(filename)
-        try:
-            sceneXmlData = self.getURL(url)
-        except KeyError:
-            sceneXmlData = b''
-
-        scene = Scene(self, filename)
-        if sceneXmlData:
-            scene.fromXml(sceneXmlData)
-
-        return scene
-
     def addConfiguration(self, deviceId, configuration):
         super(GuiProject, self).addConfiguration(deviceId, configuration)
         self.signalConfigurationAdded.emit(deviceId, configuration)

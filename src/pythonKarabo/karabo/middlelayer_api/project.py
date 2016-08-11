@@ -225,12 +225,6 @@ class Project(object):
             if title == scene.title:
                 return scene
 
-    def getSceneURL(self, title):
-        """ Return a URL which can be passed to getURL to read the scene data
-        from the project.
-        """
-        return "project:{}/{}".format(self.SCENES_KEY, title)
-
     def getSceneNames(self):
         """ All the scene names for this project.
         """
