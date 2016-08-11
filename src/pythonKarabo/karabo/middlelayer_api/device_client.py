@@ -228,7 +228,8 @@ class AutoDisconnectProxy(Proxy):
 
 
 class ProxyNode(Descriptor):
-    def __init__(self, cls):
+    def __init__(self, cls, **kwargs):
+        super(ProxyNode, self).__init__(**kwargs)
         self.cls = cls
 
     def __get__(self, instance, owner):
@@ -451,7 +452,7 @@ def _createProxyDict(hash, prefix):
             else:
                 sub = _createProxyDict(v, prefix + k + ".")
                 Cls = type(k, (SubProxy,), sub)
-                dict[k] = ProxyNode(Cls)
+                dict[k] = ProxyNode(Cls, strict=False, **a)
             dict[k].key = k
             dict[k].longkey = prefix + k
             dict[k].description = a.get("description")
