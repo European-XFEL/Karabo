@@ -64,7 +64,7 @@ void Serializable_Test::testMethod() {
     
     CPPUNIT_ASSERT(fd1->getScalar() == -1);
     CPPUNIT_ASSERT(fd3.getScalar() == 1);
-
+    CPPUNIT_ASSERT(h.get<FancyData>("fd2").getScalar() == -2);
 }
 
 
