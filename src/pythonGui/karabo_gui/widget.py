@@ -152,6 +152,7 @@ class Widget(Registry, QObject):
 
     @property
     def project(self):
+        # XXX: this is crazy - hopefully can be removed
         return self.widget.parent().parent().parent().project
 
 
