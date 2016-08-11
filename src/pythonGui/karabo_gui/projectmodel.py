@@ -1228,9 +1228,13 @@ class ProjectModel(QStandardItemModel):
             index = self.removeObject(project, sceneModel, False)
             sceneModel = self.insertScene(index, project, title)
         else:
-            # Read file into scene model
-            sceneModel = read_scene(filename)
-            # Set the scene title
+            if filename is None:
+                # Create empty scene model
+                sceneModel = SceneModel()
+            else:
+                # Read file to create scene model
+                sceneModel = read_scene(filename)
+            # Set the scene model title
             sceneModel.title = title
             project.addScene(sceneModel)
 
