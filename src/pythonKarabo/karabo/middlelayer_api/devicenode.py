@@ -131,6 +131,7 @@ class DeviceNode(String):
             attrs["accessMode"] = AccessMode.INITONLY
             return h, attrs
         attrs["nodeType"] = NodeType.Node
+        attrs["displayType"] = "deviceNode"
 
         proxy = getattr(device, self.key, None)
         h = Hash()
