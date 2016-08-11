@@ -10,7 +10,7 @@ from karabo_gui.scenemodel.api import WorkflowItemModel
 
 
 class ProjectSceneHandler(ABCHasStrictTraits):
-    project = WeakRef('karabo_gui.guiproject.GuiProject')
+    project = WeakRef('karabo_gui.guiproject.GuiProject', allow_none=True)
 
     def get_scene_names(self):
         return self.project.getSceneNames()

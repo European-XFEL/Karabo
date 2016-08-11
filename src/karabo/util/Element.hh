@@ -17,6 +17,7 @@
 #include <boost/any.hpp>
 #include <boost/cast.hpp>
 
+#include "MetaTools.hh"
 #include "Types.hh"
 #include "Exception.hh"
 #include "FromTypeInfo.hh"
@@ -34,6 +35,7 @@ namespace karabo {
 
         template<typename KeyType, typename AttributesType = bool>
         class Element {
+
 
             // Grant friendship to container
             template<typename T, typename U>
@@ -66,6 +68,12 @@ namespace karabo {
             template<class ValueType>
             inline void setValue(const ValueType& value);
 
+            // This overload specializes the behavior for inserting plain Hashes
+            // It is needed as derived objects from Hash are always converted into shared_ptrs
+            // which would break a lot of related code if done for Hash (expecially type-related things)
+            // TODO: Re-factor to also save Hash as shared_ptr and adapt all related code
+            void setValue(const Hash& value);
+
             void setValue(const char* const& value);
 
             void setValue(const wchar_t* const& value);
@@ -75,8 +83,6 @@ namespace karabo {
             void setValue(const boost::any& value);
 
             void setValue(const Element<KeyType, AttributesType>& value);
-
-            //        void swap(const Node<KeyType, AttributeType>& other);
 
             template<class ValueType>
             inline const ValueType& getValue() const;
@@ -99,10 +105,6 @@ namespace karabo {
             inline void setAttribute(const std::string& key, const T& value);
 
             inline void setAttribute(const std::string& key, const boost::any& value);
-
-            /*inline void setAttribute(const std::string& key, const Hash& value);
-
-            inline void setAttribute(const std::string& key, const std::vector<Hash>& value);*/
 
             template<class T>
             inline T& getAttribute(const std::string& key);
@@ -150,6 +152,24 @@ namespace karabo {
             bool operator!=(const Element<KeyType, AttributesType>& other) const;
 
         private:
+
+            template<class ValueType>
+            void setValue(boost::true_type /*is_shared_ptr*/, const ValueType& value);
+
+            template<class ValueType>
+            void setValue(boost::false_type /*is_shared_ptr*/, const ValueType& value);
+
+            template<class ValueType>
+            inline const ValueType& getValue(boost::true_type /*is_shared_ptr*/) const;
+
+            template<class ValueType>
+            inline const ValueType& getValue(boost::false_type /*is_shared_ptr*/) const;
+
+            template<class ValueType>
+            inline ValueType& getValue(boost::true_type /*is_shared_ptr*/);
+
+            template<class ValueType>
+            inline ValueType& getValue(boost::false_type /*is_shared_ptr*/);
 
             inline void setKey(const KeyType& key);
 
@@ -220,26 +240,52 @@ namespace karabo {
         template<class KeyType, typename AttributeType>
         template<class ValueType>
         inline void Element<KeyType, AttributeType>::setValue(const ValueType& value) {
+            this->setValue<ValueType>(is_shared_ptr<ValueType>(), value);
+        }
+
+        template<class KeyType, typename AttributeType>
+        template<class ValueType>
+        void Element<KeyType, AttributeType>::setValue(boost::true_type /*is_shared_ptr*/, const ValueType& value) {
+            if (is_base_of < Hash, typename ValueType::element_type>::value) {
+                m_value = reinterpret_cast<const boost::shared_ptr<Hash>&> (value);
+            } else {
+                m_value = value;
+            }
+        }
+
+        template<class KeyType, typename AttributeType>
+        template<class ValueType>
+        void Element<KeyType, AttributeType>::setValue(boost::false_type /*is_shared_ptr*/, const ValueType& value) {
+            if (is_base_of<Hash, ValueType>::value) {
+                const boost::shared_ptr<ValueType> p(new ValueType(value));
+                m_value = reinterpret_cast<const boost::shared_ptr<Hash>&> (p);
+            } else {
+                m_value = value;
+            }
+        }
+
+        template<class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(const Hash& value) {
             m_value = value;
         }
 
-        template<class KeyType, class ValueType>
-        inline void Element<KeyType, ValueType>::setValue(const char* const& value) {
+        template<class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(const char* const& value) {
             m_value = std::string(value);
         }
 
-        template<class KeyType, class ValueType>
-        inline void Element<KeyType, ValueType>::setValue(const wchar_t* const& value) {
+        template<class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(const wchar_t* const& value) {
             m_value = std::wstring(value);
         }
 
-        template<class KeyType, class ValueType>
-        inline void Element<KeyType, ValueType>::setValue(wchar_t* const& value) {
+        template<class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(wchar_t* const& value) {
             m_value = std::wstring(value);
         }
 
-        template<class KeyType, class ValueType>
-        inline void Element<KeyType, ValueType>::setValue(const boost::any & value) {
+        template<class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(const boost::any & value) {
             m_value = value;
         }
 
@@ -253,17 +299,69 @@ namespace karabo {
         template<class KeyType, typename AttributeType>
         template<class ValueType>
         inline const ValueType& Element<KeyType, AttributeType>::getValue() const {
-            const ValueType* ptr = boost::any_cast<ValueType > (&m_value);
-            if (ptr) return *ptr;
-            else throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
+            return getValue<ValueType>(is_shared_ptr<ValueType>());
         }
 
         template<class KeyType, typename AttributeType>
         template<class ValueType>
         inline ValueType& Element<KeyType, AttributeType>::getValue() {
-            ValueType* ptr = boost::any_cast<ValueType > (&m_value);
-            if (ptr) return *ptr;
-            else throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
+            return getValue<ValueType>(is_shared_ptr<ValueType>());
+        }
+
+        template<class KeyType, typename AttributeType>
+        template<class ValueType>
+        inline const ValueType& Element<KeyType, AttributeType>::getValue(boost::true_type /*is_shared_ptr*/) const {
+            if (is_base_of < Hash, typename ValueType::element_type>::value) {
+                const boost::shared_ptr<Hash>* ptr = boost::any_cast<boost::shared_ptr<Hash> > (&m_value);
+                if (ptr) return reinterpret_cast<const ValueType&> (*ptr);
+                throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
+            } else {
+                const ValueType* ptr = boost::any_cast<ValueType > (&m_value);
+                if (ptr) return *ptr;
+                throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
+            }
+        }
+
+        template<class KeyType, typename AttributeType>
+        template<class ValueType>
+        inline const ValueType& Element<KeyType, AttributeType>::getValue(boost::false_type /*is_shared_ptr*/) const {
+            if (is_base_of < Hash, ValueType>::value) {
+                const boost::shared_ptr<Hash>* ptr = boost::any_cast<boost::shared_ptr<Hash> > (&m_value);
+                if (ptr) return reinterpret_cast<const ValueType&> (**ptr);
+                throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
+            } else {
+                const ValueType* ptr = boost::any_cast<ValueType > (&m_value);
+                if (ptr) return *ptr;
+                throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
+            }
+        }
+
+        template<class KeyType, typename AttributeType>
+        template<class ValueType>
+        inline ValueType& Element<KeyType, AttributeType>::getValue(boost::true_type /*is_shared_ptr*/) {
+            if (is_base_of < Hash, typename ValueType::element_type>::value) {
+                boost::shared_ptr<Hash>* ptr = boost::any_cast<boost::shared_ptr<Hash> > (&m_value);
+                if (ptr) return reinterpret_cast<ValueType&> (*ptr);
+                throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
+            } else {
+                ValueType* ptr = boost::any_cast<ValueType > (&m_value);
+                if (ptr) return *ptr;
+                throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
+            }
+        }
+
+        template<class KeyType, typename AttributeType>
+        template<class ValueType>
+        inline ValueType& Element<KeyType, AttributeType>::getValue(boost::false_type /*is_shared_ptr*/) {
+            if (is_base_of < Hash, ValueType>::value) {
+                boost::shared_ptr<Hash>* ptr = boost::any_cast<boost::shared_ptr<Hash> > (&m_value);
+                if (ptr) return reinterpret_cast<ValueType&> (**ptr);
+                throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
+            } else {
+                ValueType* ptr = boost::any_cast<ValueType > (&m_value);
+                if (ptr) return *ptr;
+                throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
+            }
         }
 
         template<class KeyType, typename AttributeType>
@@ -344,17 +442,7 @@ namespace karabo {
         template<typename KeyType, typename AttributeType>
         inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, const boost::any& value) {
             m_attributes.set(key, value);
-        }
-
-        /*template<typename KeyType, typename AttributeType>
-        inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, const Hash& value) {
-            throw KARABO_NOT_SUPPORTED_EXCEPTION("Attribute can not be of type Hash");
-        }
-
-        template<typename KeyType, typename AttributeType>
-        inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, const std::vector<Hash>& value) {
-            throw KARABO_NOT_SUPPORTED_EXCEPTION("Attribute can not be of type Hash");
-        }*/
+        }       
 
         template<typename KeyType, typename AttributeType>
         template<class T>

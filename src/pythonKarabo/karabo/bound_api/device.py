@@ -19,17 +19,18 @@ from karathon import (
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, BrokerConnection,
     Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
-    ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
+    LeafType, loadFromFile, Logger, MetricPrefix, Priority,
     RawImageData, Schema, SignalSlotable, Timestamp, Trainstamp,
     Unit, Validator, ValidatorValidationRules
 
 )
 
+from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .configurator import Configurator
+from .image_data import ImageData
 from .no_fsm import NoFsm
-from .alarm_conditions import AlarmCondition
 
 def isCpuImage(value):
     return isinstance(value, (CpuImageCHAR, CpuImageDOUBLE, CpuImageFLOAT,

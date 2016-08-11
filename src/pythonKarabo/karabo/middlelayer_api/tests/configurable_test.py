@@ -21,9 +21,10 @@ class DummyConfigurable(Configurable):
 
     def setChildValue(self, key, value, desc):
         super().setChildValue(key, value, desc)
-        assert self.dummy_child is None
-        self.key = key
-        self.dummy_child = value
+        if "." in key:
+            assert self.dummy_child is None
+            self.key = key
+            self.dummy_child = value
 
     def assertChild(self, key, value):
         assert value == self.dummy_child
