@@ -120,9 +120,8 @@ extern:
 	@mkdir -p $(KARABO)
 	@$(EXTERN_DIR)/build.sh $(EXTERN_DISTDIR) $(EXTERN_WHAT)
 clean-extern:
-	rm -f .marker.txt
 	rm -rf $(EXTERN_DISTDIR)
-	cd $(EXTERN_DIR)/resources; find . -mindepth 2 -maxdepth 2 -type d -exec rm -rf {} \;
+	git clean -fxd $(EXTERN_DIR)/resources
 package-extern: extern
 	cd $(EXTERN_DIR); tar -zcf $(EXTERN_BUNDLE_NAME)-$(EXTERN_BUNDLE_VERSION).tar.gz $(EXTERN_INSTALL_DIR)
 
