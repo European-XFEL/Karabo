@@ -222,7 +222,7 @@ class Project(object):
         returned.
         """
         for scene in self.scenes:
-            if title == scene.filename:
+            if title == scene.title:
                 return scene
 
     def getSceneURL(self, title):
@@ -234,14 +234,14 @@ class Project(object):
     def getSceneNames(self):
         """ All the scene names for this project.
         """
-        return [scene.filename for scene in self.scenes]
+        return [scene.title for scene in self.scenes]
 
-    def removeScene(self, filename):
-        """ The first occurrence of a scene with the given \filename is
+    def removeScene(self, title):
+        """ The first occurrence of a scene with the given \title is
         removed.
         """
         for scene in self.scenes:
-            if filename == scene.filename:
+            if title == scene.title:
                 self.scenes.remove(scene)
                 return
 

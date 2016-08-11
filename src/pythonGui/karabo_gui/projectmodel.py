@@ -489,11 +489,11 @@ class ProjectModel(QStandardItemModel):
         This function creates a QStandardItem for the given \sceneModel and
         returns it.
         """
-        item = QStandardItem(sceneModel.filename)
+        item = QStandardItem(sceneModel.title)
         item.setIcon(icons.image)
         item.setData(sceneModel, ProjectModel.ITEM_OBJECT)
         item.setEditable(False)
-        item.setToolTip(sceneModel.filename)
+        item.setToolTip(sceneModel.title)
         
         return item
 
@@ -527,7 +527,7 @@ class ProjectModel(QStandardItemModel):
 
     def renameScene(self, sceneModel):
         item = self.findItem(sceneModel)
-        item.setText(sceneModel.filename)
+        item.setText(sceneModel.title)
         # XXX: TODO update dirty flag
         #sceneModel.project.setModified(True)
         
@@ -1207,7 +1207,7 @@ class ProjectModel(QStandardItemModel):
         if sceneModel is None:
             self.addScene(self.currentProject(), dialog.sceneName())
         else:
-            sceneModel.filename = dialog.sceneName()
+            sceneModel.title = dialog.sceneName()
             self.renameScene(sceneModel)
 
     def addScene(self, project, title, filename=None):
@@ -1231,7 +1231,7 @@ class ProjectModel(QStandardItemModel):
             # Read file into scene model
             sceneModel = read_scene(filename)
             # Set the scene title
-            sceneModel.filename = title
+            sceneModel.title = title
             project.addScene(sceneModel)
 
         self.openScene(sceneModel)
@@ -1252,7 +1252,7 @@ class ProjectModel(QStandardItemModel):
         return scene
 
     def duplicateScene(self, scene):
-        dialog = DuplicateDialog(scene.filename[:-4])
+        dialog = DuplicateDialog(scene.title[:-4])
         if dialog.exec_() == QDialog.Rejected:
             return
 
@@ -1574,7 +1574,7 @@ class ProjectModel(QStandardItemModel):
             fn = "{}.svg".format(fn)
         
         with ZipFile(project.filename, "r") as zf:
-            s = zf.read("{}/{}".format(project.SCENES_KEY, scene.filename))
+            s = zf.read("{}/{}".format(project.SCENES_KEY, scene.title))
         s = s.decode()
         with open(fn, "w") as fout:
             fout.write(s)

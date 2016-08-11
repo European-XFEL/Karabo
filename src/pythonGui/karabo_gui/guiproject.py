@@ -414,7 +414,7 @@ class GuiProject(Project, QObject):
         """
         currentlyModified = self.isModified
         # Create a new Scene instance from the data in the project.
-        newScene = self.rereadScene(scene.filename)
+        newScene = self.rereadScene(scene.title)
 
         # Remove old scene from project
         index = self.remove(scene)
