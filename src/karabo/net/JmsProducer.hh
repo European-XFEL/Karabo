@@ -29,7 +29,7 @@ namespace karabo {
 
         class JmsProducer {
 
-            friend class JmsConnection;          
+            friend class JmsConnection;
 
         public:
 
@@ -41,7 +41,7 @@ namespace karabo {
                        const int priority = 4,
                        const int timeToLive = 0);
 
-            ~JmsProducer();
+            virtual ~JmsProducer();
 
         private:
 
@@ -71,7 +71,7 @@ namespace karabo {
             static const int HANDLED_OBJECT_INVALID_HANDLE = 0xFEEEFEEE;
 
             JmsConnection::Pointer m_connection;
-            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;            
+            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
 
             MQSessionHandle m_producerSessionHandle;
 
@@ -86,4 +86,4 @@ namespace karabo {
     }
 }
 
-#endif	
+#endif

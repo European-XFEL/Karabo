@@ -208,7 +208,7 @@ void SignalSlotable_Test::testAutoConnectSignal() {
     std::pair<SignalSlotDemo::Pointer, boost::shared_ptr<boost::thread> > demo2Pair = this->createDemo("SignalSlotDemo2");
     SignalSlotDemo::Pointer demo2 = demo2Pair.first;
     boost::shared_ptr<boost::thread> demo2Thread = demo2Pair.second;
-    const bool demo2Fine = demo2;
+    const bool demo2Fine = demo2 != 0;
 
     // Give m_demo some time to auto-connect now that SignalSlotDemo2 is there:
     boost::this_thread::sleep(boost::posix_time::milliseconds(200));
@@ -246,7 +246,7 @@ void SignalSlotable_Test::testAutoConnectSlot() {
     std::pair<SignalSlotDemo::Pointer, boost::shared_ptr<boost::thread> > demo2Pair = this->createDemo("SignalSlotDemo2");
     SignalSlotDemo::Pointer demo2 = demo2Pair.first;
     boost::shared_ptr<boost::thread> demo2Thread = demo2Pair.second;
-    const bool demo2Fine = demo2;
+    const bool demo2Fine = demo2 != 0;
 
     // Give m_demo some time to auto-connect now that SignalSlotDemo2 is there:
     boost::this_thread::sleep(boost::posix_time::milliseconds(200));
