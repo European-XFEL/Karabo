@@ -42,6 +42,9 @@ namespace karabo {
 
         };
 
+        //type punned pointer warnings fixed as inspired by
+        //http://stackoverflow.com/questions/4163126/dereferencing-type-punned-pointer-will-break-strict-aliasing-rules-warning
+
         template<typename T, typename F>
         struct alias_cast_t {
 
