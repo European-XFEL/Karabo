@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   MetaTools.hh
  * Author: heisenb
  *
@@ -41,6 +41,53 @@ namespace karabo {
             static const bool value = sizeof (check(Host<B, D>(), int())) == sizeof (yes);
 
         };
+
+        //type punned pointer warnings fixed as inspired by
+        //http://stackoverflow.com/questions/4163126/dereferencing-type-punned-pointer-will-break-strict-aliasing-rules-warning
+
+        template<typename T, typename F>
+        struct alias_cast_t {
+
+            union {
+
+                F* raw;
+                T* data;
+            };
+        };
+
+        template<typename T, typename F>
+        struct alias_cast_t_c {
+
+            union {
+
+                const F* raw;
+                const T* data;
+            };
+        };
+
+        template<typename T, typename F>
+        T* alias_cast(F* raw_data) {
+            alias_cast_t<T, F> ac;
+            ac.raw = raw_data;
+            return ac.data;
+        }
+
+        template<typename T, typename F>
+        T& alias_cast(F& raw_data) {
+            alias_cast_t<T, F> ac;
+            ac.raw = &raw_data;
+            return *ac.data;
+        }
+
+        template<typename T, typename F>
+        const T& alias_cast(const F& raw_data) {
+            alias_cast_t_c<T, F> ac;
+            ac.raw = &raw_data;
+            return *ac.data;
+        }
+
+
+
     }
 }
 
