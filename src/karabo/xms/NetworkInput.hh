@@ -251,7 +251,6 @@ namespace karabo {
                     }
                     connected = true;
                 }
-                channel->setErrorHandler(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelError, this, channel, _1));
                 channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
                 channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, channel, _1, _2));
 

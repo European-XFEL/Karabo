@@ -177,8 +177,6 @@ namespace karabo {
                 channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
 
                 channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1));
-                channel->setErrorHandler(boost::bind(&karabo::core::GuiServerDevice::onError, this, channel, _1));
-
 
                 Hash brokerInfo("type", "brokerInformation");
                 brokerInfo.set("host", this->getConnection()->getBrokerHostname());

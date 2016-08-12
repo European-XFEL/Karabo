@@ -45,7 +45,7 @@ namespace karabo {
                                     const karabo::util::Hash::Pointer& header,
                                     const karabo::util::Hash::Pointer& message, int prio);
 
-            void connectHandler(const karabo::net::Channel::Pointer& channel);
+            void connectHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& e);
 
             void onSubscribe(const karabo::net::Channel::Pointer& channel, const std::string& subscription);
 
@@ -143,7 +143,7 @@ namespace karabo {
             , m_connection()
             , m_registeredChannels() {
             m_connection = Connection::create(Hash("Tcp.port", 0, "Tcp.type", "server"));
-            m_port = m_connection->startAsync(boost::bind(&PointToPoint::Producer::connectHandler, this, _1));
+            m_port = m_connection->startAsync(boost::bind(&PointToPoint::Producer::connectHandler, this, _1, _2));
         }
 
 
@@ -165,9 +165,12 @@ namespace karabo {
         }
 
 
-        void PointToPoint::Producer::connectHandler(const Channel::Pointer& channel) {
-            m_connection->startAsync(boost::bind(&PointToPoint::Producer::connectHandler, this, _1));
-            channel->setErrorHandler(boost::bind(&PointToPoint::Producer::channelErrorHandler, this, channel, _1));
+        void PointToPoint::Producer::connectHandler(const Channel::Pointer& channel, const ErrorCode& e) {
+            if (e) {
+                channelErrorHandler(channel, e);
+                return;
+            }
+            m_connection->startAsync(boost::bind(&PointToPoint::Producer::connectHandler, this, _1, _2));
             channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
             channel->setAsyncChannelPolicy(4, "LOSSLESS");
             channel->readAsyncString(boost::bind(&PointToPoint::Producer::onSubscribe, this, channel, _1));
@@ -351,8 +354,8 @@ namespace karabo {
                                                     const karabo::net::Connection::Pointer& connection,
                                                     const karabo::net::Channel::Pointer& channel) {
 
-            channel->setErrorHandler(boost::bind(&Consumer::channelErrorHandler, this,
-                                                 signalInstanceId, signalConnectionString, connection, channel, _1));
+            //channel->setErrorHandler(boost::bind(&Consumer::channelErrorHandler, this,
+            //                                     signalInstanceId, signalConnectionString, connection, channel, _1));
             // bookkeeping ...
             {
                 boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
