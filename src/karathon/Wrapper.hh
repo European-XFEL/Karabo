@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Wrapper.hh
  * Author: esenov
  *
@@ -17,6 +17,7 @@
 #define KRB_NDARRAY_MAX_DIM 6
 
 #define NO_IMPORT_ARRAY
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
 namespace bp = boost::python;
@@ -25,10 +26,9 @@ namespace karathon {
 
     class PyTypes {
 
-        public:
+    public:
 
         enum ReferenceType {
-
 
             BOOL = karabo::util::Types::BOOL, // boolean
             VECTOR_BOOL = karabo::util::Types::VECTOR_BOOL, // std::vector<std::bool>
@@ -318,8 +318,10 @@ namespace karathon {
     };
 
     // Handler class for arrays originating in C++ code
+
     template <typename T>
     class CppArrayRefHandler {
+
     public:
         typedef boost::shared_ptr<karabo::util::ArrayData<T> > ArrayDataPtr;
 
@@ -327,19 +329,28 @@ namespace karathon {
         ArrayDataPtr m_arrayData;
 
     public:
-        explicit CppArrayRefHandler(const ArrayDataPtr& arr) : m_arrayData(arr) {}
-        ArrayDataPtr getDataPtr() const { return m_arrayData; }
+
+        explicit CppArrayRefHandler(const ArrayDataPtr& arr) : m_arrayData(arr) {
+        }
+
+        ArrayDataPtr getDataPtr() const {
+            return m_arrayData;
+        }
     };
 
     // Handler class for arrays originating in Python code
+
     template <typename T>
     class PyArrayRefHandler {
+
         PyArrayObject* m_arrayRef;
 
     public:
-        explicit PyArrayRefHandler(PyArrayObject* obj) : m_arrayRef(obj) {}
 
-        void operator ()(const T*) {
+        explicit PyArrayRefHandler(PyArrayObject* obj) : m_arrayRef(obj) {
+        }
+
+        void operator()(const T*) {
             Py_DECREF(m_arrayRef);
         }
     };
@@ -476,9 +487,9 @@ namespace karathon {
 
             // Array ref is still empty. Create a new ArrayData
             if (!array) {
-                PyObject* pyobj = reinterpret_cast<PyObject*>(arr);
+                PyObject* pyobj = reinterpret_cast<PyObject*> (arr);
                 // Get a contiguous copy of the array with the correct type (or just a reference if already compatible)
-                PyArrayObject* carr = reinterpret_cast<PyArrayObject*>(PyArray_FROMANY(pyobj, typenum, KRB_NDARRAY_MIN_DIM, KRB_NDARRAY_MAX_DIM, NPY_ARRAY_C_CONTIGUOUS));
+                PyArrayObject* carr = reinterpret_cast<PyArrayObject*> (PyArray_FROMANY(pyobj, typenum, KRB_NDARRAY_MIN_DIM, KRB_NDARRAY_MAX_DIM, NPY_ARRAY_C_CONTIGUOUS));
                 if (carr != NULL) {
                     const T* data = reinterpret_cast<T*> (PyArray_DATA(carr));
                     const npy_intp nelems = PyArray_SIZE(carr);
@@ -523,7 +534,7 @@ namespace karathon {
             bp::object pyRefHandler(refHandler); // Python reference count starts at 1
             void* data = reinterpret_cast<void*> (arrayData->data());
             PyObject* pyobj = PyArray_SimpleNewFromData(nd, &dims[0], typenum, data);
-            PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(pyobj), pyRefHandler.ptr());
+            PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*> (pyobj), pyRefHandler.ptr());
             // PyArray_SetBaseObject steals a reference. Increase the refcount to protect bp::object::~object()
             Py_INCREF(pyRefHandler.ptr());
             return bp::object(bp::handle<>(pyobj));
