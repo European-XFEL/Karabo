@@ -54,7 +54,7 @@ void exportp2p() {
                      "new handlers in this handler using given channel if you want follow asynchronous model.")
                 .def("stop", &ConnectionWrap().stop, "Stops IO service operation.")
                 //.def("createChannel", &Connection::createChannel)
-                .def("setErrorHandler", &ConnectionWrap().setErrorHandler, (bp::arg("handler")), "Sets a handler being called in case of error conditions")
+                //.def("setErrorHandler", &ConnectionWrap().setErrorHandler, (bp::arg("handler")), "Sets a handler being called in case of error conditions")
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Connection)
                 ;
     }
@@ -103,8 +103,8 @@ void exportp2p() {
                      "if write operations of all message parts are completed.")
                 .def("waitAsync", &ChannelWrap().waitAsync, (bp::arg("milliseconds"), bp::arg("handler")),
                      "The handler will be called by IO service object when the registered delay (in milliseconds) is elapsed.")
-                .def("setErrorHandler", &ChannelWrap().setErrorHandler, (bp::arg("handler")),
-                     "Set handler that is called if the error condition is encountered during operations on channel.")
+                //.def("setErrorHandler", &ChannelWrap().setErrorHandler, (bp::arg("handler")),
+                //     "Set handler that is called if the error condition is encountered during operations on channel.")
                 .def("close", &Channel::close, "Close channel session.")
                 .add_property("__id__", &ChannelWrap().id, "This readonly variable keeps id that uniquely identifies channel instance.")
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Channel)
