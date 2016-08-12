@@ -1571,7 +1571,8 @@ class ProjectModel(QStandardItemModel):
         scene = self.currentScene()
         fn = QFileDialog.getSaveFileName(None, "Save scene to file",
                                          globals.HIDDEN_KARABO_FOLDER,
-                                         "SVG (*.svg)")
+                                         "SVG (*.svg)",
+                                         options=QFileDialog.DontUseNativeDialog)
         if not fn:
             return
         
@@ -1588,7 +1589,8 @@ class ProjectModel(QStandardItemModel):
         project = self.currentProject()
         fn = QFileDialog.getOpenFileName(None, "Open scene",
                                          globals.HIDDEN_KARABO_FOLDER,
-                                         "SVG (*.svg)")
+                                         "SVG (*.svg)",
+                                         options=QFileDialog.DontUseNativeDialog)
         if not fn:
             return
         # Create scene view
