@@ -1306,11 +1306,11 @@ namespace karabo {
                         emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_deviceId);
                         v.push_back(AlarmCondition::fromString(desc.get<string>("type")));
                     }
-                    return std::make_pair<bool, const AlarmCondition > (true, AlarmCondition::returnMostSignificant(v));
+                    return std::pair<bool, const AlarmCondition > (true, AlarmCondition::returnMostSignificant(v));
                 } else if (forceUpate) {
-                    return std::make_pair<bool, const AlarmCondition > (true, m_globalAlarmCondition);
+                    return std::pair<bool, const AlarmCondition > (true, m_globalAlarmCondition);
                 }
-                return std::make_pair<bool, const AlarmCondition > (false, AlarmCondition::NONE);
+                return std::pair<bool, const AlarmCondition > (false, AlarmCondition::NONE);
             }
 
 
