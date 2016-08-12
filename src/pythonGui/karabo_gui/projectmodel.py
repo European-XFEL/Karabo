@@ -1623,7 +1623,8 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return
         
-        for index in selectedIndexes:
+        while selectedIndexes:
+            index = selectedIndexes.pop()
             obj = index.data(ProjectModel.ITEM_OBJECT)
             # Get project to given object
             project = self.getProjectForObject(obj)
