@@ -635,9 +635,6 @@ namespace karabo {
                         + (checkGreater ? "above " : "below ") + alarmCond.asBaseString() + " level of "
                         + karabo::util::toString(threshold));
                     m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmString, "message", msg), '\0');
-
-                    attachTimestampIfNotAlreadyThere(workNode);
-                    workNode.setAttribute(KARABO_ALARM_ATTR, alarmString);
                     return true; //alarm condition re-raised, do not clear
                 } else {
                     return false; // if it is no longer in alarm we may clear
