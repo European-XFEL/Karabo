@@ -1691,7 +1691,8 @@ class ProjectModel(QStandardItemModel):
             for s in project.scenes:
                 # XXX: TODO: remove obj from scene model
                 # Remove all related workflow devices of project scenes
-                s.removeItemByObject(obj)
+                # s.removeItemByObject(obj)
+                print("TODO: remove workflow related object from scene model")
 
         if showConfirm:
             self.selectObject(project)
