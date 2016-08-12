@@ -1705,7 +1705,7 @@ namespace karabo {
                 countdown--; // Regular count down
 
                 if (countdown == 0) { // Instance lost
-                    deadOnes.push_back(std::make_pair<string, Hash>(it->getKey(), entry.get<Hash>("instanceInfo")));
+                    deadOnes.push_back(std::pair<string, Hash>(it->getKey(), entry.get<Hash>("instanceInfo")));
                 }
             }
         }

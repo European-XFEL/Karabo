@@ -29,7 +29,7 @@ namespace karabo {
 
         class JmsConsumer {
 
-            friend class JmsConnection;            
+            friend class JmsConnection;
 
         public:
 
@@ -46,14 +46,14 @@ namespace karabo {
              */
             void readAsync(const MessageHandler handler, const std::string& topic, const std::string& selector = "");
 
-            ~JmsConsumer();
+            virtual ~JmsConsumer();
 
         private:
 
-            JmsConsumer(const JmsConnection::Pointer& connection);           
+            JmsConsumer(const JmsConnection::Pointer& connection);
 
             void asyncConsumeMessage(const MessageHandler handler, const std::string& topic, const std::string& selector);
-          
+
             MQConsumerHandle getConsumer(const std::string& topic, const std::string& selector);
 
             std::pair<MQSessionHandle, MQDestinationHandle> ensureConsumerDestinationAvailable(const std::string& topic,
@@ -79,7 +79,7 @@ namespace karabo {
             static const int HANDLED_OBJECT_INVALID_HANDLE = 0xFEEEFEEE;
 
             JmsConnection::Pointer m_connection;
-            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;           
+            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
 
             typedef std::map<std::string, MQSessionHandle > ConsumerSessions;
             ConsumerSessions m_consumerSessions;
@@ -97,4 +97,4 @@ namespace karabo {
     }
 }
 
-#endif	
+#endif
