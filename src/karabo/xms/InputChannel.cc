@@ -212,8 +212,6 @@ namespace karabo {
                 karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
                 // Instantiate connection object
                 karabo::net::Connection::Pointer tcpConnection = karabo::net::Connection::create(config);
-                // Set connection error handler
-                tcpConnection->setErrorHandler(boost::bind(&karabo::xms::InputChannel::onTcpConnectionError, this, tcpConnection, _1));
 
                 // Establish connection (and define sub-type of server)
                 startConnectionAsync(tcpConnection, outputChannelInfo);
@@ -315,7 +313,6 @@ namespace karabo {
             const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
             unsigned int port = outputChannelInfo.get<unsigned int>("port");
 
-            channel->setErrorHandler(boost::bind(&karabo::xms::InputChannel::onTcpChannelError, this, channel, _1));
             channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
             channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
 

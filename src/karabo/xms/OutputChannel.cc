@@ -146,7 +146,6 @@ namespace karabo {
             m_dataChannels.insert(channel);
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
             KARABO_LOG_FRAMEWORK_DEBUG << "***** Connection established to socket " << tch->socket().native() << " *****";
-            channel->setErrorHandler(boost::bind(&karabo::xms::OutputChannel::onTcpChannelError, this, channel, _1));
             channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, channel, _1));
             m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1));
         }
