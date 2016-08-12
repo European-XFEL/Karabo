@@ -492,13 +492,12 @@ class ProjectTreeView(QTreeView):
 
         menu.exec_(QCursor.pos())
 
-
     def onInitDevice(self):
         selectedIndexes = self.selectionModel().selectedIndexes()
         for index in selectedIndexes:
             device = index.data(ProjectModel.ITEM_OBJECT)
-            device.project.instantiate(device)
-
+            project = self.model().getProjectForObject(device)
+            project.instantiate(device)
 
     def onKillDevice(self):
         selectedIndexes = self.selectionModel().selectedIndexes()
@@ -510,11 +509,11 @@ class ProjectTreeView(QTreeView):
 
             if reply == QMessageBox.No:
                 return
-        
+
         for index in selectedIndexes:
             device = index.data(ProjectModel.ITEM_OBJECT)
-            device.project.shutdown(device, nbSelected == 1)
-
+            project = self.model().getProjectForObject(device)
+            project.shutdown(device, nbSelected == 1)
 
     def onHandleMonitoring(self, checked):
         if checked:
