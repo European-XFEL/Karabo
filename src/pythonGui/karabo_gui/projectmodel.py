@@ -329,7 +329,7 @@ class ProjectModel(QStandardItemModel):
         """
         item = self.createDeviceItem(device)
 
-        projectItem = self.findItem(device.project)
+        projectItem = self._getProjectItemForObject(device)
         # Find folder for devices
         parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
         parentItem.appendRow(item)
@@ -342,7 +342,7 @@ class ProjectModel(QStandardItemModel):
         """
         item = self.createDeviceItem(device)
         
-        projectItem = self.findItem(device.project)
+        projectItem = self._getProjectItemForObject(device)
         # Find folder for devices
         parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
         parentItem.insertRow(row, item)
@@ -380,7 +380,7 @@ class ProjectModel(QStandardItemModel):
         """
         item = self.createDeviceGroupItem(deviceGroup)
 
-        projectItem = self.findItem(deviceGroup.project)
+        projectItem = self._getProjectItemForObject(deviceGroup)
         # Find folder for devices
         parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
         parentItem.appendRow(item)
@@ -393,7 +393,7 @@ class ProjectModel(QStandardItemModel):
         """
         item = self.createDeviceGroupItem(deviceGroup)
         
-        projectItem = self.findItem(deviceGroup.project)
+        projectItem = self._getProjectItemForObject(deviceGroup)
         # Find folder for devices
         parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
         parentItem.insertRow(row, item)
@@ -505,23 +505,21 @@ class ProjectModel(QStandardItemModel):
         """
         item = self.createSceneItem(sceneModel)
 
-        # XXX: TODO: the project should come from somewhere else..
-        project = self.currentProject() # sceneModel.project
-        projectItem = self.findItem(project)
+        projectItem = self._getProjectItemForObject(sceneModel)
         # Find folder for scenes
         parentItem = self.getCategoryItem(Project.SCENES_LABEL, projectItem)
         parentItem.appendRow(item)
         self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
 
 
-    def insertSceneItem(self, row, scene):
+    def insertSceneItem(self, row, sceneModel):
         """
         This function inserts the given \scene at the given \row of the model.
         """
         item = self.createSceneItem(scene)
         
-        projectItem = self.findItem(scene.project)
-        # Find folder for devices
+        projectItem = self._getProjectItemForObject(sceneModel)
+        # Find folder for scenes
         parentItem = self.getCategoryItem(Project.SCENES_LABEL, projectItem)
         parentItem.insertRow(row, item)
 
@@ -530,7 +528,6 @@ class ProjectModel(QStandardItemModel):
         item = self.findItem(sceneModel)
         item.setText(sceneModel.title)
         # XXX: TODO update dirty flag
-        #sceneModel.project.setModified(True)
         
         # Send signal to mainwindow to update the tab text as well
         self.signalRenameSceneView.emit(sceneModel)
@@ -541,8 +538,7 @@ class ProjectModel(QStandardItemModel):
         This function creates QStandardItems for the given \deviceId and 
         \configuration as child item and returns them both.
         """
-        project = configuration.project
-        projectItem = self.findItem(project)
+        projectItem = self._getProjectItemForObject(configuration)
         # Find folder for configurations
         labelItem = self.getCategoryItem(Project.CONFIGURATIONS_LABEL, projectItem)
         
@@ -587,9 +583,8 @@ class ProjectModel(QStandardItemModel):
         item.setData(macro, ProjectModel.ITEM_OBJECT)
         item.setEditable(False)
         item.setToolTip(macro.name)
-        
-        project = macro.project
-        projectItem = self.findItem(project)
+
+        projectItem = self._getProjectItemForObject(macro)
         # Find folder for scenes
         parentItem = self.getCategoryItem(Project.MACROS_LABEL, projectItem)
         parentItem.appendRow(item)
@@ -641,7 +636,7 @@ class ProjectModel(QStandardItemModel):
         """
         item = self.createMonitorItem(monitor)
 
-        projectItem = self.findItem(monitor.project)
+        projectItem = self._getProjectItemForObject(monitor)
         # Find folder for devices
         parentItem = self.getCategoryItem(Project.MONITORS_LABEL, projectItem)
         parentItem.appendRow(item)
@@ -654,7 +649,7 @@ class ProjectModel(QStandardItemModel):
         """
         item = self.createMonitorItem(monitor)
        
-        projectItem = self.findItem(monitor.project)
+        projectItem = self._getProjectItemForObject(monitor)
         # Find folder for devices
         parentItem = self.getCategoryItem(Project.MONITORS_LABEL, projectItem)
         parentItem.insertRow(row, item)
@@ -815,6 +810,29 @@ class ProjectModel(QStandardItemModel):
         
         return None
 
+    def _getProjectItemForObject(self, obj):
+        """ Returns the project item of the given `obj`.
+        """
+        item = self.findItem(obj)
+        if item is None:
+            return None
+
+        while not isinstance(obj, Project):
+            item = item.parent()
+            obj = item.data(ProjectModel.ITEM_OBJECT)
+        return item
+
+    def getProjectForObject(self, obj):
+        """ Returns the project object of the given `obj`.
+        """
+        index = self.findIndex(obj)
+        if index is None:
+            return None
+
+        while not isinstance(obj, Project):
+            index = index.parent()
+            obj = index.data(ProjectModel.ITEM_OBJECT)
+        return obj
 
     def currentProject(self):
         """
@@ -825,13 +843,8 @@ class ProjectModel(QStandardItemModel):
         if not index.isValid():
             return None
 
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        while not isinstance(object, Project):
-            index = index.parent()
-            object = index.data(ProjectModel.ITEM_OBJECT)
-
-        return object
-
+        obj = index.data(ProjectModel.ITEM_OBJECT)
+        return self.getProjectForObject(obj)
 
     def modifiedProjects(self):
         """
@@ -1183,9 +1196,10 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
+        project = self.getProjectForObject(device)
         for index in range(dialog.startIndex, dialog.endIndex+1):
             deviceId = "{}{}".format(dialog.displayPrefix, index)
-            newDevice = self.addDevice(self.currentProject(), device.serverId,
+            newDevice = self.addDevice(project, device.serverId,
                                        device.classId, deviceId, device.ifexists)
             
             if device.descriptor is not None:
@@ -1204,7 +1218,7 @@ class ProjectModel(QStandardItemModel):
         dialog = SceneDialog(sceneModel)
         if dialog.exec_() == QDialog.Rejected:
             return
-        
+
         if sceneModel is None:
             self.addScene(self.currentProject(), dialog.sceneName())
         else:
@@ -1245,7 +1259,7 @@ class ProjectModel(QStandardItemModel):
         return sceneModel
 
     def closeScene(self, sceneModel):
-        self.signalRemoveScene.emit(sceneModel)
+        self.signalRemoveSceneView.emit(sceneModel)
 
     def insertScene(self, index, project, title):
         """
@@ -1261,11 +1275,12 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
+        project = self.getProjectForObject(oldSceneModel)
         xml = write_scene(oldSceneModel)
         fileObj = BytesIO(xml)
         for index in range(dialog.startIndex, dialog.endIndex+1):
             title = "{}{}".format(dialog.displayPrefix, index)
-            newSceneModel = self.addScene(self.currentProject(), title, fileObj)
+            newSceneModel = self.addScene(project, title, fileObj)
             fileObj.seek(0)
             # XXX: TODO set dirty flag project modified
         self.selectObject(newSceneModel)
@@ -1274,8 +1289,8 @@ class ProjectModel(QStandardItemModel):
         """ This method gets a `sceneModel` and triggers a signal to open a
             scene view in the GUI.
         """
-        # XXX: TODO: where should the project come from?
-        self.signalAddSceneView.emit(sceneModel, self.currentProject())
+        project = self.getProjectForObject(sceneModel)
+        self.signalAddSceneView.emit(sceneModel, project)
 
     def openSceneLink(self, title):
         project = self.currentProject()
@@ -1610,13 +1625,13 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return
         
-        # Get object before QModelIndexes are gone due to update of view
-        objects = [index.data(ProjectModel.ITEM_OBJECT) for index in selectedIndexes]
-        
-        for obj in objects:
+        while selectedIndexes:
+            index = selectedIndexes.pop()
+            obj = index.data(ProjectModel.ITEM_OBJECT)
+            # Get project to given object
+            project = self.getProjectForObject(obj)
             # Remove data from project
-            self.removeObject(obj.project, obj, nbSelected == 1)
-
+            self.removeObject(project, obj, nbSelected == 1)
 
     def onRemoveConfiguration(self):
         selectedIndexes = self.selectionModel.selectedIndexes()
@@ -1635,13 +1650,12 @@ class ProjectModel(QStandardItemModel):
             deviceId = parentIndex.data()
             configuration = index.data(ProjectModel.ITEM_OBJECT)
             
-            project = configuration.project
+            project = self.getProjectForObject(configuration)
             project.removeConfiguration(deviceId, configuration)
             
             if project.configurations.get(deviceId) is None:
                 # Remove item for deviceId, if no configuration available anymore
                 self.removeRow(parentIndex.row(), parentIndex.parent())
-
 
     def onRemoveDevices(self):
         reply = QMessageBox.question(None, 'Delete devices',
@@ -1650,16 +1664,15 @@ class ProjectModel(QStandardItemModel):
 
         if reply == QMessageBox.No:
             return
-        
+
         project = self.currentProject()
         while project.devices:
-            object = project.devices[-1]
-            self.removeObject(project, object, False)
+            device = project.devices[-1]
+            self.removeObject(project, device, False)
 
-
-    def removeObject(self, project, object, showConfirm=True):
+    def removeObject(self, project, obj, showConfirm=True):
         """
-        The \object is removed from the \project.
+        The \obj is removed from the \project.
         """
         if showConfirm:
             reply = QMessageBox.question(None, 'Delete object',
@@ -1668,22 +1681,23 @@ class ProjectModel(QStandardItemModel):
 
             if reply == QMessageBox.No:
                 return
-        
-        index = project.remove(object)
-        
-        if isinstance(object, SceneModel):
-            self.closeScene(object)
-        
-        if isinstance(object, Macro):
-            self.signalRemoveMacro.emit(object)
-        
-        if isinstance(object, Configuration):
+
+        index = project.remove(obj)
+
+        if isinstance(obj, SceneModel):
+            self.closeScene(obj)
+
+        if isinstance(obj, Macro):
+            self.signalRemoveMacro.emit(obj)
+
+        if isinstance(obj, Configuration):
             for s in project.scenes:
+                # XXX: TODO: remove obj from scene model
                 # Remove all related workflow devices of project scenes
-                s.removeItemByObject(object)
-        
+                # s.removeItemByObject(obj)
+                print("TODO: remove workflow related object from scene model")
+
         if showConfirm:
             self.selectObject(project)
-        
+
         return index
-        

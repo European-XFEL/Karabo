@@ -116,4 +116,7 @@ class MacroPanel(Dockable, QSplitter):
 
 
     def onMacroChanged(self):
-        self.macro.project.setModified(True)
+        # XXX: TODO: this can be removed once a traits macro model exists
+        # which updates the project whenever changes appear
+        # self.macro.project.setModified(True)
+        print("TODO: project needs to be modified")

@@ -183,9 +183,9 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         if self.instance is not None:
             return self.instance
 
-        self.instance = DeviceGroup(self.id, self.serverId, self.classId, self.ifexists, "deviceGroup")
+        self.instance = DeviceGroup(self.id, self.serverId, self.classId,
+                                    self.ifexists, "deviceGroup")
         self.instance.devices = self.devices
-        self.instance.project = self.project
 
         return self.instance
 
