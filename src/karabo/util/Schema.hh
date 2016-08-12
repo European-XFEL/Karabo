@@ -218,6 +218,9 @@ namespace karabo {
              */
             Schema(const std::string& classId = "", const Schema::AssemblyRules& rules = Schema::AssemblyRules());
 
+            virtual ~Schema() {
+            };
+
             void setAssemblyRules(const Schema::AssemblyRules& rules);
 
             Schema::AssemblyRules getAssemblyRules() const;
