@@ -379,8 +379,6 @@ namespace karabo {
             //*                     Misc                                   */ 
             //**************************************************************/
 
-            virtual void setErrorHandler(const ErrorHandler& handler) = 0;
-
             virtual void waitAsync(int milliseconds, const WaitHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }

@@ -43,7 +43,6 @@ namespace karabo {
             boost::asio::ip::tcp::socket m_socket;
             boost::asio::deadline_timer m_timer;
             HandlerType m_activeHandler;
-            ErrorHandler m_errorHandler;
             bool m_readHeaderFirst;
             boost::any m_readHandler;
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_textSerializer;
@@ -208,7 +207,7 @@ namespace karabo {
              * @param byteSize
              * @param error
              */
-            void onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, boost::shared_ptr<std::vector<char> > prefix, const ErrorCode& error);
+            void onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, const ErrorCode& error);
 
             /**
              * Internal default handler
@@ -226,7 +225,7 @@ namespace karabo {
              * Internal default handler
              * @param channel
              */
-            void bytesAvailableHandler(boost::shared_ptr<std::vector<char> > inData, const boost::system::error_code& e);
+            void bytesAvailableHandler(const boost::system::error_code& e);
 
             void readAsyncRaw(char* data, size_t& size, const ReadRawHandler& handler);
 
@@ -259,10 +258,6 @@ namespace karabo {
             void writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data, const WriteCompleteHandler& handler);
 
             virtual void waitAsync(int milliseconds, const WaitHandler& handler);
-
-            virtual void setErrorHandler(const ErrorHandler& handler) {
-                m_errorHandler = handler;
-            }
 
             virtual void close();
 

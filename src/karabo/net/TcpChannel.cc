@@ -96,7 +96,7 @@ namespace karabo {
                 ErrorCode error; //in case of error
                 m_inboundMessagePrefix.resize(sizeofLength);
                 boost::asio::read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(), error);
-                if (error) throw KARABO_NETWORK_EXCEPTION(error.message());
+                if (error) throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
                 // prefix[0] - message length (body)
                 size_t byteSize = 0;
                 _KARABO_VECTOR_TO_SIZE(m_inboundMessagePrefix, byteSize); // reads size of message and assigns
@@ -111,7 +111,7 @@ namespace karabo {
             ErrorCode error;
             boost::asio::read(m_socket, buffer(data, size), transfer_all(), error);
             if (error) {
-                throw KARABO_NETWORK_EXCEPTION(error.message());
+                throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
             }
         }
 
@@ -197,30 +197,30 @@ namespace karabo {
         void TcpChannel::readAsyncSizeInBytes(const ReadSizeInBytesHandler& handler) {
             size_t sizeofLength = m_connectionPointer->getSizeofLength();
             if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
-            boost::shared_ptr<std::vector<char> > prefix(new std::vector<char>(sizeofLength));
-            boost::asio::async_read(m_socket, buffer(*prefix), transfer_all(),
+            m_inboundMessagePrefix.resize(sizeofLength);
+            boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
                                     m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::onSizeInBytesAvailable,
-                                                                  this, handler, prefix, boost::asio::placeholders::error)));
+                                                                  this, handler, boost::asio::placeholders::error)));
         }
 
 
-        void TcpChannel::onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, boost::shared_ptr<std::vector<char> > prefix, const ErrorCode& e) {
+        void TcpChannel::onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, const ErrorCode& e) {
             if (e) {
                 boost::shared_ptr<std::vector<char> > inData(new std::vector<char>);
-                bytesAvailableHandler(inData, e);
+                bytesAvailableHandler(e);
                 return;
             }
 
             size_t messageSize;
-            _KARABO_VECTOR_TO_SIZE(*prefix, messageSize);
+            _KARABO_VECTOR_TO_SIZE(m_inboundMessagePrefix, messageSize);
             handler(messageSize);
         }
 
 
         void TcpChannel::byteSizeAvailableHandler(const size_t byteSize) {
-            boost::shared_ptr<std::vector<char> > inboundData(new std::vector<char>(byteSize));
-            this->readAsyncRaw(&(*inboundData)[0], byteSize,
-                               m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, inboundData, _1)));
+            m_inboundData->resize(byteSize);
+            this->readAsyncRaw(&(*m_inboundData)[0], byteSize,
+                               m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1)));
         }
 
 
@@ -321,16 +321,15 @@ namespace karabo {
         }
 
 
-        void TcpChannel::bytesAvailableHandler(boost::shared_ptr<std::vector<char> > inboundData, const boost::system::error_code& e) {
+        void TcpChannel::bytesAvailableHandler(const boost::system::error_code& e) {
             if (!e) {
                 // Only parse header information
                 if (m_readHeaderFirst) {
                     m_readHeaderFirst = false;
-                    inboundData.swap(m_inboundHeader);
+                    m_inboundData.swap(m_inboundHeader);
                     this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
                     return;
-                } else
-                    inboundData.swap(m_inboundData);
+                }
             }
             HandlerType type = m_activeHandler;
             m_activeHandler = TcpChannel::NONE;
@@ -564,8 +563,7 @@ namespace karabo {
                 boost::asio::write(m_socket, buf, transfer_all(), error);
 
                 if (!error) return;
-                else if (m_errorHandler) EventLoop::getIOService().post(boost::bind(m_errorHandler, error));
-                else throw KARABO_NETWORK_EXCEPTION(error.message());
+                else throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
 
             } catch (...) {
                 KARABO_RETHROW
@@ -681,8 +679,7 @@ namespace karabo {
                 buf.push_back(buffer(body, bodySize));
                 boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
-                    if (m_errorHandler) EventLoop::getIOService().post(boost::bind(m_errorHandler, error));
-                    else throw KARABO_NETWORK_EXCEPTION(error.message());
+                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
                 }
             } catch (...) {
                 KARABO_RETHROW
@@ -1026,10 +1023,8 @@ namespace karabo {
                     } catch (...) {
                         KARABO_RETHROW
                     }
-                } else if (m_errorHandler) {
-                    m_errorHandler(e);
                 } else {
-                    throw KARABO_NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(e.value()) + " -- " + e.message());
                 }
             } catch (...) {
                 KARABO_RETHROW
@@ -1167,13 +1162,8 @@ namespace karabo {
                 }
 
             } else {
-                if (m_errorHandler)
-                    m_errorHandler(ec);
-                else {
-                    m_socket.close();
-                    throw KARABO_NETWORK_EXCEPTION("ASIO returns error# " + toString(ec.value()) + " -- " + ec.message());
-                }
                 m_socket.close();
+                throw KARABO_NETWORK_EXCEPTION("code #" + toString(ec.value()) + " -- " + ec.message());
             }
         }
 
