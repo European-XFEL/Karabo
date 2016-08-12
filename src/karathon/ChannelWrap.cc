@@ -344,12 +344,12 @@ namespace karathon {
     }
 
 
-    void ChannelWrap::setErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler) {
-        if (!PyCallable_Check(handler.ptr()))
-            throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
-        ScopedGILRelease nogil;
-        channel->setErrorHandler(boost::bind(proxyErrorHandler, handler, channel, _1));
-    }
+//    void ChannelWrap::setErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler) {
+//        if (!PyCallable_Check(handler.ptr()))
+//            throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
+//        ScopedGILRelease nogil;
+//        channel->setErrorHandler(boost::bind(proxyErrorHandler, handler, channel, _1));
+//    }
 
 
     void ChannelWrap::proxyErrorHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code) {
