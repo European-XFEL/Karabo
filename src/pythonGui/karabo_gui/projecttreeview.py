@@ -496,7 +496,7 @@ class ProjectTreeView(QTreeView):
         selectedIndexes = self.selectionModel().selectedIndexes()
         for index in selectedIndexes:
             device = index.data(ProjectModel.ITEM_OBJECT)
-            project = self.model().getProjectToObject(device)
+            project = self.model().getProjectForObject(device)
             project.instantiate(device)
 
     def onKillDevice(self):
@@ -512,7 +512,7 @@ class ProjectTreeView(QTreeView):
 
         for index in selectedIndexes:
             device = index.data(ProjectModel.ITEM_OBJECT)
-            project = self.model().getProjectToObject(device)
+            project = self.model().getProjectForObject(device)
             project.shutdown(device, nbSelected == 1)
 
     def onHandleMonitoring(self, checked):
