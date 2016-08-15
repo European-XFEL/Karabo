@@ -47,9 +47,7 @@ namespace karabo {
 
             void connectHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& e);
 
-            void onSubscribe(const karabo::net::Channel::Pointer& channel, const std::string& subscription);
-
-            void channelErrorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec);
+            void onSubscribe(const karabo::net::Channel::Pointer& channel, const std::string& subscription, const ErrorCode& e);
 
             void stop();
 
@@ -57,6 +55,8 @@ namespace karabo {
 
             void updateHeader(const karabo::util::Hash::Pointer& header,
                               const std::map<std::string, std::set<std::string> >& registeredSlots) const;
+
+            void channelErrorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec);
 
         private:
 
@@ -85,17 +85,6 @@ namespace karabo {
 
             virtual ~Consumer();
 
-            void connectionErrorHandler(const std::string& signalInstanceId,
-                                        const std::string& signalConnectionString,
-                                        const karabo::net::Connection::Pointer& connection,
-                                        const karabo::net::ErrorCode& ec);
-
-            void channelErrorHandler(const std::string& signalInstanceId,
-                                     const std::string& signalConnectionString,
-                                     const karabo::net::Connection::Pointer& connection,
-                                     const karabo::net::Channel::Pointer& channel,
-                                     const karabo::net::ErrorCode& ec);
-
             void connect(const std::string& signalInstanceId,
                          const std::string& slotInstanceId,
                          const std::string& signalConnectionString,
@@ -109,6 +98,17 @@ namespace karabo {
 
         private:
 
+
+            void connectionErrorHandler(const std::string& signalInstanceId,
+                                        const std::string& signalConnectionString,
+                                        const karabo::net::Connection::Pointer& connection,
+                                        const karabo::net::ErrorCode& ec);
+
+            void channelErrorHandler(const std::string& signalInstanceId,
+                                     const std::string& signalConnectionString,
+                                     const karabo::net::Connection::Pointer& connection,
+                                     const karabo::net::Channel::Pointer& channel,
+                                     const karabo::net::ErrorCode& ec);
 
             void storeTcpConnectionInfo(const std::string& signalConnectionString,
                                         const karabo::net::Connection::Pointer& connection,
@@ -173,13 +173,18 @@ namespace karabo {
             m_connection->startAsync(boost::bind(&PointToPoint::Producer::connectHandler, this, _1, _2));
             channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
             channel->setAsyncChannelPolicy(4, "LOSSLESS");
-            channel->readAsyncString(boost::bind(&PointToPoint::Producer::onSubscribe, this, channel, _1));
+            channel->readAsyncString(boost::bind(&PointToPoint::Producer::onSubscribe, this, channel, _1, _2));
             boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
             m_registeredChannels[channel] = std::set<std::string>();
         }
 
 
-        void PointToPoint::Producer::onSubscribe(const karabo::net::Channel::Pointer& channel, const std::string& subscription) {
+        void PointToPoint::Producer::onSubscribe(const karabo::net::Channel::Pointer& channel, const std::string& subscription, const ErrorCode& e) {
+            if (e) {
+                channelErrorHandler(channel, e);
+                return;
+            }
+            
             vector<string> v;
             string s = subscription;
             boost::split(v, s, boost::is_any_of(" "));
@@ -194,7 +199,7 @@ namespace karabo {
             else if (command == "UNSUBSCRIBE")
                 m_registeredChannels[channel].erase(slotInstanceId);
             // wait for next command
-            channel->readAsyncString(boost::bind(&PointToPoint::Producer::onSubscribe, this, channel, _1));
+            channel->readAsyncString(boost::bind(&PointToPoint::Producer::onSubscribe, this, channel, _1, _2));
         }
 
 
@@ -219,7 +224,11 @@ namespace karabo {
                 const std::set<std::string>& slotInstanceIds = it->second;
                 std::set<string>::iterator ii = slotInstanceIds.find(slotInstanceId);
                 if (ii == slotInstanceIds.end()) continue;
-                channel->writeAsync(*header, *body, prio);
+                try {
+                    channel->writeAsync(*header, *body, prio);
+                } catch (const karabo::util::Exception& e) {
+                    KARABO_LOG_FRAMEWORK_WARN << e;
+                }
                 return true;
             }
             return false;
@@ -251,7 +260,11 @@ namespace karabo {
                 if (slotsToUse.empty()) continue;
 
                 updateHeader(header, slotsToUse);
-                channel->writeAsync(*header, *message, prio);
+                try {
+                    channel->writeAsync(*header, *message, prio);
+                } catch (const karabo::util::Exception& e) {
+                    KARABO_LOG_FRAMEWORK_WARN << e;
+                }
             }
 
             updateHeader(header, registeredSlots);
