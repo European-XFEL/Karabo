@@ -8,8 +8,9 @@ import os.path as op
 
 from PyQt4.QtGui import QBoxLayout
 
-import karabo_gui.scenemodel.tests as sm
-from karabo_gui.scenemodel.api import BoxLayoutModel, LabelModel, LineModel
+from karabo.common.scenemodel.api import (
+    BoxLayoutModel, LabelModel, LineModel)
+import karabo.common.scenemodel.tests as sm
 from karabo_gui.sceneview.layout.api import BoxLayout
 from karabo_gui.sceneview.shapes import LineShape
 from karabo_gui.sceneview.widget.api import LabelWidget
