@@ -19,6 +19,7 @@ from karabo_gui.configuration import Configuration
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.network import network
 from karabo_gui.scene import Scene
+from karabo_gui.scenemodel.api import SceneModel
 from karabo_gui.topology import getClass, getDevice, Manager
 
 from PyQt4.QtCore import pyqtSignal, QObject
@@ -464,7 +465,7 @@ class GuiProject(Project, QObject):
             index = self.devices.index(object)
             self.devices.pop(index)
             return index
-        elif isinstance(object, Scene):
+        elif isinstance(object, SceneModel):
             index = self.scenes.index(object)
             self.scenes.pop(index)
             return index
