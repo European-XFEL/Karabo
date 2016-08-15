@@ -15,11 +15,11 @@ from karabo.middlelayer_api.project import (
     BaseDevice, BaseDeviceGroup, BaseMacro, Monitor, Project,
     ProjectConfiguration)
 from karabo.middlelayer import AccessMode, Hash, XMLParser, XMLWriter
+from karabo.common.scenemodel.api import SceneModel
 from karabo_gui.configuration import Configuration
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.network import network
 from karabo_gui.scene import Scene
-from karabo_gui.scenemodel.api import SceneModel
 from karabo_gui.topology import getClass, getDevice, Manager
 
 from PyQt4.QtCore import pyqtSignal, QObject
