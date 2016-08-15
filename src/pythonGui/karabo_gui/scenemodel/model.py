@@ -11,6 +11,8 @@ from .registry import register_scene_reader, register_scene_writer
 class SceneModel(HasStrictTraits):
     """ An object representing the data for a Karabo GUI scene.
     """
+    # The title of the scene
+    title = String()
     # Extra attributes from the SVG file that we want to preserve.
     extra_attributes = Dict
     # The width of the scene in pixels

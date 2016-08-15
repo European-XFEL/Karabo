@@ -60,7 +60,7 @@ namespace karabo {
 
 
             BOOST_FOREACH(string url, urls) {
-                const tuple<string, string, string, string, string> urlParts = karabo::net::parseUrl(url);
+                const boost::tuple<string, string, string, string, string> urlParts = karabo::net::parseUrl(url);
                 m_brokerAddresses.push_back(make_tuple(urlParts.get<0>(), urlParts.get<1>(), urlParts.get<2>()));
             }
         }

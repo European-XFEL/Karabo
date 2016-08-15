@@ -54,6 +54,8 @@ CONF ?= Debug
 
 # Custom environment variables
 KARABO = $(CND_BASEDIR)/../karabo/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
+NUMPY_HEADER_DIR = `../karabo/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))/extern/bin/python -c "import numpy; print(numpy.get_include())"`
+export NUMPY_HEADER_DIR
 # ... needed for C++ tests
 PYTHONPATH = $(KARABO)/lib
 export PYTHONPATH

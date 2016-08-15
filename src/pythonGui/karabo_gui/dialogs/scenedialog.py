@@ -41,7 +41,7 @@ class SceneDialog(QDialog):
         vLayout.addWidget(self.buttonBox)
 
         if scene is not None:
-            self.leSceneName.setText(scene.filename)
+            self.leSceneName.setText(scene.title)
 
     def sceneName(self):
         """

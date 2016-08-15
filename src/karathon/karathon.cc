@@ -125,9 +125,9 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilStateElement();
     exportPyUtilAlarmConditionElement();
     exportPyUtilNDArray<bool>();
-    exportPyUtilNDArray<char>();
+    exportPyUtilNDArray<signed char>();
     exportPyUtilNDArray<unsigned char>();
-    exportPyUtilNDArray<short>();
+    exportPyUtilNDArray<signed short>();
     exportPyUtilNDArray<unsigned short>();
     exportPyUtilNDArray<int>();
     exportPyUtilNDArray<unsigned int>();

@@ -36,7 +36,6 @@ namespace karabo {
         template<typename KeyType, typename AttributesType = bool>
         class Element {
 
-
             // Grant friendship to container
             template<typename T, typename U>
             friend class OrderedMap;
@@ -247,7 +246,7 @@ namespace karabo {
         template<class ValueType>
         void Element<KeyType, AttributeType>::setValue(boost::true_type /*is_shared_ptr*/, const ValueType& value) {
             if (is_base_of < Hash, typename ValueType::element_type>::value) {
-                m_value = reinterpret_cast<const boost::shared_ptr<Hash>&> (value);
+                m_value = alias_cast<const boost::shared_ptr<Hash> > (value);
             } else {
                 m_value = value;
             }
@@ -258,7 +257,7 @@ namespace karabo {
         void Element<KeyType, AttributeType>::setValue(boost::false_type /*is_shared_ptr*/, const ValueType& value) {
             if (is_base_of<Hash, ValueType>::value) {
                 const boost::shared_ptr<ValueType> p(new ValueType(value));
-                m_value = reinterpret_cast<const boost::shared_ptr<Hash>&> (p);
+                m_value = alias_cast<const boost::shared_ptr<Hash> >(p);
             } else {
                 m_value = value;
             }
@@ -442,7 +441,7 @@ namespace karabo {
         template<typename KeyType, typename AttributeType>
         inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, const boost::any& value) {
             m_attributes.set(key, value);
-        }       
+        }
 
         template<typename KeyType, typename AttributeType>
         template<class T>

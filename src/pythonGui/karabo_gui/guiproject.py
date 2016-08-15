@@ -183,9 +183,9 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         if self.instance is not None:
             return self.instance
 
-        self.instance = DeviceGroup(self.id, self.serverId, self.classId, self.ifexists, "deviceGroup")
+        self.instance = DeviceGroup(self.id, self.serverId, self.classId,
+                                    self.ifexists, "deviceGroup")
         self.instance.devices = self.devices
-        self.instance.project = self.project
 
         return self.instance
 
@@ -395,9 +395,9 @@ class GuiProject(Project, QObject):
             deviceGroup.addDevice(device)
         return deviceGroup
 
-    def addScene(self, scene):
-        self.scenes.append(scene)
-        self.signalSceneAdded.emit(scene)
+    def addScene(self, sceneModel):
+        super(GuiProject, self).addScene(sceneModel)
+        self.signalSceneAdded.emit(sceneModel)
         self.setModified(True)
 
     def insertScene(self, index, scene):
@@ -406,37 +406,6 @@ class GuiProject(Project, QObject):
         """
         super(GuiProject, self).insertScene(index, scene)
         self.signalSceneInserted.emit(index, scene)
-
-    def replaceScene(self, scene):
-        """
-        The \scene is copied into a \newScene. This newScene object replaces the
-        old one.
-        """
-        currentlyModified = self.isModified
-        # Create a new Scene instance from the data in the project.
-        newScene = self.rereadScene(scene.filename)
-
-        # Remove old scene from project
-        index = self.remove(scene)
-        # Insert \newScene
-        self.insertScene(index, newScene)
-        self.setModified(currentlyModified)
-
-    def rereadScene(self, filename):
-        """ Create a new Scene instance by reading the scene XML/SVG data from
-        the project file and constructing a new object.
-        """
-        url = self.getSceneURL(filename)
-        try:
-            sceneXmlData = self.getURL(url)
-        except KeyError:
-            sceneXmlData = b''
-
-        scene = Scene(self, filename)
-        if sceneXmlData:
-            scene.fromXml(sceneXmlData)
-
-        return scene
 
     def addConfiguration(self, deviceId, configuration):
         super(GuiProject, self).addConfiguration(deviceId, configuration)
