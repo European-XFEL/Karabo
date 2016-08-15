@@ -2,6 +2,27 @@
 free to use everything defined here, try to avoid doing deep imports
 into the Karabo package, as the internals may change.
 """
+from .common.alarm_conditions import AlarmCondition
+from .common.scenemodel.api import (
+    BaseIconsModel, BaseLayoutData, BaseLayoutModel, BaseSceneObjectData,
+    BaseShapeObjectData, BaseWidgetObjectData, BitfieldModel, BoxLayoutModel,
+    CheckBoxModel, ChoiceElementModel, ComboBoxModel, DigitIconsModel,
+    DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
+    DisplayIconsetModel, DisplayImageModel, DisplayImageElementModel,
+    DisplayLabelModel, DisplayPlotModel, DisplayStateColorModel,
+    DoubleLineEditModel, EditableListModel, EditableListElementModel,
+    EditableSpinBoxModel, EvaluatorModel, FileInModel, FileOutModel,
+    FixedLayoutChildData, FixedLayoutModel, FloatSpinBoxModel,
+    GridLayoutChildData, GridLayoutModel, HexadecimalModel, IconData,
+    IntLineEditModel, KnobModel, LabelModel, LineEditModel, LineModel,
+    LinePlotModel, MonitorModel, NS_KARABO, NS_SVG, PathModel,
+    PlotCurveModel, read_scene, RectangleModel, register_scene_reader,
+    register_scene_writer, SceneLinkModel, SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH,
+    SceneModel, SceneReaderException, SceneWriterException,
+    SelectionIconsModel, SingleBitModel, SliderModel,
+    TableElementModel, TextIconsModel, UnknownXMLDataModel, VacuumWidgetModel,
+    WorkflowItemModel, write_scene, write_single_model, XYPlotModel)
+from .common.states import State, StateSignifier
 
 from .middlelayer_api.device_client import (
     connectDevice, DeviceClientBase, disconnectDevice, Proxy, ProxySlot,
@@ -43,6 +64,3 @@ from .middlelayer_api.schema import (
 )
 from .middlelayer_api.signalslot import Signal, SignalSlotable, slot, coslot
 from .middlelayer_api.timestamp import Timestamp
-
-from .common.alarm_conditions import AlarmCondition
-from .common.states import State, StateSignifier

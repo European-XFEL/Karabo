@@ -5,7 +5,7 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QColor, QColorDialog, QDialog, QFont, QFontDialog,
                          QIcon, QPixmap)
 
-from karabo_gui.scenemodel.simple_widgets import LabelModel
+from karabo.middlelayer import LabelModel
 
 
 class TextDialog(QDialog):

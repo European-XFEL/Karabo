@@ -2,9 +2,9 @@ from PyQt4.QtCore import QLine, QPoint, QRect
 from PyQt4.QtGui import QDialog, QPen
 from traits.api import Instance
 
+from karabo.middlelayer import (LineModel, RectangleModel, SceneLinkModel)
 from karabo_gui.dialogs.dialogs import SceneLinkDialog
 from karabo_gui.dialogs.textdialog import TextDialog
-from karabo_gui.scenemodel.api import LineModel, RectangleModel, SceneLinkModel
 from karabo_gui.sceneview.bases import BaseSceneTool
 
 

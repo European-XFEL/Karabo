@@ -9,9 +9,9 @@ from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QApplication, QBoxLayout, QDialog, QFont
 from traits.api import ABCHasStrictTraits
 
+from karabo.middlelayer import BoxLayoutModel, LabelModel
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
-from karabo_gui.scenemodel.api import BoxLayoutModel, LabelModel
 from karabo_gui.schema import ChoiceOfNodes
 from karabo_gui.topology import getDeviceBox, Manager
 from karabo_gui.widget import DisplayWidget, EditableWidget
