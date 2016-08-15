@@ -8,7 +8,7 @@ from functools import partial
 from PyQt4.QtGui import QMenu
 from traits.api import Any, ABCHasStrictTraits
 
-from karabo.middlelayer import BaseWidgetObjectData
+from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabo_gui.sceneview.widget.api import BaseWidgetContainer
 from karabo_gui.widget import DisplayWidget, EditableWidget
 from .const import WIDGET_FACTORIES

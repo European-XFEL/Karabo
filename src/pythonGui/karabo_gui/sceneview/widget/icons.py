@@ -1,4 +1,4 @@
-from karabo.middlelayer import (
+from karabo.common.scenemodel.api import (
     IconData, DigitIconsModel, SelectionIconsModel, TextIconsModel)
 from karabo_gui.displaywidgets.icons import (
     DigitIcons, TextIcons, SelectionIcons)
