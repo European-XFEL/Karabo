@@ -6,9 +6,9 @@
 
 import os.path as op
 
-import karabo_gui.scenemodel.tests as sm
-from karabo_gui.scenemodel.api import (SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT,
-                                       SceneModel)
+from karabo.middlelayer  import (
+    read_scene, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT, SceneModel)
+import karabo.common.scenemodel.tests as sm
 from karabo_gui.sceneview.api import SceneView
 from karabo_gui.sceneview.layout.api import GroupLayout
 from karabo_gui.testing import GuiTestCase
@@ -29,8 +29,8 @@ class TestSceneView(GuiTestCase):
         self.assertIsNone(self.view.scene_model)
         self.assertIsInstance(self.view.layout, GroupLayout)
 
-        self.view.load(op.join(dir, file_name))
-        self.assertEqual(self.view.title, op.basename(file_name))
+        scene_model = read_scene(op.join(dir, file_name))
+        self.view.update_model(scene_model)
         self.assertIsInstance(self.view.scene_model, SceneModel)
         self.assertEqual(max(self.view.scene_model.width, SCENE_MIN_WIDTH),
                          self.view.width())

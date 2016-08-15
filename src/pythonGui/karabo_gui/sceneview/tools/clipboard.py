@@ -4,8 +4,8 @@ from io import StringIO
 from PyQt4.QtCore import QByteArray, QMimeData
 from PyQt4.QtGui import QApplication, QDialog, QMessageBox
 
-from karabo_gui.scenemodel.api import (BaseLayoutModel, BaseWidgetObjectData,
-                                       SceneModel, read_scene, write_scene)
+from karabo.middlelayer import (
+    BaseLayoutModel, BaseWidgetObjectData, SceneModel, read_scene, write_scene)
 from karabo_gui.sceneview.bases import BaseSceneAction
 from karabo_gui.dialogs.dialogs import ReplaceDialog
 
