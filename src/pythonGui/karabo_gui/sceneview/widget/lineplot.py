@@ -1,7 +1,7 @@
 import base64
 import pickle
 
-from karabo.middlelayer import PlotCurveModel
+from karabo.common.scenemodel.api import PlotCurveModel
 from karabo_gui.displaywidgets.displaytrendline import DisplayTrendline, Curve
 from karabo_gui.displaywidgets.xyvectors import XYVector
 from .base import BaseWidgetContainer

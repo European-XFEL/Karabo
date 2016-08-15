@@ -10,7 +10,7 @@ from PyQt4.QtCore import QLine, QRect, QSize, Qt
 from PyQt4.QtGui import QBrush, QColor, QDialog, QPainterPath, QPen
 from traits.api import (ABCHasStrictTraits, Bool, Instance, Property,
                         cached_property)
-from karabo.middlelayer import BaseShapeObjectData
+from karabo.common.scenemodel.api import BaseShapeObjectData
 from karabo_gui.dialogs.dialogs import PenDialog
 from karabo_gui.pathparser import Parser
 from .const import (QT_PEN_CAP_STYLE_FROM_STR, QT_PEN_CAP_STYLE_TO_STR,

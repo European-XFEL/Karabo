@@ -96,7 +96,7 @@ if __name__ == '__main__':
         # Add a subset of the Karabo package for the Windows build
         metadata['package_dir'] = {'karabo': "../../src/pythonKarabo/karabo"}
         metadata['packages'].extend(
-            ["karabo", "karabo.middlelayer_api",
+            ["karabo", "karabo.common.scenemodel", "karabo.middlelayer_api",
              "karabo.middlelayer_api._project", "karabo.interactive",
              "karabo.packaging", "karabo.testing"]
         )

@@ -1,4 +1,4 @@
-from karabo.middlelayer import (
+from karabo.common.scenemodel.api import (
     BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
     DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
     DisplayIconsetModel, DisplayImageModel, DisplayImageElementModel,

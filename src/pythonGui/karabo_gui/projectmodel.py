@@ -14,7 +14,7 @@ a treeview.
 __all__ = ["ProjectModel"]
 
 from karabo.middlelayer_api.project import Monitor, Project, ProjectAccess
-from karabo.middlelayer import (Hash, read_scene, SceneModel, write_scene)
+from karabo.middlelayer import Hash, read_scene, SceneModel, write_scene
 from karabo_gui.configuration import Configuration
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons

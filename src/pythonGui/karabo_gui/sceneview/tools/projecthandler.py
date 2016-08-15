@@ -6,7 +6,7 @@
 from PyQt4.QtGui import QFont
 from traits.api import ABCHasStrictTraits, WeakRef
 
-from karabo.middlelayer import WorkflowItemModel
+from karabo.common.scenemodel.api import WorkflowItemModel
 
 
 class ProjectSceneHandler(ABCHasStrictTraits):
