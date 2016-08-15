@@ -1158,11 +1158,11 @@ namespace karabo {
                 }
 
                 if (m_quit) {
-                    m_socket.close();
+                    this->close();
                 }
 
             } else {
-                m_socket.close();
+                this->close();
                 throw KARABO_NETWORK_EXCEPTION("code #" + toString(ec.value()) + " -- " + ec.message());
             }
         }
