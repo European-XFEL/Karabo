@@ -4,32 +4,28 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
 """
 This module contains a class which represents the treewidget of the project and
 configuration panel containing the parameters of a device.
 """
-
-__all__ = ["ProjectTreeView"]
-
-import karabo_gui.globals as globals
-
-from karabo_gui.dialogs.projectdialog import (
-    ProjectDialog, ProjectSaveDialog, ProjectLoadDialog)
-from karabo_gui.guiproject import (
-    Category, Device, DeviceGroup, GuiProject, Macro)
-from karabo_gui.projectmodel import ProjectModel
-from karabo_gui.network import Network
-from karabo_gui.scenemodel.api import SceneModel
-from karabo_gui.topology import Manager
-
-from karabo.middlelayer_api.project import (Monitor, Project, ProjectAccess,
-                                            ProjectConfiguration)
+import os.path
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
                          QMenu, QMessageBox, QTreeView)
-import os.path
+
+from karabo.middlelayer import SceneModel
+from karabo.middlelayer_api.project import (Monitor, Project, ProjectAccess,
+                                            ProjectConfiguration)
+
+import karabo_gui.globals as globals
+from karabo_gui.dialogs.projectdialog import (
+    ProjectSaveDialog, ProjectLoadDialog)
+from karabo_gui.guiproject import (
+    Category, Device, DeviceGroup, GuiProject, Macro)
+from karabo_gui.projectmodel import ProjectModel
+from karabo_gui.network import Network
+from karabo_gui.topology import Manager
 
 
 class ProjectTreeView(QTreeView):

@@ -1,6 +1,6 @@
 from PyQt4.QtCore import QRect
 
-from karabo_gui.scenemodel.api import (
+from karabo.middlelayer import (
     BaseLayoutModel, BoxLayoutModel, FixedLayoutModel, GridLayoutModel,
     LabelModel, LineModel, PathModel, RectangleModel, SceneLinkModel,
     UnknownXMLDataModel, BitfieldModel, DisplayAlignedImageModel,
