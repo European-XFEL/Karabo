@@ -7,7 +7,7 @@ from PyQt4.QtCore import QRect
 
 import unittest
 
-from karabo_gui.scenemodel.api import LineModel, RectangleModel
+from karabo.common.scenemodel.api import LineModel, RectangleModel
 from karabo_gui.sceneview.selection_model import SceneSelectionModel
 from karabo_gui.sceneview.shapes import LineShape, RectangleShape
 

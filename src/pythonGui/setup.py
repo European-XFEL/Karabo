@@ -84,8 +84,6 @@ if __name__ == '__main__':
             "karabo_gui.displaywidgets": ["*.ui", "*.svg"],
             "karabo_gui.icons": ["*.*", "vacuum/*.*",
                                  "vacuum/bigger/*.*"],
-            "karabo_gui.scenemodel.tests": ["data/*.svg",
-                                            "data/inkscape/*.svg"],
             "karabo_gui.tests": ["*.xml", "project/*.xml",
                                  "project/devices/*.xml",
                                  "project/resources/icon/*.png",
@@ -98,9 +96,10 @@ if __name__ == '__main__':
         # Add a subset of the Karabo package for the Windows build
         metadata['package_dir'] = {'karabo': "../../src/pythonKarabo/karabo"}
         metadata['packages'].extend(
-            ["karabo", "karabo.middlelayer_api",
-             "karabo.middlelayer_api._project", "karabo.interactive",
-             "karabo.packaging", "karabo.testing"]
+            ["karabo", "karabo.common", "karabo.common.scenemodel",
+             "karabo.interactive", "karabo.middlelayer_api",
+             "karabo.middlelayer_api._project", "karabo.packaging",
+             "karabo.testing"]
         )
         # Write out useful data
         with open('VERSION', 'w') as fp:

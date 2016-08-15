@@ -1,5 +1,4 @@
-import karabo_gui.gui_registry_loader  # noqa
-from karabo_gui.scenemodel.api import (
+from karabo.common.scenemodel.api import (
     BitfieldModel, DisplayAlignedImageModel, DisplayCommandModel,
     DisplayIconsetModel, DisplayImageModel, DisplayImageElementModel,
     DisplayLabelModel, DisplayPlotModel, DoubleLineEditModel,
@@ -8,6 +7,7 @@ from karabo_gui.scenemodel.api import (
     CheckBoxModel, ChoiceElementModel, ComboBoxModel, DirectoryModel,
     FileInModel, FileOutModel, LineEditModel
 )
+import karabo_gui.gui_registry_loader  # noqa
 from karabo_gui.widget import Widget
 from .base import BaseWidgetContainer
 
