@@ -6,8 +6,9 @@
 
 import os.path as op
 
-from karabo.middlelayer  import (
-    read_scene, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT, SceneModel)
+from karabo.middlelayer  import read_scene, SceneModel
+from karabo.common.scenemodel.api import (
+    SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 import karabo.common.scenemodel.tests as sm
 from karabo_gui.sceneview.api import SceneView
 from karabo_gui.sceneview.layout.api import GroupLayout

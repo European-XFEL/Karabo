@@ -8,7 +8,7 @@ from PyQt4.QtGui import (QColor, QDialog, QFont, QFontMetrics, QFrame, QLabel,
                          QPainter, QPen, QPushButton, QWidget)
 from PyQt4.QtSvg import QSvgRenderer
 
-from karabo.middlelayer import write_single_model
+from karabo.common.scenemodel.api import write_single_model
 from karabo_gui.dialogs.dialogs import SceneLinkDialog
 from karabo_gui.dialogs.textdialog import TextDialog
 from karabo_gui.sceneview.utils import calc_rect_from_text
