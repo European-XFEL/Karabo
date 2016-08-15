@@ -231,7 +231,7 @@ class DeviceServer(SignalSlotable):
 
     def parseOld(self, hash):
          # Input 'config' parameter comes from GUI or DeviceClient
-        classid = iter(hash).next().getKey()
+        classid = next(iter(hash))
         self.log.INFO("Trying to start {}...".format(classid))
         self.log.DEBUG("with the following configuration:\n{}".format(hash))        
         configuration = copy.copy(hash[classid])
