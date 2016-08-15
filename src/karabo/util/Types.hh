@@ -133,7 +133,7 @@ namespace karabo {
                 NDARRAY_BOOL, // NDArray<bool>
                 NDARRAY_INT8, // NDArray<signed char>
                 NDARRAY_UINT8, // NDArray<unsigned char>
-                NDARRAY_INT16, // NDArray<short>
+                NDARRAY_INT16, // NDArray<signed short>
                 NDARRAY_UINT16, // NDArray<unsigned short>
                 NDARRAY_INT32, // NDArray<int>
                 NDARRAY_UINT32, // NDArray<unsigned int>

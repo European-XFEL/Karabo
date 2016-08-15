@@ -124,11 +124,9 @@ class Project(object):
 
     def addDevice(self, device):
         self.devices.append(device)
-        device.project = self
 
     def insertDevice(self, index, device):
         self.devices.insert(index, device)
-        device.project = self
 
     def getDevice(self, devId):
         """
@@ -153,11 +151,9 @@ class Project(object):
 
     def addDeviceGroup(self, deviceGroup):
         self.devices.append(deviceGroup)
-        deviceGroup.project = self
 
     def insertDeviceGroup(self, index, deviceGroup):
         self.devices.insert(index, deviceGroup)
-        deviceGroup.project = self
 
     def addMacro(self, macro):
         self.macros[macro.name] = macro
@@ -175,7 +171,6 @@ class Project(object):
 
     def addMonitor(self, monitor):
         self.monitors.append(monitor)
-        monitor.project = self
 
     def getMonitor(self, name):
         """
@@ -188,7 +183,6 @@ class Project(object):
 
     def insertMonitor(self, index, monitor):
         self.monitors.insert(index, monitor)
-        monitor.project = self
 
     def addResource(self, category, data):
         """add the data into the resources of given category
@@ -216,33 +210,26 @@ class Project(object):
 
     def insertScene(self, index, scene):
         self.scenes.insert(index, scene)
-        scene.project = self
 
-    def getScene(self, filename):
-        """ The first occurrence of a scene with the given \filename is
+    def getScene(self, title):
+        """ The first occurrence of a scene with the given \title is
         returned.
         """
         for scene in self.scenes:
-            if filename == scene.filename:
+            if title == scene.title:
                 return scene
-
-    def getSceneURL(self, filename):
-        """ Return a URL which can be passed to getURL to read the scene data
-        from the project.
-        """
-        return "project:{}/{}".format(self.SCENES_KEY, filename)
 
     def getSceneNames(self):
         """ All the scene names for this project.
         """
-        return [scene.filename for scene in self.scenes]
+        return [scene.title for scene in self.scenes]
 
-    def removeScene(self, filename):
-        """ The first occurrence of a scene with the given \filename is
+    def removeScene(self, title):
+        """ The first occurrence of a scene with the given \title is
         removed.
         """
         for scene in self.scenes:
-            if filename == scene.filename:
+            if title == scene.title:
                 self.scenes.remove(scene)
                 return
 
@@ -327,9 +314,6 @@ class Project(object):
 class ProjectConfiguration(object):
     def __init__(self, project, name, hash=None):
         super(ProjectConfiguration, self).__init__()
-        
-        # Reference to the project this configuration belongs to
-        self.project = project
 
         if name.endswith(".xml"):
             self.filename = name
@@ -360,8 +344,6 @@ class BaseDevice(object):
 
         self.filename = "{}.xml".format(deviceId)
         self.ifexists = ifexists
-        
-        self.project = None
 
 
 class BaseDeviceGroup(BaseDevice):
@@ -373,18 +355,15 @@ class BaseDeviceGroup(BaseDevice):
         BaseDevice.__init__(self, serverId, classId, id, ifexists)
 
         self.devices = []
-        self.project = None
 
     def addDevice(self, device):
         self.devices.append(device)
-        device.project = self.project
 
 
 class BaseScene(object):
     """ A simple scene object which supports round-trips between project files.
     """
     def __init__(self, project, filename):
-        self.project = project  # FIXME: This should really be a weakref
         self.filename = filename
 
     def fromXml(self, xmlString):
@@ -402,10 +381,9 @@ class BaseMacro(object):
     """ A simple macro object which supports file round-trips.
     """
     def __init__(self, project, name):
-        self.project = project
         self.name = name
         self.editor = None
-        self.instanceId = "Macro-{}-{}".format(self.project.name, self.name)
+        self.instanceId = "Macro-{}-{}".format(project.name, self.name)
 
 
 class Monitor(object):
@@ -415,10 +393,7 @@ class Monitor(object):
 
     def __init__(self, name, config=None):
         super(Monitor, self).__init__()
-        
-        # Reference to the project this monitor belongs to
-        self.project = None
-        
+
         self.name = name
         
         # This hash contains all necessary data like:
