@@ -120,12 +120,13 @@
       </toolsSet>
       <compileType>
         <ccTool>
+          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
+            <pElem>${NUMPY_HEADER_DIR}</pElem>
             <pElem>${KARABO}/extern/include/python3.4</pElem>
-            <pElem>${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
           <commandLine>-Wno-unused-local-typedefs</commandLine>
@@ -579,12 +580,13 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
+          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python3.4</pElem>
-            <pElem>${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include</pElem>
+            <pElem>${NUMPY_HEADER_DIR}</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
           <commandLine>-Wno-unused-local-typedefs</commandLine>

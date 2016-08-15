@@ -76,6 +76,6 @@ boost::tuple<std::string, std::string, std::string, std::string, std::string> ka
         string port = string(what[3].first, what[3].second);
         string path = string(what[4].first, what[4].second);
         string query = string(what[5].first, what[5].second);
-        return make_tuple(protocol, domain, port, path, query);
+        return boost::make_tuple(protocol, domain, port, path, query);
     }
 }

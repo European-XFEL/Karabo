@@ -142,7 +142,7 @@ namespace karabo {
                 connect(karabo::core::DATALOGMANAGER_ID, "signalLoggerMap", "", "slotLoggerMap");
                 requestNoWait(karabo::core::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
 
-                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
+                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1, _2));
                 // Use one thread currently (you may start this multiple time for having more threads doing the work)
                 //!!!!!!! boost::thread(boost::bind(&boost::asio::io_service::run, m_ioService));
                 
@@ -166,7 +166,13 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onConnect(karabo::net::Channel::Pointer channel) {
+        void GuiServerDevice::onConnect(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& e) {
+            if (e) {
+                EventLoop::getIOService().post(boost::bind(&GuiServerDevice::onError, this, channel, e));
+                return;
+            }
+            
+
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
 
@@ -176,7 +182,7 @@ namespace karabo {
                 // priority 4 should be LOSSLESS
                 channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
 
-                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1));
+                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1, _2));
 
                 Hash brokerInfo("type", "brokerInformation");
                 brokerInfo.set("host", this->getConnection()->getBrokerHostname());
@@ -188,12 +194,12 @@ namespace karabo {
                 registerConnect(channel);
 
                 // Re-register acceptor socket (allows handling multiple clients)
-                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
+                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1, _2));
 
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onConnect(): " << e.userFriendlyMsg();
-                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
+                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1, _2));
             }
         }
 
@@ -204,7 +210,12 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onRead(karabo::net::Channel::Pointer channel, karabo::util::Hash& info) {
+        void GuiServerDevice::onRead(karabo::net::Channel::Pointer channel, karabo::util::Hash& info, const karabo::net::ErrorCode& e) {
+            if (e) {
+                EventLoop::getIOService().post(boost::bind(&GuiServerDevice::onError, this, channel, e));
+                return;
+            }
+            
             try {
                 // GUI communication scenarios
                 if (info.has("type")) {
@@ -251,10 +262,10 @@ namespace karabo {
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << "Ignoring request";
                 }
-                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1));
+                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1, _2));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRead(): " << e.userFriendlyMsg();
-                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1));
+                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1, _2));
             }
         }
 

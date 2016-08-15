@@ -87,9 +87,9 @@ namespace karabo {
 
             void onGuiError(const karabo::util::Hash& hash);
 
-            void onConnect(karabo::net::Channel::Pointer channel);
+            void onConnect(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorMessage);
 
-            void onRead(karabo::net::Channel::Pointer channel, karabo::util::Hash& info);
+            void onRead(karabo::net::Channel::Pointer channel, karabo::util::Hash& info, const karabo::net::ErrorCode& errorMessage);
 
             void onLogin(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
