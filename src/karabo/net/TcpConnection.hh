@@ -36,12 +36,8 @@ namespace karabo {
         class TcpChannel;
         typedef boost::system::error_code ErrorCode;
         typedef boost::shared_ptr<Channel> ChannelPointer;
-        typedef boost::shared_ptr<boost::asio::io_service> BoostIOServicePointer;
-        typedef boost::shared_ptr<boost::asio::ip::tcp::socket> BoostTcpSocket;
-        typedef boost::shared_ptr<boost::asio::ip::tcp::resolver> BoostTcpResolver;
-        typedef boost::shared_ptr<boost::asio::ip::tcp::acceptor> BoostTcpAcceptor;
 
-/**
+        /**
          * The Connection class.
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
@@ -104,8 +100,8 @@ namespace karabo {
 
         private:
 
-            BoostTcpResolver m_resolver;
-            BoostTcpAcceptor m_acceptor;
+            boost::asio::ip::tcp::resolver m_resolver;
+            boost::asio::ip::tcp::acceptor m_acceptor;
             std::string m_connectionType;
             std::string m_hostname;
             unsigned int m_port;
