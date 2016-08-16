@@ -143,8 +143,6 @@ namespace karabo {
                 requestNoWait(karabo::core::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
 
                 m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1, _2));
-                // Use one thread currently (you may start this multiple time for having more threads doing the work)
-                //!!!!!!! boost::thread(boost::bind(&boost::asio::io_service::run, m_ioService));
                 
                 // Start the logging thread
                 m_loggerConnection->start();

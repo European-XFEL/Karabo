@@ -87,16 +87,17 @@ namespace karabo {
             while (tryAgain > 0) {
                 try {
                     //m_ownPort = Statics::generateServerPort();
-                    karabo::util::Hash h("type", "server", "port", 0, "compressionUsageThreshold", m_compression * 10E06);
+                    karabo::util::Hash h("type", "server", "port", 0, "compressionUsageThreshold", m_compression * 1E6);
                     m_dataConnection = karabo::net::Connection::create("Tcp", h);
                     m_dataConnection->setErrorHandler(boost::bind(&karabo::xms::OutputChannel::onTcpConnectionError, this, m_dataConnection, _1));
                     m_ownPort = m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1));
-                } catch (...) {
+                } catch (const std::exception& ex) {
                     if (tryAgain > 0) {
                         tryAgain--;
                         continue;
                     } else {
-                        throw KARABO_NETWORK_EXCEPTION("Could not start TcpServer for output channel");
+                        throw KARABO_NETWORK_EXCEPTION(std::string("Could not start TcpServer for output channel (\"")
+                                + toString(m_channelId) + "\", port = " + toString(m_ownPort) + ") : " + ex.what());
                     }
                 }
                 tryAgain = 0;
