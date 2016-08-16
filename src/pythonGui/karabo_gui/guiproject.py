@@ -15,7 +15,7 @@ from karabo.middlelayer_api.project import (
     BaseDevice, BaseDeviceGroup, BaseMacro, Monitor, Project,
     ProjectConfiguration)
 from karabo.middlelayer import (
-    AccessMode, Hash, SceneModel, XMLParser, XMLWriter)
+    AccessMode, Hash, read_scene, SceneModel, XMLParser, XMLWriter)
 from karabo_gui.configuration import Configuration
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.network import network
@@ -493,7 +493,7 @@ class GuiProject(Project, QObject):
             'Macro': Macro,
             'Monitor': Monitor,
             'ProjectConfiguration': ProjectConfiguration,
-            'Scene': SceneModel,
+            'Scene': read_scene,
         }
         if factories is not None:
             objFactories.update(factories)
