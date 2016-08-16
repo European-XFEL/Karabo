@@ -318,7 +318,7 @@ def waitUntilNew(prop, **kwargs):
     :func:`waitUntil`. If you want to get all updates of a property, use
     :class:`Queue`."""
     if isinstance(prop, Proxy):
-        return _WaitUntilNew_old(prop, **kwargs)
+        return _WaitUntilNew_old(prop)
     else:
         return _waitUntilNew_new(prop, **kwargs)
 
