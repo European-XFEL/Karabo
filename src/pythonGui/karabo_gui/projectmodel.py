@@ -515,7 +515,7 @@ class ProjectModel(QStandardItemModel):
         """
         This function inserts the given \scene at the given \row of the model.
         """
-        item = self.createSceneItem(scene)
+        item = self.createSceneItem(sceneModel)
         
         projectItem = self._getProjectItemForObject(sceneModel)
         # Find folder for scenes
@@ -1607,7 +1607,7 @@ class ProjectModel(QStandardItemModel):
                                          options=QFileDialog.DontUseNativeDialog)
         if not fn:
             return
-        # Create scene view
+        # Create scene model
         self.addScene(project, os.path.basename(fn), fn)
 
     def onRemove(self):
