@@ -216,13 +216,13 @@ def _read_scenes(zf, projectConfig, projInstance, factories):
     """ Read all the scenes from a project zipfile.
     """
     scenes = []
+    sceneFactory = factories['Scene']
 
     for s in projectConfig[Project.SCENES_KEY]:
         title = s["filename"]
         data = zf.read("{}/{}".format(Project.SCENES_KEY, title))
-        file_obj = BytesIO(data)
-        scene_model = read_scene(file_obj)
-        scene_model.title = title
+        scene_model = sceneFactory(BytesIO(data))
+        scene_model.title = s["filename"]
         scenes.append(scene_model)
 
     return scenes
