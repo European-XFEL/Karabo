@@ -1033,12 +1033,9 @@ namespace karabo {
 
 
         void TcpChannel::close() {
-            boost::system::error_code ec;
-            m_timer.cancel(ec);
-            if (ec) cout << "WARN  : TCP : Timer cancellation failed: #" << ec.value() << " -- " << ec.message() << endl;
-            ec.clear();
-            m_socket.close(ec);
-            if (ec) cout << "WARN  : TCP : Socket closing failed. #" << ec.value() << " -- " << ec.message() << endl;
+            m_socket.cancel();
+            m_socket.close();
+            m_timer.cancel();
         }
 
 
