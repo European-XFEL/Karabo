@@ -19,7 +19,7 @@ from uuid import uuid4
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from .hash import XMLParser, XMLWriter
-from karabo.middlelayer import SceneModel
+from karabo.common.scenemodel.api import read_scene
 
 
 class ProjectAccess(Enum):
@@ -271,7 +271,7 @@ class Project(object):
             'Macro': BaseMacro,
             'Monitor': Monitor,
             'ProjectConfiguration': ProjectConfiguration,
-            'Scene': SceneModel,
+            'Scene': read_scene,
         }
         if factories is not None:
             objFactories.update(factories)
