@@ -307,7 +307,7 @@ def _waitUntilNew_new(prop):
     return (yield from future)
 
 
-def waitUntilNew(prop):
+def waitUntilNew(prop, **kwargs):
     """wait until a new value for a property is available
 
     this function waits until a specific property of a device changes::
@@ -320,7 +320,7 @@ def waitUntilNew(prop):
     if isinstance(prop, Proxy):
         return _WaitUntilNew_old(prop)
     else:
-        return _waitUntilNew_new(prop)
+        return _waitUntilNew_new(prop, **kwargs)
 
 
 class getHistory:
