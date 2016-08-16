@@ -19,6 +19,7 @@ from uuid import uuid4
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from .hash import XMLParser, XMLWriter
+from karabo.middlelayer import SceneModel
 
 
 class ProjectAccess(Enum):
@@ -270,7 +271,7 @@ class Project(object):
             'Macro': BaseMacro,
             'Monitor': Monitor,
             'ProjectConfiguration': ProjectConfiguration,
-            'Scene': BaseScene,
+            'Scene': SceneModel,
         }
         if factories is not None:
             objFactories.update(factories)
@@ -358,23 +359,6 @@ class BaseDeviceGroup(BaseDevice):
 
     def addDevice(self, device):
         self.devices.append(device)
-
-
-class BaseScene(object):
-    """ A simple scene object which supports round-trips between project files.
-    """
-    def __init__(self, project, filename):
-        self.filename = filename
-
-    def fromXml(self, xmlString):
-        """ 'Initialize' the instance from some XML data.
-        """
-        self.__xmlData = xmlString
-
-    def toXml(self):
-        """ 'Serialize' the instance to XML.
-        """
-        return self.__xmlData
 
 
 class BaseMacro(object):
