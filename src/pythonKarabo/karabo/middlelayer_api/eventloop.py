@@ -324,10 +324,10 @@ class KaraboFuture(object):
     @synchronize
     def add_done_callback(self, fn):
         """Add another callback to the future"""
-        def func(future):
-            loop.create_task(loop.run_coroutine_or_thread(fn, self), instance)
         loop = get_event_loop()
         instance = loop.instance()
+        def func(future):
+            loop.create_task(loop.run_coroutine_or_thread(fn, self), instance)
         self.future.add_done_callback(func)
 
     @synchronize
