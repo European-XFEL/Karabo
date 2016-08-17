@@ -1623,13 +1623,21 @@ class ProjectModel(QStandardItemModel):
 
             if reply == QMessageBox.No:
                 return
-        
-        while self.selectionModel.selectedIndexes():
-            index = self.selectionModel.selectedIndexes().pop()
+
+        # The removal needs to be done in two steps:
+        # 1. Fetch data which is about to be removed
+        # list with tuples including project and object
+        rm_proj_obj = []
+        while selectedIndexes:
+            index = selectedIndexes.pop()
             obj = index.data(ProjectModel.ITEM_OBJECT)
             # Get project to given object
             project = self.getProjectForObject(obj)
-            # Remove data from project
+            rm_proj_obj.append((project, obj))
+
+        # 2. Remove data from project and update tree
+        while rm_proj_obj:
+            project, obj = rm_proj_obj.pop()
             self.removeObject(project, obj, nbSelected == 1)
 
     def onRemoveConfiguration(self):
