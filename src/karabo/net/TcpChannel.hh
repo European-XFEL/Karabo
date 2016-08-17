@@ -41,6 +41,9 @@ namespace karabo {
             boost::asio::io_service::strand m_readStrand;
             boost::asio::io_service::strand m_writeStrand;
             boost::asio::ip::tcp::socket m_socket;
+            bool m_stoppedDeadlineTimer;
+            boost::asio::deadline_timer m_connectDeadline;
+            TimeoutHandler m_timeoutHandler;
             boost::asio::deadline_timer m_timer;
             HandlerType m_activeHandler;
             bool m_readHeaderFirst;
@@ -288,6 +291,10 @@ namespace karabo {
             void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio);
 
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy);
+            
+            void setConnectDeadline(long long timeout, TimeoutHandler handler);
+            
+            void stopDeadlineTimer();
 
         private:
 
@@ -333,6 +340,7 @@ namespace karabo {
 
             void asyncWaitHandler(const Channel::WaitHandler& handler, const ErrorCode& e);
 
+            void checkConnectDeadline(const ErrorCode& ec);
 
             // MQ support methods
         private:

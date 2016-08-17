@@ -25,6 +25,8 @@ namespace karabo {
             , m_readStrand(EventLoop::getIOService())
             , m_writeStrand(EventLoop::getIOService())
             , m_socket(EventLoop::getIOService())
+            , m_stoppedDeadlineTimer(false)
+            , m_connectDeadline(EventLoop::getIOService())
             , m_timer(EventLoop::getIOService())
             , m_activeHandler(TcpChannel::NONE)
             , m_readHeaderFirst(false)
@@ -1033,9 +1035,11 @@ namespace karabo {
 
 
         void TcpChannel::close() {
-            m_socket.cancel();
+            if (m_socket.is_open())
+                m_socket.cancel();
             m_socket.close();
             m_timer.cancel();
+            m_connectDeadline.cancel();
         }
 
 
@@ -1250,6 +1254,34 @@ namespace karabo {
             prepareVectorFromHash(data, *datap);
             Message::Pointer mp(new Message(datap, headerp));
             this->writeAsync(mp, prio);
+        }
+
+
+        void TcpChannel::checkConnectDeadline(const ErrorCode& ec) {
+            if (ec == boost::asio::error::operation_aborted || m_stoppedDeadlineTimer)
+                return;
+            if (m_connectDeadline.expires_at() <= boost::asio::deadline_timer::traits_type::now()) {
+                EventLoop::getIOService().post(m_timeoutHandler);
+                return;
+            }
+
+            m_connectDeadline.async_wait(boost::bind(&TcpChannel::checkConnectDeadline, this, _1));
+        }
+
+
+        void TcpChannel::setConnectDeadline(long long timeout, TimeoutHandler handler) {
+            if (timeout <= 0)
+                m_connectDeadline.expires_at(boost::posix_time::pos_infin);
+            else
+                m_connectDeadline.expires_from_now(boost::posix_time::milliseconds(timeout));
+            m_timeoutHandler = handler;
+            m_connectDeadline.async_wait(boost::bind(&TcpChannel::checkConnectDeadline, this, _1));
+        }
+
+
+        void TcpChannel::stopDeadlineTimer() {
+            m_stoppedDeadlineTimer = true;
+            m_connectDeadline.cancel();
         }
     }
 }
