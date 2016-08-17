@@ -38,27 +38,4 @@ namespace karathon {
             KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
         }
     }
-
-
-    void ConnectionWrap::setErrorHandler(const karabo::net::Connection::Pointer& connection, const bp::object& errorHandler) {
-        if (!PyCallable_Check(errorHandler.ptr()))
-            throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
-        ScopedGILRelease nogil;
-        connection->setErrorHandler(boost::bind(proxyErrorHandler, errorHandler, connection, _1));
-    }
-
-
-    void ConnectionWrap::proxyErrorHandler(const bp::object& errorHandler, karabo::net::Connection::Pointer connection, const karabo::net::ErrorCode& code) {
-        ScopedGILAcquire gil;
-        try {
-            errorHandler(bp::object(connection), bp::object(code));
-        } catch (const bp::error_already_set& e) {
-            if (PyErr_Occurred()) {
-                PyErr_Print();
-            }
-            throw KARABO_PYTHON_EXCEPTION("ErrorHandler has thrown an exception. See above.");
-        } catch (...) {
-            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
-        }
-    }
 }
