@@ -89,8 +89,7 @@ namespace karabo {
                     //m_ownPort = Statics::generateServerPort();
                     karabo::util::Hash h("type", "server", "port", 0, "compressionUsageThreshold", m_compression * 1E6);
                     m_dataConnection = karabo::net::Connection::create("Tcp", h);
-                    m_dataConnection->setErrorHandler(boost::bind(&karabo::xms::OutputChannel::onTcpConnectionError, this, m_dataConnection, _1));
-                    m_ownPort = m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1));
+                    m_ownPort = m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
                 } catch (const std::exception& ex) {
                     if (tryAgain > 0) {
                         tryAgain--;
@@ -142,20 +141,26 @@ namespace karabo {
         }
 
 
-        void OutputChannel::onTcpConnect(const TcpChannelPointer& channel) {
+        void OutputChannel::onTcpConnect(const TcpChannelPointer& channel, const karabo::net::ErrorCode& ec) {
             using namespace karabo::net;
+            
+            if (ec) {
+                onTcpChannelError(channel, ec);
+                return;
+            }
+            
             m_dataChannels.insert(channel);
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
             KARABO_LOG_FRAMEWORK_DEBUG << "***** Connection established to socket " << tch->socket().native() << " *****";
-            channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, channel, _1));
-            m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1));
+            channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, channel, _1, _2));
+            m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
         }
 
 
-        void OutputChannel::onTcpConnectionError(const karabo::net::Connection::Pointer& connection, const karabo::net::ErrorCode& error) {
-            KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
-            if (connection) connection->stop();
-        }
+//        void OutputChannel::onTcpConnectionError(const karabo::net::Connection::Pointer& connection, const karabo::net::ErrorCode& error) {
+//            KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
+//            if (connection) connection->stop();
+//        }
 
 
         void OutputChannel::onTcpChannelError(const TcpChannelPointer& channel, const karabo::net::ErrorCode& error) {
@@ -171,8 +176,12 @@ namespace karabo {
         }
 
 
-        void OutputChannel::onTcpChannelRead(const TcpChannelPointer& channel, const karabo::util::Hash& message) {
-
+        void OutputChannel::onTcpChannelRead(const TcpChannelPointer& channel, const karabo::util::Hash& message, const karabo::net::ErrorCode& ec) {
+            if (ec) {
+                onTcpChannelError(channel, ec);
+                return;
+            }
+            
             std::string reason;
             if (message.has("reason")) message.get<std::string > ("reason", reason);
 
@@ -230,7 +239,7 @@ namespace karabo {
                 }
 
             }
-            channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, channel, _1));
+            channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, channel, _1, _2));
         }
 
 

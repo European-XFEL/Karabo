@@ -86,14 +86,6 @@ namespace karabo {
              */
             virtual ChannelPointer createChannel() = 0;
 
-            /**
-             * This function sets the error handler that will be called if connection process failed
-             * @param Call-back function of signature: void (boost::shared_ptr<Channel>, const ErrorCode&)
-             * @return void
-             */
-            void setErrorHandler(const ErrorHandler& handler) {
-                m_errorHandler = handler;
-            }
 
         protected: // functions
 

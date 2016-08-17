@@ -13,6 +13,7 @@
 #ifndef KARABO_XMS_INPUTCHANNEL_HH
 #define	KARABO_XMS_INPUTCHANNEL_HH
 
+#include <boost/asio.hpp>
 #include <karabo/net.hpp>
 #include <karabo/io.hpp>
 #include <karabo/log.hpp>
@@ -146,7 +147,10 @@ namespace karabo {
 
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
-            void onConnect(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer channel);
+            void onConnect(karabo::net::Connection::Pointer connection,
+                           const karabo::util::Hash& outputChannelInfo,
+                           karabo::net::Channel::Pointer channel,
+                           const karabo::net::ErrorCode& error);
 
             // TODO Keep m_connectedOutputChannels in sync and adapt eos tokens on sudden death
             void startConnectionAsync(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo);
@@ -155,7 +159,8 @@ namespace karabo {
 
             void onTcpChannelError(const karabo::net::Channel::Pointer&, const karabo::net::ErrorCode& error);
 
-            void onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data);
+            void onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header,
+                                  const std::vector<char>& data, const karabo::net::ErrorCode& ec);
 
             void swapBuffers();
 
