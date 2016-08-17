@@ -305,16 +305,24 @@ namespace karabo {
         //        }
 
 
-        void InputChannel::onConnect(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer channel) {
+        void InputChannel::onConnect(karabo::net::Connection::Pointer connection,
+                                     const karabo::util::Hash& outputChannelInfo,
+                                     karabo::net::Channel::Pointer channel,
+                                     const karabo::net::ErrorCode& ec) {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "onConnect  :  outputChannelInfo is ...\n" << outputChannelInfo;
 
+            if (ec) {
+                onTcpChannelError(channel, ec);
+                return;
+            }
+            
             const std::string& memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
             const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
             unsigned int port = outputChannelInfo.get<unsigned int>("port");
 
             channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
-            channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
+            channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2, _3));
 
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             string outputChannelString;
@@ -335,7 +343,7 @@ namespace karabo {
 
 
         void InputChannel::startConnectionAsync(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo) {
-            connection->startAsync(boost::bind(&InputChannel::onConnect, this, connection, outputChannelInfo, _1));
+            connection->startAsync(boost::bind(&InputChannel::onConnect, this, connection, outputChannelInfo, _1, _2));
         }
 
 
@@ -389,7 +397,15 @@ namespace karabo {
         }
 
 
-        void InputChannel::onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
+        void InputChannel::onTcpChannelRead(karabo::net::Channel::Pointer channel,
+                                            const karabo::util::Hash& header,
+                                            const std::vector<char>& data,
+                                            const karabo::net::ErrorCode& ec) {
+            if (ec) {
+                onTcpChannelError(channel, ec);
+                return;
+            }
+            
             // Debug helper (m_channelId is unique per process...):
             const std::string debugId((("INPUT " + util::toString(m_channelId) += " of '") += this->getInstanceId()) += "' ");
             KARABO_LOG_FRAMEWORK_DEBUG << debugId << "ENTRY onTcpChannelRead";
@@ -422,7 +438,7 @@ namespace karabo {
                             // Reset eos tracker
                             m_eosChannels.clear();
                         }
-                        channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
+                        channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2, _3));
                         return;
                     }
 
@@ -465,7 +481,7 @@ namespace karabo {
                             m_keepDataUntilNew = true;
                         }
                     }
-                    channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
+                    channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2, _3));
                 }
             } catch (const karabo::util::Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onTcpChannelRead " << e;
