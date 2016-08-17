@@ -36,7 +36,8 @@ namespace karabo {
         class TcpChannel;
         typedef boost::system::error_code ErrorCode;
         typedef boost::shared_ptr<Channel> ChannelPointer;
-
+        typedef boost::function<void () > TimeoutHandler;
+        
         /**
          * The Connection class.
          * This class serves as the interface for all connections.
@@ -92,6 +93,7 @@ namespace karabo {
             void resolveHandler(const ConnectionHandler&, const ErrorCode&, boost::asio::ip::tcp::resolver::iterator);
             void acceptHandler(ChannelPointer, const ConnectionHandler&, const ErrorCode&);
             void connectHandler(const ChannelPointer&, const ConnectionHandler&, const ErrorCode&);
+            void connectTimeoutHandler(const ConnectionHandler&, const ChannelPointer&);
             ChannelPointer startServer();
             ChannelPointer startClient();
             void startServer(const ConnectionHandler&);
@@ -111,6 +113,7 @@ namespace karabo {
             bool m_manageAsyncData;
             int m_compressionUsageThreshold;
             std::string m_compression;
+            long long m_timeout;
         };
     }
 }

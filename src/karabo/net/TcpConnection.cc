@@ -61,6 +61,14 @@ namespace karabo {
                     .expertAccess()
                     .commit();
 
+            INT64_ELEMENT(expected)
+                    .key("connectTimeout")
+                    .displayedName("Connect timeout")
+                    .description("Timeout in milliseconds while trying to connect asynchronously. <=0 means 'no timeout'")
+                    .assignmentOptional().defaultValue(0)
+                    .init()
+                    .commit();
+            
             BOOL_ELEMENT(expected)
                     .key("messageTagIsText")
                     .displayedName("Message Tag is Text")
@@ -111,6 +119,7 @@ namespace karabo {
             input.get("port", m_port);
             input.get("type", m_connectionType);
             input.get("sizeofLength", m_sizeofLength);
+            input.get("connectTimeout", m_timeout);
             input.get("messageTagIsText", m_lengthIsTextFlag);
             input.get("manageAsyncData", m_manageAsyncData);
             input.get("compressionUsageThreshold", m_compressionUsageThreshold);
@@ -254,6 +263,8 @@ namespace karabo {
                     boost::asio::ip::tcp::socket& tcpSocket = tcpChannel->socket();
                     // ... and peer endpoint ...
                     const boost::asio::ip::tcp::endpoint& peerEndpoint = *it;
+                    // set up deadline timer for establishing connection timeout
+                    tcpChannel->setConnectDeadline(m_timeout, boost::bind(&TcpConnection::connectTimeoutHandler, this, handler, channel));
                     // ... and, finally, try to connect asynchronously ...
                     tcpSocket.async_connect(peerEndpoint,
                                             boost::bind(&TcpConnection::connectHandler, this,
@@ -274,6 +285,8 @@ namespace karabo {
 
         void TcpConnection::connectHandler(const Channel::Pointer& channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
+                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
+                tcpChannel->stopDeadlineTimer();
                 handler(channel, e);
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW
@@ -285,6 +298,19 @@ namespace karabo {
         }
 
 
+        void TcpConnection::connectTimeoutHandler(const ConnectionHandler& handler, const Channel::Pointer& channel) {
+            try {
+                handler(channel, boost::asio::error::timed_out);
+            } catch (const karabo::util::Exception& e) {
+                KARABO_RETHROW
+            } catch (const std::exception& ex) {
+                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(string("Standard exception caught by TcpConnection::connectTimeoutHandler: ") + ex.what()))
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+        
+        
         void TcpConnection::stop() {
             m_resolver.cancel();
             try {
