@@ -109,7 +109,7 @@ void MQTcpNetworking::serverPublish(const karabo::net::Channel::Pointer& channel
 
 
 void MQTcpNetworking::testClientServerMethod() {
-    m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_serverPort, "Tcp.hostname", "localhost"));
+    m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_serverPort, "Tcp.hostname", "localhost", "Tcp.connectTimeout", 100));
     m_connection->startAsync(boost::bind(&MQTcpNetworking::onClientConnected, this, _1, _2));
 }
 
@@ -135,6 +135,7 @@ void MQTcpNetworking::tearDown() {
 
 void MQTcpNetworking::onClientConnected(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& e) {
     if (e) {
+        std::clog << "MQTcpNetworking::onClientConnected  ErrorCode = " << e << std::endl;
         clientChannelErrorHandler(channel, e);
         return;
     }
@@ -151,9 +152,15 @@ void MQTcpNetworking::onClientConnected(const karabo::net::Channel::Pointer& cha
 
 
 void MQTcpNetworking::clientChannelErrorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
-    if (ec != boost::asio::error::eof)
-        std::clog << "\nCLIENT ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
     if (channel) channel->close();
+    if (ec != boost::asio::error::eof) {
+        std::clog << "\nCLIENT ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
+
+        if (m_serverConnection) {
+            m_serverConnection->stop();
+            m_serverConnection.reset();
+        }
+    }
 }
 
 
