@@ -1581,23 +1581,19 @@ class ProjectModel(QStandardItemModel):
 
 
     def onSaveAsScene(self):
-        project = self.currentProject()
-        scene = self.currentScene()
         fn = QFileDialog.getSaveFileName(None, "Save scene to file",
                                          globals.HIDDEN_KARABO_FOLDER,
                                          "SVG (*.svg)",
                                          options=QFileDialog.DontUseNativeDialog)
         if not fn:
             return
-        
+
         if not fn.endswith(".svg"):
             fn = "{}.svg".format(fn)
-        
-        with ZipFile(project.filename, "r") as zf:
-            s = zf.read("{}/{}".format(project.SCENES_KEY, scene.title))
-        s = s.decode()
-        with open(fn, "w") as fout:
-            fout.write(s)
+
+        sceneModel = self.currentScene()
+        with open(fn, "wb") as fout:
+            fout.write(write_scene(sceneModel))
 
     def onOpenScene(self):
         project = self.currentProject()
