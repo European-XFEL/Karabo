@@ -4,7 +4,6 @@ from zipfile import ZipFile
 
 from karabo.middlelayer_api.project import (
     Project, ProjectConfiguration, BaseDeviceGroup, BaseDevice, BaseMacro,
-    BaseScene
 )
 import karabo.testing as testing_mod
 from karabo.testing.utils import temp_file
