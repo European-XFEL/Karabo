@@ -94,7 +94,8 @@ namespace karabo {
 
             void consume(const karabo::net::Channel::Pointer& channel,
                          karabo::util::Hash::Pointer& header,
-                         karabo::util::Hash::Pointer& body);
+                         karabo::util::Hash::Pointer& body,
+                         const karabo::net::ErrorCode& ec);
 
         private:
 
@@ -127,7 +128,8 @@ namespace karabo {
                                 const std::string& connectionString,
                                 const karabo::net::ConsumeHandler& handler,
                                 const karabo::net::Connection::Pointer& connection,
-                                const karabo::net::Channel::Pointer& channel);
+                                const karabo::net::Channel::Pointer& channel,
+                                const karabo::net::ErrorCode& ec);
 
         private:
 
@@ -365,8 +367,13 @@ namespace karabo {
                                                     const std::string& signalConnectionString,
                                                     const ConsumeHandler& handler,
                                                     const karabo::net::Connection::Pointer& connection,
-                                                    const karabo::net::Channel::Pointer& channel) {
+                                                    const karabo::net::Channel::Pointer& channel,
+                                                    const karabo::net::ErrorCode& ec) {
 
+            if (ec) {
+                channelErrorHandler(signalInstanceId, signalConnectionString, connection, channel, ec);
+                return;
+            }
             //channel->setErrorHandler(boost::bind(&Consumer::channelErrorHandler, this,
             //                                     signalInstanceId, signalConnectionString, connection, channel, _1));
             // bookkeeping ...
@@ -379,7 +386,7 @@ namespace karabo {
             // Subscribe to producer with our own instanceId
             channel->write(slotInstanceId + " SUBSCRIBE");
             // ... and, finally, wait for publications ...
-            channel->readAsyncHashPointerHashPointer(boost::bind(&Consumer::consume, this, channel, _1, _2));
+            channel->readAsyncHashPointerHashPointer(boost::bind(&Consumer::consume, this, channel, _1, _2, _3));
         }
 
 
@@ -406,10 +413,8 @@ namespace karabo {
 
                     Connection::Pointer connection = Connection::create(Hash("Tcp", params));
 
-                    connection->setErrorHandler(boost::bind(&Consumer::connectionErrorHandler, this,
-                                                            signalInstanceId, signalConnectionString, connection, _1));
                     connection->startAsync(boost::bind(&Consumer::connectHandler, this, slotInstanceId,
-                                                       signalInstanceId, signalConnectionString, handler, connection, _1));
+                                                       signalInstanceId, signalConnectionString, handler, connection, _1, _2));
 
                     return;
                 }
@@ -469,7 +474,9 @@ namespace karabo {
 
         void PointToPoint::Consumer::consume(const karabo::net::Channel::Pointer& channel,
                                              karabo::util::Hash::Pointer& header,
-                                             karabo::util::Hash::Pointer& body) {
+                                             karabo::util::Hash::Pointer& body,
+                                             const karabo::net::ErrorCode& ec) {
+            
 
             // Get from header...
             // ... signalInstanceId
@@ -504,10 +511,10 @@ namespace karabo {
                     handler = iii->second;
                 }
                 // call user callback of type "ConsumeHandler"
-                handler(slotInstanceId, header, body);
+                handler(slotInstanceId, header, body, ec);
             }
             // Re-register itself
-            channel->readAsyncHashPointerHashPointer(boost::bind(&Consumer::consume, this, channel, _1, _2));
+            channel->readAsyncHashPointerHashPointer(boost::bind(&Consumer::consume, this, channel, _1, _2, _3));
         }
 
 
@@ -545,11 +552,6 @@ namespace karabo {
                                               const karabo::util::Hash::Pointer& header,
                                               const karabo::util::Hash::Pointer& message, int prio) {
             m_producer->publishIfConnected(registeredSlots, header, message, prio);
-        }
-
-
-        void PointToPoint::consume(const karabo::net::Channel::Pointer& channel, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body) {
-            m_consumer->consume(channel, header, body);
         }
 
 
