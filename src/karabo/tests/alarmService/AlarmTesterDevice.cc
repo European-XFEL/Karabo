@@ -30,6 +30,14 @@ namespace karabo {
             .enableRollingStats().warnVarianceHigh(3).needsAcknowledging(false).evaluationInterval(100)
             .commit();
         
+        FLOAT_ELEMENT(expected).key("floatProperty2")
+            .displayedName("Float Property2")
+            .readOnly().initialValue(0)
+            .warnLow(-2).info("A description for alarmLow").needsAcknowledging(true)
+            .warnHigh(2).info("A description for alarmHigh").needsAcknowledging(true)
+            .enableRollingStats().warnVarianceHigh(3).needsAcknowledging(false).evaluationInterval(100)
+            .commit();
+        
         SLOT_ELEMENT(expected).key("triggerWarnLow")
             .displayedName("Trigger WARN_LOW")
             .commit();
@@ -68,11 +76,13 @@ namespace karabo {
     AlarmTester::AlarmTester(const karabo::util::Hash& config) : Device<>(config) {
         KARABO_SLOT(triggerWarnLow);
         KARABO_SLOT(triggerWarnHigh);
+        KARABO_SLOT(triggerWarnHigh2);
         KARABO_SLOT(triggerAlarmLow);
         KARABO_SLOT(triggerAlarmHigh);
         KARABO_SLOT(triggerGlobalAlarm);
         KARABO_SLOT(triggerGlobalWarn);
         KARABO_SLOT(triggerNormal);
+        KARABO_SLOT(triggerNormal2);
         KARABO_SLOT(triggerGlobalNormal);
         
         KARABO_INITIAL_FUNCTION(initialize);
@@ -117,6 +127,12 @@ namespace karabo {
    
     }
     
+    void AlarmTester::triggerWarnHigh2(){
+        set("floatProperty2", 2.2);
+        reply("triggeredWarnHigh2");
+   
+    }
+    
     void AlarmTester::triggerAlarmLow(){
         set("floatProperty", -2.2);
        
@@ -150,6 +166,13 @@ namespace karabo {
     void AlarmTester::triggerNormal(){
         set("floatProperty", 0);
         reply("triggeredNormal");
+   
+        
+    }
+    
+    void AlarmTester::triggerNormal2(){
+        set("floatProperty2", 0);
+        reply("triggeredNormal2");
    
         
     }
