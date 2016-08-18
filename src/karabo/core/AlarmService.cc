@@ -305,6 +305,36 @@ namespace karabo {
             set("currentAlarms", tableVector);
         }
         
+        void AlarmService::preReconfigure(karabo::util::Hash& incomingReconfiguration){
+            
+            boost::optional<Hash::Node&> alarmConfig = incomingReconfiguration.find("currentAlarms");
+            if(alarmConfig){
+                std::vector<Hash>& alarmsInTable = alarmConfig->getValue<std::vector<Hash> >();
+                for(std::vector<Hash>::iterator it = alarmsInTable.begin(); it != alarmsInTable.end();){
+                    const std::string& deviceId = it->get<std::string>("deviceId");
+                    const std::string& property = it->get<std::string>("property");
+                    const std::string& type = it->get<std::string>("type");
+                    const std::string path = deviceId+"."+property+"."+type;
+                    //we make sure that the table is up-to-date-with the internal data structure
+                    const boost::optional<Hash::Node&> entryN = m_alarms.find(path);
+                    if(entryN){
+                        const Hash& entry = entryN->getValue<Hash>();
+                        if(entry.get<bool>("acknowledgeable") && entry.get<bool>("needsAcknowledging") && it->get<bool>("acknowledged")){
+                            //remove the entry
+                            it = alarmsInTable.erase(it);
+                        } else {
+                            //reset acknowledged and go on
+                            it->set("acknowledged", false);
+                            ++it;
+                        }
+                    } else {
+                        KARABO_LOG_WARN<<"Element in alarm table ("<<deviceId<<":"<<property<<":"<<type<<") does not match any internal alarm entry!";
+                        ++it;
+                    }
+                }
+            }
+        }
+        
     }
 }
 
