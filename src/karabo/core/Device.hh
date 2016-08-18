@@ -1110,6 +1110,7 @@ namespace karabo {
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
                 KARABO_SLOT(slotReSubmitAlarms, karabo::util::Hash);
 
+
             }
 
             /**
@@ -1421,6 +1422,7 @@ namespace karabo {
                 Hash alarmsToUpdate;
                 evaluateAlarmUpdates(existingAlarmsRF, alarmsToUpdate);
                 reply(getInstanceId(), alarmsToUpdate);
+
             }
 
 
