@@ -1,8 +1,24 @@
 from uuid import uuid4
 
-from PyQt4.QtGui import QDialog, QFileDialog
+from PyQt4.QtCore import QEvent, QObject
+from PyQt4.QtGui import QApplication, QDialog, QFileDialog
 
 from karabo.middlelayer import Hash
+
+# This is the global singleton for the karabo_mediator function.
+_karabo_mediator = None
+
+
+class KaraboBroadcast(QEvent):
+    """ Custom event to handle GUI widget communication """
+
+    # Ask Qt for our event type
+    Type = QEvent.Type(QEvent.registerEventType())
+
+    def __init__(self, sender="", data=None):
+        super(KaraboBroadcast, self).__init__(self.Type)
+        self.sender = sender  # Names the sender
+        self.data = data or {}  # Includes the data which is sent
 
 
 class SignalBlocker(object):
@@ -15,6 +31,29 @@ class SignalBlocker(object):
 
     def __exit__(self, a, b, c):
         self.object.blockSignals(self.state)
+
+
+def __get_mediator():
+    """ Return the karabo mediator singleton.
+    """
+    global _karabo_mediator
+    if _karabo_mediator is None:
+        class _KaraboMediator(QObject):
+            def __init__(self):
+                super(_KaraboMediator, self).__init__()
+        _karabo_mediator = _KaraboMediator()
+
+    return _karabo_mediator
+
+
+def broadcast_event(event):
+    mediator = __get_mediator()
+    QApplication.postEvent(mediator, event)
+
+
+def register_for_broadcasts(qobject):
+    mediator = __get_mediator()
+    mediator.installEventFilter(qobject)
 
 
 def generateObjectName(widget):
