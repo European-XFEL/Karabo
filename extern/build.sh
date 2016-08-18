@@ -57,11 +57,11 @@ DEPENDENCIES_BASE=( bzip2 libpng snappy jpeg tiff python3.4 lapack boost
 freetype hdf5 log4cpp cppunit openmq openmqc patchelf gmock )
 
 DEPENDENCIES_PYTHON=( setuptools pip wheel cython numpy scipy nose pillow
-sip backports tornado pyparsing six dateutil pytz pexpect pyzmq markupsafe
-jinja2 pygments docutils alabaster babel snowballstemmer sphinx_rtd_theme
-imagesize sphinx decorator ipykernel ipython_genutils jupyter_core
-jupyter_client pickleshare prompt_toolkit simplegeneric traitlets dill
-ipython h5py pyusb parse suds jsonschema ecdsa pycrypto paramiko tzlocal
+sip backports backports_abc tornado pyparsing six dateutil pytz pexpect pyzmq
+markupsafe jinja2 pygments docutils alabaster babel snowballstemmer
+sphinx_rtd_theme imagesize sphinx decorator ipykernel ipython_genutils
+jupyter_core jupyter_client pickleshare prompt_toolkit simplegeneric traitlets
+dill ipython h5py pyusb parse suds jsonschema ecdsa pycrypto paramiko tzlocal
 httplib2 pssh traits pint nbformat notebook ipyparallel ipcluster_tools cycler )
 
 DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib pyqwt5 guidata guiqwt )
