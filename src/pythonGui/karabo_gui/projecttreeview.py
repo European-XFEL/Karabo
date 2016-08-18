@@ -235,15 +235,15 @@ class ProjectTreeView(QTreeView):
         index = self.currentIndex()
         if not index.isValid(): return
 
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        if isinstance(object, Device) or isinstance(object, DeviceGroup):
-            self.model().editDevice(object)
-        elif isinstance(object, SceneModel):
-            self.model().openScene(object)
-        elif isinstance(object, Macro):
-            self.model().openMacro(object)
-        elif isinstance(object, Monitor):
-            self.model().editMonitor(object)
+        obj = index.data(ProjectModel.ITEM_OBJECT)
+        if isinstance(obj, Device) or isinstance(obj, DeviceGroup):
+            self.model().editDevice(obj)
+        elif isinstance(obj, SceneModel):
+            self.model().openScene(obj)
+        elif isinstance(obj, Macro):
+            self.model().openMacro(obj)
+        elif isinstance(obj, Monitor):
+            self.model().editMonitor(obj)
 
 
 ### slots ###
