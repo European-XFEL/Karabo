@@ -107,9 +107,13 @@ private:
 struct TcpClient {
 
 
-    TcpClient(const std::string& host, int port) : m_count(0), m_port(port) {
-        m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "localhost"));
-        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1, _2));
+    TcpClient(const std::string& host, int port)
+    : m_count(0)
+    , m_port(port)
+    , m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "sample.example.org")))
+    , m_deadline(karabo::net::EventLoop::getIOService())
+    {   //                                                           timeout repetition channel ec 
+        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, 1000, 3, _1, _2));
     }
 
 
@@ -117,12 +121,16 @@ struct TcpClient {
     }
 
 
-    void connectHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
+    void connectHandler(int timeout, int repetition, const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
         if (ec) {
-            std::clog << "\nCLIENT_ERROR: Failed to connect to remote server. Stop...\n";
+            errorHandler(channel, ec);
+            if (ec != boost::asio::error::eof && repetition >= 0) {
+                m_deadline.expires_from_now(boost::posix_time::milliseconds(timeout));
+                m_deadline.async_wait(boost::bind(&TcpClient::waitHandler, this, timeout, repetition, boost::asio::placeholders::error));
+            }
             return;
         }
-        std::clog << "TcpClient connectHandler" << std::endl;
+        std::clog << "\nTcpClient connectHandler" << std::endl;
         karabo::util::Hash header("headline", "*** CLIENT ***");
         karabo::util::Hash data("a.b", "?", "a.c", 42.22f, "a.d", 12);
 
@@ -134,6 +142,18 @@ struct TcpClient {
         if (ec != boost::asio::error::eof)
             std::clog << "\nCLIENT_ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
         if (channel) channel->close();
+    }
+    
+    
+    void waitHandler(int timeout, int repetition, const karabo::net::ErrorCode& ec) {
+        if (ec == boost::asio::error::operation_aborted) return;
+        --repetition;
+        timeout *= 2;
+        if (repetition == 1)
+            m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "exflserv04"));
+        if (repetition == 0)
+            m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "localhost"));
+        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, timeout, repetition, _1, _2));
     }
     
     
@@ -189,6 +209,9 @@ private:
     int m_count;
     int m_port;
     karabo::net::Connection::Pointer m_connection;
+    boost::asio::deadline_timer m_deadline;
+    int m_timeout;
+    int m_repetition;
 };
 
 

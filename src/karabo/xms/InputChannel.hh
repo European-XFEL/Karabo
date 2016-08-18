@@ -39,6 +39,8 @@ namespace karabo {
             typedef std::map<std::string, std::pair<karabo::net::Connection::Pointer, karabo::net::Channel::Pointer> > OpenConnections;
             typedef Memory<karabo::util::Hash> MemoryType;
 
+            boost::asio::deadline_timer m_deadline;
+            
             /// Callback on available data (per InputChannel)
             boost::function<void (const boost::shared_ptr<InputChannel>&) > m_inputHandler;
 
