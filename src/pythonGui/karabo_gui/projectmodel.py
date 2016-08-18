@@ -1,36 +1,34 @@
-
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on June 20, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
 """
 This module contains a class which represents a model to display projects in
 a treeview.
 """
 
-__all__ = ["ProjectModel"]
-
 from karabo.middlelayer_api.project import Monitor, Project, ProjectAccess
 from karabo.middlelayer import Hash, read_scene, SceneModel, write_scene
 from karabo_gui.configuration import Configuration
+from karabo_gui.const import OPEN_SCENE_LINK
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
-from karabo_gui.dialogs.configurationdialog import SelectMultipleProjectConfigurationDialog
+from karabo_gui.dialogs.configurationdialog import (
+    SelectMultipleProjectConfigurationDialog)
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.dialogs.dialogs import MacroDialog
 from karabo_gui.dialogs.duplicatedialog import DuplicateDialog
 from karabo_gui.dialogs.monitordialog import MonitorDialog
 from karabo_gui.dialogs.scenedialog import SceneDialog
-from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject, Macro
+from karabo_gui.guiproject import (
+    Category, Device, DeviceGroup, GuiProject, Macro)
 from karabo_gui.messagebox import MessageBox
 import karabo_gui.network as network
 from karabo_gui.topology import getDevice, Manager
-from karabo_gui.util import getSaveFileName
+from karabo_gui.util import getSaveFileName, register_for_broadcasts
 
-from PyQt4.QtCore import QAbstractItemModel, pyqtSignal, pyqtSlot, Qt
+from PyQt4.QtCore import QAbstractItemModel, pyqtSignal, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
                          QItemSelectionModel, QMessageBox, QStandardItem,
                          QStandardItemModel)
@@ -38,37 +36,44 @@ from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
 from io import BytesIO
 import os
 import os.path
-from zipfile import ZipFile
 
 
 class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
-    signalItemChanged = pyqtSignal(str, object) # type, configuration
+    signalItemChanged = pyqtSignal(str, object)  # type, configuration
     signalSelectionChanged = pyqtSignal(list)
-    signalAddSceneView = pyqtSignal(object, object) # SceneModel, Project
-    signalRemoveSceneView = pyqtSignal(object) # SceneModel
-    signalRenameSceneView = pyqtSignal(object) # SceneModel
+    signalAddSceneView = pyqtSignal(object, object)  # SceneModel, Project
+    signalRemoveSceneView = pyqtSignal(object)  # SceneModel
+    signalRenameSceneView = pyqtSignal(object)  # SceneModel
     signalAddMacro = pyqtSignal(object)
-    signalRemoveMacro = pyqtSignal(object) # macro
+    signalRemoveMacro = pyqtSignal(object)  # macro
 
     signalExpandIndex = pyqtSignal(object, bool)
 
     ITEM_OBJECT = Qt.UserRole
 
-
     def __init__(self, parent=None):
         super(ProjectModel, self).__init__(parent)
-        
+
         # List stores projects
         self.projects = []
-
         # Dialog to add and change a device
         self.deviceDialog = None
-        
+
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
         self.setSupportedDragActions(Qt.CopyAction)
+
+        register_for_broadcasts(self)
+
+    def eventFilter(self, obj, event):
+        if hasattr(event, "sender"):
+            if event.sender is OPEN_SCENE_LINK:
+                data = event.data
+                self.openSceneLink(data.get("target"), data.get('project'))
+                return True
+        return super(ProjectModel, self).eventFilter(obj, event)
 
     def flags(self, index):
         flags = QStandardItemModel.flags(self, index)
@@ -78,11 +83,10 @@ class ProjectModel(QStandardItemModel):
         else:
             return flags | Qt.ItemIsDropEnabled
 
-
     def mimeData(self, indexes):
         mimeData = QAbstractItemModel.mimeData(self, indexes)
         mimeData.setData('sourceType', 'internal')
-        
+
         data = ""
         for index in indexes:
             text = "{};{};{}\n".format(index.data(), index.row(), index.column())
@@ -1252,7 +1256,7 @@ class ProjectModel(QStandardItemModel):
             sceneModel.title = title
             project.addScene(sceneModel)
 
-        self.openScene(sceneModel)
+        self.openScene(sceneModel, project)
         self.selectObject(sceneModel)
 
         return sceneModel
@@ -1284,15 +1288,15 @@ class ProjectModel(QStandardItemModel):
             # XXX: TODO set dirty flag project modified
         self.selectObject(newSceneModel)
 
-    def openScene(self, sceneModel):
+    def openScene(self, sceneModel, project=None):
         """ This method gets a `sceneModel` and triggers a signal to open a
             scene view in the GUI.
         """
-        project = self.getProjectForObject(sceneModel)
+        if project is None:
+            project = self.getProjectForObject(sceneModel)
         self.signalAddSceneView.emit(sceneModel, project)
 
-    def openSceneLink(self, title):
-        project = self.currentProject()
+    def openSceneLink(self, title, project):
         sceneModel = project.getScene(title)
         if sceneModel is not None:
             self.openScene(sceneModel)
