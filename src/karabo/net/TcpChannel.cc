@@ -1007,33 +1007,6 @@ namespace karabo {
         }
 
 
-        void TcpChannel::waitAsync(int millisecs, const WaitHandler& handler) {
-            try {
-                m_timer.expires_from_now(boost::posix_time::milliseconds(millisecs));
-                m_timer.async_wait(boost::bind(&TcpChannel::asyncWaitHandler, this, handler, boost::asio::placeholders::error));
-            } catch (...) {
-                KARABO_RETHROW
-            }
-        }
-
-
-        void TcpChannel::asyncWaitHandler(const Channel::WaitHandler& handler, const ErrorCode& e) {
-            try {
-                if (!e) {
-                    try {
-                        EventLoop::getIOService().post(handler);
-                    } catch (...) {
-                        KARABO_RETHROW
-                    }
-                } else {
-                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(e.value()) + " -- " + e.message());
-                }
-            } catch (...) {
-                KARABO_RETHROW
-            }
-        }
-
-
         void TcpChannel::close() {
             if (m_socket.is_open())
                 m_socket.cancel();

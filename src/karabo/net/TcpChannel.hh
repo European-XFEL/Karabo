@@ -260,8 +260,6 @@ namespace karabo {
 
             void writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data, const WriteCompleteHandler& handler);
 
-            virtual void waitAsync(int milliseconds, const WaitHandler& handler);
-
             virtual void close();
 
             virtual bool isOpen();
@@ -337,8 +335,6 @@ namespace karabo {
             void asyncWriteHandler(const Channel::WriteCompleteHandler& handler, const ErrorCode& e);
             void asyncWriteHandler(const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& body, const ErrorCode& e);
             void asyncWriteHandler(const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& header, const boost::shared_ptr<std::vector<char> >& body, const ErrorCode& e);
-
-            void asyncWaitHandler(const Channel::WaitHandler& handler, const ErrorCode& e);
 
             void checkConnectDeadline(const ErrorCode& ec);
 
