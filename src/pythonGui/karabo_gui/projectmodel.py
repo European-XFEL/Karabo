@@ -26,7 +26,8 @@ from karabo_gui.guiproject import (
 from karabo_gui.messagebox import MessageBox
 import karabo_gui.network as network
 from karabo_gui.topology import getDevice, Manager
-from karabo_gui.util import getSaveFileName, register_for_broadcasts
+from karabo_gui.util import (
+    getSaveFileName, KaraboBroadcastEvent, register_for_broadcasts)
 
 from PyQt4.QtCore import QAbstractItemModel, pyqtSignal, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
@@ -65,10 +66,13 @@ class ProjectModel(QStandardItemModel):
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
         self.setSupportedDragActions(Qt.CopyAction)
 
+        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
+        # not necessary for self due to the fact that the singleton mediator
+        # object and `self` are being destroyed when the GUI exists
         register_for_broadcasts(self)
 
     def eventFilter(self, obj, event):
-        if hasattr(event, "sender"):
+        if isinstance(event, KaraboBroadcastEvent):
             if event.sender is OPEN_SCENE_LINK:
                 data = event.data
                 self.openSceneLink(data.get("target"), data.get('project'))
