@@ -13,7 +13,7 @@ from karabo_gui.const import OPEN_SCENE_LINK
 from karabo_gui.dialogs.dialogs import SceneLinkDialog
 from karabo_gui.dialogs.textdialog import TextDialog
 from karabo_gui.sceneview.utils import calc_rect_from_text
-from karabo_gui.util import KaraboBroadcast, broadcast_event
+from karabo_gui.util import KaraboBroadcastEvent, broadcast_event
 
 LIGHT_BLUE = (224, 240, 255)
 PADDING = 10
@@ -105,13 +105,13 @@ class SceneLinkWidget(QPushButton):
 
     def _handle_click(self):
         if len(self.model.target) > 0:
-            print("Open scene:", self.model.target)
-            # XXX: TODO the target should become an URL in the future
+            # XXX: Remove reference to project and only use URL (which only
+            # points to the project where a scene is stored) in the future
             scene_view = self.parent().parent()
             project = scene_view.project_handler.project
             data = {'target': self.model.target, 'project': project}
-            # Create KaraboBroadcast event
-            broadcast_event(KaraboBroadcast(OPEN_SCENE_LINK, data))
+            # Create KaraboBroadcastEvent
+            broadcast_event(KaraboBroadcastEvent(OPEN_SCENE_LINK, data))
 
     def add_boxes(self, boxes):
         """ Satisfy the informal widget interface. """
