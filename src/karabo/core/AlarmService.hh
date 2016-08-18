@@ -8,9 +8,13 @@
 #ifndef KARABO_ALARMSERVICE_HH
 #define	KARABO_ALARMSERVICE_HH
 
+
+#include <boost/thread.hpp>
+#include <boost/atomic.hpp>
 #include "Device.hh"
 #include "OkErrorFsm.hh"
 #include <boost/thread.hpp>
+
 
 /**
  * The main karabo namespace
@@ -84,6 +88,39 @@ namespace karabo {
              */
             void preReconfigure(karabo::util::Hash& incomingReconfiguration);
 
+<<<<<<< HEAD
+        private: // members
+
+            std::map<std::string, karabo::util::Hash> m_registeredDevices;
+            karabo::util::Hash m_alarms;
+            boost::shared_mutex m_deviceRegisterMutex;
+
+            boost::thread m_flushWorker;
+            mutable boost::shared_mutex m_flushMutex;
+            boost::atomic<bool> m_flushRunning;
+            std::string m_flushFilePath;
+
+=======
+>>>>>>> ad0f57d... Removed dual slot call and use topology information instead
+            /**
+             * Updates the alarm table of this device to reflect the entries in m_alarms
+             */
+            void updateAlarmTable();
+
+            /**
+             * Add signals and slots which need to be set up during initialization in this function
+             */
+            void setupSignalsAndSlots();
+
+            /**
+             * Runner for flushing table
+             */
+            void flushRunner() const;
+
+            /**
+             * Reinitializes the alarm services state from its persisted information
+             */
+            void reinitFromFile();
 
 
 
@@ -91,17 +128,12 @@ namespace karabo {
 
             std::map<std::string, karabo::util::Hash> m_registeredDevices;
             karabo::util::Hash m_alarms;
-            boost::shared_mutex m_deviceRegisterMutex;
 
-            /**
-             Updates the alarm table of this device to reflect the entries in m_alarms
-             */
-            void updateAlarmTable();
+            boost::thread m_flushWorker;
+            mutable boost::shared_mutex m_alarmChangeMutex;
+            boost::atomic<bool> m_flushRunning;
+            std::string m_flushFilePath;
 
-            /**
-             Add signals and slots which need to be set up during initialization in this function
-             */
-            void setupSignalsAndSlots();
 
         };
     }

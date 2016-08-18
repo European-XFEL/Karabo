@@ -38,6 +38,14 @@ namespace karabo {
             .enableRollingStats().warnVarianceHigh(3).needsAcknowledging(false).evaluationInterval(100)
             .commit();
         
+        FLOAT_ELEMENT(expected).key("floatProperty2")
+            .displayedName("Float Property2")
+            .readOnly().initialValue(0)
+            .warnLow(-2).info("A description for alarmLow").needsAcknowledging(true)
+            .warnHigh(2).info("A description for alarmHigh").needsAcknowledging(true)
+            .enableRollingStats().warnVarianceHigh(3).needsAcknowledging(false).evaluationInterval(100)
+            .commit();
+        
         SLOT_ELEMENT(expected).key("triggerWarnLow")
             .displayedName("Trigger WARN_LOW")
             .commit();
