@@ -11,6 +11,7 @@
  */
 
 #include "InputChannel.hh"
+#include "karabo/net/EventLoop.hh"
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -87,7 +88,10 @@ namespace karabo {
         }
 
 
-        InputChannel::InputChannel(const karabo::util::Hash& config) : m_isEndOfStream(false), m_respondToEndOfStream(true) {
+        InputChannel::InputChannel(const karabo::util::Hash& config)
+            : m_deadline(karabo::net::EventLoop::getIOService())
+            , m_isEndOfStream(false)
+            , m_respondToEndOfStream(true) {
             parseOutputChannelConfiguration(config);
             config.get("dataDistribution", m_dataDistribution);
             config.get("minData", m_minData);
@@ -316,7 +320,7 @@ namespace karabo {
                 onTcpChannelError(channel, ec);
                 return;
             }
-            
+
             const std::string& memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
             const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
             unsigned int port = outputChannelInfo.get<unsigned int>("port");
@@ -405,7 +409,7 @@ namespace karabo {
                 onTcpChannelError(channel, ec);
                 return;
             }
-            
+
             // Debug helper (m_channelId is unique per process...):
             const std::string debugId((("INPUT " + util::toString(m_channelId) += " of '") += this->getInstanceId()) += "' ");
             KARABO_LOG_FRAMEWORK_DEBUG << debugId << "ENTRY onTcpChannelRead";
@@ -619,8 +623,10 @@ namespace karabo {
             if (channel->isOpen()) {
                 if (m_delayOnInput <= 0) // no delay
                     deferredNotificationOfOutputChannelForPossibleRead(channel);
-                else
-                    channel->waitAsync(m_delayOnInput, boost::bind(&InputChannel::deferredNotificationOfOutputChannelForPossibleRead, this, channel));
+                else {
+                    m_deadline.expires_from_now(boost::posix_time::seconds(m_delayOnInput));
+                    m_deadline.async_wait(boost::bind(&InputChannel::deferredNotificationOfOutputChannelForPossibleRead, this, channel));
+                }
             }
         }
 
@@ -637,10 +643,9 @@ namespace karabo {
         void InputChannel::notifyOutputChannelsForPossibleRead() {
             if (m_delayOnInput <= 0) // no delay
                 deferredNotificationsOfOutputChannelsForPossibleRead();
-            else { // wait "asynchronously" on the first channel
-                const karabo::net::Channel::Pointer& channel = m_openConnections.begin()->second.second;
-                if (channel->isOpen())
-                    channel->waitAsync(m_delayOnInput, boost::bind(&InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead, this));
+            else { // wait "asynchronously"
+                m_deadline.expires_from_now(boost::posix_time::seconds(m_delayOnInput));
+                m_deadline.async_wait(boost::bind(&InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead, this));
             }
         }
 

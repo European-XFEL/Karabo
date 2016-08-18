@@ -101,8 +101,6 @@ void exportp2p() {
                 .def("writeAsyncHashHash", &ChannelWrap().writeAsyncHashHash, (bp::arg("hdr"), bp::arg("data"), bp::arg("handler")),
                      "Helper method. Register handler for write a Hash header and Hash body.  Never blocks.  The handler will be called "
                      "if write operations of all message parts are completed.")
-                .def("waitAsync", &ChannelWrap().waitAsync, (bp::arg("milliseconds"), bp::arg("handler")),
-                     "The handler will be called by IO service object when the registered delay (in milliseconds) is elapsed.")
                 .def("close", &Channel::close, "Close channel session.")
                 .add_property("__id__", &ChannelWrap().id, "This readonly variable keeps id that uniquely identifies channel instance.")
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Channel)
