@@ -40,6 +40,8 @@ private:
     void testAcknowledgement();
     void testFlushing();
     void testRecovery();
+    void testDeviceKilled();
+    void testDeviceReappeared();
 
 
     //alarm service device
