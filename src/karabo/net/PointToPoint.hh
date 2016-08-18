@@ -23,7 +23,8 @@ namespace karabo {
 
         typedef boost::function<bool (const std::string&,
                                       const karabo::util::Hash::Pointer&,
-                                      const karabo::util::Hash::Pointer&) > ConsumeHandler;
+                                      const karabo::util::Hash::Pointer&,
+                                      const karabo::net::ErrorCode&) > ConsumeHandler;
 
         class PointToPoint {
 
@@ -58,10 +59,6 @@ namespace karabo {
                                     const karabo::util::Hash::Pointer& header,
                                     const karabo::util::Hash::Pointer& message, int prio);
 
-        private:
-
-            void consume(const karabo::net::Channel::Pointer& channel, karabo::util::Hash::Pointer& header,
-                         karabo::util::Hash::Pointer& body);
 
         private:
 
