@@ -1105,6 +1105,13 @@ namespace karabo {
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
                 KARABO_SLOT(slotKillDevice)
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
+                << << << < HEAD
+                        == == == =
+                        KARABO_SLOT(slotReSubmitToAlarmService, karabo::util::Hash)
+
+
+
+                        >>>>>>> ad0f57d... Removed dual slot call and use topology information instead
             }
 
             /**
@@ -1386,6 +1393,26 @@ namespace karabo {
                 if (!toClear.empty() || !toAdd.empty()) emit("signalAlarmUpdate", getInstanceId(), result);
             }
 
+            /**
+             * This slot is called by the alarm service when it gets (re-) instantiated. The alarm service will pass
+             * any for this instances that it recovered from its persisted data. These should be checked against whether
+             * they are still valid and if new ones appeared
+             *
+             * @param existingAlarms: A hash containing existing alarms pertinent to this device. May be empty.
+             */
+            void slotReSubmitToAlarmService(const karabo::util::Hash& existingAlarms) {
+                using namespace karabo::util;
+                Hash existingAlarmsRF; //reformatted to match format updateAlarmServiceWithParametersInAlarm expects as previous
+                for (Hash::const_iterator pit = existingAlarms.begin(); pit != existingAlarms.end(); ++pit) {
+                    const Hash& propertyHash = pit->getValue<Hash>();
+                    const std::string property = pit->getKey();
+                    for (Hash::const_iterator atit = propertyHash.begin(); atit != propertyHash.end(); ++atit) {
+                        existingAlarmsRF.set(property, Hash("type", atit->getKey()));
+                    }
+                }
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                updateAlarmServiceWithParametersInAlarm(boost::optional<Hash>(existingAlarmsRF));
+            }
 
 
 

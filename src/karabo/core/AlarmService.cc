@@ -7,6 +7,12 @@
 
 #include "AlarmService.hh"
 #include "karabo/util/State.hh"
+#include "karabo/io/TextSerializer.hh"
+#include <fstream>
+#include <boost/interprocess/sync/file_lock.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/interprocess/sync/sharable_lock.hpp>
+
 
 namespace karabo {
     
@@ -85,6 +91,21 @@ namespace karabo {
             
             //device elements
             
+            PATH_ELEMENT(expected).key("storagePath")
+                    .displayedName("Storage path")
+                    .description("Path under which this device will persist its data for recovery")
+                    .assignmentOptional().defaultValue("./")
+                    .expertAccess()
+                    .commit();
+            
+            UINT32_ELEMENT(expected).key("flushInterval")
+                    .displayedName("Flush interval")
+                    .unit(Unit::SECOND)
+                    .assignmentOptional().defaultValue(10)
+                    .reconfigurable()
+                    .expertAccess()
+                    .commit();
+            
             VECTOR_STRING_ELEMENT(expected).key("registeredDevices")
                     .displayedName("Registered devices")
                     .description("The devices which are currently registered to this alarm service device")
@@ -111,6 +132,8 @@ namespace karabo {
         }
      
         AlarmService::~AlarmService() {
+            m_flushRunning = false;
+            m_flushWorker.join();
         }
         
         void AlarmService::initialize() {
@@ -121,11 +144,26 @@ namespace karabo {
             //we listen on instance new events to connect to the instances "signalAlarmUpdate" signal
             remote().registerInstanceNewMonitor(boost::bind(&AlarmService::registerNewDevice, this, _1));
             
+            //try to recover previous alarms in case we recovered from a failure or were restarted
+            m_flushFilePath = get<std::string>("storagePath") + "/" + getInstanceId() + ".xml";
+            reinitFromFile();
+            
+            //we add a worker thread, which persists alarm state at regular intervals. This data is used when recovering
+            //from a alarm service shutdown
+            
+            m_flushRunning = true;
+            m_flushWorker = boost::thread(&AlarmService::flushRunner, this);
+            
             updateState(State::NORMAL);
         }
         
         void AlarmService::setupSignalsAndSlots(){     
+<<<<<<< HEAD
             registerSlot<std::string, karabo::util::Hash > (boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2), "slotUpdateAlarms");
+=======
+            KARABO_SYSTEM_SIGNAL2("signalAlarmDeviceStarted", std::string, karabo::util::Hash);
+            registerSlot<karabo::util::Hash > (boost::bind(&AlarmService::slotUpdateAlarms, this, _1), "slotUpdateAlarms"); 
+>>>>>>> ad0f57d... Removed dual slot call and use topology information instead
         }
         
         void AlarmService::registerNewDevice(const karabo::util::Hash& topologyEntry){
@@ -160,6 +198,7 @@ namespace karabo {
             
         }
         
+
         void AlarmService::slotUpdateAlarms(const std::string& deviceId, const karabo::util::Hash& alarmInfo){
             
             //check for sanity of incoming hash
@@ -170,8 +209,11 @@ namespace karabo {
             
             // check if any alarms exist for this deviceId
             // in the following capital "N" at the end of a variable declarations signifies a Hash node
-            boost::optional<Hash::Node&> existingDeviceEntryN = m_alarms.find(deviceId);
+            boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
+            boost::optional<Hash::Node&> existingDeviceEntryN = m_alarms.find(instance);
+
             if(existingDeviceEntryN){
+                boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
                 Hash& existingDeviceEntry = existingDeviceEntryN->getValue<Hash>();
                 
                 //iterate over properties for this deviceId
@@ -210,7 +252,11 @@ namespace karabo {
             const Hash& toAdd = alarmInfo.get<Hash>("toAdd");
 
             if(!toAdd.empty()){
-                //if alarmInfo appears for first time we add it to the alarm entries
+
+    
+                boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
+                //if instance appears for first time we add it to the alarm entries
+
                 if(!existingDeviceEntryN){
                     existingDeviceEntryN = m_alarms.set(deviceId, Hash());
                 }
@@ -272,6 +318,7 @@ namespace karabo {
             std::vector<Hash> tableVector;
 
             //instance level
+            boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
             for(Hash::const_iterator it = m_alarms.begin(); it != m_alarms.end(); ++it){
                 const std::string& device = it->getKey();
                 const Hash& instances = it->getValue<Hash>();
@@ -316,11 +363,13 @@ namespace karabo {
                     const std::string& type = it->get<std::string>("type");
                     const std::string path = deviceId+"."+property+"."+type;
                     //we make sure that the table is up-to-date-with the internal data structure
+                    boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
                     const boost::optional<Hash::Node&> entryN = m_alarms.find(path, '.');
                      if(entryN){
                          const Hash& entry = entryN->getValue<Hash>();
                          if(entry.get<bool>("acknowledgeable") && entry.get<bool>("needsAcknowledging") && it->get<bool>("acknowledged")){
                              //remove the entry
+                            boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
                             m_alarms.erasePath(path, '.');
                          } 
                      } else {
@@ -333,6 +382,77 @@ namespace karabo {
                 incomingReconfiguration.erase("currentAlarms");
                 updateAlarmTable();
             }
+        }
+        
+        void AlarmService::flushRunner() const {
+            TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
+            
+            
+            while(this->m_flushRunning){
+                std::string archive;
+                std::ofstream fout;
+                fout.open(m_flushFilePath, ios::trunc);
+                {
+                    boost::interprocess::file_lock flock(m_flushFilePath.c_str());
+                    boost::interprocess::scoped_lock<boost::interprocess::file_lock> wflock(flock);
+                    {
+
+                        boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
+                        Hash h("devices", get<std::vector<std::string> >("registeredDevices"), "alarms", m_alarms);
+                        serializer->save(h, archive);
+                    }
+                    fout<<archive;
+                    fout.close();
+                }
+                boost::this_thread::sleep(boost::posix_time::seconds(this->get<unsigned int>("flushInterval")));
+            }
+        }
+        
+        void AlarmService::reinitFromFile(){
+            //nothing to do if file doesn't exist
+            if ( !boost::filesystem::exists(m_flushFilePath) ) return;
+
+            boost::interprocess::file_lock flock(m_flushFilePath.c_str());
+            try {
+                boost::interprocess::sharable_lock<boost::interprocess::file_lock> shlock(flock);
+                std::ifstream fin;
+                fin.open(m_flushFilePath);
+                std::ostringstream archive;
+                std::string input;
+                while(fin>>input) archive<<input<<std::endl;
+                fin.close();
+                TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
+                Hash previousState;
+                serializer->load(previousState, archive.str());
+                
+                boost::unique_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
+                m_alarms = previousState.get<Hash>("alarms");
+                
+                
+            } catch (...){
+                //we go on without updating alarms
+                KARABO_LOG_WARN<<"Could not load previous alarm state from file "<<m_flushFilePath<<" even though file exists!";
+            }
+            
+            //now request all devices to update their alarms
+            const Hash runtimeInfo = remote().getSystemInformation();
+            const Hash& onlineDevices = runtimeInfo.get<Hash>("device");
+            for (Hash::const_iterator it = onlineDevices.begin(); it != onlineDevices.end(); ++it) {
+                const Hash::Node& deviceNode = *it;
+                // Topology entry as understood by ensureLoggerRunning: Hash with path "device.<deviceId>"
+                Hash topologyEntry("device", Hash());
+                // Copy node with key "<deviceId>" and attributes into the single Hash in topologyEntry:
+                topologyEntry.begin()->getValue<Hash>().setNode(deviceNode);
+                registerAlarmServiceWithNewDevice(topologyEntry);
+                
+                const std::string& instanceId = it->getKey();
+                
+                boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
+                const boost::optional<Hash::Node&> entry = m_alarms.find(instanceId);
+                call(instanceId, "slotReSubmitToAlarmService", entry ? entry->getValue<Hash>() : Hash());
+            }
+           
+  
         }
         
     }
