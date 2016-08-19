@@ -139,10 +139,12 @@ class IconData(HasStrictTraits):
     """
     # XXX: Not sure what this is...
     equal = Bool
-    # The value of the icon??
+    # The value of the property
     value = String
     # A URL for an icon
     image = String
+    # The actual icon data
+    data = String
 
 
 class BaseIconsModel(BaseWidgetObjectData):
