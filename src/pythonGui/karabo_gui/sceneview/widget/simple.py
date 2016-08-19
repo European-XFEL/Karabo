@@ -4,16 +4,17 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtCore import QByteArray, QPoint, QRect, QSize, Qt
-from PyQt4.QtGui import (QApplication, QColor, QDialog, QFont, QFontMetrics,
-                         QFrame, QLabel, QPainter, QPen, QPushButton, QWidget)
+from PyQt4.QtGui import (
+    QColor, QDialog, QFont, QFontMetrics, QFrame, QLabel, QPainter, QPen,
+    QPushButton, QWidget)
 from PyQt4.QtSvg import QSvgRenderer
 
 from karabo.common.scenemodel.api import write_single_model
-from karabo_gui.const import OPEN_SCENE_LINK
 from karabo_gui.dialogs.dialogs import SceneLinkDialog
 from karabo_gui.dialogs.textdialog import TextDialog
+from karabo_gui.mediator import (
+    broadcast_event, KaraboBroadcastEvent, OPEN_SCENE_LINK)
 from karabo_gui.sceneview.utils import calc_rect_from_text
-from karabo_gui.util import KaraboBroadcastEvent, broadcast_event
 
 LIGHT_BLUE = (224, 240, 255)
 PADDING = 10
