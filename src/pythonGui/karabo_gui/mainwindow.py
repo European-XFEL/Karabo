@@ -31,6 +31,7 @@ from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
 
+from karabo.common.scenemodel.api import BaseIconsModel
 from karabo.middlelayer import AccessLevel
 
 
@@ -250,6 +251,26 @@ class MainWindow(QMainWindow):
         self.middleTab.removeDockableTab(self.placeholderPanel)
         self.placeholderPanel = None
 
+    def _readIconDataFromProject(self, sceneModel, project):
+        """ Go through the model tree to find existing icon models like
+            `DigitIconsModel`, `SelectionIconsModel`, `TextIconsModel` or
+            `DisplayIconsetModel` and use their `url` to load the actual image
+            data which is currently stored in the projects resources and put
+            them to the model data.
+        """
+        def update_icon_model(parent_model):
+            for child in parent_model.children:
+                if isinstance(child, BaseIconsModel):
+                    for icon_data in child.values:
+                        url = icon_data.image
+                        icon_data.data = project.getURL(url).decode()
+                else:
+                    if hasattr(child, "children"):
+                        update_icon_model(child)
+
+        # Recursively set all icon model data
+        update_icon_model(sceneModel)
+
     def checkAndRemovePlaceholderMiddlePanel(self):
         """ Remove placeholder from middle panel in case it makes sense.
         """
@@ -361,6 +382,8 @@ class MainWindow(QMainWindow):
         if sceneModel not in self._openedScenes:
             self.checkAndRemovePlaceholderMiddlePanel()
 
+            # Set icon data to model, if existent
+            self._readIconDataFromProject(sceneModel, project)
             sceneView = SceneView(model=sceneModel, project=project)
 
             # Add scene view to tab widget
