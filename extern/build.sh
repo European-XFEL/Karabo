@@ -65,7 +65,7 @@ traitlets dill ipython h5py pyusb parse suds jsonschema ecdsa pycrypto paramiko
 tzlocal httplib2 pssh traits pint nbformat notebook ipyparallel ipcluster_tools
 cycler )
 
-DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib pyqwt5 guidata guiqwt )
+DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole pyqwt5 guidata guiqwt )
 
 DEPENDENCIES_DARWIN=( wheel pyqwt5 guidata guiqwt boost openmqc hdf5 h5py
 log4cpp cppunit parse snappy traits pint )
