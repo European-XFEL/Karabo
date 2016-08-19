@@ -11,7 +11,6 @@ a treeview.
 from karabo.middlelayer_api.project import Monitor, Project, ProjectAccess
 from karabo.middlelayer import Hash, read_scene, SceneModel, write_scene
 from karabo_gui.configuration import Configuration
-from karabo_gui.const import OPEN_SCENE_LINK
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
 from karabo_gui.dialogs.configurationdialog import (
@@ -23,11 +22,12 @@ from karabo_gui.dialogs.monitordialog import MonitorDialog
 from karabo_gui.dialogs.scenedialog import SceneDialog
 from karabo_gui.guiproject import (
     Category, Device, DeviceGroup, GuiProject, Macro)
+from karabo_gui.mediator import (
+    KaraboBroadcastEvent, OPEN_SCENE_LINK, register_for_broadcasts)
 from karabo_gui.messagebox import MessageBox
 import karabo_gui.network as network
 from karabo_gui.topology import getDevice, Manager
-from karabo_gui.util import (
-    getSaveFileName, KaraboBroadcastEvent, register_for_broadcasts)
+from karabo_gui.util import getSaveFileName
 
 from PyQt4.QtCore import QAbstractItemModel, pyqtSignal, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
