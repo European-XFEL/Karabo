@@ -157,14 +157,14 @@ def remove_object_from_layout(obj, layout, object_dict):
     obj.hide()
 
 
-def create_object_from_model(layout, model, scene_view, object_dict):
+def create_object_from_model(layout, model, parent_widget, object_dict):
     """ Create a SceneView object to mirror a data model object.
     """
     obj = object_dict.get(model)
     if obj is None:
         factory = _SCENE_OBJ_FACTORIES.get(model.__class__)
         if factory:
-            obj = factory(model, scene_view)
+            obj = factory(model, parent_widget)
 
     # Add the new scene object to the layout
     if obj is not None:
@@ -173,7 +173,7 @@ def create_object_from_model(layout, model, scene_view, object_dict):
         add_object_to_layout(obj, layout)
         if is_layout(obj):
             # recurse
-            fill_root_layout(obj, model, scene_view, object_dict)
+            fill_root_layout(obj, model, parent_widget, object_dict)
             model_rect = QRect(model.x, model.y, model.width, model.height)
             if model_rect.isEmpty():
                 # Ask the layout to calculate a suitable size
@@ -191,14 +191,15 @@ def create_object_from_model(layout, model, scene_view, object_dict):
                 obj.set_geometry(model_rect)
 
 
-def fill_root_layout(layout, parent_model, scene_view, object_dict):
+def fill_root_layout(layout, parent_model, parent_widget, object_dict):
     """ Recursively build scene GUI objects for a given parent model object.
     Whenever a layout is encountered, its children are then added recursively.
 
     `object_dict` is a cache of already created GUI objects.
     """
     for child_model in parent_model.children:
-        create_object_from_model(layout, child_model, scene_view, object_dict)
+        create_object_from_model(layout, child_model, parent_widget,
+                                 object_dict)
 
 
 def bring_object_to_front(obj):

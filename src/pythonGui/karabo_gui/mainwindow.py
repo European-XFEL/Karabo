@@ -362,8 +362,6 @@ class MainWindow(QMainWindow):
             self.checkAndRemovePlaceholderMiddlePanel()
 
             sceneView = SceneView(model=sceneModel, project=project)
-            # XXX: TODO scenelink
-            #sceneView.signalSceneLinkTriggered.connect(self.openSceneLink)
 
             # Add scene view to tab widget
             scenePanel = ScenePanel(sceneView, self.acServerConnect.isChecked())
@@ -388,9 +386,6 @@ class MainWindow(QMainWindow):
         """ Remove the tab which is associated to the given `sceneModel`.
         """
         if sceneModel in self._openedScenes:
-            # XXX: TODO scenelink
-            #sceneView.signalSceneLinkTriggered.disconnect(self.openSceneLink)
-
             divWidget = self._getSceneDivWidget(sceneModel)
             if divWidget is not None:
                 self.middleTab.removeDockableTab(divWidget.dockableWidget)
