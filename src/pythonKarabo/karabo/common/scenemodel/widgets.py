@@ -1,7 +1,7 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import (HasStrictTraits, Bool, Dict, Enum, Float, Instance,
-                        Int, List, String)
+from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Float,
+                        Instance, Int, List, String)
 
 from .bases import BaseWidgetObjectData
 from .const import NS_KARABO, NS_SVG
@@ -144,7 +144,8 @@ class IconData(HasStrictTraits):
     # A URL for an icon
     image = String
     # The actual icon data
-    data = String
+    data = Any  # XXX This is supposed to be a String needs to be changed once
+                # the data is stored in the SVG file
 
 
 class BaseIconsModel(BaseWidgetObjectData):
