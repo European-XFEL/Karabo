@@ -10,26 +10,20 @@
    functionalities.
 """
 
-__all__ = ["BaseComponent"]
-
 import numbers
 
 import numpy
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer
-from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMessageBox,
-                         QToolButton, QWidget)
+from PyQt4.QtGui import QAction, QHBoxLayout, QLabel, QToolButton, QWidget
 
-from .const import ns_karabo
 from . import icons
-from .layouts import ProxyWidget
 from .messagebox import MessageBox
 from .network import Network
-from .registry import Loadable
-from .topology import getDevice, Manager
+from .topology import Manager
 from .widget import EditableWidget, DisplayWidget, Widget
 
 
-class BaseComponent(Loadable, QObject):
+class BaseComponent(QObject):
     Widget = EditableWidget
     signalValueChanged = pyqtSignal(object, object)  # key, value
 
@@ -41,38 +35,6 @@ class BaseComponent(Loadable, QObject):
         self.widgetFactory.setParent(self)
         if box.descriptor is not None:
             self.widgetFactory.typeChangedSlot(box)
-
-    def save(self, e):
-        """saves this component into the ElementTree.Element e"""
-        e.set(ns_karabo + "class", self.__class__.__name__)
-        e.set(ns_karabo + "widget", type(self.widgetFactory).__name__)
-        e.set(ns_karabo + "keys", ",".join(b.key()
-                                           for b in self.widgetFactory.boxes))
-        self.widgetFactory.save(e)
-
-    @classmethod
-    def load(cls, elem, layout):
-        boxes = []
-        for k in elem.get(ns_karabo + 'keys').split(","):
-            deviceId, path = k.split('.', 1)
-            conf = getDevice(deviceId)
-            boxes.append(conf.getBox(path.split(".")))
-        parent = ProxyWidget(layout.parentWidget())
-        wn = elem.get(ns_karabo + "widget")
-        try:
-            component = cls(wn, boxes[0], parent)
-        except KeyError:
-            QMessageBox.warning(layout.parentWidget(), "Widget not found",
-                                "Could not find widget '{}'.".format(wn))
-            return
-        parent.setComponent(component)
-        parent.setWidget(component.widget)
-        layout.loadPosition(elem, parent)
-        for b in boxes[1:]:
-            component.addBox(b)
-        component.widgetFactory.load(elem)
-        elem.clear()
-        return component
 
     @property
     def boxes(self):
