@@ -263,7 +263,7 @@ class MainWindow(QMainWindow):
                 if isinstance(child, BaseIconsModel):
                     for icon_data in child.values:
                         url = icon_data.image
-                        icon_data.data = project.getURL(url).decode()
+                        icon_data.data = project.getURL(url)
                 else:
                     if hasattr(child, "children"):
                         update_icon_model(child)
