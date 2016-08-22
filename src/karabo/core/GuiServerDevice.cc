@@ -164,9 +164,9 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onConnect(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& e) {
+        void GuiServerDevice::onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
             if (e) {
-                EventLoop::getIOService().post(boost::bind(&GuiServerDevice::onError, this, channel, e));
+                EventLoop::getIOService().post(boost::bind(&GuiServerDevice::onError, this, e, channel));
                 return;
             }
             
@@ -180,7 +180,7 @@ namespace karabo {
                 // priority 4 should be LOSSLESS
                 channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
 
-                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1, _2));
+                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, channel, _2));
 
                 Hash brokerInfo("type", "brokerInformation");
                 brokerInfo.set("host", this->getConnection()->getBrokerHostname());
@@ -208,9 +208,9 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onRead(karabo::net::Channel::Pointer channel, karabo::util::Hash& info, const karabo::net::ErrorCode& e) {
+        void GuiServerDevice::onRead(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel, karabo::util::Hash& info) {
             if (e) {
-                EventLoop::getIOService().post(boost::bind(&GuiServerDevice::onError, this, channel, e));
+                EventLoop::getIOService().post(boost::bind(&GuiServerDevice::onError, this, e, channel));
                 return;
             }
             
@@ -260,10 +260,10 @@ namespace karabo {
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << "Ignoring request";
                 }
-                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1, _2));
+                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, channel, _2));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRead(): " << e.userFriendlyMsg();
-                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1, _2));
+                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, channel, _2));
             }
         }
 
@@ -1040,7 +1040,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
+        void GuiServerDevice::onError(const karabo::net::ErrorCode& errorCode, karabo::net::Channel::Pointer channel) {
             try {
                 
                 KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";

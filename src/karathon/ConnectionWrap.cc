@@ -17,7 +17,7 @@ namespace karathon {
         int port = 0;
         try {
             ScopedGILRelease nogil;
-            port = connection->startAsync(boost::bind(proxyConnectionHandler, connectionHandler, _1));
+            port = connection->startAsync(boost::bind(proxyConnectionHandler, _1, connectionHandler, _2));
         } catch (...) {
             KARABO_RETHROW
         }
@@ -25,10 +25,10 @@ namespace karathon {
     }
 
 
-    void ConnectionWrap::proxyConnectionHandler(const bp::object& connectionHandler, karabo::net::Channel::Pointer channel) {
+    void ConnectionWrap::proxyConnectionHandler(const karabo::net::ErrorCode& code, const bp::object& connectionHandler, karabo::net::Channel::Pointer channel) {
         ScopedGILAcquire gil;
         try {
-            connectionHandler(bp::object(channel));
+            connectionHandler(bp::object(code), bp::object(channel));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) {
                 PyErr_Print();

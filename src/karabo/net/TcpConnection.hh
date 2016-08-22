@@ -37,6 +37,8 @@ namespace karabo {
         typedef boost::system::error_code ErrorCode;
         typedef boost::shared_ptr<Channel> ChannelPointer;
         typedef boost::function<void () > TimeoutHandler;
+        typedef boost::shared_ptr<boost::asio::ip::tcp::resolver> BoostResolverPointer;
+        typedef boost::shared_ptr<boost::asio::ip::tcp::acceptor> BoostAcceptorPointer;
         
         /**
          * The Connection class.
@@ -90,10 +92,9 @@ namespace karabo {
             
         private:
 
-            void resolveHandler(const ConnectionHandler&, const ErrorCode&, boost::asio::ip::tcp::resolver::iterator);
-            void acceptHandler(ChannelPointer, const ConnectionHandler&, const ErrorCode&);
-            void connectHandler(const ChannelPointer&, const ConnectionHandler&, const ErrorCode&);
-            void connectTimeoutHandler(const ConnectionHandler&, const ChannelPointer&);
+            void resolveHandler(const ErrorCode&, boost::asio::ip::tcp::resolver::iterator, const ConnectionHandler&);
+            void acceptHandler(const ErrorCode&, ChannelPointer, const ConnectionHandler&);
+            void connectHandler(const ErrorCode&, const ChannelPointer&, const ConnectionHandler&);
             ChannelPointer startServer();
             ChannelPointer startClient();
             void startServer(const ConnectionHandler&);
@@ -102,8 +103,8 @@ namespace karabo {
 
         private:
 
-            boost::asio::ip::tcp::resolver m_resolver;
-            boost::asio::ip::tcp::acceptor m_acceptor;
+            BoostResolverPointer m_resolver;
+            BoostAcceptorPointer m_acceptor;
             std::string m_connectionType;
             std::string m_hostname;
             unsigned int m_port;
@@ -113,7 +114,6 @@ namespace karabo {
             bool m_manageAsyncData;
             int m_compressionUsageThreshold;
             std::string m_compression;
-            long long m_timeout;
         };
     }
 }
