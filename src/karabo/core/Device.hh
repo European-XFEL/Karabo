@@ -453,7 +453,7 @@ namespace karabo {
 
 
                 const bool hadPreviousAlarm = m_validatorIntern.hasParametersInWarnOrAlarm();
-                boost::optional<Hash> previousParametersInAlarm;
+                Hash previousParametersInAlarm;
                 if (hadPreviousAlarm) {
                     previousParametersInAlarm = m_validatorIntern.getParametersInWarnOrAlarm(); //copies on purpose
                 }
@@ -474,7 +474,7 @@ namespace karabo {
                 }
 
                 //notify of alarm changes
-                updateAlarmServiceWithParametersInAlarm(previousParametersInAlarm);
+                signalAlarmUpdates(previousParametersInAlarm);
 
 
 
@@ -1097,7 +1097,7 @@ namespace karabo {
 
                 KARABO_SYSTEM_SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
 
-                KARABO_SIGNAL1("signalAlarmUpdate", karabo::util::Hash);
+                KARABO_SIGNAL2("signalAlarmUpdate", std::string, karabo::util::Hash);
 
 
                 KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
@@ -1105,9 +1105,6 @@ namespace karabo {
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
                 KARABO_SLOT(slotKillDevice)
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
-                KARABO_SLOT(slotAlarmDeviceStarted, std::string, karabo::util::Hash)
-
-
             }
 
             /**
@@ -1333,36 +1330,49 @@ namespace karabo {
                 return std::pair<bool, const AlarmCondition > (false, AlarmCondition::NONE);
             }
 
-            void updateAlarmServiceWithParametersInAlarm(const boost::optional<karabo::util::Hash> & previous) {
+            /**
+             * Evaluates difference between previous and current parameter in alarm conditions and emits
+             * a signal with the update
+             *
+             * @param previous: alarm conditions previously present on the device.
+             *
+             * Note: calling this method must be protected by a state change mutex!
+             */
+            void signalAlarmUpdates(const karabo::util::Hash& previous) {
                 using namespace karabo::util;
 
-
                 Hash result;
-                Hash::Node& thisDevice = result.set(getInstanceId(), Hash("toClear", Hash(), "toAdd", Hash()));
-                Hash& toClear = thisDevice.getValue<Hash>().bindReference<Hash>("toClear");
-                Hash& toAdd = thisDevice.getValue<Hash>().bindReference<Hash>("toAdd");
+                Hash& toClear = result.bindReference<Hash>("toClear");
+                Hash& toAdd = result.bindReference<Hash>("toAdd");
 
                 const Hash& current = m_validatorIntern.getParametersInWarnOrAlarm();
-                if (previous) {
-                    for (Hash::const_iterator it = previous->begin(); it != previous->end(); ++it) {
+                if (!previous.empty()) {
+                    for (Hash::const_iterator it = previous.begin(); it != previous.end(); ++it) {
                         if (current.find(it->getKey())) continue; //alarmCondition still exists nothing to clean
 
                         //add simple entry to allow for cleaning
                         const Hash& desc = it->getValue<Hash>();
-                        toClear.set(it->getKey(), Hash(desc.get<std::string>("type"), true));
+                        const std::string& property = it->getKey();
+
+                        boost::optional<Hash::Node&> typesListN = toClear.find(property);
+                        if (!typesListN) {
+                            typesListN = toClear.set(property, std::vector<std::string>());
+                        }
+                        std::vector<std::string>& typesList = typesListN->getValue<std::vector<std::string> >();
+                        typesList.push_back(desc.get<std::string>("type"));
                         KARABO_LOG_DEBUG << "Clearing alarm condition " << it->getKey() << " -> " << desc.get<std::string>("type");
                     }
-                };
+                }
 
                 //now add new alarms
                 for (Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
                     const Hash& desc = it->getValue<Hash>();
-                    const std::string conditionString = desc.get<std::string>("type");
+                    const std::string& conditionString = desc.get<std::string>("type");
                     const AlarmCondition& condition = AlarmCondition::fromString(conditionString);
 
-                    const std::string property = it->getKey();
+                    const std::string& property = it->getKey();
 
-                    Hash::Node& entryNode = toAdd.set(property, Hash(conditionString, Hash()));
+                    Hash::Node& entryNode = toAdd.set(property, Hash());
                     Hash& entry = entryNode.getValue<Hash>().bindReference<Hash>(conditionString);
 
                     entry.set("type", conditionString);
@@ -1373,12 +1383,10 @@ namespace karabo {
 
                 }
 
-                if (!toClear.empty() || !toAdd.empty()) emit("signalAlarmUpdate", result);
+                if (!toClear.empty() || !toAdd.empty()) emit("signalAlarmUpdate", getInstanceId(), result);
             }
 
-            void slotAlarmDeviceStarted(const std::string& alarmInstance, const karabo::util::Hash& knownAlarms) {
-                //currently only a stub
-            }
+
 
 
         };

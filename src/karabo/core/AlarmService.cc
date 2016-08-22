@@ -119,17 +119,16 @@ namespace karabo {
             
             setupSignalsAndSlots();
             //we listen on instance new events to connect to the instances "signalAlarmUpdate" signal
-            remote().registerInstanceNewMonitor(boost::bind(&AlarmService::registerAlarmServiceWithNewDevice, this, _1));
+            remote().registerInstanceNewMonitor(boost::bind(&AlarmService::registerNewDevice, this, _1));
             
             updateState(State::NORMAL);
         }
         
         void AlarmService::setupSignalsAndSlots(){     
-            KARABO_SYSTEM_SIGNAL2("signalAlarmDeviceStarted", std::string, karabo::util::Hash);
-            registerSlot<karabo::util::Hash > (boost::bind(&AlarmService::slotUpdateAlarms, this, _1), "slotUpdateAlarms");
+            registerSlot<std::string, karabo::util::Hash > (boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2), "slotUpdateAlarms");
         }
         
-        void AlarmService::registerAlarmServiceWithNewDevice(const karabo::util::Hash& topologyEntry){
+        void AlarmService::registerNewDevice(const karabo::util::Hash& topologyEntry){
             //only act upon instance we do not know about yet coming up
                 try {
                     const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
@@ -138,24 +137,17 @@ namespace karabo {
                         const Hash& entry = topologyEntry.begin()->getValue<Hash>();
                         const std::string& deviceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
                                                              topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
-                        if(m_registeredDevices.insert(std::pair<std::string, Hash>(deviceId, entry)).second){
-                            
-                            KARABO_LOG_FRAMEWORK_INFO << "registerAlarmWithNewDevice --> deviceId: '" << deviceId
-                                    << "', type: '" << type << "'";
-                            
+                        
+                        boost::upgrade_lock<boost::shared_mutex> readLock(m_deviceRegisterMutex);
+                        std::vector<std::string> devices = get<std::vector<std::string> >("registeredDevices");
+                        if (std::find(devices.begin(), devices.end(), deviceId) == devices.end()) {
                             connect(deviceId, "signalAlarmUpdate", "", "slotUpdateAlarms");
-                            
-                            std::vector<std::string> devices = get<std::vector<std::string> >("registeredDevices");
                             devices.push_back(deviceId);
+                            boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
                             set("registeredDevices", devices);
-                            
-                            //TODO: Implement listening to new instances heartbeats
-            
-                            
-                        } else {
-                        //this instance reappeared, we should ask for resubmitting all alarms
-                        //TODO: implement this
-                        }
+                        } 
+                        
+                        
                     }
                 
                 } catch (const Exception& e) {
@@ -168,32 +160,32 @@ namespace karabo {
             
         }
         
-        void AlarmService::slotUpdateAlarms(const karabo::util::Hash& alarmInfo){
-            const Hash::Node& instanceNode = *alarmInfo.begin(); //we assume only one instance entry here
-            const std::string& instance = instanceNode.getKey();
-            const Hash& instanceNodeHash = instanceNode.getValue<Hash>();
+        void AlarmService::slotUpdateAlarms(const std::string& deviceId, const karabo::util::Hash& alarmInfo){
+            
+            //check for sanity of incoming hash
+            if(!alarmInfo.has("toClear") || !alarmInfo.has("toAdd")) return;
             
             // get rid of alarm conditions that have passed or can now be acknowledged
-            const Hash& toClear = instanceNodeHash.get<Hash>("toClear");
+            const Hash& toClear = alarmInfo.get<Hash>("toClear");
             
-            // check if any alarms exist for this instance
+            // check if any alarms exist for this deviceId
             // in the following capital "N" at the end of a variable declarations signifies a Hash node
-            boost::optional<Hash::Node&> existingDeviceEntryN = m_alarms.find(instance);
+            boost::optional<Hash::Node&> existingDeviceEntryN = m_alarms.find(deviceId);
             if(existingDeviceEntryN){
                 Hash& existingDeviceEntry = existingDeviceEntryN->getValue<Hash>();
                 
-                //iterate over properties for this instance
-                for(Hash::const_iterator pit = toClear.begin(); pit != toClear.end(); ++pit){
-                    boost::optional<Hash::Node&> existingPropEntryN = existingDeviceEntry.find(pit->getKey()); //existing property alarms for instance
+                //iterate over properties for this deviceId
+                for(Hash::const_iterator propIt = toClear.begin(); propIt != toClear.end(); ++propIt){
+                    boost::optional<Hash::Node&> existingPropEntryN = existingDeviceEntry.find(propIt->getKey()); //existing property alarms for deviceId
                     if(!existingPropEntryN) continue; //no alarm for this property
                     
                     Hash& existingPropEntry = existingPropEntryN->getValue<Hash>();
                    
                     //iterate over alarm types in this property
-                    const Hash& alarmTypes = pit->getValue<Hash>();
+                    const std::vector<std::string>& alarmTypes = propIt->getValue<std::vector<std::string> >();
                    
-                    for(Hash::const_iterator atit = alarmTypes.begin(); atit != alarmTypes.end(); ++atit){
-                        boost::optional<Hash::Node&> existingTypeEntryN = existingPropEntry.find(atit->getKey()); //existing alarm types for property
+                    for(std::vector<std::string>::const_iterator aTypeIt = alarmTypes.begin(); aTypeIt != alarmTypes.end(); ++aTypeIt){
+                        boost::optional<Hash::Node&> existingTypeEntryN = existingPropEntry.find(*aTypeIt); //existing alarm types for property
                         if(!existingTypeEntryN) continue; //no alarm for this property and alarm type
    
                         //alarm of this type exists for the property
@@ -204,45 +196,47 @@ namespace karabo {
                            
                         } else {
                            //go ahead and erase the alarm condition as it is allowed to silently disappear
-                            existingPropEntry.erase(pit->getKey());
+                            existingPropEntry.erase(*aTypeIt);
                         
                         }
                     }
+                    
+                    if(existingPropEntry.empty()) existingDeviceEntry.erase(propIt->getKey());
                     
                 }
             }
             
             //now add new alarms
-            const Hash& toAdd = instanceNodeHash.get<Hash>("toAdd");
+            const Hash& toAdd = alarmInfo.get<Hash>("toAdd");
 
             if(!toAdd.empty()){
-                //if instance appears for first time we add it to the alarm entries
+                //if alarmInfo appears for first time we add it to the alarm entries
                 if(!existingDeviceEntryN){
-                    existingDeviceEntryN = m_alarms.set(instance, Hash());
+                    existingDeviceEntryN = m_alarms.set(deviceId, Hash());
                 }
                 Hash& existingDeviceEntry = existingDeviceEntryN->getValue<Hash>();
 
                 //iteration over properties with alarms
-                for(Hash::const_iterator pit = toAdd.begin(); pit != toAdd.end(); ++pit){
+                for(Hash::const_iterator propIt = toAdd.begin(); propIt != toAdd.end(); ++propIt){
                     //check if alarms for this property exist
-                    boost::optional<Hash::Node&> existingPropEntryN = existingDeviceEntry.find(pit->getKey());
+                    boost::optional<Hash::Node&> existingPropEntryN = existingDeviceEntry.find(propIt->getKey());
                     if(!existingPropEntryN) { 
                         //create node for property if it doesn't exist
-                        existingPropEntryN = existingDeviceEntry.set(pit->getKey(), Hash());
+                        existingPropEntryN = existingDeviceEntry.set(propIt->getKey(), Hash());
                     }
                     
                     //update this property
-                    const Hash& updatingPropEntry =  pit->getValue<Hash>(); 
+                    const Hash& updatingPropEntry =  propIt->getValue<Hash>(); 
                     Hash& existingPropEntry = existingPropEntryN->getValue<Hash>();
 
                     //iterates over alarm type of this property
-                    for(Hash::const_iterator atit = updatingPropEntry.begin(); atit != updatingPropEntry.end(); ++atit){
-                        boost::optional<Hash::Node&> existingTypeEntryN = existingPropEntry.find(atit->getKey());
+                    for(Hash::const_iterator aTypeIt = updatingPropEntry.begin(); aTypeIt != updatingPropEntry.end(); ++aTypeIt){
+                        boost::optional<Hash::Node&> existingTypeEntryN = existingPropEntry.find(aTypeIt->getKey());
                         
                         
-                        const Timestamp updatedTimeStamp = Timestamp::fromHashAttributes(pit->getAttributes());
-                        std::string timeOfOccurrence = updatedTimeStamp.toIso8601();
-                        unsigned long long trainOfOccurrence = updatedTimeStamp.getTrainId();
+                        const Timestamp updatedTimeStamp = Timestamp::fromHashAttributes(propIt->getAttributes());
+                        const std::string timeOfOccurrence = updatedTimeStamp.toIso8601();
+                        const unsigned long long trainOfOccurrence = updatedTimeStamp.getTrainId();
                         std::string timeOfFirstOccurrence = timeOfOccurrence;
                         unsigned long long trainOfFirstOccurrence = trainOfOccurrence;
                         
@@ -254,7 +248,7 @@ namespace karabo {
                         }
                         
                         //first set all properties we can simply copy by assigning value of the new entry
-                        Hash::Node& newEntryN = existingPropEntry.set(atit->getKey(), atit->getValue<Hash>());
+                        Hash::Node& newEntryN = existingPropEntry.set(aTypeIt->getKey(), aTypeIt->getValue<Hash>());
 
                         //now those which we needed to modify
                         Hash& newEntry = newEntryN.getValue<Hash>();
@@ -263,7 +257,7 @@ namespace karabo {
                         newEntry.set("timeOfOccurrence", timeOfOccurrence);
                         newEntry.set("trainOfOccurrence", trainOfOccurrence);
                         // acknowledgeable is determined by whether an alarm needs acknowledging
-                        newEntry.get<bool>("needsAcknowledging") ? newEntry.set("acknowledgeable", false) : newEntry.set("acknowledgeable", true);
+                        newEntry.set("acknowledgeable",  !newEntry.get<bool>("needsAcknowledging"));
                         
                 
                     }
@@ -283,14 +277,15 @@ namespace karabo {
                 const Hash& instances = it->getValue<Hash>();
                 
                 //property level
-                for(Hash::const_iterator pit = instances.begin(); pit != instances.end(); ++pit){
-                    const std::string& property = pit->getKey();
-                    const Hash& properties = pit->getValue<Hash>();
+                for(Hash::const_iterator propIt = instances.begin(); propIt != instances.end(); ++propIt){
+                    const std::string& property = propIt->getKey();
+                    const Hash& alarmTypes = propIt->getValue<Hash>();
                     
                     //type level
-                    for(Hash::const_iterator atit = properties.begin(); atit != properties.end(); ++atit){
-                        const Hash& entry = atit->getValue<Hash>();
-                        Hash h;
+                    for(Hash::const_iterator aTypeIt = alarmTypes.begin(); aTypeIt != alarmTypes.end(); ++aTypeIt){
+                        const Hash& entry = aTypeIt->getValue<Hash>();
+                        tableVector.push_back(Hash());
+                        Hash& h =  tableVector.back();
                         h.set("timeOfOccurrence", entry.get<std::string>("timeOfOccurrence"));
                         h.set("trainOfOccurrence", entry.get<unsigned long long>("trainOfOccurrence"));
                         h.set("timeOfFirstOccurrence", entry.get<std::string>("timeOfFirstOccurrence"));
@@ -301,7 +296,7 @@ namespace karabo {
                         h.set("description", entry.get<std::string>("description"));
                         h.set("needsAcknowledging", entry.get<bool>("needsAcknowledging"));
                         h.set("acknowledgeable", entry.get<bool>("acknowledgeable"));
-                        tableVector.push_back(h);
+                       
                         
                     }
                 }

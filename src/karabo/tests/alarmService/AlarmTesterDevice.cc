@@ -25,8 +25,8 @@ namespace karabo {
         FLOAT_ELEMENT(expected).key("floatProperty")
             .displayedName("Float Property")
             .readOnly().initialValue(0)
-            .alarmLow(-2).info("A description for alarmLow").needsAcknowledging(true)
-            .alarmHigh(2).info("A description for alarmHigh").needsAcknowledging(true)
+            .alarmLow(-1.5).info("A description for alarmLow").needsAcknowledging(true)
+            .alarmHigh(1.5).info("A description for alarmHigh").needsAcknowledging(true)
             .enableRollingStats().warnVarianceHigh(3).needsAcknowledging(false).evaluationInterval(100)
             .commit();
         

@@ -8,10 +8,9 @@
 #ifndef KARABO_ALARMSERVICE_HH
 #define	KARABO_ALARMSERVICE_HH
 
-#include <set>
-
 #include "Device.hh"
 #include "OkErrorFsm.hh"
+#include <boost/thread.hpp>
 
 /**
  * The main karabo namespace
@@ -43,24 +42,22 @@ namespace karabo {
              * Callback for the instanceNew monitor. Connects this device's slotUpdateAlarms function
              * to the new devices signalAlarmUpdate signal.
              */
-            void registerAlarmServiceWithNewDevice(const karabo::util::Hash& topologyEntry);
-
-            void slotRegisterExistingDevice(const karabo::util::Hash& instanceInfo);
+            void registerNewDevice(const karabo::util::Hash& topologyEntry);
 
             /**
-             * This slot is to be called to the the alarm service device know of an update
-             * in device alarms. As only parameter it expects an alarmInfo Hash, which should
+             * This slot is to be called to let the alarm service device know of an update
+             * in device alarms. As parameters it expects a device id, alarmInfo Hash, which should
              * have the following structure:
              *
-             *   deviceId -> toClear -> property A -> alarm type 1 -> bool
-             *                       -> property A -> alarm type 2 -> bool
-             *                       -> property B -> ....
+             *   toClear -> property A -> alarm type 1 -> bool
+             *           -> property A -> alarm type 2 -> bool
+             *           -> property B -> ....
              *
              *  The bool field is not evaluated but serves as a placeholder
              *
-             *   deviceId -> toClear -> property A -> alarm type 1 -> Hash()
-             *   deviceId -> toClear -> property A -> alarm type 2 -> Hash()
-             *   deviceId -> toClear -> property B -> ...
+             *   deviceId -> toAdd -> property A -> alarm type 1 -> Hash()
+             *   deviceId -> toAdd -> property A -> alarm type 2 -> Hash()
+             *   deviceId -> toAdd -> property B -> ...
              *
              * Entries underneath the "toClear" hierarchy are used to evaluated clearing of existing
              * alarms. Two scenarios are handled:
@@ -74,7 +71,7 @@ namespace karabo {
              *  - an alarm for this property and type <b>does</b> exist -> it is updated but the
              *    first occurance is set to that of the existing alarm.
              */
-            void slotUpdateAlarms(const karabo::util::Hash& alarmInfo);
+            void slotUpdateAlarms(const std::string& deviceId, const karabo::util::Hash& alarmInfo);
 
 
 
@@ -83,6 +80,7 @@ namespace karabo {
 
             std::map<std::string, karabo::util::Hash> m_registeredDevices;
             karabo::util::Hash m_alarms;
+            boost::shared_mutex m_deviceRegisterMutex;
 
             /**
              Updates the alarm table of this device to reflect the entries in m_alarms
