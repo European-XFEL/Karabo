@@ -44,35 +44,32 @@ class Label(QLabel):
             QLabel.setPixmap(self, pixmap)
 
 
-class Item:
-    value = None
-    url = None
-    pixmap = None
+class Item(object):
+    value = None  # Property value associated with the image data
+    url = None  # Url of the image
+    data = None  # Bytes of image data
+    pixmap = None  # Pixmap to display the data
 
-    def __init__(self, element=None, project=None):
-        if element is None:
-            return
-        url = element.get("image")
-        if url is None:
-            return
-        if not self.getPixmap(project, url):
-            return
-        self.url = url
+    def __init__(self, value, data=None):
+        self.value = value
+        self.data = data
+        self.getPixmap()
 
-    def getPixmap(self, project, url):
-        """This function tries to load an image from the given url
+    def getPixmap(self):
+        """ This function tries to load an image from the given `data` which
+            is available as byte string.
         """
-        if project is None:
-            return False
-        
+        if self.data is None:
+            return
+
         pixmap = QPixmap()
         try:
-            if not pixmap.loadFromData(project.getURL(url)):
+            if not pixmap.loadFromData(self.data):
                 raise IconError
         except (KeyError, IconError):
-            MessageBox.showError("Could not read image from URL {}".format(url))
+            MessageBox.showError("Could not read image.")
             return False
-        
+
         self.pixmap = pixmap
         return True
 
@@ -339,10 +336,8 @@ class SelectionIcons(Icons):
         items = list(self.items)
         for o in box.descriptor.options:
             if not any(o == item.value for item in self.items):
-                item = Item()
-                item.value = o
-                items.append(item)
-
+                newItem = Item(o)
+                items.append(newItem)
         self._setItems(items)
 
     def valueChanged(self, box, value, timestamp=None):
