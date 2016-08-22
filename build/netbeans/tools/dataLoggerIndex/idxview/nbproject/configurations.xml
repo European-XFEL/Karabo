@@ -36,6 +36,7 @@
       </toolsSet>
       <compileType>
         <ccTool>
+          <standard>8</standard>
           <incDir>
             <pElem>../../../../../src/tools/dataLoggerIndex</pElem>
             <pElem>${KARABO}/include</pElem>
