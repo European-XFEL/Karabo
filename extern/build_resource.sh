@@ -9,17 +9,42 @@
 #
 
 # Help function for checking successful execution of commands
+checkReturnCode() {
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+        printf "Error : [%d] when executing command: '$cmnd'" $ret_code
+        exit $ret_code
+    fi
+}
+
 safeRunCommand() {
-    typeset cmnd="$*"
-    typeset ret_code
+    local cmnd="$*"
+    local ret_code
 
     echo cmnd=$cmnd
     eval $cmnd
-    ret_code=$?
-    if [ $ret_code != 0 ]; then
-	printf "Error : [%d] when executing command: '$cmnd'" $ret_code
-	exit $ret_code
-    fi
+    checkReturnCode
+}
+
+safeRunCommandQuiet() {
+    local cmnd="$*"
+    local ret_code
+
+    echo cmnd=$cmnd
+    eval $cmnd &> /dev/null
+    checkReturnCode
+}
+
+usage() {
+    echo
+    echo "Usage: $0 RESOURCE_NAME [INSTALL_PREFIX]"
+    echo
+    echo "RESOURCE_NAME  - The resource to be installed out of those possible:"
+    echo
+    echo "$1"
+    echo
+    echo "INSTALL_PREFIX - The install location of the selected resource"
+    echo
 }
 
 CWD=$(pwd)
@@ -32,22 +57,26 @@ if [ $? -ne 0 ]; then
     exit 1;
 fi
 
-# Parse command line
-if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
-    AVAILABLE=$(ls resources)
-    cat <<End-of-help
-Usage: $0 RESOURCE_NAME [INSTALL_PREFIX]
-
-RESOURCE_NAME  - The resource to be installed out of those possible:
-
-$AVAILABLE
-
-INSTALL_PREFIX - The install location of the selected resource
-
-End-of-help
-
-    exit 0
-fi
+##############################################################################
+# Parse command line args (anything starting with '-')
+QUIETLY="n"
+until [ ${1:0:1} != "-" ]; do
+    case $1 in
+        --help|-help|-h)
+        usage "$0 $(ls resources)"
+        exit 0
+        ;;
+        --quiet|-q)
+        QUIETLY="y"
+        ;;
+        *)
+        echo "Unrecognized argument '$1'"
+        usage "$0 $(ls resources)"
+        exit 1
+        ;;
+    esac
+    shift
+done
 
 # $1 RESOURCE_NAME   -> Name of the installed dependency
 # $2 INSTALL_PREFIX  -> Installation prefix
@@ -87,17 +116,32 @@ if [ -d $RESOURCE_PATH ]; then
     if [ ! $CUSTOM_BUILD ]; then
 
         echo -e "\n### Extracting $RESOURCE_NAME"
-        safeRunCommand "$EXTRACT_COMMAND"
+        if [ "$QUIETLY" = "y" ]; then
+            safeRunCommandQuiet "$EXTRACT_COMMAND"
+        else
+            safeRunCommand "$EXTRACT_COMMAND"
+        fi
         cd $DEP_NAME
 
         echo -e "\n### Configuring $RESOURCE_NAME"
-        safeRunCommand "$CONFIGURE_COMMAND"
+        if [ "$QUIETLY" = "y" ]; then
+            safeRunCommandQuiet "$CONFIGURE_COMMAND"
+        else
+            safeRunCommand "$CONFIGURE_COMMAND"
+        fi
 
         echo -e "\n### Compiling $RESOURCE_NAME"
-        safeRunCommand "$MAKE_COMMAND"
-
+        if [ "$QUIETLY" = "y" ]; then
+            safeRunCommandQuiet "$MAKE_COMMAND"
+        else
+            safeRunCommand "$MAKE_COMMAND"
+        fi
         echo -e "\n### Installing $RESOURCE_NAME"
-        safeRunCommand "$INSTALL_COMMAND"
+        if [ "$QUIETLY" = "y" ]; then
+            safeRunCommandQuiet "$INSTALL_COMMAND"
+        else
+            safeRunCommand "$INSTALL_COMMAND"
+        fi
     fi
     cd $scriptDir
 else
