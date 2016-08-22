@@ -51,3 +51,4 @@ src/pythonGui/krbgui/_version.py
 build/netbeans/*/*.log
 build/python/*.exe
 !.gitignore
+*openMQLib.log.*

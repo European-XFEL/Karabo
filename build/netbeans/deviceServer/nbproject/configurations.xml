@@ -33,6 +33,7 @@
           </incDir>
         </cTool>
         <ccTool>
+          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
