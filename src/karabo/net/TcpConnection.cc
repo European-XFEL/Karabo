@@ -103,7 +103,9 @@ namespace karabo {
 
 
         TcpConnection::TcpConnection(const karabo::util::Hash& input)
-            : Connection(input) {
+            : Connection(input)
+            , m_resolver(EventLoop::getIOService())
+            , m_acceptor(EventLoop::getIOService()) {
 
             input.get("hostname", m_hostname);
             input.get("port", m_port);
@@ -127,12 +129,11 @@ namespace karabo {
 
             if (m_connectionType == "server") {
                 try {
-                    m_acceptor = BoostAcceptorPointer(new boost::asio::ip::tcp::acceptor(EventLoop::getIOService()));
                     ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
-                    m_acceptor->open(endpoint.protocol());
-                    m_acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
-                    m_acceptor->bind(endpoint); // <=== here exception possible: port in use
-                    m_acceptor->listen();
+                    m_acceptor.open(endpoint.protocol());
+                    m_acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
+                    m_acceptor.bind(endpoint); // <=== here exception possible: port in use
+                    m_acceptor.listen();
                     if (m_port != endpoint.port()) {
                         m_port = endpoint.port(); // if m_port was == 0 then the OS assigns free port number.
                     }
@@ -152,7 +153,7 @@ namespace karabo {
                 channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
                 boost::asio::ip::tcp::socket& sock = tcpChannel->socket();
-                m_acceptor->accept(sock);
+                m_acceptor.accept(sock);
                 //KARABO_LOG_FRAMEWORK_DEBUG << "Accepted new connection: " << sock.remote_endpoint().address() << ":" << sock.remote_endpoint().port();
             } catch (...) {
                 KARABO_RETHROW
@@ -164,9 +165,8 @@ namespace karabo {
         Channel::Pointer TcpConnection::startClient() {
             Channel::Pointer channel;
             try {
-                m_resolver = BoostResolverPointer(new boost::asio::ip::tcp::resolver(EventLoop::getIOService()));
                 ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
-                ip::tcp::resolver::iterator endpoint_iterator = m_resolver->resolve(query);
+                ip::tcp::resolver::iterator endpoint_iterator = m_resolver.resolve(query);
                 channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
                 boost::asio::ip::tcp::socket& sock = tcpChannel->socket();
@@ -184,15 +184,14 @@ namespace karabo {
             m_isAsyncConnect = true;
             if (m_connectionType == "server") {
                 try {
-                    m_acceptor = BoostAcceptorPointer(new boost::asio::ip::tcp::acceptor(EventLoop::getIOService()));
                     ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
-                    m_acceptor->open(endpoint.protocol());
-                    m_acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
-                    m_acceptor->set_option(ip::tcp::acceptor::enable_connection_aborted(true));
-                    m_acceptor->bind(endpoint); // <=== here exception possible: port in use
-                    m_acceptor->listen();
+                    m_acceptor.open(endpoint.protocol());
+                    m_acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
+                    m_acceptor.set_option(ip::tcp::acceptor::enable_connection_aborted(true));
+                    m_acceptor.bind(endpoint); // <=== here exception possible: port in use
+                    m_acceptor.listen();
                     if (m_port == 0) {
-                        ip::tcp::endpoint le = m_acceptor->local_endpoint();
+                        ip::tcp::endpoint le = m_acceptor.local_endpoint();
                         m_port = le.port();
                     }
                 } catch (...) {
@@ -211,7 +210,7 @@ namespace karabo {
                 Channel::Pointer channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
                 boost::asio::ip::tcp::socket& sock = tcpChannel->socket();
-                m_acceptor->async_accept(sock, boost::bind(&TcpConnection::acceptHandler,
+                m_acceptor.async_accept(sock, boost::bind(&TcpConnection::acceptHandler,
                                                            this, boost::asio::placeholders::error, channel, handler));
             } catch (...) {
                 KARABO_RETHROW
@@ -234,9 +233,8 @@ namespace karabo {
 
         void TcpConnection::startClient(const ConnectionHandler& handler) {
             try {
-                m_resolver = BoostResolverPointer(new boost::asio::ip::tcp::resolver(EventLoop::getIOService()));
                 ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
-                m_resolver->async_resolve(query, boost::bind(&TcpConnection::resolveHandler,
+                m_resolver.async_resolve(query, boost::bind(&TcpConnection::resolveHandler,
                                                              this, boost::asio::placeholders::error,
                                                              boost::asio::placeholders::iterator, handler));
             } catch (...) {
@@ -289,17 +287,15 @@ namespace karabo {
 
 
         void TcpConnection::stop() {
-            if (m_resolver) m_resolver->cancel();
+            m_resolver.cancel();
             try {
-                if (m_acceptor) m_acceptor->cancel();
+                m_acceptor.cancel();
             } catch (const boost::system::system_error& e) {
             }
             try {
-                if (m_acceptor) m_acceptor->close();
+                m_acceptor.close();
             } catch (const boost::system::system_error& e) {
             }
-            m_resolver.reset();
-            m_acceptor.reset();
         }
 
 
