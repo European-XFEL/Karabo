@@ -78,7 +78,8 @@ if __name__ == '__main__':
         package_data={
             'karabo.bound_api.tests': ['resources/*.*'],
             "karabo.common.scenemodel.tests": ["data/*.svg",
-                                               "data/inkscape/*.svg"],
+                                               "data/inkscape/*.svg",
+                                               "data/legacy/*.svg"],
             'karabo.middlelayer_api.tests': ['*.xml'],
             'karabo.testing': ['resources/*.*'],
         },

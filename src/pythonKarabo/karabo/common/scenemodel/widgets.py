@@ -1,5 +1,4 @@
 from xml.etree.ElementTree import SubElement
-import urllib.request
 
 from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Float,
                         Instance, Int, List, String)

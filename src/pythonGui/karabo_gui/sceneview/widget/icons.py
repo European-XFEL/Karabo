@@ -65,8 +65,8 @@ class _DisplayIconsetWrapper(DisplayIconset):
     """ A wrapper around Evaluator
     """
     def __init__(self, model, box, parent):
-        self.model = model  # Needs to be set here because `setURL` is already
-                            # called in the widgets constructor
+        # Needs to be set: `setURL` already called in the widget constructor
+        self.model = model
         super(_DisplayIconsetWrapper, self).__init__(box, parent)
         # Initialize the widget - XXX: needs to be removed later
         super(_DisplayIconsetWrapper, self).setData(model.image, model.data)
