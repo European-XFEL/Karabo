@@ -1,7 +1,7 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import (HasStrictTraits, Bool, Dict, Enum, Float, Instance,
-                        Int, List, String)
+from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Float,
+                        Instance, Int, List, String)
 
 from .bases import BaseWidgetObjectData
 from .const import NS_KARABO, NS_SVG
@@ -59,6 +59,10 @@ class DisplayCommandModel(BaseWidgetObjectData):
 
 class DisplayIconsetModel(BaseWidgetObjectData):
     """ A model for DisplayIconset"""
+    # A URL for an icon set
+    image = String
+    # The actual icon set data
+    data = Any
 
 
 class DisplayImageModel(BaseWidgetObjectData):
@@ -139,10 +143,13 @@ class IconData(HasStrictTraits):
     """
     # XXX: Not sure what this is...
     equal = Bool
-    # The value of the icon??
+    # The value of the property
     value = String
     # A URL for an icon
     image = String
+    # The actual icon data
+    data = Any  # XXX This is supposed to be a String. It needs to be changed
+                # once the data is stored in the SVG file
 
 
 class BaseIconsModel(BaseWidgetObjectData):
@@ -490,7 +497,7 @@ def _build_empty_widget_readers_and_writers():
         return writer
 
     names = ('BitfieldModel', 'DisplayAlignedImageModel',
-             'DisplayCommandModel', 'DisplayIconsetModel', 'DisplayImageModel',
+             'DisplayCommandModel', 'DisplayImageModel',
              'DisplayImageElementModel', 'DisplayLabelModel',
              'DisplayPlotModel', 'DoubleLineEditModel', 'EditableListModel',
              'EditableListElementModel', 'EditableSpinBoxModel',
@@ -527,6 +534,27 @@ def _build_empty_display_editable_readers_and_writers():
         register_scene_reader('Display' + file_name, version=1)(reader)
         register_scene_reader('Editable' + file_name, version=1)(reader)
         register_scene_writer(klass)(_writer_func)
+
+
+@register_scene_reader('DisplayIconset', version=1)
+def _display_iconset_reader(read_func, element):
+    traits = _read_base_widget_data(element)
+    image = element.get(NS_KARABO + 'url', '')
+    if not image:
+        # XXX: done to be compatible to older versions
+        filename = element.get(NS_KARABO + 'filename')
+        if filename is not None:
+            image = filename
+    traits['image'] = image
+    return DisplayIconsetModel(**traits)
+
+
+@register_scene_writer(DisplayIconsetModel)
+def _display_iconset_writer(write_func, model, parent):
+    element = SubElement(parent, NS_SVG + 'rect')
+    _write_base_widget_data(model, element, 'DisplayIconset')
+    element.set(NS_KARABO + 'url', model.image)
+    return element
 
 
 def _build_icon_widget_readers_and_writers():

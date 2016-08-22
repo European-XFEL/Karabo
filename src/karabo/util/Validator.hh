@@ -109,9 +109,9 @@ namespace karabo {
 
             void checkNDArrayShape(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string& scope);
 
-            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
+            bool checkAndSetThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
 
-            bool checkThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
+            bool checkAndSetThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
 
             void compareNDArrayShapes(const NDArrayElementShapeType& schemaShape, const Dims& shape, std::ostringstream& report, const std::string& scope);
 

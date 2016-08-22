@@ -9,10 +9,11 @@ from ..api import (SceneModel, FixedLayoutModel, LabelModel, LineModel,
                    RectangleModel, UnknownXMLDataModel, SceneWriterException,
                    read_scene, write_scene, write_single_model, NS_KARABO)
 from ..io_utils import set_numbers
-from .utils import temp_file, xml_is_equal
+from .utils import temp_cwd, temp_file, xml_is_equal
 
 DATA_DIR = op.join(op.abspath(op.dirname(__file__)), 'data')
 INKSCAPE_DIR = op.join(DATA_DIR, 'inkscape')
+LEGACY_DIR = op.join(DATA_DIR, 'legacy')
 SCENE_SVG = (
 """<svg xmlns:krb="http://karabo.eu/scene" xmlns:svg="http://www.w3.org/2000/svg" height="768" krb:version="1" width="1024" krb:random="golly" >"""  # noqa
 """<svg:g krb:class="FixedLayout" krb:height="323" krb:width="384" krb:x="106" krb:y="74">"""  # noqa
@@ -138,6 +139,12 @@ def test_real_data_reading():
 def test_real_data_reading_inkscape():
     for fn in _iter_data_files(INKSCAPE_DIR):
         read_scene(fn)
+
+
+def test_real_data_reading_legacy():
+    with temp_cwd(LEGACY_DIR):
+        for fn in _iter_data_files(LEGACY_DIR):
+            read_scene(fn)
 
 
 def test_real_data_round_trip():

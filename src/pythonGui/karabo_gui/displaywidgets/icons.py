@@ -44,35 +44,32 @@ class Label(QLabel):
             QLabel.setPixmap(self, pixmap)
 
 
-class Item:
-    value = None
-    url = None
-    pixmap = None
+class Item(object):
+    value = None  # Property value associated with the image data
+    url = None  # Url of the image
+    data = None  # Bytes of image data
+    pixmap = None  # Pixmap to display the data
 
-    def __init__(self, element=None, project=None):
-        if element is None:
-            return
-        url = element.get("image")
-        if url is None:
-            return
-        if not self.getPixmap(project, url):
-            return
-        self.url = url
+    def __init__(self, value, data=None):
+        self.value = value
+        self.data = data
+        self.getPixmap()
 
-    def getPixmap(self, project, url):
-        """This function tries to load an image from the given url
+    def getPixmap(self):
+        """ This function tries to load an image from the given `data` which
+            is available as byte string.
         """
-        if project is None:
-            return False
-        
+        if self.data is None:
+            return
+
         pixmap = QPixmap()
         try:
-            if not pixmap.loadFromData(project.getURL(url)):
+            if not pixmap.loadFromData(self.data):
                 raise IconError
         except (KeyError, IconError):
-            MessageBox.showError("Could not read image from URL {}".format(url))
+            MessageBox.showError("Could not read image.")
             return False
-        
+
         self.pixmap = pixmap
         return True
 
@@ -226,25 +223,6 @@ class TextIcons(Icons):
                 self.setPixmap(it.pixmap)
                 return
 
-    def save(self, e):
-        for item in self.items:
-            ee = Element(ns_karabo + "re")
-            if item.value is not None:
-                ee.text = item.value
-            if item.url is not None:
-                ee.set('image', item.url)
-            e.append(ee)
-
-    def load(self, e):
-        items = []
-        for ee in e:
-            item = Item(ee, self.project)
-            if ee.text:
-                item.value = ee.text
-                item.re = re.compile(item.value)
-            items.append(item)
-        self._setItems(items)
-
 
 class DigitDialog(Dialog):
     def __init__(self, project, items, descriptor):
@@ -292,31 +270,6 @@ class DigitIcons(Icons):
                 self.setPixmap(item.pixmap)
                 break
 
-    def save(self, e):
-        for item in self.items:
-            ee = Element(ns_karabo + "value")
-            if item.value is not None:
-                ee.text = repr(item.value)
-                if item.equal is not None:
-                    ee.set('equal', str(item.equal).lower())
-            if item.url is not None:
-                ee.set('image', item.url)
-            e.append(ee)
-
-    def load(self, e):
-        if isinstance(self.boxes[0].descriptor, Integer):
-            parse = int
-        else:
-            parse = float
-        items = []
-        for ee in e:
-            item = Item(ee, self.project)
-            if ee.get('equal'):
-                item.value = parse(ee.text)
-                item.equal = ee.get('equal') == 'true'
-            items.append(item)
-        self._setItems(items)
-
 
 class SelectionDialog(Dialog):
     def __init__(self, project, items, descriptor):
@@ -339,10 +292,8 @@ class SelectionIcons(Icons):
         items = list(self.items)
         for o in box.descriptor.options:
             if not any(o == item.value for item in self.items):
-                item = Item()
-                item.value = o
-                items.append(item)
-
+                newItem = Item(o)
+                items.append(newItem)
         self._setItems(items)
 
     def valueChanged(self, box, value, timestamp=None):
@@ -352,20 +303,3 @@ class SelectionIcons(Icons):
                 return
         raise RuntimeError('value "{}" of "{}" not in options ({})'.
                            format(value, box.key(), box.descriptor.options))
-
-    def save(self, e):
-        for item in self.items:
-            ee = Element(ns_karabo + "option")
-            if item.value is not None:
-                ee.text = item.value
-            if item.url is not None:
-                ee.set('image', item.url)
-            e.append(ee)
-
-    def load(self, e):
-        items = []
-        for ee in e:
-            item = Item(ee, self.project)
-            item.value = ee.text
-            items.append(item)
-        self._setItems(items)
