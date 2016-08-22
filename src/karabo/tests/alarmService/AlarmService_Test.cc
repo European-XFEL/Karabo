@@ -174,7 +174,8 @@ void AlarmService_Test::testAcknowledgement() {
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
     CPPUNIT_ASSERT(h.get<bool>("acknowledged") == false);
     
-    //now we go out of the alarm state, acknowledging should now be possible
+    // The alarm should still neither be acknowledgeable nor acknowledged
+    // since one cannot acknowledge alarms that are not acknowledgeable.
     success = m_deviceClient->execute("alarmTester", "triggerNormal", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
     CPPUNIT_ASSERT(success.second == "triggeredNormal");
