@@ -68,7 +68,7 @@ class _DisplayIconsetWrapper(DisplayIconset):
         self.model = model  # Needs to be set here because `setURL` is already
                             # called in the widgets constructor
         super(_DisplayIconsetWrapper, self).__init__(box, parent)
-        # Initialize the widget
+        # Initialize the widget - XXX: needs to be removed later
         super(_DisplayIconsetWrapper, self).setData(model.image, model.data)
 
     def setURL(self, image):
