@@ -15,7 +15,6 @@ __all__ = ["ConfigurationPanel"]
 from os.path import abspath, dirname, join
 
 from karabo_gui.docktabwindow import DockTabWindow, Dockable
-from .documentationpanel import DocumentationPanel
 import karabo_gui.icons as icons
 from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.parametertreewidget import ParameterTreeWidget
@@ -204,11 +203,7 @@ class ConfigurationPanel(Dockable, QWidget):
         hLayout.addWidget(self.pbResetAll)
         hLayout.addStretch()
         vLayout.addLayout(hLayout)
-        
-        self.__documentationPanel = DocumentationPanel()
-        documentation = DockTabWindow("Documentation", mainSplitter)
-        documentation.addDockableTab(self.__documentationPanel, "Documentation")
-        
+
         mainLayout.addWidget(mainSplitter)
 
         #mainSplitter.setSizes([1,1])
