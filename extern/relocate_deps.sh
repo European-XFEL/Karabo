@@ -36,14 +36,19 @@ rewrite_python_shebangs() {
     local sed_program='1 s%^.*$%'$new_shebang_line'%g'
 
     local entry_points=(2to3 2to3-3.4 cygdb cython
-        easy_install easy_install-3.4 f2py3 guidata-tests guiqwt-tests
-        idle3 idle3.4 ipcluster ipcluster3 ipcontroller ipcontroller3
+        easy_install easy_install-3.4 f2py3 get_objgraph.py
+        guidata-tests guiqwt-tests idle3 idle3.4
+        ipcluster ipcluster3 ipcluster_watcher ipcontroller ipcontroller3
         ipengine ipengine3 iptest iptest3 ipython ipython3
+        jupyter jupyter-kernelspec jupyter-migrate jupyter-nbextension
+        jupyter-notebook jupyter-qtconsole jupyter-serverextension jupyter-trust
         nosetests nosetests-3.4 pip pip3 pip3.4 pnuke prsync pscp pslurp pssh
-        pssh-askpass pydoc3 pydoc3.4 pygmentize pyvenv pyvenv-3.4 rst2html.py
-        rst2latex.py rst2man.py rst2odt_prepstyles.py rst2odt.py rst2pseudoxml.py
-        rst2s5.py rst2xetex.py rst2xml.py rstpep2html.py sift sphinx-apidoc
-        sphinx-autogen sphinx-build sphinx-quickstart wheel
+        pssh-askpass pydoc3 pydoc3.4 pygmentize pyvenv pyvenv-3.4
+        py.test py.test-3.4 pybabel
+        rst2html.py rst2latex.py rst2man.py rst2odt_prepstyles.py rst2odt.py
+        rst2pseudoxml.py rst2s5.py rst2xetex.py rst2xml.py rstpep2html.py
+        sift sphinx-apidoc sphinx-autogen sphinx-build sphinx-quickstart
+        unpickle.py wheel
     )
 
     local count=0
