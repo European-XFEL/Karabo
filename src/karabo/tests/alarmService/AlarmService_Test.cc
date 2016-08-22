@@ -54,6 +54,7 @@ void AlarmService_Test::appTestRunner() {
     
     testDeviceRegistration();
     testAlarmPassing();
+    testAcknowledgement();
 }
 
 void AlarmService_Test::testDeviceRegistration() {
@@ -136,5 +137,69 @@ void AlarmService_Test::testAlarmPassing() {
     
 }
 
+void AlarmService_Test::testAcknowledgement() {
+    std::pair<bool, std::string> success;
+    std::vector<Hash> alarmTable;
+    
+    //add another alarm to the table so we have two alarms pending
+    //we will work only on the first one afterwards
+    //now we go out of the alarm state, acknowledging should now be possible
+    success = m_deviceClient->execute("alarmTester", "triggerWarnHigh2", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+    CPPUNIT_ASSERT(success.second == "triggeredWarnHigh2");
+    
+    //allow some time for update to propagate
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    
+    //first test if we cannot acknowledge an not acknowledgeable alarm.
+    //the alarm service should be in this state after the previous test.
+    alarmTable = m_deviceClient->get<std::vector<Hash> >("testAlarmService", "currentAlarms");
+    CPPUNIT_ASSERT(alarmTable.size() == 2);
+    alarmTable[0].set("acknowledged", true);
+    success = m_deviceClient->set("testAlarmService", "currentAlarms", alarmTable, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+    
+    //the table should still be as was and acknowledged is set to false
+    alarmTable = m_deviceClient->get<std::vector<Hash> >("testAlarmService", "currentAlarms");
+    CPPUNIT_ASSERT(alarmTable.size() == 2);
+    Hash h = alarmTable[0];
+    CPPUNIT_ASSERT(h.get<std::string>("timeOfOccurrence") != h.get<std::string>("timeOfFirstOccurrence"));
+    //not testing on train id, as it will be 0 in both cases without use of a time server
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+    CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
+    CPPUNIT_ASSERT(h.get<std::string>("description") == "A description for alarmHigh");
+    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
+    //the alarm should now not be acknowledgeable anymore
+    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledged") == false);
+    
+    // The alarm should still neither be acknowledgeable nor acknowledged
+    // since one cannot acknowledge alarms that are not acknowledgeable.
+    success = m_deviceClient->execute("alarmTester", "triggerNormal", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+    CPPUNIT_ASSERT(success.second == "triggeredNormal");
+    
+    //allow some time for update to propagate
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    
+    //acknowledge alarm
+    alarmTable = m_deviceClient->get<std::vector<Hash> >("testAlarmService", "currentAlarms");
+    CPPUNIT_ASSERT(alarmTable.size() == 2);
+    alarmTable[0].set("acknowledged", true);
+    success = m_deviceClient->set("testAlarmService", "currentAlarms", alarmTable, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+    
+    //alarm table entry should be deleted
+    alarmTable = m_deviceClient->get<std::vector<Hash> >("testAlarmService", "currentAlarms");
+    CPPUNIT_ASSERT(alarmTable.size() == 1);
+    
+    h = alarmTable[0];
+    CPPUNIT_ASSERT(h.get<std::string>("timeOfOccurrence") == h.get<std::string>("timeOfFirstOccurrence"));
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty2");
+    CPPUNIT_ASSERT(h.get<std::string>("type") == "warnHigh");
+
+}
 #undef KRB_TEST_MAX_TIMEOUT
 

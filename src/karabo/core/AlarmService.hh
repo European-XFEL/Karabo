@@ -74,6 +74,17 @@ namespace karabo {
             void slotUpdateAlarms(const std::string& deviceId, const karabo::util::Hash& alarmInfo);
 
 
+            /**
+             * We check if
+             *
+             * @param incomingReconfiguration
+             *
+             * contains any requests for acknowledgement, and then if these
+             * are indeed allowed.
+             */
+            void preReconfigure(karabo::util::Hash& incomingReconfiguration);
+
+
 
 
         private: // members
