@@ -1,7 +1,9 @@
+from io import BytesIO
 import os
 from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
 
+from karabo.common.scenemodel.api import write_scene
 from .hash import Hash, StringList
 from .project import Project
 
@@ -217,10 +219,11 @@ def _read_scenes(zf, projectConfig, projInstance, factories):
     sceneFactory = factories['Scene']
 
     for s in projectConfig[Project.SCENES_KEY]:
-        scene = sceneFactory(projInstance, s["filename"])
-        data = zf.read("{}/{}".format(Project.SCENES_KEY, s["filename"]))
-        scene.fromXml(data)
-        scenes.append(scene)
+        title = s["filename"]
+        data = zf.read("{}/{}".format(Project.SCENES_KEY, title))
+        scene_model = sceneFactory(BytesIO(data))
+        scene_model.title = s["filename"]
+        scenes.append(scene_model)
 
     return scenes
 
@@ -350,16 +353,17 @@ def _write_scenes(zf, projInstance, objects, isNewFile):
     exception = None
     sceneHashes = []
 
-    for scene in objects:
-        name = "{}/{}".format(Project.SCENES_KEY, scene.filename)
+    for scene_model in objects:
+        name = "{}/{}".format(Project.SCENES_KEY, scene_model.title)
         try:
-            zf.writestr(name, scene.toXml())
+            xml = write_scene(scene_model)
+            zf.writestr(name, xml)
         except Exception as e:
             if isNewFile:
                 with ZipFile(projInstance.filename, 'r') as zin:
                     zf.writestr(name, zin.read(name))
             if exception is None:
                 exception = e
-        sceneHashes.append(Hash("filename", scene.filename))
+        sceneHashes.append(Hash("filename", scene_model.title))
 
     return sceneHashes, exception

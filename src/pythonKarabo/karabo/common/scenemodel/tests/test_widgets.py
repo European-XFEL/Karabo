@@ -93,7 +93,7 @@ def _check_icon_widget(klass):
 def test_all_empty_widgets():
     model_classes = (
         BitfieldModel, DisplayAlignedImageModel, DisplayCommandModel,
-        DisplayIconsetModel, DisplayImageModel, DisplayImageElementModel,
+        DisplayImageModel, DisplayImageElementModel,
         DisplayLabelModel, DisplayPlotModel, DoubleLineEditModel,
         EditableListModel, EditableListElementModel, EditableSpinBoxModel,
         HexadecimalModel, IntLineEditModel, KnobModel, SliderModel, XYPlotModel
@@ -107,6 +107,15 @@ def test_display_editable_widgets():
                      DirectoryModel, FileInModel, FileOutModel, LineEditModel)
     for klass in model_classes:
         yield _check_display_editable_widget, klass
+
+
+def test_display_iconset_widget():
+    traits = _base_widget_traits(parent='DisplayComponent')
+    traits['image'] = 'blah.svg'
+    model = DisplayIconsetModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_base_traits(read_model)
+    assert read_model.image == 'blah.svg'
 
 
 def test_icon_widgets():

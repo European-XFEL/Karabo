@@ -14,11 +14,11 @@ __all__ = ["Device", "DeviceGroup", "GuiProject", "Macro", "Category"]
 from karabo.middlelayer_api.project import (
     BaseDevice, BaseDeviceGroup, BaseMacro, Monitor, Project,
     ProjectConfiguration)
-from karabo.middlelayer import AccessMode, Hash, XMLParser, XMLWriter
+from karabo.middlelayer import (
+    AccessMode, Hash, read_scene, SceneModel, XMLParser, XMLWriter)
 from karabo_gui.configuration import Configuration
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.network import network
-from karabo_gui.scene import Scene
 from karabo_gui.topology import getClass, getDevice, Manager
 
 from PyQt4.QtCore import pyqtSignal, QObject
@@ -464,7 +464,7 @@ class GuiProject(Project, QObject):
             index = self.devices.index(object)
             self.devices.pop(index)
             return index
-        elif isinstance(object, Scene):
+        elif isinstance(object, SceneModel):
             index = self.scenes.index(object)
             self.scenes.pop(index)
             return index
@@ -493,7 +493,7 @@ class GuiProject(Project, QObject):
             'Macro': Macro,
             'Monitor': Monitor,
             'ProjectConfiguration': ProjectConfiguration,
-            'Scene': Scene,
+            'Scene': read_scene,
         }
         if factories is not None:
             objFactories.update(factories)

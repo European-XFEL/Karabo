@@ -128,7 +128,7 @@ class DeviceNode(String):
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super().toSchemaAndAttrs(device, state)
         if device is None:
-            attrs["accessMode"] = AccessMode.INITONLY
+            attrs["accessMode"] = AccessMode.INITONLY.value
             return h, attrs
         attrs["nodeType"] = NodeType.Node
         attrs["displayType"] = "deviceNode"

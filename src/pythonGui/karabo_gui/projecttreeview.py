@@ -4,32 +4,28 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
 """
 This module contains a class which represents the treewidget of the project and
 configuration panel containing the parameters of a device.
 """
-
-__all__ = ["ProjectTreeView"]
-
-import karabo_gui.globals as globals
-
-from karabo_gui.dialogs.projectdialog import (
-    ProjectDialog, ProjectSaveDialog, ProjectLoadDialog)
-from karabo_gui.guiproject import (
-    Category, Device, DeviceGroup, GuiProject, Macro)
-from karabo_gui.projectmodel import ProjectModel
-from karabo_gui.network import Network
-from karabo_gui.scenemodel.api import SceneModel
-from karabo_gui.topology import Manager
-
-from karabo.middlelayer_api.project import (Monitor, Project, ProjectAccess,
-                                            ProjectConfiguration)
+import os.path
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
                          QMenu, QMessageBox, QTreeView)
-import os.path
+
+from karabo.middlelayer import SceneModel
+from karabo.middlelayer_api.project import (Monitor, Project, ProjectAccess,
+                                            ProjectConfiguration)
+
+import karabo_gui.globals as globals
+from karabo_gui.dialogs.projectdialog import (
+    ProjectSaveDialog, ProjectLoadDialog)
+from karabo_gui.guiproject import (
+    Category, Device, DeviceGroup, GuiProject, Macro)
+from karabo_gui.projectmodel import ProjectModel
+from karabo_gui.network import Network
+from karabo_gui.topology import Manager
 
 
 class ProjectTreeView(QTreeView):
@@ -239,15 +235,15 @@ class ProjectTreeView(QTreeView):
         index = self.currentIndex()
         if not index.isValid(): return
 
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        if isinstance(object, Device) or isinstance(object, DeviceGroup):
-            self.model().editDevice(object)
-        elif isinstance(object, SceneModel):
-            self.model().openScene(object)
-        elif isinstance(object, Macro):
-            self.model().openMacro(object)
-        elif isinstance(object, Monitor):
-            self.model().editMonitor(object)
+        obj = index.data(ProjectModel.ITEM_OBJECT)
+        if isinstance(obj, Device) or isinstance(obj, DeviceGroup):
+            self.model().editDevice(obj)
+        elif isinstance(obj, SceneModel):
+            self.model().openScene(obj)
+        elif isinstance(obj, Macro):
+            self.model().openMacro(obj)
+        elif isinstance(obj, Monitor):
+            self.model().editMonitor(obj)
 
 
 ### slots ###

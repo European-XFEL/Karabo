@@ -2,7 +2,7 @@ from .base import BaseWidgetContainer  # noqa
 from .eval import EvaluatorContainer  # noqa
 from .floatspinbox import FloatSpinBoxContainer  # noqa
 from .generic import DisplayEditableWidgetContainer, GenericWidgetContainer  # noqa
-from .icons import IconsContainer  # noqa
+from .icons import DisplayIconsetContainer, IconsContainer  # noqa
 from .lineplot import LinePlotContainer  # noqa
 from .monitor import MonitorContainer  # noqa
 from .simple import (LabelWidget, SceneLinkWidget, UnknownSvgWidget,  # noqa

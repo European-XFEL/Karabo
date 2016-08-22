@@ -3,13 +3,9 @@
 # Created on November 3, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
-"""This module contains a class which represents the main window of the application
-   and includes all relevant panels and the main toolbar.
+"""This module contains a class which represents the main window of the
+    application and includes all relevant panels and the main toolbar.
 """
-
-__all__ = ["MainWindow"]
 
 import os.path
 
@@ -35,6 +31,7 @@ from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
 
+from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
 from karabo.middlelayer import AccessLevel
 
 
@@ -162,8 +159,10 @@ class MainWindow(QMainWindow):
         self.navigationPanel = NavigationPanel()
         self.leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.navigationTab = DockTabWindow("Navigation", self.leftArea)
-        self.navigationTab.addDockableTab(self.navigationPanel, "Navigation", self)
-        self.signalGlobalAccessLevelChanged.connect(self.navigationPanel.onGlobalAccessLevelChanged)
+        self.navigationTab.addDockableTab(self.navigationPanel,
+                                          "Navigation", self)
+        self.signalGlobalAccessLevelChanged.connect(
+            self.navigationPanel.onGlobalAccessLevelChanged)
         self.leftArea.setStretchFactor(0, 2)
 
         self.projectPanel = ProjectPanel()
@@ -190,18 +189,21 @@ class MainWindow(QMainWindow):
         self.outputTab = DockTabWindow("Output", self.middleArea)
         self.outputTab.addDockableTab(self.loggingPanel, "Log", self)
         self.outputTab.addDockableTab(self.scriptingPanel, "Console", self)
-        self.outputTab.addDockableTab(self.notificationPanel, "Notifications", self)
+        self.outputTab.addDockableTab(self.notificationPanel,
+                                      "Notifications", self)
         self.middleArea.setStretchFactor(1, 1)
 
         self.configurationPanel = ConfigurationPanel()
         self.rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.configurationTab = DockTabWindow("Configuration", self.rightArea)
-        self.configurationTab.addDockableTab(self.configurationPanel, "Configurator", self)
-        self.signalGlobalAccessLevelChanged.connect(self.configurationPanel.onGlobalAccessLevelChanged)
+        self.configurationTab.addDockableTab(self.configurationPanel,
+                                             "Configurator", self)
+        self.signalGlobalAccessLevelChanged.connect(
+            self.configurationPanel.onGlobalAccessLevelChanged)
 
         mainSplitter.setStretchFactor(0, 2)
-        mainSplitter.setStretchFactor(1, 6)
-        mainSplitter.setStretchFactor(2, 1)
+        mainSplitter.setStretchFactor(1, 4)
+        mainSplitter.setStretchFactor(2, 2)
 
         self.setCentralWidget(mainSplitter)
 
@@ -211,7 +213,8 @@ class MainWindow(QMainWindow):
         if projects:
             msgBox = QMessageBox(self)
             msgBox.setWindowTitle("Save changes before closing")
-            msgBox.setText("Do you want to save your modified projects before closing?")
+            msgBox.setText("Do you want to save your modified projects "
+                           "before closing?")
             msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard |
                                       QMessageBox.Cancel)
             msgBox.setDefaultButton(QMessageBox.Save)
@@ -248,6 +251,29 @@ class MainWindow(QMainWindow):
         self.middleTab.removeDockableTab(self.placeholderPanel)
         self.placeholderPanel = None
 
+    def _readIconDataFromProject(self, sceneModel, project):
+        """ Go through the model tree to find existing icon models like
+            `DigitIconsModel`, `SelectionIconsModel`, `TextIconsModel` or
+            `DisplayIconsetModel` and use their `url` to load the actual image
+            data which is currently stored in the projects resources and put
+            them to the model data.
+        """
+        def update_icon_model(parent_model):
+            for child in parent_model.children:
+                if isinstance(child, BaseIconsModel):
+                    for icon_data in child.values:
+                        url = icon_data.image
+                        icon_data.data = project.getURL(url)
+                elif isinstance(child, DisplayIconsetModel):
+                    url = child.image
+                    child.data = project.getURL(url)
+                else:
+                    if hasattr(child, "children"):
+                        update_icon_model(child)
+
+        # Recursively set all icon model data
+        update_icon_model(sceneModel)
+
     def checkAndRemovePlaceholderMiddlePanel(self):
         """ Remove placeholder from middle panel in case it makes sense.
         """
@@ -257,7 +283,8 @@ class MainWindow(QMainWindow):
 
     def _createPlaceholderMiddlePanel(self):
         self.placeholderPanel = PlaceholderPanel()
-        self.middleTab.addDockableTab(self.placeholderPanel, "Start Page", self)
+        self.middleTab.addDockableTab(self.placeholderPanel,
+                                      "Start Page", self)
 
     def _getSceneDivWidget(self, sceneModel):
         """ The associated divWidget for the given `sceneModel` is returned,
@@ -318,7 +345,12 @@ class MainWindow(QMainWindow):
                 self.middleTab.removeDockableTab(w.dockableWidget)
                 break
 
-        self.onMiddlePanelRemoved()
+        self.middlePanelRemoved()
+
+    def middlePanelRemoved(self):
+        # If tabwidget is empty - show start page instead
+        if self.middleTab.count() < 1:
+            self._createPlaceholderMiddlePanel()
 
     def selectLastMiddlePanel(self):
         if self.middleTab.count() > 1:
@@ -345,12 +377,6 @@ class MainWindow(QMainWindow):
         # TODO: add about dialog for karabo including version etc.
         print("onHelpAbout")
 
-    @pyqtSlot()
-    def onMiddlePanelRemoved(self):
-        # If tabwidget is empty - show start page instead
-        if self.middleTab.count() < 1:
-            self._createPlaceholderMiddlePanel()
-
     @pyqtSlot(object, object)
     def addSceneView(self, sceneModel, project):
         """ Add a scene view to show the content of the given `sceneModel in
@@ -359,13 +385,13 @@ class MainWindow(QMainWindow):
         if sceneModel not in self._openedScenes:
             self.checkAndRemovePlaceholderMiddlePanel()
 
+            # Set icon data to model, if existent
+            self._readIconDataFromProject(sceneModel, project)
             sceneView = SceneView(model=sceneModel, project=project)
-            # XXX: TODO scenelink
-            #sceneView.signalSceneLinkTriggered.connect(self.openSceneLink)
 
             # Add scene view to tab widget
             scenePanel = ScenePanel(sceneView, self.acServerConnect.isChecked())
-            scenePanel.signalClosed.connect(self.onMiddlePanelRemoved)
+            scenePanel.signalClosed.connect(self.scenePanelClosed)
             self.middleTab.addDockableTab(scenePanel,
                                           sceneModel.title,
                                           self)
@@ -386,14 +412,10 @@ class MainWindow(QMainWindow):
         """ Remove the tab which is associated to the given `sceneModel`.
         """
         if sceneModel in self._openedScenes:
-            # XXX: TODO scenelink
-            #sceneView.signalSceneLinkTriggered.disconnect(self.openSceneLink)
-
             divWidget = self._getSceneDivWidget(sceneModel)
             if divWidget is not None:
                 self.middleTab.removeDockableTab(divWidget.dockableWidget)
-                self.onMiddlePanelRemoved()
-            self._openedScenes.remove(sceneModel)
+            self.scenePanelClosed(sceneModel)
 
     @pyqtSlot(object)
     def renameSceneView(self, sceneModel):
@@ -410,6 +432,15 @@ class MainWindow(QMainWindow):
                 divWidget.updateTitle(sceneModel.title)
                 if index > -1:
                     self.middleTab.setTabText(index, sceneModel.title)
+
+    @pyqtSlot(object)
+    def scenePanelClosed(self, sceneModel):
+        """ A scene panel was closed so the associated `sceneModel` needs to be
+            removed from the set of opened scenes.
+        """
+        if sceneModel in self._openedScenes:
+            self._openedScenes.remove(sceneModel)
+        self.middlePanelRemoved()
 
     @pyqtSlot(object)
     def onAddMacro(self, macro):

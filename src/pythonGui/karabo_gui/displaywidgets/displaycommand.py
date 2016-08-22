@@ -64,9 +64,8 @@ class DisplayCommand(DisplayWidget):
     def addBox(self, box):
         action = QAction("NO TEXT", self.button)
         self.button.addAction(action)
-        item = Item()
+        item = Item(None)  # XXX: needs to be checked
         item.box = box
-        item.value = None
         item.action = action
         self.actions.append(item)
         box.configuration.boxvalue.state.signalUpdateComponent.connect(
