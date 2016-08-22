@@ -1,4 +1,5 @@
 from xml.etree.ElementTree import SubElement
+import urllib.request
 
 from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Float,
                         Instance, Int, List, String)
@@ -59,6 +60,10 @@ class DisplayCommandModel(BaseWidgetObjectData):
 
 class DisplayIconsetModel(BaseWidgetObjectData):
     """ A model for DisplayIconset"""
+    # A URL for an icon set
+    image = String
+    # The actual icon set data
+    data = Any
 
 
 class DisplayImageModel(BaseWidgetObjectData):
@@ -493,7 +498,7 @@ def _build_empty_widget_readers_and_writers():
         return writer
 
     names = ('BitfieldModel', 'DisplayAlignedImageModel',
-             'DisplayCommandModel', 'DisplayIconsetModel', 'DisplayImageModel',
+             'DisplayCommandModel', 'DisplayImageModel',
              'DisplayImageElementModel', 'DisplayLabelModel',
              'DisplayPlotModel', 'DoubleLineEditModel', 'EditableListModel',
              'EditableListElementModel', 'EditableSpinBoxModel',
@@ -530,6 +535,27 @@ def _build_empty_display_editable_readers_and_writers():
         register_scene_reader('Display' + file_name, version=1)(reader)
         register_scene_reader('Editable' + file_name, version=1)(reader)
         register_scene_writer(klass)(_writer_func)
+
+
+@register_scene_reader('DisplayIconset', version=1)
+def _display_iconset_reader(read_func, element):
+    traits = _read_base_widget_data(element)
+    image = element.get(NS_KARABO + 'url', '')
+    if not image:
+        # XXX: this is propably done to be compatible to older versions
+        name = element.get(NS_KARABO + 'filename')
+        if name is not None:
+            image = urllib.request.pathname2url(name)
+    traits['image'] = image
+    return DisplayIconsetModel(**traits)
+
+
+@register_scene_writer(DisplayIconsetModel)
+def _display_iconset_writer(write_func, model, parent):
+    element = SubElement(parent, NS_SVG + 'rect')
+    _write_base_widget_data(model, element, 'DisplayIconset')
+    element.set(NS_KARABO + 'url', model.image)
+    return element
 
 
 def _build_icon_widget_readers_and_writers():

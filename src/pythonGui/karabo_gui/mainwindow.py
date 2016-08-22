@@ -31,7 +31,7 @@ from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
 
-from karabo.common.scenemodel.api import BaseIconsModel
+from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
 from karabo.middlelayer import AccessLevel
 
 
@@ -264,6 +264,9 @@ class MainWindow(QMainWindow):
                     for icon_data in child.values:
                         url = icon_data.image
                         icon_data.data = project.getURL(url)
+                elif isinstance(child, DisplayIconsetModel):
+                    url = child.image
+                    child.data = project.getURL(url)
                 else:
                     if hasattr(child, "children"):
                         update_icon_model(child)
