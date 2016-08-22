@@ -64,7 +64,7 @@ class DisplayCommand(DisplayWidget):
     def addBox(self, box):
         action = QAction("NO TEXT", self.button)
         self.button.addAction(action)
-        item = Item(None, None)  # XXX: needs to be checked
+        item = Item(None)  # XXX: needs to be checked
         item.box = box
         item.action = action
         self.actions.append(item)
