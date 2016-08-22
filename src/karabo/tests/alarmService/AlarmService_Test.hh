@@ -37,6 +37,7 @@ private:
     void appTestRunner();
     void testDeviceRegistration();
     void testAlarmPassing();
+    void testAcknowledgement();
 
 
     //alarm service device
