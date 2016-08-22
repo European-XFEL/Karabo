@@ -19,6 +19,19 @@ def single_model_round_trip(model):
 
 
 @contextmanager
+def temp_cwd(path):
+    """ Change the current working directory temporarily using a context
+    manager.
+    """
+    orig_path = os.getcwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(orig_path)
+
+
+@contextmanager
 def temp_file(contents):
     """ Create a temporary file in a context manager. Returns the path of the
     file.
