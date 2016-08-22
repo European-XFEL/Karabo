@@ -106,6 +106,8 @@ namespace karabo {
             karabo::util::AlarmCondition m_globalAlarmCondition;
 
 
+
+
         public:
 
             KARABO_CLASSINFO(Device, "Device", "1.0")
@@ -451,6 +453,10 @@ namespace karabo {
 
 
                 const bool hadPreviousAlarm = m_validatorIntern.hasParametersInWarnOrAlarm();
+                Hash previousParametersInAlarm;
+                if (hadPreviousAlarm) {
+                    previousParametersInAlarm = m_validatorIntern.getParametersInWarnOrAlarm(); //copies on purpose
+                }
 
 
                 result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
@@ -466,6 +472,10 @@ namespace karabo {
                     Hash::Attributes& attributes = node.getAttributes();
                     timestamp.toHashAttributes(attributes);
                 }
+
+                //notify of alarm changes
+                signalAlarmUpdates(previousParametersInAlarm);
+
 
 
                 if (!validated.empty()) {
@@ -614,7 +624,7 @@ namespace karabo {
                 return m_fullSchema;
             }
 
-            void appendSchema(const karabo::util::Schema& schema) {
+            void appendSchema(const karabo::util::Schema& schema, const bool keepParameters = false) {
                 KARABO_LOG_DEBUG << "Append Schema requested";
                 karabo::util::Hash validated;
                 karabo::util::Validator::ValidationRules rules;
@@ -643,6 +653,7 @@ namespace karabo {
                 emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
                 // Merge all parameters
+                if (keepParameters) validated.merge(m_parameters);
                 set(validated);
 
                 KARABO_LOG_INFO << "Schema updated";
@@ -653,7 +664,7 @@ namespace karabo {
              * add additional (dynamic) descriptions
              * @param schema
              */
-            void updateSchema(const karabo::util::Schema& schema) {
+            void updateSchema(const karabo::util::Schema& schema, const bool keepParameters = false) {
 
                 KARABO_LOG_DEBUG << "Update Schema requested";
                 karabo::util::Hash validated;
@@ -691,6 +702,7 @@ namespace karabo {
                 emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
                 // Merge all parameters
+                if (keepParameters) validated.merge(m_parameters);
                 set(validated);
 
                 KARABO_LOG_INFO << "Schema updated";
@@ -804,7 +816,7 @@ namespace karabo {
 
 
 
-        public:
+
 
             // This function will polymorphically be called by the FSM template
 
@@ -1044,6 +1056,7 @@ namespace karabo {
                 this->initChannels();
                 this->connectInputChannels();
 
+
                 // Start the state machine
                 this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
 
@@ -1051,6 +1064,8 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to time server";
                     connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick");
                 }
+
+
 
                 t.join(); // Blocks
             }
@@ -1082,12 +1097,14 @@ namespace karabo {
 
                 KARABO_SYSTEM_SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
 
+                KARABO_SIGNAL2("signalAlarmUpdate", std::string, karabo::util::Hash);
+
+
                 KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
                 KARABO_SLOT(slotGetConfiguration)
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
                 KARABO_SLOT(slotKillDevice)
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
-
             }
 
             /**
@@ -1311,6 +1328,62 @@ namespace karabo {
                     return std::pair<bool, const AlarmCondition > (true, m_globalAlarmCondition);
                 }
                 return std::pair<bool, const AlarmCondition > (false, AlarmCondition::NONE);
+            }
+
+            /**
+             * Evaluates difference between previous and current parameter in alarm conditions and emits
+             * a signal with the update
+             *
+             * @param previous: alarm conditions previously present on the device.
+             *
+             * Note: calling this method must be protected by a state change mutex!
+             */
+            void signalAlarmUpdates(const karabo::util::Hash& previous) {
+                using namespace karabo::util;
+
+                Hash result;
+                Hash& toClear = result.bindReference<Hash>("toClear");
+                Hash& toAdd = result.bindReference<Hash>("toAdd");
+
+                const Hash& current = m_validatorIntern.getParametersInWarnOrAlarm();
+                if (!previous.empty()) {
+                    for (Hash::const_iterator it = previous.begin(); it != previous.end(); ++it) {
+                        if (current.find(it->getKey())) continue; //alarmCondition still exists nothing to clean
+
+                        //add simple entry to allow for cleaning
+                        const Hash& desc = it->getValue<Hash>();
+                        const std::string& property = it->getKey();
+
+                        boost::optional<Hash::Node&> typesListN = toClear.find(property);
+                        if (!typesListN) {
+                            typesListN = toClear.set(property, std::vector<std::string>());
+                        }
+                        std::vector<std::string>& typesList = typesListN->getValue<std::vector<std::string> >();
+                        typesList.push_back(desc.get<std::string>("type"));
+                        KARABO_LOG_DEBUG << "Clearing alarm condition " << it->getKey() << " -> " << desc.get<std::string>("type");
+                    }
+                }
+
+                //now add new alarms
+                for (Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
+                    const Hash& desc = it->getValue<Hash>();
+                    const std::string& conditionString = desc.get<std::string>("type");
+                    const AlarmCondition& condition = AlarmCondition::fromString(conditionString);
+
+                    const std::string& property = it->getKey();
+
+                    Hash::Node& entryNode = toAdd.set(property, Hash());
+                    Hash& entry = entryNode.getValue<Hash>().bindReference<Hash>(conditionString);
+
+                    entry.set("type", conditionString);
+                    entry.set("description", m_fullSchema.getInfoForAlarm(property, condition));
+                    entry.set("needsAcknowledging", m_fullSchema.doesAlarmNeedAcknowledging(property, condition));
+                    const Timestamp& occuredAt = Timestamp::fromHashAttributes(it->getAttributes());
+                    occuredAt.toHashAttributes(entryNode.getAttributes());
+
+                }
+
+                if (!toClear.empty() || !toAdd.empty()) emit("signalAlarmUpdate", getInstanceId(), result);
             }
 
 

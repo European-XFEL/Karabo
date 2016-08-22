@@ -219,6 +219,7 @@ namespace karabo {
             Schema(const std::string& classId = "", const Schema::AssemblyRules& rules = Schema::AssemblyRules());
 
             virtual ~Schema() {
+
             };
 
             void setAssemblyRules(const Schema::AssemblyRules& rules);
@@ -791,6 +792,8 @@ namespace karabo {
             unsigned int getRollingStatsEvalInterval(const std::string& path) const;
 
             const std::string getInfoForAlarm(const std::string& path, const karabo::util::AlarmCondition& condition) const;
+
+            const bool doesAlarmNeedAcknowledging(const std::string& path, const karabo::util::AlarmCondition& condition) const;
 
 
             //**********************************************
