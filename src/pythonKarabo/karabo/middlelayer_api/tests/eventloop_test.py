@@ -3,6 +3,7 @@ from functools import wraps
 from unittest import TestCase, main
 from unittest.mock import Mock
 
+from karabo.middlelayer_api.device_client import sleep
 from karabo.middlelayer_api.eventloop import synchronize
 
 from .eventloop import setEventLoop
@@ -74,14 +75,20 @@ class Tests(TestCase):
 
     @thread_tst
     def test_add_callback(self):
-        mock = Mock()
+        def callback(future):
+            nonlocal called
+            sleep(0.001)  # test that we can properly call Karabo functions
+            self.assertFalse(called)
+            called = True
+        called = False
         barrier = Barrier(self.loop)
         fut = barrier.block(wait=False)
-        fut.add_done_callback(mock)
-        mock.assert_not_called()
+        fut.add_done_callback(callback)
+        self.assertFalse(called)
         barrier.free()
         fut.wait()
-        mock.assert_called_once_with(fut)
+        sleep(0.002)
+        self.assertTrue(called)
 
     @thread_tst
     def test_cancel(self):

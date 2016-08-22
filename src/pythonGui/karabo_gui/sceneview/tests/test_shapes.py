@@ -6,9 +6,10 @@
 
 import os.path as op
 
-import karabo_gui.scenemodel.tests as sm
-from karabo_gui.scenemodel.api import (LineModel, RectangleModel, PathModel,
-                                       SceneModel)
+from karabo.middlelayer import SceneModel
+from karabo.common.scenemodel.api import (
+    LineModel, RectangleModel, PathModel)
+import karabo.common.scenemodel.tests as sm
 from karabo_gui.sceneview.view import SceneView
 from karabo_gui.testing import GuiTestCase
 

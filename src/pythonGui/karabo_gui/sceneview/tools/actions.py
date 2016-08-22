@@ -4,7 +4,7 @@ from bisect import bisect
 from PyQt4.QtGui import QBoxLayout
 from traits.api import Callable, Int
 
-from karabo_gui.scenemodel.api import (
+from karabo.common.scenemodel.api import (
     BaseLayoutModel, BoxLayoutModel, FixedLayoutModel,
     GridLayoutChildData, GridLayoutModel)
 from karabo_gui.sceneview.bases import BaseSceneAction
