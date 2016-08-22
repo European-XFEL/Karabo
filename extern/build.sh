@@ -144,6 +144,9 @@ download_latest_deps() {
     tar -zxf $deps_file
     mv $DEPS_BASE_NAME $INSTALL_PREFIX
 
+    # Adjust for the local environment
+    safeRunCommand "./relocate_deps.sh $INSTALL_PREFIX"
+
     # Leave a marker for later
     echo $deps_tag > $INSTALL_PREFIX/$DEPS_MARKER_NAME
     return 0
