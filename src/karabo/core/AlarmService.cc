@@ -47,7 +47,7 @@ namespace karabo {
                     .readOnly()
                     .commit();
             
-            STRING_ELEMENT(tableRow).key("instanceId")
+            STRING_ELEMENT(tableRow).key("deviceId")
                     .displayedName("Device")
                     .readOnly()
                     .commit();
@@ -58,7 +58,7 @@ namespace karabo {
                     .commit();
             
             STRING_ELEMENT(tableRow).key("type")
-                    .displayedName("Severity")
+                    .displayedName("Type")
                     .readOnly()
                     .commit();
             
@@ -68,12 +68,12 @@ namespace karabo {
                     .commit();
             
             BOOL_ELEMENT(tableRow).key("needsAcknowledging")
-                    .displayedName("ack?")
+                    .displayedName("Needs acknowledging")
                     .readOnly()
                     .commit();
             
             BOOL_ELEMENT(tableRow).key("acknowledgeable")
-                    .displayedName("can ack?")
+                    .displayedName("Acknowledgeable")
                     .readOnly()
                     .commit();
             
@@ -89,6 +89,7 @@ namespace karabo {
                     .displayedName("Registered devices")
                     .description("The devices which are currently registered to this alarm service device")
                     .readOnly()
+                    .expertAccess()
                     .commit();
             
             
@@ -135,17 +136,17 @@ namespace karabo {
                     // const ref is fine even for temporary std::string+
                     if(type == "device"){
                         const Hash& entry = topologyEntry.begin()->getValue<Hash>();
-                        const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
+                        const std::string& deviceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
                                                              topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
-                        if(m_registeredDevices.insert(std::pair<std::string, Hash>(instanceId, entry)).second){
+                        if(m_registeredDevices.insert(std::pair<std::string, Hash>(deviceId, entry)).second){
                             
-                            KARABO_LOG_FRAMEWORK_INFO << "registerAlarmWithNewDevice --> instanceId: '" << instanceId
+                            KARABO_LOG_FRAMEWORK_INFO << "registerAlarmWithNewDevice --> deviceId: '" << deviceId
                                     << "', type: '" << type << "'";
                             
-                            connect(instanceId, "signalAlarmUpdate", "", "slotUpdateAlarms");
+                            connect(deviceId, "signalAlarmUpdate", "", "slotUpdateAlarms");
                             
                             std::vector<std::string> devices = get<std::vector<std::string> >("registeredDevices");
-                            devices.push_back(instanceId);
+                            devices.push_back(deviceId);
                             set("registeredDevices", devices);
                             
                             //TODO: Implement listening to new instances heartbeats
@@ -278,7 +279,7 @@ namespace karabo {
 
             //instance level
             for(Hash::const_iterator it = m_alarms.begin(); it != m_alarms.end(); ++it){
-                const std::string& instance = it->getKey();
+                const std::string& device = it->getKey();
                 const Hash& instances = it->getValue<Hash>();
                 
                 //property level
@@ -294,7 +295,7 @@ namespace karabo {
                         h.set("trainOfOccurrence", entry.get<unsigned long long>("trainOfOccurrence"));
                         h.set("timeOfFirstOccurrence", entry.get<std::string>("timeOfFirstOccurrence"));
                         h.set("trainOfFirstOccurrence", entry.get<unsigned long long>("trainOfFirstOccurrence"));
-                        h.set("instanceId", instance);
+                        h.set("deviceId", device);
                         h.set("property", property);
                         h.set("type", entry.get<std::string>("type"));
                         h.set("description", entry.get<std::string>("description"));

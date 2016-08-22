@@ -105,7 +105,7 @@ namespace karabo {
 
             karabo::util::AlarmCondition m_globalAlarmCondition;
 
-            std::map<std::string, karabo::util::Hash> m_alarmServices;
+
 
 
         public:
