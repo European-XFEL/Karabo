@@ -41,10 +41,6 @@ namespace karabo {
             boost::asio::io_service::strand m_readStrand;
             boost::asio::io_service::strand m_writeStrand;
             boost::asio::ip::tcp::socket m_socket;
-            bool m_stoppedDeadlineTimer;
-            boost::asio::deadline_timer m_connectDeadline;
-            TimeoutHandler m_timeoutHandler;
-            boost::asio::deadline_timer m_timer;
             HandlerType m_activeHandler;
             bool m_readHeaderFirst;
             boost::any m_readHandler;
@@ -210,7 +206,7 @@ namespace karabo {
              * @param byteSize
              * @param error
              */
-            void onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, const ErrorCode& error);
+            void onSizeInBytesAvailable(const ErrorCode& error, const ReadSizeInBytesHandler& handler);
 
             /**
              * Internal default handler
@@ -222,7 +218,7 @@ namespace karabo {
 
 
 
-            void onBytesAvailable(const ReadRawHandler& handler, const ErrorCode& error);
+            void onBytesAvailable(const ErrorCode& error, const ReadRawHandler& handler);
 
             /**
              * Internal default handler
@@ -290,10 +286,6 @@ namespace karabo {
 
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy);
             
-            void setConnectDeadline(long long timeout, TimeoutHandler handler);
-            
-            void stopDeadlineTimer();
-
         private:
 
             void managedWriteAsync(const WriteCompleteHandler& handler);
@@ -332,11 +324,9 @@ namespace karabo {
             void read(char*& data, size_t& size, char*& hdr, size_t& hsize);
             void write(const char* header, const size_t& headerSize, const char* body, const size_t& bodySize);
 
-            void asyncWriteHandler(const Channel::WriteCompleteHandler& handler, const ErrorCode& e);
-            void asyncWriteHandler(const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& body, const ErrorCode& e);
-            void asyncWriteHandler(const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& header, const boost::shared_ptr<std::vector<char> >& body, const ErrorCode& e);
-
-            void checkConnectDeadline(const ErrorCode& ec);
+            void asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler);
+            void asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& body);
+            void asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& header, const boost::shared_ptr<std::vector<char> >& body);
 
             // MQ support methods
         private:

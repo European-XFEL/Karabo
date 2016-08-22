@@ -149,20 +149,20 @@ namespace karabo {
 
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
-            void onConnect(karabo::net::Connection::Pointer connection,
+            void onConnect(const karabo::net::ErrorCode& error,
+                           karabo::net::Connection::Pointer connection,
                            const karabo::util::Hash& outputChannelInfo,
-                           karabo::net::Channel::Pointer channel,
-                           const karabo::net::ErrorCode& error);
+                           karabo::net::Channel::Pointer channel);
 
             // TODO Keep m_connectedOutputChannels in sync and adapt eos tokens on sudden death
             void startConnectionAsync(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo);
 
-            void onTcpConnectionError(const karabo::net::Connection::Pointer&, const karabo::net::ErrorCode& error);
+            void onTcpConnectionError(const karabo::net::ErrorCode&, const karabo::net::Connection::Pointer&);
 
-            void onTcpChannelError(const karabo::net::Channel::Pointer&, const karabo::net::ErrorCode& error);
+            void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
 
-            void onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header,
-                                  const std::vector<char>& data, const karabo::net::ErrorCode& ec);
+            void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::Pointer channel,
+                                  const karabo::util::Hash& header, const std::vector<char>& data);
 
             void swapBuffers();
 
