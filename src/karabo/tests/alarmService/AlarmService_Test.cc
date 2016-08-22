@@ -80,7 +80,7 @@ void AlarmService_Test::testAlarmPassing() {
     //these should be the same as it is the first time the alarm is raised
     CPPUNIT_ASSERT(h.get<std::string>("timeOfOccurrence") == h.get<std::string>("timeOfFirstOccurrence"));
     CPPUNIT_ASSERT(h.get<unsigned long long>("trainOfOccurrence") == h.get<unsigned long long>("trainOfFirstOccurrence"));
-    CPPUNIT_ASSERT(h.get<std::string>("instanceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
     CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
     CPPUNIT_ASSERT(h.get<std::string>("description") == "A description for alarmHigh");
@@ -101,7 +101,7 @@ void AlarmService_Test::testAlarmPassing() {
     h = alarmTable[0];
     CPPUNIT_ASSERT(h.get<std::string>("timeOfOccurrence") == h.get<std::string>("timeOfFirstOccurrence"));
     CPPUNIT_ASSERT(h.get<unsigned long long>("trainOfOccurrence") == h.get<unsigned long long>("trainOfFirstOccurrence"));
-    CPPUNIT_ASSERT(h.get<std::string>("instanceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
     CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
     CPPUNIT_ASSERT(h.get<std::string>("description") == "A description for alarmHigh");
@@ -125,7 +125,7 @@ void AlarmService_Test::testAlarmPassing() {
     h = alarmTable[0];
     CPPUNIT_ASSERT(h.get<std::string>("timeOfOccurrence") != h.get<std::string>("timeOfFirstOccurrence"));
     //not testing on train id, as it will be 0 in both cases without use of a time server
-    CPPUNIT_ASSERT(h.get<std::string>("instanceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
     CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
     CPPUNIT_ASSERT(h.get<std::string>("description") == "A description for alarmHigh");
