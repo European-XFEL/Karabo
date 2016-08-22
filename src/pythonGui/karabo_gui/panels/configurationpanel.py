@@ -42,7 +42,6 @@ class ConfigurationPanel(Dockable, QWidget):
 
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
-        mainSplitter = QSplitter(Qt.Vertical)
 
         # Layout for navigation and project tree
         self.navSplitter = QSplitter(Qt.Vertical)
@@ -83,7 +82,7 @@ class ConfigurationPanel(Dockable, QWidget):
         
         self.prevConfiguration = None
 
-        topWidget = QWidget(mainSplitter)
+        topWidget = QWidget(self)
 
         splitTopPanes = QSplitter(Qt.Horizontal, topWidget)
         splitTopPanes.addWidget(self.navSplitter)
@@ -204,12 +203,7 @@ class ConfigurationPanel(Dockable, QWidget):
         hLayout.addStretch()
         vLayout.addLayout(hLayout)
 
-        mainLayout.addWidget(mainSplitter)
-
-        #mainSplitter.setSizes([1,1])
-
-        mainSplitter.setStretchFactor(0, 6)
-        mainSplitter.setStretchFactor(1, 1)
+        mainLayout.addWidget(topWidget)
 
         self.setupActions()
         self.setLayout(mainLayout)
