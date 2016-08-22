@@ -141,18 +141,18 @@ namespace karabo {
         }
 
 
-        void OutputChannel::onTcpConnect(const TcpChannelPointer& channel, const karabo::net::ErrorCode& ec) {
+        void OutputChannel::onTcpConnect(const karabo::net::ErrorCode& ec, const TcpChannelPointer& channel) {
             using namespace karabo::net;
             
             if (ec) {
-                onTcpChannelError(channel, ec);
+                onTcpChannelError(ec, channel);
                 return;
             }
             
             m_dataChannels.insert(channel);
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
             KARABO_LOG_FRAMEWORK_DEBUG << "***** Connection established to socket " << tch->socket().native() << " *****";
-            channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, channel, _1, _2));
+            channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
             m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
         }
 
@@ -163,7 +163,7 @@ namespace karabo {
 //        }
 
 
-        void OutputChannel::onTcpChannelError(const TcpChannelPointer& channel, const karabo::net::ErrorCode& error) {
+        void OutputChannel::onTcpChannelError(const karabo::net::ErrorCode& error, const TcpChannelPointer& channel) {
             using namespace karabo::net;
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
             KARABO_LOG_FRAMEWORK_INFO << "Tcp channel (socket " << tch->socket().native()
@@ -176,9 +176,9 @@ namespace karabo {
         }
 
 
-        void OutputChannel::onTcpChannelRead(const TcpChannelPointer& channel, const karabo::util::Hash& message, const karabo::net::ErrorCode& ec) {
+        void OutputChannel::onTcpChannelRead(const karabo::net::ErrorCode& ec, const TcpChannelPointer& channel, const karabo::util::Hash& message) {
             if (ec) {
-                onTcpChannelError(channel, ec);
+                onTcpChannelError(ec, channel);
                 return;
             }
             
@@ -239,7 +239,7 @@ namespace karabo {
                 }
 
             }
-            channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, channel, _1, _2));
+            channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
         }
 
 

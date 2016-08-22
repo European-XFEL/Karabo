@@ -47,18 +47,18 @@ void MQTcpNetworking::createServer() {
 }
 
 
-void MQTcpNetworking::serverConnectHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
+void MQTcpNetworking::serverConnectHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
     if (ec) {
-        serverErrorHandler(channel, ec);
+        serverErrorHandler(ec, channel);
         return;
     }
     std::clog << "SERVER: connected" << std::endl;
     // _1 -> header, _2 -> body, _3 -> error code
-    channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::serverReadHashHashHandler, this, channel, _1, _2, _3));
+    channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::serverReadHashHashHandler, this, _1, channel, _2, _3));
 }
 
 
-void MQTcpNetworking::serverErrorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
+void MQTcpNetworking::serverErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
     if (ec.value() == 2) {
         std::clog << "\nSERVER: client has closed the connection!" << std::endl;
     } else {
@@ -68,19 +68,19 @@ void MQTcpNetworking::serverErrorHandler(const karabo::net::Channel::Pointer& ch
 }
 
 
-void MQTcpNetworking::serverReadHashHashHandler(const karabo::net::Channel::Pointer& channel,
+void MQTcpNetworking::serverReadHashHashHandler(const karabo::net::ErrorCode& ec,
+                                                const karabo::net::Channel::Pointer& channel,
                                                 karabo::util::Hash& header,
-                                                karabo::util::Hash& body,
-                                                const karabo::net::ErrorCode& ec) {
+                                                karabo::util::Hash& body) {
 
     if (ec) {
-        serverErrorHandler(channel, ec);
+        serverErrorHandler(ec, channel);
         return;
     }
 
     std::clog << "\nSERVER : Request comes...\n" << header << body << "-----------------\n";
 
-    channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::serverReadHashHashHandler, this, channel, _1, _2, _3));
+    channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::serverReadHashHashHandler, this, _1, channel, _2, _3));
 
     if (body.has("START")) {
         m_numberOfMessages = body.get<int>("START");
@@ -109,7 +109,7 @@ void MQTcpNetworking::serverPublish(const karabo::net::Channel::Pointer& channel
 
 
 void MQTcpNetworking::testClientServerMethod() {
-    m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_serverPort, "Tcp.hostname", "localhost", "Tcp.connectTimeout", 100));
+    m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_serverPort, "Tcp.hostname", "localhost"));
     m_connection->startAsync(boost::bind(&MQTcpNetworking::onClientConnected, this, _1, _2));
 }
 
@@ -133,10 +133,10 @@ void MQTcpNetworking::tearDown() {
 }
 
 
-void MQTcpNetworking::onClientConnected(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& e) {
+void MQTcpNetworking::onClientConnected(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel) {
     if (e) {
         std::clog << "MQTcpNetworking::onClientConnected  ErrorCode = " << e << std::endl;
-        clientChannelErrorHandler(channel, e);
+        clientChannelErrorHandler(e, channel);
         return;
     }
 
@@ -147,11 +147,11 @@ void MQTcpNetworking::onClientConnected(const karabo::net::Channel::Pointer& cha
     channel->writeAsync(header, data);
     m_clientCount = 0;
     m_clientTimestamp = boost::posix_time::second_clock::local_time();
-    channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::clientReadHashHashHandler, this, channel, _1, _2, _3));
+    channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::clientReadHashHashHandler, this, _1, channel, _2, _3));
 }
 
 
-void MQTcpNetworking::clientChannelErrorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
+void MQTcpNetworking::clientChannelErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
     if (channel) channel->close();
     if (ec != boost::asio::error::eof) {
         std::clog << "\nCLIENT ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
@@ -164,30 +164,30 @@ void MQTcpNetworking::clientChannelErrorHandler(const karabo::net::Channel::Poin
 }
 
 
-void MQTcpNetworking::clientReadHashHashHandler(const karabo::net::Channel::Pointer& channel,
+void MQTcpNetworking::clientReadHashHashHandler(const karabo::net::ErrorCode& e,
+                                                const karabo::net::Channel::Pointer& channel,
                                                 karabo::util::Hash& header,
-                                                karabo::util::Hash& body,
-                                                const karabo::net::ErrorCode& e) {
+                                                karabo::util::Hash& body) {
     if (e) {
-        clientChannelErrorHandler(channel, e);
+        clientChannelErrorHandler(e, channel);
         return;
     }
 
     // inspect here the server reply.... just count
     m_clientCount++;
     if (m_clientCount < m_numberOfMessages) {
-        channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::clientReadHashHashHandler, this, channel, _1, _2, _3));
+        channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::clientReadHashHashHandler, this, _1, channel, _2, _3));
     } else {
         karabo::util::Hash header("headline", "*** CLIENT ***");
         karabo::util::Hash data("STOP", karabo::util::Hash());
-        channel->writeAsyncHashHash(header, data, boost::bind(&MQTcpNetworking::onClientEnd, this, channel,
-                                                              boost::asio::placeholders::error));
+        channel->writeAsyncHashHash(header, data, boost::bind(&MQTcpNetworking::onClientEnd, this,
+                                                              boost::asio::placeholders::error, channel));
     }
 
 }
 
 
-void MQTcpNetworking::onClientEnd(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& e) {
+void MQTcpNetworking::onClientEnd(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel) {
     if (e) {
         if (e.value() == 2) {
             //std::clog << "\nCLIENT: server has closed the connection!" << std::endl;

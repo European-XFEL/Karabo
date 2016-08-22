@@ -55,18 +55,18 @@ namespace karathon {
             return size_t(&(*channel));
         }
 
-        static void clear(karabo::net::IOService::Pointer ioserv) {
+        static void clear() {
         }
 
     private:
 
         static void proxyReadSizeInBytesHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const size_t& size);
-        static void proxyReadStringHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const std::string& s);
-        static void proxyReadHashHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash);
-        static void proxyReadHashVectorHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash, const std::vector<char>& v);
-        static void proxyReadHashHashHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b);
-        static void proxyWriteCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel);
-        static void proxyErrorHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code);
+        static void proxyReadStringHandler(const karabo::net::ErrorCode& code,const bp::object& handler, karabo::net::Channel::Pointer channel, const std::string& s);
+        static void proxyReadHashHandler(const karabo::net::ErrorCode& code,const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash);
+        static void proxyReadHashVectorHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash, const std::vector<char>& v);
+        static void proxyReadHashHashHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b);
+        static void proxyWriteCompleteHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel);
+        static void proxyErrorHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel);
 
         static bool hasattr(bp::object obj, const std::string& attrName) {
             return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));

@@ -83,13 +83,13 @@ namespace karabo {
 
             void safeAllClientsWrite(const karabo::util::Hash& message, int prio = LOSSLESS);
 
-            void onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorMessage);
+            void onError(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel);
 
             void onGuiError(const karabo::util::Hash& hash);
 
-            void onConnect(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorMessage);
+            void onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel);
 
-            void onRead(karabo::net::Channel::Pointer channel, karabo::util::Hash& info, const karabo::net::ErrorCode& errorMessage);
+            void onRead(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel, karabo::util::Hash& info);
 
             void onLogin(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 

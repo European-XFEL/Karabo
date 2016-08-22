@@ -10,9 +10,11 @@
 
 namespace karabo {
     namespace net {
+        
+        boost::mutex karabo::net::EventLoop::m_initMutex;
 
 
-        EventLoop::EventLoop() {
+        EventLoop::EventLoop() : m_ioService(){
         }
 
 
@@ -25,6 +27,7 @@ namespace karabo {
 
 
         EventLoop& EventLoop::instance() {
+            boost::mutex::scoped_lock lock(m_initMutex);
             static EventLoop loop;
             return loop;
         }

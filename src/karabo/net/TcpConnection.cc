@@ -61,14 +61,6 @@ namespace karabo {
                     .expertAccess()
                     .commit();
 
-            INT64_ELEMENT(expected)
-                    .key("connectTimeout")
-                    .displayedName("Connect timeout")
-                    .description("Timeout in milliseconds while trying to connect asynchronously. <=0 means 'no timeout'")
-                    .assignmentOptional().defaultValue(0)
-                    .init()
-                    .commit();
-            
             BOOL_ELEMENT(expected)
                     .key("messageTagIsText")
                     .displayedName("Message Tag is Text")
@@ -111,15 +103,12 @@ namespace karabo {
 
 
         TcpConnection::TcpConnection(const karabo::util::Hash& input)
-            : Connection(input)
-            , m_resolver(EventLoop::getIOService())
-            , m_acceptor(EventLoop::getIOService()) {
+            : Connection(input) {
 
             input.get("hostname", m_hostname);
             input.get("port", m_port);
             input.get("type", m_connectionType);
             input.get("sizeofLength", m_sizeofLength);
-            input.get("connectTimeout", m_timeout);
             input.get("messageTagIsText", m_lengthIsTextFlag);
             input.get("manageAsyncData", m_manageAsyncData);
             input.get("compressionUsageThreshold", m_compressionUsageThreshold);
@@ -138,11 +127,12 @@ namespace karabo {
 
             if (m_connectionType == "server") {
                 try {
+                    m_acceptor = BoostAcceptorPointer(new boost::asio::ip::tcp::acceptor(EventLoop::getIOService()));
                     ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
-                    m_acceptor.open(endpoint.protocol());
-                    m_acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
-                    m_acceptor.bind(endpoint); // <=== here exception possible: port in use
-                    m_acceptor.listen();
+                    m_acceptor->open(endpoint.protocol());
+                    m_acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
+                    m_acceptor->bind(endpoint); // <=== here exception possible: port in use
+                    m_acceptor->listen();
                     if (m_port != endpoint.port()) {
                         m_port = endpoint.port(); // if m_port was == 0 then the OS assigns free port number.
                     }
@@ -162,7 +152,7 @@ namespace karabo {
                 channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
                 boost::asio::ip::tcp::socket& sock = tcpChannel->socket();
-                m_acceptor.accept(sock);
+                m_acceptor->accept(sock);
                 //KARABO_LOG_FRAMEWORK_DEBUG << "Accepted new connection: " << sock.remote_endpoint().address() << ":" << sock.remote_endpoint().port();
             } catch (...) {
                 KARABO_RETHROW
@@ -174,8 +164,9 @@ namespace karabo {
         Channel::Pointer TcpConnection::startClient() {
             Channel::Pointer channel;
             try {
+                m_resolver = BoostResolverPointer(new boost::asio::ip::tcp::resolver(EventLoop::getIOService()));
                 ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
-                ip::tcp::resolver::iterator endpoint_iterator = m_resolver.resolve(query);
+                ip::tcp::resolver::iterator endpoint_iterator = m_resolver->resolve(query);
                 channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
                 boost::asio::ip::tcp::socket& sock = tcpChannel->socket();
@@ -193,14 +184,15 @@ namespace karabo {
             m_isAsyncConnect = true;
             if (m_connectionType == "server") {
                 try {
+                    m_acceptor = BoostAcceptorPointer(new boost::asio::ip::tcp::acceptor(EventLoop::getIOService()));
                     ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
-                    m_acceptor.open(endpoint.protocol());
-                    m_acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
-                    m_acceptor.set_option(ip::tcp::acceptor::enable_connection_aborted(true));
-                    m_acceptor.bind(endpoint); // <=== here exception possible: port in use
-                    m_acceptor.listen();
+                    m_acceptor->open(endpoint.protocol());
+                    m_acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
+                    m_acceptor->set_option(ip::tcp::acceptor::enable_connection_aborted(true));
+                    m_acceptor->bind(endpoint); // <=== here exception possible: port in use
+                    m_acceptor->listen();
                     if (m_port == 0) {
-                        ip::tcp::endpoint le = m_acceptor.local_endpoint();
+                        ip::tcp::endpoint le = m_acceptor->local_endpoint();
                         m_port = le.port();
                     }
                 } catch (...) {
@@ -219,17 +211,17 @@ namespace karabo {
                 Channel::Pointer channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
                 boost::asio::ip::tcp::socket& sock = tcpChannel->socket();
-                m_acceptor.async_accept(sock, boost::bind(&TcpConnection::acceptHandler,
-                                                          this, channel, handler, boost::asio::placeholders::error));
+                m_acceptor->async_accept(sock, boost::bind(&TcpConnection::acceptHandler,
+                                                           this, boost::asio::placeholders::error, channel, handler));
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
 
-        void TcpConnection::acceptHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
+        void TcpConnection::acceptHandler(const boost::system::error_code& e, Channel::Pointer channel, const ConnectionHandler& handler) {
             try {
-                handler(channel, e);
+                handler(e, channel);
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW
             } catch (const std::exception& ex) {
@@ -242,17 +234,18 @@ namespace karabo {
 
         void TcpConnection::startClient(const ConnectionHandler& handler) {
             try {
+                m_resolver = BoostResolverPointer(new boost::asio::ip::tcp::resolver(EventLoop::getIOService()));
                 ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
-                m_resolver.async_resolve(query, boost::bind(&TcpConnection::resolveHandler,
-                                                            this, handler, boost::asio::placeholders::error,
-                                                            boost::asio::placeholders::iterator));
+                m_resolver->async_resolve(query, boost::bind(&TcpConnection::resolveHandler,
+                                                             this, boost::asio::placeholders::error,
+                                                             boost::asio::placeholders::iterator, handler));
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
 
-        void TcpConnection::resolveHandler(const ConnectionHandler& handler, const ErrorCode& e, ip::tcp::resolver::iterator it) {
+        void TcpConnection::resolveHandler(const ErrorCode& e, ip::tcp::resolver::iterator it, const ConnectionHandler& handler) {
             try {
                 if (!e) {
                     // No errors... create channel first to get access to the socket
@@ -263,15 +256,14 @@ namespace karabo {
                     boost::asio::ip::tcp::socket& tcpSocket = tcpChannel->socket();
                     // ... and peer endpoint ...
                     const boost::asio::ip::tcp::endpoint& peerEndpoint = *it;
-                    // set up deadline timer for establishing connection timeout
-                    tcpChannel->setConnectDeadline(m_timeout, boost::bind(&TcpConnection::connectTimeoutHandler, this, handler, channel));
                     // ... and, finally, try to connect asynchronously ...
                     tcpSocket.async_connect(peerEndpoint,
                                             boost::bind(&TcpConnection::connectHandler, this,
-                                                        channel, handler, boost::asio::placeholders::error));
+                                                        boost::asio::placeholders::error,
+                                                        channel, handler));
                 } else {
                     Channel::Pointer c;
-                    handler(c, e);
+                    handler(e, c);
                 }
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW
@@ -283,11 +275,9 @@ namespace karabo {
         }
 
 
-        void TcpConnection::connectHandler(const Channel::Pointer& channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
+        void TcpConnection::connectHandler(const boost::system::error_code& e, const Channel::Pointer& channel, const ConnectionHandler& handler) {
             try {
-                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
-                tcpChannel->stopDeadlineTimer();
-                handler(channel, e);
+                handler(e, channel);
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW
             } catch (const std::exception& ex) {
@@ -298,29 +288,18 @@ namespace karabo {
         }
 
 
-        void TcpConnection::connectTimeoutHandler(const ConnectionHandler& handler, const Channel::Pointer& channel) {
-            try {
-                handler(channel, boost::asio::error::timed_out);
-            } catch (const karabo::util::Exception& e) {
-                KARABO_RETHROW
-            } catch (const std::exception& ex) {
-                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(string("Standard exception caught by TcpConnection::connectTimeoutHandler: ") + ex.what()))
-            } catch (...) {
-                KARABO_RETHROW
-            }
-        }
-        
-        
         void TcpConnection::stop() {
-            m_resolver.cancel();
+            if (m_resolver) m_resolver->cancel();
             try {
-                m_acceptor.cancel();
+                if (m_acceptor) m_acceptor->cancel();
             } catch (const boost::system::system_error& e) {
             }
             try {
-                m_acceptor.close();
+                if (m_acceptor) m_acceptor->close();
             } catch (const boost::system::system_error& e) {
             }
+            m_resolver.reset();
+            m_acceptor.reset();
         }
 
 

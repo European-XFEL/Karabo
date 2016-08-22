@@ -40,17 +40,17 @@ struct TcpServer {
     }
 
 
-    void connectHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
+    void connectHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
         if (ec) {
             std::clog << "\nSERVER_ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
             if (channel) channel->close();
             return;
         }
-        channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, channel, _1, _2, _3));
+        channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, _1, channel, _2, _3));
     }
 
 
-    void errorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
+    void errorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
         if (ec.value() == 2) {
             std::clog << "\nSERVER: client has closed the connection!" << std::endl;
         } else {
@@ -60,11 +60,10 @@ struct TcpServer {
     }
 
 
-    void readHashHashHandler(const karabo::net::Channel::Pointer& channel,
-                             karabo::util::Hash& header, karabo::util::Hash& body,
-                             const karabo::net::ErrorCode& ec) {
+    void readHashHashHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
+                             karabo::util::Hash& header, karabo::util::Hash& body) {
         if (ec) {
-            errorHandler(channel, ec);
+            errorHandler(ec, channel);
             return;
         }
 
@@ -83,18 +82,18 @@ struct TcpServer {
             body.set("a.b", "counter " + karabo::util::toString(m_count));
 
 
-        channel->writeAsyncHashHash(header, body, boost::bind(&TcpServer::writeCompleteHandler, this, channel, "some string", _1));
+        channel->writeAsyncHashHash(header, body, boost::bind(&TcpServer::writeCompleteHandler, this, _1, channel, "some string"));
     }
 
 
-    void writeCompleteHandler(const karabo::net::Channel::Pointer& channel, const std::string& id, const karabo::net::ErrorCode& ec) {
+    void writeCompleteHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const std::string& id) {
         if (ec) {
-            errorHandler(channel, ec);
+            errorHandler(ec, channel);
             return;
         }
 
         BOOST_ASSERT(id == "some string");
-        channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, channel, _1, _2, _3));
+        channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, _1, channel, _2, _3));
     }
 
 private:
@@ -113,7 +112,7 @@ struct TcpClient {
     , m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "sample.example.org")))
     , m_deadline(karabo::net::EventLoop::getIOService())
     {   //                                                           timeout repetition channel ec 
-        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, 1000, 3, _1, _2));
+        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1, 1000, 3, _2));
     }
 
 
@@ -121,12 +120,13 @@ struct TcpClient {
     }
 
 
-    void connectHandler(int timeout, int repetition, const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
+    void connectHandler(const karabo::net::ErrorCode& ec, int timeout, int repetition, const karabo::net::Channel::Pointer& channel) {
         if (ec) {
-            errorHandler(channel, ec);
+            errorHandler(ec, channel);
             if (ec != boost::asio::error::eof && repetition >= 0) {
+                
                 m_deadline.expires_from_now(boost::posix_time::milliseconds(timeout));
-                m_deadline.async_wait(boost::bind(&TcpClient::waitHandler, this, timeout, repetition, boost::asio::placeholders::error));
+                m_deadline.async_wait(boost::bind(&TcpClient::waitHandler, this, boost::asio::placeholders::error, timeout, repetition));
             }
             return;
         }
@@ -138,14 +138,14 @@ struct TcpClient {
         channel->writeAsyncHashHash(header, data, boost::bind(&TcpClient::writeCompleteHandler, this, channel, 42));
     }
 
-    void errorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& ec) {
+    void errorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
         if (ec != boost::asio::error::eof)
             std::clog << "\nCLIENT_ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
         if (channel) channel->close();
     }
     
     
-    void waitHandler(int timeout, int repetition, const karabo::net::ErrorCode& ec) {
+    void waitHandler(const karabo::net::ErrorCode& ec, int timeout, int repetition) {
         if (ec == boost::asio::error::operation_aborted) return;
         --repetition;
         timeout *= 2;
@@ -153,16 +153,16 @@ struct TcpClient {
             m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "exflserv04"));
         if (repetition == 0)
             m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "localhost"));
-        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, timeout, repetition, _1, _2));
+        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1, timeout, repetition, _2));
     }
     
     
-    void readHashHashHandler(const karabo::net::Channel::Pointer& channel,
+    void readHashHashHandler(const karabo::net::ErrorCode& ec,
+    const karabo::net::Channel::Pointer& channel,
                              karabo::util::Hash& header,
-                             karabo::util::Hash& body,
-                             const karabo::net::ErrorCode& ec) {
+                             karabo::util::Hash& body) {
         if (ec) {
-            errorHandler(channel, ec);
+            errorHandler(ec, channel);
             return;
         }
 
@@ -201,7 +201,7 @@ struct TcpClient {
     void writeCompleteHandler(const karabo::net::Channel::Pointer& channel, int id) {
         CPPUNIT_ASSERT(id == 42);
         // data was sent successfully! Prepare to read a reply asynchronous from a server: placeholder _1 is a Hash
-        channel->readAsyncHashHash(boost::bind(&TcpClient::readHashHashHandler, this, channel, _1, _2, _3));
+        channel->readAsyncHashHash(boost::bind(&TcpClient::readHashHashHandler, this, _1, channel, _2, _3));
     }
 
 

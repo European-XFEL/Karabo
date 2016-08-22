@@ -16,7 +16,9 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <karabo/util/Factory.hh>
-#include "IOService.hh"
+#include <karabo/util/Configurator.hh>
+#include "karabo/util/karaboDll.hh"
+
 
 /**
  * The main European XFEL namespace
@@ -53,7 +55,7 @@ namespace karabo {
             KARABO_CLASSINFO(Connection, "Connection", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            typedef boost::function<void (const ChannelPointer&, const ErrorCode&) > ConnectionHandler;
+            typedef boost::function<void (const ErrorCode&, const ChannelPointer&) > ConnectionHandler;
 
             virtual ~Connection();
 
@@ -95,7 +97,6 @@ namespace karabo {
 
         protected: // members
 
-            ErrorHandler m_errorHandler;
             std::string m_serializationType;
 
         };
