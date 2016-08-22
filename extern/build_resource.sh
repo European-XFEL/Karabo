@@ -18,8 +18,8 @@ checkReturnCode() {
 }
 
 safeRunCommand() {
-    typeset cmnd="$*"
-    typeset ret_code
+    local cmnd="$*"
+    local ret_code
 
     echo cmnd=$cmnd
     eval $cmnd
@@ -27,8 +27,8 @@ safeRunCommand() {
 }
 
 safeRunCommandQuiet() {
-    typeset cmnd="$*"
-    typeset ret_code
+    local cmnd="$*"
+    local ret_code
 
     echo cmnd=$cmnd
     eval $cmnd &> /dev/null
