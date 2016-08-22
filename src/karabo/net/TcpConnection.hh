@@ -37,8 +37,6 @@ namespace karabo {
         typedef boost::system::error_code ErrorCode;
         typedef boost::shared_ptr<Channel> ChannelPointer;
         typedef boost::function<void () > TimeoutHandler;
-        typedef boost::shared_ptr<boost::asio::ip::tcp::resolver> BoostResolverPointer;
-        typedef boost::shared_ptr<boost::asio::ip::tcp::acceptor> BoostAcceptorPointer;
         
         /**
          * The Connection class.
@@ -103,8 +101,8 @@ namespace karabo {
 
         private:
 
-            BoostResolverPointer m_resolver;
-            BoostAcceptorPointer m_acceptor;
+            boost::asio::ip::tcp::resolver m_resolver;
+            boost::asio::ip::tcp::acceptor m_acceptor;
             std::string m_connectionType;
             std::string m_hostname;
             unsigned int m_port;
