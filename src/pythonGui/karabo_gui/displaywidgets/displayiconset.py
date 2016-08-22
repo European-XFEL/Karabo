@@ -44,8 +44,10 @@ class DisplayIconset(DisplayWidget):
     def __init__(self, box, parent):
         super(DisplayIconset, self).__init__(box)
 
-        self.url = None  # URL of the icon set
-        self.xml = None  # Actual icon set xml data
+        # URL of the icon set
+        self.url = None
+        # XMLParser object to get associated layer for property value
+        self.xml = None
 
         # Use default icon set for initialization
         self.setURL("file://" + urllib.request.pathname2url(
