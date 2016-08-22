@@ -158,12 +158,9 @@ namespace karabo {
         }
         
         void AlarmService::setupSignalsAndSlots(){     
-<<<<<<< HEAD
+
             registerSlot<std::string, karabo::util::Hash > (boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2), "slotUpdateAlarms");
-=======
-            KARABO_SYSTEM_SIGNAL2("signalAlarmDeviceStarted", std::string, karabo::util::Hash);
-            registerSlot<karabo::util::Hash > (boost::bind(&AlarmService::slotUpdateAlarms, this, _1), "slotUpdateAlarms"); 
->>>>>>> ad0f57d... Removed dual slot call and use topology information instead
+
         }
         
         void AlarmService::registerNewDevice(const karabo::util::Hash& topologyEntry){
@@ -210,7 +207,7 @@ namespace karabo {
             // check if any alarms exist for this deviceId
             // in the following capital "N" at the end of a variable declarations signifies a Hash node
             boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
-            boost::optional<Hash::Node&> existingDeviceEntryN = m_alarms.find(instance);
+            boost::optional<Hash::Node&> existingDeviceEntryN = m_alarms.find(deviceId);
 
             if(existingDeviceEntryN){
                 boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
@@ -443,13 +440,13 @@ namespace karabo {
                 Hash topologyEntry("device", Hash());
                 // Copy node with key "<deviceId>" and attributes into the single Hash in topologyEntry:
                 topologyEntry.begin()->getValue<Hash>().setNode(deviceNode);
-                registerAlarmServiceWithNewDevice(topologyEntry);
+                registerNewDevice(topologyEntry);
                 
-                const std::string& instanceId = it->getKey();
+                const std::string& deviceId = it->getKey();
                 
                 boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
-                const boost::optional<Hash::Node&> entry = m_alarms.find(instanceId);
-                call(instanceId, "slotReSubmitToAlarmService", entry ? entry->getValue<Hash>() : Hash());
+                const boost::optional<Hash::Node&> entry = m_alarms.find(deviceId);
+                call(deviceId, "slotReSubmitToAlarmService", entry ? entry->getValue<Hash>() : Hash());
             }
            
   

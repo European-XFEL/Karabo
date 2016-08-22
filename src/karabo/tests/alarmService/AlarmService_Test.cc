@@ -300,7 +300,7 @@ void AlarmService_Test::testRecovery(){
     CPPUNIT_ASSERT(alarmTable.size() == 3);
     Hash h = alarmTable[0];
 
-    CPPUNIT_ASSERT(h.get<std::string>("instanceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
     CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty2");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "warnHigh");
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
@@ -309,7 +309,7 @@ void AlarmService_Test::testRecovery(){
 
     h = alarmTable[1];
 
-    CPPUNIT_ASSERT(h.get<std::string>("instanceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
     CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
@@ -318,7 +318,7 @@ void AlarmService_Test::testRecovery(){
     
     h = alarmTable[2];
 
-    CPPUNIT_ASSERT(h.get<std::string>("instanceId") == "alarmTester2");
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester2");
     CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmLow");
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
