@@ -1,7 +1,7 @@
 from karabo.common.scenemodel.api import (
     IconData, DigitIconsModel, SelectionIconsModel, TextIconsModel)
 from karabo_gui.displaywidgets.icons import (
-    DigitIcons, Item, TextIcons, SelectionIcons)
+    DigitIcons, Item, SelectionIcons, TextIcons)
 from .base import BaseWidgetContainer
 
 
@@ -9,19 +9,15 @@ class _IconsWrapperMixin(object):
     def __init__(self, model, box, parent):
         super(_IconsWrapperMixin, self).__init__(box, parent)
         self.model = model
-        items = []
-        for icon_data in self.model.values:
-            item = Item(icon_data.value, icon_data.data)
-            items.append(item)
-        self._setItems(items)
+        self.items = [Item(m.value, m.data) for m in self.model.values]
 
     def item_convert(self, item):
         """ Convert a single item to an ItemData """
         raise NotImplementedError
 
     def _setItems(self, items):
-        self.model.values = [self.item_convert(i) for i in items]
         super(_IconsWrapperMixin, self)._setItems(items)
+        self.model.values = [self.item_convert(i) for i in items]
 
 
 class _DigitIconsWrapper(_IconsWrapperMixin, DigitIcons):
@@ -30,7 +26,7 @@ class _DigitIconsWrapper(_IconsWrapperMixin, DigitIcons):
         return IconData(equal=getattr(item, 'equal', False),
                         value=str(item.value),
                         image=item.url or "",
-                        data=item.data or "")
+                        data=item.data)
 
 
 class _SelectionIconsWrapper(_IconsWrapperMixin, SelectionIcons):
@@ -39,7 +35,7 @@ class _SelectionIconsWrapper(_IconsWrapperMixin, SelectionIcons):
         return IconData(equal=False,
                         value=item.value,
                         image=item.url or "",
-                        data=item.data or "")
+                        data=item.data)
 
 
 class _TextIconsWrapper(_IconsWrapperMixin, TextIcons):
@@ -48,7 +44,7 @@ class _TextIconsWrapper(_IconsWrapperMixin, TextIcons):
         return IconData(equal=False,
                         value=item.value,
                         image=item.url or "",
-                        data=item.data or "")
+                        data=item.data)
 
 
 class IconsContainer(BaseWidgetContainer):

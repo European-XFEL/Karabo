@@ -45,10 +45,10 @@ class Label(QLabel):
 
 
 class Item(object):
-    value = None
-    url = None
-    data = None
-    pixmap = None
+    value = None  # Property value associated with the image data
+    url = None  # Url of the image
+    data = None  # Bytes of image data
+    pixmap = None  # Pixmap to display the data
 
     def __init__(self, value, data=None):
         self.value = value
@@ -56,7 +56,8 @@ class Item(object):
         self.getPixmap()
 
     def getPixmap(self):
-        """ This function tries to load an image from the given url
+        """ This function tries to load an image from the given `data` which
+            is available as byte string.
         """
         if self.data is None:
             return
