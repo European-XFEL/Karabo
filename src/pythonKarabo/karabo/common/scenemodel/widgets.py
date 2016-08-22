@@ -542,10 +542,10 @@ def _display_iconset_reader(read_func, element):
     traits = _read_base_widget_data(element)
     image = element.get(NS_KARABO + 'url', '')
     if not image:
-        # XXX: this is propably done to be compatible to older versions
-        name = element.get(NS_KARABO + 'filename')
-        if name is not None:
-            image = urllib.request.pathname2url(name)
+        # XXX: done to be compatible to older versions
+        filename = element.get(NS_KARABO + 'filename')
+        if filename is not None:
+            image = filename
     traits['image'] = image
     return DisplayIconsetModel(**traits)
 
