@@ -19,9 +19,9 @@ from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape
 from .widget.api import (
     BaseWidgetContainer, DisplayEditableWidgetContainer,
-    DisplayStateColorContainer, EvaluatorContainer, FloatSpinBoxContainer,
-    GenericWidgetContainer, IconsContainer, LabelWidget, LinePlotContainer,
-    MonitorContainer, SceneLinkWidget, SingleBitContainer,
+    DisplayIconsetContainer, DisplayStateColorContainer, EvaluatorContainer,
+    FloatSpinBoxContainer, GenericWidgetContainer, IconsContainer, LabelWidget,
+    LinePlotContainer, MonitorContainer, SceneLinkWidget, SingleBitContainer,
     TableElementContainer, UnknownSvgWidget, VacuumWidgetContainer,
     WorkflowItemWidget)
 
@@ -43,7 +43,7 @@ _SCENE_OBJ_FACTORIES = {
     BitfieldModel: GenericWidgetContainer,
     DisplayAlignedImageModel: GenericWidgetContainer,
     DisplayCommandModel: GenericWidgetContainer,
-    DisplayIconsetModel: GenericWidgetContainer,
+    DisplayIconsetModel: DisplayIconsetContainer,
     DisplayImageModel: GenericWidgetContainer,
     DisplayImageElementModel: GenericWidgetContainer,
     DisplayLabelModel: GenericWidgetContainer,

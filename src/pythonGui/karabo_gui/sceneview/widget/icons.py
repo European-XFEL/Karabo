@@ -1,5 +1,6 @@
 from karabo.common.scenemodel.api import (
-    IconData, DigitIconsModel, SelectionIconsModel, TextIconsModel)
+    DigitIconsModel, IconData, SelectionIconsModel, TextIconsModel)
+from karabo_gui.displaywidgets.displayiconset import DisplayIconset
 from karabo_gui.displaywidgets.icons import (
     DigitIcons, Item, SelectionIcons, TextIcons)
 from .base import BaseWidgetContainer
@@ -58,3 +59,28 @@ class IconsContainer(BaseWidgetContainer):
         }
         factory = factories[self.model.__class__]
         return factory(self.model, boxes[0], self)
+
+
+class _DisplayIconsetWrapper(DisplayIconset):
+    """ A wrapper around Evaluator
+    """
+    def __init__(self, model, box, parent):
+        self.model = model  # Needs to be set here because `setURL` is already
+                            # called in the widgets constructor
+        super(_DisplayIconsetWrapper, self).__init__(box, parent)
+        # Initialize the widget
+        super(_DisplayIconsetWrapper, self).setData(model.image, model.data)
+
+    def setURL(self, image):
+        super(_DisplayIconsetWrapper, self).setURL(image)
+        self.model.image = image
+
+    def setData(self, image, data):
+        super(_DisplayIconsetWrapper, self).setData(data)
+        self.model.image = image
+        self.model.data = data
+
+
+class DisplayIconsetContainer(BaseWidgetContainer):
+    def _create_widget(self, boxes):
+        return _DisplayIconsetWrapper(self.model, boxes[0], self)
