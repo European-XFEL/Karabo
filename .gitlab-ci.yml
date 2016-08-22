@@ -1,0 +1,22 @@
+.deps_build_template: &deps_build
+  script:
+    - pushd extern
+    - export DEPS_BASE_NAME=$(lsb_release -is)-$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+    - bash build.sh -q -p $DEPS_BASE_NAME CI
+    - sshpass -p "$XDATA_PWD" scp $DEPS_BASE_NAME*.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps/
+  only:
+    - /^deps-.+$/
+  except:
+    - branches
+
+deps:ubuntu14:
+  <<: *deps_build
+  image: jwiggins/karabo-containers:ubuntu-14
+
+deps:ubuntu16:
+  <<: *deps_build
+  image: jwiggins/karabo-containers:ubuntu-16
+
+deps:centos7:
+  <<: *deps_build
+  image: jwiggins/karabo-containers:centos-7
