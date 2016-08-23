@@ -66,13 +66,7 @@ namespace karabo {
         private:
             static Pointer m_instance;
 
-            boost::shared_ptr<boost::asio::io_service> m_svc;
-
-            boost::asio::io_service::work m_work;
-
             std::set<std::string> m_cache;
-
-            boost::thread m_thread;
 
             boost::mutex m_mutex;
 

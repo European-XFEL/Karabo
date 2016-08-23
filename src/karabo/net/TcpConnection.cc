@@ -18,6 +18,7 @@
 #include "karabo/log/Logger.hh"
 #include "EventLoop.hh"
 #include <karabo/util/SimpleElement.hh>
+#include <boost/asio/basic_socket_acceptor.hpp>
 
 using namespace std;
 using namespace boost::asio;
@@ -129,6 +130,10 @@ namespace karabo {
 
             if (m_connectionType == "server") {
                 try {
+                    if (m_acceptor.is_open()) {
+                        m_acceptor.cancel();
+                        m_acceptor.close();
+                    }
                     ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
                     m_acceptor.open(endpoint.protocol());
                     m_acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
@@ -184,6 +189,10 @@ namespace karabo {
             m_isAsyncConnect = true;
             if (m_connectionType == "server") {
                 try {
+                    if (m_acceptor.is_open()) {
+                        m_acceptor.cancel();
+                        m_acceptor.close();
+                    }
                     ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
                     m_acceptor.open(endpoint.protocol());
                     m_acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
