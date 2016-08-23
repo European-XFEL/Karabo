@@ -322,6 +322,8 @@ void AlarmService_Test::testRecovery(){
     CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmLow");
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledged") == false);
 
 
 

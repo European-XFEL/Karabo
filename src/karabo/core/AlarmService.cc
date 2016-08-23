@@ -385,13 +385,15 @@ namespace karabo {
             TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
             
             
-            while(this->m_flushRunning){
+            while(m_flushRunning){
                 std::string archive;
                 std::ofstream fout;
+                
                 fout.open(m_flushFilePath, ios::trunc);
                 {
                     boost::interprocess::file_lock flock(m_flushFilePath.c_str());
                     boost::interprocess::scoped_lock<boost::interprocess::file_lock> wflock(flock);
+                    
                     {
 
                         boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
@@ -436,7 +438,7 @@ namespace karabo {
             const Hash& onlineDevices = runtimeInfo.get<Hash>("device");
             for (Hash::const_iterator it = onlineDevices.begin(); it != onlineDevices.end(); ++it) {
                 const Hash::Node& deviceNode = *it;
-                // Topology entry as understood by ensureLoggerRunning: Hash with path "device.<deviceId>"
+                // Topology entry as understood by registerNewDevice: Hash with path "device.<deviceId>"
                 Hash topologyEntry("device", Hash());
                 // Copy node with key "<deviceId>" and attributes into the single Hash in topologyEntry:
                 topologyEntry.begin()->getValue<Hash>().setNode(deviceNode);
@@ -446,7 +448,8 @@ namespace karabo {
                 
                 boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
                 const boost::optional<Hash::Node&> entry = m_alarms.find(deviceId);
-                call(deviceId, "slotReSubmitToAlarmService", entry ? entry->getValue<Hash>() : Hash());
+                request(deviceId, "slotReSubmitAlarms", entry ? entry->getValue<Hash>() : Hash())
+                        .receiveAsync<std::string, Hash>(boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2));
             }
            
   

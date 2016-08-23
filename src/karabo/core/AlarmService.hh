@@ -13,7 +13,6 @@
 #include <boost/atomic.hpp>
 #include "Device.hh"
 #include "OkErrorFsm.hh"
-#include <boost/thread.hpp>
 
 
 /**
