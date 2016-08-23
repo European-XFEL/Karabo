@@ -7,6 +7,11 @@
 
 #include "AlarmService_Test.hh"
 #include <sys/wait.h>
+#include <fstream>
+#include <sstream>
+#include "karabo/io/TextSerializer.hh"
+#include <boost/interprocess/sync/file_lock.hpp>
+#include <boost/interprocess/sync/sharable_lock.hpp>
 
 USING_KARABO_NAMESPACES;
 
@@ -35,6 +40,11 @@ void AlarmService_Test::setUp() {
     Hash configClient();
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
     
+    //unlink persisted alarms if they exist
+    if (boost::filesystem::exists("./testAlarmService.xml") ){
+        boost::filesystem::remove("./testAlarmService.xml");
+    }
+    
 }
 
 
@@ -42,11 +52,16 @@ void AlarmService_Test::setUp() {
 void AlarmService_Test::tearDown() {
     m_deviceClient->killServer("testServer", KRB_TEST_MAX_TIMEOUT);
     m_deviceServerThread.join();
+    
+    //unlink persisted alarms if they exist
+    if (boost::filesystem::exists("./testAlarmService.xml") ){
+        boost::filesystem::remove("./testAlarmService.xml");
+    }
 }
 
 void AlarmService_Test::appTestRunner() {
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService"), KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService", "flushInterval", 1), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
     success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester"), KRB_TEST_MAX_TIMEOUT);
@@ -55,6 +70,8 @@ void AlarmService_Test::appTestRunner() {
     testDeviceRegistration();
     testAlarmPassing();
     testAcknowledgement();
+    testFlushing();
+    testRecovery();
 }
 
 void AlarmService_Test::testDeviceRegistration() {
@@ -165,6 +182,7 @@ void AlarmService_Test::testAcknowledgement() {
     Hash h = alarmTable[0];
     CPPUNIT_ASSERT(h.get<std::string>("timeOfOccurrence") != h.get<std::string>("timeOfFirstOccurrence"));
     //not testing on train id, as it will be 0 in both cases without use of a time server
+
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
     CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
@@ -174,6 +192,7 @@ void AlarmService_Test::testAcknowledgement() {
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
     CPPUNIT_ASSERT(h.get<bool>("acknowledged") == false);
     
+
     // The alarm should still neither be acknowledgeable nor acknowledged
     // since one cannot acknowledge alarms that are not acknowledgeable.
     success = m_deviceClient->execute("alarmTester", "triggerNormal", KRB_TEST_MAX_TIMEOUT);
@@ -199,7 +218,117 @@ void AlarmService_Test::testAcknowledgement() {
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
     CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty2");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "warnHigh");
+    
+    
 
 }
+
+void AlarmService_Test::testFlushing(){
+    //we should find a flushed file in the working directory
+    //assure the flushed file resembles the current state
+
+    boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+    boost::interprocess::file_lock flock("./testAlarmService.xml");
+    {
+        boost::interprocess::sharable_lock<boost::interprocess::file_lock> shlock(flock);
+        std::ifstream fin;
+        fin.open("./testAlarmService.xml");
+        std::ostringstream archive;
+        std::string input;
+        while(fin>>input) archive<<input<<std::endl;
+        fin.close();
+        TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
+        Hash h;
+        serializer->load(h, archive.str());
+
+
+        //should be the same as what we currently hold in the table and devices sections
+        std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >("testAlarmService", "registeredDevices");
+
+        Hash propHash;
+        propHash.set("type", "warnHigh");
+        propHash.set("description", "A description for alarmHigh");
+        propHash.set("needsAcknowledging", true);
+        propHash.set<unsigned long long>("trainOfFirstOccurrence", 0);
+        propHash.set<unsigned long long>("trainOfOccurrence", 0);
+        propHash.set("acknowledgeable", false);
+        Hash alarmHash("alarmTester", Hash("floatProperty2", Hash("warnHigh", propHash)));
+        Hash hTest("devices", registeredDevices, "alarms", alarmHash);
+        
+        //erase the occurance times, as the will not match!
+        h.erase("alarms.alarmTester.floatProperty2.warnHigh.timeOfFirstOccurrence");
+        h.erase("alarms.alarmTester.floatProperty2.warnHigh.timeOfOccurrence");
+
+        CPPUNIT_ASSERT(karabo::util::similar(h, hTest));
+    }
+    
+}
+    
+void AlarmService_Test::testRecovery(){
+    //first we bring down the alarm service.
+    //at this state it should hold an warnHigh for floatProperty2 which cannot be acknowledged
+    std::pair<bool, std::string> success = m_deviceClient->killDevice("testAlarmService", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+
+    //know we raise an alarm on floatProperty again and ma floatProperty2 acknowledgeable
+    success = m_deviceClient->execute("alarmTester", "triggerNormal2", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+    CPPUNIT_ASSERT(success.second == "triggeredNormal2");
+
+    success = m_deviceClient->execute("alarmTester", "triggerAlarmHigh", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+    CPPUNIT_ASSERT(success.second == "triggeredAlarmHigh");
+    
+    //bring up a previously unknown device
+    success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2"), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+
+    //trigger an alarm
+    success = m_deviceClient->execute("alarmTester2", "triggerAlarmLow", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+    CPPUNIT_ASSERT(success.second == "triggeredAlarmLow");
+
+    //now we bring the alarm service back up
+    success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService", "flushInterval", 1), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+
+    //we give some time for message passing
+    boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+
+    //alarmState should now be an alarm for floatProperty and floatProperty2 acknowledgeable
+    const std::vector<Hash>& alarmTable = m_deviceClient->get<std::vector<Hash> >("testAlarmService", "currentAlarms");
+    CPPUNIT_ASSERT(alarmTable.size() == 3);
+    Hash h = alarmTable[0];
+
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty2");
+    CPPUNIT_ASSERT(h.get<std::string>("type") == "warnHigh");
+    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledged") == false);
+
+    h = alarmTable[1];
+
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+    CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
+    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledged") == false);
+    
+    h = alarmTable[2];
+
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester2");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+    CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmLow");
+    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledged") == false);
+
+
+
+}
+    
+
 #undef KRB_TEST_MAX_TIMEOUT
 

@@ -474,8 +474,11 @@ namespace karabo {
                 }
 
                 //notify of alarm changes
-                signalAlarmUpdates(previousParametersInAlarm);
-
+                Hash changedAlarms;
+                evaluateAlarmUpdates(previousParametersInAlarm, changedAlarms);
+                if (!changedAlarms.get<Hash>("toClear").empty() || !changedAlarms.get<Hash>("toAdd").empty()) {
+                    emit("signalAlarmUpdate", getInstanceId(), changedAlarms);
+                }
 
 
                 if (!validated.empty()) {
@@ -1105,6 +1108,8 @@ namespace karabo {
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
                 KARABO_SLOT(slotKillDevice)
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
+                KARABO_SLOT(slotReSubmitAlarms, karabo::util::Hash);
+
             }
 
             /**
@@ -1200,8 +1205,16 @@ namespace karabo {
                         // Give device-implementer a chance to specifically react on reconfiguration event by polymorphically calling back
                         preReconfigure(validated);
 
-                        // Merge reconfiguration with current state
-                        applyReconfiguration(validated);
+                        // nothing to do if empty after preReconfigure
+                        if (!validated.empty()) {
+
+                            // Merge reconfiguration with current state
+                            applyReconfiguration(validated);
+
+                        }
+
+                        //post reconfigure action
+                        this->postReconfigure();
                     }
                 } catch (const karabo::util::Exception& e) {
                     this->exceptionFound(e);
@@ -1233,7 +1246,7 @@ namespace karabo {
                     emit("signalStateChanged", reconfiguration, getInstanceId());
                 else
                     emit("signalChanged", reconfiguration, getInstanceId());
-                this->postReconfigure();
+
             }
 
             void slotKillDevice() {
@@ -1338,10 +1351,10 @@ namespace karabo {
              *
              * Note: calling this method must be protected by a state change mutex!
              */
-            void signalAlarmUpdates(const karabo::util::Hash& previous) {
+            void evaluateAlarmUpdates(const karabo::util::Hash& previous, karabo::util::Hash& result) {
                 using namespace karabo::util;
 
-                Hash result;
+
                 Hash& toClear = result.bindReference<Hash>("toClear");
                 Hash& toAdd = result.bindReference<Hash>("toAdd");
 
@@ -1383,9 +1396,32 @@ namespace karabo {
 
                 }
 
-                if (!toClear.empty() || !toAdd.empty()) emit("signalAlarmUpdate", getInstanceId(), result);
+
+
             }
 
+            /**
+             * This slot is called by the alarm service when it gets (re-) instantiated. The alarm service will pass
+             * any for this instances that it recovered from its persisted data. These should be checked against whether
+             * they are still valid and if new ones appeared
+             *
+             * @param existingAlarms: A hash containing existing alarms pertinent to this device. May be empty.
+             */
+            void slotReSubmitAlarms(const karabo::util::Hash& existingAlarms) {
+                using namespace karabo::util;
+                Hash existingAlarmsRF; //reformatted to match format updateAlarmServiceWithParametersInAlarm expects as previous
+                for (Hash::const_iterator propIt = existingAlarms.begin(); propIt != existingAlarms.end(); ++propIt) {
+                    const Hash& propertyHash = propIt->getValue<Hash>();
+                    const std::string& property = propIt->getKey();
+                    for (Hash::const_iterator aTypeIt = propertyHash.begin(); aTypeIt != propertyHash.end(); ++aTypeIt) {
+                        existingAlarmsRF.set(property, Hash("type", aTypeIt->getKey()));
+                    }
+                }
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                Hash alarmsToUpdate;
+                evaluateAlarmUpdates(existingAlarmsRF, alarmsToUpdate);
+                reply(getInstanceId(), alarmsToUpdate);
+            }
 
 
 
