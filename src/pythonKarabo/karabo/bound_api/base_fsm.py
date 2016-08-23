@@ -35,10 +35,8 @@ class BaseFsm(NoFsm):
                 fsm.start()
             except Exception as e:
                 raise RuntimeError("startFsm -- Exception: {0}".format(str(e)))
-            # this is for compatibility with GUI: strip square brackets from state name in case of state machine with regions
+
             state = fsm.get_state()
-            if state[0] == '[' and state[len(state)-1] == ']':
-                state = state[1:len(state)-1]
             self.updateState(state)
     
     def processEvent(self, event):
