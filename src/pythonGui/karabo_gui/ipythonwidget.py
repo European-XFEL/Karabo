@@ -4,34 +4,26 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
-__all__ = ["IPythonWidget"]
-
 import os
 import pickle
 import socket
 
-from PyQt4 import QtCore
-
-from IPython.qt.console.rich_ipython_widget import RichIPythonWidget
-from IPython.lib import guisupport
-from IPython.qt import kernel_mixins, inprocess, util
-from IPython.kernel.inprocess.client import InProcessKernelClient
-from IPython.kernel.inprocess import channels
+from ipykernel.inprocess.client import InProcessKernelClient
+from qtconsole.rich_jupyter_widget import RichJupyterWidget
+from qtconsole import kernel_mixins, inprocess
 
 from karabo.middlelayer import Hash
-
 from karabo_gui.network import network
 from karabo_gui.topology import getDevice
 
 
-class IPythonWidget(RichIPythonWidget):
+class IPythonWidget(RichJupyterWidget):
     def __init__(self, banner=None, *args, **kwargs):
         if banner is not None:
             self.banner = banner
         super().__init__(*args, local_kernel=True, **kwargs)
 
-        self.kernel_manager = Manager()
+        self.kernel_manager = KernelManager()
         self.kernel_manager.start_kernel()
         self.kernel_client = self.kernel_manager.client()
         self.exit_requested.connect(self.stop)
@@ -55,27 +47,28 @@ class Channel(inprocess.QtInProcessChannel):
             self.call_handlers_later(pickle.loads(value))
 
 
-class Manager(kernel_mixins.QtKernelManagerMixin):
+class KernelManager(kernel_mixins.QtKernelManagerMixin):
     __client = None
 
     def start_kernel(self):
-        hostname = socket.gethostname().replace(".","_")
+        hostname = socket.gethostname().replace(".", "_")
         self.name = "CLI-{}-{}".format(hostname, os.getpid())
-        network.onInitDevice("Karabo_MacroServer", "IPythonKernel", self.name, Hash())
+        network.onInitDevice("Karabo_MacroServer", "IPythonKernel", self.name,
+                             Hash())
 
     def shutdown_kernel(self):
         network.onKillDevice(self.name)
 
     def client(self):
         if self.__client is None:
-            self.__client = Client(self.name)
+            self.__client = KernelClient(self.name)
         return self.__client
 
     def interrupt_kernel(self):
         self.__client.device.boxvalue.interrupt.execute()
 
 
-class Client(inprocess.QtInProcessKernelClient):
+class KernelClient(inprocess.QtInProcessKernelClient):
     shell_channel_class = Channel
     iopub_channel_class = Channel
     stdin_channel_class = Channel
