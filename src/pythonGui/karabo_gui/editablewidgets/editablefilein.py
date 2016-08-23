@@ -3,23 +3,18 @@
 # Created on February 4, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
 """This module contains a class which represents a widget plugin for parameters
    and is created by the factory class EditableWidget.
 """
 
-__all__ = ["EditableFileIn"]
-
-
-import karabo_gui.icons as icons
-from karabo_gui.util import SignalBlocker
-from karabo_gui.widget import EditableWidget
+from PyQt4.QtGui import (
+    QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 from karabo.middlelayer import String
 
-from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QLineEdit, QToolButton,
-                         QWidget)
+import karabo_gui.icons as icons
+from karabo_gui.util import getOpenFileName, SignalBlocker
+from karabo_gui.widget import EditableWidget
 
 
 class EditableFileIn(EditableWidget):
@@ -78,7 +73,7 @@ class EditableFileIn(EditableWidget):
 
 
     def onFileInClicked(self):
-        fileIn = QFileDialog.getOpenFileName(None, "Select input file")
+        fileIn = getOpenFileName("Select input file")
         if not fileIn:
             return
 
