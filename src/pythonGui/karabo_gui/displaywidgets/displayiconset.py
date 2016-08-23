@@ -43,6 +43,14 @@ class DisplayIconset(DisplayWidget):
     def __init__(self, box, parent):
         super(DisplayIconset, self).__init__(box)
 
+        self.widget = QSvgWidget(parent)
+        qaction = QAction("Iconset from file...", self.widget)
+        qaction.triggered.connect(self.onChangeIcons)
+        self.widget.addAction(qaction)
+        qaction = QAction("Iconset from URL...", self.widget)
+        qaction.triggered.connect(self.onChangeURL)
+        self.widget.addAction(qaction)
+
         # URL of the icon set
         self.url = None
         # XMLParser object to get associated layer for property value
@@ -51,14 +59,6 @@ class DisplayIconset(DisplayWidget):
         # Use default icon set for initialization
         self.setURL("file://" + urllib.request.pathname2url(
             os.path.join(os.path.dirname(__file__), "empty.svg")))
-
-        self.widget = QSvgWidget(parent)
-        qaction = QAction("Iconset from file...", self.widget)
-        qaction.triggered.connect(self.onChangeIcons)
-        self.widget.addAction(qaction)
-        qaction = QAction("Iconset from URL...", self.widget)
-        qaction.triggered.connect(self.onChangeURL)
-        self.widget.addAction(qaction)
 
     def _readData(self, url, data=None):
         if data is None:
@@ -71,6 +71,8 @@ class DisplayIconset(DisplayWidget):
     def setURL(self, url):
         self.url = url
         self.xml = self._readData(url)
+        self.valueChanged(None, self.boxes[0].value if self.boxes[0].hasValue()
+                          else "")
 
     def setData(self, url, data):
         """ The `url` and the actual `data` is passed and needs to be set. """
