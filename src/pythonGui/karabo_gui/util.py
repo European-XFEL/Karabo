@@ -3,6 +3,7 @@ from uuid import uuid4
 from PyQt4.QtGui import QDialog, QFileDialog
 
 from karabo.middlelayer import Hash
+import karabo_gui.globals as globals
 
 
 class SignalBlocker(object):
@@ -21,13 +22,26 @@ def generateObjectName(widget):
     return "{0}_{1}".format(widget.__class__.__name__, uuid4().hex)
 
 
-def getSaveFileName(title, dir="", description="", suffix="", filter=None, selectFile=""):
-    dialog = QFileDialog(None, title, dir, description)
+def getOpenFileName(parent=None, caption="", filter=""):
+    """ Return `filename` of the Qt file open dialog.
+    """
+    return QFileDialog.getOpenFileName(parent=parent,
+                                       caption=caption,
+                                       directory=globals.HIDDEN_KARABO_FOLDER,
+                                       filter=filter,
+                                       options=QFileDialog.DontUseNativeDialog)
+
+def getSaveFileName(parent=None, caption="", directory="", filter="",
+                    suffix="", selectFile=""):
+    if not directory:
+        directory = globals.HIDDEN_KARABO_FOLDER
+
+    dialog = QFileDialog(parent, caption, directory, filter)
     dialog.selectFile(selectFile)
     dialog.setDefaultSuffix(suffix)
     dialog.setFileMode(QFileDialog.AnyFile)
     dialog.setAcceptMode(QFileDialog.AcceptSave)
-    if filter is not None:
+    if filter:
         dialog.setNameFilter(filter)
 
     if dialog.exec_() == QDialog.Rejected:

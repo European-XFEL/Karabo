@@ -1,41 +1,35 @@
-
-from karabo_gui.const import ns_karabo
-import karabo_gui.icons as icons
-from karabo_gui.widget import DisplayWidget
-from karabo_gui.messagebox import MessageBox
-
-from karabo.middlelayer import Integer, Number, String
-
-from PyQt4 import uic
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer, QDir
-from PyQt4.QtGui import (QAction, QApplication, QDialog, QFileDialog, QLabel,
-                         QPixmap)
-
 from os import path
 import urllib.request
 import re
-from xml.etree.ElementTree import Element
+
+from PyQt4 import uic
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer
+from PyQt4.QtGui import QAction, QApplication, QDialog, QLabel, QPixmap
+
+from karabo.middlelayer import Integer, Number, String
+import karabo_gui.icons as icons
+from karabo_gui.messagebox import MessageBox
+from karabo_gui.util import getOpenFileName
+from karabo_gui.widget import DisplayWidget
+
 
 class IconError(Exception):
     pass
 
+
 class Label(QLabel):
     newMime = pyqtSignal(str)
-
 
     def __init__(self, parent):
         QLabel.__init__(self, parent)
         self.setAcceptDrops(True)
         self.setPixmap(None)
 
-
     def dragEnterEvent(self, event):
         event.acceptProposedAction()
 
-
     def dropEvent(self, event):
         self.newMime.emit(mime.mimeData())
-
 
     def setPixmap(self, pixmap):
         if pixmap is None:
@@ -117,8 +111,10 @@ class Dialog(QDialog):
 
     @pyqtSlot()
     def on_open_clicked(self):
-        name = QFileDialog.getOpenFileName(self, "Open Icon", QDir.homePath(), 
-                "Images (*.png *.xpm *.jpg *.jpeg *.svg *.gif *.ico *.tif *.tiff *.bmp)")
+        name = getOpenFileName(parent=self,
+                               caption="Open Icon", 
+                               filter="Images (*.png *.xpm *.jpg *.jpeg *.svg "
+                                      "*.gif *.ico *.tif *.tiff *.bmp)")
         if name:
             url = "file://" + urllib.request.pathname2url(name)
             self.setURL(url)
@@ -160,6 +156,7 @@ class Dialog(QDialog):
     def exec_(self):
         super(Dialog, self).exec_()
         return self.items
+
 
 class Icons(DisplayWidget):
     def __init__(self, box, parent):
@@ -238,7 +235,6 @@ class DigitDialog(Dialog):
             self.value.setMinimum(min)
         if max is not None:
             self.value.setMaximum(max)
-
 
     @pyqtSlot()
     def on_addValue_clicked(self):

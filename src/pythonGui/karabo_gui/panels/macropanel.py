@@ -94,9 +94,11 @@ class MacroPanel(Dockable, QSplitter):
             self.macro.run()
 
     def onSave(self):
-        fn = getSaveFileName("Save Macro to File", suffix="py",
-                             filter="Python files (*.py)",
-                             selectFile=self.macro.name + ".py")
+        fn = getSaveFileName(
+                caption="Save Macro to File",
+                filter="Python files (*.py)",
+                suffix="py",
+                selectFile=self.macro.name + ".py")
         if not fn:
             return
 
