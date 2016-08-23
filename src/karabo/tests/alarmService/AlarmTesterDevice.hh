@@ -71,11 +71,13 @@ namespace karabo {
 
         void triggerWarnLow();
         void triggerWarnHigh();
+        void triggerWarnHigh2();
         void triggerAlarmLow();
         void triggerAlarmHigh();
         void triggerGlobalAlarm();
         void triggerGlobalWarn();
         void triggerNormal();
+        void triggerNormal2();
         void initialize();
         void triggerGlobalNormal();
 
