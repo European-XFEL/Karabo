@@ -67,7 +67,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokerrates: ${OBJECTFILES
 ${OBJECTDIR}/_ext/1625554341/brokerRates.o: ../../../../src/tools/brokerRates/brokerRates.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1625554341
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1625554341/brokerRates.o ../../../../src/tools/brokerRates/brokerRates.cpp
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1625554341/brokerRates.o ../../../../src/tools/brokerRates/brokerRates.cpp
 
 # Subprojects
 .build-subprojects:
