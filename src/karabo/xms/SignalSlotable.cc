@@ -46,9 +46,8 @@ namespace karabo {
 
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId,
                                                const karabo::util::Hash::Pointer& header,
-                                               const karabo::util::Hash::Pointer& body,
-                                               const karabo::net::ErrorCode& ec) const {
-            if (instanceId == "*" || instanceId.empty() || ec) {
+                                               const karabo::util::Hash::Pointer& body) const {
+            if (instanceId == "*" || instanceId.empty()) {
                 return false;
             }
 
@@ -2172,7 +2171,7 @@ namespace karabo {
             if (signalConnectionString.empty()) return false;
 
             m_pointToPoint->connect(signalInstanceId, m_instanceId, signalConnectionString,
-                                    boost::bind(&SignalSlotable::tryToCallDirectly, this, _1, _2, _3, _4));
+                                    boost::bind(&SignalSlotable::tryToCallDirectly, this, _1, _2, _3));
             return true;
         }
 

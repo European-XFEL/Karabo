@@ -49,6 +49,10 @@ namespace karabo {
             std::vector<std::string> m_idxprops;
             size_t m_propsize;
             time_t m_lasttime;
+            
+            boost::asio::deadline_timer m_flushDeadline;
+            bool m_doFlushFiles;
+            int m_flushInterval;
 
         public:
 
@@ -93,7 +97,9 @@ namespace karabo {
 
             int incrementLastIndex(const std::string& deviceId);
 
-            void flushThread();
+            void flushActor(const boost::system::error_code& e);
+            
+            void doFlush();
         };
     }
 }

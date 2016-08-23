@@ -1521,8 +1521,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             bool tryToCallDirectly(const std::string& slotInstanceId,
                                    const karabo::util::Hash::Pointer& header,
-                                   const karabo::util::Hash::Pointer& body,
-                                   const karabo::net::ErrorCode& ec = boost::system::error_code()) const;
+                                   const karabo::util::Hash::Pointer& body) const;
 
             bool tryToCallP2P(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio) const;
 

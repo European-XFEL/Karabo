@@ -35,17 +35,15 @@ namespace karabo {
         }
 
 
-        IndexBuilderService::IndexBuilderService() : m_svc(new boost::asio::io_service()), m_work(*m_svc), m_cache(),
-            m_thread(boost::bind(&karabo::net::runProtected, m_svc, "IndexBuilderService",
-                                 "consider rerunning index file building by hand", 100)) {
+        IndexBuilderService::IndexBuilderService() : m_cache() {
+            karabo::net::EventLoop::addThread();
         }
 
 
         IndexBuilderService::~IndexBuilderService() {
             // Clean up in the destructor which is called when m_instance goes
             // out of scope, i.e. if the program finishes (tested!).
-            m_svc->stop();
-            m_thread.join();
+            karabo::net::EventLoop::removeThread();
         }
 
 
@@ -55,7 +53,7 @@ namespace karabo {
                 // such a request is in the queue
                 return;
             }
-            m_svc->post(boost::bind(&IndexBuilderService::build, this, commandLineArguments));
+            karabo::net::EventLoop::getIOService().post(boost::bind(&IndexBuilderService::build, this, commandLineArguments));
         }
 
 

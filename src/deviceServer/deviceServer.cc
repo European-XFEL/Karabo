@@ -125,13 +125,18 @@ int main(int argc, char** argv) {
 
 #endif
             
+//            boost::asio::io_service::work work(karabo::net::EventLoop::getIOService());
+//            boost::thread t(boost::bind(karabo::net::EventLoop::run));
+//
+//            deviceServer->run();
+//            
+//            karabo::net::EventLoop::stop();
+//            
+//            t.join();
+            
+            boost::thread t(boost::bind(&DeviceServer::run, deviceServer));
             boost::asio::io_service::work work(karabo::net::EventLoop::getIOService());
-            boost::thread t(boost::bind(karabo::net::EventLoop::run));
-
-            deviceServer->run();
-            
-            karabo::net::EventLoop::stop();
-            
+            karabo::net::EventLoop::run();
             t.join();
             
             deviceServer.reset();

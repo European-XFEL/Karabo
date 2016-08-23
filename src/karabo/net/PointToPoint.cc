@@ -91,6 +91,9 @@ namespace karabo {
             void disconnect(const std::string& signalInstanceId, const std::string& slotInstanceId);
 
             void consume(const karabo::net::ErrorCode& ec,
+                         const std::string& signalInstanceId,
+                         const std::string& signalConnectionString,
+                         const karabo::net::Connection::Pointer& connection,
                          const karabo::net::Channel::Pointer& channel,
                          karabo::util::Hash::Pointer& header,
                          karabo::util::Hash::Pointer& body);
@@ -385,7 +388,7 @@ namespace karabo {
             // Subscribe to producer with our own instanceId
             channel->write(slotInstanceId + " SUBSCRIBE");
             // ... and, finally, wait for publications ...
-            channel->readAsyncHashPointerHashPointer(boost::bind(&Consumer::consume, this, _1, channel, _2, _3));
+            channel->readAsyncHashPointerHashPointer(boost::bind(&Consumer::consume, this, _1, signalInstanceId, signalConnectionString, connection, channel, _2, _3));
         }
 
 
@@ -472,15 +475,19 @@ namespace karabo {
 
 
         void PointToPoint::Consumer::consume(const karabo::net::ErrorCode& ec,
+                                             const std::string& signalInstanceId,
+                                             const std::string& signalConnectionString,
+                                             const karabo::net::Connection::Pointer& connection,
                                              const karabo::net::Channel::Pointer& channel,
                                              karabo::util::Hash::Pointer& header,
                                              karabo::util::Hash::Pointer& body) {
 
+            if (ec) {
+                channelErrorHandler(ec, signalInstanceId, signalConnectionString, connection, channel);
+                return;
+            }
 
             // Get from header...
-            // ... signalInstanceId
-            string signalInstanceId = header->get<string>("signalInstanceId");
-
             // ... slotInstanceIdsString
             string slotInstanceIdsString = header->get<string>("slotInstanceIds");
 
@@ -510,10 +517,14 @@ namespace karabo {
                     handler = iii->second;
                 }
                 // call user callback of type "ConsumeHandler"
-                handler(slotInstanceId, header, body, ec);
+                handler(slotInstanceId, header, body);
             }
             // Re-register itself
-            channel->readAsyncHashPointerHashPointer(boost::bind(&Consumer::consume, this, _1, channel, _2, _3));
+            channel->readAsyncHashPointerHashPointer(boost::bind(&Consumer::consume, this, _1,
+                                                                 signalInstanceId,
+                                                                 signalConnectionString,
+                                                                 connection,
+                                                                 channel, _2, _3));
         }
 
 

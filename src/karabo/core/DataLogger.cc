@@ -71,24 +71,28 @@ namespace karabo {
         }
 
 
-        DataLogger::DataLogger(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
-            m_pendingLogin = true;
+        DataLogger::DataLogger(const Hash& input)
+            : karabo::core::Device<karabo::core::OkErrorFsm>(input)
+            , m_pendingLogin(true)
+            , m_propsize(0)
+            , m_lasttime(0)
+            , m_flushDeadline(karabo::net::EventLoop::getIOService())
+            , m_doFlushFiles(true) {
+
             m_idxprops.clear();
-            m_propsize = 0;
-            m_lasttime = 0;
 
             input.get("deviceToBeLogged", m_deviceToBeLogged);
-            // start "flush" thread ...
-            m_flushThread = boost::thread(boost::bind(&DataLogger::flushThread, this));
+            // start "flush" actor ...
+            input.get("flushInterval", m_flushInterval); // in seconds
+            m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
+            m_flushDeadline.async_wait(boost::bind(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
 
 
         DataLogger::~DataLogger() {
-            // stop and join "flush" thread if it is running...
-            if (m_flushThread.joinable()) {
-                m_flushThread.interrupt();
-                m_flushThread.join();
-            }
+            m_doFlushFiles = false;
+            m_flushDeadline.cancel();
+
             slotTagDeviceToBeDiscontinued(true, 'L');
             KARABO_LOG_FRAMEWORK_INFO << this->getInstanceId() << ": dead.";
         }
@@ -339,29 +343,24 @@ namespace karabo {
         }
 
 
-        void DataLogger::flushThread() {
-            //------------------------------------------------- make this thread sensible to external interrupts
-            boost::this_thread::interruption_enabled(); // enable interruption +
-            boost::this_thread::interruption_requested(); // request interruption = we need both!
-            try {
-                // iterate until interruption
-                while (true) {
-                    {
-                        boost::mutex::scoped_lock lock(m_configMutex);
-                        boost::this_thread::disable_interruption di; // disable interruption in this block
-                        if (m_configStream.is_open()) {
-                            m_configStream.flush();
-                        }
-                        for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
-                            MetaData::Pointer mdp = it->second;
-                            if (mdp && mdp->idxStream.is_open()) mdp->idxStream.flush();
-                        }
-                    }
-                    // here the interruption enabled again
-                    int millis = get<int>("flushInterval") * 1000;
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(millis));
-                }
-            } catch (const boost::thread_interrupted&) {
+        void DataLogger::flushActor(const boost::system::error_code& e) {
+            if (e == boost::asio::error::operation_aborted || !m_doFlushFiles)
+                return;
+            doFlush();
+            // arm timer again
+            m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
+            m_flushDeadline.async_wait(boost::bind(&DataLogger::flushActor, this, boost::asio::placeholders::error));
+        }
+
+
+        void DataLogger::doFlush() {
+            boost::mutex::scoped_lock lock(m_configMutex);
+            if (m_configStream.is_open()) {
+                m_configStream.flush();
+            }
+            for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
+                MetaData::Pointer mdp = it->second;
+                if (mdp && mdp->idxStream.is_open()) mdp->idxStream.flush();
             }
         }
 
