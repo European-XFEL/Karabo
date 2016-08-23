@@ -1,12 +1,14 @@
+import hashlib
 from os import path
-import urllib.request
 import re
+import urllib.request
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer
 from PyQt4.QtGui import QAction, QApplication, QDialog, QLabel, QPixmap
 
 from karabo.middlelayer import Integer, Number, String
+import karabo_gui.globals as globals
 import karabo_gui.icons as icons
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.util import getOpenFileName
@@ -21,7 +23,7 @@ class Label(QLabel):
     newMime = pyqtSignal(str)
 
     def __init__(self, parent):
-        QLabel.__init__(self, parent)
+        super(Label, self).__init__(parent)
         self.setAcceptDrops(True)
         self.setPixmap(None)
 
@@ -49,6 +51,10 @@ class Item(object):
         self.data = data
         self.getPixmap()
 
+    def setURL(self, url):
+        self.url = url
+        self.data = urllib.request.urlopen(url).read()
+
     def getPixmap(self):
         """ This function tries to load an image from the given `data` which
             is available as byte string.
@@ -69,11 +75,10 @@ class Item(object):
 
 
 class Dialog(QDialog):
-    def __init__(self, project, items):
+    def __init__(self, items):
         super(Dialog, self).__init__()
-        self.project = project
-        self.items = items
         uic.loadUi(path.join(path.dirname(__file__), 'icons.ui'), self)
+        self.items = items
         self.valueList.addItems([self.textFromItem(item) for item in items])
         self.valueList.setCurrentRow(0)
 
@@ -82,14 +87,14 @@ class Dialog(QDialog):
         self.image.setPixmap(self.items[row].pixmap)
 
     def setURL(self, url):
-        if url.startswith("file:"):
-            url = self.project.addResource("icon", self.project.getURL(url))
-        item = self.items[self.valueList.currentRow()]
-        if not item.getPixmap(self.project, url):
+        cr = self.valueList.currentRow()
+        item = self.items[cr]
+        if not url.startswith("file:"):
+            url = "file://" + urllib.request.pathname2url(url)
+        item.setURL(url)
+        if not item.getPixmap():
             return
-        item.url = url
         self.image.setPixmap(item.pixmap)
-        self.copy.setEnabled(not url.startswith("project:"))
 
     def on_image_newMime(self, mime):
         if mime.hasImage():
@@ -98,37 +103,34 @@ class Dialog(QDialog):
                 buffer = QBuffer(ba)
                 buffer.open(QBuffer.WriteOnly)
                 image = mime.imageData().save(buffer, "PNG")
-                url = self.project.addResource("icon", buffer.data())
+                data = buffer.data()
+                image_name = hashlib.sha1(data).hexdigest()
+                filename = path.join(globals.HIDDEN_KARABO_FOLDER, image_name)
+                # Save to file system for later use
+                with open(filename, "wb") as out:
+                    out.write(data)
             finally:
                 buffer.close()
         else:
             try:
-                url = mime.text().split()[0].strip()
+                filename = mime.text().split()[0].strip()
             except Exception as e:
                 e.message = "Could not open URL or Image"
                 raise
-        self.setURL(url)
+        self.setURL(filename)
 
     @pyqtSlot()
     def on_open_clicked(self):
-        name = getOpenFileName(parent=self,
+        filename = getOpenFileName(parent=self,
                                caption="Open Icon", 
                                filter="Images (*.png *.xpm *.jpg *.jpeg *.svg "
                                       "*.gif *.ico *.tif *.tiff *.bmp)")
-        if name:
-            url = "file://" + urllib.request.pathname2url(name)
-            self.setURL(url)
+        if filename:
+            self.setURL(filename)
 
     @pyqtSlot()
     def on_paste_clicked(self):
         self.on_image_newMime(QApplication.clipboard().mimeData())
-
-    @pyqtSlot()
-    def on_copy_clicked(self):
-        cr = self.valueList.currentRow()
-        url = self.project.addResource("icon",
-                                       self.project.getURL(self.items[cr].url))
-        self.setURL(url)
 
     @pyqtSlot()
     def on_deleteValue_clicked(self):
@@ -174,7 +176,7 @@ class Icons(DisplayWidget):
 
     def showDialog(self):
         box = self.boxes[0]
-        dialog = self.Dialog(self.project, self.items, box.descriptor)
+        dialog = self.Dialog(self.items, box.descriptor)
         self._setItems(dialog.exec_())
         if box.hasValue():
             self.valueChanged(box, box.value)
@@ -191,8 +193,8 @@ class Icons(DisplayWidget):
 
 
 class TextDialog(Dialog):
-    def __init__(self, project, items, descriptor):
-        super().__init__(project, items)
+    def __init__(self, items, descriptor):
+        super(TextDialog, self).__init__(items)
         self.stack.setCurrentWidget(self.textPage)
 
     @pyqtSlot()
@@ -222,8 +224,8 @@ class TextIcons(Icons):
 
 
 class DigitDialog(Dialog):
-    def __init__(self, project, items, descriptor):
-        super().__init__(project, items)
+    def __init__(self, items, descriptor):
+        super(DigitDialog, self).__init__(items)
         if isinstance(descriptor, Integer):
             self.value = self.intValue
             self.stack.setCurrentWidget(self.intPage)
@@ -268,8 +270,8 @@ class DigitIcons(Icons):
 
 
 class SelectionDialog(Dialog):
-    def __init__(self, project, items, descriptor):
-        super().__init__(project, items)
+    def __init__(self, items, descriptor):
+        super(SelectionDialog, self).__init__(items)
         self.editable.hide()
 
     def textFromItem(self, item):
