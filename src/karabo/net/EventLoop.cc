@@ -148,7 +148,6 @@ namespace karabo {
                         // Hence, we are injecting the exception again to be taken by another thread
                         // Only if at least one thread to kill
                         if (m_threadPool.size() > 0) {
-                            //std::cout << "Illegal trial to remove thread on empty thread-pool" << std::endl;
                             m_ioService.post(&asyncInjectException);
                             // We kindly ask the scheduler to put us on the back of the threads queue, avoiding we will
                             // eat the just posted exception again

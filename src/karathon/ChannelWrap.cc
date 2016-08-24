@@ -344,27 +344,4 @@ namespace karathon {
         }
         PyErr_SetString(PyExc_TypeError, "Python type in parameters is not supported");
     }
-
-
-//    void ChannelWrap::setErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler) {
-//        if (!PyCallable_Check(handler.ptr()))
-//            throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
-//        ScopedGILRelease nogil;
-//        channel->setErrorHandler(boost::bind(proxyErrorHandler, handler, channel, _1));
-//    }
-
-
-    void ChannelWrap::proxyErrorHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel) {
-        ScopedGILAcquire gil;
-        try {
-            handler(bp::object(code), bp::object(channel), bp::object(code));
-        } catch (const bp::error_already_set& e) {
-            if (PyErr_Occurred()) {
-                PyErr_Print();
-            }
-            throw KARABO_PYTHON_EXCEPTION("ErrorHandler has thrown an exception.");
-        } catch (...) {
-            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
-        }
-    }
 }

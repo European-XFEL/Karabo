@@ -43,8 +43,6 @@ namespace karabo {
             karabo::util::Timestamp m_lastDataTimestamp;
             bool m_pendingLogin;
 
-            boost::thread m_flushThread;
-
             std::map<std::string, karabo::core::MetaData::Pointer> m_idxMap;
             std::vector<std::string> m_idxprops;
             size_t m_propsize;
@@ -52,7 +50,7 @@ namespace karabo {
             
             boost::asio::deadline_timer m_flushDeadline;
             bool m_doFlushFiles;
-            int m_flushInterval;
+            unsigned int m_flushInterval;
 
         public:
 
