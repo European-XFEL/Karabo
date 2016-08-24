@@ -5,25 +5,30 @@
  * Created on August 5, 2016, 11:30 AM
  */
 
-#include "AlarmService.hh"
-#include "karabo/util/State.hh"
-#include "karabo/io/TextSerializer.hh"
+
 #include <fstream>
+
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/sharable_lock.hpp>
+
+#include "karabo/util/State.hh"
+#include "karabo/io/TextSerializer.hh"
+
+#include "AlarmService.hh"
 
 
 namespace karabo {
     
    
     
-    namespace core {
+    namespace devices {
 
         using namespace krb_log4cpp;
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
+        using namespace karabo::core;
 
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, AlarmService)

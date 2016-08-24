@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   DataLogReader.hh
  * Author: Sergey Esenov serguei.essenov@xfel.eu
  *
@@ -9,8 +9,10 @@
 #define	DATALOGREADER_HH
 
 #include <boost/filesystem.hpp>
-#include "Device.hh"
-#include "OkErrorFsm.hh"
+
+#include "karabo/core/Device.hh"
+#include "karabo/core/OkErrorFsm.hh"
+
 #include "DataLogUtils.hh"
 
 
@@ -22,10 +24,9 @@ namespace karabo {
     /**
      * Namespace for package core
      */
-    namespace core {
+    namespace devices {
 
         struct DataLoggerIndex {
-
 
             std::string m_event;
             karabo::util::Epochstamp m_epoch;
@@ -46,7 +47,6 @@ namespace karabo {
 
         struct PropFileInfo {
 
-
             typedef boost::shared_ptr<PropFileInfo> Pointer;
             boost::mutex filelock;
             size_t filesize;
@@ -59,7 +59,7 @@ namespace karabo {
 
         class IndexBuilderService {
 
-            public:
+        public:
             // Needed for 'Pointer' and KARABO_LOG_FRAMEWORK
             KARABO_CLASSINFO(IndexBuilderService, "IndexBuilderService", "1.4")
 
@@ -89,7 +89,7 @@ namespace karabo {
 
         class DataLogReader : public karabo::core::Device<karabo::core::OkErrorFsm> {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(DataLogReader, "DataLogReader", "1.0")
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   DataLoggerStructs.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
@@ -8,10 +8,10 @@
 #ifndef DATALOGGERSTRUCTS_HH
 #define	DATALOGGERSTRUCTS_HH
 
-#include <karabo/util/Epochstamp.hh>
+#include "karabo/util/Epochstamp.hh"
 
 namespace karabo {
-    namespace core {
+    namespace devices {
 
         char const * const DATALOGMANAGER_ID = "Karabo_DataLoggerManager_0";
         char const * const DATALOGGER_PREFIX = "DataLogger-";
@@ -20,11 +20,9 @@ namespace karabo {
 
         struct MetaData {
 
-
             typedef boost::shared_ptr<MetaData> Pointer;
 
             struct Record {
-
 
                 double epochstamp;
                 unsigned long long trainId;
@@ -46,7 +44,6 @@ namespace karabo {
         };
 
         struct MetaSearchResult {
-
 
             size_t fromFileNumber;
             size_t toFileNumber;

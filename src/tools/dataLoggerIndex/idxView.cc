@@ -10,13 +10,13 @@
 #include <boost/filesystem.hpp>
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Exception.hh>
-#include <karabo/core/DataLogUtils.hh>
+#include <karabo/devices/DataLogUtils.hh>
 
 
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
 using namespace std;
-using namespace karabo::core;
+using namespace karabo::devices;
 using namespace karabo::util;
 
 

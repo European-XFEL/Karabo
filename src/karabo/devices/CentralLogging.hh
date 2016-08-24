@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   CentralLogging.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
@@ -8,7 +8,7 @@
 #ifndef KARABO_CORE_CENTRALLOGGING_HH
 #define	KARABO_CORE_CENTRALLOGGING_HH
 
-#include "Device.hh"
+#include "karabo/core/Device.hh"
 
 /**
  * The main karabo namespace
@@ -18,11 +18,11 @@ namespace karabo {
     /**
      * Namespace for package core
      */
-    namespace core {
+    namespace devices {
 
         class CentralLogging : public karabo::core::Device<> {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(CentralLogging, "CentralLogging", "1.0")
 

@@ -30,7 +30,6 @@ namespace karabo {
 
         class DataLogger : public karabo::core::Device<karabo::core::OkErrorFsm> {
 
-
             std::string m_deviceToBeLogged;
 
             karabo::util::Schema m_currentSchema;
@@ -47,7 +46,7 @@ namespace karabo {
             std::vector<std::string> m_idxprops;
             size_t m_propsize;
             time_t m_lasttime;
-            
+
             boost::asio::deadline_timer m_flushDeadline;
             bool m_doFlushFiles;
             unsigned int m_flushInterval;
@@ -79,13 +78,13 @@ namespace karabo {
 
             /**
              * This tags a device to be discontinued, three cases have to be distinguished
-             * 
+             *
              * (a) Regular shut-down of the device (wasValidUpToNow = true, reason = 'D')
              * (b) Silent death of the device (wasValidUpToNow = true, reason = 'D')
              * (c) Start-up of this (DataLogger) device whilst the device was alive (wasValidUpToNow = false, reason = 'L')
-             * 
+             *
              * This slot will be called by the DataLoggerManager
-             * 
+             *
              */
             void slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason);
 
@@ -96,7 +95,7 @@ namespace karabo {
             int incrementLastIndex(const std::string& deviceId);
 
             void flushActor(const boost::system::error_code& e);
-            
+
             void doFlush();
         };
     }

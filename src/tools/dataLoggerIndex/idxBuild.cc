@@ -21,7 +21,7 @@
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
 using namespace std;
-using namespace karabo::core;
+using namespace karabo::devices;
 using namespace karabo::util;
 using namespace karabo::io;
 
@@ -317,7 +317,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             const string& user = tokens[6 + offset];
             const string& flag = tokens[7 + offset];
 
-            const Epochstamp epstamp(karabo::core::stringDoubleToEpochstamp(epochDoubleStr));
+            const Epochstamp epstamp(karabo::devices::stringDoubleToEpochstamp(epochDoubleStr));
 
             //cout << "*** " << recnum << " *** "
             //        "\t" << "position in input : " << position << ", epoch: " << seconds << "." << fraction << endl;
