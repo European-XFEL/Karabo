@@ -47,7 +47,6 @@ namespace karathon {
     private:
 
         static void proxyConnectionHandler(const karabo::net::ErrorCode& code, const bp::object& connectionHandler, karabo::net::Channel::Pointer channel);
-        static void proxyErrorHandler(const karabo::net::ErrorCode& code, const bp::object& errorHandler, karabo::net::Connection::Pointer connection);
 
         // I've taken this helper function from Burkhard
 

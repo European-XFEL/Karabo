@@ -6,8 +6,9 @@
  */
 
 #include <boost/python.hpp>
-#include <karabo/net/IOService.hh>
+//#include <karabo/net/IOService.hh>
 #include <karabo/net/Connection.hh>
+#include <karabo/net/EventLoop.hh>
 #include <karabo/net/BrokerConnection.hh>
 #include "PythonFactoryMacros.hh"
 #include "IOServiceWrap.hh"
@@ -104,6 +105,17 @@ void exportp2p() {
                 .def("close", &Channel::close, "Close channel session.")
                 .add_property("__id__", &ChannelWrap().id, "This readonly variable keeps id that uniquely identifies channel instance.")
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Channel)
+                ;
+    }
+    
+    {
+        bp::class_<EventLoop, boost::noncopyable >("EventLoop", "EventLoop is a singleton class wrapping Boost ASIO functionality.",
+                                                   bp::no_init)
+                .def("run", &EventLoop::run).staticmethod("run")
+                .def("stop", &EventLoop::stop).staticmethod("stop")
+                .def("addThread", (void (*)(const int))&EventLoop::addThread, (bp::arg("nThreads") = 1)).staticmethod("addThread")
+                .def("removeThread", (void(*)(const int))&EventLoop::removeThread, (bp::arg("nThreads") = 1)).staticmethod("removeThread")
+                .def("getNumberOfThreads", (size_t(*)())&EventLoop::getNumberOfThreads).staticmethod("getNumberOfThreads")
                 ;
     }
 }
