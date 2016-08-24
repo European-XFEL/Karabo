@@ -106,14 +106,36 @@ class _Manager(QObject):
             if conf.descriptor is not None:
                 conf.redummy()
 
+    def _validateConfiguration(self, current_config, old_config):
+        """" This method checks whether the keys in the `old_config` hash
+            still exist in the `current_config`.
+            If a key does not match anymore it is removed from the `old_config`.
+        """
+        def recurse(parent_key, parent_value, old_keys):
+            if isinstance(parent_value, Hash):
+                for key, value in parent_value.items():
+                    new_key = "{}.{}".format(parent_key, key)
+                    recurse(new_key, value, old_keys)
+
+            if not current_config.has(parent_key):
+                return old_keys.append(parent_key)
+
+        old_keys = []
+        for key, value in old_config.items():
+            recurse(key, value, old_keys)
+        for key in old_keys:
+            old_config.erase(key)
+
     def initDevice(self, serverId, classId, deviceId, config=None):
         # Use standard configuration for server/classId
-        conf = self.serverClassData.get((serverId, classId))
+        conf = getClass(serverId, classId)
+        current_config, _ = conf.toHash()  # Ignore returned attributes
         if config is None:
-            if conf is not None:
-                config, _ = conf.toHash()  # Ignore returned attributes
-            else:
-                config = Hash()
+            config = current_config
+        else:
+            # Validate `config` against `current_config` in case some
+            # parameters evolved over time in the underlying Schema
+            self._validateConfiguration(current_config, config)
 
         # XXX: Temporary fix - due to the state changes
         # Old projects save all parameters, even the read only ones. This fix
