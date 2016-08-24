@@ -877,7 +877,7 @@ ${OBJECTDIR}/_ext/1103122747/Statics.o: ../../../src/karabo/xms/Statics.cc
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f8: ${TESTDIR}/_ext/267650667/AlarmService_Test.o ${TESTDIR}/_ext/267650667/AlarmTesterDevice.o ${TESTDIR}/_ext/267650667/alarmServiceRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f8: ${TESTDIR}/_ext/815710531/AlarmService_Test.o ${TESTDIR}/_ext/815710531/AlarmTesterDevice.o ${TESTDIR}/_ext/815710531/alarmServiceRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f8 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
@@ -910,22 +910,22 @@ ${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/Data_Test.o ${TESTDIR}/_ext/9
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f5 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
 
-${TESTDIR}/_ext/267650667/AlarmService_Test.o: ../../../src/karabo/tests/alarmService/AlarmService_Test.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/267650667
+${TESTDIR}/_ext/815710531/AlarmService_Test.o: ../../../src/karabo/tests/integration/AlarmService_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/815710531
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/267650667/AlarmService_Test.o ../../../src/karabo/tests/alarmService/AlarmService_Test.cc
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/AlarmService_Test.o ../../../src/karabo/tests/integration/AlarmService_Test.cc
 
 
-${TESTDIR}/_ext/267650667/AlarmTesterDevice.o: ../../../src/karabo/tests/alarmService/AlarmTesterDevice.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/267650667
+${TESTDIR}/_ext/815710531/AlarmTesterDevice.o: ../../../src/karabo/tests/integration/AlarmTesterDevice.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/815710531
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/267650667/AlarmTesterDevice.o ../../../src/karabo/tests/alarmService/AlarmTesterDevice.cc
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/AlarmTesterDevice.o ../../../src/karabo/tests/integration/AlarmTesterDevice.cc
 
 
-${TESTDIR}/_ext/267650667/alarmServiceRunner.o: ../../../src/karabo/tests/alarmService/alarmServiceRunner.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/267650667
+${TESTDIR}/_ext/815710531/alarmServiceRunner.o: ../../../src/karabo/tests/integration/alarmServiceRunner.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/815710531
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/267650667/alarmServiceRunner.o ../../../src/karabo/tests/alarmService/alarmServiceRunner.cc
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/alarmServiceRunner.o ../../../src/karabo/tests/integration/alarmServiceRunner.cc
 
 
 ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o: ../../../src/karabo/tests/io/FileInputOutput_Test.cc 
