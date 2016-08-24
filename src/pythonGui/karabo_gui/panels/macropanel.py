@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 """ This is the central panel to edit macros. """
-
 from PyQt4.QtCore import Qt, pyqtSignal, QEvent
 from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QMessageBox,
                          QSplitter, QTextCursor)

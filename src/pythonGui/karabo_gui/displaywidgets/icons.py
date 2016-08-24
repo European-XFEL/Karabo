@@ -1,5 +1,6 @@
 import hashlib
 from os import path
+import os
 import re
 import urllib.request
 
@@ -87,8 +88,7 @@ class Dialog(QDialog):
         self.image.setPixmap(self.items[row].pixmap)
 
     def setURL(self, url):
-        cr = self.valueList.currentRow()
-        item = self.items[cr]
+        item = self.items[self.valueList.currentRow()]
         if not url.startswith("file:"):
             url = "file://" + urllib.request.pathname2url(url)
         item.setURL(url)
@@ -106,25 +106,29 @@ class Dialog(QDialog):
                 data = buffer.data()
                 image_name = hashlib.sha1(data).hexdigest()
                 filename = path.join(globals.HIDDEN_KARABO_FOLDER, image_name)
-                # Save to file system for later use
+                # Save temporary image to file system
                 with open(filename, "wb") as out:
                     out.write(data)
             finally:
                 buffer.close()
+            self.setURL(filename)
+            # Remove temporary image from file system
+            os.remove(filename)
         else:
             try:
                 filename = mime.text().split()[0].strip()
             except Exception as e:
                 e.message = "Could not open URL or Image"
                 raise
-        self.setURL(filename)
+            self.setURL(filename)
 
     @pyqtSlot()
     def on_open_clicked(self):
-        filename = getOpenFileName(parent=self,
-                               caption="Open Icon", 
-                               filter="Images (*.png *.xpm *.jpg *.jpeg *.svg "
-                                      "*.gif *.ico *.tif *.tiff *.bmp)")
+        filename = getOpenFileName(
+                        parent=self,
+                        caption="Open Icon", 
+                        filter="Images (*.png *.xpm *.jpg *.jpeg *.svg "
+                               "*.gif *.ico *.tif *.tiff *.bmp)")
         if filename:
             self.setURL(filename)
 

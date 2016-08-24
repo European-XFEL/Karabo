@@ -31,6 +31,7 @@ def getOpenFileName(parent=None, caption="", filter=""):
                                        filter=filter,
                                        options=QFileDialog.DontUseNativeDialog)
 
+
 def getSaveFileName(parent=None, caption="", directory="", filter="",
                     suffix="", selectFile=""):
     if not directory:
