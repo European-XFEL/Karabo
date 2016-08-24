@@ -78,8 +78,6 @@ namespace karabo {
             m_lasttime = 0;
 
             input.get("deviceToBeLogged", m_deviceToBeLogged);
-            // start "flush" thread ...
-            m_flushThread = boost::thread(boost::bind(&DataLogger::flushThread, this));
         }
 
 
@@ -131,6 +129,8 @@ namespace karabo {
 
             connectP2P(m_deviceToBeLogged);
 
+            // start "flush" thread ...
+            m_flushThread = boost::thread(boost::bind(&DataLogger::flushThread, this));
         }
 
 
@@ -362,6 +362,12 @@ namespace karabo {
                     boost::this_thread::sleep(boost::posix_time::milliseconds(millis));
                 }
             } catch (const boost::thread_interrupted&) {
+            } catch (Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Exception in flushThread: " << e;
+            } catch (std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in flushThread: " << e.what();
+            } catch (...) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception in flushThread.";
             }
         }
 
