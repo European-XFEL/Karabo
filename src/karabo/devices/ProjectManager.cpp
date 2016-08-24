@@ -5,14 +5,21 @@
  * Created on January 9, 2015, 1:17 PM
  */
 
-#include <karabo/karabo.hpp>
-#include "ProjectManager.hh"
 #include <stdio.h>
 
-namespace karabo {
-    namespace core {
+#include "karabo/core.hpp"
+#include "karabo/util.hpp"
+#include "karabo/io.hpp"
 
-        USING_KARABO_NAMESPACES;
+#include "ProjectManager.hh"
+
+
+namespace karabo {
+    namespace devices {
+
+        using namespace karabo::core;
+        using namespace karabo::util;
+        using namespace karabo::io;
 
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, ProjectManager)
@@ -49,7 +56,7 @@ namespace karabo {
 
         ProjectManager::ProjectManager(const karabo::util::Hash& input) : Device<>(input) {
 
-            registerInitialFunction(boost::bind(&karabo::core::ProjectManager::initialize, this));
+            registerInitialFunction(boost::bind(&karabo::devices::ProjectManager::initialize, this));
 
             KARABO_SLOT(slotGetAvailableProjects)
             KARABO_SLOT(slotNewProject, string /*author*/, string /*projectname*/, vector<char> /*data*/)

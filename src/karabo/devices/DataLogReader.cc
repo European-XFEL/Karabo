@@ -3,19 +3,22 @@
 #include <cstdlib>
 #include <sstream>
 #include <algorithm>
-#include <boost/algorithm/string.hpp>
 #include <streambuf>
-#include <karabo/io/Input.hh>
-#include "DataLogReader.hh"
-#include "karabo/core/DataLogUtils.hh"
+
+#include <boost/algorithm/string.hpp>
+
+#include "karabo/io/Input.hh"
+#include "karabo/devices/DataLogUtils.hh"
 #include "karabo/io/FileTools.hh"
 #include "karabo/util/Version.hh"
+
+#include "DataLogReader.hh"
 
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
 
 namespace karabo {
-    namespace core {
+    namespace devices {
 
         using namespace krb_log4cpp;
         using namespace std;
@@ -793,5 +796,5 @@ namespace karabo {
 #undef ROUND1MS
 }
 
-boost::mutex karabo::core::DataLogReader::m_propFileInfoMutex;
-std::map<std::string, karabo::core::PropFileInfo::Pointer > karabo::core::DataLogReader::m_mapPropFileInfo;
+boost::mutex karabo::devices::DataLogReader::m_propFileInfoMutex;
+std::map<std::string, karabo::devices::PropFileInfo::Pointer > karabo::devices::DataLogReader::m_mapPropFileInfo;
