@@ -10,8 +10,9 @@
 
 #include <boost/thread.hpp>
 #include <boost/atomic.hpp>
-#include "Device.hh"
-#include "OkErrorFsm.hh"
+
+#include "karabo/core/Device.hh"
+#include "karabo/core/OkErrorFsm.hh"
 
 
 /**
@@ -22,7 +23,7 @@ namespace karabo {
     /**
      * Namespace for package core
      */
-    namespace core {
+    namespace devices {
 
         class AlarmService : public karabo::core::Device<> {
 
