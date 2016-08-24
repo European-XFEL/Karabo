@@ -6,7 +6,7 @@
 """This module contains a class which represents a widget plugin for parameters
    and is created by the factory class EditableWidget.
 """
-from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
+from PyQt4.QtGui import QHBoxLayout, QLineEdit, QToolButton, QWidget
 
 from karabo.middlelayer import String
 import karabo_gui.icons as icons
