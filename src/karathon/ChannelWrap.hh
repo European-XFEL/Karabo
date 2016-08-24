@@ -66,7 +66,6 @@ namespace karathon {
         static void proxyReadHashVectorHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash, const std::vector<char>& v);
         static void proxyReadHashHashHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b);
         static void proxyWriteCompleteHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel);
-        static void proxyErrorHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel);
 
         static bool hasattr(bp::object obj, const std::string& attrName) {
             return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));

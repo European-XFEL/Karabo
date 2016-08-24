@@ -157,12 +157,6 @@ namespace karabo {
         }
 
 
-//        void OutputChannel::onTcpConnectionError(const karabo::net::Connection::Pointer& connection, const karabo::net::ErrorCode& error) {
-//            KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
-//            if (connection) connection->stop();
-//        }
-
-
         void OutputChannel::onTcpChannelError(const karabo::net::ErrorCode& error, const TcpChannelPointer& channel) {
             using namespace karabo::net;
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
