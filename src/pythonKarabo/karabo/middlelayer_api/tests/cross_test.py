@@ -9,7 +9,7 @@ from unittest import TestCase, main
 
 from karabo.middlelayer import (
     AccessLevel, Assignment, Device, getDevice, Int32,
-    MetricPrefix, shutdown, Slot, State, unit, Unit, waitUntilNew)
+    MetricPrefix, shutdown, Slot, State, unit, Unit, waitUntil)
 
 from .eventloop import setEventLoop
 
@@ -59,12 +59,15 @@ class Tests(TestCase):
             self.assertEqual(proxy.node.b, 100 * unit.kilometer)
             self.assertEqual(repr(proxy.node.b.timestamp),
                              "2016-06-17T13:55:22 UTC")
+
             with self.assertRaises(ValueError):
                 proxy.a = 77
+            self.assertEqual(proxy.a, 22.7 * unit.milliampere)
+
             proxy.a = 0.0228 * unit.ampere
             self.assertEqual(proxy.a, 22.7 * unit.milliampere,
                              "proxy should set value on device, not own value")
-            yield from waitUntilNew(proxy).a
+            yield from waitUntil(lambda: proxy.a == 22.8 * unit.milliampere)
             self.assertEqual(proxy.a, 22.8 * unit.milliampere,
                              "didn't receive change from bound device")
 
