@@ -660,23 +660,60 @@ class Schema(hashmod.Descriptor):
             if myChild is not None and otherChild is not None:
                 myChild.connectOtherBox(otherChild)
 
-    def getReadOnlyKeys(self):
-        """ This recursive methode returns a list with all full keys with
-            accessMode readOnly.
+    def _recurseGetDictKeys(self, parent_key, parent_value, key_list,
+                            accessMode=None):
+        """ This is a private methods which goes recursively through the `dict`
+            of a `Schema` and returns a list of either all flat keys or
+            read-only keys.
         """
-        def recurse(parent_key, parent_value, read_only_keys):
-            if isinstance(parent_value, Schema):
-                for key, value in parent_value.dict.items():
-                    new_key = "{}.{}".format(parent_key, key)
-                    recurse(new_key, value, read_only_keys)
+        if isinstance(parent_value, Schema):
+            for key, value in parent_value.dict.items():
+                new_key = "{}.{}".format(parent_key, key)
+                self._recurseGetDictKeys(new_key, value, key_list, accessMode)
+        if accessMode is None:
+            return key_list.append(parent_key)
+        elif (parent_value.accessMode is AccessMode.READONLY and
+              accessMode is AccessMode.READONLY):
+            return key_list.append(parent_key)
 
-            if parent_value.accessMode is AccessMode.READONLY:
-                return read_only_keys.append(parent_key)
+    def getAllFlatKeys(self):
+        """" This method returns all string list of all flat keys for this
+             context.
+        """
+        all_keys = []
+        for key, value in self.dict.items():
+            self._recurseGetDictKeys(key, value, all_keys)
+        return all_keys
 
+    def getReadOnlyKeys(self):
+        """ This recursive method returns a string list of all flat keys with
+            read-only access.
+        """
         read_only_keys = []
         for key, value in self.dict.items():
-            recurse(key, value, read_only_keys)
+            self._recurseGetDictKeys(key, value, read_only_keys,
+                                     accessMode=AccessMode.READONLY)
         return read_only_keys
+
+    def getObsoleteKeys(self, config):
+        """" This recursive method checks whether the keys in the `config` hash
+             still exist in this context.
+             A string list of obsolete flat keys is returned.
+        """
+        all_keys = self.getAllFlatKeys()
+        def recurse(parent_key, parent_value, obsolete_keys):
+            if isinstance(parent_value, Hash):
+                for key, value in parent_value.items():
+                    new_key = "{}.{}".format(parent_key, key)
+                    recurse(new_key, value, obsolete_keys)
+
+            if not parent_key in all_keys:
+                return obsolete_keys.append(parent_key)
+
+        obsolete_keys = []
+        for key, value in config.items():
+            recurse(key, value, obsolete_keys)
+        return obsolete_keys
 
 
 class ImageNode(Schema):
