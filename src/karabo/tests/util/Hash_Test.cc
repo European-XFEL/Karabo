@@ -116,15 +116,15 @@ void Hash_Test::testConstructors() {
     }
 
     {
-        Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f", Hash::Pointer(new Hash("a", 6)));
+        Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5));
         CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 6);
+        CPPUNIT_ASSERT(h.size() == 5);
         CPPUNIT_ASSERT(h.get<int>("a") == 1);
         CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
         CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
         CPPUNIT_ASSERT(h.get<string > ("d") == "4");
         CPPUNIT_ASSERT(h.get<std::vector<unsigned int> >("e")[0] == 5);
-        CPPUNIT_ASSERT(h.get<Hash::Pointer > ("f")->get<int>("a") == 6);
+        
     }
 
 
