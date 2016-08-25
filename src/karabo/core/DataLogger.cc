@@ -134,9 +134,6 @@ namespace karabo {
             refreshDeviceInformation();
 
             connectP2P(m_deviceToBeLogged);
-
-            // start "flush" thread ...
-            m_flushThread = boost::thread(boost::bind(&DataLogger::flushThread, this));
         }
 
 
