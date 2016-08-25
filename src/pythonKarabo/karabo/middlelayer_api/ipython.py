@@ -2,11 +2,11 @@ from asyncio import async, coroutine, get_event_loop
 from queue import Empty
 import pickle
 
-from IPython.kernel.blocking.channels import ZMQSocketChannel
-from IPython.kernel.channels import HBChannel
-from IPython.kernel.channelsabc import ChannelABC, HBChannelABC
-from IPython.kernel.manager import KernelManager
-from IPython.kernel import KernelClient
+from jupyter_client.blocking.channels import ZMQSocketChannel
+from jupyter_client.channels import HBChannel
+from jupyter_client.channelsabc import ChannelABC, HBChannelABC
+from jupyter_client.client import KernelClient
+from jupyter_client.manager import KernelManager
 
 from karabo.common.states import State
 from .device import Device
