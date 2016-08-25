@@ -115,6 +115,7 @@ namespace karabo {
 
             void compareNDArrayShapes(const NDArrayElementShapeType& schemaShape, const Dims& shape, std::ostringstream& report, const std::string& scope);
 
+            bool doEvaluateThresholdedConditions(const karabo::util::Types::ReferenceType type) const;
         };
     }
 }
