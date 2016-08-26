@@ -660,60 +660,58 @@ class Schema(hashmod.Descriptor):
             if myChild is not None and otherChild is not None:
                 myChild.connectOtherBox(otherChild)
 
-    def _recurseGetDictKeys(self, parent_key, parent_value, key_list,
-                            accessMode=None):
+    def _recurseGetDictPaths(self, parent_key, parent_value, path_list,
+                             accessMode=None):
         """ This is a private methods which goes recursively through the `dict`
-            of a `Schema` and returns a list of either all flat keys or
-            read-only keys.
+            of a `Schema` and returns a list of either all paths or all
+            read-only paths.
         """
         if isinstance(parent_value, Schema):
             for key, value in parent_value.dict.items():
                 new_key = "{}.{}".format(parent_key, key)
-                self._recurseGetDictKeys(new_key, value, key_list, accessMode)
+                self._recurseGetDictPaths(new_key, value, path_list, accessMode)
         if accessMode is None:
-            return key_list.append(parent_key)
-        elif (parent_value.accessMode is AccessMode.READONLY and
-              accessMode is AccessMode.READONLY):
-            return key_list.append(parent_key)
+            return path_list.append(parent_key)
+        elif parent_value.accessMode is accessMode:
+            return path_list.append(parent_key)
 
-    def getAllFlatKeys(self):
-        """" This method returns all string list of all flat keys for this
-             context.
+    def getAllPaths(self):
+        """" This method returns a string list of all paths for this context.
         """
-        all_keys = []
+        all_paths = []
         for key, value in self.dict.items():
-            self._recurseGetDictKeys(key, value, all_keys)
-        return all_keys
+            self._recurseGetDictPaths(key, value, all_paths)
+        return all_paths
 
-    def getReadOnlyKeys(self):
-        """ This recursive method returns a string list of all flat keys with
+    def getReadOnlyPaths(self):
+        """ This recursive method returns a string list of all paths with
             read-only access.
         """
-        read_only_keys = []
+        read_only_paths = []
         for key, value in self.dict.items():
-            self._recurseGetDictKeys(key, value, read_only_keys,
-                                     accessMode=AccessMode.READONLY)
-        return read_only_keys
+            self._recurseGetDictPaths(key, value, read_only_paths,
+                                      accessMode=AccessMode.READONLY)
+        return read_only_paths
 
-    def getObsoleteKeys(self, config):
-        """" This recursive method checks whether the keys in the `config` hash
-             still exist in this context.
-             A string list of obsolete flat keys is returned.
+    def getObsoletePaths(self, config):
+        """" This recursive method checks whether the paths in the `config`
+             hash still exist in this context.
+             A string list of obsolete paths is returned.
         """
-        all_keys = self.getAllFlatKeys()
-        def recurse(parent_key, parent_value, obsolete_keys):
+        all_paths = self.getAllPaths()
+        def recurse(parent_key, parent_value, obsolete_paths):
             if isinstance(parent_value, Hash):
                 for key, value in parent_value.items():
                     new_key = "{}.{}".format(parent_key, key)
-                    recurse(new_key, value, obsolete_keys)
+                    recurse(new_key, value, obsolete_paths)
 
-            if not parent_key in all_keys:
-                return obsolete_keys.append(parent_key)
+            if not parent_key in all_paths:
+                return obsolete_paths.append(parent_key)
 
-        obsolete_keys = []
+        obsolete_paths = []
         for key, value in config.items():
-            recurse(key, value, obsolete_keys)
-        return obsolete_keys
+            recurse(key, value, obsolete_paths)
+        return obsolete_paths
 
 
 class ImageNode(Schema):
