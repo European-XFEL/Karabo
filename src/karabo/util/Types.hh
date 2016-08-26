@@ -313,6 +313,25 @@ namespace karabo {
                 }
             }
 
+            static bool isNumericPod(int type) {
+                switch (type) {
+                    case Types::BOOL:
+                    case Types::INT8:
+                    case Types::INT16:
+                    case Types::INT32:
+                    case Types::INT64:
+                    case Types::UINT8:
+                    case Types::UINT16:
+                    case Types::UINT32:
+                    case Types::UINT64:
+                    case Types::FLOAT:
+                    case Types::DOUBLE:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
             static bool isSimple(int type) {
                 switch (type) {
                     case Types::CHAR:
