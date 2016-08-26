@@ -48,7 +48,6 @@ void Serializable_Test::testMethod() {
     
     CPPUNIT_ASSERT(h.get<FancyData>("fd2").getScalar() == 2);
 
-    // As r-values are references this modifies the shared_ptr object
     
     h.get<FancyData>("fd2").setScalar(-2);
     CPPUNIT_ASSERT(fd2.getScalar() == 2);
