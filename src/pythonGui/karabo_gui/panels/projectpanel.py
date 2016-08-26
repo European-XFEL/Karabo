@@ -16,18 +16,10 @@ from karabo_gui.projecttreeview import ProjectTreeView
 import karabo_gui.icons as icons
 from karabo_gui.topology import Manager
 
-from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import (QAction, QVBoxLayout, QWidget)
 
 
 class ProjectPanel(Dockable, QWidget):
-    signalAddSceneView = pyqtSignal(object, object) # SceneModel, Project
-    signalRemoveSceneView = pyqtSignal(object) # SceneModel
-    signalRenameSceneView = pyqtSignal(object) # SceneModel
-    signalAddMacro = pyqtSignal(object)
-    signalRemoveMacro = pyqtSignal(object) # macro
-
-
     def __init__(self):
         super(ProjectPanel, self).__init__()
         
@@ -35,11 +27,6 @@ class ProjectPanel(Dockable, QWidget):
         self.setWindowTitle(title)
 
         self.twProject = ProjectTreeView(self)
-        self.twProject.model().signalAddSceneView.connect(self.signalAddSceneView)
-        self.twProject.model().signalRemoveSceneView.connect(self.signalRemoveSceneView)
-        self.twProject.model().signalRenameSceneView.connect(self.signalRenameSceneView)
-        self.twProject.model().signalAddMacro.connect(self.signalAddMacro)
-        self.twProject.model().signalRemoveMacro.connect(self.signalRemoveMacro)
         self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)
         # Connect signal to get project available
         manager = Manager()

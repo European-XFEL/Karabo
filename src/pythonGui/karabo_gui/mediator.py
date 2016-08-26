@@ -1,9 +1,13 @@
 from PyQt4.QtCore import QEvent, QObject
 from PyQt4.QtGui import QApplication
 
-
 # Karabo broadcast event senders
 OPEN_SCENE_LINK = "Scene link"
+OPEN_MACRO = "Open macro"
+OPEN_SCENE_VIEW = "Open scene view"
+RENAME_SCENE_VIEW = "Rename scene view"
+REMOVE_MACRO = " Remove macro"
+REMOVE_SCENE_VIEW = "Remove scene view"
 
 # This is the global singleton for the karabo_mediator function.
 _karabo_mediator = None
