@@ -448,42 +448,36 @@ namespace karabo {
                     }
                 }
 
-                workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::NONE.asString());
-
-                bool keepCondition = false;
                 const karabo::util::Types::ReferenceType workType = workNode.getType();
-                if (karabo::util::Types::isSimple(workType) && workType != karabo::util::Types::STRING) {
+                if (karabo::util::Types::isNumericPod(workType)) { // Deal with warns and alarms only on POD types
+                    workNode.setAttribute(KARABO_ALARM_ATTR, AlarmCondition::NONE.asString());
+                    bool stayInAlarm = false;
+
                     // the order of these checks is important
-                    keepCondition |= checkAndSetThresholdedAlarmCondition(AlarmCondition::WARN_LOW, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkAndSetThresholdedAlarmCondition(AlarmCondition::ALARM_LOW, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkAndSetThresholdedAlarmCondition(AlarmCondition::WARN_HIGH, masterNode, workNode, report, scope, true);
-                    keepCondition |= checkAndSetThresholdedAlarmCondition(AlarmCondition::ALARM_HIGH, masterNode, workNode, report, scope, true);
-                };
+                    stayInAlarm |= checkAndSetThresholdedAlarmCondition(AlarmCondition::WARN_LOW, masterNode, workNode, report, scope, false);
+                    stayInAlarm |= checkAndSetThresholdedAlarmCondition(AlarmCondition::ALARM_LOW, masterNode, workNode, report, scope, false);
+                    stayInAlarm |= checkAndSetThresholdedAlarmCondition(AlarmCondition::WARN_HIGH, masterNode, workNode, report, scope, true);
+                    stayInAlarm |= checkAndSetThresholdedAlarmCondition(AlarmCondition::ALARM_HIGH, masterNode, workNode, report, scope, true);
 
 
-                if (masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
-                    assureRollingStatsInitialized(scope, masterNode.getAttributeAs<double>(KARABO_SCHEMA_ROLLING_STATS_EVAL));
-                    RollingWindowStatistics::Pointer rollingStats = m_parameterRollingStats[scope];
-                    rollingStats->update(workNode.getValueAs<double>());
-                    double variance = rollingStats->getRollingWindowVariance();
-                    // the order of these checks is important
+                    if (masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
+                        assureRollingStatsInitialized(scope, masterNode.getAttributeAs<double>(KARABO_SCHEMA_ROLLING_STATS_EVAL));
+                        RollingWindowStatistics::Pointer rollingStats = m_parameterRollingStats[scope];
+                        rollingStats->update(workNode.getValueAs<double>());
+                        double variance = rollingStats->getRollingWindowVariance();
+                        // the order of these checks is important
 
-                    keepCondition |= checkAndSetThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkAndSetThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
-                    keepCondition |= checkAndSetThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
-                    keepCondition |= checkAndSetThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
+                        stayInAlarm |= checkAndSetThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
+                        stayInAlarm |= checkAndSetThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_LOW, variance, masterNode, workNode, report, scope, false);
+                        stayInAlarm |= checkAndSetThresholdedAlarmCondition(AlarmCondition::WARN_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
+                        stayInAlarm |= checkAndSetThresholdedAlarmCondition(AlarmCondition::ALARM_VARIANCE_HIGH, variance, masterNode, workNode, report, scope, true);
 
-                }
+                    }
 
-                if (!keepCondition) {
-                    const bool wasErased = m_parametersInWarnOrAlarm.erase(scope);
-                    if (!wasErased) {
-                        KARABO_LOGIC_EXCEPTION("Parameter '" + scope + "' should have been erased from alarm parameters but wasn't!");
+                    if (!stayInAlarm) {
+                        m_parametersInWarnOrAlarm.erase(scope);
                     }
                 }
-
-
-                //if (masterNode.hasAttribute(""))
             } else if (referenceCategory == Types::SEQUENCE) {
                 int currentSize = workNode.getValueAs<string, vector>().size();
 
