@@ -24,7 +24,6 @@ namespace karabo {
 
             enum HandlerType {
 
-
                 NONE,
                 VECTOR,
                 STRING,
@@ -39,10 +38,10 @@ namespace karabo {
             };
 
             TcpConnection::Pointer m_connectionPointer;
+            boost::asio::io_service::strand m_readStrand;
+            boost::asio::io_service::strand m_writeStrand;
             boost::asio::ip::tcp::socket m_socket;
-            boost::asio::deadline_timer m_timer;
             HandlerType m_activeHandler;
-            ErrorHandler m_errorHandler;
             bool m_readHeaderFirst;
             boost::any m_readHandler;
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_textSerializer;
@@ -207,7 +206,7 @@ namespace karabo {
              * @param byteSize
              * @param error
              */
-            void onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, const size_t byteSize, const ErrorCode& error);
+            void onSizeInBytesAvailable(const ErrorCode& error, const ReadSizeInBytesHandler& handler);
 
             /**
              * Internal default handler
@@ -219,13 +218,13 @@ namespace karabo {
 
 
 
-            void onBytesAvailable(const ReadRawHandler& handler, const ErrorCode& error);
+            void onBytesAvailable(const ErrorCode& error, const ReadRawHandler& handler);
 
             /**
              * Internal default handler
              * @param channel
              */
-            void bytesAvailableHandler();
+            void bytesAvailableHandler(const boost::system::error_code& e);
 
             void readAsyncRaw(char* data, size_t& size, const ReadRawHandler& handler);
 
@@ -257,12 +256,6 @@ namespace karabo {
 
             void writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data, const WriteCompleteHandler& handler);
 
-            virtual void waitAsync(int milliseconds, const WaitHandler& handler);
-
-            virtual void setErrorHandler(const ErrorHandler& handler) {
-                m_errorHandler = handler;
-            }
-
             virtual void close();
 
             virtual bool isOpen();
@@ -292,7 +285,7 @@ namespace karabo {
             void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio);
 
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy);
-
+            
         private:
 
             void managedWriteAsync(const WriteCompleteHandler& handler);
@@ -331,12 +324,9 @@ namespace karabo {
             void read(char*& data, size_t& size, char*& hdr, size_t& hsize);
             void write(const char* header, const size_t& headerSize, const char* body, const size_t& bodySize);
 
-            void asyncWriteHandler(const Channel::WriteCompleteHandler& handler, const ErrorCode& e);
-            void asyncWriteHandler(const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& body, const ErrorCode& e);
-            void asyncWriteHandler(const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& header, const boost::shared_ptr<std::vector<char> >& body, const ErrorCode& e);
-
-            void asyncWaitHandler(const Channel::WaitHandler& handler, const ErrorCode& e);
-
+            void asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler);
+            void asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& body);
+            void asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& header, const boost::shared_ptr<std::vector<char> >& body);
 
             // MQ support methods
         private:

@@ -36,12 +36,9 @@ namespace karabo {
         class TcpChannel;
         typedef boost::system::error_code ErrorCode;
         typedef boost::shared_ptr<Channel> ChannelPointer;
-        typedef boost::shared_ptr<boost::asio::io_service> BoostIOServicePointer;
-        typedef boost::shared_ptr<boost::asio::ip::tcp::socket> BoostTcpSocket;
-        typedef boost::shared_ptr<boost::asio::ip::tcp::resolver> BoostTcpResolver;
-        typedef boost::shared_ptr<boost::asio::ip::tcp::acceptor> BoostTcpAcceptor;
-
-/**
+        typedef boost::function<void () > TimeoutHandler;
+        
+        /**
          * The Connection class.
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
@@ -90,11 +87,12 @@ namespace karabo {
                 return m_lengthIsTextFlag;
             }
 
+            
         private:
 
-            void resolveHandler(const ConnectionHandler&, const ErrorCode&, boost::asio::ip::tcp::resolver::iterator);
-            void acceptHandler(ChannelPointer, const ConnectionHandler&, const ErrorCode&);
-            void connectHandler(const ChannelPointer&, const ConnectionHandler&, const ErrorCode&);
+            void resolveHandler(const ErrorCode&, boost::asio::ip::tcp::resolver::iterator, const ConnectionHandler&);
+            void acceptHandler(const ErrorCode&, ChannelPointer, const ConnectionHandler&);
+            void connectHandler(const ErrorCode&, const ChannelPointer&, const ConnectionHandler&);
             ChannelPointer startServer();
             ChannelPointer startClient();
             void startServer(const ConnectionHandler&);
@@ -103,10 +101,8 @@ namespace karabo {
 
         private:
 
-            BoostIOServicePointer m_boostIoServicePointer;
-            BoostTcpResolver m_resolver;
-            BoostTcpAcceptor m_acceptor;
-            boost::mutex m_boostTcpMutex;
+            boost::asio::ip::tcp::resolver m_resolver;
+            boost::asio::ip::tcp::acceptor m_acceptor;
             std::string m_connectionType;
             std::string m_hostname;
             unsigned int m_port;

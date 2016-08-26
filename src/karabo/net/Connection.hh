@@ -16,7 +16,9 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <karabo/util/Factory.hh>
-#include "IOService.hh"
+#include <karabo/util/Configurator.hh>
+#include "karabo/util/karaboDll.hh"
+
 
 /**
  * The main European XFEL namespace
@@ -53,7 +55,7 @@ namespace karabo {
             KARABO_CLASSINFO(Connection, "Connection", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            typedef boost::function<void (const ChannelPointer&) > ConnectionHandler;
+            typedef boost::function<void (const ErrorCode&, const ChannelPointer&) > ConnectionHandler;
 
             virtual ~Connection();
 
@@ -86,27 +88,8 @@ namespace karabo {
              */
             virtual ChannelPointer createChannel() = 0;
 
-            /**
-             * This function returns a pointer to a IO service that had to be
-             * injected via configuration parameter
-             * @return a pointer to an IO service instance
-             */
-            IOService::Pointer getIOService() const;
-
-            void setIOService(const IOService::Pointer& ioService);
-
-            /**
-             * This function sets the error handler that will be called if connection process failed
-             * @param Call-back function of signature: void (boost::shared_ptr<Channel>, const ErrorCode&)
-             * @return void
-             */
-            void setErrorHandler(const ErrorHandler& handler) {
-                m_errorHandler = handler;
-            }
 
         protected: // functions
-
-            void setIOServiceType(const std::string& serviceType);
 
             boost::shared_ptr<Connection> getConnectionPointer() {
                 return shared_from_this();
@@ -114,8 +97,6 @@ namespace karabo {
 
         protected: // members
 
-            IOService::Pointer m_service;
-            ErrorHandler m_errorHandler;
             std::string m_serializationType;
 
         };

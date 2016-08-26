@@ -11,7 +11,7 @@
 #include <boost/python.hpp>
 #include <map>
 #include <karabo/util/Hash.hh>
-#include <karabo/net/IOService.hh>
+//#include <karabo/net/IOService.hh>
 #include <karabo/net/Connection.hh>
 #include <karabo/net/Channel.hh>
 #include "ScopedGILRelease.hh"
@@ -39,32 +39,14 @@ namespace karathon {
             connection->stop();
         }
 
-        static void setIOService(const karabo::net::Connection::Pointer& connection, const bp::object& obj) {
-            using namespace karabo::net;
-            if (bp::extract<IOService::Pointer>(obj).check()) {
-                const IOService::Pointer& io = bp::extract<IOService::Pointer>(obj);
-                ScopedGILRelease nogil;
-                connection->setIOService(io);
-                return;
-            }
-            throw KARABO_PYTHON_EXCEPTION("Python object in parameters is not IOService::Pointer");
-        }
-
-        static bp::object getIOService(const karabo::net::Connection::Pointer& connection) {
-            ScopedGILRelease nogil;
-            return bp::object(connection->getIOService());
-        }
-
         static int startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler);
-        static void setErrorHandler(const karabo::net::Connection::Pointer& connection, const bp::object& errorHandler);
 
-        static void clear(karabo::net::IOService::Pointer ioserv) {
+        static void clear() {
         }
 
     private:
 
-        static void proxyConnectionHandler(const bp::object& connectionHandler, karabo::net::Channel::Pointer channel);
-        static void proxyErrorHandler(const bp::object& errorHandler, karabo::net::Connection::Pointer connection, const karabo::net::ErrorCode& code);
+        static void proxyConnectionHandler(const karabo::net::ErrorCode& code, const bp::object& connectionHandler, karabo::net::Channel::Pointer channel);
 
         // I've taken this helper function from Burkhard
 
