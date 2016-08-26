@@ -119,11 +119,11 @@ class _Manager(QObject):
         # from instantiating
         descriptor = conf.descriptor
         if descriptor is not None:
-            obsolete_keys = descriptor.getObsoleteKeys(config)
-            for key in obsolete_keys:
+            obsolete_paths = descriptor.getObsoletePaths(config)
+            for key in obsolete_paths:
                 config.erase(key)
-            read_only_keys = descriptor.getReadOnlyKeys()
-            for key in read_only_keys:
+            read_only_paths = descriptor.getReadOnlyPaths()
+            for key in read_only_paths:
                 # Remove all read only parameters
                 if key in config: # erase does not tolerate non-existing keys
                     config.erase(key)
