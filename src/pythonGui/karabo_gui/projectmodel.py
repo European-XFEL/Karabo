@@ -1588,18 +1588,18 @@ class ProjectModel(QStandardItemModel):
             if device.id in configs:
                 device.dispatchUserChanges(configs[device.id].hash[device.classId])
 
-
     def onSaveAsScene(self):
+        sceneModel = self.currentScene()
         fn = getSaveFileName(caption="Save scene to file",
                              filter="SVG (*.svg)",
-                             suffix="svg")
+                             suffix="svg",
+                             selectFile=sceneModel.title)
         if not fn:
             return
 
         if not fn.endswith(".svg"):
             fn = "{}.svg".format(fn)
 
-        sceneModel = self.currentScene()
         with open(fn, "wb") as fout:
             fout.write(write_scene(sceneModel))
 
