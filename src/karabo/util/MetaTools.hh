@@ -35,7 +35,7 @@ namespace karabo {
             static const boost::shared_ptr<T> cast(const boost::shared_ptr<T>& v) {
                 //if the compiler ever reaches this point compilation is to fail on purpose, as
                 //we only support explicit setting of Hash::Pointer to the Hash
-                inserting_derived_hash_classes_as_pointers_is_not_supported()
+                inserting_derived_hash_classes_as_pointers_is_not_supported();
                 return v;
             }
 
