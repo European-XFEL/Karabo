@@ -1264,13 +1264,14 @@ namespace karabo {
             }
 
             karabo::util::Schema getStateDependentSchema(const karabo::util::State& state) {
+                using namespace karabo::util;
                 const std::string& currentState = state.name();
                 KARABO_LOG_DEBUG << "call: getStateDependentSchema() for state: " << currentState;
                 boost::mutex::scoped_lock lock(m_stateDependendSchemaMutex);
                 // Check cache, whether a special set of state-dependent expected parameters was created before
-                std::map<std::string, karabo::util::Schema>::iterator it = m_stateDependendSchema.find(currentState);
+                std::map<std::string, Schema>::iterator it = m_stateDependendSchema.find(currentState);
                 if (it == m_stateDependendSchema.end()) { // No
-                    it = m_stateDependendSchema.insert(make_pair(currentState, Device::getSchema(m_classId, karabo::util::Schema::AssemblyRules(karabo::util::WRITE, currentState)))).first; // New one
+                    it = m_stateDependendSchema.insert(make_pair(currentState, Device::getSchema(m_classId, Schema::AssemblyRules(WRITE | READ | INIT, currentState)))).first; // New one
                     KARABO_LOG_DEBUG << "Providing freshly cached state-dependent schema:\n" << it->second;
                     if (!m_injectedSchema.empty()) it->second.merge(m_injectedSchema);
                 } else {
