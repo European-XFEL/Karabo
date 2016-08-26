@@ -173,7 +173,7 @@ namespace karabo {
                 const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
                 // const ref is fine even for temporary std::string+
                 if(type == "device"){
-                    const Hash& entry = topologyEntry.begin()->getValue<Hash>();
+                    
                     const std::string& deviceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
                                                          topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
 
@@ -189,8 +189,8 @@ namespace karabo {
                         //for an update on these alarms.
                         KARABO_LOG_INFO<<"Device '"<<deviceId<<"' reappeared. Asking it to re-submit its alarms!";
                         boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
-                        const boost::optional<Hash::Node&> entry = m_alarms.find(deviceId);
-                        request(deviceId, "slotReSubmitAlarms", entry ? entry->getValue<Hash>() : Hash())
+                        const boost::optional<Hash::Node&> alarmNode = m_alarms.find(deviceId);
+                        request(deviceId, "slotReSubmitAlarms", alarmNode ? alarmNode->getValue<Hash>() : Hash())
                                 .receiveAsync<std::string, Hash>(boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2));
                     }
 
@@ -210,11 +210,11 @@ namespace karabo {
         void AlarmService::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo){
             {
                 boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
-                boost::optional<Hash::Node&> entryN = m_alarms.find(instanceId);
-                if(entryN){
+                boost::optional<Hash::Node&> alarmN = m_alarms.find(instanceId);
+                if(alarmN){
                     KARABO_LOG_INFO<<"Device instance '"<<instanceId<<"' disappeared. Setting all pending alarms to acknowledgeable";
                     boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
-                    Hash& entry = entryN->getValue<Hash>();
+                    Hash& entry = alarmN->getValue<Hash>();
                     for(Hash::iterator propIt = entry.begin(); propIt != entry.end(); ++propIt){
                         Hash& property = propIt->getValue<Hash>();
                         for(Hash::iterator aTypeIt = property.begin(); aTypeIt != property.end(); ++aTypeIt){
@@ -224,9 +224,10 @@ namespace karabo {
                             typeEntry.set("acknowledgeable", true);
                         }
                     }
+                    updateAlarmTable();
                 }
             }
-            updateAlarmTable();
+           
         }
         
 
