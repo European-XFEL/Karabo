@@ -124,8 +124,12 @@ int main(int argc, char** argv) {
             int ret = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
 
 #endif
-
-            deviceServer->run();
+                        
+            boost::thread t(boost::bind(&DeviceServer::run, deviceServer));
+            boost::asio::io_service::work work(karabo::net::EventLoop::getIOService());
+            karabo::net::EventLoop::run();
+            t.join();
+            
             deviceServer.reset();
         }
 

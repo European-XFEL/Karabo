@@ -546,7 +546,7 @@ namespace karabo {
                         // Check whether after key there is an [<index>]:
                         std::string croppedFirstKey(firstKeyOfPath);
                         const int index = karabo::util::getAndCropIndex(croppedFirstKey);
-                        if (index != -1 && index < targetSize && croppedFirstKey == key) {
+                        if (index != -1 && index < int(targetSize) && croppedFirstKey == key) {
                             result.insert(static_cast<unsigned int> (index));
                         }
                     }

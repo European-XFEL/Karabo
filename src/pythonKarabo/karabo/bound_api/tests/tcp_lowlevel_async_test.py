@@ -6,55 +6,60 @@ import threading
 import time
 import sys
 
-from karabo.bound import Connection, Hash
+from karabo.bound import (Connection, Hash, EventLoop)
 
 
-class Server(threading.Thread):
+class Server(object):
     
     def __init__(self):
-        threading.Thread.__init__(self)
         # create connection object
         try:
             self.connection = Connection.create("Tcp", Hash("type", "server", "port", 0,
                                                             "compressionUsageThreshold", 1))
-            # set error handler:  IT GIVES SEGFAULT!
-            self.connection.setErrorHandler(self.onError)
             # register connect handler for incoming connections
             self.port = self.connection.startAsync(self.onConnect)
             
-            # extract io service object
-            self.ioserv = self.connection.getIOService()
             print("\nServer listening port : {}".format(self.port))
         except:
             print("*** Server __init__() unexpected error: {}".format(sys.exc_info()[0]))
             self.connection = None
             raise
         
-    def onError(self, channel, ec):
-        if ec.value() != 2:
+    def onError(self, ec, channel):
+        if ec.value() != 0:
             print("Error #%r => %r  -- close channel: id %r" % (ec.value(), ec.message(), id(channel)))
-        channel.close()
-        
-    def onConnect(self, channel):
         try:
-            print("Server.onConnect entry.")
+            channel.close()
+        except:
+            print("*** Server.onError (channel.close()) unexpected error: {}".format(sys.exc_info()[0]))
+        finally:
+            print("Server channel closed")
+        
+    def onConnect(self, ec, channel):
+        print("Server.onConnect entry.")
+        if ec.value() != 0:
+            self.onError(ec, channel)
+            return
+        
+        try:
             # register connect handler for incoming connections
-            self.connection.startAsync(self.onConnect)
-            channel.setErrorHandler(self.onError);
+            #self.connection.startAsync(self.onConnect)
             # register read Hash handler for this channel (client)
             channel.readAsyncHashHash(self.onReadHashHash)
         except RuntimeError as e:
             print("*** Server.onConnect RuntimeError " + str(e))
-            # raise
         except:
             print("*** Server.onConnect unexpected error: {}".format(sys.exc_info()[0]))
-            # raise
         finally:        
             print("Server.onConnect exit.")
     
-    def onReadHashHash(self, channel, header, body):
+    def onReadHashHash(self, ec, channel, header, body):
+        print("Server.onReadHashHash entry.")
+        if ec.value() != 0:
+            self.onError(ec, channel)
+            return;
+        
         try:
-            print("Server.onReadHashHash entry.")
             body["server"] = "APPROVED!"
             channel.writeAsyncHashHash(header, body, self.onWriteComplete)
         except RuntimeError as e:
@@ -66,8 +71,12 @@ class Server(threading.Thread):
         finally:        
             print("Server.onReadHashHash exit.")
     
-    def onWriteComplete(self, channel):
+    def onWriteComplete(self, ec, channel):
         print("Server.onWriteComplete entry.")
+        if ec.value() != 0:
+            self.onError(ec, channel)
+            return;
+        
         try:
             channel.readAsyncHashHash(self.onReadHashHash)
         except RuntimeError as e:
@@ -82,43 +91,35 @@ class Server(threading.Thread):
         finally:        
             print("Server.onWriteComplete exit.")
         
-    def run(self):
-        try:
-            print("Server.run entered...")
-            self.ioserv.run()
-        except Exception as e:
-            print("*** Exception in Server.run: " + str(e))
-        except:
-            print("*** Server.run unexpected error:" + sys.exc_info()[0])
-            raise
-        finally:        
-            print("Server.run exit.")
-        
     # this method stops server
     def stop(self):
-        self.ioserv.stop()
+        self.connection.stop()
         
 
 class  P2p_asyncTestCase(unittest.TestCase):
     def setUp(self):
         #choose the port not in use
         self.server = Server()
-        self.server.start()
         time.sleep(0.5)
 
     def tearDown(self):
-        self.server.stop() # stop server io service
-        self.server.join() # join server thread
+        pass #self.server.stop() # stop server io service
 
     def test_p2p_async(self):
         
-        def onError(channel, error_code):
+        def onError(error_code, channel):
             print("Error #%r => %r" % (error_code.value(), error_code.message()))
+            channel.close()
+            EventLoop.stop()
 
-        def onConnect(channel):
-            try:
+        def onConnect(ec, channel):
                 
-                print("Async client onConnect entry.")
+            print("Async client onConnect entry.")
+            if ec.value() != 0:
+                self.onError(ec, channel)
+                return
+            
+            try:
                 h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25], "d",
                          Hash("abc", "rubbish"))
                 header = Hash("par1", 12)
@@ -130,8 +131,12 @@ class  P2p_asyncTestCase(unittest.TestCase):
             finally:
                 print("client.onConnect exit.")
 
-        def onWriteComplete(channel):
-            print("ASync client onWriteComplete entry")
+        def onWriteComplete(ec, channel):
+            print("ASync client onWriteComplete entry.")
+            if ec.value() != 0:
+                self.onError(ec, channel)
+                return
+            
             try:
                 channel.readAsyncHashHash(onReadHashHash)
             except RuntimeError as e:
@@ -139,7 +144,12 @@ class  P2p_asyncTestCase(unittest.TestCase):
             finally:
                 print("ASync client onWriteComplete exit")
             
-        def onReadHashHash(channel, header, h):
+        def onReadHashHash(ec, channel, header, h):
+            print("ASync client onReadHashHash entry: ec.value = ", ec.value())
+            if ec.value() != 0:
+                self.onError(ec, channel)
+                return
+            
             print("ASync client onReadHashHash entry: header is ...\n" + str(header))
             try:
                 self.assertEqual(len(h), 4)
@@ -148,23 +158,19 @@ class  P2p_asyncTestCase(unittest.TestCase):
                 self.assertEqual(h['x.y.z'], [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25])
                 self.assertEqual(h['d.abc'], 'rubbish')
                 channel.close()
+
             except Exception as e:
                 self.fail("test_asynchronous_client exception group 1: " + str(e))
             finally:
                 print("ASync client onReadHashHash exit.")
 
         # Asynchronous TCP client
-        try:
-            #create client connection object
-            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost",
-                                                       "port", self.server.port, "compressionUsageThreshold", 1))
-            connection.setErrorHandler(onError)
-            #register connect handler
-            connection.startAsync(onConnect)
-            ioservice = connection.getIOService()
-            ioservice.run()
-        except Exception as e:
-            self.fail("test_asynchronous_client exception group 2: " + str(e))
+        #create client connection object
+        connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost",
+                                                   "port", self.server.port, "compressionUsageThreshold", 1))
+        connection.startAsync(onConnect)
+        
+        EventLoop.run()
 
 
 if __name__ == '__main__':

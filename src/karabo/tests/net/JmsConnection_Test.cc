@@ -167,6 +167,10 @@ void JmsConnection_Test::readHandler4(karabo::net::JmsConsumer::Pointer c,
 
 void JmsConnection_Test::testCommunication2() {
     
+    m_connection = JmsConnection::Pointer(new JmsConnection());
+    
+    m_connection->connect();   
+    
     m_messageCount = 0;
     Hash::Pointer header1(new Hash("key", "foo"));
     Hash::Pointer header2(new Hash("key", "bar"));
