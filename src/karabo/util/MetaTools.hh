@@ -11,6 +11,8 @@
 namespace karabo {
     namespace util {
 
+        class Hash;
+
         template <class T>
         struct is_shared_ptr : boost::false_type {
 
@@ -21,70 +23,42 @@ namespace karabo {
 
         };
 
-        typedef char (&yes)[1];
-        typedef char (&no)[2];
+        template<typename is_hash_base>
+        struct conditional_hash_cast {
 
-        template <typename B, typename D>
-        struct Host {
+            template<typename T>
+            static const Hash& cast(const T& v) {
+                return reinterpret_cast<const Hash&> (v);
+            }
 
-            operator B*() const;
-            operator D*();
+            template<typename T>
+            static const boost::shared_ptr<T> cast(const boost::shared_ptr<T>& v) {
+                //if the compiler ever reaches this point compilation is to fail on purpose, as
+                //we only support explicit setting of Hash::Pointer to the Hash
+                inserting_derived_hash_classes_as_pointers_is_not_supported();
+                return v;
+            }
+
+
+            void inserting_derived_hash_classes_as_pointers_is_not_supported();
         };
 
-        template <typename B, typename D>
-        struct is_base_of {
+        template<>
+        struct conditional_hash_cast<boost::false_type> {
 
-            template <typename T>
-            static yes check(D*, T);
-            static no check(B*, int);
+            template<typename T>
+            static T& cast(T& v) {
+                return v;
+            }
 
-            static const bool value = sizeof (check(Host<B, D>(), int())) == sizeof (yes);
+            template<typename T>
+            static const T& cast(const T& v) {
+                return v;
+            }
+
+
 
         };
-
-        //type punned pointer warnings fixed as inspired by
-        //http://stackoverflow.com/questions/4163126/dereferencing-type-punned-pointer-will-break-strict-aliasing-rules-warning
-
-        template<typename T, typename F>
-        struct alias_cast_t {
-
-            union {
-
-                F* raw;
-                T* data;
-            };
-        };
-
-        template<typename T, typename F>
-        struct alias_cast_t_c {
-
-            union {
-
-                const F* raw;
-                const T* data;
-            };
-        };
-
-        template<typename T, typename F>
-        T* alias_cast(F* raw_data) {
-            alias_cast_t<T, F> ac;
-            ac.raw = raw_data;
-            return ac.data;
-        }
-
-        template<typename T, typename F>
-        T& alias_cast(F& raw_data) {
-            alias_cast_t<T, F> ac;
-            ac.raw = &raw_data;
-            return *ac.data;
-        }
-
-        template<typename T, typename F>
-        const T& alias_cast(const F& raw_data) {
-            alias_cast_t_c<T, F> ac;
-            ac.raw = &raw_data;
-            return *ac.data;
-        }
 
 
 
