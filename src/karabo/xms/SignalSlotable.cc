@@ -44,7 +44,8 @@ namespace karabo {
         PointToPoint::Pointer SignalSlotable::m_pointToPoint;
 
 
-        bool SignalSlotable::tryToCallDirectly(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
+        bool SignalSlotable::tryToCallDirectly(const std::string& instanceId,
+                                               const karabo::util::Hash::Pointer& header,
                                                const karabo::util::Hash::Pointer& body) const {
             if (instanceId == "*" || instanceId.empty()) {
                 return false;

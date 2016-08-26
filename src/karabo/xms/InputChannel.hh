@@ -13,6 +13,7 @@
 #ifndef KARABO_XMS_INPUTCHANNEL_HH
 #define	KARABO_XMS_INPUTCHANNEL_HH
 
+#include <boost/asio.hpp>
 #include <karabo/net.hpp>
 #include <karabo/io.hpp>
 #include <karabo/log.hpp>
@@ -38,6 +39,8 @@ namespace karabo {
             typedef std::map<std::string, std::pair<karabo::net::Connection::Pointer, karabo::net::Channel::Pointer> > OpenConnections;
             typedef Memory<karabo::util::Hash> MemoryType;
 
+            boost::asio::deadline_timer m_deadline;
+            
             /// Callback on available data (per InputChannel)
             boost::function<void (const boost::shared_ptr<InputChannel>&) > m_inputHandler;
 
@@ -146,16 +149,20 @@ namespace karabo {
 
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
-            void onConnect(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer channel);
+            void onConnect(const karabo::net::ErrorCode& error,
+                           karabo::net::Connection::Pointer connection,
+                           const karabo::util::Hash& outputChannelInfo,
+                           karabo::net::Channel::Pointer channel);
 
             // TODO Keep m_connectedOutputChannels in sync and adapt eos tokens on sudden death
             void startConnectionAsync(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo);
 
-            void onTcpConnectionError(const karabo::net::Connection::Pointer&, const karabo::net::ErrorCode& error);
+            void onTcpConnectionError(const karabo::net::ErrorCode&, const karabo::net::Connection::Pointer&);
 
-            void onTcpChannelError(const karabo::net::Channel::Pointer&, const karabo::net::ErrorCode& error);
+            void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
 
-            void onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data);
+            void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::Pointer channel,
+                                  const karabo::util::Hash& header, const std::vector<char>& data);
 
             void swapBuffers();
 

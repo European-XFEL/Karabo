@@ -70,12 +70,17 @@ void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> servic
 boost::tuple<std::string, std::string, std::string, std::string, std::string> karabo::net::parseUrl(const std::string& url) {
     boost::regex ex("(.+)://([^/ :]+):?([^/ ]*)(/?[^ #?]*)\\x3f?([^ #]*)#?([^ ]*)");
     boost::cmatch what;
+    string protocol;
+    string domain;
+    string port;
+    string path;
+    string query;
     if (regex_match(url.c_str(), what, ex)) {
-        string protocol = string(what[1].first, what[1].second);
-        string domain = string(what[2].first, what[2].second);
-        string port = string(what[3].first, what[3].second);
-        string path = string(what[4].first, what[4].second);
-        string query = string(what[5].first, what[5].second);
-        return boost::make_tuple(protocol, domain, port, path, query);
+        protocol = string(what[1].first, what[1].second);
+        domain = string(what[2].first, what[2].second);
+        port = string(what[3].first, what[3].second);
+        path = string(what[4].first, what[4].second);
+        query = string(what[5].first, what[5].second);
     }
+    return boost::make_tuple(protocol, domain, port, path, query);
 }

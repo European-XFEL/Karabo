@@ -160,14 +160,14 @@ namespace karathon {
         if (!PyCallable_Check(handler.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         ScopedGILRelease nogil;
-        channel->readAsyncString(boost::bind(proxyReadStringHandler, handler, channel, _1));
+        channel->readAsyncString(boost::bind(proxyReadStringHandler, _1, handler, channel, _2));
     }
 
 
-    void ChannelWrap::proxyReadStringHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const std::string& s) {
+    void ChannelWrap::proxyReadStringHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const std::string& s) {
         ScopedGILAcquire gil;
         try {
-            handler(bp::object(channel), bp::object(s));
+            handler(bp::object(code), bp::object(channel), bp::object(s));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) {
                 PyErr_Print();
@@ -183,14 +183,14 @@ namespace karathon {
         if (!PyCallable_Check(handler.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         ScopedGILRelease nogil;
-        channel->readAsyncHash(boost::bind(proxyReadHashHandler, handler, channel, _1));
+        channel->readAsyncHash(boost::bind(proxyReadHashHandler, _1, handler, channel, _2));
     }
 
 
-    void ChannelWrap::proxyReadHashHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& h) {
+    void ChannelWrap::proxyReadHashHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& h) {
         ScopedGILAcquire gil;
         try {
-            handler(bp::object(channel), bp::object(h));
+            handler(bp::object(code), bp::object(channel), bp::object(h));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) {
                 PyErr_Print();
@@ -206,15 +206,15 @@ namespace karathon {
         if (!PyCallable_Check(handler.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         ScopedGILRelease nogil;
-        channel->readAsyncHashVector(boost::bind(proxyReadHashVectorHandler, handler, channel, _1, _2));
+        channel->readAsyncHashVector(boost::bind(proxyReadHashVectorHandler, _1, handler, channel, _2, _3));
     }
 
 
-    void ChannelWrap::proxyReadHashVectorHandler(const bp::object& handler, karabo::net::Channel::Pointer channel,
+    void ChannelWrap::proxyReadHashVectorHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel,
                                                  const karabo::util::Hash& h, const std::vector<char>& v) {
         ScopedGILAcquire gil;
         try {
-            handler(bp::object(channel), bp::object(h), bp::object(v));
+            handler(bp::object(code), bp::object(channel), bp::object(h), bp::object(v));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) {
                 PyErr_Print();
@@ -230,14 +230,16 @@ namespace karathon {
         if (!PyCallable_Check(handler.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         ScopedGILRelease nogil;
-        channel->readAsyncHashHash(boost::bind(proxyReadHashHashHandler, handler, channel, _1, _2));
+        channel->readAsyncHashHash(boost::bind(proxyReadHashHashHandler, _1, handler, channel, _2, _3));
     }
 
 
-    void ChannelWrap::proxyReadHashHashHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b) {
+    void ChannelWrap::proxyReadHashHashHandler(const karabo::net::ErrorCode& code, const bp::object& handler,
+                                               karabo::net::Channel::Pointer channel,
+                                               const karabo::util::Hash& h, const karabo::util::Hash& b) {
         ScopedGILAcquire gil;
         try {
-            handler(bp::object(channel), bp::object(h), bp::object(b));
+            handler(bp::object(code), bp::object(channel), bp::object(h), bp::object(b));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) {
                 PyErr_Print();
@@ -257,30 +259,30 @@ namespace karathon {
             size_t size = PyBytes_Size(bytearray);
             char* data = PyBytes_AsString(bytearray);
             ScopedGILRelease nogil;
-            channel->writeAsyncRaw(data, size, boost::bind(proxyWriteCompleteHandler, handler, channel));
+            channel->writeAsyncRaw(data, size, boost::bind(proxyWriteCompleteHandler, _1, handler, channel));
             return;
         } else if (PyByteArray_Check(obj.ptr())) {
             PyObject* bytearray = obj.ptr();
             size_t size = PyByteArray_Size(bytearray);
             char* data = PyByteArray_AsString(bytearray);
             ScopedGILRelease nogil;
-            channel->writeAsyncRaw(data, size, boost::bind(proxyWriteCompleteHandler, handler, channel));
+            channel->writeAsyncRaw(data, size, boost::bind(proxyWriteCompleteHandler, _1, handler, channel));
             return;
         } else if (PyUnicode_Check(obj.ptr())) {
             Py_ssize_t size;
             const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
             ScopedGILRelease nogil;
-            channel->writeAsyncRaw(data, size, boost::bind(proxyWriteCompleteHandler, handler, channel));
+            channel->writeAsyncRaw(data, size, boost::bind(proxyWriteCompleteHandler, _1, handler, channel));
             return;
         }
         PyErr_SetString(PyExc_TypeError, "Python type in parameters is not supported");
     }
 
 
-    void ChannelWrap::proxyWriteCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel) {
+    void ChannelWrap::proxyWriteCompleteHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel) {
         ScopedGILAcquire gil;
         try {
-            handler(bp::object(channel));
+            handler(bp::object(code), bp::object(channel));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) {
                 PyErr_Print();
@@ -298,7 +300,7 @@ namespace karathon {
         if (bp::extract<Hash>(data).check()) {
             const Hash& h = bp::extract<Hash>(data);
             ScopedGILRelease nogil;
-            channel->writeAsyncHash(h, boost::bind(proxyWriteCompleteHandler, handler, channel));
+            channel->writeAsyncHash(h, boost::bind(proxyWriteCompleteHandler, _1, handler, channel));
             return;
         }
         PyErr_SetString(PyExc_TypeError, "Python type in parameters is not supported");
@@ -323,7 +325,7 @@ namespace karathon {
                 PyErr_SetString(PyExc_TypeError, "Python type in parameters is not supported");
             }
             ScopedGILRelease nogil;
-            channel->writeAsyncHashRaw(h, data, size, boost::bind(proxyWriteCompleteHandler, handler, channel));
+            channel->writeAsyncHashRaw(h, data, size, boost::bind(proxyWriteCompleteHandler, _1, handler, channel));
             return;
         }
         throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
@@ -337,60 +339,9 @@ namespace karathon {
             const Hash& header = bp::extract<Hash>(hdr);
             const Hash& data = bp::extract<Hash>(body);
             ScopedGILRelease nogil;
-            channel->writeAsyncHashHash(header, data, boost::bind(proxyWriteCompleteHandler, handler, channel));
+            channel->writeAsyncHashHash(header, data, boost::bind(proxyWriteCompleteHandler, _1, handler, channel));
             return;
         }
         PyErr_SetString(PyExc_TypeError, "Python type in parameters is not supported");
-    }
-
-
-    void ChannelWrap::setErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler) {
-        if (!PyCallable_Check(handler.ptr()))
-            throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
-        ScopedGILRelease nogil;
-        channel->setErrorHandler(boost::bind(proxyErrorHandler, handler, channel, _1));
-    }
-
-
-    void ChannelWrap::proxyErrorHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code) {
-        ScopedGILAcquire gil;
-        try {
-            handler(bp::object(channel), bp::object(code));
-        } catch (const bp::error_already_set& e) {
-            if (PyErr_Occurred()) {
-                PyErr_Print();
-            }
-            throw KARABO_PYTHON_EXCEPTION("ErrorHandler has thrown an exception.");
-        } catch (...) {
-            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
-        }
-    }
-
-
-    void ChannelWrap::waitAsync(karabo::net::Channel::Pointer channel, const bp::object& milliobj, const bp::object& handler) {
-        if (!PyCallable_Check(handler.ptr()))
-            throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
-        if (PyLong_Check(milliobj.ptr())) {
-            int milliseconds = bp::extract<int>(milliobj);
-            ScopedGILRelease nogil;
-            channel->waitAsync(milliseconds, boost::bind(proxyWaitCompleteHandler, handler, channel));
-            return;
-        }
-        PyErr_SetString(PyExc_TypeError, "Python type in parameters is not supported");
-    }
-
-
-    void ChannelWrap::proxyWaitCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel) {
-        ScopedGILAcquire gil;
-        try {
-            handler(bp::object(channel));
-        } catch (const bp::error_already_set& e) {
-            if (PyErr_Occurred()) {
-                PyErr_Print();
-            }
-            throw KARABO_PYTHON_EXCEPTION("WaitCompleteHandler has thrown an exception.");
-        } catch (...) {
-            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
-        }
     }
 }
