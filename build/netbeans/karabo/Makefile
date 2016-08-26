@@ -121,7 +121,7 @@ extern:
 	@$(EXTERN_DIR)/build.sh $(EXTERN_DISTDIR) $(EXTERN_WHAT)
 clean-extern:
 	rm -rf $(EXTERN_DISTDIR)
-	git clean -fxd $(EXTERN_DIR)/resources
+	git clean -ffxd $(EXTERN_DIR)/resources
 package-extern: extern
 	cd $(EXTERN_DIR); tar -zcf $(EXTERN_BUNDLE_NAME)-$(EXTERN_BUNDLE_VERSION).tar.gz $(EXTERN_INSTALL_DIR)
 
