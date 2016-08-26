@@ -17,7 +17,8 @@
 from karabo_gui.configuration import BulkNotifications
 from karabo_gui.dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
-from karabo.middlelayer import Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration
+from karabo.middlelayer import (
+    Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration)
 import karabo_gui.globals as globals
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.navigationtreemodel import NavigationTreeModel
@@ -108,21 +109,21 @@ class _Manager(QObject):
 
     def initDevice(self, serverId, classId, deviceId, config=None):
         # Use standard configuration for server/classId
-        conf = self.serverClassData.get((serverId, classId))
+        conf = getClass(serverId, classId)
         if config is None:
-            if conf is not None:
-                config, _ = conf.toHash()  # Ignore returned attributes
-            else:
-                config = Hash()
+            config, _ = conf.toHash()  # Ignore returned attributes
 
         # XXX: Temporary fix - due to the state changes
         # Old projects save all parameters, even the read only ones. This fix
         # removes them from the initial configuration to not stop the validator
         # from instantiating
-        descriptor = conf.descriptor if conf is not None else None
+        descriptor = conf.descriptor
         if descriptor is not None:
-            read_only_keys = descriptor.getReadOnlyKeys()
-            for key in read_only_keys:
+            obsolete_paths = descriptor.getObsoletePaths(config)
+            for key in obsolete_paths:
+                config.erase(key)
+            read_only_paths = descriptor.getReadOnlyPaths()
+            for key in read_only_paths:
                 # Remove all read only parameters
                 if key in config: # erase does not tolerate non-existing keys
                     config.erase(key)
