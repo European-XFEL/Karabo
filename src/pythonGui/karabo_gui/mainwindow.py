@@ -18,9 +18,11 @@ import karabo_gui.icons as icons
 from karabo_gui import globals
 from karabo_gui.docktabwindow import DockTabWindow
 from karabo_gui.guiproject import Macro
+from karabo_gui.mediator import (
+    KaraboBroadcastEvent, OPEN_MACRO, OPEN_SCENE_VIEW, register_for_broadcasts,
+    RENAME_SCENE_VIEW, REMOVE_MACRO, REMOVE_SCENE_VIEW)
 from karabo_gui.network import Network
 from karabo_gui.sceneview.api import SceneView
-
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.loggingpanel import LoggingPanel
 from karabo_gui.panels.macropanel import MacroPanel
@@ -56,6 +58,36 @@ class MainWindow(QMainWindow):
         title = "European XFEL - Karabo GUI " + globals.GUI_VERSION_LONG
         self.setWindowTitle(title)
         self.resize(1200, 800)
+
+        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
+        # not necessary for self due to the fact that the singleton mediator
+        # object and `self` are being destroyed when the GUI exists
+        register_for_broadcasts(self)
+
+    def eventFilter(self, obj, event):
+        if isinstance(event, KaraboBroadcastEvent):
+            sender = event.sender
+            if sender is OPEN_SCENE_VIEW:
+                data = event.data
+                self.addSceneView(data.get("model"), data.get('project'))
+                return True
+            elif sender is REMOVE_SCENE_VIEW:
+                data = event.data
+                self.removeSceneView(data.get("model"))
+                return True
+            elif sender is RENAME_SCENE_VIEW:
+                data = event.data
+                self.renameSceneView(data.get("model"))
+                return True
+            elif sender is OPEN_MACRO:
+                data = event.data
+                self.onAddMacro(data.get("macro"))
+                return True
+            elif sender is REMOVE_MACRO:
+                data = event.data
+                self.onRemoveMacro(data.get("macro"))
+                return True
+        return super(MainWindow, self).eventFilter(obj, event)
 
 ### initializations ###
     def _setupActions(self):
@@ -166,11 +198,6 @@ class MainWindow(QMainWindow):
         self.leftArea.setStretchFactor(0, 2)
 
         self.projectPanel = ProjectPanel()
-        self.projectPanel.signalAddSceneView.connect(self.addSceneView)
-        self.projectPanel.signalRemoveSceneView.connect(self.removeSceneView)
-        self.projectPanel.signalRenameSceneView.connect(self.renameSceneView)
-        self.projectPanel.signalAddMacro.connect(self.onAddMacro)
-        self.projectPanel.signalRemoveMacro.connect(self.onRemoveMacro)
         self.projectTab = DockTabWindow("Projects", self.leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects", self)
         self.leftArea.setStretchFactor(1, 1)
