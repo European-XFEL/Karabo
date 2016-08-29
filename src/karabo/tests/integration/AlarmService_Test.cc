@@ -79,8 +79,10 @@ void AlarmService_Test::appTestRunner() {
 }
 
 void AlarmService_Test::testDeviceRegistration() {
+    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
     // test whether the device actually registers with the alarm service upon instanceNew
     std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >("testAlarmService", "registeredDevices");
+    
     CPPUNIT_ASSERT(registeredDevices[0] == "alarmTester");
     
 }
@@ -94,7 +96,7 @@ void AlarmService_Test::testAlarmPassing() {
     CPPUNIT_ASSERT(success.second == "triggeredAlarmHigh");
     
     //allow some time for update to propagate
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
     
     std::vector<Hash> alarmTable = m_deviceClient->get<std::vector<Hash> >("testAlarmService", "currentAlarms");
     CPPUNIT_ASSERT(alarmTable.size() == 1);
@@ -248,7 +250,7 @@ void AlarmService_Test::testFlushing(){
 
         //should be the same as what we currently hold in the table and devices sections
         std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >("testAlarmService", "registeredDevices");
-
+        for(auto it = registeredDevices.begin(); it != registeredDevices.end(); ++it) std::clog<<*it<<std::endl;
         Hash propHash;
         propHash.set("type", "warnHigh");
         propHash.set("description", "A description for alarmHigh");

@@ -144,6 +144,7 @@ namespace karabo {
             
                         
             //we listen on instance new events to connect to the instances "signalAlarmUpdate" signal
+            trackAllInstances();
             remote().registerInstanceNewMonitor(boost::bind(&AlarmService::registerNewDevice, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&AlarmService::instanceGoneHandler, this, _1, _2));
 
@@ -176,6 +177,8 @@ namespace karabo {
                     
                     const std::string& deviceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
                                                          topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
+                    
+                    if(deviceId == getInstanceId()) return; //prevent registering ourselves.
 
                     boost::upgrade_lock<boost::shared_mutex> readLock(m_deviceRegisterMutex);
                     std::vector<std::string> devices = get<std::vector<std::string> >("registeredDevices");
@@ -212,16 +215,18 @@ namespace karabo {
                 boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
                 boost::optional<Hash::Node&> alarmN = m_alarms.find(instanceId);
                 if(alarmN){
-                    KARABO_LOG_INFO<<"Device instance '"<<instanceId<<"' disappeared. Setting all pending alarms to acknowledgeable";
-                    boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
-                    Hash& entry = alarmN->getValue<Hash>();
-                    for(Hash::iterator propIt = entry.begin(); propIt != entry.end(); ++propIt){
-                        Hash& property = propIt->getValue<Hash>();
-                        for(Hash::iterator aTypeIt = property.begin(); aTypeIt != property.end(); ++aTypeIt){
-                            Hash& typeEntry = aTypeIt->getValue<Hash>();
-                            //if a device died all alarms need to be and can be acknowledged
-                            typeEntry.set("needsAcknowledging", true);
-                            typeEntry.set("acknowledgeable", true);
+                    {
+                        KARABO_LOG_INFO<<"Device instance '"<<instanceId<<"' disappeared. Setting all pending alarms to acknowledgeable";
+                        boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
+                        Hash& alarm = alarmN->getValue<Hash>();
+                        for(Hash::iterator propIt = alarm.begin(); propIt != alarm.end(); ++propIt){
+                            Hash& property = propIt->getValue<Hash>();
+                            for(Hash::iterator aTypeIt = property.begin(); aTypeIt != property.end(); ++aTypeIt){
+                                Hash& typeEntry = aTypeIt->getValue<Hash>();
+                                //if a device died all alarms need to be and can be acknowledged
+                                typeEntry.set("needsAcknowledging", true);
+                                typeEntry.set("acknowledgeable", true);
+                            }
                         }
                     }
                     updateAlarmTable();
