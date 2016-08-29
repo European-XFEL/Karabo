@@ -161,11 +161,11 @@ namespace karabo {
             return karabo::util::base64Encode(reinterpret_cast<const unsigned char*> (value.first), value.second);
         }
 
-        template <typename T>
-        inline std::string toString(const karabo::util::NDArray<T>& value) {
-            const std::pair<const T*, size_t> data(value.getData()->data(), value.getData()->size());
-            return toString<T>(data);
-        }
+        //        template <typename T>
+        //        inline std::string toString(const karabo::util::NDArray<T>& value) {
+        //            const std::pair<const T*, size_t> data(value.getData()->data(), value.getData()->size());
+        //            return toString<T>(data);
+        //        }
 
         template <typename T>
         inline std::string toString(const std::set<T>& value) {

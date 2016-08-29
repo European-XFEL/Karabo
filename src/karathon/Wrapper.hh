@@ -8,9 +8,13 @@
 #ifndef WRAPPER_HH
 #define	WRAPPER_HH
 
+#include "FromNumpy.hh"
+#include "ToNumpy.hh"
+
 #include <boost/python.hpp>
 #include <boost/any.hpp>
 #include <karabo/util/Hash.hh>
+#include <karabo/util/NDArray.hh>
 
 #define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
 #define KRB_NDARRAY_MIN_DIM 1
@@ -99,41 +103,12 @@ namespace karathon {
             SIMPLE = karabo::util::Types::SIMPLE,
             SEQUENCE = karabo::util::Types::SEQUENCE,
             POINTER = karabo::util::Types::POINTER,
-            RAW_ARRAY = karabo::util::Types::RAW_ARRAY,
-            NDARRAY = karabo::util::Types::NDARRAY,
-
-            ARRAY_BOOL = karabo::util::Types::ARRAY_BOOL,
-            ARRAY_CHAR = karabo::util::Types::ARRAY_CHAR,
-            ARRAY_INT8 = karabo::util::Types::ARRAY_INT8,
-            ARRAY_UINT8 = karabo::util::Types::ARRAY_UINT8,
-            ARRAY_INT16 = karabo::util::Types::ARRAY_INT16,
-            ARRAY_UINT16 = karabo::util::Types::ARRAY_UINT16,
-            ARRAY_INT32 = karabo::util::Types::ARRAY_INT32,
-            ARRAY_UINT32 = karabo::util::Types::ARRAY_UINT32,
-            ARRAY_INT64 = karabo::util::Types::ARRAY_INT64,
-            ARRAY_UINT64 = karabo::util::Types::ARRAY_UINT64,
-            ARRAY_FLOAT = karabo::util::Types::ARRAY_FLOAT,
-            ARRAY_DOUBLE = karabo::util::Types::ARRAY_DOUBLE,
-
-            NDARRAY_BOOL = karabo::util::Types::NDARRAY_BOOL,
-            NDARRAY_INT8 = karabo::util::Types::NDARRAY_INT8,
-            NDARRAY_UINT8 = karabo::util::Types::NDARRAY_UINT8,
-            NDARRAY_INT16 = karabo::util::Types::NDARRAY_INT16,
-            NDARRAY_UINT16 = karabo::util::Types::NDARRAY_UINT16,
-            NDARRAY_INT32 = karabo::util::Types::NDARRAY_INT32,
-            NDARRAY_UINT32 = karabo::util::Types::NDARRAY_UINT32,
-            NDARRAY_INT64 = karabo::util::Types::NDARRAY_INT64,
-            NDARRAY_UINT64 = karabo::util::Types::NDARRAY_UINT64,
-            NDARRAY_FLOAT = karabo::util::Types::NDARRAY_FLOAT,
-            NDARRAY_DOUBLE = karabo::util::Types::NDARRAY_DOUBLE,
 
             HASH_POINTER = karabo::util::Types::HASH_POINTER,
             VECTOR_HASH_POINTER = karabo::util::Types::VECTOR_HASH_POINTER,
             LAST_CPP_TYPE = karabo::util::Types::VECTOR_HASH_POINTER + 1,
             PYTHON_DEFAULT, // global switch: treat std::vector as bp::list
             NUMPY_DEFAULT, // global switch: treat std::vector as ndarray
-            NDARRAY_COMPLEX_FLOAT,
-            NDARRAY_COMPLEX_DOUBLE
         };
 
         static const ReferenceType from(const karabo::util::Types::ReferenceType& input) {
@@ -193,30 +168,6 @@ namespace karathon {
                 case karabo::util::Types::SIMPLE: return SIMPLE;
                 case karabo::util::Types::SEQUENCE: return SEQUENCE;
                 case karabo::util::Types::POINTER: return POINTER;
-                case karabo::util::Types::RAW_ARRAY: return RAW_ARRAY;
-                case karabo::util::Types::ARRAY_BOOL: return ARRAY_BOOL;
-                case karabo::util::Types::ARRAY_CHAR: return ARRAY_CHAR;
-                case karabo::util::Types::ARRAY_INT8: return ARRAY_INT8;
-                case karabo::util::Types::ARRAY_UINT8: return ARRAY_UINT8;
-                case karabo::util::Types::ARRAY_INT16: return ARRAY_INT16;
-                case karabo::util::Types::ARRAY_UINT16: return ARRAY_UINT16;
-                case karabo::util::Types::ARRAY_INT32: return ARRAY_INT32;
-                case karabo::util::Types::ARRAY_UINT32: return ARRAY_UINT32;
-                case karabo::util::Types::ARRAY_INT64: return ARRAY_INT64;
-                case karabo::util::Types::ARRAY_UINT64: return ARRAY_UINT64;
-                case karabo::util::Types::ARRAY_FLOAT: return ARRAY_FLOAT;
-                case karabo::util::Types::ARRAY_DOUBLE: return ARRAY_DOUBLE;
-                case karabo::util::Types::NDARRAY_BOOL: return NDARRAY_BOOL;
-                case karabo::util::Types::NDARRAY_INT8: return NDARRAY_INT8;
-                case karabo::util::Types::NDARRAY_UINT8: return NDARRAY_UINT8;
-                case karabo::util::Types::NDARRAY_INT16: return NDARRAY_INT16;
-                case karabo::util::Types::NDARRAY_UINT16: return NDARRAY_UINT16;
-                case karabo::util::Types::NDARRAY_INT32: return NDARRAY_INT32;
-                case karabo::util::Types::NDARRAY_UINT32: return NDARRAY_UINT32;
-                case karabo::util::Types::NDARRAY_INT64: return NDARRAY_INT64;
-                case karabo::util::Types::NDARRAY_UINT64: return NDARRAY_UINT64;
-                case karabo::util::Types::NDARRAY_FLOAT: return NDARRAY_FLOAT;
-                case karabo::util::Types::NDARRAY_DOUBLE: return NDARRAY_DOUBLE;
                 case karabo::util::Types::HASH_POINTER: return HASH_POINTER;
                 case karabo::util::Types::VECTOR_HASH_POINTER: return VECTOR_HASH_POINTER;
                 default:
@@ -281,30 +232,6 @@ namespace karathon {
                 case SIMPLE: return karabo::util::Types::SIMPLE;
                 case SEQUENCE: return karabo::util::Types::SEQUENCE;
                 case POINTER: return karabo::util::Types::POINTER;
-                case RAW_ARRAY: return karabo::util::Types::RAW_ARRAY;
-                case ARRAY_BOOL: return karabo::util::Types::ARRAY_BOOL;
-                case ARRAY_CHAR: return karabo::util::Types::ARRAY_CHAR;
-                case ARRAY_INT8: return karabo::util::Types::ARRAY_INT8;
-                case ARRAY_UINT8: return karabo::util::Types::ARRAY_UINT8;
-                case ARRAY_INT16: return karabo::util::Types::ARRAY_INT16;
-                case ARRAY_UINT16: return karabo::util::Types::ARRAY_UINT16;
-                case ARRAY_INT32: return karabo::util::Types::ARRAY_INT32;
-                case ARRAY_UINT32: return karabo::util::Types::ARRAY_UINT32;
-                case ARRAY_INT64: return karabo::util::Types::ARRAY_INT64;
-                case ARRAY_UINT64: return karabo::util::Types::ARRAY_UINT64;
-                case ARRAY_FLOAT: return karabo::util::Types::ARRAY_FLOAT;
-                case ARRAY_DOUBLE: return karabo::util::Types::ARRAY_DOUBLE;
-                case NDARRAY_BOOL: return karabo::util::Types::NDARRAY_BOOL;
-                case NDARRAY_INT8: return karabo::util::Types::NDARRAY_INT8;
-                case NDARRAY_UINT8: return karabo::util::Types::NDARRAY_UINT8;
-                case NDARRAY_INT16: return karabo::util::Types::NDARRAY_INT16;
-                case NDARRAY_UINT16: return karabo::util::Types::NDARRAY_UINT16;
-                case NDARRAY_INT32: return karabo::util::Types::NDARRAY_INT32;
-                case NDARRAY_UINT32: return karabo::util::Types::NDARRAY_UINT32;
-                case NDARRAY_INT64: return karabo::util::Types::NDARRAY_INT64;
-                case NDARRAY_UINT64: return karabo::util::Types::NDARRAY_UINT64;
-                case NDARRAY_FLOAT: return karabo::util::Types::NDARRAY_FLOAT;
-                case NDARRAY_DOUBLE: return karabo::util::Types::NDARRAY_DOUBLE;
                 case HASH_POINTER: return karabo::util::Types::HASH_POINTER;
                 case VECTOR_HASH_POINTER: return karabo::util::Types::VECTOR_HASH_POINTER;
                 default:
@@ -319,28 +246,23 @@ namespace karathon {
 
     // Handler class for arrays originating in C++ code
 
-    template <typename T>
     class CppArrayRefHandler {
 
-    public:
-        typedef boost::shared_ptr<karabo::util::ArrayData<T> > ArrayDataPtr;
-
     private:
-        ArrayDataPtr m_arrayData;
+        karabo::util::NDArray::DataPointer m_dataPtr;
 
     public:
 
-        explicit CppArrayRefHandler(const ArrayDataPtr& arr) : m_arrayData(arr) {
+        explicit CppArrayRefHandler(const karabo::util::NDArray::DataPointer& dataPtr) : m_dataPtr(dataPtr) {
         }
 
-        ArrayDataPtr getDataPtr() const {
-            return m_arrayData;
+        karabo::util::NDArray::DataPointer getDataPtr() const {
+            return m_dataPtr;
         }
     };
 
     // Handler class for arrays originating in Python code
 
-    template <typename T>
     class PyArrayRefHandler {
 
         PyArrayObject* m_arrayRef;
@@ -350,7 +272,8 @@ namespace karathon {
         explicit PyArrayRefHandler(PyArrayObject* obj) : m_arrayRef(obj) {
         }
 
-        void operator()(const T*) {
+        void operator()(const char*) {
+            std::cout << "Py_DECREF" << std::endl;
             Py_DECREF(m_arrayRef);
         }
     };
@@ -461,52 +384,10 @@ namespace karathon {
             return v;
         }
 
-        template<typename T>
-        static karabo::util::NDArray<T> fromPyArrayToNDArray(PyArrayObject* arr, const int typenum) {
-            // Convert the array shape to a std::vector
-            npy_intp* pDims = PyArray_DIMS(arr);
-            std::vector<unsigned long long> dims;
-            for (int i = 0; i < PyArray_NDIM(arr); i++) {
-                dims.push_back(pDims[i]);
-            }
-
-            // Get an ArrayData object which points to the array's data
-            boost::shared_ptr<karabo::util::ArrayData<T> > array;
-            PyObject* arrBase = PyArray_BASE(arr);
-
-            // Determine if the array data is owned by a C++ object
-            if (arrBase != NULL && arrBase != Py_None) {
-                bp::object base(bp::handle<>(bp::borrowed(arrBase)));
-                bp::extract<CppArrayRefHandler<T> > maybeArrayRef(base);
-                if (maybeArrayRef.check()) {
-                    const CppArrayRefHandler<T>& arrayRef = maybeArrayRef();
-                    // The data already has an ArrayData<T> object managing it.
-                    array = arrayRef.getDataPtr();
-                }
-            }
-
-            // Array ref is still empty. Create a new ArrayData
-            if (!array) {
-                PyObject* pyobj = reinterpret_cast<PyObject*> (arr);
-                // Get a contiguous copy of the array with the correct type (or just a reference if already compatible)
-                PyArrayObject* carr = reinterpret_cast<PyArrayObject*> (PyArray_FROMANY(pyobj, typenum, KRB_NDARRAY_MIN_DIM, KRB_NDARRAY_MAX_DIM, NPY_ARRAY_C_CONTIGUOUS));
-                if (carr != NULL) {
-                    const T* data = reinterpret_cast<T*> (PyArray_DATA(carr));
-                    const npy_intp nelems = PyArray_SIZE(carr);
-                    const PyArrayRefHandler<T> refHandler(carr); // Steals the reference to carr
-                    // Create a new ArrayData<T> which uses PyArrayRefHandler to manage the Python reference count
-                    array = boost::shared_ptr<karabo::util::ArrayData<T> >(new karabo::util::ArrayData<T>(data, nelems, refHandler));
-                }
-            }
-
-            if (!array) {
-                throw KARABO_PYTHON_EXCEPTION("Failed conversion of ndarray to C++ NDArray.");
-            }
-
-            return karabo::util::NDArray<T>(array, karabo::util::Dims(dims));
-        }
-
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);
+
+        static bp::object toCustomObject(const karabo::util::Hash::Pointer& hash);
+
         static karabo::util::Types::ReferenceType toAny(const bp::object& operand, boost::any& any);
 
         static bp::object fromStdVectorToPyListNone(const std::vector<karabo::util::CppNone>& v) {
@@ -520,25 +401,9 @@ namespace karathon {
             return fromStdVectorToPyList(v);
         }
 
-        template<typename T>
-        static bp::object fromNDArrayToPyArray(const karabo::util::NDArray<T>& a, const int typenum) {
-            const karabo::util::Dims shape = a.getShape();
-            const int nd = shape.rank();
-            std::vector<npy_intp> dims(nd, 0);
-            for (int i = 0; i < nd; ++i) {
-                dims[i] = shape.extentIn(i);
-            }
+        static karabo::util::NDArray fromPyArrayToNDArray(PyArrayObject* arr);
 
-            boost::shared_ptr<karabo::util::ArrayData<T> > arrayData(a.getData());
-            const boost::shared_ptr<CppArrayRefHandler<T> > refHandler(new CppArrayRefHandler<T>(arrayData));
-            bp::object pyRefHandler(refHandler); // Python reference count starts at 1
-            void* data = reinterpret_cast<void*> (arrayData->data());
-            PyObject* pyobj = PyArray_SimpleNewFromData(nd, &dims[0], typenum, data);
-            PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*> (pyobj), pyRefHandler.ptr());
-            // PyArray_SetBaseObject steals a reference. Increase the refcount to protect bp::object::~object()
-            Py_INCREF(pyRefHandler.ptr());
-            return bp::object(bp::handle<>(pyobj));
-        }
+        static bp::object fromNDArrayToPyArray(const karabo::util::NDArray& ndarray);
     };
 
     // Specializations

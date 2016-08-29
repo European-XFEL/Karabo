@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   ToNumpy.hh
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -9,13 +9,13 @@
 #define	KARATHON_TONUMPY_HH
 
 #include <karabo/util/ToType.hh>
-#include "Wrapper.hh"
+#include <numpy/ndarraytypes.h>
 
 namespace karathon {
 
     class ToNumpy {
 
-        public:
+    public:
 
         typedef int ReturnType;
 

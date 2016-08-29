@@ -2116,17 +2116,17 @@ void exportPyUtilSchema() {
     // NDARRAY_INT32_ELEMENT, NDARRAY_UINT32_ELEMENT, NDARRAY_INT64_ELEMENT,
     // NDARRAY_UINT64_ELEMENT, NDARRAY_FLOAT_ELEMENT, NDARRAY_DOUBLE_ELEMENT
 
-    KARABO_PYTHON_NDARRAY(bool, BOOL)
-    KARABO_PYTHON_NDARRAY(signed char, INT8)
-    KARABO_PYTHON_NDARRAY(unsigned char, UINT8)
-    KARABO_PYTHON_NDARRAY(short, INT16)
-    KARABO_PYTHON_NDARRAY(unsigned short, UINT16)
-    KARABO_PYTHON_NDARRAY(int, INT32)
-    KARABO_PYTHON_NDARRAY(unsigned int, UINT32)
-    KARABO_PYTHON_NDARRAY(long long, INT64)
-    KARABO_PYTHON_NDARRAY(unsigned long long, UINT64)
-    KARABO_PYTHON_NDARRAY(float, FLOAT)
-    KARABO_PYTHON_NDARRAY(double, DOUBLE)
+            //    KARABO_PYTHON_NDARRAY(bool, BOOL)
+            //    KARABO_PYTHON_NDARRAY(signed char, INT8)
+            //    KARABO_PYTHON_NDARRAY(unsigned char, UINT8)
+            //    KARABO_PYTHON_NDARRAY(short, INT16)
+            //    KARABO_PYTHON_NDARRAY(unsigned short, UINT16)
+            //    KARABO_PYTHON_NDARRAY(int, INT32)
+            //    KARABO_PYTHON_NDARRAY(unsigned int, UINT32)
+            //    KARABO_PYTHON_NDARRAY(long long, INT64)
+            //    KARABO_PYTHON_NDARRAY(unsigned long long, UINT64)
+            //    KARABO_PYTHON_NDARRAY(float, FLOAT)
+            //    KARABO_PYTHON_NDARRAY(double, DOUBLE)
 
             //////////////////////////////////////////////////////////////////////
             // Binding NodeElement       
