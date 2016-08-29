@@ -67,6 +67,8 @@ void AlarmService_Test::appTestRunner() {
     success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
     
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    
     testDeviceRegistration();
     testAlarmPassing();
     testAcknowledgement();
