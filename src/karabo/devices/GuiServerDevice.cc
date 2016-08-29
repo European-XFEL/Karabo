@@ -7,7 +7,7 @@
  */
 
 #include "GuiServerDevice.hh"
-#include "DataLogUtils.hh"
+#include "karabo/util/DataLogUtils.hh"
 #include "karabo/net/EventLoop.hh"
 
 using namespace std;
@@ -19,8 +19,9 @@ using namespace karabo::xip;
 using namespace karabo::xms;
 
 
+
 namespace karabo {
-    namespace core {
+    namespace devices {
 
 
         KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, GuiServerDevice)
@@ -133,23 +134,23 @@ namespace karabo {
                 remote().getSystemInformation();
 
                 // Register handlers
-                remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceNewHandler, this, _1));
-                remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
-                remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1, _2));
-                remote().registerSchemaUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::schemaUpdatedHandler, this, _1, _2));
-                remote().registerClassSchemaMonitor(boost::bind(&karabo::core::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
+                remote().registerInstanceNewMonitor(boost::bind(&karabo::devices::GuiServerDevice::instanceNewHandler, this, _1));
+                remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::devices::GuiServerDevice::instanceUpdatedHandler, this, _1));
+                remote().registerInstanceGoneMonitor(boost::bind(&karabo::devices::GuiServerDevice::instanceGoneHandler, this, _1, _2));
+                remote().registerSchemaUpdatedMonitor(boost::bind(&karabo::devices::GuiServerDevice::schemaUpdatedHandler, this, _1, _2));
+                remote().registerClassSchemaMonitor(boost::bind(&karabo::devices::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
-                connect(karabo::core::DATALOGMANAGER_ID, "signalLoggerMap", "", "slotLoggerMap");
-                requestNoWait(karabo::core::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
+                connect(karabo::util::DATALOGMANAGER_ID, "signalLoggerMap", "", "slotLoggerMap");
+                requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
 
-                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1, _2));
+                m_dataConnection->startAsync(boost::bind(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
                 
                 // Start the logging thread
                 m_loggerConnection->start();
                 m_loggerChannel = m_loggerConnection->createChannel();
                 m_loggerChannel->setFilter("target = 'log'");
                 m_loggerChannel->setErrorHandler(boost::bind(&GuiServerDevice::logErrorHandler, this, m_loggerChannel, _1));
-                m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2));
+                m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2));
                 
                 // Start the guiDebugChannel
                 m_guiDebugConnection->start();
@@ -180,7 +181,7 @@ namespace karabo {
                 // priority 4 should be LOSSLESS
                 channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
 
-                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, channel, _2));
+                channel->readAsyncHash(boost::bind(&karabo::devices::GuiServerDevice::onRead, this, _1, channel, _2));
 
                 Hash brokerInfo("type", "brokerInformation");
                 brokerInfo.set("host", this->getConnection()->getBrokerHostname());
@@ -192,12 +193,12 @@ namespace karabo {
                 registerConnect(channel);
 
                 // Re-register acceptor socket (allows handling multiple clients)
-                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1, _2));
+                m_dataConnection->startAsync(boost::bind(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
 
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onConnect(): " << e.userFriendlyMsg();
-                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1, _2));
+                m_dataConnection->startAsync(boost::bind(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
             }
         }
 
@@ -260,10 +261,10 @@ namespace karabo {
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << "Ignoring request";
                 }
-                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, channel, _2));
+                channel->readAsyncHash(boost::bind(&karabo::devices::GuiServerDevice::onRead, this, _1, channel, _2));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRead(): " << e.userFriendlyMsg();
-                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, channel, _2));
+                channel->readAsyncHash(boost::bind(&karabo::devices::GuiServerDevice::onRead, this, _1, channel, _2));
             }
         }
 
@@ -335,7 +336,7 @@ namespace karabo {
                 const string& deviceId = hash.get<string > ("deviceId");
                 KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: request to start device instance \"" << deviceId << "\" on server \"" << serverId << "\"";
                 request(serverId, "slotStartDevice", hash)
-                        .receiveAsync<bool, string > (boost::bind(&karabo::core::GuiServerDevice::initReply, this, channel, deviceId, _1, _2));
+                        .receiveAsync<bool, string > (boost::bind(&karabo::devices::GuiServerDevice::initReply, this, channel, deviceId, _1, _2));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInitDevice(): " << e.userFriendlyMsg();
             }
@@ -438,7 +439,7 @@ namespace karabo {
                 }
 
                 if (registerFlag) { // Fresh device on the shelf
-                    remote().registerDeviceMonitor(deviceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
+                    remote().registerDeviceMonitor(deviceId, boost::bind(&karabo::devices::GuiServerDevice::deviceChangedHandler, this, _1, _2));
                 }
 
                 // Send back fresh information about device
@@ -542,7 +543,7 @@ namespace karabo {
                     static int i = 0;
                     const string readerId = DATALOGREADER_PREFIX + toString(i++ % DATALOGREADERS_PER_SERVER) += "-" + m_loggerMap.get<string>(loggerId);
                     request(readerId, "slotGetPropertyHistory", deviceId, property, args)
-                            .receiveAsync<string, string, vector<Hash> >(boost::bind(&karabo::core::GuiServerDevice::propertyHistory, this, channel, _1, _2, _3));
+                            .receiveAsync<string, string, vector<Hash> >(boost::bind(&karabo::devices::GuiServerDevice::propertyHistory, this, channel, _1, _2, _3));
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << "onGetPropertyHistory: No '" << loggerId << "' in map.";
                 }
@@ -667,7 +668,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetAvailableProjects";
 
                 request("Karabo_ProjectManager", "slotGetAvailableProjects")
-                        .receiveAsync<karabo::util::Hash >(boost::bind(&karabo::core::GuiServerDevice::availableProjects, this, channel, _1));
+                        .receiveAsync<karabo::util::Hash >(boost::bind(&karabo::devices::GuiServerDevice::availableProjects, this, channel, _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetAvailableProjects(): " << e.userFriendlyMsg();
             }
@@ -696,7 +697,7 @@ namespace karabo {
                 vector<char> data = info.get<vector<char> > ("data");
 
                 request("Karabo_ProjectManager", "slotNewProject", author, projectName, data)
-                        .receiveAsync<string, bool, vector<char> >(boost::bind(&karabo::core::GuiServerDevice::projectNew, this, channel, _1, _2, _3));
+                        .receiveAsync<string, bool, vector<char> >(boost::bind(&karabo::devices::GuiServerDevice::projectNew, this, channel, _1, _2, _3));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onNewProject(): " << e.userFriendlyMsg();
             }
@@ -730,7 +731,7 @@ namespace karabo {
                 string projectName = info.get<string > ("name");
 
                 request("Karabo_ProjectManager", "slotLoadProject", userName, projectName)
-                        .receiveAsync<string, Hash, vector<char> >(boost::bind(&karabo::core::GuiServerDevice::projectLoaded, this, channel, _1, _2, _3));
+                        .receiveAsync<string, Hash, vector<char> >(boost::bind(&karabo::devices::GuiServerDevice::projectLoaded, this, channel, _1, _2, _3));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLoadProject(): " << e.userFriendlyMsg();
             }
@@ -763,7 +764,7 @@ namespace karabo {
                 vector<char> data = info.get<vector<char> > ("data");
 
                 request("Karabo_ProjectManager", "slotSaveProject", userName, projectName, data)
-                        .receiveAsync<string, bool, vector<char> >(boost::bind(&karabo::core::GuiServerDevice::projectSaved, this, channel, _1, _2, _3));
+                        .receiveAsync<string, bool, vector<char> >(boost::bind(&karabo::devices::GuiServerDevice::projectSaved, this, channel, _1, _2, _3));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSaveProject(): " << e.userFriendlyMsg();
             }
@@ -796,7 +797,7 @@ namespace karabo {
                 string projectName = info.get<string > ("name");
 
                 request("Karabo_ProjectManager", "slotCloseProject", userName, projectName)
-                        .receiveAsync<string, bool, vector<char> >(boost::bind(&karabo::core::GuiServerDevice::projectClosed, this, channel, _1, _2, _3));
+                        .receiveAsync<string, bool, vector<char> >(boost::bind(&karabo::devices::GuiServerDevice::projectClosed, this, channel, _1, _2, _3));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onCloseProject(): " << e.userFriendlyMsg();
             }
@@ -877,13 +878,13 @@ namespace karabo {
                     }
                     if (registerMonitor) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to device " << instanceId << " which is going to be visible in a GUI client";
-                        remote().registerDeviceMonitor(instanceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
+                        remote().registerDeviceMonitor(instanceId, boost::bind(&karabo::devices::GuiServerDevice::deviceChangedHandler, this, _1, _2));
                     }
-                    if (instanceId == karabo::core::DATALOGMANAGER_ID) {
+                    if (instanceId == karabo::util::DATALOGMANAGER_ID) {
                         // The corresponding 'connect' is done by SignalSlotable's automatic reconnect feature.
                         // Even this request might not be needed since the logger manager emits the corresponding signal.
                         // But we cannot be 100% sure that our 'connect' has been registered in time.
-                        requestNoWait(karabo::core::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
+                        requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
                     }
                 }
             } catch (const Exception& e) {

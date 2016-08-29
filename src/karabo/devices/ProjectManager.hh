@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   ProjectManager.hh
  * Author: heisenb
  *
@@ -8,15 +8,14 @@
 #ifndef KARABO_CORE_PROJECTMANAGER_HH
 #define	KARABO_CORE_PROJECTMANAGER_HH
 
-#include "Device.hh"
+#include "karabo/core/Device.hh"
 
 namespace karabo {
 
 
-    namespace core {
+    namespace devices {
 
         class ProjectManager : public karabo::core::Device<> {
-
 
             // {key: projectName.krb, value: metaData}
             std::map<std::string, karabo::util::Hash > m_projectMetaData;
