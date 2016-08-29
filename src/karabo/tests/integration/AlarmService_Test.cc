@@ -177,8 +177,8 @@ void AlarmService_Test::testAcknowledgement() {
     alarmTable = m_deviceClient->get<std::vector<Hash> >("testAlarmService", "currentAlarms");
     CPPUNIT_ASSERT(alarmTable.size() == 2);
     alarmTable[0].set("acknowledged", true);
-    success = m_deviceClient->set("testAlarmService", "currentAlarms", alarmTable, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT(success.first);
+    m_deviceClient->execute("testAlarmService", "slotReconfigure", Hash("currentAlarms", alarmTable), KRB_TEST_MAX_TIMEOUT);
+    
     
     //the table should still be as was and acknowledged is set to false
     alarmTable = m_deviceClient->get<std::vector<Hash> >("testAlarmService", "currentAlarms");

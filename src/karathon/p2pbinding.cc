@@ -6,8 +6,9 @@
  */
 
 #include <boost/python.hpp>
-#include <karabo/net/IOService.hh>
+//#include <karabo/net/IOService.hh>
 #include <karabo/net/Connection.hh>
+#include <karabo/net/EventLoop.hh>
 #include <karabo/net/BrokerConnection.hh>
 #include "PythonFactoryMacros.hh"
 #include "IOServiceWrap.hh"
@@ -54,9 +55,7 @@ void exportp2p() {
                      "new handlers in this handler using given channel if you want follow asynchronous model.")
                 .def("stop", &ConnectionWrap().stop, "Stops IO service operation.")
                 //.def("createChannel", &Connection::createChannel)
-                .def("getIOService", &ConnectionWrap().getIOService, "Creates new IO service object for you and register connection on it.")
-                .def("setIOService", &ConnectionWrap().setIOService, (bp::arg("ioserv")), "Registers connection on IO service object created externally.")
-                .def("setErrorHandler", &ConnectionWrap().setErrorHandler, (bp::arg("handler")), "Sets a handler being called in case of error conditions")
+                //.def("setErrorHandler", &ConnectionWrap().setErrorHandler, (bp::arg("handler")), "Sets a handler being called in case of error conditions")
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Connection)
                 ;
     }
@@ -103,13 +102,20 @@ void exportp2p() {
                 .def("writeAsyncHashHash", &ChannelWrap().writeAsyncHashHash, (bp::arg("hdr"), bp::arg("data"), bp::arg("handler")),
                      "Helper method. Register handler for write a Hash header and Hash body.  Never blocks.  The handler will be called "
                      "if write operations of all message parts are completed.")
-                .def("waitAsync", &ChannelWrap().waitAsync, (bp::arg("milliseconds"), bp::arg("handler")),
-                     "The handler will be called by IO service object when the registered delay (in milliseconds) is elapsed.")
-                .def("setErrorHandler", &ChannelWrap().setErrorHandler, (bp::arg("handler")),
-                     "Set handler that is called if the error condition is encountered during operations on channel.")
                 .def("close", &Channel::close, "Close channel session.")
                 .add_property("__id__", &ChannelWrap().id, "This readonly variable keeps id that uniquely identifies channel instance.")
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Channel)
+                ;
+    }
+    
+    {
+        bp::class_<EventLoop, boost::noncopyable >("EventLoop", "EventLoop is a singleton class wrapping Boost ASIO functionality.",
+                                                   bp::no_init)
+                .def("run", &EventLoop::run).staticmethod("run")
+                .def("stop", &EventLoop::stop).staticmethod("stop")
+                .def("addThread", (void (*)(const int))&EventLoop::addThread, (bp::arg("nThreads") = 1)).staticmethod("addThread")
+                .def("removeThread", (void(*)(const int))&EventLoop::removeThread, (bp::arg("nThreads") = 1)).staticmethod("removeThread")
+                .def("getNumberOfThreads", (size_t(*)())&EventLoop::getNumberOfThreads).staticmethod("getNumberOfThreads")
                 ;
     }
 }

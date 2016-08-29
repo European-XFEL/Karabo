@@ -39,10 +39,11 @@ class BaseShape(ABCHasStrictTraits):
 
     @cached_property
     def _get_brush(self):
-        brush = QBrush(Qt.SolidPattern)
+        brush = QBrush()
         if self.model.fill != "none":
             color = QColor(self.model.fill)
             color.setAlphaF(self.model.fill_opacity)
+            brush.setStyle(Qt.SolidPattern)
             brush.setColor(color)
         return brush
 

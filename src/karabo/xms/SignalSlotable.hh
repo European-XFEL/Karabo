@@ -1519,7 +1519,9 @@ KARABO_SLOT0(__VA_ARGS__) \
                                            const std::string& instanceId, const std::string& channelId,
                                            bool channelExists, const karabo::util::Hash& info);
 
-            bool tryToCallDirectly(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) const;
+            bool tryToCallDirectly(const std::string& slotInstanceId,
+                                   const karabo::util::Hash::Pointer& header,
+                                   const karabo::util::Hash::Pointer& body) const;
 
             bool tryToCallP2P(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio) const;
 

@@ -10,9 +10,11 @@
 
 namespace karabo {
     namespace net {
+        
+        boost::mutex karabo::net::EventLoop::m_initMutex;
 
 
-        EventLoop::EventLoop() {
+        EventLoop::EventLoop() : m_ioService(){
         }
 
 
@@ -25,6 +27,7 @@ namespace karabo {
 
 
         EventLoop& EventLoop::instance() {
+            boost::mutex::scoped_lock lock(m_initMutex);
             static EventLoop loop;
             return loop;
         }
@@ -40,11 +43,13 @@ namespace karabo {
             instance().m_threadPool.join_all();
             instance().clearThreadPool();
             instance().m_ioService.reset();
-        }        
+        }
+
 
         void EventLoop::stop() {
             instance().m_ioService.stop();
-        }      
+        }
+
 
         size_t EventLoop::getNumberOfThreads() {
             return instance()._getNumberOfThreads();
@@ -143,7 +148,6 @@ namespace karabo {
                         // Hence, we are injecting the exception again to be taken by another thread
                         // Only if at least one thread to kill
                         if (m_threadPool.size() > 0) {
-                            std::cout << "Illegal trial to remove thread on empty thread-pool" << std::endl;
                             m_ioService.post(&asyncInjectException);
                             // We kindly ask the scheduler to put us on the back of the threads queue, avoiding we will
                             // eat the just posted exception again
@@ -159,7 +163,7 @@ namespace karabo {
                 }
                 boost::this_thread::sleep(boost::posix_time::milliseconds(100));
             }
-        }       
+        }
     }
 }
 

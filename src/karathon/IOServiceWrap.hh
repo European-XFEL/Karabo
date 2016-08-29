@@ -54,8 +54,8 @@ namespace karathon {
         }
 
         static void finalize(karabo::net::IOService::Pointer ioserv) {
-            ChannelWrap::clear(ioserv);
-            ConnectionWrap::clear(ioserv);
+            ChannelWrap::clear();
+            ConnectionWrap::clear();
         }
     };
 }

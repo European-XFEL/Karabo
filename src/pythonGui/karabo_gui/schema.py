@@ -660,23 +660,58 @@ class Schema(hashmod.Descriptor):
             if myChild is not None and otherChild is not None:
                 myChild.connectOtherBox(otherChild)
 
-    def getReadOnlyKeys(self):
-        """ This recursive methode returns a list with all full keys with
-            accessMode readOnly.
+    def _recurseGetDictPaths(self, parent_key, parent_value, path_list,
+                             accessMode=None):
+        """ This is a private methods which goes recursively through the `dict`
+            of a `Schema` and returns a list of either all paths or all
+            read-only paths.
         """
-        def recurse(parent_key, parent_value, read_only_keys):
-            if isinstance(parent_value, Schema):
-                for key, value in parent_value.dict.items():
-                    new_key = "{}.{}".format(parent_key, key)
-                    recurse(new_key, value, read_only_keys)
+        if isinstance(parent_value, Schema):
+            for key, value in parent_value.dict.items():
+                new_key = "{}.{}".format(parent_key, key)
+                self._recurseGetDictPaths(new_key, value, path_list, accessMode)
+        if accessMode is None:
+            return path_list.append(parent_key)
+        elif parent_value.accessMode is accessMode:
+            return path_list.append(parent_key)
 
-            if parent_value.accessMode is AccessMode.READONLY:
-                return read_only_keys.append(parent_key)
-
-        read_only_keys = []
+    def getAllPaths(self):
+        """" This method returns a string list of all paths for this context.
+        """
+        all_paths = []
         for key, value in self.dict.items():
-            recurse(key, value, read_only_keys)
-        return read_only_keys
+            self._recurseGetDictPaths(key, value, all_paths)
+        return all_paths
+
+    def getReadOnlyPaths(self):
+        """ This recursive method returns a string list of all paths with
+            read-only access.
+        """
+        read_only_paths = []
+        for key, value in self.dict.items():
+            self._recurseGetDictPaths(key, value, read_only_paths,
+                                      accessMode=AccessMode.READONLY)
+        return read_only_paths
+
+    def getObsoletePaths(self, config):
+        """" This recursive method checks whether the paths in the `config`
+             hash still exist in this context.
+             A string list of obsolete paths is returned.
+        """
+        all_paths = self.getAllPaths()
+        def recurse(parent_key, parent_value, obsolete_paths):
+            if isinstance(parent_value, Hash):
+                for key, value in parent_value.items():
+                    new_key = "{}.{}".format(parent_key, key)
+                    recurse(new_key, value, obsolete_paths)
+
+            if not parent_key in all_paths:
+                return obsolete_paths.append(parent_key)
+
+        obsolete_paths = []
+        for key, value in config.items():
+            recurse(key, value, obsolete_paths)
+        return obsolete_paths
 
 
 class ImageNode(Schema):
