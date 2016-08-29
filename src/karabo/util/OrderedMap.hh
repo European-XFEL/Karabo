@@ -285,10 +285,8 @@ namespace karabo {
         OrderedMap<KeyType, MappedType>::OrderedMap(OrderedMap<KeyType, MappedType>&& other)
             : m_listNodes()
             , m_mapNodes() {
-            if (!other.empty()) {
-                m_listNodes = std::move(other.m_listNodes);
-                m_mapNodes = std::move(other.m_mapNodes);
-            }
+            m_listNodes = std::move(other.m_listNodes);
+            m_mapNodes = std::move(other.m_mapNodes);
         }
 
         template<class KeyType, class MappedType>
@@ -296,11 +294,8 @@ namespace karabo {
             if (this != &other) {
                 this->m_listNodes.clear();
                 this->m_mapNodes.clear();
-
-                if (!other.empty()) {
-                    m_listNodes = std::move(other.m_listNodes);
-                    m_mapNodes = std::move(other.m_mapNodes);
-                }
+                m_listNodes = std::move(other.m_listNodes);
+                m_mapNodes = std::move(other.m_mapNodes);
             }
             return *this;
         }
