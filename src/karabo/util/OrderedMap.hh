@@ -8,7 +8,7 @@
 #ifndef KARABO_UTIL_ORDERED_MAP_HH
 #define	KARABO_UTIL_ORDERED_MAP_HH
 
-#include <map>
+#include <unordered_map>
 #include <list>
 #include <boost/any.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
@@ -23,7 +23,7 @@ namespace karabo {
         class OrderedMap {
 
             typedef std::list<MappedType*> ListType;
-            typedef std::map<KeyType, MappedType> MapType;
+            typedef std::unordered_map<KeyType, MappedType> MapType;
 
             ListType m_listNodes;
             MapType m_mapNodes;
@@ -406,6 +406,17 @@ namespace karabo {
         template<class KeyType, class MappedType>
         template<class T>
         inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyType& key, const T& value) {
+#if __cplusplus >= 201103L
+            auto result = m_mapNodes.emplace(key, MappedType());
+            MappedType& node = result.first->second;
+            bool inserted = result.second;
+            if (inserted) {
+                m_listNodes.push_back(&node);
+                node.setKey(key);
+            }
+            node.setValue(value);
+            return node;
+#else
             // COUT("__set T");
             map_iterator it;
             if (((it = find(key)) != m_mapNodes.end())) {
@@ -420,62 +431,113 @@ namespace karabo {
                 m_listNodes.push_back(&node);
                 return node;
             }
+#endif
         }
 
         template<class KeyType, class MappedType>
         inline const MappedType& OrderedMap<KeyType, MappedType>::getNode(const KeyType & key) const {
+#if __cplusplus >= 201103L
+            try {
+                return m_mapNodes.at(key);
+            } catch (const std::out_of_range& e) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist : " + e.what());
+            }
+#else
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
             return it->second; //
+#endif
         }
 
         template<class KeyType, class MappedType>
         inline MappedType& OrderedMap<KeyType, MappedType>::getNode(const KeyType & key) {
+#if __cplusplus >= 201103L
+            try {
+                return m_mapNodes.at(key);
+            } catch (const std::out_of_range& e) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist : " + e.what());
+            }
+#else
             map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
             return it->second; // 
+#endif
         }
 
         template<class KeyType, class MappedType>
         inline const boost::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) const {
+#if __cplusplus >= 201103L
+            try {
+                const MappedType& node = m_mapNodes.at(key);
+                return node.getValueAsAny();
+            } catch (const std::out_of_range& e) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist : " + e.what());
+            }
+#else
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
             return it->second.template getValueAsAny();
+#endif
         }
 
         template<class KeyType, class MappedType>
         inline boost::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) {
+#if __cplusplus >= 201103L
+            try {
+                MappedType& node = m_mapNodes.at(key);
+                return node.getValueAsAny();
+            } catch (const std::out_of_range& e) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist : " + e.what());
+            }
+#else
             map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
             return it->second.template getValueAsAny();
+#endif
         }
 
         template<class KeyType, class MappedType>
         template<class T>
         inline const T & OrderedMap<KeyType, MappedType>::get(const KeyType & key) const {
+#if __cplusplus >= 201103L
+            try {
+                return m_mapNodes.at(key).template getValue<const T>();
+            } catch (const std::out_of_range& e) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist : " + e.what());
+            }
+#else
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
             return get<T > (it); //return it->second.template value<T > (); //
+#endif
         }
 
         template<class KeyType, class MappedType>
         template<class T>
         inline T & OrderedMap<KeyType, MappedType>::get(const KeyType & key) {
+#if __cplusplus >= 201103L
+            try {
+                return m_mapNodes.at(key).template getValue<T>();
+            } catch (const std::out_of_range& e) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist : " + e.what());
+            }
+#else
             map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
             return get<T > (it);
+#endif
         }
 
         template<class KeyType, class MappedType>
@@ -499,21 +561,37 @@ namespace karabo {
         template <class KeyType, class MappedType>
         template <class ValueType>
         inline ValueType OrderedMap<KeyType, MappedType>::getAs(const KeyType& key) const {
+#if __cplusplus >= 201103L
+            try {
+                return m_mapNodes.at(key).template getValueAs<ValueType >();
+            } catch (const std::exception& e) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+            }
+#else
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
             return it->second.template getValueAs<ValueType >();
+#endif
         }
 
         template <class KeyType, class MappedType>
         template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
         inline Cont<T> OrderedMap<KeyType, MappedType>::getAs(const KeyType& key) const {
+#if __cplusplus >= 201103L
+            try {
+                return m_mapNodes.at(key).template getValueAs<T, Cont >();
+            } catch (const std::exception& e) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+            }
+#else
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
             return it->second.template getValueAs<T, Cont >();
+#endif
         }
 
         template<class KeyType, class MappedType>
