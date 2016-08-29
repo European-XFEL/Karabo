@@ -62,252 +62,183 @@ namespace karathon {
     }
 
 
-    template <typename T>
-    boost::shared_ptr<karabo::xms::ImageData<T> > ImageDataWrap<T>::make5(const bp::object& obj, const bool copy,
-                                                                          const karabo::util::Dims& dimensions,
-                                                                          const karabo::xms::EncodingType encoding,
-                                                                          const int bitsPerPixel) {
-
-        using namespace karabo::util;
-        using namespace karabo::xms;
-
-        boost::shared_ptr<ImageData<T> > self(new ImageData<T>());
-
-        if (obj == bp::object())
-            return self;
-
-        if (bp::extract<Hash::Pointer>(obj).check()) {
-            self = boost::shared_ptr<ImageData<T> >(new ImageData<T>(bp::extract<Hash::Pointer>(obj)));
-        } else if (bp::extract<Hash>(obj).check()) {
-            self = boost::shared_ptr<ImageData<T> >(new ImageData<T>(bp::extract<Hash>(obj)));
-        } else if (PyArray_Check(obj.ptr())) {
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
-            const int typenum = Types::convert<FromTypeInfo, ToNumpy>( typeid(T) );
-            const NDArray<T> ndarray = Wrapper::fromPyArrayToNDArray<T>(arr, typenum);
-            Dims _dimensions = ndarray.getShape();
-            const int rank = _dimensions.rank();
-
-            // Encoding
-            EncodingType _encoding = encoding;
-            if (encoding == Encoding::UNDEFINED) {
-                // No encoding info -> try to guess it from ndarray shape
-                if (rank == 2 || (rank == 3 && _dimensions.x3() == 1))
-                    _encoding = Encoding::GRAY;
-                else if (rank == 3 && _dimensions.x3() == 3)
-                    _encoding = Encoding::RGB;
-                else if (rank == 3 && _dimensions.x3() == 4)
-                    _encoding = Encoding::RGBA;
-            }
-
-            // Dimensions (shape)
-
-            if (_encoding == Encoding::RGB || _encoding == Encoding::RGBA ||
-                _encoding == Encoding::BGR || _encoding == Encoding::BGRA ||
-                _encoding == Encoding::CMYK || _encoding == Encoding::YUV) {
-                // Color images -> use ndarray dimensions
-                if (rank != 3) {
-                    throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
-                }
-                // Flip X & Y dimensions
-                _dimensions = Dims(_dimensions.x2(), _dimensions.x1(), _dimensions.x3());
-            } else if (_encoding == Encoding::GRAY) {
-                // Gray-scale images -> use ndarray dimensions
-                if ((rank != 2) && !((rank == 3) && (_dimensions.x3() == 1))) {
-                    throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
-                }
-                // Flip X & Y dimensions
-                if (rank == 2) {
-                    _dimensions.reverse();
-                }
-                else {
-                    _dimensions = Dims(_dimensions.x2(), _dimensions.x1());
-                }
-            } else if (_encoding == Encoding::JPEG || _encoding == Encoding::PNG ||
-                        _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
-                // JPEG, PNG, BMP, TIFF -> cannot use ndarray dimensions, use therefore input parameter
-                _dimensions = dimensions;
-                if (dimensions.size() == 0) {
-                    throw KARABO_PYTHON_EXCEPTION("Dimensions must be supplied for encoded images");
-                }
-            } else {
-                // Other encodings. Likely it will need to be fixed!
-                _dimensions.reverse();
-            }
-
-            // XXX: Bits per pixel?
-
-            if (copy) {
-                // Guarantee a copy is made.
-                const boost::shared_ptr<ArrayData<T> > arrayDataPtr(ndarray.getData());
-                self->setData(arrayDataPtr->data(), arrayDataPtr->size(), true);
-            }
-            else {
-                // No copy
-                self->setData(ndarray);
-            }
-
-            std::vector<unsigned long long> offsets(_dimensions.rank(), 0);
-            self->setDimensions(_dimensions);
-            self->setROIOffsets(Dims(offsets));
-
-            self->setEncoding(_encoding);
-            self->setIsBigEndian(false);
-        } else {
-            throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray or Hash");
-        }
-        return self;
-    }
-
-
-    template <typename T>
-    bp::object ImageDataWrap<T>::getDataPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self) {
-        const int typenum = karabo::util::Types::convert<karabo::util::FromTypeInfo, ToNumpy>( typeid(T) );
-        return Wrapper::fromNDArrayToPyArray<T>(self->getData(), typenum);
-    }
-
-
-    template <typename T>
-    void ImageDataWrap<T>::setDataPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& obj, const bool copy) {
-        if (PyBytes_Check(obj.ptr())) {
-            size_t size = PyBytes_Size(obj.ptr());
-            char* data = PyBytes_AsString(obj.ptr());
-            self->setData(reinterpret_cast<T*> (data), size, true);
-            return;
-        }
-        if (PyByteArray_Check(obj.ptr())) {
-            size_t size = PyByteArray_Size(obj.ptr());
-            char* data = PyByteArray_AsString(obj.ptr());
-            self->setData(reinterpret_cast<T*> (data), size, true);
-            return;
-        }
-        if (PyUnicode_Check(obj.ptr())) {
-            Py_ssize_t size;
-            const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
-            self->setData(reinterpret_cast<const T*> (data), size, true);
-            return;
-        }
-        if (PyArray_Check(obj.ptr())) {
-            // No copy IFF array type matches
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
-            const int typenum = karabo::util::Types::convert<karabo::util::FromTypeInfo, ToNumpy>( typeid(T) );
-            const karabo::util::NDArray<T> ndarray = Wrapper::fromPyArrayToNDArray<T>(arr, typenum);
-
-            if (copy) {
-                // Guarantee a copy is made.
-                const boost::shared_ptr<karabo::util::ArrayData<T> > arrayData(ndarray.getData());
-                self->setData(arrayData->data(), arrayData->size(), true);
-            }
-            else {
-                self->setData(ndarray);
-            }
-            return;
-        }
-        throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
-    }
-
-
-    template <typename T>
-    bp::object ImageDataWrap<T>::getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self) {
-        karabo::util::Dims dims = self->getDimensions();
-        return Wrapper::fromStdVectorToPyList(dims.toVector());
-    }
-
-
-    template <typename T>
-    void ImageDataWrap<T>::setDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& obj) {
-        if (bp::extract<karabo::util::Dims>(obj).check()) {
-            self->setDimensions(bp::extract<karabo::util::Dims>(obj));
-        } else if (bp::extract<bp::list>(obj).check()) {
-            karabo::util::Dims dims(Wrapper::fromPyListToStdVector<unsigned long long>(obj));
-            self->setDimensions(dims);
-        } else if (bp::extract<bp::tuple>(obj).check()) {
-            karabo::util::Dims dims(Wrapper::fromPyTupleToStdVector<unsigned long long>(obj));
-            self->setDimensions(dims);
-        } else
-            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
-    }
-
-
-    template <typename T>
-    bp::object ImageDataWrap<T>::getDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self) {
-        return Wrapper::fromStdVectorToPyList(self->getDimensionTypes());
-    }
+    //    boost::shared_ptr<karabo::xms::ImageData > ImageDataWrap::make5(const bp::object& obj,
+    //                                                                    const karabo::util::Dims& dimensions,
+    //                                                                    const karabo::xms::EncodingType encoding,
+    //                                                                    const int bitsPerPixel) {
+    //
+    //        using namespace karabo::util;
+    //        using namespace karabo::xms;
+    //
+    //        boost::shared_ptr<ImageData > self(new ImageData());
+    //
+    //        if (obj == bp::object())
+    //            return self;
+    //
+    //        if (PyArray_Check(obj.ptr())) {
+    //            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
+    //            const NDArray ndarray = Wrapper::fromPyArrayToNDArray(arr);
+    //            Dims _dimensions = ndarray.getShape();
+    //            const int rank = _dimensions.rank();
+    //
+    //            // Encoding
+    //            EncodingType _encoding = encoding;
+    //            if (encoding == Encoding::UNDEFINED) {
+    //                // No encoding info -> try to guess it from ndarray shape
+    //                if (rank == 2 || (rank == 3 && _dimensions.x3() == 1))
+    //                    _encoding = Encoding::GRAY;
+    //                else if (rank == 3 && _dimensions.x3() == 3)
+    //                    _encoding = Encoding::RGB;
+    //                else if (rank == 3 && _dimensions.x3() == 4)
+    //                    _encoding = Encoding::RGBA;
+    //            }
+    //
+    //            // Dimensions (shape)
+    //
+    //            if (_encoding == Encoding::RGB || _encoding == Encoding::RGBA ||
+    //                _encoding == Encoding::BGR || _encoding == Encoding::BGRA ||
+    //                _encoding == Encoding::CMYK || _encoding == Encoding::YUV) {
+    //                // Color images -> use ndarray dimensions
+    //                if (rank != 3) {
+    //                    throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
+    //                }
+    //                // Flip X & Y dimensions
+    //                _dimensions = Dims(_dimensions.x2(), _dimensions.x1(), _dimensions.x3());
+    //            } else if (_encoding == Encoding::GRAY) {
+    //                // Gray-scale images -> use ndarray dimensions
+    //                if ((rank != 2) && !((rank == 3) && (_dimensions.x3() == 1))) {
+    //                    throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
+    //                }
+    //                // Flip X & Y dimensions
+    //                if (rank == 2) {
+    //                    _dimensions.reverse();
+    //                } else {
+    //                    _dimensions = Dims(_dimensions.x2(), _dimensions.x1());
+    //                }
+    //            } else if (_encoding == Encoding::JPEG || _encoding == Encoding::PNG ||
+    //                       _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
+    //                // JPEG, PNG, BMP, TIFF -> cannot use ndarray dimensions, use therefore input parameter
+    //                _dimensions = dimensions;
+    //                if (dimensions.size() == 0) {
+    //                    throw KARABO_PYTHON_EXCEPTION("Dimensions must be supplied for encoded images");
+    //                }
+    //            } else {
+    //                // Other encodings. Likely it will need to be fixed!
+    //                _dimensions.reverse();
+    //            }
+    //
+    //            // XXX: Bits per pixel?
+    //            std::vector<unsigned long long> offsets(_dimensions.rank(), 0);
+    //            self->setDimensions(_dimensions);
+    //            self->setROIOffsets(Dims(offsets));
+    //            self->setEncoding(_encoding);
+    //        } else {
+    //            throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray");
+    //        }
+    //        return self;
+    //    }
+    //
+    //
+    //    bp::object ImageDataWrap::getDataPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+    //        return Wrapper::fromNDArrayToPyArray(self->getData());
+    //    }
+    //
+    //    //
+    //    //    void ImageDataWrap::setDataPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj) {
+    //    //        self->setData(Wrapper::fromPyArrayToNDArray(obj));
+    //    //    }
+    //
+    //
+    //    bp::object ImageDataWrap::getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+    //        karabo::util::Dims dims = self->getDimensions();
+    //        return Wrapper::fromStdVectorToPyList(dims.toVector());
+    //    }
+    //
+    //
+    //    void ImageDataWrap::setDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
+    //        if (bp::extract<karabo::util::Dims>(obj).check()) {
+    //            self->setDimensions(bp::extract<karabo::util::Dims>(obj));
+    //        } else if (bp::extract<bp::list>(obj).check()) {
+    //            karabo::util::Dims dims(Wrapper::fromPyListToStdVector<unsigned long long>(obj));
+    //            self->setDimensions(dims);
+    //        } else if (bp::extract<bp::tuple>(obj).check()) {
+    //            karabo::util::Dims dims(Wrapper::fromPyTupleToStdVector<unsigned long long>(obj));
+    //            self->setDimensions(dims);
+    //        } else
+    //            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
+    //    }
+    //
+    //
+    //    bp::object ImageDataWrap::getDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+    //        return Wrapper::fromStdVectorToPyList(self->getDimensionTypes());
+    //    }
+    //
+    //
+    //    void ImageDataWrap::setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
+    //        if (bp::extract<bp::list>(obj).check()) {
+    //            bp::ssize_t size = bp::len(obj);
+    //            std::vector<int> dimTypes(size);
+    //            for (int i = 0; i < size; i++) {
+    //                dimTypes[i] = bp::extract<int>(obj[i]);
+    //            }
+    //            self->setDimensionTypes(dimTypes);
+    //        } else
+    //            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
+    //    }
+    //
+    //
+    //    bp::object ImageDataWrap::getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+    //        karabo::util::Dims offsets = self->getROIOffsets();
+    //        return Wrapper::fromStdVectorToPyList(offsets.toVector());
+    //    }
+    //
+    //
+    //    void ImageDataWrap::setROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
+    //        if (bp::extract<karabo::util::Dims>(obj).check()) {
+    //            self->setROIOffsets(bp::extract<karabo::util::Dims>(obj));
+    //        } else if (bp::extract<bp::list>(obj).check()) {
+    //            karabo::util::Dims offsets(Wrapper::fromPyListToStdVector<unsigned long long>(obj));
+    //            self->setROIOffsets(offsets);
+    //        } else
+    //            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
+    //    }
+    //
+    //
+    //    bp::object ImageDataWrap::getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+    //        return bp::object(karabo::xms::EncodingType(self->getEncoding()));
+    //    }
+    //
+    //
+    //    void ImageDataWrap::setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& geometry) {
+    //        karabo::util::DetectorGeometry geo = bp::extract<karabo::util::DetectorGeometry>(geometry);
+    //        self->setGeometry(geo);
+    //    }
+    //
+    //
+    //    karabo::util::DetectorGeometry ImageDataWrap::getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+    //        return self->getGeometry();
+    //    }
+    //
+    //
+    //    void ImageDataWrap::setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& header) {
+    //        karabo::util::Hash head = bp::extract<karabo::util::Hash>(header);
+    //        self->setHeader(head);
+    //    }
+    //
+    //
+    //    const karabo::util::Hash& ImageDataWrap::getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+    //        return self->getHeader();
+    //    }
 
 
-    template <typename T>
-    void ImageDataWrap<T>::setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& obj) {
-        if (bp::extract<bp::list>(obj).check()) {
-            bp::ssize_t size = bp::len(obj);
-            std::vector<int> dimTypes(size);
-            for (int i = 0; i < size; i++) {
-                dimTypes[i] = bp::extract<int>(obj[i]);
-            }
-            self->setDimensionTypes(dimTypes);
-        } else
-            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
-    }
-
-
-    template <typename T>
-    bp::object ImageDataWrap<T>::getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self) {
-        karabo::util::Dims offsets = self->getROIOffsets();
-        return Wrapper::fromStdVectorToPyList(offsets.toVector());
-    }
-
-
-    template <typename T>
-    void ImageDataWrap<T>::setROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& obj) {
-        if (bp::extract<karabo::util::Dims>(obj).check()) {
-            self->setROIOffsets(bp::extract<karabo::util::Dims>(obj));
-        } else if (bp::extract<bp::list>(obj).check()) {
-            karabo::util::Dims offsets(Wrapper::fromPyListToStdVector<unsigned long long>(obj));
-            self->setROIOffsets(offsets);
-        } else
-            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
-    }
-
-
-    template <typename T>
-    bp::object ImageDataWrap<T>::getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self) {
-        return bp::object(karabo::xms::EncodingType(self->getEncoding()));
-    }
-
-
-    template <typename T>
-    void ImageDataWrap<T>::setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& geometry) {
-        karabo::util::DetectorGeometry geo = bp::extract<karabo::util::DetectorGeometry>(geometry);
-        self->setGeometry(geo);
-    }
-
-
-    template <typename T>
-    karabo::util::DetectorGeometry ImageDataWrap<T>::getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self) {
-        return self->getGeometry();
-    }
-
-
-    template <typename T>
-    void ImageDataWrap<T>::setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self, const bp::object& header){
-        karabo::util::Hash head = bp::extract<karabo::util::Hash>(header);
-        self->setHeader(head);
-    }
-
-
-    template <typename T>
-    const karabo::util::Hash& ImageDataWrap<T>::getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData<T> >& self) {
-        return self->getHeader();
-    }
-
-
-    template <typename T>
-    karabo::xms::ImageDataElement<T>& ImageDataElementWrap<T>::setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement<T> >& self,
-                                                                               const std::string& subKey,
-                                                                               const bp::object& defaultValue) {
-
-        boost::any anyValue;
-        karathon::Wrapper::toAny(defaultValue, anyValue);
-        return self->setDefaultValue(subKey, anyValue);
-    }
+    //    karabo::xms::ImageDataElement& ImageDataElementWrap::setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement >& self,
+    //                                                                         const std::string& subKey,
+    //                                                                         const bp::object& defaultValue) {
+    //
+    //        boost::any anyValue;
+    //        karathon::Wrapper::toAny(defaultValue, anyValue);
+    //        return self->setDefaultValue(subKey, anyValue);
+    //    }
 
 
     void OutputChannelWrap::registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
@@ -322,27 +253,7 @@ namespace karathon {
 
 
     void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data) {
-#define _KARABO_IMAGE_DATA_WRITE(dataType)\
-if (bp::extract<karabo::xms::ImageData<dataType> >(data).check()) {\
-    ScopedGILRelease nogil;\
-    self->write(bp::extract<karabo::xms::ImageData<dataType> >(data));\
-} else\
-
-        _KARABO_IMAGE_DATA_WRITE(bool)
-        _KARABO_IMAGE_DATA_WRITE(signed char)
-        _KARABO_IMAGE_DATA_WRITE(signed short)
-        _KARABO_IMAGE_DATA_WRITE(int)
-        _KARABO_IMAGE_DATA_WRITE(long long)
-        _KARABO_IMAGE_DATA_WRITE(unsigned char)
-        _KARABO_IMAGE_DATA_WRITE(unsigned short)
-        _KARABO_IMAGE_DATA_WRITE(unsigned int)
-        _KARABO_IMAGE_DATA_WRITE(unsigned long long)
-        _KARABO_IMAGE_DATA_WRITE(float)
-        _KARABO_IMAGE_DATA_WRITE(double)
-        if (bp::extract<karabo::xms::Data>(data).check()) {
-            ScopedGILRelease nogil;
-            self->write(bp::extract<karabo::xms::Data>(data));
-        } else if (bp::extract<karabo::util::Hash::Pointer>(data).check()) {
+        if (bp::extract<karabo::util::Hash::Pointer>(data).check()) {
             ScopedGILRelease nogil;
             self->write(bp::extract<karabo::util::Hash::Pointer>(data));
         } else
@@ -432,93 +343,11 @@ using namespace std;
 using namespace karabo::util;
 using namespace karabo::xms;
 
+
 template <typename T>
 void exportPyXmsImageData() {
 
-    const std::string typeName(karabo::util::Types::convert<karabo::util::FromTypeInfo, karabo::util::ToLiteral>(typeid(T)));
-
-    {
-        bp::class_<ImageData<T>, boost::shared_ptr<ImageData<T> >, bp::bases<Data> >(("ImageData" + typeName).c_str(), bp::init<>())
-
-            .def("__init__", bp::make_constructor(&karathon::ImageDataWrap<T>::make5,
-                                                bp::default_call_policies(),
-                                                (bp::arg("array"),
-                                                bp::arg("copy") = true,
-                                                bp::arg("dims") = karabo::util::Dims(),
-                                                bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
-                                                bp::arg("bitsPerPixel") = 8)))
-
-            .def("getData", &karathon::ImageDataWrap<T>::getDataPy)
-
-            .def("setData", &karathon::ImageDataWrap<T>::setDataPy, (bp::arg("data"), bp::arg("copy") = true))
-
-            .def("getDimensions", &karathon::ImageDataWrap<T>::getDimensionsPy)
-
-            .def("setDimensions", &karathon::ImageDataWrap<T>::setDimensionsPy, (bp::arg("dims")))
-
-            .def("getDimensionTypes", &karathon::ImageDataWrap<T>::getDimensionTypesPy)
-
-            .def("setDimensionTypes", &karathon::ImageDataWrap<T>::setDimensionTypesPy, (bp::arg("listOfDimTypes")))
-
-            .def("setIsBigEndian", &ImageData<T>::setIsBigEndian, (bp::arg("isBigEndian")))
-
-            .def("getROIOffsets", &karathon::ImageDataWrap<T>::getROIOffsetsPy)
-
-            .def("setROIOffsets", &karathon::ImageDataWrap<T>::setROIOffsetsPy, (bp::arg("offsets")))
-
-            .def("getEncoding", &karathon::ImageDataWrap<T>::getEncodingPy)
-
-            .def("setEncoding", &ImageData<T>::setEncoding, (bp::arg("encoding")))
-
-            .def("toBigEndian", &ImageData<T>::toBigEndian)
-
-            .def("toLittleEndian", &ImageData<T>::toLittleEndian)
-
-            .def("getDimensionScales", &ImageData<T>::getDimensionScales, bp::return_value_policy< bp::copy_const_reference >())
-
-            .def("setDimensionScales", &ImageData<T>::setDimensionScales, (bp::arg("scales")))
-
-            .def("setGeometry", &karathon::ImageDataWrap<T>::setGeometryPy, (bp::arg("geometry")))
-
-            .def("getGeometry", &karathon::ImageDataWrap<T>::getGeometryPy)
-
-            .def("getHeader", &karathon::ImageDataWrap<T>::getHeaderPy, bp::return_value_policy< bp::copy_const_reference >())
-
-            .def("setHeader", &karathon::ImageDataWrap<T>::setHeaderPy, (bp::arg("header")))
-            ;
-    }
-
-    {
-        bp::implicitly_convertible< Schema &, ImageDataElement<T> >();
-        bp::class_<ImageDataElement<T> > (("IMAGEDATA_" + typeName + "_ELEMENT").c_str(), bp::init<Schema & >((bp::arg("expected"))))
-
-                .def("key", &ImageDataElement<T>::key
-                     , (bp::arg("key"))
-                     , bp::return_internal_reference<> ())
-
-                .def("setDefaultValue", &karathon::ImageDataElementWrap<T>().setDefaultValue
-                     , (bp::arg("subKey"), bp::arg("defaultValue"))
-                     , bp::return_internal_reference<> ())
-
-                .def("commit", &ImageDataElement<T>::commit, bp::return_internal_reference<> ())
-
-                .def("setDimensionScales", &ImageDataElement<T>::setDimensionScales
-                     , (bp::arg("scales"))
-                     , bp::return_internal_reference<> ())
-
-                .def("setDimensions", &ImageDataElement<T>::setDimensions
-                     , (bp::arg("dims"))
-                     , bp::return_internal_reference<> ())
-
-                .def("setEncoding", &ImageDataElement<T>::setEncoding
-                     , (bp::arg("encoding"))
-                     , bp::return_internal_reference<> ())
-
-                .def("setGeometry", &ImageDataElement<T>::setGeometry
-                     , (bp::arg("geometry"))
-                     , bp::return_internal_reference<>())
-                ;
-    }
+    const std::string typeName(karabo::util::Types::convert<karabo::util::FromTypeInfo, karabo::util::ToLiteral>(typeid (T)));
 
 }
 
@@ -586,19 +415,83 @@ void exportPyXmsInputOutputChannel() {
                 .value("TIFF", karabo::xms::Encoding::TIFF)
                 .export_values()
                 ;
-
-        exportPyXmsImageData<bool>();
-        exportPyXmsImageData<signed char>();
-        exportPyXmsImageData<signed short>();
-        exportPyXmsImageData<int>();
-        exportPyXmsImageData<long long>();
-        exportPyXmsImageData<unsigned char>();
-        exportPyXmsImageData<unsigned short>();
-        exportPyXmsImageData<unsigned int>();
-        exportPyXmsImageData<unsigned long long>();
-        exportPyXmsImageData<float>();
-        exportPyXmsImageData<double>();
     }
+
+    //    {
+    //        bp::class_<ImageData, boost::shared_ptr<ImageData > >("ImageData", bp::init<>())
+    //
+    //                .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make5,
+    //                                                      bp::default_call_policies(),
+    //                                                      (bp::arg("array"),
+    //                                                       bp::arg("dims") = karabo::util::Dims(),
+    //                                                       bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
+    //                                                       bp::arg("bitsPerPixel") = 8)))
+    //
+    //                .def("getData", &karathon::ImageDataWrap::getDataPy)
+    //
+    //                //                .def("setData", &karathon::ImageDataWrap::setDataPy, (bp::arg("data")))
+    //
+    //                .def("getDimensions", &karathon::ImageDataWrap::getDimensionsPy)
+    //
+    //                .def("setDimensions", &karathon::ImageDataWrap::setDimensionsPy, (bp::arg("dims")))
+    //
+    //                .def("getDimensionTypes", &karathon::ImageDataWrap::getDimensionTypesPy)
+    //
+    //                .def("setDimensionTypes", &karathon::ImageDataWrap::setDimensionTypesPy, (bp::arg("listOfDimTypes")))
+    //
+    //                .def("getROIOffsets", &karathon::ImageDataWrap::getROIOffsetsPy)
+    //
+    //                .def("setROIOffsets", &karathon::ImageDataWrap::setROIOffsetsPy, (bp::arg("offsets")))
+    //
+    //                .def("getEncoding", &karathon::ImageDataWrap::getEncodingPy)
+    //
+    //                .def("setEncoding", &ImageData::setEncoding, (bp::arg("encoding")))
+    //
+    //                .def("getDimensionScales", &ImageData::getDimensionScales, bp::return_value_policy< bp::copy_const_reference >())
+    //
+    //                .def("setDimensionScales", &ImageData::setDimensionScales, (bp::arg("scales")))
+    //
+    //                .def("setGeometry", &karathon::ImageDataWrap::setGeometryPy, (bp::arg("geometry")))
+    //
+    //                .def("getGeometry", &karathon::ImageDataWrap::getGeometryPy)
+    //
+    //                .def("getHeader", &karathon::ImageDataWrap::getHeaderPy, bp::return_value_policy< bp::copy_const_reference >())
+    //
+    //                .def("setHeader", &karathon::ImageDataWrap::setHeaderPy, (bp::arg("header")))
+    //                ;
+    //    }
+    //    {
+    //        bp::implicitly_convertible< Schema &, ImageDataElement >();
+    //        bp::class_<ImageDataElement > ("IMAGEDATA_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+    //
+    //                .def("key", &ImageDataElement::key
+    //                     , (bp::arg("key"))
+    //                     , bp::return_internal_reference<> ())
+    //
+    //                .def("setDefaultValue", &karathon::ImageDataElementWrap().setDefaultValue
+    //                     , (bp::arg("subKey"), bp::arg("defaultValue"))
+    //                     , bp::return_internal_reference<> ())
+    //
+    //                .def("commit", &ImageDataElement::commit, bp::return_internal_reference<> ())
+    //
+    //                .def("setDimensionScales", &ImageDataElement::setDimensionScales
+    //                     , (bp::arg("scales"))
+    //                     , bp::return_internal_reference<> ())
+    //
+    //                .def("setDimensions", &ImageDataElement::setDimensions
+    //                     , (bp::arg("dims"))
+    //                     , bp::return_internal_reference<> ())
+    //
+    //                .def("setEncoding", &ImageDataElement::setEncoding
+    //                     , (bp::arg("encoding"))
+    //                     , bp::return_internal_reference<> ())
+    //
+    //                .def("setGeometry", &ImageDataElement::setGeometry
+    //                     , (bp::arg("geometry"))
+    //                     , bp::return_internal_reference<>())
+    //                ;
+    //    }
+
 
     {
         bp::class_<OutputChannel, boost::shared_ptr<OutputChannel>, boost::noncopyable >("OutputChannel", bp::no_init)

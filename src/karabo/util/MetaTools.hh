@@ -39,7 +39,6 @@ namespace karabo {
                 return v;
             }
 
-
             void inserting_derived_hash_classes_as_pointers_is_not_supported();
         };
 
@@ -55,13 +54,7 @@ namespace karabo {
             static const T& cast(const T& v) {
                 return v;
             }
-
-
-
         };
-
-
-
     }
 }
 

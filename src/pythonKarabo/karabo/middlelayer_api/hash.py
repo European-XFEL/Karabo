@@ -1080,7 +1080,7 @@ class VectorHash(Vector):
 
 
 class SchemaHashType(HashType):
-    number = 47
+    number = 32
 
     @classmethod
     def read(cls, file):
@@ -1160,7 +1160,7 @@ class Schema(Special):
 
 
 class None_(Type):
-    number = 50
+    number = 35
 
     @staticmethod
     def read(file):
