@@ -13,7 +13,7 @@ sphinx_rtd_theme imagesize sphinx decorator ipykernel ipython_genutils
 jupyter_core jupyter_client pickleshare wcwidth prompt_toolkit simplegeneric
 traitlets dill ipython h5py pyusb parse suds jsonschema ecdsa pycrypto paramiko
 tzlocal httplib2 pssh traits pint nbformat notebook ipyparallel ipcluster_tools
-cycler )
+cycler pyelftools rpathology )
 
 DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole pyqwt5 guidata guiqwt )
 
