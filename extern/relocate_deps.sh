@@ -31,6 +31,13 @@ relocate_python() {
     rewrite_python_shebangs
 }
 
+rewrite_build_machine_paths() {
+    # The bin directory
+    $INSTALL_PREFIX/bin/python3 ./builder_path_replace.py $INSTALL_PREFIX/bin __KARABO_CI_PATH__ $INSTALL_PREFIX
+    # The lib directory
+    $INSTALL_PREFIX/bin/python3 ./builder_path_replace.py $INSTALL_PREFIX/lib __KARABO_CI_PATH__ $INSTALL_PREFIX
+}
+
 rewrite_python_shebangs() {
     local new_shebang_line="#!/usr/bin/env python3"
     local sed_program='1 s%^.*$%'$new_shebang_line'%g'
@@ -66,3 +73,6 @@ INSTALL_PREFIX=$(get_abs_path $1)
 
 # Fix the Python build
 relocate_python
+
+# Rewrite instances where the local install path is needed
+rewrite_build_machine_paths
