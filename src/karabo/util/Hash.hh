@@ -196,6 +196,30 @@ namespace karabo {
             virtual ~Hash();
 
             /**
+             * Copy constructor
+             */
+            Hash(const Hash& other);
+            
+            /**
+             * Assignment of "lvalue"
+             */
+            Hash& operator=(const Hash& other);
+            
+#if __cplusplus >= 201103L
+            
+            /**
+             * Move constructor
+             */
+            Hash(Hash&& other);
+            
+            /**
+             * Assignment of "rvalue"
+             */
+            Hash& operator=(Hash&& other);
+            
+#endif
+            
+            /**
              * Merge the current hash with another one
              * @param other Hash object
              */
