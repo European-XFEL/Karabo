@@ -872,7 +872,7 @@ namespace karabo {
         void SignalSlotable::trackAllInstances() {
             m_trackAllInstances = true;
             m_heartbeatConsumerChannel->setFilter("signalFunction = 'signalHeartbeat'");
-            m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2));
+            m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, shared_from_this(), _1, _2));
         }
 
 
