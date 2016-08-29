@@ -202,8 +202,6 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(tmp.empty() == false);
     }
 
-#if __cplusplus >= 201103L
-    
     {
         // move constructor
         Hash tmp("a", 1);
@@ -224,8 +222,6 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<int>("a") == 1);
         CPPUNIT_ASSERT(tmp.empty() == true);
     }
-    
-#endif
     
 }
 
