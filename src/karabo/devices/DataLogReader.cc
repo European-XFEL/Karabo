@@ -8,7 +8,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include "karabo/io/Input.hh"
-#include "karabo/devices/DataLogUtils.hh"
+#include "karabo/util/DataLogUtils.hh"
 #include "karabo/io/FileTools.hh"
 #include "karabo/util/Version.hh"
 
@@ -249,7 +249,7 @@ namespace karabo {
                     return;
                 }
 
-                MetaSearchResult msr = navigateMetaRange(deviceId, idxFrom.m_fileindex, idxTo.m_fileindex, property, from, to);
+                karabo::util::MetaSearchResult msr = navigateMetaRange(deviceId, idxFrom.m_fileindex, idxTo.m_fileindex, property, from, to);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "MetaSearchResult: from : filenum=" << msr.fromFileNumber << " record=" << msr.fromRecord
                         << ", to : filenum=" << msr.toFileNumber << " record=" << msr.toRecord << ", list: " << toString(msr.nrecList);
@@ -593,7 +593,7 @@ namespace karabo {
 #define ROUND1MS(x)  std::floor(x*1000 + 0.5)/1000
 
 
-        MetaSearchResult DataLogReader::navigateMetaRange(const std::string& deviceId, size_t startnum, size_t tonum, const std::string& path,
+        karabo::util::MetaSearchResult DataLogReader::navigateMetaRange(const std::string& deviceId, size_t startnum, size_t tonum, const std::string& path,
                                                           const karabo::util::Epochstamp& efrom, const karabo::util::Epochstamp& eto) {
             MetaData::Record record;
             MetaSearchResult result;
