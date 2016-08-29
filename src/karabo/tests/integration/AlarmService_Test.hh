@@ -42,8 +42,6 @@ private:
     void testRecovery();
     void testDeviceKilled();
     void testDeviceReappeared();
-    void testDeviceKilled();
-    void testDeviceReappeared();
 
 
     //alarm service device
