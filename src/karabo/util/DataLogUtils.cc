@@ -11,7 +11,7 @@
 #include "DataLogUtils.hh"
 
 namespace karabo {
-    namespace devices {
+    namespace util {
 
 
         util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble) {
@@ -25,6 +25,6 @@ namespace karabo {
             return util::Epochstamp(seconds, fractions);
         }
 
-    } // end of karabo::core
+    } // end of karabo::util
 }
 

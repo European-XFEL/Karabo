@@ -11,7 +11,7 @@
 #include "karabo/util/Epochstamp.hh"
 
 namespace karabo {
-    namespace devices {
+    namespace util {
 
         char const * const DATALOGMANAGER_ID = "Karabo_DataLoggerManager_0";
         char const * const DATALOGGER_PREFIX = "DataLogger-";

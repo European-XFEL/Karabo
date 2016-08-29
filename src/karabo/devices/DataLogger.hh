@@ -13,10 +13,11 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 
-#include "Device.hh"
-#include "OkErrorFsm.hh"
-#include "Worker.hh"
-#include "DataLogUtils.hh"
+#include "karabo/util/DataLogUtils.hh"
+#include "karabo/core/Device.hh"
+#include "karabo/core/OkErrorFsm.hh"
+#include "karabo/core/Worker.hh"
+
 
 /**
  * The main karabo namespace
@@ -26,7 +27,7 @@ namespace karabo {
     /**
      * Namespace for package core
      */
-    namespace core {
+    namespace devices {
 
         class DataLogger : public karabo::core::Device<karabo::core::OkErrorFsm> {
 
@@ -42,7 +43,7 @@ namespace karabo {
             karabo::util::Timestamp m_lastDataTimestamp;
             bool m_pendingLogin;
 
-            std::map<std::string, karabo::core::MetaData::Pointer> m_idxMap;
+            std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap;
             std::vector<std::string> m_idxprops;
             size_t m_propsize;
             time_t m_lasttime;
@@ -101,4 +102,4 @@ namespace karabo {
     }
 }
 
-#endif	
+#endif
