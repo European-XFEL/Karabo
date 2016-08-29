@@ -4,6 +4,7 @@ import os
 import os.path as op
 import re
 import subprocess
+import tokenize
 
 
 def fix_paths(build_dir, search_pattern, replacement_text):
@@ -35,15 +36,22 @@ def read_file_type(path):
 
 def substitute_pattern(path, regex, replace_with):
     try:
-        with open(path, 'r') as fin:
+        with open(path, mode='rb') as fp:
+            encoding = tokenize.detect_encoding(fp.readline)[0]
+    except SyntaxError:
+        print('Unreadable file "{}" ignored'.format(path))
+        return
+
+    try:
+        with open(path, mode='r', encoding=encoding) as fin:
             text = fin.readlines()
-
-        rewritten_text = [regex.sub(replace_with, line) for line in text]
-        with open(path, 'w') as fout:
-            fout.writelines(rewritten_text)
-
     except UnicodeDecodeError:
-        print("Encountered UnicodeDecodeError in {}".format(path))
+        print('Failed to read file "{}"'.format(path))
+        return
+
+    rewritten_text = [regex.sub(replace_with, line) for line in text]
+    with open(path, mode='w', encoding=encoding) as fout:
+        fout.writelines(rewritten_text)
 
 
 def main():
