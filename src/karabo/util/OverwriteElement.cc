@@ -219,13 +219,15 @@ namespace karabo{
           
             OverwriteElement& OverwriteElement::setNewOverwriteRestrictions(OverwriteElement::Restrictions & restrictions) {
                 checkIfRestrictionApplies(m_restrictions.overwriteRestrictions);
-                if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
-                    OverwriteElement::Restrictions existing;
-                    existing.assignFromAttrVector(m_node->getAttribute < vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
-                    //now merge
-                    restrictions.merge(existing);
+                if (m_node) {
+                    if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
+                        OverwriteElement::Restrictions existing;
+                        existing.assignFromAttrVector(m_node->getAttribute < vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
+                        //now merge
+                        restrictions.merge(existing);
+                    }
+                    m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
                 }
-                m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
                 return *this;
             }
 
