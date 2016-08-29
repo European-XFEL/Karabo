@@ -12,8 +12,7 @@
 
 #include "karabo/core/Device.hh"
 #include "karabo/core/OkErrorFsm.hh"
-
-#include "DataLogUtils.hh"
+#include "karabo/util/DataLogUtils.hh"
 
 
 /**
@@ -115,8 +114,8 @@ namespace karabo {
 
             int getFileIndex(const std::string& deviceId);
 
-            MetaSearchResult navigateMetaRange(const std::string& deviceId, size_t startnum, size_t endnum, const std::string& path,
-                                               const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to);
+            karabo::util::MetaSearchResult navigateMetaRange(const std::string& deviceId, size_t startnum, size_t endnum, const std::string& path,
+                                                             const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to);
 
             /// Find index of that MetaData::Record in 'f' (between indices 'left' and 'right')
             /// that matches the Epochstamp 'stamp'. In case no exact match (within 1 ms) is found,

@@ -41,7 +41,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1423485062/AlarmService.o \
 	${OBJECTDIR}/_ext/1423485062/CentralLogging.o \
 	${OBJECTDIR}/_ext/1423485062/DataLogReader.o \
-	${OBJECTDIR}/_ext/1423485062/DataLogUtils.o \
 	${OBJECTDIR}/_ext/1423485062/DataLogger.o \
 	${OBJECTDIR}/_ext/1423485062/DataLoggerManager.o \
 	${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o \
@@ -119,6 +118,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/163016059/ByteSwap.o \
 	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
+	${OBJECTDIR}/_ext/163016059/DataLogUtils.o \
 	${OBJECTDIR}/_ext/163016059/DateTimeString.o \
 	${OBJECTDIR}/_ext/163016059/Epochstamp.o \
 	${OBJECTDIR}/_ext/163016059/Exception.o \
@@ -236,11 +236,6 @@ ${OBJECTDIR}/_ext/1423485062/DataLogReader.o: ../../../src/karabo/devices/DataLo
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/DataLogReader.o ../../../src/karabo/devices/DataLogReader.cc
-
-${OBJECTDIR}/_ext/1423485062/DataLogUtils.o: ../../../src/karabo/devices/DataLogUtils.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/DataLogUtils.o ../../../src/karabo/devices/DataLogUtils.cc
 
 ${OBJECTDIR}/_ext/1423485062/DataLogger.o: ../../../src/karabo/devices/DataLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
@@ -626,6 +621,11 @@ ${OBJECTDIR}/_ext/163016059/ClassInfo.o: ../../../src/karabo/util/ClassInfo.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/ClassInfo.o ../../../src/karabo/util/ClassInfo.cc
+
+${OBJECTDIR}/_ext/163016059/DataLogUtils.o: ../../../src/karabo/util/DataLogUtils.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/DataLogUtils.o ../../../src/karabo/util/DataLogUtils.cc
 
 ${OBJECTDIR}/_ext/163016059/DateTimeString.o: ../../../src/karabo/util/DateTimeString.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -1280,19 +1280,6 @@ ${OBJECTDIR}/_ext/1423485062/DataLogReader_nomain.o: ${OBJECTDIR}/_ext/142348506
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/DataLogReader_nomain.o ../../../src/karabo/devices/DataLogReader.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/DataLogReader.o ${OBJECTDIR}/_ext/1423485062/DataLogReader_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1423485062/DataLogUtils_nomain.o: ${OBJECTDIR}/_ext/1423485062/DataLogUtils.o ../../../src/karabo/devices/DataLogUtils.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1423485062/DataLogUtils.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/DataLogUtils_nomain.o ../../../src/karabo/devices/DataLogUtils.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1423485062/DataLogUtils.o ${OBJECTDIR}/_ext/1423485062/DataLogUtils_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1423485062/DataLogger_nomain.o: ${OBJECTDIR}/_ext/1423485062/DataLogger.o ../../../src/karabo/devices/DataLogger.cc 
@@ -2294,6 +2281,19 @@ ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o: ${OBJECTDIR}/_ext/163016059/Clas
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o ../../../src/karabo/util/ClassInfo.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/ClassInfo.o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/DataLogUtils_nomain.o: ${OBJECTDIR}/_ext/163016059/DataLogUtils.o ../../../src/karabo/util/DataLogUtils.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/DataLogUtils.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/DataLogUtils_nomain.o ../../../src/karabo/util/DataLogUtils.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/DataLogUtils.o ${OBJECTDIR}/_ext/163016059/DataLogUtils_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/DateTimeString_nomain.o: ${OBJECTDIR}/_ext/163016059/DateTimeString.o ../../../src/karabo/util/DateTimeString.cc 
