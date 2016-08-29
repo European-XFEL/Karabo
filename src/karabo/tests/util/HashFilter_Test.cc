@@ -377,8 +377,9 @@ void HashFilter_Test::testFilterByTag() {
         //        clog << "\nconfig:\n" << config << endl;
 
         Hash result;
+       
         HashFilter::byTag(schema, config, result, "KW;KW,BH", ",;");
-
+        std::clog << "RESULT " << result << std::endl;
         //        clog << "KW,BH\n" << result << endl;
 
         CPPUNIT_ASSERT(result.has("antiAlias") == false);

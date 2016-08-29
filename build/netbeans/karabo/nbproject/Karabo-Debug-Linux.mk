@@ -127,6 +127,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/FromTypeInfo.o \
 	${OBJECTDIR}/_ext/163016059/Hash.o \
 	${OBJECTDIR}/_ext/163016059/HashFilter.o \
+	${OBJECTDIR}/_ext/163016059/NDArray.o \
 	${OBJECTDIR}/_ext/163016059/OverwriteElement.o \
 	${OBJECTDIR}/_ext/163016059/PluginLoader.o \
 	${OBJECTDIR}/_ext/163016059/RollingWindowStatistics.o \
@@ -667,6 +668,11 @@ ${OBJECTDIR}/_ext/163016059/HashFilter.o: ../../../src/karabo/util/HashFilter.cc
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/HashFilter.o ../../../src/karabo/util/HashFilter.cc
 
+${OBJECTDIR}/_ext/163016059/NDArray.o: ../../../src/karabo/util/NDArray.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/NDArray.o ../../../src/karabo/util/NDArray.cc
+
 ${OBJECTDIR}/_ext/163016059/OverwriteElement.o: ../../../src/karabo/util/OverwriteElement.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
@@ -901,7 +907,7 @@ ${TESTDIR}/TestFiles/f6: ${TESTDIR}/_ext/1856679435/Authenticate_Test.o ${TESTDI
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f6 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
-${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/936507918/Image_Test.o ${TESTDIR}/_ext/936507918/RawImageData_Test.o ${TESTDIR}/_ext/936507918/xipTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/936507918/Image_Test.o ${TESTDIR}/_ext/936507918/xipTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f7 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -1166,12 +1172,6 @@ ${TESTDIR}/_ext/936507918/Image_Test.o: ../../../src/karabo/tests/xip/Image_Test
 	${MKDIR} -p ${TESTDIR}/_ext/936507918
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936507918/Image_Test.o ../../../src/karabo/tests/xip/Image_Test.cc
-
-
-${TESTDIR}/_ext/936507918/RawImageData_Test.o: ../../../src/karabo/tests/xip/RawImageData_Test.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/936507918
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936507918/RawImageData_Test.o ../../../src/karabo/tests/xip/RawImageData_Test.cc
 
 
 ${TESTDIR}/_ext/936507918/xipTestRunner.o: ../../../src/karabo/tests/xip/xipTestRunner.cc 
@@ -2398,6 +2398,19 @@ ${OBJECTDIR}/_ext/163016059/HashFilter_nomain.o: ${OBJECTDIR}/_ext/163016059/Has
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/HashFilter_nomain.o ../../../src/karabo/util/HashFilter.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/HashFilter.o ${OBJECTDIR}/_ext/163016059/HashFilter_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/NDArray_nomain.o: ${OBJECTDIR}/_ext/163016059/NDArray.o ../../../src/karabo/util/NDArray.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/NDArray.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/NDArray_nomain.o ../../../src/karabo/util/NDArray.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/NDArray.o ${OBJECTDIR}/_ext/163016059/NDArray_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/OverwriteElement_nomain.o: ${OBJECTDIR}/_ext/163016059/OverwriteElement.o ../../../src/karabo/util/OverwriteElement.cc 

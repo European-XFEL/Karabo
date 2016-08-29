@@ -377,38 +377,6 @@ namespace karabo {
                     }
                     discoverAttributes(el, h);
 
-                } else if (Types::isRawArray(t)) {
-                    string ptrType = ToType<ToLiteral>::to(t);
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << ptrType;
-                    string vecType = "VECTOR_" + ptrType.substr(6);
-                    Hash& h = hc.bindReference<Hash > (vecType);
-                    h.set("h5name", key);
-                    h.set("h5path", path);
-                    h.set("key", newKeyPath);
-                    h.set("type", ptrType);
-                    h.set("chunkSize", policy->getDefaultChunkSize());
-                    h.set("compressionLevel", policy->getDefaultCompressionLevel());
-                    switch (t) {
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(INT32, int)
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(UINT32, unsigned int)
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(FLOAT, float)
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(DOUBLE, double)
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(INT16, short)
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(UINT16, unsigned short)
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(INT64, long long)
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(UINT64, unsigned long long)
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(INT8, signed char)
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(UINT8, unsigned char)
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(CHAR, char)
-                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(BOOL, bool)
-
-                        default:
-                            throw KARABO_NOT_SUPPORTED_EXCEPTION("Type not supported for key " + key);
-                    }
-
-
-                    discoverAttributes(el, h);
-
                 } else {
                     Hash& h = hc.bindReference<Hash > (ToType<ToLiteral>::to(t));
                     h.set("h5name", key);

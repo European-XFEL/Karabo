@@ -10,6 +10,7 @@
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/io/TextSerializer.hh"
 #include "karabo/util/TimeProfiler.hh"
+#include "karabo/util/NDArray.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashBinarySerializer_Test);
 
@@ -75,6 +76,10 @@ void HashBinarySerializer_Test::setUp() {
     h.set<vector<complex<double> > >("vec_cd", vector < complex<double> >(1000, complex<double>(3., 4.)));
     h.set<vector<string> > ("vec_str", vector<string>(1000, "Hello Karabo"));
 
+    NDArray ndarr(Dims(10, 10, 10), 1);
+    h.set("ndarr", ndarr);
+
+
     h.setAttribute < vector<bool> >("vec_bool", "vec_bool", vector<bool>(1000, true));
     h.setAttribute<vector<char> >("vec_char", "vec_char", vector<char>(1000, 'c'));
     h.setAttribute<vector<unsigned char> >("vec_uint8", "vec_uint8", vector<unsigned char>(1000, 8));
@@ -92,7 +97,7 @@ void HashBinarySerializer_Test::setUp() {
     h.setAttribute<vector<string> > ("vec_str", "vec_str", vector<string>(1000, "Hello Karabo"));
 
     m_hash.set<Hash>("hash", h);
-    m_hash.set<vector<Hash> >("vec_hash", vector<Hash >(100, h));
+    //m_hash.set<vector<Hash> >("vec_hash", vector<Hash >(100, h));
 
     Schema s;
     s.setParameterHash(h);
@@ -127,6 +132,9 @@ void HashBinarySerializer_Test::testSerialization() {
     clog << "\n Average de-serialization time: " << ave << " ms" << endl;
 
     CPPUNIT_ASSERT(karabo::util::similar(hash, m_hash));
+
+    // Some selected value tests
+    CPPUNIT_ASSERT(hash.get<NDArray>("hash.ndarr").getData<int>()[42] == 1);
 
     p->save(hash, archive2);
 
