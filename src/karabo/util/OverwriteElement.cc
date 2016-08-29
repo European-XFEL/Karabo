@@ -235,7 +235,7 @@ namespace karabo{
             
          
             void OverwriteElement::checkIfRestrictionApplies(const Restrictions::Restriction& restriction) const {
-                if (restriction == true) {
+                if (restriction == true && m_node) {
                     const std::string& key = m_node->getKey();
                     const std::string& name = restriction.name;
                     const std::string& msg = "Element (" + key + ") does not allow overwriting attribute " + name + "!";

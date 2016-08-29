@@ -1271,7 +1271,7 @@ namespace karabo {
                 // Check cache, whether a special set of state-dependent expected parameters was created before
                 std::map<std::string, Schema>::iterator it = m_stateDependendSchema.find(currentState);
                 if (it == m_stateDependendSchema.end()) { // No
-                    it = m_stateDependendSchema.insert(make_pair(currentState, Device::getSchema(m_classId, Schema::AssemblyRules(WRITE | READ | INIT, currentState)))).first; // New one
+                    it = m_stateDependendSchema.insert(make_pair(currentState, Device::getSchema(m_classId, Schema::AssemblyRules(WRITE, currentState)))).first; // New one
                     KARABO_LOG_DEBUG << "Providing freshly cached state-dependent schema:\n" << it->second;
                     if (!m_injectedSchema.empty()) it->second.merge(m_injectedSchema);
                 } else {
