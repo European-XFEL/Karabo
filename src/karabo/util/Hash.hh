@@ -205,8 +205,6 @@ namespace karabo {
              */
             Hash& operator=(const Hash& other);
             
-#if __cplusplus >= 201103L
-            
             /**
              * Move constructor
              */
@@ -216,8 +214,6 @@ namespace karabo {
              * Assignment of "rvalue"
              */
             Hash& operator=(Hash&& other);
-            
-#endif
             
             /**
              * Merge the current hash with another one

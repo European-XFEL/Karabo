@@ -45,9 +45,6 @@ namespace karabo {
         }
 
         
-#if __cplusplus >= 201103L
-
-
         Hash::Hash(Hash&& other) : m_container() {
             m_container = std::move(other.m_container);
         }
@@ -62,8 +59,6 @@ namespace karabo {
             }
             return *this;
         }
-
-#endif
 
 
         Hash::const_iterator Hash::begin() const {
