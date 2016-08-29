@@ -7,7 +7,7 @@ import subprocess
 import tokenize
 
 
-def fix_paths(build_dir, search_pattern, replacement_text):
+def fix_paths(build_dir, search_pattern, replacement_text, fix_links=False):
     abs_build_dir = op.abspath(build_dir)
     regex = re.compile(re.escape(search_pattern))
 
@@ -17,6 +17,8 @@ def fix_paths(build_dir, search_pattern, replacement_text):
             file_type = read_file_type(path)
             if file_type.startswith('text'):
                 substitute_pattern(path, regex, replacement_text)
+            elif file_type == 'inode/symlink' and fix_links:
+                substitute_symlink(path, regex, replacement_text)
 
 
 def run_cmd(cmd):
@@ -54,9 +56,18 @@ def substitute_pattern(path, regex, replace_with):
         fout.writelines(rewritten_text)
 
 
+def substitute_symlink(path, regex, replace_with):
+    link_path = os.readlink(path)
+    rewritten_link = regex.sub(replace_with, link_path)
+    os.remove(path)
+    os.symlink(rewritten_link, path)
+
+
 def main():
     parser = ap.ArgumentParser(
         formatter_class=ap.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--fix-links', '-l', action='store_true',
+                        help='Use this flag if symlinks should be rewritten')
     parser.add_argument('build_directory',
                         help='The $INSTALL_PREFIX of an external deps build.')
     parser.add_argument('search_pattern',
@@ -65,7 +76,8 @@ def main():
                         help='The text to replace "search_pattern" with')
 
     args = parser.parse_args()
-    fix_paths(args.build_directory, args.search_pattern, args.replace_text)
+    fix_paths(args.build_directory, args.search_pattern, args.replace_text,
+              fix_links=args.fix_links)
 
 if __name__ == '__main__':
     main()
