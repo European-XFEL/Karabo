@@ -22,7 +22,6 @@ namespace karabo {
         template<class KeyType, class MappedType>
         class OrderedMap {
 
-
             typedef std::list<MappedType*> ListType;
             typedef std::map<KeyType, MappedType> MapType;
 
@@ -93,8 +92,15 @@ namespace karabo {
             // Destructor
             virtual ~OrderedMap();
 
-
             OrderedMap<KeyType, MappedType>& operator=(const OrderedMap<KeyType, MappedType>& other);
+
+#if __cplusplus >= 201103L
+
+            OrderedMap(OrderedMap<KeyType, MappedType>&& other);
+
+            OrderedMap<KeyType, MappedType>& operator=(OrderedMap<KeyType, MappedType>&& other);
+
+#endif
 
             list_iterator lbegin();
 
@@ -278,6 +284,34 @@ namespace karabo {
             }
             return *this;
         }
+
+#if __cplusplus >= 201103L
+
+        template<class KeyType, class MappedType>
+        OrderedMap<KeyType, MappedType>::OrderedMap(OrderedMap<KeyType, MappedType>&& other)
+            : m_listNodes()
+            , m_mapNodes() {
+            if (!other.empty()) {
+                m_listNodes = std::move(other.m_listNodes);
+                m_mapNodes = std::move(other.m_mapNodes);
+            }
+        }
+
+        template<class KeyType, class MappedType>
+        OrderedMap<KeyType, MappedType>& OrderedMap<KeyType, MappedType>::operator=(OrderedMap<KeyType, MappedType>&& other) {
+            if (this != &other) {
+                this->m_listNodes.clear();
+                this->m_mapNodes.clear();
+
+                if (!other.empty()) {
+                    m_listNodes = std::move(other.m_listNodes);
+                    m_mapNodes = std::move(other.m_mapNodes);
+                }
+            }
+            return *this;
+        }
+
+#endif
 
         template<class KeyType, class MappedType>
         inline typename OrderedMap<KeyType, MappedType>::list_iterator OrderedMap<KeyType, MappedType>::lbegin() {
