@@ -10,25 +10,24 @@
 #ifndef KARABO_CORE_GUISERVERDEVICE_HH
 #define	KARABO_CORE_GUISERVERDEVICE_HH
 
-#include <karabo/core/ProjectManager.hh>
-#include <karabo/net/Channel.hh>
-#include <karabo/net/Connection.hh>
-#include <karabo/xms/InputChannel.hh>
+#include "karabo/devices/ProjectManager.hh"
+#include "karabo/net/Channel.hh"
+#include "karabo/net/Connection.hh"
+#include "karabo/xms/InputChannel.hh"
 
-#include "Device.hh"
-#include "OkErrorFsm.hh"
+#include "karabo/core/Device.hh"
+#include "karabo/core/OkErrorFsm.hh"
 
 /**
  * The main karabo namespace
  */
 namespace karabo {
 
-    namespace core {
+    namespace devices {
 
         class GuiServerDevice : public karabo::core::Device<> {
 
             struct NetworkConnection {
-
 
                 std::string name;
                 karabo::net::Channel::Pointer channel;
@@ -37,7 +36,6 @@ namespace karabo {
             typedef std::multimap<karabo::xms::InputChannel::Pointer, NetworkConnection> NetworkMap;
 
             enum QueueBehaviorsTypes {
-
 
                 REMOVE_OLDEST = 3, LOSSLESS
             };
