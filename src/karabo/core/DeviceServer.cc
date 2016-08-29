@@ -361,6 +361,8 @@ namespace karabo {
 
             this->startFsm();
             t.join();
+                
+            karabo::net::EventLoop::stop();
 
             // TODO That should be the right solution, but we never get here
             m_serverIsRunning = false;

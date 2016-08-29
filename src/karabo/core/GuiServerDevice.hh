@@ -42,7 +42,6 @@ namespace karabo {
                 REMOVE_OLDEST = 3, LOSSLESS
             };
 
-            karabo::net::IOService::Pointer m_ioService;
             karabo::net::Connection::Pointer m_dataConnection;
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
@@ -52,7 +51,6 @@ namespace karabo {
             mutable boost::mutex m_networkMutex;
 
             karabo::net::BrokerConnection::Pointer m_loggerConnection;
-            karabo::net::BrokerIOService::Pointer m_loggerIoService;
             karabo::net::BrokerChannel::Pointer m_loggerChannel;
             std::map<std::string, int> m_monitoredDevices;
             NetworkMap m_networkConnections;
@@ -85,13 +83,13 @@ namespace karabo {
 
             void safeAllClientsWrite(const karabo::util::Hash& message, int prio = LOSSLESS);
 
-            void onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorMessage);
+            void onError(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel);
 
             void onGuiError(const karabo::util::Hash& hash);
 
-            void onConnect(karabo::net::Channel::Pointer channel);
+            void onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel);
 
-            void onRead(karabo::net::Channel::Pointer channel, karabo::util::Hash& info);
+            void onRead(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel, karabo::util::Hash& info);
 
             void onLogin(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 

@@ -157,16 +157,16 @@ namespace karabo {
 
         private:
 
-            void onTcpConnect(const TcpChannelPointer& channel);
+            void onTcpConnect(const karabo::net::ErrorCode& ec, const TcpChannelPointer& channel);
 
 
             // TODO Implement this !!!!
 
-            void onTcpConnectionError(const karabo::net::Connection::Pointer& conn, const karabo::net::ErrorCode& error);
+            //void onTcpConnectionError(const karabo::net::Connection::Pointer& conn, const karabo::net::ErrorCode& error);
 
-            void onTcpChannelError(const TcpChannelPointer& channel, const karabo::net::ErrorCode& error);
+            void onTcpChannelError(const karabo::net::ErrorCode& ec, const TcpChannelPointer& channel);
 
-            void onTcpChannelRead(const TcpChannelPointer& channel, const karabo::util::Hash& message);
+            void onTcpChannelRead(const karabo::net::ErrorCode& ec, const TcpChannelPointer& channel, const karabo::util::Hash& message);
 
             void onInputAvailable(const std::string& instanceId);
 
