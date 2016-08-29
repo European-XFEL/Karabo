@@ -4,7 +4,7 @@
     - export DEPS_BASE_NAME=$(lsb_release -is)-$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
     - export DEPS_DIR_ABS_PATH=$(pwd -P)/$DEPS_BASE_NAME
     - bash build.sh -q $DEPS_BASE_NAME CI
-    - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py $DEPS_BASE_NAME/bin $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
+    - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py --fix-links $DEPS_BASE_NAME/bin $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
     - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py $DEPS_BASE_NAME/lib $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
     - bash build.sh -p $DEPS_BASE_NAME CI
     - sshpass -p "$XDATA_PWD" scp $DEPS_BASE_NAME*.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps/
