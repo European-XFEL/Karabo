@@ -9,10 +9,10 @@ from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer
 from PyQt4.QtGui import QAction, QApplication, QDialog, QLabel, QPixmap
 
 from karabo.middlelayer import Integer, Number, String
-import karabo_gui.globals as globals
+import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
 from karabo_gui.messagebox import MessageBox
-from karabo_gui.util import getOpenFileName
+from karabo_gui.util import getOpenFileName, temp_file
 from karabo_gui.widget import DisplayWidget
 
 
@@ -102,18 +102,17 @@ class Dialog(QDialog):
             try:
                 buffer = QBuffer(ba)
                 buffer.open(QBuffer.WriteOnly)
-                image = mime.imageData().save(buffer, "PNG")
+                suffix = 'PNG'
+                mime.imageData().save(buffer, suffix)
                 data = buffer.data()
+                dir = krb_globals.HIDDEN_KARABO_FOLDER
                 image_name = hashlib.sha1(data).hexdigest()
-                filename = path.join(globals.HIDDEN_KARABO_FOLDER, image_name)
-                # Save temporary image to file system
-                with open(filename, "wb") as out:
-                    out.write(data)
+                with temp_file(suffix=suffix, prefix=image_name,
+                               dir=dir) as (fd, filename):
+                    os.write(fd, data)
+                    self.setURL(filename)
             finally:
                 buffer.close()
-            self.setURL(filename)
-            # Remove temporary image from file system
-            os.remove(filename)
         else:
             try:
                 filename = mime.text().split()[0].strip()
