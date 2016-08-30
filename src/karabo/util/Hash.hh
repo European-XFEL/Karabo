@@ -198,12 +198,12 @@ namespace karabo {
             /**
              * Copy constructor
              */
-            Hash(const Hash& other);
+            Hash(const Hash& other) = default;
             
             /**
              * Assignment of "lvalue"
              */
-            Hash& operator=(const Hash& other);
+            Hash& operator=(const Hash& other) = default;
             
             /**
              * Move constructor
