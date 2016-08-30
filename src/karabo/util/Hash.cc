@@ -35,10 +35,8 @@ namespace karabo {
 
 
         Hash& Hash::operator=(Hash&& other) {
-            if (this != &other) {
-                m_container.clear();
+            if (this != &other)
                 m_container = std::move(other.m_container);
-            }
             return *this;
         }
 
