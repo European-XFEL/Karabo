@@ -3,8 +3,6 @@
 # Created on August 10, 2015
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
 """
 This module contains a class which represents a widget plugin for tables and 
 is created as a composition of EditableWidget and DisplayWidget. Rendering in 
@@ -34,12 +32,15 @@ The Table widget supports drag and drop of deviceId's from the navigation and
 project panel. Dropping on a string cell will replace the string with the deviceId.
 Dropping on a non-string cell or on an empty region will add a row in which the
 first string-type column encountered is pre-filled with the deviceID.
-
-
 """
+import copy
 
-__all__ = ["EditableTableElement"]
-
+from PyQt4.QtGui import (
+    QTableView, QAbstractItemView, QMenu, QDialog, QComboBox, QVBoxLayout,
+    QWidget, QDialogButtonBox, QCheckBox, QItemDelegate, QStyledItemDelegate,
+    QSizePolicy)
+from PyQt4.QtCore import (Qt, QAbstractTableModel, QModelIndex, QObject,
+                          SIGNAL, SLOT, pyqtSlot)
 
 from karabo.middlelayer import Hash, Type, VectorHash, SchemaHashType
 from karabo_gui.widget import DisplayWidget, EditableWidget
@@ -48,14 +49,6 @@ from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.const import ns_karabo
 from karabo_gui.topology import getDevice, Manager
 import karabo_gui.schema as schema
-
-from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog, QComboBox,
-                        QVBoxLayout, QWidget, QDialogButtonBox, QCheckBox,
-                        QItemDelegate, QStyledItemDelegate, QSizePolicy)
-from PyQt4.QtCore import (Qt, QAbstractTableModel, QModelIndex, QObject,
-                          SIGNAL, SLOT, pyqtSlot)
-
-import copy
 
 
 class TableModel(QAbstractTableModel):
@@ -213,14 +206,10 @@ class TableModel(QAbstractTableModel):
         
     def setData(self, idx, value, role, isAliasing = None, fromValueChanged = False):
         """"""
-        
         if not idx.isValid():
             return False
-        
-       
-        
+
         if role == Qt.CheckStateRole:
-            
             row = idx.row()
             
             columnKey = self.columnHash.getKeys()[idx.column()]
@@ -241,10 +230,7 @@ class TableModel(QAbstractTableModel):
             
             if col < 0 or col >= len(self.columnHash):
                 return False
-            
-            
-            
-            
+
             cKey = self.columnHash.getKeys()[col]
             valueType = self.columnSchema.getValueType(cKey)()
             
@@ -265,19 +251,12 @@ class TableModel(QAbstractTableModel):
             
                 
             if isAliasing != None:
-               
                 value = self._addMonitor(row, col, isAliasing, role)
-                
-                    
             #now display value
             try:
                 value = valueType.cast(value)
             except:
                 value = None
-                
-           
-                
-                
             self.cdata[row][cKey] = value
             
             self.dataChanged.emit(idx,idx)
@@ -346,11 +325,8 @@ class TableModel(QAbstractTableModel):
         self.endRemoveRows()
         self.editingFinished(self.cdata)
         return True
-    
-    
-    
+
     def duplicateRow(self, pos):
-        
         self.insertRows(pos+1, 1, QModelIndex(), self.cdata[pos])
     
     def getHashList(self):
@@ -358,8 +334,6 @@ class TableModel(QAbstractTableModel):
     
     def setHashList(self, data):
         self.cdata = data
-
-
 
 
 class FromPropertyPopUp(QDialog):
@@ -405,9 +379,7 @@ class FromPropertyPopUp(QDialog):
         self.layout.addWidget(self.propertyCombo)
         self.layout.addWidget(self.actAsMonitorCheck)
         self.layout.addWidget(self.buttonBox)
-        
-        
-        
+
     def getCurrentDeviceInstances(self):
         devicesHash = Manager().systemHash["device"]
         devices = []
@@ -420,10 +392,7 @@ class FromPropertyPopUp(QDialog):
     def deviceIdSelectionChanged(self, deviceId):
         self.propertyCombo.clear()
         self.selectedDeviceId = deviceId
-       
-        
         descriptor = getDevice(deviceId).descriptor
-        
         if descriptor is not None:
             properties = []
             for i, v in descriptor.dict.items():
@@ -432,9 +401,7 @@ class FromPropertyPopUp(QDialog):
                     properties.append(i)
             
             self.propertyCombo.addItems(properties)
-        
-            
-            
+
     def delayedSchema(self):
         if self.propertyCombo.count() == 0:
             self.deviceIdSelectionChanged(self.selectedDeviceId)
@@ -472,38 +439,34 @@ class ComboBoxDelegate(QItemDelegate):
         self.commitData.emit(self.sender())
         
     def setModelData(self, editor, model, index):
-        
         model.setData(index, self.options[editor.currentIndex()], Qt.EditRole)
-        
-        
+
+
 class KaraboTableView(QTableView):
-    def __init__(self, columnSchema,  *args):
-        super(KaraboTableView, self).__init__(*args)
-        
+    def __init__(self, columnSchema=None, parent=None):
+        super(KaraboTableView, self).__init__(parent)
+        self.setColumnSchema(columnSchema)
+
+    def setColumnSchema(self, columnSchema):
+        if columnSchema is None:
+            return
         self.columnSchema  = columnSchema
         self.cHash = self.columnSchema.hash if self.columnSchema is not None else Hash()
         self.cKeys = self.cHash.getKeys()
         self.firstStringColumn = None
         #self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         
-        
-        
         for c, cKey in enumerate(self.cKeys):
             valueType = self.columnSchema.getValueType(self.cKeys[c])()
             if isinstance(valueType, schema.String):
                 self.firstStringColumn = c
                 break
-                
-      
-        
-        
+
     def checkAcceptance(self, e):
         if e.mimeData().data("sourceType") == "NavigationTreeView" or \
            e.mimeData().data("sourceType") == "internal":
             idx = self.indexAt(e.pos())
-            
-            
-            
+
             valueType = self.columnSchema.getValueType(self.cKeys[idx.column()])()
             source = e.source() 
             itemInfo = source.indexInfo(source.currentIndex())
@@ -516,8 +479,7 @@ class KaraboTableView(QTableView):
                 or isDeviceFromProject):
                 e.accept()
                 return True, idx, True
-            
-           
+
             if not isinstance(valueType, schema.String) and (type == NavigationItemTypes.DEVICE \
                 or isDeviceFromProject):
                 e.accept()
@@ -528,11 +490,7 @@ class KaraboTableView(QTableView):
                 (type == NavigationItemTypes.DEVICE or isDeviceFromProject):
                 e.accept()
                 return True, idx, False
-            
-            
-            
-            
-            
+
         e.ignore()
         return False, None, None
         
@@ -561,15 +519,8 @@ class KaraboTableView(QTableView):
                     
                 else:
                     return
-                
-            
             self.model().setData(index, deviceId, Qt.EditRole)
-            
-           
-            
-            
-            
-    
+
 
 class EditableTableElement(EditableWidget, DisplayWidget):
     category = VectorHash
@@ -578,21 +529,12 @@ class EditableTableElement(EditableWidget, DisplayWidget):
 
     def __init__(self, box, parent, role = Qt.EditRole):
         super(EditableTableElement, self).__init__(box)
-        
         self.role = role 
-        self.columnSchema = None
-        if hasattr(box.descriptor, "rowSchema"):
-            self.columnSchema = box.descriptor.rowSchema
-        
-        self.columnHash = self.columnSchema.hash if self.columnSchema is not None else Hash()
-        
-        self.tableModel = TableModel(self.columnSchema, self.onEditingFinished)
-        self.tableModel.setRole(self.role)
-        
-        self.widget = KaraboTableView(self.columnSchema)
-        self.widget.setModel(self.tableModel)
-        self.widget.setSelectionBehavior(QAbstractItemView.SelectItems | \
-                QAbstractItemView.SelectRows | QAbstractItemView.SelectColumns)
+
+        self.widget = KaraboTableView(parent=parent)
+        self.widget.setSelectionBehavior(
+            QAbstractItemView.SelectItems | QAbstractItemView.SelectRows |
+            QAbstractItemView.SelectColumns)
         self.widget.horizontalHeader().setStretchLastSection(True)
         self.widget.verticalHeader()
         
@@ -601,35 +543,30 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             self.widget.setAcceptDrops(True)
         else:
             self.widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        
         self.widget.setSelectionMode(QAbstractItemView.SingleSelection)
-        
+
         #add context menu to cells
         self.widget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.widget.customContextMenuRequested.connect(self.cellPopUp)
-        
-        #add context menu to headers to add and remove rows
         self.leftTableHeader = self.widget.verticalHeader()
         self.colsWithCombos = []
+
+        self.columnSchema = None
+        self.columnHash = None
+        self.tableModel = None
+        if hasattr(box.descriptor, "rowSchema"):
+            self._setColumnSchema(box.descriptor.rowSchema)
+
+        #add context menu to headers to add and remove rows
         if self.role == Qt.EditRole:
             self.leftTableHeader.setContextMenuPolicy(Qt.CustomContextMenu)
             self.leftTableHeader.customContextMenuRequested.connect(self._headerPopUp)
- 
             self._setComboBoxes(False)
-       
-        
-
-   
-        
-        
   
-
     def _setComboBoxes(self, ro):
         if self.columnSchema is None:
-            return 
-        
+            return
         if ro:
-            
             #remove any combo delegate
             cHash = self.columnSchema.hash
             cKeys = self.columnHash.getKeys()
@@ -639,9 +576,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                 if cHash.hasAttribute(cKey, "options"):
                     delegate = QStyledItemDelegate()
                     self.widget.setItemDelegateForColumn(col, delegate)
-                    
         else:
-            
             self.leftTableHeader.setContextMenuPolicy(Qt.CustomContextMenu)
             self.leftTableHeader.customContextMenuRequested.connect(self._headerPopUp)
  
@@ -654,8 +589,6 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                     delegate = ComboBoxDelegate(cHash.getAttribute(cKey, "options"))
                     self.widget.setItemDelegateForColumn(col, delegate)
                     self.colsWithCombos.append(col)
-            
-                    
             self._updateComboBoxes()
                     
     def _updateComboBoxes(self):
@@ -674,48 +607,27 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         ret = ret.cast(self.tableModel.getHashList())
         return ret
 
-
-
-    def save(self, element):
-        element.set(ns_karabo + "columnSchema", SchemaHashType.toString(self.columnSchema))
-        
-
-    def load(self, element):
-        try:
-            if self.columnSchema is None:
-                schema = SchemaHashType.fromstring(element.get(ns_karabo + "columnSchema"))
-                self._setColumnSchema(schema)
-        except AttributeError:
-            print("Loading column schema failed. Maybe this is an older "
-                  "project file. Try saving the project and reloading.")
-            pass
-
     def _setColumnSchema(self, schema):
         """ Give derived classes a place to respond to changes. """
         self.columnSchema = schema
-        self.columnHash = self.columnSchema.hash
+        self.columnHash = schema.hash if schema is not None else Hash()
         self.tableModel = TableModel(self.columnSchema, self.onEditingFinished)
         self.tableModel.setRole(self.role)
         self.widget.setModel(self.tableModel)
+        self.widget.setColumnSchema(self.columnSchema)
         self._setComboBoxes(self.role == Qt.DisplayRole)
 
     def valueChanged(self, box, value, timestamp=None):
-      
         if value is None:
             return
-        
+
         if self.tableModel.rowCount(None) > len(value):
             self.tableModel.removeRows(len(value)-1,
                 self.tableModel.rowCount(None)-len(value), QModelIndex())
-        
-        
         #add rows if necessary
         if self.tableModel.rowCount(None) < len(value):
             self.tableModel.insertRows(self.tableModel.rowCount(None),
                 len(value)- self.tableModel.rowCount(None), QModelIndex())
-                
-      
-            
         for r, row in enumerate(value):
             ckeys = row.getKeys()
             for c, col in enumerate(ckeys):
@@ -725,24 +637,18 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                     isAliasing = row.getAttribute(col, "isAliasing")
                 self.tableModel.setData(idx, row[col], self.role, isAliasing,
                     fromValueChanged = True)
-       
-        self._updateComboBoxes()
-      
 
+        self._updateComboBoxes()
 
     def onEditingFinished(self, value):
         self._updateComboBoxes()
         EditableWidget.onEditingFinished(self, value)
-        
-        
-        
+
     def _headerPopUp(self, pos):
         idx = None
         for i in self.widget.selectionModel().selection().indexes():
             idx = i
-            
-       
-            
+
         menu = QMenu()
         if idx != None:
             addAction = menu.addAction("Add Row below")
@@ -772,54 +678,45 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                 action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
                 if action == addAction:
                     self.tableModel.insertRows(self.tableModel.rowCount(None), 1, QModelIndex())
-            
-        
-            
-            
+
     def cellPopUp(self, pos):
         idx = None
         for i in self.widget.selectionModel().selection().indexes():
             idx = i
-        
-        
-        
         menu = QMenu()
-        
         if idx is None or not idx.isValid():
             addAction = menu.addAction("Add Row to end")
             action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
             if action == addAction:
                 self.tableModel.insertRows(self.tableModel.rowCount(None), 1, QModelIndex())
             return
-        
+
         #action to pop up from property field
         setFromPropertyAction = None
         if self.role == Qt.EditRole:
             setFromPropertyAction = menu.addAction("From device property")
-        
-        
+
         #check if this cell can be set to a default value
         col = idx.column()
-    
+
         setDefaultAction = None
-       
+
         cKey = None
         if col >= 0 and col < len(self.columnHash):
             cKey = self.columnHash.getKeys()[col]
             
             if self.columnHash.hasAttribute(cKey, "defaultValue") and self.role == Qt.EditRole:
                 setDefaultAction = menu.addAction("Set to Default")
-                
-                
+
             #add a hint to the object type
             typeDummyAction = menu.addAction(self.columnHash.getAttribute(cKey, "valueType"))
             typeDummyAction.setEnabled(False)
-                
+
         action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
         if action == setDefaultAction and cKey != None and setDefaultAction != None:
             defaultValue = self.columnHash.getAttribute(cKey, "defaultValue")
             self.tableModel.setData(idx, defaultValue, Qt.EditRole)
-            
+
         if action == setFromPropertyAction and setFromPropertyAction != None:
             propertyPopUp = FromPropertyPopUp()
             if propertyPopUp.exec_():
@@ -829,17 +726,13 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                 else:
                     value = "{}.{}".format(deviceId, deviceProperty)
                 self.tableModel.setData(idx, value, Qt.EditRole)
-            
-            
 
     def copy(self, item):
         copyWidget = EditableTableElement(item=item)
-
         copyWidget.tableModel.setHashList(self.tableModel.getHashList())
-        
+
         return copyWidget
-    
-    
+
     def setReadOnly(self, ro):
         if ro:
             self.role = Qt.DisplayRole
@@ -847,7 +740,3 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             self.role = Qt.EditRole
         self.tableModel.setRole(self.role)
         self._setComboBoxes(ro)
-        
-        
-        
-            
