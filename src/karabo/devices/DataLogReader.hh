@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   DataLogReader.hh
  * Author: Sergey Esenov serguei.essenov@xfel.eu
  *
@@ -9,9 +9,10 @@
 #define	DATALOGREADER_HH
 
 #include <boost/filesystem.hpp>
-#include "Device.hh"
-#include "OkErrorFsm.hh"
-#include "DataLogUtils.hh"
+
+#include "karabo/core/Device.hh"
+#include "karabo/core/OkErrorFsm.hh"
+#include "karabo/util/DataLogUtils.hh"
 
 
 /**
@@ -22,10 +23,9 @@ namespace karabo {
     /**
      * Namespace for package core
      */
-    namespace core {
+    namespace devices {
 
         struct DataLoggerIndex {
-
 
             std::string m_event;
             karabo::util::Epochstamp m_epoch;
@@ -46,7 +46,6 @@ namespace karabo {
 
         struct PropFileInfo {
 
-
             typedef boost::shared_ptr<PropFileInfo> Pointer;
             boost::mutex filelock;
             size_t filesize;
@@ -59,7 +58,7 @@ namespace karabo {
 
         class IndexBuilderService {
 
-            public:
+        public:
             // Needed for 'Pointer' and KARABO_LOG_FRAMEWORK
             KARABO_CLASSINFO(IndexBuilderService, "IndexBuilderService", "1.4")
 
@@ -89,7 +88,7 @@ namespace karabo {
 
         class DataLogReader : public karabo::core::Device<karabo::core::OkErrorFsm> {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(DataLogReader, "DataLogReader", "1.0")
 
@@ -115,8 +114,8 @@ namespace karabo {
 
             int getFileIndex(const std::string& deviceId);
 
-            MetaSearchResult navigateMetaRange(const std::string& deviceId, size_t startnum, size_t endnum, const std::string& path,
-                                               const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to);
+            karabo::util::MetaSearchResult navigateMetaRange(const std::string& deviceId, size_t startnum, size_t endnum, const std::string& path,
+                                                             const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to);
 
             /// Find index of that MetaData::Record in 'f' (between indices 'left' and 'right')
             /// that matches the Epochstamp 'stamp'. In case no exact match (within 1 ms) is found,

@@ -14,14 +14,13 @@
 #include <boost/algorithm/string/predicate.hpp> 
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Exception.hh>
-#include <karabo/core/DataLogUtils.hh>
+#include <karabo/util/DataLogUtils.hh>
 #include <karabo/io/TextSerializer.hh>
 #include <karabo/util/Schema.hh>
 
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
 using namespace std;
-using namespace karabo::core;
 using namespace karabo::util;
 using namespace karabo::io;
 
@@ -317,7 +316,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             const string& user = tokens[6 + offset];
             const string& flag = tokens[7 + offset];
 
-            const Epochstamp epstamp(karabo::core::stringDoubleToEpochstamp(epochDoubleStr));
+            const Epochstamp epstamp(karabo::util::stringDoubleToEpochstamp(epochDoubleStr));
 
             //cout << "*** " << recnum << " *** "
             //        "\t" << "position in input : " << position << ", epoch: " << seconds << "." << fraction << endl;

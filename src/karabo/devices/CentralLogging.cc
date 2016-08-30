@@ -5,14 +5,19 @@
  * Created on November 9, 2015, 12:28 PM
  */
 
-#include <karabo/karabo.hpp>
+#include "karabo/core.hpp"
+#include "karabo/util.hpp"
+
 #include "CentralLogging.hh"
 
 namespace karabo {
-    namespace core {
+    namespace devices {
 
-        USING_KARABO_NAMESPACES
-                using namespace std;
+ 
+        using namespace std;
+        using namespace karabo::core;
+        using namespace karabo::util;
+        using namespace karabo::net;
 
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, CentralLogging)
@@ -99,7 +104,7 @@ namespace karabo {
                 m_loggerChannel = m_loggerConnection->createChannel();
                 m_loggerChannel->setErrorHandler(boost::bind(&CentralLogging::logErrorHandler, this, m_loggerChannel, _1));
                 m_loggerChannel->setFilter("target = 'log'");
-                m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::core::CentralLogging::logHandler, this, _1, _2));
+                m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::devices::CentralLogging::logHandler, this, _1, _2));
                 m_logThread = boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
 
                 m_timer.expires_from_now(boost::posix_time::seconds(get<int>("flushInterval")));

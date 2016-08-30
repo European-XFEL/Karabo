@@ -9,17 +9,20 @@
 #include <vector>
 #include <string>
 #include <algorithm>    // std::find
+
 #include <boost/algorithm/string.hpp>
-#include <karabo/io/Input.hh>
-#include "DataLoggerManager.hh"
+
+#include "karabo/io/Input.hh"
 #include "karabo/io/FileTools.hh"
+
+#include "DataLoggerManager.hh"
 
 #define DATALOGGER_PREFIX "DataLogger-"
 #define DATALOGREADER_PREFIX "DataLogReader"
 #define DATALOGREADERS_PER_SERVER 2
 
 namespace karabo {
-    namespace core {
+    namespace devices {
 
         using namespace krb_log4cpp;
         using namespace std;

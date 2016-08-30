@@ -7,14 +7,15 @@
  */
 
 #include <streambuf>
-#include <karabo/io/Input.hh>
+
+#include "karabo/io/Input.hh"
+#include "karabo/io/TextSerializer.hh"
+#include "karabo/util/Schema.hh"
+
 #include "DataLogger.hh"
-#include <karabo/karabo.hpp>
-#include <karabo/io/TextSerializer.hh>
-#include <karabo/util/Schema.hh>
 
 namespace karabo {
-    namespace core {
+    namespace devices {
 
         using namespace krb_log4cpp;
         using namespace std;

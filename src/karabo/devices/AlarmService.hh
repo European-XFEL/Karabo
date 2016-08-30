@@ -8,11 +8,11 @@
 #ifndef KARABO_ALARMSERVICE_HH
 #define	KARABO_ALARMSERVICE_HH
 
-
 #include <boost/thread.hpp>
 #include <boost/atomic.hpp>
-#include "Device.hh"
-#include "OkErrorFsm.hh"
+
+#include "karabo/core/Device.hh"
+#include "karabo/core/OkErrorFsm.hh"
 
 
 /**
@@ -23,7 +23,7 @@ namespace karabo {
     /**
      * Namespace for package core
      */
-    namespace core {
+    namespace devices {
 
         class AlarmService : public karabo::core::Device<> {
 
@@ -43,9 +43,23 @@ namespace karabo {
 
             /**
              * Callback for the instanceNew monitor. Connects this device's slotUpdateAlarms function
-             * to the new devices signalAlarmUpdate signal.
+             * to the new devices signalAlarmUpdate signal. If the device was previously known it will ask this
+             * device to submit its current alarm state.
              */
             void registerNewDevice(const karabo::util::Hash& topologyEntry);
+
+            /**
+             * Called when a device instance disappears from the distributed system. It will trigger the alarm
+             * service to set all alarms pending for this device to need acknowledgement and acknowledgeable. This
+             * means alarms will not silently disappear, but because it can't be assured that the device instance
+             * that disappeared will ever clear them for acknowledgment they are acknowledgeble. Note that if the
+             * device instance does happen to reappear it will be asked to resubmit its current alarm state, bringing
+             * all alarms pertinent to it back into a consistent needsacknowledging, acknowledging and cleared condition.
+             *
+             * @param instanceId: the instance id of the device the disappeared
+             * @param instanceInfo: not used but forwarded by the device client
+             */
+            void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             /**
              * This slot is to be called to let the alarm service device know of an update
@@ -74,6 +88,7 @@ namespace karabo {
              *  - an alarm for this property and type <b>does</b> exist -> it is updated but the
              *    first occurance is set to that of the existing alarm.
              */
+
             void slotUpdateAlarms(const std::string& deviceId, const karabo::util::Hash& alarmInfo);
 
 
@@ -117,9 +132,11 @@ namespace karabo {
             boost::shared_mutex m_deviceRegisterMutex;
 
             boost::thread m_flushWorker;
+
             mutable boost::shared_mutex m_alarmChangeMutex;
             boost::atomic<bool> m_flushRunning;
             std::string m_flushFilePath;
+
 
 
         };

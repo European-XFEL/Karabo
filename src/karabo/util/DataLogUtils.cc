@@ -6,12 +6,12 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include "DataLogUtils.hh"
-
 #include "karabo/util/StringTools.hh"
 
+#include "DataLogUtils.hh"
+
 namespace karabo {
-    namespace core {
+    namespace util {
 
 
         util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble) {
@@ -25,6 +25,6 @@ namespace karabo {
             return util::Epochstamp(seconds, fractions);
         }
 
-    } // end of karabo::core
+    } // end of karabo::util
 }
 

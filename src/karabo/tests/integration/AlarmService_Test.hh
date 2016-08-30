@@ -9,7 +9,7 @@
 #define	ALARMSERVICE_TEST_HH
 
 #include "karabo/karabo.hpp"
-#include "karabo/core/AlarmService.hh"
+#include "karabo/devices/AlarmService.hh"
 #include "karabo/core/DeviceServer.hh"
 #include "karabo/core/DeviceClient.hh"
 #include <boost/shared_ptr.hpp>
@@ -40,6 +40,8 @@ private:
     void testAcknowledgement();
     void testFlushing();
     void testRecovery();
+    void testDeviceKilled();
+    void testDeviceReappeared();
 
 
     //alarm service device
@@ -47,7 +49,7 @@ private:
     boost::thread m_deviceServerThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
-    karabo::core::AlarmService::Pointer m_serviceDevice;
+
 
 
 };
