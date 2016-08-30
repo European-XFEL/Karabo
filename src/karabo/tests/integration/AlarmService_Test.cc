@@ -34,9 +34,10 @@ AlarmService_Test::~AlarmService_Test() {
 
 void AlarmService_Test::setUp() {
     
-    Hash config("serverId", "testServer", "scanPlugins", false, "visibility", 4, "Logger.priority", "DEBUG");
-    m_deviceServer = DeviceServer::create("DeviceServer", config);
-    m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);    
+    Hash config("DeviceServer", Hash("serverId", "testServer", "scanPlugins", false, "visibility", 4, "Logger.priority", "DEBUG"));
+    m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
+    m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
+    Hash configClient();
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
     
     //unlink persisted alarms if they exist
