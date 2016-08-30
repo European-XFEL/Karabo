@@ -80,7 +80,7 @@ rewrite_rpaths() {
     do
         local package=${target_packages[count]}
         local package_dir=$($INSTALL_PREFIX/bin/python3 -c "import os,$package as pkg;print(os.path.dirname(pkg.__file__))")
-        $INSTALL_PREFIX/bin/rpath-fixer -f -g "*.so" -l $INSTALL_PREFIX/lib -d $package_dir
+        $INSTALL_PREFIX/bin/python3 -m rpathology.fixer -f -g "*.so" -l $INSTALL_PREFIX/lib -d $package_dir
         count=$(($count + 1))
     done
 
@@ -92,12 +92,12 @@ rewrite_rpaths() {
     while [ "x${target_libs[count]}" != "x" ]
     do
         local library=${target_libs[count]}
-        $INSTALL_PREFIX/bin/rpath-fixer -f -g "$library" -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/lib
+        $INSTALL_PREFIX/bin/python3 -m rpathology.fixer -f -g "$library" -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/lib
         count=$(($count + 1))
     done
 
     # Relocate the executables
-    $INSTALL_PREFIX/bin/rpath-fixer -f -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin
+    $INSTALL_PREFIX/bin/python3 -m rpathology.fixer -f -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin
 }
 
 # Do what we came here to do
