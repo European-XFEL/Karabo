@@ -23,8 +23,7 @@ from karabo_gui.dialogs.scenedialog import SceneDialog
 from karabo_gui.guiproject import (
     Category, Device, DeviceGroup, GuiProject, Macro)
 from karabo_gui.mediator import (
-    broadcast_event, KaraboBroadcastEvent, OPEN_MACRO, OPEN_SCENE_LINK,
-    OPEN_SCENE_VIEW, REMOVE_MACRO, REMOVE_SCENE_VIEW, RENAME_SCENE_VIEW,
+    broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
     register_for_broadcasts)
 from karabo_gui.messagebox import MessageBox
 import karabo_gui.network as network
@@ -69,7 +68,7 @@ class ProjectModel(QStandardItemModel):
 
     def eventFilter(self, obj, event):
         if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is OPEN_SCENE_LINK:
+            if event.sender is KaraboEventSender.OpenSceneLink:
                 data = event.data
                 self.openSceneLink(data.get("target"), data.get('project'))
                 return True
@@ -534,7 +533,8 @@ class ProjectModel(QStandardItemModel):
 
         data = {'model': sceneModel}
         # Create KaraboBroadcastEvent
-        broadcast_event(KaraboBroadcastEvent(RENAME_SCENE_VIEW, data))
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.RenameSceneView, data))
 
     def createConfigurationItem(self, deviceId, configuration):
         """
@@ -913,12 +913,14 @@ class ProjectModel(QStandardItemModel):
         for sceneModel in project.scenes:
             data = {'model': sceneModel}
             # Create KaraboBroadcastEvent
-            broadcast_event(KaraboBroadcastEvent(REMOVE_SCENE_VIEW, data))
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.RemoveSceneView, data))
 
         for m in project.macros.values():
             data = {'macro': m}
             # Create KaraboBroadcastEvent
-            broadcast_event(KaraboBroadcastEvent(REMOVE_MACRO, data))
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.RemoveMacro, data))
         
         self.removeProject(project)
         
@@ -1268,7 +1270,8 @@ class ProjectModel(QStandardItemModel):
     def closeScene(self, sceneModel):
         data = {'model': sceneModel}
         # Create KaraboBroadcastEvent
-        broadcast_event(KaraboBroadcastEvent(REMOVE_SCENE_VIEW, data))
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.RemoveSceneView, data))
 
     def insertScene(self, index, project, title):
         """
@@ -1302,7 +1305,8 @@ class ProjectModel(QStandardItemModel):
             project = self.getProjectForObject(sceneModel)
         data = {'model': sceneModel, 'project': project}
         # Create KaraboBroadcastEvent
-        broadcast_event(KaraboBroadcastEvent(OPEN_SCENE_VIEW, data))
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.OpenSceneView, data))
 
     def openSceneLink(self, title, project):
         sceneModel = project.getScene(title)
@@ -1326,7 +1330,8 @@ class ProjectModel(QStandardItemModel):
     def openMacro(self, macro):
         data = {'macro': macro}
         # Create KaraboBroadcastEvent
-        broadcast_event(KaraboBroadcastEvent(OPEN_MACRO, data))
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.OpenMacro,data))
 
     def editMonitor(self, monitor=None):
         """
@@ -1528,7 +1533,8 @@ class ProjectModel(QStandardItemModel):
 
         data = {'macro': macro}
         # Create KaraboBroadcastEvent
-        broadcast_event(KaraboBroadcastEvent(OPEN_MACRO, data))
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.OpenMacro, data))
         with open(fn, "r") as file:
             macro.editor.edit.setPlainText(file.read())
 
@@ -1709,7 +1715,8 @@ class ProjectModel(QStandardItemModel):
         if isinstance(obj, Macro):
             data = {'model': obj}
             # Create KaraboBroadcastEvent
-            broadcast_event(KaraboBroadcastEvent(REMOVE_MACRO, data))
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.RemoveMacro, data))
 
         if isinstance(obj, Configuration):
             for s in project.scenes:
