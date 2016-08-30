@@ -99,11 +99,10 @@ Documentation
 Python Classes
 --------------
 
- * Deriving from a super class and call methods should be done like that:
+ * Per convention, deriving from a super class and call methods should be done
+   like this:
  
        `super(className, self)`
-       
-   Just in case we want to support Python 2 and 3 in the future
    
  * Do not use names of builtins for variables (e.g. `object`)
 
