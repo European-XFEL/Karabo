@@ -66,16 +66,22 @@ void AlarmService_Test::appTestRunner() {
     success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
     
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    
     testDeviceRegistration();
     testAlarmPassing();
     testAcknowledgement();
     testFlushing();
     testRecovery();
+    testDeviceKilled();
+    testDeviceReappeared();
 }
 
 void AlarmService_Test::testDeviceRegistration() {
+    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
     // test whether the device actually registers with the alarm service upon instanceNew
     std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >("testAlarmService", "registeredDevices");
+    
     CPPUNIT_ASSERT(registeredDevices[0] == "alarmTester");
     
 }
@@ -89,7 +95,7 @@ void AlarmService_Test::testAlarmPassing() {
     CPPUNIT_ASSERT(success.second == "triggeredAlarmHigh");
     
     //allow some time for update to propagate
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
     
     std::vector<Hash> alarmTable = m_deviceClient->get<std::vector<Hash> >("testAlarmService", "currentAlarms");
     CPPUNIT_ASSERT(alarmTable.size() == 1);
@@ -243,7 +249,7 @@ void AlarmService_Test::testFlushing(){
 
         //should be the same as what we currently hold in the table and devices sections
         std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >("testAlarmService", "registeredDevices");
-
+        for(auto it = registeredDevices.begin(); it != registeredDevices.end(); ++it) std::clog<<*it<<std::endl;
         Hash propHash;
         propHash.set("type", "warnHigh");
         propHash.set("description", "A description for alarmHigh");
@@ -327,6 +333,49 @@ void AlarmService_Test::testRecovery(){
 
 
 }
+
+void AlarmService_Test::testDeviceKilled(){
+     //kill device, alarms should become acknowledgeable
+     std::pair<bool, std::string> success = m_deviceClient->killDevice("alarmTester2", KRB_TEST_MAX_TIMEOUT);
+     CPPUNIT_ASSERT(success.first);
+     
+     //we give some time so that device server notifies of death of device
+     boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+     
+     //alarmState should now be an alarm for floatProperty2 and floatProperty2 acknowledgeable
+     const std::vector<Hash>& alarmTable = m_deviceClient->get<std::vector<Hash> >("testAlarmService", "currentAlarms");
+     CPPUNIT_ASSERT(alarmTable.size() == 3);
+     
+     Hash h = alarmTable[2];
+     
+     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester2");
+     CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmLow");
+     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
+     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
+ }
+ 
+ void AlarmService_Test::testDeviceReappeared(){
+     //bring up a previously known device
+     std::pair<bool, std::string> success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2", "floatProperty", -5.), KRB_TEST_MAX_TIMEOUT);
+     CPPUNIT_ASSERT(success.first);
+     
+     //we give some time so that device server notifies of death of device
+     boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+     
+     //alarmState should now be an alarm for floatProperty2 and floatProperty2 not acknowledgeable anymore
+     const std::vector<Hash>& alarmTable = m_deviceClient->get<std::vector<Hash> >("testAlarmService", "currentAlarms");
+     CPPUNIT_ASSERT(alarmTable.size() == 3);
+     
+     Hash h = alarmTable[2];
+     
+     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester2");
+     CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmLow");
+     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
+     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
+	
+ }
     
 
 #undef KRB_TEST_MAX_TIMEOUT
