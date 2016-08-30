@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 """ This is the central panel to edit macros. """
-
 from PyQt4.QtCore import Qt, pyqtSignal, QEvent
 from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QMessageBox,
                          QSplitter, QTextCursor)
@@ -94,9 +93,11 @@ class MacroPanel(Dockable, QSplitter):
             self.macro.run()
 
     def onSave(self):
-        fn = getSaveFileName("Save Macro to File", suffix="py",
-                             filter="Python files (*.py)",
-                             selectFile=self.macro.name + ".py")
+        fn = getSaveFileName(
+                caption="Save Macro to File",
+                filter="Python files (*.py)",
+                suffix="py",
+                selectFile=self.macro.name + ".py")
         if not fn:
             return
 

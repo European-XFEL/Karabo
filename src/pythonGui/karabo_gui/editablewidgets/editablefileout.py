@@ -3,22 +3,16 @@
 # Created on February 4, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
 """This module contains a class which represents a widget plugin for parameters
    and is created by the factory class EditableWidget.
 """
+from PyQt4.QtGui import QHBoxLayout, QLineEdit, QToolButton, QWidget
 
-__all__ = ["EditableFileOut"]
-
+from karabo.middlelayer import String
 import karabo_gui.icons as icons
 from karabo_gui.util import getSaveFileName
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import EditableWidget
-
-from karabo.middlelayer import String
-
-from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 
 class EditableFileOut(EditableWidget):
@@ -75,11 +69,9 @@ class EditableFileOut(EditableWidget):
         self.lastCursorPos = self.lePath.cursorPosition()
         EditableWidget.onEditingFinished(self, value)
 
-
     def onFileOutClicked(self):
-        filename = getSaveFileName("Select output file")
+        filename = getSaveFileName(caption="Select output file")
         if not filename:
             return
 
         self.lePath.setText(filename)
-

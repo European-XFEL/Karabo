@@ -32,8 +32,10 @@ class Monitor(DisplayWidget):
         self.filename = None
 
     def setFilename(self):
-        fn = getSaveFileName("Filename for Monitors", suffix="csv",
-                             filter="Comma-separated value files (*.csv)")
+        fn = getSaveFileName(
+                caption="Filename for Monitors",
+                filter="Comma-separated value files (*.csv)",
+                suffix="csv")
         if fn:
             self._setFilename(fn)
 
