@@ -1,6 +1,4 @@
-import hashlib
 from os import path
-import os
 import re
 import urllib.request
 
@@ -9,7 +7,6 @@ from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer
 from PyQt4.QtGui import QAction, QApplication, QDialog, QLabel, QPixmap
 
 from karabo.middlelayer import Integer, Number, String
-import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.util import getOpenFileName, temp_file
@@ -102,15 +99,12 @@ class Dialog(QDialog):
             try:
                 buffer = QBuffer(ba)
                 buffer.open(QBuffer.WriteOnly)
-                suffix = 'PNG'
-                mime.imageData().save(buffer, suffix)
+                mime.imageData().save(buffer, 'PNG')
                 data = buffer.data()
-                dir = krb_globals.HIDDEN_KARABO_FOLDER
-                image_name = hashlib.sha1(data).hexdigest()
-                with temp_file(suffix=suffix, prefix=image_name,
-                               dir=dir) as (fd, filename):
-                    os.write(fd, data)
-                    self.setURL(filename)
+                with temp_file() as tmp_path:
+                    with open(tmp_path, "wb") as out:
+                        out.write(data)
+                    self.setURL(tmp_path)
             finally:
                 buffer.close()
         else:
