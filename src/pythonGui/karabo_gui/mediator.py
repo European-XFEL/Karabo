@@ -1,13 +1,16 @@
+from enum import Enum
+
 from PyQt4.QtCore import QEvent, QObject
 from PyQt4.QtGui import QApplication
 
-# Karabo broadcast event senders
-OPEN_SCENE_LINK = "Scene link"
-OPEN_MACRO = "Open macro"
-OPEN_SCENE_VIEW = "Open scene view"
-RENAME_SCENE_VIEW = "Rename scene view"
-REMOVE_MACRO = " Remove macro"
-REMOVE_SCENE_VIEW = "Remove scene view"
+# Enum for karabo broadcast event senders
+class KaraboEventSender(Enum):
+    OpenMacro = "Open macro"
+    OpenSceneLink = "Scene link"
+    OpenSceneView = "Open scene view"
+    RenameSceneView = "Rename scene view"
+    RemoveMacro = "Remove macro"
+    RemoveSceneView = "Remove scene view"
 
 # This is the global singleton for the karabo_mediator function.
 _karabo_mediator = None

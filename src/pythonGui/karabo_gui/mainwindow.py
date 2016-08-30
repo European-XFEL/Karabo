@@ -19,8 +19,7 @@ from karabo_gui import globals
 from karabo_gui.docktabwindow import DockTabWindow
 from karabo_gui.guiproject import Macro
 from karabo_gui.mediator import (
-    KaraboBroadcastEvent, OPEN_MACRO, OPEN_SCENE_VIEW, register_for_broadcasts,
-    RENAME_SCENE_VIEW, REMOVE_MACRO, REMOVE_SCENE_VIEW)
+    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts)
 from karabo_gui.network import Network
 from karabo_gui.sceneview.api import SceneView
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
@@ -67,23 +66,23 @@ class MainWindow(QMainWindow):
     def eventFilter(self, obj, event):
         if isinstance(event, KaraboBroadcastEvent):
             sender = event.sender
-            if sender is OPEN_SCENE_VIEW:
+            if sender is KaraboEventSender.OpenSceneView:
                 data = event.data
                 self.addSceneView(data.get("model"), data.get('project'))
                 return True
-            elif sender is REMOVE_SCENE_VIEW:
+            elif sender is KaraboEventSender.RemoveSceneView:
                 data = event.data
                 self.removeSceneView(data.get("model"))
                 return True
-            elif sender is RENAME_SCENE_VIEW:
+            elif sender is KaraboEventSender.RenameSceneView:
                 data = event.data
                 self.renameSceneView(data.get("model"))
                 return True
-            elif sender is OPEN_MACRO:
+            elif sender is KaraboEventSender.OpenMacro:
                 data = event.data
                 self.onAddMacro(data.get("macro"))
                 return True
-            elif sender is REMOVE_MACRO:
+            elif sender is KaraboEventSender.RemoveMacro:
                 data = event.data
                 self.onRemoveMacro(data.get("macro"))
                 return True
