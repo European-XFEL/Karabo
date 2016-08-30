@@ -208,12 +208,12 @@ namespace karabo {
             /**
              * Move constructor
              */
-            Hash(Hash&& other);
+            Hash(Hash&& other) = default;
             
             /**
              * Assignment of "rvalue"
              */
-            Hash& operator=(Hash&& other);
+            Hash& operator=(Hash&& other) = default;
             
             /**
              * Merge the current hash with another one
