@@ -198,7 +198,7 @@ namespace karabo {
         template<>
         void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const ByteArray& value) const {
             writeSize(buffer, static_cast<unsigned int> (value.second));
-            const char* src = reinterpret_cast<const char*> (value.first.get());
+            const char* src = value.first.get();
             const size_t n = value.second;
             const size_t pos = buffer.size();
             buffer.resize(pos + n);
@@ -377,9 +377,9 @@ namespace karabo {
         template<>
         karabo::util::ByteArray HashBinarySerializer::readSingleValue(std::istream& is) const {
             const size_t size = readSize(is);
-            char* buffer = new char[size];
-            is.read(buffer, size);
-            return ByteArray(boost::shared_ptr<char>(buffer, &byteArrayDeleter), size);
+            ByteArray result(boost::shared_ptr<char>(new char[size], &byteArrayDeleter), size);
+            is.read(result.first.get(), size);
+            return result; 
         }
 
 

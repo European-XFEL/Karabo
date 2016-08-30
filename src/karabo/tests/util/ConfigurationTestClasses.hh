@@ -1,4 +1,4 @@
-/* 
+/*
  * Author: <burkhard.heisen>
  *
  * Created on February 5, 2013, 11:06 AM
@@ -15,7 +15,7 @@
 #include <karabo/util/NDArrayElement.hh>
 #include <karabo/util/PathElement.hh>
 #include <karabo/xms/SlotElement.hh>
-#include <karabo/util/ImageElement.hh>
+#include <karabo/xms/ImageData.hh>
 #include <karabo/util/TableElement.hh>
 #include <karabo/util/State.hh>
 
@@ -31,7 +31,6 @@ namespace configurationTest {
     using namespace karabo::xms;
 
     struct Shape {
-
 
         KARABO_CLASSINFO(Shape, "Shape", "1.0");
         KARABO_CONFIGURATION_BASE_CLASS;
@@ -68,7 +67,6 @@ namespace configurationTest {
 
     struct Circle : public Shape {
 
-
         KARABO_CLASSINFO(Circle, "Circle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -102,7 +100,6 @@ namespace configurationTest {
 
     struct EditableCircle : public Circle {
 
-
         KARABO_CLASSINFO(EditableCircle, "EditableCircle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -128,7 +125,6 @@ namespace configurationTest {
     //**********************************************
 
     struct Rectangle : public Shape {
-
 
         KARABO_CLASSINFO(Rectangle, "Rectangle", "1.0");
 
@@ -170,7 +166,6 @@ namespace configurationTest {
     };
 
     struct GraphicsRenderer {
-
 
         KARABO_CLASSINFO(GraphicsRenderer, "GraphicsRenderer", "1.0")
         KARABO_CONFIGURATION_BASE_CLASS;
@@ -231,7 +226,6 @@ namespace configurationTest {
     };
 
     struct GraphicsRenderer1 {
-
 
         KARABO_CLASSINFO(GraphicsRenderer1, "GraphicsRenderer1", "1.0");
 
@@ -304,7 +298,6 @@ namespace configurationTest {
     };
 
     struct TestStruct1 {
-
 
         KARABO_CLASSINFO(TestStruct1, "TestStruct1", "1.0");
 
@@ -409,7 +402,6 @@ namespace configurationTest {
 
     struct TestStruct2 : public TestStruct1 {
 
-
         KARABO_CLASSINFO(TestStruct2, "TestStruct2", "1.0");
 
         TestStruct2(const karabo::util::Hash& config) : TestStruct1(config) {
@@ -433,12 +425,11 @@ namespace configurationTest {
 
     struct OtherSchemaElements {
 
-
         KARABO_CLASSINFO(OtherSchemaElements, "OtherSchemaElements", "1.0");
 
         virtual ~OtherSchemaElements() {
         }
-        
+
         static void expectedParameters(karabo::util::Schema & expected) {
             SLOT_ELEMENT(expected).key("slotTest")
                     .displayedName("Reset")
@@ -565,7 +556,7 @@ namespace configurationTest {
                     .readOnly()
                     .commit();
 
-            IMAGE_ELEMENT(expected)
+            IMAGEDATA_ELEMENT(expected)
                     .key("image")
                     .commit();
 
@@ -632,7 +623,6 @@ namespace configurationTest {
 
     struct SchemaNodeElements {
 
-
         KARABO_CLASSINFO(SchemaNodeElements, "SchemaNodeElements", "1.0");
 
         SchemaNodeElements(const karabo::util::Hash& config) {
@@ -664,7 +654,6 @@ namespace configurationTest {
     };
 
     struct SchemaNodeInjected {
-
 
         KARABO_CLASSINFO(SchemaNodeInjected, "SchemaNodeInjected", "1.0");
 
