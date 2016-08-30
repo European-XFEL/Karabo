@@ -10,11 +10,13 @@
 #ifndef KARABO_CORE_DATALOGGERMANAGER_HH
 #define	KARABO_CORE_DATALOGGERMANAGER_HH
 
-#include <boost/filesystem.hpp>
 #include <map>
 #include <vector>
-#include "Device.hh"
-#include "OkErrorFsm.hh"
+
+#include <boost/filesystem.hpp>
+
+#include "karabo/core/Device.hh"
+#include "karabo/core/OkErrorFsm.hh"
 
 /**
  * The main karabo namespace
@@ -22,13 +24,13 @@
 namespace karabo {
 
     /**
-     * Namespace for package core
+     * Namespace for package devices
      */
-    namespace core {
+    namespace devices {
 
         class DataLoggerManager : public karabo::core::Device<karabo::core::OkErrorFsm> {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(DataLoggerManager, "DataLoggerManager", "1.0")
 
@@ -62,4 +64,4 @@ namespace karabo {
     }
 }
 
-#endif	
+#endif

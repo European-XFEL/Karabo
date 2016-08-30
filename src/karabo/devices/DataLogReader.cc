@@ -3,19 +3,22 @@
 #include <cstdlib>
 #include <sstream>
 #include <algorithm>
-#include <boost/algorithm/string.hpp>
 #include <streambuf>
-#include <karabo/io/Input.hh>
-#include "DataLogReader.hh"
-#include "karabo/core/DataLogUtils.hh"
+
+#include <boost/algorithm/string.hpp>
+
+#include "karabo/io/Input.hh"
+#include "karabo/util/DataLogUtils.hh"
 #include "karabo/io/FileTools.hh"
 #include "karabo/util/Version.hh"
+
+#include "DataLogReader.hh"
 
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
 
 namespace karabo {
-    namespace core {
+    namespace devices {
 
         using namespace krb_log4cpp;
         using namespace std;
@@ -246,7 +249,7 @@ namespace karabo {
                     return;
                 }
 
-                MetaSearchResult msr = navigateMetaRange(deviceId, idxFrom.m_fileindex, idxTo.m_fileindex, property, from, to);
+                karabo::util::MetaSearchResult msr = navigateMetaRange(deviceId, idxFrom.m_fileindex, idxTo.m_fileindex, property, from, to);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "MetaSearchResult: from : filenum=" << msr.fromFileNumber << " record=" << msr.fromRecord
                         << ", to : filenum=" << msr.toFileNumber << " record=" << msr.toRecord << ", list: " << toString(msr.nrecList);
@@ -590,7 +593,7 @@ namespace karabo {
 #define ROUND1MS(x)  std::floor(x*1000 + 0.5)/1000
 
 
-        MetaSearchResult DataLogReader::navigateMetaRange(const std::string& deviceId, size_t startnum, size_t tonum, const std::string& path,
+        karabo::util::MetaSearchResult DataLogReader::navigateMetaRange(const std::string& deviceId, size_t startnum, size_t tonum, const std::string& path,
                                                           const karabo::util::Epochstamp& efrom, const karabo::util::Epochstamp& eto) {
             MetaData::Record record;
             MetaSearchResult result;
@@ -793,5 +796,5 @@ namespace karabo {
 #undef ROUND1MS
 }
 
-boost::mutex karabo::core::DataLogReader::m_propFileInfoMutex;
-std::map<std::string, karabo::core::PropFileInfo::Pointer > karabo::core::DataLogReader::m_mapPropFileInfo;
+boost::mutex karabo::devices::DataLogReader::m_propFileInfoMutex;
+std::map<std::string, karabo::devices::PropFileInfo::Pointer > karabo::devices::DataLogReader::m_mapPropFileInfo;
