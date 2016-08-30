@@ -24,7 +24,7 @@ feature branches:
 2. Break down your larger project, so that smaller MRs can be created for 
    individual parts
    
-3 .Create MRs onto your feature branch. While in general your feature branch 
+3. Create MRs onto your feature branch. While in general your feature branch 
    should compile for other to check, the policy can be relaxed with respect 
    to merging to master if you clearly indicate this: e.g. you are refactoring
    something which breaks the python bindings, but would like to split C++ and
