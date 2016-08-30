@@ -14,21 +14,25 @@
    All relevant configuration data is stored in a member hash variable.
 """
 
-from karabo_gui.configuration import BulkNotifications
-from karabo_gui.dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
+
 from karabo.middlelayer import (
     Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration)
+
+from PyQt4.QtCore import pyqtSignal, QObject
+from PyQt4.QtGui import QDialog, QMessageBox
+
+from karabo_gui.configuration import BulkNotifications
+from karabo_gui.dialogs.configurationdialog import (
+    SelectProjectDialog, SelectProjectConfigurationDialog)
 import karabo_gui.globals as globals
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.navigationtreemodel import NavigationTreeModel
 from karabo_gui.network import Network
 from karabo_gui.projectmodel import ProjectModel
 from karabo_gui.topology import getClass
-from karabo_gui.util import getSaveFileName, getSchemaModifiedAttrs
-
-from PyQt4.QtCore import pyqtSignal, QObject
-from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
+from karabo_gui.util import (
+    getOpenFileName, getSaveFileName, getSchemaModifiedAttrs)
 
 
 class _Manager(QObject):
@@ -260,9 +264,8 @@ class _Manager(QObject):
         classConfig.fromHash(configHash[classId])
 
     def onOpenFromFile(self):
-        filename = QFileDialog.getOpenFileName(None, "Open configuration", \
-                                               globals.HIDDEN_KARABO_FOLDER,
-                                               "XML (*.xml)")
+        filename = getOpenFileName(caption="Open configuration",
+                                   filter="XML (*.xml)")
         if not filename:
             return
 
@@ -290,8 +293,9 @@ class _Manager(QObject):
         This function saves the current configuration of a device to a file.
         """
         filename = getSaveFileName(
-            "Save configuration as", globals.HIDDEN_KARABO_FOLDER,
-            "Configuration (*.xml)", "xml")
+                        caption="Save configuration as",
+                        filter="Configuration (*.xml)",
+                        suffix="xml")
         if not filename:
             return
 
