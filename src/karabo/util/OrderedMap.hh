@@ -286,6 +286,8 @@ namespace karabo {
         OrderedMap<KeyType, MappedType>::OrderedMap(OrderedMap<KeyType, MappedType>&& other)
             : m_listNodes(std::move(other.m_listNodes))
             , m_mapNodes(std::move(other.m_mapNodes)) {
+            other.m_listNodes.clear();
+            other.m_mapNodes.clear();
         }
 
         template<class KeyType, class MappedType>
