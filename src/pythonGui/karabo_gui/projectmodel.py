@@ -23,7 +23,8 @@ from karabo_gui.dialogs.scenedialog import SceneDialog
 from karabo_gui.guiproject import (
     Category, Device, DeviceGroup, GuiProject, Macro)
 from karabo_gui.mediator import (
-    KaraboBroadcastEvent, OPEN_SCENE_LINK, register_for_broadcasts)
+    broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
+    register_for_broadcasts)
 from karabo_gui.messagebox import MessageBox
 import karabo_gui.network as network
 from karabo_gui.topology import getDevice, Manager
@@ -43,12 +44,6 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalItemChanged = pyqtSignal(str, object)  # type, configuration
     signalSelectionChanged = pyqtSignal(list)
-    signalAddSceneView = pyqtSignal(object, object)  # SceneModel, Project
-    signalRemoveSceneView = pyqtSignal(object)  # SceneModel
-    signalRenameSceneView = pyqtSignal(object)  # SceneModel
-    signalAddMacro = pyqtSignal(object)
-    signalRemoveMacro = pyqtSignal(object)  # macro
-
     signalExpandIndex = pyqtSignal(object, bool)
 
     ITEM_OBJECT = Qt.UserRole
@@ -73,7 +68,7 @@ class ProjectModel(QStandardItemModel):
 
     def eventFilter(self, obj, event):
         if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is OPEN_SCENE_LINK:
+            if event.sender is KaraboEventSender.OpenSceneLink:
                 data = event.data
                 self.openSceneLink(data.get("target"), data.get('project'))
                 return True
@@ -535,10 +530,11 @@ class ProjectModel(QStandardItemModel):
         item = self.findItem(sceneModel)
         item.setText(sceneModel.title)
         # XXX: TODO update dirty flag
-        
-        # Send signal to mainwindow to update the tab text as well
-        self.signalRenameSceneView.emit(sceneModel)
 
+        data = {'model': sceneModel}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.RenameSceneView, data))
 
     def createConfigurationItem(self, deviceId, configuration):
         """
@@ -915,10 +911,16 @@ class ProjectModel(QStandardItemModel):
         project list.
         """
         for sceneModel in project.scenes:
-            self.signalRemoveSceneView.emit(sceneModel)
+            data = {'model': sceneModel}
+            # Create KaraboBroadcastEvent
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.RemoveSceneView, data))
 
         for m in project.macros.values():
-            self.signalRemoveMacro.emit(m)
+            data = {'macro': m}
+            # Create KaraboBroadcastEvent
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.RemoveMacro, data))
         
         self.removeProject(project)
         
@@ -1266,7 +1268,10 @@ class ProjectModel(QStandardItemModel):
         return sceneModel
 
     def closeScene(self, sceneModel):
-        self.signalRemoveSceneView.emit(sceneModel)
+        data = {'model': sceneModel}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.RemoveSceneView, data))
 
     def insertScene(self, index, project, title):
         """
@@ -1298,7 +1303,10 @@ class ProjectModel(QStandardItemModel):
         """
         if project is None:
             project = self.getProjectForObject(sceneModel)
-        self.signalAddSceneView.emit(sceneModel, project)
+        data = {'model': sceneModel, 'project': project}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.OpenSceneView, data))
 
     def openSceneLink(self, title, project):
         sceneModel = project.getScene(title)
@@ -1320,7 +1328,10 @@ class ProjectModel(QStandardItemModel):
         self.openMacro(macro)
 
     def openMacro(self, macro):
-        self.signalAddMacro.emit(macro)
+        data = {'macro': macro}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.OpenMacro,data))
 
     def editMonitor(self, monitor=None):
         """
@@ -1519,8 +1530,11 @@ class ProjectModel(QStandardItemModel):
         
         macro = Macro(project, name)
         project.addMacro(macro)
-        
-        self.signalAddMacro.emit(macro)
+
+        data = {'macro': macro}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.OpenMacro, data))
         with open(fn, "r") as file:
             macro.editor.edit.setPlainText(file.read())
 
@@ -1699,7 +1713,10 @@ class ProjectModel(QStandardItemModel):
             self.closeScene(obj)
 
         if isinstance(obj, Macro):
-            self.signalRemoveMacro.emit(obj)
+            data = {'model': obj}
+            # Create KaraboBroadcastEvent
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.RemoveMacro, data))
 
         if isinstance(obj, Configuration):
             for s in project.scenes:
