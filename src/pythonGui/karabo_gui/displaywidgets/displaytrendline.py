@@ -6,8 +6,10 @@ import os.path as op
 import pickle
 import base64
 from xml.etree.ElementTree import Element
+from statistics import mean
 
 from karabo_gui.const import ns_karabo
+import karabo_gui.globals as krb_globals
 from karabo_gui.topology import getDevice
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
@@ -15,7 +17,8 @@ from karabo_gui.widget import DisplayWidget
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import (QButtonGroup, QDateTimeEdit, QDialog, QHBoxLayout,
-                         QPushButton, QVBoxLayout, QWidget)
+                         QIntValidator, QLabel, QLineEdit, QPushButton,
+                         QVBoxLayout, QWidget)
 
 import numpy
 
@@ -33,6 +36,9 @@ ONE_HOUR = "One Hour"
 TEN_MINUTES = "Ten Minutes"
 RESET = "Uptime"
 HIDDEN = "Hidden"
+
+FULL_RANGE = "Full Range"
+DETAIL_RANGE = "Detail"
 
 
 def get_start_end_date_time(selected_time_span):
@@ -237,6 +243,23 @@ class Curve(QObject):
         self.update()
         self.curve.plot().replot()
 
+    def get_mean_y_value(self, count=10):
+        """ Return mean value for last ``number`` of y values."""
+        print("get_mean_y_value", self.box, len(self.y))
+        if count > len(self.y):
+            count = len(self.y)
+        return mean(self.y[:count])
+
+    def get_min_y_value(self):
+        """ Return min value of all y values."""
+        print("MIN", self.box, self.y)
+        return min(self.y)
+
+    def get_max_y_value(self):
+        """ Return max value for all y values"""
+        print("MAX", self.box, self.y)
+        return max(self.y)
+
 
 class DateTimeScaleDraw(QwtScaleDraw):
         '''Class used to draw a datetime axis on our plot. '''
@@ -339,49 +362,14 @@ class DisplayTrendline(DisplayWidget):
     category = Simple
     alias = "Trendline"
 
+    style = "{text-align: center; font-size: 9px; padding: 0}"
+    button_style_sheet = ("QPushButton {}".format(style))
+    datetimeedit_style_sheet = ("QDateTimeEdit {}".format(style))
+    lineedit_style_sheet = ("QLineEdit {}".format(style))
+
     def __init__(self, box, parent):
         super(DisplayTrendline, self).__init__(None)
-        self.dialog = _KaraboCurveDialog(wintitle="Trendline", edit=False,
-                                         toolbar=True)
-        # Make connection to update time buttons when mouse event in QwtWidget
-        # happened
-        self.dialog.signal_mouse_event.connect(self._uncheck_time_buttons)
-
-        # Create widget for beginning and end date time
-        self.date_time_widget = QWidget()
-        self.date_time_layout = QHBoxLayout(self.date_time_widget)
-        self.date_time_layout.setContentsMargins(0, 0, 0, 0)
-
-        style_sheet = ("QDateTimeEdit {text-align: center; font-size: 9px;"
-                       "padding: 0}")
-        current_date_time = QDateTime.currentDateTime()
-        self.dt_start = QDateTimeEdit(current_date_time)
-        self.dt_start.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
-        self.dt_start.setStyleSheet(style_sheet)
-        self.dt_end = QDateTimeEdit(current_date_time)
-        self.dt_end.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
-        self.dt_end.setStyleSheet(style_sheet)
-        self.date_time_layout.addWidget(self.dt_start)
-        self.date_time_layout.addWidget(self.dt_end)
-
-        self.buttons_widget = QWidget()
-        self.buttons_layout = QHBoxLayout(self.buttons_widget)
-        self.buttons_layout.setContentsMargins(0, 0, 0, 0)
-
-        self.time_string_btns = OrderedDict()  # Map time_string to QPushButton
-        self.time_string_btns[ONE_WEEK] = None
-        self.time_string_btns[ONE_DAY] = None
-        self.time_string_btns[ONE_HOUR] = None
-        self.time_string_btns[TEN_MINUTES] = None
-        self.time_string_btns[RESET] = None
-        self.time_buttons = self._create_time_buttons(self.buttons_layout)
-        self._selected_time_btn = None
-
-        self.widget = QWidget()
-        self.layout = QVBoxLayout(self.widget)
-        self.layout.addWidget(self.dialog)
-        self.layout.addWidget(self.date_time_widget)
-        self.layout.addWidget(self.buttons_widget)
+        self._initUI()
 
         # Keep the initial start time to recover trendline for 'Reset'
         self.initial_start_time = QDateTime.currentDateTime()
@@ -428,6 +416,85 @@ class DisplayTrendline(DisplayWidget):
                                         Qt.AlignRight | Qt.AlignBottom)
         self.destroyed.connect(self.destroy)
         self.addBox(box)
+
+    def _initUI(self):
+        """ Setup all widgets correctly.
+        """
+        self.dialog = _KaraboCurveDialog(wintitle="Trendline", edit=False,
+                                         toolbar=True)
+        # Make connection to update time buttons when mouse event in QwtWidget
+        # happened
+        self.dialog.signal_mouse_event.connect(self._uncheck_time_buttons)
+
+        # Init x-axis buttons
+        # Create widget for beginning and end date time
+        self.date_time_widget = QWidget()
+        self.date_time_layout = QHBoxLayout(self.date_time_widget)
+        self.date_time_layout.setContentsMargins(0, 0, 0, 0)
+
+        current_date_time = QDateTime.currentDateTime()
+        self.dt_start = QDateTimeEdit(current_date_time)
+        self.dt_start.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
+        self.dt_start.setStyleSheet(self.datetimeedit_style_sheet)
+        self.dt_end = QDateTimeEdit(current_date_time)
+        self.dt_end.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
+        self.dt_end.setStyleSheet(self.datetimeedit_style_sheet)
+        self.date_time_layout.addWidget(self.dt_start)
+        self.date_time_layout.addWidget(self.dt_end)
+
+        self.buttons_widget = QWidget()
+        self.buttons_layout = QHBoxLayout(self.buttons_widget)
+        self.buttons_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.time_string_btns = OrderedDict()  # Map time_string to QPushButton
+        self.time_string_btns[ONE_WEEK] = None
+        self.time_string_btns[ONE_DAY] = None
+        self.time_string_btns[ONE_HOUR] = None
+        self.time_string_btns[TEN_MINUTES] = None
+        self.time_string_btns[RESET] = None
+        self.time_buttons = self._create_time_buttons(self.buttons_layout)
+        self._selected_time_btn = None
+
+        # Init y-axis buttons
+        self.range_buttons = QButtonGroup()
+        self.range_buttons.buttonClicked.connect(self._range_buttons_toggled)
+        self._selected_range_btn = None
+
+        self.pbFullRange = QPushButton(FULL_RANGE)
+        self.pbFullRange.setCheckable(True)
+        self.pbFullRange.setChecked(True)
+        self.pbFullRange.setStyleSheet(self.button_style_sheet)
+        self.range_buttons.addButton(self.pbFullRange)
+        self.pbDetailRange = QPushButton(DETAIL_RANGE)
+        self.pbDetailRange.setCheckable(True)
+        self.pbDetailRange.setStyleSheet(self.button_style_sheet)
+        self.range_buttons.addButton(self.pbDetailRange)
+        self.leDetailRange = QLineEdit("10")
+        self.leDetailRange.setEnabled(False)
+        self.leDetailRange.setStyleSheet(self.lineedit_style_sheet)
+        validator = QIntValidator(1, krb_globals.MAX_INT32)
+        self.leDetailRange.setValidator(validator)
+        self.leDetailRange.textChanged.connect(self._detail_range_changed)
+        self.laDetailRange = QLabel("%")
+        hLayout = QHBoxLayout()
+        hLayout.addWidget(self.pbDetailRange)
+        hLayout.addWidget(self.leDetailRange)
+        hLayout.addWidget(self.laDetailRange)
+
+        yLayout = QVBoxLayout()
+        yLayout.addWidget(self.pbFullRange)
+        yLayout.addLayout(hLayout)
+        yLayout.addStretch()
+
+        xLayout = QVBoxLayout()
+        xLayout.addWidget(self.dialog)
+        xLayout.addWidget(self.date_time_widget)
+        xLayout.addWidget(self.buttons_widget)
+
+        self.widget = QWidget()
+        self.layout = QHBoxLayout(self.widget)
+        self.layout.addLayout(yLayout)
+        self.layout.addLayout(xLayout)
 
     def edit_axis_parameters(self, axis_id):
         if axis_id != QwtPlot.xBottom:
@@ -533,6 +600,18 @@ class DisplayTrendline(DisplayWidget):
         t0, t1 = asd.lowerBound(), asd.upperBound()
         self._update_x_axis_interval(t0, t1)
 
+    @pyqtSlot(str)
+    def _detail_range_changed(self, text):
+        print("_detail_range_changed - update needed", text)
+        if self._update_y_axis_scale():
+            self.updateLater()
+
+    @pyqtSlot(object)
+    def _range_buttons_toggled(self, button):
+        self._selected_range_btn = button
+        if self._update_y_axis_scale():
+            self.updateLater()
+
     @pyqtSlot(object)
     def _time_buttons_toggled(self, button):
         """ A time button was clicked which needs to update the axis scale. """
@@ -594,9 +673,7 @@ class DisplayTrendline(DisplayWidget):
 
         for btn_text in self.time_string_btns.keys():
             button = QPushButton(btn_text)
-            style_sheet = ("QPushButton {text-align: center; font-size: 9px;"
-                           "padding: 0}")
-            button.setStyleSheet(style_sheet)
+            button.setStyleSheet(self.button_style_sheet)
             self.time_string_btns[btn_text] = button
             if btn_text == RESET:
                 button.clicked.connect(self._reset_button_clicked)
@@ -644,4 +721,46 @@ class DisplayTrendline(DisplayWidget):
             # Use blocker to prevent timer start
             self.plot.setAxisScale(QwtPlot.xBottom, start_secs, end_secs)
         self._update_x_axis_interval(start_secs, end_secs)
+        return True
+
+    def _update_y_axis_scale(self):
+        """
+        """
+        if self._selected_range_btn is None:
+            return False
+        if self._selected_range_btn.text() == FULL_RANGE:
+            # Reset
+            self.leDetailRange.setEnabled(False)
+            # TODO: check if correct
+            ymin = krb_globals.MAX_INT32
+            ymax = -ymin
+            for curve in self.curves.values():
+                print("min", curve.get_min_y_value())
+                print("max", curve.get_max_y_value())
+                if ymin > curve.get_min_y_value():
+                    ymin = curve.get_min_y_value()
+                if ymax < curve.get_max_y_value():
+                    ymax = curve.get_max_y_value()
+        elif self._selected_range_btn.text() == DETAIL_RANGE:
+            # Calculate mean of last 10 values and use detail range value to
+            # get ymin/ymax
+            self.leDetailRange.setEnabled(True)
+            print("self.leDetailRange", self.leDetailRange.text())
+            y_mean_values = []
+            for curve in self.curves.values():
+                y_mean = curve.get_mean_y_value()
+                y_mean_values.append(y_mean)
+            print("y_mean_values", y_mean_values)
+            y_mean = mean(y_mean_values)
+            range = y_mean * int(self.leDetailRange.text())*0.01
+            print("range", range)
+            ymin = y_mean - range
+            ymax = y_mean + range
+
+        print("UPDATE Y RANGE", ymin, ymax)
+        print()
+        # Rescale y axis
+        aw = self.plot.axisWidget(QwtPlot.yLeft)
+        with SignalBlocker(aw):
+            self.plot.setAxisScale(QwtPlot.yLeft, ymin, ymax)
         return True
