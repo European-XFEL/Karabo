@@ -62,47 +62,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(ImageData, "ImageData", "1.5")
 
-            static void expectedParameters(karabo::util::Schema& s) {
-
-                using namespace karabo::util;
-
-                VECTOR_UINT32_ELEMENT(s).key("dims")
-                        .displayedName("Dimensions")
-                        .description("The length of the array reflects total dimensionality and each element the extension in this dimension")
-                        .readOnly()
-                        .commit();
-                VECTOR_INT32_ELEMENT(s).key("dimTypes")
-                        .displayedName("Dimension Types")
-                        .description("Any dimension should have an enumerated type")
-                        .readOnly()
-                        .commit();
-                STRING_ELEMENT(s).key("dimScales")
-                        .displayedName("Dimension Scales")
-                        .description("")
-                        .readOnly()
-                        .commit();
-                INT32_ELEMENT(s).key("encoding")
-                        .displayedName("Encoding")
-                        .description("Describes the color space of pixel encoding of the data (e.g. GRAY, RGB, JPG, PNG etc.")
-                        .readOnly()
-                        .commit();
-                INT32_ELEMENT(s).key("bitsPerPixel")
-                        .displayedName("Bits per pixel")
-                        .description("The number of bits needed for each pixel")
-                        .readOnly()
-                        .commit();
-                VECTOR_UINT32_ELEMENT(s).key("roiOffsets")
-                        .displayedName("ROI Offsets")
-                        .description("Describes the offset of the Region-of-Interest; it will contain zeros if the image has no ROI defined")
-                        .readOnly()
-                        .commit();
-                NODE_ELEMENT(s).key("geometry")
-                        .displayedName("Geometry")
-                        .commit();
-                NODE_ELEMENT(s).key("header")
-                        .displayedName("Hash containing user-defined header data")
-                        .commit();
-            }
+            static void expectedParameters(karabo::util::Schema& s);
 
             ImageData();
 
