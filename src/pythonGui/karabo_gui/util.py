@@ -1,3 +1,6 @@
+from contextlib import contextmanager
+import os
+from tempfile import mkstemp
 from uuid import uuid4
 
 from PyQt4.QtGui import QDialog, QFileDialog
@@ -91,3 +94,20 @@ def getSchemaModifiedAttrs(schema, config):
         return modified_attrs_hash
 
     return None
+
+
+@contextmanager
+def temp_file(suffix='', prefix='tmp', dir=None):
+    """ Create a temporary file wrapped in a context manager.
+        Usage is straightforward:
+        with temp_file() as path:
+            # Write a file to path
+
+        # All traces of path are now gone
+    """
+    fd, filename = mkstemp(suffix=suffix, prefix=prefix, dir=dir)
+    try:
+        yield fd, filename
+    finally:
+        os.close(fd)
+        os.unlink(filename)
