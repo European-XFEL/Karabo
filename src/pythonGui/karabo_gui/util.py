@@ -107,7 +107,7 @@ def temp_file(suffix='', prefix='tmp', dir=None):
     """
     fd, filename = mkstemp(suffix=suffix, prefix=prefix, dir=dir)
     try:
-        yield fd, filename
+        yield filename
     finally:
         os.close(fd)
         os.unlink(filename)
