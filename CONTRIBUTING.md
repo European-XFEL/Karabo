@@ -63,7 +63,7 @@ guidelines are suggested:
   
 - Don’t use `auto` to indicate straight forward types, e.g. `auto i = 4;`
 
-- Existing code does not need to be refactored for C++ feature usage alone.
+- Existing code does not need to be refactored for C++11 feature usage alone.
   E.g. if you happen to refactor something anyway, feel free to replace iterators
   with `auto` if it aids readability. You do not specifically have to refactor
   otherwise working code though.
