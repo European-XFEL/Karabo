@@ -89,7 +89,7 @@ namespace karabo {
         }
 
 
-        ByteArray NDArray::getByteArray() const {
+        const ByteArray NDArray::getByteArray() const {
             return get<ByteArray>("data");
         }
 
