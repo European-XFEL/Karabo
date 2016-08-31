@@ -76,7 +76,7 @@ void HashBinarySerializer_Test::setUp() {
     h.set<vector<complex<double> > >("vec_cd", vector < complex<double> >(1000, complex<double>(3., 4.)));
     h.set<vector<string> > ("vec_str", vector<string>(1000, "Hello Karabo"));
 
-    NDArray ndarr(Dims(10, 10, 10), 1);
+    NDArray ndarr(Dims(30, 20, 10), 1);
     h.set("ndarr", ndarr);
 
 
@@ -135,6 +135,7 @@ void HashBinarySerializer_Test::testSerialization() {
 
     // Some selected value tests
     CPPUNIT_ASSERT(hash.get<NDArray>("hash.ndarr").getData<int>()[42] == 1);
+    CPPUNIT_ASSERT(hash.get<NDArray>("hash.ndarr").getShape().x3() == 10);
 
     p->save(hash, archive2);
 
