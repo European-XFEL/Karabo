@@ -93,10 +93,19 @@ namespace karabo {
 
             karabo::util::Types::ReferenceType getType() const;
 
+            /**
+             * The number of items in the array.
+             */
             const size_t size() const;
 
+            /**
+             * The total size of the array, in bytes.
+             */
             inline size_t byteSize() const;
 
+            /**
+             * The size of each item, in bytes.
+             */
             inline size_t itemSize() const;
 
             template <typename T>
@@ -121,7 +130,7 @@ namespace karabo {
 
             ByteArray getByteArray();
 
-            ByteArray getByteArray() const;
+            const ByteArray getByteArray() const;
 
             Dims getShape() const;
 

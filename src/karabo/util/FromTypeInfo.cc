@@ -51,16 +51,9 @@ namespace karabo {
                             , _KARABO_HELPER_MACRO1(SCHEMA, Schema)
                             , _KARABO_HELPER_MACRO1(NONE, CppNone)
 
-
-                            , {
-                               std::string(typeid (Hash::Pointer).name()), Types::HASH_POINTER
-                }
-                            ,
-                {std::string(typeid (std::vector<Hash::Pointer>).name()), Types::VECTOR_HASH_POINTER}
-                            ,
-                {
-                 std::string(typeid (ByteArray).name()), Types::BYTE_ARRAY
-                }
+                            , {std::string(typeid (Hash::Pointer).name()), Types::HASH_POINTER}
+                            , {std::string(typeid (std::vector<Hash::Pointer>).name()), Types::VECTOR_HASH_POINTER}
+                            , {std::string(typeid (ByteArray).name()), Types::BYTE_ARRAY}
 
             };
 #undef _KARABO_HELPER_MACRO

@@ -37,6 +37,8 @@
 namespace karabo {
     namespace util {
 
+        class NDArray;
+
         std::string createCastFailureMessage(const std::string& key, const std::type_info& src, const std::type_info& tgt);
         std::string createCastFailureMessage(const std::string& key, const Types::ReferenceType& src, const Types::ReferenceType& tgt);
 
@@ -161,11 +163,7 @@ namespace karabo {
             return karabo::util::base64Encode(reinterpret_cast<const unsigned char*> (value.first), value.second);
         }
 
-        //        template <typename T>
-        //        inline std::string toString(const karabo::util::NDArray<T>& value) {
-        //            const std::pair<const T*, size_t> data(value.getData()->data(), value.getData()->size());
-        //            return toString<T>(data);
-        //        }
+        std::string toString(const karabo::util::NDArray& value);
 
         template <typename T>
         inline std::string toString(const std::set<T>& value) {

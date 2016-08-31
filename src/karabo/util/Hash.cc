@@ -486,7 +486,6 @@ namespace karabo {
                                                      const std::string& key, char separator) {
             std::set<std::string> result;
 
-
             BOOST_FOREACH(const std::string& path, paths) {
                 const size_t sepPos = path.find_first_of(separator);
                 // Add what is left after first separator - if that is not empty and if that before separator matches key:
@@ -502,7 +501,6 @@ namespace karabo {
 
         bool Hash::keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key, char separator,
                                         unsigned int size) {
-
 
             BOOST_FOREACH(const std::string& path, paths) {
                 if (path.empty() || path[0] == separator) continue; // ignore paths that are empty or start with separator
@@ -532,8 +530,6 @@ namespace karabo {
         std::set<unsigned int> Hash::selectIndicesOfKey(const unsigned int targetSize, const std::set<std::string>& paths,
                                                         const std::string& key, char separator) {
             std::set<unsigned int> result;
-
-
             BOOST_FOREACH(const std::string& path, paths) {
                 if (path.empty() || path[0] == separator) continue; // ignore paths that are empty or start with separator
 
@@ -796,7 +792,7 @@ namespace karabo {
             }
         }
 
-       
+
         bool similar(const Hash& left, const Hash& right) {
             if (left.size() != right.size())
                 return false;
