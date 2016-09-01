@@ -35,30 +35,34 @@ Serializable_Test::~Serializable_Test() {
 
 void Serializable_Test::testMethod() {    
 
-    
 
-    FancyData fd2;
-    fd2.setScalar(2);
+
+    FancyData fd1;
+    fd1.setScalar(2);
 
     Hash h;
-    
-    h.set("fd2", fd2); // Here the original object on the stack is copied    
 
-    CPPUNIT_ASSERT(h.get<FancyData>("fd2").getScalar() == 2);
+    h.set("fd1", fd1); // Here the original object on the stack is copied
+    h.set("h1", Hash("someRegular", "hash"));
+
+    CPPUNIT_ASSERT(h.get<FancyData>("fd1").getScalar() == 2);
 
     // The classId is automatically added as attribute
-    CPPUNIT_ASSERT(h.getAttribute<string>("fd2", "__classId") == "FancyData");
-    
-    h.get<FancyData>("fd2").setScalar(-2);
-    CPPUNIT_ASSERT(fd2.getScalar() == 2);
+    CPPUNIT_ASSERT(h.getAttribute<string>("fd1", "__classId") == "FancyData");
+
+    // This doesn't not happen for plain nested hashes
+    CPPUNIT_ASSERT(h.hasAttribute("h1", "__classId") == false);
+
+    h.get<FancyData>("fd1").setScalar(-2);
+    CPPUNIT_ASSERT(fd1.getScalar() == 2);
 
     // Here a copy is done
-    FancyData fd3 = h.get<FancyData>("fd2");
-    fd3.setScalar(1);
+    FancyData fd2 = h.get<FancyData>("fd1");
+    fd2.setScalar(1);
     
-    
-    CPPUNIT_ASSERT(fd3.getScalar() == 1);
-    CPPUNIT_ASSERT(h.get<FancyData>("fd2").getScalar() == -2);
+
+    CPPUNIT_ASSERT(fd2.getScalar() == 1);
+    CPPUNIT_ASSERT(h.get<FancyData>("fd1").getScalar() == -2);
 }
 
 

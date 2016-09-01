@@ -67,7 +67,7 @@ namespace karabo {
             struct SetClassIdAttribute<ValueType, boost::false_type> {
 
                 SetClassIdAttribute(const ValueType& value, Element& e) {
-                    // Do nothing by purpose!
+                    // Do nothing on purpose!
                 }
             };
 
@@ -93,11 +93,12 @@ namespace karabo {
             inline void setValue(const boost::shared_ptr<ValueType>& value);
 
             // This overload specializes the behavior for inserting plain Hashes
-            // It is needed as derived objects from Hash are always converted into shared_ptrs
-            // which would break a lot of related code if done for Hash (expecially type-related things)
-            // TODO: Re-factor to also save Hash as shared_ptr and adapt all related code
+            // Objects derived from Hash are treated differently
             void setValue(const Hash& value);
 
+            // Keeping downward compatibility we allow insertion of
+            // shared_ptr<Hash>. In general, we will create a compiler
+            // error for all objects deriving from Hash and wrapped as shared pointer.
             void setValue(const boost::shared_ptr<Hash>& value);
 
             void setValue(const char* const& value);
