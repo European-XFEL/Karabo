@@ -62,183 +62,168 @@ namespace karathon {
     }
 
 
-    //    boost::shared_ptr<karabo::xms::ImageData > ImageDataWrap::make5(const bp::object& obj,
-    //                                                                    const karabo::util::Dims& dimensions,
-    //                                                                    const karabo::xms::EncodingType encoding,
-    //                                                                    const int bitsPerPixel) {
-    //
-    //        using namespace karabo::util;
-    //        using namespace karabo::xms;
-    //
-    //        boost::shared_ptr<ImageData > self(new ImageData());
-    //
-    //        if (obj == bp::object())
-    //            return self;
-    //
-    //        if (PyArray_Check(obj.ptr())) {
-    //            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
-    //            const NDArray ndarray = Wrapper::fromPyArrayToNDArray(arr);
-    //            Dims _dimensions = ndarray.getShape();
-    //            const int rank = _dimensions.rank();
-    //
-    //            // Encoding
-    //            EncodingType _encoding = encoding;
-    //            if (encoding == Encoding::UNDEFINED) {
-    //                // No encoding info -> try to guess it from ndarray shape
-    //                if (rank == 2 || (rank == 3 && _dimensions.x3() == 1))
-    //                    _encoding = Encoding::GRAY;
-    //                else if (rank == 3 && _dimensions.x3() == 3)
-    //                    _encoding = Encoding::RGB;
-    //                else if (rank == 3 && _dimensions.x3() == 4)
-    //                    _encoding = Encoding::RGBA;
-    //            }
-    //
-    //            // Dimensions (shape)
-    //
-    //            if (_encoding == Encoding::RGB || _encoding == Encoding::RGBA ||
-    //                _encoding == Encoding::BGR || _encoding == Encoding::BGRA ||
-    //                _encoding == Encoding::CMYK || _encoding == Encoding::YUV) {
-    //                // Color images -> use ndarray dimensions
-    //                if (rank != 3) {
-    //                    throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
-    //                }
-    //                // Flip X & Y dimensions
-    //                _dimensions = Dims(_dimensions.x2(), _dimensions.x1(), _dimensions.x3());
-    //            } else if (_encoding == Encoding::GRAY) {
-    //                // Gray-scale images -> use ndarray dimensions
-    //                if ((rank != 2) && !((rank == 3) && (_dimensions.x3() == 1))) {
-    //                    throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
-    //                }
-    //                // Flip X & Y dimensions
-    //                if (rank == 2) {
-    //                    _dimensions.reverse();
-    //                } else {
-    //                    _dimensions = Dims(_dimensions.x2(), _dimensions.x1());
-    //                }
-    //            } else if (_encoding == Encoding::JPEG || _encoding == Encoding::PNG ||
-    //                       _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
-    //                // JPEG, PNG, BMP, TIFF -> cannot use ndarray dimensions, use therefore input parameter
-    //                _dimensions = dimensions;
-    //                if (dimensions.size() == 0) {
-    //                    throw KARABO_PYTHON_EXCEPTION("Dimensions must be supplied for encoded images");
-    //                }
-    //            } else {
-    //                // Other encodings. Likely it will need to be fixed!
-    //                _dimensions.reverse();
-    //            }
-    //
-    //            // XXX: Bits per pixel?
-    //            std::vector<unsigned long long> offsets(_dimensions.rank(), 0);
-    //            self->setDimensions(_dimensions);
-    //            self->setROIOffsets(Dims(offsets));
-    //            self->setEncoding(_encoding);
-    //        } else {
-    //            throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray");
-    //        }
-    //        return self;
-    //    }
-    //
-    //
-    //    bp::object ImageDataWrap::getDataPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
-    //        return Wrapper::fromNDArrayToPyArray(self->getData());
-    //    }
-    //
-    //    //
-    //    //    void ImageDataWrap::setDataPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj) {
-    //    //        self->setData(Wrapper::fromPyArrayToNDArray(obj));
-    //    //    }
-    //
-    //
-    //    bp::object ImageDataWrap::getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
-    //        karabo::util::Dims dims = self->getDimensions();
-    //        return Wrapper::fromStdVectorToPyList(dims.toVector());
-    //    }
-    //
-    //
-    //    void ImageDataWrap::setDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
-    //        if (bp::extract<karabo::util::Dims>(obj).check()) {
-    //            self->setDimensions(bp::extract<karabo::util::Dims>(obj));
-    //        } else if (bp::extract<bp::list>(obj).check()) {
-    //            karabo::util::Dims dims(Wrapper::fromPyListToStdVector<unsigned long long>(obj));
-    //            self->setDimensions(dims);
-    //        } else if (bp::extract<bp::tuple>(obj).check()) {
-    //            karabo::util::Dims dims(Wrapper::fromPyTupleToStdVector<unsigned long long>(obj));
-    //            self->setDimensions(dims);
-    //        } else
-    //            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
-    //    }
-    //
-    //
-    //    bp::object ImageDataWrap::getDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
-    //        return Wrapper::fromStdVectorToPyList(self->getDimensionTypes());
-    //    }
-    //
-    //
-    //    void ImageDataWrap::setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
-    //        if (bp::extract<bp::list>(obj).check()) {
-    //            bp::ssize_t size = bp::len(obj);
-    //            std::vector<int> dimTypes(size);
-    //            for (int i = 0; i < size; i++) {
-    //                dimTypes[i] = bp::extract<int>(obj[i]);
-    //            }
-    //            self->setDimensionTypes(dimTypes);
-    //        } else
-    //            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
-    //    }
-    //
-    //
-    //    bp::object ImageDataWrap::getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
-    //        karabo::util::Dims offsets = self->getROIOffsets();
-    //        return Wrapper::fromStdVectorToPyList(offsets.toVector());
-    //    }
-    //
-    //
-    //    void ImageDataWrap::setROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
-    //        if (bp::extract<karabo::util::Dims>(obj).check()) {
-    //            self->setROIOffsets(bp::extract<karabo::util::Dims>(obj));
-    //        } else if (bp::extract<bp::list>(obj).check()) {
-    //            karabo::util::Dims offsets(Wrapper::fromPyListToStdVector<unsigned long long>(obj));
-    //            self->setROIOffsets(offsets);
-    //        } else
-    //            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
-    //    }
-    //
-    //
-    //    bp::object ImageDataWrap::getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
-    //        return bp::object(karabo::xms::EncodingType(self->getEncoding()));
-    //    }
-    //
-    //
-    //    void ImageDataWrap::setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& geometry) {
-    //        karabo::util::DetectorGeometry geo = bp::extract<karabo::util::DetectorGeometry>(geometry);
-    //        self->setGeometry(geo);
-    //    }
-    //
-    //
-    //    karabo::util::DetectorGeometry ImageDataWrap::getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
-    //        return self->getGeometry();
-    //    }
-    //
-    //
-    //    void ImageDataWrap::setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& header) {
-    //        karabo::util::Hash head = bp::extract<karabo::util::Hash>(header);
-    //        self->setHeader(head);
-    //    }
-    //
-    //
-    //    const karabo::util::Hash& ImageDataWrap::getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
-    //        return self->getHeader();
-    //    }
+    boost::shared_ptr<karabo::xms::ImageData > ImageDataWrap::make5(const bp::object& obj,
+                                                                    const karabo::util::Dims& dimensions,
+                                                                    const karabo::xms::EncodingType encoding,
+                                                                    const int bitsPerPixel) {
+
+        using namespace karabo::util;
+        using namespace karabo::xms;
+
+        boost::shared_ptr<ImageData > self(new ImageData());
+
+        if (obj == bp::object())
+            return self;
+
+        if (PyArray_Check(obj.ptr())) {
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
+            const NDArray ndarray = Wrapper::fromPyArrayToNDArray(arr);
+            Dims _dimensions = ndarray.getShape();
+            const int rank = _dimensions.rank();
+
+            // Encoding
+            EncodingType _encoding = encoding;
+            if (encoding == Encoding::UNDEFINED) {
+                // No encoding info -> try to guess it from ndarray shape
+                if (rank == 2 || (rank == 3 && _dimensions.x3() == 1))
+                    _encoding = Encoding::GRAY;
+                else if (rank == 3 && _dimensions.x3() == 3)
+                    _encoding = Encoding::RGB;
+                else if (rank == 3 && _dimensions.x3() == 4)
+                    _encoding = Encoding::RGBA;
+            }
+
+            // Dimensions (shape)
+            if (_encoding == Encoding::JPEG || _encoding == Encoding::PNG ||
+                    _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
+                // JPEG, PNG, BMP, TIFF -> cannot use ndarray dimensions, use therefore input parameter
+                _dimensions = dimensions;
+                if (dimensions.size() == 0) {
+                    throw KARABO_PYTHON_EXCEPTION("Dimensions must be supplied for encoded images");
+                }
+            }
+
+            // XXX: Bits per pixel?
+            std::vector<unsigned long long> offsets(rank, 0);
+            self->setDimensions(_dimensions);
+            self->setROIOffsets(Dims(offsets));
+            self->setEncoding(_encoding);
+        } else {
+            throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray");
+        }
+        return self;
+    }
 
 
-    //    karabo::xms::ImageDataElement& ImageDataElementWrap::setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement >& self,
-    //                                                                         const std::string& subKey,
-    //                                                                         const bp::object& defaultValue) {
-    //
-    //        boost::any anyValue;
-    //        karathon::Wrapper::toAny(defaultValue, anyValue);
-    //        return self->setDefaultValue(subKey, anyValue);
-    //    }
+    bp::object ImageDataWrap::getDataPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+        return Wrapper::fromNDArrayToPyArray(self->getData());
+    }
+
+
+    void ImageDataWrap::setDataPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
+        PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
+        self->setData(Wrapper::fromPyArrayToNDArray(arr));
+    }
+
+
+    bp::object ImageDataWrap::getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+        karabo::util::Dims dims = self->getDimensions();
+        return Wrapper::fromStdVectorToPyTuple(dims.toVector());
+    }
+
+
+    void ImageDataWrap::setDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
+        if (bp::extract<karabo::util::Dims>(obj).check()) {
+            self->setDimensions(bp::extract<karabo::util::Dims>(obj));
+        } else if (bp::extract<bp::list>(obj).check()) {
+            karabo::util::Dims dims(Wrapper::fromPyListToStdVector<unsigned long long>(obj));
+            self->setDimensions(dims);
+        } else if (bp::extract<bp::tuple>(obj).check()) {
+            karabo::util::Dims dims(Wrapper::fromPyTupleToStdVector<unsigned long long>(obj));
+            self->setDimensions(dims);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
+        }
+    }
+
+
+    bp::object ImageDataWrap::getDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+        return Wrapper::fromStdVectorToPyTuple(self->getDimensionTypes());
+    }
+
+
+    void ImageDataWrap::setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
+        if (bp::extract<bp::list>(obj).check()) {
+            bp::ssize_t size = bp::len(obj);
+            std::vector<int> dimTypes(size);
+            for (int i = 0; i < size; i++) {
+                dimTypes[i] = bp::extract<int>(obj[i]);
+            }
+            self->setDimensionTypes(dimTypes);
+        } else if (bp::extract<bp::tuple>(obj).check()) {
+            std::vector<int> dimTypes = Wrapper::fromPyTupleToStdVector<int>(obj);
+            self->setDimensionTypes(dimTypes);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
+        }
+    }
+
+
+    bp::object ImageDataWrap::getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+        karabo::util::Dims offsets = self->getROIOffsets();
+        return Wrapper::fromStdVectorToPyTuple(offsets.toVector());
+    }
+
+
+    void ImageDataWrap::setROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
+        if (bp::extract<karabo::util::Dims>(obj).check()) {
+            self->setROIOffsets(bp::extract<karabo::util::Dims>(obj));
+        } else if (bp::extract<bp::list>(obj).check()) {
+            karabo::util::Dims offsets(Wrapper::fromPyListToStdVector<unsigned long long>(obj));
+            self->setROIOffsets(offsets);
+        } else if (bp::extract<bp::tuple>(obj).check()) {
+            karabo::util::Dims offsets(Wrapper::fromPyTupleToStdVector<unsigned long long>(obj));
+            self->setROIOffsets(offsets);
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
+    }
+
+
+    bp::object ImageDataWrap::getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+        return bp::object(karabo::xms::EncodingType(self->getEncoding()));
+    }
+
+
+    void ImageDataWrap::setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& geometry) {
+        karabo::util::DetectorGeometry geo = bp::extract<karabo::util::DetectorGeometry>(geometry);
+        self->setGeometry(geo);
+    }
+
+
+    karabo::util::DetectorGeometry ImageDataWrap::getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+        return self->getGeometry();
+    }
+
+
+    void ImageDataWrap::setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& header) {
+        karabo::util::Hash head = bp::extract<karabo::util::Hash>(header);
+        self->setHeader(head);
+    }
+
+
+    const karabo::util::Hash& ImageDataWrap::getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+        return self->getHeader();
+    }
+
+
+    // karabo::xms::ImageDataElement& ImageDataElementWrap::setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement >& self,
+    //                                                                      const std::string& subKey,
+    //                                                                      const bp::object& defaultValue) {
+
+    //     boost::any anyValue;
+    //     karathon::Wrapper::toAny(defaultValue, anyValue);
+    //     return self->setDefaultValue(subKey, anyValue);
+    // }
 
 
     void OutputChannelWrap::registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
@@ -339,11 +324,6 @@ namespace karathon {
 }
 
 
-using namespace std;
-using namespace karabo::util;
-using namespace karabo::xms;
-
-
 template <typename T>
 void exportPyXmsImageData() {
 
@@ -354,15 +334,15 @@ void exportPyXmsImageData() {
 
 void exportPyXmsInputOutputChannel() {
     {
-        bp::class_<Data, boost::shared_ptr<Data> >("Data", bp::init<>())
+        bp::class_<karabo::xms::Data, boost::shared_ptr<karabo::xms::Data > >("Data", bp::init<>())
 
-                .def(bp::init<const string&, const Hash&>((bp::arg("channel"), bp::arg("config"))))
+                .def(bp::init<const std::string&, const karabo::util::Hash&>((bp::arg("channel"), bp::arg("config"))))
 
-                .def(bp::init<const string&, const Data&>((bp::arg("key"), bp::arg("other"))))
+                .def(bp::init<const std::string&, const karabo::xms::Data&>((bp::arg("key"), bp::arg("other"))))
 
                 .def("__init__", bp::make_constructor(&karathon::DataWrap::make, bp::default_call_policies(), (bp::arg("data"))))
 
-                .def("setNode", &Data::setNode, (bp::arg("key"), bp::arg("data")))
+                .def("setNode", &karabo::xms::Data::setNode, (bp::arg("key"), bp::arg("data")))
 
                 .def("getNode", &karathon::DataWrap().getNode, (bp::arg("key")))
 
@@ -374,13 +354,13 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("__setitem__", &karathon::DataWrap().set)
 
-                .def("has", &Data::has, (bp::arg("key")))
+                .def("has", &karabo::xms::Data::has, (bp::arg("key")))
 
-                .def("__contains__", &Data::has, (bp::arg("key")))
+                .def("__contains__", &karabo::xms::Data::has, (bp::arg("key")))
 
-                .def("erase", &Data::erase, (bp::arg("key")))
+                .def("erase", &karabo::xms::Data::erase, (bp::arg("key")))
 
-                .def("__delitem__", &Data::erase, (bp::arg("key")))
+                .def("__delitem__", &karabo::xms::Data::erase, (bp::arg("key")))
 
                 .def("hash", &karathon::DataWrap().hash)
 
@@ -394,7 +374,7 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("__deepcopy__", &karathon::DataWrap().copy)
 
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(Data)
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::Data)
                 ;
     }
 
@@ -417,92 +397,117 @@ void exportPyXmsInputOutputChannel() {
                 ;
     }
 
-    //    {
-    //        bp::class_<ImageData, boost::shared_ptr<ImageData > >("ImageData", bp::init<>())
-    //
-    //                .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make5,
-    //                                                      bp::default_call_policies(),
-    //                                                      (bp::arg("array"),
-    //                                                       bp::arg("dims") = karabo::util::Dims(),
-    //                                                       bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
-    //                                                       bp::arg("bitsPerPixel") = 8)))
-    //
-    //                .def("getData", &karathon::ImageDataWrap::getDataPy)
-    //
-    //                //                .def("setData", &karathon::ImageDataWrap::setDataPy, (bp::arg("data")))
-    //
-    //                .def("getDimensions", &karathon::ImageDataWrap::getDimensionsPy)
-    //
-    //                .def("setDimensions", &karathon::ImageDataWrap::setDimensionsPy, (bp::arg("dims")))
-    //
-    //                .def("getDimensionTypes", &karathon::ImageDataWrap::getDimensionTypesPy)
-    //
-    //                .def("setDimensionTypes", &karathon::ImageDataWrap::setDimensionTypesPy, (bp::arg("listOfDimTypes")))
-    //
-    //                .def("getROIOffsets", &karathon::ImageDataWrap::getROIOffsetsPy)
-    //
-    //                .def("setROIOffsets", &karathon::ImageDataWrap::setROIOffsetsPy, (bp::arg("offsets")))
-    //
-    //                .def("getEncoding", &karathon::ImageDataWrap::getEncodingPy)
-    //
-    //                .def("setEncoding", &ImageData::setEncoding, (bp::arg("encoding")))
-    //
-    //                .def("getDimensionScales", &ImageData::getDimensionScales, bp::return_value_policy< bp::copy_const_reference >())
-    //
-    //                .def("setDimensionScales", &ImageData::setDimensionScales, (bp::arg("scales")))
-    //
-    //                .def("setGeometry", &karathon::ImageDataWrap::setGeometryPy, (bp::arg("geometry")))
-    //
-    //                .def("getGeometry", &karathon::ImageDataWrap::getGeometryPy)
-    //
-    //                .def("getHeader", &karathon::ImageDataWrap::getHeaderPy, bp::return_value_policy< bp::copy_const_reference >())
-    //
-    //                .def("setHeader", &karathon::ImageDataWrap::setHeaderPy, (bp::arg("header")))
-    //                ;
-    //    }
-    //    {
-    //        bp::implicitly_convertible< Schema &, ImageDataElement >();
-    //        bp::class_<ImageDataElement > ("IMAGEDATA_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
-    //
-    //                .def("key", &ImageDataElement::key
-    //                     , (bp::arg("key"))
-    //                     , bp::return_internal_reference<> ())
-    //
-    //                .def("setDefaultValue", &karathon::ImageDataElementWrap().setDefaultValue
-    //                     , (bp::arg("subKey"), bp::arg("defaultValue"))
-    //                     , bp::return_internal_reference<> ())
-    //
-    //                .def("commit", &ImageDataElement::commit, bp::return_internal_reference<> ())
-    //
-    //                .def("setDimensionScales", &ImageDataElement::setDimensionScales
-    //                     , (bp::arg("scales"))
-    //                     , bp::return_internal_reference<> ())
-    //
-    //                .def("setDimensions", &ImageDataElement::setDimensions
-    //                     , (bp::arg("dims"))
-    //                     , bp::return_internal_reference<> ())
-    //
-    //                .def("setEncoding", &ImageDataElement::setEncoding
-    //                     , (bp::arg("encoding"))
-    //                     , bp::return_internal_reference<> ())
-    //
-    //                .def("setGeometry", &ImageDataElement::setGeometry
-    //                     , (bp::arg("geometry"))
-    //                     , bp::return_internal_reference<>())
-    //                ;
-    //    }
+    {
+        bp::class_<karabo::xms::ImageData, boost::shared_ptr<karabo::xms::ImageData > >("ImageData", bp::init<>())
+
+                .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make5,
+                                                        bp::default_call_policies(),
+                                                        (bp::arg("array"),
+                                                        bp::arg("dims") = karabo::util::Dims(),
+                                                        bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
+                                                        bp::arg("bitsPerPixel") = 8)))
+
+                .def("getData", &karathon::ImageDataWrap::getDataPy)
+
+                .def("setData", &karathon::ImageDataWrap::setDataPy, (bp::arg("data")))
+
+                .def("getDimensions", &karathon::ImageDataWrap::getDimensionsPy)
+
+                .def("setDimensions", &karathon::ImageDataWrap::setDimensionsPy, (bp::arg("dims")))
+
+                .def("getDimensionTypes", &karathon::ImageDataWrap::getDimensionTypesPy)
+
+                .def("setDimensionTypes", &karathon::ImageDataWrap::setDimensionTypesPy, (bp::arg("listOfDimTypes")))
+
+                .def("getROIOffsets", &karathon::ImageDataWrap::getROIOffsetsPy)
+
+                .def("setROIOffsets", &karathon::ImageDataWrap::setROIOffsetsPy, (bp::arg("offsets")))
+
+                .def("getEncoding", &karathon::ImageDataWrap::getEncodingPy)
+
+                .def("setEncoding", &karabo::xms::ImageData::setEncoding, (bp::arg("encoding")))
+
+                .def("getDimensionScales", &karabo::xms::ImageData::getDimensionScales, bp::return_value_policy< bp::copy_const_reference >())
+
+                .def("setDimensionScales", &karabo::xms::ImageData::setDimensionScales, (bp::arg("scales")))
+
+                .def("setGeometry", &karathon::ImageDataWrap::setGeometryPy, (bp::arg("geometry")))
+
+                .def("getGeometry", &karathon::ImageDataWrap::getGeometryPy)
+
+                .def("getHeader", &karathon::ImageDataWrap::getHeaderPy, bp::return_value_policy< bp::copy_const_reference >())
+
+                .def("setHeader", &karathon::ImageDataWrap::setHeaderPy, (bp::arg("header")))
+                ;
+    }
+    {
+        bp::implicitly_convertible< karabo::util::Schema &, karabo::xms::ImageDataElement >();
+        bp::class_<karabo::xms::ImageDataElement > ("IMAGEDATA_ELEMENT", bp::init<karabo::util::Schema & >((bp::arg("expected"))))
+
+                .def("key", &karabo::xms::ImageDataElement::key
+                    , (bp::arg("key"))
+                    , bp::return_internal_reference<> ())
+
+                .def("displayedName", &karabo::xms::ImageDataElement::displayedName
+                    , bp::arg("name")
+                    , bp::return_internal_reference<> ())
+
+                .def("description", &karabo::xms::ImageDataElement::description
+                    , bp::arg("desc")
+                    , bp::return_internal_reference<> ())
+
+                // .def("setDefaultValue", &karathon::ImageDataElementWrap().setDefaultValue
+                //     , (bp::arg("subKey"), bp::arg("defaultValue"))
+                //     , bp::return_internal_reference<> ())
+
+
+                .def("observerAccess", &karabo::xms::ImageDataElement::observerAccess
+                    , bp::return_internal_reference<> ())
+
+                .def("userAccess", &karabo::xms::ImageDataElement::userAccess
+                    , bp::return_internal_reference<> ())
+
+                .def("operatorAccess", &karabo::xms::ImageDataElement::operatorAccess
+                    , bp::return_internal_reference<> ())
+
+                .def("expertAccess", &karabo::xms::ImageDataElement::expertAccess
+                    , bp::return_internal_reference<> ())
+
+                .def("adminAccess", &karabo::xms::ImageDataElement::adminAccess
+                    , bp::return_internal_reference<> ())
+
+                .def("commit", &karabo::xms::ImageDataElement::commit
+                    , bp::return_internal_reference<> ())
+
+                .def("setDimensionScales", &karabo::xms::ImageDataElement::setDimensionScales
+                    , (bp::arg("scales"))
+                    , bp::return_internal_reference<> ())
+
+                .def("setDimensions", &karabo::xms::ImageDataElement::setDimensions
+                    , (bp::arg("dims"))
+                    , bp::return_internal_reference<> ())
+
+                .def("setEncoding", &karabo::xms::ImageDataElement::setEncoding
+                    , (bp::arg("encoding"))
+                    , bp::return_internal_reference<> ())
+
+                .def("setGeometry", &karabo::xms::ImageDataElement::setGeometry
+                    , (bp::arg("geometry"))
+                    , bp::return_internal_reference<>())
+                ;
+    }
 
 
     {
-        bp::class_<OutputChannel, boost::shared_ptr<OutputChannel>, boost::noncopyable >("OutputChannel", bp::no_init)
+        bp::class_<karabo::xms::OutputChannel, boost::shared_ptr<karabo::xms::OutputChannel>, boost::noncopyable >("OutputChannel", bp::no_init)
 
-                .def("setInstanceId", &OutputChannel::setInstanceId, (bp::arg("instanceId")))
+                .def("setInstanceId", &karabo::xms::OutputChannel::setInstanceId, (bp::arg("instanceId")))
 
-                .def("getInstanceId", &OutputChannel::getInstanceId, bp::return_value_policy<bp::copy_const_reference > ())
+                .def("getInstanceId", &karabo::xms::OutputChannel::getInstanceId, bp::return_value_policy<bp::copy_const_reference > ())
 
                 .def("registerIOEventHandler", &karathon::OutputChannelWrap().registerIOEventHandlerPy)
 
-                .def("getInformation", &OutputChannel::getInformation)
+                .def("getInformation", &karabo::xms::OutputChannel::getInformation)
 
                 .def("write", &karathon::OutputChannelWrap().writePy, (bp::arg("data")))
 
@@ -510,44 +515,48 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("signalEndOfStream", &karathon::OutputChannelWrap().signalEndOfStreamPy)
 
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(OutputChannel)
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::OutputChannel)
                 ;
 
     }
 
     {
-        bp::implicitly_convertible< Schema &, OutputChannelElement >();
-        bp::class_<OutputChannelElement> ("OUTPUT_CHANNEL", bp::init<Schema & >((bp::arg("expected"))))
+        bp::implicitly_convertible< karabo::util::Schema &, karabo::xms::OutputChannelElement >();
+        bp::class_<karabo::xms::OutputChannelElement> ("OUTPUT_CHANNEL", bp::init<karabo::util::Schema & >((bp::arg("expected"))))
 
-                .def("key", &OutputChannelElement::key
+                .def("key", &karabo::xms::OutputChannelElement::key
                      , (bp::arg("key"))
                      , bp::return_internal_reference<> ())
 
-                .def("displayedName", &OutputChannelElement::displayedName
+                .def("displayedName", &karabo::xms::OutputChannelElement::displayedName
                      , (bp::arg("name"))
                      , bp::return_internal_reference<> ())
 
-                .def("description", &OutputChannelElement::description
+                .def("description", &karabo::xms::OutputChannelElement::description
                      , (bp::arg("description"))
                      , bp::return_internal_reference<> ())
 
-                .def("dataSchema", &OutputChannelElement::dataSchema
+                .def("dataSchema", &karabo::xms::OutputChannelElement::dataSchema
                      , (bp::arg("schema"))
                      , bp::return_internal_reference<> ())
 
-                .def("commit", &OutputChannelElement::commit, bp::return_internal_reference<> ())
+                .def("commit", &karabo::xms::OutputChannelElement::commit
+                     , bp::return_internal_reference<> ())
 
                 ;
     }
 
     {
-        bp::class_<InputChannel, boost::shared_ptr<InputChannel>, boost::noncopyable >("InputChannel", bp::no_init)
+        bp::class_<karabo::xms::InputChannel, boost::shared_ptr<karabo::xms::InputChannel>, boost::noncopyable >("InputChannel", bp::no_init)
 
-                .def("reconfigure", &InputChannel::reconfigure, (bp::arg("configuration")))
+                .def("reconfigure", &karabo::xms::InputChannel::reconfigure
+                    , (bp::arg("configuration")))
 
-                .def("setInstanceId", &InputChannel::setInstanceId, (bp::arg("instanceId")))
+                .def("setInstanceId", &karabo::xms::InputChannel::setInstanceId
+                    , (bp::arg("instanceId")))
 
-                .def("getInstanceId", &InputChannel::getInstanceId, bp::return_value_policy<bp::copy_const_reference > ())
+                .def("getInstanceId", &karabo::xms::InputChannel::getInstanceId
+                    , bp::return_value_policy<bp::copy_const_reference > ())
 
                 .def("registerDataHandler", &karathon::InputChannelWrap().registerDataHandlerPy)
 
@@ -555,51 +564,55 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("registerEndOfStreamEventHandler", &karathon::InputChannelWrap().registerEndOfStreamEventHandlerPy)
 
-                .def("triggerIOEvent", &InputChannel::triggerIOEvent)
+                .def("triggerIOEvent", &karabo::xms::InputChannel::triggerIOEvent)
 
-                .def("triggerEndOfStreamEvent", &InputChannel::triggerEndOfStreamEvent)
+                .def("triggerEndOfStreamEvent", &karabo::xms::InputChannel::triggerEndOfStreamEvent)
 
                 .def("getConnectedOutputChannels", &karathon::InputChannelWrap().getConnectedOutputChannelsPy)
 
-                .def("read", &karathon::InputChannelWrap().readPy, (bp::arg("idx")))
+                .def("read", &karathon::InputChannelWrap().readPy
+                    , (bp::arg("idx")))
 
-                .def("size", &InputChannel::size)
+                .def("size", &karabo::xms::InputChannel::size)
 
-                .def("getMinimumNumberOfData", &InputChannel::getMinimumNumberOfData)
+                .def("getMinimumNumberOfData", &karabo::xms::InputChannel::getMinimumNumberOfData)
 
-                .def("connect", &karathon::InputChannelWrap().connectPy, (bp::arg("outputChannelInfo")))
+                .def("connect", &karathon::InputChannelWrap().connectPy
+                    , (bp::arg("outputChannelInfo")))
 
-                .def("disconnect", &karathon::InputChannelWrap().disconnectPy, (bp::arg("outputChannelInfo")))
+                .def("disconnect", &karathon::InputChannelWrap().disconnectPy
+                    , (bp::arg("outputChannelInfo")))
 
-                .def("canCompute", &InputChannel::canCompute)
+                .def("canCompute", &karabo::xms::InputChannel::canCompute)
 
                 .def("update", &karathon::InputChannelWrap().updatePy)
 
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(InputChannel)
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::InputChannel)
                 ;
     }
 
     {
-        bp::implicitly_convertible< Schema &, InputChannelElement >();
-        bp::class_<InputChannelElement> ("INPUT_CHANNEL", bp::init<Schema & >((bp::arg("expected"))))
+        bp::implicitly_convertible< karabo::util::Schema &, karabo::xms::InputChannelElement >();
+        bp::class_<karabo::xms::InputChannelElement> ("INPUT_CHANNEL", bp::init<karabo::util::Schema & >((bp::arg("expected"))))
 
-                .def("key", &InputChannelElement::key
+                .def("key", &karabo::xms::InputChannelElement::key
                      , (bp::arg("key"))
                      , bp::return_internal_reference<> ())
 
-                .def("displayedName", &InputChannelElement::displayedName
+                .def("displayedName", &karabo::xms::InputChannelElement::displayedName
                      , (bp::arg("name"))
                      , bp::return_internal_reference<> ())
 
-                .def("description", &InputChannelElement::description
+                .def("description", &karabo::xms::InputChannelElement::description
                      , (bp::arg("description"))
                      , bp::return_internal_reference<> ())
 
-                .def("dataSchema", &InputChannelElement::dataSchema
+                .def("dataSchema", &karabo::xms::InputChannelElement::dataSchema
                      , (bp::arg("schema"))
                      , bp::return_internal_reference<> ())
 
-                .def("commit", &InputChannelElement::commit, bp::return_internal_reference<> ())
+                .def("commit", &karabo::xms::InputChannelElement::commit
+                     , bp::return_internal_reference<> ())
 
                 ;
     }

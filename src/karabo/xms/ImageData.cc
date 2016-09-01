@@ -59,6 +59,10 @@ namespace karabo {
         }
 
 
+        ImageData::ImageData() {
+        }
+
+
         ImageData::ImageData(const karabo::util::NDArray& data,
                              const karabo::util::Dims& dims,
                              const EncodingType encoding,
@@ -66,14 +70,15 @@ namespace karabo {
 
             setData(data);
             setDimensions(dims);
-            if (dims.size() == 0) {
-                setROIOffsets(karabo::util::Dims(0));
-            } else {
-                std::vector<unsigned long long> offsets(dims.rank(), 0);
-                setROIOffsets(karabo::util::Dims(offsets));
-            }
             setEncoding(encoding);
             setBitsPerPixel(bitsPerPixel);
+
+            int rank = dims.rank();
+            if (dims.size() == 0) {
+                rank = data.getShape().rank();
+            }
+            std::vector<unsigned long long> offsets(rank, 0);
+            setROIOffsets(karabo::util::Dims(offsets));
         }
 
 
@@ -116,7 +121,6 @@ namespace karabo {
             if (dims.size() == 0) {
                 // Will use the shape information of underlying NDArray as best guess
                 std::vector<unsigned long long> shape = get<NDArray>("pixels").getShape().toVector();
-                std::reverse(shape.begin(), shape.end());
                 set("dims", shape);
             } else {
                 // XXX: Make sure dimensions match the size of the data!

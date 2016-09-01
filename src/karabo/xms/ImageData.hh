@@ -134,31 +134,39 @@ namespace karabo {
          * Declaration ImageDataElement
          **********************************************************************/
 
-        class ImageDataElement : public karabo::util::CustomNodeElement<ImageData > {
+        class ImageDataElement : public karabo::util::CustomNodeElement<ImageDataElement, ImageData > {
+
+            typedef karabo::util::CustomNodeElement<ImageDataElement, ImageData > ParentType;
 
         public:
 
-            ImageDataElement(karabo::util::Schema& s) : CustomNodeElement<ImageData>(s) {
+            ImageDataElement(karabo::util::Schema& s) : ParentType(s) {
             }
 
-            CustomNodeElement<ImageData>& setDimensionScales(const std::string& scales) {
-                return CustomNodeElement<ImageData >::setDefaultValue("dimScales", scales);
+            ImageDataElement& setDimensionScales(const std::string& scales) {
+                return ParentType::setDefaultValue("dimScales", scales);
             }
 
-            CustomNodeElement<ImageData>& setDimensions(const std::string& dimensions) {
+            ImageDataElement& setDimensions(const std::string& dimensions) {
                 std::vector<unsigned long long> tmp = karabo::util::fromString<unsigned long long, std::vector>(dimensions);
-                return CustomNodeElement<ImageData >::setDefaultValue("dims", tmp);
+                return ParentType::setDefaultValue("dims", tmp);
             }
 
-            CustomNodeElement<ImageData >& setEncoding(const EncodingType& encoding) {
-                return CustomNodeElement<ImageData >::setDefaultValue("encoding", (int) encoding);
+            ImageDataElement& setEncoding(const EncodingType& encoding) {
+                return ParentType::setDefaultValue("encoding", (int) encoding);
             }
 
             // TODO Make Geometry a serializable object, too
 
-            CustomNodeElement<ImageData >& setGeometry(karabo::util::DetectorGeometry& geometry) {
+            ImageDataElement& setGeometry(karabo::util::DetectorGeometry& geometry) {
                 geometry.toSchema("data.geometry", this->m_schema);
-                return CustomNodeElement<ImageData >::setDefaultValue("detectorGeometry", geometry.toHash());
+                return ParentType::setDefaultValue("detectorGeometry", geometry.toHash());
+            }
+
+            void commit() {
+                // As ImageDataElement is only used for channel descriptions, it should always be read only.
+                readOnly();
+                ParentType::commit();
             }
 
         };

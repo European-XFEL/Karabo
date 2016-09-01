@@ -40,7 +40,7 @@ namespace karabo {
          *
          *
          */
-        template <class Described>
+        template <class Derived, class Described>
         class CustomNodeElement {
 
             std::string m_key;
@@ -54,37 +54,117 @@ namespace karabo {
                 m_key = Described::classInfo().getClassId();
             }
 
-            CustomNodeElement& key(const std::string& key) {
+            Derived& key(const std::string& key) {
                 using namespace karabo::util;
                 m_key = key;
                 NODE_ELEMENT(m_schema).key(m_key)
                         .appendParametersOf<Described>()
                         .commit();
-                return *this;
+
+                return *(static_cast<Derived*> (this));
+            }
+
+            Derived& displayedName(const std::string& name) {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key)
+                        .setNewDisplayedName(name)
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
+
+            Derived& description(const std::string& desc) {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key)
+                        .setNewDescription(desc)
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
+
+            Derived& init() {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key)
+                        .setNowInit()
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
+
+            Derived& reconfigurable() {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key)
+                        .setNowReconfigurable()
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
+
+            Derived& readOnly() {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key)
+                        .setNowReadOnly()
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
+
+            Derived& observerAccess() {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key)
+                        .setNowObserverAccess()
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
+
+            Derived& userAccess() {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key)
+                        .setNowUserAccess()
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
+
+            Derived& operatorAccess() {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key)
+                        .setNowOperatorAccess()
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
+
+            Derived& expertAccess() {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key)
+                        .setNowExpertAccess()
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
+
+            Derived& adminAccess() {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key)
+                        .setNowAdminAccess()
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
             }
 
             template <class T>
-            CustomNodeElement& setDefaultValue(const std::string& subKey, const T& defaultValue) {
+            Derived& setDefaultValue(const std::string& subKey, const T& defaultValue) {
                 using namespace karabo::util;
-                if (m_schema.empty()) {
-                    NODE_ELEMENT(m_schema).key(m_key)
-                            .appendParametersOf<Described>()
-                            .commit();
-                }
                 OVERWRITE_ELEMENT(m_schema).key(m_key + "." + subKey)
                         .setNewDefaultValue(defaultValue)
                         .commit();
 
-                return *this;
+                return *(static_cast<Derived*> (this));
             }
 
             void commit() {
-                using namespace karabo::util;
-                if (m_schema.empty()) {
-                    NODE_ELEMENT(m_schema).key(m_key)
-                            .appendParametersOf<Described>()
-                            .commit();
-                }
             }
         };
     }
