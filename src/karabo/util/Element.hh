@@ -49,6 +49,28 @@ namespace karabo {
             AttributesType m_attributes;
             boost::any m_value;
 
+            /**
+             * Helper struct adding a classId attribute to nested Hashes or classes inheriting Hash.
+             */
+            template <typename ValueType, typename isHashTheBase>
+            struct SetClassIdAttribute {
+
+                SetClassIdAttribute(const ValueType& value, Element& e) {
+                    e.setAttribute("__classId", value.getClassInfo().getClassId());
+                }
+            };
+
+            /**
+             * Types that aren't Hashes or derived Hashes are not touched.
+             */
+            template <typename ValueType>
+            struct SetClassIdAttribute<ValueType, boost::false_type> {
+
+                SetClassIdAttribute(const ValueType& value, Element& e) {
+                    // Do nothing by purpose!
+                }
+            };
+
         public:
 
             Element();
@@ -157,8 +179,6 @@ namespace karabo {
 
         private:
 
-
-
             template<class ValueType, typename is_hash_the_base>
             void setValue(const ValueType& value);
 
@@ -253,7 +273,7 @@ namespace karabo {
         template<class ValueType, typename is_hash_the_base>
         void Element<KeyType, AttributeType>::setValue(const ValueType& value) {
             m_value = conditional_hash_cast<is_hash_the_base>::cast(value);
-
+            SetClassIdAttribute<ValueType, is_hash_the_base>(value, *this);
         }
 
         template<class KeyType, class AttributeType>
