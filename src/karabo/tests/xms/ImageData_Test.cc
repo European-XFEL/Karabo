@@ -36,19 +36,17 @@ void ImageData_Test::tearDown() {
 
 void ImageData_Test::testConstructor() {
 
-    Dims dims(200, 100); // width, height
-    std::vector<unsigned char> someData(dims.size(), 2);
-
+    NDArray arr(Dims(200, 100), 2);
     {
-        ImageData<unsigned char> image(&someData[0], someData.size(), true, dims);
+        ImageData image(arr);
 
-        Dims imageDims(image.getDimensions());
+        Dims imageDims = image.getDimensions();
         Dims imageOffsets(image.getROIOffsets());
 
-        CPPUNIT_ASSERT(image.getByteSize() == 200 * 100);
+        CPPUNIT_ASSERT(image.getData().size() == 100 * 200);
         CPPUNIT_ASSERT(image.getEncoding() == Encoding::GRAY);
-
-        CPPUNIT_ASSERT(imageDims.size() == 20000);
+        
+        CPPUNIT_ASSERT(imageDims.size() == 100 * 200);
         CPPUNIT_ASSERT(imageDims.rank() == 2);
         CPPUNIT_ASSERT(imageDims.x1() == 200);
         CPPUNIT_ASSERT(imageDims.x2() == 100);
@@ -69,10 +67,10 @@ void ImageData_Test::testSetAndGetMethods() {
     std::vector<unsigned char> someData(dims.size(), 2);
 
     {
-        ImageData<unsigned char> image;
+        NDArray arr(&someData[0], someData.size());
 
         // Set
-        image.setData(&someData[0], someData.size(), true);
+        ImageData image(arr);
         image.setDimensions(dims);
         image.setROIOffsets(offsets);
         image.setDimensionTypes(dimTypes);

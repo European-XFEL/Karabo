@@ -143,8 +143,8 @@ namespace karabo {
                     } else { // Node IS provided
                         Hash::Node& node = working.setNode(user.getNode(key));
                         if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
-                        if (user.hasAttribute(key,KARABO_INDICATE_STATE_SET)) node.setAttribute(KARABO_INDICATE_STATE_SET, true);
-                        if (user.hasAttribute(key,KARABO_INDICATE_ALARM_SET)) node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
+                        if (user.hasAttribute(key, KARABO_INDICATE_STATE_SET)) node.setAttribute(KARABO_INDICATE_STATE_SET, true);
+                        if (user.hasAttribute(key, KARABO_INDICATE_ALARM_SET)) node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
                         this->validateLeaf(*it, node, report, currentScope);
                     }
                 } else if (nodeType == Schema::NODE) {
@@ -383,26 +383,26 @@ namespace karabo {
                     }
                 }
             }
-            if(masterNode.hasAttribute(KARABO_SCHEMA_LEAF_TYPE)){
+            if (masterNode.hasAttribute(KARABO_SCHEMA_LEAF_TYPE)) {
                 const int leafType = masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE);
 
-                if(leafType == karabo::util::Schema::STATE && !workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
-                    report << "State element at "<< scope <<" may only be set using predefined states"<<endl;
+                if (leafType == karabo::util::Schema::STATE && !workNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
+                    report << "State element at " << scope << " may only be set using predefined states" << endl;
                 }
 
-                if(leafType != karabo::util::Schema::STATE && workNode.hasAttribute(KARABO_INDICATE_STATE_SET)){
-                    report << "Tried setting non-state element at "<< scope <<" with state object"<<endl;
+                if (leafType != karabo::util::Schema::STATE && workNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
+                    report << "Tried setting non-state element at " << scope << " with state object" << endl;
                 }
 
-                if(leafType == karabo::util::Schema::ALARM_CONDITION && !workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)){
-                    report << "Alarm Condition element at "<< scope <<" may only be set using predefined alarm conditions"<<endl;
+                if (leafType == karabo::util::Schema::ALARM_CONDITION && !workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
+                    report << "Alarm Condition element at " << scope << " may only be set using predefined alarm conditions" << endl;
                 }
 
-                if(leafType != karabo::util::Schema::ALARM_CONDITION && workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)){
-                    report << "Tried setting non-alarm condition element at "<< scope <<" with alarm condition object"<<endl;
+                if (leafType != karabo::util::Schema::ALARM_CONDITION && workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
+                    report << "Tried setting non-alarm condition element at " << scope << " with alarm condition object" << endl;
                 }
             }
-                
+
             if (masterNode.hasAttribute(KARABO_SCHEMA_ACCESS_MODE) && masterNode.getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE)
                 m_hasReconfigurableParameter = true;
 
@@ -497,9 +497,6 @@ namespace karabo {
                     }
                 }
             }
-            else if (referenceCategory == Types::NDARRAY) {
-                checkNDArrayShape(masterNode, workNode, report, scope);
-            }
         }
 
 
@@ -547,90 +544,23 @@ namespace karabo {
         };
 
 
-        void Validator::checkNDArrayShape(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string& scope) {
-            const NDArrayElementShapeType& schemaShape = masterNode.getAttribute<NDArrayElementShapeType>(KARABO_SCHEMA_ARRAY_SHAPE);
-            const Types::ReferenceType givenType = workNode.getType();
-
-            switch (givenType) {
-                case Types::NDARRAY_BOOL: {
-                    const Dims& shape = workNode.getValue<NDArray<bool> >().getShape();
-                    compareNDArrayShapes(schemaShape, shape, report, scope);
-                    break;
-                }
-                case Types::NDARRAY_INT8: {
-                    const Dims& shape = workNode.getValue<NDArray<signed char> >().getShape();
-                    compareNDArrayShapes(schemaShape, shape, report, scope);
-                    break;
-                }
-                case Types::NDARRAY_UINT8: {
-                    const Dims& shape = workNode.getValue<NDArray<unsigned char> >().getShape();
-                    compareNDArrayShapes(schemaShape, shape, report, scope);
-                    break;
-                }
-                case Types::NDARRAY_INT16: {
-                    const Dims& shape = workNode.getValue<NDArray<signed short> >().getShape();
-                    compareNDArrayShapes(schemaShape, shape, report, scope);
-                    break;
-                }
-                case Types::NDARRAY_UINT16: {
-                    const Dims& shape = workNode.getValue<NDArray<unsigned short> >().getShape();
-                    compareNDArrayShapes(schemaShape, shape, report, scope);
-                    break;
-                }
-                case Types::NDARRAY_INT32: {
-                    const Dims& shape = workNode.getValue<NDArray<int> >().getShape();
-                    compareNDArrayShapes(schemaShape, shape, report, scope);
-                    break;
-                }
-                case Types::NDARRAY_UINT32: {
-                    const Dims& shape = workNode.getValue<NDArray<unsigned int> >().getShape();
-                    compareNDArrayShapes(schemaShape, shape, report, scope);
-                    break;
-                }
-                case Types::NDARRAY_INT64: {
-                    const Dims& shape = workNode.getValue<NDArray<long long> >().getShape();
-                    compareNDArrayShapes(schemaShape, shape, report, scope);
-                    break;
-                }
-                case Types::NDARRAY_UINT64: {
-                    const Dims& shape = workNode.getValue<NDArray<unsigned long long> >().getShape();
-                    compareNDArrayShapes(schemaShape, shape, report, scope);
-                    break;
-                }
-                case Types::NDARRAY_FLOAT: {
-                    const Dims& shape = workNode.getValue<NDArray<float> >().getShape();
-                    compareNDArrayShapes(schemaShape, shape, report, scope);
-                    break;
-                }
-                case Types::NDARRAY_DOUBLE: {
-                    const Dims& shape = workNode.getValue<NDArray<double> >().getShape();
-                    compareNDArrayShapes(schemaShape, shape, report, scope);
-                    break;
-                }
-                default:
-                    report << "Unkown Type (" << givenType << ") for (ndarray-)parameter \"" << scope << "\"" << endl;
-                    break;
-            }
-        }
-
-
-        bool Validator::checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
+        bool Validator::checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater) {
             return checkAndSetThresholdedAlarmCondition(alarmCond, workNode.getValueAs<double>(), masterNode, workNode, report, scope, checkGreater);
         }
 
 
-        bool Validator::checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater){
+        bool Validator::checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater) {
             const std::string & alarmString = alarmCond.asString();
             if (masterNode.hasAttribute(alarmString)) {
                 double threshold = masterNode.getAttributeAs<double>(alarmString);
                 double value = workNode.getValueAs<double>();
                 if ((checkGreater ? value > threshold : value < threshold)) {
                     string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went "
-                        + (checkGreater ? "above " : "below ") + alarmCond.asBaseString() + " level of "
-                        + karabo::util::toString(threshold));
-        
+                               + (checkGreater ? "above " : "below ") + alarmCond.asBaseString() + " level of "
+                               + karabo::util::toString(threshold));
+
                     Hash::Node& desc = m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmString, "message", msg), '\0');
-                    m_timestamp.toHashAttributes(desc.getAttributes());   
+                    m_timestamp.toHashAttributes(desc.getAttributes());
                     workNode.setAttribute(KARABO_ALARM_ATTR, alarmString);
 
 
@@ -645,12 +575,12 @@ namespace karabo {
 
         void Validator::compareNDArrayShapes(const NDArrayElementShapeType& expected, const Dims& observed, std::ostringstream& report, const std::string& scope) {
             NDArrayElementShapeType::const_iterator eit = expected.begin();
-            for (size_t idx=0; eit != expected.end() && idx < observed.rank(); ++eit, ++idx) {
+            for (size_t idx = 0; eit != expected.end() && idx < observed.rank(); ++eit, ++idx) {
                 if (*eit == -1) {
                     // Negative dimension => variable.
                     continue;
                 }
-                if (*eit != static_cast<long long>(observed.extentIn(idx))) {
+                if (*eit != static_cast<long long> (observed.extentIn(idx))) {
                     std::string expectedStr = toString<long long>(expected);
                     std::string observedStr = toString<unsigned long long>(observed.toVector());
                     report << "Expected array shape: " << expectedStr << " for (ndarray-)parameter \"" << scope << "\", but got " << observedStr << " instead." << endl;

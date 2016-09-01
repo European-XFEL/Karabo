@@ -33,15 +33,12 @@ Serializable_Test::~Serializable_Test() {
 }
 
 
-void Serializable_Test::testMethod() {    
-
-
+void Serializable_Test::testMethod() {
 
     FancyData fd1;
     fd1.setScalar(2);
 
     Hash h;
-
     h.set("fd1", fd1); // Here the original object on the stack is copied
     h.set("h1", Hash("someRegular", "hash"));
 
@@ -59,10 +56,11 @@ void Serializable_Test::testMethod() {
     // Here a copy is done
     FancyData fd2 = h.get<FancyData>("fd1");
     fd2.setScalar(1);
-    
 
     CPPUNIT_ASSERT(fd2.getScalar() == 1);
     CPPUNIT_ASSERT(h.get<FancyData>("fd1").getScalar() == -2);
+
+    // But the one in the hash
+    const FancyData& fd3 = h.get<FancyData>("fd1");
+    CPPUNIT_ASSERT(fd3.getScalar() == -2);
 }
-
-

@@ -253,6 +253,7 @@ namespace karathon {
     }
 
 
+    // TODO It seems, this function is not used no-where! Time to kill!
     bp::object
     HashWrap::get(const karabo::util::Hash& self,
                   const std::string& path,
@@ -373,27 +374,7 @@ namespace karathon {
                 //                    case PyTypes::HASH:
                 //                        return bp::object(self.getAs<karabo::util::Hash>(path, separator.at(0)));
                 //                    case PyTypes::VECTOR_HASH:
-                //                        return Wrapper::fromStdVectorToPyList(self.getAs<karabo::util::Hash, std::vector>(path, separator.at(0)));
-            case PyTypes::NDARRAY_INT16:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<short, std::vector>(path, separator.at(0)), true);
-            case PyTypes::NDARRAY_UINT16:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<unsigned short, std::vector>(path, separator.at(0)), true);
-            case PyTypes::NDARRAY_INT32:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<int, std::vector>(path, separator.at(0)), true);
-            case PyTypes::NDARRAY_UINT32:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<unsigned int, std::vector>(path, separator.at(0)), true);
-            case PyTypes::NDARRAY_INT64:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<long long, std::vector>(path, separator.at(0)), true);
-            case PyTypes::NDARRAY_UINT64:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<unsigned long long, std::vector>(path, separator.at(0)), true);
-            case PyTypes::NDARRAY_FLOAT:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<float, std::vector>(path, separator.at(0)), true);
-            case PyTypes::NDARRAY_DOUBLE:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<double, std::vector>(path, separator.at(0)), true);
-            case PyTypes::NDARRAY_COMPLEX_FLOAT:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<std::complex<float>, std::vector>(path, separator.at(0)), true);
-            case PyTypes::NDARRAY_COMPLEX_DOUBLE:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<std::complex<double>, std::vector>(path, separator.at(0)), true);
+                //                        return Wrapper::fromStdVectorToPyList(self.getAs<karabo::util::Hash, std::vector>(path, separator.at(0)));                        
             default:
                 break;
         }
@@ -621,29 +602,7 @@ namespace karathon {
             case PyTypes::VECTOR_COMPLEX_FLOAT:
                 return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<std::complex<float>, std::vector>(path, attribute, separator.at(0)), false);
             case PyTypes::VECTOR_COMPLEX_DOUBLE:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<std::complex<double>, std::vector>(path, attribute, separator.at(0)), false);
-            case PyTypes::NDARRAY_BOOL:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<bool, std::vector > (path, attribute, separator.at(0)), true);
-            case PyTypes::NDARRAY_INT16:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<short, std::vector>(path, attribute, separator.at(0)), true);
-            case PyTypes::NDARRAY_UINT16:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned short, std::vector>(path, attribute, separator.at(0)), true);
-            case PyTypes::NDARRAY_INT32:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<int, std::vector>(path, attribute, separator.at(0)), true);
-            case PyTypes::NDARRAY_UINT32:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned int, std::vector>(path, attribute, separator.at(0)), true);
-            case PyTypes::NDARRAY_INT64:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<long long, std::vector>(path, attribute, separator.at(0)), true);
-            case PyTypes::NDARRAY_UINT64:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned long long, std::vector>(path, attribute, separator.at(0)), true);
-            case PyTypes::NDARRAY_FLOAT:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<float, std::vector>(path, attribute, separator.at(0)), true);
-            case PyTypes::NDARRAY_DOUBLE:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<double, std::vector>(path, attribute, separator.at(0)), true);
-            case PyTypes::NDARRAY_COMPLEX_FLOAT:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<std::complex<float>, std::vector>(path, attribute, separator.at(0)), true);
-            case PyTypes::NDARRAY_COMPLEX_DOUBLE:
-                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<std::complex<double>, std::vector>(path, attribute, separator.at(0)), true);
+                return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<std::complex<double>, std::vector>(path, attribute, separator.at(0)), false);           
             default:
                 break;
         }
@@ -730,7 +689,7 @@ namespace karathon {
             Hash::Node& node = bp::extract<Hash::Node&>(obj);
             if (node.getType() == Types::HASH) {
                 boost::shared_ptr<Hash> hash = boost::shared_ptr<Hash>(&node.getValue<Hash>(), null_deleter());
-                return bp::object(hash);
+                return Wrapper::toCustomObject(hash);
             }
             return Wrapper::toObject(node.getValueAsAny(), HashWrap::try_to_use_numpy);
         } else if (bp::extract<std::string>(obj).check()) {
@@ -738,7 +697,7 @@ namespace karathon {
             if (self.getType(path, sep.at(0)) == karabo::util::Types::HASH) {
                 Hash* hp = &self.get<Hash>(path, sep.at(0));
                 boost::shared_ptr<Hash> hash = boost::shared_ptr<Hash>(hp, null_deleter());
-                return bp::object(hash);
+                return Wrapper::toCustomObject(hash);
             }
             if (self.getType(path, sep.at(0)) == Types::VECTOR_HASH) {
                 std::vector<Hash>* vhp = &self.get<std::vector<Hash> >(path, sep.at(0));

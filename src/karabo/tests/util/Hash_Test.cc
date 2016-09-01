@@ -41,6 +41,14 @@ void Hash_Test::testConstructors() {
 
     {
         Hash h;
+        h.set("h", Hash());
+        Hash& i = h.get<Hash>("h");
+        i.set("i", Hash("j", 5));
+        CPPUNIT_ASSERT(h.get<int>("h.i.j") == 5);
+    }
+
+    {
+        Hash h;
         CPPUNIT_ASSERT(h.empty() == true);
         CPPUNIT_ASSERT(h.size() == 0);
     }
@@ -80,14 +88,13 @@ void Hash_Test::testConstructors() {
     }
 
     {
-        typedef NDArray<float> ArrayType;
         const Dims shape(2, 5);
         std::vector<float> data(10, 4.2);
-        ArrayType arr(&data[0], data.size(), shape);
+        NDArray arr(&data[0], data.size(), shape);
 
         Hash h("arr", arr);
         CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.get<ArrayType>("arr").getShape().toVector() == shape.toVector());
+        CPPUNIT_ASSERT(h.get<NDArray>("arr").getShape().toVector() == shape.toVector());
     }
 
     {
@@ -443,20 +450,7 @@ void Hash_Test::testGetAs() {
     {
         Hash h("a", std::complex<double>(1.2, 0.5));
         CPPUNIT_ASSERT(h.getAs<string > ("a") == "(1.200000000000000,0.500000000000000)");
-    }
-    {
-        try {
-            const int arr[6] = {0, 1, 2, 3, 4, 5};
-            const int* ptr = &arr[0];
-            Hash h("a", std::pair<const int*, size_t>(ptr, 6));
-            CPPUNIT_ASSERT(h.getAs<string > ("a") == "0,1,2,3,4,5");
-            ostringstream oss;
-            oss << h;
-        } catch (Exception& e) {
-            cerr << e;
-            KARABO_RETHROW_AS(e);
-        }
-    }
+    }    
 }
 
 
