@@ -42,12 +42,12 @@ void Serializable_Test::testMethod() {
 
     Hash h;
     
-    h.set("fd2", fd2); // Here the original object on the stack is copied
+    h.set("fd2", fd2); // Here the original object on the stack is copied    
 
-    // Internally all objects are hold as shared_ptrs
-    
     CPPUNIT_ASSERT(h.get<FancyData>("fd2").getScalar() == 2);
 
+    // The classId is automatically added as attribute
+    CPPUNIT_ASSERT(h.getAttribute<string>("fd2", "__classId") == "FancyData");
     
     h.get<FancyData>("fd2").setScalar(-2);
     CPPUNIT_ASSERT(fd2.getScalar() == 2);
