@@ -48,8 +48,8 @@ void ImageData_Test::testConstructor() {
         
         CPPUNIT_ASSERT(imageDims.size() == 100 * 200);
         CPPUNIT_ASSERT(imageDims.rank() == 2);
-        CPPUNIT_ASSERT(imageDims.x1() == 100);
-        CPPUNIT_ASSERT(imageDims.x2() == 200);
+        CPPUNIT_ASSERT(imageDims.x1() == 200);
+        CPPUNIT_ASSERT(imageDims.x2() == 100);
 
         CPPUNIT_ASSERT(imageOffsets.rank() == 2);
         CPPUNIT_ASSERT(imageOffsets.x1() == 0);
