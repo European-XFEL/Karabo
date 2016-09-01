@@ -371,15 +371,10 @@ void HashFilter_Test::testFilterByTag() {
         Validator validator;
         Hash config;
         validator.validate(schema, Hash(), config);
-
-        //const Hash& param = schema.getParameterHash1();
-        //clog << "\nparam : \n" << param << endl;        
-        //        clog << "\nconfig:\n" << config << endl;
-
+        
         Hash result;
+       
         HashFilter::byTag(schema, config, result, "KW;KW,BH", ",;");
-
-        //        clog << "KW,BH\n" << result << endl;
 
         CPPUNIT_ASSERT(result.has("antiAlias") == false);
         CPPUNIT_ASSERT(result.has("color") == true);

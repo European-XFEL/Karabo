@@ -7,7 +7,6 @@ from .bound_api.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CL
 from .bound_api.base_fsm import BaseFsm
 from .bound_api.camera_fsm import CameraFsm
 from .bound_api.compute_device import ComputeFsm
-from .bound_api.image_data import ImageData
 from .bound_api.no_fsm import NoFsm
 from .bound_api.ok_error_fsm import OkErrorFsm
 from .bound_api.start_stop_fsm import StartStopFsm
@@ -64,25 +63,14 @@ from karathon import (
     FARAD, FEMTO, FEMTOSEC, FLOAT_ELEMENT, GIGA, GRAM, GRAY,
     H5accessMode, H5element, H5file, H5format, H5formatDiscoveryPolicy,
     H5table, HECTO, HENRY, HERTZ, HOUR, Hash, HashAttributes,
-    HashAttributesNode, HashFilter, HashMergePolicy, HashNode, IMAGE_ELEMENT,
-    IMAGEDATA_BOOL_ELEMENT, IMAGEDATA_INT8_ELEMENT, IMAGEDATA_UINT8_ELEMENT,
-    IMAGEDATA_INT16_ELEMENT, IMAGEDATA_UINT16_ELEMENT, IMAGEDATA_INT32_ELEMENT,
-    IMAGEDATA_UINT32_ELEMENT, IMAGEDATA_INT64_ELEMENT, IMAGEDATA_UINT64_ELEMENT,
-    IMAGEDATA_FLOAT_ELEMENT, IMAGEDATA_DOUBLE_ELEMENT,
-    INIT, INPUT_CHANNEL, INPUT_ELEMENT, INT32_ELEMENT,
+    HashAttributesNode, HashFilter, HashMergePolicy, HashNode,
+    IMAGEDATA_ELEMENT, INIT, INPUT_CHANNEL, INPUT_ELEMENT, INT32_ELEMENT,
     INT64_ELEMENT, INTERNAL, IOService,
-    ImageDataBOOL, ImageDataINT8, ImageDataINT16, ImageDataINT32,
-    ImageDataINT64, ImageDataUINT8, ImageDataUINT16, ImageDataUINT32,
-    ImageDataUINT64, ImageDataFLOAT, ImageDataDOUBLE,
-    InputChannel, InputHash,
+    ImageData, InputChannel, InputHash,
     InputRawImageData, InputSchema, JOULE, JPEG, KATAL, KELVIN, KILO, LEAF,
     LIST_ELEMENT, LIST_OF_NODES, LSB, LUMEN, LUX, LeafType, Logger,
     MANDATORY, MEGA, METER, METER_PER_SECOND, MICRO, MICROSEC, MILLI, MILLISEC,
     MINUTE, MOLE, MSB, MetricPrefix, NANO, NANOSEC,
-    NDARRAY_BOOL_ELEMENT, NDARRAY_INT8_ELEMENT, NDARRAY_UINT8_ELEMENT,
-    NDARRAY_INT16_ELEMENT, NDARRAY_UINT16_ELEMENT, NDARRAY_INT32_ELEMENT,
-    NDARRAY_UINT32_ELEMENT, NDARRAY_INT64_ELEMENT, NDARRAY_UINT64_ELEMENT,
-    NDARRAY_FLOAT_ELEMENT, NDARRAY_DOUBLE_ELEMENT,
     NEWTON, NODE, NODE_ELEMENT, NONE, NOT_ASSIGNED, NO_ARCHIVING,
     NUMBER, NodeType, OBSERVER, OHM, ONESECOND, OPERATOR, OPTIONAL,
     OUTPUT_CHANNEL, OUTPUT_ELEMENT, OVERWRITE_ELEMENT, OutputChannel,

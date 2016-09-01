@@ -253,10 +253,10 @@
         <itemPath>../../../src/karabo/util/AlarmConditionElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/AlarmConditionElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ChoiceElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/CustomNodeElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/GenericElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/HashFilter.cc</itemPath>
         <itemPath>../../../src/karabo/util/HashFilter.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ImageElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/LeafElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ListElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/NDArrayElement.hh</itemPath>
@@ -293,7 +293,6 @@
         </logicalFolder>
         <itemPath>../../../src/karabo/util/AlarmConditions.cc</itemPath>
         <itemPath>../../../src/karabo/util/AlarmConditions.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ArrayData.hh</itemPath>
         <itemPath>../../../src/karabo/util/ArrayTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
         <itemPath>../../../src/karabo/util/Base64.hh</itemPath>
@@ -304,6 +303,7 @@
         <itemPath>../../../src/karabo/util/DetectorGeometry.hh</itemPath>
         <itemPath>../../../src/karabo/util/Dims.hh</itemPath>
         <itemPath>../../../src/karabo/util/MetaTools.hh</itemPath>
+        <itemPath>../../../src/karabo/util/NDArray.cc</itemPath>
         <itemPath>../../../src/karabo/util/NDArray.hh</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.cc</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
@@ -333,8 +333,8 @@
         <itemPath>../../../src/karabo/util/FromTypeInfo.hh</itemPath>
         <itemPath>../../../src/karabo/util/ToCppString.hh</itemPath>
         <itemPath>../../../src/karabo/util/ToLiteral.hh</itemPath>
+        <itemPath>../../../src/karabo/util/ToSize.hh</itemPath>
         <itemPath>../../../src/karabo/util/ToType.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ToXsd.hh</itemPath>
         <itemPath>../../../src/karabo/util/Types.hh</itemPath>
       </logicalFolder>
       <itemPath>../../../src/karabo/util.hpp</itemPath>
@@ -521,8 +521,6 @@
       <logicalFolder name="f7" displayName="xip_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/xip/Image_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/xip/Image_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/xip/RawImageData_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/xip/RawImageData_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xip/TestPathSetup.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xip/xipTestRunner.cc</itemPath>
       </logicalFolder>
@@ -1832,16 +1830,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/xip/RawImageData_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xip/RawImageData_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/xip/TestPathSetup.hh"
             ex="false"
             tool="3"
@@ -1909,11 +1897,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ArrayData.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/ArrayTools.hh"
             ex="false"
             tool="3"
@@ -1953,13 +1936,18 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/CustomNodeElement.hh"
+	    ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/DataLogUtils.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/DataLogUtils.hh"
-            ex="false"
+	    ex="false"
             tool="3"
             flavor2="0">
       </item>
@@ -2064,11 +2052,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ImageElement.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
             tool="3"
@@ -2082,6 +2065,11 @@
       <item path="../../../src/karabo/util/MetaTools.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/NDArray.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/NDArray.hh"
@@ -2252,9 +2240,9 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
+      <item path="../../../src/karabo/util/ToSize.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ToXsd.hh" ex="false" tool="3" flavor2="0">
+      <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Trainstamp.cc"
             ex="false"
@@ -4010,16 +3998,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/xip/RawImageData_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xip/RawImageData_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/xip/TestPathSetup.hh"
             ex="false"
             tool="3"
@@ -4087,11 +4065,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ArrayData.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/ArrayTools.hh"
             ex="false"
             tool="3"
@@ -4127,6 +4100,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Configurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/CustomNodeElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4242,11 +4220,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ImageElement.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
             tool="3"
@@ -4260,6 +4233,11 @@
       <item path="../../../src/karabo/util/MetaTools.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/NDArray.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/NDArray.hh"
@@ -4430,9 +4408,9 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
+      <item path="../../../src/karabo/util/ToSize.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ToXsd.hh" ex="false" tool="3" flavor2="0">
+      <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Trainstamp.cc"
             ex="false"
