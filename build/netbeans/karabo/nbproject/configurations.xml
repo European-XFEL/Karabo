@@ -567,7 +567,7 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
-          <commandLine>-Wno-unused-local-typedefs</commandLine>
+          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
@@ -2723,7 +2723,7 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
-          <commandLine>-Wno-unused-local-typedefs</commandLine>
+          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
