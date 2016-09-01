@@ -15,14 +15,13 @@ from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
                          QMenu, QMessageBox, QTreeView)
 
 from karabo.middlelayer import SceneModel
-from karabo.middlelayer_api.project import (Monitor, Project, ProjectAccess,
-                                            ProjectConfiguration)
+from karabo.middlelayer_api.project import (
+    MacroModel, Monitor, Project, ProjectAccess, ProjectConfiguration)
 
 import karabo_gui.globals as globals
 from karabo_gui.dialogs.projectdialog import (
     ProjectSaveDialog, ProjectLoadDialog)
-from karabo_gui.guiproject import (
-    Category, Device, DeviceGroup, GuiProject, Macro)
+from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject
 from karabo_gui.projectmodel import ProjectModel
 from karabo_gui.network import Network
 from karabo_gui.topology import Manager
@@ -240,7 +239,7 @@ class ProjectTreeView(QTreeView):
             self.model().editDevice(obj)
         elif isinstance(obj, SceneModel):
             self.model().openScene(obj)
-        elif isinstance(obj, Macro):
+        elif isinstance(obj, MacroModel):
             self.model().openMacro(obj)
         elif isinstance(obj, Monitor):
             self.model().editMonitor(obj)
@@ -396,7 +395,8 @@ class ProjectTreeView(QTreeView):
                 menu.addAction(acFilename)
                 menu.addAction(acInterval)
                 menu.addAction(acMonitoring)
-        elif selectedType in (Device, DeviceGroup, SceneModel, Macro, Monitor):
+        elif selectedType in (Device, DeviceGroup, SceneModel, MacroModel,
+                              Monitor):
             # Device or Scene menu
             if nbSelected > 1:
                 text = "Delete selected"
@@ -449,7 +449,7 @@ class ProjectTreeView(QTreeView):
                 menu.addSeparator()
                 menu.addAction(acInitDevice)
                 menu.addAction(acKillDevice)
-            elif selectedType is Macro:
+            elif selectedType is MacroModel:
                 acEdit.triggered.connect(self.model().onEditMacro)
                 acDuplicate.triggered.connect(self.model().onDuplicateMacro)
             elif selectedType is SceneModel:

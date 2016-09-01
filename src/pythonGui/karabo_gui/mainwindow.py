@@ -17,7 +17,6 @@ import karabo_gui.icons as icons
 
 from karabo_gui import globals
 from karabo_gui.docktabwindow import DockTabWindow
-from karabo_gui.guiproject import Macro
 from karabo_gui.mediator import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts)
 from karabo_gui.network import Network
@@ -80,11 +79,11 @@ class MainWindow(QMainWindow):
                 return True
             elif sender is KaraboEventSender.OpenMacro:
                 data = event.data
-                self.onAddMacro(data.get("macro"))
+                self.addMacro(data.get("model"))
                 return True
             elif sender is KaraboEventSender.RemoveMacro:
                 data = event.data
-                self.onRemoveMacro(data.get("macro"))
+                self.removeMacro(data.get("model"))
                 return True
         return super(MainWindow, self).eventFilter(obj, event)
 
@@ -469,22 +468,22 @@ class MainWindow(QMainWindow):
         self.middlePanelRemoved()
 
     @pyqtSlot(object)
-    def onAddMacro(self, macro):
-        if self.middlePanelExists("macro", macro):
-            return
+    def addMacro(self, macroModel):
+        #if self.middlePanelExists("macro", macro):
+        #    return
 
-        if self.isMiddlePanelUndocked(macro):
-            return
+        #if self.isMiddlePanelUndocked(macro):
+        #    return
 
-        macroView = MacroPanel(macro)
-        self.middleTab.addDockableTab(macroView, macro.name, self)
-        macro.editor = macroView
+        macroView = MacroPanel(macroModel)
+        self.middleTab.addDockableTab(macroView, macroModel.title, self)
+        #macro.editor = macroView
 
         self.selectLastMiddlePanel()
 
     @pyqtSlot(object)
-    def onRemoveMacro(self, macro):
-        self.removeMiddlePanel("macro", macro)
+    def removeMacro(self, macroModel):
+        self.removeMiddlePanel("macro", macroModel)
 
     @pyqtSlot(object)
     def onChangeAccessLevel(self, action):

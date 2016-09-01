@@ -3,29 +3,23 @@
 # Created on April 7, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
 """
 This module contains a class which represents the project related datastructure.
 """
+import csv
+from datetime import datetime
+from zipfile import ZipFile
 
-__all__ = ["Device", "DeviceGroup", "GuiProject", "Macro", "Category"]
+from PyQt4.QtCore import pyqtSignal, QObject
 
 from karabo.middlelayer_api.project import (
-    BaseDevice, BaseDeviceGroup, BaseMacro, Monitor, Project,
-    ProjectConfiguration)
+    BaseDevice, BaseDeviceGroup, Monitor, Project, ProjectConfiguration)
 from karabo.middlelayer import (
-    AccessMode, Hash, read_scene, SceneModel, XMLParser, XMLWriter)
+    AccessMode, Hash, read_macro, read_scene, SceneModel, XMLParser, XMLWriter)
 from karabo_gui.configuration import Configuration
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.network import network
 from karabo_gui.topology import getClass, getDevice, Manager
-
-from PyQt4.QtCore import pyqtSignal, QObject
-
-import csv
-from datetime import datetime
-from zipfile import ZipFile
 
 
 class BaseConfiguration(Configuration):
@@ -429,9 +423,9 @@ class GuiProject(Project, QObject):
         self.setModified(True)
         return index
 
-    def addMacro(self, macro):
-        self.macros[macro.name] = macro
-        self.signalMacroAdded.emit(macro)
+    def addMacro(self, macroModel):
+        super(GuiProject, self).addMacro(macroModel)
+        self.signalMacroAdded.emit(macroModel)
         self.setModified(True)
 
     def addMonitor(self, monitor):
@@ -468,9 +462,10 @@ class GuiProject(Project, QObject):
             index = self.scenes.index(object)
             self.scenes.pop(index)
             return index
-        elif isinstance(object, Macro):
-            del self.macros[object.name]
-            return -1
+        elif isinstance(object, MacroModel):
+            index = self.macros.index(object)
+            self.macros.pop(index)
+            return index
         elif isinstance(object, Monitor):
             index = self.monitors.index(object)
             self.monitors.pop(index)
@@ -490,7 +485,7 @@ class GuiProject(Project, QObject):
         objFactories = {
             'Device': Device,
             'DeviceGroup': DeviceGroup,
-            'Macro': Macro,
+            'Macro': read_macro,
             'Monitor': Monitor,
             'ProjectConfiguration': ProjectConfiguration,
             'Scene': read_scene,
@@ -647,25 +642,25 @@ class GuiProject(Project, QObject):
             self.timerEvent(None, timestamp)
 
 
-class Macro(BaseMacro):
-    def __init__(self, project, name):
-        super(Macro, self).__init__(project, name)
-        self.macros = {}
-        self.instances = []
+#class Macro(MacroModel):
+#    def __init__(self):
+#        super(Macro, self).__init__()
+#        self.macros = {}
+#        self.instances = []
 
-    def run(self):
-        if self.editor is None:
-            code = self.load()
-        else:
-            code = self.editor.edit.toPlainText()
-        h = Hash("code", code,
-                 "project", self.project.name,
-                 "module", self.name)
-        network.onInitDevice("Karabo_MacroServer", "MetaMacro", self.instanceId, h)
+#    def run(self):
+#        if self.editor is None:
+#            code = self.load()
+#        else:
+#            code = self.editor.edit.toPlainText()
+#        h = Hash("code", code,
+#                 "project", self.project.name,
+#                 "module", self.name)
+#        network.onInitDevice("Karabo_MacroServer", "MetaMacro", self.instanceId, h)
 
-    def load(self):
-        with ZipFile(self.project.filename, "r") as zf:
-            return zf.read("macros/{}.py".format(self.name)).decode("utf8")
+    #def load(self):
+    #    with ZipFile(self.project.filename, "r") as zf:
+    #        return zf.read("macros/{}.py".format(self.name)).decode("utf8")
 
 
 class Category(object):
