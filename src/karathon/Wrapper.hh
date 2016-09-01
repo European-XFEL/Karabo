@@ -273,7 +273,6 @@ namespace karathon {
         }
 
         void operator()(const char*) {
-            std::cout << "Py_DECREF" << std::endl;
             Py_DECREF(m_arrayRef);
         }
     };
@@ -303,6 +302,11 @@ namespace karathon {
             bp::list pylist;
             for (size_t i = 0; i < v.size(); i++) pylist.append(bp::make_tuple(v[i].first, v[i].second));
             return pylist;
+        }
+
+        template<class ValueType>
+        static bp::object fromStdVectorToPyTuple(const std::vector<ValueType>& v) {
+            return bp::tuple(fromStdVectorToPyList(v));
         }
 
         static bp::object fromStdVectorToPyHashList(const std::vector<karabo::util::Hash>& v) {

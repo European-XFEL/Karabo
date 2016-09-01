@@ -5,12 +5,12 @@ import unittest
 
 from karabo.bound import (
     KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
-    BOOL_ELEMENT, CHOICE_ELEMENT, DOUBLE_ELEMENT, FLOAT_ELEMENT, IMAGE_ELEMENT,
-    LIST_ELEMENT, INT32_ELEMENT, INT64_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT,
-    STATE_ELEMENT, ALARM_ELEMENT,
+    BOOL_ELEMENT, CHOICE_ELEMENT, DOUBLE_ELEMENT, FLOAT_ELEMENT,
+    IMAGEDATA_ELEMENT, LIST_ELEMENT, INT32_ELEMENT, INT64_ELEMENT,
+    UINT32_ELEMENT, UINT64_ELEMENT, STATE_ELEMENT, ALARM_ELEMENT,
     VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT,
-    NDARRAY_BOOL_ELEMENT, NDARRAY_UINT32_ELEMENT, NDARRAY_FLOAT_ELEMENT,
-    NODE_ELEMENT, OVERWRITE_ELEMENT, PATH_ELEMENT, SLOT_ELEMENT, STRING_ELEMENT,
+    NODE_ELEMENT, OVERWRITE_ELEMENT, PATH_ELEMENT,
+    SLOT_ELEMENT, STRING_ELEMENT,
     EVERY_EVENT, EVERY_100MS, EVERY_1S, NO_ARCHIVING,
     AMPERE, CENTI, METER, MILLI,
     MetricPrefix, Unit
@@ -392,21 +392,21 @@ class TestStruct1(object):
                 .reconfigurable()
                 .commit()
                 ,
-        NDARRAY_BOOL_ELEMENT(expected).key("exampleKey16")
-                .shape([2, 2])
-                .readOnly().initialValue([True, False, False, True])
-                .commit()
-                ,
-        NDARRAY_UINT32_ELEMENT(expected).key("exampleKey17")
-                .shape([2, 2, -1])
-                .assignmentOptional().defaultValue(list(range(8)))
-                .commit()
-                ,
-        NDARRAY_FLOAT_ELEMENT(expected).key("exampleKey18")
-                .shape("3,3,3")
-                .assignmentInternal().noDefaultValue()
-                .commit()
-                ,
+        # NDARRAY_BOOL_ELEMENT(expected).key("exampleKey16")
+        #         .shape([2, 2])
+        #         .readOnly().initialValue([True, False, False, True])
+        #         .commit()
+        #         ,
+        # NDARRAY_UINT32_ELEMENT(expected).key("exampleKey17")
+        #         .shape([2, 2, -1])
+        #         .assignmentOptional().defaultValue(list(range(8)))
+        #         .commit()
+        #         ,
+        # NDARRAY_FLOAT_ELEMENT(expected).key("exampleKey18")
+        #         .shape("3,3,3")
+        #         .assignmentInternal().noDefaultValue()
+        #         .commit()
+        #         ,
         INT32_ELEMENT(expected).key("exampleIntKey")
                 .assignmentOptional().defaultValueFromString("20")
                 .reconfigurable()
@@ -510,7 +510,7 @@ class TestStruct1(object):
                 .allowedStates(State.STARTED, State.STOPPED, State.NORMAL)
                 .commit()
                 ,
-        IMAGE_ELEMENT(expected).key("myImageElement")
+        IMAGEDATA_ELEMENT(expected).key("myImageElement")
                 .displayedName("myImage")
                 .description("Image Element")
                 .operatorAccess()
@@ -559,7 +559,7 @@ class SomeClass(object):
                  .assignmentOptional().defaultValue([])
                  .commit()
                  ,
-        IMAGE_ELEMENT(expected).key("myImageElement")
+        IMAGEDATA_ELEMENT(expected).key("myImageElement")
                 .displayedName("myImage")
                 .description("Image Element")
                 .operatorAccess()
