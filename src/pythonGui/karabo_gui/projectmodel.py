@@ -7,6 +7,14 @@
 This module contains a class which represents a model to display projects in
 a treeview.
 """
+from io import BytesIO
+import os
+import os.path
+
+from PyQt4.QtCore import QAbstractItemModel, pyqtSignal, Qt
+from PyQt4.QtGui import (
+    QDialog, QFileDialog, QInputDialog, QItemSelectionModel, QMessageBox,
+    QStandardItem, QStandardItemModel)
 
 from karabo.middlelayer_api.project import Monitor, Project, ProjectAccess
 from karabo.middlelayer import Hash, read_scene, SceneModel, write_scene
@@ -28,16 +36,7 @@ from karabo_gui.mediator import (
 from karabo_gui.messagebox import MessageBox
 import karabo_gui.network as network
 from karabo_gui.topology import getDevice, Manager
-from karabo_gui.util import getSaveFileName
-
-from PyQt4.QtCore import QAbstractItemModel, pyqtSignal, Qt
-from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
-                         QItemSelectionModel, QMessageBox, QStandardItem,
-                         QStandardItemModel)
-
-from io import BytesIO
-import os
-import os.path
+from karabo_gui.util import getOpenFileName, getSaveFileName
 
 
 class ProjectModel(QStandardItemModel):
@@ -1519,9 +1518,8 @@ class ProjectModel(QStandardItemModel):
 
 
     def onLoadMacro(self):
-        fn = QFileDialog.getOpenFileName(None, "Load macro", 
-                                         globals.HIDDEN_KARABO_FOLDER,
-                                         "Python Macros (*.py)")
+        fn = getOpenFileName(caption="Load macro",
+                             filter="Python Macros (*.py)")
         if not fn:
             return
         
@@ -1554,9 +1552,12 @@ class ProjectModel(QStandardItemModel):
 
 
     def onDefineMonitorFilename(self):
-        filename = getSaveFileName("Filename for monitors", suffix="csv",
-                             filter="Comma-separated value files (*.csv)",
-                             selectFile=self.currentProject().monitorFilename)
+        filename = getSaveFileName(
+                        caption="Filename for monitors",
+                        filter="Comma-separated value files (*.csv)",
+                        suffix="csv",
+                        selectFile=self.currentProject().monitorFilename)
+
         if filename:
             self.currentProject().monitorFilename = filename
 
@@ -1601,28 +1602,25 @@ class ProjectModel(QStandardItemModel):
             if device.id in configs:
                 device.dispatchUserChanges(configs[device.id].hash[device.classId])
 
-
     def onSaveAsScene(self):
-        fn = QFileDialog.getSaveFileName(None, "Save scene to file",
-                                         globals.HIDDEN_KARABO_FOLDER,
-                                         "SVG (*.svg)",
-                                         options=QFileDialog.DontUseNativeDialog)
+        sceneModel = self.currentScene()
+        fn = getSaveFileName(caption="Save scene to file",
+                             filter="SVG (*.svg)",
+                             suffix="svg",
+                             selectFile=sceneModel.title)
         if not fn:
             return
 
         if not fn.endswith(".svg"):
             fn = "{}.svg".format(fn)
 
-        sceneModel = self.currentScene()
         with open(fn, "wb") as fout:
             fout.write(write_scene(sceneModel))
 
     def onOpenScene(self):
         project = self.currentProject()
-        fn = QFileDialog.getOpenFileName(None, "Open scene",
-                                         globals.HIDDEN_KARABO_FOLDER,
-                                         "SVG (*.svg)",
-                                         options=QFileDialog.DontUseNativeDialog)
+        fn = getOpenFileName(caption="Open scene",
+                             filter="SVG (*.svg)")
         if not fn:
             return
         # Create scene model

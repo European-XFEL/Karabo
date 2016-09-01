@@ -1,16 +1,15 @@
-from karabo_gui.const import ns_karabo
-from karabo_gui.widget import DisplayWidget
-
-from karabo.middlelayer import String
-
-from PyQt4.QtCore import pyqtSlot, QBuffer
-from PyQt4.QtGui import QAction, QFileDialog, QInputDialog, QMessageBox
-from PyQt4.QtSvg import QSvgWidget
-
-from xml.etree import ElementTree
 import re
 import os.path
 import urllib.request
+from xml.etree import ElementTree
+
+from PyQt4.QtCore import pyqtSlot, QBuffer
+from PyQt4.QtGui import QAction, QInputDialog
+from PyQt4.QtSvg import QSvgWidget
+
+from karabo.middlelayer import String
+from karabo_gui.util import getOpenFileName
+from karabo_gui.widget import DisplayWidget
 
 ns_inkscape = "{http://www.inkscape.org/namespaces/inkscape}"
 ElementTree.register_namespace("inkscape", ns_inkscape[1:-1])
@@ -44,6 +43,14 @@ class DisplayIconset(DisplayWidget):
     def __init__(self, box, parent):
         super(DisplayIconset, self).__init__(box)
 
+        self.widget = QSvgWidget(parent)
+        qaction = QAction("Iconset from file...", self.widget)
+        qaction.triggered.connect(self.onChangeIcons)
+        self.widget.addAction(qaction)
+        qaction = QAction("Iconset from URL...", self.widget)
+        qaction.triggered.connect(self.onChangeURL)
+        self.widget.addAction(qaction)
+
         # URL of the icon set
         self.url = None
         # XMLParser object to get associated layer for property value
@@ -52,15 +59,6 @@ class DisplayIconset(DisplayWidget):
         # Use default icon set for initialization
         self.setURL("file://" + urllib.request.pathname2url(
             os.path.join(os.path.dirname(__file__), "empty.svg")))
-
-        self.widget = QSvgWidget(parent)
-        action = QAction("Iconset from file...", self.widget)
-        action.triggered.connect(self.onChangeIcons)
-        self.widget.addAction(action)
-        action = QAction("Iconset from URL...", self.widget)
-        action.triggered.connect(self.onChangeURL)
-        self.widget.addAction(action)
-        self.widget.addAction(action)
 
     def _readData(self, url, data=None):
         if data is None:
@@ -73,6 +71,8 @@ class DisplayIconset(DisplayWidget):
     def setURL(self, url):
         self.url = url
         self.xml = self._readData(url)
+        self.valueChanged(None, self.boxes[0].value if self.boxes[0].hasValue()
+                          else "")
 
     def setData(self, url, data):
         """ The `url` and the actual `data` is passed and needs to be set. """
@@ -83,8 +83,9 @@ class DisplayIconset(DisplayWidget):
 
     @pyqtSlot()
     def onChangeIcons(self):
-        fn = QFileDialog.getOpenFileName(self.widget, "Open Iconset",
-                                         filter="*.svg")
+        fn = getOpenFileName(parent=self.widget,
+                             caption="Open Iconset",
+                             filter="*.svg")
         if not fn:
             return
         self.setURL("file://" + urllib.request.pathname2url(fn))
