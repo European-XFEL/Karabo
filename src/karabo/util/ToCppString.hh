@@ -1,9 +1,9 @@
-/* 
+/*
  * File:   ToCppString.hh
  * Author: <burkhard.heisen@xsmail.com>
  *
  * Created on January 22, 2013
- * 
+ *
  */
 
 #include "ToType.hh"
@@ -17,7 +17,7 @@ namespace karabo {
 
         class ToCppString {
 
-            public:
+        public:
 
             typedef std::string ReturnType;
 
@@ -75,34 +75,12 @@ namespace karabo {
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, PTR_COMPLEX_FLOAT, "complex<float>*")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, PTR_COMPLEX_DOUBLE, "complex<double>*")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, PTR_STRING, "string*")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_BOOL, "pair<bool*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_CHAR, "pair<char*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_INT8, "pair<signed char*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_UINT8, "pair<unsigned char*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_INT16, "pair<short*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_UINT16, "pair<unsigned short*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_INT32, "pair<int*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_UINT32, "pair<unsigned int*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_INT64, "pair<long long*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_UINT64, "pair<unsigned long long*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_FLOAT, "pair<float*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, ARRAY_DOUBLE, "pair<double*,size_t>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_BOOL, "NDArray<bool>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_INT8, "NDArray<signed char>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_UINT8, "NDArray<unsigned char>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_INT16, "NDArray<signed short>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_UINT16, "NDArray<unsigned short>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_INT32, "NDArray<int>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_UINT32, "NDArray<unsigned int>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_INT64, "NDArray<long long>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_UINT64, "NDArray<unsigned long long>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_FLOAT, "NDArray<float>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NDARRAY_DOUBLE, "NDArray<double>")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, UNKNOWN, "unknown")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NONE, "None")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, VECTOR_NONE, "vector<None>")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, HASH_POINTER, "Hash::Pointer")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, VECTOR_HASH_POINTER, "vector<Hash::Pointer>")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, BYTE_ARRAY, "std::pair<boost::shared_ptr<char>,size_t>")
     }
 }
 

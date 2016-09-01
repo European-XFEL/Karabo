@@ -16,6 +16,7 @@
 
 #include <boost/any.hpp>
 #include <boost/cast.hpp>
+#include <boost/type_traits/is_base_of.hpp>
 
 #include "MetaTools.hh"
 #include "Types.hh"
@@ -172,6 +173,8 @@ namespace karabo {
 
             Types::ReferenceType getType() const;
 
+            const std::type_info& type() const;
+
             void setType(const Types::ReferenceType& tgtType);
 
             bool operator==(const Element<KeyType, AttributesType>& other) const;
@@ -258,6 +261,11 @@ namespace karabo {
         }
 
         template<class KeyType, typename AttributeType>
+        const std::type_info& Element<KeyType, AttributeType>::type() const {
+            return m_value.type();
+        }
+
+        template<class KeyType, typename AttributeType>
         template<class ValueType>
         inline void Element<KeyType, AttributeType>::setValue(const ValueType& value) {
             this->setValue<ValueType, typename boost::is_base_of<Hash, ValueType>::type > (value);
@@ -323,7 +331,6 @@ namespace karabo {
         template<class KeyType, typename AttributeType>
         template<class ValueType>
         inline ValueType& Element<KeyType, AttributeType>::getValue() {
-
             return const_cast<ValueType&>
                     (static_cast<const Element*> (this)->getValue<ValueType>(typename boost::is_base_of<Hash, ValueType>::type()));
 
@@ -331,7 +338,6 @@ namespace karabo {
 
         template<class KeyType, typename AttributeType>
         template<class ValueType>
-
         inline const ValueType& Element<KeyType, AttributeType>::getValue(boost::true_type /*is_hash_the_base*/) const {
             const Hash* ptr = boost::any_cast<Hash> (&m_value);
             if (ptr) return reinterpret_cast<const ValueType&> (*ptr);
@@ -341,12 +347,10 @@ namespace karabo {
 
         template<class KeyType, typename AttributeType>
         template<class ValueType>
-
         inline const ValueType& Element<KeyType, AttributeType>::getValue(boost::false_type /*is_hash_the_base*/) const {
             const ValueType* ptr = boost::any_cast<ValueType > (&m_value);
             if (ptr) return *ptr;
             throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
-
         }
 
         template<class KeyType, typename AttributeType>
@@ -534,13 +538,6 @@ namespace karabo {
                     case Types::RefType: return karabo::util::toString(getValue<CppType>());\
                     case Types::VECTOR_##RefType: return karabo::util::toString(getValue<std::vector<CppType> >());
 
-            // this needs to be separate macro until not all pair types are supported (i.e. complex and string)
-#define _KARABO_HELPER_MACRO_1(RefType, CppType)\
-                    case Types::ARRAY_##RefType: return karabo::util::toString(getValue<std::pair<const CppType*, size_t> >());
-
-#define _KARABO_HELPER_MACRO_2(RefType, CppType)\
-                    case Types::NDARRAY_##RefType: return karabo::util::toString(getValue<NDArray<CppType> >());
-
             Types::ReferenceType type = this->getType();
             switch (type) {
                     _KARABO_HELPER_MACRO(BOOL, bool)
@@ -560,36 +557,12 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(STRING, std::string)
                     _KARABO_HELPER_MACRO(HASH, Hash)
                     _KARABO_HELPER_MACRO(NONE, CppNone)
-                    _KARABO_HELPER_MACRO_1(BOOL, bool)
-                    _KARABO_HELPER_MACRO_1(CHAR, char)
-                    _KARABO_HELPER_MACRO_1(INT8, signed char)
-                    _KARABO_HELPER_MACRO_1(UINT8, unsigned char)
-                    _KARABO_HELPER_MACRO_1(INT16, short)
-                    _KARABO_HELPER_MACRO_1(UINT16, unsigned short)
-                    _KARABO_HELPER_MACRO_1(INT32, int)
-                    _KARABO_HELPER_MACRO_1(UINT32, unsigned int)
-                    _KARABO_HELPER_MACRO_1(INT64, long long)
-                    _KARABO_HELPER_MACRO_1(UINT64, unsigned long long)
-                    _KARABO_HELPER_MACRO_1(FLOAT, float)
-                    _KARABO_HELPER_MACRO_1(DOUBLE, double)
-                    _KARABO_HELPER_MACRO_2(BOOL, bool)
-                    _KARABO_HELPER_MACRO_2(INT8, signed char)
-                    _KARABO_HELPER_MACRO_2(UINT8, unsigned char)
-                    _KARABO_HELPER_MACRO_2(INT16, short)
-                    _KARABO_HELPER_MACRO_2(UINT16, unsigned short)
-                    _KARABO_HELPER_MACRO_2(INT32, int)
-                    _KARABO_HELPER_MACRO_2(UINT32, unsigned int)
-                    _KARABO_HELPER_MACRO_2(INT64, long long)
-                    _KARABO_HELPER_MACRO_2(UINT64, unsigned long long)
-                    _KARABO_HELPER_MACRO_2(FLOAT, float)
-                    _KARABO_HELPER_MACRO_2(DOUBLE, double)
                 case Types::SCHEMA: return std::string("Schema Object");
 
                 default:
                     throw KARABO_CAST_EXCEPTION("Could not convert value of key \"" + m_key + "\" to string");
             }
 #undef _KARABO_HELPER_MACRO
-#undef _KARABO_HELPER_MACRO_1
         }
     }
 }

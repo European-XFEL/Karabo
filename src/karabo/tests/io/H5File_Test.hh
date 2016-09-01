@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   H5File_Test.hh
  * Author: <krzysztof.wrona@xfel.eu>
  *
@@ -15,7 +15,6 @@
 #include <complex>
 
 class H5File_Test : public CPPUNIT_NS::TestFixture {
-
 
     CPPUNIT_TEST_SUITE(H5File_Test);
 
@@ -34,7 +33,7 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
     //        CPPUNIT_TEST(testVLWrite);
     CPPUNIT_TEST(testTrainFormat);
     CPPUNIT_TEST(testClose);
-    CPPUNIT_TEST(testArray);
+    //CPPUNIT_TEST(testArray);
 
     //    CPPUNIT_TEST(testExternalHdf5);
 
@@ -101,7 +100,7 @@ private:
     void testClose();
     void testVectorOfHashes();
 
-    void testArray();
+    //void testArray();
     void testExternalHdf5();
 
     void testTrainFormat();

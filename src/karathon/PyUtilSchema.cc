@@ -15,7 +15,6 @@
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/PathElement.hh>
-#include <karabo/util/ImageElement.hh>
 #include <karabo/io/InputElement.hh>
 #include <karabo/io/OutputElement.hh>
 #include <karabo/util/Validator.hh>
@@ -2116,17 +2115,17 @@ void exportPyUtilSchema() {
     // NDARRAY_INT32_ELEMENT, NDARRAY_UINT32_ELEMENT, NDARRAY_INT64_ELEMENT,
     // NDARRAY_UINT64_ELEMENT, NDARRAY_FLOAT_ELEMENT, NDARRAY_DOUBLE_ELEMENT
 
-    KARABO_PYTHON_NDARRAY(bool, BOOL)
-    KARABO_PYTHON_NDARRAY(signed char, INT8)
-    KARABO_PYTHON_NDARRAY(unsigned char, UINT8)
-    KARABO_PYTHON_NDARRAY(short, INT16)
-    KARABO_PYTHON_NDARRAY(unsigned short, UINT16)
-    KARABO_PYTHON_NDARRAY(int, INT32)
-    KARABO_PYTHON_NDARRAY(unsigned int, UINT32)
-    KARABO_PYTHON_NDARRAY(long long, INT64)
-    KARABO_PYTHON_NDARRAY(unsigned long long, UINT64)
-    KARABO_PYTHON_NDARRAY(float, FLOAT)
-    KARABO_PYTHON_NDARRAY(double, DOUBLE)
+            //    KARABO_PYTHON_NDARRAY(bool, BOOL)
+            //    KARABO_PYTHON_NDARRAY(signed char, INT8)
+            //    KARABO_PYTHON_NDARRAY(unsigned char, UINT8)
+            //    KARABO_PYTHON_NDARRAY(short, INT16)
+            //    KARABO_PYTHON_NDARRAY(unsigned short, UINT16)
+            //    KARABO_PYTHON_NDARRAY(int, INT32)
+            //    KARABO_PYTHON_NDARRAY(unsigned int, UINT32)
+            //    KARABO_PYTHON_NDARRAY(long long, INT64)
+            //    KARABO_PYTHON_NDARRAY(unsigned long long, UINT64)
+            //    KARABO_PYTHON_NDARRAY(float, FLOAT)
+            //    KARABO_PYTHON_NDARRAY(double, DOUBLE)
 
             //////////////////////////////////////////////////////////////////////
             // Binding NodeElement       
@@ -2253,7 +2252,7 @@ void exportPyUtilSchema() {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    //  TableDefaultValue<TableElement> 
+    //  TableDefaultValue<TableElement>
     {
         typedef TableDefaultValue<TableElement> DefTableElement;
         bp::class_< DefTableElement, boost::noncopyable > ("DefaultValueTableElement", bp::no_init)
@@ -2268,7 +2267,7 @@ void exportPyUtilSchema() {
     }
 
     //////////////////////////////////////////////////////////////////////
-    // Binding ChoiceElement       
+    // Binding ChoiceElement
     // In Python : CHOICE_ELEMENT
     {
         bp::implicitly_convertible< Schema &, ChoiceElement >();
@@ -2296,18 +2295,7 @@ void exportPyUtilSchema() {
     }
 
     //////////////////////////////////////////////////////////////////////
-    // Binding ImageElement       
-    // In Python : IMAGE_ELEMENT
-
-    {
-        bp::implicitly_convertible< Schema &, ImageElement >();
-        bp::class_<ImageElement>("IMAGE_ELEMENT", bp::init<Schema &>((bp::arg("expected"))))
-                KARABO_PYTHON_IMAGE_ELEMENT(ImageElement)
-                ;
-    }
-
-    //////////////////////////////////////////////////////////////////////
-    // Binding InputElement       
+    // Binding InputElement
     // In Python : INPUT_ELEMENT
     {
         bp::implicitly_convertible< Schema &, InputElement >();
@@ -2320,7 +2308,7 @@ void exportPyUtilSchema() {
     }
 
     //////////////////////////////////////////////////////////////////////
-    // Binding OutputElement       
+    // Binding OutputElement
     // In Python : OUTPUT_ELEMENT
     {
         bp::implicitly_convertible< Schema &, OutputElement >();
@@ -2333,7 +2321,7 @@ void exportPyUtilSchema() {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    //  DefaultValue<ChoiceElement> 
+    //  DefaultValue<ChoiceElement>
     {
         typedef DefaultValue<ChoiceElement, string> DefChoiceElement;
         bp::class_< DefChoiceElement, boost::noncopyable > ("DefaultValueChoiceElement", bp::no_init)
@@ -2352,7 +2340,7 @@ void exportPyUtilSchema() {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    //  DefaultValue<ListElement> 
+    //  DefaultValue<ListElement>
     {
         typedef DefaultValue<ListElement, vector<string> > DefListElement;
         bp::class_< DefListElement, boost::noncopyable > ("DefaultValueListElement", bp::no_init)
