@@ -34,8 +34,6 @@ namespace karabo {
             }
 
             void startFsm() {
-                //if (m_initialFunc.empty())
-                //    throw KARABO_LOGIC_EXCEPTION("No initial function defined. Please use  \"KARABO_INITIAL_FUNCTION(your_initial_function)\" macro in the device constructor");
                 // Call second constructors in the same order as first constructors were called
                 for (size_t i = 0; i < m_initialFunc.size(); ++i) m_initialFunc[i]();
             }
