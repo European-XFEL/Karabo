@@ -49,6 +49,28 @@ namespace karabo {
             AttributesType m_attributes;
             boost::any m_value;
 
+            /**
+             * Helper struct adding a classId attribute to nested Hashes or classes inheriting Hash.
+             */
+            template <typename ValueType, typename isHashTheBase>
+            struct SetClassIdAttribute {
+
+                SetClassIdAttribute(const ValueType& value, Element& e) {
+                    e.setAttribute("__classId", value.getClassInfo().getClassId());
+                }
+            };
+
+            /**
+             * Types that aren't Hashes or derived Hashes are not touched.
+             */
+            template <typename ValueType>
+            struct SetClassIdAttribute<ValueType, boost::false_type> {
+
+                SetClassIdAttribute(const ValueType& value, Element& e) {
+                    // Do nothing on purpose!
+                }
+            };
+
         public:
 
             Element();
@@ -71,11 +93,12 @@ namespace karabo {
             inline void setValue(const boost::shared_ptr<ValueType>& value);
 
             // This overload specializes the behavior for inserting plain Hashes
-            // It is needed as derived objects from Hash are always converted into shared_ptrs
-            // which would break a lot of related code if done for Hash (expecially type-related things)
-            // TODO: Re-factor to also save Hash as shared_ptr and adapt all related code
+            // Objects derived from Hash are treated differently
             void setValue(const Hash& value);
 
+            // Keeping downward compatibility we allow insertion of
+            // shared_ptr<Hash>. In general, we will create a compiler
+            // error for all objects deriving from Hash and wrapped as shared pointer.
             void setValue(const boost::shared_ptr<Hash>& value);
 
             void setValue(const char* const& value);
@@ -156,8 +179,6 @@ namespace karabo {
             bool operator!=(const Element<KeyType, AttributesType>& other) const;
 
         private:
-
-
 
             template<class ValueType, typename is_hash_the_base>
             void setValue(const ValueType& value);
@@ -253,7 +274,7 @@ namespace karabo {
         template<class ValueType, typename is_hash_the_base>
         void Element<KeyType, AttributeType>::setValue(const ValueType& value) {
             m_value = conditional_hash_cast<is_hash_the_base>::cast(value);
-
+            SetClassIdAttribute<ValueType, is_hash_the_base>(value, *this);
         }
 
         template<class KeyType, class AttributeType>
