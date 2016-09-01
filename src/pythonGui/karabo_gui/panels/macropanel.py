@@ -16,31 +16,32 @@ from karabo_gui.util import getSaveFileName
 
 
 class MacroPanel(Dockable, QSplitter):
-    signalSave = pyqtSignal(str, str)
 
-    def __init__(self, macro):
+    def __init__(self, macroModel):
         QSplitter.__init__(self, Qt.Vertical)
-        self.edit = QTextEdit(self)
-        self.edit.installEventFilter(self)
-        self.edit.setAcceptRichText(False)
-        self.edit.setStyleSheet("font-family: monospace")
+
+        self.teEditor = QTextEdit(self)
+        self.teEditor.installEventFilter(self)
+        self.teEditor.setAcceptRichText(False)
+        self.teEditor.setStyleSheet("font-family: monospace")
         try:
-            self.edit.setPlainText(macro.load())
+            self.teEditor.setPlainText(macroModel.code)
         except KeyError:
             pass
-        PygmentsHighlighter(self.edit.document())
-        self.addWidget(self.edit)
-        self.edit.setLineWrapMode(QTextEdit.NoWrap)
-        self.edit.textChanged.connect(self.onMacroChanged)
+        PygmentsHighlighter(self.teEditor.document())
+        self.addWidget(self.teEditor)
+        self.teEditor.setLineWrapMode(QTextEdit.NoWrap)
+        self.teEditor.textChanged.connect(self.onMacroChanged)
 
         self.console = QPlainTextEdit(self)
         self.console.setReadOnly(True)
         self.console.setStyleSheet("font-family: monospace")
         self.addWidget(self.console)
-        self.macro = macro
+        self.macroModel = macroModel
         self.already_connected = set()
-        for k in macro.instances:
-            self.connect(k)
+        # XXX TODO check
+        #for k in macroModel.instances:
+        #    self.connect(k)
 
     def setupToolBars(self, tb, parent):
         tb.addAction(icons.start, "Run", self.onRun)
@@ -49,13 +50,11 @@ class MacroPanel(Dockable, QSplitter):
     def eventFilter(self, object, event):
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Tab:
-                self.edit.textCursor().insertText("    ")
+                self.teEditor.textCursor().insertText("    ")
                 return True
         return False
 
     def closeEvent(self, event):
-        # Widgets get destroyed with this event
-        self.macro.editor = None
         event.accept()
 
     def connect(self, macro):
@@ -75,34 +74,34 @@ class MacroPanel(Dockable, QSplitter):
     def onRun(self):
         self.console.clear()
         try:
-            compile(self.edit.toPlainText(), self.macro.name, "exec")
+            compile(self.teEditor.toPlainText(), self.macroModel.title, "exec")
         except SyntaxError as e:
-            if e.filename[7:-3] == self.macro.name:
-                c = self.edit.textCursor()
+            if e.filename[7:-3] == self.macroModel.title:
+                c = self.teEditor.textCursor()
                 c.movePosition(c.Start)
                 c.movePosition(c.Down, n=e.lineno - 1)
                 c.movePosition(c.Right, n=e.offset)
-                self.edit.setTextCursor(c)
-            QMessageBox.warning(self.edit, type(e).__name__,
+                self.teEditor.setTextCursor(c)
+            QMessageBox.warning(self.teEditor, type(e).__name__,
                                 "{}\n{}{}^\nin {} line {}".format(
                                 e.msg, e.text, " " * e.offset, e.filename,
                                 e.lineno))
         else:
-            getDevice(self.macro.instanceId).signalInitReply.connect(
+            getDevice(self.macroModel.instanceId).signalInitReply.connect(
                 self.initReply)
-            self.macro.run()
+            self.macroModel.run()
 
     def onSave(self):
         fn = getSaveFileName(
                 caption="Save Macro to File",
                 filter="Python files (*.py)",
                 suffix="py",
-                selectFile=self.macro.name + ".py")
+                selectFile=self.macroModel.title + ".py")
         if not fn:
             return
 
         with open(fn, "w") as out:
-            out.write(self.edit.toPlainText())
+            out.write(self.teEditor.toPlainText())
 
     def onMacroChanged(self):
         # XXX: TODO: this can be removed once a traits macro model exists

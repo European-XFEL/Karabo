@@ -1,10 +1,8 @@
-
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on September 10, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 
 """
 This module contains a class which represents project related datastructures.
@@ -12,10 +10,12 @@ This module contains a class which represents project related datastructures.
 
 from enum import Enum
 import hashlib
+from io import BytesIO
 import os.path
 import urllib.request, urllib.error, urllib.parse
 import urllib.parse
 from uuid import uuid4
+from traits.api import HasStrictTraits, String
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from .hash import XMLParser, XMLWriter
@@ -60,9 +60,11 @@ class Project(object):
         self.devices = []
         # Map for {deviceId, [ProjectConfiguration]}
         self.configurations = {}
-        self.macros = {}
+        # List of macro models
+        self.macros = []
         self.monitors = []
         self.resources = {}
+        # List of scene models
         self.scenes = []
 
         self.monitorFilename = ""
@@ -157,18 +159,24 @@ class Project(object):
         self.devices.insert(index, deviceGroup)
 
     def addMacro(self, macro):
-        self.macros[macro.name] = macro
+        self.macros.append(macro)
 
-    def getMacro(self, name):
-        """ Return the macro with the given \name
+    def getMacro(self, title):
+        """ The first occurrence of a macro with the given \title is
+        returned.
         """
-        return self.macros[name]
+        for macro in self.macros:
+            if title == macro.title:
+                return macro
 
-    def removeMacro(self, name):
-        """ Remove the macro with the given \name
+    def removeMacro(self, title):
+        """ The first occurrence of a macro with the given \title is
+        removed.
         """
-        if name in self.macros:
-            del self.macros[name]
+        for macro in self.macros:
+            if title == macro.title:
+                self.macro.remove(macro)
+                return
 
     def addMonitor(self, monitor):
         self.monitors.append(monitor)
@@ -268,7 +276,7 @@ class Project(object):
         objFactories = {
             'Device': BaseDevice,
             'DeviceGroup': BaseDeviceGroup,
-            'Macro': BaseMacro,
+            'Macro': read_macro,
             'Monitor': Monitor,
             'ProjectConfiguration': ProjectConfiguration,
             'Scene': read_scene,
@@ -361,13 +369,27 @@ class BaseDeviceGroup(BaseDevice):
         self.devices.append(device)
 
 
-class BaseMacro(object):
-    """ A simple macro object which supports file round-trips.
+class MacroModel(HasStrictTraits):
+    """ An object representing the data for a Karabo GUI macro."""
+    # The title of the macro
+    title = String()
+    # The actual macro code
+    code = String()
+
+
+def read_macro(filename_or_fileobj):
+    """ Read a macro and return it.
+        filename_or_fileobj is either a string containing a filename, or a
+        file-like object which can be read from (eg- a BytesIO instance).
     """
-    def __init__(self, project, name):
-        self.name = name
-        self.editor = None
-        self.instanceId = "Macro-{}-{}".format(project.name, self.name)
+    if isinstance(filename_or_fileobj, BytesIO):
+        # XXX : check for better solution 
+        filename_or_fileobj = filename_or_fileobj.getvalue()
+    else:
+        with open(filename_or_fileobj, 'rb') as input:
+            filename_or_fileobj = input.read()
+        input.close()
+    return MacroModel(code=filename_or_fileobj)
 
 
 class Monitor(object):

@@ -185,9 +185,11 @@ def _read_macros(zf, projectConfig, projInstance, factories):
     macros = []
     macroFactory = factories['Macro']
 
-    for k in projectConfig.get(Project.MACROS_KEY, []):
-        macro = macroFactory(projInstance, k)
-        macros.append(macro)
+    for title in projectConfig.get(Project.MACROS_KEY, []):
+        data = zf.read("{}/{}".format(Project.MACROS_KEY, "{}.py".format(title)))
+        macro_model = macroFactory(BytesIO(data))
+        macro_model.title = title
+        macros.append(macro_model)
 
     return macros
 

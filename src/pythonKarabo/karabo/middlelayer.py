@@ -37,8 +37,8 @@ from .middlelayer_api.hash import (
 from .middlelayer_api.macro import Macro, Monitor
 from .middlelayer_api.device import Device
 from .middlelayer_api.project import (
-    BaseDevice, BaseDeviceGroup, BaseMacro, Project, ProjectAccess,
-    ProjectConfiguration
+    BaseDevice, BaseDeviceGroup, MacroModel, Project, ProjectAccess,
+    ProjectConfiguration, read_macro
 )
 from .middlelayer_api.registry import MetaRegistry, Registry
 from .middlelayer_api.schema import (
