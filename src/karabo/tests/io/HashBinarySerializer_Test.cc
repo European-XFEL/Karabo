@@ -97,7 +97,7 @@ void HashBinarySerializer_Test::setUp() {
     h.setAttribute<vector<string> > ("vec_str", "vec_str", vector<string>(1000, "Hello Karabo"));
 
     m_hash.set<Hash>("hash", h);
-    //m_hash.set<vector<Hash> >("vec_hash", vector<Hash >(100, h));
+    m_hash.set<vector<Hash> >("vec_hash", vector<Hash >(100, h));
 
     Schema s;
     s.setParameterHash(h);
