@@ -72,7 +72,7 @@ namespace karathon {
 
         boost::shared_ptr<ImageData > self(new ImageData());
 
-        if (obj == bp::object())
+        if (obj.is_none())
             return self;
 
         if (PyArray_Check(obj.ptr())) {
@@ -80,6 +80,9 @@ namespace karathon {
             const NDArray ndarray = Wrapper::fromPyArrayToNDArray(arr);
             Dims _dimensions = ndarray.getShape();
             const int rank = _dimensions.rank();
+
+            // Data
+            self->setData(ndarray);
 
             // Encoding
             EncodingType _encoding = encoding;
