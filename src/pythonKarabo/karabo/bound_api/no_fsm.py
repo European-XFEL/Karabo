@@ -24,9 +24,6 @@ class NoFsm(object):
     
     def startFsm(self):
         """Start state machine"""
-        #self.updateState("Changing...")
-        if len(self.func) == 0:
-            raise RuntimeError("No initial function defined. Please call 'registerInitialFunction' method in the device constructor")
         # call initial function registered in the device constructor on registration order
         for f in self.func: f()
         
@@ -38,4 +35,5 @@ class NoFsm(object):
     def errorFound(self, userFriendly, detail):
         print("*** ERROR *** : {} -- {}".format(userFriendly, detail))
 
-    def exceptionFound(self, userFriendlyMessage, detailedMessage): pass
+    def exceptionFound(self, userFriendlyMessage, detailedMessage):
+        pass
