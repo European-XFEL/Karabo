@@ -28,4 +28,4 @@ $JAVA -jar $EXIST_HOME/start.jar jetty&
 echo "------------------------------------------"
 echo "Configuration DB was started."
 echo "You can access the backend at: http://localhost:8080/exist/"
-
+cd $CURRENT_DIR
