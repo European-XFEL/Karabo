@@ -1,0 +1,8 @@
+#!/bin/bash
+JAVA=$1
+INSTALL_PREFIX=`pwd`
+
+echo "Installing eXistDB to ${INSTALL_PREFIX}. This only needs to be done once. Your default admin password is 'karabo'!"
+$JAVA -jar eXistDB-2.2.jar -console -options install.properties
+
+
