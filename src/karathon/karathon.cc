@@ -15,7 +15,6 @@
 
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
-#include <karabo/xip/RawImageData.hh>
 
 #define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
 #include <numpy/arrayobject.h>
@@ -69,7 +68,6 @@ void exportp2p();
 //template <class T> void exportPyXipImage();
 void exportPyXipStatistics();
 template <class T> void exportPyXipCpuImage();
-void exportPyXipRawImageData();
 
 
 void *convert_to_cstring(PyObject *obj) {
@@ -132,18 +130,15 @@ BOOST_PYTHON_MODULE(karathon) {
 
     exportPyIoOutput<karabo::util::Hash>();
     exportPyIoOutput<karabo::util::Schema>();
-    exportPyIoOutput<karabo::xip::RawImageData>();
 
     exportPyIoInput<karabo::util::Hash>();
     exportPyIoInput<karabo::util::Schema>();
-    exportPyIoInput<karabo::xip::RawImageData>();
 
     exportPyIoTextSerializer<karabo::util::Hash>();
     exportPyIoTextSerializer<karabo::util::Schema>();
 
     exportPyIoBinarySerializer<karabo::util::Hash>();
     exportPyIoBinarySerializer<karabo::util::Schema>();
-    exportPyIoBinarySerializer<karabo::xip::RawImageData>();
 
     exportPyIoH5File();
 
@@ -178,7 +173,6 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyXipCpuImage<float>();
     exportPyXipCpuImage<short>();
     exportPyXipCpuImage<unsigned short>();
-    exportPyXipRawImageData();
 
     boost::python::converter::registry::insert(convert_to_cstring,
                                                boost::python::type_id<char>(),

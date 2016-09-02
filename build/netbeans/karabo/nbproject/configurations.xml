@@ -366,12 +366,6 @@
         <itemPath>../../../src/karabo/xip/FromChannelSpace.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Image.hh</itemPath>
         <itemPath>../../../src/karabo/xip/ImageEnums.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/RawImageData.cc</itemPath>
-        <itemPath>../../../src/karabo/xip/RawImageData.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/RawImageDataBinarySerializer.cc</itemPath>
-        <itemPath>../../../src/karabo/xip/RawImageDataBinarySerializer.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/RawImageDataHdf5Serializer.cc</itemPath>
-        <itemPath>../../../src/karabo/xip/RawImageDataHdf5Serializer.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Statistics.hh</itemPath>
         <itemPath>../../../src/karabo/xip/ToChannelSpace.hh</itemPath>
       </logicalFolder>
@@ -380,8 +374,6 @@
         <itemPath>../../../src/karabo/xip/ImageFileReader.hh</itemPath>
         <itemPath>../../../src/karabo/xip/ImageFileWriter.cc</itemPath>
         <itemPath>../../../src/karabo/xip/ImageFileWriter.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/RawImageFileWriter.cc</itemPath>
-        <itemPath>../../../src/karabo/xip/RawImageFileWriter.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Processor" projectFiles="true">
         <itemPath>../../../src/karabo/xip/BinaryProcessor.hh</itemPath>
@@ -2427,46 +2419,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/ImageFileWriter.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageData.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageData.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageDataBinarySerializer.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageDataBinarySerializer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageDataHdf5Serializer.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageDataHdf5Serializer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageFileWriter.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageFileWriter.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4608,46 +4560,6 @@
         </ccTool>
       </item>
       <item path="../../../src/karabo/xip/ImageFileWriter.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageData.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageData.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageDataBinarySerializer.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageDataBinarySerializer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageDataHdf5Serializer.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageDataHdf5Serializer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageFileWriter.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/RawImageFileWriter.hh"
             ex="false"
             tool="3"
             flavor2="0">

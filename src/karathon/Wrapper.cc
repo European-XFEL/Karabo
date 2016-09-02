@@ -12,7 +12,6 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/xip/CpuImage.hh>
-#include "RawImageDataWrap.hh"
 #include "PyXmsInputOutputChannel.hh"
 
 using namespace std;
@@ -227,9 +226,6 @@ namespace karathon {
                 return fromStdVectorToPyList(boost::any_cast < std::vector<std::string> >(operand));
             } else if (operand.type() == typeid (std::vector<karabo::util::CppNone>)) {
                 return fromStdVectorToPyListNone(boost::any_cast < std::vector<karabo::util::CppNone> >(operand));
-            } else if (operand.type() == typeid (karabo::xip::RawImageData)) {
-                karabo::xip::RawImageData raw = boost::any_cast<karabo::xip::RawImageData>(operand);
-                return bp::object(boost::shared_ptr<karabo::xip::RawImageData>(new karabo::xip::RawImageData(raw)));
             } else if (operand.type() == typeid (karabo::xms::Data)) {
                 return bp::object(boost::any_cast<karabo::xms::Data>(operand));           
             } else if (operand.type() == typeid (karabo::util::Schema)) {

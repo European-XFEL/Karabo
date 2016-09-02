@@ -11,12 +11,10 @@
 
 #include <karabo/xms/SignalSlotable.hh>
 #include "SignalSlotableWrap.hh"
-#include <karabo/xip/RawImageData.hh>
 #include <karabo/xms/Slot.hh>
 
 using namespace karabo::util;
 using namespace karabo::io;
-using namespace karabo::xip;
 using namespace karabo::xms;
 using namespace karathon;
 using namespace std;
