@@ -187,7 +187,49 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(tree.get<int>("F.f.f.f.f.x.y.z") == 99);
 
     }
+    
+    {
+        // copy constructor
+        Hash tmp("a", 1);
+        Hash h(tmp);
+        CPPUNIT_ASSERT(h.empty() == false);
+        CPPUNIT_ASSERT(h.size() == 1);
+        CPPUNIT_ASSERT(h.get<int>("a") == 1);
+        CPPUNIT_ASSERT(tmp.empty() == false);
+    }
+    
+    {
+        // lvalue assignment
+        Hash tmp("a", 1);
+        Hash h;
+        h = tmp;
+        CPPUNIT_ASSERT(h.empty() == false);
+        CPPUNIT_ASSERT(h.size() == 1);
+        CPPUNIT_ASSERT(h.get<int>("a") == 1);
+        CPPUNIT_ASSERT(tmp.empty() == false);
+    }
 
+    {
+        // move constructor
+        Hash tmp("a", 1);
+        Hash h(std::move(tmp));
+        CPPUNIT_ASSERT(h.empty() == false);
+        CPPUNIT_ASSERT(h.size() == 1);
+        CPPUNIT_ASSERT(h.get<int>("a") == 1);
+        CPPUNIT_ASSERT(tmp.empty() == true);
+    }
+    
+    {
+        // rvalue assignment
+        Hash h;
+        Hash tmp("a", 1);
+        h = std::move(tmp);
+        CPPUNIT_ASSERT(h.empty() == false);
+        CPPUNIT_ASSERT(h.size() == 1);
+        CPPUNIT_ASSERT(h.get<int>("a") == 1);
+        CPPUNIT_ASSERT(tmp.empty() == true);
+    }
+    
 }
 
 

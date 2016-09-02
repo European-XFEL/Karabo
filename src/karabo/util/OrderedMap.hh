@@ -93,8 +93,11 @@ namespace karabo {
             // Destructor
             virtual ~OrderedMap();
 
-
             OrderedMap<KeyType, MappedType>& operator=(const OrderedMap<KeyType, MappedType>& other);
+
+            OrderedMap(OrderedMap<KeyType, MappedType>&& other);
+
+            OrderedMap<KeyType, MappedType>& operator=(OrderedMap<KeyType, MappedType>&& other);
 
             list_iterator lbegin();
 
@@ -275,6 +278,27 @@ namespace karabo {
                         this->m_listNodes.push_back(&(find((*it)->getKey())->second));
                     }
                 }
+            }
+            return *this;
+        }
+
+        template<class KeyType, class MappedType>
+        OrderedMap<KeyType, MappedType>::OrderedMap(OrderedMap<KeyType, MappedType>&& other)
+            : m_listNodes(std::move(other.m_listNodes))
+            , m_mapNodes(std::move(other.m_mapNodes)) {
+            other.m_listNodes.clear();
+            other.m_mapNodes.clear();
+        }
+
+        template<class KeyType, class MappedType>
+        OrderedMap<KeyType, MappedType>& OrderedMap<KeyType, MappedType>::operator=(OrderedMap<KeyType, MappedType>&& other) {
+            if (this != &other) {
+                m_listNodes.clear();
+                m_mapNodes.clear();
+                m_listNodes = std::move(other.m_listNodes);
+                m_mapNodes = std::move(other.m_mapNodes);
+                other.m_listNodes.clear();
+                other.m_mapNodes.clear();
             }
             return *this;
         }
