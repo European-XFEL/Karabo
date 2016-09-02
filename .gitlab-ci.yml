@@ -7,7 +7,7 @@
     - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py --fix-links $DEPS_BASE_NAME/bin $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
     - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py $DEPS_BASE_NAME/lib $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
     - bash build.sh -p $DEPS_BASE_NAME CI
-    - sshpass -p "$XDATA_PWD" scp $DEPS_BASE_NAME*.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps/
+    - sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME*.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps/
   only:
     - /^deps-.+$/
   except:
