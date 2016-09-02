@@ -298,10 +298,10 @@ def _read_icon_elements(parent, tag):
         if sub.tag != tag:
             continue
         traits = {
-            'image': sub.get('image', '')
+            'image': sub.get('image', ''),
+            'value' : sub.text or ''
         }
         if sub.get('equal') is not None:
-            traits['value'] = sub.text
             traits['equal'] = True if sub.get('equal') == 'true' else False
         icons.append(IconData(**traits))
     return icons

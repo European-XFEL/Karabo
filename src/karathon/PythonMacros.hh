@@ -515,27 +515,6 @@ KARABO_PYTHON_COMMON_ATTRIBUTES(T) \
 ;\
 }
 
-/**
- * The following macro KARABO_PYTHON_NDARRAY is used for python binding of
- * @code
- * karabo::util::NDArrayElement< EType, -1, std::vector >
- * @endcode
- * where EType: signed char, unsigned char, short, unsigned short, int,
- * unsigned int, long long, unsigned long long, float, double.
- * In Python: NDARRAY_*_ELEMENT
- */
-#define KARABO_PYTHON_NDARRAY(t, e)\
-{\
-typedef t EType;\
-typedef NDArrayElement< EType, -1, std::vector > T;\
-bp::implicitly_convertible< Schema &, T >();\
-bp::class_< T, boost::noncopyable >( "NDARRAY_"#e"_ELEMENT", bp::init< karabo::util::Schema & >(( bp::arg("expected") )) )\
-KARABO_PYTHON_COMMON_ATTRIBUTES(T) \
-.def("shape"\
-, &NDArrayElementWrap<EType>::shape\
-, bp::return_internal_reference<> () )\
-;\
-}
 
 /**
  * The following macro KARABO_PYTHON_NODE_CHOICE_LIST is used for python binding of
