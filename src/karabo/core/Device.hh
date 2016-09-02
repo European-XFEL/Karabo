@@ -21,7 +21,6 @@
 #include <karabo/xms.hpp>
 #include <karabo/log/Logger.hh>
 #include <karabo/xip/CpuImage.hh>
-#include <karabo/xip/RawImageData.hh>
 
 #include "coredll.hh"
 

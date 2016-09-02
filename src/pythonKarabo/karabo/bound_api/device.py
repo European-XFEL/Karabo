@@ -20,8 +20,8 @@ from karathon import (
     AccessLevel, AccessType, AssemblyRules, BrokerConnection,
     Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
     ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
-    RawImageData, Schema, SignalSlotable, Timestamp, Trainstamp,
-    Unit, Validator, ValidatorValidationRules
+    Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
+    ValidatorValidationRules
 
 )
 
@@ -357,13 +357,6 @@ class PythonDevice(NoFsm):
         hash.setAttribute(key, "image", 1)
         self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
         self._ss.emit("signalChanged", hash, self.deviceid)
-    
-    def _setRawImageData(self, key, image):
-        hash = Hash(key, image.hash())
-        hash.setAttribute(key, "image", 1)
-        self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
-        self._ss.emit("signalChanged", hash, self.deviceid)
-
 
     def set(self, *args, **kwargs):
         """
@@ -397,9 +390,7 @@ class PythonDevice(NoFsm):
                 if isCpuImage(value):
                     self._setImage(key, value)
                     return
-                elif isinstance(value, RawImageData):
-                    self._setRawImageData(key, value)
-                    return
+
                 h = Hash()
                 # assure we are allowed to set states and alarms to appropriate elements
                 if isinstance(value, State):
@@ -427,9 +418,7 @@ class PythonDevice(NoFsm):
                     if isCpuImage(value):
                         self._setImage(key, value)
                         return
-                    elif isinstance(value, RawImageData):
-                        self._setRawImageData(key, value)
-                        return
+
                     h = Hash()
                     if isinstance(value, State):
                         h.set(key, value.name)
@@ -449,9 +438,6 @@ class PythonDevice(NoFsm):
                     if isCpuImage(value):
                         self._setImage(key, value)    # process images individually
                         hash.erasePath(key)      # clear hash from images 
-                    elif isinstance(value, RawImageData):
-                        self._setRawImageData(key, value)
-                        hash.erasePath(key)
 
                 validated = None
                 if validate:
