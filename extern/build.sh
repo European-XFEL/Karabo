@@ -13,7 +13,7 @@ sphinx_rtd_theme imagesize sphinx decorator ipykernel ipython_genutils
 jupyter_core jupyter_client pickleshare wcwidth prompt_toolkit simplegeneric
 traitlets dill ipython h5py pyusb parse suds jsonschema ecdsa pycrypto paramiko
 tzlocal httplib2 pssh traits pint nbformat notebook ipyparallel ipcluster_tools
-cycler )
+cycler pyelftools rpathology )
 
 DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole pyqwt5 guidata guiqwt )
 
@@ -25,7 +25,7 @@ log4cpp cppunit parse snappy traits pint )
 
 BUILD_MARKER_NAME=".marker.txt"
 DEPS_MARKER_NAME=".deps_tag.txt"
-DEP_URL_BASE="http://exflserv05.desy.de/karabo/karaboDevelopmentDeps/"
+DEP_URL_BASE="http://exflserv05.desy.de/karabo/karaboDevelopmentDeps"
 DEPS_BASE_NAME=$(lsb_release -is)-$(lsb_release -rs | sed -r 's/^([0-9]+).*/\1/')
 DEP_TAG_PATTERN="deps-*"
 
@@ -130,7 +130,7 @@ download_latest_deps() {
     local deps_url=$DEP_URL_BASE/$deps_file
 
     # Attempt to download, quietly
-    curl -O $deps_url &> /dev/null
+    curl -fO $deps_url &> /dev/null
     if [ $? -ne 0 ]; then
         if [ -f $deps_file ]; then
             rm $deps_file

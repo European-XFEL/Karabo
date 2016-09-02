@@ -659,7 +659,7 @@ void Schema_Test::testImageElement() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
     CPPUNIT_ASSERT(sch.isNode("image") == true);
-    CPPUNIT_ASSERT(sch.has("image.data") == true);
+    CPPUNIT_ASSERT(sch.has("image.encoding") == true);
 }
 
 

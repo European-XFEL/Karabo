@@ -16,10 +16,12 @@ namespace karabo {
     namespace util {
 
         template<typename T, int NDIMS = -1,
-                 template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
+        template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
         class NDArrayElement : public LeafElement<NDArrayElement<T, NDIMS, CONT>, CONT<T> > {
 
-            public:
+            typedef std::vector<long long> NDArrayElementShapeType;
+
+        public:
 
             NDArrayElement(Schema& expected) : LeafElement<NDArrayElement, CONT<T> >(expected) {
             }
@@ -47,7 +49,7 @@ namespace karabo {
                 return _shapeImpl(shp);
             }
 
-            NDArrayElement& shape(const long long x1, const long long x2=0, const long long x3=0, const long long x4=0) {
+            NDArrayElement& shape(const long long x1, const long long x2 = 0, const long long x3 = 0, const long long x4 = 0) {
                 NDArrayElementShapeType shp(1, x1);
                 if (x2 != 0) {
                     shp.push_back(x2);
@@ -68,6 +70,7 @@ namespace karabo {
             }
 
         private:
+
             NDArrayElement& _shapeImpl(const NDArrayElementShapeType& shape) {
                 if (NDIMS != -1) {
                     throw KARABO_NOT_IMPLEMENTED_EXCEPTION("The shape of a vector cannot be set");
@@ -96,7 +99,7 @@ namespace karabo {
 
                         this->userAccess();
 
-                    } else { //else set default value of requiredAccessLevel to OBSERVER 
+                    } else { //else set default value of requiredAccessLevel to OBSERVER
                         this->observerAccess();
                     }
                 }
@@ -115,10 +118,10 @@ namespace karabo {
         typedef NDArrayElement<float> NDARRAY_FLOAT_ELEMENT;
         typedef NDArrayElement<double> NDARRAY_DOUBLE_ELEMENT;
 
-        typedef NDArrayElement<bool, 1> VECTOR_BOOL_ELEMENT;
-        typedef NDArrayElement<signed char, 1> VECTOR_INT8_ELEMENT;
+        typedef NDArrayElement<bool, 1 > VECTOR_BOOL_ELEMENT;
+        typedef NDArrayElement<signed char, 1 > VECTOR_INT8_ELEMENT;
         typedef NDArrayElement<char, 1> VECTOR_CHAR_ELEMENT;
-        typedef NDArrayElement<signed short, 1> VECTOR_INT16_ELEMENT;
+        typedef NDArrayElement<signed short, 1 > VECTOR_INT16_ELEMENT;
         typedef NDArrayElement<int, 1> VECTOR_INT32_ELEMENT;
         typedef NDArrayElement<long long, 1> VECTOR_INT64_ELEMENT;
         typedef NDArrayElement<unsigned char, 1> VECTOR_UINT8_ELEMENT;

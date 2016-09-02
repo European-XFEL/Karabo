@@ -7,6 +7,7 @@
 /extern/resources/openmqc/openmqc-5.0.1/nbproject
 build/netbeans/pythonGui/nbproject/*
 build/netbeans/karabo/testresults
+build/netbeans/karabo/openMQLib.*
 build/netbeans/*/nbproject/Makefile-*.mk
 build/netbeans/*/nbproject/private
 build/netbeans/*/nbproject/Package-*.bash
@@ -52,3 +53,8 @@ build/netbeans/*/*.log
 build/python/*.exe
 !.gitignore
 *openMQLib.log.*
+/extern/resources/openmqc/openmqc-5.0.1/build/
+/build/netbeans/karabo/build/
+/build/netbeans/karathon/build/
+/build/netbeans/deviceServer/build/
+/build/netbeans/brokerMessageLogger/build/

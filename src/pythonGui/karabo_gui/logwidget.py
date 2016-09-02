@@ -3,15 +3,9 @@
 # Created on June 4, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
 """This module contains a class which represents a widget which shows log messages
    like Debug, Info, Errors, Warns, Alarms, Warnings in a generic kind of way.
 """
-
-__all__ = ["LogWidget", "LogQueryModel"]
-
-
 from collections import namedtuple
 
 from PyQt4.QtCore import (QAbstractTableModel, QDate, QDateTime,
@@ -389,8 +383,9 @@ class LogWidget(QWidget):
     def onSaveToFile(self):
         """ Write current database content to a file """
         filename = getSaveFileName(
-            "Save file as",globals.HIDDEN_KARABO_FOLDER,
-            "Log files (*.log)", "log")
+                        caption="Save file as",
+                        filter="Log files (*.log)",
+                        suffix="log")
         if not filename:
             return
 
