@@ -10,6 +10,7 @@
 #include "boost/python/raw_function.hpp"
 #include <iostream>
 #include <karabo/util/Factory.hh>
+#include <karabo/util/ByteArrayElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ListElement.hh>
 #include <karabo/util/ChoiceElement.hh>
@@ -1911,6 +1912,7 @@ void exportPyUtilSchema() {
     //DefaultValue<SimpleElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
     //and DefaultValue<PathElement, std::string >
+    //and DefaultValue<ByteArrayElement, ByteArray >
 
 
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<int>, int, INT32)
@@ -1922,11 +1924,11 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<string>, string, STRING)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<bool>, bool, BOOL)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(PathElement, string, PATH)
+    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(ByteArrayElement, ByteArray, BYTEARRAY)
 
     ///////////////////////////////////////////////////////////////
     //AlarmSpecific<SimpleElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
-    // and AlarmSpecific<PathElement, std::string >
 
     KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<int>, int, ReadOnlySpecific, INT32)
     KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned int>, unsigned int, ReadOnlySpecific, UINT32)
@@ -1962,6 +1964,7 @@ void exportPyUtilSchema() {
     //ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
     // and ReadOnlySpecific<PathElement, std::string >
+    // and ReadOnlySpecific<ByteArrayElement, ByteArray >
 
 
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<int>, int, INT32)
@@ -1973,7 +1976,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<std::string>, std::string, STRING)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<bool>, bool, BOOL)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(PathElement, std::string, PATH)
-
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(ByteArrayElement, ByteArray, BYTEARRAY)
 
 
 
@@ -2072,9 +2075,19 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_SIMPLE(string, STRING)
     KARABO_PYTHON_SIMPLE(bool, BOOL)
 
-            //////////////////////////////////////////////////////////////////////
-            // Binding PathElement       
-            // In Python : PATH_ELEMENT
+    //////////////////////////////////////////////////////////////////////
+    // Binding ByteArrayElement
+    // In Python : BYTE_ARRAY
+    {
+        bp::implicitly_convertible< Schema &, ByteArrayElement >();
+        bp::class_<ByteArrayElement> ("BYTEARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+                KARABO_PYTHON_COMMON_ATTRIBUTES(ByteArrayElement)
+                ;
+    }
+
+    //////////////////////////////////////////////////////////////////////
+    // Binding PathElement
+    // In Python : PATH_ELEMENT
     {
         bp::implicitly_convertible< Schema &, PathElement >();
         bp::class_<PathElement> ("PATH_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
