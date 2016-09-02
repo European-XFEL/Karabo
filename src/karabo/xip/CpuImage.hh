@@ -17,7 +17,6 @@
 #include <karabo/util/Types.hh>
 #include <karabo/util/FromTypeInfo.hh>
 #include <karabo/util/ToLiteral.hh>
-#include <karabo/xip/RawImageData.hh>
 
 #include "AbstractImage.hh"
 #include "CImg.h"

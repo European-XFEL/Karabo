@@ -18,7 +18,6 @@
 #include <karabo/io/FileTools.hh>
 #include <karabo/io/InputElement.hh>
 #include <karabo/io/OutputElement.hh>
-#include <karabo/xip/RawImageData.hh>
 
 #include "PythonFactoryMacros.hh"
 #include "PythonMacros.hh"
@@ -28,7 +27,6 @@
 
 using namespace karabo::util;
 using namespace karabo::io;
-using namespace karabo::xip;
 using namespace std;
 namespace bp = boost::python;
 
@@ -417,19 +415,15 @@ void exportPyIoBinarySerializer() {
 
 template void exportPyIOFileTools1<Hash>();
 template void exportPyIOFileTools1<Schema>();
-template void exportPyIOFileTools1<RawImageData>();
 
 template void exportPyIoOutput<Hash>();
 template void exportPyIoOutput<Schema>();
-template void exportPyIoOutput<RawImageData>();
 
 template void exportPyIoInput<Hash>();
 template void exportPyIoInput<Schema>();
-template void exportPyIoInput<RawImageData>();
 
 template void exportPyIoBinarySerializer<Hash>();
 template void exportPyIoBinarySerializer<Schema>();
-template void exportPyIoBinarySerializer<RawImageData>();
 
 template void exportPyIoTextSerializer<Hash>();
 template void exportPyIoTextSerializer<Schema>();
