@@ -30,17 +30,6 @@ namespace karabo {
         }
 
 
-//        Hash::Hash(Hash&& other) : m_container(std::move(other.m_container)) {
-//        }
-//
-//
-//        Hash& Hash::operator=(Hash&& other) {
-//            if (this != &other)
-//                m_container = std::move(other.m_container);
-//            return *this;
-//        }
-
-
         Hash::const_iterator Hash::begin() const {
             return m_container.begin();
         }
