@@ -33,6 +33,12 @@ class WidgetSceneHandler(ABCHasStrictTraits):
 
         main_menu = QMenu(self.widget)
         change_menu = main_menu.addMenu("Change Widget")
+        # Add actions which are bound to the actual Qt widget
+        old_style_widget = self.widget.old_style_widget
+        qwidget = old_style_widget.widget
+        if qwidget.actions():
+            change_menu.addActions(qwidget.actions())
+            change_menu.addSeparator()
         for klass in widget_classes:
             ac = change_menu.addAction(klass.alias)
             ac.triggered.connect(partial(self._change_widget,

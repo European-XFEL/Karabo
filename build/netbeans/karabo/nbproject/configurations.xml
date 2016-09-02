@@ -2,25 +2,6 @@
 <configurationDescriptor version="95">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
-      <logicalFolder name="f2" displayName="Devices" projectFiles="true">
-        <itemPath>../../../src/karabo/core/AlarmService.cc</itemPath>
-        <itemPath>../../../src/karabo/core/AlarmService.hh</itemPath>
-        <itemPath>../../../src/karabo/core/CentralLogging.cc</itemPath>
-        <itemPath>../../../src/karabo/core/CentralLogging.hh</itemPath>
-        <itemPath>../../../src/karabo/core/DataLogReader.cc</itemPath>
-        <itemPath>../../../src/karabo/core/DataLogReader.hh</itemPath>
-        <itemPath>../../../src/karabo/core/DataLogUtils.cc</itemPath>
-        <itemPath>../../../src/karabo/core/DataLogUtils.hh</itemPath>
-        <itemPath>../../../src/karabo/core/DataLogger.cc</itemPath>
-        <itemPath>../../../src/karabo/core/DataLogger.hh</itemPath>
-        <itemPath>../../../src/karabo/core/DataLoggerManager.cc</itemPath>
-        <itemPath>../../../src/karabo/core/DataLoggerManager.hh</itemPath>
-        <itemPath>../../../src/karabo/core/Device.hh</itemPath>
-        <itemPath>../../../src/karabo/core/GuiServerDevice.cc</itemPath>
-        <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
-        <itemPath>../../../src/karabo/core/ProjectManager.cpp</itemPath>
-        <itemPath>../../../src/karabo/core/ProjectManager.hh</itemPath>
-      </logicalFolder>
       <logicalFolder name="f3" displayName="Patterns" projectFiles="true">
         <itemPath>../../../src/karabo/core/Worker.hh</itemPath>
       </logicalFolder>
@@ -37,12 +18,29 @@
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopInterface.hh</itemPath>
       </logicalFolder>
+      <itemPath>../../../src/karabo/core/Device.hh</itemPath>
       <itemPath>../../../src/karabo/core/DeviceClient.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceClient.hh</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.hh</itemPath>
       <itemPath>../../../src/karabo/core/Runner.hh</itemPath>
       <itemPath>../../../src/karabo/core.hpp</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f10" displayName="devices" projectFiles="true">
+      <itemPath>../../../src/karabo/devices/AlarmService.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/AlarmService.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/CentralLogging.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/CentralLogging.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/DataLogReader.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/DataLogReader.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/DataLogger.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/DataLogger.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/DataLoggerManager.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/DataLoggerManager.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/GuiServerDevice.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/GuiServerDevice.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/ProjectManager.cpp</itemPath>
+      <itemPath>../../../src/karabo/devices/ProjectManager.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f2" displayName="io" projectFiles="true">
       <logicalFolder name="f1" displayName="h5" projectFiles="true">
@@ -255,10 +253,10 @@
         <itemPath>../../../src/karabo/util/AlarmConditionElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/AlarmConditionElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ChoiceElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/CustomNodeElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/GenericElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/HashFilter.cc</itemPath>
         <itemPath>../../../src/karabo/util/HashFilter.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ImageElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/LeafElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ListElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/NDArrayElement.hh</itemPath>
@@ -295,15 +293,17 @@
         </logicalFolder>
         <itemPath>../../../src/karabo/util/AlarmConditions.cc</itemPath>
         <itemPath>../../../src/karabo/util/AlarmConditions.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ArrayData.hh</itemPath>
         <itemPath>../../../src/karabo/util/ArrayTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
         <itemPath>../../../src/karabo/util/Base64.hh</itemPath>
         <itemPath>../../../src/karabo/util/ByteSwap.cc</itemPath>
         <itemPath>../../../src/karabo/util/ByteSwap.hh</itemPath>
+        <itemPath>../../../src/karabo/util/DataLogUtils.cc</itemPath>
+        <itemPath>../../../src/karabo/util/DataLogUtils.hh</itemPath>
         <itemPath>../../../src/karabo/util/DetectorGeometry.hh</itemPath>
         <itemPath>../../../src/karabo/util/Dims.hh</itemPath>
         <itemPath>../../../src/karabo/util/MetaTools.hh</itemPath>
+        <itemPath>../../../src/karabo/util/NDArray.cc</itemPath>
         <itemPath>../../../src/karabo/util/NDArray.hh</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.cc</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
@@ -333,8 +333,8 @@
         <itemPath>../../../src/karabo/util/FromTypeInfo.hh</itemPath>
         <itemPath>../../../src/karabo/util/ToCppString.hh</itemPath>
         <itemPath>../../../src/karabo/util/ToLiteral.hh</itemPath>
+        <itemPath>../../../src/karabo/util/ToSize.hh</itemPath>
         <itemPath>../../../src/karabo/util/ToType.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ToXsd.hh</itemPath>
         <itemPath>../../../src/karabo/util/Types.hh</itemPath>
       </logicalFolder>
       <itemPath>../../../src/karabo/util.hpp</itemPath>
@@ -521,8 +521,6 @@
       <logicalFolder name="f7" displayName="xip_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/xip/Image_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/xip/Image_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/xip/RawImageData_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/xip/RawImageData_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xip/TestPathSetup.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xip/xipTestRunner.cc</itemPath>
       </logicalFolder>
@@ -569,7 +567,7 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
-          <commandLine>-Wno-unused-local-typedefs</commandLine>
+          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
@@ -598,16 +596,6 @@
       </packaging>
       <item path="../../../src/karabo/core.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/AlarmService.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/AlarmService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/BaseFsm.hh"
             ex="false"
             tool="3"
@@ -619,56 +607,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/CameraInterface.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/CentralLogging.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/CentralLogging.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogReader.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogReader.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogUtils.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogUtils.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogger.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogger.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerManager.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerManager.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -710,16 +648,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/GuiServerDevice.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/GuiServerDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/MotorInterface.hh"
             ex="false"
             tool="3"
@@ -728,16 +656,6 @@
       <item path="../../../src/karabo/core/NoFsm.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/OkErrorFsm.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/ProjectManager.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/ProjectManager.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -755,6 +673,76 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/Worker.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/AlarmService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/AlarmService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/CentralLogging.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/CentralLogging.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLogReader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLogReader.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLoggerManager.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLoggerManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/GuiServerDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/GuiServerDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/ProjectManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/ProjectManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io.hpp" ex="false" tool="3" flavor2="0">
       </item>
@@ -1842,16 +1830,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/xip/RawImageData_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xip/RawImageData_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/xip/TestPathSetup.hh"
             ex="false"
             tool="3"
@@ -1919,11 +1897,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ArrayData.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/ArrayTools.hh"
             ex="false"
             tool="3"
@@ -1960,6 +1933,21 @@
       </item>
       <item path="../../../src/karabo/util/Configurator.hh"
             ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/CustomNodeElement.hh"
+	    ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/DataLogUtils.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/DataLogUtils.hh"
+	    ex="false"
             tool="3"
             flavor2="0">
       </item>
@@ -2064,11 +2052,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ImageElement.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
             tool="3"
@@ -2082,6 +2065,11 @@
       <item path="../../../src/karabo/util/MetaTools.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/NDArray.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/NDArray.hh"
@@ -2252,9 +2240,9 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
+      <item path="../../../src/karabo/util/ToSize.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ToXsd.hh" ex="false" tool="3" flavor2="0">
+      <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Trainstamp.cc"
             ex="false"
@@ -2735,7 +2723,7 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
-          <commandLine>-Wno-unused-local-typedefs</commandLine>
+          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
@@ -2767,16 +2755,6 @@
       </packaging>
       <item path="../../../src/karabo/core.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/AlarmService.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/AlarmService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/BaseFsm.hh"
             ex="false"
             tool="3"
@@ -2788,56 +2766,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/CameraInterface.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/CentralLogging.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/CentralLogging.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogReader.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogReader.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogUtils.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogUtils.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogger.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLogger.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerManager.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerManager.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2879,16 +2807,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/GuiServerDevice.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/GuiServerDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/MotorInterface.hh"
             ex="false"
             tool="3"
@@ -2897,16 +2815,6 @@
       <item path="../../../src/karabo/core/NoFsm.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/OkErrorFsm.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/ProjectManager.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/ProjectManager.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2924,6 +2832,76 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/Worker.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/AlarmService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/AlarmService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/CentralLogging.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/CentralLogging.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLogReader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLogReader.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLoggerManager.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/DataLoggerManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/GuiServerDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/GuiServerDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/ProjectManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/ProjectManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io.hpp" ex="false" tool="3" flavor2="0">
       </item>
@@ -4020,16 +3998,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/xip/RawImageData_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xip/RawImageData_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/xip/TestPathSetup.hh"
             ex="false"
             tool="3"
@@ -4097,11 +4065,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ArrayData.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/ArrayTools.hh"
             ex="false"
             tool="3"
@@ -4137,6 +4100,21 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Configurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/CustomNodeElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/DataLogUtils.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/DataLogUtils.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4242,11 +4220,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ImageElement.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
             tool="3"
@@ -4260,6 +4233,11 @@
       <item path="../../../src/karabo/util/MetaTools.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/NDArray.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/NDArray.hh"
@@ -4430,9 +4408,9 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
+      <item path="../../../src/karabo/util/ToSize.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/ToXsd.hh" ex="false" tool="3" flavor2="0">
+      <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Trainstamp.cc"
             ex="false"

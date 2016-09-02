@@ -9,7 +9,7 @@
 #include <karabo/log/Logger.hh>
 #include <karabo/io/FileTools.hh>
 #include <karabo/webAuth/Authenticator.hh>
-#include <karabo/core/DataLogUtils.hh>
+#include <karabo/util/DataLogUtils.hh>
 #include <karabo/util/Schema.hh>
 
 #include "DeviceClient.hh"
@@ -183,13 +183,13 @@ namespace karabo {
             mergeIntoRuntimeSystemDescription(entry);
 
             if (m_instanceNewHandler) m_instanceNewHandler(entry);
-            if (m_loggerMapCached && instanceId == core::DATALOGMANAGER_ID) {
+            if (m_loggerMapCached && instanceId == util::DATALOGMANAGER_ID) {
                 karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
                 if (p) {
                     // The corresponding 'connect' is done by SignalSlotable's automatic reconnect feature.
                     // Even this request might not be needed since the logger manager emits the corresponding signal.
                     // But we cannot be 100% sure that our 'connect' has been registered in time.
-                    p->requestNoWait(core::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "_slotLoggerMap");
+                    p->requestNoWait(util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "_slotLoggerMap");
                 }
             }
         }
@@ -888,11 +888,11 @@ namespace karabo {
                 return false;
             } else if (toggle) {
                 // connect and request a first time
-                if (p->connect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap")) {
+                if (p->connect(util::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap")) {
                     // If we cannot connect, request makes no sense
                     Hash loggerMap;
                     try {
-                        p->request(core::DATALOGMANAGER_ID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(loggerMap);
+                        p->request(util::DATALOGMANAGER_ID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(loggerMap);
                         // Next 3 lines would better fit in an else block as in Python's try-except-else...
                         boost::mutex::scoped_lock lock(m_loggerMapMutex);
                         m_loggerMap = loggerMap;
@@ -908,7 +908,7 @@ namespace karabo {
             } else {
                 m_loggerMapCached = false;
                 // disconnect and clear (since otherwise possibly wrong info)
-                if (!p->disconnect(core::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap")) {
+                if (!p->disconnect(util::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap")) {
                     KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect _slotLoggerMap";
                     return false;
                 }
@@ -961,7 +961,7 @@ namespace karabo {
 
             // Try to get server - 1st try from map:
             std::string dataLogServer;
-            const std::string loggerId(core::DATALOGGER_PREFIX + deviceId);
+            const std::string loggerId(util::DATALOGGER_PREFIX + deviceId);
             if (m_loggerMapCached) {
                 boost::mutex::scoped_lock lock(m_loggerMapMutex);
                 if (m_loggerMap.has(loggerId)) {
@@ -974,7 +974,7 @@ namespace karabo {
                 if (p) {
                     Hash localLogMap; // to become map with key=loggerId, value=server
                     try {
-                        p->request(core::DATALOGMANAGER_ID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(localLogMap);
+                        p->request(util::DATALOGMANAGER_ID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(localLogMap);
                     } catch (const TimeoutException&) {
                         // Will fail below due to empty map...
                     }
@@ -991,7 +991,7 @@ namespace karabo {
             } else {
                 // Assemble the instanceId of a log reader
                 static int i = 0; // just choose an 'arbitrary' reader
-                (dataLogReader += core::DATALOGREADER_PREFIX) += toString(i++ % core::DATALOGREADERS_PER_SERVER)
+                (dataLogReader += util::DATALOGREADER_PREFIX) += toString(i++ % util::DATALOGREADERS_PER_SERVER)
                         += "-" + dataLogServer;
             }
 

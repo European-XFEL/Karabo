@@ -6,8 +6,8 @@ from .base import BaseWidgetContainer
 
 class _TableElementWrapperMixin(object):
     def __init__(self, model, box, parent):
-        super(_TableElementWrapperMixin, self).__init__(box, parent)
         self.model = model
+        super(_TableElementWrapperMixin, self).__init__(box, parent)
 
         # Initialize the widget
         schema = SchemaHashType.fromstring(self.model.column_schema)

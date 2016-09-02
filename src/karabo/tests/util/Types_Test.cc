@@ -13,7 +13,6 @@
 #include <karabo/util/FromTypeInfo.hh>
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/ToLiteral.hh>
-#include <karabo/util/ToXsd.hh>
 #include <karabo/util/FromInt.hh>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Types_Test);
@@ -228,9 +227,7 @@ void Types_Test::testFrom() {
     CPPUNIT_ASSERT(Types::from<double>(1.23) == Types::DOUBLE);
     CPPUNIT_ASSERT(Types::from(1.23) == Types::DOUBLE);
     CPPUNIT_ASSERT(Types::from(12345678987654ULL) == Types::UINT64);
-    CPPUNIT_ASSERT(Types::from(123456.789F) == Types::FLOAT);
-    std::vector<int> tmp(5);
-    CPPUNIT_ASSERT(Types::from(std::pair<const int*, size_t>(&tmp[0], tmp.size())) == Types::ARRAY_INT32);
+    CPPUNIT_ASSERT(Types::from(123456.789F) == Types::FLOAT);    
 }
 
 
@@ -247,16 +244,7 @@ void Types_Test::testTo() {
     CPPUNIT_ASSERT(Types::to<ToCppString > (Types::VECTOR_STRING) == "vector<string>");
     CPPUNIT_ASSERT(Types::to<ToCppString > (Types::VECTOR_UINT8) == "vector<unsigned char>");
     CPPUNIT_ASSERT(Types::to<ToCppString > (Types::VECTOR_INT8) == "vector<signed char>");
-    CPPUNIT_ASSERT(Types::to<ToCppString > (Types::VECTOR_HASH) == "vector<Hash>");
-
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::CHAR) == "xs:byte");
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_CHAR) == "xs:string");
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::FLOAT) == "xs:float");
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::DOUBLE) == "xs:double");
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_STRING) == "xs:string");
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_UINT8) == "xs:string");
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_INT8) == "xs:string");
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_INT32) == "xs:string");
+    CPPUNIT_ASSERT(Types::to<ToCppString > (Types::VECTOR_HASH) == "vector<Hash>");   
 }
 
 
