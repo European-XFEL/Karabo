@@ -72,9 +72,7 @@
       <itemPath>../../../src/karathon/FromNumpy.hh</itemPath>
       <itemPath>../../../src/karathon/PyXipCpuImage.cc</itemPath>
       <itemPath>../../../src/karathon/PyXipImage.cc</itemPath>
-      <itemPath>../../../src/karathon/PyXipRawImageData.cc</itemPath>
       <itemPath>../../../src/karathon/PyXipStatistics.cc</itemPath>
-      <itemPath>../../../src/karathon/RawImageDataWrap.hh</itemPath>
       <itemPath>../../../src/karathon/ToNumpy.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
@@ -375,16 +373,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karathon/PyXipRawImageData.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
-          </preprocessorList>
-        </ccTool>
-      </item>
       <item path="../../../src/karathon/PyXipStatistics.cc"
             ex="false"
             tool="1"
@@ -461,11 +449,6 @@
         </ccTool>
       </item>
       <item path="../../../src/karathon/PythonOutputHandler.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/RawImageDataWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -840,16 +823,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karathon/PyXipRawImageData.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
-          </preprocessorList>
-        </ccTool>
-      </item>
       <item path="../../../src/karathon/PyXipStatistics.cc"
             ex="false"
             tool="1"
@@ -926,11 +899,6 @@
         </ccTool>
       </item>
       <item path="../../../src/karathon/PythonOutputHandler.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/RawImageDataWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">
