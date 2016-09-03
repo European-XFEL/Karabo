@@ -14,6 +14,10 @@
 namespace karabo {
     namespace util {
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 0d1ab4f... Resolved conflict due to re-activating vector element
         void NDArray::expectedParameters(karabo::util::Schema& s) {
 
             BYTEARRAY_ELEMENT(s).key("data")
@@ -38,6 +42,11 @@ namespace karabo {
                     .commit();
         }
 
+<<<<<<< HEAD
+=======
+>>>>>>> ea234f7... Feedback implemented
+=======
+>>>>>>> 0d1ab4f... Resolved conflict due to re-activating vector element
 
         NDArray::NDArray(const Dims& shape,
                          const karabo::util::Types::ReferenceType& type,

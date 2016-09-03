@@ -208,6 +208,7 @@ namespace karabo {
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->bind(data);
                 }
+                m_bindWasExecuted = true;
             }
 
 
@@ -216,11 +217,14 @@ namespace karabo {
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->bind(data, bufferLen);
                 }
+                m_bindLenWasExecuted = true;
             }
 
 
             size_t Table::read(size_t recordNumber) {
-
+                if(!m_bindWasExecuted){
+                    throw KARABO_LOGIC_EXCEPTION("You need to bind a data structure to read to with Table::bind(Hash&) before reading");
+                }
                 if (recordNumber >= m_tableSize) return 0;
                 const vector<Element::Pointer >& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
@@ -233,7 +237,9 @@ namespace karabo {
 
 
             size_t Table::read(size_t recordNumber, size_t len) {
-
+                if(!m_bindLenWasExecuted){
+                    throw KARABO_LOGIC_EXCEPTION("You need to bind a data structure to read to with Table::bind(Hash&, size_t) before reading");
+                }
                 size_t numberReadRecords = (recordNumber + len) < m_tableSize ? len : (m_tableSize - recordNumber);
                 const vector<Element::Pointer >& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {

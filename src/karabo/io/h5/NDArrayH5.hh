@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Author: <krzysztof.wrona@xfel.eu>
+ * Author: <steffen.hauf@xfel.eu>
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
@@ -15,10 +15,7 @@
 #include <string>
 
 #include <karabo/util/Configurator.hh>
-#include <karabo/util/VectorElement.hh>
 #include <karabo/util/NDArray.hh>
-
-#include <karabo/util/VectorElement.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/FromLiteral.hh>
 
@@ -38,25 +35,25 @@ namespace karabo {
         namespace h5 {
 
             template<typename T>
-            class FixedLengthArray : public Dataset {
+            class NDArrayH5 : public Dataset {
 
             public:
 
-                KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
+                KARABO_CLASSINFO(NDArrayH5, "NDArrayH5_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 
 
-                FixedLengthArray(const karabo::util::Hash& input) : Dataset(input, this) {
-                    std::string type = FixedLengthArray<T>::classInfo().getClassId();
-                    if (input.has("type")) {
-                        type = input.get<std::string>("type");
-                    }
+                NDArrayH5(const karabo::util::Hash& input) : Dataset(input, this) {
+                    const size_t prefixLength = std::string("NDArrayH5_").size();
+                    const std::string type = (NDArrayH5<T>::classInfo().getClassId()).substr(prefixLength);
+
                     m_memoryType = karabo::util::Types::from<karabo::util::FromLiteral>(type);
-                    std::string datasetWriterClassId = "DatasetWriter_" + type;
+                    const std::string datasetWriterClassId = "DatasetWriter_NDArrayH5" + type;
 
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "dWClassId " << datasetWriterClassId;
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "classId " << Self::classInfo().getClassId();
                     karabo::util::Hash config("dims", dims().toVector());
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "config " << config;
+
                     m_datasetWriter = karabo::util::Configurator<DatasetWriter<T> >::create(datasetWriterClassId, config, false);
                     m_datasetReader = karabo::util::Configurator<DatasetReader<T> >::create("DatasetReader", config, false);
 
@@ -70,7 +67,7 @@ namespace karabo {
                     return m_memoryType;
                 }
 
-                virtual ~FixedLengthArray() {
+                virtual ~NDArrayH5() {
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected) {
@@ -95,7 +92,7 @@ namespace karabo {
                 }
 
                 void writeNode(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.FixedLengthArray") << "writing one record of " << m_key;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.NDArrayH5") << "writing one record of " << m_key;
                     try {
                         m_datasetWriter->write(node, 1, dataSet, fileDataSpace);
                     } catch (...) {
@@ -104,7 +101,7 @@ namespace karabo {
                 }
 
                 void writeNode(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.FixedLengthArray") << "writing " << len << " records of " << m_key;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.NDArrayH5") << "writing " << len << " records of " << m_key;
                     try {
                         m_datasetWriter->write(node, len, dataSet, fileDataSpace);
                     } catch (...) {
@@ -116,20 +113,22 @@ namespace karabo {
 
                     boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
                     if (!node) {
-                        std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key, '/');
-                        vec.resize(dims().size());
-                        data.setAttribute(m_key, "dims", dims().toVector(), '/');
-                        m_datasetReader->bind(vec);
-
+                        karabo::util::NDArray arr(dims(), karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T)));
+                        T* ptr = arr.getData<T>();
+                        m_datasetReader->bind(ptr);
+                        data.set(m_key, arr, '/');
                     } else {
-                        if (karabo::util::Types::isVector(node->getType())) {
-                            std::vector<T>& vec = node->getValue< std::vector<T> >();
-                            m_datasetReader->bind(vec);
-                        } else if (karabo::util::Types::isPointer(node->getType())) {
-                            T* ptr = node->getValue<T* >();
-                            m_datasetReader->bind(ptr);
-                            data.setAttribute(m_key, "dims", dims().toVector(), '/');
+                        if (node->getType() == karabo::util::Types::HASH) {
+                            if (node->hasAttribute("__classId") && node->getAttribute<std::string>("__classId") == karabo::util::NDArray::classInfo().getClassId()) {
+                                karabo::util::NDArray& arr = node->getValue<karabo::util::NDArray>();
+                                T* ptr = arr.getData<T>();
+                                arr.setShape(dims()); //technically not needed but assures that NDarray shape and data shape match
+                                m_datasetReader->bind(ptr);
+
+                            }
                         }
+
+
                     }
 
                 }
@@ -138,19 +137,24 @@ namespace karabo {
 
                     boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
                     if (!node) {
-                        std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key, '/');
-                        vec.resize(dims().size() * len);
-                        data.setAttribute(m_key, "dims", dims().toVector(), '/');
-                        m_datasetReader->bind(vec);
+                        auto dimsV = dims().toVector();
+                        dimsV.insert(dimsV.begin(), len);
+                        karabo::util::NDArray arr(karabo::util::Dims(dimsV), karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T)));
+                        T* ptr = arr.getData<T>();
+                        m_datasetReader->bind(ptr);
+                        data.set(m_key, arr, '/');
 
                     } else {
-                        if (karabo::util::Types::isVector(node->getType())) {
-                            std::vector<T>& vec = node->getValue< std::vector<T> >();
-                            m_datasetReader->bind(vec);
-                        } else if (karabo::util::Types::isPointer(node->getType())) {
-                            T* ptr = node->getValue<T* >();
-                            m_datasetReader->bind(ptr);
-                            data.setAttribute(m_key, "dims", dims().toVector(), '/');
+                        if (node->getType() == karabo::util::Types::HASH) {
+                            if (node->hasAttribute("__classId") && node->getAttribute<std::string>("__classId") == karabo::util::NDArray::classInfo().getClassId()) {
+                                karabo::util::NDArray& arr = node->getValue<karabo::util::NDArray>();
+                                T* ptr = arr.getData<T>();
+                                auto dimsV = dims().toVector();
+                                dimsV.insert(dimsV.begin(), len);
+                                arr.setShape(karabo::util::Dims(dimsV)); //technically not needed but assures that NDarray shape and data shape match
+                                m_datasetReader->bind(ptr);
+
+                            }
                         }
                     }
 
@@ -176,14 +180,6 @@ namespace karabo {
 
 
 
-                //                void readSpecificAttributes(karabo::util::Hash& attributes) {
-                //                    attributes.setFromPath(m_key + ".rank", static_cast<int> (dims().size()));
-                //                    attributes.setFromPath(m_key + ".dims", dims());
-                //                    attributes.setFromPath(m_key + ".typeCategory", "FixedLengthArray");
-                //                }
-                //
-
-
             protected:
 
                 typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
@@ -193,23 +189,25 @@ namespace karabo {
             };
 
             // typedefs
-            typedef FixedLengthArray<char> CharArrayElement;
-            typedef FixedLengthArray<signed char> Int8ArrayElement;
-            typedef FixedLengthArray<short> Int16ArrayElement;
-            typedef FixedLengthArray<int> Int32ArrayElement;
-            typedef FixedLengthArray<long long > Int64ArrayElement;
-            typedef FixedLengthArray<unsigned char> UInt8ArrayElement;
-            typedef FixedLengthArray<unsigned short> UInt16ArrayElement;
-            typedef FixedLengthArray<unsigned int> UInt32ArrayElement;
-            typedef FixedLengthArray<unsigned long long > UInt64ArrayElement;
-            typedef FixedLengthArray<double> DoubleArrayElement;
-            typedef FixedLengthArray<float> FloatArrayElement;
-            typedef FixedLengthArray<std::string> StringArrayElement;
-            typedef FixedLengthArray<bool> BoolArrayElement;
+            typedef NDArrayH5<char> CharNDArrayH5Element;
+            typedef NDArrayH5<signed char> Int8NDArrayH5Element;
+            typedef NDArrayH5<short> Int16NDArrayH5Element;
+            typedef NDArrayH5<int> Int32NDArrayH5Element;
+            typedef NDArrayH5<long long > Int64NDArrayH5Element;
+            typedef NDArrayH5<unsigned char> UInt8NDArrayH5Element;
+            typedef NDArrayH5<unsigned short> UInt16NDArrayH5Element;
+            typedef NDArrayH5<unsigned int> UInt32NDArrayH5Element;
+            typedef NDArrayH5<unsigned long long > UInt64NDArrayH5Element;
+            typedef NDArrayH5<double> DoubleNDArrayH5Element;
+            typedef NDArrayH5<float> FloatNDArrayH5Element;
+            typedef NDArrayH5<std::string> StringNDArrayH5Element;
+            typedef NDArrayH5<bool> BoolNDArrayH5Element;
+            typedef NDArrayH5<std::complex<float> > ComplexFloatNDArrayH5Element;
+            typedef NDArrayH5<std::complex<double> > ComplexDoubleNDArrayH5Element;
 
 
         }
     }
 }
 
-#endif	/* KARABO_IO_FIXEDLENGTHARRAY_HH */
+#endif	/* KARABO_IO_NDARRAYH5_HH */

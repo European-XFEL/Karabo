@@ -85,6 +85,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/769817549/Format.o \
 	${OBJECTDIR}/_ext/769817549/FormatDiscoveryPolicy.o \
 	${OBJECTDIR}/_ext/769817549/Group.o \
+	${OBJECTDIR}/_ext/769817549/NDArrayH5.o \
 	${OBJECTDIR}/_ext/769817549/Scalar.o \
 	${OBJECTDIR}/_ext/769817549/ScalarAttribute.o \
 	${OBJECTDIR}/_ext/769817549/Table.o \
@@ -452,6 +453,11 @@ ${OBJECTDIR}/_ext/769817549/Group.o: ../../../src/karabo/io/h5/Group.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/769817549/Group.o ../../../src/karabo/io/h5/Group.cc
+
+${OBJECTDIR}/_ext/769817549/NDArrayH5.o: ../../../src/karabo/io/h5/NDArrayH5.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/769817549/NDArrayH5.o ../../../src/karabo/io/h5/NDArrayH5.cc
 
 ${OBJECTDIR}/_ext/769817549/Scalar.o: ../../../src/karabo/io/h5/Scalar.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
@@ -1822,6 +1828,19 @@ ${OBJECTDIR}/_ext/769817549/Group_nomain.o: ${OBJECTDIR}/_ext/769817549/Group.o 
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/769817549/Group_nomain.o ../../../src/karabo/io/h5/Group.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Group.o ${OBJECTDIR}/_ext/769817549/Group_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/769817549/NDArrayH5_nomain.o: ${OBJECTDIR}/_ext/769817549/NDArrayH5.o ../../../src/karabo/io/h5/NDArrayH5.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/769817549/NDArrayH5.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/769817549/NDArrayH5_nomain.o ../../../src/karabo/io/h5/NDArrayH5.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/769817549/NDArrayH5.o ${OBJECTDIR}/_ext/769817549/NDArrayH5_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/769817549/Scalar_nomain.o: ${OBJECTDIR}/_ext/769817549/Scalar.o ../../../src/karabo/io/h5/Scalar.cc 

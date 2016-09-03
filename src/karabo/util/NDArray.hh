@@ -12,8 +12,15 @@
 #include "Hash.hh"
 #include "Schema.hh"
 #include "ByteSwap.hh"
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "CustomNodeElement.hh"
+=======
+>>>>>>> ea234f7... Feedback implemented
+=======
 #include "CustomNodeElement.hh"
 
+>>>>>>> 0d1ab4f... Resolved conflict due to re-activating vector element
 
 namespace karabo {
     namespace util {
@@ -33,8 +40,17 @@ namespace karabo {
                 }
             };
 
+<<<<<<< HEAD
+<<<<<<< HEAD
             static void expectedParameters(karabo::util::Schema& s);
 
+
+=======
+>>>>>>> ea234f7... Feedback implemented
+=======
+            static void expectedParameters(karabo::util::Schema& s);
+
+>>>>>>> 0d1ab4f... Resolved conflict due to re-activating vector element
             NDArray(const Dims& shape,
                     const karabo::util::Types::ReferenceType& type = karabo::util::Types::DOUBLE,
                     const bool isBigEndian = karabo::util::isBigEndian());
@@ -227,6 +243,10 @@ namespace karabo {
             setBigEndian(isBigEndian);
         }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 0d1ab4f... Resolved conflict due to re-activating vector element
 
         /**********************************************************************
          * Declaration NDArrayElement
@@ -260,6 +280,11 @@ namespace karabo {
 
         typedef NDArrayElement NDARRAY_ELEMENT;
 
+<<<<<<< HEAD
+=======
+>>>>>>> ea234f7... Feedback implemented
+=======
+>>>>>>> 0d1ab4f... Resolved conflict due to re-activating vector element
     }
 }
 
