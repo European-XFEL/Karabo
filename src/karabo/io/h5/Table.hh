@@ -32,7 +32,8 @@ namespace karabo {
             private:
 
                 Table(hid_t h5file, boost::filesystem::path name)
-                    : m_h5file(h5file), m_name(name), m_group(-1), m_tableSize(0), m_numberOfRecordsAttribute(-1) {
+                    : m_h5file(h5file), m_name(name), m_group(-1), m_tableSize(0), m_numberOfRecordsAttribute(-1),
+                      m_bindWasExecuted(false), m_bindLenWasExecuted (false) {
                 }
 
             public:
@@ -188,6 +189,9 @@ namespace karabo {
                 std::string m_id; // table unique id
 
                 static const char* TABLE_SIZE;
+                
+                bool m_bindWasExecuted;
+                bool m_bindLenWasExecuted;
 
             };
 
