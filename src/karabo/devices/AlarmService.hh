@@ -91,23 +91,7 @@ namespace karabo {
 
             void slotUpdateAlarms(const std::string& deviceId, const karabo::util::Hash& alarmInfo);
 
-
-            /**
-             * We check if
-             *
-             * @param incomingReconfiguration
-             *
-             * contains any requests for acknowledgement, and then if these
-             * are indeed allowed.
-             */
-            void preReconfigure(karabo::util::Hash& incomingReconfiguration);
-
-
-            /**
-             * Updates the alarm table of this device to reflect the entries in m_alarms
-             */
-            void updateAlarmTable();
-
+   
             /**
              * Add signals and slots which need to be set up during initialization in this function
              */
@@ -123,12 +107,44 @@ namespace karabo {
              */
             void reinitFromFile();
 
+           
+            /**
+             * Add an update to a row in the alarm system
+             * @param updateType: type of update: init, update, delete, acknowledgeable, deviceKilled
+             * @param entry: alarm entry
+             * @return: a Hash to add to the updated rows.
+             */
+            karabo::util::Hash addRowUpdate(const std::string& updateType, const karabo::util::Hash& entry) const;
 
+            /**
+             * Slot to be called if a client wishes to acknowledge an alarm
+             * @param alarmServiceId: Alarm service the alarm should be registered at. Should be this device's instance id
+             * @param acknowledgedRows: the rows which should be acknowledged. It is a Hash where the keys give the
+             * unique row id, the value is currently not evaluated.
+             */
+            void slotAcknowledgeAlarm(const karabo::util::Hash& acknowledgedRows);
 
+            /**
+             * Request a dump of all alarms currently managed by this alarm service device
+             */
+            void slotRequestAlarmDump();
+           
+           
         private: // members
 
             std::map<std::string, karabo::util::Hash> m_registeredDevices;
-            karabo::util::Hash m_alarms;
+            karabo::util::Hash m_alarms; //base data container, organized hierarchically
+            
+            /*
+             These two maps contain the indexing and addressing information for alarms
+             * in m_alarms. The index (key in the first map, value in the second for 
+             * reverse look-up) uniquely counts upwards. Hence, newly incoming alarms
+             * are always added to the end of the map. The value of the first map,
+             * key of the second is a pointer to the entry for this alarm in m_alarms.
+             */
+            std::map<unsigned long long, karabo::util::Hash::Node*> m_alarmsMap;
+            std::map<karabo::util::Hash::Node*, unsigned long long> m_alarmsMap_r;
+
             boost::shared_mutex m_deviceRegisterMutex;
 
             boost::thread m_flushWorker;
