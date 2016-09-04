@@ -480,7 +480,9 @@ namespace karabo {
                     }
 
                     if (!stayInAlarm) {
-                        m_parametersInWarnOrAlarm.erase(scope);
+                        std::string scopeSlashes(scope);
+                        boost::replace_all(scopeSlashes, ".", "/");
+                        m_parametersInWarnOrAlarm.erase(scopeSlashes);
                     }
                 }
             } else if (referenceCategory == Types::SEQUENCE) {
@@ -563,8 +565,10 @@ namespace karabo {
                     string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went "
                                + (checkGreater ? "above " : "below ") + alarmCond.asBaseString() + " level of "
                                + karabo::util::toString(threshold));
-
-                    Hash::Node& desc = m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmString, "message", msg), '\0');
+                    std::string scopeSlashes(scope);
+                    boost::replace_all(scopeSlashes, ".", "/");
+                    Hash::Node& desc = m_parametersInWarnOrAlarm.set(scopeSlashes, Hash("type", alarmString, "message", msg));
+                    desc.setAttribute("alarmHasBeenUpdated", true); //indicate if we have passed the alarm to an alarm service
                     m_timestamp.toHashAttributes(desc.getAttributes());
                     workNode.setAttribute(KARABO_ALARM_ATTR, alarmString);
 

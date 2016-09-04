@@ -953,7 +953,9 @@ namespace karabo {
                 for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                     const Hash& desc = it->getValue<Hash>();
                     const AlarmCondition& cond = AlarmCondition::fromString(desc.get<std::string>("type"));
-                    info.set(it->getKey(), m_fullSchema.getInfoForAlarm(it->getKey(), cond));
+                    std::string propertyDeslashed(it->getKey());
+                    boost::replace_all(propertyDeslashed, "/", ".");
+                    info.set(it->getKey(), m_fullSchema.getInfoForAlarm(propertyDeslashed, cond));
                 }
                 return info;
 
@@ -1349,10 +1351,11 @@ namespace karabo {
              * a signal with the update
              *
              * @param previous: alarm conditions previously present on the device.
-             *
+             * @param forceUpdate: force updating alarms even if no change occurred on validator side.
+             * 
              * Note: calling this method must be protected by a state change mutex!
              */
-            void evaluateAlarmUpdates(const karabo::util::Hash& previous, karabo::util::Hash& result) {
+            void evaluateAlarmUpdates(const karabo::util::Hash& previous, karabo::util::Hash& result, bool forceUpdate = false) {
                 using namespace karabo::util;
 
 
@@ -1380,21 +1383,27 @@ namespace karabo {
 
                 //now add new alarms
                 for (Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
-                    const Hash& desc = it->getValue<Hash>();
-                    const std::string& conditionString = desc.get<std::string>("type");
-                    const AlarmCondition& condition = AlarmCondition::fromString(conditionString);
+                    //avoid unneccessary chatter already sent messages.
+                    if (!it->hasAttribute("alarmHasBeenUpdated") || it->getAttribute<bool>("alarmHasBeenUpdated") || forceUpdate) {
+                        const Hash& desc = it->getValue<Hash>();
+                        const std::string& conditionString = desc.get<std::string>("type");
+                        const AlarmCondition& condition = AlarmCondition::fromString(conditionString);
 
-                    const std::string& property = it->getKey();
+                        const std::string& property = it->getKey();
+                        std::string propertyDeslashed(property);
+                        boost::replace_all(propertyDeslashed, "/", ".");
 
-                    Hash::Node& entryNode = toAdd.set(property, Hash());
-                    Hash& entry = entryNode.getValue<Hash>().bindReference<Hash>(conditionString);
+                        Hash::Node& propertyNode = toAdd.set(property, Hash());
+                        Hash::Node& entryNode = propertyNode.getValue<Hash>().set(conditionString, Hash());
+                        Hash& entry = entryNode.getValue<Hash>();
 
-                    entry.set("type", conditionString);
-                    entry.set("description", m_fullSchema.getInfoForAlarm(property, condition));
-                    entry.set("needsAcknowledging", m_fullSchema.doesAlarmNeedAcknowledging(property, condition));
-                    const Timestamp& occuredAt = Timestamp::fromHashAttributes(it->getAttributes());
-                    occuredAt.toHashAttributes(entryNode.getAttributes());
-
+                        entry.set("type", conditionString);
+                        entry.set("description", m_fullSchema.getInfoForAlarm(propertyDeslashed, condition));
+                        entry.set("needsAcknowledging", m_fullSchema.doesAlarmNeedAcknowledging(propertyDeslashed, condition));
+                        const Timestamp& occuredAt = Timestamp::fromHashAttributes(it->getAttributes());
+                        occuredAt.toHashAttributes(entryNode.getAttributes());
+                        it->setAttribute("alarmHasBeenUpdated", false); //we will not handle this alarm again until updated
+                    }
                 }
 
 
@@ -1420,7 +1429,7 @@ namespace karabo {
                 }
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 Hash alarmsToUpdate;
-                evaluateAlarmUpdates(existingAlarmsRF, alarmsToUpdate);
+                evaluateAlarmUpdates(existingAlarmsRF, alarmsToUpdate, true);
                 reply(getInstanceId(), alarmsToUpdate);
 
             }
