@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "Stopping eXist database"
+pkill -9 -f start.jar
