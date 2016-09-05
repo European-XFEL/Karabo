@@ -80,7 +80,7 @@ rewrite_rpaths() {
     do
         local package=${target_packages[count]}
         local package_dir=$($INSTALL_PREFIX/bin/python3 -c "import os,$package as pkg;print(os.path.dirname(pkg.__file__))")
-        $INSTALL_PREFIX/bin/python3 -m rpathology.fixer -f -g "*.so" -l $INSTALL_PREFIX/lib -d $package_dir
+        run_rpath_fixer "-f -g '*.so' -l $INSTALL_PREFIX/lib -d $package_dir"
         count=$(($count + 1))
     done
 
@@ -92,13 +92,31 @@ rewrite_rpaths() {
     while [ "x${target_libs[count]}" != "x" ]
     do
         local library=${target_libs[count]}
-        $INSTALL_PREFIX/bin/python3 -m rpathology.fixer -f -g "$library" -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/lib
+        run_rpath_fixer "-f -g '$library' -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/lib"
         count=$(($count + 1))
     done
 
     # Relocate the executables
-    $INSTALL_PREFIX/bin/python3 -m rpathology.fixer -f -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin
+    run_rpath_fixer "-f -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin"
 }
+
+run_rpath_fixer() {
+    safeRunCommand "PATH=$INSTALL_PREFIX/bin $INSTALL_PREFIX/bin/python3 -m rpathology.fixer $*"
+}
+
+safeRunCommand() {
+    typeset cmnd="$*"
+    typeset ret_code
+
+    echo cmnd=$cmnd
+    eval $cmnd
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+        printf "Error : [%d] when executing command: '$cmnd'" $ret_code
+        exit $ret_code
+    fi
+}
+
 
 # Do what we came here to do
 INSTALL_PREFIX=$(get_abs_path $1)
