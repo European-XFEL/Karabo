@@ -1979,7 +1979,6 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(ByteArrayElement, ByteArray, BYTEARRAY)
 
 
-
     //    /////////////////////////////////////////////////////////////
     //    //DefaultValue<BitsetElement< EType >, EType >, where EType:
     //    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
@@ -2001,64 +2000,33 @@ void exportPyUtilSchema() {
     //    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned long long>, unsigned long long, BITSET64)
 
     ///////////////////////////////////////////////////////////
-    //DefaultValue<NDArrayElement< EType, 1, std::vector >, std::vector< EType > > where EType:
+    //DefaultValue<VectorElement< EType, 1, std::vector >, std::vector< EType > > where EType:
     //BOOL, INT32, UINT32, INT64, UINT64, DOUBLE, STRING 
 
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(int, INT32, 1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned int, UINT32, 1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(long long, INT64, 1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned long long, UINT64, 1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(float, FLOAT, 1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(double, DOUBLE, 1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(std::string, STRING, 1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(bool, BOOL, 1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(char, CHAR, 1)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(int, INT32)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(unsigned int, UINT32)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(long long, INT64)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(unsigned long long, UINT64)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(float, FLOAT)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(double, DOUBLE)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(std::string, STRING)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(bool, BOOL)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(char, CHAR)
 
     ///////////////////////////////////////////////////////////////
-    //ReadOnlySpecific<NDArrayElement< EType >, EType >, where EType:
+    //ReadOnlySpecific<VectorElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
 
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(int, INT32, 1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned int, UINT32, 1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(long long, INT64, 1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned long long, UINT64, 1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(float, FLOAT, 1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(double, DOUBLE, 1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(std::string, STRING, 1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(bool, BOOL, 1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(char, CHAR, 1)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(int, INT32)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(unsigned int, UINT32)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(long long, INT64)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(unsigned long long, UINT64)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(float, FLOAT)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(double, DOUBLE)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(std::string, STRING)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(bool, BOOL)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(char, CHAR)
 
-    ///////////////////////////////////////////////////////////
-    // DefaultValue<NDArrayElement< EType, NDIMS=-1, std::vector >, std::vector< EType > > where EType:
-    // BOOL, [U]INT8, [U]INT8, [U]INT8, [U]INT8, FLOAT, DOUBLE
-
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(bool, BOOL, -1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(signed char, INT8, -1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned char, UINT8, -1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(short, INT16, -1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned short, UINT16, -1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(int, INT32, -1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned int, UINT32, -1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(long long, INT64, -1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(unsigned long long, UINT64, -1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(float, FLOAT, -1)
-    KARABO_PYTHON_ARRAY_DEFAULT_VALUE(double, DOUBLE, -1)
-
-    ///////////////////////////////////////////////////////////////
-    // ReadOnlySpecific<NDArrayElement< EType, NDIMS=-1 >, EType >, where EType:
-    // BOOL, [U]INT8, [U]INT8, [U]INT8, [U]INT8, FLOAT, DOUBLE
-
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(bool, BOOL, -1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(signed char, INT8, -1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned char, UINT8, -1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(short, INT16, -1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned short, UINT16, -1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(int, INT32, -1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned int, UINT32, -1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(long long, INT64, -1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(unsigned long long, UINT64, -1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(float, FLOAT, -1)
-    KARABO_PYTHON_ARRAY_READONLYSPECIFIC(double, DOUBLE, -1)
 
     //////////////////////////////////////////////////////////////////////
     //Binding SimpleElement< EType >, where EType:
@@ -2106,7 +2074,7 @@ void exportPyUtilSchema() {
     }
 
     //////////////////////////////////////////////////////////////////////
-    // Binding NDArrayElement< EType, 1, std::vector >
+    // Binding VectorElement< EType, std::vector >
     // In Python : VECTOR_INT32_ELEMENT, VECTOR_UINT32_ELEMENT,
     // VECTOR_INT64_ELEMENT, VECTOR_UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT,
     // VECTOR_STRING_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_CHAR_ELEMENT
@@ -2122,27 +2090,53 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(char, CHAR)
 
     //////////////////////////////////////////////////////////////////////
-    // Binding NDArrayElement< EType, NDIMS=-1, std::vector >
-    // In Python : NDARRAY_BOOL_ELEMENT, NDARRAY_INT8_ELEMENT,
-    // NDARRAY_UINT8_ELEMENT, NDARRAY_INT16_ELEMENT, NDARRAY_UINT16_ELEMENT,
-    // NDARRAY_INT32_ELEMENT, NDARRAY_UINT32_ELEMENT, NDARRAY_INT64_ELEMENT,
-    // NDARRAY_UINT64_ELEMENT, NDARRAY_FLOAT_ELEMENT, NDARRAY_DOUBLE_ELEMENT
+    // Binding NDArrayElement
+    // In Python : NDARRAY_ELEMENT
 
-            //    KARABO_PYTHON_NDARRAY(bool, BOOL)
-            //    KARABO_PYTHON_NDARRAY(signed char, INT8)
-            //    KARABO_PYTHON_NDARRAY(unsigned char, UINT8)
-            //    KARABO_PYTHON_NDARRAY(short, INT16)
-            //    KARABO_PYTHON_NDARRAY(unsigned short, UINT16)
-            //    KARABO_PYTHON_NDARRAY(int, INT32)
-            //    KARABO_PYTHON_NDARRAY(unsigned int, UINT32)
-            //    KARABO_PYTHON_NDARRAY(long long, INT64)
-            //    KARABO_PYTHON_NDARRAY(unsigned long long, UINT64)
-            //    KARABO_PYTHON_NDARRAY(float, FLOAT)
-            //    KARABO_PYTHON_NDARRAY(double, DOUBLE)
+    {
+        bp::implicitly_convertible< Schema &, NDArrayElement >();
+        bp::class_<NDArrayElement> ("NDARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+                .def("dtype"
+                     , &NDArrayElementWrap::dtype, bp::arg("type")
+                     , bp::return_internal_reference<> ())
+                .def("shape"
+                     , &NDArrayElementWrap::shape, bp::arg("shape")
+                     , bp::return_internal_reference<> ())
 
-            //////////////////////////////////////////////////////////////////////
-            // Binding NodeElement       
-            // In Python : NODE_ELEMENT
+                .def("observerAccess", &NDArrayElement::observerAccess
+                    , bp::return_internal_reference<> () )
+                .def("userAccess", &NDArrayElement::userAccess
+                    , bp::return_internal_reference<> () )
+                .def("operatorAccess", &NDArrayElement::operatorAccess
+                    , bp::return_internal_reference<> () )
+                .def("expertAccess", &NDArrayElement::expertAccess
+                    , bp::return_internal_reference<> () )
+                .def("adminAccess", &NDArrayElement::adminAccess
+                    , bp::return_internal_reference<> () )
+                .def("description", &NDArrayElement::description
+                    , bp::return_internal_reference<> () )
+                .def("displayedName", &NDArrayElement::displayedName
+                    , bp::return_internal_reference<> () )
+                .def("init", &NDArrayElement::init
+                    , bp::return_internal_reference<> () )
+                .def("key", &NDArrayElement::key
+                    , bp::return_internal_reference<> () )
+                .def("readOnly", &NDArrayElement::readOnly
+                    , bp::return_internal_reference<> () )
+                .def("reconfigurable", &NDArrayElement::reconfigurable
+                    , bp::return_internal_reference<> () )
+                .def("commit", &NDArrayElement::commit
+                    , bp::return_internal_reference<> () )
+                .def("commit"
+                    , (NDArrayElement& (NDArrayElement::*)(karabo::util::Schema &))(&NDArrayElement::commit )
+                    , bp::arg("expected")
+                    , bp::return_internal_reference<> () )
+                ;
+    }
+
+    //////////////////////////////////////////////////////////////////////
+    // Binding NodeElement
+    // In Python : NODE_ELEMENT
     {
         bp::implicitly_convertible< Schema &, NodeElement >();
         bp::class_<NodeElement> ("NODE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))

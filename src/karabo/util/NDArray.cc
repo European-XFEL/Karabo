@@ -8,8 +8,8 @@
 #include "NDArray.hh"
 #include "ToSize.hh"
 #include "ByteArrayElement.hh"
-#include "NDArrayElement.hh"
 #include "SimpleElement.hh"
+#include "VectorElement.hh"
 
 namespace karabo {
     namespace util {
@@ -21,7 +21,7 @@ namespace karabo {
                     .description("The data of the array")
                     .readOnly()
                     .commit();
-            VECTOR_INT32_ELEMENT(s).key("shape")
+            VECTOR_INT64_ELEMENT(s).key("shape")
                     .displayedName("Shape")
                     .description("The shape of the array reflects total dimensionality and each element the extension in this dimension")
                     .readOnly()
