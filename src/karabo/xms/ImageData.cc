@@ -5,6 +5,8 @@
  * Created on April 20, 2015, 19:35 PM
  */
 
+#include <karabo/util/VectorElement.hh>
+
 #include "ImageData.hh"
 
 

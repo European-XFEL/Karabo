@@ -588,13 +588,6 @@ void Schema_Test::testArrayElements() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
 
-    CPPUNIT_ASSERT(sch.getValueType("arrBool") == Types::VECTOR_BOOL);
-    CPPUNIT_ASSERT(sch.getValueType("arrInt8") == Types::VECTOR_INT8);
-    CPPUNIT_ASSERT(sch.getValueType("arrUInt16") == Types::VECTOR_UINT16);
-    CPPUNIT_ASSERT(sch.getValueType("arrFloat") == Types::VECTOR_FLOAT);
-    CPPUNIT_ASSERT(sch.getValueType("arrDouble") == Types::VECTOR_DOUBLE);
-    CPPUNIT_ASSERT(sch.getValueType("arrUndefined") == Types::VECTOR_FLOAT);
-
     std::vector<long long> shapeVec;
     shapeVec.push_back(3);
     shapeVec.push_back(2);
@@ -612,22 +605,10 @@ void Schema_Test::testArrayElements() {
     CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrUndefined.shape") == undefShapeVec);
 
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrBool") == true);
-    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrInt8") == false);
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("arrInt8") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrUInt16") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrFloat") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrDouble") == true);
-
-    std::vector<bool> arrBool(6, true);
-    vector<bool> defArrBool = sch.getDefaultValue<vector<bool> >("arrBool");
-    CPPUNIT_ASSERT(defArrBool == arrBool);
-
-    std::vector<signed char> arrInt(6, 42);
-    vector<signed char> defArrInt = sch.getDefaultValue<vector<signed char> >("arrInt8");
-    CPPUNIT_ASSERT(defArrInt == arrInt);
-
-    std::vector<float> arrFloat(6, 4.2);
-    vector<float> defArrFloat = sch.getDefaultValue<vector<float> >("arrFloat");
-    CPPUNIT_ASSERT(defArrFloat == arrFloat);
 }
 
 void Schema_Test::testPathElement() {
