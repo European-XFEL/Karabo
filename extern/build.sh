@@ -129,6 +129,9 @@ download_latest_deps() {
     local deps_file=$DEPS_BASE_NAME-$deps_tag.tar.gz
     local deps_url=$DEP_URL_BASE/$deps_file
 
+    echo "### Downloading external dependencies from $deps_url. ###"
+    echo
+
     # Attempt to download, quietly
     curl -fO $deps_url &> /dev/null
     if [ $? -ne 0 ]; then
@@ -142,10 +145,16 @@ download_latest_deps() {
 
     # Unpack
     tar -zxf $deps_file
+    rm $deps_file
     mv $DEPS_BASE_NAME $INSTALL_PREFIX
 
     # Adjust for the local environment
+    echo "### Updating dependencies for the local environment... (this takes a while) ###"
+    echo
+
+    pushd $EXTERN_DIR
     safeRunCommand "./relocate_deps.sh $INSTALL_PREFIX"
+    popd
 
     # Leave a marker for later
     echo $deps_tag > $INSTALL_PREFIX/$DEPS_MARKER_NAME
