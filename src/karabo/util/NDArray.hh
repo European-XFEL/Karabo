@@ -10,6 +10,7 @@
 #include "Exception.hh"
 #include "Dims.hh"
 #include "Hash.hh"
+#include "Schema.hh"
 #include "ByteSwap.hh"
 
 namespace karabo {
@@ -29,6 +30,8 @@ namespace karabo {
                     // Do nothing
                 }
             };
+
+            static void expectedParameters(karabo::util::Schema& s);
 
             NDArray(const Dims& shape,
                     const karabo::util::Types::ReferenceType& type = karabo::util::Types::DOUBLE,

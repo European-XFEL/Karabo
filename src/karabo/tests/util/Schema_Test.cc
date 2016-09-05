@@ -598,18 +598,18 @@ void Schema_Test::testArrayElements() {
     std::vector<long long> shapeVec;
     shapeVec.push_back(3);
     shapeVec.push_back(2);
-    CPPUNIT_ASSERT(sch.getArrayShape("arrBool") == shapeVec);
-    CPPUNIT_ASSERT(sch.getArrayShape("arrInt8") == shapeVec);
-    CPPUNIT_ASSERT(sch.getArrayShape("arrUInt16") == shapeVec);
-    CPPUNIT_ASSERT(sch.getArrayShape("arrFloat") == shapeVec);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrBool.shape") == shapeVec);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrInt8.shape") == shapeVec);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrUInt16.shape") == shapeVec);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrFloat.shape") == shapeVec);
     shapeVec.push_back(-1);
-    CPPUNIT_ASSERT(sch.getArrayShape("arrDouble") == shapeVec);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrDouble.shape") == shapeVec);
 
     std::vector<long long> undefShapeVec;
     undefShapeVec.push_back(-1);
     undefShapeVec.push_back(3);
     undefShapeVec.push_back(-1);
-    CPPUNIT_ASSERT(sch.getArrayShape("arrUndefined") == undefShapeVec);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrUndefined.shape") == undefShapeVec);
 
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrBool") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrInt8") == false);
