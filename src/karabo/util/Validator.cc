@@ -573,8 +573,8 @@ namespace karabo {
         }
 
 
-        void Validator::compareNDArrayShapes(const NDArrayElementShapeType& expected, const Dims& observed, std::ostringstream& report, const std::string& scope) {
-            NDArrayElementShapeType::const_iterator eit = expected.begin();
+        void Validator::compareNDArrayShapes(const std::vector<long long> & expected, const Dims& observed, std::ostringstream& report, const std::string& scope) {
+            std::vector<long long>::const_iterator eit = expected.begin();
             for (size_t idx = 0; eit != expected.end() && idx < observed.rank(); ++eit, ++idx) {
                 if (*eit == -1) {
                     // Negative dimension => variable.

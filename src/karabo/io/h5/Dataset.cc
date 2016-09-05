@@ -9,7 +9,7 @@
 #include <sstream> 
 #include "Dataset.hh"
 #include <karabo/util/SimpleElement.hh>
-#include <karabo/util/NDArrayElement.hh>
+#include <karabo/util/VectorElement.hh>
 #include <karabo/log/Logger.hh>
 #include <karabo/util/Dims.hh>
 

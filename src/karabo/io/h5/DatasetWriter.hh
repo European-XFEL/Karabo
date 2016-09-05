@@ -17,7 +17,7 @@
 #include "ErrorHandler.hh"
 #include <karabo/util/Configurator.hh>
 #include <karabo/log/Logger.hh>
-#include <karabo/util/NDArrayElement.hh>
+#include <karabo/util/VectorElement.hh>
 
 namespace karabo {
 
