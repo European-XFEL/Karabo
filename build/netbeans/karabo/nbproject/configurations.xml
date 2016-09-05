@@ -41,6 +41,8 @@
       <itemPath>../../../src/karabo/devices/GuiServerDevice.hh</itemPath>
       <itemPath>../../../src/karabo/devices/ProjectManager.cpp</itemPath>
       <itemPath>../../../src/karabo/devices/ProjectManager.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/PropertyTest.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/PropertyTest.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f2" displayName="io" projectFiles="true">
       <logicalFolder name="f1" displayName="h5" projectFiles="true">
@@ -732,6 +734,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/ProjectManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/PropertyTest.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/PropertyTest.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1929,7 +1941,7 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/CustomNodeElement.hh"
-	    ex="false"
+            ex="false"
             tool="3"
             flavor2="0">
       </item>
@@ -1939,7 +1951,7 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/DataLogUtils.hh"
-	    ex="false"
+            ex="false"
             tool="3"
             flavor2="0">
       </item>
@@ -2851,6 +2863,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/ProjectManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/PropertyTest.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/PropertyTest.hh"
             ex="false"
             tool="3"
             flavor2="0">
