@@ -63,6 +63,24 @@ build_dependencies() {
     popd
 }
 
+check_for_curl() {
+    which curl &> /dev/null
+    if [ $? -ne 0 ]; then
+        echo
+        echo
+        echo "!!! 'curl' command not found!"
+        echo "Please install 'curl' so that dependencies can be downloaded!"
+        echo
+        echo
+        # Give the user time to see the message
+        sleep 2
+        return 1
+    fi
+
+    # Installed and ready!
+    return 0
+}
+
 check_if_download_needed() {
     local deps_tag=$(get_last_deps_tag)
 
@@ -131,6 +149,12 @@ download_latest_deps() {
 
     echo "### Downloading external dependencies from $deps_url. ###"
     echo
+
+    # Make sure curl is available
+    check_for_curl
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
 
     # Attempt to download, quietly
     curl -fO $deps_url &> /dev/null
