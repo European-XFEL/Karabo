@@ -669,7 +669,7 @@ class DisplayTrendline(DisplayWidget):
         # Add invisible button to get the state that no buttons are visible
         hidden_btn = QPushButton()
         hidden_btn.setCheckable(True)
-        hidden_btn.setVisible(True)
+        hidden_btn.setVisible(False)
         string_btn_dict[HIDDEN] = hidden_btn
         button_group.addButton(hidden_btn, 0)
         layout.addWidget(hidden_btn)
