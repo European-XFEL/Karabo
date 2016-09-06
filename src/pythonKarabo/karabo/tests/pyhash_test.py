@@ -221,7 +221,7 @@ class Hash_TestCase(unittest.TestCase):
     def test_binary(self):
         s = self.create_hash().encode("Bin")
         self.check_hash(Hash.decode(s, "Bin"))
-        self.assertEqual(adler32(s), 2927580322)
+        self.assertEqual(adler32(s), 2876462227)
 
 
     def test_cpp_bin(self):
