@@ -242,12 +242,12 @@ namespace karabo {
             }
 
             NDArrayElement& dtype(const karabo::util::Types::ReferenceType type) {
-                return ParentType::setDefaultValue("type", static_cast<int>(type));
+                return setDefaultValue("type", static_cast<int>(type));
             }
 
             NDArrayElement& shape(const std::string& shp) {
                 std::vector<long long> tmp = karabo::util::fromString<long long, std::vector>(shp);
-                return ParentType::setDefaultValue("shape", tmp);
+                return setDefaultValue("shape", tmp);
             }
 
             void commit() {

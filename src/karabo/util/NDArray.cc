@@ -18,12 +18,12 @@ namespace karabo {
 
             BYTEARRAY_ELEMENT(s).key("data")
                     .displayedName("Data")
-                    .description("The data of the array")
+                    .description("The data of the array as an untyped buffer of bytes")
                     .readOnly()
                     .commit();
             VECTOR_INT64_ELEMENT(s).key("shape")
                     .displayedName("Shape")
-                    .description("The shape of the array reflects total dimensionality and each element the extension in this dimension")
+                    .description("The shape of the array reflects total dimensionality and each element the extension in its dimension (-1: any extension)")
                     .readOnly()
                     .commit();
             INT32_ELEMENT(s).key("type")
