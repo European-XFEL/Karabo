@@ -136,14 +136,14 @@ namespace karabo {
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
                             Hash::Node& node = working.set(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE));
                             if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
-                            if (it->hasAttribute(KARABO_INDICATE_STATE_SET)) node.setAttribute(KARABO_INDICATE_STATE_SET, true);
+                            if (it->hasAttribute(KARABO_SCHEMA_CLASS_ID) && it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID) == "State") node.setAttribute(KARABO_INDICATE_STATE_SET, true);
                             if (it->hasAttribute(KARABO_INDICATE_ALARM_SET)) node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
                             this->validateLeaf(*it, node, report, currentScope);
                         }
                     } else { // Node IS provided
                         Hash::Node& node = working.setNode(user.getNode(key));
                         if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
-                        if (user.hasAttribute(key, KARABO_INDICATE_STATE_SET)) node.setAttribute(KARABO_INDICATE_STATE_SET, true);
+                        if (user.hasAttribute(key, KARABO_SCHEMA_CLASS_ID) && user.getAttribute<std::string>(key, KARABO_SCHEMA_CLASS_ID) == "State") node.setAttribute(KARABO_INDICATE_STATE_SET, true);
                         if (user.hasAttribute(key, KARABO_INDICATE_ALARM_SET)) node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
                         this->validateLeaf(*it, node, report, currentScope);
                     }
