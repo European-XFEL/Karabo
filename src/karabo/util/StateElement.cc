@@ -83,7 +83,8 @@ namespace karabo {
             m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
             m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
             m_node->setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::EVERY_EVENT);
-            m_node->setAttribute<bool>(KARABO_INDICATE_STATE_SET, true);
+            m_node->setAttribute<std::string>(KARABO_SCHEMA_CLASS_ID, "State");
+            m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, "State");
 
             //finally protect setting options etc to state element via overwrite
             OverwriteElement::Restrictions restrictions;
