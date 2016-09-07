@@ -65,6 +65,12 @@ class Enumable(object):
         else:
             return h, attrs
 
+    def toSchemaAndAttrs(self, device, state):
+        schema, attrs = super(Enumable, self).toSchemaAndAttrs(device, state)
+        if self.enum is not None:
+            attrs["classId"] = self.enum.__name__
+        return schema, attrs
+
     def toKaraboValue(self, data, strict=True):
         if not strict and not isinstance(data, self.enum):
             data = self.enum(data)
