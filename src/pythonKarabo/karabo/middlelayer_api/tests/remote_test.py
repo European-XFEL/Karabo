@@ -9,10 +9,10 @@ import weakref
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    Configurable, connectDevice, Device, DeviceNode, Float, getDevice, Hash,
-    Int32, MetricPrefix, Node, setNoWait, setWait, Slot, State, String, unit,
-    Unit, VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
-    waitUntilNew)
+    AlarmCondition, Configurable, connectDevice, Device, DeviceNode, Float,
+    getDevice, Hash, Int32, MetricPrefix, Node, setNoWait, setWait, Slot, State,
+    String, unit, Unit, VectorChar, VectorInt16, VectorString, VectorFloat,
+    waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.device_client import Queue
 
@@ -308,6 +308,12 @@ class Tests(DeviceTest):
             yield from d.changeit()
         yield from sleep(0.1)
         self.assertEqual(self.remote.value, 3)
+
+    @async_tst
+    def test_state(self):
+        with (yield from getDevice("remote")) as d:
+            self.assertEqual(d.state, State.UNKNOWN)
+            self.assertEqual(d.alarmCondition, AlarmCondition.NONE)
 
     @async_tst
     def test_disconnect(self):
