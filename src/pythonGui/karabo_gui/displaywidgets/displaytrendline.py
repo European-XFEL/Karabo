@@ -368,7 +368,7 @@ class DisplayTrendline(DisplayWidget):
 
     def __init__(self, box, parent):
         super(DisplayTrendline, self).__init__(None)
-        self._initUI()
+        self._initUI(parent)
 
         # Keep the initial start time to recover trendline for 'Reset'
         self.initial_start_time = QDateTime.currentDateTime()
@@ -416,10 +416,10 @@ class DisplayTrendline(DisplayWidget):
         self.destroyed.connect(self.destroy)
         self.addBox(box)
 
-    def _initUI(self):
+    def _initUI(self, parent):
         """ Setup all widgets correctly.
         """
-        self.curveWidget = _KaraboCurveWidget()
+        self.curveWidget = _KaraboCurveWidget(parent=parent)
         # Make connection to update time buttons when mouse event in QwtWidget
         # happened
         self.curveWidget.signal_mouse_event.connect(self._uncheck_axis_buttons)
