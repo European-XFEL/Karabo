@@ -21,20 +21,8 @@ Ubuntu type system
 
 .. code-block:: bash
 
-  sudo apt-get install subversion build-essential doxygen libqt4-dev libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev libqt4-sql-sqlite libX11-dev zlib1g-dev gfortran liblapack-dev m4 libssl-dev
+  sudo apt-get install git build-essential doxygen pkg-config gfortran m4 libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev zlib1g-dev liblapack-dev libssl-dev libX11-dev libxext-dev qt4-default libqt4-sql-sqlite unzip file curl openssh-client
 
-Additionally for Ubuntu 10.04:
-
-.. code-block:: bash
-
-  sudo apt-get install libxext-dev
-
-.. code-block:: bash
-
-  sudo apt-get install krb5-user
-
-For krb5-user use 'DESY.DE' (without quotes) as default REALM if you
-are within DESY network.
 
 For running karabo python tests:
 
@@ -43,40 +31,22 @@ For running karabo python tests:
   sudo apt-get install imagemagick
 
 
-SL6
----
+Centos-7
+--------
 
 .. code-block:: bash
 
-  sudo yum install redhat-lsb make gcc gcc-c++ gcc-gfortran subversion doxygen nspr-devel nss-devel zlib-devel libX11-devel readline-devel qt-devel lapack-devel sqlite-devel openssl-devel
-  sudo yum install epel-release
-  sudo yum --enablerepo=epel install qtwebkit-devel
-  sudo yum install krb5-workstation
+  sudo yum update
+  sudo yum install epel-release redhat-lsb-core  glibc gcc-c++ gcc-gfortran m4 make patch
+  sudo yum install unzip git which file curl openssh-clients pkgconfig
+  sudo yum install zlib-devel readline-devel nspr-devel sqlite-devel blas-devel lapack-devel openssl-devel libX11-devel qt-devel
 
-For krb5-workstation copy /etc/krb5.conf from any DESY server (eg. from exflserv02) (i.e. copy /etc/krb5.conf from the DESY server to the /etc/ directory of your local machine, overwriting your own /etc/krb5.conf file).
 
 For running karabo python tests:
 
 .. code-block:: bash
 
-  sudo yum install imagemagick
-
-
-Fedora
-------
-
-.. code-block:: bash
-
-  sudo yum install make gcc gcc-c++ gcc-gfortran subversion doxygen  nspr-devel nss-devel zlib-devel libX11-devel readline-devel qt-devel  lapack-devel sqlite-devel openssl-devel
-  sudo yum install krb5-workstation
-
-For krb5-workstation use DESY.DE as default REALM.
-
-For running karabo python tests:
-
-.. code-block:: bash
-
-  sudo yum install imagemagick
+  sudo yum install ImageMagick-devel
 
 
 MacOS X
@@ -245,19 +215,13 @@ Get and install the Karabo framework (quick - no details)
     mkdir karaboFramework
     cd karaboFramework
 
-2. Before the check out, get a valid kerberos ticket via:
+2. Now check out:
 
   .. code-block:: bash
 
-    kinit username@DESY.DE
+    git clone https://in.xfel.eu/gitlab/Karabo/Framework.git karaboFramework
 
-3. Now check out:
-
-  .. code-block:: bash
-
-    svn co https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo/karaboFramework/trunk .
-
-4. Compile the Karabo bundle by running the following command for the
+3. Compile the Karabo bundle by running the following command for the
    Debug version
 
   .. code-block:: bash
@@ -270,13 +234,13 @@ Get and install the Karabo framework (quick - no details)
 
     ./auto_build_all.sh Release
 
-5. (Updated) If you failed building the external dependencies, try and
+4. (Updated) If you failed building the external dependencies, try and
    fix the error in the dependency and compile again. For reference,
    this file:
 
   .. code-block:: bash
 
-    karaboFramework/build/netbeans/karabo/.marker.txt
+    karaboFramework/extern/<platform>/.marker.txt
 
   contains a list of packages installed successfully on your
   machine. Check if you installed all dependencies for your OS listed
@@ -299,15 +263,15 @@ local working copy.
 
     .. code-block:: bash
 
-      cd build/netbeans/karabo
-      make clean-extern 
-      make extern # or cd ../../../; ./auto_build_all.sh Debug
+      ./auto_build_all.sh Clean-All
+      ./auto_build_all.sh Debug
 
   * if you know what you are doing:
 
     .. code-block:: bash
 
-      make extern WHAT="packageA packageB"
+      cd extern
+      ./build.sh <platform> packageA packageB
 
 2. If there were any changes to netbeans project files like
    configuration.xml or makefiles like Karabo-???.mk
@@ -330,16 +294,16 @@ local working copy.
   or recompile in Netbeans
  
 
-Executing Unitary Tests
-=======================
+Executing Unit Tests
+====================
 
 Karabo (C++)
 ------------
 
-To test Karabo Unitary tests please guarantee your local changes are
+To run the Karabo unit tests please guarantee your local changes are
 compiled (via Terminal or Netbeans).
  
-To run the Unitary Tests using the Terminal, please go to the
+To run the unit tests using the Terminal, please go to the
 installed karaboFramework folder and execute the following scripts:
 
 .. code-block:: bash
@@ -347,7 +311,7 @@ installed karaboFramework folder and execute the following scripts:
   cd build/netbeans/karabo
   make test
  
-To run the Unitary Tests using Netbeans:
+To run the unit tests using Netbeans:
 
 * Go to Karabo project
 * Right-click on the "Test Files" folder or any of its logic sub-folders
@@ -378,7 +342,8 @@ To run the Unit Tests using the Terminal, execute the following scripts:
 
 .. code-block:: bash
 
-  nosetests-3.4 -sv karabo
+  # This will run ZERO tests if you are in the framework root directory
+  nosetests-3.4 -sv karabo  # or karabo.bound_api or karabo.middlelayer_api or karabo.tests, etc.
  
 To run the Unit Tests using Netbeans:
 
@@ -431,15 +396,6 @@ following structure of files and sources:
     C++ binding layer to make karabo available to the Python
     programming language.
 
-  **karathonTest/**
-
-    The name says it all.
-
-  **pythonCli/**
-
-    Native python code depending on karathon which implements the
-    command line interface for Karabo.
-
   **pythonGui/**
 
     Native python code using PyQt4 and karathon to implement the
@@ -447,8 +403,9 @@ following structure of files and sources:
 
   **pythonKarabo/**
 
-    Native python code for some core elements of Karabo which deserve
-    a native python re-write instead of a C++ binding.
+    Native Python code providing two APIs: The middlelayer API which is pure
+    Python and the bound API which makes use of the bindings to Karabo's C++ API
+    provided by karathon.
 
 **build/**
 
