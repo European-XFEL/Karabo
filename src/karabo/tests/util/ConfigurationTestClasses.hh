@@ -12,12 +12,13 @@
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ListElement.hh>
-#include <karabo/util/NDArrayElement.hh>
+#include <karabo/util/VectorElement.hh>
 #include <karabo/util/PathElement.hh>
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/xms/ImageData.hh>
 #include <karabo/util/TableElement.hh>
 #include <karabo/util/State.hh>
+#include <karabo/util/NDArray.hh>
 
 #include <karabo/util/Configurator.hh>
 
@@ -517,43 +518,40 @@ namespace configurationTest {
                     .assignmentMandatory()
                     .commit();
 
-            std::vector<bool> arrBoolInit(6, true);
-            std::vector<signed char> arrIntDef(6, 42);
-            std::vector<float> arrFloatDef(6, 4.2);
-            NDARRAY_BOOL_ELEMENT(expected)
+            NDARRAY_ELEMENT(expected)
                     .key("arrBool")
+                    .dtype(karabo::util::Types::BOOL)
                     .shape("3,2")
-                    .readOnly().initialValue(arrBoolInit)
                     .commit();
 
-            NDARRAY_INT8_ELEMENT(expected)
+            NDARRAY_ELEMENT(expected)
                     .key("arrInt8")
+                    .dtype(karabo::util::Types::INT8)
                     .shape("3,2")
-                    .assignmentOptional().defaultValue(arrIntDef)
                     .commit();
 
-            NDARRAY_UINT16_ELEMENT(expected)
+            NDARRAY_ELEMENT(expected)
                     .key("arrUInt16")
+                    .dtype(karabo::util::Types::UINT16)
                     .shape("3,2")
-                    .readOnly()
                     .commit();
 
-            NDARRAY_FLOAT_ELEMENT(expected)
+            NDARRAY_ELEMENT(expected)
                     .key("arrFloat")
+                    .dtype(karabo::util::Types::FLOAT)
                     .shape("3,2")
-                    .readOnly().initialValue(arrFloatDef)
                     .commit();
 
-            NDARRAY_DOUBLE_ELEMENT(expected)
+            NDARRAY_ELEMENT(expected)
                     .key("arrDouble")
+                    .dtype(karabo::util::Types::DOUBLE)
                     .shape("3,2,-1")
-                    .readOnly()
                     .commit();
 
-            NDARRAY_FLOAT_ELEMENT(expected)
+            NDARRAY_ELEMENT(expected)
                     .key("arrUndefined")
+                    .dtype(karabo::util::Types::DOUBLE)
                     .shape("-1,3,-1")
-                    .readOnly()
                     .commit();
 
             IMAGEDATA_ELEMENT(expected)

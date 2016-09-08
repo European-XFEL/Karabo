@@ -85,10 +85,10 @@ void exportPyUtilHash() {
             .value("UNKNOWN", PyTypes::UNKNOWN)
             .value("SIMPLE", PyTypes::SIMPLE)
             .value("SEQUENCE", PyTypes::SEQUENCE)
-            .value("POINTER", PyTypes::POINTER)           
+            .value("POINTER", PyTypes::POINTER)
             .value("VECTOR_HASH_POINTER", PyTypes::VECTOR_HASH_POINTER)
             .value("PYTHON", PyTypes::PYTHON_DEFAULT)
-            .value("NUMPY", PyTypes::NUMPY_DEFAULT)           
+            .value("NUMPY", PyTypes::NUMPY_DEFAULT)
             ;
 
     bp::class_<PyTypes>("TypesClass", bp::no_init)
@@ -377,7 +377,7 @@ void exportPyUtilHash() {
           "h.getAttributeAs(path, attribute, type, sep = '.') -> value of 'type' type.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\th.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n"
           "\nHere you have to be sure that you have imported numpy as np:\n\n\timport numpy as np\n\t"
-          "assert h.getAttributeAs('a.b.c', 'attr1', Types.NDARRAY_DOUBLE).all() == np.array([1.234,2.987,5.555], dtype=np.double).all()");
+          "assert h.getAttributeAs('a.b.c', 'attr1', Types.NDARRAY).all() == np.array([1.234,2.987,5.555], dtype=np.double).all()");
     h.def("getAttributes", &HashWrap().getAttributes, (bp::arg("path"), bp::arg("sep") = "."), bp::return_internal_reference<1> (),
           "h.getAttributes(path, sep='.') -> iterable container of attributes which is an internal reference, not a copy.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"

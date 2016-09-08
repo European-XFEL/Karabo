@@ -6,11 +6,37 @@
  */
 
 #include "NDArray.hh"
-#include "NDArrayElement.hh"
 #include "ToSize.hh"
+#include "ByteArrayElement.hh"
+#include "SimpleElement.hh"
+#include "VectorElement.hh"
 
 namespace karabo {
     namespace util {
+
+        void NDArray::expectedParameters(karabo::util::Schema& s) {
+
+            BYTEARRAY_ELEMENT(s).key("data")
+                    .displayedName("Data")
+                    .description("The data of the array as an untyped buffer of bytes")
+                    .readOnly()
+                    .commit();
+            VECTOR_INT64_ELEMENT(s).key("shape")
+                    .displayedName("Shape")
+                    .description("The shape of the array reflects total dimensionality and each element the extension in its dimension (-1: any extension)")
+                    .readOnly()
+                    .commit();
+            INT32_ELEMENT(s).key("type")
+                    .displayedName("Data Type")
+                    .description("The type of the contained array data")
+                    .readOnly()
+                    .commit();
+            BOOL_ELEMENT(s).key("isBigEndian")
+                    .displayedName("Is big-endian")
+                    .description("A boolean flag which is true if the data is big-endian")
+                    .readOnly()
+                    .commit();
+        }
 
 
         NDArray::NDArray(const Dims& shape,

@@ -30,8 +30,6 @@
 namespace karabo {
     namespace util {
 
-        typedef std::vector<long long> NDArrayElementShapeType;
-
         // Forward declaration
         class Dims;
 
@@ -113,7 +111,7 @@ namespace karabo {
 
             bool checkAndSetThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
 
-            void compareNDArrayShapes(const NDArrayElementShapeType& schemaShape, const Dims& shape, std::ostringstream& report, const std::string& scope);
+            void compareNDArrayShapes(const std::vector<long long>& schemaShape, const Dims& shape, std::ostringstream& report, const std::string& scope);
 
         };
     }
