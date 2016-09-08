@@ -35,7 +35,6 @@ namespace karabo {
 
             class Format {
 
-
                 friend class Table;
             public:
 
@@ -90,6 +89,9 @@ namespace karabo {
 
                 static void discoverFromDataElement(const karabo::util::Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy,
                                                     std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
+
+                static void discoverFromNDArray(const karabo::util::Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy,
+                                                std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
 
                 static void discoverAttributes(const karabo::util::Hash::Node& el, karabo::util::Hash& config);
 

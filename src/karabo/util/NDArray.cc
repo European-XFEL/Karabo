@@ -39,6 +39,7 @@ namespace karabo {
         }
 
 
+
         NDArray::NDArray(const Dims& shape,
                          const karabo::util::Types::ReferenceType& type,
                          const bool isBigEndian) {

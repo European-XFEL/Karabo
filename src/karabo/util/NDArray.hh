@@ -33,6 +33,7 @@ namespace karabo {
                 }
             };
 
+
             static void expectedParameters(karabo::util::Schema& s);
 
             NDArray(const Dims& shape,
