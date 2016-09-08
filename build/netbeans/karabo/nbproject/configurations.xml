@@ -360,8 +360,6 @@
         <itemPath>../../../src/karabo/xip/CpuEnvironment.cc</itemPath>
         <itemPath>../../../src/karabo/xip/CpuEnvironment.hh</itemPath>
         <itemPath>../../../src/karabo/xip/CpuImage.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.cc</itemPath>
-        <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Environment.hh</itemPath>
         <itemPath>../../../src/karabo/xip/FromChannelSpace.cc</itemPath>
         <itemPath>../../../src/karabo/xip/FromChannelSpace.hh</itemPath>
@@ -1935,7 +1933,7 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/CustomNodeElement.hh"
-	    ex="false"
+            ex="false"
             tool="3"
             flavor2="0">
       </item>
@@ -1945,7 +1943,7 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/DataLogUtils.hh"
-	    ex="false"
+            ex="false"
             tool="3"
             flavor2="0">
       </item>
@@ -2373,16 +2371,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/CpuImage.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/CpuImageBinarySerializer.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/CpuImageBinarySerializer.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4510,19 +4498,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/CpuImage.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xip/CpuImageBinarySerializer.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <commandLine>-Wno-unused-but-set-variable</commandLine>
-        </ccTool>
-      </item>
-      <item path="../../../src/karabo/xip/CpuImageBinarySerializer.hh"
             ex="false"
             tool="3"
             flavor2="0">
