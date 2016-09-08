@@ -67,6 +67,8 @@
           <itemPath>../../../src/karabo/io/h5/FixedLengthArrayComplex.hh</itemPath>
           <itemPath>../../../src/karabo/io/h5/Group.cc</itemPath>
           <itemPath>../../../src/karabo/io/h5/Group.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/NDArrayH5.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/NDArrayH5.hh</itemPath>
           <itemPath>../../../src/karabo/io/h5/Scalar.cc</itemPath>
           <itemPath>../../../src/karabo/io/h5/Scalar.hh</itemPath>
           <itemPath>../../../src/karabo/io/h5/VLArray.cc</itemPath>
@@ -1103,6 +1105,16 @@
       <item path="../../../src/karabo/io/h5/Group.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Group.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/NDArrayH5.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/NDArrayH5.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Scalar.cc"
             ex="false"
@@ -3217,6 +3229,16 @@
       <item path="../../../src/karabo/io/h5/Group.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Group.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/NDArrayH5.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/NDArrayH5.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Scalar.cc"
             ex="false"
