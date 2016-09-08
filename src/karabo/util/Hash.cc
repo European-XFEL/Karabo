@@ -656,12 +656,12 @@ namespace karabo {
         }
 
 
-        bool Hash::operator==(const Hash& other) {
+        bool Hash::operator==(const Hash& other) const {
             return similar(*this, other);
         }
 
 
-        bool Hash::operator!=(const Hash& other) {
+        bool Hash::operator!=(const Hash& other) const {
             return !similar(*this, other);
         }
 
