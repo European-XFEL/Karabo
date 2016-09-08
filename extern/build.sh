@@ -26,8 +26,15 @@ log4cpp cppunit parse snappy traits pint )
 BUILD_MARKER_NAME=".marker.txt"
 DEPS_MARKER_NAME=".deps_tag.txt"
 DEP_URL_BASE="http://exflserv05.desy.de/karabo/karaboDevelopmentDeps"
-DEPS_BASE_NAME=$(lsb_release -is)-$(lsb_release -rs | sed -r 's/^([0-9]+).*/\1/')
+DEPS_OS_IDENTIFIER=$(lsb_release -is)$(lsb_release -rs | sed -r 's/^([0-9]+).*/\1/')
 DEP_TAG_PATTERN="deps-*"
+
+declare -A DEPS_BASE_NAME_MAP
+DEPS_BASE_NAME_MAP['Ubuntu14']='Ubuntu-14'
+DEPS_BASE_NAME_MAP['Ubuntu15']='Ubuntu-14'
+DEPS_BASE_NAME_MAP['Ubuntu16']='Ubuntu-16'
+DEPS_BASE_NAME_MAP['Ubuntu17']='Ubuntu-16'
+DEPS_BASE_NAME_MAP['Centos7']='Centos-7'
 
 ##############################################################################
 # Define a bunch of functions to be called later
@@ -143,8 +150,20 @@ determine_build_packages() {
 }
 
 download_latest_deps() {
+
+    local deps_base_name=${DEPS_BASE_NAME_MAP[$DEPS_OS_IDENTIFIER]}
+
+    if [ -z $deps_base_name ]; then
+        echo
+        echo "Failed to download the pre-compiled external dependencies because"
+        echo "OS: '$DEPS_OS_IDENTIFIER' is not in the list of supported platforms!"
+        echo
+        sleep 2
+        return 1
+    fi
+
     local deps_tag=$(get_last_deps_tag)
-    local deps_file=$DEPS_BASE_NAME-$deps_tag.tar.gz
+    local deps_file=$deps_base_name-$deps_tag.tar.gz
     local deps_url=$DEP_URL_BASE/$deps_file
 
     echo "### Downloading external dependencies from $deps_url. ###"
@@ -170,7 +189,7 @@ download_latest_deps() {
     # Unpack
     tar -zxf $deps_file
     rm $deps_file
-    mv $DEPS_BASE_NAME $INSTALL_PREFIX
+    mv $deps_base_name $INSTALL_PREFIX
 
     # Adjust for the local environment
     echo "### Updating dependencies for the local environment... (this takes a while) ###"
