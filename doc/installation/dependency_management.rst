@@ -65,16 +65,28 @@ Adding/Removing/Updating a Dependency
 
 To add, remove, or update a dependency in Karabo, create a new feature branch
 and make your changes. Build and install the dependency (or dependencies)
-that you are currently concerned with. Once you are reasonably sure that it
-works, open a merge request for the branch.
+that you are currently concerned with.
 
-After the merge request is approved and merged into the master branch, add
-a tag to the merge commit:
+Building all of Karabo is explained in :ref:`buildFromSources`. But if you
+only want to know how to build a single extern. Here is the command:
+
+.. code-block:: bash
+
+    cd extern
+    ./build.sh <platform-directory> externPackageName
+
+``<platform-directory>`` is usually something like ``GNU-Linux-x86`` or
+``Darwin-x86``. It's the directory where all built externs are staged before
+being copied into a karabo build directory.
+
+Once you are reasonably sure that everything works, open a merge request for
+the branch. After the merge request is approved and merged into the master
+branch, add a tag to the merge commit:
 
 .. code-block:: bash
 
     git log  # to find the commit hash for the merge commit
-    git tag -a deps-<name> <commit hash>  # See below for naming convention
+    git tag deps-<name> <commit hash>  # See below for naming convention
     git push origin --tags
 
 This will cause an automated build to begin and rebuild the dependencies. If
