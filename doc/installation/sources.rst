@@ -1,8 +1,8 @@
 .. _buildFromSources:
 
-*******************
- Build from sources
-*******************
+******************
+Build from sources
+******************
 
 Install dependencies
 ====================
