@@ -9,5 +9,6 @@ Contents:
    mac
    binary
    sources
+   dependency_management
    netbeans
    distributed
