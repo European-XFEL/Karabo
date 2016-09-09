@@ -15,7 +15,8 @@ from PyQt4.QtCore import pyqtSignal, QObject
 from karabo.middlelayer_api.project import (
     BaseDevice, BaseDeviceGroup, Monitor, Project, ProjectConfiguration)
 from karabo.middlelayer import (
-    AccessMode, Hash, read_macro, read_scene, SceneModel, XMLParser, XMLWriter)
+    AccessMode, Hash, read_macro, read_scene, MacroModel, SceneModel, XMLParser,
+    XMLWriter)
 from karabo_gui.configuration import Configuration
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.network import network
@@ -283,6 +284,7 @@ class GuiProject(Project, QObject):
     signalConfigurationInserted = pyqtSignal(int, str, object)
     #signalResourceAdded = pytqtSignal()
     signalMacroAdded = pyqtSignal(object)
+    signalMacroInserted = pyqtSignal(int, object)
     signalMacroChanged = pyqtSignal(object)
     signalMonitorAdded = pyqtSignal(object)
     signalMonitorInserted = pyqtSignal(int, object)
@@ -426,6 +428,14 @@ class GuiProject(Project, QObject):
     def addMacro(self, macroModel):
         super(GuiProject, self).addMacro(macroModel)
         self.signalMacroAdded.emit(macroModel)
+        self.setModified(True)
+
+    def insertMacro(self, index, macroModel):
+        """
+        Insert \macroModel at given \index and update project model.
+        """
+        super(GuiProject, self).insertMacro(index, macroModel)
+        self.signalMacroInserted.emit(index, macroModel)
         self.setModified(True)
 
     def addMonitor(self, monitor):
@@ -642,7 +652,7 @@ class GuiProject(Project, QObject):
             self.timerEvent(None, timestamp)
 
 
-#class Macro(MacroModel):
+#class Macro(BaseMacro):
 #    def __init__(self):
 #        super(Macro, self).__init__()
 #        self.macros = {}

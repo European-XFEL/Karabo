@@ -71,11 +71,11 @@ class MainWindow(QMainWindow):
                 return True
             elif sender is KaraboEventSender.RemoveSceneView:
                 data = event.data
-                self.removeSceneView(data.get("model"))
+                self.removeMiddlePanel('scene_model', data.get("model"))
                 return True
             elif sender is KaraboEventSender.RenameSceneView:
                 data = event.data
-                self.renameSceneView(data.get("model"))
+                self.renameMiddlePanel('scene_model', data.get("model"))
                 return True
             elif sender is KaraboEventSender.OpenMacro:
                 data = event.data
@@ -83,7 +83,11 @@ class MainWindow(QMainWindow):
                 return True
             elif sender is KaraboEventSender.RemoveMacro:
                 data = event.data
-                self.removeMacro(data.get("model"))
+                self.removeMiddlePanel('macro_model', data.get("model"))
+                return True
+            elif sender is KaraboEventSender.RenameMacro:
+                data = event.data
+                self.renameMiddlePanel('macro_model', data.get("model"))
                 return True
         return super(MainWindow, self).eventFilter(obj, event)
 
@@ -204,8 +208,6 @@ class MainWindow(QMainWindow):
         self.middleTab = DockTabWindow("Custom view", self.middleArea)
         self.placeholderPanel = None
         self._addPlaceholderMiddlePanel(False)
-        # A set of opened scene models
-        self._openedScenes = set()
         self.middleArea.setStretchFactor(0, 6)
 
         self.loggingPanel = LoggingPanel()
@@ -311,68 +313,59 @@ class MainWindow(QMainWindow):
         self.middleTab.addDockableTab(self.placeholderPanel,
                                       "Start Page", self)
 
-    def _getSceneDivWidget(self, sceneModel):
-        """ The associated divWidget for the given `sceneModel` is returned,
-            if available.
+    def _getDivWidget(self, child_type, model):
+        """ The associated divWidget for the given ``model`` is returned,
+            if available. ``child_type`` can be 'macro_model' or 'scene_model'.
         """
         for divWidget in self.middleTab.divWidgetList:
-            if hasattr(divWidget.dockableWidget, "scene_view"):
-                view = divWidget.dockableWidget.scene_view
-                model = view.scene_model
-                if model is sceneModel:
-                    return divWidget
+            panel_model = getattr(divWidget.dockableWidget, child_type, None)
+            if panel_model is model:
+                return divWidget
 
-    def middlePanelExists(self, child_type, obj):
-        """This method checks whether a middle panel for the given ``obj``
-        already exists. Currently `child_type` can only be "macro".
+    def middlePanelExists(self, child_type, model):
+        """This method checks whether a middle panel for the given ``model``
+        already exists.
+        ``child_type`` can be either 'macro_model' or ''scene_model'.
 
         The method returns ``True``, if panel already open else ``False``
         """
         self.checkAndRemovePlaceholderMiddlePanel()
 
-        # Check whether scene is already open
-        for i in range(self.middleTab.count()):
-            divWidget = self.middleTab.widget(i)
-            if getattr(divWidget.dockableWidget, child_type, None) is obj:
-                # Child already open
-                self.middleTab.setCurrentIndex(i)
-                return True
-
-        return False
-
-    def isMiddlePanelUndocked(self, obj):
-        """This methods states whether an undocked panel for the given
-        ``obj`` already exists.
-        """
-        panel = None
-        parent = None
-        if isinstance(obj, Macro):
-            if obj.editor is not None:
-                # The macro might be in its own window
-                panel = obj.editor
-
-        if panel is None:
-            return False
-
-        parent = panel.parentWidget()
-        if parent is not None:
-            panel.activateWindow()
-            panel.raise_()
+        divWidget = self._getDivWidget(child_type, model)
+        if divWidget is not None:
+            index = self.middleTab.indexOf(divWidget)
+            if index > -1:
+                self.middleTab.setCurrentIndex(index)
+            else:
+                divWidget.activateWindow()
+                divWidget.raise_()
             return True
+
         return False
 
-    def removeMiddlePanel(self, child_type, obj):
-        """ The middle panel for the given `obj` is removed. Currently
-            `child_type` can only be "macro".
+    def renameMiddlePanel(self, child_type, model):
+        """ Adapt tab text of corresponding ``model``.
+            ``child_type`` can be 'macro_model' or 'scene_model'.
+
+            The title of the panel was already changed in the project panel
+            and needs to be updated.
         """
-        for w in self.middleTab.divWidgetList:
-            if getattr(w.dockableWidget, child_type, None) is obj:
-                self.middleTab.removeDockableTab(w.dockableWidget)
-                break
+        divWidget = self._getDivWidget(child_type, model)
+        if divWidget is not None:
+            index = self.middleTab.indexOf(divWidget)
+            # Update title - important for undocked widgets
+            divWidget.updateTitle(model.title)
+            if index > -1:
+                self.middleTab.setTabText(index, model.title)
 
-        self.middlePanelRemoved()
+    def removeMiddlePanel(self, child_type, model):
+        """ The middle panel for the given ``model`` is removed.
+            ``child_type`` can be either 'macro_model' or scene_model'.
+        """
+        divWidget = self._getDivWidget(child_type, model)
+        if divWidget is not None:
+            self.middleTab.removeDockableTab(divWidget.dockableWidget)
 
-    def middlePanelRemoved(self):
         # If tabwidget is empty - show start page instead
         if self.middleTab.count() < 1:
             self._createPlaceholderMiddlePanel()
@@ -402,88 +395,34 @@ class MainWindow(QMainWindow):
         # TODO: add about dialog for karabo including version etc.
         print("onHelpAbout")
 
-    @pyqtSlot(object, object)
     def addSceneView(self, sceneModel, project):
         """ Add a scene view to show the content of the given `sceneModel in
             the GUI.
         """
-        if sceneModel not in self._openedScenes:
-            self.checkAndRemovePlaceholderMiddlePanel()
+        if self.middlePanelExists('scene_model', sceneModel):
+            return
 
-            # Set icon data to model, if existent
-            self._readIconDataFromProject(sceneModel, project)
-            sceneView = SceneView(model=sceneModel, project=project)
+        self.checkAndRemovePlaceholderMiddlePanel()
 
-            # Add scene view to tab widget
-            scenePanel = ScenePanel(sceneView, self.acServerConnect.isChecked())
-            scenePanel.signalClosed.connect(self.scenePanelClosed)
-            self.middleTab.addDockableTab(scenePanel,
-                                          sceneModel.title,
-                                          self)
-            self._openedScenes.add(sceneModel)
-            self.selectLastMiddlePanel()
-        else:
-            divWidget = self._getSceneDivWidget(sceneModel)
-            if divWidget is not None:
-                index = self.middleTab.indexOf(divWidget)
-                if index > -1:
-                    self.middleTab.setCurrentIndex(index)
-                else:
-                    divWidget.activateWindow()
-                    divWidget.raise_()
+        # Set icon data to model, if existent
+        self._readIconDataFromProject(sceneModel, project)
+        sceneView = SceneView(model=sceneModel, project=project)
 
-    @pyqtSlot(object)
-    def removeSceneView(self, sceneModel):
-        """ Remove the tab which is associated to the given `sceneModel`.
-        """
-        if sceneModel in self._openedScenes:
-            divWidget = self._getSceneDivWidget(sceneModel)
-            if divWidget is not None:
-                self.middleTab.removeDockableTab(divWidget.dockableWidget)
-            self.scenePanelClosed(sceneModel)
-
-    @pyqtSlot(object)
-    def renameSceneView(self, sceneModel):
-        """ Adapt tab text of corresponding `sceneModel`.
-
-            The title of the scene was already changed in the project panel
-            and needs to be updated.
-        """
-        if sceneModel in self._openedScenes:
-            divWidget = self._getSceneDivWidget(sceneModel)
-            if divWidget is not None:
-                index = self.middleTab.indexOf(divWidget)
-                # Update title - important for undocked widgets
-                divWidget.updateTitle(sceneModel.title)
-                if index > -1:
-                    self.middleTab.setTabText(index, sceneModel.title)
-
-    @pyqtSlot(object)
-    def scenePanelClosed(self, sceneModel):
-        """ A scene panel was closed so the associated `sceneModel` needs to be
-            removed from the set of opened scenes.
-        """
-        if sceneModel in self._openedScenes:
-            self._openedScenes.remove(sceneModel)
-        self.middlePanelRemoved()
-
-    @pyqtSlot(object)
-    def addMacro(self, macroModel):
-        #if self.middlePanelExists("macro", macro):
-        #    return
-
-        #if self.isMiddlePanelUndocked(macro):
-        #    return
-
-        macroView = MacroPanel(macroModel)
-        self.middleTab.addDockableTab(macroView, macroModel.title, self)
-        #macro.editor = macroView
-
+        # Add scene view to tab widget
+        scenePanel = ScenePanel(sceneView, self.acServerConnect.isChecked())
+        self.middleTab.addDockableTab(scenePanel,
+                                      sceneModel.title,
+                                      self)
         self.selectLastMiddlePanel()
 
-    @pyqtSlot(object)
-    def removeMacro(self, macroModel):
-        self.removeMiddlePanel("macro", macroModel)
+    def addMacro(self, macroModel):
+        if self.middlePanelExists('macro_model', macroModel):
+            return
+
+        macroPanel = MacroPanel(macroModel)
+        self.middleTab.addDockableTab(macroPanel, macroModel.title, self)
+
+        self.selectLastMiddlePanel()
 
     @pyqtSlot(object)
     def onChangeAccessLevel(self, action):
@@ -551,12 +490,10 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def onUpdateScenes(self):
-        for i in range(self.middleTab.count()):
-            divWidget = self.middleTab.widget(i)
-            if hasattr(divWidget.dockableWidget, "scene"):
-                scene = divWidget.dockableWidget.scene
-                if scene.isVisible():
-                    scene.update()
+        for divWidget in self.middleTab.divWidgetList:
+            scene_view = getattr(divWidget.dockableWidget, 'scene_view', None)
+            if scene_view is not None and scene_view.isVisible():
+                scene_view.update()
 
     @pyqtSlot(object)
     def onTabMaximized(self, tabWidget):

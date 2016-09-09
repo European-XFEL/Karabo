@@ -161,6 +161,9 @@ class Project(object):
     def addMacro(self, macro):
         self.macros.append(macro)
 
+    def insertMacro(self, index, macro):
+        self.macros.insert(index, macro)
+
     def getMacro(self, title):
         """ The first occurrence of a macro with the given \title is
         returned.
@@ -373,6 +376,8 @@ class MacroModel(HasStrictTraits):
     """ An object representing the data for a Karabo GUI macro."""
     # The title of the macro
     title = String()
+    # The instance ID of the running macro
+    instance_id = String()
     # The actual macro code
     code = String()
 
@@ -380,15 +385,14 @@ class MacroModel(HasStrictTraits):
 def read_macro(filename_or_fileobj):
     """ Read a macro and return it.
         filename_or_fileobj is either a string containing a filename, or a
-        file-like object which can be read from (eg- a BytesIO instance).
+        file-like object which can be read from (eg- a StringIO instance).
     """
-    if isinstance(filename_or_fileobj, BytesIO):
-        # XXX : check for better solution 
-        filename_or_fileobj = filename_or_fileobj.getvalue()
-    else:
-        with open(filename_or_fileobj, 'rb') as input:
+    if not hasattr(filename_or_fileobj, 'read'):
+        with open(filename_or_fileobj, 'r') as input:
             filename_or_fileobj = input.read()
         input.close()
+    else:
+        filename_or_fileobj = filename_or_fileobj.read()
     return MacroModel(code=filename_or_fileobj)
 
 

@@ -17,7 +17,7 @@ from karabo_gui.util import getSaveFileName
 
 class MacroPanel(Dockable, QSplitter):
 
-    def __init__(self, macroModel):
+    def __init__(self, macro_model):
         QSplitter.__init__(self, Qt.Vertical)
 
         self.teEditor = QTextEdit(self)
@@ -25,7 +25,7 @@ class MacroPanel(Dockable, QSplitter):
         self.teEditor.setAcceptRichText(False)
         self.teEditor.setStyleSheet("font-family: monospace")
         try:
-            self.teEditor.setPlainText(macroModel.code)
+            self.teEditor.setPlainText(macro_model.code)
         except KeyError:
             pass
         PygmentsHighlighter(self.teEditor.document())
@@ -37,10 +37,10 @@ class MacroPanel(Dockable, QSplitter):
         self.console.setReadOnly(True)
         self.console.setStyleSheet("font-family: monospace")
         self.addWidget(self.console)
-        self.macroModel = macroModel
+        self.macro_model = macro_model
         self.already_connected = set()
         # XXX TODO check
-        #for k in macroModel.instances:
+        #for k in macro_model.instances:
         #    self.connect(k)
 
     def setupToolBars(self, tb, parent):
@@ -74,9 +74,9 @@ class MacroPanel(Dockable, QSplitter):
     def onRun(self):
         self.console.clear()
         try:
-            compile(self.teEditor.toPlainText(), self.macroModel.title, "exec")
+            compile(self.teEditor.toPlainText(), self.macro_model.title, "exec")
         except SyntaxError as e:
-            if e.filename[7:-3] == self.macroModel.title:
+            if e.filename[7:-3] == self.macro_model.title:
                 c = self.teEditor.textCursor()
                 c.movePosition(c.Start)
                 c.movePosition(c.Down, n=e.lineno - 1)
@@ -87,16 +87,16 @@ class MacroPanel(Dockable, QSplitter):
                                 e.msg, e.text, " " * e.offset, e.filename,
                                 e.lineno))
         else:
-            getDevice(self.macroModel.instanceId).signalInitReply.connect(
+            getDevice(self.macro_model.instanceId).signalInitReply.connect(
                 self.initReply)
-            self.macroModel.run()
+            self.macro_model.run()
 
     def onSave(self):
         fn = getSaveFileName(
                 caption="Save Macro to File",
                 filter="Python files (*.py)",
                 suffix="py",
-                selectFile=self.macroModel.title + ".py")
+                selectFile=self.macro_model.title + ".py")
         if not fn:
             return
 
