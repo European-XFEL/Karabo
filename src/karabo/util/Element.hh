@@ -558,6 +558,7 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(HASH, Hash)
                     _KARABO_HELPER_MACRO(NONE, CppNone)
                 case Types::SCHEMA: return std::string("Schema Object");
+                case Types::BYTE_ARRAY: return std::string("<raw data bytes...>");
 
                 default:
                     throw KARABO_CAST_EXCEPTION("Could not convert value of key \"" + m_key + "\" to string");
