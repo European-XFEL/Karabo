@@ -3,6 +3,7 @@ import os
 from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
 
+from karabo.common.project.api import write_macro
 from karabo.common.scenemodel.api import write_scene
 from .hash import Hash, StringList
 from .project import Project
