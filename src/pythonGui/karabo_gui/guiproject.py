@@ -652,27 +652,6 @@ class GuiProject(Project, QObject):
             self.timerEvent(None, timestamp)
 
 
-#class Macro(BaseMacro):
-#    def __init__(self):
-#        super(Macro, self).__init__()
-#        self.macros = {}
-#        self.instances = []
-
-#    def run(self):
-#        if self.editor is None:
-#            code = self.load()
-#        else:
-#            code = self.editor.edit.toPlainText()
-#        h = Hash("code", code,
-#                 "project", self.project.name,
-#                 "module", self.name)
-#        network.onInitDevice("Karabo_MacroServer", "MetaMacro", self.instanceId, h)
-
-    #def load(self):
-    #    with ZipFile(self.project.filename, "r") as zf:
-    #        return zf.read("macros/{}.py".format(self.name)).decode("utf8")
-
-
 class Category(object):
     """
     This class represents a project category and is only used to have an object
