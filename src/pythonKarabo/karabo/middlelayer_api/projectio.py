@@ -1,4 +1,4 @@
-from io import BytesIO
+from io import BytesIO, StringIO
 import os
 from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -77,7 +77,7 @@ def write_project(proj, path=None):
         resources = _write_resources(zf, proj, proj.resources, isNewFile)
         projectConfig[Project.RESOURCES_KEY] = resources
 
-        macros = _write_macros(zf, proj, proj.macros)
+        macros, exeption = _write_macros(zf, proj, proj.macros, isNewFile)
         projectConfig[Project.MACROS_KEY] = macros
 
         monitors, exception = _write_monitors(zf, proj, proj.monitors,
@@ -185,9 +185,9 @@ def _read_macros(zf, projectConfig, projInstance, factories):
     macros = []
     macroFactory = factories['Macro']
 
-    for title in projectConfig.get(Project.MACROS_KEY, []):
+    for title in projectConfig[Project.MACROS_KEY]:
         data = zf.read("{}/{}".format(Project.MACROS_KEY, "{}.py".format(title)))
-        macro_model = macroFactory(BytesIO(data))
+        macro_model = macroFactory(StringIO(data.decode()))
         macro_model.title = title
         macros.append(macro_model)
 
@@ -294,22 +294,25 @@ def _write_devices(zf, objects):
     return deviceHashes
 
 
-def _write_macros(zf, projInstance, objectsDict):
+def _write_macros(zf, projInstance, objects, isNewFile):
     """ Write all the macros to a project zipfile.
     """
-    macros = Hash()
+    exception = None
+    macroHash = Hash()
 
-    for m in objectsDict.values():
-        f = "macros/{}.py".format(m.name)
-        if m.editor is None:
-            with ZipFile(projInstance.filename, "r") as zin:
-                t = zin.read(f)
-        else:
-            t = m.editor.edit.toPlainText()
-        zf.writestr(f, t)
-        macros[m.name] = f
+    for macro_model in objects:
+        name = "{}/{}.py".format(Project.MACROS_KEY, macro_model.title)
+        try:
+            zf.writestr(name, macro_model.code)
+        except Exception as e:
+            if isNewFile:
+                with ZipFile(projInstance.filename, 'r') as zin:
+                    zf.writestr(name, zin.read(name))
+            if exception is None:
+                exception = e
+        macroHash[macro_model.title] = name
 
-    return macros
+    return macroHash, exception
 
 
 def _write_monitors(zf, projInstance, objects, isNewFile):
