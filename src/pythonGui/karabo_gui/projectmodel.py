@@ -16,9 +16,9 @@ from PyQt4.QtGui import (
     QDialog, QFileDialog, QInputDialog, QItemSelectionModel, QMessageBox,
     QStandardItem, QStandardItemModel)
 
-from karabo.middlelayer_api.project import (
-    MacroModel, Monitor, Project, ProjectAccess, read_macro)
-from karabo.middlelayer import Hash, read_scene, SceneModel, write_scene
+from karabo.middlelayer import (
+    Hash, MacroModel, read_macro, read_scene, SceneModel, write_scene)
+from karabo.middlelayer_api.project import Monitor, Project, ProjectAccess
 from karabo_gui.configuration import Configuration
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
