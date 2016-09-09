@@ -8,6 +8,9 @@
 #ifndef KARABO_UTIL_CUSTOMNODEELMENT_HH
 #define	KARABO_UTIL_CUSTOMNODEELMENT_HH
 
+#include "NodeElement.hh"
+#include "OverwriteElement.hh"
+
 namespace karabo {
     namespace util {
 

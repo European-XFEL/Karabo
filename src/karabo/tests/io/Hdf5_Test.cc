@@ -14,7 +14,8 @@
 #include <karabo/log/Tracer.hh>
 #include <karabo/util/Dims.hh>
 #include <karabo/io/Output.hh>
-#include <karabo/io/h5/Table.hh>
+#include <karabo/io/h5/Table.hh>#
+#include <karabo/util/NDArray.hh>
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -33,7 +34,7 @@ Hdf5_Test::Hdf5_Test() {
 
     m_numImages = 100; // number of images to be written
     m_extentMultiplier = 1; //image size multiplier: 1 means 1Mpx, 2 - 4Mpx, 3 - 9 Mpx, etc
-    m_report = false;
+    m_report = true;
 
 }
 
@@ -923,6 +924,420 @@ void Hdf5_Test::testSerializer() {
         }
     } catch (Exception& ex) {
         clog << ex << endl;
+    }
+
+}
+
+void Hdf5_Test::testKaraboNDArray() {
+
+
+#define DET_NX 1024
+#define DET_NY 1024
+
+
+    string filename = "/dev/shm/karabo.h5"; // in memory file
+    filename = resourcePath("karabo.h5"); // file on disk ($KARABO/src/karabo/tests/io/resources/pure.h5)
+    // end of configure
+
+
+    unsigned int nx = m_extentMultiplier*DET_NX; //number of pixles along x-dimension
+    unsigned int ny = m_extentMultiplier*DET_NY; //number of pixles along y-dimension
+
+
+    //compute the number of points in a single frame
+    unsigned long long imageSize = nx*ny;
+    //compute total data size in MBytes
+    unsigned long long totalSize = imageSize * m_numImages * sizeof (unsigned short) / DET_NX / DET_NY;
+
+
+    TimeProfiler p("writeKarabo");
+    p.open();
+    p.startPeriod("allocate");
+    //allocate memory for one image and set the data value   
+
+    vector<unsigned short> data(imageSize);
+    for (size_t i = 0; i < imageSize; ++i) data[i] = static_cast<unsigned short> (i % 10);
+    
+    karabo::util::NDArray arr(&data[0], imageSize, karabo::util::Dims(nx, ny));
+                         
+    Hash h;
+
+    h.set("detector", arr);
+
+    p.stopPeriod("allocate");
+    
+
+    p.startPeriod("create");
+
+    Format::Pointer dataFormat = Format::discover(h);
+
+    File file(filename);
+    file.open(File::TRUNCATE);
+    Table::Pointer t = file.createTable("/karabo", dataFormat);
+    p.stopPeriod("create");
+
+    p.startPeriod("write");
+    for (unsigned int i = 0; i < m_numImages; ++i)
+        t->write(h, i);
+    p.stopPeriod("write");
+    
+    p.startPeriod("close");
+    file.closeTable(t);
+    file.close();
+    p.stopPeriod("close");
+    
+    p.startPeriod("open");
+
+    
+    karabo::util::NDArray arr2(imageSize, karabo::util::Types::UINT16);
+                         
+    Hash h2;
+
+    h2.set("detector", arr2);
+
+    
+    Format::Pointer dataFormat2 = Format::discover(h2);
+    File file2(filename);
+    file2.open(File::READONLY);
+    Table::Pointer t2 = file2.getTable("/karabo", dataFormat2);
+    p.stopPeriod("open");
+    
+    p.startPeriod("read");
+    t2->bind(h2);
+    for (unsigned int i = 0; i < m_numImages; ++i){
+        t2->read(i);
+    }
+    p.stopPeriod("read");
+    
+    {
+        p.startPeriod("readCreateData");
+
+        for (unsigned int i = 0; i < m_numImages; ++i){
+            Hash h;
+            t2->bind(h);
+            t2->read(i);
+        }
+        p.stopPeriod("readCreateData");
+    }
+    
+    {
+        
+        karabo::util::NDArray arr(karabo::util::Dims(m_numImages, nx, ny), karabo::util::Types::UINT16);
+        Hash h("detector", arr);
+        p.startPeriod("readBulk");
+
+
+        t2->bind(h, m_numImages);
+        t2->read(0, m_numImages);
+
+        p.stopPeriod("readBulk");
+    }
+    
+    p.startPeriod("closeRead");
+    file2.closeTable(t2);
+    file2.close();
+    p.stopPeriod("closeRead");
+    
+    p.startPeriod("assertion");
+    unsigned short* a1 = h.get<NDArray>("detector").getData<unsigned short>();
+    unsigned short* a2 = h2.get<NDArray>("detector").getData<unsigned short>();
+    for(size_t i = 0; i < imageSize-100; i+=99){
+        CPPUNIT_ASSERT(a1[i] == a2[i]);
+    }
+    p.stopPeriod("assertion");
+
+    
+    //now with null-deleters, data isn't managed by NDArray, but referenced
+    {
+        p.startPeriod("allocateRef");
+        //allocate memory for one image and set the data value   
+
+        vector<unsigned short> data(imageSize);
+        for (size_t i = 0; i < imageSize; ++i) data[i] = static_cast<unsigned short> (i % 10);
+
+        karabo::util::NDArray arr(&data[0], imageSize, karabo::util::NDArray::NullDeleter(), karabo::util::Dims(nx, ny));
+
+        Hash h;
+
+        h.set("detector", arr);
+
+        p.stopPeriod("allocateRef");
+
+
+        p.startPeriod("createRef");
+
+        Format::Pointer dataFormat = Format::discover(h);
+
+        File file(filename);
+        file.open(File::TRUNCATE);
+        Table::Pointer t = file.createTable("/karabo", dataFormat);
+        p.stopPeriod("createRef");
+
+        p.startPeriod("writeRef");
+        for (unsigned int i = 0; i < m_numImages; ++i)
+            t->write(h, i);
+        p.stopPeriod("writeRef");
+
+        p.startPeriod("closeRef");
+        file.closeTable(t);
+        file.close();
+        p.stopPeriod("closeRef");
+        
+        p.startPeriod("openRef");
+
+       
+
+        File file2(filename);
+        file2.open(File::READONLY);
+        Table::Pointer t2 = file2.getTable("/karabo", dataFormat);
+        p.stopPeriod("openRef");
+
+        p.startPeriod("readRef");
+        t2->bind(h);
+        for (unsigned int i = 0; i < m_numImages; ++i){
+            t2->read(i);
+        }
+        p.stopPeriod("readRef");
+        
+        p.startPeriod("closeReadRef");
+        file2.closeTable(t2);
+        file2.close();
+        p.stopPeriod("closeReadRef");
+        
+    }
+    
+    p.close();
+    TimeDuration allocateTime = p.getPeriod("allocate").getDuration();
+    TimeDuration createTime = p.getPeriod("create").getDuration();
+    TimeDuration writeTime = p.getPeriod("write").getDuration();
+    TimeDuration closeTime = p.getPeriod("close").getDuration();
+    TimeDuration openTime = p.getPeriod("open").getDuration();
+    TimeDuration readTime = p.getPeriod("read").getDuration();
+    TimeDuration readCreateDataTime = p.getPeriod("readCreateData").getDuration();
+    TimeDuration readBulkTime = p.getPeriod("readBulk").getDuration();
+    TimeDuration closeReadTime = p.getPeriod("closeRead").getDuration();
+    TimeDuration assertionTime = p.getPeriod("assertion").getDuration();
+    
+    TimeDuration allocateTimeRef = p.getPeriod("allocateRef").getDuration();
+    TimeDuration createTimeRef = p.getPeriod("createRef").getDuration();
+    TimeDuration writeTimeRef = p.getPeriod("writeRef").getDuration();
+    TimeDuration closeTimeRef = p.getPeriod("closeRef").getDuration();
+    TimeDuration openTimeRef = p.getPeriod("openRef").getDuration();
+    TimeDuration readTimeRef = p.getPeriod("readRef").getDuration();
+    TimeDuration closeReadTimeRef = p.getPeriod("closeReadRef").getDuration();
+
+
+
+    if (m_report) {
+        clog << endl;
+        clog << "Statistics for writing and reading NDArray data types"<<std::endl;
+        clog << "------------------------------------------------------"<<std::endl;
+        clog << "file: " << filename << endl;
+        clog << "allocate memory                  : " << allocateTime << " [s]" << endl;
+        clog << "open/prepare file                : " << createTime << " [s]" << endl;
+        clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
+        clog << "written data size                : " << totalSize << " [MB]" << endl;
+        clog << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]" << endl;
+        clog << "close                            : " << closeTime << " [s]" << endl;
+        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
+        clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]" << endl;
+        clog << "open existing file               : " << openTime << " [s]" << endl;
+        clog << "read data (may use memory cache) : " << readTime << " [s]" << endl;
+        clog << "read data size                   : " << totalSize << " [MB]" << endl;
+        clog << "reading speed                    : " << totalSize / double(readTime) << " [MB/s]" << endl;
+        clog << "read data (create new Hash entry): " << readCreateDataTime << " [s]" << endl;
+        clog << "read data size (new Hash entry)  : " << totalSize << " [MB]" << endl;
+        clog << "reading speed (new Hash entry)   : " << totalSize / double(readCreateDataTime) << " [MB/s]" << endl;
+        clog << "read data (bulk)                 : " << readBulkTime << " [s]" << endl;
+        clog << "read data size (bulk)            : " << totalSize << " [MB]" << endl;
+        clog << "reading speed (bulk)             : " << totalSize / double(readBulkTime) << " [MB/s]" << endl;
+        clog << "close read                       : " << closeReadTime << " [s]" << endl;
+        clog << "open+read+close                  : " << openTime + readTime + closeReadTime << " [s]" << endl;
+        clog << "open+read+close speed            : " << totalSize / double(openTime + readTime + closeReadTime) << " [MB/s]" << endl;
+        clog << "assertion                        : " << assertionTime << " [s]" << endl;
+        
+        clog << endl;
+        clog << "Statistics for writing and reading NDArray data types (unmanaged memory)"<<std::endl;
+        clog << "------------------------------------------------------------------------"<<std::endl;
+        clog << "file: " << filename << endl;
+        clog << "allocate memory                  : " << allocateTimeRef << " [s]" << endl;
+        clog << "open/prepare file                : " << createTimeRef << " [s]" << endl;
+        clog << "write data (may use memory cache): " << writeTimeRef << " [s]" << endl;
+        clog << "written data size                : " << totalSize << " [MB]" << endl;
+        clog << "writing speed                    : " << totalSize / double(writeTimeRef) << " [MB/s]" << endl;
+        clog << "close                            : " << closeTimeRef << " [s]" << endl;
+        clog << "write+close(flush to disk)       : " << writeTimeRef + closeTimeRef << " [s]" << endl;
+        clog << "write+close(flush to disk) speed : " << totalSize / double(writeTimeRef + closeTimeRef) << " [MB/s]" << endl;
+        clog << "open existing file               : " << openTimeRef << " [s]" << endl;
+        clog << "read data (may use memory cache) : " << readTimeRef << " [s]" << endl;
+        clog << "read data size                   : " << totalSize << " [MB]" << endl;
+        clog << "reading speed                    : " << totalSize / double(readTimeRef) << " [MB/s]" << endl;
+        clog << "close read                       : " << closeReadTimeRef << " [s]" << endl;
+        clog << "open+read+close                  : " << openTimeRef + readTimeRef + closeReadTimeRef << " [s]" << endl;
+        clog << "open+read+close speed            : " << totalSize / double(openTimeRef + readTimeRef + closeReadTimeRef) << " [MB/s]" << endl;
+        clog << "assertion                        : " << assertionTime << " [s]" << endl;
+        
+    }
+
+}
+
+void Hdf5_Test::testKaraboPtr() {
+
+
+#define DET_NX 1024
+#define DET_NY 1024
+
+
+    string filename = "/dev/shm/karabo.h5"; // in memory file
+    filename = resourcePath("karabo.h5"); // file on disk ($KARABO/src/karabo/tests/io/resources/pure.h5)
+    // end of configure
+
+
+    unsigned int nx = m_extentMultiplier*DET_NX; //number of pixles along x-dimension
+    unsigned int ny = m_extentMultiplier*DET_NY; //number of pixles along y-dimension
+
+
+    //compute the number of points in a single frame
+    unsigned long long imageSize = nx*ny;
+    //compute total data size in MBytes
+    unsigned long long totalSize = imageSize * m_numImages * sizeof (unsigned short) / DET_NX / DET_NY;
+
+
+    TimeProfiler p("writeKarabo");
+    p.open();
+    p.startPeriod("allocate");
+    //allocate memory for one image and set the data value   
+
+    vector<unsigned short> data(imageSize);
+    for (size_t i = 0; i < imageSize; ++i) data[i] = static_cast<unsigned short> (i % 10);
+    
+    
+                         
+    Hash h;
+
+    h.set("detector", &data[0]);
+    h.setAttribute("detector", "dims", karabo::util::Dims(nx, ny).toVector());
+
+    p.stopPeriod("allocate");
+
+    p.startPeriod("create");
+
+    Format::Pointer dataFormat = Format::discover(h);
+
+    File file(filename);
+    file.open(File::TRUNCATE);
+    Table::Pointer t = file.createTable("/karabo", dataFormat);
+    p.stopPeriod("create");
+
+    p.startPeriod("write");
+    for (unsigned int i = 0; i < m_numImages; ++i){
+        t->write(h, i);
+    }
+    p.stopPeriod("write");
+    
+    p.startPeriod("close");
+    file.closeTable(t);
+    file.close();
+    p.stopPeriod("close");
+    
+    p.startPeriod("open");
+
+   
+                         
+    Hash h2;
+
+    vector<unsigned short> data2(imageSize);
+    h2.set("detector", &data2[0]);
+    h2.setAttribute("detector", "dims", karabo::util::Dims(nx, ny).toVector());
+
+    
+    Format::Pointer dataFormat2 = Format::discover(h2);
+    File file2(filename);
+    file2.open(File::READONLY);
+    Table::Pointer t2 = file2.getTable("/karabo", dataFormat2);
+    p.stopPeriod("open");
+    
+    p.startPeriod("read");
+    t2->bind(h2);
+    for (unsigned int i = 0; i < m_numImages; ++i){
+        t2->read(i);
+    }
+    p.stopPeriod("read");
+    
+    
+    p.startPeriod("readCreateData");
+    
+    for (unsigned int i = 0; i < m_numImages; ++i){
+        Hash h3;
+        t2->bind(h3);
+        t2->read(i);
+    }
+    p.stopPeriod("readCreateData");
+    
+    p.startPeriod("readBulk");
+    
+    
+    Hash h4;
+    t2->bind(h4, 100);
+    t2->read(0, 100);
+
+    p.stopPeriod("readBulk");
+    
+    p.startPeriod("closeRead");
+    file2.closeTable(t2);
+    file2.close();
+    p.stopPeriod("closeRead");
+    
+    p.startPeriod("assertion");
+    unsigned short* a1 = h.get<unsigned short*>("detector");
+    unsigned short* a2 = h2.get<unsigned short*>("detector");
+    for(size_t i = 0; i < imageSize-100; i+=99){
+        CPPUNIT_ASSERT(a1[i] == a2[i]);
+    }
+    p.stopPeriod("assertion");
+
+    
+    p.close();
+    TimeDuration allocateTime = p.getPeriod("allocate").getDuration();
+    TimeDuration createTime = p.getPeriod("create").getDuration();
+    TimeDuration writeTime = p.getPeriod("write").getDuration();
+    TimeDuration closeTime = p.getPeriod("close").getDuration();
+    TimeDuration openTime = p.getPeriod("open").getDuration();
+    TimeDuration readTime = p.getPeriod("read").getDuration();
+    TimeDuration readCreateDataTime = p.getPeriod("readCreateData").getDuration();
+    TimeDuration readBulkTime = p.getPeriod("readBulk").getDuration();
+    TimeDuration closeReadTime = p.getPeriod("closeRead").getDuration();
+    TimeDuration assertionTime = p.getPeriod("assertion").getDuration();
+
+
+
+    if (m_report) {
+        clog << endl;
+        clog << "Statistics for writing and reading pointer data types"<<std::endl;
+        clog << "------------------------------------------------------"<<std::endl;
+        clog << "file: " << filename << endl;
+        clog << "allocate memory                  : " << allocateTime << " [s]" << endl;
+        clog << "open/prepare file                : " << createTime << " [s]" << endl;
+        clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
+        clog << "written data size                : " << totalSize << " [MB]" << endl;
+        clog << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]" << endl;
+        clog << "close                            : " << closeTime << " [s]" << endl;
+        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
+        clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]" << endl;
+        clog << "open existing file               : " << openTime << " [s]" << endl;
+        clog << "read data (may use memory cache) : " << readTime << " [s]" << endl;
+        clog << "read data size                   : " << totalSize << " [MB]" << endl;
+        clog << "reading speed                    : " << totalSize / double(readTime) << " [MB/s]" << endl;
+        clog << "read data (create new Hash entry): " << readCreateDataTime << " [s]" << endl;
+        clog << "read data size (new Hash entry)  : " << totalSize << " [MB]" << endl;
+        clog << "reading speed (new Hash entry)   : " << totalSize / double(readCreateDataTime) << " [MB/s]" << endl;
+        clog << "read data (bulk)                 : " << readBulkTime << " [s]" << endl;
+        clog << "read data size (bulk)            : " << totalSize << " [MB]" << endl;
+        clog << "reading speed (bulk)             : " << totalSize / double(readBulkTime) << " [MB/s]" << endl;
+        clog << "close read                       : " << closeReadTime << " [s]" << endl;
+        clog << "open+read+close                  : " << openTime + readTime + closeReadTime << " [s]" << endl;
+        clog << "open+read+close speed            : " << totalSize / double(openTime + readTime + closeReadTime) << " [MB/s]" << endl;
+        clog << "assertion                        : " << assertionTime << " [s]" << endl;
     }
 
 }
