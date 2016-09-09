@@ -9,6 +9,7 @@ from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QMessageBox,
                          QSplitter, QTextCursor)
 from qtconsole.pygments_highlighter import PygmentsHighlighter
 
+from karabo.middlelayer import write_macro
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
 from karabo_gui.topology import getDevice
@@ -20,14 +21,14 @@ class MacroPanel(Dockable, QSplitter):
     def __init__(self, macro_model):
         QSplitter.__init__(self, Qt.Vertical)
 
+        self.macro_model = macro_model
+
         self.teEditor = QTextEdit(self)
         self.teEditor.installEventFilter(self)
         self.teEditor.setAcceptRichText(False)
         self.teEditor.setStyleSheet("font-family: monospace")
-        try:
-            self.teEditor.setPlainText(macro_model.code)
-        except KeyError:
-            pass
+        self.teEditor.setPlainText(write_macro(self.macro_model))
+
         PygmentsHighlighter(self.teEditor.document())
         self.addWidget(self.teEditor)
         self.teEditor.setLineWrapMode(QTextEdit.NoWrap)
@@ -37,7 +38,6 @@ class MacroPanel(Dockable, QSplitter):
         self.console.setReadOnly(True)
         self.console.setStyleSheet("font-family: monospace")
         self.addWidget(self.console)
-        self.macro_model = macro_model
         self.already_connected = set()
         # XXX TODO check
         #for k in macro_model.instances:
@@ -50,7 +50,7 @@ class MacroPanel(Dockable, QSplitter):
     def eventFilter(self, object, event):
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Tab:
-                self.teEditor.textCursor().insertText("    ")
+                self.teEditor.textCursor().insertText(" "*4)
                 return True
         return False
 
@@ -93,7 +93,7 @@ class MacroPanel(Dockable, QSplitter):
 
     def onSave(self):
         fn = getSaveFileName(
-                caption="Save Macro to File",
+                caption="Save macro to file",
                 filter="Python files (*.py)",
                 suffix="py",
                 selectFile=self.macro_model.title + ".py")
@@ -101,10 +101,11 @@ class MacroPanel(Dockable, QSplitter):
             return
 
         with open(fn, "w") as out:
-            out.write(self.teEditor.toPlainText())
+            out.write(write_macro(self.macro_model))
 
     def onMacroChanged(self):
         # XXX: TODO: this can be removed once a traits macro model exists
         # which updates the project whenever changes appear
         # self.macro.project.setModified(True)
         print("TODO: project needs to be modified")
+        self.macro_model.code = self.teEditor.toPlainText()

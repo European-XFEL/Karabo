@@ -303,7 +303,7 @@ def _write_macros(zf, projInstance, objects, isNewFile):
     for macro_model in objects:
         name = "{}/{}.py".format(Project.MACROS_KEY, macro_model.title)
         try:
-            zf.writestr(name, macro_model.code)
+            zf.writestr(name, write_macro(macro_model))
         except Exception as e:
             if isNewFile:
                 with ZipFile(projInstance.filename, 'r') as zin:
