@@ -13,11 +13,16 @@ def read_macro(filename_or_fileobj):
     """
     if not hasattr(filename_or_fileobj, 'read'):
         with open(filename_or_fileobj, 'r') as input:
-            filename_or_fileobj = input.read()
-        input.close()
+            macro_code = input.read()
     else:
-        filename_or_fileobj = filename_or_fileobj.read()
-    return MacroModel(code=filename_or_fileobj)
+        macro_code = filename_or_fileobj.read()
+    return MacroModel(code=macro_code)
+
+
+def write_macro(macro):
+    """ Write MacroModel object `macro` to a string.
+    """
+    return macro.code
 
 
 class MacroModel(HasStrictTraits):

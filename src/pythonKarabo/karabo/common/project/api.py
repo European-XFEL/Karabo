@@ -1,1 +1,1 @@
-from .macro import MacroModel, read_macro  # noqa
+from .macro import MacroModel, read_macro, write_macro  # noqa
