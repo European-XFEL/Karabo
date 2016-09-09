@@ -109,6 +109,11 @@ namespace karabo {
             // Iterate master
             for (Hash::const_iterator it = master.begin(); it != master.end(); ++it) {
 
+                if (it->hasAttribute(KARABO_SCHEMA_SKIP_VALIDATION) && it->getAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION)) {
+                    // Skip validation of this node and its children, if requested.
+                    continue;
+                }
+
                 string key(it->getKey());
 
                 string currentScope;
@@ -570,23 +575,6 @@ namespace karabo {
                 }
             }
             return false; // nothing to clear
-        }
-
-
-        void Validator::compareNDArrayShapes(const std::vector<long long> & expected, const Dims& observed, std::ostringstream& report, const std::string& scope) {
-            std::vector<long long>::const_iterator eit = expected.begin();
-            for (size_t idx = 0; eit != expected.end() && idx < observed.rank(); ++eit, ++idx) {
-                if (*eit == -1) {
-                    // Negative dimension => variable.
-                    continue;
-                }
-                if (*eit != static_cast<long long> (observed.extentIn(idx))) {
-                    std::string expectedStr = toString<long long>(expected);
-                    std::string observedStr = toString<unsigned long long>(observed.toVector());
-                    report << "Expected array shape: " << expectedStr << " for (ndarray-)parameter \"" << scope << "\", but got " << observedStr << " instead." << endl;
-                    return;
-                }
-            }
         }
 
     }

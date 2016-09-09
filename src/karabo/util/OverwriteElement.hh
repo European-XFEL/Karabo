@@ -104,6 +104,7 @@ namespace karabo {
                 Restriction operatorAccess;
                 Restriction expertAccess;
                 Restriction adminAccess;
+                Restriction skipValidation;
                 Restriction unit;
                 Restriction metricPrefix;
                 Restriction overwriteRestrictions;
@@ -133,38 +134,40 @@ namespace karabo {
                     return *this;
                 }
 
-                Restrictions() : m_rest(new Hash), alias("alias", m_rest, false),
-                    displayedName("displayedName", m_rest, false),
-                    description("description", m_rest, false),
-                    tag("tag", m_rest, false),
-                    assignmentMandatory("assignmentMandatory", m_rest, false),
-                    assignmentOptional("assignmentOptional", m_rest, false),
-                    assignmentInternal("assignmentInternal", m_rest, false),
-                    init("init", m_rest, false),
-                    reconfigurable("reconfigurable", m_rest, false),
-                    readOnly("readOnly", m_rest, false),
-                    defaultValue("defaultValue", m_rest, false),
-                    minInc("minInc", m_rest, false),
-                    maxInc("maxInc", m_rest, false),
-                    minExc("minExc", m_rest, false),
-                    maxExc("maxExc", m_rest, false),
-                    min("min", m_rest, false),
-                    max("max", m_rest, false),
-                    minSize("minSize", m_rest, false),
-                    maxSize("maxSize", m_rest, false),
-                    options("options", m_rest, false),
-                    stateOptions("stateOptions", m_rest, true), //true by default as all elements but state are restricted
-                    allowedStates("allowedStates", m_rest, false),
-                    observerAccess("observerAccess", m_rest, false),
-                    userAccess("userAccess", m_rest, false),
-                    operatorAccess("operatorAccess", m_rest, false),
-                    expertAccess("expertAccess", m_rest, false),
-                    adminAccess("adminAccess", m_rest, false),
-                    unit("unit", m_rest, false),
-                    metricPrefix("metricPrefix", m_rest, false),
-                    overwriteRestrictions("overWriteRestrictions", m_rest, false) {
-
-                }
+                Restrictions()
+                : m_rest(new Hash)
+                , alias("alias", m_rest, false)
+                , displayedName("displayedName", m_rest, false)
+                , description("description", m_rest, false)
+                , tag("tag", m_rest, false)
+                , assignmentMandatory("assignmentMandatory", m_rest, false)
+                , assignmentOptional("assignmentOptional", m_rest, false)
+                , assignmentInternal("assignmentInternal", m_rest, false)
+                , init("init", m_rest, false)
+                , reconfigurable("reconfigurable", m_rest, false)
+                , readOnly("readOnly", m_rest, false)
+                , defaultValue("defaultValue", m_rest, false)
+                , minInc("minInc", m_rest, false)
+                , maxInc("maxInc", m_rest, false)
+                , minExc("minExc", m_rest, false)
+                , maxExc("maxExc", m_rest, false)
+                , min("min", m_rest, false)
+                , max("max", m_rest, false)
+                , minSize("minSize", m_rest, false)
+                , maxSize("maxSize", m_rest, false)
+                , options("options", m_rest, false)
+                , stateOptions("stateOptions", m_rest, true) //true by default as all elements but state are restricted
+                , allowedStates("allowedStates", m_rest, false)
+                , observerAccess("observerAccess", m_rest, false)
+                , userAccess("userAccess", m_rest, false)
+                , operatorAccess("operatorAccess", m_rest, false)
+                , expertAccess("expertAccess", m_rest, false)
+                , adminAccess("adminAccess", m_rest, false)
+                , skipValidation("skipValidation", m_rest, false)
+                , unit("unit", m_rest, false)
+                , metricPrefix("metricPrefix", m_rest, false)
+                , overwriteRestrictions("overWriteRestrictions", m_rest, false)
+                {}
 
                 virtual ~Restrictions() {
                 }
@@ -225,6 +228,10 @@ namespace karabo {
             OverwriteElement& setNowReconfigurable();
 
             OverwriteElement& setNowReadOnly();
+
+            OverwriteElement& setNowValidate();
+
+            OverwriteElement& setNowSkipValidation();
 
             template <class ValueType>
             OverwriteElement& setNewDefaultValue(const ValueType& value) {
