@@ -9,9 +9,10 @@ from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QMessageBox,
                          QSplitter, QTextCursor)
 from qtconsole.pygments_highlighter import PygmentsHighlighter
 
-from karabo.middlelayer import write_macro
+from karabo.middlelayer import Hash, write_macro
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
+from karabo_gui.network import Network
 from karabo_gui.topology import getDevice
 from karabo_gui.util import getSaveFileName
 
@@ -39,9 +40,10 @@ class MacroPanel(Dockable, QSplitter):
         self.console.setStyleSheet("font-family: monospace")
         self.addWidget(self.console)
         self.already_connected = set()
-        # XXX TODO check
-        #for k in macro_model.instances:
-        #    self.connect(k)
+
+        # Connect all running macros
+        for instance in macro_model.instances:
+            self.connect(instance)
 
     def setupToolBars(self, tb, parent):
         tb.addAction(icons.start, "Run", self.onRun)
@@ -74,7 +76,7 @@ class MacroPanel(Dockable, QSplitter):
     def onRun(self):
         self.console.clear()
         try:
-            compile(self.teEditor.toPlainText(), self.macro_model.title, "exec")
+            compile(self.macro_model.code, self.macro_model.title, "exec")
         except SyntaxError as e:
             if e.filename[7:-3] == self.macro_model.title:
                 c = self.teEditor.textCursor()
@@ -87,9 +89,13 @@ class MacroPanel(Dockable, QSplitter):
                                 e.msg, e.text, " " * e.offset, e.filename,
                                 e.lineno))
         else:
-            getDevice(self.macro_model.instanceId).signalInitReply.connect(
-                self.initReply)
-            self.macro_model.run()
+            instance_id = self.macro_model.instance_id
+            macro_instance = getDevice(instance_id)
+            macro_instance.signalInitReply.connect(self.initReply)
+            h = Hash("code", self.macro_model.code,
+                     "module", self.macro_model.title)
+            Network().onInitDevice("Karabo_MacroServer", "MetaMacro",
+                                   instance_id, h)
 
     def onSave(self):
         fn = getSaveFileName(

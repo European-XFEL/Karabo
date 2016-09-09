@@ -3,7 +3,7 @@
 # Created on September 9, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from traits.api import HasStrictTraits, String
+from traits.api import cached_property, HasStrictTraits, List, Property, String
 
 
 def read_macro(filename_or_fileobj):
@@ -30,6 +30,12 @@ class MacroModel(HasStrictTraits):
     # The title of the macro
     title = String()
     # The instance ID of the running macro
-    instance_id = String()
+    instance_id = Property(String, depends_on=['title'])
+    # The instance names of all active macros
+    instances = List(String)
     # The actual macro source
     code = String()
+
+    @cached_property
+    def _get_instance_id(self):
+        return "Macro-{}".format(self.title)
