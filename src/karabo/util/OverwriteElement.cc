@@ -72,7 +72,18 @@ namespace karabo{
                 return *this;
             }
 
-            
+            OverwriteElement& OverwriteElement::setNowValidate() {
+                checkIfRestrictionApplies(m_restrictions.skipValidation);
+                if (m_node) m_node->setAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION, false);
+                return *this;
+            }
+
+            OverwriteElement& OverwriteElement::setNowSkipValidation() {
+                checkIfRestrictionApplies(m_restrictions.skipValidation);
+                if (m_node) m_node->setAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION, true);
+                return *this;
+            }
+
             OverwriteElement& OverwriteElement::setNewOptions(const std::string& opts, const std::string& sep) {
                 return setNewOptions(opts, true, sep);
             }
