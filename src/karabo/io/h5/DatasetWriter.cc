@@ -31,8 +31,6 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<float> >, DatasetVectorWriter< std::complex<float> >)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<double> >, DatasetVectorWriter< std::complex<double> >)
 
-
-
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetPointerWriter<char>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<signed char>, DatasetPointerWriter<signed char>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<short>, DatasetPointerWriter<short>)
@@ -49,20 +47,22 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<float> >, DatasetPointerWriter< std::complex<float> >)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<double> >, DatasetPointerWriter< std::complex<double> >)
 
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetNDArrayH5Writer<char>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<signed char>, DatasetNDArrayH5Writer<signed char>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<short>, DatasetNDArrayH5Writer<short>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<int>, DatasetNDArrayH5Writer<int>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<long long>, DatasetNDArrayH5Writer<long long>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned char>, DatasetNDArrayH5Writer<unsigned char>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned short>, DatasetNDArrayH5Writer<unsigned short>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned int>, DatasetNDArrayH5Writer<unsigned int>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned long long>, DatasetNDArrayH5Writer<unsigned long long>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<double>, DatasetNDArrayH5Writer<double>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<float>, DatasetNDArrayH5Writer<float>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<std::string>, DatasetNDArrayH5Writer<std::string>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<bool>, DatasetNDArrayH5Writer<bool>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<float> >, DatasetNDArrayH5Writer< std::complex<float> >)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<double> >, DatasetNDArrayH5Writer< std::complex<double> >)
 
-
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetArrayWriter<char>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<signed char>, DatasetArrayWriter<signed char>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<short>, DatasetArrayWriter<short>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<int>, DatasetArrayWriter<int>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<long long>, DatasetArrayWriter<long long>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned char>, DatasetArrayWriter<unsigned char>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned short>, DatasetArrayWriter<unsigned short>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned int>, DatasetArrayWriter<unsigned int>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned long long>, DatasetArrayWriter<unsigned long long>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<double>, DatasetArrayWriter<double>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<float>, DatasetArrayWriter<float>)
-            //            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<bool>, DatasetArrayWriter<bool>)
 
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetScalarWriter<char>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<signed char>, DatasetScalarWriter<signed char>)

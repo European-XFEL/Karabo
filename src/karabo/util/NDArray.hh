@@ -10,7 +10,10 @@
 #include "Exception.hh"
 #include "Dims.hh"
 #include "Hash.hh"
+#include "Schema.hh"
 #include "ByteSwap.hh"
+#include "CustomNodeElement.hh"
+
 
 namespace karabo {
     namespace util {
@@ -29,6 +32,9 @@ namespace karabo {
                     // Do nothing
                 }
             };
+
+
+            static void expectedParameters(karabo::util::Schema& s);
 
             NDArray(const Dims& shape,
                     const karabo::util::Types::ReferenceType& type = karabo::util::Types::DOUBLE,
@@ -221,6 +227,39 @@ namespace karabo {
             setShape(shape);
             setBigEndian(isBigEndian);
         }
+
+
+        /**********************************************************************
+         * Declaration NDArrayElement
+         **********************************************************************/
+
+        class NDArrayElement : public karabo::util::CustomNodeElement<NDArrayElement, NDArray > {
+
+            typedef karabo::util::CustomNodeElement<NDArrayElement, NDArray > ParentType;
+
+        public:
+
+            NDArrayElement(karabo::util::Schema& s) : ParentType(s) {
+            }
+
+            NDArrayElement& dtype(const karabo::util::Types::ReferenceType type) {
+                return setDefaultValue("type", static_cast<int>(type));
+            }
+
+            NDArrayElement& shape(const std::string& shp) {
+                std::vector<long long> tmp = karabo::util::fromString<long long, std::vector>(shp);
+                return setDefaultValue("shape", tmp);
+            }
+
+            void commit() {
+                // As NDArrayElement is only used for channel descriptions, it should always be read only.
+                readOnly();
+                ParentType::commit();
+            }
+
+        };
+
+        typedef NDArrayElement NDARRAY_ELEMENT;
 
     }
 }
