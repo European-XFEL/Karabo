@@ -6,17 +6,20 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-
 #include "Format.hh"
-#include <karabo/log/Tracer.hh>
+
 #include <vector>
+
+#include "Element.hh"
+
+#include <karabo/log/Tracer.hh>
 #include <karabo/util/ListElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/SimpleElement.hh>
-
-#include "Element.hh"
-#include "karabo/util/TimeProfiler.hh"
+#include <karabo/util/TimeProfiler.hh>
 #include <karabo/util/HashFilter.hh>
+#include <karabo/util/NDArray.hh>
+
 
 
 
@@ -200,47 +203,56 @@ namespace karabo {
 
             void Format::discoverFromHashElement(const Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy, vector<Hash>& config, const string& path, const string& keyPath) {
 
-                const Hash& h = el.getValue<Hash > ();
-                const std::string& key = el.getKey();
-                std::string newPath;
-                if (path != "") {
-                    newPath = path + m_h5Sep + key;
-                } else {
-                    newPath = key;
-                }
-                KARABO_LOG_FRAMEWORK_TRACE_CF << "1 path: " << path << " key: " << key << " newPath: " << newPath;
-
-                std::string newKeyPath;
-                if (keyPath != "") {
-                    newKeyPath = keyPath + m_h5Sep + key;
-                } else {
-                    newKeyPath = key;
-                }
-                KARABO_LOG_FRAMEWORK_TRACE_CF << "2 keyPath: " << keyPath << " key: " << key << " newKeyPath: " << newKeyPath;
-
-
-                if (!el.getAttributes().empty() || h.size() == 0) {
-                    config.push_back(Hash());
-                    Hash& hcGroup = config.back();
-                    Hash& hc = hcGroup.bindReference<Hash > ("Group");
-                    hc.set("h5name", key);
-                    hc.set("h5path", path);
-                    hc.set("key", newKeyPath);
-                    //hc.set("type", "HASH");
-                    discoverAttributes(el, hc);
-
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "HashElement:\n" << config.back();
-                }
-
-
-
-                for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
-                    if (it->is<Hash > ()) {
-                        discoverFromHashElement(*it, policy, config, newPath, newKeyPath);
-                    } else if (it->is<vector<Hash> >()) {
-                        discoverFromVectorOfHashesElement(*it, policy, config, newPath, newKeyPath);
+                if(el.hasAttribute("__classId")){ //sub-classed hash
+                    const std::string& classId = el.getAttribute<string>("__classId");
+                    if (classId == karabo::util::NDArray::classInfo().getClassId()) {
+                        discoverFromNDArray(el, policy, config, path, keyPath);
                     } else {
-                        discoverFromDataElement(*it, policy, config, newPath, newKeyPath);
+                        KARABO_LOG_FRAMEWORK_TRACE_CF<<"Refusing to write unknown class "<<classId<<" to hdf5.";
+                    }
+                } else { //non sub-classed hash
+                
+                    const Hash& h = el.getValue<Hash > ();
+                    const std::string& key = el.getKey();
+                    std::string newPath;
+                    if (path != "") {
+                        newPath = path + m_h5Sep + key;
+                    } else {
+                        newPath = key;
+                    }
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "1 path: " << path << " key: " << key << " newPath: " << newPath;
+
+                    std::string newKeyPath;
+                    if (keyPath != "") {
+                        newKeyPath = keyPath + m_h5Sep + key;
+                    } else {
+                        newKeyPath = key;
+                    }
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "2 keyPath: " << keyPath << " key: " << key << " newKeyPath: " << newKeyPath;
+
+
+                    if (!el.getAttributes().empty() || h.size() == 0) {
+                        config.push_back(Hash());
+                        Hash& hcGroup = config.back();
+                        Hash& hc = hcGroup.bindReference<Hash > ("Group");
+                        hc.set("h5name", key);
+                        hc.set("h5path", path);
+                        hc.set("key", newKeyPath);
+                        //hc.set("type", "HASH");
+                        discoverAttributes(el, hc);
+
+                        KARABO_LOG_FRAMEWORK_TRACE_CF << "HashElement:\n" << config.back();
+                    }
+
+                    for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
+                        if (it->is<Hash > ()) {          
+
+                            discoverFromHashElement(*it, policy, config, newPath, newKeyPath);
+                        } else if (it->is<vector<Hash> >()) {
+                            discoverFromVectorOfHashesElement(*it, policy, config, newPath, newKeyPath);
+                        } else {
+                            discoverFromDataElement(*it, policy, config, newPath, newKeyPath);
+                        }
                     }
                 }
             }
@@ -417,10 +429,54 @@ namespace karabo {
 
 
             }
-
+            
 #undef _KARABO_IO_H5_SEQUENCE_SIZE
 #undef _KARABO_IO_H5_SEQUENCE_PTR_SIZE
 #undef _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE
+            
+            void Format::discoverFromNDArray(const Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy,
+                                                 vector<Hash>& config, const string& path, const string& keyPath) {
+
+                const std::string& key = el.getKey();
+                const NDArray& value = el.getValue<NDArray>();
+                Types::ReferenceType type = value.getType();
+                const std::string& typeStr = ToType<ToLiteral>::to(type);
+                config.push_back(Hash());
+                Hash& hc = config.back();
+
+
+                std::string newKeyPath;
+                if (keyPath != "") {
+                    newKeyPath = keyPath + m_h5Sep + key;
+                } else {
+                    newKeyPath = key;
+                }
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "keyPath: " << keyPath << " key: " << key << " newKeyPath: " << newKeyPath;
+
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "NDArrayH5: " << typeStr;
+                const std::string arrayType = "NDArrayH5_"+typeStr; 
+                Hash& h = hc.bindReference<Hash > (arrayType);
+                h.set("h5name", key);
+                h.set("h5path", path);
+                h.set("key", newKeyPath);
+                h.set("type", typeStr);
+                h.set("chunkSize", policy->getDefaultChunkSize());
+                h.set("compressionLevel", policy->getDefaultCompressionLevel());
+                h.set("dims", value.getShape().toVector());
+                    
+                //set other known attributes of NDarray, which are futher down in its hierarchy
+                discoverAttributes(el, h);
+                std::vector<Hash> attr;
+                h.get("attributes", attr);
+                attr.push_back(Hash(ToType<ToLiteral>::to(Types::ReferenceType::BOOL), Hash("h5name", "isBigEndian")));
+
+     
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "Format::discoverFromDataElement type: NDArray";
+
+
+            }
+
+
 
 
 #define _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE(T,cppType) case Types::VECTOR_##T:  Format::discoverVectorSize<cppType>(h,(*it)); break;                        
@@ -473,10 +529,6 @@ namespace karabo {
             }
 
 #undef _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE
-
-
-
-
 
         }
     }

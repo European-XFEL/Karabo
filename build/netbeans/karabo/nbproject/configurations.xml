@@ -69,6 +69,8 @@
           <itemPath>../../../src/karabo/io/h5/FixedLengthArrayComplex.hh</itemPath>
           <itemPath>../../../src/karabo/io/h5/Group.cc</itemPath>
           <itemPath>../../../src/karabo/io/h5/Group.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/NDArrayH5.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/NDArrayH5.hh</itemPath>
           <itemPath>../../../src/karabo/io/h5/Scalar.cc</itemPath>
           <itemPath>../../../src/karabo/io/h5/Scalar.hh</itemPath>
           <itemPath>../../../src/karabo/io/h5/VLArray.cc</itemPath>
@@ -254,6 +256,7 @@
       <logicalFolder name="f1" displayName="Schema" projectFiles="true">
         <itemPath>../../../src/karabo/util/AlarmConditionElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/AlarmConditionElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/ByteArrayElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ChoiceElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/CustomNodeElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/GenericElement.hh</itemPath>
@@ -261,7 +264,6 @@
         <itemPath>../../../src/karabo/util/HashFilter.hh</itemPath>
         <itemPath>../../../src/karabo/util/LeafElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ListElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/NDArrayElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/NodeElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/OverwriteElement.cc</itemPath>
         <itemPath>../../../src/karabo/util/OverwriteElement.hh</itemPath>
@@ -275,6 +277,7 @@
         <itemPath>../../../src/karabo/util/TableElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/Validator.cc</itemPath>
         <itemPath>../../../src/karabo/util/Validator.hh</itemPath>
+        <itemPath>../../../src/karabo/util/VectorElement.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f6" displayName="Tools" projectFiles="true">
         <logicalFolder name="f1" displayName="Time" projectFiles="true">
@@ -1123,6 +1126,16 @@
       </item>
       <item path="../../../src/karabo/io/h5/Group.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/h5/NDArrayH5.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/NDArrayH5.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/h5/Scalar.cc"
             ex="false"
             tool="1"
@@ -1931,6 +1944,11 @@
       </item>
       <item path="../../../src/karabo/util/Base64.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/ByteArrayElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/ByteSwap.cc"
             ex="false"
             tool="1"
@@ -2098,11 +2116,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/NDArray.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/NDArrayElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2289,6 +2302,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Validator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/VectorElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3272,6 +3290,16 @@
       </item>
       <item path="../../../src/karabo/io/h5/Group.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/h5/NDArrayH5.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/NDArrayH5.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/h5/Scalar.cc"
             ex="false"
             tool="1"
@@ -4089,6 +4117,11 @@
       </item>
       <item path="../../../src/karabo/util/Base64.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/ByteArrayElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/ByteSwap.cc"
             ex="false"
             tool="1"
@@ -4256,11 +4289,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/NDArray.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/NDArrayElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4447,6 +4475,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Validator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/VectorElement.hh"
             ex="false"
             tool="3"
             flavor2="0">

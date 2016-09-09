@@ -15,7 +15,10 @@
 #include <string>
 
 #include <karabo/util/Configurator.hh>
-#include <karabo/util/NDArrayElement.hh>
+#include <karabo/util/VectorElement.hh>
+#include <karabo/util/NDArray.hh>
+
+#include <karabo/util/VectorElement.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/FromLiteral.hh>
 
@@ -37,7 +40,7 @@ namespace karabo {
             template<typename T>
             class FixedLengthArray : public Dataset {
 
-                public:
+            public:
 
                 KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 

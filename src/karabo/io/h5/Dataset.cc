@@ -9,7 +9,7 @@
 #include <sstream> 
 #include "Dataset.hh"
 #include <karabo/util/SimpleElement.hh>
-#include <karabo/util/NDArrayElement.hh>
+#include <karabo/util/VectorElement.hh>
 #include <karabo/log/Logger.hh>
 #include <karabo/util/Dims.hh>
 
@@ -61,8 +61,9 @@ namespace karabo {
 
                 size_t singleValueRank = singleValueDims.rank();
 
-                if (input.has("dims")) {
-                    vector<unsigned long long> dimsVec = input.getAs<unsigned long long, vector>("dims");
+                if (input.has("dims") || input.has("shape")) {
+                    const std::string attrName = input.has("dims") ? "dims" : "shape";
+                    vector<unsigned long long> dimsVec = input.getAs<unsigned long long, vector>(attrName);
                     // reverse order as we need to store in hdf5
                     std::reverse(dimsVec.begin(), dimsVec.end());
 

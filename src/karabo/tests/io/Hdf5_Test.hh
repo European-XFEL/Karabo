@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Hdf5_Test.hh
  * Author: wrona
  *
@@ -12,13 +12,14 @@
 
 class Hdf5_Test : public CPPUNIT_NS::TestFixture {
 
-
     CPPUNIT_TEST_SUITE(Hdf5_Test);
     CPPUNIT_TEST(testPureHdf5);
     CPPUNIT_TEST(testKaraboHdf5);
     CPPUNIT_TEST(testManyDatasets);
     CPPUNIT_TEST(testManyDatasets1);
     CPPUNIT_TEST(testSerializer);
+    CPPUNIT_TEST(testKaraboNDArray);
+    CPPUNIT_TEST(testKaraboPtr);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -38,6 +39,8 @@ private:
     void testManyDatasets();
     void testManyDatasets1();
     void testSerializer();
+    void testKaraboNDArray();
+    void testKaraboPtr();
 };
 
 #endif	/* HDF5_TEST_HH */

@@ -13,7 +13,6 @@
 #include <karabo/util/Dims.hh>
 #include <karabo/util/Validator.hh>
 #include <karabo/util/NDArray.hh>
-#include <karabo/util/NDArrayElement.hh>
 #include "Data.hh"
 #include <karabo/util/DetectorGeometry.hh>
 #include <karabo/util/ByteSwap.hh>
