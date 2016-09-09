@@ -322,15 +322,17 @@ class MainWindow(QMainWindow):
             if panel_model is model:
                 return divWidget
 
-    def middlePanelExists(self, child_type, model):
-        """This method checks whether a middle panel for the given ``model``
-        already exists.
-        ``child_type`` can be either 'macro_model' or ''scene_model'.
+    def focusExistingMiddlePanel(self, child_type, model):
+        """ This method checks whether a middle panel for the given ``model``
+            already exists.
+            ``child_type`` can be either 'macro_model' or ''scene_model'.
 
-        The method returns ``True``, if panel already open else ``False``
+            The method returns ``True``, if panel already open else ``False``.
+            Note that in case the panel is already there, it is pushed to the
+            top of the focus stack.
         """
         self.checkAndRemovePlaceholderMiddlePanel()
-
+        
         divWidget = self._getDivWidget(child_type, model)
         if divWidget is not None:
             index = self.middleTab.indexOf(divWidget)
@@ -399,12 +401,10 @@ class MainWindow(QMainWindow):
         """ Add a scene view to show the content of the given `sceneModel in
             the GUI.
         """
-        if self.middlePanelExists('scene_model', sceneModel):
+        if self.focusExistingMiddlePanel('scene_model', sceneModel):
             return
 
-        self.checkAndRemovePlaceholderMiddlePanel()
-
-        # Set icon data to model, if existent
+        # XXX: Set icon data to model, if existent (temporary solution)
         self._readIconDataFromProject(sceneModel, project)
         sceneView = SceneView(model=sceneModel, project=project)
 
@@ -416,7 +416,7 @@ class MainWindow(QMainWindow):
         self.selectLastMiddlePanel()
 
     def addMacro(self, macroModel):
-        if self.middlePanelExists('macro_model', macroModel):
+        if self.focusExistingMiddlePanel('macro_model', macroModel):
             return
 
         macroPanel = MacroPanel(macroModel)

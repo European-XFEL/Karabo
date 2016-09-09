@@ -426,6 +426,7 @@ class ProjectModel(QStandardItemModel):
         """
         macros = {}
         hash = Manager().systemHash.get("macro", Hash())
+        print("XXX macroHash", hash)
         for k, v, a in hash.iterall():
             macros.setdefault((a["project"], a["module"]), []).append(k)
 
