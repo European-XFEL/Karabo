@@ -14,9 +14,9 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
                          QMenu, QMessageBox, QTreeView)
 
-from karabo.middlelayer import SceneModel
+from karabo.middlelayer import MacroModel, SceneModel
 from karabo.middlelayer_api.project import (
-    MacroModel, Monitor, Project, ProjectAccess, ProjectConfiguration)
+    Monitor, Project, ProjectAccess, ProjectConfiguration)
 
 import karabo_gui.globals as globals
 from karabo_gui.dialogs.projectdialog import (

@@ -15,10 +15,10 @@ import os.path
 import urllib.request, urllib.error, urllib.parse
 import urllib.parse
 from uuid import uuid4
-from traits.api import HasStrictTraits, String
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from .hash import XMLParser, XMLWriter
+from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import read_scene
 
 
@@ -370,30 +370,6 @@ class BaseDeviceGroup(BaseDevice):
 
     def addDevice(self, device):
         self.devices.append(device)
-
-
-class MacroModel(HasStrictTraits):
-    """ An object representing the data for a Karabo GUI macro."""
-    # The title of the macro
-    title = String()
-    # The instance ID of the running macro
-    instance_id = String()
-    # The actual macro code
-    code = String()
-
-
-def read_macro(filename_or_fileobj):
-    """ Read a macro and return it.
-        filename_or_fileobj is either a string containing a filename, or a
-        file-like object which can be read from (eg- a StringIO instance).
-    """
-    if not hasattr(filename_or_fileobj, 'read'):
-        with open(filename_or_fileobj, 'r') as input:
-            filename_or_fileobj = input.read()
-        input.close()
-    else:
-        filename_or_fileobj = filename_or_fileobj.read()
-    return MacroModel(code=filename_or_fileobj)
 
 
 class Monitor(object):
