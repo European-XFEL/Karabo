@@ -3,7 +3,7 @@ free to use everything defined here, try to avoid doing deep imports
 into the Karabo package, as the internals may change.
 """
 from .common.alarm_conditions import AlarmCondition
-from .common.project.api import MacroModel, read_macro
+from .common.project.api import MacroModel, read_macro, write_macro
 from .common.scenemodel.api import read_scene, SceneModel, write_scene
 from .common.states import State, StateSignifier
 
