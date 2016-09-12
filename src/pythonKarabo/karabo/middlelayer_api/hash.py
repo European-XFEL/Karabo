@@ -1068,6 +1068,13 @@ class VectorHash(Vector):
         return basetypes.TableValue(table, descriptor=self)
 
 
+class HashList(list, Special):
+    hashtype = VectorHash
+
+    def __repr__(self):
+        return "HashList(" + super(HashList, self).__repr__() + ")"
+
+
 class SchemaHashType(HashType):
     number = 32
 
