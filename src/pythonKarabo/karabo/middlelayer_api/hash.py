@@ -959,37 +959,26 @@ class VectorString(Vector):
     @staticmethod
     def fromstring(s):
         if not s:
-            return StringList()
-        return StringList(ss.strip() for ss in s.split(','))
+            return []
+        return [ss.strip() for ss in s.split(',')]
 
     @classmethod
     def read(cls, file):
-        return StringList(super(VectorString, cls).read(file))
+        return list(super(VectorString, cls).read(file))
 
     @classmethod
     def toString(cls, data):
         return ",".join(str(x) for x in data)
 
     def cast(self, other):
-        if isinstance(other, StringList):
-            return other
-        else:
-            def check(s):
-                if not isinstance(s, str):
-                    raise TypeError
-                return s
-            return StringList(check(s) for s in other)
+        def check(s):
+            if not isinstance(s, str):
+                raise TypeError
+            return s
+        return [check(s) for s in other]
 
     def toKaraboValue(self, data, strict=True):
         return basetypes.VectorStringValue(data, descriptor=self)
-
-
-class StringList(Special, list):
-    """ This class represents a vector of strings """
-    hashtype = VectorString
-
-    def __repr__(self):
-        return "$" + list.__repr__(self)
 
 
 class HashType(Type):
