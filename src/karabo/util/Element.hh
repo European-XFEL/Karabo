@@ -521,6 +521,7 @@ namespace karabo {
                         _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
                         _KARABO_HELPER_MACRO(STRING, std::string)
                         _KARABO_HELPER_MACRO(NONE, CppNone)
+                        case Types::BYTE_ARRAY: m_value = this->getValueAs<karabo::util::ByteArray>(); break;
                     default:
                         throw KARABO_CAST_EXCEPTION("Casting of '" + Types::to<ToCppString>(srcType) += "' to '"
                                                     + Types::to<ToCppString>(tgtType) += "' is not supported");
@@ -558,8 +559,11 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(HASH, Hash)
                     _KARABO_HELPER_MACRO(NONE, CppNone)
                 case Types::SCHEMA: return std::string("Schema Object");
-                case Types::BYTE_ARRAY: return std::string("<raw data bytes...>");
-
+                case Types::BYTE_ARRAY: {
+                    const karabo::util::ByteArray& array = getValue<karabo::util::ByteArray>();
+                    const unsigned char* data = reinterpret_cast<unsigned char*> (array.first.get());
+                    return karabo::util::base64Encode(data, array.second);
+                }
                 default:
                     throw KARABO_CAST_EXCEPTION("Could not convert value of key \"" + m_key + "\" to string");
             }

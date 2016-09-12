@@ -392,6 +392,11 @@ class TestStruct1(object):
                 .reconfigurable()
                 .commit()
                 ,
+        NDARRAY_ELEMENT(expected).key("exampleKey16")
+                .dtype("UINT32")
+                .shape([2, 5, -1])
+                .commit()
+                ,
         INT32_ELEMENT(expected).key("exampleIntKey")
                 .assignmentOptional().defaultValueFromString("20")
                 .reconfigurable()
