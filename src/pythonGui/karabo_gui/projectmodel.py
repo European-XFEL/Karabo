@@ -11,13 +11,14 @@ from io import BytesIO
 import os
 import os.path
 
-from PyQt4.QtCore import QAbstractItemModel, pyqtSignal, Qt
+from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QFileInfo, Qt
 from PyQt4.QtGui import (
     QDialog, QFileDialog, QInputDialog, QItemSelectionModel, QMessageBox,
     QStandardItem, QStandardItemModel)
 
+from karabo.middlelayer import (
+    Hash, MacroModel, read_macro, read_scene, SceneModel, write_scene)
 from karabo.middlelayer_api.project import Monitor, Project, ProjectAccess
-from karabo.middlelayer import Hash, read_scene, SceneModel, write_scene
 from karabo_gui.configuration import Configuration
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
@@ -28,8 +29,7 @@ from karabo_gui.dialogs.dialogs import MacroDialog
 from karabo_gui.dialogs.duplicatedialog import DuplicateDialog
 from karabo_gui.dialogs.monitordialog import MonitorDialog
 from karabo_gui.dialogs.scenedialog import SceneDialog
-from karabo_gui.guiproject import (
-    Category, Device, DeviceGroup, GuiProject, Macro)
+from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject
 from karabo_gui.mediator import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
     register_for_broadcasts)
@@ -437,16 +437,16 @@ class ProjectModel(QStandardItemModel):
                 module = item.child(r)
                 ml = macros.get((project.name, module.text()), [])
                 module.removeRows(0, module.rowCount())
-                module.data(ProjectModel.ITEM_OBJECT).instances = ml
-                for k in ml:
-                    childItem = QStandardItem(hash[k, "classId"])
-                    childItem.setData(getDevice(k),
-                                      ProjectModel.ITEM_OBJECT)
-                    childItem.setEditable(False)
-                    module.appendRow(childItem)
-                    editor = module.data(ProjectModel.ITEM_OBJECT).editor
-                    if editor is not None:
-                        editor.connect(k)
+                #module.data(ProjectModel.ITEM_OBJECT).instances = ml
+                #for k in ml:
+                #    childItem = QStandardItem(hash[k, "classId"])
+                #    childItem.setData(getDevice(k),
+                #                      ProjectModel.ITEM_OBJECT)
+                #    childItem.setEditable(False)
+                #    module.appendRow(childItem)
+                #    editor = module.data(ProjectModel.ITEM_OBJECT).editor
+                #    if editor is not None:
+                #        editor.connect(k)
 
 
     def updateDeviceIcon(self, item, device):
@@ -514,8 +514,8 @@ class ProjectModel(QStandardItemModel):
 
 
     def insertSceneItem(self, row, sceneModel):
-        """
-        This function inserts the given \scene at the given \row of the model.
+        """ This function inserts the given \sceneModel at the given \row of the
+            model.
         """
         item = self.createSceneItem(sceneModel)
         
@@ -578,28 +578,50 @@ class ProjectModel(QStandardItemModel):
         self.signalExpandIndex.emit(self.indexFromItem(labelItem), True)
         self.signalExpandIndex.emit(self.indexFromItem(deviceItem), True)
 
-
-    def addMacroItem(self, macro):
-        item = QStandardItem(macro.name)
+    def createMacroItem(self, macroModel):
+        """
+        This function creates a QStandardItem for the given \sceneModel and
+        returns it.
+        """
+        item = QStandardItem(macroModel.title)
         item.setIcon(icons.file)
-        item.setData(macro, ProjectModel.ITEM_OBJECT)
+        item.setData(macroModel, ProjectModel.ITEM_OBJECT)
         item.setEditable(False)
-        item.setToolTip(macro.name)
+        item.setToolTip(macroModel.title)
+        
+        return item
 
-        projectItem = self._getProjectItemForObject(macro)
+    def addMacroItem(self, macroModel):
+        item = self.createMacroItem(macroModel)
+
+        projectItem = self._getProjectItemForObject(macroModel)
         # Find folder for scenes
         parentItem = self.getCategoryItem(Project.MACROS_LABEL, projectItem)
         parentItem.appendRow(item)
         self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
+
+        # XXX TODO: check sub macro objects
+        #self.addMacroSubItems(macroModel)
+
+    def insertMacroItem(self, row, macroModel):
+        """ This function inserts the given \macroModel at the given \row of the
+            model.
+        """
+        item = self.createMacroItem(macroModel)
         
-        self.addMacroSubItems(macro)
+        projectItem = self._getProjectItemForObject(macroModel)
+        # Find folder for scenes
+        parentItem = self.getCategoryItem(Project.MACROS_LABEL, projectItem)
+        parentItem.insertRow(row, item)
 
+        # XXX TODO: check sub macro objects
+        #self.addMacroSubItems(macroModel)
 
-    def addMacroSubItems(self, macro):
-        if not macro.macros:
+    def addMacroSubItems(self, macroModel):
+        if not macroModel.macros:
             return
         
-        item = self.findItem(macro)
+        item = self.findItem(macroModel)
         if item is None:
             return
  
@@ -608,7 +630,7 @@ class ProjectModel(QStandardItemModel):
             row = item.rowCount()-1
             item.removeRow(row)
         
-        for k, v in macro.macros.items():
+        for k, v in macroModel.macros.items():
             childItem = QStandardItem(k)
             childItem.setData(v, ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
@@ -616,6 +638,15 @@ class ProjectModel(QStandardItemModel):
         
         self.signalExpandIndex.emit(self.indexFromItem(item), True)
 
+    def renameMacro(self, macroModel):
+        item = self.findItem(macroModel)
+        item.setText(macroModel.title)
+        # XXX: TODO update dirty flag
+
+        data = {'model': macroModel}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.RenameMacro, data))
 
     def createMonitorItem(self, monitor):
         """
@@ -704,11 +735,8 @@ class ProjectModel(QStandardItemModel):
 
     def currentMacro(self):
         macro = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
-        if not isinstance(macro, Macro):
-            return None
-        
-        return macro
-
+        if isinstance(macro, MacroModel):
+            return macro
 
     def currentMonitor(self):
         monitor = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
@@ -915,8 +943,8 @@ class ProjectModel(QStandardItemModel):
             broadcast_event(KaraboBroadcastEvent(
                 KaraboEventSender.RemoveSceneView, data))
 
-        for m in project.macros.values():
-            data = {'macro': m}
+        for macroModel in project.macros:
+            data = {'model': macroModel}
             # Create KaraboBroadcastEvent
             broadcast_event(KaraboBroadcastEvent(
                 KaraboEventSender.RemoveMacro, data))
@@ -946,6 +974,7 @@ class ProjectModel(QStandardItemModel):
         project.signalConfigurationAdded.connect(self.addConfigurationItem)
         project.signalConfigurationInserted.connect(self.insertConfigurationItem)
         project.signalMacroAdded.connect(self.addMacroItem)
+        project.signalMacroInserted.connect(self.insertMacroItem)
         project.signalMacroChanged.connect(self.addMacroSubItems)
         project.signalMonitorAdded.connect(self.addMonitorItem)
         project.signalMonitorInserted.connect(self.insertMonitorItem)
@@ -1312,25 +1341,62 @@ class ProjectModel(QStandardItemModel):
         if sceneModel is not None:
             self.openScene(sceneModel)
 
-    def editMacro(self, macro):
-        if macro is None:
-            dialog = MacroDialog()
-            if dialog.exec_() == QDialog.Rejected:
-                return
-            
-            project = self.currentProject()
-            macro = Macro(project, dialog.name)
-            project.addMacro(macro)
+    def editMacro(self, macroModel=None):
+        """ This method changes the title of the macro model.
+        """
+        dialog = MacroDialog(macroModel.title if macroModel is not None else "")
+        if dialog.exec_() == QDialog.Rejected:
+            return
 
-            self.selectObject(macro)
-        
-        self.openMacro(macro)
+        if macroModel is None:
+            self.addMacro(self.currentProject(), dialog.name)
+        else:
+            macroModel.title = dialog.name
+            self.renameMacro(macroModel)
 
-    def openMacro(self, macro):
-        data = {'macro': macro}
+    def addMacro(self, project, title):
+        """
+        Create new MacroModel object for given \project.
+        """
+        macroModel = project.getMacro(title)
+        if macroModel is not None:
+            reply = QMessageBox.question(None, 'Macro already exists',
+                "Another macro with the same name \"<b>{}</b>\" <br> "
+                "already exists. Do you want to overwrite it?".format(title),
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return None
+
+            # Overwrite existing macro
+            index = self.removeObject(project, macroModel, False)
+            macroModel = self.insertMacro(index, project, title)
+        else:
+            macroModel = MacroModel(title=title)
+            project.addMacro(macroModel)
+
+        self.openMacro(macroModel)
+        self.selectObject(macroModel)
+
+        return macroModel
+
+    def insertMacro(self, index, project, title):
+        """
+        Insert a macro model for the given \project with the given data.
+        """
+        macroModel = MacroModel(title=title)
+        project.insertMacro(index, macroModel)
+
+        return macroModel
+
+    def openMacro(self, macroModel):
+        """ This method gets a ``macroModel`` and triggers a signal to open a
+            macro panel in the GUI.
+        """
+        data = {'model': macroModel}
         # Create KaraboBroadcastEvent
         broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.OpenMacro,data))
+            KaraboEventSender.OpenMacro, data))
 
     def editMonitor(self, monitor=None):
         """
@@ -1518,26 +1584,22 @@ class ProjectModel(QStandardItemModel):
 
 
     def onLoadMacro(self):
-        fn = getOpenFileName(caption="Load macro",
-                             filter="Python Macros (*.py)")
-        if not fn:
+        filename = getOpenFileName(caption="Load macro",
+                                   filter="Python Macros (*.py)")
+        if not filename:
             return
-        
-        project = self.currentProject()
-        name = os.path.basename(fn).split(".")[0]
-        
-        macro = Macro(project, name)
-        project.addMacro(macro)
 
-        data = {'macro': macro}
+        macroModel = read_macro(filename)
+        macroModel.title = QFileInfo(filename).baseName()
+        project = self.currentProject()
+        project.addMacro(macroModel)
+
+        data = {'model': macroModel}
         # Create KaraboBroadcastEvent
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.OpenMacro, data))
-        with open(fn, "r") as file:
-            macro.editor.edit.setPlainText(file.read())
 
-        self.selectObject(macro)
-
+        self.selectObject(macroModel)
 
     def onDuplicateMacro(self):
         print("TODO: duplicate macro...")
@@ -1710,7 +1772,7 @@ class ProjectModel(QStandardItemModel):
         if isinstance(obj, SceneModel):
             self.closeScene(obj)
 
-        if isinstance(obj, Macro):
+        if isinstance(obj, MacroModel):
             data = {'model': obj}
             # Create KaraboBroadcastEvent
             broadcast_event(KaraboBroadcastEvent(

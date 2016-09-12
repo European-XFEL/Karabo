@@ -2,9 +2,7 @@ from contextlib import contextmanager
 import os.path as op
 from zipfile import ZipFile
 
-from karabo.middlelayer_api.project import (
-    Project, ProjectConfiguration, BaseDeviceGroup, BaseDevice, BaseMacro,
-)
+from karabo.middlelayer_api.project import Project
 import karabo.testing as testing_mod
 from karabo.testing.utils import temp_file
 
@@ -28,7 +26,7 @@ def test_empty_project():
 
 
 def test_read_project():
-    proj = Project(TEST_PROJECT_PATH )
+    proj = Project(TEST_PROJECT_PATH)
     proj.unzip()
 
     # FIXME: Actually look at the project's contents

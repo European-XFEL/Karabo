@@ -23,13 +23,12 @@ from karabo_gui.toolbar import ToolBar
 
 
 class ScenePanel(Dockable, QScrollArea):
-    signalClosed = pyqtSignal(object)  # SceneModel
-
     def __init__(self, scene_view, connected_to_server):
         super(ScenePanel, self).__init__()
 
         # Reference to underlying scene view
         self.scene_view = scene_view
+        self.scene_model = scene_view.scene_model
         self.setWidget(self.scene_view)
 
         self.setupActions(connected_to_server)
@@ -39,7 +38,6 @@ class ScenePanel(Dockable, QScrollArea):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
     def closeEvent(self, event):
-        self.signalClosed.emit(self.scene_view.scene_model)
         self.scene_view.destroy()
         event.accept()
 
