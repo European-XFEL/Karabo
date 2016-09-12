@@ -29,7 +29,7 @@ from .middlelayer_api.hash import (
     Double, Element, Enumable, Float, Hash, HashElement, HashMergePolicy,
     HashType, Int16, Int32, Int64, Int8, Integer, ListElement, Number,
     NumpyVector, Schema, SchemaHashType, Simple, SimpleElement, Slot, Special,
-    String, StringList, Type, UInt16, UInt32, UInt64, UInt8, Vector,
+    String, Type, UInt16, UInt32, UInt64, UInt8, Vector,
     VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
     VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
