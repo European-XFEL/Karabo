@@ -311,6 +311,7 @@ def _write_monitors(zf, objects):
     """
     monitors = []
 
+    # Note: Removed execption handling and `isNewFile` if clause
     for monitor in objects:
         name = "{}/{}".format(Project.MONITORS_KEY, monitor.filename)
         monitors.append(Hash("filename", monitor.filename))
