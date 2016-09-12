@@ -1054,11 +1054,11 @@ class VectorHash(Vector):
 
     @classmethod
     def read(cls, file):
-        return list(super(VectorHash, cls).read(file))
+        return HashList(super(VectorHash, cls).read(file))
 
     def cast(self, other):
         ht = HashType()
-        return [ht.cast(o) for o in other]
+        return HashList(ht.cast(o) for o in other)
 
     def toKaraboValue(self, data, strict=True):
         table = [
@@ -1336,7 +1336,7 @@ class ListElement(Element):
 
     @property
     def data(self):
-        return [e.data for e in self.children]
+        return HashList(e.data for e in self.children)
 
 
     @data.setter
@@ -1424,7 +1424,7 @@ class Hash(OrderedDict):
             if isinstance(value, Hash):
                 elem = HashElement(p)
                 elem.children = value
-            elif (isinstance(value, list) and
+            elif isinstance(value, HashList) or (isinstance(value, list) and
                   value and isinstance(value[0], Hash)):
                 elem = ListElement(p)
                 elem.data = value

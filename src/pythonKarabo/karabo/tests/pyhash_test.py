@@ -4,9 +4,8 @@ from zlib import adler32
 import numpy
 from numpy.testing import assert_equal
 
-from karabo.bound import BinarySerializerHash, TextSerializerHash
-from karabo.middlelayer import (Hash, Schema, XMLWriter, XMLParser,
-                                BinaryParser, NodeType)
+from karabo.bound import BinarySerializerHash, TextSerializerHash, VectorHash
+from karabo.middlelayer import Hash, NodeType, Schema, HashList
 from karabo.middlelayer_api.hash import _Byte
 
 
@@ -143,6 +142,7 @@ class Hash_TestCase(unittest.TestCase):
         h["hash"] = Hash("a", 3, "b", 7.1)
         h["hashlist"] = [Hash("a", 3), Hash()]
         h["emptystringlist"] = []
+        h["emptyhashlist"] = HashList()
         h["vectorbool"] = numpy.array([True, False, True])
         h["char"] = _Byte("c")
 
@@ -166,7 +166,7 @@ class Hash_TestCase(unittest.TestCase):
         Python-only hashes."""
         keys = ["bool", "int", "string", "complex", "stringlist", "chars",
                 "vector", "emptyvector", "hash", "hashlist", "emptystringlist",
-                "vectorbool", "char", "schema"]
+                "emptyhashlist", "vectorbool", "char", "schema"]
         self.assertEqual(list(h.keys()), keys)
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
@@ -184,6 +184,8 @@ class Hash_TestCase(unittest.TestCase):
         assert_equal(h["emptyvector"], numpy.array([]))
         assert_equal(h["vectorbool"], numpy.array([True, False, True]))
         self.assertEqual(h["emptystringlist"], [])
+        self.assertEqual(len(h["emptyhashlist"]), 0)
+        self.assertIsInstance(h["emptyhashlist"], (HashList, VectorHash))
         self.assertEqual(h["char"], "c")
 
     def check_hash(self, h):
@@ -221,7 +223,7 @@ class Hash_TestCase(unittest.TestCase):
     def test_binary(self):
         s = self.create_hash().encode("Bin")
         self.check_hash(Hash.decode(s, "Bin"))
-        self.assertEqual(adler32(s), 2876462227)
+        self.assertEqual(adler32(s), 1828411983)
 
 
     def test_cpp_bin(self):
