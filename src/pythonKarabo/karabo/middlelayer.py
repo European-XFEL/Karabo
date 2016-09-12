@@ -46,7 +46,3 @@ from .middlelayer_api.schema import (
 )
 from .middlelayer_api.signalslot import Signal, SignalSlotable, slot, coslot
 from .middlelayer_api.timestamp import Timestamp
-
-from .middlelayer_api.known_classes import register_class
-register_class(State)
-register_class(AlarmCondition)
