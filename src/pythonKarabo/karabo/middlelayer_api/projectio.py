@@ -5,7 +5,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 from karabo.common.project.api import write_macro
 from karabo.common.scenemodel.api import write_scene
-from .hash import Hash, StringList
+from .hash import Hash
 from .project import Project
 
 
@@ -331,7 +331,7 @@ def _write_resources(zf, projInstance, objectsHash, isNewFile):
                 for fn in v:
                     f = "resources/{}/{}".format(k, fn)
                     zf.writestr(f, zin.read(f))
-                resources[k] = StringList(v)
+                resources[k] = list(v)
 
     return resources
 
