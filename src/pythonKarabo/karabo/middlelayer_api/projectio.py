@@ -32,7 +32,7 @@ def read_project(path, factories, instance=None):
 
         _read_configurations(zf, projectConfig, proj, factories)
 
-        macros = _read_macros(zf, projectConfig, proj, factories)
+        macros = _read_macros(zf, projectConfig, factories)
         for m in macros:
             proj.addMacro(m)
 
@@ -40,7 +40,7 @@ def read_project(path, factories, instance=None):
         for mon in monitors:
             proj.addMonitor(mon)
 
-        scenes = _read_scenes(zf, projectConfig, proj, factories)
+        scenes = _read_scenes(zf, projectConfig, factories)
         for s in scenes:
             proj.addScene(s)
 
@@ -68,8 +68,7 @@ def write_project(proj, path=None):
         deviceHashes = _write_devices(zf, proj.devices)
         projectConfig[Project.DEVICES_KEY] = deviceHashes
 
-        sceneHashes, exception = _write_scenes(zf, proj, proj.scenes,
-                                               isNewFile)
+        sceneHashes = _write_scenes(zf, proj.scenes)
         projectConfig[Project.SCENES_KEY] = sceneHashes
 
         configs = _write_configurations(zf, proj.configurations)
@@ -78,11 +77,10 @@ def write_project(proj, path=None):
         resources = _write_resources(zf, proj, proj.resources, isNewFile)
         projectConfig[Project.RESOURCES_KEY] = resources
 
-        macros, exeption = _write_macros(zf, proj, proj.macros, isNewFile)
+        macros = _write_macros(zf, proj.macros)
         projectConfig[Project.MACROS_KEY] = macros
 
-        monitors, exception = _write_monitors(zf, proj, proj.monitors,
-                                              isNewFile)
+        monitors = _write_monitors(zf, proj.monitors)
         projectConfig[Project.MONITORS_KEY] = monitors
 
         # Create folder structure and save content
@@ -180,7 +178,7 @@ def _read_devices(zf, projectConfig, factories):
     return device_groups, devices
 
 
-def _read_macros(zf, projectConfig, projInstance, factories):
+def _read_macros(zf, projectConfig, factories):
     """ Read all the macros from a project zipfile.
     """
     macros = []
@@ -215,7 +213,7 @@ def _read_monitors(zf, projectConfig, factories):
     return monitors
 
 
-def _read_scenes(zf, projectConfig, projInstance, factories):
+def _read_scenes(zf, projectConfig, factories):
     """ Read all the scenes from a project zipfile.
     """
     scenes = []
@@ -295,46 +293,30 @@ def _write_devices(zf, objects):
     return deviceHashes
 
 
-def _write_macros(zf, projInstance, objects, isNewFile):
+def _write_macros(zf, objects):
     """ Write all the macros to a project zipfile.
     """
-    exception = None
     macroHash = Hash()
 
     for macro_model in objects:
         name = "{}/{}.py".format(Project.MACROS_KEY, macro_model.title)
-        try:
-            zf.writestr(name, write_macro(macro_model))
-        except Exception as e:
-            if isNewFile:
-                with ZipFile(projInstance.filename, 'r') as zin:
-                    zf.writestr(name, zin.read(name))
-            if exception is None:
-                exception = e
+        zf.writestr(name, write_macro(macro_model))
         macroHash[macro_model.title] = name
 
-    return macroHash, exception
+    return macroHash
 
 
-def _write_monitors(zf, projInstance, objects, isNewFile):
+def _write_monitors(zf, objects):
     """ Write all the monitors to a project zipfile.
     """
-    exception = None
     monitors = []
 
     for monitor in objects:
         name = "{}/{}".format(Project.MONITORS_KEY, monitor.filename)
         monitors.append(Hash("filename", monitor.filename))
-        try:
-            zf.writestr(name, monitor.toXml())
-        except Exception as e:
-            if isNewFile:
-                with ZipFile(projInstance.filename, 'r') as zin:
-                    zf.writestr(name, zin.read(name))
-            if exception is None:
-                exception = e
+        zf.writestr(name, monitor.toXml())
 
-    return monitors, exception
+    return monitors
 
 
 def _write_resources(zf, projInstance, objectsHash, isNewFile):
@@ -353,23 +335,15 @@ def _write_resources(zf, projInstance, objectsHash, isNewFile):
     return resources
 
 
-def _write_scenes(zf, projInstance, objects, isNewFile):
+def _write_scenes(zf, objects):
     """ Write all the scenes to a project zipfile.
     """
-    exception = None
     sceneHashes = []
 
     for scene_model in objects:
         name = "{}/{}".format(Project.SCENES_KEY, scene_model.title)
-        try:
-            xml = write_scene(scene_model)
-            zf.writestr(name, xml)
-        except Exception as e:
-            if isNewFile:
-                with ZipFile(projInstance.filename, 'r') as zin:
-                    zf.writestr(name, zin.read(name))
-            if exception is None:
-                exception = e
+        xml = write_scene(scene_model)
+        zf.writestr(name, xml)
         sceneHashes.append(Hash("filename", scene_model.title))
 
-    return sceneHashes, exception
+    return sceneHashes
