@@ -26,7 +26,6 @@ from . import basetypes
 from .enums import (AccessLevel, AccessMode, Assignment, MetricPrefix,
                     NodeType, Unit)
 from .exceptions import KaraboError
-from .known_classes import known_classes
 from .registry import Registry
 
 
@@ -45,10 +44,13 @@ class Attribute(object):
 
 
 class Enumable(object):
+    known_classes = {"State": State,
+                     "AlarmCondition": AlarmCondition}
+
     def __init__(self, enum=None, classId=None, **kwargs):
         super().__init__(**kwargs)
         if classId is not None:
-            enum = known_classes.get(classId)
+            enum = self.known_classes.get(classId)
         assert enum is None or issubclass(enum, Enum)
         self.enum = enum
 
