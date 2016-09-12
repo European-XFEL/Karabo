@@ -10,7 +10,7 @@ from karabo.bound import (
     UINT32_ELEMENT, UINT64_ELEMENT, STATE_ELEMENT, ALARM_ELEMENT,
     VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT,
     NODE_ELEMENT, OVERWRITE_ELEMENT, PATH_ELEMENT,
-    SLOT_ELEMENT, STRING_ELEMENT,
+    SLOT_ELEMENT, STRING_ELEMENT, NDARRAY_ELEMENT,
     EVERY_EVENT, EVERY_100MS, EVERY_1S, NO_ARCHIVING,
     AMPERE, CENTI, METER, MILLI,
     MetricPrefix, Unit
@@ -392,63 +392,11 @@ class TestStruct1(object):
                 .reconfigurable()
                 .commit()
                 ,
-        # NDARRAY_BOOL_ELEMENT(expected).key("exampleKey16")
-        #         .shape([2, 2])
-        #         .readOnly().initialValue([True, False, False, True])
-        #         .commit()
-        #         ,
-        # NDARRAY_UINT32_ELEMENT(expected).key("exampleKey17")
-        #         .shape([2, 2, -1])
-        #         .assignmentOptional().defaultValue(list(range(8)))
-        #         .commit()
-        #         ,
-        # NDARRAY_FLOAT_ELEMENT(expected).key("exampleKey18")
-        #         .shape("3,3,3")
-        #         .assignmentInternal().noDefaultValue()
-        #         .commit()
-        #         ,
         INT32_ELEMENT(expected).key("exampleIntKey")
                 .assignmentOptional().defaultValueFromString("20")
                 .reconfigurable()
                 .commit()
                 ,
-#        UINT32_ELEMENT(expected).key("exampleBitsKey1")
-#                .tags("hardware")
-#                .displayedName("Example bits key 1")
-#                .description("Example bits key 1 description")
-#                .reconfigurable()
-#                .bin("0:inError, 1:busy, 5:HVOn, 8:CrateOn")
-#                .assignmentOptional().defaultValue(0xdeadbeef)
-#                .commit()
-#                ,
-#        UINT64_ELEMENT(expected).key("exampleBitsKey2")
-#                .tags("hardware")
-#                .displayedName("Example bits key 2")
-#                .description("Example bits key 2 description")
-#                .reconfigurable()
-#                .bin("10:In Error, 21:Busy, 35:HV On, 55:Crate On")
-#                .assignmentOptional().defaultValue(0xdeadbeefdeadface)
-#                .commit()
-#                ,
-#        UINT8_ELEMENT(expected).key("exampleBitsKey3")
-#                .tags("hardware")
-#                .displayedName("Example bits key 3")
-#                .description("Example bits key 3 description")
-#                .reconfigurable()
-#                .bin()
-#                .assignmentOptional().defaultValue(0xbeef)
-#                .commit()
-#                ,
-#        UINT32_ELEMENT(expected).key("exampleBitsKey4")
-#                .tags("hardware")
-#                .displayedName("Example bits key 4")
-#                .description("Example bits key 4 description")
-#                .reconfigurable()
-#                .hex()
-#                .assignmentOptional().defaultValue(0xbeefface)
-#                .commit()
-#                ,
-
         UINT32_ELEMENT(expected).key("exampleBitsKey1")
                 .tags("hardware")
                 .displayedName("Example bits key 1")
@@ -680,7 +628,36 @@ class P3(Base):
          .assignmentOptional().defaultValue(25)
          .init().commit(),
         )
-        
+
+@KARABO_CONFIGURATION_BASE_CLASS
+@KARABO_CLASSINFO("ArrayContainer", "1.0")
+class ArrayContainer(Base):
+    def __init__(self, configuration):
+        super(ArrayContainer, self).__init__(configuration)
+
+    @staticmethod
+    def expectedParameters(expected):
+        (
+        NDARRAY_ELEMENT(expected).key("exampleKey16")
+                .dtype("BOOL")
+                .shape([2, 3])
+                .skipValidation()
+                .commit()
+                ,
+        NDARRAY_ELEMENT(expected).key("exampleKey17")
+                .dtype("UINT32")
+                .shape([2, 5, -1])
+                .skipValidation()
+                .commit()
+                ,
+        # NOTE: validation is skipped for NDArray even when not explicitly
+        # asked for. However, this will change in the future.
+        NDARRAY_ELEMENT(expected).key("exampleKey18")
+                .dtype("FLOAT")
+                .shape("3,2,1")
+                .commit()
+        )
+
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("GraphicsRenderer2", "1.0")
 class GraphicsRenderer2(object):
