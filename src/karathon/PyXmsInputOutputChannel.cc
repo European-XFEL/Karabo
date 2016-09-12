@@ -479,6 +479,9 @@ void exportPyXmsInputOutputChannel() {
                 .def("adminAccess", &karabo::xms::ImageDataElement::adminAccess
                     , bp::return_internal_reference<> ())
 
+                .def("skipValidation", &karabo::xms::ImageDataElement::skipValidation
+                    , bp::return_internal_reference<> ())
+
                 .def("commit", &karabo::xms::ImageDataElement::commit
                     , bp::return_internal_reference<> ())
 

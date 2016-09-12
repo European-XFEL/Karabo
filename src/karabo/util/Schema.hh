@@ -92,6 +92,7 @@ namespace karabo {
 #define KARABO_SCHEMA_ASSIGNMENT "assignment"
 #define KARABO_SCHEMA_TAGS "tags"
 #define KARABO_SCHEMA_ROW_SCHEMA "rowSchema"
+#define KARABO_SCHEMA_SKIP_VALIDATION "skipValidation"
 
 #define KARABO_SCHEMA_OPTIONS "options"
 #define KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL "requiredAccessLevel"
@@ -128,8 +129,6 @@ namespace karabo {
 
 #define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
 #define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
-
-#define KARABO_SCHEMA_ARRAY_SHAPE "arrayShape"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
@@ -371,6 +370,14 @@ namespace karabo {
             const int getAssignment(const std::string& path) const;
 
             //**********************************************
+            //               Skip Validation               *
+            //**********************************************
+
+            void setSkipValidation(const std::string& path, const bool value);
+
+            bool getSkipValidation(const std::string& path);
+
+            //**********************************************
             //                  Options                    *
             //**********************************************
 
@@ -600,17 +607,6 @@ namespace karabo {
             bool hasMaxSize(const std::string& path) const;
 
             const unsigned int& getMaxSize(const std::string& path) const;
-
-            //**********************************************************
-            //	Specific functions for LEAF node (which is an NDArray) *
-            //	Shape of the array                                     *
-            //**********************************************************
-
-            void setArrayShape(const std::string& path, const std::string& value);
-
-            bool hasArrayShape(const std::string& path) const;
-
-            const std::vector<long long>& getArrayShape(const std::string& path) const;
 
             //******************************************************
             //                   WarnLow                          *
