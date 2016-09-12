@@ -650,6 +650,8 @@ class ArrayContainer(Base):
                 .skipValidation()
                 .commit()
                 ,
+        # NOTE: validation is skipped for NDArray even when not explicitly
+        # asked for. However, this will change in the future.
         NDARRAY_ELEMENT(expected).key("exampleKey18")
                 .dtype("FLOAT")
                 .shape("3,2,1")
