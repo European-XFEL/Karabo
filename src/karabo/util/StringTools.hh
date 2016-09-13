@@ -253,10 +253,9 @@ namespace karabo {
             karabo::util::base64Decode(value, array);
 
             const size_t byteSize = array.size();
-            char* data = new char [byteSize];
-            std::memcpy(data, reinterpret_cast<char*>(&array[0]), byteSize);
-
-            return karabo::util::ByteArray(boost::shared_ptr<char>(data, &karabo::util::byteArrayDeleter), byteSize);
+            boost::shared_ptr<char> data(new char [byteSize], &karabo::util::byteArrayDeleter);
+            std::memcpy(data.get(), reinterpret_cast<char*>(&array[0]), byteSize);
+            return karabo::util::ByteArray(data, byteSize);
         }
 
         template<typename T,
