@@ -376,7 +376,13 @@ namespace karabo {
 
             // Check data types
             if (givenType != referenceType) {
-                if (givenType != Types::VECTOR_STRING || workNode.getValue<vector<string> >().size() != 0) {
+                if (referenceType == Types::VECTOR_HASH && givenType == Types::VECTOR_STRING
+                    && workNode.getValue<vector<string> >().empty()) {
+                    // A HACK: Some Python code cannot distinguish between empty VECTOR_HASH and empty VECTOR_STRING
+                    //         and in doubt chooses the latter.
+                    //         So we tolerate empty vector<string> and overwrite by empty vector<Hash>.
+                    workNode.setValue(vector<Hash>());
+                } else {
                     // Try casting this guy
                     try {
                         workNode.setType(referenceType);
