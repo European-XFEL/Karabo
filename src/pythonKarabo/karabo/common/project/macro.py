@@ -35,7 +35,9 @@ class MacroModel(HasStrictTraits):
     instances = List(String)
     # The actual macro source
     code = String()
+    # The name of the project this macro belongs to
+    project_name = String()
 
     @cached_property
     def _get_instance_id(self):
-        return "Macro-{}".format(self.title)
+        return "Macro-{}-{}".format(self.project_name, self.title)
