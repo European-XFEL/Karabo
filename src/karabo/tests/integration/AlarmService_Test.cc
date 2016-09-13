@@ -19,6 +19,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(AlarmService_Test);
 
 #define KRB_TEST_MAX_TIMEOUT 10
 
+using namespace karabo;
 
 
 AlarmService_Test::AlarmService_Test() {
@@ -33,7 +34,7 @@ AlarmService_Test::~AlarmService_Test() {
 
 
 void AlarmService_Test::setUp() {
-    
+
     Hash config("DeviceServer", Hash("serverId", "testServer", "scanPlugins", false, "visibility", 4/*, "Logger.priority", "DEBUG"*/));
     m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
     m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
@@ -106,7 +107,7 @@ void AlarmService_Test::testAlarmPassing() {
     // test if raising an alarm on alarmTester propagates to testAlarmService and updates the alarmTable there
     std::pair<bool, std::string> success;
     
-    auto messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&]{success = m_deviceClient->execute("alarmTester", "triggerAlarmHigh", KRB_TEST_MAX_TIMEOUT);});
+    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&]{success = m_deviceClient->execute("alarmTester", "triggerAlarmHigh", KRB_TEST_MAX_TIMEOUT);});
     Hash lastMessage;
     messageQ->pop(lastMessage);
     
@@ -174,7 +175,7 @@ void AlarmService_Test::testAcknowledgement() {
    
     //add another alarm to the table so we have two alarms pending
     //we will work only on the first one afterwards
-    auto messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&]{success = m_deviceClient->execute("alarmTester", "triggerWarnHigh2", KRB_TEST_MAX_TIMEOUT);});
+    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&]{success = m_deviceClient->execute("alarmTester", "triggerWarnHigh2", KRB_TEST_MAX_TIMEOUT);});
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
@@ -239,7 +240,7 @@ void AlarmService_Test::testAcknowledgement() {
     CPPUNIT_ASSERT(lastMessage.has("rows.1.init"));
     h = lastMessage.get<Hash>("rows.1.init");
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "nodeA/floatProperty2");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "nodeA.floatProperty2");
     
 
 }
@@ -274,14 +275,14 @@ void AlarmService_Test::testFlushing(){
         propHash.set<unsigned long long>("trainOfOccurrence", 0);
         propHash.set("acknowledgeable", false);
         propHash.set("deviceId", "alarmTester");
-        propHash.set("property", "nodeA/floatProperty2");
+        propHash.set("property", "nodeA"+Validator::kAlarmParamPathSeparator+"floatProperty2");
         propHash.set<unsigned long long>("id", 1);
-        Hash alarmHash("alarmTester", Hash("nodeA/floatProperty2", Hash("warnHigh", propHash)));
+        Hash alarmHash("alarmTester", Hash("nodeA"+Validator::kAlarmParamPathSeparator+"floatProperty2", Hash("warnHigh", propHash)));
         Hash hTest("devices", registeredDevices, "alarms", alarmHash);
         
         //erase the occurance times, as the will not match!
-        h.erase("alarms.alarmTester.nodeA/floatProperty2.warnHigh.timeOfFirstOccurrence");
-        h.erase("alarms.alarmTester.nodeA/floatProperty2.warnHigh.timeOfOccurrence");
+        h.erase("alarms.alarmTester.nodeA"+Validator::kAlarmParamPathSeparator+"floatProperty2.warnHigh.timeOfFirstOccurrence");
+        h.erase("alarms.alarmTester.nodeA"+Validator::kAlarmParamPathSeparator+"floatProperty2.warnHigh.timeOfOccurrence");
         
        
 
@@ -318,7 +319,7 @@ void AlarmService_Test::testRecovery(){
 
     //now we bring the alarm service back up
     boost::shared_ptr<boost::lockfree::spsc_queue<Hash> > messageQ2;
-    auto messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 3, [&]{messageQ2 = m_tcpAdapter->getNextMessages("alarmInit", 1, [&]{success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService", "flushInterval", 1), KRB_TEST_MAX_TIMEOUT);});});
+    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 3, [&]{messageQ2 = m_tcpAdapter->getNextMessages("alarmInit", 1, [&]{success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService", "flushInterval", 1), KRB_TEST_MAX_TIMEOUT);});});
     CPPUNIT_ASSERT(success.first);
     CPPUNIT_ASSERT(success.first);
     Hash lastMessage;
@@ -347,7 +348,7 @@ void AlarmService_Test::testRecovery(){
 void AlarmService_Test::testDeviceKilled(){
      //kill device, alarms should become acknowledgeable
      std::pair<bool, std::string> success;
-     auto messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&]{success = m_deviceClient->killDevice("alarmTester2", KRB_TEST_MAX_TIMEOUT);});
+     TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&]{success = m_deviceClient->killDevice("alarmTester2", KRB_TEST_MAX_TIMEOUT);});
      CPPUNIT_ASSERT(success.first);
      
      Hash lastMessage;
@@ -375,7 +376,7 @@ void AlarmService_Test::testDeviceKilled(){
      // (they became acknowledgeable when it was killed), are now not acknowledgeable
      // any more, as we start it into an alarm state.
      std::pair<bool, std::string> success;
-     auto messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&]{success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2", "floatProperty", -5.), KRB_TEST_MAX_TIMEOUT);});
+     TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&]{success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2", "floatProperty", -5.), KRB_TEST_MAX_TIMEOUT);});
      CPPUNIT_ASSERT(success.first);
      
      Hash lastMessage;
