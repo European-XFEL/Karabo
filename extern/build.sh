@@ -34,7 +34,7 @@ DEPS_BASE_NAME_MAP['Ubuntu14']='Ubuntu-14'
 DEPS_BASE_NAME_MAP['Ubuntu15']='Ubuntu-14'
 DEPS_BASE_NAME_MAP['Ubuntu16']='Ubuntu-16'
 DEPS_BASE_NAME_MAP['Ubuntu17']='Ubuntu-16'
-DEPS_BASE_NAME_MAP['Centos7']='Centos-7'
+DEPS_BASE_NAME_MAP['CentOS7']='CentOS-7'
 
 ##############################################################################
 # Define a bunch of functions to be called later
