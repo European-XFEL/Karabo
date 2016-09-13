@@ -73,6 +73,9 @@ namespace karabo {
 
             // In case of failed validation, report why it failed
             ostringstream validationFailedReport;
+            
+            //preserve schema reconfigurations
+            if(unvalidatedInput.has(KARABO_RUNTIME_SCHEMA_UPDATE)) validatedOutput.set(KARABO_RUNTIME_SCHEMA_UPDATE, unvalidatedInput.get<std::vector<karabo::util::Hash> >(KARABO_RUNTIME_SCHEMA_UPDATE));
 
             if (!m_allowUnrootedConfiguration) {
                 if (unvalidatedInput.size() != 1) {
@@ -358,6 +361,9 @@ namespace karabo {
                 }
             }
 
+            //remove configuration updates, they are allowed to pass through as part of a configuration
+            if(keys.find("runtimeSchemaUpdates") != keys.end()) keys.erase("runtimeSchemaUpdates");
+            
             if (!m_allowAdditionalKeys && !keys.empty()) {
 
 
