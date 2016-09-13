@@ -48,6 +48,9 @@ namespace karabo {
 
             mutable boost::shared_mutex m_rollingStatMutex;
             std::map<std::string, RollingWindowStatistics::Pointer> m_parameterRollingStats;
+            
+        public:
+            static const std::string kAlarmParamPathSeparator;
 
         public:
 
