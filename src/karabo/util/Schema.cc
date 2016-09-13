@@ -1116,6 +1116,61 @@ namespace karabo {
                 return false;
             }
         }
+        
+        void Schema::applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates){
+            for(auto it = updates.begin(); it != updates.end(); ++it){
+                const std::string& path = it->get<std::string>("path");
+                const std::string& updateType = it->get<std::string>("updateType");
+                
+#define applyRuntimeUpdateTypeResolver(RefType, CppType, Func) if(type == RefType) Func(path, it->getAs<CppType>("updatedValue"));
+#define checkForRunttimeUpdateTemplatedType(Func) if(updateType == #Func) { \
+                applyRuntimeUpdateTypeResolver(Types::BOOL, bool, Func)\
+                applyRuntimeUpdateTypeResolver(Types::CHAR, char, Func)\
+                applyRuntimeUpdateTypeResolver(Types::UINT8, unsigned char, Func)\
+                applyRuntimeUpdateTypeResolver(Types::INT8, char, Func)\
+                applyRuntimeUpdateTypeResolver(Types::UINT16, unsigned short, Func)\
+                applyRuntimeUpdateTypeResolver(Types::INT16, short, Func)\
+                applyRuntimeUpdateTypeResolver(Types::UINT32, unsigned int, Func)\
+                applyRuntimeUpdateTypeResolver(Types::INT32, int, Func)\
+                applyRuntimeUpdateTypeResolver(Types::UINT64, unsigned long long, Func)\
+                applyRuntimeUpdateTypeResolver(Types::INT64, long long, Func)\
+                applyRuntimeUpdateTypeResolver(Types::FLOAT, float, Func)\
+                applyRuntimeUpdateTypeResolver(Types::DOUBLE, double, Func)\
+                applyRuntimeUpdateTypeResolver(Types::COMPLEX_FLOAT, std::complex<float>, Func)\
+                applyRuntimeUpdateTypeResolver(Types::COMPLEX_DOUBLE, std::complex<double>, Func)\
+                applyRuntimeUpdateTypeResolver(Types::STRING, string, Func)\
+                }
+                
+#define checkForRunttimeUpdateFixedType(Func, CppType) if(updateType == #Func) Func(path, it->getAs<CppType>("updatedValue"));
+#define checkForRunttimeUpdateFixedTypeStrict(Func, CppType) if(updateType == #Func) Func(path, it->get<CppType>("updatedValue"));
+                
+                Types::ReferenceType type = getValueType(path);
+                
+                checkForRunttimeUpdateFixedTypeStrict(setRequiredAccessLevel, AccessLevel);
+                checkForRunttimeUpdateFixedTypeStrict(setUnit, UnitType);
+                checkForRunttimeUpdateFixedTypeStrict(setMetricPrefix, MetricPrefixType);
+                checkForRunttimeUpdateTemplatedType(setMinInc);
+                checkForRunttimeUpdateTemplatedType(setMaxInc);
+                checkForRunttimeUpdateTemplatedType(setMinExc);
+                checkForRunttimeUpdateTemplatedType(setMaxExc);
+                checkForRunttimeUpdateFixedType(setMinSize, unsigned int);
+                checkForRunttimeUpdateFixedType(setMaxSize, unsigned int);
+                checkForRunttimeUpdateTemplatedType(setWarnLow);
+                checkForRunttimeUpdateTemplatedType(setWarnHigh);
+                checkForRunttimeUpdateTemplatedType(setAlarmLow);
+                checkForRunttimeUpdateTemplatedType(setAlarmHigh);
+                checkForRunttimeUpdateFixedType(setWarnVarianceLow, double);
+                checkForRunttimeUpdateFixedType(setWarnVarianceHigh, double);
+                checkForRunttimeUpdateFixedType(setAlarmVarianceLow, double);
+                checkForRunttimeUpdateFixedType(setAlarmVarianceHigh, double);
+   
+#undef checkForRunttimeUpdateFixedTypeStrict
+#undef checkForRunttimeUpdateFixedType
+#undef checkForRunttimeUpdate
+#undef applyRuntimeUpdateTypeResolver
+                
+            }
+        }
 
     }
 }

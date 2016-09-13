@@ -1079,6 +1079,11 @@ namespace karabo {
                     m_staticSchema = staticSchema; // Here we lack a Schema::swap(..)...
                     // At startup the static schema is identical with the runtime schema
                     m_fullSchema = m_staticSchema;
+                    if(m_parameters.has(KARABO_RUNTIME_SCHEMA_UPDATE)){
+                        const std::vector<karabo::util::Hash> runtimeSchemaUpdates = m_parameters.get<std::vector<karabo::util::Hash> >(KARABO_RUNTIME_SCHEMA_UPDATE);
+                        m_fullSchema.applyRuntimeUpdates(runtimeSchemaUpdates);
+                        m_parameters.erase(KARABO_RUNTIME_SCHEMA_UPDATE, '.');
+                    }
                 }
             }
 
@@ -1102,7 +1107,7 @@ namespace karabo {
                 KARABO_SLOT(slotKillDevice)
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
                 KARABO_SLOT(slotReSubmitAlarms, karabo::util::Hash);
-
+                KARABO_SLOT(slotUpdateSchemaAttributes, std::vector<karabo::util::Hash>);
 
             }
 
@@ -1438,6 +1443,23 @@ namespace karabo {
                 }
                 reply(getInstanceId(), alarmsToUpdate);
 
+            }
+            
+            void slotUpdateSchemaAttributes(const std::vector<karabo::util::Hash>& updates){
+                
+                try{
+                    {
+                        boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                        m_fullSchema.applyRuntimeUpdates(updates);
+                        // Notify the distributed system
+                        emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+                    }
+                    reply("Schema has been updated!");
+                } catch (...) {
+                    emit("signalSchemaUpdated", karabo::util::Schema(), m_deviceId);
+                    reply("Schema has not been updated!");
+                }
+                
             }
 
 

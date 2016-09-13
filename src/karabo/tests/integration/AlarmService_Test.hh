@@ -20,12 +20,12 @@
 
 class AlarmService_Test : public CPPUNIT_NS::TestFixture {
 
-    CPPUNIT_TEST_SUITE(AlarmService_Test);
+    //CPPUNIT_TEST_SUITE(AlarmService_Test);
 
-    CPPUNIT_TEST(appTestRunner);
+    //CPPUNIT_TEST(appTestRunner);
 
 
-    CPPUNIT_TEST_SUITE_END();
+    //CPPUNIT_TEST_SUITE_END();
 
 public:
     AlarmService_Test();
