@@ -1439,9 +1439,12 @@ namespace karabo {
                         existingAlarmsRF.set(boost::replace_all_copy(property, ".", Validator::kAlarmParamPathSeparator), Hash("type", aTypeIt->getKey()));
                     }
                 }
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                
                 Hash alarmsToUpdate;
-                evaluateAlarmUpdates(existingAlarmsRF, alarmsToUpdate, true);
+                {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    evaluateAlarmUpdates(existingAlarmsRF, alarmsToUpdate, true);
+                }
                 reply(getInstanceId(), alarmsToUpdate);
 
             }
