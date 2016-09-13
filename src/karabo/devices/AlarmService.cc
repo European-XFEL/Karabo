@@ -170,12 +170,8 @@ namespace karabo {
                                 
                                 //add as update to row updates;
                                 const unsigned long long id =  m_alarmsMap_r.find(&(*aTypeIt))->second;
-                                try {
-                                    rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("deviceKilled",  typeEntry));
-                                } catch (const boost::bad_lexical_cast & ){
-                                    KARABO_LOG_ERROR<<"Failed casting "<<id<<" to string representation";
-                                }
-                                
+                                rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("deviceKilled",  typeEntry));
+ 
                             }
                         }
                     }
@@ -229,20 +225,13 @@ namespace karabo {
                             //if the alarm needs to be acknowledged we allow this now
                             existingTypeEntry.set("acknowledgeable", true);
                             //add to rowUpdates
-                            try {
-                                rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("acknowledgeable", existingTypeEntry));
-                            } catch (const boost::bad_lexical_cast & ){
-                                KARABO_LOG_ERROR<<"Failed casting "<<id<<" to string representation";
-                            }
+                            rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("acknowledgeable", existingTypeEntry));   
                            
                         } else {
                            
                             //add as delete to row updates;
-                            try {
-                                rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("remove", existingTypeEntry));
-                            } catch (const boost::bad_lexical_cast & ){
-                                KARABO_LOG_ERROR<<"Failed casting "<<id<<" to string representation";
-                            }
+                            rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("remove", existingTypeEntry));
+                            
                             m_alarmsMap_r.erase(&(*existingTypeEntryN));
                             m_alarmsMap.erase(id);
                             
@@ -321,24 +310,22 @@ namespace karabo {
                         // acknowledgeable is determined by whether an alarm needs acknowledging
                         newEntry.set("acknowledgeable",  !newEntry.get<bool>("needsAcknowledging"));
                         newEntry.set("deviceId", deviceId);
-                        newEntry.set("property", existingPropEntryN->getKey());
+                        newEntry.set("property", boost::replace_all_copy(existingPropEntryN->getKey(), Validator::kAlarmParamPathSeparator, "."));
                         newEntry.set("id", id);
                         
                         //update maps
                         m_alarmsMap[id] = &newEntryN;
                         m_alarmsMap_r[&newEntryN] = id;
                         
-                        try{
-                            if(existingTypeEntryN) {
-                                rowUpdates.set(boost::lexical_cast<std::string>(id), 
-                                        addRowUpdate("update",  newEntry));
-                            } else {
-                                rowUpdates.set(boost::lexical_cast<std::string>(id), 
-                                        addRowUpdate("add", newEntry));
-                            }
-                        } catch (const boost::bad_lexical_cast & ){
-                            KARABO_LOG_ERROR<<"Failed casting "<<id<<" to string representation";
+                       
+                        if(existingTypeEntryN) {
+                            rowUpdates.set(boost::lexical_cast<std::string>(id), 
+                                    addRowUpdate("update",  newEntry));
+                        } else {
+                            rowUpdates.set(boost::lexical_cast<std::string>(id), 
+                                    addRowUpdate("add", newEntry));
                         }
+                        
                         
                     }
                 }
@@ -423,11 +410,8 @@ namespace karabo {
                         const unsigned long long id = entry.get<unsigned long long>("id");
                         m_alarmsMap[id] = &(*aTypeIt);
                         m_alarmsMap_r[&(*aTypeIt)] = id;
-                        try {
-                            rowInits.set(boost::lexical_cast<std::string>(id), addRowUpdate("init",  entry));
-                        } catch (const boost::bad_lexical_cast & ){
-                            KARABO_LOG_ERROR<<"Failed casting "<<id<<" to string representation";
-                        }
+                        rowInits.set(boost::lexical_cast<std::string>(id), addRowUpdate("init",  entry));
+                        
                         
                     }
                 }
@@ -467,21 +451,16 @@ namespace karabo {
 
                         //add as delete to row updates;
                         entry.set("acknowledged", true);
-                        try {
-                            rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("remove", entry));
-                        } catch (const boost::bad_lexical_cast & ){
-                            KARABO_LOG_ERROR<<"Failed casting "<<id<<" to string representation";
-                        }
+                        rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("remove", entry));
+                        
                         m_alarmsMap_r.erase(&(*entryN));
                         m_alarmsMap.erase(id);
-                        const std::string path = entry.get<std::string>("deviceId") + "." + entry.get<std::string>("property") + "." + entry.get<std::string>("type");
+                        const std::string path = entry.get<std::string>("deviceId") 
+                            + "." + boost::replace_all_copy(entry.get<std::string>("property"), ".", Validator::kAlarmParamPathSeparator) 
+                            + "." + entry.get<std::string>("type");
                         m_alarms.erasePath(path, '.');
                     } else {
-                        try {
-                            rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("refuseAcknowledgement",  entry));
-                        } catch (const boost::bad_lexical_cast & ){
-                            KARABO_LOG_ERROR<<"Failed casting "<<id<<" to string representation";
-                        }
+                        rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("refuseAcknowledgement",  entry));
                     }
                 } catch (const boost::bad_lexical_cast & ){
                     KARABO_LOG_ERROR<<"Failed casting "<<it->getKey()<<" to integer representation";
@@ -499,11 +478,8 @@ namespace karabo {
             for(auto it = m_alarmsMap.begin(); it != m_alarmsMap.end(); ++it){
                 const Hash::Node* entryN = it->second;
                 const Hash& entry = entryN->getValue<Hash>(); 
-                try {
-                    rowInits.set(boost::lexical_cast<std::string>(entry.get<unsigned long long>("id")), addRowUpdate("init", entry));
-                } catch (const boost::bad_lexical_cast & ){
-                    KARABO_LOG_ERROR<<"Failed casting "<<entry.get<unsigned long long>("id")<<" to integer representation";
-                }
+                rowInits.set(boost::lexical_cast<std::string>(entry.get<unsigned long long>("id")), addRowUpdate("init", entry));
+                
             }
             
             reply(Hash("instanceId", getInstanceId(), "alarms", rowInits));

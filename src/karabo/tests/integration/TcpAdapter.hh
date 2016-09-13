@@ -23,8 +23,12 @@
 namespace karabo {
 
     class TcpAdapter {
+        
+        
 
     public:
+        
+        typedef boost::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> > QueuePtr;
 
         /**
          * Constructor for a TcpAdapter, takes a config Hash as parameter
@@ -46,12 +50,12 @@ namespace karabo {
          * Get the next nMessages messages of a given type, that this TcpAdapter receives as a queue
          * @param type: type of messages
          * @param nMessages: number of messages to wait for
-         * @param f: function to call before waiting on messages. Signature is void(), can be a lambda, the default is an empty function
+         * @param triggeringFunction: function to call before waiting on messages. Signature is void(), can be a lambda, the default is an empty function
          * @param timeout: timeout (in ms) for waiting for messages. Set to 0 for infinite timeout, defaults to 5000
          * @return 
          */
         template<typename F>
-        boost::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> > getNextMessages(const std::string& type, size_t nMessages, F&& f = []{}, size_t timeout=5000) {
+        QueuePtr getNextMessages(const std::string& type, size_t nMessages, F&& triggeringFunction = []{}, size_t timeout=5000) {
 
             
             {
@@ -61,14 +65,13 @@ namespace karabo {
             }
             
             //call the function which triggers the expected messages
-            f();
+            triggeringFunction();
             
             boost::shared_lock<boost::shared_mutex> lock(m_queueAccessMutex);
             const size_t waitTime = 100; //ms
             const size_t maxLoops = std::ceil(timeout/waitTime);
             size_t i = 0;
             do {
-                //m_queueCondition.wait(clock);
                 if(i == maxLoops) throw("Waiting on messages timed out!");
                 i++;
                 boost::this_thread::sleep(boost::posix_time::milliseconds(waitTime));
