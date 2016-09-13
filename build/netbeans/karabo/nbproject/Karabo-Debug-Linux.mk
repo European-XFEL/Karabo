@@ -860,7 +860,7 @@ ${OBJECTDIR}/_ext/1103122747/Statics.o: ../../../src/karabo/xms/Statics.cc
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f8: ${TESTDIR}/_ext/815710531/AlarmService_Test.o ${TESTDIR}/_ext/815710531/AlarmTesterDevice.o ${TESTDIR}/_ext/815710531/TcpAdapter.o ${TESTDIR}/_ext/815710531/integrationRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f8: ${TESTDIR}/_ext/815710531/AlarmService_Test.o ${TESTDIR}/_ext/815710531/AlarmTesterDevice.o ${TESTDIR}/_ext/815710531/RunTimeSchemaAttributes_Test.o ${TESTDIR}/_ext/815710531/TcpAdapter.o ${TESTDIR}/_ext/815710531/integrationRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f8 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
@@ -907,6 +907,12 @@ ${TESTDIR}/_ext/815710531/AlarmTesterDevice.o: ../../../src/karabo/tests/integra
 	${MKDIR} -p ${TESTDIR}/_ext/815710531
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/AlarmTesterDevice.o ../../../src/karabo/tests/integration/AlarmTesterDevice.cc
+
+
+${TESTDIR}/_ext/815710531/RunTimeSchemaAttributes_Test.o: ../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/815710531
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/RunTimeSchemaAttributes_Test.o ../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.cc
 
 
 ${TESTDIR}/_ext/815710531/TcpAdapter.o: ../../../src/karabo/tests/integration/TcpAdapter.cc 
@@ -2774,19 +2780,6 @@ ${OBJECTDIR}/_ext/1103122620/ImageFileWriter_nomain.o: ${OBJECTDIR}/_ext/1103122
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122620/ImageFileWriter_nomain.o ../../../src/karabo/xip/ImageFileWriter.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o ${OBJECTDIR}/_ext/1103122620/ImageFileWriter_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103122747/Data_nomain.o: ${OBJECTDIR}/_ext/1103122747/Data.o ../../../src/karabo/xms/Data.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/Data.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/Data_nomain.o ../../../src/karabo/xms/Data.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103122747/Data.o ${OBJECTDIR}/_ext/1103122747/Data_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/ImageData_nomain.o: ${OBJECTDIR}/_ext/1103122747/ImageData.o ../../../src/karabo/xms/ImageData.cc 
