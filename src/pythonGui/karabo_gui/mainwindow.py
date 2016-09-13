@@ -67,27 +67,27 @@ class MainWindow(QMainWindow):
             sender = event.sender
             if sender is KaraboEventSender.OpenSceneView:
                 data = event.data
-                self.addSceneView(data.get("model"), data.get('project'))
+                self.addSceneView(data.get('model'), data.get('project'))
                 return True
             elif sender is KaraboEventSender.RemoveSceneView:
                 data = event.data
-                self.removeMiddlePanel('scene_model', data.get("model"))
+                self.removeMiddlePanel('scene_model', data.get('model'))
                 return True
             elif sender is KaraboEventSender.RenameSceneView:
                 data = event.data
-                self.renameMiddlePanel('scene_model', data.get("model"))
+                self.renameMiddlePanel('scene_model', data.get('model'))
                 return True
             elif sender is KaraboEventSender.OpenMacro:
                 data = event.data
-                self.addMacro(data.get("model"))
+                self.addMacro(data.get("model"), data.get('project'))
                 return True
             elif sender is KaraboEventSender.RemoveMacro:
                 data = event.data
-                self.removeMiddlePanel('macro_model', data.get("model"))
+                self.removeMiddlePanel('macro_model', data.get('model'))
                 return True
             elif sender is KaraboEventSender.RenameMacro:
                 data = event.data
-                self.renameMiddlePanel('macro_model', data.get("model"))
+                self.renameMiddlePanel('macro_model', data.get('model'))
                 return True
         return super(MainWindow, self).eventFilter(obj, event)
 
@@ -415,10 +415,13 @@ class MainWindow(QMainWindow):
                                       self)
         self.selectLastMiddlePanel()
 
-    def addMacro(self, macroModel):
+    def addMacro(self, macroModel, project):
         if self.focusExistingMiddlePanel('macro_model', macroModel):
             return
-
+    
+        # Add the project name to the macro model because it is only needed
+        # at instantiation time of the macro
+        macroModel.project_name = project.name
         macroPanel = MacroPanel(macroModel)
         self.middleTab.addDockableTab(macroPanel, macroModel.title, self)
 

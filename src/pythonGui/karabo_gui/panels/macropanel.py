@@ -12,6 +12,9 @@ from qtconsole.pygments_highlighter import PygmentsHighlighter
 from karabo.middlelayer import Hash, write_macro
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
+from karabo_gui.mediator import (
+    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
+    unregister_from_broadcasts)
 from karabo_gui.network import Network
 from karabo_gui.topology import getDevice
 from karabo_gui.util import getSaveFileName
@@ -41,6 +44,9 @@ class MacroPanel(Dockable, QSplitter):
         self.addWidget(self.console)
         self.already_connected = set()
 
+        # Register to KaraboBroadcastEvent
+        register_for_broadcasts(self)
+
         # Connect all running macros
         for instance in macro_model.instances:
             self.connect(instance)
@@ -54,16 +60,27 @@ class MacroPanel(Dockable, QSplitter):
             if event.key() == Qt.Key_Tab:
                 self.teEditor.textCursor().insertText(" "*4)
                 return True
+        elif isinstance(event, KaraboBroadcastEvent):
+            sender = event.sender
+            if sender is KaraboEventSender.ConnectMacroInstance:
+                data = event.data
+                macro_model = data.get('model')
+                if macro_model is self.macro_model:
+                    self.connect(data.get('instance'))
+                    return True
         return False
 
     def closeEvent(self, event):
+        # Unregister to KaraboBroadcastEvent
+        unregister_from_broadcasts(self)
         event.accept()
 
-    def connect(self, macro):
-        if macro not in self.already_connected:
-            getDevice(macro).boxvalue.printno.signalUpdateComponent.connect(
+    def connect(self, macro_instance):
+        if macro_instance not in self.already_connected:
+            device = getDevice(macro_instance)
+            device.boxvalue.printno.signalUpdateComponent.connect(
                 self.appendConsole)
-            self.already_connected.add(macro)
+            self.already_connected.add(macro_instance)
 
     def appendConsole(self, box, value, ts):
         self.console.moveCursor(QTextCursor.End)
@@ -93,7 +110,8 @@ class MacroPanel(Dockable, QSplitter):
             macro_instance = getDevice(instance_id)
             macro_instance.signalInitReply.connect(self.initReply)
             h = Hash("code", self.macro_model.code,
-                     "module", self.macro_model.title)
+                     "module", self.macro_model.title,
+                     "project", self.macro_model.project_name)
             Network().onInitDevice("Karabo_MacroServer", "MetaMacro",
                                    instance_id, h)
 
