@@ -243,8 +243,14 @@ namespace karabo {
                 return jt;
             }
 
+#define KARABO_RUNTIME_SCHEMA_UPDATE "runtimeSchemaUpdates"
+            
             static void validateConfiguration(const std::string& classId, const Hash& configuration, Hash& validated) {
                 Schema schema = getSchema(classId, Schema::AssemblyRules(INIT | WRITE | READ));
+                if(configuration.has(KARABO_RUNTIME_SCHEMA_UPDATE)){
+                    const std::vector<karabo::util::Hash> runtimeSchemaUpdates = configuration.get<std::vector<karabo::util::Hash> >(KARABO_RUNTIME_SCHEMA_UPDATE);
+                    schema.applyRuntimeUpdates(runtimeSchemaUpdates);
+                }
                 Validator validator; // Default validation
                 std::pair<bool, std::string> ret = validator.validate(schema, configuration, validated);
                 if (ret.first == false) throw KARABO_PARAMETER_EXCEPTION("Validation failed. \n" + ret.second);
@@ -437,6 +443,8 @@ namespace karabo {
                 \
                 static std::vector<std::string> getRegisteredClasses() { \
                 return karabo::util::Configurator<Self>::getRegisteredClasses(); }
+        
+
     }
 }
 

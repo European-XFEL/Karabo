@@ -834,6 +834,9 @@ namespace karabo {
              * @return
              */
             KARABO_DECLSPEC friend std::ostream & operator<<(std::ostream& os, const Schema& schema);
+            
+            
+            void applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates);
 
 
         private: // functions
@@ -871,6 +874,8 @@ namespace karabo {
             void r_updateAliasMap(const std::vector<std::string> keys, const std::string oldPath = "");
 
             void setAllowedStates(const std::string& path, const std::string& value);
+            
+            
 
         };
 

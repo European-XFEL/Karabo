@@ -24,6 +24,7 @@ namespace karabo {
         
         FLOAT_ELEMENT(expected).key("floatProperty")
             .displayedName("Float Property")
+            .minInc(0)
             .readOnly().initialValue(0)
             .alarmLow(-1.5).info("A description for alarmLow").needsAcknowledging(true)
             .alarmHigh(1.5).info("A description for alarmHigh").needsAcknowledging(true)
@@ -101,14 +102,6 @@ namespace karabo {
 
     void AlarmTester::initialize() {
 
-        Schema schema =  getFullSchema();
-        schema.setWarnLow("floatProperty", -1.);
-        schema.setWarnHigh("floatProperty", 1.);
-        schema.setAlarmLow("floatProperty", -2.);
-        schema.setAlarmHigh("floatProperty", 2.);
-        appendSchema(schema, true);
-
-        
     }
     
 
