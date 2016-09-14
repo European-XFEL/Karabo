@@ -51,10 +51,13 @@ void PropertyTest_Test::allTestRunner() {
     
     testSimpleProperties();
     testVectorProperties();
+    testTableProperties();
 }
 
 
 void PropertyTest_Test::testSimpleProperties() {
+    clog << "Testing Simple properties ..." << endl;
+    
     { // bool
         bool value = false;
         m_deviceClient->get("testPropertyTest_0", "boolProperty", value);
@@ -68,6 +71,7 @@ void PropertyTest_Test::testSimpleProperties() {
         
         value = false;
         m_deviceClient->set("testPropertyTest_0", "boolProperty", value);
+        value = true;
         m_deviceClient->get("testPropertyTest_0", "boolProperty", value);
         CPPUNIT_ASSERT(value == false);
     }
@@ -270,15 +274,18 @@ void PropertyTest_Test::testSimpleProperties() {
         CPPUNIT_ASSERT(value == 76.543211787654);
     }
     
+    clog << "Testing Simple properties ...  OK" << endl;
    
 }
 
 
 void PropertyTest_Test::testVectorProperties() {
+    clog << "Testing Vector properties ..." << endl;
 
     { // bool
         vector<bool> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.boolProperty", value);
+        CPPUNIT_ASSERT(value.size() == 6);
         for (int i = 0; i < value.size(); ++i) {
             if (i%2 == 0)
                 CPPUNIT_ASSERT(value[i] == true);
@@ -290,6 +297,7 @@ void PropertyTest_Test::testVectorProperties() {
         m_deviceClient->set("testPropertyTest_0", "vectors.boolProperty", value);
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.boolProperty", value);
+        CPPUNIT_ASSERT(value.size() == 5);
         for (int i = 0; i < value.size(); ++i) {
             CPPUNIT_ASSERT(value[i] == true);
         }
@@ -298,6 +306,7 @@ void PropertyTest_Test::testVectorProperties() {
         m_deviceClient->set("testPropertyTest_0", "vectors.boolProperty", value);
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.boolProperty", value);
+        CPPUNIT_ASSERT(value.size() == 9);
         for (int i = 0; i < value.size(); ++i) {
             CPPUNIT_ASSERT(value[i] == false);
         }
@@ -307,6 +316,7 @@ void PropertyTest_Test::testVectorProperties() {
         string sample("ABCDEF");
         vector<char> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.charProperty", value);
+        CPPUNIT_ASSERT(value.size() == 6);
         for (size_t i = 0; i < value.size(); ++i) {
             CPPUNIT_ASSERT(value[i] == sample[i]);
         }
@@ -315,6 +325,7 @@ void PropertyTest_Test::testVectorProperties() {
         m_deviceClient->set("testPropertyTest_0", "vectors.charProperty", value);
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.charProperty", value);
+        CPPUNIT_ASSERT(value.size() == 6);
         for (size_t i = 0; i < value.size(); ++i) {
             CPPUNIT_ASSERT(value[i] == 'B');
         }
@@ -323,6 +334,7 @@ void PropertyTest_Test::testVectorProperties() {
         m_deviceClient->set("testPropertyTest_0", "vectors.charProperty", value);
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.charProperty", value);
+        CPPUNIT_ASSERT(value.size() == 6);
         for (size_t i = 0; i < value.size(); ++i) {
             CPPUNIT_ASSERT(value[i] == 'C');
         }
@@ -331,6 +343,7 @@ void PropertyTest_Test::testVectorProperties() {
     { // int8
         vector<signed char> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.int8Property", value);
+        CPPUNIT_ASSERT(value.size() == 6);
         for (size_t i = 0; i < value.size(); ++i) {
             CPPUNIT_ASSERT(value[i] == (41 + i));
         }
@@ -339,30 +352,35 @@ void PropertyTest_Test::testVectorProperties() {
         m_deviceClient->set("testPropertyTest_0", "vectors.int8Property", value);
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.int8Property", value);
+        CPPUNIT_ASSERT(value.size() == 3);
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == 42);
         
         value.assign(8, -99);
         m_deviceClient->set("testPropertyTest_0", "vectors.int8Property", value);
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.int8Property", value);
+        CPPUNIT_ASSERT(value.size() == 8);
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == -99);
     }
     
     { // uint8
         vector<unsigned char> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.uint8Property", value);
+        CPPUNIT_ASSERT(value.size() == 6);
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == (41 + i));
         
         value.assign(8,142);
         m_deviceClient->set("testPropertyTest_0", "vectors.uint8Property", value);
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.uint8Property", value);
+        CPPUNIT_ASSERT(value.size() == 8);
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == 142);
         
         value.assign(6, 199);
         m_deviceClient->set("testPropertyTest_0", "vectors.uint8Property", value);
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.uint8Property", value);
+        CPPUNIT_ASSERT(value.size() == 6);
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == 199);
     }
     
@@ -559,4 +577,41 @@ void PropertyTest_Test::testVectorProperties() {
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == "HELLO");
     }
     
+    clog << "Testing Vector properties ... OK" << endl;
+}
+
+
+void PropertyTest_Test::testTableProperties() {
+    clog << "Testing Table properties ..." << endl;
+    vector<Hash> value;
+    m_deviceClient->get("testPropertyTest_0", "table", value);
+
+    CPPUNIT_ASSERT(value.size() == 2);
+
+    CPPUNIT_ASSERT(value[0].get<float>("e4") == 0.9837F);
+    CPPUNIT_ASSERT(value[0].get<double>("e5") == 1.2345);
+    
+    CPPUNIT_ASSERT(value[1].get<float>("e4") == 2.33333F);
+    CPPUNIT_ASSERT(value[1].get<double>("e5") == 7.77777);
+    
+    value.clear();
+    value.push_back(Hash("e4", 0.0011F, "e5", 9.87654321));
+    value.push_back(Hash("e4", 2.2222F, "e5", 3.33333333));
+    value.push_back(Hash("e4", 55.5555F, "e5", 9.99999999));
+    
+    m_deviceClient->set("testPropertyTest_0", "table", value);
+    value.clear();
+    m_deviceClient->get("testPropertyTest_0", "table", value);
+    
+    CPPUNIT_ASSERT(value.size() == 3);
+
+    CPPUNIT_ASSERT(value[0].get<float>("e4") == 0.0011F);
+    CPPUNIT_ASSERT(value[0].get<double>("e5") == 9.87654321);
+    
+    CPPUNIT_ASSERT(value[1].get<float>("e4") == 2.2222F);
+    CPPUNIT_ASSERT(value[1].get<double>("e5") == 3.33333333);
+    
+    CPPUNIT_ASSERT(value[2].get<float>("e4") == 55.5555F);
+    CPPUNIT_ASSERT(value[2].get<double>("e5") == 9.99999999);
+    clog << "Testing Table properties ...  OK" << endl;
 }

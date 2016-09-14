@@ -29,6 +29,7 @@ private:
     void allTestRunner();
     void testSimpleProperties();
     void testVectorProperties();
+    void testTableProperties();
     
 private:
         
