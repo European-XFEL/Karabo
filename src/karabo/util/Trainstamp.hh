@@ -41,7 +41,7 @@ namespace karabo {
                 return m_trainId;
             }
 
-            static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);
+            static bool hashAttributesContainTimeInformation(const Hash::Attributes& attributes);
 
 
             /**
@@ -61,7 +61,13 @@ namespace karabo {
 
             virtual ~Trainstamp();
 
+            inline bool operator==(const Trainstamp& other) const {
+                return m_trainId == other.m_trainId;
+            }
 
+            inline bool operator!=(const Trainstamp& other) const {
+                return m_trainId != other.m_trainId;
+            }
         private:
 
         };
