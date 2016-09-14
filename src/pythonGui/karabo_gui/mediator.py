@@ -5,6 +5,8 @@ from PyQt4.QtGui import QApplication
 
 # Enum for karabo broadcast event senders
 class KaraboEventSender(Enum):
+    ConnectMacroInstance = "Connect macro instance"
+    DeviceInitReply = "Device instantiate reply"
     OpenMacro = "Open macro"
     OpenSceneLink = "Scene link"
     OpenSceneView = "Open scene view"
