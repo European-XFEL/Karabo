@@ -44,8 +44,13 @@ class Attribute(object):
 
 
 class Enumable(object):
-    def __init__(self, enum=None, **kwargs):
+    known_classes = {"State": State,
+                     "AlarmCondition": AlarmCondition}
+
+    def __init__(self, enum=None, classId=None, **kwargs):
         super().__init__(**kwargs)
+        if classId is not None:
+            enum = self.known_classes.get(classId)
         assert enum is None or issubclass(enum, Enum)
         self.enum = enum
 
@@ -61,6 +66,12 @@ class Enumable(object):
             return data.value, attrs
         else:
             return h, attrs
+
+    def toSchemaAndAttrs(self, device, state):
+        schema, attrs = super(Enumable, self).toSchemaAndAttrs(device, state)
+        if self.enum is not None:
+            attrs["classId"] = self.enum.__name__
+        return schema, attrs
 
     def toKaraboValue(self, data, strict=True):
         if not strict and not isinstance(data, self.enum):
