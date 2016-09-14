@@ -8,7 +8,7 @@ import sys
 from unittest import TestCase, main
 
 from karabo.middlelayer import (
-    AccessLevel, Assignment, Device, getDevice, Int32,
+    AccessLevel, AlarmCondition, Assignment, Device, getDevice, Int32,
     MetricPrefix, shutdown, Slot, State, unit, Unit, waitUntil)
 
 from .eventloop import setEventLoop
@@ -59,6 +59,8 @@ class Tests(TestCase):
             self.assertEqual(proxy.node.b, 100 * unit.kilometer)
             self.assertEqual(repr(proxy.node.b.timestamp),
                              "2016-06-17T13:55:22 UTC")
+            self.assertEqual(proxy.state, State.UNKNOWN)
+            self.assertEqual(proxy.alarmCondition, AlarmCondition.NONE)
 
             with self.assertRaises(ValueError):
                 proxy.a = 77

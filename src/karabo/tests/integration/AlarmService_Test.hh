@@ -16,6 +16,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "AlarmTesterDevice.hh"
+#include "TcpAdapter.hh"
 
 class AlarmService_Test : public CPPUNIT_NS::TestFixture {
 
@@ -49,8 +50,8 @@ private:
     boost::thread m_deviceServerThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
-
-
+    boost::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
+    std::string m_killedDeviceRow;
 
 };
 

@@ -157,6 +157,15 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            Derived& skipValidation() {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key)
+                        .setNowSkipValidation()
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
+
             template <class T>
             Derived& setDefaultValue(const std::string& subKey, const T& defaultValue) {
                 using namespace karabo::util;

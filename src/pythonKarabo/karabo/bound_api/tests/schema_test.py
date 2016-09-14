@@ -9,7 +9,8 @@ from karabo.bound import (
     AlarmCondition
 )
 from .configuration_example_classes import (
-    Base, GraphicsRenderer, GraphicsRenderer1, Shape, SomeClass, TestStruct1
+    Base, GraphicsRenderer, GraphicsRenderer1, Shape, SomeClass, TestStruct1,
+    ArrayContainer
 )
 from karabo.common.states import State
 
@@ -581,20 +582,20 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_vectorElement exception 2: " +str(e))
 
-    # def test_ndarrayElement(self):
-    #     schema = Configurator(TestStruct1).getSchema("TestStruct1")
+    def test_ndarrayElement(self):
+        schema = Configurator(ArrayContainer).getSchema("ArrayContainer")
 
-    #     self.assertEqual(schema.isAccessReadOnly("exampleKey16"), True)
-    #     self.assertEqual(schema.hasDefaultValue("exampleKey16"), True)
-    #     self.assertEqual(schema.hasDefaultValue("exampleKey17"), True)
-    #     self.assertEqual(schema.hasDefaultValue("exampleKey18"), False)
+        assert schema.getDefaultValue("exampleKey16.shape") == [2, 3]
+        assert schema.getDefaultValue("exampleKey17.shape") == [2, 5, -1]
+        assert schema.getDefaultValue("exampleKey18.shape") == [3, 2, 1]
 
-    #     self.assertEqual(schema.getDefaultValue("exampleKey16"), [True, False, False, True])
-    #     self.assertEqual(schema.getDefaultValue("exampleKey17"), list(range(8)))
+        assert schema.isAccessReadOnly("exampleKey16")
+        assert schema.isAccessReadOnly("exampleKey17")
+        assert schema.isAccessReadOnly("exampleKey18")
 
-    #     self.assertEqual(schema.getArrayShape("exampleKey16"), [2, 2])
-    #     self.assertEqual(schema.getArrayShape("exampleKey17"), [2, 2, -1])
-    #     self.assertEqual(schema.getArrayShape("exampleKey18"), [3, 3, 3])
+        assert schema.getSkipValidation("exampleKey16")
+        assert schema.getSkipValidation("exampleKey17")
+        assert not schema.getSkipValidation("exampleKey18")
 
     def test_getDisplayType(self):
         try:    

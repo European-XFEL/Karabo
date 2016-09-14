@@ -247,6 +247,17 @@ namespace karabo {
             return karabo::util::CppNone();
         }
 
+        template<>
+        inline karabo::util::ByteArray fromString(const std::string& value) {
+            std::vector<unsigned char> array;
+            karabo::util::base64Decode(value, array);
+
+            const size_t byteSize = array.size();
+            boost::shared_ptr<char> data(new char [byteSize], &karabo::util::byteArrayDeleter);
+            std::memcpy(data.get(), reinterpret_cast<char*>(&array[0]), byteSize);
+            return karabo::util::ByteArray(data, byteSize);
+        }
+
         template<typename T,
         template <typename ELEM, typename = std::allocator<ELEM> > class CONT>
         inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {

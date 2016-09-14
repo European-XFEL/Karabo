@@ -690,6 +690,14 @@ void Schema_Test::testTable() {
     OtherSchemaElements::expectedParameters(sch);
     CPPUNIT_ASSERT(sch.isLeaf("testTable") == true);
     CPPUNIT_ASSERT(sch.getParameterHash().hasAttribute("testTable", "rowSchema") == true);
+    const std::vector<Hash> shouldBeDefault(2, Hash("a", 3, "b", "foo"));
+    const std::vector<Hash>& theDefault = sch.getDefaultValue<std::vector<Hash> >("testTable");
+    CPPUNIT_ASSERT_EQUAL(shouldBeDefault.size(), theDefault.size());
+    CPPUNIT_ASSERT_EQUAL(shouldBeDefault[0].size(), theDefault[1].size());
+    CPPUNIT_ASSERT_EQUAL(shouldBeDefault[1].get<int>("a"), theDefault[0].get<int>("a"));
+    CPPUNIT_ASSERT_EQUAL(shouldBeDefault[1].get<std::string>("b"), theDefault[1].get<std::string>("b"));
+
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<Hash> >("testTableEmptyDefault").empty());
 }
 
 
