@@ -579,6 +579,12 @@ namespace configurationTest {
                     .assignmentOptional().defaultValue(std::vector<Hash>(2, Hash("a", 3, "b", "foo")))
                     .commit();
 
+            TABLE_ELEMENT(expected)
+                    .key("testTableEmptyDefault")
+                    .setNodeSchema(rowSchema)
+                    .assignmentOptional().defaultValue(std::vector<Hash>())
+                    .commit();
+
             INT16_ELEMENT(expected)
                     .key("nonExistingNode.int16")
                     .description("This element refers to a non-existing node and thus is ignored")
