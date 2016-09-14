@@ -23,7 +23,7 @@ namespace karabo {
         }
 
 
-        bool Trainstamp::hashAttributesContainTimeInformation(const Hash::Attributes attributes) {
+        bool Trainstamp::hashAttributesContainTimeInformation(const Hash::Attributes& attributes) {
             return attributes.has("tid");
         }
 
