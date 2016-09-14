@@ -1570,7 +1570,7 @@ class ProjectModel(QStandardItemModel):
         if not fn:
             return
         # Create macro model
-        title = os.path.basename(fn)[:-3]
+        title = os.path.splitext(os.path.basename(fn))[0]
         self.addMacro(project, title, fn)
 
     def onDuplicateMacro(self):
