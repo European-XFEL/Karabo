@@ -152,7 +152,7 @@ namespace karabo {
         }
 
 
-        void InputChannel::registerDataHandler(const boost::function<void (const Data&) >& ioDataHandler) {
+        void InputChannel::registerDataHandler(const boost::function<void (const karabo::util::Hash::Pointer&) >& ioDataHandler) {
             if (m_inputHandler) {
                 KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
                         << "data handler per InputChannel since setting one per Data";
