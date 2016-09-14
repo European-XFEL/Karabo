@@ -392,7 +392,7 @@ namespace karabo {
              */
             template <class PixelType>
             void writeChannel(const std::string& channelName, const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
-                karabo::xms::Data data(key, karabo::xms::ImageData(image));
+                karabo::util::Hash::Pointer data(new karabo::util::Hash(key, karabo::xms::ImageData(image)));
                 writeChannel(channelName, data);
             }
 
@@ -405,8 +405,8 @@ namespace karabo {
              * @param key The data element (root-)key
              * @param data Data object
              */
-            void writeChannel(const std::string& channelName, const std::string& key, const karabo::xms::Data& data) {
-                karabo::xms::Data root(key, data);
+            void writeChannel(const std::string& channelName, const std::string& key, const karabo::util::Hash::Pointer& data) {
+                karabo::util::Hash::Pointer root(new karabo::util::Hash(key, data));
                 writeChannel(channelName, root);
             }
 
@@ -416,10 +416,14 @@ namespace karabo {
              * @param channelName The output channel name
              * @param data Data object
              */
-            void writeChannel(const std::string& channelName, karabo::xms::Data& data) {
+            void writeChannel(const std::string& channelName, karabo::util::Hash::Pointer& data) {
                 // TODO think about proper validation and time tagging later
-                data.attachTimestamp(getActualTimestamp());
                 karabo::xms::OutputChannel::Pointer channel = this->getOutputChannel(channelName);
+                const karabo::util::Timestamp& ts = getActualTimestamp();
+
+                for (karabo::util::Hash::iterator it = data->begin(); it != data->end(); ++it) {
+                    ts.toHashAttributes(it->getAttributes());
+                }
                 channel->write(data);
                 channel->update();
             }
