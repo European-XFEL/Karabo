@@ -279,7 +279,7 @@ namespace karathon {
     }
 
 
-    void InputChannelWrap::proxyDataHandler(const bp::object& handler, const karabo::xms::Data& data) {
+    void InputChannelWrap::proxyDataHandler(const bp::object& handler, const karabo::util::Hash::Pointer& data) {
         ScopedGILAcquire gil;
         handler(bp::object(data));
     }

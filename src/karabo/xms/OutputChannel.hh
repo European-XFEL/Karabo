@@ -20,7 +20,6 @@
 
 #include "Statics.hh"
 #include "Memory.hh"
-#include "Data.hh"
 
 
 /**
@@ -136,19 +135,15 @@ namespace karabo {
              * @param data
              */
             void write(const karabo::util::Hash& data) {
-                MemoryType::write(boost::shared_ptr<karabo::util::Hash>(new karabo::util::Hash(data)), m_channelId, m_chunkId);
+                MemoryType::write(karabo::util::Hash::Pointer(new karabo::util::Hash(data)), m_channelId, m_chunkId);
             }
 
             /**
              * This function will use the data as pointer and does not copy
              * @param data
              */
-            void write(const boost::shared_ptr<karabo::util::Hash>& data) {
+            void write(const karabo::util::Hash::Pointer& data) {
                 MemoryType::write(data, m_channelId, m_chunkId);
-            }
-
-            void write(const Data& data) {
-                MemoryType::write(data.hash(), m_channelId, m_chunkId);
             }
 
             void update();
