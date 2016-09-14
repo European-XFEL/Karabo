@@ -68,6 +68,12 @@ class MacroPanel(Dockable, QSplitter):
                 if macro_model is self.macro_model:
                     self.connect(data.get('instance'))
                     return True
+            elif sender is KaraboEventSender.DeviceInitReply:
+                data = event.data
+                macro_instance = data.get('device')
+                if macro_instance.id in self.macro_model.instance_id:
+                    self.initReply(data.get('success'), data.get('message'))
+                    return True
         return False
 
     def closeEvent(self, event):
@@ -108,7 +114,6 @@ class MacroPanel(Dockable, QSplitter):
         else:
             instance_id = self.macro_model.instance_id
             macro_instance = getDevice(instance_id)
-            macro_instance.signalInitReply.connect(self.initReply)
             h = Hash("code", self.macro_model.code,
                      "module", self.macro_model.title,
                      "project", self.macro_model.project_name)
