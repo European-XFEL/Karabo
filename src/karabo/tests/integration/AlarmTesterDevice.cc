@@ -30,7 +30,11 @@ namespace karabo {
             .enableRollingStats().warnVarianceHigh(3).needsAcknowledging(false).evaluationInterval(100)
             .commit();
         
-        FLOAT_ELEMENT(expected).key("floatProperty2")
+        
+        NODE_ELEMENT(expected).key("nodeA")
+                .commit();
+        
+        FLOAT_ELEMENT(expected).key("nodeA.floatProperty2")
             .displayedName("Float Property2")
             .readOnly().initialValue(0)
             .warnLow(-2).info("A description for alarmLow").needsAcknowledging(true)
@@ -129,7 +133,7 @@ namespace karabo {
     }
     
     void AlarmTester::triggerWarnHigh2(){
-        set("floatProperty2", 2.2);
+        set("nodeA.floatProperty2", 2.2);
         reply("triggeredWarnHigh2");
    
     }
@@ -172,7 +176,7 @@ namespace karabo {
     }
     
     void AlarmTester::triggerNormal2(){
-        set("floatProperty2", 0);
+        set("nodeA.floatProperty2", 0);
         reply("triggeredNormal2");
    
         
