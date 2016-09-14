@@ -434,20 +434,25 @@ class ProjectModel(QStandardItemModel):
             project = projectItem.data(ProjectModel.ITEM_OBJECT)
             item = self.getCategoryItem(Project.MACROS_LABEL, projectItem)
             for r in range(item.rowCount()):
-                module = item.child(r)
-                ml = macros.get((project.name, module.text()), [])
-                module.removeRows(0, module.rowCount())
-                #module.data(ProjectModel.ITEM_OBJECT).instances = ml
-                #for k in ml:
-                #    childItem = QStandardItem(hash[k, "classId"])
-                #    childItem.setData(getDevice(k),
-                #                      ProjectModel.ITEM_OBJECT)
-                #    childItem.setEditable(False)
-                #    module.appendRow(childItem)
-                #    editor = module.data(ProjectModel.ITEM_OBJECT).editor
-                #    if editor is not None:
-                #        editor.connect(k)
-
+                module_item = item.child(r)
+                proj_name = project.name
+                macro_title = module_item.text()
+                macro_instances = macros.get((proj_name, macro_title), [])
+                module_item.removeRows(0, module_item.rowCount())
+                macro_model = module_item.data(ProjectModel.ITEM_OBJECT)
+                # Add macro instances to macro model
+                macro_model.instances = macro_instances
+                for instance in macro_instances:
+                    classId = hash[instance, "classId"]
+                    childItem = QStandardItem(classId)
+                    device = getDevice(k)
+                    childItem.setData(device, ProjectModel.ITEM_OBJECT)
+                    childItem.setEditable(False)
+                    module_item.appendRow(childItem)
+                    data = {'model': macro_model, 'instance': instance}
+                    # Create KaraboBroadcastEvent
+                    broadcast_event(KaraboBroadcastEvent(
+                        KaraboEventSender.ConnectMacroInstance, data))
 
     def updateDeviceIcon(self, item, device):
         """
@@ -600,9 +605,6 @@ class ProjectModel(QStandardItemModel):
         parentItem.appendRow(item)
         self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
 
-        # XXX TODO: check sub macro objects
-        #self.addMacroSubItems(macroModel)
-
     def insertMacroItem(self, row, macroModel):
         """ This function inserts the given \macroModel at the given \row of the
             model.
@@ -613,30 +615,6 @@ class ProjectModel(QStandardItemModel):
         # Find folder for scenes
         parentItem = self.getCategoryItem(Project.MACROS_LABEL, projectItem)
         parentItem.insertRow(row, item)
-
-        # XXX TODO: check sub macro objects
-        #self.addMacroSubItems(macroModel)
-
-    def addMacroSubItems(self, macroModel):
-        if not macroModel.macros:
-            return
-        
-        item = self.findItem(macroModel)
-        if item is None:
-            return
- 
-        # Remove possible old rows
-        while item.hasChildren():
-            row = item.rowCount()-1
-            item.removeRow(row)
-        
-        for k, v in macroModel.macros.items():
-            childItem = QStandardItem(k)
-            childItem.setData(v, ProjectModel.ITEM_OBJECT)
-            childItem.setEditable(False)
-            item.appendRow(childItem)
-        
-        self.signalExpandIndex.emit(self.indexFromItem(item), True)
 
     def renameMacro(self, macroModel):
         item = self.findItem(macroModel)
@@ -975,7 +953,6 @@ class ProjectModel(QStandardItemModel):
         project.signalConfigurationInserted.connect(self.insertConfigurationItem)
         project.signalMacroAdded.connect(self.addMacroItem)
         project.signalMacroInserted.connect(self.insertMacroItem)
-        project.signalMacroChanged.connect(self.addMacroSubItems)
         project.signalMonitorAdded.connect(self.addMonitorItem)
         project.signalMonitorInserted.connect(self.insertMonitorItem)
         
@@ -1278,14 +1255,10 @@ class ProjectModel(QStandardItemModel):
 
             # Overwrite existing scene
             index = self.removeObject(project, sceneModel, False)
-            sceneModel = self.insertScene(index, project, title)
+            sceneModel = self.insertScene(index, project, title,
+                                          filename_or_fileobj)
         else:
-            if filename_or_fileobj is None:
-                # Create empty scene model
-                sceneModel = SceneModel()
-            else:
-                # Read file to create scene model
-                sceneModel = read_scene(filename_or_fileobj)
+            sceneModel = read_scene(filename_or_fileobj)
             # Set the scene model title
             sceneModel.title = title
             project.addScene(sceneModel)
@@ -1301,11 +1274,12 @@ class ProjectModel(QStandardItemModel):
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.RemoveSceneView, data))
 
-    def insertScene(self, index, project, title):
+    def insertScene(self, index, project, title, filename_or_fileobj=None):
         """
         Insert a scene model for the given \project with the given data.
         """
-        sceneModel = SceneModel(title=title)
+        sceneModel = read_scene(filename_or_fileobj)
+        sceneModel.title = title
         project.insertScene(index, sceneModel)
 
         return sceneModel
@@ -1354,7 +1328,7 @@ class ProjectModel(QStandardItemModel):
             macroModel.title = dialog.name
             self.renameMacro(macroModel)
 
-    def addMacro(self, project, title):
+    def addMacro(self, project, title, filename_or_fileobj=None):
         """
         Create new MacroModel object for given \project.
         """
@@ -1370,30 +1344,36 @@ class ProjectModel(QStandardItemModel):
 
             # Overwrite existing macro
             index = self.removeObject(project, macroModel, False)
-            macroModel = self.insertMacro(index, project, title)
+            macroModel = self.insertMacro(index, project, title,
+                                          filename_or_fileobj)
         else:
-            macroModel = MacroModel(title=title)
+            macroModel = read_macro(filename_or_fileobj)
+            # Set the scene model title
+            macroModel.title = title
             project.addMacro(macroModel)
 
-        self.openMacro(macroModel)
+        self.openMacro(macroModel, project)
         self.selectObject(macroModel)
 
         return macroModel
 
-    def insertMacro(self, index, project, title):
+    def insertMacro(self, index, project, title, filename_or_fileobj=None):
         """
         Insert a macro model for the given \project with the given data.
         """
-        macroModel = MacroModel(title=title)
+        macroModel = read_macro(filename_or_fileobj)
+        macroModel.title = title
         project.insertMacro(index, macroModel)
 
         return macroModel
 
-    def openMacro(self, macroModel):
+    def openMacro(self, macroModel, project=None):
         """ This method gets a ``macroModel`` and triggers a signal to open a
             macro panel in the GUI.
         """
-        data = {'model': macroModel}
+        if project is None:
+            project = self.getProjectForObject(macroModel)
+        data = {'model': macroModel, 'project': project}
         # Create KaraboBroadcastEvent
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.OpenMacro, data))
@@ -1584,22 +1564,14 @@ class ProjectModel(QStandardItemModel):
 
 
     def onLoadMacro(self):
-        filename = getOpenFileName(caption="Load macro",
-                                   filter="Python Macros (*.py)")
-        if not filename:
-            return
-
-        macroModel = read_macro(filename)
-        macroModel.title = QFileInfo(filename).baseName()
         project = self.currentProject()
-        project.addMacro(macroModel)
-
-        data = {'model': macroModel}
-        # Create KaraboBroadcastEvent
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.OpenMacro, data))
-
-        self.selectObject(macroModel)
+        fn = getOpenFileName(caption="Load macro",
+                             filter="Python Macros (*.py)")
+        if not fn:
+            return
+        # Create macro model
+        title = os.path.splitext(os.path.basename(fn))[0]
+        self.addMacro(project, title, fn)
 
     def onDuplicateMacro(self):
         print("TODO: duplicate macro...")

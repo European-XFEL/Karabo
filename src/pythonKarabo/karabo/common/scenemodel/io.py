@@ -8,7 +8,11 @@ def read_scene(filename_or_fileobj):
     """ Read a scene and return it.
     filename_or_fileobj is either a string containing a filename, or a
     file-like object which can be read from (eg- a TextIO instance).
+    If ``filename_or_fileobj`` is None, an empty MacroModel is returned.
     """
+    if filename_or_fileobj is None:
+        return SceneModel()
+
     tree = parse(filename_or_fileobj)
     root = tree.getroot()
 
