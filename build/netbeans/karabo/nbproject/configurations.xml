@@ -1464,6 +1464,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/integration/TcpAdapter.cc"
             ex="false"
             tool="1"
@@ -2693,10 +2703,12 @@
         <cTool>
           <incDir>
             <pElem>.</pElem>
+            <pElem>.</pElem>
           </incDir>
         </cTool>
         <ccTool>
           <incDir>
+            <pElem>.</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
@@ -3646,6 +3658,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/integration/AlarmTesterDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4871,10 +4893,12 @@
         <cTool>
           <incDir>
             <pElem>.</pElem>
+            <pElem>.</pElem>
           </incDir>
         </cTool>
         <ccTool>
           <incDir>
+            <pElem>.</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
