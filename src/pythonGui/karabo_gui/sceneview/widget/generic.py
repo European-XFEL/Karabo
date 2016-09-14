@@ -50,10 +50,10 @@ class GenericWidgetContainer(BaseWidgetContainer):
     """
     def _create_widget(self, boxes):
         factory = _GENERIC_WIDGET_FACTORIES[self.model.__class__]
-        display_widget = factory(boxes[0], self)
+        widget = factory(boxes[0], self)
         for b in boxes[1:]:
-            display_widget.addBox(b)
-        return display_widget
+            widget.addBox(b)
+        return widget
 
 
 class DisplayEditableWidgetContainer(BaseWidgetContainer):
@@ -63,7 +63,7 @@ class DisplayEditableWidgetContainer(BaseWidgetContainer):
     def _create_widget(self, boxes):
         factories = _DISPLAY_EDITABLE_WIDGETS[self.model.__class__]
         factory = factories[self.model.klass]
-        display_widget = factory(boxes[0], self)
+        widget = factory(boxes[0], self)
         for b in boxes[1:]:
-            display_widget.addBox(b)
-        return display_widget
+            widget.addBox(b)
+        return widget

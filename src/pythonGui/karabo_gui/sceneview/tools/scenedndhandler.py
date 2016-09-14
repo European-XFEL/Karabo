@@ -87,12 +87,18 @@ class ConfigurationDropHandler(SceneDnDHandler):
             klass = WIDGET_FACTORIES[factory.__name__]
             model = klass(keys=[box.key()],
                           parent_component='DisplayComponent')
+            # Set ``klass`` if settable
+            if hasattr(model, 'klass'):
+                model.klass = factory.__name__
             layout_model.children.append(model)
         if item.editableComponent:
             factory = EditableWidget.getClass(box)
             klass = WIDGET_FACTORIES[factory.__name__]
             model = klass(keys=[box.key()],
                           parent_component='EditableApplyLaterComponent')
+            # Set ``klass`` if settable
+            if hasattr(model, 'klass'):
+                model.klass = factory.__name__
             layout_model.children.append(model)
 
         return layout_model
