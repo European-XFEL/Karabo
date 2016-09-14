@@ -89,12 +89,14 @@ namespace karabo {
 
             Schema m_nodeSchema;
             TableDefaultValue<TableElement> m_defaultValue;
-
+            Schema::AssemblyRules m_parentSchemaAssemblyRules;
+            
         public:
 
             TableElement(Schema& expected) : GenericElement<TableElement>(expected) {
-
+                
                 m_defaultValue.setElement(this);
+                m_parentSchemaAssemblyRules = expected.getAssemblyRules();
 
             }
 
@@ -230,6 +232,30 @@ namespace karabo {
 
                 //this->addRow(); //set first element to containt parameter Hash
 
+                return *this;
+            }
+            
+            TableElement& appendNodeSchema(const Schema& schema) {
+
+                m_nodeSchema.merge(schema);
+
+                return *this;
+            }
+
+            template <class ConfigurableClass>
+            TableElement& appendParametersOfConfigurableClass(const std::string& classId) {
+                // Assemble schema (taking into account base classes, etc.) and append to node
+                Schema schema = Configurator<ConfigurableClass>::getSchema(classId, m_parentSchemaAssemblyRules);
+                m_nodeSchema.merge(schema);
+                return *this;
+            }
+
+            template <class T>
+            TableElement& appendParametersOf() {
+                // Simply append the expected parameters of T to current node
+                Schema schema("dummyRoot", m_parentSchemaAssemblyRules);
+                T::_KARABO_SCHEMA_DESCRIPTION_FUNCTION(schema);
+                m_nodeSchema.merge(schema);
                 return *this;
             }
 
