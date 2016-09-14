@@ -605,9 +605,6 @@ class ProjectModel(QStandardItemModel):
         parentItem.appendRow(item)
         self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
 
-        # XXX TODO: check sub macro objects
-        #self.addMacroSubItems(macroModel)
-
     def insertMacroItem(self, row, macroModel):
         """ This function inserts the given \macroModel at the given \row of the
             model.
@@ -618,30 +615,6 @@ class ProjectModel(QStandardItemModel):
         # Find folder for scenes
         parentItem = self.getCategoryItem(Project.MACROS_LABEL, projectItem)
         parentItem.insertRow(row, item)
-
-        # XXX TODO: check sub macro objects
-        #self.addMacroSubItems(macroModel)
-
-    def addMacroSubItems(self, macroModel):
-        if not macroModel.macros:
-            return
-        
-        item = self.findItem(macroModel)
-        if item is None:
-            return
- 
-        # Remove possible old rows
-        while item.hasChildren():
-            row = item.rowCount()-1
-            item.removeRow(row)
-        
-        for k, v in macroModel.macros.items():
-            childItem = QStandardItem(k)
-            childItem.setData(v, ProjectModel.ITEM_OBJECT)
-            childItem.setEditable(False)
-            item.appendRow(childItem)
-        
-        self.signalExpandIndex.emit(self.indexFromItem(item), True)
 
     def renameMacro(self, macroModel):
         item = self.findItem(macroModel)
@@ -980,7 +953,6 @@ class ProjectModel(QStandardItemModel):
         project.signalConfigurationInserted.connect(self.insertConfigurationItem)
         project.signalMacroAdded.connect(self.addMacroItem)
         project.signalMacroInserted.connect(self.insertMacroItem)
-        project.signalMacroChanged.connect(self.addMacroSubItems)
         project.signalMonitorAdded.connect(self.addMonitorItem)
         project.signalMonitorInserted.connect(self.insertMonitorItem)
         
@@ -1283,14 +1255,10 @@ class ProjectModel(QStandardItemModel):
 
             # Overwrite existing scene
             index = self.removeObject(project, sceneModel, False)
-            sceneModel = self.insertScene(index, project, title)
+            sceneModel = self.insertScene(index, project, title,
+                                          filename_or_fileobj)
         else:
-            if filename_or_fileobj is None:
-                # Create empty scene model
-                sceneModel = SceneModel()
-            else:
-                # Read file to create scene model
-                sceneModel = read_scene(filename_or_fileobj)
+            sceneModel = read_scene(filename_or_fileobj)
             # Set the scene model title
             sceneModel.title = title
             project.addScene(sceneModel)
@@ -1306,11 +1274,12 @@ class ProjectModel(QStandardItemModel):
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.RemoveSceneView, data))
 
-    def insertScene(self, index, project, title):
+    def insertScene(self, index, project, title, filename_or_fileobj=None):
         """
         Insert a scene model for the given \project with the given data.
         """
-        sceneModel = SceneModel(title=title)
+        sceneModel = read_scene(filename_or_fileobj)
+        sceneModel.title = title
         project.insertScene(index, sceneModel)
 
         return sceneModel
@@ -1375,14 +1344,10 @@ class ProjectModel(QStandardItemModel):
 
             # Overwrite existing macro
             index = self.removeObject(project, macroModel, False)
-            macroModel = self.insertMacro(index, project, title)
+            macroModel = self.insertMacro(index, project, title,
+                                          filename_or_fileobj)
         else:
-            if filename_or_fileobj is None:
-                # Create empty macro model
-                macroModel = MacroModel()
-            else:
-                # Read file to create scene model
-                macroModel = read_macro(filename_or_fileobj)
+            macroModel = read_macro(filename_or_fileobj)
             # Set the scene model title
             macroModel.title = title
             project.addMacro(macroModel)
@@ -1392,11 +1357,12 @@ class ProjectModel(QStandardItemModel):
 
         return macroModel
 
-    def insertMacro(self, index, project, title):
+    def insertMacro(self, index, project, title, filename_or_fileobj=None):
         """
         Insert a macro model for the given \project with the given data.
         """
-        macroModel = MacroModel(title=title)
+        macroModel = read_macro(filename_or_fileobj)
+        macroModel.title = title
         project.insertMacro(index, macroModel)
 
         return macroModel
