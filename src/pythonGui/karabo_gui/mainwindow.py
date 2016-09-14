@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
                 return True
             elif sender is KaraboEventSender.OpenMacro:
                 data = event.data
-                self.addMacro(data.get("model"), data.get('project'))
+                self.addMacro(data.get('model'), data.get('project'))
                 return True
             elif sender is KaraboEventSender.RemoveMacro:
                 data = event.data
@@ -332,7 +332,7 @@ class MainWindow(QMainWindow):
             top of the focus stack.
         """
         self.checkAndRemovePlaceholderMiddlePanel()
-        
+
         divWidget = self._getDivWidget(child_type, model)
         if divWidget is not None:
             index = self.middleTab.indexOf(divWidget)
