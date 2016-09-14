@@ -930,13 +930,13 @@ ${TESTDIR}/_ext/815710531/integrationRunner.o: ../../../src/karabo/tests/integra
 ${TESTDIR}/_ext/815710531/PropertyTest_Test.o: ../../../src/karabo/tests/integration/PropertyTest_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/815710531
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/PropertyTest_Test.o ../../../src/karabo/tests/integration/PropertyTest_Test.cc
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/PropertyTest_Test.o ../../../src/karabo/tests/integration/PropertyTest_Test.cc
 
 
 ${TESTDIR}/_ext/815710531/integrationRunner_2.o: ../../../src/karabo/tests/integration/integrationRunner_2.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/815710531
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/integrationRunner_2.o ../../../src/karabo/tests/integration/integrationRunner_2.cc
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/integrationRunner_2.o ../../../src/karabo/tests/integration/integrationRunner_2.cc
 
 
 ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o: ../../../src/karabo/tests/io/FileInputOutput_Test.cc 

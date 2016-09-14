@@ -870,7 +870,7 @@ ${TESTDIR}/TestFiles/f8: ${TESTDIR}/_ext/815710531/AlarmService_Test.o ${TESTDIR
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f8 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/f9: ${TESTDIR}/_ext/815710531/integrationRunner_2.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f9: ${TESTDIR}/_ext/815710531/PropertyTest_Test.o ${TESTDIR}/_ext/815710531/integrationRunner_2.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f9 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -927,10 +927,16 @@ ${TESTDIR}/_ext/815710531/integrationRunner.o: ../../../src/karabo/tests/integra
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/integrationRunner.o ../../../src/karabo/tests/integration/integrationRunner.cc
 
 
+${TESTDIR}/_ext/815710531/PropertyTest_Test.o: ../../../src/karabo/tests/integration/PropertyTest_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/815710531
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/PropertyTest_Test.o ../../../src/karabo/tests/integration/PropertyTest_Test.cc
+
+
 ${TESTDIR}/_ext/815710531/integrationRunner_2.o: ../../../src/karabo/tests/integration/integrationRunner_2.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/815710531
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/integrationRunner_2.o ../../../src/karabo/tests/integration/integrationRunner_2.cc
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/integrationRunner_2.o ../../../src/karabo/tests/integration/integrationRunner_2.cc
 
 
 ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o: ../../../src/karabo/tests/io/FileInputOutput_Test.cc 
