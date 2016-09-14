@@ -6,7 +6,7 @@
  */
 
 #ifndef KARABO_DEVICES_PROPERTYTEST_HH
-#define	KARABO_DEVICES_PROPERTYTEST_HH
+#define KARABO_DEVICES_PROPERTYTEST_HH
 
 #include <boost/shared_ptr.hpp>
 #include <karabo/karabo.hpp>
