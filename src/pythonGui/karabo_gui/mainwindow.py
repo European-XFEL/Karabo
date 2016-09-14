@@ -67,27 +67,27 @@ class MainWindow(QMainWindow):
             sender = event.sender
             if sender is KaraboEventSender.OpenSceneView:
                 data = event.data
-                self.addSceneView(data.get("model"), data.get('project'))
+                self.addSceneView(data.get('model'), data.get('project'))
                 return True
             elif sender is KaraboEventSender.RemoveSceneView:
                 data = event.data
-                self.removeMiddlePanel('scene_model', data.get("model"))
+                self.removeMiddlePanel('scene_model', data.get('model'))
                 return True
             elif sender is KaraboEventSender.RenameSceneView:
                 data = event.data
-                self.renameMiddlePanel('scene_model', data.get("model"))
+                self.renameMiddlePanel('scene_model', data.get('model'))
                 return True
             elif sender is KaraboEventSender.OpenMacro:
                 data = event.data
-                self.addMacro(data.get("model"))
+                self.addMacro(data.get('model'), data.get('project'))
                 return True
             elif sender is KaraboEventSender.RemoveMacro:
                 data = event.data
-                self.removeMiddlePanel('macro_model', data.get("model"))
+                self.removeMiddlePanel('macro_model', data.get('model'))
                 return True
             elif sender is KaraboEventSender.RenameMacro:
                 data = event.data
-                self.renameMiddlePanel('macro_model', data.get("model"))
+                self.renameMiddlePanel('macro_model', data.get('model'))
                 return True
         return super(MainWindow, self).eventFilter(obj, event)
 
@@ -322,12 +322,14 @@ class MainWindow(QMainWindow):
             if panel_model is model:
                 return divWidget
 
-    def middlePanelExists(self, child_type, model):
-        """This method checks whether a middle panel for the given ``model``
-        already exists.
-        ``child_type`` can be either 'macro_model' or ''scene_model'.
+    def focusExistingMiddlePanel(self, child_type, model):
+        """ This method checks whether a middle panel for the given ``model``
+            already exists.
+            ``child_type`` can be either 'macro_model' or ''scene_model'.
 
-        The method returns ``True``, if panel already open else ``False``
+            The method returns ``True``, if panel already open else ``False``.
+            Note that in case the panel is already there, it is pushed to the
+            top of the focus stack.
         """
         self.checkAndRemovePlaceholderMiddlePanel()
 
@@ -399,12 +401,10 @@ class MainWindow(QMainWindow):
         """ Add a scene view to show the content of the given `sceneModel in
             the GUI.
         """
-        if self.middlePanelExists('scene_model', sceneModel):
+        if self.focusExistingMiddlePanel('scene_model', sceneModel):
             return
 
-        self.checkAndRemovePlaceholderMiddlePanel()
-
-        # Set icon data to model, if existent
+        # XXX: Set icon data to model, if existent (temporary solution)
         self._readIconDataFromProject(sceneModel, project)
         sceneView = SceneView(model=sceneModel, project=project)
 
@@ -415,10 +415,13 @@ class MainWindow(QMainWindow):
                                       self)
         self.selectLastMiddlePanel()
 
-    def addMacro(self, macroModel):
-        if self.middlePanelExists('macro_model', macroModel):
+    def addMacro(self, macroModel, project):
+        if self.focusExistingMiddlePanel('macro_model', macroModel):
             return
-
+    
+        # Add the project name to the macro model because it is only needed
+        # at instantiation time of the macro
+        macroModel.project_name = project.name
         macroPanel = MacroPanel(macroModel)
         self.middleTab.addDockableTab(macroPanel, macroModel.title, self)
 

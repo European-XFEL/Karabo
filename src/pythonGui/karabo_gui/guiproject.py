@@ -285,7 +285,6 @@ class GuiProject(Project, QObject):
     #signalResourceAdded = pytqtSignal()
     signalMacroAdded = pyqtSignal(object)
     signalMacroInserted = pyqtSignal(int, object)
-    signalMacroChanged = pyqtSignal(object)
     signalMonitorAdded = pyqtSignal(object)
     signalMonitorInserted = pyqtSignal(int, object)
     
@@ -650,27 +649,6 @@ class GuiProject(Project, QObject):
         """
         if self.monitorInterval == 0 and self.isMonitoring and box in self.monitorBoxes:
             self.timerEvent(None, timestamp)
-
-
-#class Macro(BaseMacro):
-#    def __init__(self):
-#        super(Macro, self).__init__()
-#        self.macros = {}
-#        self.instances = []
-
-#    def run(self):
-#        if self.editor is None:
-#            code = self.load()
-#        else:
-#            code = self.editor.edit.toPlainText()
-#        h = Hash("code", code,
-#                 "project", self.project.name,
-#                 "module", self.name)
-#        network.onInitDevice("Karabo_MacroServer", "MetaMacro", self.instanceId, h)
-
-    #def load(self):
-    #    with ZipFile(self.project.filename, "r") as zf:
-    #        return zf.read("macros/{}.py".format(self.name)).decode("utf8")
 
 
 class Category(object):
