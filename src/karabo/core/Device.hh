@@ -1359,14 +1359,10 @@ namespace karabo {
                     for (Hash::const_iterator it = previous.begin(); it != previous.end(); ++it) {
                         const boost::optional<const Hash::Node&> currentEntry = current.find(it->getKey());
                         if (currentEntry) {
-                            if (!forceUpdate) { // on force update we don't care if timestamps match
-                                const Timestamp previousTimeStamp = Timestamp::fromHashAttributes(it->getAttributes());
-                                const Timestamp currentTimeStamp = Timestamp::fromHashAttributes(currentEntry->getAttributes());
-                                if (previousTimeStamp.getTrainId() == currentTimeStamp.getTrainId() &&
-                                    previousTimeStamp.getSeconds() == currentTimeStamp.getSeconds() &&
-                                    previousTimeStamp.getFractionalSeconds() == previousTimeStamp.getFractionalSeconds()) {
-                                    knownAlarms.insert(it->getKey());
-                                }
+                            if (!forceUpdate // on force update we don't care if timestamps match
+                                && (Timestamp::fromHashAttributes(it->getAttributes())
+                                    == Timestamp::fromHashAttributes(currentEntry->getAttributes()))) {
+                                knownAlarms.insert(it->getKey());
                             }
                             continue; //alarmCondition still exists nothing to clean
                         }
