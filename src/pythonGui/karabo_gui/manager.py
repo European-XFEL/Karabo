@@ -26,6 +26,8 @@ from karabo_gui.configuration import BulkNotifications
 from karabo_gui.dialogs.configurationdialog import (
     SelectProjectDialog, SelectProjectConfigurationDialog)
 import karabo_gui.globals as globals
+from karabo_gui.mediator import (
+    broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.navigationtreemodel import NavigationTreeModel
 from karabo_gui.network import Network
@@ -557,5 +559,9 @@ class _Manager(QObject):
 
     def handle_initReply(self, deviceId, success, message):
         device = self.deviceData.get(deviceId)
+        print("handle_initReply", deviceId)
         if device is not None:
-            device.signalInitReply.emit(success, message)
+            data = {'device': device, 'success': success, 'message': message}
+            # Create KaraboBroadcastEvent
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.DeviceInitReply, data))
