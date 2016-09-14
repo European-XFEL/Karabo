@@ -15,53 +15,6 @@ namespace bp = boost::python;
 namespace karathon {
 
 
-    boost::shared_ptr<karabo::xms::Data> DataWrap::make(bp::object& obj) {
-        if (bp::extract<karabo::util::Hash::Pointer>(obj).check()) {
-            return boost::shared_ptr<karabo::xms::Data>(new karabo::xms::Data(bp::extract<karabo::util::Hash::Pointer>(obj)));
-        } else if (bp::extract<karabo::xms::Data>(obj).check()) {
-            return boost::shared_ptr<karabo::xms::Data>(new karabo::xms::Data(bp::extract<karabo::xms::Data>(obj)));
-        } else if (bp::extract<karabo::util::Hash>(obj).check()) {
-            return boost::shared_ptr<karabo::xms::Data>(new karabo::xms::Data(bp::extract<karabo::util::Hash>(obj)));
-        } else
-            throw KARABO_PYTHON_EXCEPTION("Object type is not \"Hash\", \"HashPointer\" or \"Data\"");
-    }
-
-
-    karabo::util::Hash::Pointer DataWrap::getNode(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key) {
-        return self->getNode<karabo::util::Hash::Pointer>(key);
-    }
-
-
-    bp::object DataWrap::get(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key) {
-        return Wrapper::toObject(self->hash()->getNode(key).getValueAsAny(), true);
-    }
-
-
-    void DataWrap::set(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key, const bp::object& value) {
-        boost::any anyval;
-        Wrapper::toAny(value, anyval);
-        self->set(key, anyval);
-    }
-
-
-    bp::object DataWrap::hash(const boost::shared_ptr<karabo::xms::Data>& self) {
-        return Wrapper::toObject(self->hash());
-    }
-
-
-    void DataWrap::attachTimestamp(const boost::shared_ptr<karabo::xms::Data>& self, const bp::object& obj) {
-        if (bp::extract<karabo::util::Timestamp>(obj).check()) {
-            const karabo::util::Timestamp& ts = bp::extract<karabo::util::Timestamp>(obj);
-            self->attachTimestamp(ts);
-        }
-    }
-
-
-    boost::shared_ptr<karabo::xms::Data> DataWrap::copy(const boost::shared_ptr<karabo::xms::Data>& self) {
-        return boost::shared_ptr<karabo::xms::Data>(new karabo::xms::Data(*self));
-    }
-
-
     boost::shared_ptr<karabo::xms::ImageData > ImageDataWrap::make5(const bp::object& obj,
                                                                     const karabo::util::Dims& dimensions,
                                                                     const karabo::xms::EncodingType encoding,
@@ -336,51 +289,6 @@ void exportPyXmsImageData() {
 
 
 void exportPyXmsInputOutputChannel() {
-    {
-        bp::class_<karabo::xms::Data, boost::shared_ptr<karabo::xms::Data > >("Data", bp::init<>())
-
-                .def(bp::init<const std::string&, const karabo::util::Hash&>((bp::arg("channel"), bp::arg("config"))))
-
-                .def(bp::init<const std::string&, const karabo::xms::Data&>((bp::arg("key"), bp::arg("other"))))
-
-                .def("__init__", bp::make_constructor(&karathon::DataWrap::make, bp::default_call_policies(), (bp::arg("data"))))
-
-                .def("setNode", &karabo::xms::Data::setNode, (bp::arg("key"), bp::arg("data")))
-
-                .def("getNode", &karathon::DataWrap().getNode, (bp::arg("key")))
-
-                .def("get", &karathon::DataWrap().get, (bp::arg("key")))
-
-                .def("__getitem__", &karathon::DataWrap().get)
-
-                .def("set", &karathon::DataWrap().set, (bp::arg("key"), bp::arg("value")))
-
-                .def("__setitem__", &karathon::DataWrap().set)
-
-                .def("has", &karabo::xms::Data::has, (bp::arg("key")))
-
-                .def("__contains__", &karabo::xms::Data::has, (bp::arg("key")))
-
-                .def("erase", &karabo::xms::Data::erase, (bp::arg("key")))
-
-                .def("__delitem__", &karabo::xms::Data::erase, (bp::arg("key")))
-
-                .def("hash", &karathon::DataWrap().hash)
-
-                .def("attachTimestamp", &karathon::DataWrap().attachTimestamp, (bp::arg("timestamp")))
-
-                .def(bp::self_ns::str(bp::self))
-
-                .def(bp::self_ns::repr(bp::self))
-
-                .def("__copy__", &karathon::DataWrap().copy)
-
-                .def("__deepcopy__", &karathon::DataWrap().copy)
-
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::Data)
-                ;
-    }
-
     {
         bp::enum_< karabo::xms::Encoding::EncodingType>("Encoding")
                 .value("UNDEFINED", karabo::xms::Encoding::UNDEFINED)

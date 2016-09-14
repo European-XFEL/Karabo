@@ -226,8 +226,6 @@ namespace karathon {
                 return fromStdVectorToPyList(boost::any_cast < std::vector<std::string> >(operand));
             } else if (operand.type() == typeid (std::vector<karabo::util::CppNone>)) {
                 return fromStdVectorToPyListNone(boost::any_cast < std::vector<karabo::util::CppNone> >(operand));
-            } else if (operand.type() == typeid (karabo::xms::Data)) {
-                return bp::object(boost::any_cast<karabo::xms::Data>(operand));           
             } else if (operand.type() == typeid (karabo::util::Schema)) {
                 return bp::object(boost::any_cast<karabo::util::Schema>(operand));
             } else if (operand.type() == typeid (std::vector<karabo::util::Hash>)) {
