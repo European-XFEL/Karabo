@@ -403,7 +403,7 @@ namespace karabo {
              * Data will be timestamped and send immediately (write/update).
              * @param channelName The output channel name
              * @param key The data element (root-)key
-             * @param data Data object
+             * @param data Hash::Pointer object
              */
             void writeChannel(const std::string& channelName, const std::string& key, const karabo::util::Hash::Pointer& data) {
                 karabo::util::Hash::Pointer root(new karabo::util::Hash(key, data));
@@ -414,7 +414,7 @@ namespace karabo {
              * Writes a data object to the specified channel. The data object internally must
              * follow exactly the data schema as defined in the expected parameters.
              * @param channelName The output channel name
-             * @param data Data object
+             * @param data Hash::Pointer object
              */
             void writeChannel(const std::string& channelName, karabo::util::Hash::Pointer& data) {
                 // TODO think about proper validation and time tagging later

@@ -15,7 +15,6 @@
 #include "xms/NetworkInput.hh"
 #include "xms/OutputChannel.hh"
 #include "xms/InputChannel.hh"
-#include "xms/Data.hh"
 #include "xms/ImageData.hh"
 #endif
 
