@@ -36,64 +36,6 @@ namespace karabo {
 
         void AlarmService::expectedParameters(Schema& expected) {
             
-            Schema tableRow;
-            
-            STRING_ELEMENT(tableRow).key("timeOfOccurrence")
-                    .displayedName("Occurred at")
-                    .readOnly()
-                    .commit();
-            
-            UINT64_ELEMENT(tableRow).key("trainOfOccurrence")
-                    .displayedName("Occurred at train")
-                    .readOnly()
-                    .commit();
-            
-            STRING_ELEMENT(tableRow).key("timeOfFirstOccurrence")
-                    .displayedName("First occurred at")
-                    .readOnly()
-                    .commit();
-            
-            UINT64_ELEMENT(tableRow).key("trainOfFirstOccurrence")
-                    .displayedName("First occurred at train")
-                    .readOnly()
-                    .commit();
-            
-            STRING_ELEMENT(tableRow).key("deviceId")
-                    .displayedName("Device")
-                    .readOnly()
-                    .commit();
-            
-            STRING_ELEMENT(tableRow).key("property")
-                    .displayedName("Property")
-                    .readOnly()
-                    .commit();
-            
-            STRING_ELEMENT(tableRow).key("type")
-                    .displayedName("Type")
-                    .readOnly()
-                    .commit();
-            
-            STRING_ELEMENT(tableRow).key("description")
-                    .displayedName("Description")
-                    .readOnly()
-                    .commit();
-            
-            BOOL_ELEMENT(tableRow).key("needsAcknowledging")
-                    .displayedName("Needs acknowledging")
-                    .readOnly()
-                    .commit();
-            
-            BOOL_ELEMENT(tableRow).key("acknowledgeable")
-                    .displayedName("Acknowledgeable")
-                    .readOnly()
-                    .commit();
-            
-            BOOL_ELEMENT(tableRow).key("acknowledged")
-                    .displayedName("Acknowledged")
-                    .assignmentOptional().defaultValue(false)
-                    .reconfigurable()
-                    .commit();
-            
             //device elements
             
             PATH_ELEMENT(expected).key("storagePath")
@@ -117,22 +59,12 @@ namespace karabo {
                     .readOnly()
                     .expertAccess()
                     .commit();
-            
-            
-            TABLE_ELEMENT(expected).key("currentAlarms")
-                    .displayedName("Current Alarms")
-                    .setNodeSchema(tableRow)
-                    .assignmentOptional().noDefaultValue()
-                    .reconfigurable()
-                    .commit();
                   
         }
 
-            
-
-
         AlarmService::AlarmService(const karabo::util::Hash& input) :
             karabo::core::Device<>(input){
+            setupSignalsAndSlots();
             KARABO_INITIAL_FUNCTION(initialize);
         }
      
@@ -145,9 +77,6 @@ namespace karabo {
 
             updateState(State::INIT);
             
-            setupSignalsAndSlots();
-            
-                        
             //we listen on instance new events to connect to the instances "signalAlarmUpdate" signal
             trackAllInstances();
             remote().registerInstanceNewMonitor(boost::bind(&AlarmService::registerNewDevice, this, _1));
@@ -170,7 +99,10 @@ namespace karabo {
         void AlarmService::setupSignalsAndSlots(){     
 
             registerSlot<std::string, karabo::util::Hash > (boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2), "slotUpdateAlarms");
-
+            KARABO_SIGNAL3("signalAlarmServiceUpdate", std::string, std::string, karabo::util::Hash)
+            registerSlot<karabo::util::Hash > (boost::bind(&AlarmService::slotAcknowledgeAlarm, this, _1), "slotAcknowledgeAlarm");
+            registerSlot(boost::bind(&AlarmService::slotRequestAlarmDump, this), "slotRequestAlarmDump");
+            
         }
         
         void AlarmService::registerNewDevice(const karabo::util::Hash& topologyEntry){
@@ -216,7 +148,11 @@ namespace karabo {
         }
         
         void AlarmService::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo){
-            {
+            
+            {   
+                //updates by row
+                Hash rowUpdates;
+                
                 boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
                 boost::optional<Hash::Node&> alarmN = m_alarms.find(instanceId);
                 if(alarmN){
@@ -231,11 +167,17 @@ namespace karabo {
                                 //if a device died all alarms need to be and can be acknowledged
                                 typeEntry.set("needsAcknowledging", true);
                                 typeEntry.set("acknowledgeable", true);
+                                
+                                //add as update to row updates;
+                                const unsigned long long id =  m_alarmsMap_r.find(&(*aTypeIt))->second;
+                                rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("deviceKilled",  typeEntry));
+ 
                             }
                         }
                     }
-                    updateAlarmTable();
+                    emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), rowUpdates);
                 }
+                
             }
            
         }
@@ -248,6 +190,9 @@ namespace karabo {
             
             // get rid of alarm conditions that have passed or can now be acknowledged
             const Hash& toClear = alarmInfo.get<Hash>("toClear");
+            
+            //updates by row
+            Hash rowUpdates;
             
             // check if any alarms exist for this deviceId
             // in the following capital "N" at the end of a variable declarations signifies a Hash node
@@ -274,14 +219,24 @@ namespace karabo {
    
                         //alarm of this type exists for the property
                         Hash& existingTypeEntry = existingTypeEntryN->getValue<Hash>();
+                        
+                        const unsigned long long id =  m_alarmsMap_r.find(&(*existingTypeEntryN))->second;
                         if(existingTypeEntry.get<bool>("needsAcknowledging")){
                             //if the alarm needs to be acknowledged we allow this now
                             existingTypeEntry.set("acknowledgeable", true);
+                            //add to rowUpdates
+                            rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("acknowledgeable", existingTypeEntry));   
                            
                         } else {
-                           //go ahead and erase the alarm condition as it is allowed to silently disappear
+                           
+                            //add as delete to row updates;
+                            rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("remove", existingTypeEntry));
+                            
+                            m_alarmsMap_r.erase(&(*existingTypeEntryN));
+                            m_alarmsMap.erase(id);
+                            
+                            //go ahead and erase the alarm condition as it is allowed to silently disappear
                             existingPropEntry.erase(*aTypeIt);
-                        
                         }
                     }
                     
@@ -301,6 +256,7 @@ namespace karabo {
                 if(!existingDeviceEntryN){
                     existingDeviceEntryN = m_alarms.set(deviceId, Hash());
                 }
+                
                 Hash& existingDeviceEntry = existingDeviceEntryN->getValue<Hash>();
 
                 //iteration over properties with alarms
@@ -321,17 +277,25 @@ namespace karabo {
                         boost::optional<Hash::Node&> existingTypeEntryN = existingPropEntry.find(aTypeIt->getKey());
                         
                         
-                        const Timestamp updatedTimeStamp = Timestamp::fromHashAttributes(propIt->getAttributes());
+                        const Timestamp updatedTimeStamp = Timestamp::fromHashAttributes(aTypeIt->getAttributes());
                         const std::string timeOfOccurrence = updatedTimeStamp.toIso8601();
                         const unsigned long long trainOfOccurrence = updatedTimeStamp.getTrainId();
                         std::string timeOfFirstOccurrence = timeOfOccurrence;
                         unsigned long long trainOfFirstOccurrence = trainOfOccurrence;
                         
+                        //get the next id if we perform insertion
+                        unsigned long long id = 0;
+                        if(!m_alarmsMap.empty()) {
+                            id = (--m_alarmsMap.end())->first;
+                            id++;
+                        }
+   
                         if(existingTypeEntryN) {
                             //alarm exists, we use its first occurance
                             Hash& existingTypeEntry = existingTypeEntryN->getValue<Hash>();
                             timeOfFirstOccurrence =  existingTypeEntry.get<std::string>("timeOfFirstOccurrence");
                             trainOfFirstOccurrence =  existingTypeEntry.get<unsigned long long>("trainOfFirstOccurrence");
+                            id = m_alarmsMap_r.find(&(*existingTypeEntryN))->second;
                         }
                         
                         //first set all properties we can simply copy by assigning value of the new entry
@@ -345,87 +309,37 @@ namespace karabo {
                         newEntry.set("trainOfOccurrence", trainOfOccurrence);
                         // acknowledgeable is determined by whether an alarm needs acknowledging
                         newEntry.set("acknowledgeable",  !newEntry.get<bool>("needsAcknowledging"));
+                        newEntry.set("deviceId", deviceId);
+                        newEntry.set("property", boost::replace_all_copy(existingPropEntryN->getKey(), Validator::kAlarmParamPathSeparator, "."));
+                        newEntry.set("id", id);
                         
-                
-                    }
-                }
-            }
-            
-            updateAlarmTable();
-            
-        }
-        
-        void AlarmService::updateAlarmTable(){
-            std::vector<Hash> tableVector;
-
-            //instance level
-
-            boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
-            for(Hash::const_iterator it = m_alarms.begin(); it != m_alarms.end(); ++it){
-                const std::string& device = it->getKey();
-                const Hash& instances = it->getValue<Hash>();
-                
-                //property level
-                for(Hash::const_iterator propIt = instances.begin(); propIt != instances.end(); ++propIt){
-                    const std::string& property = propIt->getKey();
-                    const Hash& alarmTypes = propIt->getValue<Hash>();
-                    
-                    //type level
-                    for(Hash::const_iterator aTypeIt = alarmTypes.begin(); aTypeIt != alarmTypes.end(); ++aTypeIt){
-                        const Hash& entry = aTypeIt->getValue<Hash>();
-                        tableVector.push_back(Hash());
-                        Hash& h =  tableVector.back();
-                        h.set("timeOfOccurrence", entry.get<std::string>("timeOfOccurrence"));
-                        h.set("trainOfOccurrence", entry.get<unsigned long long>("trainOfOccurrence"));
-                        h.set("timeOfFirstOccurrence", entry.get<std::string>("timeOfFirstOccurrence"));
-                        h.set("trainOfFirstOccurrence", entry.get<unsigned long long>("trainOfFirstOccurrence"));
-                        h.set("deviceId", device);
-                        h.set("property", property);
-                        h.set("type", entry.get<std::string>("type"));
-                        h.set("description", entry.get<std::string>("description"));
-                        h.set("needsAcknowledging", entry.get<bool>("needsAcknowledging"));
-                        h.set("acknowledgeable", entry.get<bool>("acknowledgeable"));
+                        //update maps
+                        m_alarmsMap[id] = &newEntryN;
+                        m_alarmsMap_r[&newEntryN] = id;
+                        
                        
+                        if(existingTypeEntryN) {
+                            rowUpdates.set(boost::lexical_cast<std::string>(id), 
+                                    addRowUpdate("update",  newEntry));
+                        } else {
+                            rowUpdates.set(boost::lexical_cast<std::string>(id), 
+                                    addRowUpdate("add", newEntry));
+                        }
+                        
                         
                     }
                 }
             }
+            emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), rowUpdates);
             
-            set("currentAlarms", tableVector);
+            
         }
         
-        void AlarmService::preReconfigure(karabo::util::Hash& incomingReconfiguration){
-            
-            boost::optional<Hash::Node&> alarmConfig = incomingReconfiguration.find("currentAlarms");
-            if(alarmConfig){
-                std::vector<Hash>& alarmsInTable = alarmConfig->getValue<std::vector<Hash> >();
-                for(std::vector<Hash>::iterator it = alarmsInTable.begin(); it != alarmsInTable.end(); ++it){
-                    const std::string& deviceId = it->get<std::string>("deviceId");
-                    const std::string& property = it->get<std::string>("property");
-                    const std::string& type = it->get<std::string>("type");
-                    const std::string path = deviceId+"."+property+"."+type;
-                    //we make sure that the table is up-to-date-with the internal data structure
-                    boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
-                    const boost::optional<Hash::Node&> entryN = m_alarms.find(path, '.');
-                     if(entryN){
-                         const Hash& entry = entryN->getValue<Hash>();
-                         if(entry.get<bool>("acknowledgeable") && entry.get<bool>("needsAcknowledging") && it->get<bool>("acknowledged")){
-                             //remove the entry
-                            boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
-                            m_alarms.erasePath(path, '.');
-                         } 
-                     } else {
-                         KARABO_LOG_WARN<<"Element in alarm table ("<<deviceId<<":"<<property<<":"<<type<<") does not match any internal alarm entry!";
+        karabo::util::Hash AlarmService::addRowUpdate(const std::string& updateType, const karabo::util::Hash& entry) const {
+            return Hash(updateType, entry);
+        }
 
-                     }
-                }
-                // now remove update to table and update from m_alarms instead
-                // this is necessary to keep everything in sync. Even if new alarms pop up during the update
-                incomingReconfiguration.erase("currentAlarms");
-                updateAlarmTable();
-            }
-        }
-        
+                
         void AlarmService::flushRunner() const {
             TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
             
@@ -442,6 +356,7 @@ namespace karabo {
                     {
 
                         boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
+                        
                         Hash h("devices", get<std::vector<std::string> >("registeredDevices"), "alarms", m_alarms);
                         serializer->save(h, archive);
                     }
@@ -474,12 +389,37 @@ namespace karabo {
                 m_alarms = previousState.get<Hash>("alarms");
                 
                 
+                
+                
             } catch (...){
                 //we go on without updating alarms
                 KARABO_LOG_WARN<<"Could not load previous alarm state from file "<<m_flushFilePath<<" even though file exists!";
             }
             
-            //now request all devices to update their alarms
+            //send this as init information to Clients
+            Hash rowInits;
+            boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
+            for(Hash::const_iterator it = m_alarms.begin(); it != m_alarms.end(); ++it){
+                const Hash& instance = it->getValue<Hash>();   
+                //property level
+                for(Hash::const_iterator propIt = instance.begin(); propIt != instance.end(); ++propIt){
+                    const Hash& alarmTypes = propIt->getValue<Hash>();
+                    //type level
+                    for(Hash::const_iterator aTypeIt = alarmTypes.begin(); aTypeIt != alarmTypes.end(); ++aTypeIt){
+                        const Hash& entry = aTypeIt->getValue<Hash>();
+                        const unsigned long long id = entry.get<unsigned long long>("id");
+                        m_alarmsMap[id] = &(*aTypeIt);
+                        m_alarmsMap_r[&(*aTypeIt)] = id;
+                        rowInits.set(boost::lexical_cast<std::string>(id), addRowUpdate("init",  entry));
+                        
+                        
+                    }
+                }
+            }
+            emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmInit"), rowInits);
+            
+            // trigger instance new handlers for existing devices
+            // this will also trigger these devices to resubmit their alarms
             const Hash runtimeInfo = remote().getSystemInformation();
             const Hash& onlineDevices = runtimeInfo.get<Hash>("device");
             for (Hash::const_iterator it = onlineDevices.begin(); it != onlineDevices.end(); ++it) {
@@ -488,19 +428,64 @@ namespace karabo {
                 Hash topologyEntry("device", Hash());
                 // Copy node with key "<deviceId>" and attributes into the single Hash in topologyEntry:
                 topologyEntry.begin()->getValue<Hash>().setNode(deviceNode);
-                registerNewDevice(topologyEntry);
-                
-                const std::string& deviceId = it->getKey();
-                
-                boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
-                const boost::optional<Hash::Node&> entry = m_alarms.find(deviceId);
-                request(deviceId, "slotReSubmitAlarms", entry ? entry->getValue<Hash>() : Hash())
-                        .receiveAsync<std::string, Hash>(boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2));
+                registerNewDevice(topologyEntry);              
             }
 
         }
-
         
+        void AlarmService::slotAcknowledgeAlarm(const karabo::util::Hash& acknowledgedRows){
+           
+            Hash rowUpdates;
+            for(Hash::const_iterator it = acknowledgedRows.begin(); it != acknowledgedRows.end(); ++it){
+                try {
+                    const unsigned long long id = boost::lexical_cast<unsigned long long>(it->getKey());
+                
+                    const auto mapIter = m_alarmsMap.find(id);
+                    if (mapIter == m_alarmsMap.end()) {
+                         KARABO_LOG_WARN << "Tried to acknowledge non-existing alarm!";
+                         continue;
+                    }
+                    Hash::Node* entryN = mapIter->second;
+                    Hash& entry = entryN->getValue<Hash>();
+                    if(entry.get<bool>("acknowledgeable")){
+
+                        //add as delete to row updates;
+                        entry.set("acknowledged", true);
+                        rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("remove", entry));
+                        
+                        m_alarmsMap_r.erase(&(*entryN));
+                        m_alarmsMap.erase(id);
+                        const std::string path = entry.get<std::string>("deviceId") 
+                            + "." + boost::replace_all_copy(entry.get<std::string>("property"), ".", Validator::kAlarmParamPathSeparator) 
+                            + "." + entry.get<std::string>("type");
+                        m_alarms.erasePath(path, '.');
+                    } else {
+                        rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("refuseAcknowledgement",  entry));
+                    }
+                } catch (const boost::bad_lexical_cast & ){
+                    KARABO_LOG_ERROR<<"Failed casting "<<it->getKey()<<" to integer representation";
+                }
+                
+            }
+            if(!rowUpdates.empty()) emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), rowUpdates);
+            
+        }
+        
+        void AlarmService::slotRequestAlarmDump(){
+            
+            Hash rowInits;
+            boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
+            for(auto it = m_alarmsMap.begin(); it != m_alarmsMap.end(); ++it){
+                const Hash::Node* entryN = it->second;
+                const Hash& entry = entryN->getValue<Hash>(); 
+                rowInits.set(boost::lexical_cast<std::string>(entry.get<unsigned long long>("id")), addRowUpdate("init", entry));
+                
+            }
+            
+            reply(Hash("instanceId", getInstanceId(), "alarms", rowInits));
+            
+        }
+       
     }
 }
 

@@ -492,7 +492,7 @@ namespace karabo {
                     }
 
                     if (!stayInAlarm) {
-                        m_parametersInWarnOrAlarm.erase(scope);
+                        m_parametersInWarnOrAlarm.erase(boost::replace_all_copy(scope, ".", kAlarmParamPathSeparator));
                     }
                 }
             } else if (referenceCategory == Types::SEQUENCE) {
@@ -575,11 +575,10 @@ namespace karabo {
                     string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went "
                                + (checkGreater ? "above " : "below ") + alarmCond.asBaseString() + " level of "
                                + karabo::util::toString(threshold));
-
-                    Hash::Node& desc = m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmString, "message", msg), '\0');
+                    const std::string scopeSlashes = boost::replace_all_copy(scope, ".", kAlarmParamPathSeparator); 
+                    Hash::Node& desc = m_parametersInWarnOrAlarm.set(scopeSlashes, Hash("type", alarmString, "message", msg));
                     m_timestamp.toHashAttributes(desc.getAttributes());
                     workNode.setAttribute(KARABO_ALARM_ATTR, alarmString);
-
 
                     return true; //alarm condition re-raised, do not clear
                 } else {
@@ -588,6 +587,8 @@ namespace karabo {
             }
             return false; // nothing to clear
         }
+        
+        const std::string Validator::kAlarmParamPathSeparator = "KRB_ALARM_SEP_REPLACEMENT";
 
     }
 }

@@ -88,6 +88,9 @@ namespace karabo {
 
             KARABO_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
+            registerSlot<std::string, std::string, karabo::util::Hash > (boost::bind(&GuiServerDevice::slotAlarmSignalsUpdate, this, _1, _2, _3), "slotAlarmSignalsUpdate");
+            KARABO_SIGNAL("signalClientSignalsAlarmUpdate", Hash);
+            KARABO_SIGNAL("signalClientRequestsAlarms");
 
             Hash h;
             h.set("port", config.get<unsigned int>("port"));
@@ -257,6 +260,10 @@ namespace karabo {
                         onSaveProject(channel, info);
                     } else if (type == "closeProject") {
                         onCloseProject(channel, info);
+                    } else if (type == "acknowledgeAlarm"){
+                        onAcknowledgeAlarm(channel, info);
+                    } else if (type == "requestAlarms"){
+                        onRequestAlarms(channel, info);
                     }
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << "Ignoring request";
@@ -868,7 +875,7 @@ namespace karabo {
 
                 Hash h("type", "instanceNew", "topologyEntry", topologyEntry);
                 safeAllClientsWrite(h);
-
+                
                 if (type == "device") {
                     // Check whether someone already noted interest in it
                     bool registerMonitor = false;
@@ -885,6 +892,15 @@ namespace karabo {
                         // Even this request might not be needed since the logger manager emits the corresponding signal.
                         // But we cannot be 100% sure that our 'connect' has been registered in time.
                         requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
+                    }
+                    
+                    
+                    if(topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") && 
+                       topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService"){
+                        connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
+                        boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
+                        m_alarmDevices.insert(instanceId);
+                        
                     }
                 }
             } catch (const Exception& e) {
@@ -1117,6 +1133,55 @@ namespace karabo {
 
             // Just log a warning to the Gui - if these still come through...
             KARABO_LOG_WARN << "Problem listening to " << source << ":\n" << info;
+        }
+        
+        void GuiServerDevice::slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type, const karabo::util::Hash& updateRows){
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting alarm update";
+                Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
+                // Broadcast to all GUIs
+                safeAllClientsWrite(h, LOSSLESS);
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad casting alarms(): " << e.userFriendlyMsg();
+            }
+        }
+        
+        void GuiServerDevice::onAcknowledgeAlarm(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info){
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onAcknowledgeAlarm : info ...\n" << info;
+                const std::string& alarmServiceId = info.get<std::string>("alarmInstanceId");
+                call(alarmServiceId, "slotAcknowledgeAlarm", info.get<Hash>("acknowledgedRows"));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onAcknowledgeAlarm(): " << e.userFriendlyMsg();
+            }
+        };
+            
+        void GuiServerDevice::onRequestAlarms(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info){
+             try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestAlarms : info ...\n" << info;
+               
+                boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
+                const std::string& requestedInstance = info.get<std::string>("alarmInstanceId");
+                for(std::set<std::string>::const_iterator it = m_alarmDevices.begin(); it != m_alarmDevices.end(); ++it){
+                    if(requestedInstance != "" && requestedInstance != *it) continue;
+                    request(*it, "slotRequestAlarmDump")
+                            .receiveAsync<karabo::util::Hash>(boost::bind(&GuiServerDevice::onRequestedAlarmsReply, this, channel, _1));
+                }
+                      
+                
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestAlarms(): " << e.userFriendlyMsg();
+            }
+        };
+        
+        void GuiServerDevice::onRequestedAlarmsReply(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply){
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestedAlarmsReply : info ...\n" << reply;
+                Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows", reply.get<Hash>("alarms"));
+                channel->writeAsync(h, LOSSLESS);
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAlarmsReply(): " << e.userFriendlyMsg();
+            }  
         }
 
     }
