@@ -15,6 +15,31 @@ namespace karabo {
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, PropertyTest)
 
 
+        void NestedClass::expectedParameters(Schema& expected) {
+            
+            STRING_ELEMENT(expected).key("e1")
+                    .displayedName("E1")
+                    .description("E1 property")
+                    .assignmentOptional().defaultValue("E1")
+                    .reconfigurable()
+                    .commit();
+            
+            BOOL_ELEMENT(expected).key("e2")
+                    .displayedName("E2")
+                    .description("E2 property")
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(false)
+                    .commit();
+            
+            INT32_ELEMENT(expected).key("e3")
+                    .displayedName("E3")
+                    .description("E3 property")
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(77)
+                    .commit();
+        }
+        
+        
         void PropertyTest::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("state")
@@ -242,7 +267,38 @@ namespace karabo {
                     .assignmentOptional().defaultValue({"1111111", "2222222", "3333333",
                                                        "4444444", "5555555", "6666666"})
                     .commit();
-
+                                                       
+            Schema nestedRow;
+            
+//            NODE_ELEMENT(nestedRow).key("node")
+//                    .displayedName("Node")
+//                    .description("Node")
+//                    .appendParametersOf<NestedClass>()
+//                    .commit();
+            
+            FLOAT_ELEMENT(nestedRow).key("e4")
+                    .displayedName("E4")
+                    .description("E4 property")
+                    .assignmentOptional().defaultValue(3.1415F)
+                    .reconfigurable()
+                    .commit();
+            
+            DOUBLE_ELEMENT(nestedRow).key("e5")
+                    .displayedName("E5")
+                    .description("E5 property")
+                    .assignmentOptional().defaultValue(2.78)
+                    .reconfigurable()
+                    .commit();
+            
+            TABLE_ELEMENT(expected).key("table")
+                    .displayedName("Table property")
+                    .description("Table containing one node.")
+                    .setNodeSchema(nestedRow)
+                    .assignmentOptional().defaultValue({Hash("e4", 0.9837F, "e5", 1.2345), Hash("e4", 2.33333F, "e5", 7.77777)})
+                    .reconfigurable()
+                    .commit();
+            
+            
         }
 
 
@@ -256,9 +312,7 @@ namespace karabo {
 
 
         void PropertyTest::initialize() {
-            updateState(State::INIT);
-
-
+            // some initialization
             updateState(State::NORMAL);
         }
 
