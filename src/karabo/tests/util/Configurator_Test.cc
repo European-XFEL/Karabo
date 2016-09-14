@@ -8,85 +8,77 @@
 #include <karabo/util/Configurator.hh>
 
 #include "Configurator_Test.hh"
+#include "karabo/util/NodeElement.hh"
+#include "karabo/util/LeafElement.hh"
+#include "karabo/util/SimpleElement.hh"
 
 using namespace karabo::util;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Configurator_Test);
 
+KARABO_REGISTER_FOR_CONFIGURATION(Base);
+KARABO_REGISTER_FOR_CONFIGURATION(Aggregated);
 
-Configurator_Test::Configurator_Test() {
+
+void Base::expectedParameters(karabo::util::Schema& s) {
+    NODE_ELEMENT(s).key("node")
+            .appendParametersOf<Aggregated>()
+            .commit();
 }
 
 
-Configurator_Test::~Configurator_Test() {
+Base::Base(const karabo::util::Hash& hash) {
+    cout << "BASE Ctor: " << hash << endl;
+    m_aggregated = Configurator<Aggregated>::createNode("node", hash);
 }
 
 
-void Configurator_Test::setUp() {
+const boost::shared_ptr<Aggregated>& Base::getAggregated() const {
+    return m_aggregated;
 }
 
 
-void Configurator_Test::tearDown() {
+void Aggregated::expectedParameters(karabo::util::Schema& s) {
+    INT32_ELEMENT(s).key("answer")
+            .description("The answer")
+            .displayedName("Answer")
+            .assignmentOptional().defaultValue(0)
+            .commit();
 }
 
-//KARABO_REGISTER_FOR_CONFIGURATION(Base_N, Base_N);
-//KARABO_REGISTER_FOR_CONFIGURATION(Base_Y, Base_Y);
-//
-//void Configurator_Test::testBase() {
-//
-//
-//    {
-//        Base_N::Pointer p = Configurator<Base_N>::createAndConfigure("Base_N", Hash("a", 1));
-//        Hash h = p->getConfig();
-//        CPPUNIT_ASSERT(h.size() == 0);
-//
-//    }
-//
-//    {
-//        Base_Y::Pointer p = Configurator1<Base_Y>::createAndConfigure("Base_Y", Hash("a", 1));
-//        Hash h = p->getConfig();
-//        CPPUNIT_ASSERT(h.has("base.a") == true);
-//    }
-//}
 
-KARABO_REGISTER_FOR_CONFIGURATION_2(Base_N, Sub1_N<Base_N>);
-KARABO_REGISTER_FOR_CONFIGURATION_2(Base_N, Sub1_Y<Base_N>);
-KARABO_REGISTER_FOR_CONFIGURATION_2(Base_Y, Sub1_N<Base_Y>);
-KARABO_REGISTER_FOR_CONFIGURATION_2(Base_Y, Sub1_Y<Base_Y>);
+Aggregated::Aggregated(const karabo::util::Hash& hash) : m_answer(hash.get<int>("answer")) {
+
+}
 
 
-void Configurator_Test::testSub1() {
+Aggregated::Aggregated(const int answer) : m_answer(answer) {
+
+}
+
+
+int Aggregated::foo() const {
+    return m_answer;
+}
+
+
+void Configurator_Test::test() {
 
     {
-        Base_N::Pointer p = Configurator<Base_N>::create("Base_N-Sub1_N", Hash("a", 1), false);
-        Hash h = p->getConfig();
-        CPPUNIT_ASSERT(h.has("base.a") == false);
-        CPPUNIT_ASSERT(h.has("sub1.a") == false);
-
+        // Test to construct Base from Aggregated params
+        Hash config("node.answer", 42);
+        Base::Pointer b = Configurator<Base>::create("Base", config);
+        CPPUNIT_ASSERT(b->getAggregated()->foo() == 42);
     }
 
     {
-        Base_N::Pointer p = Configurator<Base_N>::create("Base_N-Sub1_Y", Hash("a", 1), false);
-        Hash h = p->getConfig();
-        CPPUNIT_ASSERT(h.has("base.a") == false);
-        CPPUNIT_ASSERT(h.has("sub1.a") == true);
-    }
-
-    {
-        Base_Y::Pointer p = Configurator<Base_Y>::create("Base_Y-Sub1_N", Hash("a", 1), false);
-        Hash h = p->getConfig();
-        CPPUNIT_ASSERT(h.has("base.a") == true);
-        CPPUNIT_ASSERT(h.has("sub1.a") == false);
-    }
-
-    {
-        Base_Y::Pointer p = Configurator<Base_Y>::create("Base_Y-Sub1_Y", Hash("a", 1), false);
-        Hash h = p->getConfig();
-        CPPUNIT_ASSERT(h.has("base.a") == true);
-        CPPUNIT_ASSERT(h.has("sub1.a") == true);
+        // Test to construct Base from Aggregated object
+        Hash config("node", Aggregated::Pointer(new Aggregated(42)));
+        Base::Pointer b = Configurator<Base>::create("Base", config);
+        CPPUNIT_ASSERT(b->getAggregated()->foo() == 42);
 
     }
-
 }
+
 
 
