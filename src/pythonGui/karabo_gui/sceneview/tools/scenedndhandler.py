@@ -81,19 +81,22 @@ class ConfigurationDropHandler(SceneDnDHandler):
         if realbox.descriptor is not None:
             box = realbox
 
+        def create_model(factory, box, parent_component, layout_model):
+            klass = WIDGET_FACTORIES[factory.__name__]
+            model = klass(keys=[box.key()],
+                          parent_component=parent_component)
+            if hasattr(model, 'klass'):
+                model.klass = factory.__name__
+            layout_model.children.append(model)
+
         # Add the display and editable components, as needed
         if item.displayComponent:
             factory = DisplayWidget.getClass(box)
-            klass = WIDGET_FACTORIES[factory.__name__]
-            model = klass(keys=[box.key()],
-                          parent_component='DisplayComponent')
-            layout_model.children.append(model)
+            create_model(factory, box, 'DisplayComponent', layout_model)
         if item.editableComponent:
             factory = EditableWidget.getClass(box)
-            klass = WIDGET_FACTORIES[factory.__name__]
-            model = klass(keys=[box.key()],
-                          parent_component='EditableApplyLaterComponent')
-            layout_model.children.append(model)
+            create_model(factory, box, 'EditableApplyLaterComponent',
+                         layout_model)
 
         return layout_model
 

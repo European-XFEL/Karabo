@@ -1118,7 +1118,7 @@ namespace schemawrap {
 
     //***********************************************************************************
     // Wrapper functions for : getKeys, getPaths, getTags, getOptions,                  *
-    // getAllowedStates, getArrayShape                                                  *
+    // getAllowedStates                                                                 *
     //***********************************************************************************
 
 
@@ -1177,15 +1177,6 @@ namespace schemawrap {
             return states;
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedStates' should be a string");
-    }
-
-    bp::object getArrayShape(const Schema& schema, const bp::object& obj) {
-        if (PyUnicode_Check(obj.ptr())) {
-            string path = bp::extract<string>(obj);
-            const vector<long long>& v = schema.getArrayShape(path);
-            return karathon::Wrapper::fromStdVectorToPyArray<long long>(v);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getArrayShape' should be a string");
     }
 
     //*************************************************************
@@ -1659,6 +1650,8 @@ void exportPyUtilSchema() {
 
         s.def("getAssignment", &Schema::getAssignment);
 
+        s.def("getSkipValidation", &Schema::getSkipValidation);
+
         s.def("getDescription"
               , &Schema::getDescription
               , bp::return_value_policy< bp::copy_const_reference >());
@@ -1744,8 +1737,6 @@ void exportPyUtilSchema() {
         s.def("getMaxSize"
               , (const unsigned int& (Schema::*)(const string &) const) (&Schema::getMaxSize)
               , bp::return_value_policy< bp::copy_const_reference >());
-
-        s.def("getArrayShape", &schemawrap::getArrayShape);
 
         s.def("getArchivePolicy", &Schema::getArchivePolicy
               , bp::return_value_policy< bp::copy_const_reference >());
@@ -1841,8 +1832,6 @@ void exportPyUtilSchema() {
 
         s.def("hasMaxSize", &Schema::hasMaxSize);
 
-        s.def("hasArrayShape", &Schema::hasArrayShape);
-
         //********* 'is'-methods ****************
 
         s.def("isAccessInitOnly", &Schema::isAccessInitOnly);
@@ -1877,6 +1866,7 @@ void exportPyUtilSchema() {
         s.def("setTags", &Schema::setTags, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
         s.def("setDisplayType", &Schema::setDisplayType, (bp::arg("path"), bp::arg("value")));
         s.def("setAssignment", &Schema::setAssignment, (bp::arg("path"), bp::arg("value")));
+        s.def("setSkipValidation", &Schema::setSkipValidation, (bp::arg("path"), bp::arg("value")));
         s.def("setOptions", &Schema::setOptions, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
         s.def("setAllowedStates", &schemawrap::setAllowedStates, (bp::arg("path"), bp::arg("value")));
         s.def("setDefaultValue", &schemawrap::setDefaultValue, (bp::arg("path"), bp::arg("value")));
@@ -2124,6 +2114,8 @@ void exportPyUtilSchema() {
                 .def("readOnly", &NDArrayElement::readOnly
                     , bp::return_internal_reference<> () )
                 .def("reconfigurable", &NDArrayElement::reconfigurable
+                    , bp::return_internal_reference<> () )
+                .def("skipValidation", &NDArrayElement::skipValidation
                     , bp::return_internal_reference<> () )
                 .def("commit", &NDArrayElement::commit
                     , bp::return_internal_reference<> () )
@@ -2429,6 +2421,12 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("setNowReadOnly"
                      , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowReadOnly)
+                     , bp::return_internal_reference<> ())
+                .def("setNowValidate"
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowValidate)
+                     , bp::return_internal_reference<> ())
+                .def("setNowSkipValidation"
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowSkipValidation)
                      , bp::return_internal_reference<> ())
                 .def("setNewDefaultValue"
                      , &OverwriteElementWrap().setNewDefaultValue

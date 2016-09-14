@@ -5,12 +5,15 @@ from PyQt4.QtGui import QApplication
 
 # Enum for karabo broadcast event senders
 class KaraboEventSender(Enum):
+    ConnectMacroInstance = "Connect macro instance"
+    DeviceInitReply = "Device instantiate reply"
     OpenMacro = "Open macro"
     OpenSceneLink = "Scene link"
     OpenSceneView = "Open scene view"
-    RenameSceneView = "Rename scene view"
     RemoveMacro = "Remove macro"
     RemoveSceneView = "Remove scene view"
+    RenameSceneView = "Rename scene view"
+    RenameMacro = "Rename macro"
 
 # This is the global singleton for the karabo_mediator function.
 _karabo_mediator = None

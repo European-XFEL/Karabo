@@ -353,6 +353,24 @@ namespace karabo {
             return m_hash.getAttributeAs<string>(path, KARABO_SCHEMA_ALIAS);
         }
 
+
+        //**********************************************
+        //               Skip Validation               *
+        //**********************************************
+
+
+        void Schema::setSkipValidation(const std::string& path, const bool value) {
+            m_hash.setAttribute(path, KARABO_SCHEMA_SKIP_VALIDATION, value);
+        }
+
+        bool Schema::getSkipValidation(const std::string& path) {
+            if (m_hash.hasAttribute(path, KARABO_SCHEMA_SKIP_VALIDATION)) {
+                return m_hash.getAttributeAs<bool>(path, KARABO_SCHEMA_SKIP_VALIDATION);
+            }
+            return false;
+        }
+
+
         //**********************************************
         //                  Options             *
         //**********************************************
@@ -608,24 +626,6 @@ namespace karabo {
 
         const unsigned int& Schema::getMaxSize(const std::string& path) const {
             return m_hash.getAttribute<unsigned int>(path, KARABO_SCHEMA_MAX_SIZE);
-        }
-
-        //**********************************************************
-        //	Specific functions for LEAF node (which is an NDArray) *
-        //	Shape of the array                                     *
-        //**********************************************************
-
-        void Schema::setArrayShape(const std::string& path, const std::string& value) {
-            const std::vector<long long> dims = fromString<long long, std::vector>(value);
-            m_hash.setAttribute(path, KARABO_SCHEMA_ARRAY_SHAPE, dims);
-        }
-
-        bool Schema::hasArrayShape(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ARRAY_SHAPE);
-        }
-
-        const std::vector<long long>& Schema::getArrayShape(const std::string& path) const {
-            return m_hash.getAttribute<std::vector<long long> >(path, KARABO_SCHEMA_ARRAY_SHAPE);
         }
 
         //******************************************************

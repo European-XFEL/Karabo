@@ -109,6 +109,11 @@ namespace karabo {
             // Iterate master
             for (Hash::const_iterator it = master.begin(); it != master.end(); ++it) {
 
+                if (it->hasAttribute(KARABO_SCHEMA_SKIP_VALIDATION) && it->getAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION)) {
+                    // Skip validation of this node and its children, if requested.
+                    continue;
+                }
+
                 string key(it->getKey());
 
                 string currentScope;
@@ -136,15 +141,21 @@ namespace karabo {
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
                             Hash::Node& node = working.set(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE));
                             if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
-                            if (it->hasAttribute(KARABO_INDICATE_STATE_SET)) node.setAttribute(KARABO_INDICATE_STATE_SET, true);
-                            if (it->hasAttribute(KARABO_INDICATE_ALARM_SET)) node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
+                            if (it->hasAttribute(KARABO_SCHEMA_CLASS_ID)) {
+                                const std::string &classId = it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
+                                if (classId == "State") node.setAttribute(KARABO_INDICATE_STATE_SET, true);
+                                else if (classId == "AlarmCondition") node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
+                            }
                             this->validateLeaf(*it, node, report, currentScope);
                         }
                     } else { // Node IS provided
                         Hash::Node& node = working.setNode(user.getNode(key));
                         if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
-                        if (user.hasAttribute(key, KARABO_INDICATE_STATE_SET)) node.setAttribute(KARABO_INDICATE_STATE_SET, true);
-                        if (user.hasAttribute(key, KARABO_INDICATE_ALARM_SET)) node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
+                        if (user.hasAttribute(key, KARABO_SCHEMA_CLASS_ID)) {
+                            const std::string &classId = user.getAttribute<std::string>(key, KARABO_SCHEMA_CLASS_ID);
+                            if (classId == "State") node.setAttribute(KARABO_INDICATE_STATE_SET, true);
+                            else if (classId == "AlarmCondition") node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
+                        }
                         this->validateLeaf(*it, node, report, currentScope);
                     }
                 } else if (nodeType == Schema::NODE) {
@@ -371,7 +382,13 @@ namespace karabo {
 
             // Check data types
             if (givenType != referenceType) {
-                if (givenType != Types::VECTOR_STRING || workNode.getValue<vector<string> >().size() != 0) {
+                if (referenceType == Types::VECTOR_HASH && givenType == Types::VECTOR_STRING
+                    && workNode.getValue<vector<string> >().empty()) {
+                    // A HACK: Some Python code cannot distinguish between empty VECTOR_HASH and empty VECTOR_STRING
+                    //         and in doubt chooses the latter.
+                    //         So we tolerate empty vector<string> and overwrite by empty vector<Hash>.
+                    workNode.setValue(vector<Hash>());
+                } else {
                     // Try casting this guy
                     try {
                         workNode.setType(referenceType);
@@ -475,7 +492,7 @@ namespace karabo {
                     }
 
                     if (!stayInAlarm) {
-                        m_parametersInWarnOrAlarm.erase(scope);
+                        m_parametersInWarnOrAlarm.erase(boost::replace_all_copy(scope, ".", kAlarmParamPathSeparator));
                     }
                 }
             } else if (referenceCategory == Types::SEQUENCE) {
@@ -558,11 +575,10 @@ namespace karabo {
                     string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went "
                                + (checkGreater ? "above " : "below ") + alarmCond.asBaseString() + " level of "
                                + karabo::util::toString(threshold));
-
-                    Hash::Node& desc = m_parametersInWarnOrAlarm.set(scope, Hash("type", alarmString, "message", msg), '\0');
+                    const std::string scopeSlashes = boost::replace_all_copy(scope, ".", kAlarmParamPathSeparator); 
+                    Hash::Node& desc = m_parametersInWarnOrAlarm.set(scopeSlashes, Hash("type", alarmString, "message", msg));
                     m_timestamp.toHashAttributes(desc.getAttributes());
                     workNode.setAttribute(KARABO_ALARM_ATTR, alarmString);
-
 
                     return true; //alarm condition re-raised, do not clear
                 } else {
@@ -571,23 +587,8 @@ namespace karabo {
             }
             return false; // nothing to clear
         }
-
-
-        void Validator::compareNDArrayShapes(const std::vector<long long> & expected, const Dims& observed, std::ostringstream& report, const std::string& scope) {
-            std::vector<long long>::const_iterator eit = expected.begin();
-            for (size_t idx = 0; eit != expected.end() && idx < observed.rank(); ++eit, ++idx) {
-                if (*eit == -1) {
-                    // Negative dimension => variable.
-                    continue;
-                }
-                if (*eit != static_cast<long long> (observed.extentIn(idx))) {
-                    std::string expectedStr = toString<long long>(expected);
-                    std::string observedStr = toString<unsigned long long>(observed.toVector());
-                    report << "Expected array shape: " << expectedStr << " for (ndarray-)parameter \"" << scope << "\", but got " << observedStr << " instead." << endl;
-                    return;
-                }
-            }
-        }
+        
+        const std::string Validator::kAlarmParamPathSeparator = "KRB_ALARM_SEP_REPLACEMENT";
 
     }
 }

@@ -420,6 +420,8 @@
         <itemPath>../../../src/karabo/tests/integration/AlarmService_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/integration/AlarmTesterDevice.cc</itemPath>
         <itemPath>../../../src/karabo/tests/integration/AlarmTesterDevice.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/TcpAdapter.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/TcpAdapter.hh</itemPath>
         <itemPath>../../../src/karabo/tests/integration/integrationRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f9"
@@ -508,6 +510,8 @@
         <itemPath>../../../src/karabo/tests/util/TimeClasses_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Types_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Types_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/util/Validator_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/Validator_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Version_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Version_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/utilTestRunner.cc</itemPath>
@@ -1460,12 +1464,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.cc"
+      <item path="../../../src/karabo/tests/integration/TcpAdapter.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.hh"
+      <item path="../../../src/karabo/tests/integration/TcpAdapter.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1816,6 +1820,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/util/Types_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Validator_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Validator_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3636,12 +3650,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.cc"
+      <item path="../../../src/karabo/tests/integration/TcpAdapter.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.hh"
+      <item path="../../../src/karabo/tests/integration/TcpAdapter.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3992,6 +4006,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/util/Types_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Validator_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Validator_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">

@@ -48,6 +48,9 @@ namespace karabo {
 
             mutable boost::shared_mutex m_rollingStatMutex;
             std::map<std::string, RollingWindowStatistics::Pointer> m_parameterRollingStats;
+            
+        public:
+            static const std::string kAlarmParamPathSeparator;
 
         public:
 
@@ -105,13 +108,9 @@ namespace karabo {
 
             void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
 
-            void checkNDArrayShape(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string& scope);
-
             bool checkAndSetThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
 
             bool checkAndSetThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
-
-            void compareNDArrayShapes(const std::vector<long long>& schemaShape, const Dims& shape, std::ostringstream& report, const std::string& scope);
 
         };
     }
