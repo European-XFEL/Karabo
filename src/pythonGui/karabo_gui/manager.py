@@ -559,7 +559,6 @@ class _Manager(QObject):
 
     def handle_initReply(self, deviceId, success, message):
         device = self.deviceData.get(deviceId)
-        print("handle_initReply", deviceId)
         if device is not None:
             data = {'device': device, 'success': success, 'message': message}
             # Create KaraboBroadcastEvent
