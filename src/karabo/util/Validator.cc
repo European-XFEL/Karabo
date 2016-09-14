@@ -170,8 +170,15 @@ namespace karabo {
                     } else {
 
                         if (user.getType(key) != Types::HASH) {
-                            report << "Parameter \"" << currentScope << "\" has incorrect node type, expecting HASH not " << Types::to<ToLiteral > (user.getType(key)) << endl;
-                            return;
+                            if (it->hasAttribute(KARABO_SCHEMA_CLASS_ID)) {
+                                // The node reflects a configuration for a class,
+                                // what is provided here is the object already -> copy over and shut-up
+                                working.setNode(user.getNode(key));
+                                return;
+                            } else {
+                                report << "Parameter \"" << currentScope << "\" has incorrect node type, expecting HASH not " << Types::to<ToLiteral > (user.getType(key)) << endl;
+                                return;
+                            }
                         } else {
                             Hash::Node& workNode = working.set(key, Hash()); // Insert empty node
                             r_validate(it->getValue < Hash > (), user.get<Hash > (key), workNode.getValue<Hash > (), report, currentScope);

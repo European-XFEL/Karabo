@@ -790,6 +790,8 @@ namespace karabo {
                     os << " => " << hit->getValue<Schema>() << std::endl;
                 } else if (Types::isPointer(type)) {// TODO Add pointer types
                     os << " => xxx " << Types::to<ToLiteral>(type) << std::endl;
+                } else if (type == Types::UNKNOWN) {
+                    os << " => " << hit->type().name() << " " << Types::to<ToLiteral>(type) << std::endl;
                 } else {
                     os << " => " << hit->getValueAs<string>() << " " << Types::to<ToLiteral>(type) << std::endl;
                 }

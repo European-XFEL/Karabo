@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Configurator_Test.hh
  * Author: heisenb
  *
@@ -12,79 +12,54 @@
 
 #include <karabo/util/ClassInfo.hh>
 
-struct Base_N {
+// Forward
+class Aggregated;
 
+class Base {
 
-    KARABO_CLASSINFO(Base_N, "Base_N", "1.0");
+public:
 
-    karabo::util::Hash m_config;
+    KARABO_CLASSINFO(Base, "Base", "");
 
-    virtual karabo::util::Hash getConfig() {
-        return karabo::util::Hash();
-    }
+    static void expectedParameters(karabo::util::Schema& s);
 
-};
+    Base(const karabo::util::Hash& hash);
 
-struct Base_Y {
+    const boost::shared_ptr<Aggregated>& getAggregated() const;
 
+private:
 
-    KARABO_CLASSINFO(Base_Y, "Base_Y", "1.0");
-
-    karabo::util::Hash m_config;
-
-    void configure(const karabo::util::Hash & configuration) {
-        m_config.set<karabo::util::Hash > ("base", configuration);
-    }
-
-    virtual karabo::util::Hash getConfig() {
-        return m_config;
-    }
-};
-
-template < class Base>
-struct Sub1_N : public Base {
-
-
-    KARABO_CLASSINFO(Sub1_N, Base::classInfo().getClassId() + "-Sub1_N", "1.0");
-
-    virtual karabo::util::Hash getConfig() {
-        return Base::m_config;
-    }
+    boost::shared_ptr<Aggregated> m_aggregated;
 
 };
 
-template < class Base>
-struct Sub1_Y : public Base {
+class Aggregated {
 
+public:
 
-    KARABO_CLASSINFO(Sub1_Y, Base::classInfo().getClassId() + "-Sub1_Y", "1.0");
+    KARABO_CLASSINFO(Aggregated, "Aggregated", "");
 
-    void configure(const karabo::util::Hash & configuration) {
-        Base::m_config.template set<karabo::util::Hash > ("sub1", configuration);
-    }
+    static void expectedParameters(karabo::util::Schema& s);
 
-    virtual karabo::util::Hash getConfig() {
-        return Base::m_config;
-    }
+    Aggregated(const karabo::util::Hash& hash);
+
+    Aggregated(const int answer);
+
+    int foo() const;
+
+private:
+
+    int m_answer;
 
 };
 
 class Configurator_Test : public CPPUNIT_NS::TestFixture {
 
-
     CPPUNIT_TEST_SUITE(Configurator_Test);
-    CPPUNIT_TEST(testSub1);
+    CPPUNIT_TEST(test);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    Configurator_Test();
-    virtual ~Configurator_Test();
-    void setUp();
-    void tearDown();
-
-private:
-
-    void testSub1();
+    void test();
 
 };
 
