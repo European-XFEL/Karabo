@@ -23,12 +23,12 @@ namespace karabo {
         }
 
 
-        bool Timestamp::hashAttributesContainTimeInformation(const Hash::Attributes attributes) {
+        bool Timestamp::hashAttributesContainTimeInformation(const Hash::Attributes& attributes) {
             return (Epochstamp::hashAttributesContainTimeInformation(attributes) && Trainstamp::hashAttributesContainTimeInformation(attributes));
         }
 
 
-        Timestamp Timestamp::fromHashAttributes(const Hash::Attributes attributes) {
+        Timestamp Timestamp::fromHashAttributes(const Hash::Attributes& attributes) {
             return Timestamp(Epochstamp::fromHashAttributes(attributes), Trainstamp::fromHashAttributes(attributes));
         }
 
@@ -62,6 +62,17 @@ namespace karabo {
             m_epochstamp.toHashAttributes(attributes);
             m_trainstamp.toHashAttributes(attributes);
         }
+
+
+        bool Timestamp::operator==(const Timestamp& other) const {
+            return (m_epochstamp == other.m_epochstamp && m_trainstamp == other.m_trainstamp);
+        }
+
+
+        bool Timestamp::operator!=(const Timestamp& other) const {
+            return (m_epochstamp != other.m_epochstamp || m_trainstamp != other.m_trainstamp);
+        }
+
     }
 }
 
