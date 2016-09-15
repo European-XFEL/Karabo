@@ -566,9 +566,13 @@ class _Manager(QObject):
                 KaraboEventSender.DeviceInitReply, data))
 
     def handle_alarmInit(self, instanceId, rows):
-        print()
-        print("+++ handle_alarmInit", instanceId, rows)
+        data = {'instanceId': instanceId, 'rows': rows}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.AlarmInitReply, data))
 
     def handle_alarmUpdate(self, instanceId, rows):
-        print()
-        print("+++ handle_alarmUpdate", instanceId, rows)
+        data = {'instanceId': instanceId, 'rows': rows}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.AlarmUpdate, data))
