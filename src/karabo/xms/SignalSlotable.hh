@@ -23,7 +23,6 @@
 
 #include "OutputChannel.hh"
 #include "InputChannel.hh"
-#include "Data.hh"
 
 #include "Signal.hh"
 #include "Slot.hh"
@@ -1241,7 +1240,7 @@ KARABO_SLOT0(__VA_ARGS__) \
             //            }
 
             virtual InputChannel::Pointer createInputChannel(const std::string& channelName, const karabo::util::Hash& config,
-                                                             const boost::function<void (const Data&) >& onDataAvailableHandler = boost::function<void (const Data&) >(),
+                                                             const boost::function<void (const karabo::util::Hash::Pointer&) >& onDataAvailableHandler = boost::function<void (const karabo::util::Hash::Pointer&) >(),
                                                              const boost::function<void (const InputChannel::Pointer&) >& onInputAvailableHandler = boost::function<void (const InputChannel::Pointer&) >(),
                                                              const boost::function<void (const InputChannel::Pointer&)>& onEndOfStreamEventHandler = boost::function<void (const InputChannel::Pointer&)>());
 
@@ -1259,7 +1258,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void registerInputHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&) >& handler);
 
-            void registerDataHandler(const std::string& channelName, const boost::function<void (const karabo::xms::Data&) >& handler);
+            void registerDataHandler(const std::string& channelName, const boost::function<void (const karabo::util::Hash::Pointer&) >& handler);
 
             void registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&) >& handler);
 
@@ -1296,8 +1295,8 @@ KARABO_SLOT0(__VA_ARGS__) \
             void inputHandlerWrap(const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler,
                                   const karabo::xms::InputChannel::Pointer& input);
 
-            void dataHandlerWrap(const boost::function<void (const Data&) >& handler,
-                                 const Data& data);
+            void dataHandlerWrap(const boost::function<void (const karabo::util::Hash::Pointer&) >& handler,
+                                 const karabo::util::Hash::Pointer& data);
 
             void endOfStreamHandlerWrap(const boost::function<void (const boost::shared_ptr<InputChannel>&) >& handler,
                                         const boost::shared_ptr<InputChannel>& input);

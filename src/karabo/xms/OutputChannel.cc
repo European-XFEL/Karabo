@@ -11,7 +11,6 @@
 #include <exception>
 #include <boost/pointer_cast.hpp>
 #include "OutputChannel.hh"
-#include "Data.hh"
 #include "karabo/net/TcpChannel.hh"
 
 using namespace karabo::util;

@@ -27,17 +27,6 @@ namespace bp = boost::python;
 
 namespace karathon {
 
-    struct DataWrap {
-
-        static boost::shared_ptr<karabo::xms::Data> make(bp::object& obj);
-        static karabo::util::Hash::Pointer getNode(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key);
-        static bp::object get(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key);
-        static void set(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key, const bp::object& value);
-        static bp::object hash(const boost::shared_ptr<karabo::xms::Data>& self);
-        static void attachTimestamp(const boost::shared_ptr<karabo::xms::Data>& self, const bp::object& obj);
-        static boost::shared_ptr<karabo::xms::Data> copy(const boost::shared_ptr<karabo::xms::Data>& self);
-    };
-
        struct ImageDataWrap : public karabo::xms::ImageData {
 
            static boost::shared_ptr<karabo::xms::ImageData > make5(const bp::object& obj,
@@ -79,7 +68,7 @@ namespace karathon {
     struct InputChannelWrap {
 
         static void registerDataHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
-        static void proxyDataHandler(const bp::object& handler, const karabo::xms::Data& data);
+        static void proxyDataHandler(const bp::object& handler, const karabo::util::Hash::Pointer& data);
         static void registerInputHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
         static void proxyInputHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::InputChannel>& self);
         static void registerEndOfStreamEventHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);

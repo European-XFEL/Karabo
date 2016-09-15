@@ -18,7 +18,6 @@
 #include <karabo/io.hpp>
 #include <karabo/log.hpp>
 #include <karabo/util.hpp>
-#include "Data.hh"
 #include "Memory.hh"
 
 /**
@@ -44,8 +43,8 @@ namespace karabo {
             /// Callback on available data (per InputChannel)
             boost::function<void (const boost::shared_ptr<InputChannel>&) > m_inputHandler;
 
-            /// Callback on available data (per Data item in InputChannel)
-            boost::function<void (const Data&) > m_dataHandler;
+            /// Callback on available data (per item in InputChannel)
+            boost::function<void (const karabo::util::Hash::Pointer&) > m_dataHandler;
 
             // Callback on end-of-stream
             boost::function<void (const boost::shared_ptr<InputChannel>&) > m_endOfStreamHandler;
@@ -90,8 +89,6 @@ namespace karabo {
              */
             static void expectedParameters(karabo::util::Schema& expected);
 
-
-
             /**
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
@@ -99,9 +96,6 @@ namespace karabo {
             InputChannel(const karabo::util::Hash& config);
 
             virtual ~InputChannel();
-
-
-
 
             void reconfigure(const karabo::util::Hash& config);
 
@@ -111,7 +105,7 @@ namespace karabo {
 
             void registerInputHandler(const boost::function<void (const Self::Pointer&)>& ioInputHandler);
 
-            void registerDataHandler(const boost::function<void (const Data&) >& ioDataHandler);
+            void registerDataHandler(const boost::function<void (const karabo::util::Hash::Pointer&) >& ioDataHandler);
 
             void registerEndOfStreamEventHandler(const boost::function<void (const Self::Pointer&)>& endOfStreamEventHandler);
 
