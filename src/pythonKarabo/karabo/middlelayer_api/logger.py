@@ -4,7 +4,7 @@ from datetime import datetime
 import logging
 import traceback
 
-from .hash import Hash, StringList
+from .hash import Hash
 from .schema import Configurable, ListOfNodes
 
 
@@ -27,7 +27,7 @@ class Handler(Configurable):
     filters = ListOfNodes(Filter,
                           description="Filters for this handler",
                           displayedName="Filters",
-                          defaultValue=StringList())
+                          defaultValue=[])
 
     def __init__(self, config, parent, key):
         super().__init__(config, parent, key)
@@ -79,7 +79,7 @@ class Logger(Configurable):
     filters = ListOfNodes(
         Filter,
         description="Global filters for logging",
-        displayedName="Filters", defaultValue=StringList())
+        displayedName="Filters", defaultValue=[])
 
     @contextmanager
     def setBroker(self, broker):
