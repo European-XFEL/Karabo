@@ -45,6 +45,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1423485062/DataLoggerManager.o \
 	${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o \
 	${OBJECTDIR}/_ext/1423485062/ProjectManager.o \
+	${OBJECTDIR}/_ext/1423485062/PropertyTest.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/CppInputHandler.o \
@@ -172,6 +173,7 @@ TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
 # Test Files
 TESTFILES= \
 	${TESTDIR}/TestFiles/f8 \
+	${TESTDIR}/TestFiles/f9 \
 	${TESTDIR}/TestFiles/f2 \
 	${TESTDIR}/TestFiles/f3 \
 	${TESTDIR}/TestFiles/f4 \
@@ -253,6 +255,11 @@ ${OBJECTDIR}/_ext/1423485062/ProjectManager.o: ../../../src/karabo/devices/Proje
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/ProjectManager.o ../../../src/karabo/devices/ProjectManager.cpp
+
+${OBJECTDIR}/_ext/1423485062/PropertyTest.o: ../../../src/karabo/devices/PropertyTest.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/PropertyTest.o ../../../src/karabo/devices/PropertyTest.cc
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o: ../../../src/karabo/io/BinaryFileInput.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -863,6 +870,10 @@ ${TESTDIR}/TestFiles/f8: ${TESTDIR}/_ext/815710531/AlarmService_Test.o ${TESTDIR
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f8 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
+${TESTDIR}/TestFiles/f9: ${TESTDIR}/_ext/815710531/PropertyTest_Test.o ${TESTDIR}/_ext/815710531/integrationRunner_2.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${TESTDIR}/TestFiles
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f9 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
+
 ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/SchemaSerializer_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
@@ -914,6 +925,18 @@ ${TESTDIR}/_ext/815710531/integrationRunner.o: ../../../src/karabo/tests/integra
 	${MKDIR} -p ${TESTDIR}/_ext/815710531
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/integrationRunner.o ../../../src/karabo/tests/integration/integrationRunner.cc
+
+
+${TESTDIR}/_ext/815710531/PropertyTest_Test.o: ../../../src/karabo/tests/integration/PropertyTest_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/815710531
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/PropertyTest_Test.o ../../../src/karabo/tests/integration/PropertyTest_Test.cc
+
+
+${TESTDIR}/_ext/815710531/integrationRunner_2.o: ../../../src/karabo/tests/integration/integrationRunner_2.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/815710531
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/integrationRunner_2.o ../../../src/karabo/tests/integration/integrationRunner_2.cc
 
 
 ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o: ../../../src/karabo/tests/io/FileInputOutput_Test.cc 
@@ -1320,6 +1343,19 @@ ${OBJECTDIR}/_ext/1423485062/ProjectManager_nomain.o: ${OBJECTDIR}/_ext/14234850
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/ProjectManager_nomain.o ../../../src/karabo/devices/ProjectManager.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/ProjectManager.o ${OBJECTDIR}/_ext/1423485062/ProjectManager_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1423485062/PropertyTest_nomain.o: ${OBJECTDIR}/_ext/1423485062/PropertyTest.o ../../../src/karabo/devices/PropertyTest.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1423485062/PropertyTest.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/PropertyTest_nomain.o ../../../src/karabo/devices/PropertyTest.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1423485062/PropertyTest.o ${OBJECTDIR}/_ext/1423485062/PropertyTest_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o ../../../src/karabo/io/BinaryFileInput.cc 
@@ -2887,6 +2923,7 @@ ${OBJECTDIR}/_ext/1103122747/Statics_nomain.o: ${OBJECTDIR}/_ext/1103122747/Stat
 	@if [ "${TEST}" = "" ]; \
 	then  \
 	    ${TESTDIR}/TestFiles/f8 || true; \
+	    ${TESTDIR}/TestFiles/f9 || true; \
 	    ${TESTDIR}/TestFiles/f2 || true; \
 	    ${TESTDIR}/TestFiles/f3 || true; \
 	    ${TESTDIR}/TestFiles/f4 || true; \

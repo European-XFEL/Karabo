@@ -41,6 +41,8 @@
       <itemPath>../../../src/karabo/devices/GuiServerDevice.hh</itemPath>
       <itemPath>../../../src/karabo/devices/ProjectManager.cpp</itemPath>
       <itemPath>../../../src/karabo/devices/ProjectManager.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/PropertyTest.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/PropertyTest.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f2" displayName="io" projectFiles="true">
       <logicalFolder name="f1" displayName="h5" projectFiles="true">
@@ -422,6 +424,14 @@
         <itemPath>../../../src/karabo/tests/integration/TcpAdapter.hh</itemPath>
         <itemPath>../../../src/karabo/tests/integration/integrationRunner.cc</itemPath>
       </logicalFolder>
+      <logicalFolder name="f9"
+                     displayName="integration_tests_2"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/karabo/tests/integration/PropertyTest_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/PropertyTest_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/integrationRunner_2.cc</itemPath>
+      </logicalFolder>
       <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/io/FileInputOutput_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/FileInputOutput_Test.hh</itemPath>
@@ -737,6 +747,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/ProjectManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/PropertyTest.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/PropertyTest.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1444,6 +1464,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/integration/TcpAdapter.cc"
             ex="false"
             tool="1"
@@ -1455,6 +1485,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/integration/integrationRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/integrationRunner_2.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -2664,6 +2699,23 @@
           </linkerLibItems>
         </linkerTool>
       </folder>
+      <folder path="TestFiles/f9">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f9</output>
+        </linkerTool>
+      </folder>
       <folder path="f2/f1">
         <ccTool>
           <preprocessorList>
@@ -2881,6 +2933,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/ProjectManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/PropertyTest.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/PropertyTest.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3600,6 +3662,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/PropertyTest_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/integration/TcpAdapter.cc"
             ex="false"
             tool="1"
@@ -3611,6 +3683,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/integration/integrationRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/integrationRunner_2.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -4810,6 +4887,23 @@
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f9">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f9</output>
         </linkerTool>
       </folder>
       <folder path="f5">

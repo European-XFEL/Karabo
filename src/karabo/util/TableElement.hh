@@ -89,11 +89,11 @@ namespace karabo {
 
             Schema m_nodeSchema;
             TableDefaultValue<TableElement> m_defaultValue;
-
+            
         public:
 
             TableElement(Schema& expected) : GenericElement<TableElement>(expected) {
-
+                
                 m_defaultValue.setElement(this);
 
             }
@@ -232,9 +232,6 @@ namespace karabo {
 
                 return *this;
             }
-
-
-
 
 
         protected:
