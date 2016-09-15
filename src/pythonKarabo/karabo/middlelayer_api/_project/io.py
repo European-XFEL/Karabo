@@ -4,7 +4,7 @@ from os.path import dirname, exists
 from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from karabo.middlelayer_api.hash import Hash, StringList
+from karabo.middlelayer_api.hash import Hash
 from .configuration import ProjectConfigurationData
 from .constants import (DEVICES_KEY, SCENES_KEY, CONFIGURATIONS_KEY, MACROS_KEY,
                         MONITORS_KEY, PROJECT_KEY, RESOURCES_KEY)
@@ -326,7 +326,7 @@ def _write_resources(zf, projInstance, objectsHash):
             for fn in v:
                 f = "resources/{}/{}".format(k, fn)
                 zf.writestr(f, zin.read(f))
-            resources[k] = StringList(v)
+            resources[k] = list(v)
 
     return resources
 
