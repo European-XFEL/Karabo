@@ -468,7 +468,7 @@ namespace karathon {
                                              const bp::object& onEndOfStreamHandler) {
         // Basically just call createInputChannel from C++, but take care that
         // 'None' callbacks are really empty.
-        typedef boost::function<void (const karabo::xms::Data&) > OnDataFunction;
+        typedef boost::function<void (const karabo::util::Hash::Pointer&) > OnDataFunction;
         typedef boost::function<void (const karabo::xms::InputChannel::Pointer&) > OnInputFunction;
         OnDataFunction dataHandler = OnDataFunction();
         OnInputFunction inputHandler = OnInputFunction();
@@ -614,7 +614,7 @@ namespace karathon {
 
 
     void SignalSlotableWrap::proxyOnDataAvailableHandler(const bp::object& handler,
-                                                         const karabo::xms::Data& data) {
+                                                         const karabo::util::Hash::Pointer& data) {
         ScopedGILAcquire gil;
         try {
             if (handler) handler(bp::object(data));
