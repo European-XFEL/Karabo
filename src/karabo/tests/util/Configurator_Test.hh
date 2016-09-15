@@ -25,7 +25,7 @@ public:
 
     Base(const karabo::util::Hash& hash);
 
-    const boost::shared_ptr<Aggregated>& getAggregated() const;
+    boost::shared_ptr<Aggregated>& getAggregated();
 
 private:
 

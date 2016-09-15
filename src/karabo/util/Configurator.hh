@@ -159,6 +159,12 @@ namespace karabo {
             /**
              * Use this function to create a configurable object as part of a parent one (aggregation).
              *
+             * The input configuration may contain regular Hash parameters under the key nodeName or
+             * an already instantiated object of type BaseClass::Pointer.
+             *
+             * This signature of this function allows to specify a classId in case the Aggregate itself is a
+             * derivative of BaseClass.
+             *
              * @param nodeName The key name of the NODE_ELEMENT as defined by the parent class
              * @param classId The factory key of the to be created object (must inherit the BaseClass template)
              * @param input The input configuration of the parent class
@@ -178,6 +184,9 @@ namespace karabo {
 
             /**
              * Use this function to create a configurable object of class template type as part of a parent one (aggregation).
+             *
+             * The input configuration may contain regular Hash parameters under the key nodeName or
+             * an already instantiated object of type BaseClass::Pointer.
              *
              * @param nodeName The key name of the NODE_ELEMENT as defined by the parent class
              * @param input The input configuration of the parent class
