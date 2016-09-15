@@ -173,6 +173,7 @@ TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
 TESTFILES= \
 	${TESTDIR}/TestFiles/f8 \
 	${TESTDIR}/TestFiles/f9 \
+	${TESTDIR}/TestFiles/f10 \
 	${TESTDIR}/TestFiles/f2 \
 	${TESTDIR}/TestFiles/f3 \
 	${TESTDIR}/TestFiles/f4 \
@@ -868,6 +869,10 @@ ${TESTDIR}/TestFiles/f9: ${TESTDIR}/_ext/815710531/PropertyTest_Test.o ${TESTDIR
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f9 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
+${TESTDIR}/TestFiles/f10: ${TESTDIR}/_ext/815710531/AlarmTesterDevice_3.o ${TESTDIR}/_ext/815710531/RunTimeSchemaAttributes_Test.o ${TESTDIR}/_ext/815710531/TcpAdapter_3.o ${TESTDIR}/_ext/815710531/integrationRunner_3.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${TESTDIR}/TestFiles
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f10 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
+
 ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/SchemaSerializer_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
@@ -931,6 +936,30 @@ ${TESTDIR}/_ext/815710531/integrationRunner_2.o: ../../../src/karabo/tests/integ
 	${MKDIR} -p ${TESTDIR}/_ext/815710531
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/integrationRunner_2.o ../../../src/karabo/tests/integration/integrationRunner_2.cc
+
+
+${TESTDIR}/_ext/815710531/AlarmTesterDevice_3.o: ../../../src/karabo/tests/integration/AlarmTesterDevice_3.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/815710531
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/AlarmTesterDevice_3.o ../../../src/karabo/tests/integration/AlarmTesterDevice_3.cc
+
+
+${TESTDIR}/_ext/815710531/RunTimeSchemaAttributes_Test.o: ../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/815710531
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/RunTimeSchemaAttributes_Test.o ../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.cc
+
+
+${TESTDIR}/_ext/815710531/TcpAdapter_3.o: ../../../src/karabo/tests/integration/TcpAdapter_3.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/815710531
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/TcpAdapter_3.o ../../../src/karabo/tests/integration/TcpAdapter_3.cc
+
+
+${TESTDIR}/_ext/815710531/integrationRunner_3.o: ../../../src/karabo/tests/integration/integrationRunner_3.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/815710531
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/815710531/integrationRunner_3.o ../../../src/karabo/tests/integration/integrationRunner_3.cc
 
 
 ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o: ../../../src/karabo/tests/io/FileInputOutput_Test.cc 
@@ -2776,19 +2805,6 @@ ${OBJECTDIR}/_ext/1103122620/ImageFileWriter_nomain.o: ${OBJECTDIR}/_ext/1103122
 	    ${CP} ${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o ${OBJECTDIR}/_ext/1103122620/ImageFileWriter_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1103122747/Data_nomain.o: ${OBJECTDIR}/_ext/1103122747/Data.o ../../../src/karabo/xms/Data.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/Data.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/Data_nomain.o ../../../src/karabo/xms/Data.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103122747/Data.o ${OBJECTDIR}/_ext/1103122747/Data_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/1103122747/ImageData_nomain.o: ${OBJECTDIR}/_ext/1103122747/ImageData.o ../../../src/karabo/xms/ImageData.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/ImageData.o`; \
@@ -2912,6 +2928,7 @@ ${OBJECTDIR}/_ext/1103122747/Statics_nomain.o: ${OBJECTDIR}/_ext/1103122747/Stat
 	then  \
 	    ${TESTDIR}/TestFiles/f8 || true; \
 	    ${TESTDIR}/TestFiles/f9 || true; \
+	    ${TESTDIR}/TestFiles/f10 || true; \
 	    ${TESTDIR}/TestFiles/f2 || true; \
 	    ${TESTDIR}/TestFiles/f3 || true; \
 	    ${TESTDIR}/TestFiles/f4 || true; \
