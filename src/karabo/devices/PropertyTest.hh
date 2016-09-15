@@ -15,20 +15,6 @@ namespace karabo {
     namespace devices {
         
         
-        class NestedClass {
-        public:
-            
-            KARABO_CLASSINFO(NestedClass, "NestedClass", "1.5")
-            KARABO_CONFIGURATION_BASE_CLASS
-                    
-            static void expectedParameters(karabo::util::Schema& expected); 
-                   
-            NestedClass(const karabo::util::Hash& input);
-            
-            virtual ~NestedClass();
-        };
-        
-        
         class PropertyTest : public karabo::core::Device<> {
         public:
             
