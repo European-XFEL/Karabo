@@ -263,6 +263,8 @@ namespace karabo {
                         onAcknowledgeAlarm(channel, info);
                     } else if (type == "requestAlarms"){
                         onRequestAlarms(channel, info);
+                    } else if (type == "updateAttributes"){
+                        onUpdateAttributes(channel, info);
                     }
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << "Ignoring request";
@@ -1180,6 +1182,28 @@ namespace karabo {
                 channel->writeAsync(h, LOSSLESS);
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAlarmsReply(): " << e.userFriendlyMsg();
+            }  
+        }
+        
+        void GuiServerDevice::onUpdateAttributes(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info){
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onUpdateAttributes : info ...\n" << info;  
+                const std::string& instanceId = info.get<std::string>("instanceId");
+                const std::vector<Hash>& updates = info.get<std::vector<Hash> >("updates");
+                request(instanceId, "slotUpdateSchemaAttributes", updates)
+                            .receiveAsync<Hash>(boost::bind(&GuiServerDevice::onRequestedAttributeUpdate, this, channel, _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onUpdateAttributes(): " << e.userFriendlyMsg();
+            }
+        }
+        
+        void GuiServerDevice::onRequestedAttributeUpdate(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply) {  
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestedAttributeUpdate : success ...\n" << reply.get<bool>("success");
+                Hash h("type", "attributesUpdated", "reply", reply);
+                channel->writeAsync(h, LOSSLESS);
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAttributeUpdate(): " << e.userFriendlyMsg();
             }  
         }
 

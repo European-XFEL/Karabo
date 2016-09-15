@@ -32,7 +32,7 @@ namespace karabo {
         h.set("port", config.get<unsigned int>("port"));
         h.set("serializationType", "binary");
         m_dataConnection = Connection::create("Tcp", h);
-        m_dataConnection->startAsync(boost::bind(&karabo::TcpAdapter::onConnect, this, _1, 500, 5, _2));
+        m_dataConnection->startAsync(boost::bind(&karabo::TcpAdapter::onConnect, this, _1, 500, 10, _2));
         m_debug = config.has("debug") ? config.get<bool>("debug") : false;
     }
 
@@ -158,6 +158,11 @@ namespace karabo {
         // data was sent successfully! Prepare to read a reply asynchronous from a server: placeholder _1 is a Hash
         channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
        
+    }
+    
+    void TcpAdapter::disconnect(){
+        m_channel->socket().cancel(); // cancel pending reads
+        m_dataConnection->stop();
     }
     
    

@@ -16,13 +16,13 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "AlarmTesterDevice.hh"
+#include "TcpAdapter.hh"
 
 class RunTimeSchemaAttributes_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(RunTimeSchemaAttributes_Test);
 
     CPPUNIT_TEST(appTestRunner);
-
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -35,14 +35,16 @@ public:
 private:
 
     void appTestRunner();
-    void testApplicationOnInit();
     void testRuntimeApplication();
+    void testGuiServerApplication();
+    void testGuiServerApplicationFailure();
     void dummyMonitor(const std::string&, const karabo::util::Hash&);
     
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_deviceServerThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
+    boost::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
 
 
 

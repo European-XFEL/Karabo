@@ -1122,62 +1122,67 @@ namespace karabo {
             }
         }
         
-        void Schema::applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates){
+        #define applyRuntimeUpdateTypeResolver(Type, RefType, CppType, Func) if(Type == RefType) Func(path, it->getAs<CppType>("value"));
+        #define checkForRunttimeUpdateTemplatedType(Type, Attr, Func) if(attribute == Attr) { \
+                        applyRuntimeUpdateTypeResolver(Type, Types::BOOL, bool, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::CHAR, char, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::UINT8, unsigned char, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::INT8, char, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::UINT16, unsigned short, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::INT16, short, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::UINT32, unsigned int, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::INT32, int, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::UINT64, unsigned long long, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::INT64, long long, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::FLOAT, float, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::DOUBLE, double, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::COMPLEX_FLOAT, std::complex<float>, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::COMPLEX_DOUBLE, std::complex<double>, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::STRING, string, Func)\
+                        }
+
+        #define checkForRunttimeUpdateFixedType(Attr, Func, CppType) if(attribute == Attr) Func(path, it->getAs<CppType>("value"));
+        #define checkForRunttimeUpdateFixedTypeStrict(Attr, Func, CppType) if(attribute == Attr) Func(path, it->get<CppType>("value"));
+        
+        bool Schema::applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates){
+            bool success = true;
             for(auto it = updates.begin(); it != updates.end(); ++it){
-                const std::string& path = it->get<std::string>("path");
-                const std::string& attribute = it->get<std::string>("attribute");
-                
-#define applyRuntimeUpdateTypeResolver(RefType, CppType, Func) if(type == RefType) Func(path, it->getAs<CppType>("value"));
-#define checkForRunttimeUpdateTemplatedType(Attr, Func) if(Attr == #Func) { \
-                applyRuntimeUpdateTypeResolver(Types::BOOL, bool, Func)\
-                applyRuntimeUpdateTypeResolver(Types::CHAR, char, Func)\
-                applyRuntimeUpdateTypeResolver(Types::UINT8, unsigned char, Func)\
-                applyRuntimeUpdateTypeResolver(Types::INT8, char, Func)\
-                applyRuntimeUpdateTypeResolver(Types::UINT16, unsigned short, Func)\
-                applyRuntimeUpdateTypeResolver(Types::INT16, short, Func)\
-                applyRuntimeUpdateTypeResolver(Types::UINT32, unsigned int, Func)\
-                applyRuntimeUpdateTypeResolver(Types::INT32, int, Func)\
-                applyRuntimeUpdateTypeResolver(Types::UINT64, unsigned long long, Func)\
-                applyRuntimeUpdateTypeResolver(Types::INT64, long long, Func)\
-                applyRuntimeUpdateTypeResolver(Types::FLOAT, float, Func)\
-                applyRuntimeUpdateTypeResolver(Types::DOUBLE, double, Func)\
-                applyRuntimeUpdateTypeResolver(Types::COMPLEX_FLOAT, std::complex<float>, Func)\
-                applyRuntimeUpdateTypeResolver(Types::COMPLEX_DOUBLE, std::complex<double>, Func)\
-                applyRuntimeUpdateTypeResolver(Types::STRING, string, Func)\
-                }
-                
-#define checkForRunttimeUpdateFixedType(Attr, Func, CppType) if(attribute == #Attr) Func(path, it->getAs<CppType>("value"));
-#define checkForRunttimeUpdateFixedTypeStrict(Attr, Func, CppType) if(attribute == #Attr) Func(path, it->get<CppType>("value"));
-                
-                Types::ReferenceType type = getValueType(path);
-                
-                checkForRunttimeUpdateFixedTypeStrict(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, setRequiredAccessLevel, AccessLevel);
-                checkForRunttimeUpdateFixedTypeStrict(KARABO_SCHEMA_UNIT_ENUM, setUnit, UnitType);
-                checkForRunttimeUpdateFixedTypeStrict(KARABO_SCHEMA_METRIC_PREFIX_ENUM, setMetricPrefix, MetricPrefixType);
-                checkForRunttimeUpdateTemplatedType(KARABO_SCHEMA_MIN_INC, setMinInc);
-                checkForRunttimeUpdateTemplatedType(KARABO_SCHEMA_MAX_INC, setMaxInc);
-                checkForRunttimeUpdateTemplatedType(KARABO_SCHEMA_MIN_EXC, setMinExc);
-                checkForRunttimeUpdateTemplatedType(KARABO_SCHEMA_MAX_EXC, setMaxExc);
-                checkForRunttimeUpdateFixedType(KARABO_SCHEMA_MIN_SIZE, setMinSize, unsigned int);
-                checkForRunttimeUpdateFixedType(KARABO_SCHEMA_MAX_SIZE, setMaxSize, unsigned int);
-                checkForRunttimeUpdateTemplatedType(AlarmCondition::WARN_LOW.asString(), setWarnLow);
-                checkForRunttimeUpdateTemplatedType(AlarmCondition::WARN_HIGH.asString(), setWarnHigh);
-                checkForRunttimeUpdateTemplatedType(AlarmCondition::ALARM_LOW.asString(), setAlarmLow);
-                checkForRunttimeUpdateTemplatedType(AlarmCondition::ALARM_HIGH.asString(), setAlarmHigh);
-                checkForRunttimeUpdateFixedType(AlarmCondition::WARN_VARIANCE_LOW.asString(), setWarnVarianceLow, double);
-                checkForRunttimeUpdateFixedType(AlarmCondition::WARN_VARIANCE_HIGH.asString(), setWarnVarianceHigh, double);
-                checkForRunttimeUpdateFixedType(AlarmCondition::ALARM_VARIANCE_LOW.asString(), setAlarmVarianceLow, double);
-                checkForRunttimeUpdateFixedType(AlarmCondition::ALARM_VARIANCE_HIGH.asString(), setAlarmVarianceHigh, double);
-                checkForRunttimeUpdateFixedType(KARABO_SCHEMA_ENABLE_ROLLING_STATS, setRollingStatistics, unsigned int);
-                
-   
-#undef checkForRunttimeUpdateFixedTypeStrict
-#undef checkForRunttimeUpdateFixedType
-#undef checkForRunttimeUpdate
-#undef applyRuntimeUpdateTypeResolver
-                
+                try{
+                    const std::string& path = it->get<std::string>("path");
+                    const std::string& attribute = it->get<std::string>("attribute");
+
+                    Types::ReferenceType type = getValueType(path);
+
+                    checkForRunttimeUpdateFixedTypeStrict(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, setRequiredAccessLevel, AccessLevel);
+                    checkForRunttimeUpdateFixedTypeStrict(KARABO_SCHEMA_UNIT_ENUM, setUnit, UnitType);
+                    checkForRunttimeUpdateFixedTypeStrict(KARABO_SCHEMA_METRIC_PREFIX_ENUM, setMetricPrefix, MetricPrefixType);
+                    checkForRunttimeUpdateTemplatedType(type, KARABO_SCHEMA_MIN_INC, setMinInc);
+                    checkForRunttimeUpdateTemplatedType(type, KARABO_SCHEMA_MAX_INC, setMaxInc);
+                    checkForRunttimeUpdateTemplatedType(type, KARABO_SCHEMA_MIN_EXC, setMinExc);
+                    checkForRunttimeUpdateTemplatedType(type, KARABO_SCHEMA_MAX_EXC, setMaxExc);
+                    checkForRunttimeUpdateFixedType(KARABO_SCHEMA_MIN_SIZE, setMinSize, unsigned int);
+                    checkForRunttimeUpdateFixedType(KARABO_SCHEMA_MAX_SIZE, setMaxSize, unsigned int);
+                    checkForRunttimeUpdateTemplatedType(type, AlarmCondition::WARN_LOW.asString(), setWarnLow);
+                    checkForRunttimeUpdateTemplatedType(type, AlarmCondition::WARN_HIGH.asString(), setWarnHigh);
+                    checkForRunttimeUpdateTemplatedType(type, AlarmCondition::ALARM_LOW.asString(), setAlarmLow);
+                    checkForRunttimeUpdateTemplatedType(type, AlarmCondition::ALARM_HIGH.asString(), setAlarmHigh);
+                    checkForRunttimeUpdateFixedType(AlarmCondition::WARN_VARIANCE_LOW.asString(), setWarnVarianceLow, double);
+                    checkForRunttimeUpdateFixedType(AlarmCondition::WARN_VARIANCE_HIGH.asString(), setWarnVarianceHigh, double);
+                    checkForRunttimeUpdateFixedType(AlarmCondition::ALARM_VARIANCE_LOW.asString(), setAlarmVarianceLow, double);
+                    checkForRunttimeUpdateFixedType(AlarmCondition::ALARM_VARIANCE_HIGH.asString(), setAlarmVarianceHigh, double);
+                    checkForRunttimeUpdateFixedType(KARABO_SCHEMA_ENABLE_ROLLING_STATS, setRollingStatistics, unsigned int);
+
+                } catch (...) {
+                    success = false;
+                }       
             }
+            return success;
         }
+        
+        #undef checkForRunttimeUpdateFixedTypeStrict
+        #undef checkForRunttimeUpdateFixedType
+        #undef checkForRunttimeUpdateTemplatedType
+        #undef applyRuntimeUpdateTypeResolver
 
     }
 }
