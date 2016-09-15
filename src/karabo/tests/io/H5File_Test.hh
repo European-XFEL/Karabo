@@ -11,6 +11,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/Dims.hh>
+#include <karabo/log/Logger.hh>
 #include <karabo/io/h5/Format.hh>
 #include <complex>
 
@@ -81,8 +82,6 @@ private:
     std::vector<std::complex<double> > m_a5;
 
     bool m_testBufferWriteSuccess;
-
-    bool m_reportTime;
 
     void testWrite();
     void testWriteFailure();

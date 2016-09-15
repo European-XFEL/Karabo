@@ -89,10 +89,6 @@ void ClassInfo_Test::testAnotherUsage() {
 void ClassInfo_Test::testGetRegisteredKeys() {
 
     vector<string> keys = Factory<Vehicle>::getRegisteredKeys();
-    cout << "\n Registered keys for Factory<Vehicle> " << endl;
-    for (size_t i = 0; i < keys.size(); ++i) {
-        cout << keys[i] << endl;
-    }
     CPPUNIT_ASSERT(keys[0] == "BobbyCar");
 
 }

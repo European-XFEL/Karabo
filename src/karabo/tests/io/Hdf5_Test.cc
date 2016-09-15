@@ -34,8 +34,6 @@ Hdf5_Test::Hdf5_Test() {
 
     m_numImages = 100; // number of images to be written
     m_extentMultiplier = 1; //image size multiplier: 1 means 1Mpx, 2 - 4Mpx, 3 - 9 Mpx, etc
-    m_report = true;
-
 }
 
 
@@ -180,19 +178,15 @@ void Hdf5_Test::testPureHdf5() {
     TimeDuration writeTime = p.getPeriod("write").getDuration();
     TimeDuration closeTime = p.getPeriod("close").getDuration();
 
-    if (false) {
-        clog << endl;
-        clog << "file : " << filename << endl;
-        clog << "allocate memory                  : " << allocateTime << " [s]" << endl;
-        clog << "open/prepare file                : " << createTime << " [s]" << endl;
-        clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-        clog << "written data size                : " << totalSize << " [MB]" << endl;
-        //clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl; //TODO
-        clog << "close                            : " << closeTime << " [s]" << endl;
-        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-        // clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl; //TODO
-
-    }
+    KARABO_LOG_FRAMEWORK_DEBUG << "file : " << filename;
+    KARABO_LOG_FRAMEWORK_DEBUG << "allocate memory                  : " << allocateTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open/prepare file                : " << createTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write data (may use memory cache): " << writeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "written data size                : " << totalSize << " [MB]";
+    //KARABO_LOG_FRAMEWORK_DEBUG << "writing speed                    : " << totalSize / writeTime << " [MB/s]"; //TODO
+    KARABO_LOG_FRAMEWORK_DEBUG << "close                            : " << closeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]";
+    // KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]"; //TODO
 
 
 }
@@ -253,12 +247,12 @@ void Hdf5_Test::testKaraboHdf5() {
     file.closeTable(t);
 
     // check if all objects are closed (apart from file) - requires making  m_h5file to be made temporary public in File.hh
-    //    clog << "files    : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_FILE) << endl;
-    //    clog << "datasets : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_DATASET)<< endl;
-    //    clog << "datatypes: " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_DATATYPE)<< endl;
-    //    clog << "attribute: " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_ATTR)<< endl;
-    //    clog << "groups   : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_GROUP)<< endl;
-    //    clog << "all      : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_ALL)<< endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "files    : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_FILE);
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "datasets : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_DATASET);
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "datatypes: " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_DATATYPE);
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "attribute: " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_ATTR);
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "groups   : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_GROUP);
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "all      : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_ALL);
 
 
     file.close();
@@ -270,20 +264,15 @@ void Hdf5_Test::testKaraboHdf5() {
     TimeDuration writeTime = p.getPeriod("write").getDuration();
     TimeDuration closeTime = p.getPeriod("close").getDuration();
 
-
-
-    if (m_report) {
-        clog << endl;
-        clog << "file: " << filename << endl;
-        clog << "allocate memory                  : " << allocateTime << " [s]" << endl;
-        clog << "open/prepare file                : " << createTime << " [s]" << endl;
-        clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-        clog << "written data size                : " << totalSize << " [MB]" << endl;
-        clog << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]" << endl;
-        clog << "close                            : " << closeTime << " [s]" << endl;
-        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-        clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]" << endl;
-    }
+    KARABO_LOG_FRAMEWORK_DEBUG << "file: " << filename;
+    KARABO_LOG_FRAMEWORK_DEBUG << "allocate memory                  : " << allocateTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open/prepare file                : " << createTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write data (may use memory cache): " << writeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "written data size                : " << totalSize << " [MB]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "close                            : " << closeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]";
 
 }
 
@@ -380,7 +369,7 @@ void Hdf5_Test::testManyDatasets() {
         string ds = "/base/c1/de/tec/tor" + toString(i);
         vdid[i] = H5Dopen(fid, ds.c_str(), H5P_DEFAULT);
         if (vdid[i] < 0) {
-            clog << "Error opening dataset " << i << endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "Error opening dataset " << i;
         }
         for (int j = 0; j < 2; j++) {
             ostringstream oss;
@@ -474,22 +463,17 @@ void Hdf5_Test::testManyDatasets() {
     double writeTime = 0; //p.getPeriod("write").getDuration();
     TimeDuration closeTime = p.getPeriod("close").getDuration();
     TimeDuration openTime = p.getPeriod("open").getDuration();
-    if (false) {
-        clog << endl;
-        clog << "file : " << filename << endl;
-        clog << "allocate memory                  : " << allocateTime << " [s]" << endl;
-        clog << "open/prepare file                : " << createTime << " [s]" << endl;
-        clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-        //        clog << "written data size                : " << totalSize << " [MB]" << endl;
-        //        clog << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]" << endl;
-        clog << "close                            : " << closeTime << " [s]" << endl;
-        clog << "open                             : " << openTime << " [s]" << endl;
-        //        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-        //        clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]" << endl;
 
-    }
-
-
+    KARABO_LOG_FRAMEWORK_DEBUG << "file : " << filename;
+    KARABO_LOG_FRAMEWORK_DEBUG << "allocate memory                  : " << allocateTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open/prepare file                : " << createTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write data (may use memory cache): " << writeTime << " [s]";
+    //        KARABO_LOG_FRAMEWORK_DEBUG << "written data size                : " << totalSize << " [MB]";
+    //        KARABO_LOG_FRAMEWORK_DEBUG << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "close                            : " << closeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open                             : " << openTime << " [s]";
+    //        KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]";
+    //        KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]";
 
 }
 
@@ -557,14 +541,14 @@ void Hdf5_Test::testManyDatasets1() {
     p.stopPeriod("all");
     p.close();
     TimeDuration allTime = p.getPeriod("all").getDuration();
-    //    clog << "Time: " << allTime << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Time: " << allTime;
     //
     //    hid_t scalar_id = H5Screate(H5S_SCALAR);
     //    for (size_t i = 0; i < max; ++i) {
     //        string ds = "/base/c1/de/tec/tor" + toString(i);
     //        vdid[i] = H5Dopen(fid, ds.c_str(), H5P_DEFAULT);
     //        if (vdid[i] < 0) {
-    //            clog << "Error opening dataset " << i << endl;
+    //            KARABO_LOG_FRAMEWORK_DEBUG << "Error opening dataset " << i;
     //        }
     //        for (int j = 0; j < 2; j++) {
     //            ostringstream oss;
@@ -663,17 +647,16 @@ void Hdf5_Test::testManyDatasets1() {
     //    double openTime = HighResolutionTimer::time2double(p.getTime("open"));
     //
     //    if (true) {
-    //        clog << endl;
-    //        clog << "file : " << filename << endl;
-    //        clog << "allocate memory                  : " << allocateTime << " [s]" << endl;
-    //        clog << "open/prepare file                : " << createTime << " [s]" << endl;
-    //        clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-    //        //        clog << "written data size                : " << totalSize << " [MB]" << endl;
-    //        //        clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl;
-    //        clog << "close                            : " << closeTime << " [s]" << endl;
-    //        clog << "open                             : " << openTime << " [s]" << endl;
-    //        //        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-    //        //        clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl;
+    //        KARABO_LOG_FRAMEWORK_DEBUG << "file : " << filename;
+    //        KARABO_LOG_FRAMEWORK_DEBUG << "allocate memory                  : " << allocateTime << " [s]";
+    //        KARABO_LOG_FRAMEWORK_DEBUG << "open/prepare file                : " << createTime << " [s]";
+    //        KARABO_LOG_FRAMEWORK_DEBUG << "write data (may use memory cache): " << writeTime << " [s]";
+    //        //        KARABO_LOG_FRAMEWORK_DEBUG << "written data size                : " << totalSize << " [MB]";
+    //        //        KARABO_LOG_FRAMEWORK_DEBUG << "writing speed                    : " << totalSize / writeTime << " [MB/s]";
+    //        KARABO_LOG_FRAMEWORK_DEBUG << "close                            : " << closeTime << " [s]";
+    //        KARABO_LOG_FRAMEWORK_DEBUG << "open                             : " << openTime << " [s]";
+    //        //        KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]";
+    //        //        KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]";
     //
     //    }
     //
@@ -760,14 +743,14 @@ void Hdf5_Test::testSerializer() {
             Hash a("aa", 1, "bb", 12.89, "cc", -4);
             vector<Hash> v(4, a);
             data.set("c.d", v);
-            //            clog << "Original Hash:\n" << data << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "Original Hash:\n" << data;
             p.startPeriod("all");
             Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("test1.h5")));
             out->write(data);
             p.stopPeriod("all");
             p.close();
             TimeDuration allTime = p.getPeriod("all").getDuration();
-            //            clog << "Write time: " << allTime << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "Write time: " << allTime;
 
 
 
@@ -779,8 +762,8 @@ void Hdf5_Test::testSerializer() {
             p.stopPeriod("read");
             p.close();
             TimeDuration readTime = p.getPeriod("read").getDuration();
-            //            clog << "Read time: " << readTime << endl;
-            //            clog << "Read Hash\n" << rdata << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "Read time: " << readTime;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "Read Hash\n" << rdata;
         }
 
         // return;
@@ -811,7 +794,7 @@ void Hdf5_Test::testSerializer() {
             p.stopPeriod("all");
             p.close();
             TimeDuration allTime = p.getPeriod("all").getDuration();
-            //            clog << "Write time: " << allTime << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "Write time: " << allTime;
 
             Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("test2.h5")));
             p.open();
@@ -821,13 +804,13 @@ void Hdf5_Test::testSerializer() {
             p.stopPeriod("read");
             p.close();
             TimeDuration readTime = p.getPeriod("read").getDuration();
-            //            clog << "Read time: " << readTime << endl;
-            //            clog << "Read Hash\n" << rdata << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "Read time: " << readTime;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "Read Hash\n" << rdata;
 
         }
 
         {
-            //            clog << "+++++++++++++++++++++++++++" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "+++++++++++++++++++++++++++";
             Hash data;
 
             data.set("a.01.Hello.World", static_cast<char> ('B'));
@@ -848,11 +831,11 @@ void Hdf5_Test::testSerializer() {
             p.stopPeriod("write");
             p.close();
             TimeDuration allTime = p.getPeriod("write").getDuration();
-            //            clog << "Write time: " << allTime << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "Write time: " << allTime;
 
             Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("test4.h5")));
             size_t size = in->size();
-            //            clog << "number of Hashes in the file: " << size << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "number of Hashes in the file: " << size;
 
             for (size_t i = 0; i < size; ++i) {
                 Hash rdata;
@@ -862,10 +845,10 @@ void Hdf5_Test::testSerializer() {
                 p.stopPeriod("read");
                 p.close();
                 TimeDuration readTime = p.getPeriod("read").getDuration();
-                //                clog << "Read time: " << readTime << endl;
-                //   clog << "Read Hash\n" << rdata << endl;
+                //                KARABO_LOG_FRAMEWORK_DEBUG << "Read time: " << readTime;
+                //   KARABO_LOG_FRAMEWORK_DEBUG << "Read Hash\n" << rdata;
             }
-            //            clog << "+++++++++++++++++++++++++++" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "+++++++++++++++++++++++++++";
         }
 
 
@@ -887,7 +870,7 @@ void Hdf5_Test::testSerializer() {
             p.stopPeriod("vec");
             try {
                 //        double time = HighResolutionTimer::time2double(p.getTime("vec"));
-                //        clog << "creating big Hash took " << time << " [s]" << endl;
+                //        KARABO_LOG_FRAMEWORK_DEBUG << "creating big Hash took " << time << " [s]";
 
                 vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
                 tmp.resize(10000);
@@ -895,14 +878,14 @@ void Hdf5_Test::testSerializer() {
                     tmp[i] = m_rootedHash;
                 }
                 Hash m_bigHash = big;
-                //                clog << "start m_bigHash" << endl;
+                //                KARABO_LOG_FRAMEWORK_DEBUG << "start m_bigHash";
                 p.startPeriod("all");
                 Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("test3.h5")));
                 out->write(m_bigHash);
                 p.stopPeriod("all");
                 p.close();
                 TimeDuration allTime = p.getPeriod("all").getDuration();
-                //                clog << "Write time: " << allTime << endl;
+                //                KARABO_LOG_FRAMEWORK_DEBUG << "Write time: " << allTime;
 
 
                 Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("test3.h5")));
@@ -914,16 +897,16 @@ void Hdf5_Test::testSerializer() {
                 p.close();
                 TimeDuration readTime = p.getPeriod("read").getDuration();
 
-                //                clog << "Read time: " << readTime << endl;
-                //                clog << "Read Hash\n" << rdata << endl;
+                //                KARABO_LOG_FRAMEWORK_DEBUG << "Read time: " << readTime;
+                //                KARABO_LOG_FRAMEWORK_DEBUG << "Read Hash\n" << rdata;
 
 
             } catch (Exception& ex) {
-                clog << ex << endl;
+                KARABO_LOG_FRAMEWORK_DEBUG << ex;
             }
         }
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
     }
 
 }
@@ -1128,56 +1111,51 @@ void Hdf5_Test::testKaraboNDArray() {
 
 
 
-    if (m_report) {
-        clog << endl;
-        clog << "Statistics for writing and reading NDArray data types"<<std::endl;
-        clog << "------------------------------------------------------"<<std::endl;
-        clog << "file: " << filename << endl;
-        clog << "allocate memory                  : " << allocateTime << " [s]" << endl;
-        clog << "open/prepare file                : " << createTime << " [s]" << endl;
-        clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-        clog << "written data size                : " << totalSize << " [MB]" << endl;
-        clog << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]" << endl;
-        clog << "close                            : " << closeTime << " [s]" << endl;
-        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-        clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]" << endl;
-        clog << "open existing file               : " << openTime << " [s]" << endl;
-        clog << "read data (may use memory cache) : " << readTime << " [s]" << endl;
-        clog << "read data size                   : " << totalSize << " [MB]" << endl;
-        clog << "reading speed                    : " << totalSize / double(readTime) << " [MB/s]" << endl;
-        clog << "read data (create new Hash entry): " << readCreateDataTime << " [s]" << endl;
-        clog << "read data size (new Hash entry)  : " << totalSize << " [MB]" << endl;
-        clog << "reading speed (new Hash entry)   : " << totalSize / double(readCreateDataTime) << " [MB/s]" << endl;
-        clog << "read data (bulk)                 : " << readBulkTime << " [s]" << endl;
-        clog << "read data size (bulk)            : " << totalSize << " [MB]" << endl;
-        clog << "reading speed (bulk)             : " << totalSize / double(readBulkTime) << " [MB/s]" << endl;
-        clog << "close read                       : " << closeReadTime << " [s]" << endl;
-        clog << "open+read+close                  : " << openTime + readTime + closeReadTime << " [s]" << endl;
-        clog << "open+read+close speed            : " << totalSize / double(openTime + readTime + closeReadTime) << " [MB/s]" << endl;
-        clog << "assertion                        : " << assertionTime << " [s]" << endl;
-        
-        clog << endl;
-        clog << "Statistics for writing and reading NDArray data types (unmanaged memory)"<<std::endl;
-        clog << "------------------------------------------------------------------------"<<std::endl;
-        clog << "file: " << filename << endl;
-        clog << "allocate memory                  : " << allocateTimeRef << " [s]" << endl;
-        clog << "open/prepare file                : " << createTimeRef << " [s]" << endl;
-        clog << "write data (may use memory cache): " << writeTimeRef << " [s]" << endl;
-        clog << "written data size                : " << totalSize << " [MB]" << endl;
-        clog << "writing speed                    : " << totalSize / double(writeTimeRef) << " [MB/s]" << endl;
-        clog << "close                            : " << closeTimeRef << " [s]" << endl;
-        clog << "write+close(flush to disk)       : " << writeTimeRef + closeTimeRef << " [s]" << endl;
-        clog << "write+close(flush to disk) speed : " << totalSize / double(writeTimeRef + closeTimeRef) << " [MB/s]" << endl;
-        clog << "open existing file               : " << openTimeRef << " [s]" << endl;
-        clog << "read data (may use memory cache) : " << readTimeRef << " [s]" << endl;
-        clog << "read data size                   : " << totalSize << " [MB]" << endl;
-        clog << "reading speed                    : " << totalSize / double(readTimeRef) << " [MB/s]" << endl;
-        clog << "close read                       : " << closeReadTimeRef << " [s]" << endl;
-        clog << "open+read+close                  : " << openTimeRef + readTimeRef + closeReadTimeRef << " [s]" << endl;
-        clog << "open+read+close speed            : " << totalSize / double(openTimeRef + readTimeRef + closeReadTimeRef) << " [MB/s]" << endl;
-        clog << "assertion                        : " << assertionTime << " [s]" << endl;
-        
-    }
+    KARABO_LOG_FRAMEWORK_DEBUG << "Statistics for writing and reading NDArray data types";
+    KARABO_LOG_FRAMEWORK_DEBUG << "------------------------------------------------------";
+    KARABO_LOG_FRAMEWORK_DEBUG << "file: " << filename;
+    KARABO_LOG_FRAMEWORK_DEBUG << "allocate memory                  : " << allocateTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open/prepare file                : " << createTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write data (may use memory cache): " << writeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "written data size                : " << totalSize << " [MB]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "close                            : " << closeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open existing file               : " << openTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data (may use memory cache) : " << readTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data size                   : " << totalSize << " [MB]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "reading speed                    : " << totalSize / double(readTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data (create new Hash entry): " << readCreateDataTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data size (new Hash entry)  : " << totalSize << " [MB]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "reading speed (new Hash entry)   : " << totalSize / double(readCreateDataTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data (bulk)                 : " << readBulkTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data size (bulk)            : " << totalSize << " [MB]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "reading speed (bulk)             : " << totalSize / double(readBulkTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "close read                       : " << closeReadTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open+read+close                  : " << openTime + readTime + closeReadTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open+read+close speed            : " << totalSize / double(openTime + readTime + closeReadTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "assertion                        : " << assertionTime << " [s]";
+
+    KARABO_LOG_FRAMEWORK_DEBUG << "Statistics for writing and reading NDArray data types (unmanaged memory)";
+    KARABO_LOG_FRAMEWORK_DEBUG << "------------------------------------------------------------------------";
+    KARABO_LOG_FRAMEWORK_DEBUG << "file: " << filename;
+    KARABO_LOG_FRAMEWORK_DEBUG << "allocate memory                  : " << allocateTimeRef << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open/prepare file                : " << createTimeRef << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write data (may use memory cache): " << writeTimeRef << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "written data size                : " << totalSize << " [MB]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "writing speed                    : " << totalSize / double(writeTimeRef) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "close                            : " << closeTimeRef << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk)       : " << writeTimeRef + closeTimeRef << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk) speed : " << totalSize / double(writeTimeRef + closeTimeRef) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open existing file               : " << openTimeRef << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data (may use memory cache) : " << readTimeRef << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data size                   : " << totalSize << " [MB]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "reading speed                    : " << totalSize / double(readTimeRef) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "close read                       : " << closeReadTimeRef << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open+read+close                  : " << openTimeRef + readTimeRef + closeReadTimeRef << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open+read+close speed            : " << totalSize / double(openTimeRef + readTimeRef + closeReadTimeRef) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "assertion                        : " << assertionTime << " [s]";
 
 }
 
@@ -1309,36 +1287,31 @@ void Hdf5_Test::testKaraboPtr() {
     TimeDuration closeReadTime = p.getPeriod("closeRead").getDuration();
     TimeDuration assertionTime = p.getPeriod("assertion").getDuration();
 
-
-
-    if (m_report) {
-        clog << endl;
-        clog << "Statistics for writing and reading pointer data types"<<std::endl;
-        clog << "------------------------------------------------------"<<std::endl;
-        clog << "file: " << filename << endl;
-        clog << "allocate memory                  : " << allocateTime << " [s]" << endl;
-        clog << "open/prepare file                : " << createTime << " [s]" << endl;
-        clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-        clog << "written data size                : " << totalSize << " [MB]" << endl;
-        clog << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]" << endl;
-        clog << "close                            : " << closeTime << " [s]" << endl;
-        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-        clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]" << endl;
-        clog << "open existing file               : " << openTime << " [s]" << endl;
-        clog << "read data (may use memory cache) : " << readTime << " [s]" << endl;
-        clog << "read data size                   : " << totalSize << " [MB]" << endl;
-        clog << "reading speed                    : " << totalSize / double(readTime) << " [MB/s]" << endl;
-        clog << "read data (create new Hash entry): " << readCreateDataTime << " [s]" << endl;
-        clog << "read data size (new Hash entry)  : " << totalSize << " [MB]" << endl;
-        clog << "reading speed (new Hash entry)   : " << totalSize / double(readCreateDataTime) << " [MB/s]" << endl;
-        clog << "read data (bulk)                 : " << readBulkTime << " [s]" << endl;
-        clog << "read data size (bulk)            : " << totalSize << " [MB]" << endl;
-        clog << "reading speed (bulk)             : " << totalSize / double(readBulkTime) << " [MB/s]" << endl;
-        clog << "close read                       : " << closeReadTime << " [s]" << endl;
-        clog << "open+read+close                  : " << openTime + readTime + closeReadTime << " [s]" << endl;
-        clog << "open+read+close speed            : " << totalSize / double(openTime + readTime + closeReadTime) << " [MB/s]" << endl;
-        clog << "assertion                        : " << assertionTime << " [s]" << endl;
-    }
+    KARABO_LOG_FRAMEWORK_DEBUG << "Statistics for writing and reading pointer data types";
+    KARABO_LOG_FRAMEWORK_DEBUG << "------------------------------------------------------";
+    KARABO_LOG_FRAMEWORK_DEBUG << "file: " << filename;
+    KARABO_LOG_FRAMEWORK_DEBUG << "allocate memory                  : " << allocateTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open/prepare file                : " << createTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write data (may use memory cache): " << writeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "written data size                : " << totalSize << " [MB]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "close                            : " << closeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open existing file               : " << openTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data (may use memory cache) : " << readTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data size                   : " << totalSize << " [MB]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "reading speed                    : " << totalSize / double(readTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data (create new Hash entry): " << readCreateDataTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data size (new Hash entry)  : " << totalSize << " [MB]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "reading speed (new Hash entry)   : " << totalSize / double(readCreateDataTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data (bulk)                 : " << readBulkTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "read data size (bulk)            : " << totalSize << " [MB]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "reading speed (bulk)             : " << totalSize / double(readBulkTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "close read                       : " << closeReadTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open+read+close                  : " << openTime + readTime + closeReadTime << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "open+read+close speed            : " << totalSize / double(openTime + readTime + closeReadTime) << " [MB/s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "assertion                        : " << assertionTime << " [s]";
 
 }
 

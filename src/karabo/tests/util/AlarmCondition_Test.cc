@@ -141,8 +141,8 @@ void AlarmCondition_Test::testValidation() {
                     } else if (t > (50 + i)) {
                         CPPUNIT_ASSERT(type == AlarmCondition::ALARM_HIGH.asString());
                     } else {
-                        std::clog << t << " " << i << std::endl;
-                        std::clog << scope << it->getValue<Hash>() << std::endl;
+                        KARABO_LOG_FRAMEWORK_DEBUG << t << " " << i;
+                        KARABO_LOG_FRAMEWORK_DEBUG << scope << it->getValue<Hash>();
                         CPPUNIT_ASSERT(false); // alarm should have been raised
                     }
                 }
@@ -191,7 +191,7 @@ void AlarmCondition_Test::testValidation() {
 
     profiler.close();
 
-    std::clog << "Validation time 250 properties: " << profiler.getPeriod("validator").getDuration() / 10 << " [s/per validation]" << std::endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "Validation time 250 properties: " << profiler.getPeriod("validator").getDuration() / 10 << " [s/per validation]";
 }
 
 

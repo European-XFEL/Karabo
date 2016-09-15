@@ -63,7 +63,8 @@ namespace karabo {
         timeout *= 2;
         
         if (repetition == 0) {
-            std::clog<<"Connecting failed. Timed out!"<<std::endl;
+            if (m_debug) std::clog<<"Connecting failed. Timed out!"<<std::endl;
+
             return;
         };
             
@@ -79,7 +80,10 @@ namespace karabo {
 
         try {
             // GUI communication scenarios
-            if(m_debug) std::clog <<"Received message: "<<info << std::endl;
+            if (m_debug) {
+                std::clog <<"Received message: "<<info << std::endl;
+            }
+
             {
                 const std::string& type = info.has("type") ? info.get<std::string>("type") : "unspecified";
                 {
@@ -111,7 +115,7 @@ namespace karabo {
     void TcpAdapter::onError(const karabo::net::ErrorCode& errorCode, karabo::net::Channel::Pointer channel) {
         try {
 
-            std::clog  << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client" <<std::endl;
+            if (m_debug) std::clog  << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client" <<std::endl;
 
         } catch (const Exception& e) {
             std::cerr << "Problem in onError(): " << e.userFriendlyMsg() << std::endl;

@@ -7,6 +7,8 @@
 
 #ifndef STATISTICALEVALUATOR_HH
 #define	STATISTICALEVALUATOR_HH
+#include <karabo/util/Configurator.hh>
+#include <karabo/log/Logger.hh>
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <karabo/util/RollingWindowStatistics.hh>
@@ -42,6 +44,8 @@ class StatisticalEvaluator : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
+    KARABO_CLASSINFO(StatisticalEvaluator, "StatisticalEvaluator", "1.0");
+
     StatisticalEvaluator();
     virtual ~StatisticalEvaluator();
     void setUp();
