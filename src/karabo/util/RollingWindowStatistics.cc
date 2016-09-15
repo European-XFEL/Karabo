@@ -69,6 +69,10 @@ namespace karabo {
             }
 
         }
+        
+        unsigned long long RollingWindowStatistics::getInterval() const{
+            return m_evalInterval;
+        }
 
 
 
