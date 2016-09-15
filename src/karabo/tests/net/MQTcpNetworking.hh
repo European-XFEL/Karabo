@@ -8,6 +8,9 @@
 #ifndef MQTCPNETWORKING_HH
 #define	MQTCPNETWORKING_HH
 
+#include <karabo/util/Configurator.hh>
+#include <karabo/log/Logger.hh>
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -43,6 +46,9 @@ class MQTcpNetworking : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
+
+    KARABO_CLASSINFO(MQTcpNetworking, "MQTcpNetworking", "1.0");
+
     MQTcpNetworking();
     virtual ~MQTcpNetworking();
     void setUp();

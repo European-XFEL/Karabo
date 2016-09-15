@@ -272,7 +272,7 @@ void StatisticalEvaluator::testPerformance() {
 
     profiler.close();
 
-    std::clog << "Single var time (100000 updates and reads): " << profiler.getPeriod("varianceSingle").getDuration() << " [s]" << std::endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "Single var time (100000 updates and reads): " << profiler.getPeriod("varianceSingle").getDuration() << " [s]";
 
 
 }
@@ -344,7 +344,7 @@ void StatisticalEvaluator::testValidatorPerformance() {
 
     profiler.close();
 
-    std::clog << "Validation time 250 properties: " << profiler.getPeriod("varianceValidator").getDuration() / 10 << " [s/per validation]" << std::endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "Validation time 250 properties: " << profiler.getPeriod("varianceValidator").getDuration() / 10 << " [s/per validation]";
 
 
 }

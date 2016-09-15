@@ -41,9 +41,9 @@ MQTcpNetworking::~MQTcpNetworking() {
 
 void MQTcpNetworking::createServer() {
     m_serverConnection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", 0, "Tcp.type", "server"));
-    std::clog << "SERVER: connection object created. " << std::endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "SERVER: connection object created. ";
     m_serverPort = m_serverConnection->startAsync(boost::bind(&MQTcpNetworking::serverConnectHandler, this, _1, _2));
-    std::clog << "SERVER: the allocated port is " << m_serverPort << std::endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "SERVER: the allocated port is " << m_serverPort;
 }
 
 
@@ -52,7 +52,7 @@ void MQTcpNetworking::serverConnectHandler(const karabo::net::ErrorCode& ec, con
         serverErrorHandler(ec, channel);
         return;
     }
-    std::clog << "SERVER: connected" << std::endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "SERVER: connected";
     // _1 -> header, _2 -> body, _3 -> error code
     channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::serverReadHashHashHandler, this, _1, channel, _2, _3));
 }
@@ -60,9 +60,9 @@ void MQTcpNetworking::serverConnectHandler(const karabo::net::ErrorCode& ec, con
 
 void MQTcpNetworking::serverErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
     if (ec.value() == 2) {
-        std::clog << "\nSERVER: client has closed the connection!" << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER: client has closed the connection!";
     } else {
-        std::clog << "\nSERVER_ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER_ERROR: " << ec.value() << " -- " << ec.message();
     }
     if (channel) channel->close();
 }
@@ -78,18 +78,18 @@ void MQTcpNetworking::serverReadHashHashHandler(const karabo::net::ErrorCode& ec
         return;
     }
 
-    std::clog << "\nSERVER : Request comes...\n" << header << body << "-----------------\n";
+    KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER : Request comes...\n" << header << body << "-----------------\n";
 
     channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::serverReadHashHashHandler, this, _1, channel, _2, _3));
 
     if (body.has("START")) {
         m_numberOfMessages = body.get<int>("START");
-        std::clog << "\nSERVER:  CLIENT sent START command with counter = " << m_numberOfMessages << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER:  CLIENT sent START command with counter = " << m_numberOfMessages;
         m_serverCount = 0;
         m_ts = boost::posix_time::second_clock::local_time();
         karabo::net::EventLoop::getIOService().post(boost::bind(&MQTcpNetworking::serverPublish, this, channel));
     } else if (body.has("STOP")) {
-        std::clog << "\nSERVER:  CLIENT requests exiting together!\n" << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER:  CLIENT requests exiting together!\n";
     }
 }
 
@@ -102,8 +102,8 @@ void MQTcpNetworking::serverPublish(const karabo::net::Channel::Pointer& channel
     else {
         boost::posix_time::ptime t = boost::posix_time::second_clock::local_time();
         boost::posix_time::time_duration diff = t - m_ts;
-        std::clog << "SERVER : " << diff.total_milliseconds() << " ms,  publishing rate = "
-                << double(m_serverCount) / diff.total_milliseconds() << " per ms" << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "SERVER : " << diff.total_milliseconds() << " ms";
+        KARABO_LOG_FRAMEWORK_DEBUG << "\tpublishing rate = " << double(m_serverCount) / diff.total_milliseconds() << " per ms";
     }
 }
 
@@ -115,11 +115,12 @@ void MQTcpNetworking::testClientServerMethod() {
 
 
 void MQTcpNetworking::setUp() {
-    std::clog << "\n==============================================\nMQTestClientServer START nThreads = " << karabo::net::EventLoop::getNumberOfThreads() << std::endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "==============================================";
+    KARABO_LOG_FRAMEWORK_DEBUG << "MQTestClientServer START nThreads = " << karabo::net::EventLoop::getNumberOfThreads();
     try {
         createServer();
     } catch (const std::exception& e) {
-        std::clog << "SETUP exception: " << e.what() << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "SETUP exception: " << e.what();
         return;
     }
 }
@@ -127,15 +128,15 @@ void MQTcpNetworking::setUp() {
 
 void MQTcpNetworking::tearDown() {
     karabo::net::EventLoop::run();
-    std::clog << "EventLoop::run() was left." << std::endl;
-    std::clog << "=== MQTestClientServer STOPPED nThreads = " << karabo::net::EventLoop::getNumberOfThreads()
-            << "\n==============================================\n" << std::endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "EventLoop::run() was left.";
+    KARABO_LOG_FRAMEWORK_DEBUG << "=== MQTestClientServer STOPPED nThreads = " << karabo::net::EventLoop::getNumberOfThreads();
+    KARABO_LOG_FRAMEWORK_DEBUG << "==============================================";
 }
 
 
 void MQTcpNetworking::onClientConnected(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel) {
     if (e) {
-        std::clog << "MQTcpNetworking::onClientConnected  ErrorCode = " << e << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "MQTcpNetworking::onClientConnected  ErrorCode = " << e;
         clientChannelErrorHandler(e, channel);
         return;
     }
@@ -154,7 +155,7 @@ void MQTcpNetworking::onClientConnected(const karabo::net::ErrorCode& e, const k
 void MQTcpNetworking::clientChannelErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
     if (channel) channel->close();
     if (ec != boost::asio::error::eof) {
-        std::clog << "\nCLIENT ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "\nCLIENT ERROR: " << ec.value() << " -- " << ec.message();
 
         if (m_serverConnection) {
             m_serverConnection->stop();
@@ -190,9 +191,9 @@ void MQTcpNetworking::clientReadHashHashHandler(const karabo::net::ErrorCode& e,
 void MQTcpNetworking::onClientEnd(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel) {
     if (e) {
         if (e.value() == 2) {
-            //std::clog << "\nCLIENT: server has closed the connection!" << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nCLIENT: server has closed the connection!";
         } else {
-            std::clog << "\nCLIENT ERROR: " << e.value() << " -- " << e.message() << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nCLIENT ERROR: " << e.value() << " -- " << e.message();
         }
         if (channel) channel->close();
         return;
@@ -201,6 +202,6 @@ void MQTcpNetworking::onClientEnd(const karabo::net::ErrorCode& e, const karabo:
     boost::posix_time::ptime t = boost::posix_time::second_clock::local_time();
     boost::posix_time::time_duration diff = t - m_clientTimestamp;
     double rate = double(m_clientCount) / diff.total_milliseconds();
-    std::clog << "CLIENT Summary : " << diff.total_milliseconds() << " ms, rate = " << rate << " 1/ms" << std::endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "CLIENT Summary : " << diff.total_milliseconds() << " ms, rate = " << rate << " 1/ms";
     channel->close();
 }

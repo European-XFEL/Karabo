@@ -7,6 +7,8 @@
 
 #ifndef ALARMCONDITION_TEST_HH
 #define	ALARMCONDITION_TEST_HH
+#include <karabo/util/Configurator.hh>
+#include <karabo/log/Logger.hh>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -24,6 +26,9 @@ class AlarmCondition_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
+
+    KARABO_CLASSINFO(AlarmCondition_Test, "AlarmCondition_Test", "1.0");
+
     AlarmCondition_Test();
     virtual ~AlarmCondition_Test();
     void setUp();

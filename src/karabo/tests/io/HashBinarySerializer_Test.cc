@@ -120,7 +120,7 @@ void HashBinarySerializer_Test::testSerialization() {
 
     boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - tick;
     float ave = diff.total_milliseconds() / 10.0;
-    clog << "\n Average serialization time: " << ave << " ms for Hash of size: " << archive1.size() / 10.e6 << " MB" << endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "\n Average serialization time: " << ave << " ms for Hash of size: " << archive1.size() / 10.e6 << " MB";
 
     Hash hash;
     tick = boost::posix_time::microsec_clock::local_time();
@@ -129,7 +129,7 @@ void HashBinarySerializer_Test::testSerialization() {
     }
     diff = boost::posix_time::microsec_clock::local_time() - tick;
     ave = diff.total_milliseconds() / 10.0;
-    clog << "\n Average de-serialization time: " << ave << " ms" << endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "\n Average de-serialization time: " << ave << " ms";
 
     CPPUNIT_ASSERT(karabo::util::similar(hash, m_hash));
 

@@ -7,6 +7,8 @@
 
 #ifndef TIMECLASSES_TEST_HH
 #define	TIMECLASSES_TEST_HH
+#include <karabo/util/Configurator.hh>
+#include <karabo/log/Logger.hh>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -21,6 +23,9 @@ class TimeClasses_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
+
+    KARABO_CLASSINFO(TimeClasses_Test, "TimeClasses_Test", "1.0");
+
     TimeClasses_Test();
     virtual ~TimeClasses_Test();
     void setUp();
