@@ -28,12 +28,11 @@ void Base::expectedParameters(karabo::util::Schema& s) {
 
 
 Base::Base(const karabo::util::Hash& hash) {
-    cout << "BASE Ctor: " << hash << endl;
     m_aggregated = Configurator<Aggregated>::createNode("node", hash);
 }
 
 
-const boost::shared_ptr<Aggregated>& Base::getAggregated() const {
+boost::shared_ptr<Aggregated>& Base::getAggregated() {
     return m_aggregated;
 }
 
