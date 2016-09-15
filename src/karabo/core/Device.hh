@@ -1079,11 +1079,6 @@ namespace karabo {
                     m_staticSchema = staticSchema; // Here we lack a Schema::swap(..)...
                     // At startup the static schema is identical with the runtime schema
                     m_fullSchema = m_staticSchema;
-                    if(m_parameters.has(KARABO_RUNTIME_SCHEMA_UPDATE)){
-                        const std::vector<karabo::util::Hash> runtimeSchemaUpdates = m_parameters.get<std::vector<karabo::util::Hash> >(KARABO_RUNTIME_SCHEMA_UPDATE);
-                        m_fullSchema.applyRuntimeUpdates(runtimeSchemaUpdates);
-                        m_parameters.erase(KARABO_RUNTIME_SCHEMA_UPDATE, '.');
-                    }
                 }
             }
 

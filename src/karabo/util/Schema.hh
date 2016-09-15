@@ -129,6 +129,8 @@ namespace karabo {
 
 #define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
 #define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
+            
+#define KARABO_RUNTIME_SCHEMA_UPDATE "runtimeSchemaUpdates"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
@@ -782,6 +784,8 @@ namespace karabo {
             bool hasAlarmVarianceHigh(const std::string& path) const;
 
             bool hasInterlock(const std::string& path) const;
+            
+            void setRollingStatistics(const std::string& path, unsigned int interval);
 
             bool hasRollingStatistics(const std::string& path) const;
 
