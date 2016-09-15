@@ -4,7 +4,8 @@
 # Packages that we know how to build
 
 DEPENDENCIES_BASE=( bzip2 libpng snappy jpeg tiff python3.4 lapack boost
-freetype hdf5 log4cpp cppunit openmq openmqc patchelf gmock existDB )
+freetype hdf5 log4cpp cppunit openmq openmqc patchelf gmock existDB libxml
+libxslt )
 
 DEPENDENCIES_PYTHON=( setuptools pip wheel cython numpy scipy six nose py pytest
 pillow sip backports backports_abc tornado pyparsing dateutil pytz pexpect pyzmq
@@ -13,7 +14,7 @@ sphinx_rtd_theme imagesize sphinx decorator ipykernel ipython_genutils
 jupyter_core jupyter_client pickleshare wcwidth prompt_toolkit simplegeneric
 traitlets dill ipython h5py pyusb parse suds jsonschema ecdsa pycrypto paramiko
 tzlocal httplib2 pssh traits pint nbformat notebook ipyparallel ipcluster_tools
-cycler pyelftools rpathology )
+cycler pyelftools rpathology lxml requests ply eulxml eulexist)
 
 DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole pyqwt5 guidata guiqwt )
 
