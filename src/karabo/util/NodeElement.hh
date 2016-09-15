@@ -51,6 +51,7 @@ namespace karabo {
                 Schema schema("dummyRoot", m_parentSchemaAssemblyRules);
                 T::_KARABO_SCHEMA_DESCRIPTION_FUNCTION(schema);
                 this->m_node->template setValue<Hash > (schema.getParameterHash());
+                this->m_node->setAttribute(KARABO_SCHEMA_CLASS_ID, T::classInfo().getClassId());
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, T::classInfo().getClassId());
                 return *this;
             }

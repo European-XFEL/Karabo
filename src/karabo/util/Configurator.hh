@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Configurator.hh
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -30,7 +30,7 @@ namespace karabo {
             template<class Class, class Argument, void (*)(Argument&) >
             struct VoidArg1FunctionExists {
 
-                };
+            };
 
             template<class Class>
             inline PointerToSchemaDescriptionFunction getSchemaDescriptionFunction(VoidArg1FunctionExists<Class, Schema, &Class::_KARABO_SCHEMA_DESCRIPTION_FUNCTION>*) {
@@ -56,7 +56,6 @@ namespace karabo {
 
         template <class BaseClass>
         class Configurator {
-
 
             typedef std::map<std::string, boost::any > CtorMap;
             typedef std::map<std::string, CtorMap> Registry;
@@ -157,12 +156,47 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Use this function to create a configurable object as part of a parent one (aggregation).
+             *
+             * The input configuration may contain regular Hash parameters under the key nodeName or
+             * an already instantiated object of type BaseClass::Pointer.
+             *
+             * This signature of this function allows to specify a classId in case the Aggregate itself is a
+             * derivative of BaseClass.
+             *
+             * @param nodeName The key name of the NODE_ELEMENT as defined by the parent class
+             * @param classId The factory key of the to be created object (must inherit the BaseClass template)
+             * @param input The input configuration of the parent class
+             * @param validate Whether to validate or not
+             * @return Shared pointer of the created object
+             */
             inline static typename BaseClass::Pointer createNode(const std::string& nodeName, const std::string& classId, const karabo::util::Hash& input, const bool validate = true) {
                 if (input.has(nodeName)) {
-                    return create(classId, input.get<Hash > (nodeName), validate);
-                } else {
-                    throw KARABO_INIT_EXCEPTION("Given nodeName \"" + nodeName + "\" is not part of input configuration");
+                    if (input.is<typename BaseClass::Pointer > (nodeName)) {
+                        return input.get<typename BaseClass::Pointer > (nodeName);
+                    } else {
+                        return create(classId, input.get<Hash >(nodeName), validate);
+                    }
                 }
+                throw KARABO_INIT_EXCEPTION("Given nodeName \"" + nodeName + "\" is not part of input configuration");
+            }
+
+            /**
+             * Use this function to create a configurable object of class template type as part of a parent one (aggregation).
+             *
+             * The input configuration may contain regular Hash parameters under the key nodeName or
+             * an already instantiated object of type BaseClass::Pointer.
+             *
+             * @param nodeName The key name of the NODE_ELEMENT as defined by the parent class
+             * @param input The input configuration of the parent class
+             * @param validate Whether to validate or not
+             * @return Shared pointer of the created object
+             */
+            inline static typename BaseClass::Pointer createNode(const std::string& nodeName,
+                                                                 const karabo::util::Hash& input,
+                                                                 const bool validate = true) {
+                return createNode(nodeName, BaseClass::classInfo().getClassId(), input, validate);
             }
 
             inline static typename BaseClass::Pointer createChoice(const std::string& choiceName, const karabo::util::Hash& input, const bool validate = true) {
@@ -268,7 +302,6 @@ namespace karabo {
         template <class Base>
         struct RegisterConfigurator1 {
 
-
             static const ConfiguratorMember1<Base> registerMe;
         };
 
@@ -288,7 +321,6 @@ namespace karabo {
 
         template <class Base, class Sub1>
         struct RegisterConfigurator2 {
-
 
             static const ConfiguratorMember2<Base, Sub1> registerMe;
         };
@@ -310,7 +342,6 @@ namespace karabo {
 
         template <class Base, class Sub1, class Sub2>
         struct RegisterConfigurator3 {
-
 
             static const ConfiguratorMember3<Base, Sub1, Sub2> registerMe;
         };
@@ -334,7 +365,6 @@ namespace karabo {
         template <class Base, class Sub1, class Sub2, class Sub3>
         struct RegisterConfigurator4 {
 
-
             static const ConfiguratorMember4<Base, Sub1, Sub2, Sub3> registerMe;
         };
 
@@ -357,7 +387,6 @@ namespace karabo {
 
         template <class Base, class Sub1, class Sub2, class Sub3, class Sub4>
         struct RegisterConfigurator5 {
-
 
             static const ConfiguratorMember5<Base, Sub1, Sub2, Sub3, Sub4> registerMe;
         };
