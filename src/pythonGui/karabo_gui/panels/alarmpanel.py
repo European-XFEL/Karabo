@@ -8,6 +8,7 @@ from PyQt4.QtGui import (
     QVBoxLayout, QWidget)
 
 from karabo_gui.docktabwindow import Dockable
+from karabo_gui.network import Network
 
 
 class AlarmPanel(Dockable, QWidget):
@@ -57,3 +58,8 @@ class AlarmPanel(Dockable, QWidget):
 
     def setupToolBars(self, toolBar, parent):
         print("setupToolBars")
+
+    def setEnabled(self, enable):
+        if enable:
+            Network().onRequestAlarms()
+        super(AlarmPanel, self).setEnabled(enable)
