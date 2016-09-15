@@ -7,6 +7,8 @@
 
 #ifndef HDF5_TEST_HH
 #define	HDF5_TEST_HH
+#include <karabo/util/Configurator.hh>
+#include <karabo/log/Logger.hh>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -23,6 +25,9 @@ class Hdf5_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
+
+    KARABO_CLASSINFO(Hdf5_Test, "Hdf5_Test", "1.0");
+
     Hdf5_Test();
     virtual ~Hdf5_Test();
     void setUp();
@@ -32,7 +37,6 @@ private:
 
     size_t m_numImages; // number of images to be written
     int m_extentMultiplier; //image size multiplier: 1 means 1Mpx, 2 - 4Mpx, 3 - 9 Mpx, etc
-    bool m_report;
 
     void testPureHdf5();
     void testKaraboHdf5();

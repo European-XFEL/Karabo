@@ -7,6 +7,8 @@
 
 #ifndef HASHBINARYSERIALIZER_TEST_HH
 #define	HASHBINARYSERIALIZER_TEST_HH
+#include <karabo/util/Configurator.hh>
+#include <karabo/log/Logger.hh>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -18,6 +20,9 @@ class HashBinarySerializer_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
+
+    KARABO_CLASSINFO(HashBinarySerializer_Test, "HashBinarySerializer_Test", "1.0");
+
     HashBinarySerializer_Test();
     virtual ~HashBinarySerializer_Test();
     void setUp();    

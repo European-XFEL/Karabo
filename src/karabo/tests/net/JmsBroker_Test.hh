@@ -7,6 +7,8 @@
 
 #ifndef JMSBROKER_TEST_HH
 #define	JMSBROKER_TEST_HH
+#include <karabo/util/Configurator.hh>
+#include <karabo/log/Logger.hh>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -31,6 +33,9 @@ class JmsBroker_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
+
+    KARABO_CLASSINFO(JmsBroker_Test, "JmsBroker_Test", "1.0");
+
     JmsBroker_Test();
 
     virtual ~JmsBroker_Test();

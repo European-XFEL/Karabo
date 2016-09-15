@@ -7,6 +7,8 @@
 
 #ifndef SCHEMA_TEST_HH
 #define	SCHEMA_TEST_HH
+#include <karabo/util/Configurator.hh>
+#include <karabo/log/Logger.hh>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -61,6 +63,8 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
+
+    KARABO_CLASSINFO(Schema_Test, "Schema_Test", "1.0");
 
     Schema_Test();
     virtual ~Schema_Test();

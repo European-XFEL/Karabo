@@ -49,23 +49,23 @@ void TimeClasses_Test::testEpochstamp() {
     TimeDuration::setDefaultFormat("%s.%U");
     TimeDuration d = t2 - t1;
 
-    //    clog << "Duration: " << t2 - t1 << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << t2 - t1;
 
     Epochstamp t3;
     t2 += TimeDuration(0ULL, 1000000000000000ULL);
 
-    //    clog << "Duration: " << t2 - t1 << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << t2 - t1;
 
     Epochstamp t4 = t3 + d;
 
-    //    clog << "Duration: " << t4 - t3 << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << t4 - t3;
 
-    //    clog << "Duration: " << t4 - t1 << endl;
-    //    clog << "Duration: " << t4.elapsed(t1) << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << t4 - t1;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << t4.elapsed(t1);
 
     t4 -= TimeDuration(0ULL, 2000000000000000ULL);
 
-    //    clog << "Duration: " << t4.elapsed(t1) << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << t4.elapsed(t1);
 
     CPPUNIT_ASSERT(true);
 }
@@ -84,8 +84,8 @@ void TimeClasses_Test::testTimePeriod() {
 
     TimePeriod p2(t1, t2);
 
-    //    clog << "Duration: " << p1.getDuration() << endl;
-    //    clog << "Duration: " << p2.getDuration() << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << p1.getDuration();
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << p2.getDuration();
 
     CPPUNIT_ASSERT(p1.after(t0));
     CPPUNIT_ASSERT(p1.contain(t1));
@@ -229,12 +229,10 @@ void TimeClasses_Test::testTimeProfiler() {
     }
     profiler.stopPeriod("write");
 
-    //clog << p << endl;
-
     profiler.close();
 
-    clog << "Write time: " << profiler.getPeriod("write").getDuration() << " [s]" << endl;
-    clog << "Read time : " << profiler.getPeriod("write.read").getDuration() << " [s]" << endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "Write time: " << profiler.getPeriod("write").getDuration() << " [s]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "Read time : " << profiler.getPeriod("write.read").getDuration() << " [s]";
 
     //TimeProfiler profiler("Test");
     profiler.open();
@@ -307,17 +305,17 @@ void TimeClasses_Test::testTimeProfiler() {
 
     profiler.close();
 
-    clog << "Profiler:\n" << profiler << endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "Profiler:\n" << profiler;
 
-    //clog << "Profiler:\n" << profiler.sql() << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Profiler:\n" << profiler.sql();
 
-    //    clog << "Profiler: " << profiler.getPeriod().getDuration() << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Profiler: " << profiler.getPeriod().getDuration();
     //
-    //    clog << "Profiler write: " << profiler.getPeriod("write").getDuration() << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Profiler write: " << profiler.getPeriod("write").getDuration();
     //
-    //    clog << "Profiler write.format: " << profiler.getPeriod("write.format").getDuration() << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Profiler write.format: " << profiler.getPeriod("write.format").getDuration();
     //
-    //    clog << "Profiler write.format.open: " << profiler.getPeriod("write.format.open").getDuration() << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Profiler write.format.open: " << profiler.getPeriod("write.format.open").getDuration();
 
     CPPUNIT_ASSERT(true);
 }
