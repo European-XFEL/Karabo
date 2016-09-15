@@ -482,7 +482,11 @@ class EventLoop(SelectorEventLoop):
                     return f(*args, **kwargs)
                 finally:
                     set_event_loop(None)
-            return (yield from self.run_in_executor(None, inner))
+            try:
+                return (yield from self.run_in_executor(None, inner))
+            except CancelledError:
+                loop.cancel()
+                raise
 
     def start_device(self, device):
         lock = threading.Lock()
@@ -512,7 +516,6 @@ class EventLoop(SelectorEventLoop):
             self.changedFutures.remove(f)
 
     def sync(self, coro, timeout, wait):
-        assert wait is True
         return coro
 
     def close(self):
