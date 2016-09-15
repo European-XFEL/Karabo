@@ -8,6 +8,8 @@ from PyQt4.QtGui import (
     QVBoxLayout, QWidget)
 
 from karabo_gui.docktabwindow import Dockable
+from karabo_gui.mediator import (
+    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts)
 from karabo_gui.network import Network
 
 
@@ -53,6 +55,23 @@ class AlarmPanel(Dockable, QWidget):
         main_layout.addLayout(filter_layout)
         main_layout.addWidget(tw_alarm_widget)
 
+        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
+        # not necessary for self due to the fact that the singleton mediator
+        # object and `self` are being destroyed when the GUI exists
+        register_for_broadcasts(self)
+
+    def eventFilter(self, obj, event):
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.AlarmInitReply:
+                data = event.data
+                self._initAlarms(data.get('instanceId'), data.get('rows'))
+                return True
+            elif event.sender is KaraboEventSender.AlarmUpdate:
+                data = event.data
+                self._updateAlarms(data.get('instanceId'), data.get('rows'))
+                return True
+        return super(AlarmPanel, self).eventFilter(obj, event)
+
     def setupActions(self):
         print("setupActions")
 
@@ -63,3 +82,21 @@ class AlarmPanel(Dockable, QWidget):
         if enable:
             Network().onRequestAlarms()
         super(AlarmPanel, self).setEnabled(enable)
+
+    def _initAlarms(self, instanceId, rows):
+        print("+++_initAlarms", instanceId)
+        for k, v in rows.items():
+            print()
+            print("k", k)
+            print("v", v)
+            print()
+        print()
+
+    def _updateAlarms(self, instanceId, rows):
+        print("+++_updateAlarms", instanceId)
+        for k, v in rows.items():
+            print()
+            print("k", k)
+            print("v", v)
+            print()
+        print()
