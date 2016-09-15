@@ -13,10 +13,12 @@ class Tests(DeviceTest):
     def coro(self, param):
         self.assertEqual(param, "whatever")
         self.called = True
+        return "coro called"
 
     def func(self, param):
         self.assertEqual(param, "something")
         self.called = True
+        return "func called"
 
     @coroutine
     def coro_sleep(self):
@@ -37,27 +39,32 @@ class Tests(DeviceTest):
 
     @async_tst
     def test_coro_coro(self):
-        yield from background(self.coro, "whatever")
+        r = yield from background(self.coro, "whatever")
+        self.assertEqual(r, "coro called")
         self.assertTrue(self.called)
 
     @async_tst
     def test_coro_coro_direct(self):
-        yield from background(self.coro("whatever"))
+        r = yield from background(self.coro("whatever"))
+        self.assertEqual(r, "coro called")
         self.assertTrue(self.called)
 
     @async_tst
     def test_coro_func(self):
-        yield from background(self.func, "something")
+        r = yield from background(self.func, "something")
+        self.assertEqual(r, "func called")
         self.assertTrue(self.called)
 
     @sync_tst
     def test_func_coro(self):
-        background(self.coro, "whatever").wait()
+        r = background(self.coro, "whatever").wait()
+        self.assertEqual(r, "coro called")
         self.assertTrue(self.called)
 
     @sync_tst
     def test_func_func(self):
-        background(self.func, "something").wait()
+        r = background(self.func, "something").wait()
+        self.assertEqual(r, "func called")
         self.assertTrue(self.called)
 
     @async_tst
