@@ -226,7 +226,12 @@ namespace karabo {
                 return *this;
             }
 
-            TableElement& setNodeSchema(const Schema& schema) {
+            /**
+             * This method is deprecated.  Use <b>setColumns</b> instead.
+             * @param schema
+             * @return reference to the Element (chaining)
+             */
+            KARABO_DEPRECATED TableElement& setNodeSchema(const Schema& schema) {
 
                 m_nodeSchema = schema;
 
@@ -235,32 +240,40 @@ namespace karabo {
                 return *this;
             }
             
-            TableElement& appendNodeSchema(const Schema& schema) {
-
+            
+            /**
+             * This method establishes content of the table, i.e. table columns and their types
+             * @param schema
+             * @return reference to the Element (chaining)
+             */
+            TableElement& setColumns(const Schema& schema) {
+                m_nodeSchema = schema;
+                return *this;
+            }
+            
+            /**
+             * This method appends additional columns to the right side of the table.
+             * @param schema
+             * @return reference to the Element (chaining)
+             */
+            TableElement& addColumns(const Schema& schema) {
                 m_nodeSchema.merge(schema);
-
                 return *this;
             }
 
-            template <class ConfigurableClass>
-            TableElement& appendParametersOfConfigurableClass(const std::string& classId) {
-                // Assemble schema (taking into account base classes, etc.) and append to node
-                Schema schema = Configurator<ConfigurableClass>::getSchema(classId, m_parentSchemaAssemblyRules);
-                m_nodeSchema.merge(schema);
-                return *this;
-            }
-
+            /**
+             * This method appends additional columns to the table taken from
+             * some class.  The class is template parameter.
+             * @return reference to the Element (chaining)
+             */
             template <class T>
-            TableElement& appendParametersOf() {
+            TableElement& addColumnsFromClass() {
                 // Simply append the expected parameters of T to current node
                 Schema schema("dummyRoot", m_parentSchemaAssemblyRules);
                 T::_KARABO_SCHEMA_DESCRIPTION_FUNCTION(schema);
                 m_nodeSchema.merge(schema);
                 return *this;
             }
-
-
-
 
 
         protected:

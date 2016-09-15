@@ -160,7 +160,7 @@ namespace karabo {
                     .maxSize(10)
                     .assignmentOptional().defaultValue({true, false, true,
                                                        false, true, false})
-            .commit();
+                    .commit();
 
             VECTOR_CHAR_ELEMENT(expected).key("vectors.charProperty")
                     .displayedName("Char property")
@@ -169,7 +169,7 @@ namespace karabo {
                     .minSize(1)
                     .maxSize(10)
                     .assignmentOptional().defaultValue({'A', 'B', 'C', 'D', 'E', 'F'})
-            .commit();
+                    .commit();
 
             VECTOR_INT8_ELEMENT(expected).key("vectors.int8Property")
                     .displayedName("Int8 property")
@@ -179,7 +179,7 @@ namespace karabo {
                     .maxSize(10)
                     .assignmentOptional().defaultValue({41, 42, 43,
                                                        44, 45, 46})
-            .commit();
+                    .commit();
 
             VECTOR_UINT8_ELEMENT(expected).key("vectors.uint8Property")
                     .displayedName("UInt8 property")
@@ -189,7 +189,7 @@ namespace karabo {
                     .maxSize(10)
                     .assignmentOptional().defaultValue({41, 42, 43,
                                                        44, 45, 46})
-            .commit();
+                    .commit();
 
             VECTOR_INT16_ELEMENT(expected).key("vectors.int16Property")
                     .displayedName("Int16 property")
@@ -198,7 +198,7 @@ namespace karabo {
                     .minSize(1)
                     .maxSize(10)
                     .assignmentOptional().defaultValue({20041, 20042, 20043, 20044, 20045, 20046})
-            .commit();
+                    .commit();
 
             VECTOR_UINT16_ELEMENT(expected).key("vectors.uint16Property")
                     .displayedName("UInt16 property")
@@ -208,7 +208,7 @@ namespace karabo {
                     .maxSize(10)
                     .assignmentOptional().defaultValue({10041, 10042, 10043,
                                                        10044, 10045, 10046})
-            .commit();
+                    .commit();
 
             VECTOR_INT32_ELEMENT(expected).key("vectors.int32Property")
                     .displayedName("Int32 property")
@@ -218,7 +218,7 @@ namespace karabo {
                     .maxSize(10)
                     .assignmentOptional().defaultValue({20000041, 20000042, 20000043,
                                                        20000044, 20000045, 20000046})
-            .commit();
+                    .commit();
 
             VECTOR_UINT32_ELEMENT(expected).key("vectors.uint32Property")
                     .displayedName("UInt32 property")
@@ -228,7 +228,7 @@ namespace karabo {
                     .maxSize(10)
                     .assignmentOptional().defaultValue({90000041, 90000042, 90000043,
                                                        90000044, 90000045, 90000046})
-            .commit();
+                    .commit();
 
             VECTOR_INT64_ELEMENT(expected).key("vectors.int64Property")
                     .displayedName("Int64 property")
@@ -238,7 +238,7 @@ namespace karabo {
                     .maxSize(10)
                     .assignmentOptional().defaultValue({20000000041LL, 20000000042LL, 20000000043LL,
                                                        20000000044LL, 20000000045LL, 20000000046LL})
-            .commit();
+                    .commit();
 
             VECTOR_UINT64_ELEMENT(expected).key("vectors.uint64Property")
                     .displayedName("UInt64 property")
@@ -248,7 +248,7 @@ namespace karabo {
                     .maxSize(10)
                     .assignmentOptional().defaultValue({90000000041ULL, 90000000042ULL, 90000000043ULL,
                                                        90000000044ULL, 90000000045ULL, 90000000046ULL})
-            .commit();
+                    .commit();
 
             VECTOR_FLOAT_ELEMENT(expected).key("vectors.floatProperty")
                     .displayedName("Float property")
@@ -257,7 +257,7 @@ namespace karabo {
                     .minSize(1)
                     .maxSize(10)
                     .assignmentOptional().defaultValue({1.23456, 2.34567, 3.45678, 4.56789, 5.67891, 6.78912})
-            .commit();
+                    .commit();
 
             VECTOR_DOUBLE_ELEMENT(expected).key("vectors.doubleProperty")
                     .displayedName("Double property")
@@ -266,7 +266,7 @@ namespace karabo {
                     .minSize(1).maxSize(10)
                     .assignmentOptional().defaultValue({1.234567891, 2.345678912, 3.456789123,
                                                        4.567891234, 5.678901234, 6.123456789})
-            .commit();
+                    .commit();
 
             VECTOR_STRING_ELEMENT(expected).key("vectors.stringProperty")
                     .displayedName("String property")
@@ -275,18 +275,18 @@ namespace karabo {
                     .minSize(1).maxSize(10)
                     .assignmentOptional().defaultValue({"1111111", "2222222", "3333333",
                                                        "4444444", "5555555", "6666666"})
-            .commit();
+                    .commit();
 
-            Schema nestedRow;
+            Schema columns;
 
-            FLOAT_ELEMENT(nestedRow).key("e4")
+            FLOAT_ELEMENT(columns).key("e4")
                     .displayedName("E4")
                     .description("E4 property")
                     .assignmentOptional().defaultValue(3.1415F)
                     .reconfigurable()
                     .commit();
 
-            DOUBLE_ELEMENT(nestedRow).key("e5")
+            DOUBLE_ELEMENT(columns).key("e5")
                     .displayedName("E5")
                     .description("E5 property")
                     .assignmentOptional().defaultValue(2.78)
@@ -296,11 +296,11 @@ namespace karabo {
             TABLE_ELEMENT(expected).key("table")
                     .displayedName("Table property")
                     .description("Table containing one node.")
-                    .appendParametersOf<NestedClass>()
-                    .appendNodeSchema(nestedRow)
+                    .addColumnsFromClass<NestedClass>()
+                    .addColumns(columns)
                     .assignmentOptional().defaultValue({Hash("e1", "abc", "e2", true, "e3", 12, "e4", 0.9837F, "e5", 1.2345),
                                                        Hash("e1", "xyz", "e2", false, "e3", 42, "e4", 2.33333F, "e5", 7.77777)})
-            .reconfigurable()
+                    .reconfigurable()
                     .commit();
 
 
