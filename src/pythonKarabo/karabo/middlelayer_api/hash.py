@@ -970,37 +970,26 @@ class VectorString(Vector):
     @staticmethod
     def fromstring(s):
         if not s:
-            return StringList()
-        return StringList(ss.strip() for ss in s.split(','))
+            return []
+        return [ss.strip() for ss in s.split(',')]
 
     @classmethod
     def read(cls, file):
-        return StringList(super(VectorString, cls).read(file))
+        return list(super(VectorString, cls).read(file))
 
     @classmethod
     def toString(cls, data):
         return ",".join(str(x) for x in data)
 
     def cast(self, other):
-        if isinstance(other, StringList):
-            return other
-        else:
-            def check(s):
-                if not isinstance(s, str):
-                    raise TypeError
-                return s
-            return StringList(check(s) for s in other)
+        def check(s):
+            if not isinstance(s, str):
+                raise TypeError
+            return s
+        return [check(s) for s in other]
 
     def toKaraboValue(self, data, strict=True):
         return basetypes.VectorStringValue(data, descriptor=self)
-
-
-class StringList(Special, list):
-    """ This class represents a vector of strings """
-    hashtype = VectorString
-
-    def __repr__(self):
-        return "$" + list.__repr__(self)
 
 
 class HashType(Type):
@@ -1076,11 +1065,11 @@ class VectorHash(Vector):
 
     @classmethod
     def read(cls, file):
-        return list(super(VectorHash, cls).read(file))
+        return HashList(super(VectorHash, cls).read(file))
 
     def cast(self, other):
         ht = HashType()
-        return [ht.cast(o) for o in other]
+        return HashList(ht.cast(o) for o in other)
 
     def toKaraboValue(self, data, strict=True):
         table = [
@@ -1088,6 +1077,13 @@ class VectorHash(Vector):
                       for k, v in row.items()})
             for row in data]
         return basetypes.TableValue(table, descriptor=self)
+
+
+class HashList(list, Special):
+    hashtype = VectorHash
+
+    def __repr__(self):
+        return "HashList(" + super(HashList, self).__repr__() + ")"
 
 
 class SchemaHashType(HashType):
@@ -1351,7 +1347,7 @@ class ListElement(Element):
 
     @property
     def data(self):
-        return [e.data for e in self.children]
+        return HashList(e.data for e in self.children)
 
 
     @data.setter
@@ -1439,7 +1435,7 @@ class Hash(OrderedDict):
             if isinstance(value, Hash):
                 elem = HashElement(p)
                 elem.children = value
-            elif (isinstance(value, list) and
+            elif isinstance(value, HashList) or (isinstance(value, list) and
                   value and isinstance(value[0], Hash)):
                 elem = ListElement(p)
                 elem.data = value
