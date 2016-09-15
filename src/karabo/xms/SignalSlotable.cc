@@ -1754,7 +1754,7 @@ namespace karabo {
 
 
         InputChannel::Pointer SignalSlotable::createInputChannel(const std::string& channelName, const karabo::util::Hash& config,
-                                                                 const boost::function<void (const Data&) >& onDataAvailableHandler,
+                                                                 const boost::function<void (const karabo::util::Hash::Pointer&) >& onDataAvailableHandler,
                                                                  const boost::function<void (const InputChannel::Pointer&) >& onInputAvailableHandler,
                                                                  const boost::function<void(const InputChannel::Pointer&)>& onEndOfStreamEventHandler) {
             if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
@@ -1841,8 +1841,8 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::dataHandlerWrap(const boost::function<void (const karabo::xms::Data&) >& handler,
-                                             const karabo::xms::Data& data) {
+        void SignalSlotable::dataHandlerWrap(const boost::function<void (const karabo::util::Hash::Pointer&) >& handler,
+                                             const karabo::util::Hash::Pointer& data) {
             try {
                 // Make sure that SignalSlotable shared pointer can be built...  if not the we get exception
                 SignalSlotable::Pointer self = shared_from_this();
@@ -1855,7 +1855,7 @@ namespace karabo {
 
 
         void SignalSlotable::registerDataHandler(const std::string& channelName,
-                                                 const boost::function<void (const karabo::xms::Data&) >& handler) {
+                                                 const boost::function<void (const karabo::util::Hash::Pointer&) >& handler) {
             getInputChannel(channelName)->registerDataHandler(boost::bind(&SignalSlotable::dataHandlerWrap, this, handler, _1));
         }
 

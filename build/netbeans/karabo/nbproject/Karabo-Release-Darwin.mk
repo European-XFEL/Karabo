@@ -141,7 +141,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103122620/FromChannelSpace.o \
 	${OBJECTDIR}/_ext/1103122620/ImageFileReader.o \
 	${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o \
-	${OBJECTDIR}/_ext/1103122747/Data.o \
 	${OBJECTDIR}/_ext/1103122747/ImageData.o \
 	${OBJECTDIR}/_ext/1103122747/ImageDataFileWriter.o \
 	${OBJECTDIR}/_ext/1103122747/InputChannel.o \
@@ -721,11 +720,6 @@ ${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o: ../../../src/karabo/xip/ImageFil
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -Wno-unused-but-set-variable -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o ../../../src/karabo/xip/ImageFileWriter.cc
 
-${OBJECTDIR}/_ext/1103122747/Data.o: ../../../src/karabo/xms/Data.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/Data.o ../../../src/karabo/xms/Data.cc
-
 ${OBJECTDIR}/_ext/1103122747/ImageData.o: ../../../src/karabo/xms/ImageData.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
 	${RM} "$@.d"
@@ -810,7 +804,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}: ${TESTDIR}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc}   -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} $^ ${LDLIBSOPTIONS} -lcppunit 
 
-${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/Data_Test.o ${TESTDIR}/_ext/936508045/ImageData_Test.o ${TESTDIR}/_ext/936508045/NDArray_Test.o ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/ImageData_Test.o ${TESTDIR}/_ext/936508045/NDArray_Test.o ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f5 $^ ${LDLIBSOPTIONS} -lcppunit `cppunit-config --libs`   
 
@@ -1017,12 +1011,6 @@ ${TESTDIR}/_ext/936507918/xipTestRunner.o: ../../../src/karabo/tests/xip/xipTest
 	${MKDIR} -p ${TESTDIR}/_ext/936507918
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936507918/xipTestRunner.o ../../../src/karabo/tests/xip/xipTestRunner.cc
-
-
-${TESTDIR}/_ext/936508045/Data_Test.o: ../../../src/karabo/tests/xms/Data_Test.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/936508045
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/Data_Test.o ../../../src/karabo/tests/xms/Data_Test.cc
 
 
 ${TESTDIR}/_ext/936508045/ImageData_Test.o: ../../../src/karabo/tests/xms/ImageData_Test.cc 

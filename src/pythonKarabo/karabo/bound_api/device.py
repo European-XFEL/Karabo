@@ -18,11 +18,10 @@ from karathon import (
     UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, BrokerConnection,
-    Data, DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
+    DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
     ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
     ValidatorValidationRules
-
 )
 
 from karabo.common.alarm_conditions import AlarmCondition
@@ -490,32 +489,26 @@ class PythonDevice(NoFsm):
         self.set(key, value, self._getActualTimestamp())
         
     def writeChannel(self, *args):
-        pars = tuple(args)
-        if len(pars) < 2 or len(pars) > 3:
+        if len(args) < 2 or len(args) > 3:
             raise SyntaxError("Number of parameters is wrong: only 2 to 3 arguments are allowed.")
-        if len(pars) == 3:
-            channelName, key, value = pars
+        if len(args) == 3:
+            channelName, key, value = args
             if isCpuImage(value):
                 dataval = ImageData(value)
-            elif isinstance(value, (Data, ImageData)):
+            elif isinstance(value, ImageData):
                 dataval = value
             elif isinstance(value, Image.Image):
                 dataval = ImageData(np.array(value))
             else:
-                raise ValueError('The type of value is neither a "CpuImage" nor a "Data"')
-            data = Data(key, dataval)
-        elif len(pars) == 2:
-            channelName, data = pars
-            if isinstance(data, ImageData):
-                data = Data(data.hash())
-            elif isinstance(data, Image.Image):
-                img = data
-                imgdata = ImageData(np.array(img))
-                data = Data(imgdata.hash())
-            elif isinstance(data, Data):
-                pass
+                raise ValueError('The type of value is neither a "CpuImage" nor a "Hash"')
+            data = Hash(key, dataval)
+        elif len(args) == 2:
+            channelName, data = args
+            if isinstance(data, Image.Image):
+                data = ImageData(np.array(data))
             else:
                 raise ValueError('Unsupported type of value: {}'.format(type(data)))
+
         data.attachTimestamp(self._getActualTimestamp())
         channel = self._ss.getOutputChannel(channelName)
         channel.write(data)
