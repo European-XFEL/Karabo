@@ -1,17 +1,18 @@
 """This tests the communication between bound API and middlelayer API"""
 
-from asyncio import coroutine, create_subprocess_exec, wait_for
+from asyncio import create_subprocess_exec
+from contextlib import contextmanager
 import os
 import os.path
 from subprocess import PIPE
 import sys
-from unittest import TestCase, main
+from unittest import main
 
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, Device, getDevice, Int32,
     MetricPrefix, shutdown, Slot, State, unit, Unit, waitUntil)
 
-from .eventloop import setEventLoop
+from .eventloop import DeviceTest, async_tst
 
 
 class MiddlelayerDevice(Device):
@@ -22,10 +23,19 @@ class MiddlelayerDevice(Device):
         self.marker = True
 
 
-class Tests(TestCase):
-    @coroutine
-    def connect(self, device):
+class Tests(DeviceTest):
+    @classmethod
+    @contextmanager
+    def lifetimeManager(cls):
+        cls.device = MiddlelayerDevice(dict(_deviceId_="middlelayerDevice"))
+        with cls.deviceManager(lead=cls.device):
+            yield
+
+    @async_tst
+    def test_cross(self):
         # it takes typically 2 s for the bound device to start
+        self.bound = yield from create_subprocess_exec(
+            sys.executable, "bounddevice.py", stderr=PIPE)
         line = ""
         while "got started" not in line:
             readbytes = yield from wait_for(self.bound.stderr.readline(), 5.0)
@@ -75,8 +85,8 @@ class Tests(TestCase):
                              "didn't receive change from bound device")
 
         yield from proxy.backfire()
-        self.assertEqual(device.value, 99)
-        self.assertTrue(device.marker)
+        self.assertEqual(self.device.value, 99)
+        self.assertTrue(self.device.marker)
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
         yield from self.bound.wait()
@@ -84,28 +94,16 @@ class Tests(TestCase):
     def setUp(self):
         self.__starting_dir = os.curdir
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
-        self.loop = setEventLoop()
-        self.bound = self.loop.run_until_complete(
-            create_subprocess_exec(sys.executable, "bounddevice.py",
-                                   stderr=PIPE))
 
     def tearDown(self):
         if self.bound.returncode is None:
             self.bound.kill()
             self.loop.run_until_complete(self.bound.wait())
-        self.loop.close()
         try:
             os.remove("karabo.log")
         except FileNotFoundError:
             pass  # never mind
         os.chdir(self.__starting_dir)
-
-    def test_cross(self):
-        md = MiddlelayerDevice(dict(_deviceId_="middlelayerDevice"))
-        md.startInstance()
-        self.loop.run_until_complete(wait_for(
-            self.loop.create_task(self.connect(md), md),
-            15))
 
 
 if __name__ == "__main__":
