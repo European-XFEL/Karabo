@@ -2,7 +2,7 @@ from asyncio import CancelledError, coroutine
 from unittest import main
 
 from .eventloop import async_tst, DeviceTest, sync_tst
-from karabo.middlelayer import background, sleep
+from karabo.middlelayer import background, gather, sleep
 
 
 class Tests(DeviceTest):
@@ -107,6 +107,49 @@ class Tests(DeviceTest):
         with self.assertRaises(CancelledError):
             task.wait()
         self.assertTrue(self.called)
+
+    @sync_tst
+    def test_gather(self):
+        f1 = sleep(0.01, wait=False)
+        f2 = background(self.func, "something")
+        g = gather(f1, f2)
+        self.assertEqual(g, [None, "func called"])
+        self.assertTrue(self.called)
+
+    @sync_tst
+    def test_gather_raise(self):
+        def raise_error():
+            sleep(0.01)
+            raise RuntimeError
+
+        def fail_late():
+            sleep(0.02)
+            self.fail()
+        f1 = background(raise_error)
+        f2 = background(self.func, "something")
+        f3 = background(fail_late)
+        with self.assertRaises(RuntimeError):
+            gather(f1, f2, f3)
+        self.assertTrue(self.called)
+
+    @sync_tst
+    def test_gather_noraise(self):
+        def raise_error():
+            sleep(0.01)
+            raise RuntimeError
+
+        def fail_late():
+            sleep(0.02)
+            self.called = 2
+        f1 = background(raise_error)
+        f2 = background(self.func, "something")
+        f3 = background(fail_late)
+        g = gather(f1, f2, f3, return_exceptions=True)
+        self.assertEqual(len(g), 3)
+        self.assertIsInstance(g[0], RuntimeError)
+        self.assertEqual(g[1], "func called")
+        self.assertIsNone(g[2])
+        self.assertEqual(self.called, 2)
 
 
 if __name__ == "__main__":
