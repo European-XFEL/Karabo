@@ -21,6 +21,7 @@ from karabo_gui.mediator import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts)
 from karabo_gui.network import Network
 from karabo_gui.sceneview.api import SceneView
+from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.loggingpanel import LoggingPanel
 from karabo_gui.panels.macropanel import MacroPanel
@@ -210,10 +211,12 @@ class MainWindow(QMainWindow):
         self._addPlaceholderMiddlePanel(False)
         self.middleArea.setStretchFactor(0, 6)
 
+        self.alarmPanel = AlarmPanel()
         self.loggingPanel = LoggingPanel()
         self.scriptingPanel = ScriptingPanel()
         self.notificationPanel = NotificationPanel()
         self.outputTab = DockTabWindow("Output", self.middleArea)
+        self.outputTab.addDockableTab(self.alarmPanel, "Alarms", self)
         self.outputTab.addDockableTab(self.loggingPanel, "Log", self)
         self.outputTab.addDockableTab(self.scriptingPanel, "Console", self)
         self.outputTab.addDockableTab(self.notificationPanel,
