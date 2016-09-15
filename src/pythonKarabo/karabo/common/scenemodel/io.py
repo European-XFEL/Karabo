@@ -1,6 +1,7 @@
 from xml.etree.ElementTree import Element, parse, tostring
 
 from .const import NS_KARABO
+from .model import SceneModel
 from .registry import get_reader, get_writer
 
 
