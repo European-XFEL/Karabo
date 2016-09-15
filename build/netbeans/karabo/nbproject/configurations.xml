@@ -420,8 +420,6 @@
         <itemPath>../../../src/karabo/tests/integration/AlarmTesterDevice.hh</itemPath>
         <itemPath>../../../src/karabo/tests/integration/TcpAdapter.cc</itemPath>
         <itemPath>../../../src/karabo/tests/integration/TcpAdapter.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/integration/integrationRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f9"
@@ -431,6 +429,18 @@
         <itemPath>../../../src/karabo/tests/integration/PropertyTest_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/integration/PropertyTest_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/integration/integrationRunner_2.cc</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f10"
+                     displayName="Integrations_tests_3"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/karabo/tests/integration/AlarmTesterDevice_3.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/AlarmTesterDevice_3.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/TcpAdapter_3.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/TcpAdapter_3.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/integrationRunner_3.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/io/FileInputOutput_Test.cc</itemPath>
@@ -1452,16 +1462,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/integration/AlarmTesterDevice.cc"
             ex="false"
             tool="1"
@@ -1472,13 +1472,32 @@
             tool="3"
             flavor2="0">
       </item>
-
+      <item path="../../../src/karabo/tests/integration/AlarmTesterDevice_3.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/AlarmTesterDevice_3.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/integration/PropertyTest_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/integration/PropertyTest_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1493,12 +1512,27 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/integration/TcpAdapter_3.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/TcpAdapter_3.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/integration/integrationRunner.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/integration/integrationRunner_2.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/integrationRunner_3.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -2602,6 +2636,24 @@
           <output>${TESTDIR}/TestFiles/f1</output>
         </linkerTool>
       </folder>
+      <folder path="TestFiles/f10">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <incFile>
+            <pElem>../../../src/karabo/tests/integration/TcpAdapter.hh</pElem>
+          </incFile>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f10</output>
+          <stripSymbols>true</stripSymbols>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
       <folder path="TestFiles/f2">
         <cTool>
           <incDir>
@@ -3647,22 +3699,22 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/integration/AlarmTesterDevice.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/integration/AlarmTesterDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/AlarmTesterDevice_3.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/AlarmTesterDevice_3.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3677,6 +3729,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/RunTimeSchemaAttributes_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/integration/TcpAdapter.cc"
             ex="false"
             tool="1"
@@ -3687,12 +3749,27 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/integration/TcpAdapter_3.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/TcpAdapter_3.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/integration/integrationRunner.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/integration/integrationRunner_2.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/integrationRunner_3.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -4100,16 +4177,6 @@
       <item path="../../../src/karabo/tests/xip/xipTestRunner.cc"
             ex="false"
             tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xms/Data_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xms/Data_Test.hh"
-            ex="false"
-            tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/xms/ImageData_Test.cc"
@@ -4715,10 +4782,6 @@
       </item>
       <item path="../../../src/karabo/xms.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/xms/Data.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/Data.hh" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../../../src/karabo/xms/ImageData.cc"
             ex="false"
             tool="1"
@@ -4812,6 +4875,20 @@
       <folder path="TestFiles/f1">
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f1</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f10">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f10</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f2">

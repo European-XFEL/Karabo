@@ -247,6 +247,26 @@ namespace karabo {
              * Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows", reply.get<Hash>("alarms"));
              */
             void onRequestedAlarmsReply(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply);
+            
+            
+            /**
+             * Executed when the gui requests an update to schema attributes via the updateAttributes signal.
+             * @param channel: gui channel that requested the update
+             * @param info: updated attributes, expected to be of form Hash("instanceId", str, "updates", vector<Hash>) where
+             * each entry in updates is of the form Hash("path", str, "attribute", str, "value", valueType)
+             */
+            void onUpdateAttributes(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            
+            /**
+             * Callback for onUpdateAttributes
+             * @param channel: gui channel that requested the update
+             * @param reply: reply from the device that performed the attribute update. Is of form
+             * Hash("success" bool, "instanceId", str, "updatedSchema", Schema, "requestedUpdate", vector<Hash>)
+             * where success indicates a successful update, instanceId the device that performed the update
+             * updatedSchema the new valid schema, regardless of success or not, and requestedUpdates the 
+             * original update request, as received through onUpdateAttributes
+             */
+            void onRequestedAttributeUpdate(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply);
 
         };
     }

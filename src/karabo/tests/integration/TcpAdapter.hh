@@ -97,6 +97,11 @@ namespace karabo {
          * @param block: if true, block until the onWriteComplete handler has been called
          */
         void sendMessage(const karabo::util::Hash & message, bool block = true);
+        
+        /**
+         * Disconnect adapter
+         */
+        void disconnect();
 
     private:
 
@@ -105,7 +110,7 @@ namespace karabo {
         void onRead(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel, karabo::util::Hash& info);
         void onError(const karabo::net::ErrorCode& errorCode, karabo::net::Channel::Pointer channel);
         void onWriteComplete(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, size_t id);
-
+        
 
     private:
 
