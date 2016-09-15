@@ -2,6 +2,7 @@ from asyncio import coroutine, gather, set_event_loop, wait_for
 from contextlib import contextmanager, ExitStack
 from functools import wraps
 from unittest import TestCase
+from unittest.mock import Mock
 
 from karabo.middlelayer_api.eventloop import EventLoop
 
@@ -38,6 +39,11 @@ class DeviceTest(TestCase):
     @contextmanager
     def lifetimeManager(cls):
         """This context manager is run around the test class"""
+        cls.lead = Mock()
+        cls.lead._ss = Mock()
+        cls.lead._ss.loop = cls.loop
+        cls.lead._ss.tasks = set()
+        yield
 
     @classmethod
     @contextmanager
