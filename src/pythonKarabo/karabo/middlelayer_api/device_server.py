@@ -16,7 +16,7 @@ import numpy
 from .device import Device
 from .enums import AccessLevel, AccessMode, Assignment
 from .eventloop import EventLoop
-from .hash import Hash, XMLParser, saveToFile, String, StringList, Int32
+from .hash import Hash, XMLParser, saveToFile, String, Int32
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
@@ -250,7 +250,7 @@ class DeviceServer(SignalSlotable):
         
     def deviceClassesHash(self):
         return Hash(
-            "deviceClasses", StringList([k for k in Device.subclasses.keys()]),
+            "deviceClasses", [k for k in Device.subclasses.keys()],
             "visibilities", numpy.array([c.visibility.defaultValue.value
                                          for c in Device.subclasses.values()]))
 

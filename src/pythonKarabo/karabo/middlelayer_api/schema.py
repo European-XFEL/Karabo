@@ -4,7 +4,7 @@ from enum import Enum
 
 from .basetypes import KaraboValue
 from .enums import NodeType
-from .hash import Attribute, Descriptor, Hash, Schema
+from .hash import Attribute, Descriptor, Hash, Schema, HashList
 from .registry import Registry
 from .timestamp import Timestamp
 from .weak import Weak
@@ -262,7 +262,7 @@ class ListOfNodes(Node):
         return ret
 
     def toDataAndAttrs(self, instance):
-        l = []
+        l = HashList()
         for v in instance:
             r = Hash()
             t = type(v)
