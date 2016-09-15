@@ -74,9 +74,7 @@ namespace karabo {
             // In case of failed validation, report why it failed
             ostringstream validationFailedReport;
             
-            //preserve schema reconfigurations
-            if(unvalidatedInput.has(KARABO_RUNTIME_SCHEMA_UPDATE)) validatedOutput.set(KARABO_RUNTIME_SCHEMA_UPDATE, unvalidatedInput.get<std::vector<karabo::util::Hash> >(KARABO_RUNTIME_SCHEMA_UPDATE));
-
+          
             if (!m_allowUnrootedConfiguration) {
                 if (unvalidatedInput.size() != 1) {
                     return std::make_pair<bool, string > (false, "Expecting a rooted input, i.e. a Hash with exactly one key (describing the classId) at the top level");
@@ -361,8 +359,6 @@ namespace karabo {
                 }
             }
 
-            //remove configuration updates, they are allowed to pass through as part of a configuration
-            if(keys.find("runtimeSchemaUpdates") != keys.end()) keys.erase("runtimeSchemaUpdates");
             
             if (!m_allowAdditionalKeys && !keys.empty()) {
 
@@ -550,8 +546,11 @@ namespace karabo {
 
         void Validator::assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval) {
             boost::unique_lock<boost::shared_mutex> lock(m_rollingStatMutex);
-            if (m_parameterRollingStats.find(scope) == m_parameterRollingStats.end()) {
+            auto rollingStatsEntry = m_parameterRollingStats.find(scope);
+            if (rollingStatsEntry == m_parameterRollingStats.end()) {
                 m_parameterRollingStats.insert(std::pair<std::string, RollingWindowStatistics::Pointer>(scope, RollingWindowStatistics::Pointer(new RollingWindowStatistics(evalInterval))));
+            } else if (rollingStatsEntry->second->getInterval() != evalInterval){
+                rollingStatsEntry->second.reset(new RollingWindowStatistics(evalInterval));
             }
         }
 
