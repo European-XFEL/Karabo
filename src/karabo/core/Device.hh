@@ -21,7 +21,6 @@
 #include <karabo/util/RollingWindowStatistics.hh>
 #include <karabo/xms.hpp>
 #include <karabo/log/Logger.hh>
-#include <karabo/xip/CpuImage.hh>
 
 #include "coredll.hh"
 
@@ -383,18 +382,6 @@ namespace karabo {
                 m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
             }
 
-            /**
-             * This function allows to write a CpuImage instead of an ImageElement to an output channel.
-             * Data will be timestamped and send immediately (write/update).
-             * @param channelName The output channel name
-             * @param key The image element key
-             * @param image CpuImage object
-             */
-            template <class PixelType>
-            void writeChannel(const std::string& channelName, const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
-                karabo::util::Hash::Pointer data(new karabo::util::Hash(key, karabo::xms::ImageData(image)));
-                writeChannel(channelName, data);
-            }
 
             /**
              * Convenience function for writing data objects that reflect a single element in the data schema.
