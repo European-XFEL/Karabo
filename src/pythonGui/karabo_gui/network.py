@@ -429,6 +429,17 @@ class _Network(QObject):
         h.set("name", filename)
         self._tcpWriteHash(h)
 
+    def onRequestAlarms(self):
+        # XXX: where should the ``alarmInstanceId`` come from?
+        h = Hash("type", "requestAlarms",
+                 "alarmInstanceId", "testAlarmService")
+        self._tcpWriteHash(h)
+
+    def onAcknowledgeAlarm(self, instanceId, data):
+        h = Hash("type", "acknowledgeAlarm")
+        h.set("alarmInstanceId", instanceId)
+        h.set("acknowledgedRows", data)
+        self._tcpWriteHash(h)
 
     def onSubscribeToOutput(self, box, subscribe):
         h = Hash("type", "subscribeNetwork")
