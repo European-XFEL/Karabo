@@ -27,9 +27,9 @@ def background(task, *args, timeout=-1):
         loop = get_event_loop()
         if iscoroutine(task):
             assert not args
-            yield from task
+            return (yield from task)
         else:
-            yield from loop.run_coroutine_or_thread(task, *args)
+            return (yield from loop.run_coroutine_or_thread(task, *args))
 
     ret = inner(task, *args, wait=False, timeout=timeout)
     if iscoroutine(ret):
