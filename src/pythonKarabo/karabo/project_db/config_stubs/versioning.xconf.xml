@@ -1,0 +1,13 @@
+<collection xmlns="http://exist-db.org/collection-config/1.0">
+    <index>
+        <fulltext default="none" attributes="no">
+        </fulltext>
+    </index>
+    <triggers>
+        <trigger class="org.exist.extensions.exquery.restxq.impl.RestXqTrigger"/>
+        <trigger event="create,delete,update,copy,move"
+            class="org.exist.versioning.VersioningTrigger">
+            <parameter name="overwrite" value="no"/>
+        </trigger>
+    </triggers>
+</collection>
