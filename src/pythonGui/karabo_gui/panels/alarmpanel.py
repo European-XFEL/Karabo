@@ -3,8 +3,11 @@
 # Created on September 16, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from collections import namedtuple
+
+from PyQt4.QtCore import QAbstractTableModel, Qt, QVariant
 from PyQt4.QtGui import (
-    QButtonGroup, QComboBox, QHBoxLayout, QLabel, QPushButton, QTableWidget,
+    QButtonGroup, QComboBox, QHBoxLayout, QLabel, QPushButton, QTableView,
     QVBoxLayout, QWidget)
 
 from karabo_gui.docktabwindow import Dockable
@@ -20,6 +23,7 @@ class AlarmPanel(Dockable, QWidget):
         self.bg_filter = QButtonGroup()
         pb_default_view = QPushButton("Default view")
         pb_default_view.setCheckable(True)
+        pb_default_view.setChecked(True)
         self.bg_filter.addButton(pb_default_view)
         pb_acknowledge_only = QPushButton("Acknowledge only")
         pb_acknowledge_only.setCheckable(True)
@@ -44,16 +48,14 @@ class AlarmPanel(Dockable, QWidget):
         filter_layout.addWidget(pb_custom_filter)
         filter_layout.addStretch()
 
-        tw_alarm_widget = QTableWidget()
-        headers = ["Start time", "Device ID", "Device Type", "Alarm Type",
-                   "Message", "Acknowledge", "Show Device"]
-        tw_alarm_widget.setColumnCount(len(headers))
-        tw_alarm_widget.setHorizontalHeaderLabels(headers)
+        self.alarm_model = AlarmServiceModel()
+        tw_alarms = QTableView()
+        tw_alarms.setModel(self.alarm_model)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.addLayout(filter_layout)
-        main_layout.addWidget(tw_alarm_widget)
+        main_layout.addWidget(tw_alarms)
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary for self due to the fact that the singleton mediator
@@ -73,10 +75,10 @@ class AlarmPanel(Dockable, QWidget):
         return super(AlarmPanel, self).eventFilter(obj, event)
 
     def setupActions(self):
-        print("setupActions")
+        pass
 
     def setupToolBars(self, toolBar, parent):
-        print("setupToolBars")
+        pass
 
     def setEnabled(self, enable):
         if enable:
@@ -84,19 +86,114 @@ class AlarmPanel(Dockable, QWidget):
         super(AlarmPanel, self).setEnabled(enable)
 
     def _initAlarms(self, instanceId, rows):
-        print("+++_initAlarms", instanceId)
-        for k, v in rows.items():
-            print()
-            print("k", k)
-            print("v", v)
-            print()
-        print()
+        self.alarm_model.initAlarms(instanceId, rows)
 
     def _updateAlarms(self, instanceId, rows):
-        print("+++_updateAlarms", instanceId)
-        for k, v in rows.items():
+        self.alarm_model.updateAlarms(instanceId, rows)
+
+
+class AlarmServiceModel(QAbstractTableModel):
+    headers = ['Time of First Occurence',
+               'Time of Occurence',
+               'Train of First Occurence',
+               'Train of Occurence',
+               'Device ID',
+               'Property',
+               'Type',
+               'Description',
+               'Acknowledge',
+               'Show Device']
+
+    #entries = ['timeOfFirstOccurrence',
+    #           'timeOfOccurrence',
+    #           'trainOfFirstOccurrence',
+    #           'trainOfOccurrence',
+    #           'needsAcknowledging',
+    #           'acknowledgeable',
+    #           'deviceId',
+    #           'property',
+    #           'type',
+    #           'id']
+
+    updateType = ['init', 'add', 'remove', 'update', 'acknowledgeable',
+                  'deviceKilled', 'refuseAcknowledgement']
+
+    AlarmEntry = namedtuple('AlarmEntry', ['timeOfFirstOccurrence',
+                                           'timeOfOccurrence',
+                                           'trainOfFirstOccurrence',
+                                           'trainOfOccurrence',
+                                           'needsAcknowledging',
+                                           'acknowledgeable',
+                                           'deviceId',
+                                           'property',
+                                           'type',
+                                           'id'])
+
+    def __init__(self, parent=None):
+        super(AlarmServiceModel, self).__init__(parent)
+
+    def initAlarms(self, instanceId, rows):
+        print("+++ AlarmModel.initAlarms", instanceId)
+        alarm_list = []
+        for id, h, _ in rows.iterall():
+            print("rowId", id)
+            # Get data of hash
+            for updateType, alarmHash, _ in h.iterall():
+                print("updateType:", updateType)
+                print()
+                alarmEntry = {}
+                for key, entry, _ in alarmHash.iterall():
+                    print("---", key, entry)
+                    alarmEntry[key] = entry
+                print("FINAL", alarmEntry)
+                alarm_list.append(alarmEntry)
             print()
-            print("k", k)
-            print("v", v)
-            print()
-        print()
+        print(alarm_list)
+        self.beginResetModel()
+        self.filtered = alarm_list
+        self.endResetModel()
+
+    def updateAlarms(self, instanceId, rows):
+        print("AlarmModel.updateAlarms", instanceId)
+        #for k, v, _ in rows.iterall():
+        #    print("....k, v, attrs...")
+        #    print(k)
+        #    print(v)
+        #    print()
+        #print()
+
+    def insert(self, data):
+        print("insert", data)
+        return
+        hi = len(self.filtered)
+        lo = 0
+        key = self.key(data)
+        while hi > lo:
+            mid = (hi + lo) // 2
+            if self.reverse == (self.key(self.filtered[mid]) < key):
+                hi = mid
+            else:
+                lo = mid + 1
+        self.beginInsertRows(QModelIndex(), lo, lo + 1)
+        self.filtered.insert(lo, data)
+        self.endInsertRows()
+
+    def headerData(self, section, orientation, role):
+        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
+            return self.headers[section]
+
+    def rowCount(self, _):
+        return 0
+
+    def columnCount(self, _):
+        return len(self.headers)
+
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return None
+
+    def insertRows(self):
+        pass
+
+    def removeRows(self):
+        pass
