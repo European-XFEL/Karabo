@@ -9,6 +9,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include <openmqc/mqlogutil-priv.h>
+
 #include "JmsBrokerConnection.hh"
 #include "karabo/log/Logger.hh"
 #include <karabo/util/SimpleElement.hh>
@@ -260,6 +262,9 @@ namespace karabo {
             else if (acknowledgeMode == "explicit") m_acknowledgeMode = MQ_CLIENT_ACKNOWLEDGE;
             else if (acknowledgeMode == "transacted") m_acknowledgeMode = MQ_SESSION_TRANSACTED;
             else if (acknowledgeMode == "dupsOk") m_acknowledgeMode = MQ_DUPS_OK_ACKNOWLEDGE;
+
+            // Tell OpenMQC to BE QUIET on STDERR
+            MQSetStdErrLogLevel(MQ_LOG_OFF);
 
             try {
                 connectToBrokers();

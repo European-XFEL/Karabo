@@ -93,7 +93,7 @@ void Hdf5File_Test::testWrite() {
             KARABO_RETHROW;
         }
         dfc = dataFormat->getConfig();
-        tracer << "dataFormatConfig: " << endl << dfc << endl;
+        KARABO_LOG_FRAMEWORK_TRACE << "dataFormatConfig: " << endl << dfc << endl;
         Writer<Hash>::Pointer wc = Writer<Hash>::create(Hash("TextFile.filename", runDir + "writer.xml"));
         wc->write(dfc);
     } else {
@@ -103,13 +103,13 @@ void Hdf5File_Test::testWrite() {
     dataFormat = DataFormat::create(dfc);
 
 
-    tracer << "-----" << endl << data[0] << endl << "-----";
+    KARABO_LOG_FRAMEWORK_TRACE << "-----" << endl << data[0] << endl << "-----";
 
 
 
     Table::Pointer table = file.createTable("/test", dataFormat);
 
-    tracer << "table created " << endl;
+    KARABO_LOG_FRAMEWORK_TRACE << "table created " << endl;
     for (size_t i = 0; i < vecSize; ++i) {
         table->append(data[i]);
     }
@@ -142,7 +142,7 @@ void Hdf5File_Test::testWrite() {
 
     for (size_t i = 0; i < vecSize; ++i) {
 
-        tracer << "------- readData[" << i << "] ----------" << endl;
+        KARABO_LOG_FRAMEWORK_TRACE << "------- readData[" << i << "] ----------" << endl;
 
         CPPUNIT_ASSERT(readData[i].hasFromPath("scalars.a"));
         CPPUNIT_ASSERT(readData[i].getFromPath<signed char>("scalars.a") == (signed char) i);
@@ -249,7 +249,7 @@ void Hdf5File_Test::compute(Hash& rec, int idx) {
         vp[i] = i + idx;
         vx[i] = false;
         if (i % 2) vx[i] = true;
-        tracer << "original vx[" << i << "] = " << vx[i] << endl;
+        KARABO_LOG_FRAMEWORK_TRACE << "original vx[" << i << "] = " << vx[i] << endl;
         axArr[i] = vx[i];
         std::ostringstream str;
         str << "Hello " << idx << "[" << i << "]" << " from me";

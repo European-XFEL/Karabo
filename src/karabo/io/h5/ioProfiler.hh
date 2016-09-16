@@ -15,9 +15,9 @@
 #include <iostream>
 
 #ifdef KARABO_IO_TRACE
-#define tracer if(0); else std::cerr
+#define KRB_IO_DEBUG_TRACE if(0); else std::cerr
 #else 
-#define tracer if(1); else std::cerr
+#define KRB_IO_DEBUG_TRACE if(1); else std::cerr
 #endif
 
 

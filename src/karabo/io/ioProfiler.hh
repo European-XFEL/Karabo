@@ -14,13 +14,6 @@
 #include <karabo/util/Profiler.hh>
 #include <iostream>
 
-#ifdef KARABO_IO_TRACE
-#define tracer if(0); else std::cerr
-#else
-#define tracer if(1); else std::cerr
-#endif
-
-
 
 #define KARABO_PROFILER(p) karabo::util::Profiler p(#p);
 #define KARABO_PROFILER_START(p,name) p.start(name);

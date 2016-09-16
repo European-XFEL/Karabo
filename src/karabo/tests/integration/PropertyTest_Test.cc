@@ -25,7 +25,7 @@ PropertyTest_Test::~PropertyTest_Test() {
 
 void PropertyTest_Test::setUp() {
 
-    Hash config("DeviceServer", Hash("serverId", "propertyTestServer_0", "scanPlugins", false, "visibility", 4, "Logger.priority", "INFO"));
+    Hash config("DeviceServer", Hash("serverId", "propertyTestServer_0", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
     m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
     m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
 
@@ -44,7 +44,6 @@ void PropertyTest_Test::allTestRunner() {
     std::pair<bool, std::string> success = m_deviceClient->instantiate("propertyTestServer_0", "PropertyTest",
                                                                        Hash("deviceId", "testPropertyTest_0"),
                                                                        KRB_TEST_MAX_TIMEOUT);
-    clog << "Result of instantiate is '" << success.second << "'" << endl;
     CPPUNIT_ASSERT(success.first);
 
     boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
@@ -56,8 +55,7 @@ void PropertyTest_Test::allTestRunner() {
 
 
 void PropertyTest_Test::testSimpleProperties() {
-    clog << "Testing Simple properties ..." << endl;
-    
+
     { // bool
         bool value = false;
         m_deviceClient->get("testPropertyTest_0", "boolProperty", value);
@@ -273,14 +271,11 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "doubleProperty", value);
         CPPUNIT_ASSERT(value == 76.543211787654);
     }
-    
-    clog << "Testing Simple properties ...  OK" << endl;
-   
+
 }
 
 
 void PropertyTest_Test::testVectorProperties() {
-    clog << "Testing Vector properties ..." << endl;
 
     { // bool
         vector<bool> value;
@@ -576,8 +571,7 @@ void PropertyTest_Test::testVectorProperties() {
         CPPUNIT_ASSERT(value.size() == 2);
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == "HELLO");
     }
-    
-    clog << "Testing Vector properties ... OK" << endl;
+
 }
 
 
