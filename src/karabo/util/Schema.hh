@@ -129,6 +129,8 @@ namespace karabo {
 
 #define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
 #define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
+            
+#define KARABO_RUNTIME_SCHEMA_UPDATE "runtimeSchemaUpdates"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
@@ -782,6 +784,8 @@ namespace karabo {
             bool hasAlarmVarianceHigh(const std::string& path) const;
 
             bool hasInterlock(const std::string& path) const;
+            
+            void setRollingStatistics(const std::string& path, unsigned int interval);
 
             bool hasRollingStatistics(const std::string& path) const;
 
@@ -834,6 +838,14 @@ namespace karabo {
              * @return
              */
             KARABO_DECLSPEC friend std::ostream & operator<<(std::ostream& os, const Schema& schema);
+            
+            /**
+             * Update attribute for schema.
+             * @param updates: updated attributes, expected to be of form Hash("instanceId", str, "updates", vector<Hash>) where
+             * each entry in updates is of the form Hash("path", str, "attribute", str, "value", valueType)
+             * @return true if all updates succeeded, false otherwise
+             */
+            bool applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates);
 
 
         private: // functions
@@ -871,6 +883,8 @@ namespace karabo {
             void r_updateAliasMap(const std::vector<std::string> keys, const std::string oldPath = "");
 
             void setAllowedStates(const std::string& path, const std::string& value);
+            
+            
 
         };
 
