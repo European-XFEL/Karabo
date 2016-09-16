@@ -37,7 +37,7 @@ void Logger_Test::tearDown() {
 
 
 void Logger_Test::testLogging() {
-    Hash s1("Category.name", "s1", "Category.priority", "DEBUG");
+    Hash s1("Category.name", "s1", "Category.priority", "ERROR");
     Hash conf("categories[0]", s1, "appenders[0].Ostream.layout", "Pattern");
     Logger::configure(conf);
     //p->initialize();

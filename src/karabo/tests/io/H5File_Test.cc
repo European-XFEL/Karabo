@@ -23,8 +23,6 @@
 #include <karabo/io/h5/Scalar.hh>
 #include <karabo/util/TimeProfiler.hh>
 
-#include <karabo/log/Tracer.hh>
-
 // for memcopy
 #include <cstring>
 
@@ -37,26 +35,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION(H5File_Test);
 
 
 H5File_Test::H5File_Test() : m_maxRec(100), m_testBufferWriteSuccess(false) {
-
-    karabo::log::Tracer tr;
-    tr.disableAll();
-    tr.enable("karabo.io.h5");
-    //tr.disable("karabo.io.h5.DatasetWriter");
-    //    tr.enable("karabo.io.h5.Table");
-    //    tr.enable("karabo.io.h5.Table.saveTableFormatAsAttribute");
-    //    tr.enable("karabo.io.h5.Table.openNew");
-    //    tr.enable("karabo.io.h5.Table.openReadOnly");
-    //    tr.enable("H5File_Test.testReadTable");
-    //    tr.enable("H5File_Test.testBufferWrite");
-    //    tr.enable("H5File_Test.testBufferRead");
-    //    tr.enable("H5File_Test.testRead");
-    //    tr.enable("H5File_Test.testWrite");
-    tr.enable("H5File_Test");
-    tr.reconfigure();
-
-
-
-    m_reportTime = false; //true;
     m_numberOfRecords = 2; //512;
 }
 
@@ -237,7 +215,7 @@ void H5File_Test::testWrite() {
         //        dataFormat->removeElement("vectors.str");
 
 
-        //        clog << "config 2: " << dataFormat->getConfig() << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "config 2: " << dataFormat->getConfig();
 
         File file(resourcePath("file.h5"));
         file.open(File::TRUNCATE);
@@ -255,7 +233,7 @@ void H5File_Test::testWrite() {
 
 
     } catch (karabo::util::Exception& ex) {
-        clog << ex.detailedMsg() << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex.detailedMsg();
         CPPUNIT_FAIL(ex.detailedMsg());
     }
 
@@ -461,7 +439,7 @@ void H5File_Test::testRead() {
         file.close();
 
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_FAIL(ex.detailedMsg());
     }
 
@@ -490,7 +468,7 @@ void H5File_Test::testReadTable() {
 
 
         if (imageElement->getMemoryType() == Types::VECTOR_UINT16) {
-            //clog << "image is an array" << endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "image is an array";
             arraySize = imageElement->getDims().size();
             image = boost::shared_array<unsigned short>(new unsigned short[arraySize]);
             data.set("instrument.LPD.image", image.get());
@@ -511,7 +489,7 @@ void H5File_Test::testReadTable() {
 
         //        size_t printSize = (arraySize < 6 ? arraySize : 6);
         //        for (size_t i = 0; i < printSize; ++i) {
-        //            clog << "image[" << i << "] = " << image[i] << endl;
+        //            KARABO_LOG_FRAMEWORK_DEBUG << "image[" << i << "] = " << image[i];
         //        }
 
         float b = data.get<float>("instrument.b");
@@ -527,7 +505,7 @@ void H5File_Test::testReadTable() {
 
         file.close();
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_FAIL(ex.detailedMsg());
     }
 
@@ -714,15 +692,12 @@ void H5File_Test::testBufferWrite() {
 
 
         bool exists = file.hasTable("/planets");
-        //cerr << "/planets " << exists << endl;
         CPPUNIT_ASSERT(exists == true);
 
         exists = file.hasTable("/planet");
-        //cerr << "/planet " << exists << endl;
         CPPUNIT_ASSERT(exists == false);
 
         exists = file.hasTable("planets");
-        //cerr << "planets " << exists << endl;
         CPPUNIT_ASSERT(exists == false);
 
 
@@ -859,23 +834,20 @@ void H5File_Test::testBufferWrite() {
         TimeDuration writeTime = p.getPeriod("write").getDuration();
         TimeDuration closeTime = p.getPeriod("close").getDuration();
 
-        if (m_reportTime) {
-            clog << endl;
-            clog << "file: " << filename << endl;
-            clog << "initialize data                  : " << initializeTime << " [s]" << endl;
-            clog << "format                           : " << formatTime << " [s]" << endl;
-            clog << "open/prepare file                : " << createTime << " [s]" << endl;
-            clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-            clog << "written data size                : " << totalSize << " [MB]" << endl;
-            clog << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]" << endl; //TODO
-            clog << "close                            : " << closeTime << " [s]" << endl;
-            clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-            clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]" << endl; //TODO
-        }
+        KARABO_LOG_FRAMEWORK_DEBUG << "file: " << filename;
+        KARABO_LOG_FRAMEWORK_DEBUG << "initialize data                  : " << initializeTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "format                           : " << formatTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "open/prepare file                : " << createTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "write data (may use memory cache): " << writeTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "written data size                : " << totalSize << " [MB]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]"; //TODO
+        KARABO_LOG_FRAMEWORK_DEBUG << "close                            : " << closeTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]"; //TODO
 
 
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_FAIL(ex.detailedMsg());
     }
 
@@ -1022,7 +994,7 @@ void H5File_Test::testBufferRead() {
 
         file.close();
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_ASSERT(true == false);
     }
 
@@ -1083,7 +1055,7 @@ void H5File_Test::testVectorOfHashes() {
     //    data.set("hvh", h2);
 
     //    int a = data.get<int>("vector[0].ha1");
-    //    clog << "a=" << a << endl;
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "a=" << a;
 
 
 
@@ -1117,13 +1089,13 @@ void H5File_Test::testVectorOfHashes() {
         s->save(data, sdata);
         s->save(rdata, srdata);
 
-        //        clog << " data\n" << sdata << endl;
-        //        clog << "rdata\n" << srdata << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << " data\n" << sdata;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "rdata\n" << srdata;
         CPPUNIT_ASSERT(sdata == srdata);
 
 
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_FAIL(ex.detailedMsg());
     }
 
@@ -1222,7 +1194,7 @@ void H5File_Test::testManyTables() {
 
         data.set("3", 234);
 
-        //        clog << "File structure is created" << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "File structure is created";
         p.stopPeriod("create");
         //
         //        //        t->writeAttributes(data);
@@ -1239,7 +1211,7 @@ void H5File_Test::testManyTables() {
         unsigned char id3 = 0;
         id3 = id3 | 1; // rec 0 -> 2^0 = 1
         id3 = id3 | 8; // rec 3 -> 2^3 =   8
-        //        clog << "id3: " << oct << (int) id3 << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "id3: " << oct << (int) id3;
         data.set("id3", id3);
         eid3->write(data, 0);
 
@@ -1267,22 +1239,19 @@ void H5File_Test::testManyTables() {
         TimeDuration closeTime = p.getPeriod("close").getDuration();
 
 
-        if (false) {
-            clog << endl;
-            clog << "file: " << filename << endl;
-            clog << "format                           : " << formatTime << " [s]" << endl;
-            clog << "open/prepare file                : " << createTime << " [s]" << endl;
-            clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-            //            clog << "written data size                : " << totalSize << " [kB]" << endl;
-            //            clog << "writing speed                    : " << totalSize / double(writeTime) << " [kB/s]" << endl;
-            clog << "close                            : " << closeTime << " [s]" << endl;
-            clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-            //            clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [kB/s]" << endl;
-        }
+        KARABO_LOG_FRAMEWORK_DEBUG << "file: " << filename;
+        KARABO_LOG_FRAMEWORK_DEBUG << "format                           : " << formatTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "open/prepare file                : " << createTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "write data (may use memory cache): " << writeTime << " [s]";
+        //            KARABO_LOG_FRAMEWORK_DEBUG << "written data size                : " << totalSize << " [kB]";
+        //            KARABO_LOG_FRAMEWORK_DEBUG << "writing speed                    : " << totalSize / double(writeTime) << " [kB/s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "close                            : " << closeTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]";
+        //            KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [kB/s]";
 
 
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_FAIL("Error");
     }
 
@@ -1388,33 +1357,33 @@ void H5File_Test::testManyGroups() {
 
         p.startPeriod("attribute");
         if (attr) {
-            //            clog << "write attributes" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "write attributes";
             //            file.reportOpenObjects();
             p.startPeriod("attribute1");
             t1->writeAttributes(d1);
             p.stopPeriod("attribute1");
             //            double attTime1 = HighResolutionTimer::time2double(p.getTime("attribute1"));
-            //            clog << "t1: " << attTime1 << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "t1: " << attTime1;
             //            file.reportOpenObjects();
             p.startPeriod("attribute2");
             t2->writeAttributes(d2);
             p.stopPeriod("attribute2");
             //            double attTime2 = HighResolutionTimer::time2double(p.getTime("attribute2"));
-            //            clog << "t2: " << attTime2 << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "t2: " << attTime2;
             //            file.reportOpenObjects();
             p.startPeriod("attribute3");
             t3->writeAttributes(d3);
             p.stopPeriod("attribute3");
             //            double attTime3 = HighResolutionTimer::time2double(p.getTime("attribute3"));
-            //            clog << "t3: " << attTime3 << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "t3: " << attTime3;
             //            file.reportOpenObjects();
             p.startPeriod("attribute4");
             t4->writeAttributes(d4);
             p.stopPeriod("attribute4");
             //            double attTime4 = HighResolutionTimer::time2double(p.getTime("attribute4"));
-            //            clog << "t4: " << attTime4 << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "t4: " << attTime4;
             //            file.reportOpenObjects();
-            //            clog << "Attributes have been written" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "Attributes have been written";
         }
         p.stopPeriod("attribute");
 #define WRITE
@@ -1473,27 +1442,27 @@ void H5File_Test::testManyGroups() {
         totalSize *= m;
 
         p.stopPeriod("write");
-        //        clog << "---report before closing--" << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "---report before closing--";
         //        file.reportOpenObjects();
         p.startPeriod("close");
         file.closeTable(t1);
         p.stopPeriod("close");
-        //        clog << "-----" << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "-----";
         //        file.reportOpenObjects();
         p.startPeriod("close");
         file.closeTable(t2);
         p.stopPeriod("close");
-        //        clog << "-----" << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "-----";
         //        file.reportOpenObjects();
         p.startPeriod("close");
         file.closeTable(t3);
         p.stopPeriod("close");
-        //        clog << "-----" << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "-----";
         //        file.reportOpenObjects();
         p.startPeriod("close");
         file.closeTable(t4);
         p.stopPeriod("close");
-        //        clog << "-----" << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "-----";
         //        file.reportOpenObjects();
         p.startPeriod("close");
         file.close();
@@ -1505,7 +1474,7 @@ void H5File_Test::testManyGroups() {
 #ifdef READ
         {
             file.open(File::READONLY);
-            //clog << "a" << endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "a";
             p.startPeriod("open");
             Table::Pointer t1 = file.getTable("/base/c1");
             Table::Pointer t2 = file.getTable("/base/c2");
@@ -1513,7 +1482,7 @@ void H5File_Test::testManyGroups() {
             Table::Pointer t4 = file.getTable("/base/c4");
             KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is open";
             p.stopPeriod("open");
-            //clog << "a" << endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "a";
             Hash rd1, rd2, rd3, rd4;
             p.startPeriod("bind");
             t1->bind(rd1, rec);
@@ -1540,27 +1509,27 @@ void H5File_Test::testManyGroups() {
 
 
 
-            //            clog << "---report before closing--" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "---report before closing--";
             //            file.reportOpenObjects();
             p.startPeriod("close1");
             file.closeTable(t1);
             p.stopPeriod("close1");
-            //            clog << "-----" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "-----";
             //            file.reportOpenObjects();
             p.startPeriod("close1");
             file.closeTable(t2);
             p.stopPeriod("close1");
-            //            clog << "-----" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "-----";
             //            file.reportOpenObjects();
             p.startPeriod("close1");
             file.closeTable(t3);
             p.stopPeriod("close1");
-            //            clog << "-----" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "-----";
             //            file.reportOpenObjects();
             p.startPeriod("close1");
             file.closeTable(t4);
             p.stopPeriod("close1");
-            //            clog << "-----" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << "-----";
             //            file.reportOpenObjects();
             p.startPeriod("close1");
             file.close();
@@ -1607,32 +1576,29 @@ void H5File_Test::testManyGroups() {
         TimeDuration readAttrTime = p.getPeriod("readAttr").getDuration();
         TimeDuration close1Time = p.getPeriod("close1").getDuration();
 
-        if (false) {
-            clog << endl;
-            clog << "file: " << filename << endl;
-            clog << "number of properties             : " << num_prop << endl;
-            clog << "number of records                : " << num_rec << endl;
-            clog << "format                           : " << formatTime << " [s]" << endl;
-            clog << "open/prepare file                : " << createTime << " [s]" << endl;
-            clog << "write attributes                 : " << attributeTime << " [s]" << endl;
-            clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-            clog << "written data size                : " << totalSize << " [kB]" << endl;
-            clog << "writing speed                    : " << totalSize / double(writeTime) << " [kB/s]" << endl; //TODO
-            clog << "close                            : " << closeTime << " [s]" << endl;
-            clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-            clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [kB/s]" << endl; //TODO
-            clog << "Total write time                 : " << formatTime + createTime + attributeTime + writeTime + closeTime << " [s]" << endl;
-            clog << "open for reading                 : " << openTime << " [s]" << endl;
-            clog << "bind                             : " << bindTime << " [s]" << endl;
-            clog << "read                             : " << readTime << " [s]" << endl;
-            clog << "read attributes                  : " << readAttrTime << " [s]" << endl;
-            clog << "close reading                    : " << close1Time << " [s]" << endl;
-            clog << "Total (open/bind/read/close) time: " << openTime + bindTime + readTime + close1Time << " [s]" << endl;
-        }
+        KARABO_LOG_FRAMEWORK_DEBUG << "file: " << filename;
+        KARABO_LOG_FRAMEWORK_DEBUG << "number of properties             : " << num_prop;
+        KARABO_LOG_FRAMEWORK_DEBUG << "number of records                : " << num_rec;
+        KARABO_LOG_FRAMEWORK_DEBUG << "format                           : " << formatTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "open/prepare file                : " << createTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "write attributes                 : " << attributeTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "write data (may use memory cache): " << writeTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "written data size                : " << totalSize << " [kB]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "writing speed                    : " << totalSize / double(writeTime) << " [kB/s]"; //TODO
+        KARABO_LOG_FRAMEWORK_DEBUG << "close                            : " << closeTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [kB/s]"; //TODO
+        KARABO_LOG_FRAMEWORK_DEBUG << "Total write time                 : " << formatTime + createTime + attributeTime + writeTime + closeTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "open for reading                 : " << openTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "bind                             : " << bindTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "read                             : " << readTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "read attributes                  : " << readAttrTime << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "close reading                    : " << close1Time << " [s]";
+        KARABO_LOG_FRAMEWORK_DEBUG << "Total (open/bind/read/close) time: " << openTime + bindTime + readTime + close1Time << " [s]";
 
 
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_FAIL("Error");
     }
 
@@ -1701,26 +1667,26 @@ void H5File_Test::testVLWrite() {
 
                 t->read(0);
                 vector<float>& a = rdata.get<vector<float> >("experimental.test");
-                clog << "size: " << a.size() << endl;
-                clog << "rdata:\n" << rdata << endl;
+                KARABO_LOG_FRAMEWORK_DEBUG << "size: " << a.size();
+                KARABO_LOG_FRAMEWORK_DEBUG << "rdata:\n" << rdata;
 
                 t->bind(rbdata, 2);
                 t->read(1, 2);
                 const vector<unsigned long long>& sizes = rbdata.getNode("experimental.test").getAttribute<vector<unsigned long long> >("size");
-                clog << "size (0): " << sizes[0] << endl;
-                clog << "size (1): " << sizes[1] << endl;
+                KARABO_LOG_FRAMEWORK_DEBUG << "size (0): " << sizes[0];
+                KARABO_LOG_FRAMEWORK_DEBUG << "size (1): " << sizes[1];
 
                 //vector<float>& a = rdata.get<vector<float> >("experimental.test");
-                clog << "rdata:\n" << rbdata << endl;
+                KARABO_LOG_FRAMEWORK_DEBUG << "rdata:\n" << rbdata;
 
                 t->bind(rdata);
                 t->read(3);
-                clog << "size: " << r1.size() << endl;
-                clog << "rdata:\n" << rdata << endl;
+                KARABO_LOG_FRAMEWORK_DEBUG << "size: " << r1.size();
+                KARABO_LOG_FRAMEWORK_DEBUG << "rdata:\n" << rdata;
 
                 t->read(4);
-                clog << "size: " << r1.size() << endl;
-                clog << "rdata:\n" << rdata << endl;
+                KARABO_LOG_FRAMEWORK_DEBUG << "size: " << r1.size();
+                KARABO_LOG_FRAMEWORK_DEBUG << "rdata:\n" << rdata;
 
             }
         }
@@ -1732,7 +1698,7 @@ void H5File_Test::testVLWrite() {
         p.close();
 
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_FAIL("Error");
     }
 
@@ -1781,32 +1747,23 @@ void H5File_Test::testTrainFormat() {
 
         p.startPeriod("discoverDataset");
         h5::Format::Pointer formatConfiguration = h5::Format::discover(dataset);
-        //        clog << Epochstamp().elpased(t10) << endl;
         formatConfiguration->removeElement("checksumType");
         formatConfiguration->removeElement("checksumSize");
         //formatConfiguration->removeElement("encoding");
-        //    clog << Epochstamp().elpased(t10) << endl;
         p.stopPeriod("discoverDataset");
 
-        //clog << "discoverDataset: " << p.getPeriod("discoverDataset").getDuration() << endl;
         //p.startPeriod("createConfiguration");
 
         p.startPeriod("configuration");
         Table::Pointer lpdTableConfiguration = file.createTable("/instrument/LPD1/configuration", formatConfiguration);
         lpdTableConfiguration->write(dataset, 0);
         p.stopPeriod("configuration");
-        //clog << "configuration: " << p.getPeriod("configuration").getDuration() << endl;
-        //clog << Epochstamp().elpased(t1) << endl;
-        //t1.now();
 
         Epochstamp t1;
         h5::Format::Pointer formatTrainData = trainFormatTrainData(detectorDataSize);
         p.startPeriod("trainData");
         Table::Pointer lpdTableTrainData = file.createTable("/instrument/LPD1/train", formatTrainData);
         p.stopPeriod("trainData");
-        //clog << "trainData: " << p.getPeriod("trainData").getDuration() << endl;
-
-        //        clog << Epochstamp().elpased(t1) << endl;
 
         //        p.startPeriod("createImages");
         h5::Format::Pointer formatImages = trainFormatImages(dataset);
@@ -1865,7 +1822,7 @@ void H5File_Test::testTrainFormat() {
             trailer.set("checksum", *reinterpret_cast<uint32_t*> (ptr + offsetTrailer));
             trailer.set("status", *reinterpret_cast<unsigned long long*> (ptr + offsetTrailer + checksumSize));
 
-            //            KARABO_LOG_FRAMEWORK_TRACE_CF << "trainData:" << endl << trainData;
+            //            KARABO_LOG_FRAMEWORK_TRACE_CF << "trainData:" << trainData;
 
 
             if (i == 0) {
@@ -1894,11 +1851,10 @@ void H5File_Test::testTrainFormat() {
 
         p.stopPeriod("writeData");
         p.close();
-        //clog << "writeData: " << p.getPeriod("writeData").getDuration() << endl;
         file.close();
 
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_FAIL("Error");
     }
 
@@ -2231,7 +2187,7 @@ void H5File_Test::testClose() {
         //        for (unsigned long long i = 0; i < 100000000L; ++i) {
         for (unsigned long long i = 0; i < 1L; ++i) {
 
-            //            clog << i << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << i;
 
 
             File file(filename);
@@ -2243,11 +2199,11 @@ void H5File_Test::testClose() {
             t->write(data, 1);
             t->write(data, 2);
             t->write(data, 3);
-            //            clog << i << " after write" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << i << " after write";
             //        file.closeTable(t);
-            //            clog << i << " after table close" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << i << " after table close";
             file.close();
-            //            clog << i << " after file close" << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << i << " after file close";
 
             file.open(File::READONLY);
             KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename << " " << i << " is open for reading";
@@ -2256,8 +2212,8 @@ void H5File_Test::testClose() {
             Table::Pointer t2 = file.getTable("/a/b/c/d");
             Hash rAttr;
             t->readAttributes(rAttr);
-            //            clog << rAttr << endl;
-            //            clog << rAttr.getAttribute<bool>("x", "a4") << endl;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << rAttr;
+            //            KARABO_LOG_FRAMEWORK_DEBUG << rAttr.getAttribute<bool>("x", "a4");
             Hash rdata;
             t->bind(rdata);
             t->read(0);
@@ -2270,7 +2226,7 @@ void H5File_Test::testClose() {
             file.close();
         }
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_FAIL("Error");
     }
 }
@@ -2332,7 +2288,7 @@ void H5File_Test::testClose() {
 //
 //
 //    } catch (Exception& ex) {
-//        clog << ex << endl;
+//        KARABO_LOG_FRAMEWORK_DEBUG << ex;
 //        CPPUNIT_FAIL("Error in testArray");
 //    }
 //}
@@ -2356,7 +2312,7 @@ void H5File_Test::testExternalHdf5() {
 
         h5::Element::Pointer e = h5::Element::create("VECTOR_UINT8", c);
         df->addElement(e);
-        clog << c << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << c;
 
         Table::Pointer table = file1.getTable("/", df, 1);
 
@@ -2365,12 +2321,12 @@ void H5File_Test::testExternalHdf5() {
         table->bind(rdata);
         table->read(0);
 
-        clog << "image:" << endl << rdata << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "image:" << rdata;
 
         file1.close();
 
     } catch (Exception& ex) {
-        clog << ex << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_FAIL("Error");
     }
 

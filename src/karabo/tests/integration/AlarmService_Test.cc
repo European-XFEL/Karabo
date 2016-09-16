@@ -35,7 +35,7 @@ AlarmService_Test::~AlarmService_Test() {
 
 void AlarmService_Test::setUp() {
 
-    Hash config("DeviceServer", Hash("serverId", "testServer", "scanPlugins", false, "visibility", 4/*, "Logger.priority", "DEBUG"*/));
+    Hash config("DeviceServer", Hash("serverId", "testServer", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
     m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
     m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
     Hash configClient();

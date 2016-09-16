@@ -8,6 +8,8 @@
 
 #ifndef TCPNETWORKING_TEST_HH
 #define	TCPNETWORKING_TEST_HH
+#include <karabo/util/Configurator.hh>
+#include <karabo/log/Logger.hh>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -19,6 +21,7 @@ class TcpNetworking_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
+    KARABO_CLASSINFO(TcpNetworking_Test, "TcpNetworking_Test", "1.0");
 
     TcpNetworking_Test();
     virtual ~TcpNetworking_Test();

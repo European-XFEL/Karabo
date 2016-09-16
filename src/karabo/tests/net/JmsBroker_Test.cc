@@ -55,7 +55,7 @@ void JmsBroker_Test::readHandler2(const karabo::util::Hash::Pointer& header, con
 
 
 void JmsBroker_Test::errorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& message) {
-    std::cout << "JmsBroker_Test::errorHandler message is: " << message << std::endl;
+    KARABO_LOG_FRAMEWORK_DEBUG << "JmsBroker_Test::errorHandler message is: " << message;
 
     ++m_errorsLogged;
 }

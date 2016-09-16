@@ -79,7 +79,6 @@ public:
 
 
     bool wasOk(int messageCalls) {
-        std::cout << "\nwasOk : m_messageCount=" << m_messageCount << ", m_allOk=" << m_allOk << std::endl;
         return ((m_messageCount == messageCalls) && m_allOk);
     }
 
@@ -87,7 +86,6 @@ public:
     void myCallBack(const std::string& someData, int number) {
         boost::mutex::scoped_lock lock(m_mutex);
         m_messageCount++;
-        std::cout << "Got called with: " << someData << " and " << number << std::endl;
     }
 
 
