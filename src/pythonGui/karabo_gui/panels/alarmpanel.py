@@ -5,14 +5,15 @@
 #############################################################################
 from collections import namedtuple
 
-from PyQt4.QtCore import QAbstractTableModel, Qt, QVariant
+from PyQt4.QtCore import QAbstractTableModel, QDateTime, QModelIndex, Qt
 from PyQt4.QtGui import (
-    QButtonGroup, QComboBox, QHBoxLayout, QLabel, QPushButton, QTableView,
-    QVBoxLayout, QWidget)
+    QButtonGroup, QColor, QComboBox, QHBoxLayout, QLabel, QPushButton,
+    QTableView, QVBoxLayout, QWidget)
 
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.mediator import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts)
+from karabo.middlelayer import Timestamp
 from karabo_gui.network import Network
 
 
@@ -48,14 +49,17 @@ class AlarmPanel(Dockable, QWidget):
         filter_layout.addWidget(pb_custom_filter)
         filter_layout.addStretch()
 
-        self.alarm_model = AlarmServiceModel()
-        tw_alarms = QTableView()
-        tw_alarms.setModel(self.alarm_model)
+        alarm_model = AlarmServiceModel()
+        self.twAlarm = QTableView()
+        self.twAlarm.setWordWrap(True)
+        self.twAlarm.setAlternatingRowColors(True)
+        self.twAlarm.horizontalHeader().setStretchLastSection(True)
+        self.twAlarm.setModel(alarm_model)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.addLayout(filter_layout)
-        main_layout.addWidget(tw_alarms)
+        main_layout.addWidget(self.twAlarm)
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary for self due to the fact that the singleton mediator
@@ -86,14 +90,32 @@ class AlarmPanel(Dockable, QWidget):
         super(AlarmPanel, self).setEnabled(enable)
 
     def _initAlarms(self, instanceId, rows):
-        self.alarm_model.initAlarms(instanceId, rows)
+        self.twAlarm.model().initAlarms(instanceId, rows)
 
     def _updateAlarms(self, instanceId, rows):
-        self.alarm_model.updateAlarms(instanceId, rows)
+        self.twAlarm.model().updateAlarms(instanceId, rows)
+
+
+updateType = ['init', 'add', 'remove', 'update', 'acknowledgeable',
+              'deviceKilled', 'refuseAcknowledgement']
+
+AlarmEntry = namedtuple('AlarmEntry', ['id',
+                                       'timeOfFirstOccurrence',
+                                       'timeOfOccurrence',
+                                       'trainOfFirstOccurrence',
+                                       'trainOfOccurrence',
+                                       'deviceId',
+                                       'property',
+                                       'type',
+                                       'description',
+                                       'needsAcknowledging',
+                                       'acknowledgeable'
+                                       ])
 
 
 class AlarmServiceModel(QAbstractTableModel):
-    headers = ['Time of First Occurence',
+    headers = ['ID',
+               'Time of First Occurence',
                'Time of Occurence',
                'Train of First Occurence',
                'Train of Occurence',
@@ -104,86 +126,87 @@ class AlarmServiceModel(QAbstractTableModel):
                'Acknowledge',
                'Show Device']
 
-    #entries = ['timeOfFirstOccurrence',
-    #           'timeOfOccurrence',
-    #           'trainOfFirstOccurrence',
-    #           'trainOfOccurrence',
-    #           'needsAcknowledging',
-    #           'acknowledgeable',
-    #           'deviceId',
-    #           'property',
-    #           'type',
-    #           'id']
-
-    updateType = ['init', 'add', 'remove', 'update', 'acknowledgeable',
-                  'deviceKilled', 'refuseAcknowledgement']
-
-    AlarmEntry = namedtuple('AlarmEntry', ['timeOfFirstOccurrence',
-                                           'timeOfOccurrence',
-                                           'trainOfFirstOccurrence',
-                                           'trainOfOccurrence',
-                                           'needsAcknowledging',
-                                           'acknowledgeable',
-                                           'deviceId',
-                                           'property',
-                                           'type',
-                                           'id'])
+    textColor = {'warnLow': QColor(255, 102, 0),
+                 'warnHigh': QColor(255, 102, 0),
+                 'alarmLow': QColor(255, 204, 102),
+                 'alarmHigh': QColor(255, 204, 102)
+                }
 
     def __init__(self, parent=None):
         super(AlarmServiceModel, self).__init__(parent)
+        self.filtered = []
 
-    def initAlarms(self, instanceId, rows):
-        print("+++ AlarmModel.initAlarms", instanceId)
-        alarm_list = []
+    def fetchData(self, rows):
+        """ Fetch data from incoming hash object ``rows`` and put
+            ``updateTypes`` and all ``alarmEntries`` into lists and return them.
+        """
+        updateTypes = []
+        alarmEntries = []
         for id, h, _ in rows.iterall():
-            print("rowId", id)
             # Get data of hash
             for updateType, alarmHash, _ in h.iterall():
-                print("updateType:", updateType)
-                print()
-                alarmEntry = {}
-                for key, entry, _ in alarmHash.iterall():
-                    print("---", key, entry)
-                    alarmEntry[key] = entry
-                print("FINAL", alarmEntry)
-                alarm_list.append(alarmEntry)
-            print()
-        print(alarm_list)
+                updateTypes.append(updateType)
+                timeOfFirstOccurrence = Timestamp(alarmHash.get('timeOfFirstOccurrence')).toTimestamp()
+                timeOfOccurrence = Timestamp(alarmHash.get('timeOfOccurrence')).toTimestamp()
+                trainOfFirstOccurrence = alarmHash.get('trainOfFirstOccurrence')
+                trainOfOccurrence = alarmHash.get('trainOfOccurrence')
+                alarmEntry = AlarmEntry(
+                    id=str(alarmHash.get('id')),
+                    timeOfFirstOccurrence=QDateTime.fromMSecsSinceEpoch(timeOfFirstOccurrence * 1000),
+                    timeOfOccurrence=QDateTime.fromMSecsSinceEpoch(timeOfOccurrence * 1000),
+                    trainOfFirstOccurrence=str(trainOfFirstOccurrence),
+                    trainOfOccurrence=str(trainOfOccurrence),
+                    needsAcknowledging=alarmHash.get('needsAcknowledging'),
+                    acknowledgeable=alarmHash.get('acknowledgeable'),
+                    description=alarmHash.get('description'),
+                    deviceId=alarmHash.get('deviceId'),
+                    property=alarmHash.get('property'),
+                    type=alarmHash.get('type'))
+                alarmEntries.append(alarmEntry)
+        return updateTypes, alarmEntries
+
+    def initAlarms(self, instanceId, rows):
+        print()
+        print("+++ AlarmModel.initAlarms", instanceId)
+        _, alarmEntries = self.fetchData(rows)
         self.beginResetModel()
-        self.filtered = alarm_list
+        self.filtered = alarmEntries
         self.endResetModel()
 
     def updateAlarms(self, instanceId, rows):
-        print("AlarmModel.updateAlarms", instanceId)
-        #for k, v, _ in rows.iterall():
-        #    print("....k, v, attrs...")
-        #    print(k)
-        #    print(v)
-        #    print()
-        #print()
+        print()
+        print("+++ AlarmModel.updateAlarms", instanceId)
+        updateTypes, alarmEntries = self.fetchData(rows)
+        for i, upType in enumerate(updateTypes):
+            alarmEntry = alarmEntries[i]
+            id = int(alarmEntry.id)
+            # XXX: Use real row index here not id to insert/remove
+            print("updateTypes", upType, id)
+            if (upType == 'init' or upType == 'update' or upType == 'add' or
+                upType == 'acknowledgeable' or upType == 'refuseAcknowledgement'):
+                if id < len(self.filtered):
+                    # Remove old entry from list
+                    self.removeRow(id)
+                self.insertRow(id, alarmEntry)
+            elif upType == 'remove' or upType == 'deviceKilled':
+                self.removeRow(id)
 
-    def insert(self, data):
-        print("insert", data)
-        return
-        hi = len(self.filtered)
-        lo = 0
-        key = self.key(data)
-        while hi > lo:
-            mid = (hi + lo) // 2
-            if self.reverse == (self.key(self.filtered[mid]) < key):
-                hi = mid
-            else:
-                lo = mid + 1
-        self.beginInsertRows(QModelIndex(), lo, lo + 1)
-        self.filtered.insert(lo, data)
+    def insertRow(self, index, alarmEntry):
+        self.beginInsertRows(QModelIndex(), index, index)
+        self.filtered.insert(index, alarmEntry)
         self.endInsertRows()
+
+    def removeRow(self, index):
+        self.beginRemoveRows(QModelIndex(), index, index)
+        self.filtered.pop(index)
+        self.endRemoveRows()
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
             return self.headers[section]
 
     def rowCount(self, _):
-        return 0
+        return len(self.filtered)
 
     def columnCount(self, _):
         return len(self.headers)
@@ -191,9 +214,11 @@ class AlarmServiceModel(QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
             return None
-
-    def insertRows(self):
-        pass
-
-    def removeRows(self):
-        pass
+        entry = self.filtered[index.row()]
+        #if role == Qt.DecorationRole and index.column() == 2:
+        #    return self.icons.get(entry.messageType)
+        if role == Qt.TextColorRole and index.column() == 7:
+            return self.textColor.get(entry.type)
+        elif role in (Qt.DisplayRole, Qt.ToolTipRole):
+            return entry[index.column()]
+        return None
