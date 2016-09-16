@@ -46,7 +46,7 @@ private:
         CPPUNIT_ASSERT(adim.getRank() == 1);
         CPPUNIT_ASSERT(adim[0] == arraySize);
         for (size_t j = 0; j < arraySize; ++j) {
-            tracer << "rva[" << j << "]: " << rva[j] << std::endl;
+            KARABO_LOG_FRAMEWORK_TRACE << "rva[" << j << "]: " << rva[j] << std::endl;
             CPPUNIT_ASSERT(rva[j] == (vecSize - 1 + j));
         }
     }
@@ -60,12 +60,12 @@ private:
         CPPUNIT_ASSERT(adim[0] == arraySize);
         for (size_t j = 0; j < arraySize; ++j) {
             std::ostringstream ref;
-            tracer << "rva[" << j << "]: " << rva[j] << std::endl;
+            KARABO_LOG_FRAMEWORK_TRACE << "rva[" << j << "]: " << rva[j] << std::endl;
             ref << "Hello " << (vecSize - 1) << "[" << j << "]" << " from me";
             for (size_t k = 0; k < j; ++k) {
                 ref << k;
             }
-            tracer << "arrayView<string> rva[" << j << "]: " << rva[j] << " reference: " << ref.str() << std::endl;
+            KARABO_LOG_FRAMEWORK_TRACE << "arrayView<string> rva[" << j << "]: " << rva[j] << " reference: " << ref.str() << std::endl;
             CPPUNIT_ASSERT(rva[j] == ref.str());
         }
     }
@@ -79,7 +79,7 @@ private:
         CPPUNIT_ASSERT(adim[0] == arraySize);
 
         for (size_t j = 0; j < arraySize; ++j) {
-            tracer << "rva[" << j << "]: " << (int) (rva[j]) << std::endl;
+            KARABO_LOG_FRAMEWORK_TRACE << "rva[" << j << "]: " << (int) (rva[j]) << std::endl;
             if (j % 2) {
                 CPPUNIT_ASSERT(rva[j] == true);
             } else {
@@ -95,7 +95,7 @@ private:
         const std::vector<T>& rva = h.getFromPath < std::vector<T> > ("vectors." + name);
         CPPUNIT_ASSERT(rva.size() == arraySize);
         for (size_t j = 0; j < arraySize; ++j) {
-            tracer << "rva[" << j << "]: " << (int) (rva[j]) << std::endl;
+            KARABO_LOG_FRAMEWORK_TRACE << "rva[" << j << "]: " << (int) (rva[j]) << std::endl;
             CPPUNIT_ASSERT(rva[j] == i + j);
         }
     }
@@ -103,17 +103,17 @@ private:
     void assertStringVector(std::string name, int i, const karabo::util::Hash& h) {
 
         CPPUNIT_ASSERT(h.hasFromPath("vectors." + name));
-        tracer << "vectors." + name << std::endl;
+        KARABO_LOG_FRAMEWORK_TRACE << "vectors." + name << std::endl;
         const std::vector<std::string>& rva = h.getFromPath < std::vector<std::string> > ("vectors." + name);
         CPPUNIT_ASSERT(rva.size() == arraySize);
         for (size_t j = 0; j < arraySize; ++j) {
             std::ostringstream ref;
-            tracer << "rva[" << j << "]: " << rva[j] << std::endl;
+            KARABO_LOG_FRAMEWORK_TRACE << "rva[" << j << "]: " << rva[j] << std::endl;
             ref << "Hello " << i << "[" << j << "]" << " from me";
             for (size_t k = 0; k < j; ++k) {
                 ref << k;
             }
-            tracer << "rva[" << j << "]: " << rva[j] << std::endl;
+            KARABO_LOG_FRAMEWORK_TRACE << "rva[" << j << "]: " << rva[j] << std::endl;
             CPPUNIT_ASSERT(rva[j] == ref.str());
         }
     }
@@ -124,7 +124,7 @@ private:
         const std::deque<bool>& rva = h.getFromPath < std::deque<bool> > ("deque." + name);
         CPPUNIT_ASSERT(rva.size() == arraySize);
         for (size_t j = 0; j < arraySize; ++j) {
-            tracer << "rva[" << j << "]: " << (int) (rva[j]) << std::endl;
+            KARABO_LOG_FRAMEWORK_TRACE << "rva[" << j << "]: " << (int) (rva[j]) << std::endl;
             if (j % 2) {
                 CPPUNIT_ASSERT(rva[j] == true);
             } else {

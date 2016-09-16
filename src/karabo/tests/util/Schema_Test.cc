@@ -41,7 +41,7 @@ void Schema_Test::testBuildUp() {
         //cout << Configurator<GraphicsRenderer>::getSchema("GraphicsRenderer"); 
 
     } catch (karabo::util::Exception e) {
-        cout << e << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << e;
         CPPUNIT_ASSERT(false);
     }
 }
@@ -140,7 +140,7 @@ void Schema_Test::setUp() {
         m_schema = Schema("MyTest", Schema::AssemblyRules(READ | WRITE | INIT));
         TestStruct1::expectedParameters(m_schema);
     } catch (karabo::util::Exception e) {
-        cout << e << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << e;
     }
 }
 

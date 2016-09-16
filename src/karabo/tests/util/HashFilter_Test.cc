@@ -406,7 +406,7 @@ void HashFilter_Test::testFilterByTag() {
         result.clear();
         HashFilter::byTag(schema, config, result, "JS", ",;");
 
-        //        clog << "JS\n" << result << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "JS\n" << result;
 
 
         CPPUNIT_ASSERT(result.has("antiAlias") == false);
@@ -439,7 +439,7 @@ void HashFilter_Test::testFilterByTag() {
         result.clear();
         HashFilter::byTag(schema, config, result, "NC,LM", ",;");
 
-        //        clog << "NC,LM\n" << result << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "NC,LM\n" << result;
 
 
         CPPUNIT_ASSERT(result.has("antiAlias") == true);
@@ -472,7 +472,7 @@ void HashFilter_Test::testFilterByTag() {
         result.clear();
         HashFilter::byTag(schema, config, result, "CY", ",;");
 
-        //        clog << "CY\n" << result << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "CY\n" << result;
 
 
         CPPUNIT_ASSERT(result.has("antiAlias") == false);
@@ -506,7 +506,7 @@ void HashFilter_Test::testFilterByTag() {
         result.clear();
         HashFilter::byTag(schema, config, result, "BF", ",;");
 
-        //        clog << "BF\n" << result << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "BF\n" << result;
 
 
         CPPUNIT_ASSERT(result.has("antiAlias") == false);
@@ -539,7 +539,7 @@ void HashFilter_Test::testFilterByTag() {
         result.clear();
         HashFilter::byTag(schema, config, result, "WP76", ",;");
 
-        //        clog << "WP76\n" << result << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "WP76\n" << result;
 
 
         CPPUNIT_ASSERT(result.has("antiAlias") == false);
@@ -570,7 +570,7 @@ void HashFilter_Test::testFilterByTag() {
 
 
     } catch (karabo::util::Exception e) {
-        clog << e << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << e;
     }
 }
 
@@ -585,14 +585,10 @@ void HashFilter_Test::testFilterByAccessMode() {
         Hash config;
         validator.validate(schema, Hash(), config);
 
-        //const Hash& param = schema.getParameterHash1();
-        //clog << "\nparam : \n" << param << endl;        
-        //        clog << "\nconfig:\n" << config << endl;
-
         Hash result;
         HashFilter::byAccessMode(schema, config, result, karabo::util::INIT);
 
-        //clog << "\nINIT ...\n" << result << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "\nINIT ...\n" << result;
 
         CPPUNIT_ASSERT(result.has("antiAlias") == true);
         CPPUNIT_ASSERT(result.has("color") == false);
@@ -626,7 +622,7 @@ void HashFilter_Test::testFilterByAccessMode() {
         result.clear();
         HashFilter::byAccessMode(schema, config, result, karabo::util::READ);
 
-        //clog << "\nREAD ...\n" << result << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "\nREAD ...\n" << result;
 
 
         CPPUNIT_ASSERT(result.has("antiAlias") == false);
@@ -661,7 +657,7 @@ void HashFilter_Test::testFilterByAccessMode() {
         result.clear();
         HashFilter::byAccessMode(schema, config, result, karabo::util::WRITE);
 
-        //clog << "\nWRITE ...\n" << result << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "\nWRITE ...\n" << result;
 
 
         CPPUNIT_ASSERT(result.has("antiAlias") == false);
@@ -693,7 +689,7 @@ void HashFilter_Test::testFilterByAccessMode() {
         CPPUNIT_ASSERT(result.has("state") == false);
 
     } catch (karabo::util::Exception e) {
-        clog << e << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << e;
     }
 }
 
@@ -736,17 +732,17 @@ void HashFilter_Test::testHdf5Filter() {
 
 
         Hash h5Config = dataFormat->getConfig();
-        clog << "original\n" << h5Config << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "original\n" << h5Config;
         Schema schema = h5::Format::getSchema("Format");
-        //        clog << "schema: \n" << schema.getParameterHash1() << endl;
+        //        KARABO_LOG_FRAMEWORK_DEBUG << "schema: \n" << schema.getParameterHash1();
 
         Hash result;
         HashFilter::byTag(schema, h5Config.get<Hash>("Format"), result, "persistent");
 
-        clog << "permanent: \n" << result << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "permanent: \n" << result;
 
     } catch (karabo::util::Exception e) {
-        cout << e << endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << e;
     }
 
 }

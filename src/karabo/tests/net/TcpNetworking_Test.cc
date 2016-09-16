@@ -24,6 +24,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(TcpNetworking_Test);
 
 struct TcpServer {
 
+    KARABO_CLASSINFO(TcpServer, "TcpServer", "1.0");
 
     TcpServer() : m_count(0), m_port(0) {
         m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", 0, "Tcp.type", "server"));
@@ -42,7 +43,7 @@ struct TcpServer {
 
     void connectHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
         if (ec) {
-            std::clog << "\nSERVER_ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER_ERROR: " << ec.value() << " -- " << ec.message();
             if (channel) channel->close();
             return;
         }
@@ -52,9 +53,9 @@ struct TcpServer {
 
     void errorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
         if (ec.value() == 2) {
-            std::clog << "\nSERVER: client has closed the connection!" << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER: client has closed the connection!";
         } else {
-            std::clog << "\nSERVER_ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER_ERROR: " << ec.value() << " -- " << ec.message();
         }
         if (channel) channel->close();
     }
@@ -68,7 +69,7 @@ struct TcpServer {
         }
 
         m_count++;
-        //std::clog << "\nSERVER_INFO: count " << m_count << "\n" << header << body << "-----------------\n";
+        KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER_INFO: count " << m_count << "\n" << header << body << "-----------------\n";
 
         CPPUNIT_ASSERT(header.get<std::string>("headline") == "*** CLIENT ***");
 
@@ -105,6 +106,7 @@ private:
 
 struct TcpClient {
 
+    KARABO_CLASSINFO(TcpClient, "TcpClient", "1.0");
 
     TcpClient(const std::string& host, int port)
         : m_count(0)
@@ -129,7 +131,7 @@ struct TcpClient {
             }
             return;
         }
-        std::clog << "\nTcpClient connectHandler" << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "\nTcpClient connectHandler";
         karabo::util::Hash header("headline", "*** CLIENT ***");
         karabo::util::Hash data("a.b", "?", "a.c", 42.22f, "a.d", 12);
 
@@ -140,7 +142,7 @@ struct TcpClient {
 
     void errorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
         if (ec != boost::asio::error::eof)
-            std::clog << "\nCLIENT_ERROR: " << ec.value() << " -- " << ec.message() << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nCLIENT_ERROR: " << ec.value() << " -- " << ec.message();
         if (channel) channel->close();
     }
 
@@ -169,7 +171,7 @@ struct TcpClient {
         // inspect here the server reply.... just count
         m_count++;
 
-        std::clog << "TcpClient readHashHashHandler count = " << m_count << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "TcpClient readHashHashHandler count = " << m_count;
 
         if (m_count >= 3) { // stop after 3 attempts
             channel->close();
