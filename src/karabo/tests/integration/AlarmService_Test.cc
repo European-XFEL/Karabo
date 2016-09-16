@@ -53,13 +53,20 @@ void AlarmService_Test::setUp() {
 
 
 void AlarmService_Test::tearDown() {
-    m_deviceClient->killServer("testServer", KRB_TEST_MAX_TIMEOUT);
-    m_deviceServerThread.join();
     
+    m_deviceClient->killDevice("testGuiServer", KRB_TEST_MAX_TIMEOUT);
+    m_deviceClient->killDevice("alarmTester2", KRB_TEST_MAX_TIMEOUT);
+    m_deviceClient->killDevice("alarmTester", KRB_TEST_MAX_TIMEOUT);
+    m_deviceClient->killDevice("testAlarmService", KRB_TEST_MAX_TIMEOUT);
+    m_deviceClient->killServer("testServer", KRB_TEST_MAX_TIMEOUT);
+
+    m_deviceServerThread.join();
+    m_deviceClient.reset();
     //unlink persisted alarms if they exist
     if (boost::filesystem::exists("./testAlarmService.xml") ){
         boost::filesystem::remove("./testAlarmService.xml");
     }
+    
 }
 
 void AlarmService_Test::appTestRunner() {
@@ -89,7 +96,11 @@ void AlarmService_Test::appTestRunner() {
     testRecovery();
     testDeviceKilled();
     testDeviceReappeared();
+    if(m_tcpAdapter->connected()){
+        m_tcpAdapter->disconnect();
+    }
     EventLoop::stop();
+    t.join();
 }
 
 void AlarmService_Test::testDeviceRegistration() {

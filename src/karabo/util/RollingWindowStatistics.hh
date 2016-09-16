@@ -54,6 +54,13 @@ namespace karabo {
              * @return
              */
             double getRollingWindowMean() const;
+            
+            
+            /**
+             * Return the interval for these statistics
+             * @return 
+             */
+            unsigned long long getInterval() const;
 
         protected:
             double m_meanEstimate; //protected mainly to allow for testing
