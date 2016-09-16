@@ -277,6 +277,7 @@ namespace karabo {
                 return jt;
             }
 
+            
             static void validateConfiguration(const std::string& classId, const Hash& configuration, Hash& validated) {
                 Schema schema = getSchema(classId, Schema::AssemblyRules(INIT | WRITE | READ));
                 Validator validator; // Default validation
@@ -466,6 +467,8 @@ namespace karabo {
                 \
                 static std::vector<std::string> getRegisteredClasses() { \
                 return karabo::util::Configurator<Self>::getRegisteredClasses(); }
+        
+
     }
 }
 
