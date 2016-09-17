@@ -12,9 +12,9 @@ class local_db_settings:
         self.root_collection_test = "/krb_test"
 
 class db_settings:
-    def __init__(self, user, passoword, server, port=8080):
+    def __init__(self, user, password, server, port=8080):
         self.user = user
-        self.password = passoword
+        self.password = password
         self.server_uri = make_server_uri(server, port)
         self.server_url = make_server_url(self.user,
                                           self.password,
