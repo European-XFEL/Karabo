@@ -1,6 +1,6 @@
 """This tests the communication between bound API and middlelayer API"""
 
-from asyncio import coroutine, create_subprocess_exec
+from asyncio import coroutine, create_subprocess_exec, get_event_loop
 from contextlib import contextmanager
 import os
 import os.path
@@ -37,8 +37,6 @@ class Tests(DeviceTest):
         self.process = None
 
     def tearDown(self):
-        # it takes up to 5 s for the bound device to actually shut down
-        yield from self.process.wait(5)
         had_to_kill = False
         if self.process is not None and self.process.returncode is None:
             self.process.kill()
@@ -53,16 +51,17 @@ class Tests(DeviceTest):
             self.fail("process didn't properly go down")
 
     @coroutine
-    def start_process(self, *args):
-        self.process = yield from create_subprocess_exec(*args, stderr=PIPE)
+    def wait_for_stderr(self, wait):
         line = ""
-        while "got started" not in line:
+        while wait not in line:
             line = (yield from self.process.stderr.readline()).decode("ascii")
 
     @async_tst
     def test_cross(self):
         # it takes typically 2 s for the bound device to start
-        yield from self.start_process(sys.executable, "bounddevice.py")
+        self.process = yield from create_subprocess_exec(
+             sys.executable, "bounddevice.py", stderr=PIPE)
+        yield from self.wait_for_stderr("got started")
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
                          "didn't receive initial value from bound device")
@@ -111,6 +110,8 @@ class Tests(DeviceTest):
         self.assertEqual(self.device.value, 99)
         self.assertTrue(self.device.marker)
         yield from shutdown(proxy)
+        # it takes up to 5 s for the bound device to actually shut down
+        yield from self.process.wait()
 
 if __name__ == "__main__":
     main()
