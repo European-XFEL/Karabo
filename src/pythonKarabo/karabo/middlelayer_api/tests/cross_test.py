@@ -9,13 +9,14 @@ import sys
 from unittest import main
 
 from karabo.middlelayer import (
-    AccessLevel, AlarmCondition, Assignment, Device, getDevice, Int32,
-    MetricPrefix, shutdown, Slot, State, unit, Unit, waitUntil)
+    AccessLevel, AlarmCondition, Assignment, Device, DeviceClientBase,
+    getDevice, getHistory, Int32, MetricPrefix, shutdown, sleep, Slot, State,
+    unit, Unit, waitUntil)
 
 from .eventloop import DeviceTest, async_tst
 
 
-class MiddlelayerDevice(Device):
+class MiddlelayerDevice(DeviceClientBase):
     value = Int32()
 
     @Slot()
@@ -112,6 +113,37 @@ class Tests(DeviceTest):
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
         yield from self.process.wait()
+
+    @async_tst
+    def test_history(self):
+        karabo = os.environ["KARABO"]
+        self.process = yield from create_subprocess_exec(
+            os.path.join(karabo, "bin", "karabo-deviceserver"),
+            "historytest.xml", stderr=PIPE)
+        yield from self.wait_for_stderr(
+            "'DataLogger-middlelayerDevice' got started")
+
+        yield from sleep(0.1)
+
+        for i in range(5):
+            self.device.value = i
+            self.device.update()
+
+        history = yield from getHistory(
+            "middlelayerDevice", "00:00", "23:59").value
+
+        if not history:
+            print("history empty, need to index files?")
+            yield from self.wait_for_stderr("building command finished")
+            history = yield from getHistory(
+                "middlelayerDevice", "00:00", "23:59").value
+
+        self.assertEqual([h for _, _, _, h in history[-5:]], list(range(5)))
+
+        yield from get_event_loop().instance()._ss.request(
+            "Karabo_DLManagerServer", "slotKillServer")
+        yield from self.process.wait()
+
 
 if __name__ == "__main__":
     main()
