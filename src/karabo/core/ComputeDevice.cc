@@ -18,7 +18,6 @@ using namespace karabo::core;
 using namespace karabo::net;
 using namespace karabo::io;
 using namespace karabo::xms;
-using namespace karabo::xip;
 
 namespace karabo {
     namespace core {
