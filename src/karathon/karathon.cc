@@ -64,11 +64,6 @@ void exportPyLogLogger();
 // net
 void exportp2p();
 
-// xip
-//template <class T> void exportPyXipImage();
-void exportPyXipStatistics();
-template <class T> void exportPyXipCpuImage();
-
 
 void *convert_to_cstring(PyObject *obj) {
     char *ret = PyUnicode_AsUTF8(obj);
@@ -158,21 +153,6 @@ BOOST_PYTHON_MODULE(karathon) {
 
     // net
     exportp2p();
-
-    // xip
-    //exportPyXipImage<double>();
-    //exportPyXipImage<float>();
-    exportPyXipStatistics();
-    exportPyXipCpuImage<int>();
-    exportPyXipCpuImage<unsigned int>();
-    exportPyXipCpuImage<long long>();
-    exportPyXipCpuImage<unsigned long long>();
-    exportPyXipCpuImage<double>();
-    exportPyXipCpuImage<char>();
-    exportPyXipCpuImage<unsigned char>();
-    exportPyXipCpuImage<float>();
-    exportPyXipCpuImage<short>();
-    exportPyXipCpuImage<unsigned short>();
 
     boost::python::converter::registry::insert(convert_to_cstring,
                                                boost::python::type_id<char>(),

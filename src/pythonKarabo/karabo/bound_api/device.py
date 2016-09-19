@@ -12,8 +12,6 @@ from PIL import Image
 import numpy as np
 
 from karathon import (
-    CpuImageCHAR, CpuImageDOUBLE, CpuImageFLOAT, CpuImageINT16,
-    CpuImageINT32, CpuImageUINT16, CpuImageUINT8,
     ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
     UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
@@ -30,10 +28,6 @@ from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .configurator import Configurator
 from .no_fsm import NoFsm
 
-def isCpuImage(value):
-    return isinstance(value, (CpuImageCHAR, CpuImageDOUBLE, CpuImageFLOAT,
-                              CpuImageINT16, CpuImageINT32, CpuImageUINT16,
-                              CpuImageUINT8))
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonDevice", "1.0")
@@ -349,13 +343,6 @@ class PythonDevice(NoFsm):
         if self._client is None:
             self._client = DeviceClient(self._ss)  # SignalSlotable object for reuse
         return self._client
-    
-    def _setImage(self, key, image):
-        hash = Hash(key, Hash())
-        image.copyTo(hash[key])
-        hash.setAttribute(key, "image", 1)
-        self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
-        self._ss.emit("signalChanged", hash, self.deviceid)
 
     def set(self, *args, **kwargs):
         """
@@ -386,9 +373,6 @@ class PythonDevice(NoFsm):
 
                 if not isinstance(stamp, Timestamp):
                     raise TypeError("The 3rd argument should be Timestamp")
-                if isCpuImage(value):
-                    self._setImage(key, value)
-                    return
 
                 h = Hash()
                 # assure we are allowed to set states and alarms to appropriate elements
@@ -414,9 +398,6 @@ class PythonDevice(NoFsm):
             if len(pars) == 2:
                 if not isinstance(pars[0], Hash):
                     key, value = pars
-                    if isCpuImage(value):
-                        self._setImage(key, value)
-                        return
 
                     h = Hash()
                     if isinstance(value, State):
@@ -434,9 +415,6 @@ class PythonDevice(NoFsm):
                 paths = hash.getPaths()
                 for key in paths:
                     value = hash[key]
-                    if isCpuImage(value):
-                        self._setImage(key, value)    # process images individually
-                        hash.erasePath(key)      # clear hash from images 
 
                 validated = None
                 if validate:
@@ -493,14 +471,12 @@ class PythonDevice(NoFsm):
             raise SyntaxError("Number of parameters is wrong: only 2 to 3 arguments are allowed.")
         if len(args) == 3:
             channelName, key, value = args
-            if isCpuImage(value):
-                dataval = ImageData(value)
-            elif isinstance(value, ImageData):
+            if isinstance(value, ImageData):
                 dataval = value
             elif isinstance(value, Image.Image):
                 dataval = ImageData(np.array(value))
             else:
-                raise ValueError('The type of value is neither a "CpuImage" nor a "Hash"')
+                raise ValueError('The type of value is neither an Image nor a "Hash"')
             data = Hash(key, dataval)
         elif len(args) == 2:
             channelName, data = args
