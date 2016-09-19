@@ -37,14 +37,20 @@ class Tests(DeviceTest):
         self.process = None
 
     def tearDown(self):
+        # it takes up to 5 s for the bound device to actually shut down
+        yield from self.process.wait(5)
+        had_to_kill = False
         if self.process is not None and self.process.returncode is None:
             self.process.kill()
             self.loop.run_until_complete(self.process.wait())
+            had_to_kill = True
         try:
             os.remove("karabo.log")
         except FileNotFoundError:
             pass  # never mind
         os.chdir(self.__starting_dir)
+        if had_to_kill:
+            self.fail("process didn't properly go down")
 
     @coroutine
     def start_process(self, *args):
@@ -105,8 +111,6 @@ class Tests(DeviceTest):
         self.assertEqual(self.device.value, 99)
         self.assertTrue(self.device.marker)
         yield from shutdown(proxy)
-        # it takes up to 5 s for the bound device to actually shut down
-        yield from self.process.wait()
 
 if __name__ == "__main__":
     main()
