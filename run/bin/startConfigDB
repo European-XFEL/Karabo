@@ -1,7 +1,8 @@
 #!/bin/bash
 
 
-EXIST_HOME="$KARABO/extern/eXistDB"
+EXIST_BASE="$KARABO/extern/eXistDB"
+EXIST_HOME="$KARABO/extern/eXistDB/db"
 CURRENT_DIR=`pwd`
 
 #check if java is installed
@@ -15,9 +16,12 @@ else
 fi
 
 #first we check if the database is installed
-if [ ! -d "$EXIST_HOME/web-app" ]; then
-	cd $EXIST_HOME
+if [ ! -d "$EXIST_HOME" ]; then
+	cd $EXIST_BASE
 	./install $JAVA
+	#now insure it is initialized after we've given it some time to finish installation.
+	sleep 10s
+	$KARABO/extern/bin/python3 -c "from karabo.project_db import util; util.init_local_db();"
 fi
 
 ##TODO add checks if DB is initialized. This will be added by calling python API functions
