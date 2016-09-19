@@ -1,6 +1,6 @@
 """This tests the communication between bound API and middlelayer API"""
 
-from asyncio import create_subprocess_exec
+from asyncio import coroutine, create_subprocess_exec
 from contextlib import contextmanager
 import os
 import os.path
@@ -31,15 +31,32 @@ class Tests(DeviceTest):
         with cls.deviceManager(lead=cls.device):
             yield
 
+    def setUp(self):
+        self.__starting_dir = os.curdir
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+        self.process = None
+
+    def tearDown(self):
+        if self.process is not None and self.process.returncode is None:
+            self.process.kill()
+            self.loop.run_until_complete(self.process.wait())
+        try:
+            os.remove("karabo.log")
+        except FileNotFoundError:
+            pass  # never mind
+        os.chdir(self.__starting_dir)
+
+    @coroutine
+    def start_process(self, *args):
+        self.process = yield from create_subprocess_exec(*args, stderr=PIPE)
+        line = ""
+        while "got started" not in line:
+            line = (yield from self.process.stderr.readline()).decode("ascii")
+
     @async_tst
     def test_cross(self):
         # it takes typically 2 s for the bound device to start
-        self.bound = yield from create_subprocess_exec(
-            sys.executable, "bounddevice.py", stderr=PIPE)
-        line = ""
-        while "got started" not in line:
-            readbytes = yield from wait_for(self.bound.stderr.readline(), 5.0)
-            line = readbytes.decode("ascii")
+        yield from self.start_process(sys.executable, "bounddevice.py")
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
                          "didn't receive initial value from bound device")
@@ -89,22 +106,7 @@ class Tests(DeviceTest):
         self.assertTrue(self.device.marker)
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
-        yield from self.bound.wait()
-
-    def setUp(self):
-        self.__starting_dir = os.curdir
-        os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-    def tearDown(self):
-        if self.bound.returncode is None:
-            self.bound.kill()
-            self.loop.run_until_complete(self.bound.wait())
-        try:
-            os.remove("karabo.log")
-        except FileNotFoundError:
-            pass  # never mind
-        os.chdir(self.__starting_dir)
-
+        yield from self.process.wait()
 
 if __name__ == "__main__":
     main()
