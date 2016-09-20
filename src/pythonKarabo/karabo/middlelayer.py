@@ -12,7 +12,7 @@ from .middlelayer_api.device_client import (
     ProxyNode, AutoDisconnectProxy, SubProxy, getHistory, waitUntilNew,
     waitUntil, setWait, instantiate, instantiateNoWait, shutdown,
     shutdownNoWait, setNoWait, getClasses, getDevice, getDevices, getServers,
-    execute, executeNoWait, updateDevice, sleep
+    execute, executeNoWait, updateDevice
 )
 from .middlelayer_api.enums import (
     AccessLevel, AccessMode, Assignment, EncodingType, MetricPrefix, NodeType,
@@ -45,5 +45,5 @@ from .middlelayer_api.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes
 )
 from .middlelayer_api.signalslot import Signal, SignalSlotable, slot, coslot
-from .middlelayer_api.synchronization import background, gather
+from .middlelayer_api.synchronization import background, gather, sleep
 from .middlelayer_api.timestamp import Timestamp

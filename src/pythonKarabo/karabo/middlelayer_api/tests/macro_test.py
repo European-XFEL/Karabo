@@ -9,10 +9,11 @@ from karabo.common.states import State
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     waitUntilNew, waitUntil, setWait, setNoWait, getDevice, executeNoWait,
-    updateDevice, Queue, connectDevice, sleep)
+    updateDevice, Queue, connectDevice)
 from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro
+from karabo.middlelayer_api.synchronization import sleep
 
 from .eventloop import DeviceTest, sync_tst, async_tst
 
@@ -231,13 +232,6 @@ class Tests(DeviceTest):
             for i in range(30):
                 j = waitUntilNew(d).counter
                 self.assertEqual(i, j)
-
-    @sync_tst
-    def test_sleep(self):
-        t = time.time()
-        sleep(6)
-        self.assertGreater(time.time() - t, 6)
-    test_sleep.slow = 1
 
     @async_tst
     def test_print(self):
