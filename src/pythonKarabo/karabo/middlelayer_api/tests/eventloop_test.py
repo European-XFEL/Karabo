@@ -1,25 +1,10 @@
 from asyncio import CancelledError, coroutine, Lock
-from functools import wraps
-from unittest import TestCase, main
-from unittest.mock import Mock
+from unittest import main
 
 from karabo.middlelayer_api.device_client import sleep
 from karabo.middlelayer_api.eventloop import synchronize
 
-from .eventloop import setEventLoop
-
-
-def thread_tst(f):
-    @wraps(f)
-    def wrapper(self):
-        device = Mock()
-        device._ss = Mock()
-        device._ss.loop = self.loop
-        device._ss.tasks = set()
-        task = self.loop.create_task(
-            self.loop.run_coroutine_or_thread(f, self), instance=device)
-        self.loop.run_until_complete(task)
-    return wrapper
+from .eventloop import DeviceTest, sync_tst
 
 
 class Barrier(object):
@@ -49,13 +34,7 @@ class Barrier(object):
         self.lock.release()
 
 
-class Tests(TestCase):
-    def setUp(self):
-        self.loop = setEventLoop()
-
-    def tearDown(self):
-        self.loop.close()
-
+class Tests(DeviceTest):
     @coroutine
     def coro(self, s, t):
         return "this was the coroutine" + s + t
@@ -73,7 +52,7 @@ class Tests(TestCase):
             self.loop.run_coroutine_or_thread(self.thread, " test", t="."))
         self.assertEqual("this was the thread test.", r)
 
-    @thread_tst
+    @sync_tst
     def test_add_callback(self):
         def callback(future):
             nonlocal called
@@ -90,7 +69,7 @@ class Tests(TestCase):
         sleep(0.002)
         self.assertTrue(called)
 
-    @thread_tst
+    @sync_tst
     def test_cancel(self):
         barrier = Barrier(self.loop)
         fut = barrier.block(wait=False)
@@ -102,7 +81,7 @@ class Tests(TestCase):
         self.assertEqual(barrier.state, "cancelled")
         self.assertTrue(fut.done())
 
-    @thread_tst
+    @sync_tst
     def test_result(self):
         barrier = Barrier(self.loop)
         fut = barrier.block(wait=False)
@@ -110,7 +89,7 @@ class Tests(TestCase):
         self.assertEqual(fut.wait(), "something")
         self.assertEqual(fut.result(), "something")
 
-    @thread_tst
+    @sync_tst
     def test_error(self):
         barrier = Barrier(self.loop)
         barrier.error = True
