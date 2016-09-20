@@ -55,3 +55,12 @@ def gather(*args, return_exceptions=False):
         "Arguments must be of type KaraboFuture"
     return (yield from asyncio.gather(*[f.future for f in args],
                                       return_exceptions=return_exceptions))
+
+
+@synchronize
+def sleep(delay, result=None):
+    """do nothing for *delay* seconds
+
+    This method should be preferred over :func:`time.sleep`, as it is
+    interruptable."""
+    return asyncio.sleep(delay, result)
