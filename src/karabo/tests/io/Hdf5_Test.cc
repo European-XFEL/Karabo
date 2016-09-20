@@ -11,10 +11,9 @@
 #include <karabo/util/TimeDuration.hh>
 #include "TestPathSetup.hh"
 #include "karabo/io/Input.hh"
-#include <karabo/log/Tracer.hh>
 #include <karabo/util/Dims.hh>
 #include <karabo/io/Output.hh>
-#include <karabo/io/h5/Table.hh>#
+#include <karabo/io/h5/Table.hh>
 #include <karabo/util/NDArray.hh>
 
 using namespace karabo::util;
@@ -27,10 +26,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION(Hdf5_Test);
 
 
 Hdf5_Test::Hdf5_Test() {
-
-    karabo::log::Tracer tr;
-    tr.disableAll();
-    tr.reconfigure();
 
     m_numImages = 100; // number of images to be written
     m_extentMultiplier = 1; //image size multiplier: 1 means 1Mpx, 2 - 4Mpx, 3 - 9 Mpx, etc

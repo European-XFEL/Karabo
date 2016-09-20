@@ -3,11 +3,11 @@
  *
  * File:   NodeElement.hh
  * Author: <burkhard.heisen@xfel.eu>
- * 
+ *
  * Created on July 1, 2011, 11:49 AM
  *
  * Major re-design on February 1, 2013, 8:49 AM
- * 
+ *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
@@ -22,7 +22,6 @@ namespace karabo {
     namespace util {
 
         class NodeElement : public GenericElement<NodeElement> {
-
 
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
 

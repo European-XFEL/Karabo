@@ -17,27 +17,8 @@ using namespace krb_log4cpp;
 using namespace std;
 
 
-namespace karathon {
-
-    // make 'create' to be public
-
-
-    struct AppenderConfiguratorWrap1 : AppenderConfigurator {
-
-
-        krb_log4cpp::Appender* create() = 0;
-    };
-
-
-    struct AppenderConfiguratorWrap : AppenderConfiguratorWrap1, bp::wrapper<AppenderConfiguratorWrap1> {
-
-
-        krb_log4cpp::Appender* create() {
-            return this->get_override("create")();
-        }
-    };
-
-
+namespace karathon {  
+   
     struct PriorityWrap {
 
 
@@ -48,20 +29,7 @@ namespace karathon {
 }
 
 
-void exportPyLogLogger() {
-    { // AppenderConfigurator
-        bp::class_<karathon::AppenderConfiguratorWrap, boost::noncopyable>("AppenderConfigurator", bp::no_init)
-                .def("create", bp::pure_virtual((krb_log4cpp::Appender * (karathon::AppenderConfiguratorWrap1::*)()) & karathon::AppenderConfiguratorWrap1::create), bp::return_internal_reference<>())
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(AppenderConfigurator)
-                ;
-    }
-
-    { // CategoryConfigurator
-        bp::class_<CategoryConfigurator>("CategoryConfigurator", bp::init<const Hash&>())
-                .def("setup", &CategoryConfigurator::setup)
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(CategoryConfigurator)
-                ;
-    }
+void exportPyLogLogger() {     
 
     {
         bp::enum_<krb_log4cpp::Priority::PriorityLevel>("PriorityLevel", "This enumeration describes priority levels")
@@ -138,19 +106,53 @@ void exportPyLogLogger() {
     }
 
     {//karabo::log::Logger
-        bp::class_< Logger >("Logger", bp::init<Hash const &>((bp::arg("input"))))
-                .def("configure"
-                     , &Logger::configure
-                     , (bp::arg("config") = Hash())).staticmethod("configure")
-                .def("reset", &Logger::reset).staticmethod("reset")
-                .def("getLogger"
-                     , (krb_log4cpp::Category & (*)(string const &))(&Logger::getLogger)
-                     , (bp::arg("logCategorie"))
-                     , bp::return_internal_reference<> ()).staticmethod("getLogger")
+        bp::class_< Logger >("Logger", bp::no_init)
+                .def("expectedParameters",
+                     &Logger::expectedParameters,
+                     (bp::arg("schema"))).staticmethod("expectedParameters")
+                .def("configure",
+                     &Logger::configure,
+                     (bp::arg("config") = Hash())).staticmethod("configure")
+                .def("useOstream",
+                     &Logger::useOstream,
+                     (bp::arg("category") = "",
+                      bp::arg("inheritAppenders") = true)).staticmethod("useOstream")
+                .def("useFile",
+                     &Logger::useFile,
+                     (bp::arg("category") = "",
+                      bp::arg("inheritAppenders") = true)).staticmethod("useFile")
+                .def("useNetwork",
+                     &Logger::useNetwork,
+                     (bp::arg("category") = "",
+                      bp::arg("inheritAppenders") = true)).staticmethod("useNetwork")
+                .def("reset",
+                     &Logger::reset).staticmethod("reset")
+                .def("logDebug",
+                     &Logger::logDebug,
+                     (bp::arg("category") = "")).staticmethod("logDebug")
+                .def("logInfo",
+                     &Logger::logDebug,
+                     (bp::arg("category") = "")).staticmethod("logInfo")
+                .def("logWarn",
+                     &Logger::logDebug,
+                     (bp::arg("category") = "")).staticmethod("logWarn")
+                .def("logError",
+                     &Logger::logDebug,
+                     (bp::arg("category") = "")).staticmethod("logError")
+                .def("setPriority",
+                     &Logger::setPriority,
+                     (bp::arg("priority"),
+                      bp::arg("category") = "")).staticmethod("setPriority")
+                .def("getPriority",
+                     &Logger::getPriority,
+                     (bp::arg("category") = ""),
+                      bp::return_internal_reference<> ()).staticmethod("getPriority")
+                .def("getCategory",
+                     (krb_log4cpp::Category & (*)(const string&))(&Logger::getCategory),
+                     (bp::arg("logCategorie") = ""),
+                     bp::return_internal_reference<> ()).staticmethod("getCategory")
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Logger)
                 ;
-
         bp::register_ptr_to_python< boost::shared_ptr< Logger > >();
     }
-
 }
