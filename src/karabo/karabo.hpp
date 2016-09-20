@@ -14,7 +14,6 @@
 #include "karabo/io.hpp"
 #include "karabo/net.hpp"
 #include "karabo/xms.hpp"
-#include "karabo/xip.hpp"
 #include "karabo/core.hpp"
 
 #define USING_KARABO_NAMESPACES \
@@ -24,6 +23,5 @@ using namespace karabo::net; \
 using namespace karabo::log; \
 using namespace karabo::xms; \
 using namespace karabo::core; \
-using namespace karabo::xip;
 
 #endif
