@@ -5,10 +5,11 @@
 #############################################################################
 from collections import namedtuple
 
-from PyQt4.QtCore import QAbstractTableModel, QDateTime, QModelIndex, Qt
+from PyQt4.QtCore import (
+    pyqtSlot, QAbstractTableModel, QDateTime, QModelIndex, Qt)
 from PyQt4.QtGui import (
-    QButtonGroup, QColor, QComboBox, QHBoxLayout, QLabel, QPushButton,
-    QTableView, QVBoxLayout, QWidget)
+    QButtonGroup, QColor, QComboBox, QHBoxLayout, QLabel, QPixmap, QPushButton,
+    QStyle, QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
 
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.mediator import (
@@ -49,12 +50,15 @@ class AlarmPanel(Dockable, QWidget):
         filter_layout.addWidget(pb_custom_filter)
         filter_layout.addStretch()
 
-        alarm_model = AlarmServiceModel()
         self.twAlarm = QTableView()
         self.twAlarm.setWordWrap(True)
         self.twAlarm.setAlternatingRowColors(True)
+        self.twAlarm.resizeColumnsToContents()
         self.twAlarm.horizontalHeader().setStretchLastSection(True)
+        alarm_model = AlarmServiceModel()
         self.twAlarm.setModel(alarm_model)
+        btn_delegate = ButtonDelegate(self.twAlarm)
+        self.twAlarm.setItemDelegate(btn_delegate)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(5, 5, 5, 5)
@@ -99,6 +103,7 @@ class AlarmPanel(Dockable, QWidget):
 updateType = ['init', 'add', 'remove', 'update', 'acknowledgeable',
               'deviceKilled', 'refuseAcknowledgement']
 
+
 AlarmEntry = namedtuple('AlarmEntry', ['id',
                                        'timeOfFirstOccurrence',
                                        'timeOfOccurrence',
@@ -108,8 +113,8 @@ AlarmEntry = namedtuple('AlarmEntry', ['id',
                                        'property',
                                        'type',
                                        'description',
-                                       'needsAcknowledging',
-                                       'acknowledgeable'
+                                       'acknowledgeable',
+                                       'needsAcknowledging' # Show Device
                                        ])
 
 
@@ -123,8 +128,8 @@ class AlarmServiceModel(QAbstractTableModel):
                'Property',
                'Type',
                'Description',
-               'Acknowledge',
-               'Show Device']
+               'Acknowledge', # needsAcknowledging/acknowledgeable
+               'Device']
 
     textColor = {'warnLow': QColor(255, 102, 0),
                  'warnHigh': QColor(255, 102, 0),
@@ -222,3 +227,71 @@ class AlarmServiceModel(QAbstractTableModel):
         elif role in (Qt.DisplayRole, Qt.ToolTipRole):
             return entry[index.column()]
         return None
+
+
+class ButtonDelegate(QStyledItemDelegate):
+    def __init__(self, parent=None):
+        super(ButtonDelegate, self).__init__(parent)
+        # Fake button used for later rendering
+        self.pbClick = QPushButton("", parent)
+        self.pbClick.hide()
+        parent.clicked.connect(self.cellClicked)
+        self.cellEditMode = False
+        self.currentCellIndex = None  # QPersistentModelIndex
+
+    def createEditor(self, parent, option, index):
+        model = index.model()
+        headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
+        if headerData == 'Acknowledge' or headerData == 'Device':
+            button = QPushButton(parent)
+            self.pbClick.setText("Show {}".format(headerData))
+            self.pbClick.setEnabled(True if index.data() else False)
+            button.setFocusPolicy(Qt.NoFocus)
+            return button
+        else:
+            return super(ButtonDelegate, self).createEditor(parent, option, index)
+
+    def setEditorData(self, button, index):
+        model = index.model()
+        headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
+        if headerData == 'Acknowledge' or headerData == 'Device':
+            self.pbClick.setText("Show {}".format(headerData))
+            self.pbClick.setEnabled(True if index.data() else False)
+        else:
+            super(ButtonDelegate, self).setEditorData(button, index)
+
+    def paint(self, painter, option, index):
+        model = index.model()
+        headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
+        if headerData == 'Acknowledge' or headerData == 'Device':
+            self.pbClick.setGeometry(option.rect)
+            self.pbClick.setText("Show {}".format(headerData))
+            self.pbClick.setEnabled(True if index.data() else False)
+            if option.state == QStyle.State_Selected:
+                painter.fillRect(option.rect, option.palette.highlight())
+            pixmap = QPixmap.grabWidget(self.pbClick)
+            painter.drawPixmap(option.rect.x(), option.rect.y(), pixmap)
+        else:
+            super(ButtonDelegate, self).paint(painter, option, index)
+
+    def updateEditorGeometry(self, button, option, index):
+        button.setGeometry(option.rect)
+
+    def setModelData(self, button, model, index):
+        print("setModelData", button, model, index)
+
+    @pyqtSlot(object)
+    def cellClicked(self, index):
+        model = index.model()
+        headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
+        print("cellClicked", headerData, index.data())
+        if headerData == 'Acknowledge' or headerData == 'Device':
+            if self.cellEditMode:
+                self.parent().closePersistentEditor(self.currentCellIndex)
+            self.parent().openPersistentEditor(index)
+            self.cellEditMode = True
+            self.currentCellIndex = index
+        else:
+            if self.cellEditMode:
+                self.cellEditMode = False
+                self.parent().closePersistentEditor(self.currentCellIndex)
