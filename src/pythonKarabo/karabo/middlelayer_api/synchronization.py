@@ -16,7 +16,7 @@ def background(task, *args, timeout=-1):
 
     Example::
 
-        def do_something_in_background(some_attribute):
+        def do_something_in_background(some_value):
             # so something here
 
         task = background(do_something_in_background, "some value")
