@@ -47,6 +47,10 @@ class Tests(DeviceTest):
             os.remove("karabo.log")
         except FileNotFoundError:
             pass  # never mind
+        try:
+            os.remove("serverId.xml")
+        except FileNotFoundError:
+            pass  # never mind
         os.chdir(self.__starting_dir)
         if had_to_kill:
             self.fail("process didn't properly go down")

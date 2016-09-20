@@ -109,6 +109,10 @@ class Tests(TestCase):
         os.chdir(this_dir)
 
     def tearDown(self):
+        try:
+            os.remove("serverId.xml")
+        except FileNotFoundError:
+            pass
         os.chdir(self.__starting_dir)
 
     def test_delete(self):
