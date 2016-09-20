@@ -92,12 +92,10 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/769817549/Table.o \
 	${OBJECTDIR}/_ext/769817549/TypeTraits.o \
 	${OBJECTDIR}/_ext/769817549/VLArray.o \
-	${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o \
-	${OBJECTDIR}/_ext/1103111265/CategoryConfigurator.o \
-	${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator.o \
 	${OBJECTDIR}/_ext/1103111265/Logger.o \
-	${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o \
-	${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o \
+	${OBJECTDIR}/_ext/1103111265/NetworkAppender.o \
+	${OBJECTDIR}/_ext/1103111265/OstreamAppender.o \
+	${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o \
 	${OBJECTDIR}/_ext/1103112890/AsioIOService.o \
 	${OBJECTDIR}/_ext/1103112890/BrokerConnection.o \
 	${OBJECTDIR}/_ext/1103112890/Connection.o \
@@ -108,8 +106,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/JmsConnection.o \
 	${OBJECTDIR}/_ext/1103112890/JmsConsumer.o \
 	${OBJECTDIR}/_ext/1103112890/JmsProducer.o \
-	${OBJECTDIR}/_ext/1103112890/NetworkAppender.o \
-	${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator.o \
 	${OBJECTDIR}/_ext/1103112890/PointToPoint.o \
 	${OBJECTDIR}/_ext/1103112890/TcpChannel.o \
 	${OBJECTDIR}/_ext/1103112890/TcpConnection.o \
@@ -486,35 +482,25 @@ ${OBJECTDIR}/_ext/769817549/VLArray.o: ../../../src/karabo/io/h5/VLArray.cc
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_NOT_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/769817549/VLArray.o ../../../src/karabo/io/h5/VLArray.cc
 
-${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o: ../../../src/karabo/log/AppenderConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o ../../../src/karabo/log/AppenderConfigurator.cc
-
-${OBJECTDIR}/_ext/1103111265/CategoryConfigurator.o: ../../../src/karabo/log/CategoryConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/CategoryConfigurator.o ../../../src/karabo/log/CategoryConfigurator.cc
-
-${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator.o: ../../../src/karabo/log/FileAppenderConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator.o ../../../src/karabo/log/FileAppenderConfigurator.cc
-
 ${OBJECTDIR}/_ext/1103111265/Logger.o: ../../../src/karabo/log/Logger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/Logger.o ../../../src/karabo/log/Logger.cc
 
-${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o: ../../../src/karabo/log/OstreamAppenderConfigurator.cc 
+${OBJECTDIR}/_ext/1103111265/NetworkAppender.o: ../../../src/karabo/log/NetworkAppender.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o ../../../src/karabo/log/OstreamAppenderConfigurator.cc
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/NetworkAppender.o ../../../src/karabo/log/NetworkAppender.cc
 
-${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o: ../../../src/karabo/log/RollingFileAppenderConfigurator.cc 
+${OBJECTDIR}/_ext/1103111265/OstreamAppender.o: ../../../src/karabo/log/OstreamAppender.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/OstreamAppender.o ../../../src/karabo/log/OstreamAppender.cc
+
+${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o: ../../../src/karabo/log/RollingFileAppender.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o ../../../src/karabo/log/RollingFileAppender.cc
 
 ${OBJECTDIR}/_ext/1103112890/AsioIOService.o: ../../../src/karabo/net/AsioIOService.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -565,16 +551,6 @@ ${OBJECTDIR}/_ext/1103112890/JmsProducer.o: ../../../src/karabo/net/JmsProducer.
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsProducer.o ../../../src/karabo/net/JmsProducer.cc
-
-${OBJECTDIR}/_ext/1103112890/NetworkAppender.o: ../../../src/karabo/net/NetworkAppender.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/NetworkAppender.o ../../../src/karabo/net/NetworkAppender.cc
-
-${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator.o: ../../../src/karabo/net/NetworkAppenderConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator.o ../../../src/karabo/net/NetworkAppenderConfigurator.cc
 
 ${OBJECTDIR}/_ext/1103112890/PointToPoint.o: ../../../src/karabo/net/PointToPoint.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -1938,45 +1914,6 @@ ${OBJECTDIR}/_ext/769817549/VLArray_nomain.o: ${OBJECTDIR}/_ext/769817549/VLArra
 	    ${CP} ${OBJECTDIR}/_ext/769817549/VLArray.o ${OBJECTDIR}/_ext/769817549/VLArray_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1103111265/AppenderConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o ../../../src/karabo/log/AppenderConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator_nomain.o ../../../src/karabo/log/AppenderConfigurator.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103111265/CategoryConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/CategoryConfigurator.o ../../../src/karabo/log/CategoryConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/CategoryConfigurator.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/CategoryConfigurator_nomain.o ../../../src/karabo/log/CategoryConfigurator.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103111265/CategoryConfigurator.o ${OBJECTDIR}/_ext/1103111265/CategoryConfigurator_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator.o ../../../src/karabo/log/FileAppenderConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator_nomain.o ../../../src/karabo/log/FileAppenderConfigurator.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator.o ${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/1103111265/Logger_nomain.o: ${OBJECTDIR}/_ext/1103111265/Logger.o ../../../src/karabo/log/Logger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/Logger.o`; \
@@ -1990,30 +1927,43 @@ ${OBJECTDIR}/_ext/1103111265/Logger_nomain.o: ${OBJECTDIR}/_ext/1103111265/Logge
 	    ${CP} ${OBJECTDIR}/_ext/1103111265/Logger.o ${OBJECTDIR}/_ext/1103111265/Logger_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o ../../../src/karabo/log/OstreamAppenderConfigurator.cc 
+${OBJECTDIR}/_ext/1103111265/NetworkAppender_nomain.o: ${OBJECTDIR}/_ext/1103111265/NetworkAppender.o ../../../src/karabo/log/NetworkAppender.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o`; \
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/NetworkAppender.o`; \
 	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator_nomain.o ../../../src/karabo/log/OstreamAppenderConfigurator.cc;\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/NetworkAppender_nomain.o ../../../src/karabo/log/NetworkAppender.cc;\
 	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator_nomain.o;\
+	    ${CP} ${OBJECTDIR}/_ext/1103111265/NetworkAppender.o ${OBJECTDIR}/_ext/1103111265/NetworkAppender_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc 
+${OBJECTDIR}/_ext/1103111265/OstreamAppender_nomain.o: ${OBJECTDIR}/_ext/1103111265/OstreamAppender.o ../../../src/karabo/log/OstreamAppender.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o`; \
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/OstreamAppender.o`; \
 	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc;\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/OstreamAppender_nomain.o ../../../src/karabo/log/OstreamAppender.cc;\
 	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o;\
+	    ${CP} ${OBJECTDIR}/_ext/1103111265/OstreamAppender.o ${OBJECTDIR}/_ext/1103111265/OstreamAppender_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103111265/RollingFileAppender_nomain.o: ${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o ../../../src/karabo/log/RollingFileAppender.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppender_nomain.o ../../../src/karabo/log/RollingFileAppender.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o ${OBJECTDIR}/_ext/1103111265/RollingFileAppender_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/AsioIOService_nomain.o: ${OBJECTDIR}/_ext/1103112890/AsioIOService.o ../../../src/karabo/net/AsioIOService.cc 
@@ -2144,32 +2094,6 @@ ${OBJECTDIR}/_ext/1103112890/JmsProducer_nomain.o: ${OBJECTDIR}/_ext/1103112890/
 	    $(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsProducer_nomain.o ../../../src/karabo/net/JmsProducer.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsProducer.o ${OBJECTDIR}/_ext/1103112890/JmsProducer_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103112890/NetworkAppender_nomain.o: ${OBJECTDIR}/_ext/1103112890/NetworkAppender.o ../../../src/karabo/net/NetworkAppender.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/NetworkAppender.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/NetworkAppender_nomain.o ../../../src/karabo/net/NetworkAppender.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103112890/NetworkAppender.o ${OBJECTDIR}/_ext/1103112890/NetworkAppender_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator.o ../../../src/karabo/net/NetworkAppenderConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator_nomain.o ../../../src/karabo/net/NetworkAppenderConfigurator.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator.o ${OBJECTDIR}/_ext/1103112890/NetworkAppenderConfigurator_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/PointToPoint_nomain.o: ${OBJECTDIR}/_ext/1103112890/PointToPoint.o ../../../src/karabo/net/PointToPoint.cc 

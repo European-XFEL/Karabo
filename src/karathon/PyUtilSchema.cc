@@ -128,8 +128,8 @@ struct NodeElementWrap {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg1' given in 'appendParametersOfConfigurableClass(arg1, arg2)' of NODE_ELEMENT must be a class in Python registered as base class in Configurator");
         }
         if (!PyObject_HasAttrString(baseobj.ptr(), "getSchema")) {
-            throw KARABO_PYTHON_EXCEPTION("Class with classid = '" + classId + "' given in 'appendParametersOfConfigurableClass(base, classid)' of NODE_ELELEMT has no 'getSchema' method.");
-        }
+            throw KARABO_PYTHON_EXCEPTION("Class with classid = '" + classId + "' given in 'appendParametersOfConfigurableClass(base, classid)' of NODE_ELEMENT has no 'getSchema' method.");
+        }        
         std::string baseClassId;
         if (PyObject_HasAttrString(baseobj.ptr(), "__karabo_cpp_classid__")) {
             // baseobj is object of C++ base class
@@ -156,22 +156,18 @@ struct NodeElementWrap {
         if (!PyType_Check(obj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg' given in 'appendParametersOf(arg)' of NODE_ELEMENT must be a class in Python");
         }
-        if (!PyObject_HasAttrString(obj.ptr(), "getSchema")) {
-            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendParametersOf' of NODE_ELELEMT has no 'getSchema' method");
-        }
+        // TODO This whole code block repeats over and over!! TERRIBLE!! Cleaning needed.
         std::string classId;
         if (PyObject_HasAttrString(obj.ptr(), "__karabo_cpp_classid__")) {
             classId = bp::extract<std::string>(obj.attr("__karabo_cpp_classid__"));
         } else {
             classId = bp::extract<std::string>(obj.attr("__classid__"));
         }
-        bp::object schemaObj = obj.attr("getSchema")(classId);
-        const Schema schemaPy = bp::extract<Schema> (schemaObj);
-
-        const Hash h = schemaPy.getParameterHash();
-        self.getNode().setValue<Hash>(h);
+        Schema::Pointer schema(new Schema());
+        obj.attr("expectedParameters")(schema);        
+        self.getNode().setValue<Hash>(schema->getParameterHash());
+        self.getNode().setAttribute(KARABO_SCHEMA_CLASS_ID, classId);
         self.getNode().setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, classId);
-
         return self;
     }
 
@@ -1567,7 +1563,7 @@ void exportPyUtilSchema() {
 
     {//exposing ::Schema
 
-        bp::class_< Schema > s("Schema");
+        bp::class_< Schema, boost::shared_ptr<Schema> > s("Schema");
         s.def(bp::init< >());
         s.def(bp::init<std::string const &, bp::optional<Schema::AssemblyRules const&> > ());
 

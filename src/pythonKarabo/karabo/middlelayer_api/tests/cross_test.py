@@ -84,6 +84,7 @@ class Tests(TestCase):
         self.__starting_dir = os.curdir
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         self.loop = setEventLoop()
+        print("Bringing up bound device", file=sys.__stdout__)
         self.bound = self.loop.run_until_complete(
             create_subprocess_exec(sys.executable, "bounddevice.py",
                                    stderr=PIPE))

@@ -52,6 +52,22 @@ namespace karabo {
 
             KARABO_CLASSINFO(JmsConnection, "JmsConnection", "1.0")
 
+
+            static void expectedParameters(karabo::util::Schema& s);
+
+
+            JmsConnection(const karabo::util::Hash& config);
+
+            /**
+             * This class allows to create a single TCP connection to a JMS (openMQ) broker.
+             * One or more broker URLs can be provided. If several URLs are provided they will be tried
+             * in order once a previous connection failed.
+             * NOTE: Automatic reconnection needs a running event-loop
+             * @param brokerUrls A vector of broker URLs (tcp://<host>:<port>)
+             */
+            JmsConnection(const std::vector<std::string>& brokerUrls =
+                          std::vector<std::string>(1, "tcp://exfl-broker.desy.de:7777"));
+
             /**
              * This class allows to create a single TCP connection to a JMS (openMQ) broker.
              * One or more broker URLs can be provided. If several URLs are provided they will be tried
@@ -59,7 +75,7 @@ namespace karabo {
              * NOTE: Automatic reconnection needs a running event-loop
              * @param brokerUrl A single or a comma separated list of broker URLs (tcp://<host>:<port>)
              */
-            JmsConnection(const std::string& brokerUrl = std::string("tcp://exfl-broker.desy.de:7777"));
+            JmsConnection(const std::string& brokerUrls);
 
             virtual ~JmsConnection();
 
@@ -135,7 +151,7 @@ namespace karabo {
             // it is used for exactly the aforementioned purpose
             static const int HANDLED_OBJECT_INVALID_HANDLE = 0xFEEEFEEE;
 
-            std::string m_availableBrokerUrls;
+            std::vector<std::string> m_availableBrokerUrls;
 
             std::string m_connectedBrokerUrl;
 

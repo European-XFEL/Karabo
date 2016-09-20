@@ -23,8 +23,30 @@ namespace karabo {
         using namespace karabo::util;
         using namespace boost;
 
+        KARABO_REGISTER_FOR_CONFIGURATION(JmsConnection);
+
+        void JmsConnection::expectedParameters(Schema& s) {
+
+            VECTOR_STRING_ELEMENT(s).key("brokers")
+                    .displayedName("Brokers")
+                    .description("Brokers must be provided as URLs of format: tcp://<host>:<port>. Extra URLs serve as fallback.")
+                    .assignmentOptional().defaultValueFromString("tcp://exfl-broker.desy.de:7777")
+                    .commit();
+        }
+
+
+        JmsConnection::JmsConnection(const karabo::util::Hash& config) :
+            JmsConnection(config.get<vector<string>>("brokers")) {
+        }
+
 
         JmsConnection::JmsConnection(const std::string& brokerUrls)
+            : JmsConnection(fromString<string, vector>(brokerUrls)) {
+
+        }
+
+
+        JmsConnection::JmsConnection(const std::vector<std::string>& brokerUrls)
             : m_availableBrokerUrls(brokerUrls),
             m_reconnectStrand(EventLoop::getIOService()) {
 
@@ -33,7 +55,7 @@ namespace karabo {
             // Give precedence to the environment variable (if defined)
             char* env = 0;
             env = getenv("KARABO_BROKER");
-            if (env != 0) m_availableBrokerUrls = string(env);
+            if (env != 0) m_availableBrokerUrls = fromString<string, vector>(string(env));
             parseBrokerUrl();
 
             // Add one event-loop thread for handling automatic reconnection
@@ -44,7 +66,6 @@ namespace karabo {
             // Set logging function
             // TODO: Decide what should be done here
             MQSetLogFileName("openMQLib.log");
-
         }
 
 
@@ -55,11 +76,8 @@ namespace karabo {
 
         void JmsConnection::parseBrokerUrl() {
 
-            // This splits by ","
-            const vector<string> urls = fromString<string, vector>(m_availableBrokerUrls);
 
-
-            BOOST_FOREACH(string url, urls) {
+            BOOST_FOREACH(string url, m_availableBrokerUrls) {
                 const boost::tuple<string, string, string, string, string> urlParts = karabo::net::parseUrl(url);
                 m_brokerAddresses.push_back(make_tuple(urlParts.get<0>(), urlParts.get<1>(), urlParts.get<2>()));
             }

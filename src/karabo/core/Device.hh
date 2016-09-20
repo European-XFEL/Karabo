@@ -305,7 +305,7 @@ namespace karabo {
                 m_validatorExtern.setValidationRules(rules);
 
                 // Setup device logger
-                m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + instanceId
+                m_log = &(karabo::log::Logger::getCategory(m_deviceId)); // TODO use later: "device." + instanceId
 
 
             }
@@ -381,7 +381,6 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
             }
-
 
             /**
              * Convenience function for writing data objects that reflect a single element in the data schema.
@@ -1344,7 +1343,7 @@ namespace karabo {
              *
              * @param previous: alarm conditions previously present on the device.
              * @param forceUpdate: force updating alarms even if no change occurred on validator side.
-             * 
+             *
              * Note: calling this method must be protected by a state change mutex!
              */
             void evaluateAlarmUpdates(const karabo::util::Hash& previous, karabo::util::Hash& result, bool forceUpdate = false) {
@@ -1354,23 +1353,23 @@ namespace karabo {
                 Hash& toClear = result.bindReference<Hash>("toClear");
                 Hash& toAdd = result.bindReference<Hash>("toAdd");
                 std::unordered_set<std::string> knownAlarms; //alarms already known to the system which have not updated
-                
+
                 const Hash& current = m_validatorIntern.getParametersInWarnOrAlarm();
                 if (!previous.empty()) {
                     for (Hash::const_iterator it = previous.begin(); it != previous.end(); ++it) {
                         const boost::optional<const Hash::Node&> currentEntry = current.find(it->getKey());
                         if (currentEntry) {
-                            if(!forceUpdate){ // on force update we don't care if timestamps match
+                            if (!forceUpdate) { // on force update we don't care if timestamps match
                                 const Timestamp previousTimeStamp = Timestamp::fromHashAttributes(it->getAttributes());
                                 const Timestamp currentTimeStamp = Timestamp::fromHashAttributes(currentEntry->getAttributes());
-                                if(previousTimeStamp.getTrainId() == currentTimeStamp.getTrainId() &&
-                                   previousTimeStamp.getSeconds() == currentTimeStamp.getSeconds() && 
-                                   previousTimeStamp.getFractionalSeconds() == previousTimeStamp.getFractionalSeconds()) {
+                                if (previousTimeStamp.getTrainId() == currentTimeStamp.getTrainId() &&
+                                    previousTimeStamp.getSeconds() == currentTimeStamp.getSeconds() &&
+                                    previousTimeStamp.getFractionalSeconds() == previousTimeStamp.getFractionalSeconds()) {
                                     knownAlarms.insert(it->getKey());
                                 }
                             }
                             continue; //alarmCondition still exists nothing to clean
-                        } 
+                        }
                         //add simple entry to allow for cleaning
                         const Hash& desc = it->getValue<Hash>();
                         const std::string& property = it->getKey();
@@ -1388,7 +1387,7 @@ namespace karabo {
                 //now add new alarms
                 for (Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
                     // avoid unnecessary chatter of already sent messages.
-                     if (forceUpdate || knownAlarms.find(it->getKey()) == knownAlarms.end()) {
+                    if (forceUpdate || knownAlarms.find(it->getKey()) == knownAlarms.end()) {
                         const Hash& desc = it->getValue<Hash>();
                         const std::string& conditionString = desc.get<std::string>("type");
                         const AlarmCondition& condition = AlarmCondition::fromString(conditionString);
@@ -1430,7 +1429,7 @@ namespace karabo {
                         existingAlarmsRF.set(boost::replace_all_copy(property, ".", Validator::kAlarmParamPathSeparator), Hash("type", aTypeIt->getKey()));
                     }
                 }
-                
+
                 Hash alarmsToUpdate;
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);

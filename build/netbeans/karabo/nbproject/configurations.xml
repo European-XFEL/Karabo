@@ -153,22 +153,15 @@
     </logicalFolder>
     <logicalFolder name="f4" displayName="log" projectFiles="true">
       <logicalFolder name="f1" displayName="Appender" projectFiles="true">
-        <itemPath>../../../src/karabo/log/AppenderConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/AppenderConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/FileAppenderConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/FileAppenderConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/OstreamAppenderConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/OstreamAppenderConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/RollingFileAppenderConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/RollingFileAppenderConfigurator.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f3" displayName="Category" projectFiles="true">
-        <itemPath>../../../src/karabo/log/CategoryConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/CategoryConfigurator.hh</itemPath>
+        <itemPath>../../../src/karabo/log/NetworkAppender.cc</itemPath>
+        <itemPath>../../../src/karabo/log/NetworkAppender.hh</itemPath>
+        <itemPath>../../../src/karabo/log/OstreamAppender.cc</itemPath>
+        <itemPath>../../../src/karabo/log/OstreamAppender.hh</itemPath>
+        <itemPath>../../../src/karabo/log/RollingFileAppender.cc</itemPath>
+        <itemPath>../../../src/karabo/log/RollingFileAppender.hh</itemPath>
       </logicalFolder>
       <itemPath>../../../src/karabo/log/Logger.cc</itemPath>
       <itemPath>../../../src/karabo/log/Logger.hh</itemPath>
-      <itemPath>../../../src/karabo/log/Tracer.hh</itemPath>
       <itemPath>../../../src/karabo/log.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="f5" displayName="net" projectFiles="true">
@@ -195,12 +188,6 @@
         <itemPath>../../../src/karabo/net/JmsConsumer.hh</itemPath>
         <itemPath>../../../src/karabo/net/JmsProducer.cc</itemPath>
         <itemPath>../../../src/karabo/net/JmsProducer.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f2" displayName="NetworkAppender" projectFiles="true">
-        <itemPath>../../../src/karabo/net/NetworkAppender.cc</itemPath>
-        <itemPath>../../../src/karabo/net/NetworkAppender.hh</itemPath>
-        <itemPath>../../../src/karabo/net/NetworkAppenderConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/net/NetworkAppenderConfigurator.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="Point-2-Point" projectFiles="true">
         <logicalFolder name="f3" displayName="Channel" projectFiles="true">
@@ -1170,61 +1157,39 @@
       </item>
       <item path="../../../src/karabo/log.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/AppenderConfigurator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/AppenderConfigurator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/CategoryConfigurator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/CategoryConfigurator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/FileAppenderConfigurator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/FileAppenderConfigurator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/log/Logger.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/log/Logger.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/OstreamAppenderConfigurator.cc"
+      <item path="../../../src/karabo/log/NetworkAppender.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/OstreamAppenderConfigurator.hh"
+      <item path="../../../src/karabo/log/NetworkAppender.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/RollingFileAppenderConfigurator.cc"
+      <item path="../../../src/karabo/log/OstreamAppender.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/RollingFileAppenderConfigurator.hh"
+      <item path="../../../src/karabo/log/OstreamAppender.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/Tracer.hh" ex="false" tool="3" flavor2="0">
+      <item path="../../../src/karabo/log/RollingFileAppender.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/RollingFileAppender.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/net.hpp" ex="false" tool="3" flavor2="0">
       </item>
@@ -1346,26 +1311,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/JmsProducer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/NetworkAppender.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/NetworkAppender.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/NetworkAppenderConfigurator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/NetworkAppenderConfigurator.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3284,61 +3229,39 @@
       </item>
       <item path="../../../src/karabo/log.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/AppenderConfigurator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/AppenderConfigurator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/CategoryConfigurator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/CategoryConfigurator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/FileAppenderConfigurator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/FileAppenderConfigurator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/log/Logger.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/log/Logger.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/OstreamAppenderConfigurator.cc"
+      <item path="../../../src/karabo/log/NetworkAppender.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/OstreamAppenderConfigurator.hh"
+      <item path="../../../src/karabo/log/NetworkAppender.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/RollingFileAppenderConfigurator.cc"
+      <item path="../../../src/karabo/log/OstreamAppender.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/RollingFileAppenderConfigurator.hh"
+      <item path="../../../src/karabo/log/OstreamAppender.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/Tracer.hh" ex="false" tool="3" flavor2="0">
+      <item path="../../../src/karabo/log/RollingFileAppender.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/RollingFileAppender.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/net.hpp" ex="false" tool="3" flavor2="0">
       </item>
@@ -3472,26 +3395,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/JmsProducer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/NetworkAppender.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/NetworkAppender.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/NetworkAppenderConfigurator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/NetworkAppenderConfigurator.hh"
             ex="false"
             tool="3"
             flavor2="0">
