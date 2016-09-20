@@ -67,14 +67,6 @@
     <logicalFolder name="f8" displayName="webAuth" projectFiles="true">
       <itemPath>../../../src/karathon/PyWebAuthenticator.cc</itemPath>
     </logicalFolder>
-    <logicalFolder name="f11" displayName="xip" projectFiles="true">
-      <itemPath>../../../src/karathon/FromNumpy.cc</itemPath>
-      <itemPath>../../../src/karathon/FromNumpy.hh</itemPath>
-      <itemPath>../../../src/karathon/PyXipCpuImage.cc</itemPath>
-      <itemPath>../../../src/karathon/PyXipImage.cc</itemPath>
-      <itemPath>../../../src/karathon/PyXipStatistics.cc</itemPath>
-      <itemPath>../../../src/karathon/ToNumpy.hh</itemPath>
-    </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
       <itemPath>../../../src/karathon/PyXmsInputOutputChannel.cc</itemPath>
       <itemPath>../../../src/karathon/PyXmsInputOutputChannel.hh</itemPath>
@@ -84,6 +76,9 @@
       <itemPath>../../../src/karathon/SignalWrap.hh</itemPath>
       <itemPath>../../../src/karathon/SlotWrap.cc</itemPath>
       <itemPath>../../../src/karathon/SlotWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/FromNumpy.cc</itemPath>
+      <itemPath>../../../src/karathon/FromNumpy.hh</itemPath>
+      <itemPath>../../../src/karathon/ToNumpy.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -353,27 +348,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyWebAuthenticator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/PyXipCpuImage.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
-          </preprocessorList>
-          <warningLevel>1</warningLevel>
-        </ccTool>
-      </item>
-      <item path="../../../src/karathon/PyXipImage.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/PyXipStatistics.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -803,27 +777,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyWebAuthenticator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/PyXipCpuImage.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <commandLine>-Wno-unused-but-set-variable -Wno-strict-aliasing</commandLine>
-          <preprocessorList>
-            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
-          </preprocessorList>
-        </ccTool>
-      </item>
-      <item path="../../../src/karathon/PyXipImage.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/PyXipStatistics.cc"
             ex="false"
             tool="1"
             flavor2="0">
