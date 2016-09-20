@@ -16,6 +16,7 @@ class KaraboEventSender(Enum):
     RemoveSceneView = "Remove scene view"
     RenameSceneView = "Rename scene view"
     RenameMacro = "Rename macro"
+    ShowDevice = "Show device"
 
 # This is the global singleton for the karabo_mediator function.
 _karabo_mediator = None

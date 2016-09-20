@@ -3,23 +3,19 @@
 # Created on May 31, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
 """This module contains a class which represents the treeview of the navigation
    panel containing the items for the host, device server instance and device
    class/instance.
 """
-
-__all__ = ["NavigationTreeView"]
-
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QMenu, QTreeView)
 
 from karabo_gui.enums import NavigationItemTypes
 import karabo_gui.icons as icons
 from karabo_gui.topology import Manager
 from karabo_gui.treewidgetitems.popupwidget import PopupWidget
-
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QMenu, QTreeView)
+from karabo_gui.mediator import (
+    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts)
 
 
 class NavigationTreeView(QTreeView):
@@ -41,6 +37,18 @@ class NavigationTreeView(QTreeView):
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
 
+        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
+        # not necessary for self due to the fact that the singleton mediator
+        # object and `self` are being destroyed when the GUI exists
+        register_for_broadcasts(self)
+
+    def eventFilter(self, obj, event):
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.ShowDevice:
+                data = event.data
+                self.selectItem(data.get('deviceId'))
+                return True
+        return super(NavigationTreeView, self).eventFilter(obj, event)
 
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
