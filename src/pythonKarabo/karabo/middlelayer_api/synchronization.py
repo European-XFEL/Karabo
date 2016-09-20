@@ -43,8 +43,9 @@ def background(task, *args, timeout=-1):
 def gather(*args, return_exceptions=False):
     """wait until all KaraboFutures given are done
 
-    This function waits until all :class:`KaraboFuture`s are done.
-    The function returns a list of the return value of all functions.
+    This function waits until all :class:`KaraboFuture`s passed as
+    arguments are done. The function returns a list of the return value
+    of all functions.
 
     If one of the futues raises an exception, gather also immediately raises
     that exception, unless *return_exceptions* indicates that all futures
