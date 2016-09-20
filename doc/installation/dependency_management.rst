@@ -79,6 +79,11 @@ only want to know how to build a single extern. Here is the command:
 ``Darwin-x86``. It's the directory where all built externs are staged before
 being copied into a karabo build directory.
 
+Note that dependencies which include executable binaries (programs or shared
+libraries) will need to have their ``RUNPATH`` metadata set so that runtime
+linking works appropriately. This is handled by the ``extern/relocate_deps.sh``
+script, and should be made there when adding/removing/updating dependencies.
+
 Once you are reasonably sure that everything works, open a merge request for
 the branch. After the merge request is approved and merged into the master
 branch, add a tag to the merge commit:
