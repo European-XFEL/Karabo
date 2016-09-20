@@ -138,12 +138,12 @@ class Tests(DeviceTest):
             sleep(0.01)
             raise RuntimeError
 
-        def fail_late():
+        def succeed_late():
             sleep(0.02)
             self.called = 2
         f1 = background(raise_error)
         f2 = background(self.func, "something")
-        f3 = background(fail_late)
+        f3 = background(succeed_late)
         g = gather(f1, f2, f3, return_exceptions=True)
         self.assertEqual(len(g), 3)
         self.assertIsInstance(g[0], RuntimeError)
