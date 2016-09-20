@@ -19,7 +19,7 @@ import inspect
 from karathon import (
     CHOICE_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
     PATH_ELEMENT, STRING_ELEMENT,
-    AccessLevel, AppenderConfigurator, BrokerConnection, CategoryConfigurator,
+    AccessLevel, BrokerConnection,
     Hash, Logger, Priority, Schema, SignalSlotable,
     loadFromFile, saveToFile
 )
@@ -100,76 +100,7 @@ class DeviceServer(object):
             NODE_ELEMENT(expected).key("Logger")
                     .description("Logging settings")
                     .displayedName("Logger")
-                    .appendParametersOfConfigurableClass(Logger,"Logger")
-                    .commit()
-                    ,
-            NODE_ELEMENT(expected).key("Logger.rollingFile")
-                    .description("Log Appender settings for file")
-                    .displayedName("Rolling File Appender")
-                    .appendParametersOfConfigurableClass(AppenderConfigurator,"RollingFile")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout")
-                    .setNewDefaultValue("Pattern")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout.Pattern.format")
-                    .setNewDefaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.filename")
-                    .setNewDefaultValue("device-server.log")
-                    .commit()
-                    ,
-            NODE_ELEMENT(expected).key("Logger.network")
-                    .description("Log Appender settings for Network")
-                    .displayedName("Network Appender")
-                    .appendParametersOfConfigurableClass(AppenderConfigurator,"Network")
-                    .commit()
-                    ,
-            NODE_ELEMENT(expected).key("Logger.ostream")
-                    .description("Log Appender settings for terminal")
-                    .displayedName("Ostream Appender")
-                    .appendParametersOfConfigurableClass(AppenderConfigurator,"Ostream")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout")
-                    .setNewDefaultValue("Pattern")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout.Pattern.format")
-                    .setNewDefaultValue("%p  %c  : %m%n")
-                    .commit()
-                    ,
-            NODE_ELEMENT(expected).key("Logger.karabo")
-                    .description("Logger category for karabo framework")
-                    .displayedName("Karabo framework logger")
-                    .appendParametersOfConfigurableClass(CategoryConfigurator, "Category")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.name")
-                    .setNewAssignmentOptional()
-                    .setNewDefaultValue("karabo")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.additivity")
-                    .setNewDefaultValue(False)
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders")
-                    .setNewDefaultValue("RollingFile")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.layout")
-                    .setNewDefaultValue("Pattern")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.layout.Pattern.format")
-                    .setNewDefaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.filename")
-                    .setNewDefaultValue("device-server.log")
+                    .appendParametersOf(Logger)
                     .commit()
                     ,
         )
@@ -297,42 +228,14 @@ class DeviceServer(object):
     
     def loadLogger(self, input):
         config = input["Logger"]
+        Logger.configure(config)
+        
+        Logger.useOstream()
+        Logger.useFile()
+        Logger.useNetwork()
 
-        # make a copy of additional appenders defined by user
-        appenders = config["appenders"]
-
-        # handle predefined DeviceServer appenders
-        newAppenders = [Hash(), Hash(), Hash()]
-        newAppenders[0].set("Ostream", config["ostream"])
-        newAppenders[1].set("RollingFile", config["rollingFile"])
-        newAppenders[2].set("Network", config["network"])
-            
-        del config["ostream"]
-        del config["rollingFile"]
-        del config["network"]
-
-        for appr in appenders:
-            if appr.has("Ostream"):
-                if appr["Ostream.name"] == "default":
-                    continue
-
-            newAppenders.append(appr)
-                
-        config.set("appenders", newAppenders)
-            
-        # network appender has fixed format (the one expected by the GUI)
-        if "connection" in input:
-            config["appenders[2].Network.connection"] = input["connection"]
-            
-        category = config["karabo"]
-        category["name"] = "karabo"
-        config["categories[0].Category"] = category
-        config["categories[0].Category.appenders[1].Ostream.layout.Pattern.format"] = "%p  %c  : %m%n"
-        del config["karabo"]
-#        print "loadLogger final:\n", config
-        self.loggerConfiguration = Hash()
-        self.loggerConfiguration += config
-        self.logger = Logger.configure(config)
+        Logger.useOstream("karabo", False)
+        Logger.useFile("karabo", False)              
         
     def run(self):
         self.log = Logger.getLogger(self.serverid)

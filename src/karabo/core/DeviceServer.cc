@@ -8,26 +8,26 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <cstdlib>
+#include "DeviceServer.hh"
+#include "Device.hh"
+
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/NodeElement.hh"
+#include "karabo/util/ChoiceElement.hh"
+#include "karabo/util/Version.hh"
+#include "karabo/util/Configurator.hh"
+#include "karabo/log/Logger.hh"
+#include "karabo/io/Input.hh"
+#include "karabo/io/Output.hh"
+#include "karabo/io/FileTools.hh"
+#include "karabo/net/JmsConnection.hh"
+#include "karabo/net/utils.hh"
+
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/thread.hpp>
-
-#include <karabo/net/utils.hh>
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/NodeElement.hh>
-#include <karabo/util/ChoiceElement.hh>
-#include <karabo/util/Version.hh>
-#include <karabo/util/Configurator.hh>
-#include <karabo/io/Input.hh>
-#include <karabo/io/Output.hh>
-#include <karabo/log/Logger.hh>
-
-#include "Device.hh"
-#include "DeviceServer.hh"
-#include "karabo/io/FileTools.hh"
-
+#include <cstdlib>
 
 namespace karabo {
 
@@ -126,81 +126,9 @@ namespace karabo {
             NODE_ELEMENT(expected).key("Logger")
                     .description("Logging settings")
                     .displayedName("Logger")
-                    .appendParametersOfConfigurableClass<Logger>("Logger")
+                    .appendParametersOf<Logger>()
                     .commit();
 
-            NODE_ELEMENT(expected).key("Logger.rollingFile")
-                    .description("Log Appender settings for file")
-                    .displayedName("Rolling File Appender")
-                    .appendParametersOfConfigurableClass<AppenderConfigurator>("RollingFile")
-                    .expertAccess()
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout")
-                    .setNewDefaultValue("Pattern")
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout.Pattern.format")
-                    .setNewDefaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.filename")
-                    .setNewDefaultValue("device-server.log")
-                    .commit();
-
-            NODE_ELEMENT(expected).key("Logger.network")
-                    .description("Log Appender settings for Network")
-                    .displayedName("Network Appender")
-                    .appendParametersOfConfigurableClass<AppenderConfigurator>("Network")
-                    .expertAccess()
-                    .commit();
-
-            NODE_ELEMENT(expected).key("Logger.ostream")
-                    .description("Log Appender settings for terminal")
-                    .displayedName("Ostream Appender")
-                    .appendParametersOfConfigurableClass<AppenderConfigurator>("Ostream")
-                    .expertAccess()
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout")
-                    .setNewDefaultValue("Pattern")
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout.Pattern.format")
-                    .setNewDefaultValue("%p  %c  : %m%n")
-                    .commit();
-
-            NODE_ELEMENT(expected).key("Logger.karabo")
-                    .description("Logger category for karabo framework")
-                    .displayedName("Karabo framework logger")
-                    .appendParametersOfConfigurableClass<CategoryConfigurator>("Category")
-                    .expertAccess()
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.name")
-                    .setNewAssignmentOptional()
-                    .setNewDefaultValue("karabo")
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.additivity")
-                    .setNewDefaultValue(false)
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders")
-                    .setNewDefaultValue("RollingFile")
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.layout")
-                    .setNewDefaultValue("Pattern")
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.layout.Pattern.format")
-                    .setNewDefaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.filename")
-                    .setNewDefaultValue("device-server.log")
-                    .commit();
         }
 
 
@@ -275,46 +203,20 @@ namespace karabo {
 
 
         void DeviceServer::loadLogger(const Hash& input) {
-
-            Hash config = input.get<Hash>("Logger");
-
-
-            // make a copy of additional appenders defined by user
-            vector<Hash> appenders = config.get < vector<Hash> >("appenders");
-
-            // handle predefined DeviceServer appenders
-            vector<Hash> newAppenders(3, Hash());
-            newAppenders[0].set("Ostream", config.get<Hash>("ostream"));
-            newAppenders[1].set("RollingFile", config.get<Hash>("rollingFile"));
-            newAppenders[2].set("Network", config.get<Hash>("network"));
-
-
-
-            config.erase("ostream");
-            config.erase("rollingFile");
-            config.erase("network");
-
-            for (size_t i = 0; i < appenders.size(); ++i) {
-                if (appenders[i].has("Ostream")) {
-                    if (appenders[i].get<string>("Ostream.name") == "default")
-                        continue;
-                }
-                newAppenders.push_back(appenders[i]);
-            }
-
-
-            config.set("appenders", newAppenders);
-
-            // network appender has fixed format (the one expected by GUI)
-            config.set("appenders[2].Network.connection", m_connectionConfiguration);
-
-            Hash category = config.get<Hash>("karabo");
-            category.set("name", "karabo");
-            config.set("categories[0].Category", category);
-            config.set("categories[0].Category.appenders[1].Ostream.layout.Pattern.format", "%p  %c  : %m%n");
-            config.erase("karabo");
-            //cerr << "loadLogger final:" << endl << config << endl;
-            m_logger = Logger::configure(config);
+            
+            const Hash& config = input.get<Hash>("Logger");                       
+            
+            Logger::configure(config);                        
+            
+            // By default all categories use all three appenders
+            Logger::useOstream();
+            Logger::useFile();
+            Logger::useNetwork();
+            
+            // All class logs will have karabo as parent category (outermost namespace)
+            // Those messages should not go via the broker
+            Logger::useOstream("karabo", false); // The false means, that we do not inherit any parent appenders
+            Logger::useFile("karabo", false);                     
         }
 
 
@@ -328,7 +230,7 @@ namespace karabo {
             m_serverIsRunning = true;
 
             // Initialize category
-            m_log = &(karabo::log::Logger::getLogger(m_serverId));
+            m_log = &(karabo::log::Logger::getCategory(m_serverId));
 
             const std::string hostName = net::bareHostName();
             KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << hostName
@@ -698,8 +600,8 @@ namespace karabo {
 
         void DeviceServer::slotLoggerPriority(const std::string& newprio) {
             using namespace krb_log4cpp;
-            string oldprio = Priority::getPriorityName(m_logger->getLogger<Self>().getRootPriority());
-            m_logger->getLogger<Self>().setRootPriority(Priority::getPriorityValue(newprio));
+            string oldprio = Logger::getPriority();
+            Logger::setPriority(newprio);
             KARABO_LOG_INFO << "Logger Priority changed : " << oldprio << " ==> " << newprio;
         }
     }

@@ -12,7 +12,6 @@
 
 #include "Element.hh"
 
-#include <karabo/log/Tracer.hh>
 #include <karabo/util/ListElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/SimpleElement.hh>
