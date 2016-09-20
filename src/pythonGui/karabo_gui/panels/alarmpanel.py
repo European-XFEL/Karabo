@@ -13,7 +13,8 @@ from PyQt4.QtGui import (
 
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.mediator import (
-    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts)
+    broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
+    register_for_broadcasts)
 from karabo.middlelayer import Timestamp
 from karabo_gui.network import Network
 
@@ -222,7 +223,7 @@ class AlarmServiceModel(QAbstractTableModel):
         entry = self.filtered[index.row()]
         #if role == Qt.DecorationRole and index.column() == 2:
         #    return self.icons.get(entry.messageType)
-        if role == Qt.TextColorRole and index.column() == 7:
+        if role == Qt.TextColorRole and index.column() == 7: # XXX: magic number
             return self.textColor.get(entry.type)
         elif role in (Qt.DisplayRole, Qt.ToolTipRole):
             return entry[index.column()]
@@ -244,7 +245,7 @@ class ButtonDelegate(QStyledItemDelegate):
         headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
         if headerData == 'Acknowledge' or headerData == 'Device':
             button = QPushButton(parent)
-            self.pbClick.setText("Show {}".format(headerData))
+            self.pbClick.setText(headerData)
             self.pbClick.setEnabled(True if index.data() else False)
             button.setFocusPolicy(Qt.NoFocus)
             return button
@@ -255,7 +256,7 @@ class ButtonDelegate(QStyledItemDelegate):
         model = index.model()
         headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
         if headerData == 'Acknowledge' or headerData == 'Device':
-            self.pbClick.setText("Show {}".format(headerData))
+            self.pbClick.setText(headerData)
             self.pbClick.setEnabled(True if index.data() else False)
         else:
             super(ButtonDelegate, self).setEditorData(button, index)
@@ -265,7 +266,7 @@ class ButtonDelegate(QStyledItemDelegate):
         headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
         if headerData == 'Acknowledge' or headerData == 'Device':
             self.pbClick.setGeometry(option.rect)
-            self.pbClick.setText("Show {}".format(headerData))
+            self.pbClick.setText(headerData)
             self.pbClick.setEnabled(True if index.data() else False)
             if option.state == QStyle.State_Selected:
                 painter.fillRect(option.rect, option.palette.highlight())
@@ -275,22 +276,33 @@ class ButtonDelegate(QStyledItemDelegate):
             super(ButtonDelegate, self).paint(painter, option, index)
 
     def updateEditorGeometry(self, button, option, index):
+        model = index.model()
+        headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
         button.setGeometry(option.rect)
-
-    def setModelData(self, button, model, index):
-        print("setModelData", button, model, index)
+        button.setText(headerData)
+        button.setEnabled(True if index.data() else False)
 
     @pyqtSlot(object)
     def cellClicked(self, index):
         model = index.model()
         headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
-        print("cellClicked", headerData, index.data())
         if headerData == 'Acknowledge' or headerData == 'Device':
             if self.cellEditMode:
                 self.parent().closePersistentEditor(self.currentCellIndex)
             self.parent().openPersistentEditor(index)
             self.cellEditMode = True
             self.currentCellIndex = index
+            if headerData == 'Acknowledge':
+                # Send signal to acknowledge alarm
+                id = model.index(index.row(), 0).data()  # XXX: magix number
+                Network().onAcknowledgeAlarm('Karabo_AlarmService_0', id)
+            else:
+                # Send signal to show device
+                deviceId = model.index(index.row(), 5).data()  # XXX: magix number
+                data = {'deviceId': deviceId}
+                # Create KaraboBroadcastEvent
+                broadcast_event(KaraboBroadcastEvent(
+                    KaraboEventSender.ShowDevice, data))
         else:
             if self.cellEditMode:
                 self.cellEditMode = False
