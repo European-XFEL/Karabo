@@ -1,13 +1,16 @@
-__author__ = 'steffen.hauf@xfel.eu'
 from contextlib import ContextDecorator
+import os
+
 from eulexistdb import db
+
 from .util import assure_running
-from .db_settings import db_settings
+from .dbsettings import DbSettings
+
 
 class ProjectDatabase(ContextDecorator):
 
-    def __enter__(self, user, password, server = None, port = None):
-        #get our environment straightened out
+    def __enter__(self, user, password, server=None, port=None):
+        # get our environment straightened out
         if server is None:
             server = os.getenv('KARABO_PROJECT_DB', None)
 
@@ -20,17 +23,13 @@ class ProjectDatabase(ContextDecorator):
             port = os.getenv('KARABO_PROJECT_DB_PORT', 8080)
             print("Connecting to default port 8080")
 
-        #assure their is a database running where we assume one would be
+        # assure their is a database running where we assume one would be
         assure_running(server, port)
 
-        #now create our actual handle
-        settings = db_settings(user, password, server, port)
+        # now create our actual handle
+        settings = DbSettings(user, password, server, port)
         self.dbhandle = db.ExistDB(settings.server_url)
 
-
     def __exit__(self, exc_type, exc_val, exc_tb):
-        #nothing to do as dbhandle does not keep the connection open
+        # nothing to do as dbhandle does not keep the connection open
         pass
-
-
-
