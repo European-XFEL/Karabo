@@ -693,12 +693,3 @@ def updateDevice(device):
     way to receive changes on a device while the device is not connected."""
     yield from device
     return device
-
-
-@synchronize
-def sleep(delay, result=None):
-    """do nothing for *delay* seconds
-
-    This method should be preferred over :func:`time.sleep`, as it is
-    interruptable."""
-    return asyncio.sleep(delay, result)
