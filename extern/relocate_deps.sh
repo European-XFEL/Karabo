@@ -65,12 +65,11 @@ rewrite_python_shebangs() {
         [ -f $script_path ] && sed -i "$sed_program" $script_path
         count=$(($count + 1))
     done
-
 }
 
 rewrite_rpaths() {
     # These are the specific Python packages which need to be relocated
-    local target_packages=(Crypto Cython guiqwt h5py matplotlib numpy PIL
+    local target_packages=(Crypto Cython guiqwt h5py lxml matplotlib numpy PIL
         PyQt4 scipy tornado traits zmq
     )
 
@@ -85,7 +84,7 @@ rewrite_rpaths() {
     done
 
     # These are specific libs which need to be relocated
-    local target_libs=(libtiffxx.so libhdf5_hl.so libfreetype.so)
+    local target_libs=(libtiffxx.so libhdf5_hl.so libfreetype.so libxslt.so libexslt.so libxml2mod.so)
 
     # Relocate the libraries
     count=0
