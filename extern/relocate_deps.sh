@@ -70,7 +70,7 @@ rewrite_python_shebangs() {
 rewrite_rpaths() {
     # These are the specific Python packages which need to be relocated
     local target_packages=(Crypto Cython guiqwt h5py lxml matplotlib numpy PIL
-        PyQt4 scipy tornado traits zmq
+        psutil PyQt4 scipy tornado traits zmq
     )
 
     # Relocate the Python packages
