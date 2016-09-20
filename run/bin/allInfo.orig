@@ -123,9 +123,17 @@ logLevel=INFO
 
 ALLINFO[20]="$KARABO_SERVERS/pythonDeviceServer/startPythonServerApi1:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
 
+#############################
+# Device Server Middlelayer #
+#############################
+
+# logLevel configuration currently not supported for middlelayer
+serverId=Karabo_MiddlelayerServer
+ALLINFO[30]="$KARABO_SERVERS/middlelayerServer/startMiddlelayerServer:DeviceServer.serverId=$serverId:0:1000:yes"
+
 
 ###################
 # User Interfaces #
 ###################
 
-ALLINFO[30]="./startGui::0:1000:no"
+ALLINFO[40]="./startGui::0:1000:no"
