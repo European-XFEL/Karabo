@@ -100,7 +100,6 @@ build: .build-post
 	@if test ! -d $(KARABO)/include/karabo/net;     then $(MKDIR) -p  $(KARABO)/include/karabo/net; fi
 	@if test ! -d $(KARABO)/include/karabo/xms;     then $(MKDIR) -p  $(KARABO)/include/karabo/xms; fi
 	@if test ! -d $(KARABO)/include/karabo/core;    then $(MKDIR) -p  $(KARABO)/include/karabo/core; fi
-	@if test ! -d $(KARABO)/include/karabo/xip;     then $(MKDIR) -p  $(KARABO)/include/karabo/xip; fi
 	@if test ! -d $(KARABO)/include/karabo/devices;     then $(MKDIR) -p  $(KARABO)/include/karabo/devices; fi
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.h* $(KARABO)/include/karabo/util
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/log/*.h* $(KARABO)/include/karabo/log
@@ -111,7 +110,6 @@ build: .build-post
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.h* $(KARABO)/include/karabo/net
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.h* $(KARABO)/include/karabo/xms
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.h* $(KARABO)/include/karabo/core
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h* $(KARABO)/include/karabo/xip
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/devices/*.h* $(KARABO)/include/karabo/devices
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/*.hpp $(KARABO)/include/karabo
 	@echo "### Done building Karabo. ###"

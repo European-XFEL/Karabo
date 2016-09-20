@@ -11,7 +11,7 @@ from .bound_api.no_fsm import NoFsm
 from .bound_api.ok_error_fsm import OkErrorFsm
 from .bound_api.start_stop_fsm import StartStopFsm
 from .bound_api.start_stop_fsm_periodic import StartStopFsmPeriodic
-from .bound_api.device import PythonDevice, isCpuImage, launchPythonDevice
+from .bound_api.device import PythonDevice, launchPythonDevice
 from .bound_api.device_server import DeviceServer, Launcher
 from .bound_api.motor_interface import MotorInterface
 from .bound_api.plugin_loader import PluginLoader
@@ -46,9 +46,7 @@ from karathon import (
     BrokerConnection, CANDELA, CENTI, CHOICE_ELEMENT, CHOICE_OF_NODES, CMYK,
     COMMAND, COULOMB, COUNT, Category, CategoryConfigurator, Channel,
     ClassInfo, Connection,
-    CpuImageCHAR, CpuImageDOUBLE, CpuImageFLOAT, CpuImageINT16, CpuImageINT32,
-    CpuImageINT64, CpuImageUINT16, CpuImageUINT32, CpuImageUINT64,
-    CpuImageUINT8, DAY, DECA, DECI, DEGREE, DEGREE_CELSIUS, DOUBLE_ELEMENT,
+    DAY, DECA, DECI, DEGREE, DEGREE_CELSIUS, DOUBLE_ELEMENT,
     DateTimeString, DetectorGeometry, DeviceClient, DeviceClientBase,
     Dims, ELECTRONVOLT, EVERY_100MS, EVERY_10MIN, EVERY_10S, EVERY_1MIN,
     EVERY_1S, EVERY_5S, EVERY_EVENT, EXA, EXPERT,
@@ -72,7 +70,7 @@ from karathon import (
     PriorityLevel, RADIAN, READ, RGB, RGBA,
     Requestor, RollingWindowStatistics, SECOND, SIEMENS, SIEVERT,
     SLOT_ELEMENT, STERADIAN, STRING_ELEMENT, Schema, SignalSlotable,
-    SignalSlotableIntern, Slot, SlotElementBase, Statistics, STATE_ELEMENT,
+    SignalSlotableIntern, Slot, SlotElementBase, STATE_ELEMENT,
     TABLE_ELEMENT, TERA, TESLA, TIFF, TIME_UNITS, TextSerializerHash,
     TextSerializerSchema, TimeDuration, Timestamp, Trainstamp, Types,
     TypesClass, UINT32_ELEMENT, UINT64_ELEMENT, UNDEFINED, USER, Unit,

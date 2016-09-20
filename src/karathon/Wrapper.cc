@@ -11,7 +11,6 @@
 #include <boost/filesystem.hpp>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
-#include <karabo/xip/CpuImage.hh>
 #include "PyXmsInputOutputChannel.hh"
 
 using namespace std;
