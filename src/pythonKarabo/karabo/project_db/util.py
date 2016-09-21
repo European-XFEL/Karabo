@@ -7,7 +7,7 @@ from lxml import etree
 from eulexistdb import db
 from eulexistdb.exceptions import ExistDBException
 
-from .dbsettings import TestDbSettings, LocalDbSettings
+from dbsettings import TestDbSettings, LocalDbSettings
 
 class ProjectDBError(Exception):
     pass
@@ -60,11 +60,26 @@ def assure_running(project_db_server=None, project_db_port=None):
             script_path = os.path.join(karabo_install, 'karaboRun', 'bin',
                                        'startConfigDB')
             check_call([script_path])
-            sleep(30)  # this might take a while
+            #wait until the database is acutally up
+            maxTimeout = 60
+            waitBetween = 5
+            count = 0
+            while True:
+                if count > maxTimeout//waitBetween:
+                    raise TimeoutError("Starting project database timed out!")
+                try:
+                    tSettings = TestDbSettings(project_db_server,
+                                               port=project_db_port)
+                    dbhandle = db.ExistDB(tSettings.server_url)
+                    if dbhandle.hasCollection('/system'):
+                        break
+                except Exception:
+                    sleep(waitBetween)
+                count += 1
     else:
         try:
             tSettings = TestDbSettings(project_db_server, port=project_db_port)
-            dbhandle = db.ExistDB(tSettings.server_url)
+            dbhandle = db.ExistDB(tSettings.server_uri)
             if not dbhandle.hasCollection(tSettings.root_collection):
                 raise ProjectDBError("An eXistDB instance with karabo "
                                      "collections was found running on {}."
@@ -141,7 +156,7 @@ def init_local_db():
         for root in [settings.root_collection,
                      settings.root_collection_test]:
 
-                path = '/db/system/config/db{}'.format(root)
+                path = '/system/config/db{}'.format(root)
 
                 if not dbhandle.hasCollection(path):
                     dbhandle.createCollection(path)
