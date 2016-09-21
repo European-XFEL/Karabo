@@ -1,5 +1,6 @@
 from asyncio import CancelledError, coroutine
 from unittest import main
+import time
 
 from .eventloop import async_tst, DeviceTest, sync_tst
 from karabo.middlelayer import background, gather, sleep
@@ -150,6 +151,13 @@ class Tests(DeviceTest):
         self.assertEqual(g[1], "func called")
         self.assertIsNone(g[2])
         self.assertEqual(self.called, 2)
+
+    @sync_tst
+    def test_sleep(self):
+        t = time.time()
+        sleep(6)
+        self.assertGreater(time.time() - t, 6)
+    test_sleep.slow = 1
 
 
 if __name__ == "__main__":
