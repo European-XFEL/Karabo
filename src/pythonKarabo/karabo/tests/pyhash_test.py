@@ -4,8 +4,9 @@ from zlib import adler32
 import numpy
 from numpy.testing import assert_equal
 
-from karabo.bound import BinarySerializerHash, TextSerializerHash, VectorHash
-from karabo.middlelayer import Hash, NodeType, Schema, HashList
+from karabo.bound import (BinarySerializerHash, TextSerializerHash,
+                          Hash as BoundHash, VectorHash)
+from karabo.middlelayer import Hash, NodeType, Schema, HashList, Int64
 from karabo.middlelayer_api.hash import _Byte
 
 
@@ -242,6 +243,19 @@ class Hash_TestCase(unittest.TestCase):
         self.check_hash_simple(h)
         ret = Hash.decode(ser.save(h), "XML")
         self.check_hash(ret)
+
+    def test_ndarray(self):
+        bh = BoundHash()
+        arr = numpy.arange(12).reshape((3, 4))
+        bh.set("vector", arr)
+        ser = BinarySerializerHash.create("Bin")
+        h = Hash.decode(ser.save(bh), "Bin")
+        self.assertEqual(h["vector"]["__classId"], "NDArray")
+        assert_equal(h["vector"]["shape"], [3, 4])
+        self.assertEqual(h["vector"]["type"], Int64.number)
+        self.assertEqual(len(h["vector"]["data"]), arr.nbytes)
+        bh = ser.load(h.encode("Bin"))
+        assert_equal(bh["vector"], arr)
 
 
 if __name__ == '__main__':

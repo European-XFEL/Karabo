@@ -773,6 +773,41 @@ class VectorChar(Vector):
         return basetypes.VectorCharValue(data, descriptor=self)
 
 
+class ByteArray(Vector):
+    """A ByteArray is simply some binary data in memory. The corresponding
+    Python data type is :class:`python:bytearray`."""
+    basetype = Char
+    number = 37
+
+    @staticmethod
+    def read(file):
+        size, = file.readFormat('I')
+        file.pos += size
+        return bytearray(file.data[file.pos - size:file.pos])
+
+    @classmethod
+    def toString(cls, data):
+        return base64.b64encode(data).decode("ascii")
+
+    @classmethod
+    def fromstring(self, s):
+        return base64.b64decode(s)
+
+    @classmethod
+    def write(cls, file, data):
+        file.writeFormat('I', len(data))
+        file.file.write(data)
+
+    def cast(self, other):
+        if isinstance(other, bytes):
+            return other
+        else:
+            return bytearray(other)
+
+    def toKaraboValue(self, data, strict=True):
+        return basetypes.VectorCharValue(data, descriptor=self)
+
+
 class Int8(Integer, Type):
     number = 4
     format = "b"
@@ -1212,6 +1247,8 @@ def _gettype(data):
             return ComplexDouble
         elif isinstance(data, bytes):
             return VectorChar
+        elif isinstance(data, bytearray):
+            return ByteArray
         elif isinstance(data, str):
             return String
         elif isinstance(data, list):
