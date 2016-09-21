@@ -193,12 +193,12 @@ namespace karabo {
              * @param updateRows: the rows which should be updated. This is a Hash of Hashes, were
              * the unique row indices, as managed by the alarm service are keys, and the values are
              * Hashes of the form updateType->entry
-             * 
+             *
              * updateType is a string of any of the following: init, update, delete,
              *  acknowledgeable, deviceKilled, refuseAcknowledgement
-             * 
+             *
              * entry is a Hash with the following entries:
-             * 
+             *
              *  timeOfFirstOccurrence -> string: timestamp of first occurrence of alarm
              *  trainOfFirstOccurrence -> unsigned long long: train id of first occurrence of alarm
              *  timeOfOccurrence -> string: timestamp of most resent occurrence of alarm
@@ -208,9 +208,9 @@ namespace karabo {
              *  deviceId -> string: deviceId of device that raised the alarm
              *  property -> string: property the alarm refers to
              *  id -> the unique row id
-             * 
+             *
              * it send the following Hash to the client (lossless)
-             * 
+             *
              * Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
              */
             void slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type, const karabo::util::Hash& updateRows);
@@ -236,19 +236,19 @@ namespace karabo {
             void onRequestAlarms(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             /**
-             * Callback executed upon reply from an alarm service to "onRequestAlarms". 
+             * Callback executed upon reply from an alarm service to "onRequestAlarms".
              * @param channel: the client channel the request came from, bound by "onRequestAlarms"
              * @param reply: reply from the alarm service, expected to contain fields
-             * 
+             *
              * instanceId -> string: instance id of the replying alarm service
              * alarms -> Nested Hash of form given in "slotAlarmSignalsUpdate"
-             * 
+             *
              * It sends out a Hash of form:
              * Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows", reply.get<Hash>("alarms"));
              */
             void onRequestedAlarmsReply(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply);
-            
-            
+
+
             /**
              * Executed when the gui requests an update to schema attributes via the updateAttributes signal.
              * @param channel: gui channel that requested the update
@@ -256,17 +256,26 @@ namespace karabo {
              * each entry in updates is of the form Hash("path", str, "attribute", str, "value", valueType)
              */
             void onUpdateAttributes(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
-            
+
             /**
              * Callback for onUpdateAttributes
              * @param channel: gui channel that requested the update
              * @param reply: reply from the device that performed the attribute update. Is of form
              * Hash("success" bool, "instanceId", str, "updatedSchema", Schema, "requestedUpdate", vector<Hash>)
              * where success indicates a successful update, instanceId the device that performed the update
-             * updatedSchema the new valid schema, regardless of success or not, and requestedUpdates the 
+             * updatedSchema the new valid schema, regardless of success or not, and requestedUpdates the
              * original update request, as received through onUpdateAttributes
              */
             void onRequestedAttributeUpdate(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply);
+
+            /**
+             *  Gets called when the GUI requests a current list of the existing alarm services
+             * @param channel: gui channel that requested the update
+             * @param info: Hash("type", "requestAlarmServices")
+             * Sends a reply Hash("type", "knownAlarmServices", "instanceIds", std::vector<string>) back to channel,
+             * where instanceIds contains a list of the currently available alarm service instances.
+             */
+            void onRequestAlarmServices(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
         };
     }
