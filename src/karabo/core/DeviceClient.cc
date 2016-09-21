@@ -1517,7 +1517,7 @@ if (nodeData) {\
         }
         
         karabo::util::Hash DeviceClient::getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName){
-            Schema schema = cacheAndGetDeviceSchema(deviceId);
+            const Schema& schema = cacheAndGetDeviceSchema(deviceId);
             Validator::ValidationRules rules;
             rules.injectTimestamps = false;
             rules.allowAdditionalKeys = false;
