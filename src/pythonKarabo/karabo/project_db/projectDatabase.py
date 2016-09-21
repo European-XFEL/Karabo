@@ -21,7 +21,6 @@ class ProjectDatabase(ContextDecorator):
 
         if port is None:
             port = os.getenv('KARABO_PROJECT_DB_PORT', 8080)
-            print("Connecting to default port 8080")
 
         # assure their is a database running where we assume one would be
         assure_running(server, port)

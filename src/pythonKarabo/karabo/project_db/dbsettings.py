@@ -25,7 +25,7 @@ class DbSettings:
 
 class TestDbSettings(DbSettings):
     def __init__(self, server, port=8080):
-        super(TestDbSettings).__init__('test', 'karabo')
+        super(TestDbSettings).__init__('test', 'karabo', server, port)
 
 
 def make_server_uri(server, port):
