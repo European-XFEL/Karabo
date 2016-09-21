@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import namedtuple
+from enum import Enum
 
 from PyQt4.QtCore import (
     pyqtSlot, QAbstractTableModel, QDateTime, QModelIndex, Qt)
@@ -101,36 +102,66 @@ class AlarmPanel(Dockable, QWidget):
         self.twAlarm.model().updateAlarms(instanceId, rows)
 
 
+class AlarmColumnData(Enum):
+    """ Describes the indices of the tuple of the ``AlarmColumn`` Enum."""
+    index = 0
+    entry = 1
+    entry_display = 2
+
+
+class AlarmColumn(Enum):
+    """ Describes possible alarm entries in a tuple.
+        First entry describes the column of the entry in the table.
+        Second entry describes the entry name in the hash.
+        Thirtd Entry describes the display name of the entry in the table.
+    """
+    id = (0, 'id', 'ID')
+    timeOfFirstOccurrence = (1, 'timeOfFirstOccurrence', 'Time of First Occurence')
+    timeOfOccurrence = (2, 'timeOfOccurrence', 'Time of Occurence')
+    trainOfFirstOccurrence = (3, 'trainOfFirstOccurrence', 'Train of First Occurence')
+    trainOfOccurrence = (4, 'trainOfOccurrence', 'Train of Occurence')
+    deviceId = (5, 'deviceId', 'Device ID')
+    property = (6, 'property', 'Property')
+    typ = (7, 'type', 'Type')
+    description = (8, 'description', 'Description')
+    needsAcknowledging = (9, 'needsAcknowledging', 'Acknowledge')
+    acknowledgeable = (10, 'acknowledgeable', 'Acknowledge')
+
+
+AlarmEntry = namedtuple(
+    'AlarmEntry', [AlarmColumn.id.value[AlarmColumnData.entry.value],
+                   AlarmColumn.timeOfFirstOccurrence.value[AlarmColumnData.entry.value],
+                   AlarmColumn.timeOfOccurrence.value[AlarmColumnData.entry.value],
+                   AlarmColumn.trainOfFirstOccurrence.value[AlarmColumnData.entry.value],
+                   AlarmColumn.trainOfOccurrence.value[AlarmColumnData.entry.value],
+                   AlarmColumn.deviceId.value[AlarmColumnData.entry.value],
+                   AlarmColumn.property.value[AlarmColumnData.entry.value],
+                   AlarmColumn.typ.value[AlarmColumnData.entry.value],
+                   AlarmColumn.description.value[AlarmColumnData.entry.value],
+                   AlarmColumn.needsAcknowledging.value[AlarmColumnData.entry.value],
+                   AlarmColumn.acknowledgeable.value[AlarmColumnData.entry.value],
+                   ])
+
+
 updateType = ['init', 'add', 'remove', 'update', 'acknowledgeable',
               'deviceKilled', 'refuseAcknowledgement']
 
 
-AlarmEntry = namedtuple('AlarmEntry', ['id',
-                                       'timeOfFirstOccurrence',
-                                       'timeOfOccurrence',
-                                       'trainOfFirstOccurrence',
-                                       'trainOfOccurrence',
-                                       'deviceId',
-                                       'property',
-                                       'type',
-                                       'description',
-                                       'acknowledgeable',
-                                       'needsAcknowledging' # Show Device
-                                       ])
-
-
 class AlarmServiceModel(QAbstractTableModel):
-    headers = ['ID',
-               'Time of First Occurence',
-               'Time of Occurence',
-               'Train of First Occurence',
-               'Train of Occurence',
-               'Device ID',
-               'Property',
-               'Type',
-               'Description',
-               'Acknowledge', # needsAcknowledging/acknowledgeable
-               'Device']
+    """ A class which describes the relevant data (model) of a alarm service
+        device to show in a table view. """
+    headers = [AlarmColumn.id.value[AlarmColumnData.entry_display.value],
+               AlarmColumn.timeOfFirstOccurrence.value[AlarmColumnData.entry_display.value],
+               AlarmColumn.timeOfOccurrence.value[AlarmColumnData.entry_display.value],
+               AlarmColumn.trainOfFirstOccurrence.value[AlarmColumnData.entry_display.value],
+               AlarmColumn.trainOfOccurrence.value[AlarmColumnData.entry_display.value],
+               AlarmColumn.deviceId.value[AlarmColumnData.entry_display.value],
+               AlarmColumn.property.value[AlarmColumnData.entry_display.value],
+               AlarmColumn.typ.value[AlarmColumnData.entry_display.value],
+               AlarmColumn.description.value[AlarmColumnData.entry_display.value],
+               AlarmColumn.needsAcknowledging.value[AlarmColumnData.entry_display.value],
+               AlarmColumn.deviceId.value[AlarmColumnData.entry_display.value]
+               ]
 
     textColor = {'warnLow': QColor(255, 102, 0),
                  'warnHigh': QColor(255, 102, 0),
@@ -152,22 +183,35 @@ class AlarmServiceModel(QAbstractTableModel):
             # Get data of hash
             for updateType, alarmHash, _ in h.iterall():
                 updateTypes.append(updateType)
-                timeOfFirstOccurrence = Timestamp(alarmHash.get('timeOfFirstOccurrence')).toTimestamp()
-                timeOfOccurrence = Timestamp(alarmHash.get('timeOfOccurrence')).toTimestamp()
-                trainOfFirstOccurrence = alarmHash.get('trainOfFirstOccurrence')
-                trainOfOccurrence = alarmHash.get('trainOfOccurrence')
+                id_entry = AlarmColumn.id.value[AlarmColumnData.entry.value]
+                time_first = AlarmColumn.timeOfFirstOccurrence.value[AlarmColumnData.entry.value]
+                time = AlarmColumn.timeOfOccurrence.value[AlarmColumnData.entry.value]
+                train_first = AlarmColumn.trainOfFirstOccurrence.value[AlarmColumnData.entry.value]
+                train = AlarmColumn.trainOfOccurrence.value[AlarmColumnData.entry.value]
+                deviceId = AlarmColumn.deviceId.value[AlarmColumnData.entry.value]
+                prop = AlarmColumn.property.value[AlarmColumnData.entry.value]
+                typ = AlarmColumn.typ.value[AlarmColumnData.entry.value]
+                description = AlarmColumn.description.value[AlarmColumnData.entry.value]
+                needsAck = AlarmColumn.needsAcknowledging.value[AlarmColumnData.entry.value]
+                ack = AlarmColumn.acknowledgeable.value[AlarmColumnData.entry.value]
+
+                timeOfFirstOccurrence = Timestamp(alarmHash.get(time_first)).toTimestamp()
+                timeOfOccurrence = Timestamp(alarmHash.get(time)).toTimestamp()
+                trainOfFirstOccurrence = alarmHash.get(train_first)
+                trainOfOccurrence = alarmHash.get(train)
                 alarmEntry = AlarmEntry(
-                    id=str(alarmHash.get('id')),
+                    id=str(alarmHash.get(id_entry)),
                     timeOfFirstOccurrence=QDateTime.fromMSecsSinceEpoch(timeOfFirstOccurrence * 1000),
                     timeOfOccurrence=QDateTime.fromMSecsSinceEpoch(timeOfOccurrence * 1000),
                     trainOfFirstOccurrence=str(trainOfFirstOccurrence),
                     trainOfOccurrence=str(trainOfOccurrence),
-                    needsAcknowledging=alarmHash.get('needsAcknowledging'),
-                    acknowledgeable=alarmHash.get('acknowledgeable'),
-                    description=alarmHash.get('description'),
-                    deviceId=alarmHash.get('deviceId'),
-                    property=alarmHash.get('property'),
-                    type=alarmHash.get('type'))
+                    needsAcknowledging=alarmHash.get(needsAck),
+                    acknowledgeable=alarmHash.get(ack),
+                    description=alarmHash.get(description),
+                    deviceId=alarmHash.get(deviceId),
+                    property=alarmHash.get(prop),
+                    type=alarmHash.get(typ),
+                    )
                 alarmEntries.append(alarmEntry)
         return updateTypes, alarmEntries
 
@@ -221,16 +265,28 @@ class AlarmServiceModel(QAbstractTableModel):
         if not index.isValid():
             return None
         entry = self.filtered[index.row()]
+        typ_index = AlarmColumn.typ.value[AlarmColumnData.index.value]
         #if role == Qt.DecorationRole and index.column() == 2:
         #    return self.icons.get(entry.messageType)
-        if role == Qt.TextColorRole and index.column() == 7: # XXX: magic number
+        if role == Qt.TextColorRole and index.column() == typ_index:
             return self.textColor.get(entry.type)
         elif role in (Qt.DisplayRole, Qt.ToolTipRole):
-            return entry[index.column()]
+            column = index.column()
+            needs_ack_index = AlarmColumn.needsAcknowledging.value[AlarmColumnData.index.value]
+            ack_index = AlarmColumn.acknowledgeable.value[AlarmColumnData.index.value]
+            if column == needs_ack_index:
+                return (entry[column], entry[column+1])
+            elif column == ack_index:
+                deviceId_index = AlarmColumn.deviceId.value[AlarmColumnData.index.value]
+                return entry[deviceId_index]
+            else:
+                return entry[index.column()]
         return None
 
 
 class ButtonDelegate(QStyledItemDelegate):
+    SHOW_DEVICE = "Show Device"
+
     def __init__(self, parent=None):
         super(ButtonDelegate, self).__init__(parent)
         # Fake button used for later rendering
@@ -240,33 +296,50 @@ class ButtonDelegate(QStyledItemDelegate):
         self.cellEditMode = False
         self.currentCellIndex = None  # QPersistentModelIndex
 
+    def _isRelevantColumn(self, index):
+        """ This methods checks whether the column of the given ``index`` is
+            belongs to either the acknowledging or device column.
+
+            Returns tuple:
+            [0] - states whether this is a relevant column
+            [1] - the text which needs to be shown on the button
+            Otherwise ``False`` is returned.
+        """
+        column = index.column()
+        ack_index = AlarmColumn.needsAcknowledging.value[AlarmColumnData.index.value]
+        device_index = AlarmColumn.acknowledgeable.value[AlarmColumnData.index.value]
+        if column == ack_index or column == device_index:
+            if column == ack_index:
+                text = AlarmColumn.acknowledgeable.value[AlarmColumnData.entry_display.value]
+            else:
+                text = self.SHOW_DEVICE
+            return (True, text)
+        return (False, '')
+
     def createEditor(self, parent, option, index):
-        model = index.model()
-        headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
-        if headerData == 'Acknowledge' or headerData == 'Device':
+        isRelevant, text = self._isRelevantColumn(index)
+        if isRelevant:
             button = QPushButton(parent)
-            self.pbClick.setText(headerData)
+            self.pbClick.setText(text)
             self.pbClick.setEnabled(True if index.data() else False)
-            button.setFocusPolicy(Qt.NoFocus)
+            #button.setFocusPolicy(Qt.NoFocus)
             return button
         else:
             return super(ButtonDelegate, self).createEditor(parent, option, index)
 
     def setEditorData(self, button, index):
-        model = index.model()
-        headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
-        if headerData == 'Acknowledge' or headerData == 'Device':
-            self.pbClick.setText(headerData)
+        isRelevant, text = self._isRelevantColumn(index)
+        if isRelevant:
+            self.pbClick.setText(text)
             self.pbClick.setEnabled(True if index.data() else False)
         else:
             super(ButtonDelegate, self).setEditorData(button, index)
 
     def paint(self, painter, option, index):
-        model = index.model()
-        headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
-        if headerData == 'Acknowledge' or headerData == 'Device':
+        isRelevant, text = self._isRelevantColumn(index)
+        if isRelevant:
             self.pbClick.setGeometry(option.rect)
-            self.pbClick.setText(headerData)
+            self.pbClick.setText(text)
             self.pbClick.setEnabled(True if index.data() else False)
             if option.state == QStyle.State_Selected:
                 painter.fillRect(option.rect, option.palette.highlight())
@@ -276,33 +349,35 @@ class ButtonDelegate(QStyledItemDelegate):
             super(ButtonDelegate, self).paint(painter, option, index)
 
     def updateEditorGeometry(self, button, option, index):
-        model = index.model()
-        headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
-        button.setGeometry(option.rect)
-        button.setText(headerData)
-        button.setEnabled(True if index.data() else False)
+        isRelevant, text = self._isRelevantColumn(index)
+        if isRelevant:
+            button.setGeometry(option.rect)
+            button.setText(text)
+            button.setEnabled(True if index.data() else False)
 
     @pyqtSlot(object)
     def cellClicked(self, index):
-        model = index.model()
-        headerData = model.headerData(index.column(), Qt.Horizontal, Qt.DisplayRole)
-        if headerData == 'Acknowledge' or headerData == 'Device':
+        isRelevant, text = self._isRelevantColumn(index)
+        if isRelevant:
             if self.cellEditMode:
                 self.parent().closePersistentEditor(self.currentCellIndex)
             self.parent().openPersistentEditor(index)
             self.cellEditMode = True
             self.currentCellIndex = index
-            if headerData == 'Acknowledge':
-                # Send signal to acknowledge alarm
-                id = model.index(index.row(), 0).data()  # XXX: magix number
-                Network().onAcknowledgeAlarm('Karabo_AlarmService_0', id)
-            else:
+            model = index.model()
+            if text == self.SHOW_DEVICE:
                 # Send signal to show device
-                deviceId = model.index(index.row(), 5).data()  # XXX: magix number
+                deviceId_index = AlarmColumn.deviceId.value[AlarmColumnData.index.value]
+                deviceId = model.index(index.row(), deviceId_index).data()
                 data = {'deviceId': deviceId}
                 # Create KaraboBroadcastEvent
                 broadcast_event(KaraboBroadcastEvent(
                     KaraboEventSender.ShowDevice, data))
+            else:
+                # Send signal to acknowledge alarm
+                id_index = AlarmColumn.id.value[AlarmColumnData.index.value]
+                id = model.index(index.row(), id_index).data()
+                Network().onAcknowledgeAlarm('Karabo_AlarmService_0', id)
         else:
             if self.cellEditMode:
                 self.cellEditMode = False
