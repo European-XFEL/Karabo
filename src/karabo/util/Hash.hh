@@ -62,6 +62,8 @@ namespace karabo {
 
         class KARABO_DECLSPEC Hash {
 
+#define KARABO_HASH_CLASS_ID "__classId"
+
         public:
 
             KARABO_CLASSINFO(Hash, "Hash", "2.0")
@@ -197,22 +199,22 @@ namespace karabo {
              * Copy constructor
              */
             Hash(const Hash& other) = default;
-            
+
             /**
              * Assignment of "lvalue"
              */
             Hash& operator=(const Hash& other) = default;
-            
+
             /**
              * Move constructor
              */
             Hash(Hash&& other) = default;
-            
+
             /**
              * Assignment of "rvalue"
              */
             Hash& operator=(Hash&& other) = default;
-            
+
             /**
              * Merge the current hash with another one
              * @param other Hash object

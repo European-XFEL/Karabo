@@ -404,7 +404,7 @@
         <itemPath>../../../src/karabo/tests/integration/integrationRunner_2.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f10"
-                     displayName="Integrations_tests_3"
+                     displayName="Integration_tests_3"
                      projectFiles="true"
                      kind="TEST">
         <itemPath>../../../src/karabo/tests/integration/AlarmTesterDevice_3.cc</itemPath>
@@ -414,6 +414,16 @@
         <itemPath>../../../src/karabo/tests/integration/TcpAdapter_3.cc</itemPath>
         <itemPath>../../../src/karabo/tests/integration/TcpAdapter_3.hh</itemPath>
         <itemPath>../../../src/karabo/tests/integration/integrationRunner_3.cc</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f7"
+                     displayName="integration_tests_4"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/karabo/tests/integration/P2PSenderDevice.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/P2PSenderDevice.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/PipelinedProcessing_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/PipelinedProcessing_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/integration/integrationRunner_4.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/io/FileInputOutput_Test.cc</itemPath>
@@ -1451,6 +1461,26 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/integration/P2PSenderDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/P2PSenderDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/PipelinedProcessing_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/PipelinedProcessing_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/integration/PropertyTest_Test.cc"
             ex="false"
             tool="1"
@@ -1502,6 +1532,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/integration/integrationRunner_3.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/integrationRunner_4.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -2590,6 +2625,20 @@
           <output>${TESTDIR}/TestFiles/f6</output>
         </linkerTool>
       </folder>
+      <folder path="TestFiles/f7">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f7</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
       <folder path="TestFiles/f8">
         <cTool>
           <commandLine>`cppunit-config --cflags`</commandLine>
@@ -3577,6 +3626,26 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/integration/P2PSenderDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/P2PSenderDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/PipelinedProcessing_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/PipelinedProcessing_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/integration/PropertyTest_Test.cc"
             ex="false"
             tool="1"
@@ -3628,6 +3697,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/integration/integrationRunner_3.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/integration/integrationRunner_4.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -4705,6 +4779,20 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f6</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f7">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f7</output>
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>

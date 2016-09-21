@@ -604,6 +604,15 @@ namespace karabo {
                 return std::make_pair(ok, text);
             }
 
+            /**
+             * Request the data schema for an output channel as a Hash containing relevant information
+             * @param deviceId
+             * @param outputChannelName
+             * @return a Hash containing the output channel's data schema
+             */
+            karabo::util::Hash getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName);
+
+
         protected: // functions
 
             void initTopology();
