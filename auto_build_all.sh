@@ -30,7 +30,7 @@ runUnitTests() {
     echo Running karabo tests ...
     echo
     cd $scriptDir/build/netbeans/karabo
-    make CONF=$CONF test -j $NUM_CORES
+    make CONF=$CONF test
     cd $scriptDir
     echo
     echo Running pythonKarabo tests
@@ -151,6 +151,9 @@ elif [ "$OS" = "Darwin" ]; then
     DISTRO_RELEASE=$(uname -r)
     NUM_CORES=`sysctl hw.ncpu | awk '{print $2}'`
 fi
+
+# Cut the total number to ensure memory fitness
+if [ "$NUM_CORES" -gt "10" ]; then NUM_CORES=10; fi
 
 if [ "$SKIP" = "n" ]; then
     echo 
