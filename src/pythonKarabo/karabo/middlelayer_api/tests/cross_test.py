@@ -28,7 +28,8 @@ class Tests(TestCase):
         # it takes typically 2 s for the bound device to start
         line = ""
         while "got started" not in line:
-            line = (yield from self.bound.stderr.readline()).decode("ascii")
+            readbytes = yield from wait_for(self.bound.stderr.readline(), 5.0)
+            line = readbytes.decode("ascii")
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
                          "didn't receive initial value from bound device")
