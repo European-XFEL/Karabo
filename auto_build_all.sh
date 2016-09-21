@@ -30,7 +30,7 @@ runUnitTests() {
     echo Running karabo tests ...
     echo
     cd $scriptDir/build/netbeans/karabo
-    make CONF=$CONF test
+    make CONF=$CONF test -j $NUM_CORES
     cd $scriptDir
     echo
     echo Running pythonKarabo tests
@@ -62,6 +62,7 @@ Available flags:
   --noBundle   - Only installs Karabo, does not create the software bundle
   --pyDevelop  - Install Python packages in development mode rather than from wheels
   --runTests   - Run unit tests after building (useful for Debug|Release)
+  --numJobs N  - Specify the number of jobs that make should use to run simultaneously
 
 Note: "Dependencies" builds only the external dependencies
       "Clean" cleans all Karabo code (src folder)
@@ -113,6 +114,7 @@ SKIP="y"
 BUNDLE="y"
 RUNTESTS="n"
 PYOPT="wheel"
+NUM_JOBS=0
 while [ -n "$1" ]; do
     case "$1" in
         --auto)
@@ -131,6 +133,16 @@ while [ -n "$1" ]; do
             # Run all the unit tests too
             RUNTESTS="y"
             ;;
+	--numJobs)
+	    # Limit the numbers of jobs for make runs
+	    if [ -n "$2" ]; then
+		NUM_JOBS=$2
+		shift
+	    else
+		echo "Option --numJobs needs a number of jobs"
+		exit 1
+	    fi
+	    ;;
         *)
             # Make a little noise
             echo "Unrecognized commandline flag: $1"
@@ -141,19 +153,19 @@ done
 
 # Get some information about our system
 OS=$(uname -s)
-NUM_CORES=2
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
     DISTRO_RELEASE=$(lsb_release -rs)
-    NUM_CORES=`grep "processor" /proc/cpuinfo | wc -l`
+    if [ "$NUM_JOBS" = "0" ]; then
+	NUM_JOBS=`grep "processor" /proc/cpuinfo | wc -l`
+    fi
 elif [ "$OS" = "Darwin" ]; then
     DISTRO_ID=MacOSX
     DISTRO_RELEASE=$(uname -r)
-    NUM_CORES=`sysctl hw.ncpu | awk '{print $2}'`
+    if [ "$NUM_JOBS" = "0" ]; then
+	NUM_JOBS=`sysctl hw.ncpu | awk '{print $2}'`
+    fi
 fi
-
-# Cut the total number to ensure memory fitness
-if [ "$NUM_CORES" -gt "10" ]; then NUM_CORES=10; fi
 
 if [ "$SKIP" = "n" ]; then
     echo 
@@ -215,7 +227,7 @@ if [ "$SKIP" = "n" ]; then
 fi
 
 echo
-echo "### Starting compilation (using $NUM_CORES threads) and packaging of the karaboFramework. ###"
+echo "### Starting compilation (using $NUM_JOBS jobs) and packaging of the karaboFramework. ###"
 echo
 
 sleep 2
@@ -223,14 +235,14 @@ sleep 2
 safeRunCommand "cd $scriptDir/build/netbeans/karabo"
 
 if [ $EXTERN_ONLY = "y" ]; then
-    safeRunCommand "make -j$NUM_CORES extern"
+    safeRunCommand "make -j$NUM_JOBS extern"
     if [ "$BUNDLE" = "y" ]; then
-        safeRunCommand "make -j$NUM_CORES package-extern"
+        safeRunCommand "make -j$NUM_JOBS package-extern"
     fi
 elif [ "$BUNDLE" = "y" ]; then
-    safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_CORES bundle-package"
+    safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_JOBS bundle-package"
 else
-    safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_CORES bundle-install"
+    safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_JOBS bundle-install"
 fi
 if [ "$RUNTESTS" = "y" ]; then
     runUnitTests
