@@ -1,8 +1,8 @@
 from asyncio import CancelledError, coroutine, Lock
 from unittest import main
 
-from karabo.middlelayer_api.device_client import sleep
 from karabo.middlelayer_api.eventloop import synchronize
+from karabo.middlelayer_api.synchronization import sleep
 
 from .eventloop import DeviceTest, sync_tst
 
