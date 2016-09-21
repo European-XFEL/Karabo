@@ -3,6 +3,8 @@
   <autoStart>
     <KRB_Item>
       <DataLoggerManager>
+        <!-- Frequent flushing of raw and index files every 1 s: -->
+      <flushInterval KRB_Type="INT32">1</flushInterval>
       <directory KRB_Type="STRING">karaboHistory</directory>
       <serverList KRB_Type="VECTOR_STRING">Karabo_DLManagerServer</serverList>
       </DataLoggerManager>
