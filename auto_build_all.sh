@@ -62,7 +62,7 @@ Available flags:
   --noBundle   - Only installs Karabo, does not create the software bundle
   --pyDevelop  - Install Python packages in development mode rather than from wheels
   --runTests   - Run unit tests after building (useful for Debug|Release)
-  --numJobs    - Specify the number of jobs that make should use to run simultaneously
+  --numJobs N  - Specify the number of jobs that make should use to run simultaneously
 
 Note: "Dependencies" builds only the external dependencies
       "Clean" cleans all Karabo code (src folder)
@@ -139,7 +139,8 @@ while [ -n "$1" ]; do
 		NUM_JOBS=$2
 		shift
 	    else
-		NUM_JOBS=0
+		echo "Option --numJobs needs a number of jobs"
+		exit 1
 	    fi
 	    ;;
         *)
