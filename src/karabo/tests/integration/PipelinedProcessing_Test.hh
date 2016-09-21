@@ -9,14 +9,10 @@
 #define	PIPELINEDPROCESSING_TEST_HH
 
 #include "karabo/karabo.hpp"
-#include "karabo/devices/AlarmService.hh"
 #include "karabo/core/DeviceServer.hh"
 #include "karabo/core/DeviceClient.hh"
 #include <boost/shared_ptr.hpp>
 #include <cppunit/extensions/HelperMacros.h>
-
-#include "AlarmTesterDevice.hh"
-#include "TcpAdapter.hh"
 
 class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
@@ -41,10 +37,6 @@ private:
     boost::thread m_deviceServerThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
-    boost::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
-
-
-
 
 };
 
