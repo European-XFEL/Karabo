@@ -263,6 +263,8 @@ namespace karabo {
                         onAcknowledgeAlarm(channel, info);
                     } else if (type == "requestAlarms"){
                         onRequestAlarms(channel, info);
+                    } else if (type == "requestAlarmServices"){
+                        onRequestAlarmServices(channel, info);
                     } else if (type == "updateAttributes"){
                         onUpdateAttributes(channel, info);
                     }
@@ -901,6 +903,10 @@ namespace karabo {
                         connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
                         boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
                         m_alarmDevices.insert(instanceId);
+                        Hash h("type", "alarmServiceAppeared", "instanceId", instanceId);
+                        for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                            it->first->writeAsync(h, LOSSLESS);
+                        }
                         
                     }
                 }
@@ -962,6 +968,18 @@ namespace karabo {
                             KARABO_LOG_FRAMEWORK_DEBUG << "instanceId : " << instanceId << ", channelName : " << iter->second.name;
                             m_networkConnections.erase(iter);
                         }
+                    }
+                }
+                
+                {
+                    //specifically tell alarm service widgets
+                    if(m_alarmDevices.find(instanceId) != m_alarmDevices.end()){
+                        Hash h("type", "alarmServiceGone", "instanceId", instanceId);
+                        for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                            it->first->writeAsync(h, LOSSLESS);
+                        }
+                        //delete from list of alarm services
+                        m_alarmDevices.erase(instanceId);
                     }
                 }
             } catch (const Exception& e) {
@@ -1205,6 +1223,18 @@ namespace karabo {
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAttributeUpdate(): " << e.userFriendlyMsg();
             }  
+        }
+        
+        void GuiServerDevice::onRequestAlarmServices(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info){
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestAlarmServices : info ...\n" << info;
+                std::vector<std::string> alarmServices(m_alarmDevices.size());
+                alarmServices.assign(m_alarmDevices.begin(), m_alarmDevices.end());
+                Hash h("type", "knownAlarmServices", "instanceIds", alarmServices);
+                channel->writeAsync(h, LOSSLESS);
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestAlarmServices(): " << e.userFriendlyMsg();
+            }
         }
 
     }
