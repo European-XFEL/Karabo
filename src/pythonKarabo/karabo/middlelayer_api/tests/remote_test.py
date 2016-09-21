@@ -674,6 +674,8 @@ class Tests(DeviceTest):
                 self.assertEqual(d.dn.cntr, 12)
                 self.assertEqual(a.dn.value, 8)
                 self.assertEqual(a.dn.counter, 12)
+                self.assertEqual(a.dn.state, State.UNKNOWN)
+                self.assertEqual(a.dn.alarmCondition, AlarmCondition.NONE)
                 self.assertTrue(self.remote.done)
                 d.dn.value = 22
                 yield from d.dn.changeit()
