@@ -172,7 +172,7 @@ class PythonDevice(NoFsm):
             NODE_ELEMENT(expected).key("Logger")
                     .description("Logging settings")
                     .displayedName("Logger")
-                    .appendParametersOfConfigurableClass(Logger,"Logger")
+                    .appendParametersOf(Logger)
                     .expertAccess()
                     .commit(),
 
@@ -271,7 +271,6 @@ class PythonDevice(NoFsm):
         Logger.useOstream();
         Logger.useFile();
         Logger.useNetwork();
-        
         Logger.useOstream("karabo", False)
         Logger.useFile("karabo", False)
         
