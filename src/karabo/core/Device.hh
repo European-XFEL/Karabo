@@ -114,14 +114,6 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::util;
 
-                STRING_ELEMENT(expected).key("compatibility")
-                        .displayedName("Compatibility")
-                        .description("The compatibility of this device to the Karabo framework")
-                        .expertAccess()
-                        .readOnly()
-                        .initialValue(Device::classInfo().getVersion())
-                        .commit();
-
                 STRING_ELEMENT(expected).key("_serverId_")
                         .displayedName("_ServerID_")
                         .description("Do not set this property, it will be set by the device-server")
@@ -155,6 +147,12 @@ namespace karabo {
                         .reconfigurable()
                         .commit();
 
+                STRING_ELEMENT(expected).key("deviceId")
+                        .displayedName("DeviceID")
+                        .description("The device instance ID uniquely identifies a device instance in the distributed system")
+                        .readOnly()
+                        .commit();
+
                 STRING_ELEMENT(expected).key("classId")
                         .displayedName("ClassID")
                         .description("The (factory)-name of the class of this device")
@@ -170,10 +168,26 @@ namespace karabo {
                         .readOnly()
                         .commit();
 
-                STRING_ELEMENT(expected).key("deviceId")
-                        .displayedName("DeviceID")
-                        .description("The device instance ID uniquely identifies a device instance in the distributed system")
+                STRING_ELEMENT(expected).key("hostName")
+                        .displayedName("Host")
+                        .description("The name of the host where this device runs")
+                        .expertAccess()
                         .readOnly()
+                        .initialValue(net::bareHostName())
+                        .commit();
+
+                STATE_ELEMENT(expected).key("state")
+                        .displayedName("State")
+                        .description("The current state the device is in")
+                        .initialValue(State::UNKNOWN)
+                        .commit();
+
+                ALARM_ELEMENT(expected).key("alarmCondition")
+                        .displayedName("Alarm condition")
+                        .description("The current alarm condition of the device. "
+                                     "Evaluates to the highest condition on any"
+                                     " property if not set manually.")
+                        .initialValue(AlarmCondition::NONE)
                         .commit();
 
                 BOOL_ELEMENT(expected).key("archive")
@@ -204,20 +218,6 @@ namespace karabo {
                         .description("The heartbeat interval")
                         .assignmentOptional().defaultValue(120)
                         .adminAccess()
-                        .commit();
-
-                STATE_ELEMENT(expected).key("state")
-                        .displayedName("State")
-                        .description("The current state the device is in")
-                        .initialValue(State::UNKNOWN)
-                        .commit();
-
-                ALARM_ELEMENT(expected).key("alarmCondition")
-                        .displayedName("Alarm condition")
-                        .description("The current alarm condition of the device. "
-                                     "Evaluates to the highest condition on any"
-                                     " property if not set manually.")
-                        .initialValue(AlarmCondition::NONE)
                         .commit();
 
                 NODE_ELEMENT(expected).key("performanceStatistics")

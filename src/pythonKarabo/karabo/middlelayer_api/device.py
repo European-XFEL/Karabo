@@ -20,6 +20,14 @@ class Device(AlarmMixin, SignalSlotable):
 
     __version__ = "1.3"
 
+    _serverId_ = String(
+        displayedName="_ServerID_",
+        description="Do not set this property, it will be set by the "
+                    "device-server",
+        requiredAccessLevel=AccessLevel.EXPERT,
+        assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
+        defaultValue="__none__")
+
     visibility = Int32(
         enum=AccessLevel, displayedName="Visibility",
         description="Configures who is allowed to see this device at all",
@@ -27,10 +35,24 @@ class Device(AlarmMixin, SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.RECONFIGURABLE)
 
-    compatibility = String(
-        displayedName="Compatibility",
-        description="The compatibility of this device to the Karabo framework",
-        accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL)
+    classId = String(
+        displayedName="ClassID",
+        description="The (factory)-name of the class of this device",
+        requiredAccessLevel=AccessLevel.EXPERT,
+        accessMode=AccessMode.READONLY)
+
+    serverId = String(
+        displayedName="ServerID",
+        description="The device-server which this device is running on",
+        requiredAccessLevel=AccessLevel.EXPERT,
+        accessMode=AccessMode.READONLY)
+
+    hostName = String(
+        displayedName="Host",
+        description="The name of the host where this device runs",
+        requiredAccessLevel=AccessLevel.EXPERT,
+        accessMode=AccessMode.READONLY,
+        defaultValue=socket.gethostname().partition('.')[0])
 
     state = String(
         displayedName="State", enum=State,
@@ -42,28 +64,9 @@ class Device(AlarmMixin, SignalSlotable):
         displayedName="Archive",
         description="Decides whether the properties of this device "
                     "will be logged or not",
+        requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
         defaultValue=True)
-
-    _serverId_ = String(
-        displayedName="_ServerID_",
-        description="Do not set this property, it will be set by the "
-                    "device-server",
-        requiredAccessLevel=AccessLevel.EXPERT,
-        assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
-        defaultValue="__none__")
-
-    serverId = String(
-        displayedName="ServerID",
-        description="The device-server which this device is running on",
-        requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.READONLY)
-
-    classId = String(
-        displayedName="ClassID",
-        description="The (factory)-name of the class of this device",
-        requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.READONLY)
 
     log = Node(Logger,
                description="Logging settings",
