@@ -52,9 +52,7 @@ void PipelinedProcessing_Test::appTestRunner() {
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
     std::pair<bool, std::string> success =  m_deviceClient->instantiate("testServerPP", "P2PSenderDevice", Hash("deviceId", "p2pTestSender"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
-    
-    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
-    
+
     testGetOutputChannelSchema();
    
 }
