@@ -123,8 +123,9 @@ namespace karabo {
 
                 int nodeType = it->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE);
                 bool userHasNode = user.has(key);
-                bool hasDefault = it->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE);
-                bool hasRowSchema = it->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA);
+                const bool hasDefault = it->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE);
+                const bool hasRowSchema = it->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA);
+                const bool hasClassAttribute = it->hasAttribute(KARABO_SCHEMA_CLASS_ID);
 
                 // Remove current node from all provided
                 if (userHasNode) keys.erase(key);
@@ -142,10 +143,11 @@ namespace karabo {
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
                             Hash::Node& node = working.set(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE));
                             if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
-                            if (it->hasAttribute(KARABO_SCHEMA_CLASS_ID)) {
+                            if (hasClassAttribute) {
                                 const std::string &classId = it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
                                 if (classId == "State") node.setAttribute(KARABO_INDICATE_STATE_SET, true);
                                 else if (classId == "AlarmCondition") node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
+                                node.setAttribute(KARABO_HASH_CLASS_ID, classId);
                             }
                             this->validateLeaf(*it, node, report, currentScope);
                         }
@@ -156,6 +158,7 @@ namespace karabo {
                             const std::string &classId = user.getAttribute<std::string>(key, KARABO_SCHEMA_CLASS_ID);
                             if (classId == "State") node.setAttribute(KARABO_INDICATE_STATE_SET, true);
                             else if (classId == "AlarmCondition") node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
+                            node.setAttribute(KARABO_HASH_CLASS_ID, classId);
                         }
                         this->validateLeaf(*it, node, report, currentScope);
                     }
@@ -163,6 +166,9 @@ namespace karabo {
                     if (!userHasNode) {
                         if (m_injectDefaults) {
                             Hash::Node& workNode = working.set(key, Hash()); // Insert empty node
+                            if(hasClassAttribute){
+                                workNode.setAttribute(KARABO_HASH_CLASS_ID, it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID));
+                            }
                             r_validate(it->getValue<Hash > (), Hash(), workNode.getValue<Hash > (), report, currentScope);
                         } else {
                             Hash workFake;
@@ -171,10 +177,11 @@ namespace karabo {
                     } else {
 
                         if (user.getType(key) != Types::HASH) {
-                            if (it->hasAttribute(KARABO_SCHEMA_CLASS_ID)) {
+                            if (hasClassAttribute) {
                                 // The node reflects a configuration for a class,
                                 // what is provided here is the object already -> copy over and shut-up
-                                working.setNode(user.getNode(key));
+                                Hash::Node& workNode = working.setNode(user.getNode(key));
+                                workNode.setAttribute(KARABO_HASH_CLASS_ID, it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID));
                                 return;
                             } else {
                                 report << "Parameter \"" << currentScope << "\" has incorrect node type, expecting HASH not " << Types::to<ToLiteral > (user.getType(key)) << endl;

@@ -588,21 +588,21 @@ void Schema_Test::testArrayElements() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
 
-    std::vector<long long> shapeVec;
+    std::vector<unsigned long long> shapeVec;
     shapeVec.push_back(3);
     shapeVec.push_back(2);
-    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrBool.shape") == shapeVec);
-    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrInt8.shape") == shapeVec);
-    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrUInt16.shape") == shapeVec);
-    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrFloat.shape") == shapeVec);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<unsigned long long > >("arrBool.shape") == shapeVec);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<unsigned long long > >("arrInt8.shape") == shapeVec);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<unsigned long long > >("arrUInt16.shape") == shapeVec);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<unsigned long long > >("arrFloat.shape") == shapeVec);
     shapeVec.push_back(-1);
-    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrDouble.shape") == shapeVec);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<unsigned long long > >("arrDouble.shape") == shapeVec);
 
-    std::vector<long long> undefShapeVec;
-    undefShapeVec.push_back(-1);
+    std::vector<unsigned long long> undefShapeVec;
+    undefShapeVec.push_back(0);
     undefShapeVec.push_back(3);
-    undefShapeVec.push_back(-1);
-    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<long long > >("arrUndefined.shape") == undefShapeVec);
+    undefShapeVec.push_back(0);
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<unsigned long long > >("arrUndefined.shape") == undefShapeVec);
 
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrBool") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrInt8") == true);
