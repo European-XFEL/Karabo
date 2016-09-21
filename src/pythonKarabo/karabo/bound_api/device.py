@@ -234,8 +234,8 @@ class PythonDevice(NoFsm):
         except RuntimeError as e:
             raise RuntimeError("PythonDevice.__init__: SignalSlotable.create Exception -- {0}".format(str(e)))
         # Setup device logger
-        self.loadLogger(configuration)
-        self.log = Logger.getLogger(self.deviceid)
+        self.loadLogger(configuration)        
+        self.log = Logger.getCategory(self.deviceid)
 
         # Initialize FSM slots if defined
         if hasattr(self, 'initFsmSlots'):
@@ -265,17 +265,15 @@ class PythonDevice(NoFsm):
     def setNumberOfThreads(self, nThreads):
         self._ss.setNumberOfThreads(nThreads)
     
-    def loadLogger(self,input):
-        config = input["Logger"]
-
-        # make a copy of additional appenders defined by user
-        appenders = config["appenders"]
-        config["appenders[2].Network.layout"] = Hash()
-        config["appenders[2].Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
-        if "connection" in input:
-            config["appenders[2].Network.connection"] = input["connection"]
-#        print "loadLogger final:\n", config
-        self.logger=Logger.configure(config)
+    def loadLogger(self, input):
+        config = input.get("Logger")
+        Logger.configure(config)
+        Logger.useOstream();
+        Logger.useFile();
+        Logger.useNetwork();
+        
+        Logger.useOstream("karabo", False)
+        Logger.useFile("karabo", False)
         
     def run(self):
         self.initClassId()
@@ -830,8 +828,8 @@ class PythonDevice(NoFsm):
         self.onTimeUpdate(id, sec, frac, period)
         
     def slotLoggerPriority(self, newprio):
-        oldprio = Priority.getPriorityName(self.logger.getLogger("some_deviceId").getRootPriority())
-        self.logger.getLogger("some_deviceId").setRootPriority(Priority.getPriorityValue(newprio))
+        oldprio = Logger.getPriority()
+        Logger.setPriority(newprio)
         self.log.INFO("Logger Priority changed : {} ==> {}".format(oldprio, newprio))
         
     def _getActualTimestamp(self):
