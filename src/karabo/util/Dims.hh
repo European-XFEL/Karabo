@@ -139,6 +139,15 @@ namespace karabo {
                 }
             }
         };
+
+        inline bool operator==(const Dims& lhs, const Dims& rhs) {
+            if (lhs.size() != rhs.size()) return false;
+            bool result = true;
+            for (size_t i = 0; i != lhs.rank(); ++i) {
+                result &= (lhs.extentIn(i) == rhs.extentIn(i));
+            }
+            return result;
+        }
     }
 }
 

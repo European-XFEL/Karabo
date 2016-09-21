@@ -551,7 +551,7 @@ namespace configurationTest {
             NDARRAY_ELEMENT(expected)
                     .key("arrUndefined")
                     .dtype(karabo::util::Types::DOUBLE)
-                    .shape("-1,3,-1")
+                    .shape("0,3,0")
                     .commit();
 
             IMAGEDATA_ELEMENT(expected)
