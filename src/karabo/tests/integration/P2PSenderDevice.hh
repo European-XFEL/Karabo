@@ -14,13 +14,6 @@ namespace karabo {
 
     class P2PSenderDevice : public karabo::core::Device<> {
 
-        /// thread for actual work
-        boost::thread m_writingThread;
-
-        int m_currentDataId;
-
-        bool m_isStopped;
-
     public:
 
         KARABO_CLASSINFO(P2PSenderDevice, "P2PSenderDevice", "2.0")
@@ -35,14 +28,6 @@ namespace karabo {
 
         virtual ~P2PSenderDevice();
 
-    private:
-        //slots for write and stop commands
-        void write();
-
-        void stop();
-
-        /// method for writing thread
-        void writing();
     };
 }
 
