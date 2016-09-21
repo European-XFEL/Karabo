@@ -435,10 +435,10 @@ class _Network(QObject):
                  "alarmInstanceId", "Karabo_AlarmService_0")
         self._tcpWriteHash(h)
 
-    def onAcknowledgeAlarm(self, instanceId, id):
+    def onAcknowledgeAlarm(self, instanceId, rowId):
         h = Hash("type", "acknowledgeAlarm")
         h.set("alarmInstanceId", instanceId)
-        h.set("acknowledgedRows", Hash(id, True))
+        h.set("acknowledgedRows", Hash(rowId, True))
         self._tcpWriteHash(h)
 
     def onSubscribeToOutput(self, box, subscribe):
