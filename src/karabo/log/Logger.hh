@@ -42,7 +42,7 @@ namespace karabo {
              *
              * By default any appenders defined on parent categories will inherited. A boolean flag
              * allows to disable this behavior
-             * @param category The category on which the appender should work
+             * @param category The category on which the appender should work (empty string reflects root category)
              * @param inheritAppenders If true will inherit appenders defined in parent categories
              */
             static void useOstream(const std::string& category = "", bool inheritAppenders = true);
@@ -52,7 +52,7 @@ namespace karabo {
              *
              * By default any appenders defined on parent categories will inherited. A boolean flag
              * allows to disable this behavior
-             * @param category The category on which the appender should work
+             * @param category The category on which the appender should work (empty string reflects root category)
              * @param inheritAppenders If true will inherit appenders defined in parent categories
              */
             static void useFile(const std::string& category = "", bool inheritAppenders = true);
@@ -62,7 +62,7 @@ namespace karabo {
              *
              * By default any appenders defined on parent categories will inherited. A boolean flag
              * allows to disable this behavior
-             * @param category The category on which the appender should work
+             * @param category The category on which the appender should work (empty string reflects root category)
              * @param inheritAppenders If true will inherit appenders defined in parent categories
              */
             static void useNetwork(const std::string& category = "", bool inheritAppenders = true);
@@ -76,28 +76,28 @@ namespace karabo {
 
             /**
              * Adds a debug message on the defined category
-             * @param category The category for this message
+             * @param category The category for this message (empty string reflects root category)
              * @return A stream object that can be used with the \<\< operator
              */
             static krb_log4cpp::CategoryStream logDebug(const std::string& category = "");
 
             /**
              * Adds a info message on the defined category
-             * @param category The category for this message
+             * @param category The category for this message (empty string reflects root category)
              * @return A stream object that can be used with the \<\< operator
              */
             static krb_log4cpp::CategoryStream logInfo(const std::string& category = "");
 
             /**
              * Adds a warn message on the defined category
-             * @param category The category for this message
+             * @param category The category for this message (empty string reflects root category)
              * @return A stream object that can be used with the \<\< operator
              */
             static krb_log4cpp::CategoryStream logWarn(const std::string& category = "");
 
             /**
              * Adds a error message on the defined category
-             * @param category The category for this message
+             * @param category The category for this message (empty string reflects root category)
              * @return A stream object that can be used with the \<\< operator
              */
             static krb_log4cpp::CategoryStream logError(const std::string& category = "");
@@ -105,13 +105,13 @@ namespace karabo {
             /**
              * Allows to set the priority filter on specified category
              * @param priority DEBUG,INFO,WARN of ERROR
-             * @param category The category to apply the filter to
+             * @param category The category to apply the filter to (empty string reflects root category)
              */
             static void setPriority(const std::string& priority, const std::string& category = "");
 
             /**
              * Retrieve the currently enabled priority level for the given category
-             * @param category The category
+             * @param category The category (empty string reflects root category)
              */
             static const std::string& getPriority(const std::string& category = "");
 
@@ -126,7 +126,7 @@ namespace karabo {
             /**
              * Retrieves a log4cpp category object for specified name.
              * Categories are created on demand and cached from then on
-             * @param logCategory Name for the category
+             * @param category Name for the category (empty string reflects root category)
              * @return a log4cpp category object
              */
             static krb_log4cpp::Category& getCategory(const std::string& category = std::string());

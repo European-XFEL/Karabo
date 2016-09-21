@@ -12,15 +12,15 @@ from PIL import Image
 import numpy as np
 
 from karathon import (
-    ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
-    UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
-    OBSERVER, READ, WRITE, INIT,
-    AccessLevel, AccessType, AssemblyRules, BrokerConnection,
-    DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
-    ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
-    Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
-    ValidatorValidationRules
-)
+                      ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
+                      UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
+                      OBSERVER, READ, WRITE, INIT,
+                      AccessLevel, AccessType, AssemblyRules, BrokerConnection,
+                      DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
+                      ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
+                      Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
+                      ValidatorValidationRules
+                      )
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
@@ -881,7 +881,7 @@ class PythonDevice(NoFsm):
             if resultingCondition is not None and resultingCondition.asString()\
                 != self.parameters.get("alarmCondition"):
                     self.set("alarmCondition", resultingCondition,
-                     validate=False)
+                             validate=False)
 
     def getAlarmCondition(self, key=None, separator="."):
         if key is None:

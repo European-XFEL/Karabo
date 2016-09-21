@@ -24,6 +24,11 @@ namespace karabo {
      */
     namespace log {
 
+        /**
+         * Helper class to configure an underlying log4cpp appender.
+         * NOTE: Do NOT use this class directly. It is indirectly involved in the static functions
+         * of the Logger!!
+         */
         class RollingFileAppender {
 
         public:

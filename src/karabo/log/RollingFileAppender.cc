@@ -72,7 +72,8 @@ namespace karabo {
 
 
         RollingFileAppender::RollingFileAppender(const Hash& input) {
-
+            // The raw pointers will be handed to a log4cpp category object (functionality of Logger class)
+            // Log4cpp will take ownership and deal with memory management
             krb_log4cpp::PatternLayout* layout = new krb_log4cpp::PatternLayout();
             layout->setConversionPattern(input.get<string>("pattern"));
 

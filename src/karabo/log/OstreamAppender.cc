@@ -47,6 +47,8 @@ namespace karabo {
 
 
         OstreamAppender::OstreamAppender(const Hash& config) {
+            // The raw pointers will be handed to a log4cpp category object (functionality of Logger class)
+            // Log4cpp will take ownership and deal with memory management (proper delete)
             krb_log4cpp::PatternLayout* layout = new krb_log4cpp::PatternLayout();
             layout->setConversionPattern(config.get<string>("pattern"));
 

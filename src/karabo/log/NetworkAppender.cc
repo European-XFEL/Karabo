@@ -46,6 +46,8 @@ namespace karabo {
 
 
         NetworkAppender::NetworkAppender(const karabo::util::Hash& config) {
+            // This raw pointer will be handed to a log4cpp category object (functionality of Logger class)
+            // Log4cpp will take ownership and deal with memory management (proper delete)
             m_appender = new Log4CppNetApp(config);
         }
 
