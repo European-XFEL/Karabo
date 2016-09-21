@@ -6,7 +6,7 @@ from numpy.testing import assert_equal
 
 from karabo.bound import (BinarySerializerHash, TextSerializerHash,
                           Hash as BoundHash, VectorHash)
-from karabo.middlelayer import Hash, NodeType, Schema, HashList
+from karabo.middlelayer import Hash, NodeType, Schema, HashList, Int64
 from karabo.middlelayer_api.hash import _Byte
 
 
@@ -246,15 +246,16 @@ class Hash_TestCase(unittest.TestCase):
 
     def test_ndarray(self):
         bh = BoundHash()
-        bh.set("vector", numpy.arange(12).reshape((3, 4)))
+        arr = numpy.arange(12).reshape((3, 4))
+        bh.set("vector", arr)
         ser = BinarySerializerHash.create("Bin")
         h = Hash.decode(ser.save(bh), "Bin")
         self.assertEqual(h["vector"]["__classId"], "NDArray")
         assert_equal(h["vector"]["shape"], [3, 4])
-        self.assertEqual(h["vector"]["type"], 16)
-        self.assertEqual(len(h["vector"]["data"]), 96)
+        self.assertEqual(h["vector"]["type"], Int64.number)
+        self.assertEqual(len(h["vector"]["data"]), arr.nbytes)
         bh = ser.load(h.encode("Bin"))
-        assert_equal(bh["vector"], numpy.arange(12).reshape((3, 4)))
+        assert_equal(bh["vector"], arr)
 
 
 if __name__ == '__main__':
