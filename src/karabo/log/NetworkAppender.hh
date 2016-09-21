@@ -24,12 +24,17 @@ namespace karabo {
 
     namespace log {
 
+        /**
+         * Helper class to configure an underlying log4cpp appender.
+         * NOTE: Do NOT use this class directly. It is indirectly involved in the static functions
+         * of the Logger!!
+         */
         class NetworkAppender {
 
         public:
-            
+
             KARABO_CLASSINFO(NetworkAppender, "NetworkAppender", "");
-            
+
             static void expectedParameters(karabo::util::Schema& s);
 
             NetworkAppender(const karabo::util::Hash& config);
@@ -50,8 +55,8 @@ namespace karabo {
          */
         class Log4CppNetApp : public krb_log4cpp::LayoutAppender {
 
-        public:          
-            
+        public:
+
             KARABO_CLASSINFO(Log4CppNetApp, "Log4CppNetApp", "");
 
             Log4CppNetApp(const karabo::util::Hash& config);

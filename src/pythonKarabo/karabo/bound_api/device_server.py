@@ -161,9 +161,9 @@ class DeviceServer(object):
         sys.exit()
         # os._exit(0)
     
-    def __init__(self, input):
+    def __init__(self, config):
         '''Constructor'''
-        if input is None:
+        if config is None:
             raise ValueError(
                 "Input configuration for constructor should be Hash, not None")
         super(DeviceServer, self).__init__()
@@ -185,8 +185,8 @@ class DeviceServer(object):
         serverIdFileName = "serverId.xml"
         if os.path.isfile(serverIdFileName): 
             hash = loadFromFile(serverIdFileName) 
-            if 'serverId' in input:
-                self.serverid = input['serverId'] # Else whatever was configured
+            if 'serverId' in config:
+                self.serverid = config['serverId'] # Else whatever was configured
                 saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName, Hash("format.Xml.indentation", 3))
             elif 'DeviceServer.serverId' in hash:
                 self.serverid = hash['DeviceServer.serverId'] # If file exists, it has priority
@@ -195,51 +195,48 @@ class DeviceServer(object):
                 self.serverid = self._generateDefaultServerId() # If nothing configured -> generate
                 saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName, Hash("format.Xml.indentation", 3))
         else: # No file
-            if 'serverId' in input:
-                self.serverid = input['serverId']
+            if 'serverId' in config:
+                self.serverid = config['serverId']
             else:
                 self.serverid = self._generateDefaultServerId()
             saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName, Hash("format.Xml.indentation", 3))
         
         # Device configurations for those to automatically start
-        #if "autoStart" in input:
-        #    self.autoStart = input['autoStart']
+        #if "autoStart" in config:
+        #    self.autoStart = config['autoStart']
             
         # Whether to scan for additional plug-ins at runtime
-        #if "scanPlugins" in input:
-        #    self.needScanPlugins = input['scanPlugins']
+        #if "scanPlugins" in config:
+        #    self.needScanPlugins = config['scanPlugins']
         
         # What visibility this server should have
-        self.visibility = input.get("visibility")
+        self.visibility = config.get("visibility")
         
-        self.connectionType = next(iter(input['connection'])).getKey()
-        self.connectionParameters = copy.copy(input['connection.' + self.connectionType])
+        self.connectionType = next(iter(config['connection'])).getKey()
+        self.connectionParameters = copy.copy(config['connection.' + self.connectionType])
         self.pluginLoader = PluginLoader.create(
             "PythonPluginLoader",
-            Hash("pluginNamespace", input["pluginNamespace"],
-                 "pluginDirectory", input["pluginDirectory"],
-                 "pluginNames", input["pluginNames"]))
-        self.loadLogger(input)
+            Hash("pluginNamespace", config["pluginNamespace"],
+                 "pluginDirectory", config["pluginDirectory"],
+                 "pluginNames", config["pluginNames"]))
+        self.loadLogger(config)
         self.pid = os.getpid()
         self.seqnum = 0
     
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
-    
-    def loadLogger(self, input):
-        config = input["Logger"]
-        Logger.configure(config)
-        
+
+    def loadLogger(self, config):
+        Logger.configure(config["Logger"])
         Logger.useOstream()
         Logger.useFile()
         Logger.useNetwork()
-
         Logger.useOstream("karabo", False)
-        Logger.useFile("karabo", False)              
+        Logger.useFile("karabo", False)
         
     def run(self):
         self.log = Logger.getLogger(self.serverid)
-        self.ss = SignalSlotable.create(self.serverid, self.connectionType, self.connectionParameters)        
+        self.ss = SignalSlotable.create(self.serverid, self.connectionType, self.connectionParameters)
         self._registerAndConnectSignalsAndSlots()
 
         self.log.INFO("Starting Karabo DeviceServer on host: {0.hostname}, "
