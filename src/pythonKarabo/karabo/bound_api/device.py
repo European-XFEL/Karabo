@@ -39,11 +39,6 @@ class PythonDevice(NoFsm):
     @staticmethod
     def expectedParameters(expected):
         (
-            STRING_ELEMENT(expected).key("compatibility")
-                    .displayedName("Compatibility").description("The compatibility of this device to the Karabo framework")
-                    .expertAccess().readOnly().initialValue(PythonDevice.__version__)
-                    .commit(),
-
             STRING_ELEMENT(expected).key("_serverId_")
                     .displayedName("_ServerID_").description("Do not set this property, it will be set by the device-server")
                     .expertAccess().assignmentInternal().noDefaultValue().init()
@@ -54,12 +49,6 @@ class PythonDevice(NoFsm):
                     .expertAccess().assignmentInternal().noDefaultValue().init()
                     .commit(),
 
-            INT32_ELEMENT(expected).key("visibility")
-                    .displayedName("Visibility").description("Configures who is allowed to see this device at all")
-                    .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
-                    .expertAccess().reconfigurable()
-                    .commit(),
-
             CHOICE_ELEMENT(expected).key("_connection_")
                     .displayedName("Connection")
                     .description("The connection to the communication layer of the distributed system")
@@ -67,6 +56,17 @@ class PythonDevice(NoFsm):
                     .assignmentOptional().defaultValue("Jms")
                     .adminAccess()
                     .init()
+                    .commit(),
+
+            INT32_ELEMENT(expected).key("visibility")
+                    .displayedName("Visibility").description("Configures who is allowed to see this device at all")
+                    .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
+                    .expertAccess().reconfigurable()
+                    .commit(),
+
+            STRING_ELEMENT(expected).key("deviceId")
+                    .displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
+                    .readOnly()
                     .commit(),
 
             STRING_ELEMENT(expected).key("classId")
@@ -79,10 +79,26 @@ class PythonDevice(NoFsm):
                     .expertAccess().readOnly()
                     .commit(),
 
-            STRING_ELEMENT(expected).key("deviceId")
-                    .displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
+            STRING_ELEMENT(expected).key("hostName")
+                    .displayedName("Host")
+                    .description("The name of the host where this device runs")
+                    .expertAccess()
                     .readOnly()
+                    .initialValue(socket.gethostname().partition('.')[0])
                     .commit(),
+
+            STATE_ELEMENT(expected).key("state")
+                    .displayedName("State").description("The current state the device is in")
+                    .initialValue(State.UNKNOWN)
+                    .commit(),
+
+            ALARM_ELEMENT(expected).key("alarmCondition")
+                        .displayedName("Alarm condition")
+                        .description("The current alarm condition of the device. "
+                                     "Evaluates to the highest condition on any"
+                                     " property if not set manually.")
+                        .initialValue(AlarmCondition.NONE)
+                        .commit(),
 
             BOOL_ELEMENT(expected).key("archive")
                         .displayedName("Archive")
@@ -104,19 +120,6 @@ class PythonDevice(NoFsm):
                     .displayedName("Progress").description("The progress of the current action")
                     .readOnly().initialValue(0).commit(),
                     
-            STATE_ELEMENT(expected).key("state")
-                    .displayedName("State").description("The current state the device is in")
-                    .initialValue(State.UNKNOWN)
-                    .commit(),
-
-            ALARM_ELEMENT(expected).key("alarmCondition")
-                        .displayedName("Alarm condition")
-                        .description("The current alarm condition of the device. "
-                                     "Evaluates to the highest condition on any"
-                                     " property if not set manually.")
-                        .initialValue(AlarmCondition.NONE)
-                        .commit(),
-
             NODE_ELEMENT(expected).key("performanceStatistics")
                     .displayedName("Performance Statistics")
                     .description("Accumulates some statistics")
