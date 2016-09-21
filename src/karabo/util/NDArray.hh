@@ -228,7 +228,6 @@ namespace karabo {
             setBigEndian(isBigEndian);
         }
 
-
         /**********************************************************************
          * Declaration NDArrayElement
          **********************************************************************/
@@ -243,11 +242,11 @@ namespace karabo {
             }
 
             NDArrayElement& dtype(const karabo::util::Types::ReferenceType type) {
-                return setDefaultValue("type", static_cast<int>(type));
+                return setDefaultValue("type", static_cast<int> (type));
             }
 
             NDArrayElement& shape(const std::string& shp) {
-                std::vector<long long> tmp = karabo::util::fromString<long long, std::vector>(shp);
+                std::vector<unsigned long long> tmp = karabo::util::fromString< unsigned long long, std::vector>(shp);
                 return setDefaultValue("shape", tmp);
             }
 

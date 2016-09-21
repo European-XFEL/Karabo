@@ -45,10 +45,10 @@ void Serializable_Test::testMethod() {
     CPPUNIT_ASSERT(h.get<FancyData>("fd1").getScalar() == 2);
 
     // The classId is automatically added as attribute
-    CPPUNIT_ASSERT(h.getAttribute<string>("fd1", "__classId") == "FancyData");
+    CPPUNIT_ASSERT(h.getAttribute<string>("fd1", KARABO_HASH_CLASS_ID) == "FancyData");
 
     // This doesn't not happen for plain nested hashes
-    CPPUNIT_ASSERT(h.hasAttribute("h1", "__classId") == false);
+    CPPUNIT_ASSERT(h.hasAttribute("h1", KARABO_HASH_CLASS_ID) == false);
 
     h.get<FancyData>("fd1").setScalar(-2);
     CPPUNIT_ASSERT(fd1.getScalar() == 2);

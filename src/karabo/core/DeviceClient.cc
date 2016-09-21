@@ -1515,6 +1515,19 @@ if (nodeData) {\
         bool DeviceClient::hasAttribute(const std::string& instanceId, const std::string& key, const std::string& attribute, const char keySep) {
             return cacheAndGetConfiguration(instanceId).hasAttribute(key, attribute, keySep);
         }
+        
+        karabo::util::Hash DeviceClient::getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName){
+            Schema schema = cacheAndGetDeviceSchema(deviceId);
+            Validator::ValidationRules rules;
+            rules.injectTimestamps = false;
+            rules.allowAdditionalKeys = false;
+            Validator validator(rules);
+            Hash pHash;
+            validator.validate(schema, Hash(), pHash);
+            return pHash.get<Hash>(outputChannelName+".schema");
+        }
+        
+        
 
 #undef KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN
 

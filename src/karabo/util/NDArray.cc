@@ -21,9 +21,9 @@ namespace karabo {
                     .description("The data of the array as an untyped buffer of bytes")
                     .readOnly()
                     .commit();
-            VECTOR_INT64_ELEMENT(s).key("shape")
+            VECTOR_UINT64_ELEMENT(s).key("shape")
                     .displayedName("Shape")
-                    .description("The shape of the array reflects total dimensionality and each element the extension in its dimension (-1: any extension)")
+                    .description("The shape of the array reflects total dimensionality and each element the extension in its dimension (0: any extension)")
                     .readOnly()
                     .commit();
             INT32_ELEMENT(s).key("type")
@@ -148,7 +148,7 @@ namespace karabo {
 
 
         void NDArray::setClassId() {
-            set("__classId", getClassInfo().getClassId());
+            set(KARABO_HASH_CLASS_ID, getClassInfo().getClassId());
         }
 
 
