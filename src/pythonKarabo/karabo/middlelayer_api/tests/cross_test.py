@@ -51,6 +51,10 @@ class Tests(DeviceTest):
             os.remove("serverId.xml")
         except FileNotFoundError:
             pass  # never mind
+        try:
+            os.remove("loggermap.xml")
+        except FileNotFoundError:
+            pass  # never mind
         os.chdir(self.__starting_dir)
         if had_to_kill:
             self.fail("process didn't properly go down")
@@ -129,18 +133,25 @@ class Tests(DeviceTest):
 
         yield from sleep(0.1)
 
-        for i in range(5):
+        for i in range(4):
             self.device.value = i
             self.device.update()
 
+        # This is the first history request ever, so it returns an empty
+        # list (see https://in.xfel.eu/redmine/issues/9414).
         history = yield from getHistory(
             "middlelayerDevice", "00:00", "23:59").value
 
-        if not history:
-            print("history empty, need to index files?")
-            yield from self.wait_for_stderr("building command finished")
-            history = yield from getHistory(
-                "middlelayerDevice", "00:00", "23:59").value
+        # We have to write another value to close the first archive file :-(...
+        self.device.value = 4
+        self.device.update()
+
+        # ... and finally need to wait until the new archive and index files
+        # are flushed (see flushInterval in history.xml).
+        yield from sleep(1.1)
+
+        history = yield from getHistory(
+            "middlelayerDevice", "00:00", "23:59").value
 
         self.assertEqual([h for _, _, _, h in history[-5:]], list(range(5)))
 
