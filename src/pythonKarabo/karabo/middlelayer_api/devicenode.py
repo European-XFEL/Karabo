@@ -51,6 +51,10 @@ class DeviceNode(String):
 
         self.properties = recode(properties)
         self.commands = recode(commands)
+        if self.properties and "state" not in self.properties:
+            self.properties["state"] = "state"
+        if self.properties and "alarmCondition" not in self.properties:
+            self.properties["alarmCondition"] = "alarmCondition"
 
     def toDataAndAttrs(self, proxy):
         if self.properties:
