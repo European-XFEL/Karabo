@@ -539,6 +539,31 @@ def disconnectDevice(device):
     device.__exit__(None, None, None)
 
 
+class locked:
+    def __init__(self, device):
+        self.device = device
+
+    @synchronize
+    def __enter__(self):
+        myId = get_instance().deviceId
+        if self.device.lockedBy == myId:
+            raise KaraboError('recursive lock of "{}" detected!'.
+                              format(self.device.deviceId))
+        self.device.lockedBy = myId
+        while self.device.lockedBy != myId:
+            yield from waitUntilNew(self.device.lockedBy)
+            if self.device.lockedBy == "":
+                self.device.lockedBy = myId
+        return self.device
+
+    @synchronize
+    def __exit__(self, a, b, c):
+        self.device.lockedBy = ""
+        myId = get_instance().deviceId
+        while self.device.lockedBy == myId:
+            yield from waitUntilNew(self.device.lockedBy)
+
+
 def getDevices(serverId=None):
     """Return a list of currently running devices
 
