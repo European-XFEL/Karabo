@@ -1256,12 +1256,15 @@ function buildPackage() {
         if [ $? -ne 0 ]; then
             return 1  # Failure
         fi
-        # Install the package
-        pluginDir=$scriptDir/servers/pythonDeviceServer/plugins
-        if ! takeCareDirExists $pluginDir ; then
-            return 1
-        fi
-        find package -executable -name \*.sh -exec {} --prefix=$pluginDir \;
+        # Install the package in both Python APIs,
+        # its entry point(s) will define where what gets 'active'.
+        for server in pythonDeviceServer middlelayerServer; do
+            pluginDir=$scriptDir/servers/${server}/plugins
+            if ! takeCareDirExists $pluginDir ; then
+                return 1
+            fi
+            find package -executable -name \*.sh -exec {} --prefix=$pluginDir \;
+        done
     fi
     return 0  # looks like success...
 }
