@@ -23,7 +23,7 @@ class DbSettings:
         self.root_collection_test = "/krb_test"
 
 
-class TestDbSettings(DbSettings):
+class ProbeDbSettings(DbSettings):
     def __init__(self, server, port=8080):
         super().__init__('admin', 'karabo', server, port=port)
 

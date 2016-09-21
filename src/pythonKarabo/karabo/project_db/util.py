@@ -7,10 +7,12 @@ from lxml import etree
 from eulexistdb import db
 from eulexistdb.exceptions import ExistDBException
 
-from dbsettings import TestDbSettings, LocalDbSettings
+from .dbsettings import ProbeDbSettings, LocalDbSettings
+
 
 class ProjectDBError(Exception):
     pass
+
 
 def check_running():
     """
@@ -42,10 +44,7 @@ def assure_running(project_db_server=None, project_db_port=None):
      environment variables will be used.
     :return: None
     """
-    karabo_install = os.getenv('KARABO', None)
-    if karabo_install is None:
-        raise EnvironmentError("The $KARABO environment variable needs"
-                               " to be set!")
+    karabo_install = os.getenv('KARABO')
 
     if project_db_server is None:
         project_db_server = os.getenv('KARABO_PROJECT_DB', None)
@@ -60,7 +59,7 @@ def assure_running(project_db_server=None, project_db_port=None):
             script_path = os.path.join(karabo_install, 'karaboRun', 'bin',
                                        'startConfigDB')
             check_call([script_path])
-            #wait until the database is acutally up
+            # wait until the database is acutally up
             maxTimeout = 60
             waitBetween = 5
             count = 0
@@ -68,8 +67,8 @@ def assure_running(project_db_server=None, project_db_port=None):
                 if count > maxTimeout//waitBetween:
                     raise TimeoutError("Starting project database timed out!")
                 try:
-                    tSettings = TestDbSettings(project_db_server,
-                                               port=project_db_port)
+                    tSettings = ProbeDbSettings(project_db_server,
+                                                port=project_db_port)
                     dbhandle = db.ExistDB(tSettings.server_url)
                     if dbhandle.hasCollection('/system'):
                         break
@@ -78,7 +77,8 @@ def assure_running(project_db_server=None, project_db_port=None):
                 count += 1
     else:
         try:
-            tSettings = TestDbSettings(project_db_server, port=project_db_port)
+            tSettings = ProbeDbSettings(project_db_server,
+                                        port=project_db_port)
             dbhandle = db.ExistDB(tSettings.server_uri)
             if not dbhandle.hasCollection(tSettings.root_collection):
                 raise ProjectDBError("An eXistDB instance with karabo "
@@ -97,13 +97,10 @@ def stop_database():
     Stops a **locally** running instance of eXistDB
     :return:
     """
-    karabo_install = os.getenv('KARABO', None)
-    if karabo_install is None:
-        raise EnvironmentError("The $KARABO environment variable needs"
-                               " to be set!")
+    karabo_install = os.getenv('KARABO')
     if check_running():
         script_path = os.path.join(karabo_install, 'karaboRun', 'bin',
-                                       'stopConfigDB')
+                                   'stopConfigDB')
         check_call([script_path])
 
 
@@ -148,7 +145,7 @@ def init_local_db():
     print("Enabling versioning...")
 
     loc = os.path.join(os.path.dirname(__file__),
-                       'config_stubs','versioning.xconf.xml')
+                       'config_stubs', 'versioning.xconf.xml')
 
     with open(loc, "r") as f:
         vers_conf_stub = f.read()
@@ -171,11 +168,12 @@ def init_local_db():
     if karabo_install is None:
         raise EnvironmentError("The $KARABO environment variable needs"
                                " to be set!")
-    loc_conf = "{}/extern/eXistDB/db/conf.xml".format(karabo_install)
+    loc_conf = os.path.join(karabo_install, 'extern', 'eXistDB', 'db',
+                            'conf.xml')
     conf = etree.parse(loc_conf)
 
     loc_filter = os.path.join(os.path.dirname(__file__),
-                              'config_stubs','versioning_filter.xml')
+                              'config_stubs', 'versioning_filter.xml')
     filter = etree.parse(loc_filter).getroot()
 
     serializer = conf.getroot().find('serializer')
