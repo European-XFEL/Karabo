@@ -29,6 +29,8 @@ ALARM_TYPE = 'type'
 DESCRIPTION = 'description'
 NEEDS_ACKNOWLEDGING = 'needsAcknowledging'
 ACKNOWLEDGEABLE = 'acknowledgeable'
+ACKNOWLEDGE = 'acknowledge'  # puts together needsAcknowledging/acknowledgeable
+SHOW_DEVICE = 'showDevice'
 
 alarmData = OrderedDict()
 alarmData[ALARM_ID] = 'ID'
@@ -40,8 +42,8 @@ alarmData[DEVICE_ID] = 'Device ID'
 alarmData[PROPERTY] = 'Property'
 alarmData[ALARM_TYPE] = 'Type'
 alarmData[DESCRIPTION] = 'Description'
-alarmData[NEEDS_ACKNOWLEDGING] = 'Acknowledge'
-alarmData[ACKNOWLEDGEABLE] = 'Show'
+alarmData[ACKNOWLEDGE] = 'Acknowledge'
+alarmData[SHOW_DEVICE] = 'Show Device'
 
 
 AlarmEntry = namedtuple('AlarmEntry', [key for key in alarmData.keys()])
@@ -178,18 +180,21 @@ class AlarmServiceModel(QAbstractTableModel):
                 timeOfOccurrence = Timestamp(alarmHash.get(TIME_OF_OCCURENCE)).toTimestamp()
                 trainOfFirstOccurrence = alarmHash.get(TRAIN_OF_FIRST_OCCURENCE)
                 trainOfOccurrence = alarmHash.get(TRAIN_OF_OCCURENCE)
+                needsAck = alarmHash.get(NEEDS_ACKNOWLEDGING)
+                acknowledge = alarmHash.get(ACKNOWLEDGEABLE)
+                deviceId = alarmHash.get(DEVICE_ID)
                 alarmEntry = AlarmEntry(
                     id=str(alarmHash.get(ALARM_ID)),
                     timeOfFirstOccurrence=QDateTime.fromMSecsSinceEpoch(timeOfFirstOccurrence * 1000),
                     timeOfOccurrence=QDateTime.fromMSecsSinceEpoch(timeOfOccurrence * 1000),
                     trainOfFirstOccurrence=str(trainOfFirstOccurrence),
                     trainOfOccurrence=str(trainOfOccurrence),
-                    needsAcknowledging=alarmHash.get(NEEDS_ACKNOWLEDGING),
-                    acknowledgeable=alarmHash.get(ACKNOWLEDGEABLE),
-                    description=alarmHash.get(DESCRIPTION),
-                    deviceId=alarmHash.get(DEVICE_ID),
+                    deviceId=deviceId,
                     property=alarmHash.get(PROPERTY),
                     type=alarmHash.get(ALARM_TYPE),
+                    description=alarmHash.get(DESCRIPTION),
+                    acknowledge=(needsAck, acknowledge),
+                    showDevice=deviceId,
                     )
                 alarmEntries.append(alarmEntry)
         return updateTypes, alarmEntries
@@ -258,8 +263,6 @@ class AlarmServiceModel(QAbstractTableModel):
 
 
 class ButtonDelegate(QStyledItemDelegate):
-    SHOW_DEVICE = "Show Device"
-
     def __init__(self, parent=None):
         super(ButtonDelegate, self).__init__(parent)
         # Fake button used for later rendering
@@ -279,13 +282,13 @@ class ButtonDelegate(QStyledItemDelegate):
             Otherwise ``False`` is returned.
         """
         column = index.column()
-        ack_index = get_alarm_key_index(NEEDS_ACKNOWLEDGING)
-        device_index = get_alarm_key_index(ACKNOWLEDGEABLE)
+        ack_index = get_alarm_key_index(ACKNOWLEDGE)
+        device_index = get_alarm_key_index(SHOW_DEVICE)
         if column == ack_index or column == device_index:
             if column == ack_index:
-                text = alarmData[NEEDS_ACKNOWLEDGING]
+                text = alarmData[ACKNOWLEDGE]
             else:
-                text = self.SHOW_DEVICE
+                text = alarmData[SHOW_DEVICE]
             return (True, text)
         return (False, '')
 
@@ -294,6 +297,7 @@ class ButtonDelegate(QStyledItemDelegate):
         if isRelevant:
             button = QPushButton(parent)
             self.pbClick.setText(text)
+            # XXX: differentiate between ACKNOWLEDGE and SHOW_DEVICE
             self.pbClick.setEnabled(True if index.data() else False)
             return button
         else:
@@ -303,6 +307,7 @@ class ButtonDelegate(QStyledItemDelegate):
         isRelevant, text = self._isRelevantColumn(index)
         if isRelevant:
             self.pbClick.setText(text)
+            # XXX: differentiate between ACKNOWLEDGE and SHOW_DEVICE
             self.pbClick.setEnabled(True if index.data() else False)
         else:
             super(ButtonDelegate, self).setEditorData(button, index)
@@ -312,6 +317,7 @@ class ButtonDelegate(QStyledItemDelegate):
         if isRelevant:
             self.pbClick.setGeometry(option.rect)
             self.pbClick.setText(text)
+            # XXX: differentiate between ACKNOWLEDGE and SHOW_DEVICE
             self.pbClick.setEnabled(True if index.data() else False)
             if option.state == QStyle.State_Selected:
                 painter.fillRect(option.rect, option.palette.highlight())
@@ -325,6 +331,7 @@ class ButtonDelegate(QStyledItemDelegate):
         if isRelevant:
             button.setGeometry(option.rect)
             button.setText(text)
+            # XXX: differentiate between ACKNOWLEDGE and SHOW_DEVICE
             button.setEnabled(True if index.data() else False)
 
     @pyqtSlot(object)
@@ -336,11 +343,10 @@ class ButtonDelegate(QStyledItemDelegate):
             self.parent().openPersistentEditor(index)
             self.cellEditMode = True
             self.currentCellIndex = index
-            model = index.model()
-            if text == self.SHOW_DEVICE:
+            if text == alarmData[SHOW_DEVICE]:
                 # Send signal to show device
-                deviceId_index = get_alarm_key_index(DEVICE_ID)
-                deviceId = model.index(index.row(), deviceId_index).data()
+                deviceId = index.data()
+                print("deviceId", deviceId)
                 data = {'deviceId': deviceId}
                 # Create KaraboBroadcastEvent
                 broadcast_event(KaraboBroadcastEvent(
@@ -348,6 +354,7 @@ class ButtonDelegate(QStyledItemDelegate):
             else:
                 # Send signal to acknowledge alarm
                 id_index = get_alarm_key_index(ALARM_ID)
+                model = index.model()
                 alarm_id = model.index(index.row(), id_index).data()
                 Network().onAcknowledgeAlarm('Karabo_AlarmService_0', alarm_id)
         else:
