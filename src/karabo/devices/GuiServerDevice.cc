@@ -901,8 +901,10 @@ namespace karabo {
                     if(topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") && 
                        topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService"){
                         connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
-                        boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
-                        m_alarmDevices.insert(instanceId);
+                        {
+                            boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
+                            m_alarmDevices.insert(instanceId);
+                        }
                         const Hash h("type", "alarmServiceAppeared", "instanceId", instanceId);
                         for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                             it->first->writeAsync(h, LOSSLESS);
@@ -971,17 +973,21 @@ namespace karabo {
                     }
                 }
                 
+                //specifically tell alarm service widgets
                 {
-                    //specifically tell alarm service widgets
-                    if(m_alarmDevices.find(instanceId) != m_alarmDevices.end()){
-                        const Hash h("type", "alarmServiceGone", "instanceId", instanceId);
-                        for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                            it->first->writeAsync(h, LOSSLESS);
+                    {
+                        boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
+                        if(m_alarmDevices.find(instanceId) != m_alarmDevices.end()){
+                            //delete from list of alarm services
+                            m_alarmDevices.erase(instanceId);
                         }
-                        //delete from list of alarm services
-                        m_alarmDevices.erase(instanceId);
+                    }
+                    const Hash h("type", "alarmServiceGone", "instanceId", instanceId);
+                    for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                        it->first->writeAsync(h, LOSSLESS);
                     }
                 }
+                
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceGoneHandler(): " << e.userFriendlyMsg();
             }
