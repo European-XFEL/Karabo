@@ -31,7 +31,6 @@ namespace karabo {
 
         void Logger::expectedParameters(Schema& s) {
 
-
             STRING_ELEMENT(s).key("priority")
                     .displayedName("Priority")
                     .description("The default log priority")
@@ -54,6 +53,9 @@ namespace karabo {
 
 
         void Logger::configure(const karabo::util::Hash& config) {
+            // Clear m_config in case a call to configure happened before
+            m_config.clear();
+            // Validate given configuration
             Schema schema;
             expectedParameters(schema);
             Validator validator; // Default validation
