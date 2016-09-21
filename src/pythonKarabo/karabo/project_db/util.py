@@ -5,9 +5,12 @@ from subprocess import check_call
 import psutil
 from lxml import etree
 from eulexistdb import db
+from eulexistdb.exceptions import ExistDBException
 
 from .dbsettings import TestDbSettings, LocalDbSettings
 
+class ProjectDBError(Exception):
+    pass
 
 def check_running():
     """
@@ -18,6 +21,8 @@ def check_running():
         cmd = p.cmdline()
         if len(cmd) == 0:
             continue
+        # check if a web app for eXistDB is running. the full command is
+        # java -jar existDB/start jetty
         if 'java' in cmd and '-jar' in cmd and 'jetty' in cmd and \
            'eXistDB/start' in cmd[2]:
             return True
@@ -52,10 +57,8 @@ def assure_running(project_db_server=None, project_db_port=None):
         # we check if the db is already running
         if not check_running():
             # we execute the start script for the database
-            print("Starting eXistDB. If this is the first start this may take "
-                  "a while as it will also install the database first!")
-            script_path = "{}/karaboRun/bin/startConfigDB"\
-                .format(karabo_install)
+            script_path = os.path.join(karabo_install, 'karaboRun', 'bin',
+                                       'startConfigDB')
             check_call([script_path])
             sleep(30)  # this might take a while
     else:
@@ -63,14 +66,15 @@ def assure_running(project_db_server=None, project_db_port=None):
             tSettings = TestDbSettings(project_db_server, port=project_db_port)
             dbhandle = db.ExistDB(tSettings.server_url)
             if not dbhandle.hasCollection(tSettings.root_collection):
-                print("An eXistDB instance with karabo collections"
-                      " was found running on {}.".format(project_db_server))
+                raise ProjectDBError("An eXistDB instance with karabo "
+                                     "collections was found running on {}."
+                                     .format(project_db_server))
             else:
-                raise EnvironmentError("Could not contact the database server"
-                                       " at {}".format(project_db_server))
-        except:
-            raise EnvironmentError("Could not contact the database server"
-                                   " at {}".format(project_db_server))
+                raise ProjectDBError("Could not contact the database server"
+                                     " at {}".format(project_db_server))
+        except ExistDBException as e:
+            raise ProjectDBError("Could not contact the database server"
+                                 " at {}: {}".format(project_db_server, e))
 
 
 def stop_database():
@@ -83,10 +87,9 @@ def stop_database():
         raise EnvironmentError("The $KARABO environment variable needs"
                                " to be set!")
     if check_running():
-        script_path = "{}/karaboRun/bin/stopConfigDB".format(karabo_install)
+        script_path = os.path.join(karabo_install, 'karaboRun', 'bin',
+                                       'stopConfigDB')
         check_call([script_path])
-    else:
-        print("No database instance is running! Nothing to stop!")
 
 
 def init_local_db():
@@ -130,7 +133,7 @@ def init_local_db():
     print("Enabling versioning...")
 
     loc = os.path.join(os.path.dirname(__file__),
-                       './config_stubs/versioning.xconf.xml')
+                       'config_stubs','versioning.xconf.xml')
 
     with open(loc, "r") as f:
         vers_conf_stub = f.read()
@@ -157,7 +160,7 @@ def init_local_db():
     conf = etree.parse(loc_conf)
 
     loc_filter = os.path.join(os.path.dirname(__file__),
-                              './config_stubs/versioning_filter.xml')
+                              'config_stubs','versioning_filter.xml')
     filter = etree.parse(loc_filter).getroot()
 
     serializer = conf.getroot().find('serializer')
@@ -170,6 +173,5 @@ def init_local_db():
         f.write(str_rep)
 
     # in the end we have to restart the database
-    print("Restarting database...")
     stop_database()
     assure_running()
