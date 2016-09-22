@@ -27,7 +27,7 @@ EXTRACT_SCRIPT=$KARABO/bin/.extract-pythondependency.sh
 INSTALLSCRIPT=$DISTDIR/${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
 if [ "$OS" == "Darwin" ]; then
-  PYTHON=python3.4
+  PYTHON=python3.6
   PIP=pip
   WHEEL_INSTALL_FLAGS="--user"
 else
