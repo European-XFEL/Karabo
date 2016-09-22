@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   ComWrap.hh
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -24,7 +24,7 @@ namespace karathon {
 
     class DeviceClientWrap : public karabo::core::DeviceClient {
 
-        public:
+    public:
 
         DeviceClientWrap(const std::string& connectionType = "Jms", const karabo::util::Hash& connectionParameters = karabo::util::Hash())
             : DeviceClient(connectionType, connectionParameters)
@@ -129,7 +129,7 @@ namespace karathon {
 
         //        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
         //            karabo::util::Hash hash;
-        //            try {    
+        //            try {
         //                ScopedGILRelease nogil;
         //                this->DeviceClient::get(instanceId, hash);
         //            } catch(...) {
@@ -351,6 +351,12 @@ namespace karathon {
             return Wrapper::fromStdPairToPyTuple<karabo::util::Hash, karabo::util::Schema>(this->getConfigurationFromPast(deviceId, timePoint));
         }
 
+        karabo::util::Hash getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName) {
+            ScopedGILRelease nogil;
+            return this->DeviceClient::getOutputChannelSchema(deviceId, outputChannelName);
+        }
+
+
     private:
 
         void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
@@ -451,6 +457,7 @@ namespace karathon {
                 if (it->is<karabo::util::Hash>()) callMonitor(instanceId, registered, it->getValue<karabo::util::Hash>(), currentPath);
             }
         }
+
 
     private: // members
 
