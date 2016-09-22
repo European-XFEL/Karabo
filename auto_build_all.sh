@@ -30,15 +30,15 @@ runUnitTests() {
     echo Running karabo tests ...
     echo
     cd $scriptDir/build/netbeans/karabo
-    make CONF=$CONF test -j $NUM_CORES
+    safeRunCommand "make CONF=$CONF test -j $NUM_CORES"
     cd $scriptDir
     echo
     echo Running pythonKarabo tests
     echo
     cd build/netbeans/pythonKarabo
-    nosetests-3.4 -v karabo.bound_api
-    nosetests-3.4 -v karabo.middlelayer_api
-    nosetests-3.4 -v karabo.tests
+    safeRunCommand "nosetests -v karabo.bound_api"
+    safeRunCommand "nosetests -v karabo.middlelayer_api"
+    safeRunCommand "nosetests -v karabo.tests"
     echo
     echo Unit tests complete
     echo
