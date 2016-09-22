@@ -32,21 +32,21 @@ ACKNOWLEDGEABLE = 'acknowledgeable'
 ACKNOWLEDGE = 'acknowledge'  # puts together needsAcknowledging/acknowledgeable
 SHOW_DEVICE = 'showDevice'
 
-alarmData = OrderedDict()
-alarmData[ALARM_ID] = 'ID'
-alarmData[TIME_OF_FIRST_OCCURENCE] = 'Time of First Occurence'
-alarmData[TIME_OF_OCCURENCE] = 'Time of Occurence'
-alarmData[TRAIN_OF_FIRST_OCCURENCE] = 'Train of First Occurence'
-alarmData[TRAIN_OF_OCCURENCE] = 'Train of Occurence'
-alarmData[DEVICE_ID] = 'Device ID'
-alarmData[PROPERTY] = 'Property'
-alarmData[ALARM_TYPE] = 'Type'
-alarmData[DESCRIPTION] = 'Description'
-alarmData[ACKNOWLEDGE] = 'Acknowledge'
-alarmData[SHOW_DEVICE] = 'Show Device'
+_ALARM_DATA = OrderedDict()
+_ALARM_DATA[ALARM_ID] = 'ID'
+_ALARM_DATA[TIME_OF_FIRST_OCCURENCE] = 'Time of First Occurence'
+_ALARM_DATA[TIME_OF_OCCURENCE] = 'Time of Occurence'
+_ALARM_DATA[TRAIN_OF_FIRST_OCCURENCE] = 'Train of First Occurence'
+_ALARM_DATA[TRAIN_OF_OCCURENCE] = 'Train of Occurence'
+_ALARM_DATA[DEVICE_ID] = 'Device ID'
+_ALARM_DATA[PROPERTY] = 'Property'
+_ALARM_DATA[ALARM_TYPE] = 'Type'
+_ALARM_DATA[DESCRIPTION] = 'Description'
+_ALARM_DATA[ACKNOWLEDGE] = 'Acknowledge'
+_ALARM_DATA[SHOW_DEVICE] = 'Show Device'
 
 
-AlarmEntry = namedtuple('AlarmEntry', [key for key in alarmData.keys()])
+AlarmEntry = namedtuple('AlarmEntry', [key for key in _ALARM_DATA.keys()])
 
 
 INIT_UPDATE_TYPE = 'init'
@@ -59,11 +59,11 @@ REFUSE_ACKNOWLEDGEMENT_UPDATE_TYPE = 'refuseAcknowledgement'
 
 
 def get_alarm_key_index(key):
-    """ Return ``index`` position in ``alarmData`` OrderedDict for the given
+    """ Return ``index`` position in ``_ALARM_DATA`` OrderedDict for the given
         ``key``.
         If the ``key`` is not found, ``None`` is returned."""
     index = -1
-    for k in alarmData.keys():
+    for k in _ALARM_DATA.keys():
         index = index + 1
         if k == key:
             return index
@@ -154,7 +154,7 @@ class AlarmPanel(Dockable, QWidget):
 class AlarmServiceModel(QAbstractTableModel):
     """ A class which describes the relevant data (model) of a alarm service
         device to show in a table view. """
-    headers = [value for key, value in alarmData.items()]
+    headers = [value for key, value in _ALARM_DATA.items()]
 
     textColor = {'warnLow': QColor(255, 102, 0),
                  'warnHigh': QColor(255, 102, 0),
@@ -286,19 +286,26 @@ class ButtonDelegate(QStyledItemDelegate):
         device_index = get_alarm_key_index(SHOW_DEVICE)
         if column == ack_index or column == device_index:
             if column == ack_index:
-                text = alarmData[ACKNOWLEDGE]
+                text = _ALARM_DATA[ACKNOWLEDGE]
             else:
-                text = alarmData[SHOW_DEVICE]
+                text = _ALARM_DATA[SHOW_DEVICE]
             return (True, text)
         return (False, '')
+
+    def _updateButton(self, button, index):
+        """ Set the visibility and enabling of the button depending on the
+            properties ``NEEDS_ACKNOWLEDGING`` and ``ACKNOWLEDGEABLE``.
+        """
+        if index.column() == get_alarm_key_index(ACKNOWLEDGE):
+            needsAck, ack = index.data()
+            button.setEnabled(True if needsAck and ack else False)
 
     def createEditor(self, parent, option, index):
         isRelevant, text = self._isRelevantColumn(index)
         if isRelevant:
             button = QPushButton(parent)
-            self.pbClick.setText(text)
-            # XXX: differentiate between ACKNOWLEDGE and SHOW_DEVICE
-            self.pbClick.setEnabled(True if index.data() else False)
+            button.setText(text)
+            self._updateButton(button, index)
             return button
         else:
             return super(ButtonDelegate, self).createEditor(parent, option, index)
@@ -306,9 +313,8 @@ class ButtonDelegate(QStyledItemDelegate):
     def setEditorData(self, button, index):
         isRelevant, text = self._isRelevantColumn(index)
         if isRelevant:
-            self.pbClick.setText(text)
-            # XXX: differentiate between ACKNOWLEDGE and SHOW_DEVICE
-            self.pbClick.setEnabled(True if index.data() else False)
+            button.setText(text)
+            self._updateButton(button, index)
         else:
             super(ButtonDelegate, self).setEditorData(button, index)
 
@@ -317,8 +323,7 @@ class ButtonDelegate(QStyledItemDelegate):
         if isRelevant:
             self.pbClick.setGeometry(option.rect)
             self.pbClick.setText(text)
-            # XXX: differentiate between ACKNOWLEDGE and SHOW_DEVICE
-            self.pbClick.setEnabled(True if index.data() else False)
+            self._updateButton(self.pbClick, index)
             if option.state == QStyle.State_Selected:
                 painter.fillRect(option.rect, option.palette.highlight())
             pixmap = QPixmap.grabWidget(self.pbClick)
@@ -331,8 +336,7 @@ class ButtonDelegate(QStyledItemDelegate):
         if isRelevant:
             button.setGeometry(option.rect)
             button.setText(text)
-            # XXX: differentiate between ACKNOWLEDGE and SHOW_DEVICE
-            button.setEnabled(True if index.data() else False)
+            self._updateButton(button, index)
 
     @pyqtSlot(object)
     def cellClicked(self, index):
@@ -343,10 +347,9 @@ class ButtonDelegate(QStyledItemDelegate):
             self.parent().openPersistentEditor(index)
             self.cellEditMode = True
             self.currentCellIndex = index
-            if text == alarmData[SHOW_DEVICE]:
+            if text == _ALARM_DATA[SHOW_DEVICE]:
                 # Send signal to show device
                 deviceId = index.data()
-                print("deviceId", deviceId)
                 data = {'deviceId': deviceId}
                 # Create KaraboBroadcastEvent
                 broadcast_event(KaraboBroadcastEvent(
