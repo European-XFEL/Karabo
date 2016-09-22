@@ -906,6 +906,7 @@ namespace karabo {
                             m_alarmDevices.insert(instanceId);
                         }
                         const Hash h("type", "alarmServiceAppeared", "instanceId", instanceId);
+                        boost::mutex::scoped_lock lock(m_channelMutex);
                         for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                             it->first->writeAsync(h, LOSSLESS);
                         }
@@ -974,7 +975,8 @@ namespace karabo {
                 }
                 
                 //specifically tell alarm service widgets
-                {
+                if(instanceInfo.get<Hash>(type).begin()->hasAttribute("classId") && 
+                       instanceInfo.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService"){
                     {
                         boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
                         if(m_alarmDevices.find(instanceId) != m_alarmDevices.end()){
@@ -983,6 +985,7 @@ namespace karabo {
                         }
                     }
                     const Hash h("type", "alarmServiceGone", "instanceId", instanceId);
+                    boost::mutex::scoped_lock lock(m_channelMutex);
                     for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                         it->first->writeAsync(h, LOSSLESS);
                     }
