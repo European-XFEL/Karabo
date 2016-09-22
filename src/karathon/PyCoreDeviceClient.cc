@@ -79,6 +79,7 @@ void exportPyCoreDeviceClient() {
             .def("executeNoWait2", &DeviceClientWrap::executeNoWaitPy2, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2")))
             .def("executeNoWait3", &DeviceClientWrap::executeNoWaitPy3, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
             .def("executeNoWait4", &DeviceClientWrap::executeNoWaitPy4, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
+            .def("getOutputChannelSchema", &DeviceClientWrap::getOutputChannelSchema, (bp::arg("deviceId"), bp::arg("outputChannelName")))
             ;
 }
 
