@@ -265,9 +265,8 @@ class PythonDevice(NoFsm):
     def setNumberOfThreads(self, nThreads):
         self._ss.setNumberOfThreads(nThreads)
     
-    def loadLogger(self, input):
-        config = input.get("Logger")
-        Logger.configure(config)
+    def loadLogger(self, config):
+        Logger.configure(config.get("Logger"))
         Logger.useOstream();
         Logger.useFile();
         Logger.useNetwork();

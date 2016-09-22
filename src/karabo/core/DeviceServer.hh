@@ -63,7 +63,7 @@ namespace karabo {
             std::map<std::string, unsigned int> m_deviceInstanceCount;
             int m_visibility;
 
-            karabo::net::BrokerConnection::Pointer m_connection;            
+            karabo::net::BrokerConnection::Pointer m_connection;
 
             karabo::util::Hash m_connectionConfiguration;
             std::string m_serverId;
