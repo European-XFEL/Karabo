@@ -431,6 +431,7 @@ class _Network(QObject):
 
     def onRequestAlarms(self):
         # XXX: where should the ``alarmInstanceId`` come from?
+        # This will be gone soon since all available AlarmServices are sent
         h = Hash("type", "requestAlarms",
                  "alarmInstanceId", "Karabo_AlarmService_0")
         self._tcpWriteHash(h)
