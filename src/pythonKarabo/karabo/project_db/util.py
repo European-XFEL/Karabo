@@ -83,9 +83,7 @@ def assure_running(project_db_server=None, project_db_port=None):
                     dbhandle = db.ExistDB(tSettings.server_url)
                     if dbhandle.hasCollection('/system'):
                         break
-                except (NewConnectionError, ConnectTimeoutError,
-                        ConnectionError, HTTPError, ResponseError,
-                        RequestError, MaxRetryError, ProtocolError) as last_ex:
+                except (TimeoutError, HTTPError) as last_ex:
                     sleep(waitBetween)
                 count += 1
     else:
