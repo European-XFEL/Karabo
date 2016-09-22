@@ -83,6 +83,7 @@ if __name__ == '__main__':
                                                "data/legacy/icon_data/*.svg"],
             'karabo.middlelayer_api.tests': ['*.xml'],
             'karabo.testing': ['resources/*.*'],
+            'karabo.project_db': ['config_stubs/*.*'],
         },
         entry_points={'console_scripts': [
                       'karabo_device_server=karabo.bound_api.device_server:main',
