@@ -62,9 +62,6 @@ namespace karabo {
             karabo::util::Hash m_loggerMap;
             karabo::util::Hash m_loggerInput;
 
-            std::set<std::string> m_alarmDevices;
-            mutable boost::mutex m_alarmDevicesMutex;
-
         public:
 
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "1.0")
@@ -267,15 +264,6 @@ namespace karabo {
              * original update request, as received through onUpdateAttributes
              */
             void onRequestedAttributeUpdate(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply);
-
-            /**
-             *  Gets called when the GUI requests a current list of the existing alarm services
-             * @param channel: gui channel that requested the update
-             * @param info: Hash("type", "requestAlarmServices")
-             * Sends a reply Hash("type", "knownAlarmServices", "instanceIds", std::vector<string>) back to channel,
-             * where instanceIds contains a list of the currently available alarm service instances.
-             */
-            void onRequestAlarmServices(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
         };
     }

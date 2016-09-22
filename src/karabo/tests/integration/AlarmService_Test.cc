@@ -96,7 +96,6 @@ void AlarmService_Test::appTestRunner() {
     testRecovery();
     testDeviceKilled();
     testDeviceReappeared();
-    testRequestExistingAlarmServices();
     if(m_tcpAdapter->connected()){
         m_tcpAdapter->disconnect();
     }
@@ -307,7 +306,7 @@ void AlarmService_Test::testRecovery(){
     //first we bring down the alarm service.
     //at this state it should hold an warnHigh for floatProperty2 which cannot be acknowledged
     std::pair<bool, std::string> success;
-    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmServiceGone", 1, [&]{success = m_deviceClient->killDevice("testAlarmService", KRB_TEST_MAX_TIMEOUT);});
+    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("instanceGone", 1, [&]{success = m_deviceClient->killDevice("testAlarmService", KRB_TEST_MAX_TIMEOUT);});
     CPPUNIT_ASSERT(success.first);
     Hash lastMessage;
     messageQ->pop(lastMessage);
@@ -337,13 +336,13 @@ void AlarmService_Test::testRecovery(){
     //now we bring the alarm service back up
     boost::shared_ptr<boost::lockfree::spsc_queue<Hash> > messageQ2;
     boost::shared_ptr<boost::lockfree::spsc_queue<Hash> > messageQ3;
-    messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 3, [&]{messageQ2 = m_tcpAdapter->getNextMessages("alarmInit", 1, [&]{messageQ3 = m_tcpAdapter->getNextMessages("alarmServiceAppeared", 1, [&]{success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService", "flushInterval", 1), KRB_TEST_MAX_TIMEOUT);});});});
+    messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 3, [&]{messageQ2 = m_tcpAdapter->getNextMessages("alarmInit", 1, [&]{messageQ3 = m_tcpAdapter->getNextMessages("instanceNew", 1, [&]{success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService", "flushInterval", 1), KRB_TEST_MAX_TIMEOUT);});});});
     CPPUNIT_ASSERT(success.first);
     CPPUNIT_ASSERT(success.first);
     
     messageQ3->pop(lastMessage);
-    CPPUNIT_ASSERT(lastMessage.has("instanceId"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("instanceId") == "testAlarmService");
+    CPPUNIT_ASSERT(lastMessage.has("topologyEntry.device.testAlarmService"));
+
     
     messageQ2->pop(lastMessage);
     CPPUNIT_ASSERT(lastMessage.has("rows.1.init"));
@@ -415,17 +414,6 @@ void AlarmService_Test::testDeviceKilled(){
 	
  }
     
- void AlarmService_Test::testRequestExistingAlarmServices(){
-    const Hash message("type", "requestAlarmServices");
-    TcpAdapter::QueuePtr messageQ =  m_tcpAdapter->getNextMessages("knownAlarmServices", 1, [&]{m_tcpAdapter->sendMessage(message);});
-
-    Hash lastMessage;
-    messageQ->pop(lastMessage);
-
-    CPPUNIT_ASSERT(lastMessage.has("instanceIds")); 
-    CPPUNIT_ASSERT(lastMessage.get<std::vector<std::string> >("instanceIds").size() == 1); 
-    CPPUNIT_ASSERT(lastMessage.get<std::vector<std::string> >("instanceIds")[0] == "testAlarmService"); 
- }
 
 #undef KRB_TEST_MAX_TIMEOUT
 
