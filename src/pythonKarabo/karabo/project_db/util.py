@@ -6,6 +6,15 @@ import psutil
 from lxml import etree
 from eulexistdb import db
 from eulexistdb.exceptions import ExistDBException
+from requests.packages.urllib3.exceptions import (NewConnectionError,
+                                                  ConnectTimeoutError,
+                                                  ConnectionError,
+                                                  HTTPError,
+                                                  ResponseError,
+                                                  RequestError,
+                                                  MaxRetryError,
+                                                  ProtocolError)
+
 
 from .dbsettings import ProbeDbSettings, LocalDbSettings
 
@@ -63,16 +72,20 @@ def assure_running(project_db_server=None, project_db_port=None):
             maxTimeout = 60
             waitBetween = 5
             count = 0
+            last_ex = None
             while True:
                 if count > maxTimeout//waitBetween:
-                    raise TimeoutError("Starting project database timed out!")
+                    raise TimeoutError("Starting project database timed out!"
+                                       "Last exception: {}".format(last_ex))
                 try:
                     tSettings = ProbeDbSettings(project_db_server,
                                                 port=project_db_port)
                     dbhandle = db.ExistDB(tSettings.server_url)
                     if dbhandle.hasCollection('/system'):
                         break
-                except Exception:
+                except (NewConnectionError, ConnectTimeoutError,
+                        ConnectionError, HTTPError, ResponseError,
+                        RequestError, MaxRetryError, ProtocolError) as last_ex:
                     sleep(waitBetween)
                 count += 1
     else:
