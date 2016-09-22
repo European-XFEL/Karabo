@@ -81,16 +81,15 @@ class AlarmPanel(Dockable, QWidget):
                 return True
         return super(AlarmPanel, self).eventFilter(obj, event)
 
+    @property
+    def instanceId(self):
+        return self.twAlarm.model().instanceId
+
     def setupActions(self):
         pass
 
     def setupToolBars(self, toolBar, parent):
         pass
-
-    def setEnabled(self, enable):
-        if enable:
-            Network().onRequestAlarms()
-        super(AlarmPanel, self).setEnabled(enable)
 
     def _initAlarms(self, instanceId, rows):
         self.twAlarm.model().initAlarms(instanceId, rows)

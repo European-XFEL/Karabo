@@ -90,6 +90,14 @@ class MainWindow(QMainWindow):
                 data = event.data
                 self.renameMiddlePanel('macro_model', data.get('model'))
                 return True
+            elif sender is KaraboEventSender.ShowAlarmServices:
+                data = event.data
+                self.showAlarmServicePanels(data.get('instanceIds'))
+                return True
+            elif sender is KaraboEventSender.RemoveAlarmServices:
+                data = event.data
+                self.removeAlarmServicePanels(data.get('instanceIds'))
+                return True
         return super(MainWindow, self).eventFilter(obj, event)
 
 ### initializations ###
@@ -210,12 +218,13 @@ class MainWindow(QMainWindow):
         self.placeholderPanel = None
         self.middleArea.setStretchFactor(0, 6)
 
-        self.alarmPanel = AlarmPanel()
+        # Container for all current alarm panels
+        self.alarmPanels = []
+
         self.loggingPanel = LoggingPanel()
         self.scriptingPanel = ScriptingPanel()
         self.notificationPanel = NotificationPanel()
         self.outputTab = DockTabWindow("Output", self.middleArea)
-        self.outputTab.addDockableTab(self.alarmPanel, "Alarms", self)
         self.outputTab.addDockableTab(self.loggingPanel, "Log", self)
         self.outputTab.addDockableTab(self.scriptingPanel, "Console", self)
         self.outputTab.addDockableTab(self.notificationPanel,
@@ -274,8 +283,12 @@ class MainWindow(QMainWindow):
 
         # Enable or disable toolbar of project panel
         self.projectPanel.enableToolBar(connectedToServer)
-        # Enable alarm panel
-        self.alarmPanel.setEnabled(connectedToServer)
+        # Remove all alarm panels
+        if not connectedToServer:
+            while self.alarmPanels:
+                panel = self.alarmPanels.pop()
+                print("panel", panel)
+                self.outputTab.removeDockableTab(panel)
 
     def _removePlaceholderMiddlePanel(self):
         """The placeholder for the middle panel is removed.
@@ -381,6 +394,28 @@ class MainWindow(QMainWindow):
         if self.middleTab.count() > 1:
             self.middleTab.updateTabsClosable()
         self.middleTab.setCurrentIndex(self.middleTab.count() - 1)
+
+    def showAlarmServicePanels(self, instanceIds):
+        """ Show alarm panels for the given ``instanceIds``."""
+        for instId in instanceIds:
+            # Check whether there is already an alarm panel for this ``instanceId``
+            for panel in self.alarmPanels:
+                if panel.instanceId == instId:
+                    self.outputTab.setCurrentWidget(panel)
+                    return
+            panel = AlarmPanel()
+            title = "Alarms for {}".format(instId)
+            self.outputTab.addDockableTab(panel, title, self)
+            self.outputTab.setCurrentWidget(panel)
+            self.alarmPanels.append(panel)
+
+    def removeAlarmServicePanels(self, instanceIds):
+        """ Remove alarm panels for the given ``instanceIds``."""
+        for instId in instanceIds:
+            while self.alarmPanels:
+                panel = self.alarmPanels.pop()
+                if panel.instanceId == instId:
+                    self.outputTab.removeDockableTab(panel)
 
 ### virtual functions ###
     def closeEvent(self, event):

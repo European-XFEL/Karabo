@@ -113,6 +113,18 @@ class _Manager(QObject):
             if conf.descriptor is not None:
                 conf.redummy()
 
+    def _extractAlarmServices(self, topologyEntry):
+        """ This method extracts the existing devices of type ``AlarmService``
+            and returns the instance ids in a list.
+        """
+        instanceIds = []
+        for deviceId, _, attrs in topologyEntry['device'].iterall():
+            classId = attrs.get("classId", "unknown-class")
+            if classId == 'AlarmService':
+                print("+++ AlarmService", deviceId)
+                instanceIds.append(deviceId)
+        return instanceIds
+
     def initDevice(self, serverId, classId, deviceId, config=None):
         # Use standard configuration for server/classId
         conf = getClass(serverId, classId)
@@ -374,7 +386,6 @@ class _Manager(QObject):
     def handle_brokerInformation(self, **kwargs):
         Network()._handleBrokerInformation(**kwargs)
 
-
     def handle_systemTopology(self, systemTopology):
         if self.systemHash is None:
             self.systemHash = systemTopology
@@ -385,6 +396,12 @@ class _Manager(QObject):
         for v in self.deviceData.values():
             v.updateStatus()
         self.projectTopology.updateNeeded()
+        # Distribute alarm service devices
+        instanceIds = self._extractAlarmServices(systemTopology)
+        data = {'instanceIds': instanceIds}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.ShowAlarmServices, data))
 
     def handle_systemVersion(self, version):
         """ Handle the version number reply from the GUI server.
@@ -412,6 +429,12 @@ class _Manager(QObject):
 
         # Update system topology with new configuration
         self.handle_instanceUpdated(topologyEntry)
+        # Distribute new alarm service devices
+        instanceIds = self._extractAlarmServices(topologyEntry)
+        data = {'instanceIds': instanceIds}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.ShowAlarmServices, data))
 
     def handle_instanceUpdated(self, topologyEntry):
         self.handle_systemTopology(topologyEntry)
@@ -442,6 +465,14 @@ class _Manager(QObject):
             path = instanceType + "." + instanceId
             if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
+            
+            # Distribute gone alarm service devices
+            instanceIds = self._extractAlarmServices(self.systemHash)
+            if instanceId in instanceIds:
+                data = {'instanceIds': [instanceId]}
+                # Create KaraboBroadcastEvent
+                broadcast_event(KaraboBroadcastEvent(
+                    KaraboEventSender.RemoveAlarmServices, data))
         elif instanceType == "server":
             # Update system topology
             serverClassIds = self.systemTopology.eraseServer(instanceId)
