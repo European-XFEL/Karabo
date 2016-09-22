@@ -263,8 +263,6 @@ namespace karabo {
                         onAcknowledgeAlarm(channel, info);
                     } else if (type == "requestAlarms"){
                         onRequestAlarms(channel, info);
-                    } else if (type == "requestAlarmServices"){
-                        onRequestAlarmServices(channel, info);
                     } else if (type == "updateAttributes"){
                         onUpdateAttributes(channel, info);
                     }
@@ -897,20 +895,9 @@ namespace karabo {
                         requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
                     }
                     
-                    
                     if(topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") && 
                        topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService"){
-                        connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
-                        {
-                            boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
-                            m_alarmDevices.insert(instanceId);
-                        }
-                        const Hash h("type", "alarmServiceAppeared", "instanceId", instanceId);
-                        boost::mutex::scoped_lock lock(m_channelMutex);
-                        for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                            it->first->writeAsync(h, LOSSLESS);
-                        }
-                        
+                         connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
                     }
                 }
             } catch (const Exception& e) {
@@ -924,6 +911,18 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance updated";
                 Hash h("type", "instanceUpdated", "topologyEntry", topologyEntry);
                 safeAllClientsWrite(h);
+                
+                //assure connection of alarm signal
+                const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
+                const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
+                                                 topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
+                if(type == "device"){
+                    if(topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") && 
+                       topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService"){
+                            connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
+                    }
+                }
+                
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceUpdatedHandler(): " << e.userFriendlyMsg();
             }
@@ -971,23 +970,6 @@ namespace karabo {
                             KARABO_LOG_FRAMEWORK_DEBUG << "instanceId : " << instanceId << ", channelName : " << iter->second.name;
                             m_networkConnections.erase(iter);
                         }
-                    }
-                }
-                
-                //specifically tell alarm service widgets
-                if(instanceInfo.get<Hash>(type).begin()->hasAttribute("classId") && 
-                       instanceInfo.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService"){
-                    {
-                        boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
-                        if(m_alarmDevices.find(instanceId) != m_alarmDevices.end()){
-                            //delete from list of alarm services
-                            m_alarmDevices.erase(instanceId);
-                        }
-                    }
-                    const Hash h("type", "alarmServiceGone", "instanceId", instanceId);
-                    boost::mutex::scoped_lock lock(m_channelMutex);
-                    for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                        it->first->writeAsync(h, LOSSLESS);
                     }
                 }
                 
@@ -1188,14 +1170,9 @@ namespace karabo {
              try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestAlarms : info ...\n" << info;
                
-                boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
                 const std::string& requestedInstance = info.get<std::string>("alarmInstanceId");
-                for(std::set<std::string>::const_iterator it = m_alarmDevices.begin(); it != m_alarmDevices.end(); ++it){
-                    if(requestedInstance != "" && requestedInstance != *it) continue;
-                    request(*it, "slotRequestAlarmDump")
+                request(requestedInstance, "slotRequestAlarmDump")
                             .receiveAsync<karabo::util::Hash>(boost::bind(&GuiServerDevice::onRequestedAlarmsReply, this, channel, _1));
-                }
-                      
                 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestAlarms(): " << e.userFriendlyMsg();
@@ -1234,17 +1211,5 @@ namespace karabo {
             }  
         }
         
-        void GuiServerDevice::onRequestAlarmServices(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info){
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestAlarmServices : info ...\n" << info;
-                std::vector<std::string> alarmServices(m_alarmDevices.size());
-                alarmServices.assign(m_alarmDevices.begin(), m_alarmDevices.end());
-                const Hash h("type", "knownAlarmServices", "instanceIds", alarmServices);
-                channel->writeAsync(h, LOSSLESS);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestAlarmServices(): " << e.userFriendlyMsg();
-            }
-        }
-
     }
 }
