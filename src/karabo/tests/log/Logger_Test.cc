@@ -38,6 +38,9 @@ void Logger_Test::tearDown() {
 
 void Logger_Test::test1() {
 
+    // We are chatty in this test
+    // But the idea is to only see OKs and never ERROR
+    // There is no ASSERT unfortunately, so this test needs visual inspection
     Hash config("priority", "DEBUG");
     Logger::configure(config);
     Logger::logDebug() << "ERROR";

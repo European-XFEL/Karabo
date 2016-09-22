@@ -73,7 +73,7 @@ namespace karabo {
              * One or more broker URLs can be provided. If several URLs are provided they will be tried
              * in order once a previous connection failed.
              * NOTE: Automatic reconnection needs a running event-loop
-             * @param brokerUrl A single or a comma separated list of broker URLs (tcp://<host>:<port>)
+             * @param brokerUrls A single or a comma separated list of broker URLs (tcp://<host>:<port>)
              */
             JmsConnection(const std::string& brokerUrls);
 
