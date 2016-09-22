@@ -52,8 +52,10 @@ namespace karabo {
             string defaultBrokerHosts = ""; // no defaults; it serves as a flag for clustering setup
             string defaultHostname = "exfl-broker.desy.de:7777";
             unsigned int defaultPort = 7777;
-            string defaultTopic = string(getenv("USER"));
+            string defaultTopic = "unsetKaraboUser";
 
+            env = getenv("USER");
+            if (env != 0) defaultTopic = string(env);
             env = getenv("KARABO_BROKER_PORT");
             if (env != 0) defaultPort = fromString<unsigned int>(string(env));
             env = getenv("KARABO_BROKER_HOST");
