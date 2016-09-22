@@ -18,7 +18,11 @@ namespace karabo {
 
         void ImageData::expectedParameters(karabo::util::Schema& s) {
 
-            // TODO -- Add NDARRAY_ELEMENT, once it's done
+            NDARRAY_ELEMENT(s).key("pixels")
+                    .displayedName("Pixel Data")
+                    .description("The N-dimensional array containing the pixels")
+                    .readOnly()
+                    .commit();
 
             VECTOR_UINT32_ELEMENT(s).key("dims")
                     .displayedName("Dimensions")
