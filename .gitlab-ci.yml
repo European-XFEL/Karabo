@@ -22,6 +22,8 @@
     - bash ./auto_build_all.sh Debug --noBundle --runTests
   only:
     - branches
+  except:
+    - master
 
 deps:ubuntu14:
   <<: *deps_build
