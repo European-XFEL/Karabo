@@ -130,7 +130,7 @@ else
     cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $SITE_PACKAGES/ # <-- karathon.so
     ln -s $SITE_PACKAGES/karathon.so $PACKAGEDIR/lib/libkarathon.so
 
-    [ -d $PACKAGEDIR/extern/include/python3.4m ]  && (cd $PACKAGEDIR/extern/include; rm -f python3.4; ln -s python3.4m python3.4)
+    [ -d $PACKAGEDIR/extern/include/python3.6m ]  && (cd $PACKAGEDIR/extern/include; rm -f python3.6; ln -s python3.6m python3.6)
 fi
 
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
