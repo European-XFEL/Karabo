@@ -67,12 +67,5 @@ namespace karabo {
         bool Timestamp::operator==(const Timestamp& other) const {
             return (m_epochstamp == other.m_epochstamp && m_trainstamp == other.m_trainstamp);
         }
-
-
-        bool Timestamp::operator!=(const Timestamp& other) const {
-            return (m_epochstamp != other.m_epochstamp || m_trainstamp != other.m_trainstamp);
-        }
-
     }
 }
-
