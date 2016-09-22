@@ -586,7 +586,7 @@ class  Schema_TestCase(unittest.TestCase):
         schema = Configurator(ArrayContainer).getSchema("ArrayContainer")
 
         assert schema.getDefaultValue("exampleKey16.shape") == [2, 3]
-        assert schema.getDefaultValue("exampleKey17.shape") == [2, 5, -1]
+        assert schema.getDefaultValue("exampleKey17.shape") == [2, 5, 0]
         assert schema.getDefaultValue("exampleKey18.shape") == [3, 2, 1]
 
         assert schema.isAccessReadOnly("exampleKey16")
