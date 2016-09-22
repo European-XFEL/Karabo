@@ -58,6 +58,7 @@
             <linkerLibLibItem>karabo</linkerLibLibItem>
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
+          <commandLine>-Wl,-rpath-link,${KARABO}/extern/lib</commandLine>
         </linkerTool>
         <requiredProjects>
           <makeArtifact PL="../../../karabo"
@@ -117,6 +118,7 @@
             <linkerLibLibItem>karabo</linkerLibLibItem>
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
+          <commandLine>-Wl,-rpath-link,${KARABO}/extern/lib</commandLine>
         </linkerTool>
         <requiredProjects>
           <makeArtifact PL="../../../karabo"

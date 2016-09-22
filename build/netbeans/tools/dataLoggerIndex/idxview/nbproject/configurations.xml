@@ -58,6 +58,7 @@
             <linkerLibLibItem>karabo</linkerLibLibItem>
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
+          <commandLine>-Wl,-rpath-link,${KARABO}/extern/lib</commandLine>
         </linkerTool>
       </compileType>
       <item path="../../../../../src/tools/dataLoggerIndex/idxView.cc"
@@ -105,6 +106,7 @@
             <linkerLibLibItem>karabo</linkerLibLibItem>
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
+          <commandLine>-Wl,-rpath-link,${KARABO}/extern/lib</commandLine>
         </linkerTool>
       </compileType>
       <item path="../../../../../src/tools/dataLoggerIndex/idxView.cc"

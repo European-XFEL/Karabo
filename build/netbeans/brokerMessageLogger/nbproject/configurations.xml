@@ -68,6 +68,7 @@
             </linkerLibProjectItem>
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
+          <commandLine>-Wl,-rpath-link,${KARABO}/extern/lib</commandLine>
         </linkerTool>
       </compileType>
       <item path="../../../src/brokerMessageLogger/brokerMessageLogger.cc"
@@ -126,6 +127,7 @@
             </linkerLibProjectItem>
             <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
+          <commandLine>-Wl,-rpath-link,${KARABO}/extern/lib</commandLine>
         </linkerTool>
       </compileType>
       <item path="../../../src/brokerMessageLogger/brokerMessageLogger.cc"

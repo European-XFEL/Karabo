@@ -62,7 +62,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ../ka
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger ${OBJECTFILES} ${LDLIBSOPTIONS}
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger ${OBJECTFILES} ${LDLIBSOPTIONS} -Wl,-rpath-link,${KARABO}/extern/lib
 
 ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o: ../../../src/brokerMessageLogger/brokerMessageLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/496226620
