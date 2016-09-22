@@ -19,7 +19,6 @@
 
 
 #include "karabo/util/TimeProfiler.hh"
-#include <karabo/log/Tracer.hh>
 #include <karabo/util/ArrayTools.hh>
 
 using namespace karabo::util;
@@ -32,13 +31,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION(H5Format_Test);
 
 H5Format_Test::H5Format_Test() {
 
-    karabo::log::Tracer tr;
-    tr.disableAll();
-    // tr.enable("karabo.io.h5.VECTOR_INT32");
-    //    tr.enable("karabo.io.h5");
-    //tr.enable("karabo.io.h5.Format");    
-    //tr.enable("H5Format_Test.testDiscoverFromHash");
-    tr.reconfigure();
 }
 
 

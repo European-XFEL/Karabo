@@ -79,11 +79,6 @@ class TestDevice(PythonDevice):
 
 
 if __name__ == "__main__":
-    # most of what's happening here is magic. Maybe some wizard
-    # (SE?) should have a look at it and try to simplify it?
-    config = Hash()
-    config.set("appenders[0].Ostream.layout.Pattern.format", "%p %c: %m%n")
-    config.set("appenders[1].RollingFile.layout.Pattern.format", "blua")
-    device = Configurator(PythonDevice).create(
-        "TestDevice", Hash("_deviceId_", "boundDevice", "Logger", config))
+    config = Hash("_deviceId_", "boundDevice")
+    device = Configurator(PythonDevice).create("TestDevice", config)
     device.run()

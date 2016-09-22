@@ -227,6 +227,23 @@ namespace karabo {
                 }
                 return registeredClasses;
             }
+            
+            /**
+             * Trigger a validation of class BaseClass (or a derivative) against the Schema as provided by the
+             * static expectedParameters function
+             * 
+             * NOTE: During regular factory construction validation already is done (if validate==true)            *      
+             * 
+             * @param classId The factory key of the to be created object (must inherit the BaseClass template)
+             * @param configuration A hash that is checked against the expectedParameters requirements
+             * @param validated The resultant validated hash (has defaults injected)
+             */
+            static void validateConfiguration(const std::string& classId, const Hash& configuration, Hash& validated) {
+                Schema schema = getSchema(classId, Schema::AssemblyRules(INIT | WRITE | READ));
+                Validator validator; // Default validation
+                std::pair<bool, std::string> ret = validator.validate(schema, configuration, validated);
+                if (ret.first == false) throw KARABO_PARAMETER_EXCEPTION("Validation failed. \n" + ret.second);
+            }
 
         private:
 
@@ -275,15 +292,7 @@ namespace karabo {
                 CtorMap::const_iterator jt = it->second.find(constructorKey);
                 if (jt == it->second.end()) throw KARABO_PARAMETER_EXCEPTION("No constructor expecting argument(s) \"" + constructorKey + "\" registered for key \"" + factoryKey + "\"");
                 return jt;
-            }
-
-            
-            static void validateConfiguration(const std::string& classId, const Hash& configuration, Hash& validated) {
-                Schema schema = getSchema(classId, Schema::AssemblyRules(INIT | WRITE | READ));
-                Validator validator; // Default validation
-                std::pair<bool, std::string> ret = validator.validate(schema, configuration, validated);
-                if (ret.first == false) throw KARABO_PARAMETER_EXCEPTION("Validation failed. \n" + ret.second);
-            }
+            }            
 
         };
 
