@@ -389,12 +389,15 @@ void TimeClasses_Test::testTimestamp() {
     CPPUNIT_ASSERT_EQUAL(79837534348ull, stamp1.getFractionalSeconds());
     CPPUNIT_ASSERT_EQUAL(987654321ull, stamp1.getTrainId());
 
-    // operator == and !=
+    // operator == and !=: non-equality for both
+    // - epoch is same, but trainId differs
+    // - epoch differs, but trainId is same
     const Timestamp stamp2a(eStamp, Trainstamp(trStamp.getTrainId() + 2));
+    const Timestamp stamp2b(eStamp + TimeDuration(12345ull, 987654321ull), trStamp);
     CPPUNIT_ASSERT(stamp1 == stamp3);
     CPPUNIT_ASSERT(!(stamp1 == stamp2a));
-    // I skip testing where eStamp differs but trStamps are same...
-
+    CPPUNIT_ASSERT(!(stamp1 == stamp2b));
     CPPUNIT_ASSERT(!(stamp1 != stamp3));
     CPPUNIT_ASSERT(stamp1 != stamp2a);
+    CPPUNIT_ASSERT(stamp1 != stamp2b);
 }
