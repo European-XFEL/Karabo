@@ -394,7 +394,7 @@ class TestStruct1(object):
                 ,
         NDARRAY_ELEMENT(expected).key("exampleKey16")
                 .dtype("UINT32")
-                .shape([2, 5, -1])
+                .shape([2, 5, 0])
                 .commit()
                 ,
         INT32_ELEMENT(expected).key("exampleIntKey")
@@ -651,7 +651,7 @@ class ArrayContainer(Base):
                 ,
         NDARRAY_ELEMENT(expected).key("exampleKey17")
                 .dtype("UINT32")
-                .shape([2, 5, -1])
+                .shape([2, 5, 0])
                 .skipValidation()
                 .commit()
                 ,
