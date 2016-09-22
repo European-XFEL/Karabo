@@ -3,70 +3,18 @@
 # Created on September 16, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from collections import namedtuple, OrderedDict
+from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtGui import (QButtonGroup, QComboBox, QHBoxLayout, QLabel, QPixmap,
+                         QPushButton, QStyle, QStyledItemDelegate, QTableView,
+                         QVBoxLayout, QWidget)
 
-from PyQt4.QtCore import (
-    pyqtSlot, QAbstractTableModel, QDateTime, QModelIndex, Qt)
-from PyQt4.QtGui import (
-    QButtonGroup, QColor, QComboBox, QHBoxLayout, QLabel, QPixmap, QPushButton,
-    QStyle, QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
-
+from karabo_gui.alarmwidget import (
+    ACKNOWLEDGE, ALARM_DATA, ALARM_ID, AlarmServiceModel, getAlarmKeyIndex,
+    SHOW_DEVICE)
 from karabo_gui.docktabwindow import Dockable
-from karabo_gui.mediator import (
-    broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
-    register_for_broadcasts)
-from karabo.middlelayer import Timestamp
+from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
+                                 broadcast_event, register_for_broadcasts)
 from karabo_gui.network import Network
-
-ALARM_ID = 'id'
-TIME_OF_FIRST_OCCURENCE = 'timeOfFirstOccurrence'
-TIME_OF_OCCURENCE = 'timeOfOccurrence'
-TRAIN_OF_FIRST_OCCURENCE = 'trainOfFirstOccurrence'
-TRAIN_OF_OCCURENCE = 'trainOfOccurrence'
-DEVICE_ID = 'deviceId'
-PROPERTY = 'property'
-ALARM_TYPE = 'type'
-DESCRIPTION = 'description'
-NEEDS_ACKNOWLEDGING = 'needsAcknowledging'
-ACKNOWLEDGEABLE = 'acknowledgeable'
-ACKNOWLEDGE = 'acknowledge'  # puts together needsAcknowledging/acknowledgeable
-SHOW_DEVICE = 'showDevice'
-
-_ALARM_DATA = OrderedDict()
-_ALARM_DATA[ALARM_ID] = 'ID'
-_ALARM_DATA[TIME_OF_FIRST_OCCURENCE] = 'Time of First Occurence'
-_ALARM_DATA[TIME_OF_OCCURENCE] = 'Time of Occurence'
-_ALARM_DATA[TRAIN_OF_FIRST_OCCURENCE] = 'Train of First Occurence'
-_ALARM_DATA[TRAIN_OF_OCCURENCE] = 'Train of Occurence'
-_ALARM_DATA[DEVICE_ID] = 'Device ID'
-_ALARM_DATA[PROPERTY] = 'Property'
-_ALARM_DATA[ALARM_TYPE] = 'Type'
-_ALARM_DATA[DESCRIPTION] = 'Description'
-_ALARM_DATA[ACKNOWLEDGE] = 'Acknowledge'
-_ALARM_DATA[SHOW_DEVICE] = 'Show Device'
-
-
-AlarmEntry = namedtuple('AlarmEntry', [key for key in _ALARM_DATA.keys()])
-
-
-INIT_UPDATE_TYPE = 'init'
-ADD_UPDATE_TYPE = 'add'
-REMOVE_UPDATE_TYPE = 'remove'
-UPDATE_UPDATE_TYPE = 'update'
-ACKNOWLEGDABLE_UPDATE_TYPE = 'acknowledgeable'
-DEVICE_KILLED_UPDATE_TYPE = 'deviceKilled'
-REFUSE_ACKNOWLEDGEMENT_UPDATE_TYPE = 'refuseAcknowledgement'
-
-
-def get_alarm_key_index(key):
-    """ Return ``index`` position in ``_ALARM_DATA`` OrderedDict for the given
-        ``key``.
-        If the ``key`` is not found, ``None`` is returned."""
-    index = -1
-    for k in _ALARM_DATA.keys():
-        index = index + 1
-        if k == key:
-            return index
 
 
 class AlarmPanel(Dockable, QWidget):
@@ -151,117 +99,6 @@ class AlarmPanel(Dockable, QWidget):
         self.twAlarm.model().updateAlarms(instanceId, rows)
 
 
-class AlarmServiceModel(QAbstractTableModel):
-    """ A class which describes the relevant data (model) of a alarm service
-        device to show in a table view. """
-    headers = [value for key, value in _ALARM_DATA.items()]
-
-    textColor = {'warnLow': QColor(255, 102, 0),
-                 'warnHigh': QColor(255, 102, 0),
-                 'alarmLow': QColor(255, 204, 102),
-                 'alarmHigh': QColor(255, 204, 102)
-                }
-
-    def __init__(self, parent=None):
-        super(AlarmServiceModel, self).__init__(parent)
-        self.filtered = []
-
-    def fetchData(self, rows):
-        """ Fetch data from incoming hash object ``rows`` and put
-            ``updateTypes`` and all ``alarmEntries`` into lists and return them.
-        """
-        updateTypes = []
-        alarmEntries = []
-        for id, h, _ in rows.iterall():
-            # Get data of hash
-            for updateType, alarmHash, _ in h.iterall():
-                updateTypes.append(updateType)
-                timeOfFirstOccurrence = Timestamp(alarmHash.get(TIME_OF_FIRST_OCCURENCE)).toTimestamp()
-                timeOfOccurrence = Timestamp(alarmHash.get(TIME_OF_OCCURENCE)).toTimestamp()
-                trainOfFirstOccurrence = alarmHash.get(TRAIN_OF_FIRST_OCCURENCE)
-                trainOfOccurrence = alarmHash.get(TRAIN_OF_OCCURENCE)
-                needsAck = alarmHash.get(NEEDS_ACKNOWLEDGING)
-                acknowledge = alarmHash.get(ACKNOWLEDGEABLE)
-                deviceId = alarmHash.get(DEVICE_ID)
-                alarmEntry = AlarmEntry(
-                    id=str(alarmHash.get(ALARM_ID)),
-                    timeOfFirstOccurrence=QDateTime.fromMSecsSinceEpoch(timeOfFirstOccurrence * 1000),
-                    timeOfOccurrence=QDateTime.fromMSecsSinceEpoch(timeOfOccurrence * 1000),
-                    trainOfFirstOccurrence=str(trainOfFirstOccurrence),
-                    trainOfOccurrence=str(trainOfOccurrence),
-                    deviceId=deviceId,
-                    property=alarmHash.get(PROPERTY),
-                    type=alarmHash.get(ALARM_TYPE),
-                    description=alarmHash.get(DESCRIPTION),
-                    acknowledge=(needsAck, acknowledge),
-                    showDevice=deviceId,
-                    )
-                alarmEntries.append(alarmEntry)
-        return updateTypes, alarmEntries
-
-    def initAlarms(self, instanceId, rows):
-        print()
-        print("+++ AlarmModel.initAlarms", instanceId)
-        _, alarmEntries = self.fetchData(rows)
-        self.beginResetModel()
-        self.filtered = alarmEntries
-        self.endResetModel()
-
-    def updateAlarms(self, instanceId, rows):
-        print()
-        print("+++ AlarmModel.updateAlarms", instanceId)
-        updateTypes, alarmEntries = self.fetchData(rows)
-        for i, upType in enumerate(updateTypes):
-            alarmEntry = alarmEntries[i]
-            id = int(alarmEntry.id)
-            # XXX: Use real row index here not id to insert/remove
-            print("updateTypes", upType, id)
-            if (upType == INIT_UPDATE_TYPE or upType == UPDATE_UPDATE_TYPE or
-                upType == ADD_UPDATE_TYPE or
-                upType == ACKNOWLEGDABLE_UPDATE_TYPE or
-                upType == REFUSE_ACKNOWLEDGEMENT_UPDATE_TYPE):
-                if id < len(self.filtered):
-                    # Remove old entry from list
-                    self.removeRow(id)
-                self.insertRow(id, alarmEntry)
-            elif (upType == REMOVE_UPDATE_TYPE or
-                  upType == DEVICE_KILLED_UPDATE_TYPE):
-                self.removeRow(id)
-
-    def insertRow(self, index, alarmEntry):
-        self.beginInsertRows(QModelIndex(), index, index)
-        self.filtered.insert(index, alarmEntry)
-        self.endInsertRows()
-
-    def removeRow(self, index):
-        self.beginRemoveRows(QModelIndex(), index, index)
-        self.filtered.pop(index)
-        self.endRemoveRows()
-
-    def headerData(self, section, orientation, role):
-        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return self.headers[section]
-
-    def rowCount(self, _):
-        return len(self.filtered)
-
-    def columnCount(self, _):
-        return len(self.headers)
-
-    def data(self, index, role=Qt.DisplayRole):
-        if not index.isValid():
-            return None
-        entry = self.filtered[index.row()]
-        type_index = get_alarm_key_index(ALARM_TYPE)
-        #if role == Qt.DecorationRole and index.column() == 2:
-        #    return self.icons.get(entry.messageType)
-        if role == Qt.TextColorRole and index.column() == type_index:
-            return self.textColor.get(entry.type)
-        elif role in (Qt.DisplayRole, Qt.ToolTipRole):
-            return entry[index.column()]
-        return None
-
-
 class ButtonDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
         super(ButtonDelegate, self).__init__(parent)
@@ -282,23 +119,26 @@ class ButtonDelegate(QStyledItemDelegate):
             Otherwise ``False`` is returned.
         """
         column = index.column()
-        ack_index = get_alarm_key_index(ACKNOWLEDGE)
-        device_index = get_alarm_key_index(SHOW_DEVICE)
+        ack_index = getAlarmKeyIndex(ACKNOWLEDGE)
+        device_index = getAlarmKeyIndex(SHOW_DEVICE)
         if column == ack_index or column == device_index:
             if column == ack_index:
-                text = _ALARM_DATA[ACKNOWLEDGE]
+                text = ALARM_DATA[ACKNOWLEDGE]
             else:
-                text = _ALARM_DATA[SHOW_DEVICE]
+                text = ALARM_DATA[SHOW_DEVICE]
             return (True, text)
         return (False, '')
 
     def _updateButton(self, button, index):
-        """ Set the visibility and enabling of the button depending on the
+        """ Set the enabling of the button depending on the
             properties ``NEEDS_ACKNOWLEDGING`` and ``ACKNOWLEDGEABLE``.
         """
-        if index.column() == get_alarm_key_index(ACKNOWLEDGE):
+        column = index.column()
+        if column == getAlarmKeyIndex(ACKNOWLEDGE):
             needsAck, ack = index.data()
             button.setEnabled(True if needsAck and ack else False)
+        elif column == getAlarmKeyIndex(SHOW_DEVICE):
+            button.setEnabled(True)
 
     def createEditor(self, parent, option, index):
         isRelevant, text = self._isRelevantColumn(index)
@@ -347,7 +187,7 @@ class ButtonDelegate(QStyledItemDelegate):
             self.parent().openPersistentEditor(index)
             self.cellEditMode = True
             self.currentCellIndex = index
-            if text == _ALARM_DATA[SHOW_DEVICE]:
+            if text == ALARM_DATA[SHOW_DEVICE]:
                 # Send signal to show device
                 deviceId = index.data()
                 data = {'deviceId': deviceId}
@@ -356,10 +196,10 @@ class ButtonDelegate(QStyledItemDelegate):
                     KaraboEventSender.ShowDevice, data))
             else:
                 # Send signal to acknowledge alarm
-                id_index = get_alarm_key_index(ALARM_ID)
+                id_index = getAlarmKeyIndex(ALARM_ID)
                 model = index.model()
                 alarm_id = model.index(index.row(), id_index).data()
-                Network().onAcknowledgeAlarm('Karabo_AlarmService_0', alarm_id)
+                Network().onAcknowledgeAlarm(model.instanceId, alarm_id)
         else:
             if self.cellEditMode:
                 self.cellEditMode = False
