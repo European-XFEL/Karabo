@@ -14,11 +14,11 @@ using namespace karabo::log;
 using namespace karabo::util;
 using namespace karabo::io;
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION(Logger_Test);
 
 
 KARABO_REGISTER_FOR_CONFIGURATION(LogSomething)
+
 
 Logger_Test::Logger_Test() {
 }
@@ -36,20 +36,78 @@ void Logger_Test::tearDown() {
 }
 
 
-void Logger_Test::testLogging() {
-    Hash s1("Category.name", "s1", "Category.priority", "ERROR");
-    Hash conf("categories[0]", s1, "appenders[0].Ostream.layout", "Pattern");
-    Logger::configure(conf);
-    //p->initialize();
-    KARABO_LOG_FRAMEWORK_DEBUG_C("s1") << "Some test message";
+void Logger_Test::test1() {
 
+    // We are chatty in this test
+    // But the idea is to only see OKs and never ERROR
+    // There is no ASSERT unfortunately, so this test needs visual inspection
+    Hash config("priority", "DEBUG");
+    Logger::configure(config);
+    Logger::logDebug() << "ERROR";
+
+    Logger::useOstream();
+    Logger::logDebug() << "OK";
+    Logger::logDebug("a1") << "OK";
+    Logger::logDebug("a1.a2") << "OK";
+    Logger::logInfo() << "OK";
+    Logger::logInfo("a1") << "OK";
+    Logger::logInfo("a1.a2") << "OK";
+
+    Logger::reset();
+    Logger::logDebug() << "ERROR";
+    Logger::logDebug("a1") << "ERROR";
+    Logger::logDebug("a1.a2") << "ERROR";
+    Logger::logInfo() << "ERROR";
+    Logger::logInfo("a1") << "ERROR";
+    Logger::logInfo("a1.a2") << "ERROR";
+
+    Logger::useOstream("a1");
+    Logger::logDebug() << "ERROR";
+    Logger::logDebug("a1") << "OK";
+    Logger::logDebug("a1.a2") << "OK";
+    Logger::logInfo() << "ERROR";
+    Logger::logInfo("a1") << "OK";
+    Logger::logInfo("a1.a2") << "OK";
+
+    Logger::setPriority("INFO");
+    Logger::logDebug() << "ERROR";
+    Logger::logDebug("a1") << "ERROR";
+    Logger::logDebug("a1.a2") << "ERROR";
+    Logger::logInfo() << "ERROR";
+    Logger::logInfo("a1") << "OK";
+    Logger::logInfo("a1.a2") << "OK";
+
+    Logger::setPriority("WARN");
+    Logger::logDebug() << "ERROR";
+    Logger::logDebug("a1") << "ERROR";
+    Logger::logDebug("a1.a2") << "ERROR";
+    Logger::logInfo() << "ERROR";
+    Logger::logInfo("a1") << "ERROR";
+    Logger::logInfo("a1.a2") << "ERROR";
+}
+
+
+void Logger_Test::test2() {
+    Logger::reset();
+    Hash config("priority", "INFO");
+    Logger::configure(config);
+    Logger::useOstream();
+    Logger::useFile("a1", false); // do not inherit appenders from parents
+    Logger::logDebug() << "ERROR";
+    Logger::logDebug("a1") << "ERROR";
+    Logger::logDebug("a1.a2") << "ERROR";
+    Logger::logInfo() << "CONSOLE-OK";
+    Logger::logInfo("a1") << "FILE-OK";
+    Logger::logInfo("a1.a2") << "FILE-OK";
 }
 
 
 void Logger_Test::testInClassLogging() {
     Logger::reset();
-    Hash config("logger.priority", "INFO", "logger.appenders[0].File.layout.Pattern.format", "%c %m %n");
-    LogSomething::Pointer p = LogSomething::create("LogSomething", config);
+    Hash config("Logger.priority", "WARN");
+    auto p = Configurator<LogSomething>::create("LogSomething", config);
     p->doSomeLogging();
 }
+
+
 
