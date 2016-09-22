@@ -11,6 +11,7 @@
 
 from xml.etree import ElementTree
 from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QColor
 
 
 ns_svg = "{http://www.w3.org/2000/svg}"
@@ -22,6 +23,8 @@ ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 # Commonly used colors
 OK_COLOR = (225, 242, 225, 128)
 ERROR_COLOR = (255, 155, 155, 128)
+WARN_COLOR = QColor(255, 102, 0)
+ALARM_COLOR = QColor(255, 204, 102)
 
 # Scene dimensions
 SCENE_MIN_WIDTH = 1024
