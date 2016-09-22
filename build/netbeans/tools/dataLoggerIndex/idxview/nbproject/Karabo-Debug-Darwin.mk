@@ -60,7 +60,7 @@ LDLIBSOPTIONS=-L${KARABO}/lib -L${KARABO}/extern/lib -lkarabo `pkg-config --libs
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-idxview: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-idxview ${OBJECTFILES} ${LDLIBSOPTIONS}
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-idxview ${OBJECTFILES} ${LDLIBSOPTIONS} -Wl,-rpath-link,${KARABO}/extern/lib
 
 ${OBJECTDIR}/_ext/1310162774/idxView.o: ../../../../../src/tools/dataLoggerIndex/idxView.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1310162774
