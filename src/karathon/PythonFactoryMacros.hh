@@ -1,8 +1,8 @@
-/* 
+/*
  * $Id$
- * 
+ *
  * Author: <irina.kozlova@xfel.eu>
- * 
+ *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
@@ -55,6 +55,6 @@ namespace bp = boost::python;
         , (karabo::util::Schema (*)( std::string const &,karabo::util::Schema::AssemblyRules const & ))( &karabo::util::Configurator<baseClass>::getSchema)\
         , (bp::arg("classId"), bp::arg("rules")=karabo::util::Schema::AssemblyRules() ),\
         "Get schema for C++ class with \"classId\" derived from C++ base class \"" #baseClass "\" using assembly \"rules\"" ).staticmethod( "getSchema" )\
-.attr("__karabo_cpp_classid__") = baseClass::classInfo().getClassId()        
+.attr("__karabo_cpp_classid__") = baseClass::classInfo().getClassId()
 
 #endif	/* PYTHONFACTORYMACROS_HH */

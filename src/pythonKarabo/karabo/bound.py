@@ -39,12 +39,12 @@ from .bound_api.fsm import (
 
 from karathon import (
     ADMIN,  ALARM_ELEMENT, AMPERE, AMPERE_PER_SECOND, ATTO, ATTOSEC,
-    AbstractInput, AccessLevel, AccessType, AppenderConfigurator,
+    AbstractInput, AccessLevel, AccessType,
     ArchivePolicy, AssemblyRules, AssignmentType, Authenticator,
     BAR, BAYER, BECQUEREL, BGR, BGRA, BIT, BMP, BOOL_ELEMENT, BYTE,
     BYTEARRAY_ELEMENT, BinarySerializerHash, BinarySerializerSchema,
     BrokerConnection, CANDELA, CENTI, CHOICE_ELEMENT, CHOICE_OF_NODES, CMYK,
-    COMMAND, COULOMB, COUNT, Category, CategoryConfigurator, Channel,
+    COMMAND, COULOMB, COUNT, Category, Channel,
     ClassInfo, Connection,
     DAY, DECA, DECI, DEGREE, DEGREE_CELSIUS, DOUBLE_ELEMENT,
     DateTimeString, DetectorGeometry, DeviceClient, DeviceClientBase,

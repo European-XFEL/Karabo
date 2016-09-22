@@ -745,21 +745,25 @@ class  Schema_TestCase(unittest.TestCase):
             
         
     def test_logger(self): 
-        s1 = Hash("Category.name", "s1", "Category.priority", "DEBUG")
-        conf = Hash("categories[0]", s1, "appenders[0].Ostream.layout", "Pattern")
-        Logger.configure(conf)
+        config = Hash("priority", "DEBUG")
+        Logger.configure(config)
+        root = Logger.getCategory()
+        a1 = Logger.getCategory("a1")
+        a1_a2 = Logger.getCategory("a1.a2")
+        root.DEBUG("ERROR")
         
-        testLog = Logger.getLogger("TestLogA")
-        testLog.INFO("This is INFO message")
-        testLog.DEBUG("This is DEBUG message") #will not be shown (default priority "INFO")
-        testLog.WARN("This is WARN message")
-        testLog.ERROR("This is ERROR message")
+        Logger.useOstream();
+        root.DEBUG("ok")
+        a1.DEBUG("ok")
+        a1_a2.DEBUG("ok")
+        root.INFO("ok")
+        a1.INFO("ok")
+        a1_a2.INFO("ok")
         
-        slog = Logger.getLogger("s1")
-        slog.INFO("This is INFO message")
-        slog.DEBUG("This is DEBUG message")
-        slog.WARN("This is WARN message")
-        slog.ERROR("This is ERROR message")
+        Logger.reset();
+        root.DEBUG("ERROR")
+        a1.DEBUG("ERROR")
+        a1_a2.DEBUG("ERROR")
     
     def test_helpFunction(self):
         pass
