@@ -108,7 +108,9 @@ namespace karabo {
 
             bool operator==(const Timestamp& other) const;
 
-            bool operator!=(const Timestamp& other) const;
+            inline bool operator!=(const Timestamp& other) const {
+                return !(*this == other);
+            }
         private:
 
         };
