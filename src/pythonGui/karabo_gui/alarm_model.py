@@ -86,9 +86,9 @@ class AlarmModel(QAbstractTableModel):
         """
         updateTypes = []
         alarmEntries = []
-        for id, h, _ in rows.iterall():
+        for id, h in rows.items():
             # Get data of hash
-            for updateType, aHash, _ in h.iterall():
+            for updateType, aHash in h.items():
                 updateTypes.append(updateType)
                 # XXX: TODO use proper UTC to local time lib
                 params = {
