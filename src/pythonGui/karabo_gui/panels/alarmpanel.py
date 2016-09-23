@@ -137,7 +137,7 @@ class ButtonDelegate(QStyledItemDelegate):
         column = index.column()
         if column == getAlarmKeyIndex(ACKNOWLEDGE):
             needsAck, ack = index.data()
-            button.setEnabled(True if needsAck and ack else False)
+            button.setEnabled(needsAck and ack)
         elif column == getAlarmKeyIndex(SHOW_DEVICE):
             button.setEnabled(True)
 
