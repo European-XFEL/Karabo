@@ -18,7 +18,7 @@ from karabo_gui.network import Network
 
 
 class AlarmPanel(Dockable, QWidget):
-    def __init__(self):
+    def __init__(self, instanceId):
         super(AlarmPanel, self).__init__()
 
         self.bg_filter = QButtonGroup()
@@ -54,7 +54,7 @@ class AlarmPanel(Dockable, QWidget):
         self.twAlarm.setAlternatingRowColors(True)
         self.twAlarm.resizeColumnsToContents()
         self.twAlarm.horizontalHeader().setStretchLastSection(True)
-        alarm_model = AlarmModel()
+        alarm_model = AlarmModel(instanceId)
         self.twAlarm.setModel(alarm_model)
         btn_delegate = ButtonDelegate(self.twAlarm)
         self.twAlarm.setItemDelegate(btn_delegate)
