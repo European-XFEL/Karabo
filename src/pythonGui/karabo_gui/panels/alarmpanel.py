@@ -129,10 +129,11 @@ class ButtonDelegate(QStyledItemDelegate):
             return (True, text)
         return (False, '')
 
-    def _updateButton(self, button, index):
+    def _updateButton(self, button, index, text):
         """ Set the enabling of the button depending on the
             properties ``NEEDS_ACKNOWLEDGING`` and ``ACKNOWLEDGEABLE``.
         """
+        button.setText(text)
         column = index.column()
         if column == getAlarmKeyIndex(ACKNOWLEDGE):
             needsAck, ack = index.data()
@@ -141,11 +142,13 @@ class ButtonDelegate(QStyledItemDelegate):
             button.setEnabled(True)
 
     def createEditor(self, parent, option, index):
+        """ This method is called whenever the delegate is in edit mode."""
         isRelevant, text = self._isRelevantColumn(index)
         if isRelevant:
+            # This button is for the highlighting effect when clicking/editing
+            # the index, is deleted whenever `closePersistentEditor` is called
             button = QPushButton(parent)
-            button.setText(text)
-            self._updateButton(button, index)
+            self._updateButton(button, index, text)
             return button
         else:
             return super(ButtonDelegate, self).createEditor(parent, option, index)
@@ -153,8 +156,7 @@ class ButtonDelegate(QStyledItemDelegate):
     def setEditorData(self, button, index):
         isRelevant, text = self._isRelevantColumn(index)
         if isRelevant:
-            button.setText(text)
-            self._updateButton(button, index)
+            self._updateButton(button, index, text)
         else:
             super(ButtonDelegate, self).setEditorData(button, index)
 
@@ -162,8 +164,7 @@ class ButtonDelegate(QStyledItemDelegate):
         isRelevant, text = self._isRelevantColumn(index)
         if isRelevant:
             self.pbClick.setGeometry(option.rect)
-            self.pbClick.setText(text)
-            self._updateButton(self.pbClick, index)
+            self._updateButton(self.pbClick, index, text)
             if option.state == QStyle.State_Selected:
                 painter.fillRect(option.rect, option.palette.highlight())
             pixmap = QPixmap.grabWidget(self.pbClick)
@@ -175,18 +176,22 @@ class ButtonDelegate(QStyledItemDelegate):
         isRelevant, text = self._isRelevantColumn(index)
         if isRelevant:
             button.setGeometry(option.rect)
-            button.setText(text)
-            self._updateButton(button, index)
+            self._updateButton(button, index, text)
 
     @pyqtSlot(object)
     def cellClicked(self, index):
         isRelevant, text = self._isRelevantColumn(index)
         if isRelevant:
             if self.cellEditMode:
+                # Remove old persistent model index
                 self.parent().closePersistentEditor(self.currentCellIndex)
-            self.parent().openPersistentEditor(index)
-            self.cellEditMode = True
+            # Current model index is stored and added to stay persistent until
+            # editing mode is done
             self.currentCellIndex = index
+            # If no editor exists, the delegate will create a new editor which
+            # means that here ``createEditor`` is called
+            self.parent().openPersistentEditor(self.currentCellIndex)
+            self.cellEditMode = True
             if text == ALARM_DATA[SHOW_DEVICE]:
                 # Send signal to show device
                 deviceId = index.data()
@@ -203,4 +208,5 @@ class ButtonDelegate(QStyledItemDelegate):
         else:
             if self.cellEditMode:
                 self.cellEditMode = False
+                # Persistent model index and data namely QPushButton cleaned up
                 self.parent().closePersistentEditor(self.currentCellIndex)
