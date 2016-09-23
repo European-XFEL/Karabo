@@ -48,9 +48,9 @@ DEVICE_KILLED_UPDATE_TYPE = 'deviceKilled'
 REFUSE_ACKNOWLEDGEMENT_UPDATE_TYPE = 'refuseAcknowledgement'
 
 # Tuples for convenience
-UPDATE_ALARM = (INIT_UPDATE_TYPE, UPDATE_UPDATE_TYPE, ADD_UPDATE_TYPE,
+UPDATE_ALARM_TYPES = (INIT_UPDATE_TYPE, UPDATE_UPDATE_TYPE, ADD_UPDATE_TYPE,
                 ACKNOWLEGDABLE_UPDATE_TYPE, REFUSE_ACKNOWLEDGEMENT_UPDATE_TYPE)
-REMOVE_ALARM = (REMOVE_UPDATE_TYPE, DEVICE_KILLED_UPDATE_TYPE)
+REMOVE_ALARM_TYPES = (REMOVE_UPDATE_TYPE, DEVICE_KILLED_UPDATE_TYPE)
 
 
 def getAlarmKeyIndex(key):
@@ -67,8 +67,12 @@ class AlarmModel(QAbstractTableModel):
 
     textColor = {'warnLow': WARN_COLOR,
                  'warnHigh': WARN_COLOR,
+                 'warnVarianceLow': WARN_COLOR,
+                 'warnVarianceHigh': WARN_COLOR,
                  'alarmLow': ALARM_COLOR,
-                 'alarmHigh': ALARM_COLOR}
+                 'alarmHigh': ALARM_COLOR,
+                 'alarmVarianceLow': ALARM_COLOR,
+                 'alarmVarianceHigh': ALARM_COLOR}
 
     def __init__(self, parent=None):
         super(AlarmModel, self).__init__(parent)
@@ -84,29 +88,29 @@ class AlarmModel(QAbstractTableModel):
         alarmEntries = []
         for id, h, _ in rows.iterall():
             # Get data of hash
-            for updateType, alarmHash, _ in h.iterall():
+            for updateType, aHash, _ in h.iterall():
                 updateTypes.append(updateType)
                 # XXX: TODO use proper UTC to local time lib
-                timeOfFirstOccurrence = Timestamp(alarmHash.get(TIME_OF_FIRST_OCCURENCE)).toTimestamp()
-                timeOfOccurrence = Timestamp(alarmHash.get(TIME_OF_OCCURENCE)).toTimestamp()
-                trainOfFirstOccurrence = alarmHash.get(TRAIN_OF_FIRST_OCCURENCE)
-                trainOfOccurrence = alarmHash.get(TRAIN_OF_OCCURENCE)
-                needsAck = alarmHash.get(NEEDS_ACKNOWLEDGING)
-                ack = alarmHash.get(ACKNOWLEDGEABLE)
-                deviceId = alarmHash.get(DEVICE_ID)
+                params = {
+                    k: str(aHash.get(k)) for k in ALARM_DATA.keys() if k in aHash
+                    }
+                # Time of first occurence
+                params[TIME_OF_FIRST_OCCURENCE] = Timestamp(
+                    params[TIME_OF_FIRST_OCCURENCE]).toTimestamp()
+                params[TIME_OF_FIRST_OCCURENCE] = QDateTime.fromMSecsSinceEpoch(
+                    params[TIME_OF_FIRST_OCCURENCE] * 1000)
+                # Time of occurence
+                params[TIME_OF_OCCURENCE] = Timestamp(
+                    params[TIME_OF_OCCURENCE]).toTimestamp()
+                params[TIME_OF_OCCURENCE] = QDateTime.fromMSecsSinceEpoch(
+                    params[TIME_OF_OCCURENCE] * 1000)
+                needsAck = aHash.get(NEEDS_ACKNOWLEDGING)
+                ack = aHash.get(ACKNOWLEDGEABLE)
+                # Create namedtuple
                 alarmEntry = AlarmEntry(
-                    id=str(alarmHash.get(ALARM_ID)),
-                    timeOfFirstOccurrence=QDateTime.fromMSecsSinceEpoch(timeOfFirstOccurrence * 1000),
-                    timeOfOccurrence=QDateTime.fromMSecsSinceEpoch(timeOfOccurrence * 1000),
-                    trainOfFirstOccurrence=str(trainOfFirstOccurrence),
-                    trainOfOccurrence=str(trainOfOccurrence),
-                    deviceId=deviceId,
-                    property=alarmHash.get(PROPERTY),
-                    type=alarmHash.get(ALARM_TYPE),
-                    description=alarmHash.get(DESCRIPTION),
                     acknowledge=(needsAck, ack),
-                    showDevice=deviceId,
-                    )
+                    showDevice=params[DEVICE_ID],
+                    **params)
                 alarmEntries.append(alarmEntry)
         return updateTypes, alarmEntries
 
@@ -121,14 +125,14 @@ class AlarmModel(QAbstractTableModel):
         updateTypes, alarmEntries = self.extractData(rows)
         for upType, alarmEntry in zip(updateTypes, alarmEntries):
             rowIndex = self._getRowIndexFromId(alarmEntry.id)
-            if upType in UPDATE_ALARM:
+            if upType in UPDATE_ALARM_TYPES:
                 if rowIndex > -1 and rowIndex < len(self.filtered):
                     # Remove old entry from list first
                     self.removeRow(rowIndex)
                     self.insertRow(rowIndex, alarmEntry)
                 else:
                     self.insertRow(len(self.filtered), alarmEntry)
-            elif upType in REMOVE_ALARM:
+            elif upType in REMOVE_ALARM_TYPES:
                 self.removeRow(rowIndex)
 
     def _getRowIndexFromId(self, id):
