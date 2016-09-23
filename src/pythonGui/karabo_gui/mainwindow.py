@@ -287,7 +287,6 @@ class MainWindow(QMainWindow):
         if not connectedToServer:
             while self.alarmPanels:
                 panel = self.alarmPanels.pop()
-                print("panel", panel)
                 self.outputTab.removeDockableTab(panel)
 
     def _removePlaceholderMiddlePanel(self):
