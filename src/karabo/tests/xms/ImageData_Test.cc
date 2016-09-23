@@ -45,7 +45,8 @@ void ImageData_Test::testConstructor() {
 
         CPPUNIT_ASSERT(image.getData().size() == 100 * 200);
         CPPUNIT_ASSERT(image.getEncoding() == Encoding::GRAY);
-        
+        CPPUNIT_ASSERT(image.isIndexable());
+
         CPPUNIT_ASSERT(imageDims.size() == 100 * 200);
         CPPUNIT_ASSERT(imageDims.rank() == 2);
         CPPUNIT_ASSERT(imageDims.x1() == 200);
