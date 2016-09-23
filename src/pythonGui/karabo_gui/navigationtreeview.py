@@ -8,14 +8,14 @@
    class/instance.
 """
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QMenu, QTreeView)
+from PyQt4.QtGui import QAbstractItemView, QAction, QCursor, QMenu, QTreeView
 
-from karabo_gui.enums import NavigationItemTypes
 import karabo_gui.icons as icons
+from karabo_gui.enums import NavigationItemTypes
+from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
+                                 register_for_broadcasts)
 from karabo_gui.topology import Manager
 from karabo_gui.treewidgetitems.popupwidget import PopupWidget
-from karabo_gui.mediator import (
-    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts)
 
 
 class NavigationTreeView(QTreeView):
@@ -209,4 +209,3 @@ class NavigationTreeView(QTreeView):
 
     def mimeData(self, items):
         return self.model().mimeData(items)
-

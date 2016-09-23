@@ -110,13 +110,13 @@ class ButtonDelegate(QStyledItemDelegate):
         self.currentCellIndex = None  # QPersistentModelIndex
 
     def _isRelevantColumn(self, index):
-        """ This methods checks whether the column of the given ``index`` is
-            belongs to either the acknowledging or device column.
+        """ This methods checks whether the column of the given ``index``
+            belongs to either the acknowledging or show device column.
 
             Returns tuple:
             [0] - states whether this is a relevant column
             [1] - the text which needs to be shown on the button
-            Otherwise ``False`` is returned.
+            Otherwise ``False`` and an empty string is returned.
         """
         column = index.column()
         ack_index = getAlarmKeyIndex(ACKNOWLEDGE)
