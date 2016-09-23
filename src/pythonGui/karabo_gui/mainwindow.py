@@ -6,21 +6,21 @@
 """This module contains a class which represents the main window of the
     application and includes all relevant panels and the main toolbar.
 """
-
 import os.path
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt4.QtGui import (QAction, QActionGroup, qApp, QMainWindow, QMenu,
-                         QMessageBox, QSplitter, QToolButton)
+from PyQt4.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt4.QtGui import (QAction, QActionGroup, QColor, QMainWindow, QMenu,
+                         QMessageBox, QSplitter, QToolButton, qApp)
 
 import karabo_gui.icons as icons
-
+from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
+from karabo.middlelayer import AccessLevel
 from karabo_gui import globals
+from karabo_gui.const import ALARM_COLOR
 from karabo_gui.docktabwindow import DockTabWindow
-from karabo_gui.mediator import (
-    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts)
+from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
+                                 register_for_broadcasts)
 from karabo_gui.network import Network
-from karabo_gui.sceneview.api import SceneView
 from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.loggingpanel import LoggingPanel
@@ -31,9 +31,7 @@ from karabo_gui.panels.placeholderpanel import PlaceholderPanel
 from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
-
-from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
-from karabo.middlelayer import AccessLevel
+from karabo_gui.sceneview.api import SceneView
 
 
 class MainWindow(QMainWindow):
@@ -407,6 +405,9 @@ class MainWindow(QMainWindow):
                 panel = AlarmPanel(instId)
                 title = "Alarms for {}".format(instId)
                 self.outputTab.addDockableTab(panel, title, self)
+                tabBar = self.outputTab.tabBar()
+                tabBar.setTabTextColor(
+                    self.outputTab.count()-1, QColor(*ALARM_COLOR))
                 self.alarmPanels.append(panel)
 
     def removeAlarmServicePanels(self, instanceIds):
