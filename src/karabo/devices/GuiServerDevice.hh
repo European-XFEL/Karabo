@@ -265,6 +265,22 @@ namespace karabo {
              */
             void onRequestedAttributeUpdate(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply);
 
+            /**
+             * Checks if an instance at instanceId is an alarmService and connects to its signals if it is.
+             * @param instanceId: the instanceId of the device
+             * @param type: type of instance
+             * @param topologyEntry: the topology Hash, from which the class of instanceId will be deduced
+             */
+            void connectPotentialAlarmService(const karabo::util::Hash& topologyEntry);
+
+            /**
+             * Returns the instance type and instance id from a topology entry
+             * @param topologyEntry: a Hash of the topology format
+             * @param type: string which will afterwards contain type
+             * @param instanceId: string which will be filled with the instance id
+             */
+            void typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type, std::string& instanceId);
+
         };
     }
 }
