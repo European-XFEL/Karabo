@@ -22,6 +22,8 @@ ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 # Commonly used colors
 OK_COLOR = (225, 242, 225, 128)
 ERROR_COLOR = (255, 155, 155, 128)
+WARN_COLOR = (255, 102, 0)  # orange
+ALARM_COLOR = (255, 0, 0)  # red
 
 # Scene dimensions
 SCENE_MIN_WIDTH = 1024

@@ -21,6 +21,7 @@ from karabo_gui.mediator import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts)
 from karabo_gui.network import Network
 from karabo_gui.sceneview.api import SceneView
+from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.loggingpanel import LoggingPanel
 from karabo_gui.panels.macropanel import MacroPanel
@@ -207,13 +208,14 @@ class MainWindow(QMainWindow):
         self.middleArea = QSplitter(Qt.Vertical, mainSplitter)
         self.middleTab = DockTabWindow("Custom view", self.middleArea)
         self.placeholderPanel = None
-        self._addPlaceholderMiddlePanel(False)
         self.middleArea.setStretchFactor(0, 6)
 
+        self.alarmPanel = AlarmPanel()
         self.loggingPanel = LoggingPanel()
         self.scriptingPanel = ScriptingPanel()
         self.notificationPanel = NotificationPanel()
         self.outputTab = DockTabWindow("Output", self.middleArea)
+        self.outputTab.addDockableTab(self.alarmPanel, "Alarms", self)
         self.outputTab.addDockableTab(self.loggingPanel, "Log", self)
         self.outputTab.addDockableTab(self.scriptingPanel, "Console", self)
         self.outputTab.addDockableTab(self.notificationPanel,
@@ -233,6 +235,7 @@ class MainWindow(QMainWindow):
         mainSplitter.setStretchFactor(2, 2)
 
         self.setCentralWidget(mainSplitter)
+        self._addPlaceholderMiddlePanel(False)
 
     def _quit(self):
         # Check for project changes
@@ -259,18 +262,20 @@ class MainWindow(QMainWindow):
 
         return True
 
-    def _addPlaceholderMiddlePanel(self, enableProjectPanel):
+    def _addPlaceholderMiddlePanel(self, connectedToServer):
         """The placholder for the middle panel is added.
 
-        ``enableProjectPanel`` states whether the toolbar of the project panel
-        should be enabled.
+        ``connectedToServer`` states whether panels, which only work with an
+        active GuiServer connection are enabled.
         """
         if self.placeholderPanel is None:
             # Add startup page
             self._createPlaceholderMiddlePanel()
 
         # Enable or disable toolbar of project panel
-        self.projectPanel.enableToolBar(enableProjectPanel)
+        self.projectPanel.enableToolBar(connectedToServer)
+        # Enable alarm panel
+        self.alarmPanel.setEnabled(connectedToServer)
 
     def _removePlaceholderMiddlePanel(self):
         """The placeholder for the middle panel is removed.

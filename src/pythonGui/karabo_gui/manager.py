@@ -564,3 +564,15 @@ class _Manager(QObject):
             # Create KaraboBroadcastEvent
             broadcast_event(KaraboBroadcastEvent(
                 KaraboEventSender.DeviceInitReply, data))
+
+    def handle_alarmInit(self, instanceId, rows):
+        data = {'instanceId': instanceId, 'rows': rows}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.AlarmInitReply, data))
+
+    def handle_alarmUpdate(self, instanceId, rows):
+        data = {'instanceId': instanceId, 'rows': rows}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.AlarmUpdate, data))
