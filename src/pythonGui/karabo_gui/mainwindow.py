@@ -217,7 +217,7 @@ class MainWindow(QMainWindow):
         self.middleArea.setStretchFactor(0, 6)
 
         # Container for all current alarm panels
-        self.alarmPanels = []
+        self.alarmPanels = {}
 
         self.loggingPanel = LoggingPanel()
         self.scriptingPanel = ScriptingPanel()
@@ -395,32 +395,22 @@ class MainWindow(QMainWindow):
     def showAlarmServicePanels(self, instanceIds):
         """ Show alarm panels for the given ``instanceIds``."""
         for instId in instanceIds:
-            panelExists = False
-            # Check whether there is already an alarm panel for this ``instanceId``
-            for panel in self.alarmPanels:
-                if panel.instanceId == instId:
-                    panelExists = True
-                    break
-            if not panelExists:
+            # Check whether there is already alarm panel for this ``instanceId``
+            if instId not in self.alarmPanels:
                 panel = AlarmPanel(instId)
                 title = "Alarms for {}".format(instId)
                 self.outputTab.addDockableTab(panel, title, self)
                 tabBar = self.outputTab.tabBar()
                 tabBar.setTabTextColor(
                     self.outputTab.count()-1, QColor(*ALARM_COLOR))
-                self.alarmPanels.append(panel)
+                self.alarmPanels[instId] = panel
 
     def removeAlarmServicePanels(self, instanceIds):
         """ Remove alarm panels for the given ``instanceIds``."""
         for instId in instanceIds:
-            rm_panels = []
-            for panel in self.alarmPanels:
-                if panel.instanceId == instId:
-                    self.outputTab.removeDockableTab(panel)
-                    rm_panels.append(panel)
-        while rm_panels:
-            panel = rm_panels.pop()
-            self.alarmPanels.remove(panel)
+            if instId in self.alarmPanels:
+                self.outputTab.removeDockableTab(self.alarmPanels[instId])
+                del self.alarmPanels[instId]
 
 ### virtual functions ###
     def closeEvent(self, event):
