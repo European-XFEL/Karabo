@@ -113,15 +113,14 @@ class _Manager(QObject):
             if conf.descriptor is not None:
                 conf.redummy()
 
-    def _extractAlarmServices(self, topologyEntry):
+    def _extractAlarmServices(self, systemTopology):
         """ This method extracts the existing devices of type ``AlarmService``
-            and returns the instance ids in a list.
+            of the ``systemTopology`` and returns the instance ids in a list.
         """
         instanceIds = []
-        for deviceId, _, attrs in topologyEntry['device'].iterall():
+        for deviceId, _, attrs in systemTopology['device'].iterall():
             classId = attrs.get("classId", "unknown-class")
             if classId == 'AlarmService':
-                print("+++ AlarmService", deviceId)
                 instanceIds.append(deviceId)
         return instanceIds
 
@@ -396,7 +395,7 @@ class _Manager(QObject):
         for v in self.deviceData.values():
             v.updateStatus()
         self.projectTopology.updateNeeded()
-        # Distribute alarm service devices
+        # Distribute current alarm service devices
         instanceIds = self._extractAlarmServices(systemTopology)
         data = {'instanceIds': instanceIds}
         # Create KaraboBroadcastEvent
@@ -421,7 +420,7 @@ class _Manager(QObject):
                 message='Detected dirty shutdown for instance "{}", '
                         'which is coming up now.'.format(id))
             self.handle_log([logMessage])
-            
+
             # Clear deviceId parameter page, if existent
             self._clearDeviceParameterPage(id)
 
@@ -447,8 +446,15 @@ class _Manager(QObject):
 
     def handle_instanceGone(self, instanceId, instanceType):
         """ Remove instanceId from central hash and update """
-        
         if instanceType in ("device", "macro"):
+            # Distribute gone alarm service devices
+            instanceIds = self._extractAlarmServices(self.systemHash)
+            if instanceId in instanceIds:
+                data = {'instanceIds': [instanceId]}
+                # Create KaraboBroadcastEvent
+                broadcast_event(KaraboBroadcastEvent(
+                    KaraboEventSender.RemoveAlarmServices, data))
+
             device = self.deviceData.get(instanceId)
             if device is not None:
                 device.status = "offline"
@@ -457,7 +463,7 @@ class _Manager(QObject):
                 # Clear corresponding parameter page
                 if device.parameterEditor is not None:
                     device.parameterEditor.clear()
-            
+
             # Update system topology
             self.systemTopology.eraseDevice(instanceId)
 
@@ -465,30 +471,22 @@ class _Manager(QObject):
             path = instanceType + "." + instanceId
             if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
-            
-            # Distribute gone alarm service devices
-            instanceIds = self._extractAlarmServices(self.systemHash)
-            if instanceId in instanceIds:
-                data = {'instanceIds': [instanceId]}
-                # Create KaraboBroadcastEvent
-                broadcast_event(KaraboBroadcastEvent(
-                    KaraboEventSender.RemoveAlarmServices, data))
         elif instanceType == "server":
             # Update system topology
             serverClassIds = self.systemTopology.eraseServer(instanceId)
             self._clearServerClassParameterPages(serverClassIds)
-            
+
             # Remove server from systemHash
             path = "server." + instanceId
             if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
-            
+
             for v in self.deviceData.values():
                 v.updateStatus()
 
             # Clear corresponding parameter pages
             self.projectTopology.clearParameterPages(serverClassIds)
-        
+
         self.projectTopology.updateNeeded()
 
 
