@@ -36,7 +36,6 @@ namespace karabo {
             typedef std::map<std::string, karabo::util::Hash> ConnectedOutputChannels;
             // Maps outputChannelString to the TCP (connection, channel) pair
             typedef std::map<std::string, std::pair<karabo::net::Connection::Pointer, karabo::net::Channel::Pointer> > OpenConnections;
-            typedef Memory<karabo::util::Hash> MemoryType;
 
             boost::asio::deadline_timer m_deadline;
             
@@ -124,12 +123,6 @@ namespace karabo {
             void read(karabo::util::Hash& data, size_t idx = 0);
 
             karabo::util::Hash::Pointer read(size_t idx = 0);
-
-            template <class T>
-            T readData(size_t idx = 0) {
-                boost::mutex::scoped_lock lock(m_swapBuffersMutex);
-                return T(MemoryType::read(idx, m_channelId, m_activeChunk));
-            }
 
             size_t size();
 
