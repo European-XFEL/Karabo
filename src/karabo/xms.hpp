@@ -12,7 +12,6 @@
 #define	KARABO_XMS_HPP
 
 #include "xms/SignalSlotable.hh"
-#include "xms/NetworkInput.hh"
 #include "xms/OutputChannel.hh"
 #include "xms/InputChannel.hh"
 #include "xms/ImageData.hh"
