@@ -6,6 +6,7 @@
 from collections import OrderedDict, namedtuple
 
 from PyQt4.QtCore import QAbstractTableModel, QDateTime, QModelIndex, Qt
+from PyQt4.QtGui import QColor
 
 from karabo.middlelayer import Timestamp
 from karabo_gui.const import ALARM_COLOR, WARN_COLOR
@@ -65,14 +66,14 @@ class AlarmModel(QAbstractTableModel):
         device to show in a table view. """
     headers = [value for key, value in ALARM_DATA.items()]
 
-    textColor = {'warnLow': WARN_COLOR,
-                 'warnHigh': WARN_COLOR,
-                 'warnVarianceLow': WARN_COLOR,
-                 'warnVarianceHigh': WARN_COLOR,
-                 'alarmLow': ALARM_COLOR,
-                 'alarmHigh': ALARM_COLOR,
-                 'alarmVarianceLow': ALARM_COLOR,
-                 'alarmVarianceHigh': ALARM_COLOR}
+    textColor = {'warnLow': QColor(*WARN_COLOR),
+                 'warnHigh': QColor(*WARN_COLOR),
+                 'warnVarianceLow': QColor(*WARN_COLOR),
+                 'warnVarianceHigh': QColor(*WARN_COLOR),
+                 'alarmLow': QColor(*ALARM_COLOR),
+                 'alarmHigh': QColor(*ALARM_COLOR),
+                 'alarmVarianceLow': QColor(*ALARM_COLOR),
+                 'alarmVarianceHigh': QColor(*ALARM_COLOR)}
 
     def __init__(self, parent=None):
         super(AlarmModel, self).__init__(parent)
