@@ -8,8 +8,8 @@ from PyQt4.QtGui import (QButtonGroup, QComboBox, QHBoxLayout, QLabel, QPixmap,
                          QPushButton, QStyle, QStyledItemDelegate, QTableView,
                          QVBoxLayout, QWidget)
 
-from karabo_gui.alarmwidget import (
-    ACKNOWLEDGE, ALARM_DATA, ALARM_ID, AlarmServiceModel, getAlarmKeyIndex,
+from karabo_gui.alarm_model import (
+    ACKNOWLEDGE, ALARM_DATA, ALARM_ID, AlarmModel, getAlarmKeyIndex,
     SHOW_DEVICE)
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
@@ -54,7 +54,7 @@ class AlarmPanel(Dockable, QWidget):
         self.twAlarm.setAlternatingRowColors(True)
         self.twAlarm.resizeColumnsToContents()
         self.twAlarm.horizontalHeader().setStretchLastSection(True)
-        alarm_model = AlarmServiceModel()
+        alarm_model = AlarmModel()
         self.twAlarm.setModel(alarm_model)
         btn_delegate = ButtonDelegate(self.twAlarm)
         self.twAlarm.setItemDelegate(btn_delegate)
