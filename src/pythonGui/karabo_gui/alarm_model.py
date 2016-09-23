@@ -60,7 +60,7 @@ def getAlarmKeyIndex(key):
     return list(ALARM_DATA.keys()).index(key)
 
 
-class AlarmServiceModel(QAbstractTableModel):
+class AlarmModel(QAbstractTableModel):
     """ A class which describes the relevant data (model) of a alarm service
         device to show in a table view. """
     headers = [value for key, value in ALARM_DATA.items()]
@@ -71,7 +71,7 @@ class AlarmServiceModel(QAbstractTableModel):
                  'alarmHigh': ALARM_COLOR}
 
     def __init__(self, parent=None):
-        super(AlarmServiceModel, self).__init__(parent)
+        super(AlarmModel, self).__init__(parent)
         self.instanceId = ""  # InstanceId of the associated AlarmService-Device
         self.filtered = []
 
