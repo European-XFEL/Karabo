@@ -398,24 +398,29 @@ class MainWindow(QMainWindow):
     def showAlarmServicePanels(self, instanceIds):
         """ Show alarm panels for the given ``instanceIds``."""
         for instId in instanceIds:
+            panelExists = False
             # Check whether there is already an alarm panel for this ``instanceId``
             for panel in self.alarmPanels:
                 if panel.instanceId == instId:
-                    self.outputTab.setCurrentWidget(panel)
-                    return
-            panel = AlarmPanel()
-            title = "Alarms for {}".format(instId)
-            self.outputTab.addDockableTab(panel, title, self)
-            self.outputTab.setCurrentWidget(panel)
-            self.alarmPanels.append(panel)
+                    panelExists = True
+                    break
+            if not panelExists:
+                panel = AlarmPanel(instId)
+                title = "Alarms for {}".format(instId)
+                self.outputTab.addDockableTab(panel, title, self)
+                self.alarmPanels.append(panel)
 
     def removeAlarmServicePanels(self, instanceIds):
         """ Remove alarm panels for the given ``instanceIds``."""
         for instId in instanceIds:
-            while self.alarmPanels:
-                panel = self.alarmPanels.pop()
+            rm_panels = []
+            for panel in self.alarmPanels:
                 if panel.instanceId == instId:
                     self.outputTab.removeDockableTab(panel)
+                    rm_panels.append(panel)
+        while rm_panels:
+            panel = rm_panels.pop()
+            self.alarmPanels.remove(panel)
 
 ### virtual functions ###
     def closeEvent(self, event):
