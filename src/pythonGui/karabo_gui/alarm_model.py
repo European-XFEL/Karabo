@@ -185,7 +185,6 @@ class AlarmModel(QAbstractTableModel):
             If the ``id`` is not found, ``-1`` is returned.
         """
         for index, entry in enumerate(self.allEntries):
-            print("index", index, id, entry.id)
             if entry.id == id:
                 return index
         return -1
