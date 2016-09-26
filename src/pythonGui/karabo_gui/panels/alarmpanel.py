@@ -81,10 +81,6 @@ class AlarmPanel(Dockable, QWidget):
                 return True
         return super(AlarmPanel, self).eventFilter(obj, event)
 
-    @property
-    def instanceId(self):
-        return self.twAlarm.model().instanceId
-
     def setupActions(self):
         pass
 

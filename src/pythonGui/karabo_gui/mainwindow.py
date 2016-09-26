@@ -283,9 +283,9 @@ class MainWindow(QMainWindow):
         self.projectPanel.enableToolBar(connectedToServer)
         # Remove all alarm panels
         if not connectedToServer:
-            while self.alarmPanels:
-                panel = self.alarmPanels.pop()
-                self.outputTab.removeDockableTab(panel)
+            rm_keys = list(self.alarmPanels.keys())
+            while rm_keys:
+                self._removeAlarmPanel(rm_keys.pop())
 
     def _removePlaceholderMiddlePanel(self):
         """The placeholder for the middle panel is removed.
@@ -392,6 +392,11 @@ class MainWindow(QMainWindow):
             self.middleTab.updateTabsClosable()
         self.middleTab.setCurrentIndex(self.middleTab.count() - 1)
 
+    def _removeAlarmPanel(self, instanceId):
+        if instanceId in self.alarmPanels:
+            self.outputTab.removeDockableTab(self.alarmPanels[instanceId])
+            del self.alarmPanels[instanceId]
+
     def showAlarmServicePanels(self, instanceIds):
         """ Show alarm panels for the given ``instanceIds``."""
         for instId in instanceIds:
@@ -408,9 +413,7 @@ class MainWindow(QMainWindow):
     def removeAlarmServicePanels(self, instanceIds):
         """ Remove alarm panels for the given ``instanceIds``."""
         for instId in instanceIds:
-            if instId in self.alarmPanels:
-                self.outputTab.removeDockableTab(self.alarmPanels[instId])
-                del self.alarmPanels[instId]
+            self._removeAlarmPanel(instId)
 
 ### virtual functions ###
     def closeEvent(self, event):
