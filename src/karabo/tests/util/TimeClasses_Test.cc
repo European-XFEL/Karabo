@@ -16,6 +16,8 @@
 #include <karabo/util/Hash.hh>
 
 #include "TimeClasses_Test.hh"
+#include "karabo/util/Trainstamp.hh"
+#include "karabo/util/Timestamp.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TimeClasses_Test);
 
@@ -320,3 +322,77 @@ void TimeClasses_Test::testTimeProfiler() {
     CPPUNIT_ASSERT(true);
 }
 
+
+void TimeClasses_Test::testTrainstamp() {
+
+    // default ctr.
+    const Trainstamp stamp;
+    CPPUNIT_ASSERT_EQUAL(0ull, stamp.getTrainId());
+
+    // specific ctr.
+    const unsigned long long trainId = 123454321;
+    const Trainstamp stamp2(trainId);
+    CPPUNIT_ASSERT_EQUAL(trainId, stamp2.getTrainId());
+
+    // operator == and !=
+    const Trainstamp stamp3(trainId);
+    const Trainstamp stamp4(trainId + 1);
+    CPPUNIT_ASSERT(stamp2 == stamp3);
+    CPPUNIT_ASSERT(stamp2 != stamp4);
+
+    // conversion to Hash::Attributes etc.
+    Hash::Attributes attrs;
+    stamp2.toHashAttributes(attrs);
+    CPPUNIT_ASSERT(attrs.has("tid"));
+    CPPUNIT_ASSERT(Trainstamp::hashAttributesContainTimeInformation(attrs));
+    CPPUNIT_ASSERT_EQUAL(trainId, attrs.get<unsigned long long>("tid"));
+
+    attrs.erase("tid");
+    CPPUNIT_ASSERT(!Trainstamp::hashAttributesContainTimeInformation(attrs));
+    CPPUNIT_ASSERT_THROW(Trainstamp::fromHashAttributes(attrs), karabo::util::ParameterException);
+
+    attrs.set("tid", trainId + 2);
+    CPPUNIT_ASSERT(Trainstamp::hashAttributesContainTimeInformation(attrs));
+
+    const Trainstamp stamp5(Trainstamp::fromHashAttributes(attrs));
+    CPPUNIT_ASSERT_EQUAL(trainId + 2, stamp5.getTrainId());
+}
+
+
+void TimeClasses_Test::testTimestamp() {
+
+    const Epochstamp eStamp(1234567123ull, 79837534348ull);
+    const Trainstamp trStamp(987654321ull);
+
+    // default ctr.
+    Timestamp stamp1;
+    // cannot really test seconds and fractional seconds from now()...
+    CPPUNIT_ASSERT_EQUAL(0ull, stamp1.getTrainId());
+
+    // default from epoch and train stamp
+    const Timestamp stamp2(eStamp, trStamp);
+    CPPUNIT_ASSERT_EQUAL(1234567123ull, stamp2.getSeconds());
+    CPPUNIT_ASSERT_EQUAL(79837534348ull, stamp2.getFractionalSeconds());
+    CPPUNIT_ASSERT_EQUAL(987654321ull, stamp2.getTrainId());
+
+    // copy ctr.
+    const Timestamp stamp3(stamp2);
+    CPPUNIT_ASSERT_EQUAL(1234567123ull, stamp3.getSeconds());
+    CPPUNIT_ASSERT_EQUAL(79837534348ull, stamp3.getFractionalSeconds());
+    CPPUNIT_ASSERT_EQUAL(987654321ull, stamp3.getTrainId());
+
+    // assignment operator
+    stamp1 = stamp3;
+    CPPUNIT_ASSERT_EQUAL(1234567123ull, stamp1.getSeconds());
+    CPPUNIT_ASSERT_EQUAL(79837534348ull, stamp1.getFractionalSeconds());
+    CPPUNIT_ASSERT_EQUAL(987654321ull, stamp1.getTrainId());
+
+    // operator == and !=: non-equality for both
+    // - epoch is same, but trainId differs
+    // - epoch differs, but trainId is same
+    const Timestamp stamp2a(eStamp, Trainstamp(trStamp.getTrainId() + 2));
+    const Timestamp stamp2b(eStamp + TimeDuration(12345ull, 987654321ull), trStamp);
+    CPPUNIT_ASSERT(stamp1 == stamp3);
+    CPPUNIT_ASSERT(stamp1 != stamp2a);
+    CPPUNIT_ASSERT(stamp1 != stamp2b);
+}

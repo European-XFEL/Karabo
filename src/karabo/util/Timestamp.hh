@@ -43,7 +43,7 @@ namespace karabo {
                 return m_trainstamp.getTrainId();
             }
 
-            static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);
+            static bool hashAttributesContainTimeInformation(const Hash::Attributes& attributes);
 
             /**
              * Creates an Timestamp from three Hash attributes
@@ -51,7 +51,7 @@ namespace karabo {
              * @param attributes Hash attributes
              * @return Timestamp object
              */
-            static Timestamp fromHashAttributes(const Hash::Attributes attributes);
+            static Timestamp fromHashAttributes(const Hash::Attributes& attributes);
 
             /**
              * Generates a sting (respecting ISO-8601) for object time for INTERNAL usage ("%Y%m%dT%H%M%S%f" => "20121225T132536.789333[123456789123]")
@@ -106,7 +106,11 @@ namespace karabo {
 
             virtual ~Timestamp();
 
+            bool operator==(const Timestamp& other) const;
 
+            inline bool operator!=(const Timestamp& other) const {
+                return !(*this == other);
+            }
         private:
 
         };
