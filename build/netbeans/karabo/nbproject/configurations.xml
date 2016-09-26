@@ -351,8 +351,6 @@
       <itemPath>../../../src/karabo/xms/InputChannel.hh</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.hh</itemPath>
-      <itemPath>../../../src/karabo/xms/NetworkInput.cc</itemPath>
-      <itemPath>../../../src/karabo/xms/NetworkInput.hh</itemPath>
       <itemPath>../../../src/karabo/xms/OutputChannel.cc</itemPath>
       <itemPath>../../../src/karabo/xms/OutputChannel.hh</itemPath>
       <itemPath>../../../src/karabo/xms/Signal.cc</itemPath>
@@ -510,6 +508,8 @@
       <logicalFolder name="f5" displayName="xms_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/xms/ImageData_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/xms/ImageData_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/xms/Memory_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/xms/Memory_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xms/SignalSlotable_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/xms/SignalSlotable_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xms/xmsTestRunner.cc</itemPath>
@@ -2415,16 +2415,6 @@
       </item>
       <item path="../../../src/karabo/xms/Memory.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/xms/NetworkInput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/NetworkInput.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/xms/OutputChannel.cc"
             ex="false"
             tool="1"
@@ -2461,6 +2451,16 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/Memory_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/Memory_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>
@@ -4536,16 +4536,6 @@
       </item>
       <item path="../../../src/karabo/xms/Memory.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/xms/NetworkInput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/NetworkInput.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/xms/OutputChannel.cc"
             ex="false"
             tool="1"
@@ -4582,6 +4572,16 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/Memory_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/Memory_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>
