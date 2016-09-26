@@ -79,7 +79,7 @@ namespace karabo {
                       const int bitsPerPixel = 8);
 
             virtual ~ImageData() {
-            };
+            }
 
             const karabo::util::NDArray& getData() const;
 
@@ -96,6 +96,15 @@ namespace karabo {
             int getEncoding() const;
 
             void setEncoding(const int encoding);
+
+            /**
+             * Returns true if the image data can be directly indexed.
+             */
+            bool isIndexable() const {
+                const int encoding = getEncoding();
+                return (encoding != Encoding::JPEG && encoding != Encoding::PNG &&
+                        encoding != Encoding::BMP && encoding != Encoding::TIFF);
+            }
 
             karabo::util::Dims getDimensions() const;
 

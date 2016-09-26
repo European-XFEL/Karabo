@@ -14,6 +14,7 @@ def test_imagedata_from_ndarray():
     assert imageData.getDimensionTypes() == (0, 0)
     assert imageData.getDimensions() == (100, 200)
     assert imageData.getEncoding() == Encoding.GRAY
+    assert imageData.isIndexable()
     assert imageData.getROIOffsets() == (0, 0)
 
     # Make sure conversion from Fortran order doesn't harm dimensions
