@@ -267,8 +267,6 @@ namespace karabo {
 
             /**
              * Checks if an instance at instanceId is an alarmService and connects to its signals if it is.
-             * @param instanceId: the instanceId of the device
-             * @param type: type of instance
              * @param topologyEntry: the topology Hash, from which the class of instanceId will be deduced
              */
             void connectPotentialAlarmService(const karabo::util::Hash& topologyEntry);
