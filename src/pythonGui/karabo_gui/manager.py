@@ -113,12 +113,12 @@ class _Manager(QObject):
             if conf.descriptor is not None:
                 conf.redummy()
 
-    def _extractAlarmServices(self, systemTopology):
+    def _extractAlarmServices(self):
         """ This method extracts the existing devices of type ``AlarmService``
-            of the ``systemTopology`` and returns the instance ids in a list.
+            of the ``self.systemHash`` and returns the instance ids in a list.
         """
         instanceIds = []
-        for deviceId, _, attrs in systemTopology['device'].iterall():
+        for deviceId, _, attrs in self.systemHash['device'].iterall():
             classId = attrs.get("classId", "unknown-class")
             if classId == 'AlarmService':
                 instanceIds.append(deviceId)
@@ -396,7 +396,7 @@ class _Manager(QObject):
             v.updateStatus()
         self.projectTopology.updateNeeded()
         # Distribute current alarm service devices
-        instanceIds = self._extractAlarmServices(systemTopology)
+        instanceIds = self._extractAlarmServices()
         data = {'instanceIds': instanceIds}
         # Create KaraboBroadcastEvent
         broadcast_event(KaraboBroadcastEvent(
@@ -429,7 +429,7 @@ class _Manager(QObject):
         # Update system topology with new configuration
         self.handle_instanceUpdated(topologyEntry)
         # Distribute new alarm service devices
-        instanceIds = self._extractAlarmServices(topologyEntry)
+        instanceIds = self._extractAlarmServices()
         data = {'instanceIds': instanceIds}
         # Create KaraboBroadcastEvent
         broadcast_event(KaraboBroadcastEvent(
@@ -448,7 +448,7 @@ class _Manager(QObject):
         """ Remove instanceId from central hash and update """
         if instanceType in ("device", "macro"):
             # Distribute gone alarm service devices
-            instanceIds = self._extractAlarmServices(self.systemHash)
+            instanceIds = self._extractAlarmServices()
             if instanceId in instanceIds:
                 data = {'instanceIds': [instanceId]}
                 # Create KaraboBroadcastEvent
