@@ -144,6 +144,21 @@ namespace karabo {
 
                 connect(karabo::util::DATALOGMANAGER_ID, "signalLoggerMap", "", "slotLoggerMap");
                 requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
+                
+                //scan topology to find additional alarm services
+                const Hash& topology =  remote().getSystemTopology();
+                const boost::optional<const Hash::Node&> devices = topology.find("device");
+                if (devices){
+                    const Hash& deviceEntry = devices->getValue<Hash>();
+                    for(Hash::const_iterator it = deviceEntry.begin(); it != deviceEntry.end(); ++it){
+                        Hash topologyEntry;
+                        Hash::Node& hn = topologyEntry.set("device", Hash(it->getKey(), it->getValue<Hash>()));
+                        hn.setAttributes(it->getAttributes());
+                        connectPotentialAlarmService(topologyEntry);
+                    }
+                    
+                }
+                    
 
                 m_dataConnection->startAsync(boost::bind(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
                 
@@ -865,14 +880,11 @@ namespace karabo {
             // an empty Hash at path <type>.<instanceId> with all the instanceInfo as attributes
             try {
 
-                const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
-                // TODO let device client return also instanceId as first argument
-                // const ref is fine even for temporary std::string
-                const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
-                                                 topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
+                std::string type, instanceId;
+                typeAndInstanceFromTopology(topologyEntry, type, instanceId);
+                
                 KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler --> instanceId: '" << instanceId
-                        << "', type: '" << type << "'";
-
+                    << "', type: '" << type << "'";
 
                 Hash h("type", "instanceNew", "topologyEntry", topologyEntry);
                 safeAllClientsWrite(h);
@@ -895,14 +907,7 @@ namespace karabo {
                         requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
                     }
                     
-                    
-                    if(topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") && 
-                       topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService"){
-                        connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
-                        boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
-                        m_alarmDevices.insert(instanceId);
-                        
-                    }
+                    connectPotentialAlarmService(topologyEntry);
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceNewHandler(): " << e.userFriendlyMsg();
@@ -915,6 +920,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance updated";
                 Hash h("type", "instanceUpdated", "topologyEntry", topologyEntry);
                 safeAllClientsWrite(h);
+                
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceUpdatedHandler(): " << e.userFriendlyMsg();
             }
@@ -964,6 +970,9 @@ namespace karabo {
                         }
                     }
                 }
+                
+                
+                
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceGoneHandler(): " << e.userFriendlyMsg();
             }
@@ -1161,14 +1170,9 @@ namespace karabo {
              try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestAlarms : info ...\n" << info;
                
-                boost::mutex::scoped_lock lock(m_alarmDevicesMutex);
                 const std::string& requestedInstance = info.get<std::string>("alarmInstanceId");
-                for(std::set<std::string>::const_iterator it = m_alarmDevices.begin(); it != m_alarmDevices.end(); ++it){
-                    if(requestedInstance != "" && requestedInstance != *it) continue;
-                    request(*it, "slotRequestAlarmDump")
+                request(requestedInstance, "slotRequestAlarmDump")
                             .receiveAsync<karabo::util::Hash>(boost::bind(&GuiServerDevice::onRequestedAlarmsReply, this, channel, _1));
-                }
-                      
                 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestAlarms(): " << e.userFriendlyMsg();
@@ -1206,6 +1210,27 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAttributeUpdate(): " << e.userFriendlyMsg();
             }  
         }
+        
+        void GuiServerDevice::connectPotentialAlarmService(const karabo::util::Hash& topologyEntry){
+            std::string type, instanceId;
+            typeAndInstanceFromTopology(topologyEntry, type, instanceId);
+            if(topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") && 
+               topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService"){
+                    connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
+            }
+        }
+        
+        void GuiServerDevice::typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type, std::string& instanceId){
+            if  (topologyEntry.empty()) return;
+            
+            type = topologyEntry.begin()->getKey(); // fails if empty...
+            // TODO let device client return also instanceId as first argument
+            // const ref is fine even for temporary std::string
+            instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
+                                             topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
+            
 
+        }
+        
     }
 }
