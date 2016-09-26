@@ -78,7 +78,8 @@ class AlarmModel(QAbstractTableModel):
     def __init__(self, instanceId, parent=None):
         super(AlarmModel, self).__init__(parent)
         self.instanceId = instanceId  # InstanceId of associated AlarmService
-        self.filtered = []
+        self.allEntries = []  # All alarm entries
+        self.filtered = []  # Filtered alarm entries
 
     def extractData(self, rows):
         """ Fetch data from incoming hash object ``rows`` and put
@@ -118,10 +119,8 @@ class AlarmModel(QAbstractTableModel):
     def initAlarms(self, instanceId, rows):
         if self.instanceId != instanceId:
             return
-        _, alarmEntries = self.extractData(rows)
-        self.beginResetModel()
-        self.filtered = alarmEntries
-        self.endResetModel()
+        _, self.allEntries = self.extractData(rows)
+        self.setFilterList(self.updateFilter())
 
     def updateAlarms(self, instanceId, rows):
         if self.instanceId != instanceId:
@@ -138,6 +137,29 @@ class AlarmModel(QAbstractTableModel):
                     self.insertRow(len(self.filtered), alarmEntry)
             elif upType in REMOVE_ALARM_TYPES:
                 self.removeRow(rowIndex)
+
+    def setFilterList(self, filtered):
+        """ Update filter list and reset model."""
+        self.beginResetModel()
+        self.filtered = filtered
+        self.endResetModel()
+
+    def updateFilter(self, **params):
+        print("AlarmModel.updateFilter", params)
+        filterType = params.get('filterType', None)
+        text = params.get('text', None)
+        if filterType is None:
+            self.filtered = self.allEntries
+        else:
+            print("filter", filterType, text)
+            self.filtered = []
+            if filterType is ACKNOWLEDGE:
+                for entry in self.allEntries:
+                    print("Entry", entry.deviceId)
+                    if entry.acknowledge:
+                        self.filtered.append(entry)
+            else:
+                print("ELSE", filterType)
 
     def _getRowIndexFromId(self, id):
         """ The row index for the given ``id`` is returned.

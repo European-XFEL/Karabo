@@ -4,13 +4,13 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (QButtonGroup, QComboBox, QHBoxLayout, QLabel, QPixmap,
-                         QPushButton, QStyle, QStyledItemDelegate, QTableView,
-                         QVBoxLayout, QWidget)
+from PyQt4.QtGui import (QButtonGroup, QComboBox, QHBoxLayout, QLabel,
+                         QLineEdit, QPixmap, QPushButton, QStyle,
+                         QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
 
-from karabo_gui.alarm_model import (
-    ACKNOWLEDGE, ALARM_DATA, ALARM_ID, AlarmModel, getAlarmKeyIndex,
-    SHOW_DEVICE)
+from karabo_gui.alarm_model import (ACKNOWLEDGE, ALARM_DATA, ALARM_ID,
+                                    ALARM_TYPE, DEVICE_ID, PROPERTY,
+                                    SHOW_DEVICE, AlarmModel, getAlarmKeyIndex)
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
                                  broadcast_event, register_for_broadcasts)
@@ -21,47 +21,50 @@ class AlarmPanel(Dockable, QWidget):
     def __init__(self, instanceId):
         super(AlarmPanel, self).__init__()
 
-        self.bg_filter = QButtonGroup()
-        pb_default_view = QPushButton("Default view")
-        pb_default_view.setCheckable(True)
-        pb_default_view.setChecked(True)
-        self.bg_filter.addButton(pb_default_view)
-        pb_acknowledge_only = QPushButton("Acknowledge only")
-        pb_acknowledge_only.setCheckable(True)
-        self.bg_filter.addButton(pb_acknowledge_only)
+        self.bgFilter = QButtonGroup()
+        self.bgFilter.buttonClicked.connect(self.filterToggled)
+        self.pbDefaultView = QPushButton("Default view")
+        self.pbDefaultView.setCheckable(True)
+        self.pbDefaultView.setChecked(True)
+        self.bgFilter.addButton(self.pbDefaultView)
+        self.pbAcknowledgeOnly = QPushButton("Acknowledge only")
+        self.pbAcknowledgeOnly.setCheckable(True)
+        self.bgFilter.addButton(self.pbAcknowledgeOnly)
 
-        la_filter_options = QLabel("Filter options")
-        cb_filter_type = QComboBox()
-        cb_filter_type.addItem("Device ID")
-        cb_filter_type.addItem("Type")
-        cb_filter_type.addItem("Class")
-        pb_custom_filter = QPushButton("Filter")
-        pb_custom_filter.setCheckable(True)
-        self.bg_filter.addButton(pb_custom_filter)
+        self.laFilterOptions = QLabel("Filter options")
+        self.cbFilterType = QComboBox()
+        self.cbFilterType.addItem(ALARM_DATA[DEVICE_ID], DEVICE_ID)
+        self.cbFilterType.addItem(ALARM_DATA[PROPERTY], PROPERTY)
+        self.cbFilterType.addItem(ALARM_DATA[ALARM_TYPE], ALARM_TYPE)
+        self.leFilterString = QLineEdit()
+        self.pbCustomFilter = QPushButton("Filter")
+        self.pbCustomFilter.setCheckable(True)
+        self.bgFilter.addButton(self.pbCustomFilter)
 
-        filter_layout = QHBoxLayout()
-        filter_layout.setContentsMargins(0, 0, 0, 0)
-        filter_layout.addWidget(pb_default_view)
-        filter_layout.addWidget(pb_acknowledge_only)
+        filterLayout = QHBoxLayout()
+        filterLayout.setContentsMargins(0, 0, 0, 0)
+        filterLayout.addWidget(self.pbDefaultView)
+        filterLayout.addWidget(self.pbAcknowledgeOnly)
         # Add custom filter options
-        filter_layout.addWidget(la_filter_options)
-        filter_layout.addWidget(cb_filter_type)
-        filter_layout.addWidget(pb_custom_filter)
-        filter_layout.addStretch()
+        filterLayout.addWidget(self.laFilterOptions)
+        filterLayout.addWidget(self.cbFilterType)
+        filterLayout.addWidget(self.leFilterString)
+        filterLayout.addWidget(self.pbCustomFilter)
+        filterLayout.addStretch()
 
         self.twAlarm = QTableView()
         self.twAlarm.setWordWrap(True)
         self.twAlarm.setAlternatingRowColors(True)
         self.twAlarm.resizeColumnsToContents()
         self.twAlarm.horizontalHeader().setStretchLastSection(True)
-        alarm_model = AlarmModel(instanceId)
+        alarm_model = AlarmModel(instanceId, self.twAlarm)
         self.twAlarm.setModel(alarm_model)
         btn_delegate = ButtonDelegate(self.twAlarm)
         self.twAlarm.setItemDelegate(btn_delegate)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(5, 5, 5, 5)
-        main_layout.addLayout(filter_layout)
+        main_layout.addLayout(filterLayout)
         main_layout.addWidget(self.twAlarm)
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
@@ -92,6 +95,25 @@ class AlarmPanel(Dockable, QWidget):
 
     def _updateAlarms(self, instanceId, rows):
         self.twAlarm.model().updateAlarms(instanceId, rows)
+
+    def _enableCustomFilter(self, enable):
+        self.cbFilterType.setEnabled(enable)
+        self.leFilterString.setEnabled(enable)
+
+    @pyqtSlot(object)
+    def filterToggled(self, button):
+        """ The filter ``button`` was activated. Update filtering needed."""
+        if button is self.pbDefaultView:
+            self._enableCustomFilter(False)
+            self.twAlarm.model().updateFilter()
+        elif button is self.pbAcknowledgeOnly:
+            self._enableCustomFilter(False)
+            self.twAlarm.model().updateFilter(filterType=ACKNOWLEDGE)
+        elif button is self.pbCustomFilter:
+            self._enableCustomFilter(True)
+            data = self.cbFilterType.itemData(self.cbFilterType.currentIndex())
+            filterText = self.leFilterString.text()
+            self.twAlarm.model().updateFilter(filterType=data, text=filterText)
 
 
 class ButtonDelegate(QStyledItemDelegate):
