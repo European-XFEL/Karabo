@@ -66,7 +66,7 @@ namespace karabo {
             }
 
             inline bool operator!=(const Trainstamp& other) const {
-                return m_trainId != other.m_trainId;
+                return !(*this == other);
             }
         private:
 
