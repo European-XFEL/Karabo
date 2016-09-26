@@ -508,6 +508,8 @@
       <logicalFolder name="f5" displayName="xms_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/xms/ImageData_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/xms/ImageData_Test.hh</itemPath>
+        <itemPath>/home/wigginsj/source/karaboFramework/src/karabo/tests/xms/Memory_Test.cc</itemPath>
+        <itemPath>/home/wigginsj/source/karaboFramework/src/karabo/tests/xms/Memory_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xms/SignalSlotable_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/xms/SignalSlotable_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xms/xmsTestRunner.cc</itemPath>
@@ -2449,6 +2451,16 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="/home/wigginsj/source/karaboFramework/src/karabo/tests/xms/Memory_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="/home/wigginsj/source/karaboFramework/src/karabo/tests/xms/Memory_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>
@@ -4560,6 +4572,16 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="/home/wigginsj/source/karaboFramework/src/karabo/tests/xms/Memory_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="/home/wigginsj/source/karaboFramework/src/karabo/tests/xms/Memory_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>
