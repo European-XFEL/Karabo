@@ -100,9 +100,9 @@ namespace karabo {
             config.get("respondToEndOfStream", m_respondToEndOfStream);
             config.get("delayOnInput", m_delayOnInput);
 
-            m_channelId = MemoryType::registerChannel();
-            m_inactiveChunk = MemoryType::registerChunk(m_channelId);
-            m_activeChunk = MemoryType::registerChunk(m_channelId);
+            m_channelId = Memory::registerChannel();
+            m_inactiveChunk = Memory::registerChunk(m_channelId);
+            m_activeChunk = Memory::registerChunk(m_channelId);
 
             KARABO_LOG_FRAMEWORK_DEBUG << "Inputting on channel " << m_channelId << " (active) chunkId " << m_activeChunk << " and (inactive) chunkId " << m_inactiveChunk;
         }
@@ -117,7 +117,7 @@ namespace karabo {
                 } else
                     m_tcpIoServiceThread.join();
             }
-            MemoryType::unregisterChannel(m_channelId);
+            Memory::unregisterChannel(m_channelId);
             KARABO_LOG_FRAMEWORK_DEBUG << "*** InputChannel::~InputChannel DTOR for channelId = " << m_channelId;
         }
 
@@ -175,18 +175,20 @@ namespace karabo {
 
         void InputChannel::read(karabo::util::Hash& data, size_t idx) {
             boost::mutex::scoped_lock lock(m_swapBuffersMutex);
-            MemoryType::read(data, idx, m_channelId, m_activeChunk);
+            Memory::read(data, idx, m_channelId, m_activeChunk);
         }
 
 
         karabo::util::Hash::Pointer InputChannel::read(size_t idx) {
             boost::mutex::scoped_lock lock(m_swapBuffersMutex);
-            return MemoryType::read(idx, m_channelId, m_activeChunk);
+            karabo::util::Hash::Pointer hash(new karabo::util::Hash());
+            Memory::read(*hash, idx, m_channelId, m_activeChunk);
+            return hash;
         }
 
 
         size_t InputChannel::size() {
-            return MemoryType::size(m_channelId, m_activeChunk);
+            return Memory::size(m_channelId, m_activeChunk);
         }
 
 
@@ -424,18 +426,18 @@ namespace karabo {
 
                         KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from local memory [" << channelId << "][" << chunkId << "]";
 
-                        MemoryType::writeChunk(MemoryType::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk);
-                        MemoryType::decrementChunkUsage(channelId, chunkId);
+                        Memory::writeChunk(Memory::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk);
+                        Memory::decrementChunkUsage(channelId, chunkId);
 
                     } else { // TCP data
 
                         KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from remote memory (over tcp)";
-                        MemoryType::writeAsContiguosBlock(data, header, m_channelId, m_inactiveChunk);
+                        Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
 
                     }
 
-                    size_t nInactiveData = MemoryType::size(m_channelId, m_inactiveChunk);
-                    size_t nActiveData = MemoryType::size(m_channelId, m_activeChunk);
+                    size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
+                    size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
 
                     if ((this->getMinimumNumberOfData()) <= 0 || (nInactiveData < this->getMinimumNumberOfData())) { // Not enough data, yet
                         KARABO_LOG_FRAMEWORK_TRACE << debugId << "Can read more data";
@@ -533,7 +535,7 @@ namespace karabo {
 
 
         bool InputChannel::canCompute() const {
-            //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Current size of async read data cache: " << MemoryType::size(m_channelId, m_activeChunk);
+            //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Current size of async read data cache: " << Memory::size(m_channelId, m_activeChunk);
             //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Is end of stream? " << m_isEndOfStream;
             //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: MinData " << this->getMinimumNumberOfData();
             if ((this->getMinimumNumberOfData() == 0xFFFFFFFF)) {
@@ -543,11 +545,11 @@ namespace karabo {
                 return true;
             }
 
-            if (m_isEndOfStream && (MemoryType::size(m_channelId, m_activeChunk) == 0)) return false;
+            if (m_isEndOfStream && (Memory::size(m_channelId, m_activeChunk) == 0)) return false;
 
             if (!m_isEndOfStream && (this->getMinimumNumberOfData() <= 0)) return false;
 
-            return MemoryType::size(m_channelId, m_activeChunk) >= this->getMinimumNumberOfData();
+            return Memory::size(m_channelId, m_activeChunk) >= this->getMinimumNumberOfData();
         }
 
 
@@ -562,13 +564,13 @@ namespace karabo {
                 if (m_keepDataUntilNew) return;
 
                 // Clear active chunk
-                MemoryType::clearChunkData(m_channelId, m_activeChunk);
+                Memory::clearChunkData(m_channelId, m_activeChunk);
 
                 // Swap buffers               
                 swapBuffers();
 
                 // Fetch number of data pieces
-                size_t nActiveData = MemoryType::size(m_channelId, m_activeChunk);
+                size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
 
                 // Notify all connected output channels for another read
                 if (nActiveData >= this->getMinimumNumberOfData()) {

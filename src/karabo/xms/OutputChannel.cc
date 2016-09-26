@@ -72,8 +72,8 @@ namespace karabo {
 
             // Memory related
             try {
-                m_channelId = MemoryType::registerChannel();
-                m_chunkId = MemoryType::registerChunk(m_channelId);
+                m_channelId = Memory::registerChannel();
+                m_chunkId = Memory::registerChunk(m_channelId);
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -116,7 +116,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_WARN << BOOST_CURRENT_FUNCTION << ":" << __LINE__ << " : attempt to join itself";
             else
                 m_dataThread.join();
-            MemoryType::unregisterChannel(m_channelId);
+            Memory::unregisterChannel(m_channelId);
         }
 
 
@@ -421,7 +421,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT " << m_channelId << " of '" << this->getInstanceId() << "' update()";
 
             // If no data was written return
-            if (MemoryType::size(m_channelId, m_chunkId) == 0) return;
+            if (Memory::size(m_channelId, m_chunkId) == 0) return;
 
             // Take current chunkId for sending
             unsigned int chunkId = m_chunkId;
@@ -432,10 +432,10 @@ namespace karabo {
 
             // We are done with this chunkId, it will stay alive only until
             // all inputs are served (see above)
-            MemoryType::unregisterChunk(m_channelId, chunkId);
+            Memory::unregisterChunk(m_channelId, chunkId);
 
             // Register new chunkId for writing to
-            m_chunkId = MemoryType::registerChunk(m_channelId);
+            m_chunkId = Memory::registerChunk(m_channelId);
 
             // Distribute chunk(s)
             distribute(chunkId);
@@ -449,7 +449,7 @@ namespace karabo {
         void OutputChannel::signalEndOfStream() {
 
             // If there is still some data in the pipe, put it out
-            if (MemoryType::size(m_channelId, m_chunkId) > 0) update();
+            if (Memory::size(m_channelId, m_chunkId) > 0) update();
 
             // Wait until all queued data is fetched
             bool doWait = true;
@@ -481,15 +481,15 @@ namespace karabo {
 
         void OutputChannel::registerWritersOnChunk(unsigned int chunkId) {
             // Only one of the shared inputs will be provided with data
-            if (!m_registeredSharedInputs.empty()) MemoryType::incrementChunkUsage(m_channelId, chunkId);
-            for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) MemoryType::incrementChunkUsage(m_channelId, chunkId);
-            KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Registered " << MemoryType::getChunkStatus(m_channelId, chunkId) << " uses for [" << m_channelId << "][" << chunkId << "]";
+            if (!m_registeredSharedInputs.empty()) Memory::incrementChunkUsage(m_channelId, chunkId);
+            for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) Memory::incrementChunkUsage(m_channelId, chunkId);
+            KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Registered " << Memory::getChunkStatus(m_channelId, chunkId) << " uses for [" << m_channelId << "][" << chunkId << "]";
         }
 
 
         void OutputChannel::unregisterWriterFromChunk(int chunkId) {
-            MemoryType::decrementChunkUsage(m_channelId, chunkId);
-            KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT " << MemoryType::getChunkStatus(m_channelId, chunkId) << " uses left for [" << m_channelId << "][" << chunkId << "]";
+            Memory::decrementChunkUsage(m_channelId, chunkId);
+            KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT " << Memory::getChunkStatus(m_channelId, chunkId) << " uses left for [" << m_channelId << "][" << chunkId << "]";
         }
 
 
@@ -629,12 +629,12 @@ namespace karabo {
 
             karabo::util::Hash header;
             std::vector<char> data;
-            MemoryType::readAsContiguosBlock(data, header, m_channelId, chunkId);
+            Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
 
             tcpChannel->write(header, data); // Blocks whilst writing
 
             unregisterWriterFromChunk(chunkId);
-            //MemoryType::decrementChannelUsage(m_channelId, chunkId); // Later use this one!
+            //Memory::decrementChannelUsage(m_channelId, chunkId); // Later use this one!
 
         }
 
@@ -705,7 +705,7 @@ namespace karabo {
 
             karabo::util::Hash header;
             std::vector<char> data;
-            MemoryType::readAsContiguosBlock(data, header, m_channelId, chunkId);
+            Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
 
             tcpChannel->write(header, data);
 
