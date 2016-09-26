@@ -882,6 +882,9 @@ namespace karabo {
 
                 std::string type, instanceId;
                 typeAndInstanceFromTopology(topologyEntry, type, instanceId);
+                
+                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler --> instanceId: '" << instanceId
+                    << "', type: '" << type << "'";
 
                 Hash h("type", "instanceNew", "topologyEntry", topologyEntry);
                 safeAllClientsWrite(h);
@@ -1218,13 +1221,14 @@ namespace karabo {
         }
         
         void GuiServerDevice::typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type, std::string& instanceId){
+            if  (topologyEntry.empty()) return;
+            
             type = topologyEntry.begin()->getKey(); // fails if empty...
             // TODO let device client return also instanceId as first argument
             // const ref is fine even for temporary std::string
             instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
                                              topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
-            KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler --> instanceId: '" << instanceId
-                    << "', type: '" << type << "'";
+            
 
         }
         
