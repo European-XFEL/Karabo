@@ -3,6 +3,8 @@
 # Created on September 16, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from functools import partial
+
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QButtonGroup, QComboBox, QHBoxLayout, QLabel,
                          QLineEdit, QPixmap, QPushButton, QStyle,
@@ -36,10 +38,15 @@ class AlarmPanel(Dockable, QWidget):
         self.cbFilterType.addItem(ALARM_DATA[DEVICE_ID], DEVICE_ID)
         self.cbFilterType.addItem(ALARM_DATA[PROPERTY], PROPERTY)
         self.cbFilterType.addItem(ALARM_DATA[ALARM_TYPE], ALARM_TYPE)
-        self.leFilterString = QLineEdit()
+        self.leFilterText = QLineEdit()
         self.pbCustomFilter = QPushButton("Filter")
         self.pbCustomFilter.setCheckable(True)
         self.bgFilter.addButton(self.pbCustomFilter)
+        self._enableCustomFilter(False)
+        self.cbFilterType.currentIndexChanged.connect(
+            partial(self.filterToggled, self.pbCustomFilter))
+        self.leFilterText.textChanged.connect(
+            partial(self.filterToggled, self.pbCustomFilter))
 
         filterLayout = QHBoxLayout()
         filterLayout.setContentsMargins(0, 0, 0, 0)
@@ -48,7 +55,7 @@ class AlarmPanel(Dockable, QWidget):
         # Add custom filter options
         filterLayout.addWidget(self.laFilterOptions)
         filterLayout.addWidget(self.cbFilterType)
-        filterLayout.addWidget(self.leFilterString)
+        filterLayout.addWidget(self.leFilterText)
         filterLayout.addWidget(self.pbCustomFilter)
         filterLayout.addStretch()
 
@@ -98,21 +105,21 @@ class AlarmPanel(Dockable, QWidget):
 
     def _enableCustomFilter(self, enable):
         self.cbFilterType.setEnabled(enable)
-        self.leFilterString.setEnabled(enable)
+        self.leFilterText.setEnabled(enable)
 
     @pyqtSlot(object)
     def filterToggled(self, button):
         """ The filter ``button`` was activated. Update filtering needed."""
         if button is self.pbDefaultView:
             self._enableCustomFilter(False)
-            self.twAlarm.model().updateFilter()
+            self.twAlarm.model().updateFilter(filterType=None)
         elif button is self.pbAcknowledgeOnly:
             self._enableCustomFilter(False)
             self.twAlarm.model().updateFilter(filterType=ACKNOWLEDGE)
         elif button is self.pbCustomFilter:
             self._enableCustomFilter(True)
             data = self.cbFilterType.itemData(self.cbFilterType.currentIndex())
-            filterText = self.leFilterString.text()
+            filterText = self.leFilterText.text()
             self.twAlarm.model().updateFilter(filterType=data, text=filterText)
 
 
