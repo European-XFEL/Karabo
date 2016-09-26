@@ -338,8 +338,6 @@ void TimeClasses_Test::testTrainstamp() {
     const Trainstamp stamp3(trainId);
     const Trainstamp stamp4(trainId + 1);
     CPPUNIT_ASSERT(stamp2 == stamp3);
-    CPPUNIT_ASSERT(!(stamp2 == stamp4));
-    CPPUNIT_ASSERT(!(stamp2 != stamp3));
     CPPUNIT_ASSERT(stamp2 != stamp4);
 
     // conversion to Hash::Attributes etc.
@@ -395,9 +393,6 @@ void TimeClasses_Test::testTimestamp() {
     const Timestamp stamp2a(eStamp, Trainstamp(trStamp.getTrainId() + 2));
     const Timestamp stamp2b(eStamp + TimeDuration(12345ull, 987654321ull), trStamp);
     CPPUNIT_ASSERT(stamp1 == stamp3);
-    CPPUNIT_ASSERT(!(stamp1 == stamp2a));
-    CPPUNIT_ASSERT(!(stamp1 == stamp2b));
-    CPPUNIT_ASSERT(!(stamp1 != stamp3));
     CPPUNIT_ASSERT(stamp1 != stamp2a);
     CPPUNIT_ASSERT(stamp1 != stamp2b);
 }
