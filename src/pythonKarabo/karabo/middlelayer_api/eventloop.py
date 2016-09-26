@@ -475,18 +475,34 @@ class EventLoop(SelectorEventLoop):
             return (yield from f(*args, **kwargs))
         else:
             loop = NoEventLoop(self.instance())
+            future = Future(loop=self)
+            exception_raised = False
 
-            def inner():
+            def thread():
+                nonlocal exception_raised
                 set_event_loop(loop)
                 try:
-                    return f(*args, **kwargs)
+                    result = f(*args, **kwargs)
+                    self.call_soon_threadsafe(future.set_result, result)
+                except Exception as e:
+                    exception_raised = True
+                    self.call_soon_threadsafe(future.set_exception, e)
                 finally:
                     set_event_loop(None)
-            try:
-                return (yield from self.run_in_executor(None, inner))
-            except CancelledError:
-                loop.cancel()
-                raise
+
+            async(self.run_in_executor(None, thread))
+            while True:
+                try:
+                    return (yield from future)
+                except CancelledError:
+                    # ignore cancelling from the outside, instead cancel the
+                    # thread. Forward any resulting exception from the thread
+                    # to the caller.
+                    if exception_raised:
+                        raise
+                    else:
+                        loop.cancel()
+                        future = Future(loop=self)
 
     def start_device(self, device):
         lock = threading.Lock()
