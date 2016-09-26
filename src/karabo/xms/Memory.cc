@@ -154,18 +154,22 @@ namespace karabo {
             Memory::_ensureSerializer();
 
             const Data& data = m_cache[channelIdx][chunkIdx];
-            std::vector<unsigned int> byteSizes(data.size());
+            std::vector<unsigned int> byteSizes;
+            size_t totalSize = 0;
+            byteSizes.reserve(data.size());
+            for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
+                byteSizes.push_back((*it)->size());
+                totalSize += byteSizes.back();
+            }
+
             size_t offset = 0;
             size_t idx = 0;
+            buffer.resize(totalSize);  // .resize() because we're using memcpy and not push_back
             for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
                 const DataType& serializedDataElement = **it;
-                const size_t byteSize = serializedDataElement.size();
-
-                if (it == data.begin()) buffer.reserve(byteSize * data.size());
-                buffer.resize(offset + byteSize);
+                const size_t byteSize = byteSizes[idx++];
                 std::memcpy(&buffer[offset], &serializedDataElement[0], byteSize);
                 offset += byteSize;
-                byteSizes[idx++] = byteSize;
             }
             header.clear();
             header.set<unsigned int>("nData", data.size());
