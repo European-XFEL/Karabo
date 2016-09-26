@@ -338,6 +338,8 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("setEncoding", &karabo::xms::ImageData::setEncoding, (bp::arg("encoding")))
 
+                .def("isIndexable", &karabo::xms::ImageData::isIndexable)
+
                 .def("getDimensionScales", &karabo::xms::ImageData::getDimensionScales, bp::return_value_policy< bp::copy_const_reference >())
 
                 .def("setDimensionScales", &karabo::xms::ImageData::setDimensionScales, (bp::arg("scales")))
