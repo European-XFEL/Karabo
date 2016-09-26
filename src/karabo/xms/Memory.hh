@@ -66,10 +66,34 @@ namespace karabo {
 
             KARABO_CLASSINFO(Memory, "Memory", "1.0")
 
+            /**
+             * Read the contents of a single Hash out of the cache. The passed in
+             * Hash will be cleared first.
+             * @param data
+             * @param dataIdx
+             * @param channelIdx
+             * @param chunkIdx
+             */
             static void read(karabo::util::Hash& data, const size_t dataIdx, const size_t channelIdx, const size_t chunkIdx);
+
+            /**
+             * Read the contents of a single Hash out of the cache. A pointer tag_of
+             * a newly created Hash will be returned.
+             * @param dataIdx
+             * @param channelIdx
+             * @param chunkIdx
+             */
             static DataPointer read(const size_t dataIdx, const size_t channelIdx, const size_t chunkIdx);
             static const Data& readChunk(const size_t channelIdx, const size_t chunkIdx);
 
+            /**
+             * Write the contents of a single Hash into the cache. The Hash will
+             * be serialized before control is returned to the caller. Therefore
+             * it is safe to mutate the Hash after writing it.
+             * @param data
+             * @param channelIdx
+             * @param chunkIdx
+             */
             static void write(const karabo::util::Hash& data, const size_t channelIdx, const size_t chunkIdx);
             static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx);
 
