@@ -57,8 +57,6 @@ namespace karabo {
 
             typedef std::map<TcpChannelPointer, unsigned int> TcpChannelPointer2ChunkId;
 
-            typedef Memory<karabo::util::Hash> MemoryType;
-
             // Callback on available input
             boost::function<void (const boost::shared_ptr<OutputChannel>&) > m_ioEventHandler;
 
@@ -131,19 +129,19 @@ namespace karabo {
             karabo::util::Hash getInformation() const;
 
             /**
-             * This interface will make an (possibly expensive) copy of your data
+             * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * @param data
              */
             void write(const karabo::util::Hash& data) {
-                MemoryType::write(karabo::util::Hash::Pointer(new karabo::util::Hash(data)), m_channelId, m_chunkId);
+                Memory::write(data, m_channelId, m_chunkId);
             }
 
             /**
-             * This function will use the data as pointer and does not copy
+             * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * @param data
              */
             void write(const karabo::util::Hash::Pointer& data) {
-                MemoryType::write(data, m_channelId, m_chunkId);
+                Memory::write(*data, m_channelId, m_chunkId);
             }
 
             void update();

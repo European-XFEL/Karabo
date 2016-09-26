@@ -151,7 +151,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103122747/ImageData.o \
 	${OBJECTDIR}/_ext/1103122747/InputChannel.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
-	${OBJECTDIR}/_ext/1103122747/NetworkInput.o \
 	${OBJECTDIR}/_ext/1103122747/OutputChannel.o \
 	${OBJECTDIR}/_ext/1103122747/Signal.o \
 	${OBJECTDIR}/_ext/1103122747/SignalSlotable.o \
@@ -778,11 +777,6 @@ ${OBJECTDIR}/_ext/1103122747/Memory.o: ../../../src/karabo/xms/Memory.cc
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/Memory.o ../../../src/karabo/xms/Memory.cc
 
-${OBJECTDIR}/_ext/1103122747/NetworkInput.o: ../../../src/karabo/xms/NetworkInput.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/NetworkInput.o ../../../src/karabo/xms/NetworkInput.cc
-
 ${OBJECTDIR}/_ext/1103122747/OutputChannel.o: ../../../src/karabo/xms/OutputChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
 	${RM} "$@.d"
@@ -849,7 +843,7 @@ ${TESTDIR}/TestFiles/f6: ${TESTDIR}/_ext/1856679435/Authenticate_Test.o ${TESTDI
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f6 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
-${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/ImageData_Test.o ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/ImageData_Test.o ${TESTDIR}/_ext/1707106411/Memory_Test.o ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f5 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
@@ -1182,6 +1176,12 @@ ${TESTDIR}/_ext/936508045/ImageData_Test.o: ../../../src/karabo/tests/xms/ImageD
 	${MKDIR} -p ${TESTDIR}/_ext/936508045
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/ImageData_Test.o ../../../src/karabo/tests/xms/ImageData_Test.cc
+
+
+${TESTDIR}/_ext/1707106411/Memory_Test.o: ../../../src/karabo/tests/xms/Memory_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1707106411
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1707106411/Memory_Test.o ../../../src/karabo/tests/xms/Memory_Test.cc
 
 
 ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o: ../../../src/karabo/tests/xms/SignalSlotable_Test.cc 
@@ -2702,19 +2702,6 @@ ${OBJECTDIR}/_ext/1103122747/Memory_nomain.o: ${OBJECTDIR}/_ext/1103122747/Memor
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/Memory_nomain.o ../../../src/karabo/xms/Memory.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103122747/Memory.o ${OBJECTDIR}/_ext/1103122747/Memory_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103122747/NetworkInput_nomain.o: ${OBJECTDIR}/_ext/1103122747/NetworkInput.o ../../../src/karabo/xms/NetworkInput.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/NetworkInput.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/NetworkInput_nomain.o ../../../src/karabo/xms/NetworkInput.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103122747/NetworkInput.o ${OBJECTDIR}/_ext/1103122747/NetworkInput_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/OutputChannel_nomain.o: ${OBJECTDIR}/_ext/1103122747/OutputChannel.o ../../../src/karabo/xms/OutputChannel.cc 
