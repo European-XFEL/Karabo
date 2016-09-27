@@ -398,7 +398,7 @@ class MainWindow(QMainWindow):
             # Call closeEvent to unregister from broadcast events
             panel.close()
             self.outputTab.removeDockableTab(panel)
-            del panel
+            del self.alarmPanels[instanceId]
 
     def showAlarmServicePanels(self, instanceIds):
         """ Show alarm panels for the given ``instanceIds``."""
