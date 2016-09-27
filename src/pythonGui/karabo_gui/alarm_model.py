@@ -133,11 +133,10 @@ class AlarmModel(QAbstractTableModel):
             entryIndex = self._getEntryIndex(alarmEntry.id)
             if upType in UPDATE_ALARM_TYPES:
                 if entryIndex > -1 and entryIndex < len(self.allEntries):
-                    # Remove old entry from list first
-                    self.allEntries.pop(entryIndex)
-                    self.allEntries.insert(entryIndex, alarmEntry)
+                    # Replace entry
+                    self.allEntries[entryIndex] = alarmEntry
                 else:
-                    self.allEntries.insert(len(self.allEntries), alarmEntry)
+                    self.allEntries.append(alarmEntry)
             elif upType in REMOVE_ALARM_TYPES:
                 self.allEntries.pop(entryIndex)
         self.updateFilter()
