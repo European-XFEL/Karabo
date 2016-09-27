@@ -576,7 +576,6 @@ void PropertyTest_Test::testVectorProperties() {
 
 
 void PropertyTest_Test::testTableProperties() {
-    clog << "Testing Table properties ..." << endl;
     vector<Hash> value;
     m_deviceClient->get("testPropertyTest_0", "table", value);
 
@@ -622,5 +621,4 @@ void PropertyTest_Test::testTableProperties() {
     CPPUNIT_ASSERT(value[2].get<int>("e3") == 42);    
     CPPUNIT_ASSERT(value[2].get<float>("e4") == 55.5555F);
     CPPUNIT_ASSERT(value[2].get<double>("e5") == 9.99999999);
-    clog << "Testing Table properties ...  OK" << endl;
 }
