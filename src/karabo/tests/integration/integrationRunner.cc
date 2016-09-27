@@ -28,18 +28,22 @@ int main() {
 
     // Add the top suite to the test runner
     CPPUNIT_NS::TestRunner runner;
-    CPPUNIT_NS::TestSuite* testSuite = dynamic_cast<CPPUNIT_NS::TestSuite*>(CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest());
-    runner.addTest(testSuite);
+    // JW: Save a pointer to the test suite object.
+    CPPUNIT_NS::Test* test = CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest();
+    runner.addTest(test);
     runner.run(controller);
 
     // Print test in a compiler compatible format.
     CPPUNIT_NS::CompilerOutputter outputter(&result, CPPUNIT_NS::stdCOut());
     outputter.write();
 
-    // Output XML for Jenkins CPPunit plugin
-    const std::vector<CPPUNIT_NS::Test*>& tests = testSuite->getTests();
+    // Get a vector containing all the tests in the test suite
+    const std::vector<CPPUNIT_NS::Test*>& tests = dynamic_cast<CPPUNIT_NS::TestSuite*>(test)->getTests();
+    // Generate a results file name based on the first test's name.
     std::ostringstream filename;
     filename << "testresults/" << tests[0]->getName() << ".xml";
+
+    // Output XML for Jenkins CPPunit plugin
     std::ofstream xmlFileOut(filename.str());
     CPPUNIT_NS::XmlOutputter xmlOut(&result, xmlFileOut);
     xmlOut.write();
