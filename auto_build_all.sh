@@ -54,6 +54,7 @@ runUnitTests() {
     echo
     cd build/netbeans/pythonKarabo
     safeRunCommand "nosetests -v karabo.bound_api"
+    safeRunCommand "nosetests -v karabo.common"
     safeRunCommand "nosetests -v karabo.middlelayer_api"
     safeRunCommand "nosetests -v karabo.tests"
     echo
