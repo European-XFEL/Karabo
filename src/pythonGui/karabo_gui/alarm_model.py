@@ -163,14 +163,11 @@ class AlarmModel(QAbstractTableModel):
                     # Only check for ``needsAcknowledging`` flag
                     if needsAck:
                         filtered.append(entry)
-                elif filterType == DEVICE_ID:
-                    if text in entry.deviceId:
+                elif filterType == DEVICE_ID and text in entry.deviceId:
                         filtered.append(entry)
-                elif filterType == PROPERTY:
-                    if text in entry.property:
+                elif filterType == PROPERTY and text in entry.property:
                         filtered.append(entry)
-                elif filterType == ALARM_TYPE:
-                    if text in entry.type:
+                elif filterType == ALARM_TYPE and text in entry.type:
                         filtered.append(entry)
         self._setFilterList(filtered)
 
