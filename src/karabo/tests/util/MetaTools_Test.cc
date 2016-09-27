@@ -29,3 +29,18 @@ void MetaTools_Test::testMethod() {
     CPPUNIT_ASSERT((karabo::util::is_base_of<Hash, MyPrivateHash>::value));
     CPPUNIT_ASSERT((!karabo::util::is_base_of<Hash, int>::value));
 }
+
+void MetaTools_Test::testWeakBind(){
+    std::vector<std::string> messages;
+    DeviceServer* d = new DeviceServer(&messages);
+    karabo::net::EventLoop::addThread(4);
+    karabo::net::EventLoop::run();
+
+    CPPUNIT_ASSERT(messages.size() >= 4);
+    CPPUNIT_ASSERT(messages[0] == "Device created");
+    CPPUNIT_ASSERT(messages[1] == "Tick 5");
+    CPPUNIT_ASSERT(messages[2] == "Tick 6");
+    CPPUNIT_ASSERT(messages[messages.size()-1] == "Device deleted");
+    karabo::net::EventLoop::stop();
+    delete d;
+}
