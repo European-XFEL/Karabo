@@ -71,7 +71,25 @@ def wrap_function(func, timestamp=None):
     return wrapper
 
 
-class KaraboValue(Registry):
+def wrap_methods(cls):
+    pattern = re.compile(r"__\w*__|[^_]\w*")
+    blacklist = {"__len__", "__contains__", "__complex__", "__int__",
+                 "__float__", "__index__", "__bool__", "__getattribute__",
+                 "__getattr__", "__init__", "__new__", "__setattr__",
+                 "__array_prepare__", "__hash__", "__str__", "__repr__",
+                 "__array_wrap__", "register"}
+
+    attrs = [a for a in dir(cls)
+             if pattern.fullmatch(a) and a not in blacklist]
+
+    for name in attrs:
+        attr = getattr(cls, name)
+        if inspect.isfunction(attr) or inspect.ismethoddescriptor(attr):
+            setattr(cls, name, wrap_function(attr))
+    return cls
+
+
+class KaraboValue(object):
     """This is the base class for all Karabo values. All attributes of
     a Karabo device contain objects of these types, as they are the only
     ones we know how to transport over the network.
@@ -105,13 +123,6 @@ class KaraboValue(Registry):
       attached.
     """
 
-    __re = re.compile(r"__\w*__|[^_]\w*")
-    __blacklist = {"__len__", "__contains__", "__complex__", "__int__",
-                   "__float__", "__index__", "__bool__", "__getattribute__",
-                   "__getattr__", "__init__", "__new__", "__setattr__",
-                   "__array_prepare__", "__hash__", "__str__", "__repr__",
-                   "__array_wrap__", "register"}
-
     # Karabo stores the device this value belongs to here to do its magic
     _parent = Weak()
 
@@ -123,16 +134,6 @@ class KaraboValue(Registry):
         else:
             self.timestamp = timestamp
         self.descriptor = descriptor
-
-    @classmethod
-    def register(cls, name, d):
-        attrs = [a for a in dir(cls)
-                 if cls.__re.fullmatch(a) and a not in cls.__blacklist]
-
-        for name in attrs:
-            attr = getattr(cls, name)
-            if inspect.isfunction(attr) or inspect.ismethoddescriptor(attr):
-                setattr(cls, name, wrap_function(attr))
 
     def getdoc(self):
         """This is called by iPython/iKarabo to get the documentation
@@ -148,6 +149,7 @@ class KaraboValue(Registry):
             yield y
 
 
+@wrap_methods
 class BoolValue(KaraboValue):
     """This contains bools.
 
@@ -174,6 +176,7 @@ class BoolValue(KaraboValue):
         return hash(self.value)
 
 
+@wrap_methods
 class EnumValue(KaraboValue):
     """This contains an enum.
 
@@ -236,14 +239,17 @@ class StringlikeValue(KaraboValue):
 del StringlikeValue.__hash__
 
 
+@wrap_methods
 class VectorCharValue(StringlikeValue, bytes):
     """A VectorChar is a Python :class:`bytes` object"""
 
 
+@wrap_methods
 class StringValue(StringlikeValue, str):
     """A StringValue is a Python :class:`str`."""
 
 
+@wrap_methods
 class VectorStringValue(KaraboValue, list):
     """A Karabo VectorStringValue corresponds to a Python list.
 
@@ -267,6 +273,7 @@ class VectorStringValue(KaraboValue, list):
         return self
 
 
+@wrap_methods
 class TableValue(KaraboValue, list):
     def __init__(self, value=None, **kwargs):
         super(TableValue, self).__init__(value, **kwargs)
@@ -286,6 +293,7 @@ unit_registry = pint.UnitRegistry()
 Quantity = unit_registry.Quantity
 
 
+@wrap_methods
 class QuantityValue(KaraboValue, Quantity):
     """The base class for all Karabo numerical values, including vectors.
 
