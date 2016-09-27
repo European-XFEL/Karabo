@@ -21,6 +21,19 @@ safeRunCommand() {
     fi
 }
 
+checkKaraboTestResults() {
+    for i in $scriptDir/build/netbeans/karabo/testresults/*.xml; do
+        # xmllint is distributed with Karabo
+        local fails=$(xmllint --xpath '/TestRun/Statistics/FailuresTotal/text()' $i)
+        if [ $fails != "0" ]; then
+            echo "Test failure found in results file: $i"
+            echo
+            echo
+            exit 1
+        fi
+    done
+}
+
 runUnitTests() {
     if [ -z "$KARABO" ]; then
         source $scriptDir/karabo/activate
@@ -30,8 +43,12 @@ runUnitTests() {
     echo Running karabo tests ...
     echo
     cd $scriptDir/build/netbeans/karabo
-    safeRunCommand "make CONF=$CONF test -j $NUM_CORES"
+    safeRunCommand "make CONF=$CONF -j$NUM_JOBS test"
     cd $scriptDir
+
+    # Parse the XML test outputs
+    checkKaraboTestResults
+
     echo
     echo Running pythonKarabo tests
     echo
