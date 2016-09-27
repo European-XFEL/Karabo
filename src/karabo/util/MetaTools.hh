@@ -88,13 +88,18 @@ namespace karabo {
          * @return a wrapped version of f.
          */
         template<typename Ret, typename... Args, typename O>
-        std::function<void(O*, Args&...) > exec_weak_impl(Ret(O::*f)(Args...)) {
-            auto wrapped = [f](O* o, Args&... fargs) { //we need to copy-capture here -> otherwise segfault, because f out of scope
-                auto wp = boost::weak_ptr<O>(cond_dyn_cast<typename std::is_same < boost::shared_ptr<O>, decltype(o->shared_from_this())>::type>::template cast(o));
+        std::function<void(O*, Args&...) > exec_weak_impl(Ret(O::*f)(Args...), O* o) {
+            auto wp = boost::weak_ptr<O>(cond_dyn_cast<typename std::is_same < boost::shared_ptr<O>, decltype(o->shared_from_this())>::type>::template cast(o));
+            //the raw pointer in the signature of wrapped is necessary to maintain compatability with boost::bind wrapping. However,
+            //we never use this raw pointer. We instead use the captured weak pointer
+            //we need to copy-capture here -> otherwise segfault, because f and wp go out of scope
+            auto wrapped = [f, wp](O* o, Args&... fargs) {
+
                 auto ptr = wp.lock();
                 if (ptr) {
                     (*ptr.*f)(fargs...);
                 }
+
             };
             return wrapped;
         }
@@ -117,9 +122,9 @@ namespace karabo {
          * @return: bound functor, compatible with boost bind.
          */
         template< typename F, typename O, typename ...P>
-        auto bind_weak(const F& f, O * const o, const P&... p) -> decltype(boost::bind<void>(exec_weak_impl(f), o, p...)) {
+        auto bind_weak(const F& f, O * const o, const P&... p) -> decltype(boost::bind<void>(exec_weak_impl(f, o), o, p...)) {
             //note that boost::arg<N>s cannot be forwarded, thus we work with references here.
-            auto wrapped = exec_weak_impl(f);
+            auto wrapped = exec_weak_impl(f, o);
             return boost::bind<void>(wrapped, o, p...);
         }
 
