@@ -58,7 +58,6 @@ def register_for_broadcasts(qobject):
     """ Register the given `qobject` to the events coming from the singleton
         `mediator`.
     """
-    print("register", qobject)
     mediator = __get_mediator()
     mediator.installEventFilter(qobject)
 
@@ -67,6 +66,5 @@ def unregister_from_broadcasts(qobject):
     """ Unregister the given `qobject` from the events coming from the
         singleton mediator object.
     """
-    print("unregister", qobject)
     mediator = __get_mediator()
     mediator.removeEventFilter(qobject)
