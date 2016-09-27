@@ -15,7 +15,8 @@ from karabo_gui.alarm_model import (ACKNOWLEDGE, ALARM_DATA, ALARM_ID,
                                     SHOW_DEVICE, AlarmModel, getAlarmKeyIndex)
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
-                                 broadcast_event, register_for_broadcasts)
+                                 broadcast_event, register_for_broadcasts,
+                                 unregister_from_broadcasts)
 from karabo_gui.network import Network
 
 
@@ -90,6 +91,9 @@ class AlarmPanel(Dockable, QWidget):
                 self._updateAlarms(data.get('instanceId'), data.get('rows'))
                 return True
         return super(AlarmPanel, self).eventFilter(obj, event)
+
+    def closeEvent(self, event):
+        unregister_from_broadcasts(self)
 
     def setupActions(self):
         pass
