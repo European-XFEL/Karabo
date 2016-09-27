@@ -397,10 +397,11 @@ class _Manager(QObject):
         self.projectTopology.updateNeeded()
         # Distribute current alarm service devices
         instanceIds = self._extractAlarmServices()
-        data = {'instanceIds': instanceIds}
-        # Create KaraboBroadcastEvent
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.ShowAlarmServices, data))
+        if instanceIds:
+            data = {'instanceIds': instanceIds}
+            # Create KaraboBroadcastEvent
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.ShowAlarmServices, data))
 
     def handle_systemVersion(self, version):
         """ Handle the version number reply from the GUI server.
@@ -430,10 +431,11 @@ class _Manager(QObject):
         self.handle_instanceUpdated(topologyEntry)
         # Distribute new alarm service devices
         instanceIds = self._extractAlarmServices()
-        data = {'instanceIds': instanceIds}
-        # Create KaraboBroadcastEvent
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.ShowAlarmServices, data))
+        if instanceIds:
+            data = {'instanceIds': instanceIds}
+            # Create KaraboBroadcastEvent
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.ShowAlarmServices, data))
 
     def handle_instanceUpdated(self, topologyEntry):
         self.handle_systemTopology(topologyEntry)
