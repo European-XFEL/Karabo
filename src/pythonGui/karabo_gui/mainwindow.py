@@ -6,21 +6,21 @@
 """This module contains a class which represents the main window of the
     application and includes all relevant panels and the main toolbar.
 """
-
 import os.path
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt4.QtGui import (QAction, QActionGroup, qApp, QMainWindow, QMenu,
-                         QMessageBox, QSplitter, QToolButton)
+from PyQt4.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt4.QtGui import (QAction, QActionGroup, QColor, QMainWindow, QMenu,
+                         QMessageBox, QSplitter, QToolButton, qApp)
 
 import karabo_gui.icons as icons
-
+from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
+from karabo.middlelayer import AccessLevel
 from karabo_gui import globals
+from karabo_gui.const import ALARM_COLOR
 from karabo_gui.docktabwindow import DockTabWindow
-from karabo_gui.mediator import (
-    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts)
+from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
+                                 register_for_broadcasts)
 from karabo_gui.network import Network
-from karabo_gui.sceneview.api import SceneView
 from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.loggingpanel import LoggingPanel
@@ -31,9 +31,7 @@ from karabo_gui.panels.placeholderpanel import PlaceholderPanel
 from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
-
-from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
-from karabo.middlelayer import AccessLevel
+from karabo_gui.sceneview.api import SceneView
 
 
 class MainWindow(QMainWindow):
@@ -89,6 +87,14 @@ class MainWindow(QMainWindow):
             elif sender is KaraboEventSender.RenameMacro:
                 data = event.data
                 self.renameMiddlePanel('macro_model', data.get('model'))
+                return True
+            elif sender is KaraboEventSender.ShowAlarmServices:
+                data = event.data
+                self.showAlarmServicePanels(data.get('instanceIds'))
+                return True
+            elif sender is KaraboEventSender.RemoveAlarmServices:
+                data = event.data
+                self.removeAlarmServicePanels(data.get('instanceIds'))
                 return True
         return super(MainWindow, self).eventFilter(obj, event)
 
@@ -210,12 +216,13 @@ class MainWindow(QMainWindow):
         self.placeholderPanel = None
         self.middleArea.setStretchFactor(0, 6)
 
-        self.alarmPanel = AlarmPanel()
+        # Container for all current alarm panels
+        self.alarmPanels = {}
+
         self.loggingPanel = LoggingPanel()
         self.scriptingPanel = ScriptingPanel()
         self.notificationPanel = NotificationPanel()
         self.outputTab = DockTabWindow("Output", self.middleArea)
-        self.outputTab.addDockableTab(self.alarmPanel, "Alarms", self)
         self.outputTab.addDockableTab(self.loggingPanel, "Log", self)
         self.outputTab.addDockableTab(self.scriptingPanel, "Console", self)
         self.outputTab.addDockableTab(self.notificationPanel,
@@ -274,8 +281,11 @@ class MainWindow(QMainWindow):
 
         # Enable or disable toolbar of project panel
         self.projectPanel.enableToolBar(connectedToServer)
-        # Enable alarm panel
-        self.alarmPanel.setEnabled(connectedToServer)
+        # Remove all alarm panels
+        if not connectedToServer:
+            rm_keys = list(self.alarmPanels.keys())
+            while rm_keys:
+                self._removeAlarmPanel(rm_keys.pop())
 
     def _removePlaceholderMiddlePanel(self):
         """The placeholder for the middle panel is removed.
@@ -381,6 +391,29 @@ class MainWindow(QMainWindow):
         if self.middleTab.count() > 1:
             self.middleTab.updateTabsClosable()
         self.middleTab.setCurrentIndex(self.middleTab.count() - 1)
+
+    def _removeAlarmPanel(self, instanceId):
+        if instanceId in self.alarmPanels:
+            self.outputTab.removeDockableTab(self.alarmPanels[instanceId])
+            del self.alarmPanels[instanceId]
+
+    def showAlarmServicePanels(self, instanceIds):
+        """ Show alarm panels for the given ``instanceIds``."""
+        for instId in instanceIds:
+            # Check whether there is already alarm panel for this ``instanceId``
+            if instId not in self.alarmPanels:
+                panel = AlarmPanel(instId)
+                title = "Alarms for {}".format(instId)
+                self.outputTab.addDockableTab(panel, title, self)
+                tabBar = self.outputTab.tabBar()
+                tabBar.setTabTextColor(
+                    self.outputTab.count()-1, QColor(*ALARM_COLOR))
+                self.alarmPanels[instId] = panel
+
+    def removeAlarmServicePanels(self, instanceIds):
+        """ Remove alarm panels for the given ``instanceIds``."""
+        for instId in instanceIds:
+            self._removeAlarmPanel(instId)
 
 ### virtual functions ###
     def closeEvent(self, event):

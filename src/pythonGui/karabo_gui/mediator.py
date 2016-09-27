@@ -3,6 +3,7 @@ from enum import Enum
 from PyQt4.QtCore import QEvent, QObject
 from PyQt4.QtGui import QApplication
 
+
 # Enum for karabo broadcast event senders
 class KaraboEventSender(Enum):
     AlarmInitReply = "Alarm init reply"
@@ -12,10 +13,12 @@ class KaraboEventSender(Enum):
     OpenMacro = "Open macro"
     OpenSceneLink = "Scene link"
     OpenSceneView = "Open scene view"
+    RemoveAlarmServices = "Remove alarm services"
     RemoveMacro = "Remove macro"
     RemoveSceneView = "Remove scene view"
     RenameSceneView = "Rename scene view"
     RenameMacro = "Rename macro"
+    ShowAlarmServices = "Show alarm services"
     ShowDevice = "Show device"
 
 # This is the global singleton for the karabo_mediator function.

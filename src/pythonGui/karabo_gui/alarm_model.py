@@ -75,9 +75,9 @@ class AlarmModel(QAbstractTableModel):
                  'alarmVarianceLow': QColor(*ALARM_COLOR),
                  'alarmVarianceHigh': QColor(*ALARM_COLOR)}
 
-    def __init__(self, parent=None):
+    def __init__(self, instanceId, parent=None):
         super(AlarmModel, self).__init__(parent)
-        self.instanceId = ""  # InstanceId of the associated AlarmService-Device
+        self.instanceId = instanceId  # InstanceId of associated AlarmService
         self.filtered = []
 
     def extractData(self, rows):
@@ -116,13 +116,16 @@ class AlarmModel(QAbstractTableModel):
         return updateTypes, alarmEntries
 
     def initAlarms(self, instanceId, rows):
-        self.instanceId = instanceId
+        if self.instanceId != instanceId:
+            return
         _, alarmEntries = self.extractData(rows)
         self.beginResetModel()
         self.filtered = alarmEntries
         self.endResetModel()
 
     def updateAlarms(self, instanceId, rows):
+        if self.instanceId != instanceId:
+            return
         updateTypes, alarmEntries = self.extractData(rows)
         for upType, alarmEntry in zip(updateTypes, alarmEntries):
             rowIndex = self._getRowIndexFromId(alarmEntry.id)
