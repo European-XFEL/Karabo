@@ -122,7 +122,7 @@ class AlarmModel(QAbstractTableModel):
         if self.instanceId != instanceId:
             return
         _, self.allEntries = self.extractData(rows)
-        self.setFilterList(self.updateFilter())
+        self.updateFilter()
 
     def updateAlarms(self, instanceId, rows):
         if self.instanceId != instanceId:
@@ -141,12 +141,6 @@ class AlarmModel(QAbstractTableModel):
             elif upType in REMOVE_ALARM_TYPES:
                 self.allEntries.pop(entryIndex)
         self.updateFilter()
-
-    def setFilterList(self, filtered):
-        """ Update filter list and reset model."""
-        self.beginResetModel()
-        self.filtered = filtered
-        self.endResetModel()
 
     def updateFilter(self, **params):
         """ Fetch filtered data of all alarm entries.
@@ -178,7 +172,7 @@ class AlarmModel(QAbstractTableModel):
                 elif filterType == ALARM_TYPE:
                     if text in entry.type:
                         filtered.append(entry)
-        self.setFilterList(filtered)
+        self._setFilterList(filtered)
 
     def _getEntryIndex(self, id):
         """ The index in ``self.allEntries`` for the given ``id`` is returned.
@@ -188,6 +182,12 @@ class AlarmModel(QAbstractTableModel):
             if entry.id == id:
                 return index
         return -1
+
+    def _setFilterList(self, filtered):
+        """ Update filter list and reset model."""
+        self.beginResetModel()
+        self.filtered = filtered
+        self.endResetModel()
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
