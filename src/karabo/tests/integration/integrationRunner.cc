@@ -1,5 +1,5 @@
 /*
- * File:   newtestrunner.cc
+ * File:   integrationRunner.cc
  * Author: haufs
  *
  * Created on Aug 8, 2016, 3:22:00 PM
@@ -7,6 +7,7 @@
 
 #include <cppunit/BriefTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>
+#include <cppunit/XmlOutputter.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/TestResult.h>
 #include <cppunit/TestResultCollector.h>
@@ -27,12 +28,21 @@ int main() {
 
     // Add the top suite to the test runner
     CPPUNIT_NS::TestRunner runner;
-    runner.addTest(CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest());
+    CPPUNIT_NS::TestSuite* testSuite = dynamic_cast<CPPUNIT_NS::TestSuite*>(CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest());
+    runner.addTest(testSuite);
     runner.run(controller);
 
     // Print test in a compiler compatible format.
     CPPUNIT_NS::CompilerOutputter outputter(&result, CPPUNIT_NS::stdCOut());
     outputter.write();
+
+    // Output XML for Jenkins CPPunit plugin
+    const std::vector<CPPUNIT_NS::Test*>& tests = testSuite->getTests();
+    std::ostringstream filename;
+    filename << "testresults/" << tests[0]->getName() << ".xml";
+    std::ofstream xmlFileOut(filename.str());
+    CPPUNIT_NS::XmlOutputter xmlOut(&result, xmlFileOut);
+    xmlOut.write();
 
     return result.wasSuccessful() ? 0 : 1;
 }
