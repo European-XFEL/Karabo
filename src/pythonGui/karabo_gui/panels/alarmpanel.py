@@ -113,7 +113,6 @@ class AlarmPanel(Dockable, QWidget):
 
     @pyqtSlot(object)
     def filterToggled(self, button):
-        print("button", button)
         """ The filter ``button`` was activated. Update filtering needed."""
         if button is self.pbDefaultView:
             self._enableCustomFilter(False)
