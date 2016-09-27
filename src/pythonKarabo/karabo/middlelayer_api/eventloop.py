@@ -343,6 +343,13 @@ for f in ["cancel", "cancelled", "done", "result", "exception"]:
 
 
 class NoEventLoop(AbstractEventLoop):
+    """A fake event loop for a thread
+
+    There is only one Karabo event loop running ever. All other threads
+    have this fake event loop running, which is merely a marker that there
+    is no event loop. Setting a fake event loop prevents asyncio from
+    automatically setting one.
+    """
     Queue = queue.Queue
     sync_set = True
 
@@ -352,11 +359,23 @@ class NoEventLoop(AbstractEventLoop):
         self.task = None
 
     def cancel(self):
+        """Mark this event loop as cancelled
+
+        This marks the thread of this event loop as cancelled. Subsequent calls
+        to Karabo routines will fail with a :exc:`CancelledError`. Currently
+        running Karabo routines are cancelled right away.
+        """
         self._cancelled = True
         if self.task is not None:
             self._instance._ss.loop.call_soon_threadsafe(self.task.cancel)
 
     def sync(self, coro, timeout, wait):
+        """The main synchronization routine
+
+        This injects the coroutine *coro* into the event loop of the main
+        thread, with a *timeout*. If *wait* is true, we wait for the coroutine
+        to execute, otherwise we return a :class:`KaraboFuture`.
+        """
         if self._cancelled:
             raise CancelledError
         loop = self._instance._ss.loop
@@ -475,18 +494,35 @@ class EventLoop(SelectorEventLoop):
             return (yield from f(*args, **kwargs))
         else:
             loop = NoEventLoop(self.instance())
+            exception = None
 
-            def inner():
+            def thread():
+                nonlocal exception
                 set_event_loop(loop)
                 try:
-                    return f(*args, **kwargs)
+                    ret = f(*args, **kwargs)
+                    # The lambda assures we are using the newest future
+                    self.call_soon_threadsafe(lambda: future.set_result(ret))
+                except Exception as e:
+                    exception = e
+                    self.call_soon_threadsafe(
+                        lambda: future.set_exception(exception))
                 finally:
                     set_event_loop(None)
-            try:
-                return (yield from self.run_in_executor(None, inner))
-            except CancelledError:
-                loop.cancel()
-                raise
+
+            self.run_in_executor(None, thread)
+            while True:
+                future = Future(loop=self)
+                try:
+                    return (yield from future)
+                except CancelledError:
+                    # Ignore cancelling from the outside, instead cancel the
+                    # thread. Forward any resulting exception from the thread
+                    # to the caller.
+                    if exception is not None:
+                        raise
+                    else:
+                        loop.cancel()
 
     def start_device(self, device):
         lock = threading.Lock()
