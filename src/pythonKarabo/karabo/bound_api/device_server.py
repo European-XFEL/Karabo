@@ -156,7 +156,6 @@ class DeviceServer(object):
         self.pluginThread.join()
         self.pluginThread = None
         self.ss = None
-        self.logger = None
         # time.sleep(3)
         sys.exit()
         # os._exit(0)
@@ -171,7 +170,7 @@ class DeviceServer(object):
         self.processEventLock = threading.RLock()
         self.fsm = self.setupFsm()
 
-        self.ss = self.log = self.logger = self.loggerConfiguration = None
+        self.ss = self.log = None
         self.signal_handled = False
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
@@ -352,9 +351,6 @@ class DeviceServer(object):
 
         # Add connection type and parameters used by device server for connecting to broker
         config['_connection_.' + self.connectionType] = self.connectionParameters
-        
-        # Add logger configuration from DeviceServer:
-        config['Logger'] = copy.copy(self.loggerConfiguration)
 
         # create temporary instance to check the configuration parameters are valid
         try:
