@@ -66,7 +66,7 @@ namespace karabo {
 
             /**
              * Constructor from NDArray
-             * NOTE: If no dimensions are specified the shape of NDArray is used, but in reversed order!
+             * NOTE: If no dimensions are specified, the shape of NDArray is used.
              *
              * @param data NDArray
              * @param dims The dimensions of the image data
