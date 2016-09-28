@@ -394,7 +394,10 @@ class MainWindow(QMainWindow):
 
     def _removeAlarmPanel(self, instanceId):
         if instanceId in self.alarmPanels:
-            self.outputTab.removeDockableTab(self.alarmPanels[instanceId])
+            panel = self.alarmPanels[instanceId]
+            # Call closeEvent to unregister from broadcast events
+            panel.close()
+            self.outputTab.removeDockableTab(panel)
             del self.alarmPanels[instanceId]
 
     def showAlarmServicePanels(self, instanceIds):
