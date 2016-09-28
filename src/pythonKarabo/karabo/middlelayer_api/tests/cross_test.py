@@ -2,6 +2,7 @@
 
 from asyncio import coroutine, create_subprocess_exec, get_event_loop
 from contextlib import contextmanager
+from datetime import datetime
 import os
 import os.path
 from subprocess import PIPE
@@ -124,6 +125,8 @@ class Tests(DeviceTest):
 
     @async_tst
     def test_history(self):
+        before = datetime.now()
+
         karabo = os.environ["KARABO"]
         self.process = yield from create_subprocess_exec(
             os.path.join(karabo, "bin", "karabo-deviceserver"),
@@ -137,10 +140,12 @@ class Tests(DeviceTest):
             self.device.value = i
             self.device.update()
 
+        after = datetime.now()
+
         # This is the first history request ever, so it returns an empty
         # list (see https://in.xfel.eu/redmine/issues/9414).
         history = yield from getHistory(
-            "middlelayerDevice", "00:00", "23:59").value
+            "middlelayerDevice", before.isoformat(), after.isoformat()).value
 
         # We have to write another value to close the first archive file :-(...
         self.device.value = 4
@@ -150,8 +155,10 @@ class Tests(DeviceTest):
         # are flushed (see flushInterval in history.xml).
         yield from sleep(1.1)
 
+        after = datetime.now()
+
         history = yield from getHistory(
-            "middlelayerDevice", "00:00", "23:59").value
+            "middlelayerDevice", before.isoformat(), after.isoformat()).value
 
         self.assertEqual([h for _, _, _, h in history[-5:]], list(range(5)))
 
