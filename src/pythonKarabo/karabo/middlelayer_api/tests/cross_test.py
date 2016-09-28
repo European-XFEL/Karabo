@@ -165,6 +165,7 @@ class Tests(DeviceTest):
         yield from get_event_loop().instance()._ss.request(
             "Karabo_DLManagerServer", "slotKillServer")
         yield from self.process.wait()
+    test_history.slow = True
 
 
 if __name__ == "__main__":
