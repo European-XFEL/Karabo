@@ -8,6 +8,10 @@
 #ifndef KARABO_UTIL_METATOOLS_HH
 #define	KARABO_UTIL_METATOOLS_HH
 
+#include <boost/type_traits/is_virtual_base_of.hpp>
+#include <boost/type_traits/is_base_of.hpp>
+#include <boost/type_traits/is_polymorphic.hpp>
+
 namespace karabo {
     namespace util {
 
@@ -63,11 +67,46 @@ namespace karabo {
         /**
          * Helper functions to compile-time distinguish if a dynamic_cast is needed.
          */
+
+        //if it is not a virtual base but is a direct base we can static cast
+
+        template<typename, typename, typename>
+        struct static_or_dyn_cast {
+
+            template<typename T>
+            static boost::shared_ptr<T> cast(T* p) {
+                return boost::static_pointer_cast<T>(p->shared_from_this());
+            }
+        };
+
+        //if it is a virtual base a dynamic cast must be made
+
+        template<>
+        struct static_or_dyn_cast<boost::true_type, boost::true_type, boost::true_type> {
+
+            template<typename T>
+            static boost::shared_ptr<T> cast(T* p) {
+                return boost::dynamic_pointer_cast<T>(p->shared_from_this());
+            }
+        };
+
+
+        // if this is not a direct base a dynamic cast must be made
+
+        template<>
+        struct static_or_dyn_cast<boost::false_type, boost::false_type, boost::true_type> {
+
+            template<typename T>
+            static boost::shared_ptr<T> cast(T* p) {
+                return boost::dynamic_pointer_cast<T>(p->shared_from_this());
+            }
+        };
+
         template<typename>
         struct cond_dyn_cast {
 
             template<typename T>
-            static boost::shared_ptr<T>& cast(T* p) {
+            static boost::shared_ptr<T> cast(T* p) {
                 return p->shared_from_this();
             }
         };
@@ -77,7 +116,10 @@ namespace karabo {
 
             template<typename T>
             static boost::shared_ptr<T> cast(T* p) {
-                return boost::dynamic_pointer_cast<T>(p->shared_from_this());
+                typedef typename boost::is_virtual_base_of < decltype(*(p->shared_from_this())), T>::type is_virtual_base;
+                typedef typename boost::is_base_of < decltype(*(p->shared_from_this())), T>::type is_base;
+                typedef typename boost::is_polymorphic <T>::type is_polym;
+                return static_or_dyn_cast<is_virtual_base, is_base, is_polym>::cast(p);
             }
         };
 
@@ -87,13 +129,12 @@ namespace karabo {
          * @param f: an arbitrary member function, can have any argument types but must return void
          * @return a wrapped version of f.
          */
-        template<typename Ret, typename... Args, typename O>
-        std::function<void(O*, Args&...) > exec_weak_impl(Ret(O::*f)(Args...), O* o) {
-            auto wp = boost::weak_ptr<O>(cond_dyn_cast<typename std::is_same < boost::shared_ptr<O>, decltype(o->shared_from_this())>::type>::template cast(o));
-            //the raw pointer in the signature of wrapped is necessary to maintain compatability with boost::bind wrapping. However,
-            //we never use this raw pointer. We instead use the captured weak pointer
+        template<typename Ret, typename... Args, typename Obj>
+        std::function<void(Args&...) > exec_weak_impl(Ret(Obj::*f)(Args...), Obj* o) {
+            typedef typename std::is_same < boost::shared_ptr<Obj>, decltype(o->shared_from_this())>::type is_same_type;
+            boost::weak_ptr<Obj> wp(cond_dyn_cast<is_same_type>::template cast(o));
             //we need to copy-capture here -> otherwise segfault, because f and wp go out of scope
-            auto wrapped = [f, wp](O* o, Args&... fargs) {
+            auto wrapped = [f, wp](Args&... fargs) {
 
                 auto ptr = wp.lock();
                 if (ptr) {
@@ -121,11 +162,11 @@ namespace karabo {
          * @param p: parameters as one would give to boost::bind. Placeholders are fully supported.
          * @return: bound functor, compatible with boost bind.
          */
-        template< typename F, typename O, typename ...P>
-        auto bind_weak(const F& f, O * const o, const P&... p) -> decltype(boost::bind<void>(exec_weak_impl(f, o), o, p...)) {
+        template< typename F, typename Obj, typename ...P>
+        auto bind_weak(const F& f, Obj * const o, const P&... p) -> decltype(boost::bind<void>(exec_weak_impl(f, o), p...)) {
             //note that boost::arg<N>s cannot be forwarded, thus we work with references here.
             auto wrapped = exec_weak_impl(f, o);
-            return boost::bind<void>(wrapped, o, p...);
+            return boost::bind<void>(wrapped, p...);
         }
 
 
