@@ -17,7 +17,7 @@
 #include <unordered_set>
 #include <karabo/net/utils.hh>
 #include <karabo/util.hpp>
-#include <karabo/util/SignalHandler.hh>
+#include <karabo/util/StackTrace.hh>
 #include <karabo/util/RollingWindowStatistics.hh>
 #include <karabo/xms.hpp>
 #include <karabo/log/Logger.hh>
@@ -313,12 +313,7 @@ namespace karabo {
             virtual ~Device() {
                 KARABO_LOG_FRAMEWORK_TRACE << "Device::~Device() dtor : m_deviceClient.use_count()="
                         << m_deviceClient.use_count() << "\n"
-#ifdef __linux__
                         << karabo::util::StackTrace();
-#else
-                        << "Stack trace not implemented";
-#endif
-
                 m_deviceClient.reset();
             };
 
