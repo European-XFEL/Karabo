@@ -464,7 +464,9 @@ class Slot(Descriptor):
         @coroutine
         def wrapper():
             try:
-                device._ss.reply(message, (yield from coro))
+                ret = yield from coro
+                device.update()
+                device._ss.reply(message, ret)
             except Exception as e:
                 _, exc, tb = sys.exc_info()
                 instance._onException(self, exc, tb)
