@@ -44,18 +44,13 @@ class Tests(DeviceTest):
             self.process.kill()
             self.loop.run_until_complete(self.process.wait())
             had_to_kill = True
-        try:
-            os.remove("karabo.log")
-        except FileNotFoundError:
-            pass  # never mind
-        try:
-            os.remove("serverId.xml")
-        except FileNotFoundError:
-            pass  # never mind
-        try:
-            os.remove("loggermap.xml")
-        except FileNotFoundError:
-            pass  # never mind
+
+        for fn in ("karabo.log", "serverId.xml", "loggermap.xml"):
+            try:
+                os.remove(fn)
+            except FileNotFoundError:
+                pass  # never mind
+
         os.chdir(self.__starting_dir)
         if had_to_kill:
             self.fail("process didn't properly go down")
