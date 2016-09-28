@@ -383,34 +383,23 @@ namespace karabo {
             }
 
             /**
-             * Convenience function for writing data objects that reflect a single element in the data schema.
-             * In this case the root-name must not be included in the data object hierarchy but should be given
-             * as second argument to this function.
-             * Data will be timestamped and send immediately (write/update).
-             * @param channelName The output channel name
-             * @param key The data element (root-)key
-             * @param data Hash::Pointer object
-             */
-            void writeChannel(const std::string& channelName, const std::string& key, const karabo::util::Hash::Pointer& data) {
-                karabo::util::Hash::Pointer root(new karabo::util::Hash(key, data));
-                writeChannel(channelName, root);
-            }
-
-            /**
-             * Writes a data object to the specified channel. The data object internally must
+             * Writes a hash to the specified channel. The hash internally must
              * follow exactly the data schema as defined in the expected parameters.
+             * To avoid copies, but allow addition of a timestamp, the hash is passed as
+             * non-const reference.
              * @param channelName The output channel name
-             * @param data Hash::Pointer object
+             * @param data Hash with the data
              */
-            void writeChannel(const std::string& channelName, karabo::util::Hash::Pointer& data) {
+            void writeChannel(const std::string& channelName, karabo::util::Hash& data) {
                 // TODO think about proper validation and time tagging later
                 karabo::xms::OutputChannel::Pointer channel = this->getOutputChannel(channelName);
                 const karabo::util::Timestamp& ts = getActualTimestamp();
 
-                for (karabo::util::Hash::iterator it = data->begin(); it != data->end(); ++it) {
+                for (karabo::util::Hash::iterator it = data.begin(); it != data.end(); ++it) {
                     ts.toHashAttributes(it->getAttributes());
                 }
-                channel->write(data);
+                // const_cast to guarantee that the data cannot be changed downstream.
+                channel->write(const_cast<const karabo::util::Hash&> (data));
                 channel->update();
             }
 
