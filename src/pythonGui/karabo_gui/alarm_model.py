@@ -49,8 +49,9 @@ DEVICE_KILLED_UPDATE_TYPE = 'deviceKilled'
 REFUSE_ACKNOWLEDGEMENT_UPDATE_TYPE = 'refuseAcknowledgement'
 
 # Tuples for convenience
-UPDATE_ALARM_TYPES = (INIT_UPDATE_TYPE, UPDATE_UPDATE_TYPE, ADD_UPDATE_TYPE,
-                ACKNOWLEGDABLE_UPDATE_TYPE, REFUSE_ACKNOWLEDGEMENT_UPDATE_TYPE)
+UPDATE_ALARM_TYPES = (
+    INIT_UPDATE_TYPE, UPDATE_UPDATE_TYPE, ADD_UPDATE_TYPE,
+    ACKNOWLEGDABLE_UPDATE_TYPE, REFUSE_ACKNOWLEDGEMENT_UPDATE_TYPE)
 REMOVE_ALARM_TYPES = (REMOVE_UPDATE_TYPE, DEVICE_KILLED_UPDATE_TYPE)
 
 
@@ -78,7 +79,9 @@ class AlarmModel(QAbstractTableModel):
     def __init__(self, instanceId, parent=None):
         super(AlarmModel, self).__init__(parent)
         self.instanceId = instanceId  # InstanceId of associated AlarmService
-        self.filtered = []
+        self.allEntries = []  # All alarm entries
+        self.filtered = []  # Filtered alarm entries
+        self.filterSettings = {}  # Filter settings set by AlarmPanel
 
     def extractData(self, rows):
         """ Fetch data from incoming hash object ``rows`` and put
@@ -118,46 +121,69 @@ class AlarmModel(QAbstractTableModel):
     def initAlarms(self, instanceId, rows):
         if self.instanceId != instanceId:
             return
-        _, alarmEntries = self.extractData(rows)
-        self.beginResetModel()
-        self.filtered = alarmEntries
-        self.endResetModel()
+        _, self.allEntries = self.extractData(rows)
+        self.updateFilter()
 
     def updateAlarms(self, instanceId, rows):
         if self.instanceId != instanceId:
             return
         updateTypes, alarmEntries = self.extractData(rows)
+        # Insert updated entries in all entries list
         for upType, alarmEntry in zip(updateTypes, alarmEntries):
-            rowIndex = self._getRowIndexFromId(alarmEntry.id)
+            entryIndex = self._getEntryIndex(alarmEntry.id)
             if upType in UPDATE_ALARM_TYPES:
-                if rowIndex > -1 and rowIndex < len(self.filtered):
-                    # Remove old entry from list first
-                    self.removeRow(rowIndex)
-                    self.insertRow(rowIndex, alarmEntry)
+                if entryIndex > -1 and entryIndex < len(self.allEntries):
+                    # Replace entry
+                    self.allEntries[entryIndex] = alarmEntry
                 else:
-                    self.insertRow(len(self.filtered), alarmEntry)
+                    self.allEntries.append(alarmEntry)
             elif upType in REMOVE_ALARM_TYPES:
-                self.removeRow(rowIndex)
+                self.allEntries.pop(entryIndex)
+        self.updateFilter()
 
-    def _getRowIndexFromId(self, id):
-        """ The row index for the given ``id`` is returned.
+    def updateFilter(self, **params):
+        """ Fetch filtered data of all alarm entries.
+            ``params`` is a dict which might include the keys:
+            ``filterType`` which describes the filter
+            ``text`` additional string for custom filtering
+        """
+        if params:
+            self.filterSettings = params
+
+        filterType = self.filterSettings.get('filterType', None)
+        text = self.filterSettings.get('text', None)
+        filtered = []
+        if filterType is None:
+            filtered = self.allEntries
+        else:
+            for entry in self.allEntries:
+                if filterType == ACKNOWLEDGE:
+                    needsAck, _ = entry.acknowledge
+                    # Only check for ``needsAcknowledging`` flag
+                    if needsAck:
+                        filtered.append(entry)
+                elif filterType == DEVICE_ID and text in entry.deviceId:
+                        filtered.append(entry)
+                elif filterType == PROPERTY and text in entry.property:
+                        filtered.append(entry)
+                elif filterType == ALARM_TYPE and text in entry.type:
+                        filtered.append(entry)
+        self._setFilterList(filtered)
+
+    def _getEntryIndex(self, id):
+        """ The index in ``self.allEntries`` for the given ``id`` is returned.
             If the ``id`` is not found, ``-1`` is returned.
         """
-        for row in range(self.rowCount()):
-            index = self.index(row, getAlarmKeyIndex(ALARM_ID))
-            if index.data() == id:
-                return row
+        for index, entry in enumerate(self.allEntries):
+            if entry.id == id:
+                return index
         return -1
 
-    def insertRow(self, index, alarmEntry):
-        self.beginInsertRows(QModelIndex(), index, index)
-        self.filtered.insert(index, alarmEntry)
-        self.endInsertRows()
-
-    def removeRow(self, index):
-        self.beginRemoveRows(QModelIndex(), index, index)
-        self.filtered.pop(index)
-        self.endRemoveRows()
+    def _setFilterList(self, filtered):
+        """ Update filter list and reset model."""
+        self.beginResetModel()
+        self.filtered = filtered
+        self.endResetModel()
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
