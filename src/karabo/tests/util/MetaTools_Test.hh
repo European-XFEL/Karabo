@@ -65,14 +65,10 @@ struct Test_Device : public virtual Test_SignalSlotable {
 
     boost::asio::deadline_timer m_timer;
     std::vector<std::string>* m_messages;
-    boost::mutex m_messageMutex;
 
     Test_Device(std::vector<std::string>* messages)
         : m_timer(karabo::net::EventLoop::getIOService()), m_messages(messages) {
-        {
-            boost::mutex::scoped_lock lock(m_messageMutex);
-            m_messages->push_back("Test_Device created");
-        }
+        m_messages->push_back("Test_Device created");
     }
 
     void init() {
@@ -81,27 +77,18 @@ struct Test_Device : public virtual Test_SignalSlotable {
     }
 
     ~Test_Device() {
-        {
-            boost::mutex::scoped_lock lock(m_messageMutex);
-            m_messages->push_back("Test_Device deleted");
-        }
+        m_messages->push_back("Test_Device deleted");
         m_timer.cancel();
     }
 
     void executeStepFunction(int arg, const boost::system::error_code& error) {
         // Canceled timer
         if (error == boost::asio::error::operation_aborted) {
-            {
-                boost::mutex::scoped_lock lock(m_messageMutex);
-                m_messages->push_back("Timer aborted");
-            }
+            m_messages->push_back("Timer aborted");
             return;
         }
         // Schedule next step
-        {
-            boost::mutex::scoped_lock lock(m_messageMutex);
-            m_messages->push_back("Tick " + boost::lexical_cast<std::string>(arg));
-        }
+        m_messages->push_back("Tick " + boost::lexical_cast<std::string>(arg));
 
         boost::this_thread::sleep(boost::posix_time::milliseconds(50));
 
