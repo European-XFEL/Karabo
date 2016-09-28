@@ -9,8 +9,6 @@
 #define	KARABO_UTIL_METATOOLS_HH
 
 #include <boost/type_traits/is_virtual_base_of.hpp>
-#include <boost/type_traits/is_base_of.hpp>
-#include <boost/type_traits/is_polymorphic.hpp>
 
 namespace karabo {
     namespace util {
@@ -70,7 +68,7 @@ namespace karabo {
 
         //if it is not a virtual base but is a direct base we can static cast
 
-        template<typename, typename, typename>
+        template<typename, typename>
         struct static_or_dyn_cast {
 
             template<typename T>
@@ -82,7 +80,7 @@ namespace karabo {
         //if it is a virtual base a dynamic cast must be made
 
         template<>
-        struct static_or_dyn_cast<boost::true_type, boost::true_type, boost::true_type> {
+        struct static_or_dyn_cast<boost::true_type, boost::true_type> {
 
             template<typename T>
             static boost::shared_ptr<T> cast(T* p) {
@@ -94,7 +92,7 @@ namespace karabo {
         // if this is not a direct base a dynamic cast must be made
 
         template<>
-        struct static_or_dyn_cast<boost::false_type, boost::false_type, boost::true_type> {
+        struct static_or_dyn_cast<boost::false_type, boost::false_type> {
 
             template<typename T>
             static boost::shared_ptr<T> cast(T* p) {
@@ -118,8 +116,7 @@ namespace karabo {
             static boost::shared_ptr<T> cast(T* p) {
                 typedef typename boost::is_virtual_base_of < decltype(*(p->shared_from_this())), T>::type is_virtual_base;
                 typedef typename boost::is_base_of < decltype(*(p->shared_from_this())), T>::type is_base;
-                typedef typename boost::is_polymorphic <T>::type is_polym;
-                return static_or_dyn_cast<is_virtual_base, is_base, is_polym>::cast(p);
+                return static_or_dyn_cast<is_virtual_base, is_base>::cast(p);
             }
         };
 
