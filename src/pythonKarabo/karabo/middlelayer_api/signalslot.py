@@ -273,9 +273,9 @@ class SignalSlotable(Configurable):
             self.signalChanged(h, self.deviceId)
 
     def setChildValue(self, key, value, desc):
+        self._sethash[key] = value, desc
         if self._ss is not None:
             self._ss.loop.call_soon_threadsafe(self.update)
-        self._sethash[key] = value, desc
 
     @slot
     def slotSchemaUpdated(self, schema, deviceId):

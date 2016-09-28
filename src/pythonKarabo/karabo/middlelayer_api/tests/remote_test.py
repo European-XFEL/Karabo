@@ -69,6 +69,7 @@ class Remote(Device):
         self.state = State.UNKNOWN
 
     @Slot(allowedStates=[State.UNKNOWN])
+    @coroutine
     def allow(self):
         self.state = State.ON
         self.value = 777
@@ -486,7 +487,6 @@ class Tests(DeviceTest):
                 # d.allow() sets d.value to 777 and is changing state such that
                 # disallowed_int can be set ...
                 yield from d.allow()
-                yield from waitUntil(lambda: d.value == 777)
                 self.assertEqual(d.value, 777)
                 d.value = 4
                 # ... but it cannot be called itself anymore ...
@@ -501,10 +501,11 @@ class Tests(DeviceTest):
                 self.assertEqual(d.value, 444)
                 # ... so allow can be called again!
                 yield from d.allow()
-                yield from waitUntil(lambda: d.value == 777)
+                self.assertEqual(d.value, 777)
             finally:
                 # set the state back
                 d.disallowed_int = 7
+                self.remote.state = State.UNKNOWN
 
     @async_tst
     def test_log(self):
