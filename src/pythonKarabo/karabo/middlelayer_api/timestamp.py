@@ -43,7 +43,7 @@ class Timestamp(object):
     def toDict(self):
         return {"frac": numpy.uint64(self.time % RESOLUTION),
                 "sec": numpy.uint64(self.time // RESOLUTION),
-                "tid": self.tid}
+                "tid": numpy.uint64(self.tid)}
 
     def toTimestamp(self):
         """Return the time as seconds since 1970-01-01 00:00 UTC"""
