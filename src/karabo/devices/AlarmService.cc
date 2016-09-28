@@ -35,7 +35,9 @@ namespace karabo {
 
 
         void AlarmService::expectedParameters(Schema& expected) {
-            
+            OVERWRITE_ELEMENT(expected).key("deviceId")
+                    .setNewDefaultValue("Karabo_AlarmService")
+                    .commit();
             //device elements
             
             PATH_ELEMENT(expected).key("storagePath")
