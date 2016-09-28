@@ -48,21 +48,21 @@ void MetaTools_Test::testWeakBind(){
 
 
 struct Base : public boost::enable_shared_from_this<Base> {
-    void foo(){};
+    virtual ~Base() {}
 };
 
 struct VirtualBase: public boost::enable_shared_from_this<VirtualBase> {
     virtual void foo(){};
-       
+    virtual ~VirtualBase() {};
 };
 
 
 struct FinalInterim : public Base {
-
+    virtual ~FinalInterim() {};
 };
 
 struct FinalInterimVirtual : public virtual VirtualBase {
-    
+    virtual ~FinalInterimVirtual() {};
 };
 
 struct Final : public boost::enable_shared_from_this<Final> {
@@ -71,33 +71,35 @@ struct Final : public boost::enable_shared_from_this<Final> {
 
 struct FinalVirtual : public boost::enable_shared_from_this<FinalVirtual> {
     virtual void foo(){};
+    virtual ~FinalVirtual() {};
 };
 
 void MetaTools_Test::testCastResolvers(){
-    //note that we verify compile-time functionality here.
-    Final* f = new Final();
+    // note that we verify compile-time functionality here. This will simply not compile if the cast resolvers
+    // do not treat cases appropriately.
+    boost::shared_ptr<Final> f(new Final());
     {
-        boost::shared_ptr<Final> sf = karabo::util::cond_dyn_cast<std::true_type>::cast(f);
+        boost::shared_ptr<Final> sf = karabo::util::cond_dyn_cast<std::true_type>::cast(f.get());
     }
-    delete f;
     
-    FinalVirtual* fv = new FinalVirtual();
-    {
-        boost::shared_ptr<FinalVirtual> sfv = karabo::util::cond_dyn_cast<std::true_type>::cast(fv);
-    }
-    delete fv;
     
-    FinalInterim* fi = new FinalInterim();
+    boost::shared_ptr<FinalVirtual> fv(new FinalVirtual()); 
     {
-        boost::shared_ptr<FinalInterim> sfi = karabo::util::cond_dyn_cast<std::false_type>::cast(fi);
+        boost::shared_ptr<FinalVirtual> sfv = karabo::util::cond_dyn_cast<std::true_type>::cast(fv.get());
     }
-    delete fi;
+   
     
-    FinalInterimVirtual* fiv = new FinalInterimVirtual();
+    boost::shared_ptr<FinalInterim> fi(new FinalInterim()); 
     {
-        boost::shared_ptr<FinalInterimVirtual> sfiv = karabo::util::cond_dyn_cast<std::false_type>::cast(fiv);
+        boost::shared_ptr<FinalInterim> sfi = karabo::util::cond_dyn_cast<std::false_type>::cast(fi.get());
     }
-    delete fiv;
+    
+    boost::shared_ptr<FinalInterimVirtual> fiv(new FinalInterimVirtual()); 
+   
+    {
+        boost::shared_ptr<FinalInterimVirtual> sfiv = karabo::util::cond_dyn_cast<std::false_type>::cast(fiv.get());
+    }
+
     CPPUNIT_ASSERT(true);
 
 }
