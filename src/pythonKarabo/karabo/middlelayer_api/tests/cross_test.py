@@ -1,6 +1,6 @@
 """This tests the communication between bound API and middlelayer API"""
 
-from asyncio import coroutine, create_subprocess_exec, get_event_loop
+from asyncio import async, coroutine, create_subprocess_exec, get_event_loop
 from contextlib import contextmanager
 from datetime import datetime
 import os
@@ -130,9 +130,16 @@ class Tests(DeviceTest):
         karabo = os.environ["KARABO"]
         self.process = yield from create_subprocess_exec(
             os.path.join(karabo, "bin", "karabo-deviceserver"),
-            "historytest.xml", stderr=PIPE)
+            "historytest.xml", stderr=PIPE, stdout=PIPE)
         yield from self.wait_for_stderr(
             "'DataLogger-middlelayerDevice' got started")
+
+        @coroutine
+        def print_stdout():
+            while not self.process.stdout.at_eof():
+                line = yield from self.process.stdout.readline()
+                print(line.decode("ascii"), end="")
+        async(print_stdout())
 
         yield from sleep(0.1)
 
