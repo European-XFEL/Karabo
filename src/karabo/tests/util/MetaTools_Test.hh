@@ -54,36 +54,36 @@ struct PointerTest {
     }
 };
 
-struct SignalSlotable : public boost::enable_shared_from_this<SignalSlotable> {
+struct _SignalSlotable : public boost::enable_shared_from_this<_SignalSlotable> {
 
-    virtual ~SignalSlotable() {
+    virtual ~_SignalSlotable() {
     }
 
 };
 
-struct Device : public virtual SignalSlotable {
+struct _Device : public virtual _SignalSlotable {
 
     boost::asio::deadline_timer m_timer;
     std::vector<std::string>* m_messages;
     boost::mutex m_messageMutex;
 
-    Device(std::vector<std::string>* messages)
+    _Device(std::vector<std::string>* messages)
         : m_timer(karabo::net::EventLoop::getIOService()), m_messages(messages) {
         {
             boost::mutex::scoped_lock lock(m_messageMutex);
-            m_messages->push_back("Device created");
+            m_messages->push_back("_Device created");
         }
     }
 
     void init() {
         m_timer.expires_from_now(boost::posix_time::millisec(100));
-        m_timer.async_wait(karabo::util::bind_weak(&Device::executeStepFunction, this, 5, _1));
+        m_timer.async_wait(karabo::util::bind_weak(&_Device::executeStepFunction, this, 5, _1));
     }
 
-    ~Device() {
+    ~_Device() {
         {
             boost::mutex::scoped_lock lock(m_messageMutex);
-            m_messages->push_back("Device deleted");
+            m_messages->push_back("_Device deleted");
         }
         m_timer.cancel();
     }
@@ -107,25 +107,25 @@ struct Device : public virtual SignalSlotable {
 
         m_timer.expires_from_now(boost::posix_time::millisec(500));
 
-        m_timer.async_wait(karabo::util::bind_weak(&Device::executeStepFunction, this, arg + 1, _1));
+        m_timer.async_wait(karabo::util::bind_weak(&_Device::executeStepFunction, this, arg + 1, _1));
     }
 };
 
-struct DeviceServer {
+struct _DeviceServer {
 
     boost::asio::deadline_timer m_deviceDestructTimer;
-    std::map<std::string, boost::shared_ptr<Device> > m_devices;
+    std::map<std::string, boost::shared_ptr<_Device> > m_devices;
 
-    DeviceServer(std::vector<std::string>* messages)
+    _DeviceServer(std::vector<std::string>* messages)
         : m_deviceDestructTimer(karabo::net::EventLoop::getIOService()) {
-        m_devices["someDevice"] = boost::shared_ptr<Device>(new Device(messages));
-        m_devices["someDevice"]->init();
+        m_devices["some_Device"] = boost::shared_ptr<_Device>(new _Device(messages));
+        m_devices["some_Device"]->init();
 
         m_deviceDestructTimer.expires_from_now(boost::posix_time::millisec(1500));
-        m_deviceDestructTimer.async_wait(boost::bind(&DeviceServer::killDevice, this, _1, "someDevice"));
+        m_deviceDestructTimer.async_wait(boost::bind(&_DeviceServer::kill_Device, this, _1, "some_Device"));
     }
 
-    void killDevice(const boost::system::error_code& error, const std::string& deviceName) {
+    void kill_Device(const boost::system::error_code& error, const std::string& deviceName) {
         m_devices.erase(deviceName);
     }
 };
