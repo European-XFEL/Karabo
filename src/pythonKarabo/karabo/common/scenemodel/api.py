@@ -1,25 +1,30 @@
-from .bases import (BaseLayoutData, BaseLayoutModel, BaseSceneObjectData,  # noqa
-                    BaseShapeObjectData,  BaseWidgetObjectData)  # noqa
-from .const import NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT  # noqa
-from .exceptions import SceneReaderException, SceneWriterException  # noqa
-from .io import read_scene, write_scene, write_single_model  # noqa
-from .layouts import (BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,  # noqa
-                      GridLayoutChildData, GridLayoutModel)  # noqa
-from .model import SceneModel, UnknownXMLDataModel  # noqa
-from .registry import register_scene_reader, register_scene_writer  # noqa
-from .shapes import LineModel, PathModel, RectangleModel  # noqa
-from .simple_widgets import LabelModel, SceneLinkModel, WorkflowItemModel  # noqa
-from .widgets import (BitfieldModel, CheckBoxModel, ChoiceElementModel,  # noqa
-                      ComboBoxModel, DirectoryModel, DisplayAlignedImageModel,  # noqa
-                      DisplayCommandModel, DisplayIconsetModel,  # noqa
-                      DisplayImageModel, DisplayImageElementModel,  # noqa
-                      DisplayLabelModel, DisplayPlotModel,  # noqa
-                      DisplayStateColorModel, DoubleLineEditModel,  # noqa
-                      EditableListModel, EditableListElementModel,  # noqa
-                      EditableSpinBoxModel, EvaluatorModel, FileInModel,  # noqa
-                      FileOutModel, FloatSpinBoxModel, HexadecimalModel,  # noqa
-                      IconData, BaseIconsModel, DigitIconsModel,  # noqa
-                      SelectionIconsModel, TextIconsModel, IntLineEditModel,  # noqa
-                      KnobModel, LineEditModel, PlotCurveModel, LinePlotModel,  # noqa
-                      MonitorModel, SingleBitModel, SliderModel,  # noqa
-                      TableElementModel, VacuumWidgetModel, XYPlotModel)  # noqa
+# flake8: noqa
+from .bases import (BaseLayoutData, BaseLayoutModel, BaseSceneObjectData,
+                    BaseShapeObjectData,  BaseWidgetObjectData)
+from .const import NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
+from .exceptions import SceneReaderException, SceneWriterException
+from .io import read_scene, write_scene, write_single_model
+from .layouts import (BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
+                      GridLayoutChildData, GridLayoutModel)
+from .model import SceneModel, UnknownXMLDataModel
+from .registry import register_scene_reader, register_scene_writer
+from .shapes import LineModel, PathModel, RectangleModel
+from .widgets.complex import (DisplayStateColorModel, EvaluatorModel,
+                              FloatSpinBoxModel, MonitorModel, SingleBitModel,
+                              TableElementModel)
+from .widgets.icon import (BaseIconsModel, DigitIconsModel,
+                           DisplayIconsetModel, IconData, SelectionIconsModel,
+                           TextIconsModel)
+from .widgets.plot import  PlotCurveModel, LinePlotModel
+from .widgets.simple import (BitfieldModel, CheckBoxModel, ChoiceElementModel,
+                            ComboBoxModel, DirectoryModel,
+                            DisplayAlignedImageModel, DisplayCommandModel,
+                            DisplayImageModel, DisplayImageElementModel,
+                            DisplayLabelModel, DisplayPlotModel,
+                            DoubleLineEditModel, EditableListModel,
+                            EditableListElementModel, EditableSpinBoxModel,
+                            FileInModel, FileOutModel, HexadecimalModel,
+                            IntLineEditModel, KnobModel, LabelModel,
+                            LineEditModel, SceneLinkModel, SliderModel,
+                            WorkflowItemModel, XYPlotModel)
+from .widgets.vacuum import VacuumWidgetModel
