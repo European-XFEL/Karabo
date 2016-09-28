@@ -1,6 +1,7 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import HasStrictTraits, Dict, Float, Instance, List, String
+from traits.api import (HasStrictTraits, Dict, Float, Instance, Int, List,
+                        String)
 
 from .bases import BaseSceneObjectData
 from .const import NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
@@ -11,6 +12,8 @@ from .registry import register_scene_reader, register_scene_writer
 class SceneModel(HasStrictTraits):
     """ An object representing the data for a Karabo GUI scene.
     """
+    # The version (from the scene file)
+    version = Int(2)
     # The title of the scene
     title = String()
     # Extra attributes from the SVG file that we want to preserve.
@@ -52,6 +55,7 @@ def _read_extra_attributes(element):
 @register_scene_reader('Scene', xmltag=NS_SVG + 'svg', version=1)
 def __scene_reader(read_func, element):
     traits = {
+        'version': int(element.get(NS_KARABO + 'version', 1)),
         'width': float(element.get('width', 0)),
         'height': float(element.get('height', 0)),
         'extra_attributes': _read_extra_attributes(element),
