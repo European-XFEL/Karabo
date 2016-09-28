@@ -60,7 +60,8 @@ namespace karabo {
                     .displayedName("Geometry")
                     .commit();
             NODE_ELEMENT(s).key("header")
-                    .displayedName("Hash containing user-defined header data")
+                    .displayedName("Header")
+                    .description("Hash containing user-defined header data")
                     .commit();
         }
 
