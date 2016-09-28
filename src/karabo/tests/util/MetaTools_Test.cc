@@ -32,15 +32,15 @@ void MetaTools_Test::testMethod() {
 
 void MetaTools_Test::testWeakBind(){
     std::vector<std::string> messages;
-    DeviceServer* d = new DeviceServer(&messages);
+    _DeviceServer* d = new _DeviceServer(&messages);
     karabo::net::EventLoop::addThread(4);
     karabo::net::EventLoop::run();
 
     CPPUNIT_ASSERT(messages.size() >= 4);
-    CPPUNIT_ASSERT(messages[0] == "Device created");
+    CPPUNIT_ASSERT(messages[0] == "_Device created");
     CPPUNIT_ASSERT(messages[1] == "Tick 5");
     CPPUNIT_ASSERT(messages[2] == "Tick 6");
-    CPPUNIT_ASSERT(messages[messages.size()-1] == "Device deleted");
+    CPPUNIT_ASSERT(messages[messages.size()-1] == "_Device deleted");
     karabo::net::EventLoop::stop();
     delete d;
 }
