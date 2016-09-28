@@ -62,7 +62,8 @@ class Device(AlarmMixin, SignalSlotable):
 
     lockedBy = String(
         displayedName="Locked By",
-        description="The name of the device holding a lock on this one",
+        description="The name of the device holding a lock on this one "
+                    "(empty if not locked)",
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
         requiredAccessLevel=AccessLevel.EXPERT, defaultValue="")
 
