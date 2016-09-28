@@ -7,6 +7,24 @@ from ..model import SceneModel
 from ..io import read_scene, write_scene
 
 
+def assert_base_traits(model):
+    assert model.x == 0
+    assert model.y == 0
+    assert model.width == 100
+    assert model.height == 100
+    assert model.keys == ['device_id.prop']
+
+
+def base_widget_traits(parent=None):
+    traits = {
+        'keys': ['device_id.prop'],
+        'x': 0, 'y': 0, 'height': 100, 'width': 100
+    }
+    if parent is not None:
+        traits['parent_component'] = parent
+    return traits
+
+
 def single_model_round_trip(model):
     """ Given a scene model object, write it to XML and read it back to examine
     the round trip reader/writer behavior.
