@@ -540,6 +540,13 @@ def disconnectDevice(device):
 
 
 class locked:
+    """A context manager to lock a device
+
+    This allows to lock another devices for exclusive use::
+
+        with locked(device):
+            # do something on device
+    """
     def __init__(self, device):
         self.device = device
 
