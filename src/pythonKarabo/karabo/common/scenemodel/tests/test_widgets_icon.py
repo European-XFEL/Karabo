@@ -2,12 +2,50 @@ from ..widgets.icon import (
     IconData, DigitIconsModel, DisplayIconsetModel, SelectionIconsModel,
     TextIconsModel)
 from .utils import (assert_base_traits, base_widget_traits,
-                    single_model_round_trip)
+                    single_model_from_data, single_model_round_trip)
+
+VERSION_1_DIGIT_ICONS_SVG = """
+<svg
+    xmlns:krb="http://karabo.eu/scene"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    height="768"
+    width="1024"
+    krb:version="1">
+        <svg:rect
+            height="100"
+            width="100"
+            x="0"
+            y="0"
+            krb:class="DisplayComponent"
+            krb:keys="device_id.prop"
+            krb:widget="DigitIcons">
+                <krb:value image="blah.svg" equal="false">14</krb:value>
+        </svg:rect>
+</svg>
+"""
+VERSION_1_DISPLAY_ICONSET_SVG = """
+<svg
+    xmlns:krb="http://karabo.eu/scene"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    height="768"
+    width="1024"
+    krb:version="1">
+        <svg:rect
+            height="100"
+            width="100"
+            x="0"
+            y="0"
+            krb:class="DisplayComponent"
+            krb:keys="device_id.prop"
+            krb:url="blah.svg"
+            krb:widget="DisplayIconset" />
+</svg>
+"""
 
 
 def _check_icon_widget(klass):
     traits = base_widget_traits(parent='DisplayComponent')
-    icon = IconData(image='blah.svg')
+    icon = IconData(data=b'karabo')
     if klass is DigitIconsModel:
         icon.equal = True
         icon.value = '14'
@@ -16,7 +54,7 @@ def _check_icon_widget(klass):
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert len(read_model.values) == 1
-    assert read_model.values[0].image == 'blah.svg'
+    assert read_model.values[0].data == b'karabo'
     if klass is DigitIconsModel:
         assert read_model.values[0].equal is True
         assert read_model.values[0].value == '14'
@@ -24,14 +62,28 @@ def _check_icon_widget(klass):
 
 def test_display_iconset_widget():
     traits = base_widget_traits(parent='DisplayComponent')
-    traits['image'] = 'blah.svg'
+    traits['data'] = b'karabo'
     model = DisplayIconsetModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
-    assert read_model.image == 'blah.svg'
+    assert read_model.data == b'karabo'
 
 
 def test_icon_widgets():
     model_classes = (DigitIconsModel, SelectionIconsModel, TextIconsModel)
     for klass in model_classes:
         yield _check_icon_widget, klass
+
+
+def test_display_iconset_widget_version_1():
+    read_model = single_model_from_data(VERSION_1_DISPLAY_ICONSET_SVG)
+    assert_base_traits(read_model)
+    assert read_model.image == 'blah.svg'
+
+
+def test_icon_widget_version_1():
+    read_model = single_model_from_data(VERSION_1_DIGIT_ICONS_SVG)
+    assert_base_traits(read_model)
+    assert len(read_model.values) == 1
+    assert read_model.values[0].image == 'blah.svg'
+    assert isinstance(read_model, DigitIconsModel)
