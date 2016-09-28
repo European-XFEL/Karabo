@@ -1,20 +1,23 @@
 """This tests the communication between bound API and middlelayer API"""
 
-from asyncio import coroutine, create_subprocess_exec, wait_for
+from asyncio import async, coroutine, create_subprocess_exec, get_event_loop
+from contextlib import contextmanager
+from datetime import datetime
 import os
 import os.path
 from subprocess import PIPE
 import sys
-from unittest import TestCase, main
+from unittest import main
 
 from karabo.middlelayer import (
-    AccessLevel, AlarmCondition, Assignment, Device, getDevice, Int32,
-    MetricPrefix, shutdown, Slot, State, unit, Unit, waitUntil)
+    AccessLevel, AlarmCondition, Assignment, Device, DeviceClientBase,
+    getDevice, getHistory, Int32, MetricPrefix, shutdown, sleep, Slot, State,
+    unit, Unit, waitUntil)
 
-from .eventloop import setEventLoop
+from .eventloop import DeviceTest, async_tst
 
 
-class MiddlelayerDevice(Device):
+class MiddlelayerDevice(DeviceClientBase):
     value = Int32()
 
     @Slot()
@@ -22,14 +25,48 @@ class MiddlelayerDevice(Device):
         self.marker = True
 
 
-class Tests(TestCase):
+class Tests(DeviceTest):
+    @classmethod
+    @contextmanager
+    def lifetimeManager(cls):
+        cls.device = MiddlelayerDevice(dict(_deviceId_="middlelayerDevice"))
+        with cls.deviceManager(lead=cls.device):
+            yield
+
+    def setUp(self):
+        self.__starting_dir = os.curdir
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+        self.process = None
+
+    def tearDown(self):
+        had_to_kill = False
+        if self.process is not None and self.process.returncode is None:
+            self.process.kill()
+            self.loop.run_until_complete(self.process.wait())
+            had_to_kill = True
+
+        for fn in ("karabo.log", "serverId.xml", "loggermap.xml"):
+            try:
+                os.remove(fn)
+            except FileNotFoundError:
+                pass  # never mind
+
+        os.chdir(self.__starting_dir)
+        if had_to_kill:
+            self.fail("process didn't properly go down")
+
     @coroutine
-    def connect(self, device):
-        # it takes typically 2 s for the bound device to start
+    def wait_for_stderr(self, wait):
         line = ""
-        while "got started" not in line:
-            readbytes = yield from wait_for(self.bound.stderr.readline(), 5.0)
-            line = readbytes.decode("ascii")
+        while wait not in line:
+            line = (yield from self.process.stderr.readline()).decode("ascii")
+
+    @async_tst
+    def test_cross(self):
+        # it takes typically 2 s for the bound device to start
+        self.process = yield from create_subprocess_exec(
+             sys.executable, "bounddevice.py", stderr=PIPE)
+        yield from self.wait_for_stderr("got started")
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
                          "didn't receive initial value from bound device")
@@ -75,37 +112,62 @@ class Tests(TestCase):
                              "didn't receive change from bound device")
 
         yield from proxy.backfire()
-        self.assertEqual(device.value, 99)
-        self.assertTrue(device.marker)
+        self.assertEqual(self.device.value, 99)
+        self.assertTrue(self.device.marker)
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
-        yield from self.bound.wait()
+        yield from self.process.wait()
 
-    def setUp(self):
-        self.__starting_dir = os.curdir
-        os.chdir(os.path.dirname(os.path.abspath(__file__)))
-        self.loop = setEventLoop()
-        self.bound = self.loop.run_until_complete(
-            create_subprocess_exec(sys.executable, "bounddevice.py",
-                                   stderr=PIPE))
+    @async_tst
+    def test_history(self):
+        before = datetime.now()
 
-    def tearDown(self):
-        if self.bound.returncode is None:
-            self.bound.kill()
-            self.loop.run_until_complete(self.bound.wait())
-        self.loop.close()
-        try:
-            os.remove("karabo.log")
-        except FileNotFoundError:
-            pass  # never mind
-        os.chdir(self.__starting_dir)
+        karabo = os.environ["KARABO"]
+        self.process = yield from create_subprocess_exec(
+            os.path.join(karabo, "bin", "karabo-deviceserver"),
+            "historytest.xml", stderr=PIPE, stdout=PIPE)
+        yield from self.wait_for_stderr(
+            "'DataLogger-middlelayerDevice' got started")
 
-    def test_cross(self):
-        md = MiddlelayerDevice(dict(_deviceId_="middlelayerDevice"))
-        md.startInstance()
-        self.loop.run_until_complete(wait_for(
-            self.loop.create_task(self.connect(md), md),
-            15))
+        @coroutine
+        def print_stdout():
+            while not self.process.stdout.at_eof():
+                line = yield from self.process.stdout.readline()
+                print(line.decode("ascii"), end="")
+        async(print_stdout())
+
+        yield from sleep(0.1)
+
+        for i in range(4):
+            self.device.value = i
+            self.device.update()
+
+        after = datetime.now()
+
+        # This is the first history request ever, so it returns an empty
+        # list (see https://in.xfel.eu/redmine/issues/9414).
+        history = yield from getHistory(
+            "middlelayerDevice", before.isoformat(), after.isoformat()).value
+
+        # We have to write another value to close the first archive file :-(...
+        self.device.value = 4
+        self.device.update()
+
+        # ... and finally need to wait until the new archive and index files
+        # are flushed (see flushInterval in history.xml).
+        yield from sleep(1.1)
+
+        after = datetime.now()
+
+        history = yield from getHistory(
+            "middlelayerDevice", before.isoformat(), after.isoformat()).value
+
+        self.assertEqual([h for _, _, _, h in history[-5:]], list(range(5)))
+
+        yield from get_event_loop().instance()._ss.request(
+            "Karabo_DLManagerServer", "slotKillServer")
+        yield from self.process.wait()
+    test_history.slow = True
 
 
 if __name__ == "__main__":
