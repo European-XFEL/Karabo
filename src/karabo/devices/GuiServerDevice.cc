@@ -144,21 +144,20 @@ namespace karabo {
 
                 connect(karabo::util::DATALOGMANAGER_ID, "signalLoggerMap", "", "slotLoggerMap");
                 requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
-                
+
                 //scan topology to find additional alarm services
                 const Hash& topology =  remote().getSystemTopology();
                 const boost::optional<const Hash::Node&> devices = topology.find("device");
                 if (devices){
                     const Hash& deviceEntry = devices->getValue<Hash>();
                     for(Hash::const_iterator it = deviceEntry.begin(); it != deviceEntry.end(); ++it){
-                        Hash topologyEntry;
-                        Hash::Node& hn = topologyEntry.set("device", Hash(it->getKey(), it->getValue<Hash>()));
+                        Hash topologyEntry; // prepare input for connectPotentialAlarmService
+                        Hash::Node& hn = topologyEntry.set("device." + it->getKey(), it->getValue<Hash>());
                         hn.setAttributes(it->getAttributes());
                         connectPotentialAlarmService(topologyEntry);
                     }
-                    
                 }
-                    
+
 
                 m_dataConnection->startAsync(boost::bind(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
                 
@@ -1210,7 +1209,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAttributeUpdate(): " << e.userFriendlyMsg();
             }  
         }
-        
+
         void GuiServerDevice::connectPotentialAlarmService(const karabo::util::Hash& topologyEntry){
             std::string type, instanceId;
             typeAndInstanceFromTopology(topologyEntry, type, instanceId);
