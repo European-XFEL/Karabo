@@ -45,9 +45,11 @@ class Remote(Device):
     @Slot()
     @coroutine
     def count(self):
+        self.state = State.INCREASING
         for i in range(30):
             self.counter = i
             yield from sleep(0.02)
+        self.state = State.UNKNOWN
 
     @Slot()
     @coroutine
@@ -113,6 +115,11 @@ class Tests(DeviceTest):
         cls.remote = Remote(dict(_deviceId_="remote"))
         with cls.deviceManager(cls.remote, lead=cls.local):
             yield
+
+    @async_tst
+    def tearDown(self):
+        with (yield from getDevice("remote")) as d:
+            yield from waitUntil(lambda: d.state == State.UNKNOWN)
 
     @sync_tst
     def test_execute(self):
@@ -220,7 +227,7 @@ class Tests(DeviceTest):
             waitUntil(lambda: d.counter > 10)
             self.assertEqual(d.counter, 11)
             with self.assertRaises(TimeoutError):
-                waitUntil(lambda: d.counter > 40, timeout=1)
+                waitUntil(lambda: d.counter > 40, timeout=0.1)
 
     @sync_tst
     def test_waituntilnew(self):
@@ -346,8 +353,7 @@ class Tests(DeviceTest):
         try:
             self.assertEqual(d.value, 123)
             self.remote.value = 456
-            sleep(0.02)
-            self.assertEqual(d.value, 456)
+            waitUntil(lambda: d.value == 456, timeout=0.1)
         finally:
             # check that the proxy gets collected when not used anymore
             weak = weakref.ref(d)
