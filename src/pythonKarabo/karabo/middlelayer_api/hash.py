@@ -452,6 +452,11 @@ class Slot(Descriptor):
         if instance is None:
             return
 
+        msg = device._checkLocked(message)
+        if msg is not None:
+            device._ss.reply(message, msg)
+            return
+
         if (self.allowedStates is not None and
                 instance.state not in self.allowedStates):
             msg = 'Calling slot "{}" not allowed in state "{}"'.format(
