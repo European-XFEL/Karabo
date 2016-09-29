@@ -119,7 +119,7 @@ namespace karabo {
                         data.set(m_key, arr, '/');
                     } else {
                         if (node->getType() == karabo::util::Types::HASH) {
-                            if (node->hasAttribute("__classId") && node->getAttribute<std::string>("__classId") == karabo::util::NDArray::classInfo().getClassId()) {
+                            if (node->hasAttribute(KARABO_HASH_CLASS_ID) && node->getAttribute<std::string>(KARABO_HASH_CLASS_ID) == karabo::util::NDArray::classInfo().getClassId()) {
                                 karabo::util::NDArray& arr = node->getValue<karabo::util::NDArray>();
                                 T* ptr = arr.getData<T>();
                                 arr.setShape(dims()); //technically not needed but assures that NDarray shape and data shape match
@@ -146,7 +146,7 @@ namespace karabo {
 
                     } else {
                         if (node->getType() == karabo::util::Types::HASH) {
-                            if (node->hasAttribute("__classId") && node->getAttribute<std::string>("__classId") == karabo::util::NDArray::classInfo().getClassId()) {
+                            if (node->hasAttribute(KARABO_HASH_CLASS_ID) && node->getAttribute<std::string>(KARABO_HASH_CLASS_ID) == karabo::util::NDArray::classInfo().getClassId()) {
                                 karabo::util::NDArray& arr = node->getValue<karabo::util::NDArray>();
                                 T* ptr = arr.getData<T>();
                                 auto dimsV = dims().toVector();
