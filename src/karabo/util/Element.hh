@@ -32,6 +32,8 @@ namespace karabo {
         // Class forward (needed to prevent assignment of Hash to Attribute)
         class Hash;
 
+#define KARABO_HASH_CLASS_ID "__classId"
+
         template <class T> class GenericElement;
 
         template<typename KeyType, typename AttributesType = bool>
@@ -57,7 +59,7 @@ namespace karabo {
             struct SetClassIdAttribute {
 
                 SetClassIdAttribute(const ValueType& value, Element& e) {
-                    e.setAttribute("__classId", value.getClassInfo().getClassId());
+                    e.setAttribute(KARABO_HASH_CLASS_ID, value.getClassInfo().getClassId());
                 }
             };
 

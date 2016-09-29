@@ -390,7 +390,7 @@ namespace karathon {
 
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);
 
-        static bp::object toCustomObject(const karabo::util::Hash::Pointer& hash);
+        static bp::object toCustomObject(const karabo::util::Hash::Node& node, const karabo::util::Hash::Pointer& hash);
 
         static karabo::util::Types::ReferenceType toAny(const bp::object& operand, boost::any& any);
 

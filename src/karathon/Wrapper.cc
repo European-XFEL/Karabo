@@ -242,11 +242,15 @@ namespace karathon {
     }
 
 
-    bp::object Wrapper::toCustomObject(const karabo::util::Hash::Pointer& hash) {
-        if (hash->has("__classId")) { // Hash actually holds data for a custom class
-            const std::string& classId = hash->get<string>("__classId");
+    bp::object Wrapper::toCustomObject(const karabo::util::Hash::Node& node, const karabo::util::Hash::Pointer& hash) {
+        if (node.hasAttribute(KARABO_HASH_CLASS_ID)) { // Hash actually holds data for a custom class
+            const std::string& classId = node.getAttribute<string>(KARABO_HASH_CLASS_ID);
             if (classId == "NDArray") {
                 return fromNDArrayToPyArray(reinterpret_cast<const karabo::util::NDArray&> (*hash));
+            }
+            if (classId == "ImageData") {
+                const karabo::xms::ImageData& imgData = reinterpret_cast<const karabo::xms::ImageData&> (*hash);
+                return bp::object(karabo::xms::ImageData::Pointer(new karabo::xms::ImageData(imgData)));
             }
         }
         return bp::object(hash);
