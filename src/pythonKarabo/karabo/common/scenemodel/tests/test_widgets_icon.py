@@ -1,6 +1,8 @@
-from ..widgets.icon import (
-    IconData, DigitIconsModel, DisplayIconsetModel, SelectionIconsModel,
-    TextIconsModel)
+from nose.tools import assert_raises
+
+from ..api import (
+    IconData, DigitIconsModel, DisplayIconsetModel, SceneWriterException,
+    SelectionIconsModel, TextIconsModel)
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_from_data, single_model_round_trip)
 
@@ -87,3 +89,14 @@ def test_icon_widget_version_1():
     assert len(read_model.values) == 1
     assert read_model.values[0].image == 'blah.svg'
     assert isinstance(read_model, DigitIconsModel)
+
+
+def test_write_exceptions():
+    traits = base_widget_traits(parent='DisplayComponent')
+    traits['values'] = [IconData()]
+    model = TextIconsModel(**traits)
+    assert_raises(SceneWriterException, single_model_round_trip, model)
+
+    traits = base_widget_traits(parent='DisplayComponent')
+    model = DisplayIconsetModel(**traits)
+    assert_raises(SceneWriterException, single_model_round_trip, model)
