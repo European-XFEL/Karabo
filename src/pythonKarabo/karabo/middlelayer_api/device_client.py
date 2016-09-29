@@ -539,7 +539,7 @@ def disconnectDevice(device):
     device.__exit__(None, None, None)
 
 
-class locked:
+class lock:
     """A context manager to lock a device
 
     This allows to lock another devices for exclusive use::
