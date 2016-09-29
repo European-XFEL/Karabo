@@ -4,7 +4,8 @@ from traits.api import (HasStrictTraits, Dict, Float, Instance, Int, List,
                         String)
 
 from .bases import BaseSceneObjectData
-from .const import NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
+from .const import (NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT,
+                    SCENE_FILE_VERSION)
 from .io_utils import set_numbers
 from .registry import register_scene_reader, register_scene_writer
 
@@ -13,7 +14,7 @@ class SceneModel(HasStrictTraits):
     """ An object representing the data for a Karabo GUI scene.
     """
     # The version (from the scene file)
-    version = Int(2)
+    version = Int(SCENE_FILE_VERSION)
     # The title of the scene
     title = String()
     # Extra attributes from the SVG file that we want to preserve.

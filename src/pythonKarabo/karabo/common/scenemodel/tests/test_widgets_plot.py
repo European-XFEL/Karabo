@@ -1,4 +1,4 @@
-from ..widgets.plot import PlotCurveModel, LinePlotModel
+from ..api import PlotCurveModel, LinePlotModel
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
 
