@@ -366,10 +366,12 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             d.value = 22
             d.lockedBy = "whoever"
-            with self.assertRaises(KaraboError):
-                d.value = 7
-            self.assertEqual(d.value, 22)
-            self.remote.lockedBy = ""
+            try:
+                with self.assertRaisesRegex(KaraboError, "lock"):
+                    d.value = 7
+                self.assertEqual(d.value, 22)
+            finally:
+                self.remote.lockedBy = ""
             d.value = 3
             self.assertEqual(d.value, 3)
 
