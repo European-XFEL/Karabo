@@ -9,7 +9,7 @@ from karabo.common.states import State
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     waitUntilNew, waitUntil, setWait, setNoWait, getDevice, executeNoWait,
-    updateDevice, Queue, connectDevice, locked)
+    updateDevice, Queue, connectDevice, lock)
 from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.exceptions import KaraboError
 from karabo.middlelayer_api.hash import Int32 as Int, Slot
@@ -376,7 +376,7 @@ class Tests(DeviceTest):
     @sync_tst
     def test_lock(self):
         with getDevice("remote") as d:
-            with locked(d):
+            with lock(d):
                 self.assertEqual(d.lockedBy, "local")
                 d.value = 33
                 self.assertEqual(d.value, 33)

@@ -8,7 +8,7 @@ from .common.scenemodel.api import read_scene, SceneModel, write_scene
 from .common.states import State, StateSignifier
 
 from .middlelayer_api.device_client import (
-    connectDevice, DeviceClientBase, disconnectDevice, Proxy, ProxySlot,
+    connectDevice, DeviceClientBase, disconnectDevice, lock, Proxy, ProxySlot,
     ProxyNode, AutoDisconnectProxy, SubProxy, getHistory, waitUntilNew,
     waitUntil, setWait, instantiate, instantiateNoWait, shutdown,
     shutdownNoWait, setNoWait, getClasses, getDevice, getDevices, getServers,
