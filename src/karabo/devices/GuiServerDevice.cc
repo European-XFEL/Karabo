@@ -1182,7 +1182,11 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestedAlarmsReply : info ...\n" << reply;
                 Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows", reply.get<Hash>("alarms"));
-                channel->writeAsync(h, LOSSLESS);
+                if(channel){//write to a single channel
+                    channel->writeAsync(h, LOSSLESS);
+                } else { //write to all
+                    safeAllClientsWrite(h);
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAlarmsReply(): " << e.userFriendlyMsg();
             }  
@@ -1216,7 +1220,10 @@ namespace karabo {
             if(topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") && 
                topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService"){
                     connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
+                    // actively ask this previously unknown device to submit its alarms as init messages on all channesl
+                    onRequestAlarms(karabo::net::Channel::Pointer(), Hash("alarmInstanceId", instanceId));
             }
+            
         }
         
         void GuiServerDevice::typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type, std::string& instanceId){
