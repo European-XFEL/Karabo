@@ -280,10 +280,8 @@ namespace karabo {
                         
                         
                         const Timestamp updatedTimeStamp = Timestamp::fromHashAttributes(aTypeIt->getAttributes());
-                        const std::string timeOfOccurrence = updatedTimeStamp.toIso8601();
-                        const unsigned long long trainOfOccurrence = updatedTimeStamp.getTrainId();
-                        std::string timeOfFirstOccurrence = timeOfOccurrence;
-                        unsigned long long trainOfFirstOccurrence = trainOfOccurrence;
+                        Timestamp originalTimeStamp = updatedTimeStamp;
+                        
                         
                         //get the next id if we perform insertion
                         unsigned long long id = 0;
@@ -295,8 +293,7 @@ namespace karabo {
                         if(existingTypeEntryN) {
                             //alarm exists, we use its first occurance
                             Hash& existingTypeEntry = existingTypeEntryN->getValue<Hash>();
-                            timeOfFirstOccurrence =  existingTypeEntry.get<std::string>("timeOfFirstOccurrence");
-                            trainOfFirstOccurrence =  existingTypeEntry.get<unsigned long long>("trainOfFirstOccurrence");
+                            originalTimeStamp = Timestamp::fromHashAttributes(existingTypeEntry.getAttributes("timeOfFirstOccurrence"));
                             id = m_alarmsMap_r.find(&(*existingTypeEntryN))->second;
                         }
                         
@@ -305,10 +302,10 @@ namespace karabo {
 
                         //now those which we needed to modify
                         Hash& newEntry = newEntryN.getValue<Hash>();
-                        newEntry.set("timeOfFirstOccurrence", timeOfFirstOccurrence);
-                        newEntry.set("trainOfFirstOccurrence", trainOfFirstOccurrence);
-                        newEntry.set("timeOfOccurrence", timeOfOccurrence);
-                        newEntry.set("trainOfOccurrence", trainOfOccurrence);
+                        newEntry.set("timeOfFirstOccurrence", originalTimeStamp.toIso8601Ext());
+                        newEntry.set("timeOfOccurrence", updatedTimeStamp.toIso8601Ext());
+                        originalTimeStamp.toHashAttributes(newEntry.getAttributes("timeOfFirstOccurrence"));
+                        updatedTimeStamp.toHashAttributes(newEntry.getAttributes("timeOfOccurrence"));
                         // acknowledgeable is determined by whether an alarm needs acknowledging
                         newEntry.set("acknowledgeable",  !newEntry.get<bool>("needsAcknowledging"));
                         newEntry.set("deviceId", deviceId);
