@@ -1,13 +1,15 @@
-from xml.etree.ElementTree import Element
+from io import BytesIO
 import os
 import os.path as op
+from xml.etree.ElementTree import Element
 
 from nose.tools import assert_raises
 
 # Import via the API module so that all the readers/writers get registered
 from ..api import (SceneModel, FixedLayoutModel, LabelModel, LineModel,
                    RectangleModel, UnknownXMLDataModel, SceneWriterException,
-                   read_scene, write_scene, write_single_model, NS_KARABO)
+                   read_scene, write_scene, write_single_model, NS_KARABO,
+                   SCENE_FILE_VERSION)
 from ..io_utils import set_numbers
 from .utils import temp_cwd, temp_file, xml_is_equal
 
@@ -166,9 +168,8 @@ def test_writing():
 def test_scene_version():
     scene = SceneModel()
     xml = write_scene(scene)
-    with temp_file(xml.decode('utf-8')) as fn:
-        scene = read_scene(fn)
-    assert scene.version == 2
+    scene = read_scene(BytesIO(xml))
+    assert scene.version == SCENE_FILE_VERSION
 
 
 def test_single_model_writing():

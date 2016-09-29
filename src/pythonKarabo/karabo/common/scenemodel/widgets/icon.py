@@ -5,10 +5,14 @@ from traits.api import HasStrictTraits, Bool, Instance, List, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, NS_SVG
+from karabo.common.scenemodel.exceptions import SceneWriterException
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, write_base_widget_data)
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
+
+# Define a trait for bytes objects
+BytesTrait = Instance(bytes, args=(b'',))
 
 
 class DisplayIconsetModel(BaseWidgetObjectData):
@@ -16,7 +20,7 @@ class DisplayIconsetModel(BaseWidgetObjectData):
     # A URL for an icon set (version 1 data only!)
     image = String
     # The actual icon set data
-    data = Instance(bytes)
+    data = BytesTrait
 
 
 class IconData(HasStrictTraits):
@@ -29,8 +33,8 @@ class IconData(HasStrictTraits):
     # A URL for an icon (version 1 data only!)
     image = String
     # The actual icon data
-    # NOTE: This data will only be automatically loaded from version 2 files
-    data = Instance(bytes)
+    # NOTE: This data will only be automatically loaded from version 2+ files
+    data = BytesTrait
 
 
 class BaseIconsModel(BaseWidgetObjectData):
@@ -63,6 +67,9 @@ def _display_iconset_reader(read_func, element):
 def _display_iconset_writer(write_func, model, parent):
     element = SubElement(parent, NS_SVG + 'rect')
     write_base_widget_data(model, element, 'DisplayIconset')
+    if len(model.data) == 0:
+        msg = 'Attempting to write a DisplayIconsetModel with empty data'
+        raise SceneWriterException(msg)
     element.set('data', base64.b64encode(model.data).decode("ascii"))
     return element
 
@@ -89,7 +96,10 @@ def _write_icon_elements(icons, parent, tag):
     """
     for ic in icons:
         sub = SubElement(parent, tag)
-        uuencoded_data = base64.b64encode(ic.data).decode("ascii")
+        if len(ic.data) == 0:
+            msg = 'Attempting to write an IconData object with empty data'
+            raise SceneWriterException(msg)
+        uuencoded_data = base64.b64encode(ic.data).decode('ascii')
         sub.set('data', uuencoded_data)
         if ic.value:
             sub.text = ic.value
