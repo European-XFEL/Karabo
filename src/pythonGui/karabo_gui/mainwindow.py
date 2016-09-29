@@ -423,8 +423,6 @@ class MainWindow(QMainWindow):
                 self.alarmPanels[instId] = panel
             else:
                 panel = self.alarmPanels[instId]
-                divWidget = self._getDivWidget(self.outputTab, 'alarm_model',
-                                               panel.alarm_model)
                 self.focusExistingTabWindow(self.outputTab, 'alarm_model',
                                             panel.alarm_model)
 
